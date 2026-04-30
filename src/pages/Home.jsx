@@ -59,7 +59,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.5 }}
-          className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 shadow-xl mb-4"
+          className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 shadow-xl mb-4 transition-shadow duration-300 hover:shadow-2xl hover:border-white/15"
         >
           <label className="block font-inter text-xs text-white/40 uppercase tracking-widest mb-3">
             Arabic Text Input
@@ -75,22 +75,26 @@ export default function Home() {
 
           {/* Buttons */}
           <div className="flex gap-3 mt-4">
-            <button
+            <motion.button
               onClick={handleCalculate}
               disabled={!input.trim()}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-yellow-500 hover:bg-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] font-inter font-semibold text-sm transition-all duration-200 shadow-lg shadow-yellow-500/20 hover:shadow-yellow-400/30 active:scale-[0.98]"
+              whileHover={{ scale: 1.02, boxShadow: "0 0 24px rgba(234,179,8,0.35)" }}
+              whileTap={{ scale: 0.97 }}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-yellow-500 hover:bg-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] font-inter font-semibold text-sm transition-colors duration-200 shadow-lg shadow-yellow-500/20"
             >
               <Calculator className="w-4 h-4" />
               Calculate
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={handleClear}
               disabled={!input && !result}
-              className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white/70 hover:text-white font-inter text-sm border border-white/10 transition-all duration-200 active:scale-[0.98]"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white/70 hover:text-white font-inter text-sm border border-white/10 hover:border-white/20 transition-all duration-200"
             >
               <Trash2 className="w-4 h-4" />
               Clear
-            </button>
+            </motion.button>
           </div>
         </motion.div>
 

@@ -9,8 +9,9 @@ export default function ResultsSummary({ count, total }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ scale: 1.03, boxShadow: "0 8px 32px rgba(255,255,255,0.07)" }}
         transition={{ duration: 0.35 }}
-        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-3 shadow-xl"
+        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-3 shadow-xl hover:border-white/20 transition-colors duration-200 cursor-default"
       >
         <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center">
           <Hash className="w-5 h-5 text-white/60" />
@@ -26,8 +27,9 @@ export default function ResultsSummary({ count, total }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ scale: 1.03, boxShadow: "0 8px 32px rgba(234,179,8,0.18)" }}
         transition={{ duration: 0.35, delay: 0.08 }}
-        className="bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/25 rounded-2xl p-6 flex flex-col items-center gap-3 shadow-xl shadow-yellow-500/5"
+        className="bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/25 rounded-2xl p-6 flex flex-col items-center gap-3 shadow-xl shadow-yellow-500/5 hover:border-yellow-500/40 transition-colors duration-200 cursor-default"
       >
         <div className="w-11 h-11 rounded-xl bg-yellow-500/20 flex items-center justify-center">
           <Sigma className="w-5 h-5 text-yellow-400" />
