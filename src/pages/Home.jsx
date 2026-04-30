@@ -265,18 +265,18 @@ export default function Home() {
                         key={key}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ scale: 1.03, boxShadow: `0 8px 32px ${el.glow}` }}
+                        whileHover={{ scale: 1.05, boxShadow: `0 12px 40px ${el.glow}` }}
                         transition={{ duration: 0.35, delay: i * 0.07 }}
                         className="rounded-2xl p-5 flex flex-col items-center gap-2 border cursor-default transition-all backdrop-blur-sm"
                         style={{
-                          background: isDominant ? el.bg : "rgba(255,255,255,0.02)",
+                          background: isDominant ? (typeof el.bg === 'string' && el.bg.includes('linear-gradient') ? el.bg : el.bg) : "rgba(255,255,255,0.02)",
                           borderColor: isDominant ? el.border : "rgba(255,255,255,0.08)",
-                          boxShadow: isDominant ? `0 6px 32px ${el.glow}` : "none",
+                          boxShadow: isDominant ? `0 8px 40px ${el.glow}` : "none",
                         }}
                     >
                       <span className="text-2xl drop-shadow-sm">{el.icon}</span>
                       <span className="font-inter text-xs uppercase tracking-widest font-medium" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.7)" }}>{el.name}</span>
-                      <span className="font-amiri text-lg font-bold text-white drop-shadow-md" style={{ textShadow: `0 0 8px ${el.glow}` }}>{el.arabic}</span>
+                      <span className="font-amiri text-lg font-bold drop-shadow-md" style={{ color: isDominant ? (el.arabicColor || "#ffffff") : "rgba(255,255,255,0.6)", textShadow: isDominant ? `0 0 10px ${el.glow}` : "none" }}>{el.arabic}</span>
                       <span className="font-amiri text-4xl font-bold drop-shadow-sm" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.9)" }}>{anasirResult.counts[key]}</span>
                       {isDominant && (
                         <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold" style={{ color: el.color, borderColor: el.border, background: el.bg }}>Dominant</span>
