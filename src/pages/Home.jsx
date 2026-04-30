@@ -5,6 +5,7 @@ import ResultsSummary from "../components/ResultsSummary";
 import AbjadReferenceTable from "../components/AbjadReferenceTable";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -124,6 +125,16 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Nav to Anasir */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-2">
+          <Link
+            to="/anasir"
+            className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white font-inter text-sm border border-white/10 hover:border-white/20 transition-all duration-200 w-full"
+          >
+            🌊 Try Anasir Domination Analyzer
+          </Link>
+        </motion.div>
 
         {/* Reference Table */}
         <motion.div
