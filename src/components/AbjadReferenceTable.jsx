@@ -17,11 +17,12 @@ export default function AbjadReferenceTable() {
     <div className="w-full">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors font-inter"
+        className="flex items-center gap-2 mx-auto text-xs text-white/30 hover:text-white/60 transition-colors font-inter uppercase tracking-widest"
       >
-        Abjad Reference
-        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        {open ? "Hide" : "Show"} Abjad Reference
+        {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
       </button>
+
       <AnimatePresence>
         {open && (
           <motion.div
@@ -31,18 +32,20 @@ export default function AbjadReferenceTable() {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="mt-4 grid grid-cols-7 sm:grid-cols-10 gap-1.5 max-w-md mx-auto" dir="rtl">
-              {orderedLetters.map((letter) => (
-                <div
-                  key={letter}
-                  className="flex flex-col items-center bg-card border border-border rounded-md py-2 px-1"
-                >
-                  <span className="font-amiri text-lg text-foreground">{letter}</span>
-                  <span className="font-inter text-[10px] text-accent font-semibold">
-                    {ABJAD_MAP[letter]}
-                  </span>
-                </div>
-              ))}
+            <div className="mt-5 bg-white/5 border border-white/10 rounded-2xl p-5">
+              <div className="grid grid-cols-7 sm:grid-cols-10 gap-2 max-w-sm mx-auto" dir="rtl">
+                {orderedLetters.map((letter) => (
+                  <div
+                    key={letter}
+                    className="flex flex-col items-center bg-white/5 border border-white/10 rounded-lg py-2 px-1 hover:border-yellow-500/30 hover:bg-yellow-500/5 transition-all"
+                  >
+                    <span className="font-amiri text-lg text-white">{letter}</span>
+                    <span className="font-inter text-[9px] text-yellow-400/70 font-semibold">
+                      {ABJAD_MAP[letter]}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
