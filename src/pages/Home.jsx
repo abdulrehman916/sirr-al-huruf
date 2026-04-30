@@ -164,7 +164,7 @@ export default function Home() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/30 mb-5">
             <span className="text-3xl">🌊</span>
           </div>
-          <h1 className="font-amiri text-5xl sm:text-6xl font-bold bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-300 bg-clip-text text-transparent">حاسبة العناصر</h1>
+          <h1 className="font-amiri text-5xl sm:text-6xl font-bold text-white drop-shadow-sm">حاسبة العناصر</h1>
           <p className="font-inter text-sm text-blue-300/60 mt-2 tracking-widest uppercase font-semibold">Anasir Domination Calculator</p>
           <div className="mt-5 flex items-center justify-center gap-3">
             <div className="h-px w-16 bg-gradient-to-r from-transparent to-blue-500/50" />
@@ -236,11 +236,11 @@ export default function Home() {
                     style={{ background: el.bg, borderColor: el.border, boxShadow: `0 0 48px ${el.glow}` }}
                   >
                     <div>
-                      <p className="font-inter text-xs uppercase tracking-widest mb-1" style={{ color: el.color, opacity: 0.75 }}>Dominant Element</p>
-                      <p className="font-amiri text-3xl font-bold text-white">{el.icon} {el.name}</p>
-                      <p className="font-inter text-xs text-white/40 mt-1">{anasirResult.counts[anasirResult.dominant]} letters · {anasirResult.percentages[anasirResult.dominant]}% of total</p>
+                      <p className="font-inter text-xs uppercase tracking-widest mb-1 font-semibold" style={{ color: el.color }}>Dominant Element</p>
+                      <p className="font-amiri text-3xl font-bold text-white drop-shadow-sm">{el.icon} {el.name}</p>
+                      <p className="font-inter text-xs text-white/60 mt-1 font-medium">{anasirResult.counts[anasirResult.dominant]} letters · {anasirResult.percentages[anasirResult.dominant]}% of total</p>
                     </div>
-                    <span className="font-amiri text-5xl sm:text-6xl opacity-15" style={{ color: el.color }}>{el.arabic}</span>
+                    <span className="font-amiri text-5xl sm:text-6xl opacity-20" style={{ color: el.color }}>{el.arabic}</span>
                   </motion.div>
                 );
               })()}
@@ -255,8 +255,8 @@ export default function Home() {
                     transition={{ duration: 0.35 }}
                     className="col-span-2 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-2xl p-5 flex flex-col items-center gap-2 shadow-xl cursor-default hover:border-cyan-500/40 transition-all"
                   >
-                    <span className="font-inter text-xs text-cyan-400/60 uppercase tracking-widest font-semibold">Total Letters</span>
-                    <span className="font-amiri text-4xl font-bold text-white">{anasirResult.total}</span>
+                    <span className="font-inter text-xs text-cyan-400 uppercase tracking-widest font-semibold">Total Letters</span>
+                    <span className="font-amiri text-4xl font-bold text-white drop-shadow-sm">{anasirResult.total}</span>
                   </motion.div>
                   {Object.entries(ELEMENTS).map(([key, el], i) => {
                     const isDominant = anasirResult.dominant === key;
@@ -274,9 +274,9 @@ export default function Home() {
                           boxShadow: isDominant ? `0 6px 32px ${el.glow}` : "none",
                         }}
                     >
-                      <span className="text-2xl">{el.icon}</span>
-                      <span className="font-inter text-xs uppercase tracking-widest" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.35)" }}>{el.name}</span>
-                      <span className="font-amiri text-4xl font-bold" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.75)" }}>{anasirResult.counts[key]}</span>
+                      <span className="text-2xl drop-shadow-sm">{el.icon}</span>
+                      <span className="font-inter text-xs uppercase tracking-widest font-medium" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.7)" }}>{el.name}</span>
+                      <span className="font-amiri text-4xl font-bold drop-shadow-sm" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.9)" }}>{anasirResult.counts[key]}</span>
                       {isDominant && (
                         <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold" style={{ color: el.color, borderColor: el.border, background: el.bg }}>Dominant</span>
                       )}
