@@ -274,10 +274,10 @@ export default function Home() {
                           boxShadow: isDominant ? `0 8px 40px ${el.glow}` : "none",
                         }}
                     >
-                      <span className="text-2xl drop-shadow-sm">{el.icon}</span>
+                      <span className={`text-2xl drop-shadow-sm ${key === 'fire' && isDominant ? 'animate-pulse' : ''}`}>{el.icon}</span>
                       <span className="font-inter text-xs uppercase tracking-widest font-medium" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.7)" }}>{el.name}</span>
-                      <span className="font-amiri text-lg font-bold drop-shadow-md" style={{ color: isDominant ? (el.arabicColor || "#ffffff") : "rgba(255,255,255,0.6)", textShadow: isDominant ? `0 0 10px ${el.glow}` : "none" }}>{el.arabic}</span>
-                      <span className="font-amiri text-4xl font-bold drop-shadow-sm" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.9)" }}>{anasirResult.counts[key]}</span>
+                      <span className="font-amiri text-lg font-bold" style={{ color: isDominant ? (el.arabicColor || "#ffffff") : "rgba(255,255,255,0.6)", textShadow: isDominant && key === 'fire' ? "0 0 4px rgba(255, 80, 0, 0.5)" : isDominant ? `0 0 10px ${el.glow}` : "none" }}>{el.arabic}</span>
+                      <span className="font-amiri text-4xl font-bold drop-shadow-sm" style={{ color: isDominant ? (el.numberColor || el.color) : "rgba(255,255,255,0.9)" }}>{anasirResult.counts[key]}</span>
                       {isDominant && (
                         <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold" style={{ color: el.color, borderColor: el.border, background: el.bg }}>Dominant</span>
                       )}
