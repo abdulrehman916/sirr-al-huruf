@@ -89,8 +89,8 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="أدخل النص العربي هنا..."
-            rows={4}
-            className="w-full bg-white/5 border border-white/10 rounded-xl p-4 font-amiri text-2xl text-white placeholder:text-white/20 leading-loose resize-none focus:outline-none focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/10 transition-all"
+            rows={5}
+            className="w-full bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-yellow-500/20 rounded-2xl px-5 py-4 font-amiri text-xl text-white placeholder:text-gray-400 placeholder:opacity-70 leading-relaxed resize-none focus:outline-none focus:border-yellow-500/60 focus:ring-3 focus:ring-yellow-500/20 transition-all duration-200 caret-white mb-4"
           />
 
           {/* Buttons */}
@@ -186,8 +186,8 @@ export default function Home() {
             value={anasirInput}
             onChange={(e) => setAnasirInput(e.target.value)}
             placeholder="أدخل النص العربي هنا..."
-            rows={4}
-            className="w-full bg-white/3 border border-cyan-500/20 rounded-2xl p-4 font-amiri text-2xl text-white placeholder:text-white/20 leading-loose resize-none focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all duration-200"
+            rows={5}
+            className="w-full bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-cyan-500/20 rounded-2xl px-5 py-4 font-amiri text-xl text-white placeholder:text-gray-400 placeholder:opacity-70 leading-relaxed resize-none focus:outline-none focus:border-cyan-500/60 focus:ring-3 focus:ring-cyan-500/20 transition-all duration-200 caret-white mb-4"
           />
           <div className="flex gap-3 mt-4">
             <motion.button
