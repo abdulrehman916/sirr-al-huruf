@@ -127,13 +127,20 @@ export default function Home() {
         </AnimatePresence>
 
         {/* Nav to Anasir */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-2">
-          <Link
-            to="/anasir"
-            className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white font-inter text-sm border border-white/10 hover:border-white/20 transition-all duration-200 w-full"
-          >
-            🌊 Try Anasir Domination Analyzer
-          </Link>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-2"
+        >
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+            <Link
+              to="/anasir"
+              className="flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-white/5 hover:bg-yellow-500/10 text-white/60 hover:text-yellow-400 font-inter font-semibold text-sm border border-white/10 hover:border-yellow-500/30 transition-all duration-200 w-full shadow-sm"
+            >
+              🌊 Go to Anasir Analysis
+            </Link>
+          </motion.div>
         </motion.div>
 
         {/* Reference Table */}
