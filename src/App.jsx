@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Add page imports here
 import Home from './pages/Home';
 import AnasirDomination from './pages/AnasirDomination';
+import AnasirCalculator from './pages/AnasirCalculator';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -37,6 +38,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/anasir" element={<AnasirDomination />} />
+      <Route path="/anasir-calculator" element={<AnasirCalculator />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
