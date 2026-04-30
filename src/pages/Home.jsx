@@ -276,6 +276,7 @@ export default function Home() {
                     >
                       <span className="text-2xl drop-shadow-sm">{el.icon}</span>
                       <span className="font-inter text-xs uppercase tracking-widest font-medium" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.7)" }}>{el.name}</span>
+                      <span className="font-amiri text-lg font-bold text-white drop-shadow-md" style={{ textShadow: `0 0 8px ${el.glow}` }}>{el.arabic}</span>
                       <span className="font-amiri text-4xl font-bold drop-shadow-sm" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.9)" }}>{anasirResult.counts[key]}</span>
                       {isDominant && (
                         <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold" style={{ color: el.color, borderColor: el.border, background: el.bg }}>Dominant</span>
