@@ -449,10 +449,10 @@ export default function Home() {
                 <Card>
                   <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest mb-4">Step 1 — Abjad Analysis per Input</p>
                   <div className="space-y-3">
-                    {hadimResult.active.map((field, fi) => (
+                    {hadimResult.allFields.map((field, fi) => (
                       <div key={fi} className="rounded-xl border border-purple-500/15 p-3" style={{ background: "rgba(168,85,247,0.06)" }}>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/60">Input {field.index + 1}</span>
+                          <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/60">{field.label}</span>
                           <span className="font-inter text-xs font-bold text-white tabular-nums">{field.r.total}</span>
                         </div>
                         <p className="font-amiri text-base text-white/60 mb-2" dir="rtl">{field.text}</p>
@@ -473,9 +473,9 @@ export default function Home() {
                 <Card>
                   <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest mb-4">Step 2 — Total Summary</p>
                   <div className="space-y-2" dir="rtl">
-                    {hadimResult.active.map((field, fi) => (
+                    {hadimResult.allFields.map((field, fi) => (
                       <div key={fi} className="flex justify-between items-center">
-                        <span className="font-amiri text-base text-white/60 truncate max-w-[60%]">{field.text.length > 20 ? field.text.slice(0,20)+'…' : field.text}</span>
+                        <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/50">{field.label}</span>
                         <span className="font-inter text-xs text-white/70 tabular-nums">{field.r.total}</span>
                       </div>
                     ))}
@@ -541,7 +541,7 @@ export default function Home() {
                 {/* STEP 7 — Per-Input Hadim Names */}
                 {hadimResult.perInput.length > 0 && (
                   <div className="space-y-4">
-                    <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest px-1">Step 7 — Individual Hadim Names ({hadimResult.perInput.length})</p>
+                    <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest px-1">Step 7 — Ism Hadim Names ({hadimResult.perInput.length})</p>
                     {hadimResult.perInput.map((item, i) => (
                       <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
                         className="rounded-2xl border p-5 space-y-4"
@@ -550,7 +550,7 @@ export default function Home() {
                         {/* Input Header */}
                         <div className="flex items-center justify-between" dir="rtl">
                           <div>
-                            <p className="font-inter text-[10px] uppercase tracking-widest text-purple-300/50 mb-1">Input {item.index + 1}</p>
+                            <p className="font-inter text-[10px] uppercase tracking-widest text-purple-300/50 mb-1">{item.label}</p>
                             <p className="font-amiri text-2xl text-white">{item.text}</p>
                           </div>
                           <div className="rounded-xl border border-purple-500/25 px-4 py-2 text-center" style={{ background: "rgba(168,85,247,0.10)" }}>
