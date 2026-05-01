@@ -136,7 +136,7 @@ export default function Home() {
             HEADER
         ══════════════════════════════════════════ */}
         {/* Ambient glow */}
-        <div className="pointer-events-none absolute inset-0 z-0" style={{ background: "radial-gradient(ellipse 80% 50% at 50% 20%, rgba(56,189,248,0.12) 0%, transparent 65%)" }} />
+        <div className="pointer-events-none absolute inset-0 z-0" style={{ background: "radial-gradient(ellipse 90% 55% at 50% 18%, rgba(56,189,248,0.20) 0%, rgba(99,102,241,0.08) 50%, transparent 75%)" }} />
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center relative z-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-yellow-500/20 mb-5"
             style={{ background: "linear-gradient(180deg, rgba(234,179,8,0.22) 0%, rgba(234,179,8,0.10) 100%)", boxShadow: "0 0 24px rgba(234,179,8,0.15)" }}>
@@ -333,7 +333,7 @@ function SectionLabel({ children }) {
 function Card({ children }) {
   return (
     <div className="rounded-2xl border p-5"
-      style={{ background: "rgba(15,45,75,0.85)", borderColor: "rgba(255,255,255,0.18)", boxShadow: "0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+      style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(255,255,255,0.20)", boxShadow: "0 4px 24px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.10) inset" }}>
       {children}
     </div>
   );
@@ -375,7 +375,7 @@ function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentCol
   const accentHex = isYellow ? "rgba(234,179,8," : "rgba(6,182,212,";
   return (
     <div className="rounded-2xl border p-5"
-      style={{ background: "rgba(15,45,75,0.85)", borderColor: isYellow ? "rgba(234,179,8,0.50)" : "rgba(56,189,248,0.50)", boxShadow: isYellow ? "0 0 20px rgba(234,179,8,0.12)" : "0 0 20px rgba(56,189,248,0.12)" }}>
+      style={{ background: "rgba(15,48,80,0.92)", borderColor: isYellow ? "rgba(251,191,36,0.60)" : "rgba(56,189,248,0.60)", boxShadow: isYellow ? "0 0 28px rgba(251,191,36,0.18), 0 4px 20px rgba(0,0,0,0.35)" : "0 0 28px rgba(56,189,248,0.18), 0 4px 20px rgba(0,0,0,0.35)" }}>
       <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5"
         style={{ color: isYellow ? "rgba(234,179,8,0.5)" : "rgba(6,182,212,0.5)" }}>
         Arabic Text Input
@@ -386,9 +386,8 @@ function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentCol
         onChange={(e) => onChange(e.target.value)}
         placeholder="أدخل النص العربي هنا..."
         rows={4}
-        className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none transition-all duration-200 caret-white mb-3"
-        style={{ background: "rgba(10,30,55,0.90)", border: `1px solid ${isYellow ? 'rgba(234,179,8,0.45)' : 'rgba(56,189,248,0.45)'}`, boxShadow: isYellow ? "0 0 12px rgba(234,179,8,0.10)" : "0 0 12px rgba(56,189,248,0.10)" }}
-        style={{ borderColor: isYellow ? "rgba(234,179,8,0.2)" : "rgba(6,182,212,0.2)" }}
+        className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none transition-all duration-200 caret-white mb-3 placeholder:text-white/35"
+        style={{ background: "rgba(8,25,48,0.95)", border: `1px solid ${isYellow ? 'rgba(251,191,36,0.50)' : 'rgba(56,189,248,0.50)'}`, boxShadow: isYellow ? "0 0 16px rgba(251,191,36,0.14), inset 0 1px 0 rgba(255,255,255,0.06)" : "0 0 16px rgba(56,189,248,0.14), inset 0 1px 0 rgba(255,255,255,0.06)" }}
       />
 
       {/* Progress bar — visible while loading */}
@@ -416,7 +415,7 @@ function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentCol
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a]"
-          style={{ background: isYellow ? "linear-gradient(135deg,#fbbf24,#d97706)" : "linear-gradient(135deg,#38bdf8,#2563eb)", boxShadow: isYellow ? "0 0 28px rgba(251,191,36,0.60), 0 2px 8px rgba(0,0,0,0.25)" : "0 0 28px rgba(56,189,248,0.60), 0 2px 8px rgba(0,0,0,0.25)" }}
+          style={{ background: isYellow ? "linear-gradient(135deg,#fcd34d,#d97706)" : "linear-gradient(135deg,#38bdf8,#3b82f6)", boxShadow: isYellow ? "0 0 32px rgba(252,211,77,0.65), 0 2px 10px rgba(0,0,0,0.30)" : "0 0 32px rgba(56,189,248,0.65), 0 2px 10px rgba(0,0,0,0.30)", transition: "box-shadow 0.2s ease, transform 0.15s ease" }}
         >
           {loading
             ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -428,7 +427,7 @@ function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentCol
           disabled={!value && !hasResult && !loading}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/50 hover:text-white font-inter text-sm border border-white/10 hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ background: "rgba(255,255,255,0.04)" }}
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -447,7 +446,7 @@ function ActionRow({ onStar, onCopy, onShare, copied }) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="flex items-center gap-1.5 py-2 px-3.5 rounded-lg border border-yellow-500/20 text-yellow-400/70 hover:text-yellow-400 hover:border-yellow-500/40 text-xs font-inter transition-all"
-        style={{ background: "rgba(234,179,8,0.04)" }}
+        style={{ background: "rgba(234,179,8,0.08)", transition: "all 0.2s ease" }}
       >
         <Star className="w-3.5 h-3.5" />
         Save
@@ -456,8 +455,8 @@ function ActionRow({ onStar, onCopy, onShare, copied }) {
         onClick={onCopy}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="flex items-center gap-1.5 py-2 px-3.5 rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/25 text-xs font-inter transition-all"
-        style={{ background: "rgba(255,255,255,0.03)" }}
+        className="flex items-center gap-1.5 py-2 px-3.5 rounded-lg border border-white/15 text-white/60 hover:text-white hover:border-white/30 text-xs font-inter transition-all"
+        style={{ background: "rgba(255,255,255,0.06)", transition: "all 0.2s ease" }}
       >
         {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
         {copied ? "Copied!" : "Copy"}
@@ -466,8 +465,8 @@ function ActionRow({ onStar, onCopy, onShare, copied }) {
         onClick={onShare}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="flex items-center gap-1.5 py-2 px-3.5 rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/25 text-xs font-inter transition-all"
-        style={{ background: "rgba(255,255,255,0.03)" }}
+        className="flex items-center gap-1.5 py-2 px-3.5 rounded-lg border border-white/15 text-white/60 hover:text-white hover:border-white/30 text-xs font-inter transition-all"
+        style={{ background: "rgba(255,255,255,0.06)", transition: "all 0.2s ease" }}
       >
         <Share2 className="w-3.5 h-3.5" />
         Share
