@@ -267,11 +267,11 @@ export default function Home() {
                         animate={{ opacity: 1, scale: 1 }}
                         whileHover={{ scale: 1.05, boxShadow: `0 12px 40px ${el.glow}` }}
                         transition={{ duration: 0.35, delay: i * 0.07 }}
-                        className="rounded-2xl p-5 flex flex-col items-center gap-2 border cursor-default transition-all backdrop-blur-sm"
+                        className="rounded-2xl p-5 flex flex-col items-center gap-2 border cursor-default transition-all backdrop-blur-md"
                         style={{
-                          background: isDominant ? (typeof el.bg === 'string' && el.bg.includes('linear-gradient') ? el.bg : el.bg) : "rgba(255,255,255,0.02)",
-                          borderColor: isDominant ? el.border : "rgba(255,255,255,0.08)",
-                          boxShadow: isDominant ? `0 8px 40px ${el.glow}` : "none",
+                          background: "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+                          borderColor: isDominant ? el.color : "rgba(255,255,255,0.08)",
+                          boxShadow: isDominant ? `0 0 20px ${el.glow}, inset 0 1px 0 rgba(255,255,255,0.08)` : "inset 0 1px 0 rgba(255,255,255,0.05)",
                         }}
                     >
                       <span className={`text-2xl drop-shadow-sm ${key === 'fire' && isDominant ? 'animate-pulse' : ''}`}>{el.icon}</span>
