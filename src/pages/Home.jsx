@@ -68,7 +68,9 @@ export default function Home() {
   const anasirAbort = useRef(false);
 
   // ── Hadim state ────────────────────────────────────
-  const [hadimInputs, setHadimInputs] = useState([""]);
+  const [hadimTalib, setHadimTalib] = useState("");
+  const [hadimMatloob, setHadimMatloob] = useState("");
+  const [hadimIsms, setHadimIsms] = useState(["", "", "", "", ""]);
   const [hadimType, setHadimType] = useState("ulvi");
   const [hadimResult, setHadimResult] = useState(null);
 
@@ -113,28 +115,35 @@ export default function Home() {
   const handleAnasirClear = () => { anasirAbort.current = true; setAnasirInput(""); setAnasirResult(null); setAnasirLoading(false); };
 
   // ── Hadim handlers ─────────────────────────────────
-  const addHadimInput = () => setHadimInputs((p) => [...p, ""]);
-  const removeHadimInput = (i) => setHadimInputs((p) => p.filter((_, idx) => idx !== i));
-  const updateHadimInput = (i, v) => setHadimInputs((p) => p.map((x, idx) => idx === i ? v : x));
+  const addHadimIsm = () => setHadimIsms((p) => [...p, ""]);
+  const removeHadimIsm = (i) => setHadimIsms((p) => p.filter((_, idx) => idx !== i));
+  const updateHadimIsm = (i, v) => setHadimIsms((p) => p.map((x, idx) => idx === i ? v : x));
   const handleHadimGenerate = () => {
-    const active = hadimInputs.map((t, i) => ({ index: i, text: t, r: processText(t) })).filter(x => x.text.trim());
-    if (!active.length) return;
-    const grandTotal = active.reduce((a, x) => a + x.r.total, 0);
+    const talibR = hadimTalib.trim() ? processText(hadimTalib) : null;
+    const matloobR = hadimMatloob.trim() ? processText(hadimMatloob) : null;
+    const ismItems = hadimIsms.map((t, i) => ({ index: i, text: t, r: processText(t) })).filter(x => x.text.trim());
+    const allFields = [
+      ...(talibR ? [{ label: 'Talib', text: hadimTalib, r: talibR }] : []),
+      ...(matloobR ? [{ label: 'Matloob', text: hadimMatloob, r: matloobR }] : []),
+      ...ismItems.map(x => ({ label: `Ism ${x.index + 1}`, text: x.text, r: x.r })),
+    ];
+    if (!allFields.length) return;
+    const grandTotal = allFields.reduce((a, x) => a + x.r.total, 0);
     const sub = HADIM_SUB[hadimType];
     const needed360 = grandTotal < sub;
     const adjusted = needed360 ? grandTotal + 360 : grandTotal;
     const final = adjusted - sub;
     const letters = numToLetters(final);
-    const perInput = active.map(({ text, r, index }) => {
+    const perInput = ismItems.map(({ text, r, index }) => {
       const iNeeded = r.total < sub;
       const iAdj = iNeeded ? r.total + 360 : r.total;
       const iFinal = iAdj - sub;
       const iLetters = numToLetters(iFinal);
-      return { text, total: r.total, letters: r.letters, needed360: iNeeded, adjusted: iAdj, final: iFinal, extracted: iLetters, name: iLetters + 'ايل', breakdown: numToLettersBreakdown(iFinal), index };
+      return { label: `Ism ${index + 1}`, text, total: r.total, needed360: iNeeded, adjusted: iAdj, final: iFinal, extracted: iLetters, name: iLetters + 'ايل', breakdown: numToLettersBreakdown(iFinal) };
     });
-    setHadimResult({ active, grandTotal, sub, needed360, adjusted, final, letters, name: letters + 'ايل', breakdown: numToLettersBreakdown(final), perInput, type: hadimType });
+    setHadimResult({ allFields, grandTotal, sub, needed360, adjusted, final, letters, name: letters + 'ايل', breakdown: numToLettersBreakdown(final), perInput, type: hadimType });
   };
-  const handleHadimClear = () => { setHadimInputs([""]); setHadimResult(null); };
+  const handleHadimClear = () => { setHadimTalib(""); setHadimMatloob(""); setHadimIsms(["","","","",""]); setHadimResult(null); };
 
   // ── Favorites ──────────────────────────────────────────
   const saveToFavorites = (text, abjadResult, anasirResult) => {
@@ -372,24 +381,40 @@ export default function Home() {
           <div className="rounded-2xl border p-5 space-y-4"
             style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(168,85,247,0.55)", boxShadow: "0 0 28px rgba(168,85,247,0.14), 0 4px 20px rgba(0,0,0,0.35)" }}>
 
-            {/* Unified Inputs */}
+            {/* Talib */}
             <div>
-              <label className="block font-inter text-[10px] uppercase tracking-widest mb-3" style={{ color: "rgba(168,85,247,0.70)" }}>Ism / Text Input</label>
+              <label className="block font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(168,85,247,0.70)" }}>Talib (طالب)</label>
+              <input dir="rtl" type="text" value={hadimTalib} onChange={(e) => setHadimTalib(e.target.value)}
+                placeholder="اسمك..."
+                className="w-full rounded-xl px-4 py-3 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
+                style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
+            </div>
+
+            {/* Matloob */}
+            <div>
+              <label className="block font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(168,85,247,0.70)" }}>Matloob (المطلوب)</label>
+              <input dir="rtl" type="text" value={hadimMatloob} onChange={(e) => setHadimMatloob(e.target.value)}
+                placeholder="رزق، محبة، فتح، اسم شخص..."
+                className="w-full rounded-xl px-4 py-3 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
+                style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
+            </div>
+
+            {/* Ism Section */}
+            <div>
+              <label className="block font-inter text-[10px] uppercase tracking-widest mb-3" style={{ color: "rgba(168,85,247,0.70)" }}>Ism (Names / Ayah / Surah)</label>
               <div className="space-y-3">
-                {hadimInputs.map((val, i) => (
+                {hadimIsms.map((val, i) => (
                   <div key={i} className="flex gap-2 items-start">
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(168,85,247,0.50)" }}>Input {i + 1}</span>
-                      </div>
-                      <textarea dir="rtl" value={val} onChange={(e) => updateHadimInput(i, e.target.value)}
-                        placeholder="اسم، آية، سورة..." rows={3}
+                      <span className="block font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: "rgba(168,85,247,0.45)" }}>Ism {i + 1}</span>
+                      <textarea dir="rtl" value={val} onChange={(e) => updateHadimIsm(i, e.target.value)}
+                        placeholder="اسم، آية، سورة..." rows={2}
                         className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/30"
-                        style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
+                        style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
                     </div>
-                    {hadimInputs.length > 1 && (
-                      <button onClick={() => removeHadimInput(i)}
-                        className="mt-6 p-2.5 rounded-xl border border-red-500/20 text-red-400/50 hover:text-red-400 hover:border-red-500/40 transition-all flex-shrink-0"
+                    {hadimIsms.length > 1 && (
+                      <button onClick={() => removeHadimIsm(i)}
+                        className="mt-5 p-2.5 rounded-xl border border-red-500/20 text-red-400/50 hover:text-red-400 hover:border-red-500/40 transition-all flex-shrink-0"
                         style={{ background: "rgba(239,68,68,0.06)" }}>
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -397,10 +422,10 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <button onClick={addHadimInput}
+              <button onClick={addHadimIsm}
                 className="flex items-center gap-1.5 text-xs font-inter text-purple-300/70 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/45 rounded-lg px-3 py-1.5 mt-3 transition-all"
                 style={{ background: "rgba(168,85,247,0.06)" }}>
-                <Plus className="w-3.5 h-3.5" /> + Add Input
+                <Plus className="w-3.5 h-3.5" /> + Add Ism
               </button>
             </div>
 
@@ -425,13 +450,13 @@ export default function Home() {
 
             {/* Action Buttons */}
             <div className="flex gap-2 pt-1">
-              <motion.button onClick={handleHadimGenerate} disabled={!hadimInputs.some(t => t.trim())}
+              <motion.button onClick={handleHadimGenerate} disabled={!hadimTalib.trim() && !hadimMatloob.trim() && !hadimIsms.some(t => t.trim())}
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)", boxShadow: "0 0 32px rgba(168,85,247,0.55), 0 2px 10px rgba(0,0,0,0.3)" }}>
                 <Wand2 className="w-3.5 h-3.5" /> Generate Hadim
               </motion.button>
-              <motion.button onClick={handleHadimClear} disabled={!hadimInputs.some(t=>t.trim()) && !hadimResult}
+              <motion.button onClick={handleHadimClear} disabled={!hadimTalib && !hadimMatloob && !hadimIsms.some(t=>t.trim()) && !hadimResult}
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ background: "rgba(255,255,255,0.04)" }}>
