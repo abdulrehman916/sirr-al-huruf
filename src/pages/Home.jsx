@@ -331,14 +331,14 @@ export default function Home() {
                           }}
                         >
                           <span className={`text-xl ${key === "fire" && isDominant ? "animate-pulse" : ""}`}>{el.icon}</span>
-                          <span className="font-inter text-[10px] uppercase tracking-widest font-medium" style={{ color: el.arabicColor !== '#ffffff' ? '#455A64' : '#FFFFFF' }}>{el.name}</span>
-                          <span className="font-amiri text-base font-bold" style={{ color: el.arabicColor || '#ffffff' }}>{el.arabic}</span>
-                          <span className="font-amiri text-3xl font-bold" style={{ color: el.arabicColor !== '#ffffff' ? '#263238' : '#FFFFFF', fontWeight: 700 }}>{anasirResult.counts[key]}</span>
+                          <span className="font-inter text-[10px] uppercase tracking-widest font-semibold" style={{ color: el.arabicColor !== '#ffffff' ? '#1F2937' : '#FFFFFF' }}>{el.name}</span>
+                          <span className="font-amiri text-base font-bold" style={{ color: el.arabicColor !== '#ffffff' ? '#1F2937' : '#FFFFFF', fontWeight: 600 }}>{el.arabic}</span>
+                          <span className="font-amiri text-3xl font-bold" style={{ color: el.arabicColor !== '#ffffff' ? '#0F172A' : '#FFFFFF', fontWeight: 700 }}>{anasirResult.counts[key]}</span>
                           {isDominant && (
                             <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold mt-0.5"
-                              style={key === 'fire'
-                                ? { color: '#FFFFFF', borderColor: el.dominantBadge?.borderColor ?? 'rgba(255,255,255,0.2)', background: el.dominantBadge?.background, boxShadow: el.dominantBadge?.boxShadow, letterSpacing: '1px', fontWeight: 600, borderRadius: '20px', transform: 'translateY(-1px)' }
-                                : { color: el.color, borderColor: el.border, background: el.bg }
+                              style={el.arabicColor !== '#ffffff'
+                                ? { color: '#FFFFFF', background: 'rgba(0,0,0,0.30)', borderColor: 'rgba(255,255,255,0.35)', fontWeight: 700, letterSpacing: '1px', borderRadius: '20px' }
+                                : { color: '#FFFFFF', borderColor: el.dominantBadge?.borderColor ?? 'rgba(255,255,255,0.2)', background: el.dominantBadge?.background, boxShadow: el.dominantBadge?.boxShadow, letterSpacing: '1px', fontWeight: 600, borderRadius: '20px', transform: 'translateY(-1px)' }
                               }>Dominant</span>
                           )}
                         </motion.div>
