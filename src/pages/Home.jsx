@@ -331,9 +331,9 @@ export default function Home() {
                           }}
                         >
                           <span className={`text-xl ${key === "fire" && isDominant ? "animate-pulse" : ""}`}>{el.icon}</span>
-                          <span className="font-inter text-[10px] uppercase tracking-widest font-medium" style={{ color: isDominant && key === 'fire' ? '#FFFFFF' : isDominant ? el.color : "rgba(255,255,255,0.6)", textShadow: isDominant && key === 'fire' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none' }}>{el.name}</span>
-                          <span className="font-amiri text-base font-bold" style={{ color: isDominant ? (el.arabicColor || "#fff") : "rgba(255,255,255,0.5)", textShadow: isDominant && key === "fire" ? "0 0 4px rgba(255,80,0,0.5)" : isDominant ? `0 0 8px ${el.glow}` : "none" }}>{el.arabic}</span>
-                          <span className="font-amiri text-3xl font-bold" style={{ color: isDominant ? (el.numberColor || el.color) : "rgba(255,255,255,0.85)", textShadow: isDominant && key === 'fire' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none' }}>{anasirResult.counts[key]}</span>
+                          <span className="font-inter text-[10px] uppercase tracking-widest font-medium" style={{ color: isDominant ? (el.arabicColor && el.arabicColor !== '#ffffff' ? el.arabicColor : '#FFFFFF') : el.color }}>{el.name}</span>
+                          <span className="font-amiri text-base font-bold" style={{ color: el.arabicColor || '#ffffff' }}>{el.arabic}</span>
+                          <span className="font-amiri text-3xl font-bold" style={{ color: isDominant ? (el.numberColor || '#FFFFFF') : '#FFFFFF', fontWeight: 700 }}>{anasirResult.counts[key]}</span>
                           {isDominant && (
                             <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold mt-0.5"
                               style={key === 'fire'
