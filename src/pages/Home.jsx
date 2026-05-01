@@ -317,7 +317,7 @@ export default function Home() {
                           key={key}
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          whileHover={{ scale: isDominant && key === 'fire' ? 1.02 : 1.04, filter: isDominant && key === 'fire' ? 'brightness(1.08)' : 'none' }}
+                          whileHover={{ scale: isDominant && key === 'fire' ? 1.02 : 1.04, filter: isDominant && key === 'fire' ? 'brightness(1.06)' : 'none' }}
                           transition={{ duration: 0.3, delay: i * 0.06 }}
                           className="rounded-xl p-4 flex flex-col items-center gap-1.5 border cursor-default transition-all backdrop-blur-md"
                           style={{
