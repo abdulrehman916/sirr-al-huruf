@@ -336,7 +336,10 @@ export default function Home() {
                           <span className="font-amiri text-3xl font-bold" style={{ color: isDominant ? (el.numberColor || el.color) : "rgba(255,255,255,0.85)", textShadow: isDominant && key === 'fire' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none' }}>{anasirResult.counts[key]}</span>
                           {isDominant && (
                             <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold mt-0.5"
-                              style={{ color: el.color, borderColor: el.border, background: el.bg }}>Dominant</span>
+                              style={key === 'fire'
+                                ? { color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.30)', background: 'rgba(0,0,0,0.25)', boxShadow: '0 2px 6px rgba(0,0,0,0.20)', letterSpacing: '0.08em', fontWeight: 700 }
+                                : { color: el.color, borderColor: el.border, background: el.bg }
+                              }>Dominant</span>
                           )}
                         </motion.div>
                       );
