@@ -22,8 +22,8 @@ export default function LetterAnalysis({ letters }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="rounded-2xl border border-white/20 p-5"
-      style={{ background: "linear-gradient(160deg, rgba(255,255,255,0.12) 0%, rgba(6,182,212,0.06) 100%)", backdropFilter: "blur(4px)", boxShadow: "0 4px 24px rgba(6,182,212,0.08), inset 0 1px 0 rgba(255,255,255,0.10)" }}
+      className="rounded-2xl border p-5"
+      style={{ background: "rgba(15,45,75,0.85)", borderColor: "rgba(255,255,255,0.18)", boxShadow: "0 2px 16px rgba(0,0,0,0.3)" }}
     >
       <p className="font-inter text-xs text-white/40 uppercase tracking-widest mb-4">Letter Analysis</p>
 
