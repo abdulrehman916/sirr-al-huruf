@@ -331,9 +331,9 @@ export default function Home() {
                           }}
                         >
                           <span className={`text-xl ${key === "fire" && isDominant ? "animate-pulse" : ""}`}>{el.icon}</span>
-                          <span className="font-inter text-[10px] uppercase tracking-widest font-medium" style={{ color: isDominant ? (el.arabicColor && el.arabicColor !== '#ffffff' ? el.arabicColor : '#FFFFFF') : el.color }}>{el.name}</span>
+                          <span className="font-inter text-[10px] uppercase tracking-widest font-medium" style={{ color: el.arabicColor !== '#ffffff' ? '#455A64' : '#FFFFFF' }}>{el.name}</span>
                           <span className="font-amiri text-base font-bold" style={{ color: el.arabicColor || '#ffffff' }}>{el.arabic}</span>
-                          <span className="font-amiri text-3xl font-bold" style={{ color: isDominant ? (el.numberColor || '#FFFFFF') : '#FFFFFF', fontWeight: 700 }}>{anasirResult.counts[key]}</span>
+                          <span className="font-amiri text-3xl font-bold" style={{ color: el.arabicColor !== '#ffffff' ? '#263238' : '#FFFFFF', fontWeight: 700 }}>{anasirResult.counts[key]}</span>
                           {isDominant && (
                             <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold mt-0.5"
                               style={key === 'fire'
