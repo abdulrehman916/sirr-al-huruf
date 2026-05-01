@@ -4,10 +4,12 @@ import { ABJAD_MAP } from "../lib/abjadValues";
 export default function LetterAnalysis({ letters }) {
   if (!letters || !letters.length) return null;
 
-  // Frequency map
+  // Frequency map — each letter object has { original, normalized, value }
   const freq = {};
   for (const l of letters) {
-    freq[l.letter] = (freq[l.letter] || 0) + 1;
+    const key = l.normalized || l.letter || l.original;
+    if (!key) continue;
+    freq[key] = (freq[key] || 0) + 1;
   }
 
   const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
