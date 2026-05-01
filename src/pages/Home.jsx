@@ -592,35 +592,76 @@ export default function Home() {
 
                 {/* STEP 7 — Per-Ism Hadim Names */}
                 {hadimResult.ismHadims.length > 0 && (
-                  <Card>
-                    <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest mb-4">Step 7 — Ism Hadim Names</p>
-                    <div className="space-y-4">
-                      {hadimResult.ismHadims.map((item, i) => (
-                        <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                          className="rounded-xl border border-purple-500/20 p-4" style={{ background: "rgba(168,85,247,0.07)" }}>
-                          <div className="flex justify-between items-start gap-3 mb-3" dir="rtl">
-                            <div>
-                              <p className="font-amiri text-base text-white/70 mb-0.5">{item.ism}</p>
-                              <p className="font-inter text-[10px] text-white/35">
-                                {item.total}{item.needed360 ? ` + 360 = ${item.adjusted}` : ""} − {hadimResult.sub} = {item.final}
-                              </p>
-                            </div>
-                            <p className="font-amiri text-3xl font-bold text-white flex-shrink-0" style={{ textShadow: "0 0 16px rgba(168,85,247,0.65)" }}>{item.name}</p>
+                  <div className="space-y-4">
+                    <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest px-1">Step 7 — Ism Hadim Names ({hadimResult.ismHadims.length})</p>
+                    {hadimResult.ismHadims.map((item, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+                        className="rounded-2xl border p-5 space-y-4"
+                        style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(168,85,247,0.35)", boxShadow: "0 4px 24px rgba(0,0,0,0.30), 0 0 18px rgba(168,85,247,0.10)" }}>
+
+                        {/* Ism Header */}
+                        <div className="flex items-center justify-between" dir="rtl">
+                          <div>
+                            <p className="font-inter text-[10px] uppercase tracking-widest text-purple-300/50 mb-1">Ism {i + 1}</p>
+                            <p className="font-amiri text-2xl text-white">{item.ism}</p>
                           </div>
-                          {item.breakdown.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5" dir="rtl">
+                          <div className="rounded-xl border border-purple-500/25 px-4 py-2 text-center" style={{ background: "rgba(168,85,247,0.10)" }}>
+                            <p className="font-inter text-[9px] text-purple-300/50 uppercase tracking-widest">Abjad</p>
+                            <p className="font-inter text-lg font-bold text-white tabular-nums">{item.total}</p>
+                          </div>
+                        </div>
+
+                        <div className="h-px bg-purple-500/15" />
+
+                        {/* Subtraction Step */}
+                        <div className="rounded-xl border border-purple-500/20 px-4 py-3" style={{ background: "rgba(168,85,247,0.06)" }}>
+                          <p className="font-inter text-[10px] uppercase tracking-widest text-purple-300/50 mb-2">Subtraction</p>
+                          <p className="font-inter text-xs text-white/60">
+                            {item.needed360
+                              ? `${item.total} < ${hadimResult.sub} → ${item.total} + 360 = ${item.adjusted} − ${hadimResult.sub} = ${item.final}`
+                              : `${item.total} − ${hadimResult.sub} = ${item.final}`
+                            }
+                          </p>
+                          {item.needed360 && (
+                            <p className="font-inter text-[10px] text-purple-400/50 mt-1">(added 360 because total &lt; {hadimResult.sub})</p>
+                          )}
+                          <div className="flex justify-between items-center mt-2">
+                            <span className="font-inter text-[10px] text-white/40 uppercase tracking-widest">Result</span>
+                            <span className="font-inter text-sm font-bold text-yellow-400 tabular-nums" style={{ textShadow: "0 0 10px rgba(234,179,8,0.45)" }}>{item.final}</span>
+                          </div>
+                        </div>
+
+                        {/* Letter Extraction */}
+                        {item.breakdown.length > 0 && (
+                          <div>
+                            <p className="font-inter text-[10px] uppercase tracking-widest text-purple-300/50 mb-2">
+                              {item.final} → Letters
+                            </p>
+                            <div className="flex flex-wrap gap-2" dir="rtl">
                               {item.breakdown.map((part, pi) => (
-                                <div key={pi} className="flex flex-col items-center rounded-lg border border-purple-500/15 px-2 py-1" style={{ background: "rgba(255,255,255,0.04)" }}>
-                                  <span className="font-amiri text-base text-white">{part.letter}</span>
-                                  <span className="font-inter text-[9px] text-purple-300/60">{part.value}</span>
+                                <div key={pi} className="flex flex-col items-center rounded-xl border border-purple-500/20 px-3 py-2" style={{ background: "rgba(168,85,247,0.09)" }}>
+                                  <span className="font-amiri text-2xl text-white">{part.letter}</span>
+                                  <span className="font-inter text-[10px] text-purple-300/60">{part.value}</span>
                                 </div>
                               ))}
                             </div>
-                          )}
-                        </motion.div>
-                      ))}
-                    </div>
-                  </Card>
+                            <p className="font-inter text-[10px] text-white/35 mt-2" dir="rtl">
+                              {item.breakdown.map(p => `${p.letter}(${p.value})`).join(' + ')}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Final Hadim Name */}
+                        <div className="rounded-xl border border-purple-500/40 p-4 text-center"
+                          style={{ background: "rgba(168,85,247,0.14)", boxShadow: "0 0 20px rgba(168,85,247,0.22)" }}>
+                          <p className="font-inter text-[9px] uppercase tracking-widest text-purple-300/55 mb-1">Hadim Name</p>
+                          <p className="font-amiri text-4xl font-bold text-white" style={{ textShadow: "0 0 24px rgba(168,85,247,0.75)" }}>{item.name}</p>
+                          <p className="font-inter text-[10px] text-purple-400/45 mt-1.5">{item.letters} + ايل</p>
+                        </div>
+
+                      </motion.div>
+                    ))}
+                  </div>
                 )}
 
               </motion.div>
