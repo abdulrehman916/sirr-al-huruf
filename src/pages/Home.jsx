@@ -367,26 +367,26 @@ export default function Home() {
             style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(168,85,247,0.55)", boxShadow: "0 0 28px rgba(168,85,247,0.14), 0 4px 20px rgba(0,0,0,0.35)" }}>
 
             <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
-              style={{ color: "rgba(168,85,247,0.60)" }}>النص العربي</label>
+              style={{ color: "rgba(168,85,247,0.60)" }}>Arabic Text</label>
             <textarea dir="rtl" value={hadimText} onChange={(e) => setHadimText(e.target.value)}
               placeholder="أدخل النص العربي هنا..." rows={3}
               className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
               style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.45)", boxShadow: "0 0 14px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.05)" }} />
 
             <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
-              style={{ color: "rgba(168,85,247,0.60)" }}>المطلوب (اختياري)</label>
+              style={{ color: "rgba(168,85,247,0.60)" }}>Goal / Matloob (Optional)</label>
             <input dir="rtl" type="text" value={hadimMatloob} onChange={(e) => setHadimMatloob(e.target.value)}
               placeholder="مثال: رزق، محبة، فتح..."
               className="w-full rounded-xl px-4 py-3 font-amiri text-lg text-white focus:outline-none caret-white mb-3 placeholder:text-white/30"
               style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.45)", boxShadow: "0 0 14px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.05)" }} />
 
             <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
-              style={{ color: "rgba(168,85,247,0.60)" }}>الأسماء</label>
+              style={{ color: "rgba(168,85,247,0.60)" }}>Ism</label>
             <div className="space-y-2 mb-2">
               {hadimIsms.map((ism, i) => (
                 <div key={i} className="flex gap-2">
                   <input dir="rtl" type="text" value={ism} onChange={(e) => updateHadimIsm(i, e.target.value)}
-                    placeholder={'الاسم ' + (i + 1)}
+                    placeholder={'Ism ' + (i + 1)}
                     className="flex-1 rounded-xl px-4 py-2.5 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
                     style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
                   {hadimIsms.length > 1 && (
@@ -402,14 +402,14 @@ export default function Home() {
             <button onClick={addHadimIsm}
               className="flex items-center gap-1.5 text-xs font-inter text-purple-300/70 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/45 rounded-lg px-3 py-1.5 mb-4 transition-all"
               style={{ background: "rgba(168,85,247,0.06)" }}>
-              <Plus className="w-3.5 h-3.5" /> إضافة اسم
+              <Plus className="w-3.5 h-3.5" /> + Add Ism
             </button>
 
             {/* Type selector */}
             <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
-              style={{ color: "rgba(168,85,247,0.60)" }}>نوع الخادم</label>
+              style={{ color: "rgba(168,85,247,0.60)" }}>Type</label>
             <div className="grid grid-cols-3 gap-2 mb-4">
-              {[['ulvi','علوي','-41'],['sufli','سفلي','-316'],['sherli','شرلي','-319']].map(([key, label, sub]) => (
+              {[['ulvi','Ulvi','−41'],['sufli','Sufli','−316'],['sherli','Sherli','−319']].map(([key, label, sub]) => (
                 <button key={key} onClick={() => setHadimType(key)}
                   className="rounded-xl py-2.5 px-3 text-center border transition-all"
                   style={{
@@ -428,13 +428,13 @@ export default function Home() {
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)", boxShadow: "0 0 32px rgba(168,85,247,0.60), 0 2px 10px rgba(0,0,0,0.3)" }}>
-                <Wand2 className="w-3.5 h-3.5" /> توليد الخادم
+                <Wand2 className="w-3.5 h-3.5" /> Generate Hadim
               </motion.button>
               <motion.button onClick={handleHadimClear} disabled={!hadimText && !hadimResult}
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ background: "rgba(255,255,255,0.04)" }}>
-                <Trash2 className="w-3.5 h-3.5" /> مسح
+                <Trash2 className="w-3.5 h-3.5" /> Clear
               </motion.button>
             </div>
           </div>
