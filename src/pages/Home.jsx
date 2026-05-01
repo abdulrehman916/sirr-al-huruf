@@ -337,7 +337,7 @@ export default function Home() {
                           {isDominant && (
                             <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold mt-0.5"
                               style={key === 'fire'
-                                ? { color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.20)', background: 'linear-gradient(135deg, #E85030, #F07835, #F5A840)', boxShadow: '0 4px 10px rgba(220,90,40,0.30)', letterSpacing: '0.07em', fontWeight: 600, borderRadius: '20px' }
+                                ? { color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.25)', background: 'linear-gradient(135deg, #FF7A4D, #FF9A4D)', boxShadow: '0 3px 8px rgba(0,0,0,0.25)', letterSpacing: '1px', fontWeight: 600, borderRadius: '20px', transform: 'translateY(-1px)' }
                                 : { color: el.color, borderColor: el.border, background: el.bg }
                               }>Dominant</span>
                           )}
