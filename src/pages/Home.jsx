@@ -294,7 +294,7 @@ export default function Home() {
                       initial={{ opacity: 0, scale: 0.97 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className="rounded-2xl p-5 flex items-center justify-between border backdrop-blur-sm"
-                      style={{ background: el.dominantBg || el.bg, borderColor: el.border, boxShadow: `0 4px 24px ${el.glow}`, borderRadius: "16px" }}
+                      style={{ background: el.dominantBg || el.bg, borderColor: el.border, boxShadow: el.dominantShadow || `0 4px 24px ${el.glow}`, borderRadius: "16px" }}
                     >
                       <div>
                         <p className="font-inter text-[10px] uppercase tracking-widest mb-1 font-semibold" style={{ color: el.color }}>Dominant Element</p>
@@ -317,13 +317,14 @@ export default function Home() {
                           key={key}
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          whileHover={{ scale: 1.04 }}
+                          whileHover={{ scale: isDominant && key === 'fire' ? 1.02 : 1.04, filter: isDominant && key === 'fire' ? 'brightness(1.08)' : 'none' }}
                           transition={{ duration: 0.3, delay: i * 0.06 }}
                           className="rounded-xl p-4 flex flex-col items-center gap-1.5 border cursor-default transition-all backdrop-blur-md"
                           style={{
-                            background: "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+                            background: isDominant && key === 'fire' ? "linear-gradient(135deg, rgba(255,107,74,0.20), rgba(255,179,71,0.13))" : "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
                             borderColor: isDominant ? el.color : "rgba(255,255,255,0.08)",
-                            boxShadow: isDominant ? `0 0 20px ${el.glow}, inset 0 1px 0 rgba(255,255,255,0.08)` : "inset 0 1px 0 rgba(255,255,255,0.05)",
+                            boxShadow: isDominant && key === 'fire' ? "0 8px 20px rgba(255,107,74,0.22), inset 0 1px 0 rgba(255,255,255,0.10)" : isDominant ? `0 0 20px ${el.glow}, inset 0 1px 0 rgba(255,255,255,0.08)` : "inset 0 1px 0 rgba(255,255,255,0.05)",
+                            borderRadius: "16px",
                           }}
                         >
                           <span className={`text-xl ${key === "fire" && isDominant ? "animate-pulse" : ""}`}>{el.icon}</span>
