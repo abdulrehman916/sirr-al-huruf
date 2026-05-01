@@ -11,11 +11,36 @@ import ElementInsight from "../components/ElementInsight";
 import HistorySection from "../components/HistorySection";
 import FavoritesSection from "../components/FavoritesSection";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calculator, Trash2, Star, Copy, Share2, Check } from "lucide-react";
+import { Calculator, Trash2, Star, Copy, Share2, Check, Plus, Wand2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 let idCounter = 0;
 const uid = () => `${Date.now()}-${++idCounter}`;
+
+// ── Hadim helpers ─────────────────────────────────────
+const ISTINTAQ_TABLE = [
+  [1000,'غ'],[900,'ظ'],[800,'ض'],[700,'ذ'],[600,'خ'],[500,'ث'],
+  [400,'ت'],[300,'ش'],[200,'ر'],[100,'ق'],
+  [90,'ص'],[80,'ف'],[70,'ع'],[60,'س'],[50,'ن'],[40,'م'],
+  [30,'ل'],[20,'ك'],[10,'ي'],
+  [9,'ط'],[8,'ح'],[7,'ز'],[6,'و'],[5,'ه'],[4,'د'],[3,'ج'],[2,'ب'],[1,'ا'],
+];
+function numToLetters(n) {
+  if (n <= 0) return '';
+  let r = '';
+  for (const [v, l] of ISTINTAQ_TABLE) { while (n >= v) { r += l; n -= v; } }
+  return r;
+}
+const HADIM_SUB = { ulvi: 41, sufli: 316, sherli: 319 };
+function hadimCalc(text, type) {
+  const r = processText(text);
+  const total = r.total;
+  const sub = HADIM_SUB[type];
+  const adjusted = total < sub ? total + 360 : total;
+  const final = adjusted - sub;
+  const letters = numToLetters(final);
+  return { total, adjusted, final, letters, name: letters + 'ايل', needed360: total < sub };
+}
 
 function buildHistoryItem(text, abjadResult, anasirResult) {
   const dominant = anasirResult?.dominant;
@@ -45,6 +70,13 @@ export default function Home() {
   const [anasirProgress, setAnasirProgress] = useState(0);
   const abjadAbort = useRef(false);
   const anasirAbort = useRef(false);
+
+  // ── Hadim state ────────────────────────────────────
+  const [hadimText, setHadimText] = useState("");
+  const [hadimMatloob, setHadimMatloob] = useState("");
+  const [hadimIsms, setHadimIsms] = useState([""]);
+  const [hadimType, setHadimType] = useState("ulvi");
+  const [hadimResult, setHadimResult] = useState(null);
 
   // ── Abjad ──────────────────────────────────────────────
   const handleCalculate = useCallback(async () => {
@@ -85,6 +117,18 @@ export default function Home() {
   }, [anasirInput]);
 
   const handleAnasirClear = () => { anasirAbort.current = true; setAnasirInput(""); setAnasirResult(null); setAnasirLoading(false); };
+
+  // ── Hadim handlers ─────────────────────────────────
+  const addHadimIsm = () => setHadimIsms((p) => [...p, ""]);
+  const removeHadimIsm = (i) => setHadimIsms((p) => p.filter((_, idx) => idx !== i));
+  const updateHadimIsm = (i, v) => setHadimIsms((p) => p.map((x, idx) => idx === i ? v : x));
+  const handleHadimGenerate = () => {
+    if (!hadimText.trim()) return;
+    const main = hadimCalc(hadimText, hadimType);
+    const ismResults = hadimIsms.filter((s) => s.trim()).map((ism) => ({ ism, ...hadimCalc(ism, hadimType) }));
+    setHadimResult({ main, ismResults });
+  };
+  const handleHadimClear = () => { setHadimText(""); setHadimMatloob(""); setHadimIsms([""]); setHadimResult(null); };
 
   // ── Favorites ──────────────────────────────────────────
   const saveToFavorites = (text, abjadResult, anasirResult) => {
@@ -305,6 +349,161 @@ export default function Home() {
         <DividerLine />
 
         {/* ══════════════════════════════════════════
+            HADIM GENERATOR
+        ══════════════════════════════════════════ */}
+        <Section>
+          <motion.div className="text-center mb-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-purple-500/25 mb-4"
+              style={{ background: "linear-gradient(180deg, rgba(168,85,247,0.22) 0%, rgba(168,85,247,0.10) 100%)", boxShadow: "0 0 24px rgba(168,85,247,0.18)" }}>
+              <span className="font-amiri text-2xl text-purple-300">خ</span>
+            </div>
+            <h2 className="font-amiri text-4xl sm:text-5xl font-bold text-white">مولّد الخادم</h2>
+            <p className="font-inter text-xs text-purple-400/55 mt-1.5 tracking-widest uppercase font-medium">Hadim Generator</p>
+            <Divider color="purple" />
+          </motion.div>
+
+          {/* Input Card */}
+          <div className="rounded-2xl border p-5"
+            style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(168,85,247,0.55)", boxShadow: "0 0 28px rgba(168,85,247,0.14), 0 4px 20px rgba(0,0,0,0.35)" }}>
+
+            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
+              style={{ color: "rgba(168,85,247,0.60)" }}>النص العربي</label>
+            <textarea dir="rtl" value={hadimText} onChange={(e) => setHadimText(e.target.value)}
+              placeholder="أدخل النص العربي هنا..." rows={3}
+              className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
+              style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.45)", boxShadow: "0 0 14px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.05)" }} />
+
+            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
+              style={{ color: "rgba(168,85,247,0.60)" }}>المطلوب (اختياري)</label>
+            <input dir="rtl" type="text" value={hadimMatloob} onChange={(e) => setHadimMatloob(e.target.value)}
+              placeholder="مثال: رزق، محبة، فتح..."
+              className="w-full rounded-xl px-4 py-3 font-amiri text-lg text-white focus:outline-none caret-white mb-3 placeholder:text-white/30"
+              style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.45)", boxShadow: "0 0 14px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.05)" }} />
+
+            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
+              style={{ color: "rgba(168,85,247,0.60)" }}>الأسماء</label>
+            <div className="space-y-2 mb-2">
+              {hadimIsms.map((ism, i) => (
+                <div key={i} className="flex gap-2">
+                  <input dir="rtl" type="text" value={ism} onChange={(e) => updateHadimIsm(i, e.target.value)}
+                    placeholder={'الاسم ' + (i + 1)}
+                    className="flex-1 rounded-xl px-4 py-2.5 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
+                    style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
+                  {hadimIsms.length > 1 && (
+                    <button onClick={() => removeHadimIsm(i)}
+                      className="p-2.5 rounded-xl border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-all"
+                      style={{ background: "rgba(239,68,68,0.06)" }}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button onClick={addHadimIsm}
+              className="flex items-center gap-1.5 text-xs font-inter text-purple-300/70 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/45 rounded-lg px-3 py-1.5 mb-4 transition-all"
+              style={{ background: "rgba(168,85,247,0.06)" }}>
+              <Plus className="w-3.5 h-3.5" /> إضافة اسم
+            </button>
+
+            {/* Type selector */}
+            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
+              style={{ color: "rgba(168,85,247,0.60)" }}>نوع الخادم</label>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {[['ulvi','علوي','-41'],['sufli','سفلي','-316'],['sherli','شرلي','-319']].map(([key, label, sub]) => (
+                <button key={key} onClick={() => setHadimType(key)}
+                  className="rounded-xl py-2.5 px-3 text-center border transition-all"
+                  style={{
+                    background: hadimType === key ? "rgba(168,85,247,0.22)" : "rgba(255,255,255,0.04)",
+                    borderColor: hadimType === key ? "rgba(168,85,247,0.65)" : "rgba(255,255,255,0.12)",
+                    boxShadow: hadimType === key ? "0 0 16px rgba(168,85,247,0.28)" : "none",
+                  }}>
+                  <p className="font-amiri text-base font-bold text-white">{label}</p>
+                  <p className="font-inter text-[10px] mt-0.5" style={{ color: hadimType === key ? "rgba(200,170,255,0.80)" : "rgba(255,255,255,0.35)" }}>{sub}</p>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <motion.button onClick={handleHadimGenerate} disabled={!hadimText.trim()}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)", boxShadow: "0 0 32px rgba(168,85,247,0.60), 0 2px 10px rgba(0,0,0,0.3)" }}>
+                <Wand2 className="w-3.5 h-3.5" /> توليد الخادم
+              </motion.button>
+              <motion.button onClick={handleHadimClear} disabled={!hadimText && !hadimResult}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: "rgba(255,255,255,0.04)" }}>
+                <Trash2 className="w-3.5 h-3.5" /> مسح
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Results */}
+          <AnimatePresence mode="wait">
+            {hadimResult && (
+              <motion.div key="hadim-results" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3 mt-3">
+
+                {/* Main result */}
+                <Card>
+                  <p className="font-inter text-[10px] text-white/35 uppercase tracking-widest mb-4">النتيجة الرئيسية</p>
+                  <div className="space-y-2" dir="rtl">
+                    <div className="flex justify-between items-center">
+                      <span className="font-amiri text-base text-white/70">قيمة الأبجد</span>
+                      <span className="font-inter text-sm font-bold text-white tabular-nums">{hadimResult.main.total}</span>
+                    </div>
+                    {hadimResult.main.needed360 && (
+                      <div className="flex justify-between items-center">
+                        <span className="font-amiri text-sm text-white/50">+ 360 (تصحيح)</span>
+                        <span className="font-inter text-xs text-purple-400/70 tabular-nums">{hadimResult.main.adjusted}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="font-amiri text-base text-white/70">بعد الطرح</span>
+                      <span className="font-inter text-sm font-bold text-yellow-400 tabular-nums" style={{ textShadow: "0 0 10px rgba(234,179,8,0.50)" }}>{hadimResult.main.final}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-amiri text-base text-white/70">الحروف</span>
+                      <span className="font-amiri text-xl text-white">{hadimResult.main.letters}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-purple-500/25 p-4 text-center"
+                    style={{ background: "rgba(168,85,247,0.10)", boxShadow: "0 0 20px rgba(168,85,247,0.15)" }}>
+                    <p className="font-inter text-[10px] text-purple-400/60 uppercase tracking-widest mb-1">الخادم</p>
+                    <p className="font-amiri text-4xl font-bold text-white" style={{ textShadow: "0 0 24px rgba(168,85,247,0.70)" }}>{hadimResult.main.name}</p>
+                  </div>
+                </Card>
+
+                {/* Ism results */}
+                {hadimResult.ismResults.length > 0 && (
+                  <Card>
+                    <p className="font-inter text-[10px] text-white/35 uppercase tracking-widest mb-4">نتائج الأسماء</p>
+                    <div className="space-y-3">
+                      {hadimResult.ismResults.map((item, i) => (
+                        <motion.div key={i} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+                          className="rounded-xl border border-purple-500/18 p-3" dir="rtl"
+                          style={{ background: "rgba(168,85,247,0.07)" }}>
+                          <div className="flex justify-between items-start gap-2">
+                            <div>
+                              <p className="font-amiri text-sm text-white/55 mb-0.5">{item.ism}</p>
+                              <p className="font-inter text-[10px] text-white/30">{item.total} → {item.final} → {item.letters}</p>
+                            </div>
+                            <p className="font-amiri text-2xl text-white flex-shrink-0" style={{ textShadow: "0 0 14px rgba(168,85,247,0.55)" }}>{item.name}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Section>
+
+        <DividerLine />
+
+        {/* ══════════════════════════════════════════
             FAVORITES
         ══════════════════════════════════════════ */}
         <FavoritesSection favorites={favorites} onRemove={removeFavorite} />
@@ -356,7 +555,7 @@ function TotalCard({ total }) {
 }
 
 function Divider({ color }) {
-  const c = color === "yellow" ? "yellow-500" : "cyan-500";
+  const c = color === "yellow" ? "yellow-500" : color === "purple" ? "purple-500" : "cyan-500";
   return (
     <div className="mt-4 flex items-center justify-center gap-3">
       <div className={`h-px w-12 bg-gradient-to-r from-transparent to-${c}/70`} />
