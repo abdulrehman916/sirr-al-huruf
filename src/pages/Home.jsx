@@ -317,20 +317,23 @@ export default function Home() {
                           key={key}
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          whileHover={{ scale: isDominant && key === 'fire' ? 1.02 : 1.04, filter: isDominant && key === 'fire' ? 'brightness(1.06)' : 'none' }}
+                          whileHover={{ scale: isDominant && key === 'fire' ? 1.03 : 1.04, filter: isDominant && key === 'fire' ? 'brightness(1.05)' : 'none' }}
                           transition={{ duration: 0.3, delay: i * 0.06 }}
                           className="rounded-xl p-4 flex flex-col items-center gap-1.5 border cursor-default transition-all backdrop-blur-md"
                           style={{
-                            background: isDominant && key === 'fire' ? "linear-gradient(135deg, rgba(255,107,74,0.20), rgba(255,179,71,0.13))" : "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
-                            borderColor: isDominant ? el.color : "rgba(255,255,255,0.08)",
-                            boxShadow: isDominant && key === 'fire' ? "0 8px 20px rgba(255,107,74,0.22), inset 0 1px 0 rgba(255,255,255,0.10)" : isDominant ? `0 0 20px ${el.glow}, inset 0 1px 0 rgba(255,255,255,0.08)` : "inset 0 1px 0 rgba(255,255,255,0.05)",
+                            background: isDominant && key === 'fire'
+                              ? `${el.dominantBg}, linear-gradient(to bottom, rgba(255,255,255,0.13), transparent)`
+                              : "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+                            border: isDominant && key === 'fire' ? el.dominantBorder : undefined,
+                            borderColor: isDominant && key !== 'fire' ? el.color : isDominant ? undefined : "rgba(255,255,255,0.08)",
+                            boxShadow: isDominant && key === 'fire' ? el.dominantShadow : isDominant ? `0 0 20px ${el.glow}, inset 0 1px 0 rgba(255,255,255,0.08)` : "inset 0 1px 0 rgba(255,255,255,0.05)",
                             borderRadius: "16px",
                           }}
                         >
                           <span className={`text-xl ${key === "fire" && isDominant ? "animate-pulse" : ""}`}>{el.icon}</span>
-                          <span className="font-inter text-[10px] uppercase tracking-widest font-medium" style={{ color: isDominant ? el.color : "rgba(255,255,255,0.6)" }}>{el.name}</span>
+                          <span className="font-inter text-[10px] uppercase tracking-widest font-medium" style={{ color: isDominant && key === 'fire' ? '#FFFFFF' : isDominant ? el.color : "rgba(255,255,255,0.6)", textShadow: isDominant && key === 'fire' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none' }}>{el.name}</span>
                           <span className="font-amiri text-base font-bold" style={{ color: isDominant ? (el.arabicColor || "#fff") : "rgba(255,255,255,0.5)", textShadow: isDominant && key === "fire" ? "0 0 4px rgba(255,80,0,0.5)" : isDominant ? `0 0 8px ${el.glow}` : "none" }}>{el.arabic}</span>
-                          <span className="font-amiri text-3xl font-bold" style={{ color: isDominant ? (el.numberColor || el.color) : "rgba(255,255,255,0.85)" }}>{anasirResult.counts[key]}</span>
+                          <span className="font-amiri text-3xl font-bold" style={{ color: isDominant ? (el.numberColor || el.color) : "rgba(255,255,255,0.85)", textShadow: isDominant && key === 'fire' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none' }}>{anasirResult.counts[key]}</span>
                           {isDominant && (
                             <span className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-semibold mt-0.5"
                               style={{ color: el.color, borderColor: el.border, background: el.bg }}>Dominant</span>
