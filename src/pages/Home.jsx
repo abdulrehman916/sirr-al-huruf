@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { analyzeText, ELEMENTS } from "../lib/anasirValues";
+import { processTextAsync, analyzeTextAsync } from "../lib/asyncProcessor";
 import { processText } from "../lib/abjadValues";
 import AnasirLetterGrid from "../components/AnasirLetterGrid";
 import LetterGrid from "../components/LetterGrid";
@@ -37,30 +38,52 @@ export default function Home() {
   const [history, setHistory] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [abjadLoading, setAbjadLoading] = useState(false);
+  const [abjadProgress, setAbjadProgress] = useState(0);
+  const [anasirLoading, setAnasirLoading] = useState(false);
+  const [anasirProgress, setAnasirProgress] = useState(0);
+  const abjadAbort = useRef(false);
+  const anasirAbort = useRef(false);
 
   // ── Abjad ──────────────────────────────────────────────
-  const handleCalculate = useCallback(() => {
+  const handleCalculate = useCallback(async () => {
     if (!input.trim()) return;
-    const r = processText(input);
-    setResult(r);
-    const ar = analyzeText(input);
-    const item = buildHistoryItem(input, r, ar);
-    setHistory((h) => [item, ...h].slice(0, 20));
+    abjadAbort.current = false;
+    setAbjadLoading(true);
+    setAbjadProgress(0);
+    setResult(null);
+    const r = await processTextAsync(input, (p) => { if (!abjadAbort.current) setAbjadProgress(p); });
+    if (!abjadAbort.current) {
+      setResult(r);
+      const ar = analyzeText(input);
+      const item = buildHistoryItem(input, r, ar);
+      setHistory((h) => [item, ...h].slice(0, 20));
+    }
+    setAbjadLoading(false);
   }, [input]);
 
-  const handleClear = () => { setInput(""); setResult(null); };
+  const handleClear = () => { abjadAbort.current = true; setInput(""); setResult(null); setAbjadLoading(false); };
 
   // ── Anasir ─────────────────────────────────────────────
-  const handleAnasirAnalyze = useCallback(() => {
+  const handleAnasirAnalyze = useCallback(async () => {
     if (!anasirInput.trim()) return;
-    const ar = analyzeText(anasirInput);
-    setAnasirResult(ar);
-    const r = processText(anasirInput);
-    const item = buildHistoryItem(anasirInput, r, ar);
-    setHistory((h) => [item, ...h].slice(0, 20));
+    anasirAbort.current = false;
+    setAnasirLoading(true);
+    setAnasirProgress(0);
+    setAnasirResult(null);
+    const [ar, r] = await Promise.all([
+      analyzeTextAsync(anasirInput, (p) => { if (!anasirAbort.current) setAnasirProgress(p); }),
+      processTextAsync(anasirInput),
+    ]);
+    if (!anasirAbort.current) {
+      setAnasirResult(ar);
+      const item = buildHistoryItem(anasirInput, r, ar);
+      setHistory((h) => [item, ...h].slice(0, 20));
+    }
+    setAnasirLoading(false);
   }, [anasirInput]);
 
-  const handleAnasirClear = () => { setAnasirInput(""); setAnasirResult(null); };
+  const handleAnasirClear = () => { anasirAbort.current = true; setAnasirInput(""); setAnasirResult(null); setAnasirLoading(false); };
 
   // ── Favorites ──────────────────────────────────────────
   const saveToFavorites = (text, abjadResult, anasirResult) => {
@@ -134,6 +157,8 @@ export default function Home() {
             onClear={handleClear}
             hasResult={!!result}
             accentColor="yellow"
+            loading={abjadLoading}
+            progress={abjadProgress}
           />
 
           <AnimatePresence mode="wait">
@@ -186,6 +211,8 @@ export default function Home() {
             hasResult={!!anasirResult}
             accentColor="cyan"
             buttonLabel="Analyze Elements"
+            loading={anasirLoading}
+            progress={anasirProgress}
           />
 
           <AnimatePresence mode="wait">
@@ -341,8 +368,9 @@ function DividerLine() {
   );
 }
 
-function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentColor, buttonLabel = "Calculate" }) {
+function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentColor, buttonLabel = "Calculate", loading = false, progress = 0 }) {
   const isYellow = accentColor === "yellow";
+  const accentHex = isYellow ? "rgba(234,179,8," : "rgba(6,182,212,";
   return (
     <div className="rounded-2xl border p-5"
       style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)", borderColor: isYellow ? "rgba(234,179,8,0.15)" : "rgba(6,182,212,0.15)" }}>
@@ -359,28 +387,49 @@ function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentCol
         className="w-full bg-black/30 border rounded-xl px-4 py-3 font-amiri text-xl text-white placeholder:text-white/25 leading-relaxed resize-none focus:outline-none transition-all duration-200 caret-white mb-3"
         style={{ borderColor: isYellow ? "rgba(234,179,8,0.2)" : "rgba(6,182,212,0.2)" }}
       />
+
+      {/* Progress bar — visible while loading */}
+      {loading && (
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-inter text-[10px] text-white/40 animate-pulse">Analyzing…</span>
+            <span className="font-inter text-[10px]" style={{ color: isYellow ? "rgba(234,179,8,0.6)" : "rgba(6,182,212,0.6)" }}>{progress}%</span>
+          </div>
+          <div className="h-1 w-full rounded-full bg-white/8 overflow-hidden">
+            <motion.div
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.15 }}
+              className="h-full rounded-full"
+              style={{ background: isYellow ? "linear-gradient(90deg,#f59e0b,#d97706)" : "linear-gradient(90deg,#06b6d4,#3b82f6)" }}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <motion.button
           onClick={onCalculate}
-          disabled={!value.trim()}
+          disabled={!value.trim() || loading}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a]"
           style={{ background: isYellow ? "linear-gradient(135deg,#f59e0b,#d97706)" : "linear-gradient(135deg,#06b6d4,#3b82f6)" }}
         >
-          <Calculator className="w-3.5 h-3.5" />
-          {buttonLabel}
+          {loading
+            ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            : <Calculator className="w-3.5 h-3.5" />}
+          {loading ? "Analyzing…" : buttonLabel}
         </motion.button>
         <motion.button
           onClick={onClear}
-          disabled={!value && !hasResult}
+          disabled={!value && !hasResult && !loading}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/50 hover:text-white font-inter text-sm border border-white/10 hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ background: "rgba(255,255,255,0.04)" }}
         >
           <Trash2 className="w-3.5 h-3.5" />
-          Clear
+          {loading ? "Cancel" : "Clear"}
         </motion.button>
       </div>
     </div>
