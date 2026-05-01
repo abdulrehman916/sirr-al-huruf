@@ -294,7 +294,7 @@ export default function Home() {
                       initial={{ opacity: 0, scale: 0.97 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className="rounded-2xl p-5 flex items-center justify-between border backdrop-blur-sm"
-                      style={{ background: el.bg, borderColor: el.border, boxShadow: `0 0 30px ${el.glow}` }}
+                      style={{ background: el.dominantBg || el.bg, borderColor: el.border, boxShadow: `0 4px 24px ${el.glow}`, borderRadius: "16px" }}
                     >
                       <div>
                         <p className="font-inter text-[10px] uppercase tracking-widest mb-1 font-semibold" style={{ color: el.color }}>Dominant Element</p>

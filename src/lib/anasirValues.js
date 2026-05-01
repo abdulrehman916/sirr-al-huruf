@@ -7,9 +7,10 @@ export const ELEMENTS = {
     color: "#FF8C42",
     arabicColor: "#ffffff",
     numberColor: "#FFD0B0",
-    glow: "rgba(255, 107, 74, 0.30)",
-    bg: "linear-gradient(135deg, rgba(255,107,74,0.18), rgba(255,140,66,0.12))",
-    border: "rgba(255, 107, 74, 0.45)",
+    glow: "rgba(255, 107, 74, 0.22)",
+    bg: "linear-gradient(135deg, rgba(255,107,74,0.22), rgba(255,140,66,0.16))",
+    dominantBg: "linear-gradient(135deg, #FF6B4A, #FF8C42)",
+    border: "rgba(255, 107, 74, 0.40)",
     icon: "🔥",
   },
   air: {
