@@ -14,6 +14,20 @@ function norm(char) {
   return NORMALIZE_MAP[char] || char;
 }
 
+/**
+ * Strip spaces, punctuation, diacritics (tashkeel), and non-Arabic characters,
+ * then normalize letter variants before any processing.
+ */
+export function preprocessArabic(text) {
+  return text
+    // Remove tashkeel (Arabic diacritics U+0610–U+061A, U+064B–U+065F, U+0670)
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '')
+    // Remove tatweel (kashida)
+    .replace(/\u0640/g, '')
+    // Remove everything except Arabic letter codepoints and their variants
+    .replace(/[^\u0600-\u06FF]/g, '');
+}
+
 // Yield to the browser between chunks so the UI stays responsive
 function tick() {
   return new Promise((r) => setTimeout(r, 0));
@@ -24,6 +38,7 @@ function tick() {
  * Returns { total, count, letters } — same shape as processText().
  */
 export async function processTextAsync(text, onProgress) {
+  text = preprocessArabic(text);
   let abjadTotal = 0;
   let count = 0;
   const letters = [];
@@ -62,6 +77,7 @@ for (const [key, el] of Object.entries(ELEMENTS)) {
  * Returns { counts, percentages, total, dominant, letterDetails }
  */
 export async function analyzeTextAsync(text, onProgress) {
+  text = preprocessArabic(text);
   const counts = { fire: 0, air: 0, water: 0, earth: 0 };
   // For very large texts we skip building full letterDetails array (performance)
   // but still count accurately. We cap letterDetails at 500 for rendering.

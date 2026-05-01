@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { analyzeText, ELEMENTS } from "../lib/anasirValues";
-import { processTextAsync, analyzeTextAsync } from "../lib/asyncProcessor";
+import { processTextAsync, analyzeTextAsync, preprocessArabic } from "../lib/asyncProcessor";
 import { processText } from "../lib/abjadValues";
 import AnasirLetterGrid from "../components/AnasirLetterGrid";
 import LetterGrid from "../components/LetterGrid";
@@ -55,7 +55,7 @@ export default function Home() {
     const r = await processTextAsync(input, (p) => { if (!abjadAbort.current) setAbjadProgress(p); });
     if (!abjadAbort.current) {
       setResult(r);
-      const ar = analyzeText(input);
+      const ar = analyzeText(preprocessArabic(input));
       const item = buildHistoryItem(input, r, ar);
       setHistory((h) => [item, ...h].slice(0, 20));
     }
@@ -73,7 +73,7 @@ export default function Home() {
     setAnasirResult(null);
     const [ar, r] = await Promise.all([
       analyzeTextAsync(anasirInput, (p) => { if (!anasirAbort.current) setAnasirProgress(p); }),
-      processTextAsync(anasirInput),
+      processTextAsync(anasirInput, undefined),
     ]);
     if (!anasirAbort.current) {
       setAnasirResult(ar);
