@@ -31,16 +31,12 @@ function numToLetters(n) {
   for (const [v, l] of ISTINTAQ_TABLE) { while (n >= v) { r += l; n -= v; } }
   return r;
 }
-const HADIM_SUB = { ulvi: 41, sufli: 316, sherli: 319 };
-function hadimCalc(text, type) {
-  const r = processText(text);
-  const total = r.total;
-  const sub = HADIM_SUB[type];
-  const adjusted = total < sub ? total + 360 : total;
-  const final = adjusted - sub;
-  const letters = numToLetters(final);
-  return { total, adjusted, final, letters, name: letters + 'ايل', needed360: total < sub };
+function numToLettersBreakdown(n) {
+  const parts = [];
+  for (const [v, l] of ISTINTAQ_TABLE) { while (n >= v) { parts.push({ value: v, letter: l }); n -= v; } }
+  return parts;
 }
+const HADIM_SUB = { ulvi: 41, sufli: 316, sherli: 319 };
 
 function buildHistoryItem(text, abjadResult, anasirResult) {
   const dominant = anasirResult?.dominant;
@@ -72,6 +68,7 @@ export default function Home() {
   const anasirAbort = useRef(false);
 
   // ── Hadim state ────────────────────────────────────
+  const [hadimSeekerName, setHadimSeekerName] = useState("");
   const [hadimText, setHadimText] = useState("");
   const [hadimMatloob, setHadimMatloob] = useState("");
   const [hadimIsms, setHadimIsms] = useState([""]);
@@ -124,11 +121,30 @@ export default function Home() {
   const updateHadimIsm = (i, v) => setHadimIsms((p) => p.map((x, idx) => idx === i ? v : x));
   const handleHadimGenerate = () => {
     if (!hadimText.trim()) return;
-    const main = hadimCalc(hadimText, hadimType);
-    const ismResults = hadimIsms.filter((s) => s.trim()).map((ism) => ({ ism, ...hadimCalc(ism, hadimType) }));
-    setHadimResult({ main, ismResults });
+    const seekerR = hadimSeekerName.trim() ? processText(hadimSeekerName) : null;
+    const matloobR = hadimMatloob.trim() ? processText(hadimMatloob) : null;
+    const mainR = processText(hadimText);
+    const ismRs = hadimIsms.filter((s) => s.trim()).map((ism) => ({ ism, r: processText(ism) }));
+    const grandTotal = (seekerR?.total || 0) + (matloobR?.total || 0) + mainR.total + ismRs.reduce((a, x) => a + x.r.total, 0);
+    const sub = HADIM_SUB[hadimType];
+    const needed360 = grandTotal < sub;
+    const adjusted = needed360 ? grandTotal + 360 : grandTotal;
+    const final = adjusted - sub;
+    const letters = numToLetters(final);
+    const ismHadims = ismRs.map(({ ism, r }) => {
+      const iNeeded = r.total < sub;
+      const iAdj = iNeeded ? r.total + 360 : r.total;
+      const iFinal = iAdj - sub;
+      const iLetters = numToLetters(iFinal);
+      return { ism, total: r.total, needed360: iNeeded, adjusted: iAdj, final: iFinal, letters: iLetters, name: iLetters + 'ايل', breakdown: numToLettersBreakdown(iFinal), letterDetails: r.letters };
+    });
+    setHadimResult({
+      seekerR, matloobR, mainR, ismRs, grandTotal, sub, needed360, adjusted, final,
+      letters, name: letters + 'ايل', breakdown: numToLettersBreakdown(final), ismHadims,
+      type: hadimType,
+    });
   };
-  const handleHadimClear = () => { setHadimText(""); setHadimMatloob(""); setHadimIsms([""]); setHadimResult(null); };
+  const handleHadimClear = () => { setHadimSeekerName(""); setHadimText(""); setHadimMatloob(""); setHadimIsms([""]); setHadimResult(null); };
 
   // ── Favorites ──────────────────────────────────────────
   const saveToFavorites = (text, abjadResult, anasirResult) => {
@@ -362,75 +378,92 @@ export default function Home() {
             <Divider color="purple" />
           </motion.div>
 
-          {/* Input Card */}
-          <div className="rounded-2xl border p-5"
+          {/* ── Input Card ── */}
+          <div className="rounded-2xl border p-5 space-y-4"
             style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(168,85,247,0.55)", boxShadow: "0 0 28px rgba(168,85,247,0.14), 0 4px 20px rgba(0,0,0,0.35)" }}>
 
-            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
-              style={{ color: "rgba(168,85,247,0.60)" }}>Arabic Text</label>
-            <textarea dir="rtl" value={hadimText} onChange={(e) => setHadimText(e.target.value)}
-              placeholder="أدخل النص العربي هنا..." rows={3}
-              className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
-              style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.45)", boxShadow: "0 0 14px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.05)" }} />
-
-            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
-              style={{ color: "rgba(168,85,247,0.60)" }}>Goal / Matloob (Optional)</label>
-            <input dir="rtl" type="text" value={hadimMatloob} onChange={(e) => setHadimMatloob(e.target.value)}
-              placeholder="مثال: رزق، محبة، فتح..."
-              className="w-full rounded-xl px-4 py-3 font-amiri text-lg text-white focus:outline-none caret-white mb-3 placeholder:text-white/30"
-              style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.45)", boxShadow: "0 0 14px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.05)" }} />
-
-            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
-              style={{ color: "rgba(168,85,247,0.60)" }}>Ism</label>
-            <div className="space-y-2 mb-2">
-              {hadimIsms.map((ism, i) => (
-                <div key={i} className="flex gap-2">
-                  <input dir="rtl" type="text" value={ism} onChange={(e) => updateHadimIsm(i, e.target.value)}
-                    placeholder={'Ism ' + (i + 1)}
-                    className="flex-1 rounded-xl px-4 py-2.5 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
-                    style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
-                  {hadimIsms.length > 1 && (
-                    <button onClick={() => removeHadimIsm(i)}
-                      className="p-2.5 rounded-xl border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-all"
-                      style={{ background: "rgba(239,68,68,0.06)" }}>
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            <button onClick={addHadimIsm}
-              className="flex items-center gap-1.5 text-xs font-inter text-purple-300/70 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/45 rounded-lg px-3 py-1.5 mb-4 transition-all"
-              style={{ background: "rgba(168,85,247,0.06)" }}>
-              <Plus className="w-3.5 h-3.5" /> + Add Ism
-            </button>
-
-            {/* Type selector */}
-            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2"
-              style={{ color: "rgba(168,85,247,0.60)" }}>Type</label>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {[['ulvi','Ulvi','−41'],['sufli','Sufli','−316'],['sherli','Sherli','−319']].map(([key, label, sub]) => (
-                <button key={key} onClick={() => setHadimType(key)}
-                  className="rounded-xl py-2.5 px-3 text-center border transition-all"
-                  style={{
-                    background: hadimType === key ? "rgba(168,85,247,0.22)" : "rgba(255,255,255,0.04)",
-                    borderColor: hadimType === key ? "rgba(168,85,247,0.65)" : "rgba(255,255,255,0.12)",
-                    boxShadow: hadimType === key ? "0 0 16px rgba(168,85,247,0.28)" : "none",
-                  }}>
-                  <p className="font-amiri text-base font-bold text-white">{label}</p>
-                  <p className="font-inter text-[10px] mt-0.5" style={{ color: hadimType === key ? "rgba(200,170,255,0.80)" : "rgba(255,255,255,0.35)" }}>{sub}</p>
-                </button>
-              ))}
+            {/* Seeker Name */}
+            <div>
+              <label className="block font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(168,85,247,0.70)" }}>Your Name</label>
+              <input dir="rtl" type="text" value={hadimSeekerName} onChange={(e) => setHadimSeekerName(e.target.value)}
+                placeholder="اسمك..."
+                className="w-full rounded-xl px-4 py-2.5 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
+                style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
             </div>
 
-            <div className="flex gap-2">
+            {/* Target / Matloob */}
+            <div>
+              <label className="block font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(168,85,247,0.70)" }}>Target / Desire</label>
+              <input dir="rtl" type="text" value={hadimMatloob} onChange={(e) => setHadimMatloob(e.target.value)}
+                placeholder="رزق، محبة، فتح..."
+                className="w-full rounded-xl px-4 py-2.5 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
+                style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
+            </div>
+
+            {/* Main Arabic Text */}
+            <div>
+              <label className="block font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(168,85,247,0.70)" }}>Arabic Text (Ayah / Surah / Phrase)</label>
+              <textarea dir="rtl" value={hadimText} onChange={(e) => setHadimText(e.target.value)}
+                placeholder="أدخل النص العربي هنا..." rows={4}
+                className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/30"
+                style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.45)", boxShadow: "0 0 14px rgba(168,85,247,0.10), inset 0 1px 0 rgba(255,255,255,0.05)" }} />
+            </div>
+
+            {/* Ism Fields */}
+            <div>
+              <label className="block font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(168,85,247,0.70)" }}>Ism (Names)</label>
+              <div className="space-y-2 mb-2">
+                {hadimIsms.map((ism, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input dir="rtl" type="text" value={ism} onChange={(e) => updateHadimIsm(i, e.target.value)}
+                      placeholder={'Ism ' + (i + 1)}
+                      className="flex-1 rounded-xl px-4 py-2.5 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
+                      style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }} />
+                    {hadimIsms.length > 1 && (
+                      <button onClick={() => removeHadimIsm(i)}
+                        className="p-2.5 rounded-xl border border-red-500/20 text-red-400/50 hover:text-red-400 hover:border-red-500/40 transition-all"
+                        style={{ background: "rgba(239,68,68,0.06)" }}>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button onClick={addHadimIsm}
+                className="flex items-center gap-1.5 text-xs font-inter text-purple-300/70 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/45 rounded-lg px-3 py-1.5 transition-all"
+                style={{ background: "rgba(168,85,247,0.06)" }}>
+                <Plus className="w-3.5 h-3.5" /> + Add Ism
+              </button>
+            </div>
+
+            {/* Type Selector */}
+            <div>
+              <label className="block font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(168,85,247,0.70)" }}>Type</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[['ulvi','Ulvi','−41'],['sufli','Sufli','−316'],['sherli','Sherli','−319']].map(([key, label, sub]) => (
+                  <button key={key} onClick={() => setHadimType(key)}
+                    className="rounded-xl py-2.5 px-3 text-center border transition-all"
+                    style={{
+                      background: hadimType === key ? "rgba(168,85,247,0.22)" : "rgba(255,255,255,0.04)",
+                      borderColor: hadimType === key ? "rgba(168,85,247,0.65)" : "rgba(255,255,255,0.12)",
+                      boxShadow: hadimType === key ? "0 0 16px rgba(168,85,247,0.28)" : "none",
+                    }}>
+                    <p className="font-inter text-sm font-bold text-white">{label}</p>
+                    <p className="font-inter text-[10px] mt-0.5" style={{ color: hadimType === key ? "rgba(200,170,255,0.80)" : "rgba(255,255,255,0.35)" }}>{sub}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-1">
               <motion.button onClick={handleHadimGenerate} disabled={!hadimText.trim()}
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)", boxShadow: "0 0 32px rgba(168,85,247,0.60), 0 2px 10px rgba(0,0,0,0.3)" }}>
+                style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)", boxShadow: "0 0 32px rgba(168,85,247,0.55), 0 2px 10px rgba(0,0,0,0.3)" }}>
                 <Wand2 className="w-3.5 h-3.5" /> Generate Hadim
               </motion.button>
-              <motion.button onClick={handleHadimClear} disabled={!hadimText && !hadimResult}
+              <motion.button onClick={handleHadimClear} disabled={!hadimText && !hadimResult && !hadimSeekerName}
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ background: "rgba(255,255,255,0.04)" }}>
@@ -439,57 +472,151 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Results */}
+          {/* ── Results ── */}
           <AnimatePresence mode="wait">
             {hadimResult && (
-              <motion.div key="hadim-results" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3 mt-3">
+              <motion.div key="hadim-results" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
 
-                {/* Main result */}
+                {/* STEP 1 — Input Analysis */}
                 <Card>
-                  <p className="font-inter text-[10px] text-white/35 uppercase tracking-widest mb-4">النتيجة الرئيسية</p>
-                  <div className="space-y-2" dir="rtl">
-                    <div className="flex justify-between items-center">
-                      <span className="font-amiri text-base text-white/70">قيمة الأبجد</span>
-                      <span className="font-inter text-sm font-bold text-white tabular-nums">{hadimResult.main.total}</span>
-                    </div>
-                    {hadimResult.main.needed360 && (
-                      <div className="flex justify-between items-center">
-                        <span className="font-amiri text-sm text-white/50">+ 360 (تصحيح)</span>
-                        <span className="font-inter text-xs text-purple-400/70 tabular-nums">{hadimResult.main.adjusted}</span>
+                  <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest mb-4">Step 1 — Abjad Analysis per Field</p>
+                  <div className="space-y-3">
+                    {[
+                      hadimResult.seekerR && { label: "Your Name", text: hadimSeekerName, total: hadimResult.seekerR.total, letters: hadimResult.seekerR.letters },
+                      hadimResult.matloobR && { label: "Target / Desire", text: hadimMatloob, total: hadimResult.matloobR.total, letters: hadimResult.matloobR.letters },
+                      { label: "Main Text", text: hadimText, total: hadimResult.mainR.total, letters: hadimResult.mainR.letters },
+                    ].filter(Boolean).map((field, fi) => (
+                      <div key={fi} className="rounded-xl border border-purple-500/15 p-3" style={{ background: "rgba(168,85,247,0.06)" }}>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/60">{field.label}</span>
+                          <span className="font-inter text-xs font-bold text-white tabular-nums">{field.total}</span>
+                        </div>
+                        <p className="font-amiri text-base text-white/60 mb-2" dir="rtl">{field.text}</p>
+                        <div className="flex flex-wrap gap-1.5" dir="rtl">
+                          {field.letters.map((l, li) => (
+                            <div key={li} className="flex flex-col items-center rounded-lg border border-purple-500/15 px-2 py-1" style={{ background: "rgba(255,255,255,0.04)" }}>
+                              <span className="font-amiri text-base text-white">{l.original}</span>
+                              <span className="font-inter text-[9px] text-purple-300/70">{l.value}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    )}
-                    <div className="flex justify-between items-center">
-                      <span className="font-amiri text-base text-white/70">بعد الطرح</span>
-                      <span className="font-inter text-sm font-bold text-yellow-400 tabular-nums" style={{ textShadow: "0 0 10px rgba(234,179,8,0.50)" }}>{hadimResult.main.final}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-amiri text-base text-white/70">الحروف</span>
-                      <span className="font-amiri text-xl text-white">{hadimResult.main.letters}</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 rounded-xl border border-purple-500/25 p-4 text-center"
-                    style={{ background: "rgba(168,85,247,0.10)", boxShadow: "0 0 20px rgba(168,85,247,0.15)" }}>
-                    <p className="font-inter text-[10px] text-purple-400/60 uppercase tracking-widest mb-1">الخادم</p>
-                    <p className="font-amiri text-4xl font-bold text-white" style={{ textShadow: "0 0 24px rgba(168,85,247,0.70)" }}>{hadimResult.main.name}</p>
+                    ))}
                   </div>
                 </Card>
 
-                {/* Ism results */}
-                {hadimResult.ismResults.length > 0 && (
+                {/* STEP 2 — Grand Total */}
+                <Card>
+                  <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest mb-4">Step 2 — Total Summary</p>
+                  <div className="space-y-2" dir="rtl">
+                    {hadimResult.seekerR && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-amiri text-base text-white/60">اسمك</span>
+                        <span className="font-inter text-xs text-white/70 tabular-nums">{hadimResult.seekerR.total}</span>
+                      </div>
+                    )}
+                    {hadimResult.matloobR && (
+                      <div className="flex justify-between items-center">
+                        <span className="font-amiri text-base text-white/60">المطلوب</span>
+                        <span className="font-inter text-xs text-white/70 tabular-nums">{hadimResult.matloobR.total}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="font-amiri text-base text-white/60">النص الرئيسي</span>
+                      <span className="font-inter text-xs text-white/70 tabular-nums">{hadimResult.mainR.total}</span>
+                    </div>
+                    {hadimResult.ismRs.length > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="font-amiri text-base text-white/60">الأسماء ({hadimResult.ismRs.length})</span>
+                        <span className="font-inter text-xs text-white/70 tabular-nums">{hadimResult.ismRs.reduce((a,x)=>a+x.r.total,0)}</span>
+                      </div>
+                    )}
+                    <div className="h-px bg-purple-500/20 my-1" />
+                    <div className="flex justify-between items-center">
+                      <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/60">Grand Total</span>
+                      <span className="font-inter text-lg font-bold text-white tabular-nums" style={{ textShadow: "0 0 12px rgba(168,85,247,0.70)" }}>{hadimResult.grandTotal}</span>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* STEP 3+4 — Type & Subtraction */}
+                <Card>
+                  <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest mb-4">Step 3–4 — Type &amp; Subtraction</p>
+                  <div className="rounded-xl border border-purple-500/20 p-3 mb-3" style={{ background: "rgba(168,85,247,0.07)" }}>
+                    <p className="font-inter text-xs text-white/50 mb-2">
+                      {hadimResult.needed360
+                        ? `Total ${hadimResult.grandTotal} < ${hadimResult.sub} → add 360 → ${hadimResult.grandTotal + 360} − ${hadimResult.sub} = ${hadimResult.final}`
+                        : `Total ${hadimResult.grandTotal} ≥ ${hadimResult.sub} → ${hadimResult.grandTotal} − ${hadimResult.sub} = ${hadimResult.final}`
+                      }
+                    </p>
+                    {hadimResult.needed360 && (
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-amiri text-sm text-white/50">+ 360 (adjustment)</span>
+                        <span className="font-inter text-xs text-purple-400/70 tabular-nums">{hadimResult.adjusted}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="font-amiri text-base text-white/70">After Subtraction (−{hadimResult.sub})</span>
+                      <span className="font-inter text-sm font-bold text-yellow-400 tabular-nums" style={{ textShadow: "0 0 10px rgba(234,179,8,0.50)" }}>{hadimResult.final}</span>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* STEP 5 — Istintaq */}
+                <Card>
+                  <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest mb-4">Step 5 — Istintaq (Number → Letters)</p>
+                  <div className="mb-3">
+                    <p className="font-inter text-xs text-white/40 mb-2">{hadimResult.final} →</p>
+                    <div className="flex flex-wrap gap-2" dir="rtl">
+                      {hadimResult.breakdown.map((part, pi) => (
+                        <div key={pi} className="flex flex-col items-center rounded-xl border border-purple-500/20 px-3 py-2" style={{ background: "rgba(168,85,247,0.08)" }}>
+                          <span className="font-amiri text-2xl text-white">{part.letter}</span>
+                          <span className="font-inter text-[10px] text-purple-300/60">{part.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-amiri text-base text-white/60">Extracted Letters</span>
+                    <span className="font-amiri text-xl text-white" dir="rtl">{hadimResult.letters}</span>
+                  </div>
+                </Card>
+
+                {/* STEP 6 — Final Hadim Name */}
+                <div className="rounded-2xl border border-purple-500/40 p-6 text-center"
+                  style={{ background: "rgba(168,85,247,0.12)", boxShadow: "0 0 32px rgba(168,85,247,0.25)" }}>
+                  <p className="font-inter text-[10px] text-purple-300/60 uppercase tracking-widest mb-1">Step 6 — Final Hadim Name</p>
+                  <p className="font-amiri text-5xl font-bold text-white mt-2" style={{ textShadow: "0 0 28px rgba(168,85,247,0.80)" }}>{hadimResult.name}</p>
+                  <p className="font-inter text-xs text-purple-400/50 mt-2">{hadimResult.letters} + ايل</p>
+                </div>
+
+                {/* STEP 7 — Per-Ism Hadim Names */}
+                {hadimResult.ismHadims.length > 0 && (
                   <Card>
-                    <p className="font-inter text-[10px] text-white/35 uppercase tracking-widest mb-4">نتائج الأسماء</p>
-                    <div className="space-y-3">
-                      {hadimResult.ismResults.map((item, i) => (
-                        <motion.div key={i} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
-                          className="rounded-xl border border-purple-500/18 p-3" dir="rtl"
-                          style={{ background: "rgba(168,85,247,0.07)" }}>
-                          <div className="flex justify-between items-start gap-2">
+                    <p className="font-inter text-[10px] text-purple-300/50 uppercase tracking-widest mb-4">Step 7 — Ism Hadim Names</p>
+                    <div className="space-y-4">
+                      {hadimResult.ismHadims.map((item, i) => (
+                        <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
+                          className="rounded-xl border border-purple-500/20 p-4" style={{ background: "rgba(168,85,247,0.07)" }}>
+                          <div className="flex justify-between items-start gap-3 mb-3" dir="rtl">
                             <div>
-                              <p className="font-amiri text-sm text-white/55 mb-0.5">{item.ism}</p>
-                              <p className="font-inter text-[10px] text-white/30">{item.total} → {item.final} → {item.letters}</p>
+                              <p className="font-amiri text-base text-white/70 mb-0.5">{item.ism}</p>
+                              <p className="font-inter text-[10px] text-white/35">
+                                {item.total}{item.needed360 ? ` + 360 = ${item.adjusted}` : ""} − {hadimResult.sub} = {item.final}
+                              </p>
                             </div>
-                            <p className="font-amiri text-2xl text-white flex-shrink-0" style={{ textShadow: "0 0 14px rgba(168,85,247,0.55)" }}>{item.name}</p>
+                            <p className="font-amiri text-3xl font-bold text-white flex-shrink-0" style={{ textShadow: "0 0 16px rgba(168,85,247,0.65)" }}>{item.name}</p>
                           </div>
+                          {item.breakdown.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5" dir="rtl">
+                              {item.breakdown.map((part, pi) => (
+                                <div key={pi} className="flex flex-col items-center rounded-lg border border-purple-500/15 px-2 py-1" style={{ background: "rgba(255,255,255,0.04)" }}>
+                                  <span className="font-amiri text-base text-white">{part.letter}</span>
+                                  <span className="font-inter text-[9px] text-purple-300/60">{part.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </motion.div>
                       ))}
                     </div>
