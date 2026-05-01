@@ -12,6 +12,7 @@ import HistorySection from "../components/HistorySection";
 import FavoritesSection from "../components/FavoritesSection";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, Trash2, Star, Copy, Share2, Check } from "lucide-react";
+import { Link } from "react-router-dom";
 
 let idCounter = 0;
 const uid = () => `${Date.now()}-${++idCounter}`;
@@ -138,6 +139,11 @@ export default function Home() {
         {/* Ambient glow */}
         <div className="pointer-events-none absolute inset-0 z-0" style={{ background: "radial-gradient(ellipse 90% 55% at 50% 18%, rgba(56,189,248,0.20) 0%, rgba(99,102,241,0.08) 50%, transparent 75%)" }} />
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center relative z-10">
+          <Link to="/hadim-kasem"
+            className="inline-flex items-center gap-2 mb-6 text-xs font-inter uppercase tracking-widest border border-purple-500/30 rounded-full px-4 py-1.5 text-purple-300/70 hover:text-purple-200 hover:border-purple-400/60 transition-all"
+            style={{ background: "rgba(168,85,247,0.08)", boxShadow: "0 0 18px rgba(168,85,247,0.15)" }}>
+            <span className="font-amiri text-base">خ</span> Hadim &amp; Kasem Generator
+          </Link>
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-yellow-500/20 mb-5"
             style={{ background: "linear-gradient(180deg, rgba(234,179,8,0.22) 0%, rgba(234,179,8,0.10) 100%)", boxShadow: "0 0 24px rgba(234,179,8,0.15)" }}>
             <span className="font-amiri text-3xl text-yellow-400">ح</span>
