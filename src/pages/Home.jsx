@@ -129,7 +129,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0d1b2a] via-[#0f1f30] to-[#0a1520] text-white font-inter relative overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#102340] via-[#132b4a] to-[#0d1e35] text-white font-inter relative overflow-x-hidden">
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-12 sm:py-16 space-y-12">
 
         {/* ══════════════════════════════════════════
@@ -137,7 +137,7 @@ export default function Home() {
         ══════════════════════════════════════════ */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-yellow-500/20 mb-5"
-            style={{ background: "linear-gradient(180deg, rgba(234,179,8,0.12) 0%, rgba(234,179,8,0.04) 100%)" }}>
+            style={{ background: "linear-gradient(180deg, rgba(234,179,8,0.22) 0%, rgba(234,179,8,0.10) 100%)", boxShadow: "0 0 24px rgba(234,179,8,0.15)" }}>
             <span className="font-amiri text-3xl text-yellow-400">ح</span>
           </div>
           <h1 className="font-amiri text-5xl sm:text-6xl font-bold text-white">سرّ الحروف</h1>
@@ -195,7 +195,7 @@ export default function Home() {
         <Section>
           <motion.div className="text-center mb-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-cyan-500/25 mb-4"
-              style={{ background: "linear-gradient(180deg, rgba(6,182,212,0.12) 0%, rgba(6,182,212,0.04) 100%)" }}>
+              style={{ background: "linear-gradient(180deg, rgba(6,182,212,0.22) 0%, rgba(6,182,212,0.10) 100%)", boxShadow: "0 0 24px rgba(6,182,212,0.15)" }}>
               <span className="text-2xl">🌊</span>
             </div>
             <h2 className="font-amiri text-4xl sm:text-5xl font-bold text-white">حاسبة العناصر</h2>
@@ -330,8 +330,8 @@ function SectionLabel({ children }) {
 
 function Card({ children }) {
   return (
-    <div className="rounded-2xl border border-white/8 p-5"
-      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)" }}>
+    <div className="rounded-2xl border border-white/20 p-5"
+      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.05) 100%)" }}>
       {children}
     </div>
   );
@@ -351,9 +351,9 @@ function Divider({ color }) {
   const c = color === "yellow" ? "yellow-500" : "cyan-500";
   return (
     <div className="mt-4 flex items-center justify-center gap-3">
-      <div className={`h-px w-12 bg-gradient-to-r from-transparent to-${c}/40`} />
-      <div className={`w-1.5 h-1.5 rounded-full bg-${c}/50`} />
-      <div className={`h-px w-12 bg-gradient-to-l from-transparent to-${c}/40`} />
+      <div className={`h-px w-12 bg-gradient-to-r from-transparent to-${c}/70`} />
+      <div className={`w-1.5 h-1.5 rounded-full bg-${c}/80`} />
+      <div className={`h-px w-12 bg-gradient-to-l from-transparent to-${c}/70`} />
     </div>
   );
 }
@@ -361,9 +361,9 @@ function Divider({ color }) {
 function DividerLine() {
   return (
     <div className="flex items-center gap-4 py-4">
-      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-      <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
-      <div className="flex-1 h-px bg-gradient-to-l from-transparent via-white/15 to-transparent" />
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+      <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+      <div className="flex-1 h-px bg-gradient-to-l from-transparent via-white/30 to-transparent" />
     </div>
   );
 }
@@ -373,7 +373,7 @@ function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentCol
   const accentHex = isYellow ? "rgba(234,179,8," : "rgba(6,182,212,";
   return (
     <div className="rounded-2xl border p-5"
-      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)", borderColor: isYellow ? "rgba(234,179,8,0.15)" : "rgba(6,182,212,0.15)" }}>
+      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.05) 100%)", borderColor: isYellow ? "rgba(234,179,8,0.40)" : "rgba(6,182,212,0.40)" }}>
       <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5"
         style={{ color: isYellow ? "rgba(234,179,8,0.5)" : "rgba(6,182,212,0.5)" }}>
         Arabic Text Input
@@ -384,7 +384,7 @@ function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentCol
         onChange={(e) => onChange(e.target.value)}
         placeholder="أدخل النص العربي هنا..."
         rows={4}
-        className="w-full bg-black/30 border rounded-xl px-4 py-3 font-amiri text-xl text-white placeholder:text-white/25 leading-relaxed resize-none focus:outline-none transition-all duration-200 caret-white mb-3"
+        className="w-full bg-black/20 border rounded-xl px-4 py-3 font-amiri text-xl text-white placeholder:text-white/40 leading-relaxed resize-none focus:outline-none transition-all duration-200 caret-white mb-3"
         style={{ borderColor: isYellow ? "rgba(234,179,8,0.2)" : "rgba(6,182,212,0.2)" }}
       />
 
@@ -413,7 +413,7 @@ function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentCol
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a]"
-          style={{ background: isYellow ? "linear-gradient(135deg,#f59e0b,#d97706)" : "linear-gradient(135deg,#06b6d4,#3b82f6)" }}
+          style={{ background: isYellow ? "linear-gradient(135deg,#f59e0b,#d97706)" : "linear-gradient(135deg,#06b6d4,#3b82f6)", boxShadow: isYellow ? "0 0 20px rgba(245,158,11,0.45)" : "0 0 20px rgba(6,182,212,0.45)" }}
         >
           {loading
             ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />

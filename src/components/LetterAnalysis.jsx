@@ -22,22 +22,22 @@ export default function LetterAnalysis({ letters }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="rounded-2xl border border-white/8 p-5"
-      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)" }}
+      className="rounded-2xl border border-white/20 p-5"
+      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.05) 100%)" }}
     >
       <p className="font-inter text-xs text-white/40 uppercase tracking-widest mb-4">Letter Analysis</p>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 mb-5">
-        <div className="rounded-xl border border-white/8 px-4 py-3" style={{ background: "rgba(255,255,255,0.03)" }}>
-          <p className="font-inter text-[10px] text-white/35 uppercase tracking-widest mb-1">Most Repeated</p>
+        <div className="rounded-xl border border-white/20 px-4 py-3" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <p className="font-inter text-[10px] text-white/60 uppercase tracking-widest mb-1">Most Repeated</p>
           <div className="flex items-center gap-2">
             <span className="font-amiri text-2xl text-white">{mostRepeated?.[0]}</span>
             <span className="font-inter text-xs text-white/50">×{mostRepeated?.[1]}</span>
           </div>
         </div>
-        <div className="rounded-xl border border-white/8 px-4 py-3" style={{ background: "rgba(255,255,255,0.03)" }}>
-          <p className="font-inter text-[10px] text-white/35 uppercase tracking-widest mb-1">Highest Abjad</p>
+        <div className="rounded-xl border border-white/20 px-4 py-3" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <p className="font-inter text-[10px] text-white/60 uppercase tracking-widest mb-1">Highest Abjad</p>
           <div className="flex items-center gap-2">
             <span className="font-amiri text-2xl text-white">{highestAbjad?.[0]}</span>
             <span className="font-inter text-xs text-yellow-400/70">{ABJAD_MAP[highestAbjad?.[0]]}</span>
@@ -46,12 +46,12 @@ export default function LetterAnalysis({ letters }) {
       </div>
 
       {/* Frequency bars */}
-      <p className="font-inter text-[10px] text-white/30 uppercase tracking-widest mb-3">Letter Frequency</p>
+      <p className="font-inter text-[10px] text-white/60 uppercase tracking-widest mb-3">Letter Frequency</p>
       <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
         {sorted.map(([letter, count]) => (
           <div key={letter} className="flex items-center gap-3">
             <span className="font-amiri text-base text-white w-6 text-center flex-shrink-0">{letter}</span>
-            <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
+            <div className="flex-1 h-1.5 rounded-full bg-white/20 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${(count / maxCount) * 100}%` }}
@@ -59,8 +59,8 @@ export default function LetterAnalysis({ letters }) {
                 className="h-full rounded-full bg-gradient-to-r from-yellow-500/70 to-yellow-400/50"
               />
             </div>
-            <span className="font-inter text-[10px] text-white/35 w-4 text-right flex-shrink-0">{count}</span>
-            <span className="font-inter text-[10px] text-white/20 w-6 text-right flex-shrink-0">{ABJAD_MAP[letter] || '—'}</span>
+            <span className="font-inter text-[10px] text-white/60 w-4 text-right flex-shrink-0">{count}</span>
+            <span className="font-inter text-[10px] text-white/40 w-6 text-right flex-shrink-0">{ABJAD_MAP[letter] || '—'}</span>
           </div>
         ))}
       </div>
