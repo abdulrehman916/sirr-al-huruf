@@ -4,18 +4,18 @@ import { ABJAD_MAP } from "../lib/abjadValues";
 export default function LetterAnalysis({ letters }) {
   if (!letters || !letters.length) return null;
 
-  // Frequency map — each letter object has { original, normalized, value }
+  // Build frequency map keyed by normalized letter
   const freq = {};
   for (const l of letters) {
-    const key = l.normalized || l.letter || l.original;
-    if (!key) continue;
+    const key = l.normalized ?? l.original;
+    if (!key || !(key in ABJAD_MAP)) continue;
     freq[key] = (freq[key] || 0) + 1;
   }
 
   const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
   const maxCount = sorted[0]?.[1] || 1;
-  const mostRepeated = sorted[0];
-  const highestAbjad = Object.entries(freq).sort((a, b) => (ABJAD_MAP[b[0]] || 0) - (ABJAD_MAP[a[0]] || 0))[0];
+  const mostRepeated = sorted[0] ?? null;
+  const highestAbjad = [...sorted].sort((a, b) => (ABJAD_MAP[b[0]] || 0) - (ABJAD_MAP[a[0]] || 0))[0] ?? null;
 
   return (
     <motion.div
