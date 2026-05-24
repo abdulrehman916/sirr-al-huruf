@@ -74,57 +74,45 @@ export default function Home() {
         <div className="relative flex items-center justify-center" style={{ width: 560, height: 560 }}>
           <SacredWheel />
           {/* Central logo on top */}
+          {/* Central Allah calligraphy — pure floating, no box */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.4, ease: "easeOut" }}
             className="absolute z-20 flex items-center justify-center"
           >
+            {/* Soft divine aura — no border, no background */}
             <motion.div
-              className="flex flex-col items-center justify-center"
-              style={{ position: "relative" }}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: 160, height: 160,
+                background: "radial-gradient(circle, rgba(212,175,55,0.30) 0%, rgba(212,175,55,0.08) 50%, transparent 78%)",
+                filter: "blur(20px)",
+              }}
+              animate={{ scale: [1, 1.4, 1], opacity: [0.45, 1, 0.45] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* الله — bare luminous calligraphy */}
+            <motion.span
+              className="font-amiri font-bold relative z-10 select-none"
+              style={{
+                fontSize: "3.6rem",
+                color: "#D4AF37",
+                lineHeight: 1,
+                letterSpacing: "0.03em",
+              }}
+              animate={{
+                textShadow: [
+                  "0 0 16px rgba(212,175,55,0.55), 0 0 40px rgba(212,175,55,0.75), 0 0 80px rgba(212,175,55,0.30)",
+                  "0 0 24px rgba(212,175,55,0.80), 0 0 60px rgba(212,175,55,1.00), 0 0 120px rgba(212,175,55,0.50)",
+                  "0 0 16px rgba(212,175,55,0.55), 0 0 40px rgba(212,175,55,0.75), 0 0 80px rgba(212,175,55,0.30)",
+                ],
+                y: [0, -3, 0],
+              }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              {/* Breathing aura behind the word */}
-              <motion.div
-                className="absolute rounded-full"
-                style={{ width: 110, height: 110, background: "radial-gradient(circle, rgba(212,175,55,0.28) 0%, rgba(212,175,55,0.06) 55%, transparent 80%)", filter: "blur(14px)" }}
-                animate={{ scale: [1, 1.35, 1], opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-              {/* Inner rotating micro-seal ring */}
-              <motion.div
-                className="absolute rounded-full"
-                style={{ width: 96, height: 96, border: "1px solid rgba(212,175,55,0.35)", boxShadow: "0 0 12px rgba(212,175,55,0.25)" }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-              />
-              <motion.div
-                className="absolute rounded-full"
-                style={{ width: 78, height: 78, border: "1px dashed rgba(212,175,55,0.20)" }}
-                animate={{ rotate: -360 }}
-                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-              />
-              {/* الله text */}
-              <motion.span
-                className="font-amiri font-bold relative z-10"
-                style={{
-                  fontSize: "clamp(2rem, 8vw, 2.8rem)",
-                  color: "#D4AF37",
-                  textShadow: "0 0 12px rgba(212,175,55,0.5), 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.4)",
-                  letterSpacing: "0.02em",
-                  lineHeight: 1,
-                }}
-                animate={{
-                  textShadow: [
-                    "0 0 12px rgba(212,175,55,0.5), 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3)",
-                    "0 0 18px rgba(212,175,55,0.7), 0 0 50px rgba(212,175,55,1.0), 0 0 90px rgba(212,175,55,0.5)",
-                    "0 0 12px rgba(212,175,55,0.5), 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3)",
-                  ]
-                }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                الله
-              </motion.span>
-            </motion.div>
+              الله
+            </motion.span>
           </motion.div>
         </div>
 
