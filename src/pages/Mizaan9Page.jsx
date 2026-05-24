@@ -112,6 +112,59 @@ function AnasirBreakdownCard({ counts, percentages, total }) {
   );
 }
 
+// ── Second Mizan card ──
+function SecondMizaanCard({ dominant, bast2Value, tiebreak }) {
+  if (!dominant || bast2Value == null) return null;
+  const el = MIZAAN_ELEMENTS[dominant];
+  const s  = EL_STYLE[dominant];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+      className="rounded-2xl border p-5 space-y-3"
+      style={{ background: "rgba(6,14,36,0.98)", borderColor: G.borderHi, boxShadow: `0 0 36px ${G.glow}` }}>
+      <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+        الميزان الثاني — Second Mizan
+      </p>
+
+      {/* Element badge */}
+      <div className="flex items-center justify-center gap-2">
+        <span style={{ fontSize: "1.4rem" }}>{el.icon}</span>
+        <span className="font-inter text-sm font-bold uppercase tracking-widest" style={{ color: s.color }}>{el.labelTR}</span>
+        <span className="font-amiri text-base" style={{ color: s.color, opacity: 0.7 }}>{el.arabic}</span>
+      </div>
+
+      {/* Bast2 value */}
+      <div className="text-center">
+        <motion.p
+          className="font-inter font-bold tabular-nums"
+          style={{ fontSize: "clamp(2.2rem,10vw,3.2rem)", color: G.text }}
+          animate={{ textShadow: [`0 0 20px ${G.glow}`, `0 0 50px ${G.glowHi}`, `0 0 20px ${G.glow}`] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+          {bast2Value.toLocaleString()}
+        </motion.p>
+        <p className="font-inter text-[9px] uppercase tracking-widest mt-1" style={{ color: G.dim }}>Bast-ı Sani</p>
+      </div>
+
+      {/* Letters of this element */}
+      <div className="flex flex-wrap gap-1.5 justify-center pt-1">
+        {el.letters.map((letter, i) => (
+          <span key={i}
+            className="font-amiri text-xl rounded-lg border px-2.5 py-1"
+            style={{ color: s.color, background: s.bg, borderColor: s.border }}>
+            {letter}
+          </span>
+        ))}
+      </div>
+
+      {tiebreak?.rankName && (
+        <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: G.dim, opacity: 0.6 }}>
+          Resolved by {tiebreak.rankName}
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
 // ── Dominant element card ──
 function DominantCard({ dominant, tiebreak }) {
   if (!dominant) return null;
@@ -260,6 +313,9 @@ export default function Mizaan9Page() {
 
               {/* Dominant element */}
               <DominantCard dominant={result.dominant} tiebreak={result.tiebreak} />
+
+              {/* Second Mizan */}
+              <SecondMizaanCard dominant={result.dominant} bast2Value={result.bast2Value} tiebreak={result.tiebreak} />
 
             </motion.div>
           )}

@@ -14,11 +14,19 @@ const MIZAAN_BAST1 = {
 };
 
 // ── Own element map (fire/water/air/earth), letters in Mertebe rank order ──
+// Second Mizan Bast values per element (from the book)
+const MIZAAN_BAST2 = {
+  fire:  3550,
+  earth: 4015,
+  air:   3757,
+  water: 3342,
+};
+
 const MIZAAN_ELEMENTS = {
-  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'] },
-  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','ض'] },
-  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ت','ظ'] },
-  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'الأرض',  icon: '🪨', letters: ['ب','و','ي','ن','ص','ث','غ'] },
+  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'],        bast2: 3550 },
+  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'الأرض',  icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'],        bast2: 4015 },
+  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'],        bast2: 3757 },
+  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'],        bast2: 3342 },
 };
 
 const MIZAAN_RANK_NAMES = ['Mertebe','Derece','Dakika','Saniye','Salise','Rabia','Hamise'];
@@ -101,7 +109,9 @@ function mBuildResult(text, letters, counts) {
     }
   }
 
-  return { text, letters, letterCount, bast1Total, counts, percentages, dominant, tiebreak };
+  const bast2Value = dominant ? (MIZAAN_ELEMENTS[dominant]?.bast2 ?? null) : null;
+
+  return { text, letters, letterCount, bast1Total, counts, percentages, dominant, tiebreak, bast2Value };
 }
 
 // ── Synchronous analysis ──
@@ -151,4 +161,4 @@ export async function mizaanAnalyzeAsync(text, onProgress) {
 }
 
 // ── Element metadata export (for UI only) ──
-export { MIZAAN_ELEMENTS, MIZAAN_RANK_NAMES };
+export { MIZAAN_ELEMENTS, MIZAAN_RANK_NAMES, MIZAAN_BAST2 };
