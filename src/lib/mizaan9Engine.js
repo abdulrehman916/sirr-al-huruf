@@ -16,7 +16,7 @@ const MIZAAN_BAST1 = {
 // ── Element map — letters in Mertebe rank order ──
 export const MIZAAN_ELEMENTS = {
   fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 3550 },
-  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'الأرض',  icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 4015 },
+  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'التراب', icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 4015 },
   air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 3757 },
   water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 3342 },
 };
