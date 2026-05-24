@@ -54,6 +54,7 @@ export function calcKebir(text) {
     .filter(l => l.normalized in KABIR_MAP)
     .map(l => ({ ...l, value: KABIR_MAP[l.normalized] }));
   const total = letters.reduce((s, l) => s + l.value, 0);
+  console.log('[calcKebir] input:', text, 'letters:', letters, 'total:', total);
   return { letters, total };
 }
 
@@ -79,6 +80,7 @@ export function calcSaghir(text) {
   const activeLetters = letters.filter(l => !l.sakit);
   const total = activeLetters.reduce((s, l) => s + l.saghir, 0);
   const sakitLetters = letters.filter(l => l.sakit);
+  console.log('[calcSaghir] input:', text, 'letters:', letters.length, 'active:', activeLetters.length, 'total:', total);
   return { letters, activeLetters, sakitLetters, total };
 }
 
@@ -113,6 +115,7 @@ export function calcCumeli(text) {
     return { original: l.original, normalized: l.normalized, name, nameLetters, nameTotal };
   });
   const total = entries.reduce((s, e) => s + e.nameTotal, 0);
+  console.log('[calcCumeli] input:', text, 'entries:', entries.length, 'total:', total);
   return { entries, total };
 }
 
@@ -165,5 +168,6 @@ export function calcBast(text, bastLevel = 1) {
   });
 
   const total = entries.reduce((s, e) => s + e.entryTotal, 0);
+  console.log('[calcBast] input:', text, 'bastLevel:', bastLevel, 'entries:', entries.length, 'total:', total);
   return { entries, total, bastLevel };
 }

@@ -312,20 +312,25 @@ export default function AbjadKabirPage() {
   const { state, setState } = STATE_MAP[mode];
   const { input, result }   = state;
 
-  const performCalculation = useCallback(() => {
-    if (!input.trim()) return;
-    const calcFn = modeObj.calc;
-    const resultValue = mode === "bast" ? calcFn(input, bastLevel) : calcFn(input);
+  const performCalculation = useCallback((inputValue = input) => {
+    console.log('[performCalculation] mode:', mode, 'input:', inputValue, 'bastLevel:', bastLevel);
+    if (!inputValue.trim()) {
+      console.log('[performCalculation] empty input, returning');
+      return;
+    }
+    const calcFn = MODES.find(m => m.key === mode).calc;
+    const resultValue = mode === "bast" ? calcFn(inputValue, bastLevel) : calcFn(inputValue);
+    console.log('[performCalculation] result:', resultValue);
     setState(prev => ({ ...prev, result: resultValue }));
     // Save to history
     setHistory(prev => [{
       mode,
-      input,
+      input: inputValue,
       bastLevel: mode === "bast" ? bastLevel : null,
       result: resultValue,
       timestamp: new Date().toLocaleTimeString(),
     }, ...prev.slice(0, 19)]);
-  }, [input, modeObj, setState, mode, bastLevel]);
+  }, [mode, bastLevel, setState]);
 
   const handleCalculate = useCallback(() => performCalculation(), [performCalculation]);
 
@@ -337,10 +342,10 @@ export default function AbjadKabirPage() {
       return;
     }
     debounceTimerRef.current = setTimeout(() => {
-      performCalculation();
+      performCalculation(input);
     }, 300);
     return () => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); };
-  }, [input, mode, bastLevel, performCalculation]);
+  }, [input, mode, bastLevel]);
 
   const handleModeChange = (key) => {
     setMode(key);
