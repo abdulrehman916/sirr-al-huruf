@@ -5,6 +5,7 @@ import { processText } from "../lib/abjadValues";
 import PageLayout from "../components/PageLayout";
 import HadimTypePanel from "../components/HadimTypePanel";
 import HadimKasem from "../components/HadimKasem";
+import HadimZikr from "../components/HadimZikr";
 
 // ── Positional lookup maps ──
 const UNITS_MAP    = { 1:'ا', 2:'ب', 3:'ج', 4:'د', 5:'ه', 6:'و', 7:'ز', 8:'ح', 9:'ط' };
@@ -382,6 +383,14 @@ export default function HadimPage() {
                   hadimMode={hadimMode}
                   individuals={result.individuals}
                   grandTypes={result.grandTypes}
+                />
+              </motion.div>
+
+              {/* Zikr Count */}
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: result.individuals.length * 0.07 + 0.40 }}>
+                <HadimZikr
+                  hadimMode={hadimMode}
+                  grandSum={result.grandSum}
                 />
               </motion.div>
 
