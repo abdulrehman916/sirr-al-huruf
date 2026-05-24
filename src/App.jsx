@@ -7,9 +7,10 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Add page imports here
 import Home from './pages/Home';
-import AnasirDomination from './pages/AnasirDomination';
-import AnasirCalculator from './pages/AnasirCalculator';
-import HadimKasem from './pages/HadimKasem';
+import AbjadPage from './pages/AbjadPage';
+import AnasirPage from './pages/AnasirPage';
+import HadimPage from './pages/HadimPage';
+import Mizaan9Page from './pages/Mizaan9Page';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -38,9 +39,10 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/anasir" element={<AnasirDomination />} />
-      <Route path="/anasir-calculator" element={<AnasirCalculator />} />
-      <Route path="/hadim-kasem" element={<HadimKasem />} />
+      <Route path="/abjad" element={<AbjadPage />} />
+      <Route path="/anasir" element={<AnasirPage />} />
+      <Route path="/hadim" element={<HadimPage />} />
+      <Route path="/mizaan9" element={<Mizaan9Page />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
