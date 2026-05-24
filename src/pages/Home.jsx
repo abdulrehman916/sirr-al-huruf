@@ -209,8 +209,7 @@ export default function Home() {
               ) : (
                 <Link
                   to={card.path}
-                  onMouseDown={startNav}
-                  onTouchStart={startNav}
+                  onClick={startNav}
                   className="block rounded-2xl border p-5 flex flex-col items-center text-center transition-all duration-300"
                   style={{
                     background: card.bg,

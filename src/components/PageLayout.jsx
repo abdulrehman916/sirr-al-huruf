@@ -69,9 +69,8 @@ export default function PageLayout({ children, accentColor = "gold" }) {
           {/* Back Home */}
           <Link
             to="/"
-            onMouseDown={startNav}
-            onTouchStart={startNav}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all"
+            onClick={startNav}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all active:scale-95"
             style={{
               background: "rgba(212,175,55,0.08)",
               border: "1px solid rgba(212,175,55,0.25)",
@@ -79,6 +78,7 @@ export default function PageLayout({ children, accentColor = "gold" }) {
               WebkitTapHighlightColor: "transparent",
               touchAction: "manipulation",
               transform: "translateZ(0)",
+              userSelect: "none",
             }}
           >
             <ArrowRight className="w-3.5 h-3.5 rotate-180" />
@@ -93,9 +93,8 @@ export default function PageLayout({ children, accentColor = "gold" }) {
                 <Link
                   key={tab.id}
                   to={tab.path}
-                  onMouseDown={startNav}
-                  onTouchStart={startNav}
-                  className="relative flex flex-col items-center py-1.5 px-1 rounded-lg transition-all duration-300"
+                  onClick={startNav}
+                  className="relative flex flex-col items-center py-1.5 px-1 rounded-lg transition-all duration-300 active:scale-95"
                   style={isActive ? {
                     background: "linear-gradient(135deg, rgba(212,175,55,0.28), rgba(212,175,55,0.12))",
                     border: "1px solid rgba(212,175,55,0.45)",
