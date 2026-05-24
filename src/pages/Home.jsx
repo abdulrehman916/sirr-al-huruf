@@ -71,7 +71,7 @@ export default function Home() {
 
       <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pb-8">
         {/* Sacred Wheel + Logo */}
-        <div className="relative flex items-center justify-center" style={{ width: 560, height: 560 }}>
+        <div className="relative flex items-center justify-center" style={{ width: 500, height: 500 }}>
           <SacredWheel />
           {/* Central logo on top */}
           {/* Central Allah calligraphy — pure floating, no box */}
@@ -81,31 +81,31 @@ export default function Home() {
             transition={{ duration: 1.4, ease: "easeOut" }}
             className="absolute z-20 flex items-center justify-center"
           >
-            {/* Soft divine aura — no border, no background */}
+            {/* Soft divine aura — refined, not excessive */}
             <motion.div
               className="absolute rounded-full pointer-events-none"
               style={{
-                width: 160, height: 160,
-                background: "radial-gradient(circle, rgba(212,175,55,0.30) 0%, rgba(212,175,55,0.08) 50%, transparent 78%)",
-                filter: "blur(20px)",
+                width: 130, height: 130,
+                background: "radial-gradient(circle, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.05) 55%, transparent 80%)",
+                filter: "blur(16px)",
               }}
-              animate={{ scale: [1, 1.4, 1], opacity: [0.45, 1, 0.45] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ scale: [1, 1.25, 1], opacity: [0.40, 0.85, 0.40] }}
+              transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
             />
             {/* الله — bare luminous calligraphy */}
             <motion.span
               className="font-amiri font-bold relative z-10 select-none"
               style={{
-                fontSize: "3.6rem",
-                color: "#D4AF37",
-                lineHeight: 1,
-                letterSpacing: "0.03em",
-              }}
+                  fontSize: "3.2rem",
+                  color: "#D4AF37",
+                  lineHeight: 1,
+                  letterSpacing: "0.03em",
+                }}
               animate={{
                 textShadow: [
-                  "0 0 16px rgba(212,175,55,0.55), 0 0 40px rgba(212,175,55,0.75), 0 0 80px rgba(212,175,55,0.30)",
-                  "0 0 24px rgba(212,175,55,0.80), 0 0 60px rgba(212,175,55,1.00), 0 0 120px rgba(212,175,55,0.50)",
-                  "0 0 16px rgba(212,175,55,0.55), 0 0 40px rgba(212,175,55,0.75), 0 0 80px rgba(212,175,55,0.30)",
+                  "0 0 10px rgba(212,175,55,0.45), 0 0 28px rgba(212,175,55,0.60), 0 0 55px rgba(212,175,55,0.22)",
+                  "0 0 16px rgba(212,175,55,0.70), 0 0 44px rgba(212,175,55,0.88), 0 0 80px rgba(212,175,55,0.38)",
+                  "0 0 10px rgba(212,175,55,0.45), 0 0 28px rgba(212,175,55,0.60), 0 0 55px rgba(212,175,55,0.22)",
                 ],
                 y: [0, -3, 0],
               }}
