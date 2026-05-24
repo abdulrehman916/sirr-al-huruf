@@ -33,8 +33,9 @@ function stripDiacritics(text) {
 function extractLetters(text) {
   const clean = stripDiacritics(text);
   const result = [];
-  // Arabic letter regex: Hamza-Ya range ONLY
-  const arabicLetterRegex = /[\u0621-\u063A\u0641-\u064A]/g;
+  // Arabic letter range check: Hamza-Ya ONLY (\u0621-\u063A and \u0641-\u064A)
+  // Use non-global regex for single character testing
+  const arabicLetterRegex = /[\u0621-\u063A\u0641-\u064A]/;
   
   for (const ch of clean) {
     // Check if character is in valid Arabic letter range
