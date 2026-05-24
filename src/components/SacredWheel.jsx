@@ -1,13 +1,14 @@
 import { motion, useAnimationFrame } from "framer-motion";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 const GOLD = "#D4AF37";
 const G = (o) => `rgba(212,175,55,${o})`;
 
 const CX = 260, CY = 260, SIZE = 520;
 
+// الله stays at the center (rendered in Home.jsx), these 8 orbit inside
 const ASMA = [
-  "الله","الرحمن","الرحيم","الملك","القدوس","السلام","العزيز","الجبار","النور"
+  "الرحمن","الرحيم","الملك","القدوس","السلام","العزيز","الجبار","النور"
 ];
 
 function pt(cx, cy, r, angleDeg) {
@@ -78,14 +79,14 @@ function OuterRing() {
       <circle cx={CX} cy={CY} r={220} fill="none" stroke={GOLD}
         strokeWidth="0.4" strokeOpacity="0.18" />
 
-      {/* 9 gem nodes between names */}
-      {ASMA.map((_, i) => {
-        const [x, y] = pt(CX, CY, 228, (i / ASMA.length) * 360 + (360 / ASMA.length / 2));
+      {/* 12 evenly spaced gem nodes */}
+      {Array.from({ length: 12 }, (_, i) => {
+        const [x, y] = pt(CX, CY, 228, (i / 12) * 360);
         return (
           <g key={i}>
-            <circle cx={x} cy={y} r={4} fill={GOLD} fillOpacity="0.15"
-              stroke={GOLD} strokeWidth="0.9" strokeOpacity="0.65" filter="url(#sg)" />
-            <circle cx={x} cy={y} r={1.6} fill={GOLD} fillOpacity="0.90" />
+            <circle cx={x} cy={y} r={3.5} fill={GOLD} fillOpacity="0.14"
+              stroke={GOLD} strokeWidth="0.8" strokeOpacity="0.60" filter="url(#sg)" />
+            <circle cx={x} cy={y} r={1.4} fill={GOLD} fillOpacity="0.88" />
           </g>
         );
       })}
@@ -202,33 +203,31 @@ function SigilSVG() {
   );
 }
 
-/* ── Asma ul Husna — 3D celestial orbit ── */
-// The orbit is a tilted ellipse: radiusX is the full horizontal span,
-// radiusY is compressed to simulate a ~30° tilt toward the viewer.
-// depth (sinY) drives scale, opacity, blur and z-order — names "behind"
-// recede and dim; names "in front" swell and glow.
+/* ── Asma ul Husna — 3D celestial orbit INSIDE the seal ── */
+// Orbit sits between inner ring (r=110) and middle ring (r=164) in SVG space.
+// SVG viewBox=520, container=500px → scale factor = 500/520
+// Orbit radius in SVG units: 136. In px: 136 * (500/520) ≈ 130.8px
+// Tilted ellipse gives 3D depth: rY = rX * 0.30
 function AsmaNames({ containerSize }) {
   const half = containerSize / 2;
-  const rX = half * 0.84;   // horizontal orbit radius
-  const rY = rX * 0.28;     // vertical compression → tilt angle
-  const ORBIT_DURATION = 120; // seconds for one full revolution
+  const SVG_SCALE = containerSize / SIZE; // 500/520
+  const rX = 136 * SVG_SCALE;   // ~130px — between inner & middle ring
+  const rY = rX * 0.30;          // tilt compression
+  const ORBIT_DURATION = 100;    // seconds per revolution — slow, celestial
 
-  const angleRef = useRef(0);
   const [positions, setPositions] = useState(() =>
-    ASMA.map((_, i) => ({ x: half, y: half, depth: 0, angle: (i / ASMA.length) * Math.PI * 2 }))
+    ASMA.map((_, i) => ({ x: half, y: half, depth: 0 }))
   );
 
   useAnimationFrame((t) => {
-    const elapsed = (t / 1000) / ORBIT_DURATION; // 0..∞ fractional revolutions
+    const elapsed = (t / 1000) / ORBIT_DURATION;
     setPositions(ASMA.map((_, i) => {
       const baseAngle = (i / ASMA.length) * Math.PI * 2;
       const angle = baseAngle + elapsed * Math.PI * 2;
-      // Tilted ellipse: x stays full, y compressed
       const ox = Math.cos(angle) * rX;
       const oy = Math.sin(angle) * rY;
-      // depth goes from -1 (back) to +1 (front) based on sinY component
-      const depth = Math.sin(angle); // +1 = closest, -1 = farthest
-      return { x: half + ox, y: half + oy, depth, angle };
+      const depth = Math.sin(angle); // +1 front, -1 back
+      return { x: half + ox, y: half + oy, depth };
     }));
   });
 
@@ -243,25 +242,16 @@ function AsmaNames({ containerSize }) {
         // depth: -1 (back) → +1 (front)
         const t = (depth + 1) / 2; // normalise 0..1
 
-        // Scale: back=0.62, front=1.10 — subtle 3D parallax
-        const scale = 0.62 + t * 0.48;
-
-        // Opacity: back=0.22, front=1.0
-        const opacity = 0.22 + t * 0.78;
-
-        // Blur: back gets a whisper of softness, front is crisp
-        const blur = (1 - t) * 1.8;
-
-        // Font brightness: back is a dim amber, front is bright gold
-        const brightness = 70 + t * 30; // CSS % for filter
-
-        // Glow intensity scales with depth
-        const gInner = G((0.25 + t * 0.55).toFixed(2));
-        const gOuter = G((0.10 + t * 0.40).toFixed(2));
-        const gFar   = G((0.04 + t * 0.20).toFixed(2));
-
-        // Subtle "motion trail" shadow offset — shifts toward center at back
-        const shadowY = (1 - t) * 2;
+        // Scale: back=0.68, front=1.05
+        const scale = 0.68 + t * 0.37;
+        // Opacity: back=0.20, front=0.95
+        const opacity = 0.20 + t * 0.75;
+        // Blur: back softens, front is crisp
+        const blur = (1 - t) * 1.4;
+        const brightness = 68 + t * 32;
+        const gInner = G((0.20 + t * 0.60).toFixed(2));
+        const gOuter = G((0.08 + t * 0.38).toFixed(2));
+        const shadowY = (1 - t) * 1.5;
 
         return (
           <div
@@ -272,37 +262,36 @@ function AsmaNames({ containerSize }) {
               top: y,
               transform: `translate(-50%, -50%) scale(${scale})`,
               opacity,
-              zIndex: Math.round(t * 10),
+              zIndex: Math.round(t * 10) + 6,
               willChange: "transform, opacity",
             }}
           >
-            {/* Aura halo behind the text */}
+            {/* Soft aura halo */}
             <div style={{
               position: "absolute",
-              inset: "-8px -12px",
+              inset: "-6px -10px",
               borderRadius: "50%",
-              background: `radial-gradient(ellipse, ${gOuter} 0%, transparent 75%)`,
-              filter: `blur(${4 + t * 4}px)`,
-              opacity: 0.6 + t * 0.4,
+              background: `radial-gradient(ellipse, ${gOuter} 0%, transparent 72%)`,
+              filter: `blur(${3 + t * 5}px)`,
+              opacity: 0.5 + t * 0.5,
               pointerEvents: "none",
             }} />
 
-            {/* The name itself */}
+            {/* The divine name */}
             <span style={{
               fontFamily: "'Amiri', serif",
               fontWeight: "700",
-              fontSize: "13.5px",
-              color: `hsl(43, ${55 + t * 25}%, ${55 + t * 20}%)`,
+              fontSize: "11.5px",
+              color: `hsl(43, ${52 + t * 28}%, ${52 + t * 22}%)`,
               textShadow: [
-                `0 ${shadowY}px ${3 + t * 5}px ${gInner}`,
-                `0 0 ${12 + t * 20}px ${gOuter}`,
-                `0 0 ${28 + t * 30}px ${gFar}`,
+                `0 ${shadowY}px ${2 + t * 5}px ${gInner}`,
+                `0 0 ${10 + t * 18}px ${gOuter}`,
               ].join(", "),
               whiteSpace: "nowrap",
               display: "block",
               letterSpacing: "0.04em",
               direction: "rtl",
-              filter: blur > 0.4 ? `blur(${blur}px) brightness(${brightness}%)` : `brightness(${brightness}%)`,
+              filter: blur > 0.3 ? `blur(${blur}px) brightness(${brightness}%)` : `brightness(${brightness}%)`,
               position: "relative",
               zIndex: 1,
             }}>
