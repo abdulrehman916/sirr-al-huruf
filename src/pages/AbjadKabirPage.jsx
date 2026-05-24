@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Copy, Check } from "lucide-react";
+import { Trash2, Copy, Check, Download, FileText } from "lucide-react";
 import { calcKebir, calcSaghir, calcCumeli, calcBast } from "../lib/abjadModes";
 import PageLayout from "../components/PageLayout";
 
@@ -292,6 +292,8 @@ export default function AbjadKabirPage() {
   const [mode, setMode] = useState("kebir");
   const [bastLevel, setBastLevel] = useState(1);
   const [copied, setCopied] = useState(false);
+  const [history, setHistory] = useState([]);
+  const debounceTimerRef = useRef(null);
 
   // Fully isolated state per module — changing one NEVER affects another
   const [kebirState,  setKebirState]  = useState(INITIAL_MODULE_STATE);
@@ -310,13 +312,35 @@ export default function AbjadKabirPage() {
   const { state, setState } = STATE_MAP[mode];
   const { input, result }   = state;
 
-  const handleCalculate = useCallback(() => {
+  const performCalculation = useCallback(() => {
     if (!input.trim()) return;
     const calcFn = modeObj.calc;
-    // Bast accepts bastLevel parameter
     const resultValue = mode === "bast" ? calcFn(input, bastLevel) : calcFn(input);
     setState(prev => ({ ...prev, result: resultValue }));
+    // Save to history
+    setHistory(prev => [{
+      mode,
+      input,
+      bastLevel: mode === "bast" ? bastLevel : null,
+      result: resultValue,
+      timestamp: new Date().toLocaleTimeString(),
+    }, ...prev.slice(0, 19)]);
   }, [input, modeObj, setState, mode, bastLevel]);
+
+  const handleCalculate = useCallback(() => performCalculation(), [performCalculation]);
+
+  // Auto-calculate with debounce (300ms delay)
+  useEffect(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    if (!input.trim()) {
+      setState(prev => ({ ...prev, result: null }));
+      return;
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      performCalculation();
+    }, 300);
+    return () => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); };
+  }, [input, mode, bastLevel, performCalculation]);
 
   const handleModeChange = (key) => {
     setMode(key);
@@ -331,6 +355,25 @@ export default function AbjadKabirPage() {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const exportAsText = () => {
+    if (!result) return;
+    const text = `═══════════════════════════════════════
+${modeObj.label}
+═══════════════════════════════════════
+Input: ${input}
+Total: ${result.total}
+Mode: ${mode}${mode === "bast" ? ` (Level ${bastLevel})` : ""}
+Timestamp: ${new Date().toLocaleString()}
+═══════════════════════════════════════`;
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `abjad-${mode}-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -456,14 +499,20 @@ export default function AbjadKabirPage() {
               {mode === "cumeli" && <CumeliResults data={result} />}
               {mode === "bast"   && <BastResults   data={result} />}
 
-              {/* Copy */}
-              <div className="flex justify-start pt-1">
+              {/* Copy + Export */}
+              <div className="flex flex-wrap gap-2 justify-start pt-1">
                 <motion.button onClick={handleCopy}
                   whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
                   className="flex items-center gap-1.5 py-2 px-3.5 rounded-lg border border-white/15 text-white/60 hover:text-white hover:border-white/30 text-xs font-inter transition-all"
                   style={{ background:"rgba(255,255,255,0.06)" }}>
                   {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Copied!" : "Copy Results"}
+                  {copied ? "Copied!" : "Copy"}
+                </motion.button>
+                <motion.button onClick={exportAsText}
+                  whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
+                  className="flex items-center gap-1.5 py-2 px-3.5 rounded-lg border border-white/15 text-white/60 hover:text-white hover:border-white/30 text-xs font-inter transition-all"
+                  style={{ background:"rgba(255,255,255,0.06)" }}>
+                  <Download className="w-3.5 h-3.5" /> Export TXT
                 </motion.button>
               </div>
 
@@ -473,6 +522,35 @@ export default function AbjadKabirPage() {
 
         {/* ── Reference Table ── */}
         <KabirReferenceTable />
+
+        {/* ── History ── */}
+        {history.length > 0 && (
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.4 }}
+            className="rounded-2xl border p-4 space-y-2"
+            style={{ background:"rgba(6,14,36,0.95)", borderColor:G.faint }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>Recent Calculations</p>
+            <div className="space-y-1 max-h-64 overflow-y-auto" dir="rtl">
+              {history.slice(0, 10).map((entry, i) => (
+                <motion.button key={i}
+                  onClick={() => {
+                    setMode(entry.mode);
+                    if (entry.mode === "bast") setBastLevel(entry.bastLevel || 1);
+                    setState(prev => ({ ...prev, input: entry.input, result: entry.result }));
+                  }}
+                  whileHover={{ scale:1.01 }} whileTap={{ scale:0.98 }}
+                  className="w-full text-left flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 hover:border-white/20 text-xs transition-all"
+                  style={{ background:"rgba(255,255,255,0.02)" }}>
+                  <span className="font-amiri text-sm text-white truncate flex-1">{entry.input.slice(0,20)}</span>
+                  <div className="flex items-center gap-2 ml-2">
+                    <span className="font-inter text-[8px] uppercase tracking-widest text-white/40">{entry.mode}</span>
+                    <span className="font-inter text-xs font-bold tabular-nums" style={{ color:G.text }}>{entry.result.total}</span>
+                    <span className="font-inter text-[8px] text-white/25">{entry.timestamp}</span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
       </div>
     </PageLayout>
