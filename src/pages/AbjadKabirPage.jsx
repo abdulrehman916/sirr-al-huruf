@@ -164,35 +164,55 @@ function SaghirResults({ data }) {
 }
 
 function CumeliResults({ data }) {
+  let running = 0;
   return (
     <div className="space-y-4">
+      {/* Total + count */}
       <TotalCard total={data.total} label="Total — Cümeli Kebir" count={data.entries.length} />
 
-      {data.entries.map((e, i) => (
-        <motion.div key={i}
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.05 }}
-          className="rounded-2xl border p-4 space-y-3"
-          style={{ background: "rgba(8,18,44,0.96)", borderColor: G.faint }}>
-          {/* header: original → name */}
-          <div className="flex items-center gap-3" dir="rtl">
-            <span className="font-amiri text-3xl text-white">{e.original}</span>
-            <span className="font-inter text-white/25 text-sm">→</span>
-            <span className="font-amiri text-2xl" style={{ color: G.text }}>{e.name}</span>
-            <span className="font-inter text-sm font-bold tabular-nums ml-auto" style={{ color: G.text }}>= {e.nameTotal}</span>
-          </div>
-          {/* name letters */}
-          <div className="flex flex-wrap gap-1.5 justify-end" dir="rtl">
-            {e.nameLetters.map((nl, ni) => (
-              <div key={ni} className="flex flex-col items-center rounded-lg border px-2 py-1.5 min-w-[36px]"
-                style={{ background: G.bg, borderColor: G.faint }}>
-                <span className="font-amiri text-base text-white leading-none">{nl.original}</span>
-                <span className="font-inter text-[10px] tabular-nums" style={{ color: G.dim }}>{nl.value}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      ))}
+      {/* Letter cards grid */}
+      <Section title={`Letter Breakdown — ${data.entries.length} Letters`}>
+        <div className="flex flex-wrap gap-3 justify-end" dir="rtl">
+          {data.entries.map((e, i) => (
+            <motion.div key={i}
+              initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.03, duration: 0.28 }}
+              className="flex flex-col items-center rounded-2xl border px-4 py-3 min-w-[64px] gap-1"
+              style={{ background: G.bgHi, borderColor: G.borderHi, boxShadow: `0 0 14px ${G.glow}` }}>
+              <span className="font-amiri text-3xl text-white leading-none">{e.original}</span>
+              <span className="font-amiri text-sm leading-none" style={{ color: G.dim }}>{e.name}</span>
+              <span className="font-inter text-sm font-bold tabular-nums mt-0.5" style={{ color: G.text }}>{e.nameTotal}</span>
+            </motion.div>
+          ))}
+        </div>
+      </Section>
+
+      {/* Running total strip */}
+      <Section title="Running Total">
+        <div className="space-y-1" dir="rtl">
+          {data.entries.map((e, i) => {
+            running += e.nameTotal;
+            const isLast = i === data.entries.length - 1;
+            return (
+              <motion.div key={i}
+                initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.018 * i, duration: 0.28 }}
+                className="flex items-center justify-between px-3 py-1.5 rounded-lg"
+                style={{ background: isLast ? G.bgHi : "rgba(255,255,255,0.02)", borderBottom: `1px solid ${G.faint}` }}>
+                <div className="flex items-center gap-3">
+                  <span className="font-amiri text-lg text-white w-6 text-center">{e.original}</span>
+                  <span className="font-amiri text-xs" style={{ color: G.dim }}>{e.name}</span>
+                  <span className="font-inter text-[10px] text-white/25">+</span>
+                  <span className="font-inter text-xs tabular-nums" style={{ color: G.dim }}>{e.nameTotal}</span>
+                </div>
+                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: isLast ? G.text : "rgba(255,255,255,0.50)" }}>
+                  {running.toLocaleString()}
+                </span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </Section>
     </div>
   );
 }

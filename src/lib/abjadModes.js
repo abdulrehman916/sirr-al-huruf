@@ -86,14 +86,19 @@ export function calcSaghir(text) {
 // 3 — EBCED-İ CÜMELİ KEBİR
 // Expand each letter to its full Arabic name, then sum all letters of those names.
 // ══════════════════════════════════════
+// Names chosen to match exact Cümeli Kebir totals:
+// ا=الف(111) ب=با(3) ج=جيم(53) د=دال(35) ه=ها(6) و=واو(13) ز=زاي(18)
+// ح=حا(9) ط=طا(10) ي=يا(11) ك=كاف(101) ل=لام(71) م=ميم(90) ن=نون(106)
+// س=سين(120) ع=عين(130) ف=فا(81) ص=صاد(95) ق=قاف(181) ر=را(201) ش=شين(360)
+// ت=تا(401) ث=ثا(501) خ=خا(601) ذ=ذال(701) ض=ضاد(805) ظ=ظا(901) غ=غين(1060)
 export const LETTER_NAMES = {
-  'ا': 'ألف',  'ب': 'باء',  'ج': 'جيم',  'د': 'دال',
-  'ه': 'هاء',  'و': 'واو',  'ز': 'زاي',  'ح': 'حاء',
-  'ط': 'طاء',  'ي': 'ياء',  'ك': 'كاف',  'ل': 'لام',
+  'ا': 'الف',  'ب': 'با',   'ج': 'جيم',  'د': 'دال',
+  'ه': 'ها',   'و': 'واو',  'ز': 'زاي',  'ح': 'حا',
+  'ط': 'طا',   'ي': 'يا',   'ك': 'كاف',  'ل': 'لام',
   'م': 'ميم',  'ن': 'نون',  'س': 'سين',  'ع': 'عين',
-  'ف': 'فاء',  'ص': 'صاد',  'ق': 'قاف',  'ر': 'راء',
-  'ش': 'شين',  'ت': 'تاء',  'ث': 'ثاء',  'خ': 'خاء',
-  'ذ': 'ذال',  'ض': 'ضاد',  'ظ': 'ظاء',  'غ': 'غين',
+  'ف': 'فا',   'ص': 'صاد',  'ق': 'قاف',  'ر': 'را',
+  'ش': 'شين',  'ت': 'تا',   'ث': 'ثا',   'خ': 'خا',
+  'ذ': 'ذال',  'ض': 'ضاد',  'ظ': 'ظا',   'غ': 'غين',
 };
 
 export function calcCumeli(text) {
@@ -102,7 +107,7 @@ export function calcCumeli(text) {
     const name = LETTER_NAMES[l.normalized] || l.normalized;
     const nameLetters = extractLetters(name).map(nl => ({
       ...nl,
-      value: KABIR_MAP[nl.normalized],
+      value: KABIR_MAP[nl.normalized] ?? 0,
     }));
     const nameTotal = nameLetters.reduce((s, x) => s + x.value, 0);
     return { original: l.original, normalized: l.normalized, name, nameLetters, nameTotal };
