@@ -14,33 +14,36 @@ const NORM = { 'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ئ':'ي','ؤ':
 
 export function normalize(ch) { return NORM[ch] || ch; }
 
-function isArabic(ch) {
-  return normalize(ch) in KABIR_MAP;
-}
-
-// Strip all non-letter noise: tashkeel, diacritics, tatweel, zero-width chars,
-// directional marks, invisible Unicode, and anything outside visible Arabic/letter ranges.
+// Strip ONLY diacritics and noise - preserve actual Arabic letters
+// Arabic letter ranges: \u0621-\u063A (Hamza to Ghain) and \u0641-\u064A (Fa to Ya)
 function stripDiacritics(text) {
   return text
-    .replace(/[\u0610-\u065F]/g, '')   // tashkeel / Arabic extended marks
+    .replace(/[\u064B-\u065F]/g, '')    // tashkeel/harakat ONLY (not letters)
     .replace(/\u0640/g, '')             // tatweel (kashida)
     .replace(/\u0670/g, '')             // superscript alef
-    .replace(/[\u064B-\u065F]/g, '')    // harakat (belt & safety)
-    .replace(/[\u200B-\u200F]/g, '')    // zero-width / directional marks
-    .replace(/[\u202A-\u202E]/g, '')    // LTR/RTL embedding marks
-    .replace(/[\uFE70-\uFEFF]/g, '')    // Arabic presentation forms-B / BOM
-    .replace(/[\u0600-\u0605]/g, '')    // Arabic number signs / special
-    .replace(/[\u0606-\u060F]/g, '')    // Arabic poetic verse / signs
-    .replace(/[\u0610-\u061F]/g, '');   // Arabic sign / punctuation range
+    .replace(/[\u0600-\u0605]/g, '')    // Arabic number signs
+    .replace(/[\u0606-\u060F]/g, '')    // Arabic poetic signs
+    .replace(/[\u0610-\u061A]/g, '')    // Arabic sign marks (NOT letters)
+    .replace(/[\u200B-\u200F]/g, '')    // zero-width chars
+    .replace(/[\u202A-\u202E]/g, '')    // LTR/RTL embedding
+    .replace(/[\uFE70-\uFEFF]/g, '')    // presentation forms-B noise
+    .replace(/\s+/g, '');               // spaces
 }
 
 function extractLetters(text) {
   const clean = stripDiacritics(text);
   const result = [];
+  // Arabic letter regex: Hamza-Ya range ONLY
+  const arabicLetterRegex = /[\u0621-\u063A\u0641-\u064A]/g;
+  
   for (const ch of clean) {
-    if (isArabic(ch)) {
+    // Check if character is in valid Arabic letter range
+    if (arabicLetterRegex.test(ch)) {
       const norm = normalize(ch);
-      result.push({ original: ch, normalized: norm });
+      // Only include if it maps to a known Abjad value
+      if (norm in KABIR_MAP) {
+        result.push({ original: ch, normalized: norm });
+      }
     }
   }
   return result;
@@ -50,11 +53,17 @@ function extractLetters(text) {
 // 1 — EBCED-İ KEBİR
 // ══════════════════════════════════════
 export function calcKebir(text) {
-  const letters = extractLetters(text)
+  console.log('═══════════════════════════════════════');
+  console.log('[calcKebir] Original Input:', text);
+  const rawLetters = extractLetters(text);
+  console.log('[calcKebir] Parsed Letters:', rawLetters.map(l => l.original));
+  const letters = rawLetters
     .filter(l => l.normalized in KABIR_MAP)
     .map(l => ({ ...l, value: KABIR_MAP[l.normalized] }));
+  console.log('[calcKebir] Mapped Values:', letters.map(l => ({ letter: l.original, value: l.value })));
   const total = letters.reduce((s, l) => s + l.value, 0);
-  console.log('[calcKebir] input:', text, 'letters:', letters, 'total:', total);
+  console.log('[calcKebir] Total:', total);
+  console.log('═══════════════════════════════════════');
   return { letters, total };
 }
 
@@ -70,7 +79,11 @@ export const SAGHIR_MAP = {
 };
 
 export function calcSaghir(text) {
-  const letters = extractLetters(text)
+  console.log('═══════════════════════════════════════');
+  console.log('[calcSaghir] Original Input:', text);
+  const rawLetters = extractLetters(text);
+  console.log('[calcSaghir] Parsed Letters:', rawLetters.map(l => l.original));
+  const letters = rawLetters
     .filter(l => l.normalized in SAGHIR_MAP)
     .map(l => {
       const kabir  = KABIR_MAP[l.normalized];
@@ -80,7 +93,9 @@ export function calcSaghir(text) {
   const activeLetters = letters.filter(l => !l.sakit);
   const total = activeLetters.reduce((s, l) => s + l.saghir, 0);
   const sakitLetters = letters.filter(l => l.sakit);
-  console.log('[calcSaghir] input:', text, 'letters:', letters.length, 'active:', activeLetters.length, 'total:', total);
+  console.log('[calcSaghir] Mapped Values:', activeLetters.map(l => ({ letter: l.original, saghir: l.saghir })));
+  console.log('[calcSaghir] Total:', total);
+  console.log('═══════════════════════════════════════');
   return { letters, activeLetters, sakitLetters, total };
 }
 
@@ -104,7 +119,10 @@ export const LETTER_NAMES = {
 };
 
 export function calcCumeli(text) {
+  console.log('═══════════════════════════════════════');
+  console.log('[calcCumeli] Original Input:', text);
   const src = extractLetters(text);
+  console.log('[calcCumeli] Parsed Letters:', src.map(l => l.original));
   const entries = src.map(l => {
     const name = LETTER_NAMES[l.normalized] || l.normalized;
     const nameLetters = extractLetters(name).map(nl => ({
@@ -115,7 +133,9 @@ export function calcCumeli(text) {
     return { original: l.original, normalized: l.normalized, name, nameLetters, nameTotal };
   });
   const total = entries.reduce((s, e) => s + e.nameTotal, 0);
-  console.log('[calcCumeli] input:', text, 'entries:', entries.length, 'total:', total);
+  console.log('[calcCumeli] Mapped Values:', entries.map(e => ({ letter: e.original, name: e.name, total: e.nameTotal })));
+  console.log('[calcCumeli] Total:', total);
+  console.log('═══════════════════════════════════════');
   return { entries, total };
 }
 
@@ -132,8 +152,11 @@ export function calcCumeli(text) {
 export const BAST_MULTIPLIERS = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
 
 export function calcBast(text, bastLevel = 1) {
-  const multiplier = BAST_MULTIPLIERS[bastLevel] || 1;
+  console.log('═══════════════════════════════════════');
+  console.log('[calcBast] Original Input:', text, '| bastLevel:', bastLevel);
   const src = extractLetters(text);
+  console.log('[calcBast] Parsed Letters:', src.map(l => l.original));
+  const multiplier = BAST_MULTIPLIERS[bastLevel] || 1;
 
   const entries = src.map(l => {
     // First expansion: letter → name
@@ -168,6 +191,8 @@ export function calcBast(text, bastLevel = 1) {
   });
 
   const total = entries.reduce((s, e) => s + e.entryTotal, 0);
-  console.log('[calcBast] input:', text, 'bastLevel:', bastLevel, 'entries:', entries.length, 'total:', total);
+  console.log('[calcBast] Mapped Values:', entries.map(e => ({ letter: e.original, firstName: e.firstName, total: e.entryTotal })));
+  console.log('[calcBast] Total:', total);
+  console.log('═══════════════════════════════════════');
   return { entries, total, bastLevel };
 }
