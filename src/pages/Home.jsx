@@ -71,7 +71,13 @@ export default function Home() {
 
       <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pb-8">
         {/* Sacred Wheel + Logo */}
-        <div className="relative flex items-center justify-center" style={{ width: 500, height: 500 }}>
+        <div
+          className="relative flex items-center justify-center"
+          style={{
+            width: "min(500px, 88vw)",
+            height: "min(500px, 88vw)",
+          }}
+        >
           <SacredWheel />
           {/* Central logo on top */}
           {/* Central Allah calligraphy — pure floating, no box */}

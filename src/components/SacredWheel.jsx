@@ -1,5 +1,5 @@
 import { motion, useAnimationFrame } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useMouseParallax from "../hooks/useMouseParallax";
 
 const GOLD = "#D4AF37";
@@ -442,10 +442,20 @@ function GoldenDust({ containerSize }) {
   );
 }
 
+function getContainerSize() {
+  return Math.min(500, Math.max(280, window.innerWidth * 0.88));
+}
+
 /* ── Main export ── */
 export default function SacredWheel() {
-  const containerSize = 500;
+  const [containerSize, setContainerSize] = useState(getContainerSize);
   const mouse = useMouseParallax(1);
+
+  useEffect(() => {
+    const onResize = () => setContainerSize(getContainerSize());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   return (
     <div
