@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 
 const TABS = [
-  { id: "abjad", label: "ABJAD", arabic: "أبجد", path: "/abjad" },
-  { id: "anasir", label: "ANASIR", arabic: "عناصر", path: "/anasir" },
-  { id: "hadim", label: "HADIM", arabic: "خادم", path: "/hadim" },
-  { id: "mizaan9", label: "MIZAAN 9", arabic: "ميزان", path: "/mizaan9" },
+  { id: "home",    label: "HOME",     arabic: "الرئيسية", path: "/" },
+  { id: "abjad",   label: "ABJAD",    arabic: "أبجد",     path: "/abjad" },
+  { id: "anasir",  label: "ANASIR",   arabic: "عناصر",    path: "/anasir" },
+  { id: "hadim",   label: "HADIM",    arabic: "خادم",     path: "/hadim" },
+  { id: "mizaan9", label: "MIZAAN",   arabic: "ميزان",    path: "/mizaan9" },
 ];
 
 function CosmicBackground() {
@@ -39,17 +39,10 @@ function CosmicBackground() {
   );
 }
 
-export default function PageLayout({ children, accentColor = "gold" }) {
+export default function PageLayout({ children }) {
   const location = useLocation();
   const { startNav } = useNavigation();
   const activeId = TABS.find(t => t.path === location.pathname)?.id;
-
-  const accentMap = {
-    gold: { border: "rgba(212,175,55,0.40)", glow: "rgba(212,175,55,0.15)" },
-    cyan: { border: "rgba(6,182,212,0.40)", glow: "rgba(6,182,212,0.12)" },
-    purple: { border: "rgba(168,85,247,0.40)", glow: "rgba(168,85,247,0.12)" },
-  };
-  const accent = accentMap[accentColor] || accentMap.gold;
 
   return (
     <div className="min-h-screen font-inter relative" style={{ background: "linear-gradient(180deg, #050d1a 0%, #0a1628 40%, #112840 100%)" }}>
@@ -57,76 +50,84 @@ export default function PageLayout({ children, accentColor = "gold" }) {
 
       {/* Sticky Top Nav */}
       <div
-        className="sticky top-0 z-50 w-full py-2 px-4"
+        className="sticky top-0 z-50 w-full px-3 py-2"
         style={{
-          background: "rgba(5,13,26,0.92)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(212,175,55,0.15)",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+          background: "rgba(4,10,22,0.94)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          borderBottom: "1px solid rgba(212,175,55,0.12)",
+          boxShadow: "0 2px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.06)",
         }}
       >
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
-          {/* Back Home */}
-          <Link
-            to="/"
-            onClick={startNav}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all active:scale-95"
-            style={{
-              background: "rgba(212,175,55,0.08)",
-              border: "1px solid rgba(212,175,55,0.25)",
-              color: "rgba(212,175,55,0.80)",
-              WebkitTapHighlightColor: "transparent",
-              touchAction: "manipulation",
-              transform: "translateZ(0)",
-              userSelect: "none",
-            }}
-          >
-            <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-            <span className="font-inter text-[10px] uppercase tracking-widest font-semibold">Home</span>
-          </Link>
-
-          {/* Tab Nav */}
-          <div className="flex-1 grid grid-cols-4 gap-1">
-            {TABS.map((tab) => {
-              const isActive = activeId === tab.id;
-              return (
+        <div className="max-w-2xl mx-auto grid grid-cols-5 gap-1">
+          {TABS.map((tab) => {
+            const isActive = activeId === tab.id;
+            return (
+              <motion.div
+                key={tab.id}
+                animate={{
+                  background: isActive
+                    ? "linear-gradient(160deg, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.08) 100%)"
+                    : "rgba(255,255,255,0.025)",
+                  borderColor: isActive
+                    ? "rgba(212,175,55,0.50)"
+                    : "rgba(255,255,255,0.06)",
+                  boxShadow: isActive
+                    ? "0 0 18px rgba(212,175,55,0.22), inset 0 1px 0 rgba(212,175,55,0.18)"
+                    : "none",
+                }}
+                transition={{ duration: 0.28, ease: "easeInOut" }}
+                style={{ borderRadius: 10, border: "1px solid" }}
+              >
                 <Link
-                  key={tab.id}
                   to={tab.path}
                   onClick={startNav}
-                  className="relative flex flex-col items-center py-1.5 px-1 rounded-lg transition-all duration-300 active:scale-95"
-                  style={isActive ? {
-                    background: "linear-gradient(135deg, rgba(212,175,55,0.28), rgba(212,175,55,0.12))",
-                    border: "1px solid rgba(212,175,55,0.45)",
-                    boxShadow: "0 0 12px rgba(212,175,55,0.20)",
+                  className="relative flex flex-col items-center justify-center py-2 px-1 w-full h-full"
+                  style={{
                     WebkitTapHighlightColor: "transparent",
                     touchAction: "manipulation",
-                    transform: "translateZ(0)",
-                  } : {
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                    WebkitTapHighlightColor: "transparent",
-                    touchAction: "manipulation",
-                    transform: "translateZ(0)",
+                    userSelect: "none",
+                    minHeight: 46,
                   }}
                 >
-                  <span className="font-amiri text-xs font-bold" style={{ color: isActive ? "#D4AF37" : "rgba(255,255,255,0.45)" }}>
+                  <motion.span
+                    className="font-amiri font-bold leading-none"
+                    style={{ fontSize: "clamp(11px, 3vw, 14px)" }}
+                    animate={{ color: isActive ? "#D4AF37" : "rgba(255,255,255,0.40)" }}
+                    transition={{ duration: 0.25 }}
+                  >
                     {tab.arabic}
-                  </span>
-                  <span className="font-inter font-bold" style={{ fontSize: 7, letterSpacing: "0.08em", color: isActive ? "rgba(212,175,55,0.85)" : "rgba(255,255,255,0.25)" }}>
+                  </motion.span>
+                  <motion.span
+                    className="font-inter font-bold tracking-widest mt-0.5 leading-none"
+                    style={{ fontSize: "clamp(6px, 1.6vw, 8px)" }}
+                    animate={{ color: isActive ? "rgba(212,175,55,0.88)" : "rgba(255,255,255,0.22)" }}
+                    transition={{ duration: 0.25 }}
+                  >
                     {tab.label}
-                  </span>
+                  </motion.span>
+
+                  {/* Animated gold underline */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{ bottom: 3, left: "50%", x: "-50%", height: 2, background: "linear-gradient(90deg, rgba(212,175,55,0.3), #D4AF37, rgba(212,175,55,0.3))" }}
+                    animate={{ width: isActive ? 20 : 0, opacity: isActive ? 1 : 0 }}
+                    transition={{ duration: 0.30, ease: "easeInOut" }}
+                  />
+
+                  {/* Shared layout underline for smooth cross-tab travel */}
                   {isActive && (
                     <motion.div
-                      layoutId="navIndicator"
-                      className="absolute -bottom-0.5 left-1/2 rounded-full"
-                      style={{ width: 16, height: 2, background: "#D4AF37", transform: "translateX(-50%)" }}
+                      layoutId="navGlow"
+                      className="absolute inset-0 rounded-[9px] pointer-events-none"
+                      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 100%, rgba(212,175,55,0.14) 0%, transparent 75%)" }}
+                      transition={{ duration: 0.28, ease: "easeInOut" }}
                     />
                   )}
                 </Link>
-              );
-            })}
-          </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
