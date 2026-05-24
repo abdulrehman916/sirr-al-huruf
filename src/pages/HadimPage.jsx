@@ -60,7 +60,11 @@ function positionalIstintaq(n) {
   const combined = steps.map(s => s.letters).join('');
   const separated = steps.map(s => s.letters).filter(l => l).join(' ');
 
-  return { steps, combined, separated };
+  // Reverse the final display output (character-level reverse of combined)
+  const reversedCombined = combined.split('').reverse().join('');
+  const reversedSeparated = combined.split('').reverse().join(' ');
+
+  return { steps, combined, separated, reversedCombined, reversedSeparated };
 }
 
 // ── Legacy breakdown for backward compat (used in per-input display) ──
@@ -107,13 +111,13 @@ export default function HadimPage() {
     const adjusted = needed360 ? grandTotal + 360 : grandTotal;
     const final = adjusted - sub;
     const istintaq = positionalIstintaq(final);
-    const letters = istintaq.combined;
+    const letters = istintaq.reversedCombined;
     const perInput = ismItems.map(({ text, r, index }) => {
       const iNeeded = r.total < sub;
       const iAdj = iNeeded ? r.total + 360 : r.total;
       const iFinal = iAdj - sub;
       const iIstintaq = positionalIstintaq(iFinal);
-      const iLetters = iIstintaq.combined;
+      const iLetters = iIstintaq.reversedCombined;
       return { label: `Ism ${index + 1}`, text, total: r.total, needed360: iNeeded, adjusted: iAdj, final: iFinal, extracted: iLetters, name: iLetters + 'ايل', istintaq: iIstintaq };
     });
     setResult({ allFields, grandTotal, sub, needed360, adjusted, final, letters, name: letters + 'ايل', istintaq, perInput, type });
@@ -293,17 +297,17 @@ export default function HadimPage() {
                     </div>
                   ))}
                 </div>
-                {/* Separated mode */}
+                {/* Separated mode (reversed) */}
                 <div className="rounded-xl border border-purple-500/20 px-4 py-3 mb-2 flex items-center justify-between"
                   style={{ background: "rgba(168,85,247,0.07)" }}>
                   <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/50">Separated</span>
-                  <span className="font-amiri text-xl text-white tracking-widest" dir="rtl">{result.istintaq.separated}</span>
+                  <span className="font-amiri text-xl text-white tracking-widest" dir="rtl">{result.istintaq.reversedSeparated}</span>
                 </div>
-                {/* Combined ceremonial mode */}
+                {/* Combined ceremonial mode (reversed) */}
                 <div className="rounded-xl border border-purple-500/40 px-4 py-3 flex items-center justify-between"
                   style={{ background: "rgba(168,85,247,0.14)", boxShadow: "0 0 16px rgba(168,85,247,0.18)" }}>
                   <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/60">Ceremonial</span>
-                  <span className="font-amiri text-2xl font-bold text-white" dir="rtl" style={{ textShadow: "0 0 14px rgba(168,85,247,0.70)" }}>{result.letters}</span>
+                  <span className="font-amiri text-2xl font-bold text-white" dir="rtl" style={{ textShadow: "0 0 14px rgba(168,85,247,0.70)" }}>{result.istintaq.reversedCombined}</span>
                 </div>
               </GlowCard>
 
@@ -312,7 +316,7 @@ export default function HadimPage() {
                 style={{ background: "rgba(168,85,247,0.12)", boxShadow: "0 0 32px rgba(168,85,247,0.25)" }}>
                 <p className="font-inter text-[10px] text-purple-300/60 uppercase tracking-widest mb-1">Step 6 — Final Hadim Name</p>
                 <p className="font-amiri text-5xl font-bold text-white mt-2" style={{ textShadow: "0 0 28px rgba(168,85,247,0.80)" }}>{result.name}</p>
-                <p className="font-inter text-xs text-purple-400/50 mt-2">{result.letters} + ايل</p>
+                <p className="font-inter text-xs text-purple-400/50 mt-2">{result.istintaq.reversedSeparated} + ايل</p>
               </div>
 
               {/* Per-Input Names */}
