@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, Trash2, Star, Copy, Share2, Check } from "lucide-react";
 import { processTextAsync } from "../lib/asyncProcessor";
 import { processText } from "../lib/abjadValues";
-import { analyzeText } from "../lib/anasirValues";
 import LetterGrid from "../components/LetterGrid";
 import ResultsSummary from "../components/ResultsSummary";
 import LetterAnalysis from "../components/LetterAnalysis";
@@ -32,7 +31,6 @@ export default function AbjadPage() {
   const handleClear = () => { abortRef.current = true; setInput(""); setResult(null); setLoading(false); };
 
   const handleCopy = () => {
-    const ar = analyzeText(input);
     const text = `📖 ${input}\n🔢 Abjad Value: ${result?.total ?? "—"}`;
     navigator.clipboard.writeText(text);
     setCopied(true);

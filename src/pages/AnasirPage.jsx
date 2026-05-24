@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Copy, Check } from "lucide-react";
-import { analyzeTextAsync } from "../lib/asyncProcessor";
+import { analyzeAnasirAsync } from "../lib/anasirEngine";
 import { ELEMENTS } from "../lib/anasirValues";
 import AnasirLetterGrid from "../components/AnasirLetterGrid";
 import ElementInsight from "../components/ElementInsight";
@@ -21,7 +21,7 @@ export default function AnasirPage() {
     setLoading(true);
     setProgress(0);
     setResult(null);
-    const ar = await analyzeTextAsync(input, (p) => { if (!abortRef.current) setProgress(p); });
+    const ar = await analyzeAnasirAsync(input, (p) => { if (!abortRef.current) setProgress(p); });
     if (!abortRef.current) setResult(ar);
     setLoading(false);
   }, [input]);
