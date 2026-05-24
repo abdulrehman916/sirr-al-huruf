@@ -59,6 +59,7 @@ const AuthenticatedApp = () => {
           <Route path="/hadim" element={<HadimPage />} />
           <Route path="/mizaan9" element={<Mizaan9Page />} />
           <Route path="/abjad-kabir" element={<AbjadKabirPage />} />
+          <Route path="/abjad" element={<AbjadKabirPage />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </motion.div>
