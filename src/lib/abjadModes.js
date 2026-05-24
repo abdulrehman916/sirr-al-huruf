@@ -59,26 +59,23 @@ export function calcKebir(text) {
 
 // ══════════════════════════════════════
 // 2 — EBCED-İ SAĞİR
-// Sağir: reduce each Kabir value to single digit
-//   1-9   → same
-//   10-90 → tens digit (e.g. 40 → 4)
-//   100-900 → hundreds digit (e.g. 300 → 3)
-//   1000  → 1
-// Letters whose Sağir = 0 → SAKIT (silent / dropped)
+// True Sağir lookup table (cyclic reduction)
+// Letters with value 0 are SAKIT (silent)
 // ══════════════════════════════════════
-export function saghirValue(kabirVal) {
-  if (kabirVal >= 1000) return 1;
-  if (kabirVal >= 100) return Math.floor(kabirVal / 100);
-  if (kabirVal >= 10)  return Math.floor(kabirVal / 10);
-  return kabirVal;
-}
+export const SAGHIR_MAP = {
+  'ا':1, 'ب':2, 'ج':3, 'د':4, 'ه':5, 'و':6, 'ز':7, 'ح':8, 'ط':9,
+  'ي':10,'ك':8, 'ل':6, 'م':4, 'ن':2, 'س':0, 'ع':10,'ف':8, 'ص':6,
+  'ق':4, 'ر':8, 'ش':0, 'ت':4, 'ث':8, 'خ':0, 'ذ':4, 'ض':8, 'ظ':0, 'غ':4,
+};
 
 export function calcSaghir(text) {
-  const letters = extractLetters(text).map(l => {
-    const kabir  = KABIR_MAP[l.normalized];
-    const saghir = saghirValue(kabir);
-    return { ...l, kabir, saghir, sakit: saghir === 0 };
-  });
+  const letters = extractLetters(text)
+    .filter(l => l.normalized in SAGHIR_MAP)
+    .map(l => {
+      const kabir  = KABIR_MAP[l.normalized];
+      const saghir = SAGHIR_MAP[l.normalized];
+      return { ...l, kabir, saghir, sakit: saghir === 0 };
+    });
   const activeLetters = letters.filter(l => !l.sakit);
   const total = activeLetters.reduce((s, l) => s + l.saghir, 0);
   const sakitLetters = letters.filter(l => l.sakit);

@@ -125,50 +125,40 @@ function KebirResults({ data }) {
 function SaghirResults({ data }) {
   return (
     <div className="space-y-4">
-      <TotalCard total={data.total} label="Total — Ebced-i Sağir" />
+      {/* Total + count */}
+      <TotalCard total={data.total} label="Total — Ebced-i Sağir" count={data.letters.length} />
 
-      {/* All letters: kebir vs saghir */}
-      <Section title="Kebir → Sağir Breakdown">
-        <div className="space-y-1.5" dir="rtl">
+      {/* Full letter breakdown grid — show all including sakit */}
+      <Section title={`Letter Breakdown — ${data.letters.length} Letters`}>
+        <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
           {data.letters.map((l, i) => (
             <motion.div key={i}
-              initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.02 * i }}
-              className="flex items-center justify-between px-3 py-2 rounded-lg"
-              style={{ background: l.sakit ? "rgba(255,255,255,0.02)" : G.bg, borderBottom: `1px solid ${G.faint}`, opacity: l.sakit ? 0.35 : 1 }}>
-              <div className="flex items-center gap-3">
-                <span className="font-amiri text-xl text-white w-6 text-center">{l.original}</span>
-                <span className="font-inter text-[10px] tabular-nums text-white/40">{l.kabir}</span>
-                <span className="font-inter text-[10px] text-white/20">→</span>
-                <span className="font-inter text-xs font-bold tabular-nums" style={{ color: l.sakit ? "rgba(255,255,255,0.20)" : G.text }}>
-                  {l.sakit ? "SAKIT" : l.saghir}
-                </span>
-              </div>
-              {l.sakit && <span className="font-inter text-[8px] uppercase tracking-widest text-white/25">silent</span>}
+              initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.025, duration: 0.28 }}
+              className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[46px]"
+              style={{
+                background: l.sakit ? "rgba(255,255,255,0.02)" : G.bg,
+                borderColor: l.sakit ? "rgba(255,255,255,0.10)" : G.faint,
+                opacity: l.sakit ? 0.45 : 1,
+              }}>
+              <span className="font-amiri text-2xl text-white leading-none mb-0.5">{l.original}</span>
+              <span className="font-inter text-[11px] font-bold tabular-nums" style={{ color: l.sakit ? "rgba(255,255,255,0.25)" : G.text }}>
+                {l.saghir}
+              </span>
+              {l.sakit && (
+                <span className="font-inter text-[7px] uppercase tracking-wide text-white/25 mt-0.5">sakit</span>
+              )}
             </motion.div>
           ))}
         </div>
       </Section>
 
-      {/* Sakit letters */}
-      {data.sakitLetters.length > 0 && (
-        <Section title={`Sakit Letters (${data.sakitLetters.length})`}>
-          <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
-            {data.sakitLetters.map((l, i) => (
-              <div key={i} className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[46px] opacity-40"
-                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}>
-                <span className="font-amiri text-2xl text-white leading-none">{l.original}</span>
-                <span className="font-inter text-[9px] text-white/40 uppercase tracking-wide">sakit</span>
-              </div>
-            ))}
-          </div>
+      {/* Running total — active letters only */}
+      {data.activeLetters.length > 0 && (
+        <Section title="Running Total (Active Letters)">
+          <RunningStrip letters={data.activeLetters} valueKey="saghir" />
         </Section>
       )}
-
-      {/* Running active letters */}
-      <Section title="Running Total (Active)">
-        <RunningStrip letters={data.activeLetters} valueKey="saghir" />
-      </Section>
     </div>
   );
 }
