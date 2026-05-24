@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
+import { getDominantPurpose, getBestHour, getBestDay, getDominantPlanet, getDominantDayNight } from "../lib/mizaan9Data";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
 import Mizaan3      from "../components/mizaan/Mizaan3";
@@ -32,8 +33,7 @@ function GoldDivider() {
   );
 }
 
-// Thin gold separator between mizaan sections
-function MizaanDivider({ num }) {
+function MizaanDivider() {
   return (
     <div className="flex items-center justify-center gap-3 py-1">
       <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, rgba(212,175,55,0.20))` }} />
@@ -43,11 +43,25 @@ function MizaanDivider({ num }) {
   );
 }
 
+// Build initial selections from dominant element
+function buildDefaultSelections(dominant) {
+  return {
+    elements:   dominant ? [dominant] : [],
+    khayrSharr: null,
+    hour:       null,
+    days:       [],
+    planet:     null,
+    purposes:   dominant ? (getDominantPurpose(dominant) ? [getDominantPurpose(dominant)] : []) : [],
+    daynight:   null,
+  };
+}
+
 export default function Mizaan9Page() {
-  const [input,    setInput]    = useState("");
-  const [result,   setResult]   = useState(null);
-  const [loading,  setLoading]  = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [input,       setInput]       = useState("");
+  const [result,      setResult]      = useState(null);
+  const [loading,     setLoading]     = useState(false);
+  const [progress,    setProgress]    = useState(0);
+  const [selections,  setSelections]  = useState(buildDefaultSelections(null));
   const abortRef = useRef(false);
 
   const handleAnalyze = useCallback(async () => {
@@ -56,8 +70,13 @@ export default function Mizaan9Page() {
     setLoading(true);
     setProgress(0);
     setResult(null);
+    setSelections(buildDefaultSelections(null));
     const r = await mizaanAnalyzeAsync(input, (p) => { if (!abortRef.current) setProgress(p); });
-    if (!abortRef.current) setResult(r);
+    if (!abortRef.current) {
+      setResult(r);
+      // Pre-populate selections with system suggestions
+      setSelections(buildDefaultSelections(r.dominant));
+    }
     setLoading(false);
   }, [input]);
 
@@ -67,7 +86,10 @@ export default function Mizaan9Page() {
     setResult(null);
     setLoading(false);
     setProgress(0);
+    setSelections(buildDefaultSelections(null));
   };
+
+  const updateSel = (key) => (val) => setSelections(prev => ({ ...prev, [key]: val }));
 
   return (
     <PageLayout>
@@ -137,7 +159,7 @@ export default function Mizaan9Page() {
           </div>
         </div>
 
-        {/* 9 Mizaans — sequential */}
+        {/* 9 Mizaans */}
         <AnimatePresence mode="wait">
           {result && (
             <motion.div key="mizaan-9-flow"
@@ -146,21 +168,50 @@ export default function Mizaan9Page() {
 
               <Mizaan1 result={result} />
               <MizaanDivider />
-              <Mizaan2 dominant={result.dominant} tiebreak={result.tiebreak} />
+              <Mizaan2
+                dominant={result.dominant}
+                tiebreak={result.tiebreak}
+                selected={selections.elements}
+                onChange={updateSel("elements")}
+              />
               <MizaanDivider />
-              <Mizaan3 dominant={result.dominant} />
+              <Mizaan3
+                dominant={result.dominant}
+                selected={selections.khayrSharr}
+                onChange={updateSel("khayrSharr")}
+              />
               <MizaanDivider />
-              <Mizaan4 dominant={result.dominant} />
+              <Mizaan4
+                dominant={result.dominant}
+                selected={selections.hour}
+                onChange={updateSel("hour")}
+              />
               <MizaanDivider />
-              <Mizaan5 dominant={result.dominant} />
+              <Mizaan5
+                dominant={result.dominant}
+                selected={selections.days}
+                onChange={updateSel("days")}
+              />
               <MizaanDivider />
-              <Mizaan6 dominant={result.dominant} />
+              <Mizaan6
+                dominant={result.dominant}
+                selected={selections.planet}
+                onChange={updateSel("planet")}
+              />
               <MizaanDivider />
-              <Mizaan7 dominant={result.dominant} />
+              <Mizaan7
+                dominant={result.dominant}
+                selected={selections.purposes}
+                onChange={updateSel("purposes")}
+              />
               <MizaanDivider />
-              <Mizaan8 dominant={result.dominant} />
+              <Mizaan8
+                dominant={result.dominant}
+                selected={selections.daynight}
+                onChange={updateSel("daynight")}
+              />
               <MizaanDivider />
-              <Mizaan9Final result={result} />
+              <Mizaan9Final result={result} selections={selections} />
 
             </motion.div>
           )}

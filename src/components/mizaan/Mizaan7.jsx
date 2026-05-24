@@ -1,17 +1,18 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_PURPOSES, getDominantPurpose } from "../../lib/mizaan9Data";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
-export default function Mizaan7({ dominant }) {
+export default function Mizaan7({ dominant, selected, onChange }) {
   const suggestedKey = getDominantPurpose(dominant);
-  const [selected, setSelected] = useState(() => suggestedKey ? [suggestedKey] : []);
 
-  const toggle = (key) => setSelected(prev =>
-    prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-  );
+  const toggle = (key) => {
+    const next = selected.includes(key)
+      ? selected.filter(k => k !== key)
+      : [...selected, key];
+    onChange(next);
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}
@@ -24,7 +25,7 @@ export default function Mizaan7({ dominant }) {
 
       <div className="grid grid-cols-2 gap-3">
         {MIZAAN_PURPOSES.map((p, i) => {
-          const isSuggested = p.elements.includes(dominant);
+          const isSuggested = p.key === suggestedKey;
           const isSelected  = selected.includes(p.key);
           const col = p.color;
           return (
