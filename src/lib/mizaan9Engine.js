@@ -13,23 +13,82 @@ const MIZAAN_BAST1 = {
   'ض': 593, 'ظ': 114, 'غ': 991,
 };
 
-// ── Own element map (fire/water/air/earth), letters in Mertebe rank order ──
-// Second Mizan Bast values per element (from the book)
-const MIZAAN_BAST2 = {
-  fire:  3550,
-  earth: 4015,
-  air:   3757,
-  water: 3342,
+// ── Element map — letters in Mertebe rank order ──
+export const MIZAAN_ELEMENTS = {
+  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 3550 },
+  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'الأرض',  icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 4015 },
+  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 3757 },
+  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 3342 },
 };
 
-const MIZAAN_ELEMENTS = {
-  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'],        bast2: 3550 },
-  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'الأرض',  icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'],        bast2: 4015 },
-  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'],        bast2: 3757 },
-  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'],        bast2: 3342 },
+export const MIZAAN_RANK_NAMES = ['Mertebe','Derece','Dakika','Saniye','Salise','Rabia','Hamise'];
+
+// ── Second Mizan Bast values ──
+export const MIZAAN_BAST2 = {
+  fire: 3550, earth: 4015, air: 3757, water: 3342,
 };
 
-const MIZAAN_RANK_NAMES = ['Mertebe','Derece','Dakika','Saniye','Salise','Rabia','Hamise'];
+// ── Planet table ──
+export const MIZAAN_PLANETS = {
+  fire:  { name: 'Merih',   arabic: 'المريخ',  symbol: '♂', bast: 3124, color: '#FF4444' },
+  earth: { name: 'Zühal',   arabic: 'زحل',     symbol: '♄', bast: 3886, color: '#9B7FD4' },
+  air:   { name: 'Müşteri', arabic: 'المشتري', symbol: '♃', bast: 3757, color: '#74C0FC' },
+  water: { name: 'Zühre',   arabic: 'الزهرة',  symbol: '♀', bast: 3342, color: '#F9A8D4' },
+};
+
+// ── Day/Night table ──
+export const MIZAAN_DAYNIGHT = {
+  fire:  { mode: 'Gündüz', arabic: 'النهار', icon: '☀️', bast: 3886, desc: 'Solar radiance — peak daytime energy' },
+  earth: { mode: 'Gündüz', arabic: 'النهار', icon: '☀️', bast: 3886, desc: 'Stable daytime grounding force' },
+  air:   { mode: 'Gece',   arabic: 'الليل',  icon: '🌙', bast: 3120, desc: 'Nocturnal mental clarity' },
+  water: { mode: 'Gece',   arabic: 'الليل',  icon: '🌙', bast: 3120, desc: 'Lunar depths — night reflection' },
+};
+
+// ── Mizan suitability table ──
+export const MIZAAN_SUITABILITY = {
+  fire:  { name: 'Celb',   arabic: 'الجلب',  bast: 3124, desc: 'Attraction & drawing force — powerful magnetism' },
+  earth: { name: 'Tard',   arabic: 'الطرد',  bast: 4015, desc: 'Repulsion & banishment — removing obstacles' },
+  air:   { name: 'Sıhhat', arabic: 'الصحة',  bast: 3757, desc: 'Health & restoration — healing energy' },
+  water: { name: 'Sakam',  arabic: 'السقام', bast: 3342, desc: 'Spiritual remedy — transformative depth' },
+};
+
+// ── Mystical interpretation table ──
+const MIZAAN_INTERP = {
+  fire: [
+    'Güçlü çekim enerjisi — fiery attraction dominates',
+    'Ruhani ateş aktif — spiritual fire ignited',
+    'Celb ve cazibe — magnetic pull is strong',
+    'Yüksek irade gücü — solar willpower ascending',
+  ],
+  earth: [
+    'Toprak sabitleyici güç — grounding force is supreme',
+    'Tard enerjisi baskın — obstacles dissolve before you',
+    'Maddi düzlem güçlü — material world aligned',
+    'Sabır ve kalıcılık — enduring Saturnine power',
+  ],
+  air: [
+    'Zihin hâkimiyeti — mental dominance achieved',
+    'Sıhhat ve berraklık — clarity and healing arise',
+    'Gezegen Müşteri bağlı — Jovian expansion active',
+    'Gece enerjisi saf — nocturnal wisdom flows',
+  ],
+  water: [
+    'Duygusal derinlik — lunar emotional depth',
+    'Sakam dönüşümü — transformative healing active',
+    'Zühre etkisi — Venusian harmony present',
+    'Gizli uyum — hidden harmonic resonance',
+  ],
+};
+
+export function getMizaanInterpretation(dominant, letterCount, bast1Total) {
+  if (!dominant) return [];
+  const base   = MIZAAN_INTERP[dominant] || [];
+  const extras = [];
+  if (letterCount > 50)   extras.push('Uzun metin — güçlü birleşik enerji alanı oluştu');
+  if (letterCount < 5)    extras.push('Kısa metin — yoğun odaklanmış enerji');
+  if (bast1Total > 10000) extras.push('Yüksek bast değeri — güçlü manevi yük taşıyor');
+  return [...base, ...extras];
+}
 
 // ── Own normalization ──
 const MIZAAN_NORM = {
@@ -44,9 +103,9 @@ function mNorm(ch) { return MIZAAN_NORM[ch] || ch; }
 // ── Own text cleaner ──
 function mClean(text) {
   return text
-    .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '') // tashkeel / harakat
-    .replace(/\u0640/g, '')                               // tatweel
-    .replace(/[^\u0600-\u06FF]/g, '');                   // non-Arabic
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '')
+    .replace(/\u0640/g, '')
+    .replace(/[^\u0600-\u06FF]/g, '');
 }
 
 // ── Internal lookup tables (built at module load) ──
@@ -85,8 +144,8 @@ function mResolveTie(tiedKeys, letterDetails) {
 
 // ── Result builder (shared by sync + async paths) ──
 function mBuildResult(text, letters, counts) {
-  const letterCount = letters.length;
-  const bast1Total  = letters.reduce((s, l) => s + l.bast1, 0);
+  const letterCount  = letters.length;
+  const bast1Total   = letters.reduce((s, l) => s + l.bast1, 0);
 
   const elementTotal = Object.values(counts).reduce((a, b) => a + b, 0);
   const percentages  = {};
@@ -104,14 +163,17 @@ function mBuildResult(text, letters, counts) {
       dominant = topKeys[0];
     } else {
       const res = mResolveTie(topKeys, letters);
-      dominant = res.winner;
-      tiebreak = { tiedElements: topKeys, rankName: res.rankName, rankIndex: res.rankIndex };
+      dominant  = res.winner;
+      tiebreak  = { tiedElements: topKeys, rankName: res.rankName, rankIndex: res.rankIndex };
     }
   }
 
-  const bast2Value = dominant ? (MIZAAN_ELEMENTS[dominant]?.bast2 ?? null) : null;
+  const bast2Value  = dominant ? (MIZAAN_ELEMENTS[dominant]?.bast2 ?? null) : null;
+  const planet      = dominant ? (MIZAAN_PLANETS[dominant] ?? null) : null;
+  const daynight    = dominant ? (MIZAAN_DAYNIGHT[dominant] ?? null) : null;
+  const suitability = dominant ? (MIZAAN_SUITABILITY[dominant] ?? null) : null;
 
-  return { text, letters, letterCount, bast1Total, counts, percentages, dominant, tiebreak, bast2Value };
+  return { text, letters, letterCount, bast1Total, counts, percentages, dominant, tiebreak, bast2Value, planet, daynight, suitability };
 }
 
 // ── Synchronous analysis ──
@@ -159,6 +221,3 @@ export async function mizaanAnalyzeAsync(text, onProgress) {
   onProgress?.(100);
   return mBuildResult(text, letters, counts);
 }
-
-// ── Element metadata export (for UI only) ──
-export { MIZAAN_ELEMENTS, MIZAAN_RANK_NAMES, MIZAAN_BAST2 };
