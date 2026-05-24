@@ -117,11 +117,19 @@ export function calcCumeli(text) {
 }
 
 // ══════════════════════════════════════
-// 4 — BAST-I HURUF
-// Take the expanded name letters and expand THOSE letters once more,
-// then sum the entire expanded corpus.
+// 4 — BAST-I HURUF (5 Levels)
+// Each letter expands to its name, then each letter of that name
+// is valued according to the Bast level multiplier.
+// Bast 1: base Kabir values
+// Bast 2: ×2 multiplier
+// Bast 3: ×3 multiplier
+// Bast 4: ×4 multiplier
+// Bast 5: ×5 multiplier
 // ══════════════════════════════════════
-export function calcBast(text) {
+export const BAST_MULTIPLIERS = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
+
+export function calcBast(text, bastLevel = 1) {
+  const multiplier = BAST_MULTIPLIERS[bastLevel] || 1;
   const src = extractLetters(text);
 
   const entries = src.map(l => {
@@ -129,12 +137,12 @@ export function calcBast(text) {
     const firstName = LETTER_NAMES[l.normalized] || l.normalized;
     const firstLetters = extractLetters(firstName);
 
-    // Second expansion: each letter of the name → its name
+    // Second expansion with Bast level multiplier
     const bastGroups = firstLetters.map(fl => {
       const secondName = LETTER_NAMES[fl.normalized] || fl.normalized;
       const secondLetters = extractLetters(secondName).map(sl => ({
         ...sl,
-        value: KABIR_MAP[sl.normalized],
+        value: (KABIR_MAP[sl.normalized] ?? 0) * multiplier,
       }));
       const groupTotal = secondLetters.reduce((s, x) => s + x.value, 0);
       return {
@@ -157,5 +165,5 @@ export function calcBast(text) {
   });
 
   const total = entries.reduce((s, e) => s + e.entryTotal, 0);
-  return { entries, total };
+  return { entries, total, bastLevel };
 }

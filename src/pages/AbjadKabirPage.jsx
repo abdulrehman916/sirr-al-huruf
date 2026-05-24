@@ -218,50 +218,55 @@ function CumeliResults({ data }) {
 }
 
 function BastResults({ data }) {
+  let running = 0;
   return (
     <div className="space-y-4">
-      <TotalCard total={data.total} label="Total — Bast-ı Huruf" count={data.entries.length} />
+      {/* Total + count */}
+      <TotalCard total={data.total} label={`Total — Bast-${data.bastLevel || 1}`} count={data.entries.length} />
 
-      {data.entries.map((e, i) => (
-        <motion.div key={i}
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.06 }}
-          className="rounded-2xl border p-4 space-y-3"
-          style={{ background: "rgba(8,18,44,0.96)", borderColor: G.faint }}>
+      {/* Letter cards grid */}
+      <Section title={`Letter Breakdown — ${data.entries.length} Letters`}>
+        <div className="flex flex-wrap gap-3 justify-end" dir="rtl">
+          {data.entries.map((e, i) => (
+            <motion.div key={i}
+              initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.03, duration: 0.28 }}
+              className="flex flex-col items-center rounded-2xl border px-4 py-3 min-w-[64px] gap-1"
+              style={{ background: G.bgHi, borderColor: G.borderHi, boxShadow: `0 0 14px ${G.glow}` }}>
+              <span className="font-amiri text-3xl text-white leading-none">{e.original}</span>
+              <span className="font-amiri text-sm leading-none" style={{ color: G.dim }}>{e.firstName}</span>
+              <span className="font-inter text-sm font-bold tabular-nums mt-0.5" style={{ color: G.text }}>{e.entryTotal}</span>
+            </motion.div>
+          ))}
+        </div>
+      </Section>
 
-          {/* top: original → first name → total */}
-          <div className="flex items-center gap-2 pb-1 border-b" style={{ borderColor: G.faint }} dir="rtl">
-            <span className="font-amiri text-3xl text-white">{e.original}</span>
-            <span className="text-white/25 text-sm">→</span>
-            <span className="font-amiri text-xl" style={{ color: G.dim }}>{e.firstName}</span>
-            <span className="font-inter text-sm font-bold tabular-nums ml-auto" style={{ color: G.text }}>= {e.entryTotal}</span>
-          </div>
-
-          {/* bast groups */}
-          <div className="space-y-2" dir="rtl">
-            {e.bastGroups.map((g, gi) => (
-              <div key={gi} className="rounded-xl border px-3 py-2 space-y-1.5"
-                style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.12)" }}>
-                <div className="flex items-center gap-2">
-                  <span className="font-amiri text-lg text-white">{g.letter}</span>
-                  <span className="text-white/20 text-xs">→</span>
-                  <span className="font-amiri text-base" style={{ color: G.dim }}>{g.name}</span>
-                  <span className="font-inter text-xs tabular-nums ml-auto" style={{ color: G.text }}>= {g.total}</span>
+      {/* Running total strip */}
+      <Section title="Running Total">
+        <div className="space-y-1" dir="rtl">
+          {data.entries.map((e, i) => {
+            running += e.entryTotal;
+            const isLast = i === data.entries.length - 1;
+            return (
+              <motion.div key={i}
+                initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.018 * i, duration: 0.28 }}
+                className="flex items-center justify-between px-3 py-1.5 rounded-lg"
+                style={{ background: isLast ? G.bgHi : "rgba(255,255,255,0.02)", borderBottom: `1px solid ${G.faint}` }}>
+                <div className="flex items-center gap-3">
+                  <span className="font-amiri text-lg text-white w-6 text-center">{e.original}</span>
+                  <span className="font-amiri text-xs" style={{ color: G.dim }}>{e.firstName}</span>
+                  <span className="font-inter text-[10px] text-white/25">+</span>
+                  <span className="font-inter text-xs tabular-nums" style={{ color: G.dim }}>{e.entryTotal}</span>
                 </div>
-                <div className="flex flex-wrap gap-1 justify-end">
-                  {g.letters.map((sl, si) => (
-                    <div key={si} className="flex flex-col items-center rounded-md border px-1.5 py-1 min-w-[32px]"
-                      style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.15)" }}>
-                      <span className="font-amiri text-sm text-white leading-none">{sl.original}</span>
-                      <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(212,175,55,0.55)" }}>{sl.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      ))}
+                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: isLast ? G.text : "rgba(255,255,255,0.50)" }}>
+                  {running.toLocaleString()}
+                </span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </Section>
     </div>
   );
 }
@@ -285,6 +290,7 @@ const INITIAL_MODULE_STATE = { input: "", result: null };
 
 export default function AbjadKabirPage() {
   const [mode, setMode] = useState("kebir");
+  const [bastLevel, setBastLevel] = useState(1);
   const [copied, setCopied] = useState(false);
 
   // Fully isolated state per module — changing one NEVER affects another
@@ -306,8 +312,11 @@ export default function AbjadKabirPage() {
 
   const handleCalculate = useCallback(() => {
     if (!input.trim()) return;
-    setState(prev => ({ ...prev, result: modeObj.calc(input) }));
-  }, [input, modeObj, setState]);
+    const calcFn = modeObj.calc;
+    // Bast accepts bastLevel parameter
+    const resultValue = mode === "bast" ? calcFn(input, bastLevel) : calcFn(input);
+    setState(prev => ({ ...prev, result: resultValue }));
+  }, [input, modeObj, setState, mode, bastLevel]);
 
   const handleModeChange = (key) => {
     setMode(key);
@@ -390,6 +399,35 @@ export default function AbjadKabirPage() {
             rows={4}
             className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
             style={{ background:"rgba(4,12,34,0.97)", border:`1px solid ${G.border}` }} />
+          
+          {/* Bast Level Selector */}
+          {mode === "bast" && (
+            <div className="mb-3">
+              <p className="font-inter text-[8px] uppercase tracking-widest text-center mb-2" style={{ color: G.dim }}>Select Bast Level</p>
+              <div className="grid grid-cols-5 gap-1.5">
+                {[1,2,3,4,5].map(level => {
+                  const active = bastLevel === level;
+                  return (
+                    <motion.button key={level}
+                      onClick={() => { setBastLevel(level); setState(prev => ({ ...prev, result: null })); }}
+                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                      animate={{
+                        background: active ? G.bgHi : "rgba(255,255,255,0.02)",
+                        borderColor: active ? G.borderHi : "rgba(255,255,255,0.08)",
+                        boxShadow: active ? `0 0 16px ${G.glow}` : "none",
+                      }}
+                      transition={{ duration: 0.2 }}
+                      className="flex flex-col items-center justify-center py-2 px-1 rounded-lg border">
+                      <span className="font-inter text-[10px] font-bold" style={{ color: active ? G.text : "rgba(255,255,255,0.35)" }}>
+                        BAST {level}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <motion.button onClick={handleCalculate} disabled={!input.trim()}
               whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
