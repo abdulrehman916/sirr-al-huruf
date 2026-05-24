@@ -203,56 +203,43 @@ function SigilSVG() {
   );
 }
 
-/* ── Asma ul Husna — 3D celestial orbit INSIDE the seal ── */
-// Orbit sits between inner ring (r=110) and middle ring (r=164) in SVG space.
-// SVG viewBox=520, container=500px → scale factor = 500/520
-// Orbit radius in SVG units: 136. In px: 136 * (500/520) ≈ 130.8px
-// Tilted ellipse gives 3D depth: rY = rX * 0.30
+/* ── Asma ul Husna — flat circular orbit in the LARGE sacred ring zone ── */
+// SVG rings: outer=228, middle=164. Midpoint orbit = 196 SVG units.
+// In px (container 500, SVG 520): 196 * (500/520) ≈ 188px radius.
+// Flat circle — no tilt — names stay perfectly upright and readable.
 function AsmaNames({ containerSize }) {
   const half = containerSize / 2;
   const SVG_SCALE = containerSize / SIZE; // 500/520
-  const rX = 136 * SVG_SCALE;   // ~130px — between inner & middle ring
-  const rY = rX * 0.30;          // tilt compression
-  const ORBIT_DURATION = 100;    // seconds per revolution — slow, celestial
+  // Orbit at the midpoint of the large sacred zone (between outer r=228 & middle r=164)
+  const ORBIT_R = 194 * SVG_SCALE; // ≈ 186px — sits beautifully in the large ring area
+  const ORBIT_DURATION = 120; // seconds per full revolution — slow, celestial
 
   const [positions, setPositions] = useState(() =>
-    ASMA.map((_, i) => ({ x: half, y: half, depth: 0 }))
+    ASMA.map((_, i) => {
+      const angle = (i / ASMA.length) * Math.PI * 2 - Math.PI / 2;
+      return {
+        x: half + Math.cos(angle) * ORBIT_R,
+        y: half + Math.sin(angle) * ORBIT_R,
+      };
+    })
   );
 
   useAnimationFrame((t) => {
-    const elapsed = (t / 1000) / ORBIT_DURATION;
+    const elapsed = (t / 1000) / ORBIT_DURATION; // fractional revolutions
     setPositions(ASMA.map((_, i) => {
-      const baseAngle = (i / ASMA.length) * Math.PI * 2;
+      const baseAngle = (i / ASMA.length) * Math.PI * 2 - Math.PI / 2;
       const angle = baseAngle + elapsed * Math.PI * 2;
-      const ox = Math.cos(angle) * rX;
-      const oy = Math.sin(angle) * rY;
-      const depth = Math.sin(angle); // +1 front, -1 back
-      return { x: half + ox, y: half + oy, depth };
+      return {
+        x: half + Math.cos(angle) * ORBIT_R,
+        y: half + Math.sin(angle) * ORBIT_R,
+      };
     }));
   });
 
-  // Sort so front names render on top
-  const sorted = positions
-    .map((p, i) => ({ ...p, name: ASMA[i], i }))
-    .sort((a, b) => a.depth - b.depth);
-
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
-      {sorted.map(({ name, x, y, depth, i }) => {
-        // depth: -1 (back) → +1 (front)
-        const t = (depth + 1) / 2; // normalise 0..1
-
-        // Scale: back=0.68, front=1.05
-        const scale = 0.68 + t * 0.37;
-        // Opacity: back=0.20, front=0.95
-        const opacity = 0.20 + t * 0.75;
-        // Blur: back softens, front is crisp
-        const blur = (1 - t) * 1.4;
-        const brightness = 68 + t * 32;
-        const gInner = G((0.20 + t * 0.60).toFixed(2));
-        const gOuter = G((0.08 + t * 0.38).toFixed(2));
-        const shadowY = (1 - t) * 1.5;
-
+    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 8 }}>
+      {positions.map(({ x, y }, i) => {
+        const name = ASMA[i];
         return (
           <div
             key={name}
@@ -260,38 +247,35 @@ function AsmaNames({ containerSize }) {
               position: "absolute",
               left: x,
               top: y,
-              transform: `translate(-50%, -50%) scale(${scale})`,
-              opacity,
-              zIndex: Math.round(t * 10) + 6,
-              willChange: "transform, opacity",
+              transform: "translate(-50%, -50%)",
+              willChange: "transform",
             }}
           >
-            {/* Soft aura halo */}
+            {/* Soft gold aura behind the name */}
             <div style={{
               position: "absolute",
-              inset: "-6px -10px",
+              inset: "-8px -14px",
               borderRadius: "50%",
-              background: `radial-gradient(ellipse, ${gOuter} 0%, transparent 72%)`,
-              filter: `blur(${3 + t * 5}px)`,
-              opacity: 0.5 + t * 0.5,
+              background: `radial-gradient(ellipse, ${G("0.28")} 0%, transparent 70%)`,
+              filter: "blur(6px)",
               pointerEvents: "none",
             }} />
 
-            {/* The divine name */}
+            {/* Divine name — upright, legible, luminous */}
             <span style={{
               fontFamily: "'Amiri', serif",
               fontWeight: "700",
-              fontSize: "11.5px",
-              color: `hsl(43, ${52 + t * 28}%, ${52 + t * 22}%)`,
+              fontSize: "13px",
+              color: "#D4AF37",
               textShadow: [
-                `0 ${shadowY}px ${2 + t * 5}px ${gInner}`,
-                `0 0 ${10 + t * 18}px ${gOuter}`,
+                `0 0 8px ${G("0.75")}`,
+                `0 0 20px ${G("0.40")}`,
+                `0 0 40px ${G("0.18")}`,
               ].join(", "),
               whiteSpace: "nowrap",
               display: "block",
-              letterSpacing: "0.04em",
+              letterSpacing: "0.05em",
               direction: "rtl",
-              filter: blur > 0.3 ? `blur(${blur}px) brightness(${brightness}%)` : `brightness(${brightness}%)`,
               position: "relative",
               zIndex: 1,
             }}>
