@@ -32,22 +32,19 @@ function stripDiacritics(text) {
 
 function extractLetters(text) {
   const clean = stripDiacritics(text);
-  const result = [];
-  // Arabic letter range check: Hamza-Ya ONLY (\u0621-\u063A and \u0641-\u064A)
-  // Use non-global regex for single character testing
-  const arabicLetterRegex = /[\u0621-\u063A\u0641-\u064A]/;
+  // Match ALL Arabic letters at once using global regex - safest for Unicode
+  const arabicLetterRegex = /[\u0621-\u063A\u0641-\u064A]/g;
+  const matches = clean.match(arabicLetterRegex);
   
-  for (const ch of clean) {
-    // Check if character is in valid Arabic letter range
-    if (arabicLetterRegex.test(ch)) {
-      const norm = normalize(ch);
-      // Only include if it maps to a known Abjad value
-      if (norm in KABIR_MAP) {
-        result.push({ original: ch, normalized: norm });
-      }
-    }
+  if (!matches) {
+    return [];
   }
-  return result;
+  
+  // Convert matches to result objects with normalization
+  return matches.map(ch => {
+    const norm = normalize(ch);
+    return { original: ch, normalized: norm };
+  }).filter(item => item.normalized in KABIR_MAP);
 }
 
 // ══════════════════════════════════════
