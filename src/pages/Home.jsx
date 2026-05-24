@@ -81,33 +81,61 @@ export default function Home() {
             transition={{ duration: 1.4, ease: "easeOut" }}
             className="absolute z-20 flex items-center justify-center"
           >
-            {/* Soft divine aura — refined, not excessive */}
+            {/* Volumetric light — deep golden bloom behind the name */}
             <motion.div
               className="absolute rounded-full pointer-events-none"
               style={{
-                width: 130, height: 130,
-                background: "radial-gradient(circle, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.05) 55%, transparent 80%)",
-                filter: "blur(16px)",
+                width: 220, height: 220,
+                background: "radial-gradient(circle, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.07) 35%, rgba(180,130,20,0.03) 60%, transparent 78%)",
+                filter: "blur(22px)",
+                zIndex: 0,
               }}
-              animate={{ scale: [1, 1.25, 1], opacity: [0.40, 0.85, 0.40] }}
-              transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ scale: [1, 1.30, 1], opacity: [0.38, 0.78, 0.38] }}
+              transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
             />
-            {/* الله — bare luminous calligraphy */}
-            <motion.span
-              className="font-amiri font-bold relative z-10 select-none"
+            {/* Secondary tighter core bloom */}
+            <motion.div
+              className="absolute rounded-full pointer-events-none"
               style={{
-                  fontSize: "3.2rem",
-                  color: "#D4AF37",
-                  lineHeight: 1,
-                  letterSpacing: "0.03em",
-                }}
+                width: 110, height: 110,
+                background: "radial-gradient(circle, rgba(212,175,55,0.28) 0%, rgba(212,175,55,0.08) 55%, transparent 80%)",
+                filter: "blur(12px)",
+                zIndex: 1,
+              }}
+              animate={{ scale: [1, 1.20, 1], opacity: [0.45, 0.90, 0.45] }}
+              transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+            />
+            {/* Floating depth shadow — sacred object lifting off the plane */}
+            <motion.div
+              className="absolute pointer-events-none"
+              style={{
+                width: 90, height: 18,
+                borderRadius: "50%",
+                background: "radial-gradient(ellipse, rgba(0,0,0,0.45) 0%, transparent 70%)",
+                filter: "blur(8px)",
+                bottom: -22,
+                zIndex: 0,
+              }}
+              animate={{ scaleX: [1, 0.80, 1], opacity: [0.50, 0.28, 0.50] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* الله — luminous calligraphy, elevated */}
+            <motion.span
+              className="font-amiri font-bold relative select-none"
+              style={{
+                fontSize: "3.2rem",
+                color: "#D4AF37",
+                lineHeight: 1,
+                letterSpacing: "0.03em",
+                zIndex: 2,
+              }}
               animate={{
                 textShadow: [
-                  "0 0 10px rgba(212,175,55,0.45), 0 0 28px rgba(212,175,55,0.60), 0 0 55px rgba(212,175,55,0.22)",
-                  "0 0 16px rgba(212,175,55,0.70), 0 0 44px rgba(212,175,55,0.88), 0 0 80px rgba(212,175,55,0.38)",
-                  "0 0 10px rgba(212,175,55,0.45), 0 0 28px rgba(212,175,55,0.60), 0 0 55px rgba(212,175,55,0.22)",
+                  "0 0 10px rgba(212,175,55,0.48), 0 0 28px rgba(212,175,55,0.62), 0 0 60px rgba(212,175,55,0.20)",
+                  "0 0 18px rgba(212,175,55,0.78), 0 0 48px rgba(212,175,55,0.92), 0 0 90px rgba(212,175,55,0.35)",
+                  "0 0 10px rgba(212,175,55,0.48), 0 0 28px rgba(212,175,55,0.62), 0 0 60px rgba(212,175,55,0.20)",
                 ],
-                y: [0, -3, 0],
+                y: [0, -4, 0],
               }}
               transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
             >

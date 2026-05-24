@@ -33,6 +33,18 @@ const DUST = Array.from({ length: 30 }, () => ({
   opacity: randomBetween(0.18, 0.55),
 }));
 
+// Tiny cosmic micro-particles — barely visible, very subtle
+const COSMIC_PARTICLES = Array.from({ length: 55 }, () => ({
+  size: randomBetween(0.5, 1.6),
+  top: randomBetween(0, 100),
+  left: randomBetween(0, 100),
+  driftX: randomBetween(-18, 18),
+  driftY: randomBetween(-25, 10),
+  dur: randomBetween(18, 45),
+  delay: randomBetween(0, 30),
+  opacity: randomBetween(0.06, 0.22),
+}));
+
 const BG_LETTERS = ["ب","ح","ط","ي","ل","م","ن","ع","ف","ص","ق","ر","ش","و","ك","ذ","غ","ا"];
 const BG_LETTER_DATA = Array.from({ length: 14 }, (_, i) => ({
   char: BG_LETTERS[i % BG_LETTERS.length],
@@ -164,6 +176,31 @@ function NebulaLayers({ mouse }) {
         animate={{ opacity: [0.28, 0.60, 0.28] }}
         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 9 }}
       />
+    </div>
+  );
+}
+
+/* ── Tiny cosmic micro-particles ── */
+function CosmicParticles() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {COSMIC_PARTICLES.map((p, i) => (
+        <motion.div key={i}
+          className="absolute rounded-full"
+          style={{
+            width: p.size, height: p.size,
+            top: `${p.top}%`, left: `${p.left}%`,
+            background: i % 5 === 0 ? "#D4AF37" : "#c8d8f0",
+            opacity: p.opacity,
+          }}
+          animate={{
+            x: [0, p.driftX, 0],
+            y: [0, p.driftY, 0],
+            opacity: [p.opacity * 0.3, p.opacity, p.opacity * 0.3],
+          }}
+          transition={{ duration: p.dur, repeat: Infinity, ease: "easeInOut", delay: p.delay }}
+        />
+      ))}
     </div>
   );
 }
@@ -323,7 +360,10 @@ export default function MysticalBackground() {
       {/* Layer 5 — light rays */}
       <LightRays mouse={mouse} />
 
-      {/* Layer 6 — foreground gold dust */}
+      {/* Layer 6 — micro cosmic particles */}
+      <CosmicParticles />
+
+      {/* Layer 7 — foreground gold dust */}
       <GoldDust />
 
       {/* Final vignette */}

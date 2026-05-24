@@ -81,13 +81,13 @@ function AuraLayers() {
   );
 }
 
-/* ── BACKGROUND depth layer — outermost ring, slowest parallax ── */
+/* ── BACKGROUND depth layer — outermost ring, ultra slow rotation ── */
 function OuterRing() {
   return (
     <motion.g
       style={{ transformOrigin: `${CX}px ${CY}px` }}
       animate={{ rotate: 360 }}
-      transition={{ duration: 240, repeat: Infinity, ease: "linear" }}
+      transition={{ duration: 420, repeat: Infinity, ease: "linear" }}
     >
       {/* Double ring border */}
       <circle cx={CX} cy={CY} r={228} fill="none" stroke={GOLD}
@@ -234,6 +234,27 @@ function SigilSVG({ mouse }) {
         </svg>
       </motion.div>
 
+      {/* ATMOSPHERIC FOG — between outer and middle rings */}
+      <motion.div style={{
+        position: "absolute", inset: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        pointerEvents: "none",
+        x: mouse.x * -7,
+        y: mouse.y * -7,
+      }}>
+        {/* Fog annulus: sits in the large sacred zone, dims background */}
+        <motion.div style={{
+          position: "absolute",
+          width: SIZE * 0.68, height: SIZE * 0.68,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, transparent 48%, rgba(2,8,22,0.22) 62%, rgba(2,8,22,0.10) 72%, transparent 85%)",
+          filter: "blur(14px)",
+        }}
+          animate={{ opacity: [0.55, 0.85, 0.55] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </motion.div>
+
       {/* MIDGROUND layer — hexagram, moves moderately */}
       <motion.div style={{
         position: "absolute", inset: 0,
@@ -243,6 +264,26 @@ function SigilSVG({ mouse }) {
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} style={{ width: SIZE, height: SIZE, overflow: "visible" }}>
           <MiddleRing />
         </svg>
+      </motion.div>
+
+      {/* ATMOSPHERIC FOG — between middle and inner rings */}
+      <motion.div style={{
+        position: "absolute", inset: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        pointerEvents: "none",
+        x: mouse.x * -12,
+        y: mouse.y * -12,
+      }}>
+        <motion.div style={{
+          position: "absolute",
+          width: SIZE * 0.46, height: SIZE * 0.46,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, transparent 42%, rgba(2,8,22,0.18) 58%, rgba(2,8,22,0.08) 68%, transparent 80%)",
+          filter: "blur(10px)",
+        }}
+          animate={{ opacity: [0.45, 0.72, 0.45] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
       </motion.div>
 
       {/* FOREGROUND layer — inner ring + core, moves most */}
@@ -302,6 +343,8 @@ function AsmaNames({ containerSize, mouse }) {
     >
       {positions.map(({ x, y }, i) => {
         const name = ASMA[i];
+        // Stagger the breath phase per name so they don't all pulse in sync
+        const breathDelay = (i / ASMA.length) * 4;
         return (
           <div
             key={name}
@@ -313,35 +356,43 @@ function AsmaNames({ containerSize, mouse }) {
               willChange: "transform",
             }}
           >
-            {/* Soft aura bloom */}
-            <div style={{
-              position: "absolute",
-              inset: "-8px -14px",
-              borderRadius: "50%",
-              background: `radial-gradient(ellipse, ${G("0.26")} 0%, transparent 68%)`,
-              filter: "blur(7px)",
-              pointerEvents: "none",
-            }} />
-            {/* Divine name */}
-            <span style={{
-              fontFamily: "'Amiri', serif",
-              fontWeight: "700",
-              fontSize: "13px",
-              color: "#D4AF37",
-              textShadow: [
-                `0 0 7px ${G("0.80")}`,
-                `0 0 18px ${G("0.38")}`,
-                `0 0 35px ${G("0.15")}`,
-              ].join(", "),
-              whiteSpace: "nowrap",
-              display: "block",
-              letterSpacing: "0.05em",
-              direction: "rtl",
-              position: "relative",
-              zIndex: 1,
-            }}>
+            {/* Breathing aura bloom — pulsing glow */}
+            <motion.div
+              style={{
+                position: "absolute",
+                inset: "-10px -16px",
+                borderRadius: "50%",
+                background: `radial-gradient(ellipse, ${G("0.30")} 0%, transparent 68%)`,
+                pointerEvents: "none",
+              }}
+              animate={{ opacity: [0.35, 0.85, 0.35], scale: [0.9, 1.15, 0.9] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: breathDelay }}
+            />
+            {/* Divine name with breathing glow */}
+            <motion.span
+              style={{
+                fontFamily: "'Amiri', serif",
+                fontWeight: "700",
+                fontSize: "13px",
+                color: "#D4AF37",
+                whiteSpace: "nowrap",
+                display: "block",
+                letterSpacing: "0.05em",
+                direction: "rtl",
+                position: "relative",
+                zIndex: 1,
+              }}
+              animate={{
+                textShadow: [
+                  `0 0 5px ${G("0.55")}, 0 0 14px ${G("0.22")}`,
+                  `0 0 10px ${G("0.90")}, 0 0 28px ${G("0.50")}, 0 0 50px ${G("0.18")}`,
+                  `0 0 5px ${G("0.55")}, 0 0 14px ${G("0.22")}`,
+                ],
+              }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: breathDelay }}
+            >
               {name}
-            </span>
+            </motion.span>
           </div>
         );
       })}
