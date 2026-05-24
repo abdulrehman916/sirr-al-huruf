@@ -234,8 +234,8 @@ function BastResults({ data }) {
               className="flex flex-col items-center rounded-2xl border px-4 py-3 min-w-[64px] gap-1"
               style={{ background: G.bgHi, borderColor: G.borderHi, boxShadow: `0 0 14px ${G.glow}` }}>
               <span className="font-amiri text-3xl text-white leading-none">{e.original}</span>
-              <span className="font-amiri text-sm leading-none" style={{ color: G.dim }}>{e.firstName}</span>
-              <span className="font-inter text-sm font-bold tabular-nums mt-0.5" style={{ color: G.text }}>{e.entryTotal}</span>
+              <span className="font-inter text-xs leading-none font-bold" style={{ color: G.dim }}>BAST {data.bastLevel}</span>
+              <span className="font-inter text-sm font-bold tabular-nums mt-0.5" style={{ color: G.text }}>{e.value}</span>
             </motion.div>
           ))}
         </div>
@@ -245,7 +245,7 @@ function BastResults({ data }) {
       <Section title="Running Total">
         <div className="space-y-1" dir="rtl">
           {data.entries.map((e, i) => {
-            running += e.entryTotal;
+            running += e.value;
             const isLast = i === data.entries.length - 1;
             return (
               <motion.div key={i}
@@ -255,9 +255,9 @@ function BastResults({ data }) {
                 style={{ background: isLast ? G.bgHi : "rgba(255,255,255,0.02)", borderBottom: `1px solid ${G.faint}` }}>
                 <div className="flex items-center gap-3">
                   <span className="font-amiri text-lg text-white w-6 text-center">{e.original}</span>
-                  <span className="font-amiri text-xs" style={{ color: G.dim }}>{e.firstName}</span>
+                  <span className="font-inter text-xs" style={{ color: G.dim }}>BAST {data.bastLevel}</span>
                   <span className="font-inter text-[10px] text-white/25">+</span>
-                  <span className="font-inter text-xs tabular-nums" style={{ color: G.dim }}>{e.entryTotal}</span>
+                  <span className="font-inter text-xs tabular-nums" style={{ color: G.dim }}>{e.value}</span>
                 </div>
                 <span className="font-inter text-sm font-bold tabular-nums" style={{ color: isLast ? G.text : "rgba(255,255,255,0.50)" }}>
                   {running.toLocaleString()}

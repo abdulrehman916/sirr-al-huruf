@@ -139,57 +139,57 @@ export function calcCumeli(text) {
 
 // ══════════════════════════════════════
 // 4 — BAST-I HURUF (5 Levels)
-// Each letter expands to its name, then each letter of that name
-// is valued according to the Bast level multiplier.
-// Bast 1: base Kabir values
-// Bast 2: ×2 multiplier
-// Bast 3: ×3 multiplier
-// Bast 4: ×4 multiplier
-// Bast 5: ×5 multiplier
+// Authentic numerical Bast table from the book
+// Direct lookup values for each letter at each Bast level
 // ══════════════════════════════════════
-export const BAST_MULTIPLIERS = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
+export const BAST_TABLE = {
+  'ا': { 1: 16,   2: 1047, 3: 594,  4: 1941, 5: 991 },
+  'ب': { 1: 616,  2: 1569, 3: 1940, 4: 1046, 5: 921 },
+  'ج': { 1: 1041, 2: 469,  3: 1400, 4: 451,  5: 1118 },
+  'د': { 1: 283,  2: 2215, 3: 2535, 4: 3299, 5: 2806 },
+  'ه': { 1: 709,  2: 734,  3: 1575, 4: 1783, 5: 2007 },
+  'و': { 1: 141,  2: 415,  3: 1625, 4: 1980, 5: 1364 },
+  'ز': { 1: 612,  2: 1717, 3: 1029, 4: 1288, 5: 1900 },
+  'ح': { 1: 539,  2: 2399, 3: 2959, 4: 2627, 5: 2028 },
+  'ط': { 1: 579,  2: 1499, 3: 1585, 4: 2243, 5: 2627 },
+  'ي': { 1: 579,  2: 1499, 3: 1585, 4: 2243, 5: 2627 },
+  'ك': { 1: 1097, 2: 850,  3: 1420, 4: 1086, 5: 1239 },
+  'ل': { 1: 339,  2: 2731, 3: 2038, 4: 2439, 5: 2703 },
+  'م': { 1: 765,  2: 1428, 3: 1698, 4: 1843, 5: 2149 },
+  'ن': { 1: 524,  2: 1681, 3: 1309, 4: 1748, 5: 1260 },
+  'س': { 1: 197,  2: 796,  3: 1258, 4: 2008, 5: 1342 },
+  'ع': { 1: 657,  2: 1428, 3: 1698, 4: 1843, 5: 2149 },
+  'ف': { 1: 595,  2: 2067, 3: 1395, 4: 2513, 5: 3113 },
+  'ص': { 1: 60,   2: 524,  3: 1681, 4: 1309, 5: 1748 },
+  'ق': { 1: 517,  2: 1483, 3: 2149, 4: 1668, 5: 1772 },
+  'ر': { 1: 1095, 2: 1418, 3: 1642, 4: 1591, 5: 1488 },
+  'ش': { 1: 337,  2: 2333, 3: 3963, 4: 3313, 5: 3870 },
+  'ت': { 1: 763,  2: 1760, 3: 883,  4: 2793, 5: 2561 },
+  'ث': { 1: 522,  2: 2014, 3: 1592, 4: 2088, 5: 1991 },
+  'خ': { 1: 195,  2: 1364, 3: 2016, 4: 1777, 5: 647 },
+  'ذ': { 1: 655,  2: 1996, 3: 1770, 4: 506,  5: 1231 },
+  'ض': { 1: 593,  2: 2399, 3: 2959, 4: 2627, 5: 2028 },
+  'ظ': { 1: 114,  2: 822,  3: 1906, 4: 1175, 5: 1080 },
+  'غ': { 1: 991,  2: 1941, 3: 594,  4: 1047, 5: 16 },
+};
 
 export function calcBast(text, bastLevel = 1) {
   console.log('═══════════════════════════════════════');
   console.log('[calcBast] Original Input:', text, '| bastLevel:', bastLevel);
   const src = extractLetters(text);
   console.log('[calcBast] Parsed Letters:', src.map(l => l.original));
-  const multiplier = BAST_MULTIPLIERS[bastLevel] || 1;
 
   const entries = src.map(l => {
-    // First expansion: letter → name
-    const firstName = LETTER_NAMES[l.normalized] || l.normalized;
-    const firstLetters = extractLetters(firstName);
-
-    // Second expansion with Bast level multiplier
-    const bastGroups = firstLetters.map(fl => {
-      const secondName = LETTER_NAMES[fl.normalized] || fl.normalized;
-      const secondLetters = extractLetters(secondName).map(sl => ({
-        ...sl,
-        value: (KABIR_MAP[sl.normalized] ?? 0) * multiplier,
-      }));
-      const groupTotal = secondLetters.reduce((s, x) => s + x.value, 0);
-      return {
-        letter: fl.original,
-        normalized: fl.normalized,
-        name: secondName,
-        letters: secondLetters,
-        total: groupTotal,
-      };
-    });
-
-    const entryTotal = bastGroups.reduce((s, g) => s + g.total, 0);
+    const bastValue = BAST_TABLE[l.normalized]?.[bastLevel] ?? 0;
     return {
       original: l.original,
       normalized: l.normalized,
-      firstName,
-      bastGroups,
-      entryTotal,
+      value: bastValue,
     };
   });
 
-  const total = entries.reduce((s, e) => s + e.entryTotal, 0);
-  console.log('[calcBast] Mapped Values:', entries.map(e => ({ letter: e.original, firstName: e.firstName, total: e.entryTotal })));
+  const total = entries.reduce((s, e) => s + e.value, 0);
+  console.log('[calcBast] Mapped Values:', entries.map(e => ({ letter: e.original, bastLevel, value: e.value })));
   console.log('[calcBast] Total:', total);
   console.log('═══════════════════════════════════════');
   return { entries, total, bastLevel };
