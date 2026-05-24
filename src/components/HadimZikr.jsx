@@ -1,7 +1,8 @@
 /**
  * HadimZikr — Zikr / Recitation Count Section
- * Shows the dynamic recommended count (= final grand total before subtraction)
- * plus traditional 777-multiple extended cycles.
+ * Primary: 777 (book recommendation)
+ * Secondary: traditional 777 multiples
+ * Tertiary: dynamic grand total (informational)
  */
 import { motion } from "framer-motion";
 
@@ -34,6 +35,16 @@ const ACCENTS = {
   },
 };
 
+function Divider({ accent }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${accent.border})` }} />
+      <div className="w-1 h-1 rounded-full" style={{ background: accent.border }} />
+      <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${accent.border})` }} />
+    </div>
+  );
+}
+
 export default function HadimZikr({ hadimMode, grandSum }) {
   const accent = ACCENTS[hadimMode] || ACCENTS.ULVI;
 
@@ -51,47 +62,51 @@ export default function HadimZikr({ hadimMode, grandSum }) {
     >
       {/* ── Title ── */}
       <div className="text-center space-y-1">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${accent.border})` }} />
-          <span className="font-inter text-[8px] uppercase tracking-[0.3em]" style={{ color: accent.dim }}>Zikr / Recitation Count</span>
-          <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${accent.border})` }} />
-        </div>
-        <p className="font-amiri text-xl font-bold" dir="rtl" style={{ color: accent.text }}>
-          عدد الزكر / التلاوة
+        <Divider accent={accent} />
+        <p className="font-inter text-[8px] uppercase tracking-[0.3em] pt-1" style={{ color: accent.dim }}>
+          Zikr / Recitation Count
         </p>
+        <p className="font-amiri text-xl font-bold" dir="rtl" style={{ color: accent.text }}>
+          عدد الذكر / التلاوة
+        </p>
+        <Divider accent={accent} />
       </div>
 
-      {/* ── Recommended Main Count ── */}
+      {/* ══ 1 — PRIMARY RECOMMENDED COUNT: 777 ══ */}
       <div
-        className="rounded-2xl border p-5 text-center space-y-2"
-        style={{ background: accent.numBg, borderColor: accent.border, boxShadow: `inset 0 0 30px ${accent.glow.replace("0.65","0.08")}` }}
+        className="rounded-2xl border p-6 text-center space-y-2"
+        style={{
+          background: accent.numBg,
+          borderColor: accent.border,
+          boxShadow: `inset 0 0 30px ${accent.glow.replace("0.65","0.08")}`,
+        }}
       >
         <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: accent.dim }}>
           Recommended Main Count
         </p>
         <motion.p
           className="font-inter font-bold tabular-nums"
-          style={{ fontSize: "clamp(2.4rem, 10vw, 4rem)", color: accent.text }}
+          style={{ fontSize: "clamp(3rem, 14vw, 5rem)", color: accent.text }}
           animate={{
             textShadow: [
               `0 0 20px ${accent.glow}, 0 0 50px ${accent.glow.replace("0.65","0.22")}`,
-              `0 0 42px ${accent.glow}, 0 0 90px ${accent.glow.replace("0.65","0.40")}`,
+              `0 0 48px ${accent.glow}, 0 0 100px ${accent.glow.replace("0.65","0.42")}`,
               `0 0 20px ${accent.glow}, 0 0 50px ${accent.glow.replace("0.65","0.22")}`,
             ],
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         >
-          {grandSum.toLocaleString()}
+          777
         </motion.p>
         <p className="font-inter text-[9px] text-white/30 uppercase tracking-widest">
-          Final Grand Total (before subtraction)
+          Book Recommendation
         </p>
       </div>
 
-      {/* ── Traditional Extended Cycles ── */}
+      {/* ══ 2 — TRADITIONAL EXTENDED CYCLES ══ */}
       <div className="space-y-3">
         <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: accent.dim }}>
-          Traditional Extended Cycles (×777)
+          Traditional Extended Cycles
         </p>
         <div className="grid grid-cols-2 gap-2">
           {TRADITIONAL_CYCLES.map((count, i) => (
@@ -101,10 +116,13 @@ export default function HadimZikr({ hadimMode, grandSum }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.04 * i, duration: 0.4 }}
               className="rounded-xl border px-3 py-2 flex items-center justify-between"
-              style={{ background: accent.bg, borderColor: accent.border.replace("0.35","0.20").replace("0.40","0.22") }}
+              style={{
+                background: accent.bg,
+                borderColor: accent.border.replace("0.35","0.18").replace("0.40","0.20"),
+              }}
             >
               <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: accent.dim }}>
-                ×{i + 1}
+                777 × {i + 1}
               </span>
               <span className="font-inter text-sm font-bold tabular-nums" style={{ color: accent.text }}>
                 {count.toLocaleString()}
@@ -112,6 +130,30 @@ export default function HadimZikr({ hadimMode, grandSum }) {
             </motion.div>
           ))}
         </div>
+      </div>
+
+      <Divider accent={accent} />
+
+      {/* ══ 3 — OPTIONAL DYNAMIC GRAND TOTAL ══ */}
+      <div
+        className="rounded-xl border px-4 py-3 text-center space-y-1"
+        style={{
+          background: "rgba(255,255,255,0.02)",
+          borderColor: accent.border.replace("0.35","0.15").replace("0.40","0.18"),
+        }}
+      >
+        <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: accent.dim }}>
+          Based on Final Grand Total
+        </p>
+        <p
+          className="font-inter font-bold tabular-nums text-white/70"
+          style={{ fontSize: "clamp(1.2rem, 5vw, 1.6rem)" }}
+        >
+          {grandSum.toLocaleString()}
+        </p>
+        <p className="font-inter text-[8px] text-white/25 uppercase tracking-widest">
+          Secondary Informational Value
+        </p>
       </div>
 
       {/* ── Bottom ornament ── */}
