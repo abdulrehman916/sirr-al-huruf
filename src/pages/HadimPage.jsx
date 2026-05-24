@@ -63,7 +63,38 @@ function computeAllTypes(value) {
   };
 }
 
+const HADIM_MODES = [
+  {
+    key: 'ULVI',
+    icon: '✨',
+    label: 'ULVI',
+    arabic: 'علوي',
+    subtract: 41,
+    active:   { border: 'rgba(212,175,55,0.80)', bg: 'rgba(212,175,55,0.18)', glow: '0 0 22px rgba(212,175,55,0.55)', text: '#F5D060' },
+    inactive: { border: 'rgba(212,175,55,0.20)', bg: 'rgba(212,175,55,0.05)', text: 'rgba(212,175,55,0.45)' },
+  },
+  {
+    key: 'SUFLI',
+    icon: '🔥',
+    label: 'SUFLI',
+    arabic: 'سفلي',
+    subtract: 316,
+    active:   { border: 'rgba(220,38,38,0.80)', bg: 'rgba(220,38,38,0.18)', glow: '0 0 22px rgba(220,38,38,0.55)', text: '#FCA5A5' },
+    inactive: { border: 'rgba(220,38,38,0.20)', bg: 'rgba(220,38,38,0.05)', text: 'rgba(220,38,38,0.45)' },
+  },
+  {
+    key: 'SHERLI',
+    icon: '🜏',
+    label: 'SHERLI',
+    arabic: 'شرلي',
+    subtract: 319,
+    active:   { border: 'rgba(168,85,247,0.80)', bg: 'rgba(168,85,247,0.18)', glow: '0 0 22px rgba(168,85,247,0.55)', text: '#D8B4FE' },
+    inactive: { border: 'rgba(168,85,247,0.20)', bg: 'rgba(168,85,247,0.05)', text: 'rgba(168,85,247,0.45)' },
+  },
+];
+
 export default function HadimPage() {
+  const [hadimMode, setHadimMode] = useState('ULVI');
   const [talib, setTalib]     = useState("");
   const [matloob, setMatloob] = useState("");
   const [isms, setIsms]       = useState(["", "", "", "", ""]);
@@ -90,8 +121,9 @@ export default function HadimPage() {
       types: computeAllTypes(item.abjad),
     }));
 
-    // Grand sum uses Ulvi reduced values (−41 chain) for the grand total
-    const grandSum = individuals.reduce((acc, item) => acc + item.types.ulvi.reduced, 0);
+    // Grand sum uses the active mode's reduced values
+    const activeKey = hadimMode.toLowerCase();
+    const grandSum = individuals.reduce((acc, item) => acc + item.types[activeKey].reduced, 0);
     const grandTypes = computeAllTypes(grandSum);
 
     setResult({ individuals, grandSum, grandTypes });
@@ -112,6 +144,47 @@ export default function HadimPage() {
           <h1 className="font-amiri text-4xl sm:text-5xl font-bold text-white">مولّد الخادم</h1>
           <p className="font-inter text-xs text-purple-400/55 mt-1.5 tracking-widest uppercase font-medium">Hadim Generator</p>
           <PurpleDivider />
+        </div>
+
+        {/* Hadim Type Selector */}
+        <div className="rounded-2xl border p-3"
+          style={{ background: "rgba(8,18,40,0.90)", borderColor: "rgba(255,255,255,0.10)", boxShadow: "0 2px 16px rgba(0,0,0,0.40)" }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest text-white/30 text-center mb-2.5">Select Hadim Type</p>
+          <div className="grid grid-cols-3 gap-2">
+            {HADIM_MODES.map(mode => {
+              const isActive = hadimMode === mode.key;
+              const s = isActive ? mode.active : mode.inactive;
+              return (
+                <motion.button
+                  key={mode.key}
+                  onClick={() => { setHadimMode(mode.key); setResult(null); }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.96 }}
+                  animate={{
+                    background: s.bg,
+                    boxShadow: isActive ? s.glow : 'none',
+                  }}
+                  transition={{ duration: 0.25 }}
+                  className="relative flex flex-col items-center justify-center py-3 px-2 rounded-xl border"
+                  style={{ borderColor: s.border }}>
+                  {isActive && (
+                    <motion.div
+                      layoutId="modeHighlight"
+                      className="absolute inset-0 rounded-xl pointer-events-none"
+                      style={{ background: s.bg }}
+                      transition={{ duration: 0.28, ease: "easeInOut" }}
+                    />
+                  )}
+                  <span className="text-lg mb-0.5 relative z-10">{mode.icon}</span>
+                  <span className="font-inter text-[11px] font-bold tracking-widest relative z-10" style={{ color: s.text }}>{mode.label}</span>
+                  <span className="font-amiri text-[11px] relative z-10" style={{ color: isActive ? s.text : 'rgba(255,255,255,0.25)' }}>{mode.arabic}</span>
+                  {isActive && (
+                    <span className="font-inter text-[8px] uppercase tracking-widest mt-0.5 relative z-10" style={{ color: s.text, opacity: 0.65 }}>−{mode.subtract}</span>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Input Card */}
@@ -209,12 +282,12 @@ export default function HadimPage() {
                     </div>
                   </div>
 
-                  {/* Three types */}
-                  <div className="space-y-3">
-                    <HadimTypePanel typeData={item.types.ulvi} />
-                    <HadimTypePanel typeData={item.types.sufli} />
-                    <HadimTypePanel typeData={item.types.sherli} />
-                  </div>
+                  {/* Active type panel */}
+                  <AnimatePresence mode="wait">
+                    <motion.div key={hadimMode} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
+                      <HadimTypePanel typeData={item.types[hadimMode.toLowerCase()]} />
+                    </motion.div>
+                  </AnimatePresence>
                 </motion.div>
               ))}
 
@@ -229,8 +302,8 @@ export default function HadimPage() {
                   <div className="rounded-xl border border-purple-500/20 px-3 py-2.5 space-y-1.5" style={{ background: "rgba(168,85,247,0.06)" }}>
                     {result.individuals.map((item, i) => (
                       <div key={i} className="flex justify-between items-center">
-                        <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/40">{item.label} (Ulvi reduced)</span>
-                        <span className="font-inter text-xs text-white/60 tabular-nums">{item.types.ulvi.reduced}</span>
+                        <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/40">{item.label} reduced</span>
+                        <span className="font-inter text-xs text-white/60 tabular-nums">{item.types[hadimMode.toLowerCase()].reduced}</span>
                       </div>
                     ))}
                     <div className="h-px bg-purple-500/25 my-1" />
@@ -240,12 +313,12 @@ export default function HadimPage() {
                     </div>
                   </div>
 
-                  {/* Three grand types */}
-                  <div className="space-y-3">
-                    <HadimTypePanel typeData={result.grandTypes.ulvi} />
-                    <HadimTypePanel typeData={result.grandTypes.sufli} />
-                    <HadimTypePanel typeData={result.grandTypes.sherli} />
-                  </div>
+                  {/* Active grand type panel */}
+                  <AnimatePresence mode="wait">
+                    <motion.div key={hadimMode} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
+                      <HadimTypePanel typeData={result.grandTypes[hadimMode.toLowerCase()]} />
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
               </motion.div>
 
