@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import MysticalBackground from "../components/MysticalBackground";
 import SacredWheel from "../components/SacredWheel";
+import { useNavigation } from "../context/NavigationContext";
 
 const NAV_CARDS = [
   {
@@ -65,6 +66,7 @@ function CardInner({ card }) {
 }
 
 export default function Home() {
+  const { startNav } = useNavigation();
   return (
     <div className="min-h-screen font-inter relative overflow-x-hidden">
       <MysticalBackground />
@@ -205,8 +207,22 @@ export default function Home() {
                   <CardInner card={card} />
                 </div>
               ) : (
-                <Link to={card.path} className="block rounded-2xl border p-5 flex flex-col items-center text-center transition-all duration-300"
-                  style={{ background: card.bg, borderColor: card.borderColor, boxShadow: card.glow, minHeight: 140 }}>
+                <Link
+                  to={card.path}
+                  onMouseDown={startNav}
+                  onTouchStart={startNav}
+                  className="block rounded-2xl border p-5 flex flex-col items-center text-center transition-all duration-300"
+                  style={{
+                    background: card.bg,
+                    borderColor: card.borderColor,
+                    boxShadow: card.glow,
+                    minHeight: 140,
+                    transform: "translateZ(0)",
+                    willChange: "transform",
+                    WebkitTapHighlightColor: "transparent",
+                    touchAction: "manipulation",
+                  }}
+                >
                   <CardInner card={card} />
                 </Link>
               )}

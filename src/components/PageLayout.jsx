@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useNavigation } from "../context/NavigationContext";
 
 const TABS = [
   { id: "abjad", label: "ABJAD", arabic: "أبجد", path: "/abjad" },
@@ -40,6 +41,7 @@ function CosmicBackground() {
 
 export default function PageLayout({ children, accentColor = "gold" }) {
   const location = useLocation();
+  const { startNav } = useNavigation();
   const activeId = TABS.find(t => t.path === location.pathname)?.id;
 
   const accentMap = {
@@ -67,11 +69,16 @@ export default function PageLayout({ children, accentColor = "gold" }) {
           {/* Back Home */}
           <Link
             to="/"
+            onMouseDown={startNav}
+            onTouchStart={startNav}
             className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all"
             style={{
               background: "rgba(212,175,55,0.08)",
               border: "1px solid rgba(212,175,55,0.25)",
               color: "rgba(212,175,55,0.80)",
+              WebkitTapHighlightColor: "transparent",
+              touchAction: "manipulation",
+              transform: "translateZ(0)",
             }}
           >
             <ArrowRight className="w-3.5 h-3.5 rotate-180" />
@@ -86,14 +93,22 @@ export default function PageLayout({ children, accentColor = "gold" }) {
                 <Link
                   key={tab.id}
                   to={tab.path}
+                  onMouseDown={startNav}
+                  onTouchStart={startNav}
                   className="relative flex flex-col items-center py-1.5 px-1 rounded-lg transition-all duration-300"
                   style={isActive ? {
                     background: "linear-gradient(135deg, rgba(212,175,55,0.28), rgba(212,175,55,0.12))",
                     border: "1px solid rgba(212,175,55,0.45)",
                     boxShadow: "0 0 12px rgba(212,175,55,0.20)",
+                    WebkitTapHighlightColor: "transparent",
+                    touchAction: "manipulation",
+                    transform: "translateZ(0)",
                   } : {
                     background: "rgba(255,255,255,0.03)",
                     border: "1px solid rgba(255,255,255,0.07)",
+                    WebkitTapHighlightColor: "transparent",
+                    touchAction: "manipulation",
+                    transform: "translateZ(0)",
                   }}
                 >
                   <span className="font-amiri text-xs font-bold" style={{ color: isActive ? "#D4AF37" : "rgba(255,255,255,0.45)" }}>
