@@ -33,6 +33,24 @@ const DUST = Array.from({ length: 30 }, () => ({
   opacity: randomBetween(0.18, 0.55),
 }));
 
+// Edge-only twinkling stars — concentrated in outer 20% of screen
+const EDGE_STARS = Array.from({ length: 32 }, (_, i) => {
+  // distribute around edges: top, bottom, left-strip, right-strip
+  const side = i % 4;
+  return {
+    top: side === 0 ? randomBetween(0, 18)
+       : side === 1 ? randomBetween(82, 100)
+       : randomBetween(0, 100),
+    left: side === 2 ? randomBetween(0, 14)
+        : side === 3 ? randomBetween(86, 100)
+        : randomBetween(0, 100),
+    size: randomBetween(0.8, 2.2),
+    opacity: randomBetween(0.25, 0.65),
+    dur: randomBetween(2.5, 7),
+    delay: randomBetween(0, 8),
+  };
+});
+
 // Tiny cosmic micro-particles — barely visible, very subtle
 const COSMIC_PARTICLES = Array.from({ length: 55 }, () => ({
   size: randomBetween(0.5, 1.6),
@@ -176,6 +194,27 @@ function NebulaLayers({ mouse }) {
         animate={{ opacity: [0.28, 0.60, 0.28] }}
         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 9 }}
       />
+    </div>
+  );
+}
+
+/* ── Edge-only twinkling stars ── */
+function EdgeStars() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {EDGE_STARS.map((s, i) => (
+        <motion.div key={i}
+          className="absolute rounded-full"
+          style={{
+            width: s.size, height: s.size,
+            top: `${s.top}%`, left: `${s.left}%`,
+            background: i % 5 === 0 ? "#fffbe8" : "#ffffff",
+            boxShadow: i % 5 === 0 ? `0 0 ${s.size * 4}px rgba(255,248,220,0.7)` : "none",
+          }}
+          animate={{ opacity: [s.opacity * 0.2, s.opacity, s.opacity * 0.2], scale: [1, 1.5, 1] }}
+          transition={{ duration: s.dur, repeat: Infinity, ease: "easeInOut", delay: s.delay }}
+        />
+      ))}
     </div>
   );
 }
@@ -366,10 +405,21 @@ export default function MysticalBackground() {
       {/* Layer 7 — foreground gold dust */}
       <GoldDust />
 
-      {/* Final vignette */}
-      <div className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 80% 80% at 50% 50%, transparent 35%, rgba(1,3,8,0.70) 100%)" }}
-      />
+      {/* Edge twinkling stars */}
+      <EdgeStars />
+
+      {/* Cinematic corner vignette — deep shadow in all 4 corners */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: "radial-gradient(ellipse 80% 80% at 50% 50%, transparent 35%, rgba(1,3,8,0.72) 100%)",
+      }} />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: `
+          radial-gradient(ellipse 45% 45% at 0% 0%, rgba(0,0,0,0.55) 0%, transparent 60%),
+          radial-gradient(ellipse 45% 45% at 100% 0%, rgba(0,0,0,0.55) 0%, transparent 60%),
+          radial-gradient(ellipse 45% 45% at 0% 100%, rgba(0,0,0,0.55) 0%, transparent 60%),
+          radial-gradient(ellipse 45% 45% at 100% 100%, rgba(0,0,0,0.55) 0%, transparent 60%)
+        `,
+      }} />
     </div>
   );
 }

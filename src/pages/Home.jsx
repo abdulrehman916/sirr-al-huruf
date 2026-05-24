@@ -152,21 +152,35 @@ export default function Home() {
 
         {/* Title */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }}
-          className="text-center z-10 px-4 mt-2">
+          className="text-center z-10 px-4 mt-2" style={{ marginTop: 16 }}>
           <h1 className="font-amiri font-bold"
-            style={{ fontSize: "clamp(3rem, 12vw, 5.5rem)", color: "#FFFFFF", textShadow: "0 0 40px rgba(212,175,55,0.5), 0 2px 20px rgba(56,189,248,0.2)", lineHeight: 1.1 }}>
+            style={{ fontSize: "clamp(3rem, 12vw, 5.5rem)", color: "#FFFFFF", textShadow: "0 0 34px rgba(212,175,55,0.42), 0 2px 17px rgba(56,189,248,0.17)", lineHeight: 1.1 }}>
             سرّ الحروف
           </h1>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.6 }} className="mt-3 space-y-1">
-            <p className="font-inter font-bold tracking-[0.35em] uppercase"
-              style={{ fontSize: "clamp(12px, 3vw, 16px)", color: "rgba(212,175,55,0.90)", textShadow: "0 0 16px rgba(212,175,55,0.4)" }}>
-              Sirrul Huruf
-            </p>
-            <p className="font-inter tracking-[0.2em] uppercase"
-              style={{ fontSize: "clamp(9px, 2vw, 11px)", color: "rgba(255,255,255,0.45)" }}>
-              Advanced Ilm al-Huruf Analysis
-            </p>
-          </motion.div>
+          {/* Subtle blue atmospheric gradient behind lower text */}
+          <div style={{
+            position: "relative",
+            marginTop: 12,
+          }}>
+            <div style={{
+              position: "absolute",
+              inset: "-18px -40px",
+              background: "radial-gradient(ellipse 80% 100% at 50% 50%, rgba(14,40,90,0.28) 0%, rgba(6,18,50,0.12) 55%, transparent 80%)",
+              filter: "blur(18px)",
+              pointerEvents: "none",
+              zIndex: 0,
+            }} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.6 }} className="space-y-3" style={{ position: "relative", zIndex: 1 }}>
+              <p className="font-inter font-bold tracking-[0.35em] uppercase"
+                style={{ fontSize: "clamp(12px, 3vw, 16px)", color: "rgba(212,175,55,0.90)", textShadow: "0 0 14px rgba(212,175,55,0.34)" }}>
+                Sirrul Huruf
+              </p>
+              <p className="font-inter tracking-[0.2em] uppercase"
+                style={{ fontSize: "clamp(9px, 2vw, 11px)", color: "rgba(255,255,255,0.45)" }}>
+                Advanced Ilm al-Huruf Analysis
+              </p>
+            </motion.div>
+          </div>
           <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 1, duration: 0.8 }}
             className="mt-5 flex items-center justify-center gap-3">
             <div style={{ width: 50, height: 1, background: "linear-gradient(to right, transparent, rgba(212,175,55,0.7))" }} />

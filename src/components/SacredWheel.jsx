@@ -89,14 +89,14 @@ function OuterRing() {
       animate={{ rotate: 360 }}
       transition={{ duration: 420, repeat: Infinity, ease: "linear" }}
     >
-      {/* Double ring border */}
+      {/* Double ring border — 85% opacity for softer sacred elegance */}
       <circle cx={CX} cy={CY} r={228} fill="none" stroke={GOLD}
-        strokeWidth="1.4" strokeOpacity="0.45" filter="url(#sg)" />
+        strokeWidth="1.4" strokeOpacity="0.38" filter="url(#sg)" />
       <circle cx={CX} cy={CY} r={220} fill="none" stroke={GOLD}
-        strokeWidth="0.4" strokeOpacity="0.16" />
+        strokeWidth="0.4" strokeOpacity="0.14" />
       {/* Soft bloom halo on outer ring */}
       <circle cx={CX} cy={CY} r={228} fill="none" stroke={GOLD}
-        strokeWidth="6" strokeOpacity="0.04" filter="url(#bloom)" />
+        strokeWidth="6" strokeOpacity="0.034" filter="url(#bloom)" />
 
       {/* 12 gem nodes */}
       {Array.from({ length: 12 }, (_, i) => {
