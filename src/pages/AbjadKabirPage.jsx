@@ -265,31 +265,41 @@ function Section({ title, children }) {
 // ═══════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════
+// Each mode gets its own isolated state slice
+const INITIAL_MODULE_STATE = { input: "", result: null };
+
 export default function AbjadKabirPage() {
-  const [mode, setMode]   = useState("kebir");
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState(null);
+  const [mode, setMode] = useState("kebir");
   const [copied, setCopied] = useState(false);
 
-  const modeObj = MODES.find(m => m.key === mode);
+  // Fully isolated state per module — changing one NEVER affects another
+  const [kebirState,  setKebirState]  = useState(INITIAL_MODULE_STATE);
+  const [saghirState, setSaghirState] = useState(INITIAL_MODULE_STATE);
+  const [cumeliState, setCumeliState] = useState(INITIAL_MODULE_STATE);
+  const [bastState,   setBastState]   = useState(INITIAL_MODULE_STATE);
+
+  const STATE_MAP = {
+    kebir:  { state: kebirState,  setState: setKebirState  },
+    saghir: { state: saghirState, setState: setSaghirState },
+    cumeli: { state: cumeliState, setState: setCumeliState },
+    bast:   { state: bastState,   setState: setBastState   },
+  };
+
+  const modeObj  = MODES.find(m => m.key === mode);
+  const { state, setState } = STATE_MAP[mode];
+  const { input, result }   = state;
 
   const handleCalculate = useCallback(() => {
     if (!input.trim()) return;
-    setResult(modeObj.calc(input));
-  }, [input, modeObj]);
+    setState(prev => ({ ...prev, result: modeObj.calc(input) }));
+  }, [input, modeObj, setState]);
 
   const handleModeChange = (key) => {
     setMode(key);
-    // recalculate instantly if there's already input
-    if (input.trim()) {
-      const m = MODES.find(x => x.key === key);
-      setResult(m.calc(input));
-    } else {
-      setResult(null);
-    }
+    // No cross-calculation — each mode keeps its own state untouched
   };
 
-  const handleClear = () => { setInput(""); setResult(null); };
+  const handleClear = () => setState(INITIAL_MODULE_STATE);
 
   const handleCopy = () => {
     if (!result) return;
@@ -359,7 +369,7 @@ export default function AbjadKabirPage() {
             Arabic Text Input — {modeObj.label}
           </label>
           <textarea dir="rtl" value={input}
-            onChange={e => { setInput(e.target.value); setResult(null); }}
+            onChange={e => setState(prev => ({ ...prev, input: e.target.value, result: null }))}
             onKeyDown={e => { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); handleCalculate(); } }}
             placeholder="أدخل النص العربي هنا..."
             rows={4}
@@ -372,7 +382,7 @@ export default function AbjadKabirPage() {
               style={{ background:"linear-gradient(135deg,#fcd34d,#d97706)", boxShadow:`0 0 28px ${G.glowHi}` }}>
               <span className="font-amiri text-base">احسب</span> Calculate
             </motion.button>
-            <motion.button onClick={handleClear} disabled={!input && !result}
+            <motion.button onClick={handleClear} disabled={!input && !result && true}
               whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
               className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               style={{ background:"rgba(255,255,255,0.04)" }}>
