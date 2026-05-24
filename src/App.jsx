@@ -14,6 +14,7 @@ import AbjadPage from './pages/AbjadPage';
 import AnasirPage from './pages/AnasirPage';
 import HadimPage from './pages/HadimPage';
 import Mizaan9Page from './pages/Mizaan9Page';
+import AbjadKabirPage from './pages/AbjadKabirPage';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
           <Route path="/anasir" element={<AnasirPage />} />
           <Route path="/hadim" element={<HadimPage />} />
           <Route path="/mizaan9" element={<Mizaan9Page />} />
+          <Route path="/abjad-kabir" element={<AbjadKabirPage />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </motion.div>

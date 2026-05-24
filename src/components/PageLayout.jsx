@@ -3,11 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 
 const TABS = [
-  { id: "home",    label: "HOME",     arabic: "الرئيسية", path: "/" },
-  { id: "abjad",   label: "ABJAD",    arabic: "أبجد",     path: "/abjad" },
-  { id: "anasir",  label: "ANASIR",   arabic: "عناصر",    path: "/anasir" },
-  { id: "hadim",   label: "HADIM",    arabic: "خادم",     path: "/hadim" },
-  { id: "mizaan9", label: "MIZAAN",   arabic: "ميزان",    path: "/mizaan9" },
+  { id: "home",        label: "HOME",     arabic: "الرئيسية", path: "/" },
+  { id: "abjad",       label: "ABJAD",    arabic: "أبجد",     path: "/abjad" },
+  { id: "abjad-kabir", label: "KABIR",    arabic: "كبير",     path: "/abjad-kabir" },
+  { id: "anasir",      label: "ANASIR",   arabic: "عناصر",    path: "/anasir" },
+  { id: "hadim",       label: "HADIM",    arabic: "خادم",     path: "/hadim" },
 ];
 
 function CosmicBackground() {
