@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import MysticalBackground from "../components/MysticalBackground";
 
 const ASMA = ["الله", "الرحمن", "الملك", "القدوس", "السلام", "المؤمن", "العزيز", "الجبار"];
 
@@ -47,37 +48,48 @@ const NAV_CARDS = [
   },
 ];
 
-function CosmicBackground() {
-  const stars = Array.from({ length: 80 }, (_, i) => ({
-    width: Math.random() * 2.5 + 0.5,
-    height: Math.random() * 2.5 + 0.5,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    opacity: Math.random() * 0.7 + 0.1,
-    animation: `twinkle ${2 + Math.random() * 4}s ease-in-out infinite`,
-    animationDelay: `${Math.random() * 4}s`,
-  }));
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {stars.map((s, i) => <div key={i} className="absolute rounded-full bg-white" style={s} />)}
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 60% 40% at 50% 30%, rgba(212,175,55,0.12) 0%, transparent 70%)" }} />
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 30% 60% at 30% 50%, rgba(99,102,241,0.08) 0%, transparent 60%)" }} />
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 30% 60% at 70% 50%, rgba(56,189,248,0.06) 0%, transparent 60%)" }} />
-    </div>
-  );
-}
+
 
 function SacredGeometry() {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <motion.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-        className="absolute" style={{ width: 340, height: 340, border: "1px solid rgba(212,175,55,0.15)", borderRadius: "50%" }} />
-      <motion.div animate={{ rotate: -360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-        className="absolute" style={{ width: 260, height: 260, border: "1px solid rgba(212,175,55,0.20)", borderRadius: "50%", borderStyle: "dashed" }} />
-      <motion.div animate={{ rotate: 360 }} transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        className="absolute" style={{ width: 190, height: 190, border: "1px solid rgba(212,175,55,0.25)", borderRadius: "50%" }} />
-      <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute rounded-full" style={{ width: 100, height: 100, background: "radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%)" }} />
+      {/* Outer aura glow */}
+      <motion.div className="absolute rounded-full"
+        style={{ width: 400, height: 400, background: "radial-gradient(circle, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.04) 40%, transparent 70%)", filter: "blur(18px)" }}
+        animate={{ scale: [1, 1.12, 1], opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Rings */}
+      {[
+        { size: 370, dur: 90, dir: 1, opacity: 0.12, dash: false, w: 1 },
+        { size: 310, dur: 65, dir: -1, opacity: 0.18, dash: true, w: 0.8 },
+        { size: 255, dur: 45, dir: 1, opacity: 0.22, dash: false, w: 1 },
+        { size: 205, dur: 32, dir: -1, opacity: 0.28, dash: true, w: 0.7 },
+        { size: 158, dur: 22, dir: 1, opacity: 0.32, dash: false, w: 1 },
+        { size: 118, dur: 15, dir: -1, opacity: 0.20, dash: true, w: 0.6 },
+      ].map((ring, i) => (
+        <motion.div key={i} className="absolute rounded-full"
+          animate={{ rotate: ring.dir * 360 }}
+          transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
+          style={{
+            width: ring.size, height: ring.size,
+            border: `${ring.w}px ${ring.dash ? "dashed" : "solid"} rgba(212,175,55,${ring.opacity})`,
+            boxShadow: `0 0 ${ring.size * 0.06}px rgba(212,175,55,0.15)`,
+          }}
+        />
+      ))}
+      {/* Breathing inner pulse */}
+      <motion.div className="absolute rounded-full"
+        style={{ width: 88, height: 88, background: "radial-gradient(circle, rgba(212,175,55,0.35) 0%, transparent 70%)", filter: "blur(8px)" }}
+        animate={{ scale: [1, 1.45, 1], opacity: [0.5, 0.9, 0.5] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Radial golden aura */}
+      <motion.div className="absolute rounded-full"
+        style={{ width: 200, height: 200, background: "radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 65%)", filter: "blur(12px)" }}
+        animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      />
     </div>
   );
 }
@@ -121,8 +133,8 @@ function CardInner({ card }) {
 
 export default function Home() {
   return (
-    <div className="min-h-screen font-inter relative overflow-x-hidden" style={{ background: "linear-gradient(180deg, #050d1a 0%, #0a1628 40%, #112840 100%)" }}>
-      <CosmicBackground />
+    <div className="min-h-screen font-inter relative overflow-x-hidden">
+      <MysticalBackground />
 
       <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pb-8">
         {/* Sigil */}
@@ -192,12 +204,7 @@ export default function Home() {
         </motion.div>
       </div>
 
-      <style>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.15; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.4); }
-        }
-      `}</style>
+
     </div>
   );
 }
