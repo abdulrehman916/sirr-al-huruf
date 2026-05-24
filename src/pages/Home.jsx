@@ -80,12 +80,50 @@ export default function Home() {
             className="absolute z-20 flex items-center justify-center"
           >
             <motion.div
-              animate={{ boxShadow: ["0 0 24px rgba(212,175,55,0.35)", "0 0 55px rgba(212,175,55,0.70)", "0 0 24px rgba(212,175,55,0.35)"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="w-20 h-20 rounded-2xl flex items-center justify-center"
-              style={{ background: "linear-gradient(180deg, rgba(212,175,55,0.30) 0%, rgba(212,175,55,0.12) 100%)", border: "1px solid rgba(212,175,55,0.50)", backdropFilter: "blur(8px)" }}
+              className="flex flex-col items-center justify-center"
+              style={{ position: "relative" }}
             >
-              <span className="font-amiri text-4xl" style={{ color: "#D4AF37", textShadow: "0 0 24px rgba(212,175,55,0.9)" }}>ح</span>
+              {/* Breathing aura behind the word */}
+              <motion.div
+                className="absolute rounded-full"
+                style={{ width: 110, height: 110, background: "radial-gradient(circle, rgba(212,175,55,0.28) 0%, rgba(212,175,55,0.06) 55%, transparent 80%)", filter: "blur(14px)" }}
+                animate={{ scale: [1, 1.35, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              {/* Inner rotating micro-seal ring */}
+              <motion.div
+                className="absolute rounded-full"
+                style={{ width: 96, height: 96, border: "1px solid rgba(212,175,55,0.35)", boxShadow: "0 0 12px rgba(212,175,55,0.25)" }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+              />
+              <motion.div
+                className="absolute rounded-full"
+                style={{ width: 78, height: 78, border: "1px dashed rgba(212,175,55,0.20)" }}
+                animate={{ rotate: -360 }}
+                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              />
+              {/* الله text */}
+              <motion.span
+                className="font-amiri font-bold relative z-10"
+                style={{
+                  fontSize: "clamp(2rem, 8vw, 2.8rem)",
+                  color: "#D4AF37",
+                  textShadow: "0 0 12px rgba(212,175,55,0.5), 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.4)",
+                  letterSpacing: "0.02em",
+                  lineHeight: 1,
+                }}
+                animate={{
+                  textShadow: [
+                    "0 0 12px rgba(212,175,55,0.5), 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3)",
+                    "0 0 18px rgba(212,175,55,0.7), 0 0 50px rgba(212,175,55,1.0), 0 0 90px rgba(212,175,55,0.5)",
+                    "0 0 12px rgba(212,175,55,0.5), 0 0 30px rgba(212,175,55,0.8), 0 0 60px rgba(212,175,55,0.3)",
+                  ]
+                }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                الله
+              </motion.span>
             </motion.div>
           </motion.div>
         </div>

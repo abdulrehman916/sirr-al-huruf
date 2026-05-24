@@ -7,13 +7,14 @@ const BG_LETTERS = ["ب","ج","د","ه","و","ز","ح","ط","ي","ك","ل","م",
 function randomBetween(a, b) { return a + Math.random() * (b - a); }
 
 // Static data generated once
-const STARS_DATA = Array.from({ length: 120 }, () => ({
-  size: randomBetween(0.5, 2.5),
+const STARS_DATA = Array.from({ length: 220 }, () => ({
+  size: randomBetween(0.3, 3),
   top: `${randomBetween(0, 100)}%`,
   left: `${randomBetween(0, 100)}%`,
-  opacity: randomBetween(0.08, 0.55),
-  dur: randomBetween(2.5, 7),
-  delay: randomBetween(0, 6),
+  opacity: randomBetween(0.06, 0.70),
+  dur: randomBetween(2, 9),
+  delay: randomBetween(0, 8),
+  bright: Math.random() > 0.88,
 }));
 
 const DUST_DATA = Array.from({ length: 40 }, () => ({
@@ -124,35 +125,52 @@ function LightRays() {
 function NebulaLayers() {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {/* Central golden nebula */}
+      {/* Milky way diagonal band */}
+      <div className="absolute inset-0" style={{
+        background: "linear-gradient(125deg, transparent 20%, rgba(90,80,160,0.07) 40%, rgba(120,100,200,0.10) 50%, rgba(90,80,160,0.07) 60%, transparent 80%)",
+        filter: "blur(35px)",
+      }} />
+      {/* Deep teal/blue galactic core */}
       <motion.div className="absolute"
-        style={{ width: "70vw", height: "70vw", maxWidth: 700, maxHeight: 700, top: "50%", left: "50%", transform: "translate(-50%, -50%)", borderRadius: "50%", background: "radial-gradient(ellipse at 50% 50%, rgba(212,175,55,0.09) 0%, rgba(139,90,0,0.05) 40%, transparent 70%)", filter: "blur(40px)" }}
-        animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.9, 0.5] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        style={{ width: "80vw", height: "60vw", maxWidth: 900, top: "30%", left: "50%", transform: "translateX(-50%)", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(20,40,100,0.30) 0%, rgba(10,20,60,0.15) 50%, transparent 75%)", filter: "blur(55px)" }}
+        animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Golden divine light from center-top */}
+      <motion.div className="absolute"
+        style={{ width: "50vw", height: "70vw", top: "-20%", left: "50%", transform: "translateX(-50%)", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(212,175,55,0.08) 0%, rgba(180,130,30,0.04) 45%, transparent 70%)", filter: "blur(50px)" }}
+        animate={{ opacity: [0.4, 0.85, 0.4], scaleY: [1, 1.15, 1] }}
+        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
       {/* Indigo nebula top-left */}
       <motion.div className="absolute"
-        style={{ width: "50vw", height: "50vw", top: "-10%", left: "-10%", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(79,70,229,0.12) 0%, transparent 65%)", filter: "blur(60px)" }}
-        animate={{ x: [0, 30, 0], y: [0, 20, 0], opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        style={{ width: "55vw", height: "55vw", top: "-15%", left: "-15%", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(60,50,180,0.14) 0%, rgba(30,20,100,0.07) 55%, transparent 75%)", filter: "blur(65px)" }}
+        animate={{ x: [0, 25, 0], y: [0, 18, 0], opacity: [0.5, 0.9, 0.5] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
       />
-      {/* Cyan nebula bottom-right */}
+      {/* Deep azure nebula bottom-right */}
       <motion.div className="absolute"
-        style={{ width: "45vw", height: "45vw", bottom: "-5%", right: "-5%", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(6,182,212,0.09) 0%, transparent 65%)", filter: "blur(55px)" }}
-        animate={{ x: [0, -25, 0], y: [0, -20, 0], opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 5 }}
+        style={{ width: "50vw", height: "50vw", bottom: "-10%", right: "-10%", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(0,100,180,0.12) 0%, rgba(0,60,120,0.06) 55%, transparent 75%)", filter: "blur(60px)" }}
+        animate={{ x: [0, -20, 0], y: [0, -18, 0], opacity: [0.35, 0.75, 0.35] }}
+        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut", delay: 6 }}
       />
-      {/* Deep purple nebula top-right */}
+      {/* Violet nebula top-right */}
       <motion.div className="absolute"
-        style={{ width: "35vw", height: "35vw", top: "10%", right: "5%", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(139,92,246,0.10) 0%, transparent 65%)", filter: "blur(50px)" }}
-        animate={{ x: [0, -20, 0], y: [0, 25, 0], opacity: [0.35, 0.65, 0.35] }}
-        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut", delay: 8 }}
+        style={{ width: "40vw", height: "40vw", top: "5%", right: "2%", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(100,60,200,0.11) 0%, transparent 65%)", filter: "blur(55px)" }}
+        animate={{ x: [0, -18, 0], y: [0, 22, 0], opacity: [0.30, 0.65, 0.30] }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 9 }}
       />
-      {/* Fog / smoke layers */}
+      {/* Warm amber nebula bottom-left */}
+      <motion.div className="absolute"
+        style={{ width: "38vw", height: "38vw", bottom: "5%", left: "2%", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(180,100,20,0.08) 0%, transparent 65%)", filter: "blur(50px)" }}
+        animate={{ x: [0, 20, 0], y: [0, -15, 0], opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+      />
+      {/* Fine cosmic dust haze */}
       <motion.div className="absolute inset-0"
-        style={{ background: "linear-gradient(135deg, rgba(15,20,50,0.3) 0%, transparent 50%, rgba(10,16,40,0.25) 100%)", filter: "blur(20px)" }}
-        animate={{ opacity: [0.4, 0.7, 0.4] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        style={{ background: "radial-gradient(ellipse 120% 80% at 50% 40%, rgba(30,20,80,0.18) 0%, transparent 65%)", filter: "blur(25px)" }}
+        animate={{ opacity: [0.5, 0.9, 0.5] }}
+        transition={{ duration: 17, repeat: Infinity, ease: "easeInOut" }}
       />
     </div>
   );
@@ -177,9 +195,13 @@ function StarField() {
   return (
     <div className="absolute inset-0 pointer-events-none">
       {STARS_DATA.map((s, i) => (
-        <motion.div key={i} className="absolute rounded-full bg-white"
-          style={{ width: s.size, height: s.size, top: s.top, left: s.left }}
-          animate={{ opacity: [s.opacity * 0.3, s.opacity, s.opacity * 0.3], scale: [1, 1.5, 1] }}
+        <motion.div key={i} className="absolute rounded-full"
+          style={{
+            width: s.size, height: s.size, top: s.top, left: s.left,
+            background: s.bright ? "#fffbe8" : "#ffffff",
+            boxShadow: s.bright ? `0 0 ${s.size * 3}px rgba(255,248,220,0.9)` : "none",
+          }}
+          animate={{ opacity: [s.opacity * 0.2, s.opacity, s.opacity * 0.2], scale: [1, s.bright ? 1.8 : 1.3, 1] }}
           transition={{ duration: s.dur, repeat: Infinity, ease: "easeInOut", delay: s.delay }}
         />
       ))}
@@ -207,7 +229,7 @@ function BackgroundArabicLetters() {
 export default function MysticalBackground() {
   return (
     <div className="fixed inset-0 z-0 overflow-hidden"
-      style={{ background: "linear-gradient(180deg, #02060f 0%, #050d1a 30%, #080f20 60%, #060c1a 100%)" }}>
+      style={{ background: "linear-gradient(180deg, #010308 0%, #030818 20%, #050d22 50%, #040a1c 75%, #020610 100%)" }}>
       <StarField />
       <NebulaLayers />
       <BackgroundArabicLetters />

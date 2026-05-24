@@ -398,6 +398,56 @@ function AtmosphericBase() {
   );
 }
 
+/* ── Asma names on 3rd ring (MandalaBand at r=190) using textPath ── */
+const THIRD_RING_ASMA = [
+  "الله","الرحمن","الرحيم","القدوس","السلام","العزيز","الجبار","النور","الملك"
+];
+
+function ThirdRingAsma() {
+  const ringR = 190;
+  const circumference = 2 * Math.PI * ringR;
+  // Each name gets an equal arc segment
+  const segCount = THIRD_RING_ASMA.length;
+
+  return (
+    <motion.g
+      style={{ transformOrigin: `${CX}px ${CY}px` }}
+      animate={{ rotate: -360 }}
+      transition={{ duration: 110, repeat: Infinity, ease: "linear" }}
+    >
+      {THIRD_RING_ASMA.map((name, i) => {
+        const id = `arc3ring${i}`;
+        const startAngle = (i / segCount) * 360 - 90;
+        const endAngle = startAngle + (360 / segCount) * 0.72;
+        const startRad = startAngle * (Math.PI / 180);
+        const endRad = endAngle * (Math.PI / 180);
+        const sx = CX + Math.cos(startRad) * ringR;
+        const sy = CY + Math.sin(startRad) * ringR;
+        const ex = CX + Math.cos(endRad) * ringR;
+        const ey = CY + Math.sin(endRad) * ringR;
+        return (
+          <g key={i}>
+            <defs>
+              <path id={id} d={`M ${sx} ${sy} A ${ringR} ${ringR} 0 0 1 ${ex} ${ey}`} />
+            </defs>
+            <text
+              fontFamily="'Amiri', serif"
+              fontSize="11"
+              fill={GOLD}
+              fillOpacity="0.85"
+              filter="url(#glow1)"
+            >
+              <textPath href={`#${id}`} startOffset="0%">
+                {name}
+              </textPath>
+            </text>
+          </g>
+        );
+      })}
+    </motion.g>
+  );
+}
+
 /* ── SVG sigil ── */
 function SigilSVG() {
   return (
@@ -417,6 +467,7 @@ function SigilSVG() {
       <OuterBand />
       <RosetteRing />
       <MandalaBand />
+      <ThirdRingAsma />
       <InnerKhatam />
       <CoreSeal />
       {/* Absolute center dot */}
