@@ -3,85 +3,71 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Wand2, Plus } from "lucide-react";
 import { processText } from "../lib/abjadValues";
 import PageLayout from "../components/PageLayout";
+import HadimTypePanel from "../components/HadimTypePanel";
 
 // ── Positional lookup maps ──
 const UNITS_MAP    = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9:'ط' };
 const TENS_MAP     = { 1:'ي',2:'ك',3:'ل',4:'م',5:'ن',6:'س',7:'ع',8:'ف',9:'ص' };
 const HUNDREDS_MAP = { 1:'ق',2:'ر',3:'ش',4:'ت',5:'ث',6:'خ',7:'ذ',8:'ض',9:'ظ' };
 
-/**
- * Positional Istintaq
- * Decomposes n into: thousands part, hundreds, tens, units.
- * Thousands: always one fixed marker ع, then if extra thousands (>1000),
- *   encode (thousands_count - 1) as a unit letter.
- * Order of steps (right-to-left): units → tens → hundreds → thousands → extra-thousands
- */
 function positionalIstintaq(n) {
-  if (n <= 0) return { steps: [], combined: '', separated: '', reversedCombined: '', reversedSeparated: '' };
+  if (n <= 0) return { steps: [], combined: '', reversedCombined: '', reversedSeparated: '' };
   n = Math.floor(n);
-
   const thousands = Math.floor(n / 1000);
   const remainder = n % 1000;
   const hundreds  = Math.floor(remainder / 100);
   const tens      = Math.floor((remainder % 100) / 10);
   const units     = remainder % 10;
-
   const steps = [];
-
-  // Units
-  steps.push({ label: 'Units',    value: units,    letters: units    ? (UNITS_MAP[units]    || '') : '' });
-  // Tens
-  steps.push({ label: 'Tens',     value: tens * 10, letters: tens    ? (TENS_MAP[tens]      || '') : '' });
-  // Hundreds
-  steps.push({ label: 'Hundreds', value: hundreds * 100, letters: hundreds ? (HUNDREDS_MAP[hundreds] || '') : '' });
-  // Thousands marker (ع) — only if there is a thousands component
+  steps.push({ label: 'Units',    value: units,         letters: units    ? (UNITS_MAP[units]       || '') : '' });
+  steps.push({ label: 'Tens',     value: tens * 10,     letters: tens     ? (TENS_MAP[tens]         || '') : '' });
+  steps.push({ label: 'Hundreds', value: hundreds * 100,letters: hundreds ? (HUNDREDS_MAP[hundreds] || '') : '' });
   if (thousands > 0) {
     steps.push({ label: 'Thousands', value: 1000, letters: 'ع' });
-    // Extra thousands: (thousands - 1) encoded as unit letter
     const extra = thousands - 1;
-    if (extra > 0) {
-      steps.push({ label: 'Extra ×1000', value: extra, letters: UNITS_MAP[extra] || '' });
-    }
+    if (extra > 0) steps.push({ label: 'Extra ×1000', value: extra, letters: UNITS_MAP[extra] || '' });
   }
-
-  // Build combined string (in step order: units→tens→hundreds→thousands→extra)
   const combined = steps.map(s => s.letters).join('');
-  const separated = steps.map(s => s.letters).filter(l => l).join(' ');
   const reversedCombined = combined.split('').reverse().join('');
   const reversedSeparated = combined.split('').reverse().join(' ');
-  return { steps, combined, separated, reversedCombined, reversedSeparated };
+  return { steps, combined, reversedCombined, reversedSeparated };
 }
 
 /**
- * Individual Hadim Reduction (Step A)
- * >= 41 → value - 41
- * <  41 → (value + 316) - 41
+ * Compute a single Hadim type.
+ * subtract: 41 (Ulvi), 316 (Sufli), 319 (Sherli)
+ * Rule: if value >= subtract → reduced = value - subtract
+ *       else → adjusted = value + 361, reduced = adjusted - subtract
  */
-function hadimReduce(value) {
-  if (value >= 41) {
-    return { reduced: value - 41, boosted: false, adjusted: value };
+function computeType(value, subtract, typeLabel) {
+  let reduced, boosted, adjusted;
+  if (value >= subtract) {
+    reduced = value - subtract;
+    boosted = false;
+    adjusted = value;
   } else {
-    const adj = value + 316;
-    return { reduced: adj - 41, boosted: true, adjusted: adj };
+    adjusted = value + 361;
+    reduced = adjusted - subtract;
+    boosted = true;
   }
-}
-
-/**
- * Full hadim computation for a single numeric value.
- * Returns { abjad, boosted, adjusted, reduced, istintaq, name }
- */
-function computeHadim(abjad) {
-  const { reduced, boosted, adjusted } = hadimReduce(abjad);
   const istintaq = positionalIstintaq(reduced);
   const name = istintaq.reversedCombined + 'ائيل';
-  return { abjad, boosted, adjusted, reduced, istintaq, name };
+  return { typeLabel, subtract, reduced, boosted, adjusted, istintaq, name };
+}
+
+function computeAllTypes(value) {
+  return {
+    ulvi:  computeType(value, 41,  'ULVI'),
+    sufli: computeType(value, 316, 'SUFLI'),
+    sherli:computeType(value, 319, 'SHERLI'),
+  };
 }
 
 export default function HadimPage() {
-  const [talib, setTalib]   = useState("");
+  const [talib, setTalib]     = useState("");
   const [matloob, setMatloob] = useState("");
-  const [isms, setIsms]     = useState(["", "", "", "", ""]);
-  const [result, setResult] = useState(null);
+  const [isms, setIsms]       = useState(["", "", "", "", ""]);
+  const [result, setResult]   = useState(null);
 
   const addIsm    = () => setIsms(p => [...p, ""]);
   const removeIsm = (i) => setIsms(p => p.filter((_, idx) => idx !== i));
@@ -93,23 +79,22 @@ export default function HadimPage() {
     const ismData     = isms.map((t, i) => t.trim() ? { label: `Ism ${i + 1}`, text: t, abjad: processText(t).total, letters: processText(t).letters } : null).filter(Boolean);
 
     const allIndividuals = [
-      ...(talibData ? [talibData] : []),
+      ...(talibData   ? [talibData]   : []),
       ...(matloobData ? [matloobData] : []),
       ...ismData,
     ];
     if (!allIndividuals.length) return;
 
-    // Compute individual hadim for each
     const individuals = allIndividuals.map(item => ({
       ...item,
-      hadim: computeHadim(item.abjad),
+      types: computeAllTypes(item.abjad),
     }));
 
-    // Final Grand Hadim: sum of all individual REDUCED values → reduce again
-    const grandReducedSum = individuals.reduce((acc, item) => acc + item.hadim.reduced, 0);
-    const grandHadim = computeHadim(grandReducedSum);
+    // Grand sum uses Ulvi reduced values (−41 chain) for the grand total
+    const grandSum = individuals.reduce((acc, item) => acc + item.types.ulvi.reduced, 0);
+    const grandTypes = computeAllTypes(grandSum);
 
-    setResult({ individuals, grandReducedSum, grandHadim });
+    setResult({ individuals, grandSum, grandTypes });
   };
 
   const handleClear = () => { setTalib(""); setMatloob(""); setIsms(["","","","",""]); setResult(null); };
@@ -197,24 +182,24 @@ export default function HadimPage() {
         {/* Results */}
         <AnimatePresence mode="wait">
           {result && (
-            <motion.div key="hadim-results" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
+            <motion.div key="hadim-results" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
 
-              {/* Individual Hadim Cards */}
+              {/* Individual sections */}
               {result.individuals.map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}>
-                  <GlowCard>
-                    {/* Header row */}
-                    <div className="flex items-center justify-between mb-3">
+                  {/* Section header */}
+                  <div className="rounded-2xl border p-4 mb-3"
+                    style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(255,255,255,0.20)", boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}>
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/55">{item.label}</span>
                       <div className="flex items-center gap-2">
                         <span className="font-inter text-[9px] text-purple-300/40 uppercase tracking-widest">Abjad</span>
                         <span className="font-inter text-sm font-bold text-white tabular-nums">{item.abjad}</span>
                       </div>
                     </div>
-                    <p className="font-amiri text-lg text-white/60 mb-3" dir="rtl">{item.text}</p>
-
-                    {/* Abjad letter breakdown */}
-                    <div className="flex flex-wrap gap-1.5 mb-4" dir="rtl">
+                    <p className="font-amiri text-lg text-white/60 mb-2" dir="rtl">{item.text}</p>
+                    {/* Letter breakdown */}
+                    <div className="flex flex-wrap gap-1.5" dir="rtl">
                       {item.letters.map((l, li) => (
                         <div key={li} className="flex flex-col items-center rounded-lg border border-purple-500/15 px-2 py-1" style={{ background: "rgba(255,255,255,0.04)" }}>
                           <span className="font-amiri text-base text-white">{l.original}</span>
@@ -222,83 +207,44 @@ export default function HadimPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
 
-                    {/* Reduction step */}
-                    <div className="rounded-xl border border-purple-500/15 px-3 py-2 mb-3 font-inter text-xs text-white/45" style={{ background: "rgba(168,85,247,0.05)" }}>
-                      {item.hadim.boosted
-                        ? `${item.abjad} < 41 → ${item.abjad} + 316 = ${item.hadim.adjusted} − 41 = ${item.hadim.reduced}`
-                        : `${item.abjad} ≥ 41 → ${item.abjad} − 41 = ${item.hadim.reduced}`}
-                    </div>
-
-                    {/* Positional extraction grid */}
-                    <div className="flex flex-wrap gap-2 mb-3 justify-end" dir="rtl">
-                      {item.hadim.istintaq.steps.map((step, pi) => (
-                        <div key={pi} className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[48px]"
-                          style={{ background: step.letters ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.03)", borderColor: step.letters ? "rgba(168,85,247,0.35)" : "rgba(255,255,255,0.08)" }}>
-                          <span className="font-amiri text-xl text-white leading-none mb-0.5">{step.letters || '—'}</span>
-                          <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(168,85,247,0.65)" }}>{step.value}</span>
-                          <span className="font-inter text-[7px] uppercase tracking-wide text-white/25 mt-0.5">{step.label.split(' ')[0]}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Hadim Name */}
-                    <div className="rounded-2xl border border-purple-500/40 p-4 text-center"
-                      style={{ background: "rgba(168,85,247,0.14)", boxShadow: "0 0 20px rgba(168,85,247,0.22)" }}>
-                      <p className="font-inter text-[9px] uppercase tracking-widest text-purple-300/55 mb-1">Hadim Name</p>
-                      <p className="font-amiri text-4xl font-bold text-white" style={{ textShadow: "0 0 24px rgba(168,85,247,0.75)" }}>{item.hadim.name}</p>
-                      <p className="font-inter text-[10px] text-purple-400/45 mt-1" dir="rtl">{item.hadim.istintaq.reversedSeparated} + ائيل</p>
-                    </div>
-                  </GlowCard>
+                  {/* Three types */}
+                  <div className="space-y-3">
+                    <HadimTypePanel typeData={item.types.ulvi} />
+                    <HadimTypePanel typeData={item.types.sufli} />
+                    <HadimTypePanel typeData={item.types.sherli} />
+                  </div>
                 </motion.div>
               ))}
 
-              {/* Grand Combined Hadim */}
+              {/* Grand Hadim */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: result.individuals.length * 0.07 + 0.1 }}>
                 <div className="rounded-2xl border border-purple-400/50 p-5 space-y-4"
                   style={{ background: "rgba(20,10,50,0.96)", boxShadow: "0 0 40px rgba(168,85,247,0.30), 0 4px 24px rgba(0,0,0,0.50)" }}>
-                  <p className="font-inter text-[10px] text-purple-300/60 uppercase tracking-widest">Final Grand Hadim</p>
 
-                  {/* Sum of reduced values */}
-                  <div className="space-y-1.5">
+                  <p className="font-inter text-[11px] text-purple-300/70 uppercase tracking-widest font-bold">⬡ Final Grand Hadim</p>
+
+                  {/* Sum breakdown */}
+                  <div className="rounded-xl border border-purple-500/20 px-3 py-2.5 space-y-1.5" style={{ background: "rgba(168,85,247,0.06)" }}>
                     {result.individuals.map((item, i) => (
                       <div key={i} className="flex justify-between items-center">
-                        <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/40">{item.label} reduced</span>
-                        <span className="font-inter text-xs text-white/60 tabular-nums">{item.hadim.reduced}</span>
+                        <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/40">{item.label} (Ulvi reduced)</span>
+                        <span className="font-inter text-xs text-white/60 tabular-nums">{item.types.ulvi.reduced}</span>
                       </div>
                     ))}
                     <div className="h-px bg-purple-500/25 my-1" />
                     <div className="flex justify-between items-center">
-                      <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/60">Sum</span>
-                      <span className="font-inter text-sm font-bold text-white tabular-nums">{result.grandReducedSum}</span>
+                      <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/70">Grand Sum</span>
+                      <span className="font-inter text-sm font-bold text-white tabular-nums">{result.grandSum}</span>
                     </div>
                   </div>
 
-                  {/* Grand reduction step */}
-                  <div className="rounded-xl border border-purple-500/20 px-3 py-2 font-inter text-xs text-white/45" style={{ background: "rgba(168,85,247,0.06)" }}>
-                    {result.grandHadim.boosted
-                      ? `${result.grandReducedSum} < 41 → ${result.grandReducedSum} + 316 = ${result.grandHadim.adjusted} − 41 = ${result.grandHadim.reduced}`
-                      : `${result.grandReducedSum} ≥ 41 → ${result.grandReducedSum} − 41 = ${result.grandHadim.reduced}`}
-                  </div>
-
-                  {/* Positional extraction */}
-                  <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
-                    {result.grandHadim.istintaq.steps.map((step, pi) => (
-                      <div key={pi} className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[52px]"
-                        style={{ background: step.letters ? "rgba(168,85,247,0.18)" : "rgba(255,255,255,0.03)", borderColor: step.letters ? "rgba(168,85,247,0.50)" : "rgba(255,255,255,0.08)" }}>
-                        <span className="font-amiri text-2xl text-white leading-none mb-0.5">{step.letters || '—'}</span>
-                        <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(200,150,255,0.80)" }}>{step.value}</span>
-                        <span className="font-inter text-[7px] uppercase tracking-wide text-white/25 mt-0.5">{step.label.split(' ')[0]}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Grand Name */}
-                  <div className="rounded-2xl border border-purple-400/60 p-5 text-center"
-                    style={{ background: "rgba(168,85,247,0.18)", boxShadow: "0 0 40px rgba(168,85,247,0.40)" }}>
-                    <p className="font-inter text-[10px] text-purple-300/60 uppercase tracking-widest mb-2">Grand Hadim Name</p>
-                    <p className="font-amiri text-5xl font-bold text-white" style={{ textShadow: "0 0 32px rgba(168,85,247,0.90)" }}>{result.grandHadim.name}</p>
-                    <p className="font-inter text-xs text-purple-400/50 mt-2" dir="rtl">{result.grandHadim.istintaq.reversedSeparated} + ائيل</p>
+                  {/* Three grand types */}
+                  <div className="space-y-3">
+                    <HadimTypePanel typeData={result.grandTypes.ulvi} />
+                    <HadimTypePanel typeData={result.grandTypes.sufli} />
+                    <HadimTypePanel typeData={result.grandTypes.sherli} />
                   </div>
                 </div>
               </motion.div>
@@ -317,15 +263,6 @@ function PurpleDivider() {
       <div className="h-px w-12 bg-gradient-to-r from-transparent to-purple-500/70" />
       <div className="w-1.5 h-1.5 rounded-full bg-purple-500/80" />
       <div className="h-px w-12 bg-gradient-to-l from-transparent to-purple-500/70" />
-    </div>
-  );
-}
-
-function GlowCard({ children }) {
-  return (
-    <div className="rounded-2xl border p-5"
-      style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(255,255,255,0.20)", boxShadow: "0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10)" }}>
-      {children}
     </div>
   );
 }
