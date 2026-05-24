@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { motion, useAnimationFrame } from "framer-motion";
+import { useRef, useState } from "react";
 
 const GOLD = "#D4AF37";
 const G = (o) => `rgba(212,175,55,${o})`;
@@ -201,56 +202,113 @@ function SigilSVG() {
   );
 }
 
-/* ── Asma ul Husna — upright HTML overlay, fixed around the circle ── */
+/* ── Asma ul Husna — 3D celestial orbit ── */
+// The orbit is a tilted ellipse: radiusX is the full horizontal span,
+// radiusY is compressed to simulate a ~30° tilt toward the viewer.
+// depth (sinY) drives scale, opacity, blur and z-order — names "behind"
+// recede and dim; names "in front" swell and glow.
 function AsmaNames({ containerSize }) {
-  const radius = containerSize / 2 * 0.82; // sits just inside the outer ring
+  const half = containerSize / 2;
+  const rX = half * 0.84;   // horizontal orbit radius
+  const rY = rX * 0.28;     // vertical compression → tilt angle
+  const ORBIT_DURATION = 120; // seconds for one full revolution
+
+  const angleRef = useRef(0);
+  const [positions, setPositions] = useState(() =>
+    ASMA.map((_, i) => ({ x: half, y: half, depth: 0, angle: (i / ASMA.length) * Math.PI * 2 }))
+  );
+
+  useAnimationFrame((t) => {
+    const elapsed = (t / 1000) / ORBIT_DURATION; // 0..∞ fractional revolutions
+    setPositions(ASMA.map((_, i) => {
+      const baseAngle = (i / ASMA.length) * Math.PI * 2;
+      const angle = baseAngle + elapsed * Math.PI * 2;
+      // Tilted ellipse: x stays full, y compressed
+      const ox = Math.cos(angle) * rX;
+      const oy = Math.sin(angle) * rY;
+      // depth goes from -1 (back) to +1 (front) based on sinY component
+      const depth = Math.sin(angle); // +1 = closest, -1 = farthest
+      return { x: half + ox, y: half + oy, depth, angle };
+    }));
+  });
+
+  // Sort so front names render on top
+  const sorted = positions
+    .map((p, i) => ({ ...p, name: ASMA[i], i }))
+    .sort((a, b) => a.depth - b.depth);
 
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
-      {ASMA.map((name, i) => {
-        const angleDeg = (i / ASMA.length) * 360 - 90;
-        const rad = angleDeg * (Math.PI / 180);
-        const x = containerSize / 2 + Math.cos(rad) * radius;
-        const y = containerSize / 2 + Math.sin(rad) * radius;
+      {sorted.map(({ name, x, y, depth, i }) => {
+        // depth: -1 (back) → +1 (front)
+        const t = (depth + 1) / 2; // normalise 0..1
+
+        // Scale: back=0.62, front=1.10 — subtle 3D parallax
+        const scale = 0.62 + t * 0.48;
+
+        // Opacity: back=0.22, front=1.0
+        const opacity = 0.22 + t * 0.78;
+
+        // Blur: back gets a whisper of softness, front is crisp
+        const blur = (1 - t) * 1.8;
+
+        // Font brightness: back is a dim amber, front is bright gold
+        const brightness = 70 + t * 30; // CSS % for filter
+
+        // Glow intensity scales with depth
+        const gInner = G((0.25 + t * 0.55).toFixed(2));
+        const gOuter = G((0.10 + t * 0.40).toFixed(2));
+        const gFar   = G((0.04 + t * 0.20).toFixed(2));
+
+        // Subtle "motion trail" shadow offset — shifts toward center at back
+        const shadowY = (1 - t) * 2;
 
         return (
-          <motion.div
+          <div
             key={name}
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 + i * 0.1, duration: 0.9, ease: "easeOut" }}
             style={{
               position: "absolute",
               left: x,
               top: y,
-              transform: "translate(-50%, -50%)",
+              transform: `translate(-50%, -50%) scale(${scale})`,
+              opacity,
+              zIndex: Math.round(t * 10),
+              willChange: "transform, opacity",
             }}
           >
-            <motion.span
-              animate={{
-                opacity: [0.72, 1, 0.72],
-              }}
-              transition={{
-                duration: 3.5 + i * 0.4,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.25,
-              }}
-              style={{
-                fontFamily: "'Amiri', serif",
-                fontWeight: "700",
-                fontSize: "13px",
-                color: GOLD,
-                textShadow: `0 0 8px ${G("0.50")}, 0 0 20px ${G("0.75")}, 0 0 36px ${G("0.35")}`,
-                whiteSpace: "nowrap",
-                display: "block",
-                letterSpacing: "0.03em",
-                direction: "rtl",
-              }}
-            >
+            {/* Aura halo behind the text */}
+            <div style={{
+              position: "absolute",
+              inset: "-8px -12px",
+              borderRadius: "50%",
+              background: `radial-gradient(ellipse, ${gOuter} 0%, transparent 75%)`,
+              filter: `blur(${4 + t * 4}px)`,
+              opacity: 0.6 + t * 0.4,
+              pointerEvents: "none",
+            }} />
+
+            {/* The name itself */}
+            <span style={{
+              fontFamily: "'Amiri', serif",
+              fontWeight: "700",
+              fontSize: "13.5px",
+              color: `hsl(43, ${55 + t * 25}%, ${55 + t * 20}%)`,
+              textShadow: [
+                `0 ${shadowY}px ${3 + t * 5}px ${gInner}`,
+                `0 0 ${12 + t * 20}px ${gOuter}`,
+                `0 0 ${28 + t * 30}px ${gFar}`,
+              ].join(", "),
+              whiteSpace: "nowrap",
+              display: "block",
+              letterSpacing: "0.04em",
+              direction: "rtl",
+              filter: blur > 0.4 ? `blur(${blur}px) brightness(${brightness}%)` : `brightness(${brightness}%)`,
+              position: "relative",
+              zIndex: 1,
+            }}>
               {name}
-            </motion.span>
-          </motion.div>
+            </span>
+          </div>
         );
       })}
     </div>
