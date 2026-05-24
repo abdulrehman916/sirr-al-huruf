@@ -11,84 +11,72 @@ const TENS_MAP     = { 1:'ي', 2:'ك', 3:'ل', 4:'م', 5:'ن', 6:'س', 7:'ع', 8
 const HUNDREDS_MAP = { 1:'ق', 2:'ر', 3:'ش', 4:'ت', 5:'ث', 6:'خ', 7:'ذ', 8:'ض', 9:'ظ' };
 
 /**
- * MASTER HADIM POSITIONAL EXTRACTION (Istintaq)
+ * MASTER HADIM POSITIONAL EXTRACTION — FINAL LAW
  *
- * Laws (from the finalized spec):
+ * Cycle: Units(0) → Tens(1) → Hundreds(2) → Thousands(3) → restart from Tens(1)
  *
- *  • Read number RIGHT → LEFT by positional place value.
- *  • First group cycle: Units → Tens → Hundreds → Thousands(غ + count-letter)
- *  • After a Thousands slot, the cycle RESTARTS but begins from TENS (not Units).
- *    i.e. every post-thousands group cycles: Tens → Hundreds → Thousands → ...
+ * ZERO RULE:
+ *   - Units / Tens / Hundreds: zero → no letter, but slot advances.
+ *   - Thousands slot: ALWAYS emits 'غ' regardless of digit value (even 0).
+ *     If digit > 1 → also emit UNITS_MAP[digit] as count letter.
+ *     If digit = 0 or 1 → emit 'غ' only.
+ *   - After thousands slot: always restart from Tens (slot 1).
  *
- *  Thousands rule:
- *    digit=1 → push 'غ' only
- *    digit>1 → push 'غ', then push UNITS_MAP[digit]  (e.g. 2→ب, 3→ج)
- *
- *  Zero digits are SKIPPED (no letter emitted, position still advances).
- *
- *  Ceremonial output = steps reversed (highest position first).
- *
- * Verified examples:
- *  3457     → ز ن ت غ ج   → joined: جغتنز
- *  12846    → و م ض غ ب ي → joined: يبغضمو
- *  293639386→ و ف ش غ ط ل خ غ ج ص ر → joined: رصجغخلطغشفو
- *  9377383873→ ج ع ض غ ج ف ش غ ز ع ش غ ط → joined: طغشعزغشفجغضعج
+ * Verified:
+ *  3457      → ز ن ت غ ج        → مغشصا after reversal? No: جغتنز
+ *  12846     → و م ض غ ب ي      → يبغضمو
+ *  40391     → ا ص ش غ م        → مغشصا
+ *  5064      → د س غ ه          → هغسد
+ *  100467    → ز س ت غ ق        → قغتسز
+ *  293639386 → و ف ش غ ط ل خ غ ج ص ر → رصجغخلطغشفو
  */
 function positionalIstintaq(n) {
   if (n <= 0) return { steps: [], separatedLetters: '', joinedCeremonial: '', hadimName: 'ائيل' };
   n = Math.floor(n);
 
-  // Digits right-to-left: index 0 = units place, 1 = tens place, 2 = hundreds place, 3 = thousands place …
+  // Digits right-to-left: index 0 = units place, 1 = tens, 2 = hundreds, 3+ = thousands...
   const digits = String(n).split('').reverse();
-  const len    = digits.length;
+  const steps  = [];
 
-  const steps = [];
+  let place = 0; // current digit index
+  let slot  = 0; // 0=Units, 1=Tens, 2=Hundreds, 3=Thousands
 
-  // We walk place by place.
-  // cycleStart: which position in the 4-slot cycle (0=U,1=T,2=H,3=K) the current slot maps to.
-  // First group always starts at slot 0 (Units).
-  // After a thousands slot, the NEXT group starts at slot 1 (Tens).
-
-  let place = 0;         // current digit index (= place value index)
-  let slot  = 0;         // 0=Units, 1=Tens, 2=Hundreds, 3=Thousands
-
-  while (place < len) {
+  while (place < digits.length) {
     const d = parseInt(digits[place]);
 
     if (slot === 0) {
-      // Units position
+      // Units — zero emits nothing, slot advances
       if (d > 0) steps.push({ label: 'Units', value: d, letters: UNITS_MAP[d] || '' });
       place++;
       slot = 1;
 
     } else if (slot === 1) {
-      // Tens position
+      // Tens — zero emits nothing, slot advances
       if (d > 0) steps.push({ label: 'Tens', value: d * 10, letters: TENS_MAP[d] || '' });
       place++;
       slot = 2;
 
     } else if (slot === 2) {
-      // Hundreds position
+      // Hundreds — zero emits nothing, slot advances
       if (d > 0) steps.push({ label: 'Hundreds', value: d * 100, letters: HUNDREDS_MAP[d] || '' });
       place++;
       slot = 3;
 
     } else {
-      // Thousands position (slot === 3)
-      if (d > 0) {
-        steps.push({ label: 'Thousands ×غ', value: 1000, letters: 'غ' });
-        if (d > 1) {
-          steps.push({ label: `×${d}`, value: d, letters: UNITS_MAP[d] || '' });
-        }
+      // Thousands (slot === 3)
+      // ALWAYS emit 'غ' — even when digit is 0 (marks the thousands boundary)
+      steps.push({ label: 'Thousands', value: 1000, letters: 'غ' });
+      // If count > 1, append unit-count letter (d=0 and d=1 → no extra letter)
+      if (d > 1) {
+        steps.push({ label: `×${d}`, value: d, letters: UNITS_MAP[d] || '' });
       }
       place++;
-      // ── CRITICAL RESTART RULE ──
-      // After thousands the cycle restarts from TENS (slot 1), not Units.
+      // RESTART from TENS (not Units) after every thousands slot
       slot = 1;
     }
   }
 
-  // Ceremonial reversal: highest positional first
+  // Ceremonial reversal: highest position first
   const reversed = [...steps].reverse();
   const tokens   = reversed.map(s => s.letters).filter(Boolean);
 
