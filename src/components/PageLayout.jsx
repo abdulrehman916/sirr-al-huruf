@@ -4,7 +4,7 @@ import { useNavigation } from "../context/NavigationContext";
 
 const TABS = [
   { id: "home",        label: "HOME",   arabic: "الرئيسية", path: "/" },
-  { id: "abjad-kabir", label: "ABJAD",  arabic: "الأبجد",   path: "/abjad-kabir" },
+  { id: "abjad-kabir", label: "ABJAD",  arabic: "الأبجد",   path: "/abjad" },
   { id: "anasir",      label: "ANASIR", arabic: "عناصر",    path: "/anasir" },
   { id: "hadim",       label: "HADIM",  arabic: "خادم",     path: "/hadim" },
 ];
