@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import MysticalBackground from "../components/MysticalBackground";
-
-const ASMA = ["الله", "الرحمن", "الملك", "القدوس", "السلام", "المؤمن", "العزيز", "الجبار"];
+import SacredWheel from "../components/SacredWheel";
 
 const NAV_CARDS = [
   {
@@ -50,73 +49,7 @@ const NAV_CARDS = [
 
 
 
-function SacredGeometry() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {/* Outer aura glow */}
-      <motion.div className="absolute rounded-full"
-        style={{ width: 400, height: 400, background: "radial-gradient(circle, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.04) 40%, transparent 70%)", filter: "blur(18px)" }}
-        animate={{ scale: [1, 1.12, 1], opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* Rings */}
-      {[
-        { size: 370, dur: 90, dir: 1, opacity: 0.12, dash: false, w: 1 },
-        { size: 310, dur: 65, dir: -1, opacity: 0.18, dash: true, w: 0.8 },
-        { size: 255, dur: 45, dir: 1, opacity: 0.22, dash: false, w: 1 },
-        { size: 205, dur: 32, dir: -1, opacity: 0.28, dash: true, w: 0.7 },
-        { size: 158, dur: 22, dir: 1, opacity: 0.32, dash: false, w: 1 },
-        { size: 118, dur: 15, dir: -1, opacity: 0.20, dash: true, w: 0.6 },
-      ].map((ring, i) => (
-        <motion.div key={i} className="absolute rounded-full"
-          animate={{ rotate: ring.dir * 360 }}
-          transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-          style={{
-            width: ring.size, height: ring.size,
-            border: `${ring.w}px ${ring.dash ? "dashed" : "solid"} rgba(212,175,55,${ring.opacity})`,
-            boxShadow: `0 0 ${ring.size * 0.06}px rgba(212,175,55,0.15)`,
-          }}
-        />
-      ))}
-      {/* Breathing inner pulse */}
-      <motion.div className="absolute rounded-full"
-        style={{ width: 88, height: 88, background: "radial-gradient(circle, rgba(212,175,55,0.35) 0%, transparent 70%)", filter: "blur(8px)" }}
-        animate={{ scale: [1, 1.45, 1], opacity: [0.5, 0.9, 0.5] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* Radial golden aura */}
-      <motion.div className="absolute rounded-full"
-        style={{ width: 200, height: 200, background: "radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 65%)", filter: "blur(12px)" }}
-        animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      />
-    </div>
-  );
-}
 
-function FloatingAsma() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {ASMA.map((name, i) => {
-        const angle = (i / ASMA.length) * 2 * Math.PI - Math.PI / 2;
-        const radius = 155;
-        const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius;
-        return (
-          <motion.div key={name} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.8 + i * 0.12, duration: 0.6 }} className="absolute"
-            style={{ transform: `translate(${x}px, ${y}px)` }}>
-            <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 3 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
-              className="font-amiri text-xs sm:text-sm font-bold text-center px-2 py-1 rounded-lg"
-              style={{ color: "rgba(212,175,55,0.85)", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.18)", textShadow: "0 0 12px rgba(212,175,55,0.6)", backdropFilter: "blur(4px)", whiteSpace: "nowrap", fontSize: "clamp(10px, 2.5vw, 14px)" }}>
-              {name}
-            </motion.div>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
 
 function CardInner({ card }) {
   return (
@@ -137,18 +70,22 @@ export default function Home() {
       <MysticalBackground />
 
       <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pb-8">
-        {/* Sigil */}
-        <div className="relative flex items-center justify-center" style={{ width: 340, height: 340 }}>
-          <SacredGeometry />
-          <FloatingAsma />
-          <motion.div initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, ease: "easeOut" }}
-            className="relative z-10 flex flex-col items-center">
+        {/* Sacred Wheel + Logo */}
+        <div className="relative flex items-center justify-center" style={{ width: 420, height: 420 }}>
+          <SacredWheel />
+          {/* Central logo on top */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="absolute z-20 flex items-center justify-center"
+          >
             <motion.div
-              animate={{ boxShadow: ["0 0 24px rgba(212,175,55,0.3)", "0 0 48px rgba(212,175,55,0.6)", "0 0 24px rgba(212,175,55,0.3)"] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ boxShadow: ["0 0 24px rgba(212,175,55,0.35)", "0 0 55px rgba(212,175,55,0.70)", "0 0 24px rgba(212,175,55,0.35)"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               className="w-20 h-20 rounded-2xl flex items-center justify-center"
-              style={{ background: "linear-gradient(180deg, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0.10) 100%)", border: "1px solid rgba(212,175,55,0.40)" }}>
-              <span className="font-amiri text-4xl" style={{ color: "#D4AF37", textShadow: "0 0 20px rgba(212,175,55,0.8)" }}>ح</span>
+              style={{ background: "linear-gradient(180deg, rgba(212,175,55,0.30) 0%, rgba(212,175,55,0.12) 100%)", border: "1px solid rgba(212,175,55,0.50)", backdropFilter: "blur(8px)" }}
+            >
+              <span className="font-amiri text-4xl" style={{ color: "#D4AF37", textShadow: "0 0 24px rgba(212,175,55,0.9)" }}>ح</span>
             </motion.div>
           </motion.div>
         </div>
