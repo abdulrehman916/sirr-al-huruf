@@ -41,10 +41,9 @@ const NAV_CARDS = [
     label: "MIZAAN 9",
     subtitle: "Sacred Numerology",
     icon: "٩",
-    borderColor: "rgba(212,175,55,0.30)",
-    bg: "linear-gradient(135deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.04) 100%)",
-    glow: "0 0 30px rgba(212,175,55,0.10)",
-    dimmed: true,
+    borderColor: "rgba(212,175,55,0.45)",
+    bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
+    glow: "0 0 40px rgba(212,175,55,0.20)",
   },
 ];
 

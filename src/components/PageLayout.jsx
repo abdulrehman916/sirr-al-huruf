@@ -7,6 +7,7 @@ const TABS = [
   { id: "abjad-kabir", label: "ABJAD",  arabic: "الأبجد",   path: "/abjad" },
   { id: "anasir",      label: "ANASIR", arabic: "عناصر",    path: "/anasir" },
   { id: "hadim",       label: "HADIM",  arabic: "خادم",     path: "/hadim" },
+  { id: "mizaan9",     label: "MIZAN",  arabic: "ميزان",    path: "/mizaan9" },
 ];
 
 function CosmicBackground() {
@@ -42,7 +43,8 @@ export default function PageLayout({ children }) {
   const location = useLocation();
   const { startNav } = useNavigation();
   const activeId = TABS.find(t => t.path === location.pathname)?.id
-    ?? (location.pathname === "/abjad" ? "abjad-kabir" : undefined);
+    ?? (location.pathname === "/abjad" ? "abjad-kabir" : undefined)
+    ?? (location.pathname === "/mizaan9" ? "mizaan9" : undefined);
 
   return (
     <div className="min-h-screen font-inter relative" style={{ background: "linear-gradient(180deg, #050d1a 0%, #0a1628 40%, #112840 100%)" }}>
@@ -59,7 +61,7 @@ export default function PageLayout({ children }) {
           boxShadow: "0 2px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.06)",
         }}
       >
-        <div className="max-w-2xl mx-auto grid grid-cols-4 gap-1">
+        <div className="max-w-2xl mx-auto grid grid-cols-5 gap-1">
           {TABS.map((tab) => {
             const isActive = activeId === tab.id;
             return (
