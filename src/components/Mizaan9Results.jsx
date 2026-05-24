@@ -65,40 +65,136 @@ export function LetterCountCard({ count }) {
   );
 }
 
-// ── 3. Anasir Breakdown ──
+// ── 3. Anasir Breakdown — DYNAMIC CARD SYSTEM ──
 export function AnasirBreakdownCard({ counts, percentages }) {
+  // Sort entries by percentage descending to determine rank
+  const sorted = Object.entries(MIZAAN_ELEMENTS)
+    .map(([key, el]) => ({ key, el, pct: percentages[key] ?? 0, cnt: counts[key] ?? 0 }))
+    .sort((a, b) => b.pct - a.pct);
+
+  const maxPct = sorted[0]?.pct ?? 0;
+
+  // Determine visual tier for each element
+  const getTier = (key, pct) => {
+    if (pct === maxPct && pct > 0) return 'dominant';
+    if (pct >= maxPct * 0.5 && pct > 0) return 'strong';
+    if (pct > 0) return 'weak';
+    return 'inactive';
+  };
+
+  const TIER_STYLE = {
+    dominant: { opacity: 1,    scale: 1,    borderWidth: 2,  glowMult: 1.0  },
+    strong:   { opacity: 0.80, scale: 1,    borderWidth: 1,  glowMult: 0.5  },
+    weak:     { opacity: 0.50, scale: 1,    borderWidth: 1,  glowMult: 0.2  },
+    inactive: { opacity: 0.20, scale: 1,    borderWidth: 1,  glowMult: 0.0  },
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
       className="rounded-2xl border p-4 space-y-3"
       style={{ background: "rgba(8,18,44,0.96)", borderColor: G.border }}>
       <SectionLabel>عناصر — Anasir Breakdown</SectionLabel>
       <div className="space-y-2">
-        {Object.entries(MIZAAN_ELEMENTS).map(([key, el], idx) => {
-          const s   = EL_STYLE[key];
-          const cnt = counts[key] ?? 0;
-          const pct = percentages[key] ?? 0;
+        {sorted.map(({ key, el, pct, cnt }, idx) => {
+          const s    = EL_STYLE[key];
+          const tier = getTier(key, pct);
+          const ts   = TIER_STYLE[tier];
+          const isDominant = tier === 'dominant';
+
           return (
             <motion.div key={key}
-              initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.06 * idx }}
-              className="rounded-xl border px-4 py-2.5"
-              style={{ background: s.bg, borderColor: s.border }}>
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">{el.icon}</span>
-                  <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: s.color }}>{el.labelTR}</span>
-                  <span className="font-amiri text-sm" style={{ color: s.color, opacity: 0.7 }}>{el.arabic}</span>
+              initial={{ opacity: 0, x: 10 }}
+              animate={{
+                opacity: ts.opacity,
+                x: 0,
+                boxShadow: isDominant
+                  ? [`0 0 18px ${s.glow}`, `0 0 36px ${s.glow}`, `0 0 18px ${s.glow}`]
+                  : `0 0 0px transparent`,
+              }}
+              transition={{
+                opacity:    { duration: 0.4, delay: 0.06 * idx },
+                x:          { duration: 0.4, delay: 0.06 * idx },
+                boxShadow:  isDominant ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : { duration: 0.3 },
+              }}
+              className="rounded-xl border px-4 py-3"
+              style={{
+                background:  isDominant
+                  ? `linear-gradient(135deg, ${s.bg}, rgba(0,0,0,0.4))`
+                  : "rgba(255,255,255,0.02)",
+                borderColor: isDominant ? s.border : `${s.border.replace(/[\d.]+\)$/, "0.15)")}`,
+                borderWidth:  ts.borderWidth,
+              }}>
+
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2.5">
+                  {/* Icon — larger + glowing for dominant */}
+                  <motion.span
+                    style={{ fontSize: isDominant ? "1.6rem" : "1.1rem", lineHeight: 1 }}
+                    animate={isDominant ? {
+                      filter: [`drop-shadow(0 0 4px ${s.glow})`, `drop-shadow(0 0 14px ${s.color})`, `drop-shadow(0 0 4px ${s.glow})`],
+                    } : { filter: "drop-shadow(0 0 0px transparent)" }}
+                    transition={isDominant ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : {}}>
+                    {el.icon}
+                  </motion.span>
+
+                  <div>
+                    <p className="font-inter text-xs font-bold uppercase tracking-wider leading-none"
+                      style={{ color: isDominant ? s.color : `${s.color}99` }}>
+                      {el.labelTR}
+                    </p>
+                    <p className="font-amiri text-sm leading-none mt-0.5"
+                      style={{ color: isDominant ? s.color : `${s.color}66` }}>
+                      {el.arabic}
+                    </p>
+                  </div>
+
+                  {isDominant && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="font-inter text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full border font-bold"
+                      style={{ color: s.color, borderColor: s.border, background: s.bg }}>
+                      Dominant
+                    </motion.span>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-inter text-xs font-bold tabular-nums" style={{ color: s.color }}>{cnt}</span>
-                  <span className="font-inter text-[10px]" style={{ color: s.color, opacity: 0.6 }}>{pct}%</span>
+
+                <div className="flex flex-col items-end gap-0.5">
+                  {/* Bast value */}
+                  <span className="font-inter text-sm font-bold tabular-nums"
+                    style={{ color: isDominant ? s.color : `${s.color}88` }}>
+                    {el.bast2?.toLocaleString()}
+                  </span>
+                  {/* Percentage — big for dominant */}
+                  <span className="font-inter font-bold tabular-nums"
+                    style={{
+                      fontSize: isDominant ? "1.1rem" : "0.75rem",
+                      color: isDominant ? s.color : `${s.color}77`,
+                    }}>
+                    {pct}%
+                  </span>
+                  <span className="font-inter text-[9px] tabular-nums"
+                    style={{ color: `${s.color}55` }}>
+                    {cnt} letters
+                  </span>
                 </div>
               </div>
-              <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+
+              {/* Energy bar */}
+              <div className="h-2 w-full rounded-full overflow-hidden"
+                style={{ background: "rgba(255,255,255,0.05)" }}>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 + idx * 0.05 }}
                   className="h-full rounded-full"
-                  style={{ background: s.color, boxShadow: `0 0 8px ${s.glow}` }} />
+                  style={{
+                    background: isDominant
+                      ? `linear-gradient(90deg, ${s.color}cc, ${s.color})`
+                      : s.color,
+                    boxShadow: isDominant ? `0 0 10px ${s.glow}` : "none",
+                    opacity: ts.opacity,
+                  }} />
               </div>
             </motion.div>
           );
