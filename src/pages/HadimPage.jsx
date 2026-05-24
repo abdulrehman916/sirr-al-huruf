@@ -4,6 +4,7 @@ import { Trash2, Wand2, Plus } from "lucide-react";
 import { processText } from "../lib/abjadValues";
 import PageLayout from "../components/PageLayout";
 import HadimTypePanel from "../components/HadimTypePanel";
+import HadimKasem from "../components/HadimKasem";
 
 // ── Positional lookup maps ──
 const UNITS_MAP    = { 1:'ا', 2:'ب', 3:'ج', 4:'د', 5:'ه', 6:'و', 7:'ز', 8:'ح', 9:'ط' };
@@ -373,6 +374,15 @@ export default function HadimPage() {
                     </motion.div>
                   </AnimatePresence>
                 </div>
+              </motion.div>
+
+              {/* Kasem Invocation */}
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: result.individuals.length * 0.07 + 0.25 }}>
+                <HadimKasem
+                  hadimMode={hadimMode}
+                  individuals={result.individuals}
+                  grandTypes={result.grandTypes}
+                />
               </motion.div>
 
             </motion.div>
