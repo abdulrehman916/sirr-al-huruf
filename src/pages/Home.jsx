@@ -71,7 +71,7 @@ export default function Home() {
 
       <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pb-8">
         {/* Sacred Wheel + Logo */}
-        <div className="relative flex items-center justify-center" style={{ width: 420, height: 420 }}>
+        <div className="relative flex items-center justify-center" style={{ width: 560, height: 560 }}>
           <SacredWheel />
           {/* Central logo on top */}
           <motion.div
