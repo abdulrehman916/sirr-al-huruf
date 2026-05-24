@@ -285,9 +285,6 @@ function Section({ title, children }) {
 // ═══════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════
-// Each mode gets its own isolated state slice
-const INITIAL_MODULE_STATE = { input: "", result: null };
-
 export default function AbjadKabirPage() {
   const [mode, setMode] = useState("kebir");
   const [bastLevel, setBastLevel] = useState(1);
@@ -295,34 +292,19 @@ export default function AbjadKabirPage() {
   const [history, setHistory] = useState([]);
   const debounceTimerRef = useRef(null);
 
-  // Fully isolated state per module — changing one NEVER affects another
-  const [kebirState,  setKebirState]  = useState(INITIAL_MODULE_STATE);
-  const [saghirState, setSaghirState] = useState(INITIAL_MODULE_STATE);
-  const [cumeliState, setCumeliState] = useState(INITIAL_MODULE_STATE);
-  const [bastState,   setBastState]   = useState(INITIAL_MODULE_STATE);
+  // ONE shared input — persists across all mode switches
+  const [input, setInput] = useState("");
+  // Per-mode results — each mode stores its own last result
+  const [results, setResults] = useState({ kebir: null, saghir: null, cumeli: null, bast: null });
 
-  const STATE_MAP = {
-    kebir:  { state: kebirState,  setState: setKebirState  },
-    saghir: { state: saghirState, setState: setSaghirState },
-    cumeli: { state: cumeliState, setState: setCumeliState },
-    bast:   { state: bastState,   setState: setBastState   },
-  };
-
-  const modeObj  = MODES.find(m => m.key === mode);
-  const { state, setState } = STATE_MAP[mode];
-  const { input, result }   = state;
+  const modeObj = MODES.find(m => m.key === mode);
+  const result  = results[mode];
 
   const performCalculation = useCallback((inputValue = input) => {
-    console.log('[performCalculation] mode:', mode, 'input:', inputValue, 'bastLevel:', bastLevel);
-    if (!inputValue.trim()) {
-      console.log('[performCalculation] empty input, returning');
-      return;
-    }
+    if (!inputValue.trim()) return;
     const calcFn = MODES.find(m => m.key === mode).calc;
     const resultValue = mode === "bast" ? calcFn(inputValue, bastLevel) : calcFn(inputValue);
-    console.log('[performCalculation] result:', resultValue);
-    setState(prev => ({ ...prev, result: resultValue }));
-    // Save to history
+    setResults(prev => ({ ...prev, [mode]: resultValue }));
     setHistory(prev => [{
       mode,
       input: inputValue,
@@ -330,7 +312,7 @@ export default function AbjadKabirPage() {
       result: resultValue,
       timestamp: new Date().toLocaleTimeString(),
     }, ...prev.slice(0, 19)]);
-  }, [mode, bastLevel, setState]);
+  }, [mode, bastLevel, input]);
 
   const handleCalculate = useCallback(() => performCalculation(), [performCalculation]);
 
@@ -338,7 +320,7 @@ export default function AbjadKabirPage() {
   useEffect(() => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     if (!input.trim()) {
-      setState(prev => ({ ...prev, result: null }));
+      setResults(prev => ({ ...prev, [mode]: null }));
       return;
     }
     debounceTimerRef.current = setTimeout(() => {
@@ -349,15 +331,16 @@ export default function AbjadKabirPage() {
 
   const handleModeChange = (key) => {
     setMode(key);
-    // No cross-calculation — each mode keeps its own state untouched
+    // Input persists; result for the new mode will auto-calculate via the effect above
   };
 
-  const handleClear = () => setState(INITIAL_MODULE_STATE);
+  const handleClear = () => { setInput(""); setResults({ kebir: null, saghir: null, cumeli: null, bast: null }); };
 
   const handleCopy = () => {
     if (!result) return;
     const text = `[${modeObj.label}]\n${input}\n\nTotal: ${result.total}`;
     navigator.clipboard.writeText(text);
+
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -441,7 +424,7 @@ Timestamp: ${new Date().toLocaleString()}
             Arabic Text Input — {modeObj.label}
           </label>
           <textarea dir="rtl" value={input}
-            onChange={e => setState(prev => ({ ...prev, input: e.target.value, result: null }))}
+            onChange={e => { setInput(e.target.value); setResults(prev => ({ ...prev, [mode]: null })); }}
             onKeyDown={e => { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); handleCalculate(); } }}
             placeholder="أدخل النص العربي هنا..."
             rows={4}
@@ -457,7 +440,7 @@ Timestamp: ${new Date().toLocaleString()}
                   const active = bastLevel === level;
                   return (
                     <motion.button key={level}
-                      onClick={() => { setBastLevel(level); setState(prev => ({ ...prev, result: null })); }}
+                      onClick={() => { setBastLevel(level); setResults(prev => ({ ...prev, bast: null })); }}
                       whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       animate={{
                         background: active ? G.bgHi : "rgba(255,255,255,0.02)",
@@ -483,7 +466,7 @@ Timestamp: ${new Date().toLocaleString()}
               style={{ background:"linear-gradient(135deg,#fcd34d,#d97706)", boxShadow:`0 0 28px ${G.glowHi}` }}>
               <span className="font-amiri text-base">احسب</span> Calculate
             </motion.button>
-            <motion.button onClick={handleClear} disabled={!input && !result && true}
+            <motion.button onClick={handleClear} disabled={!input}
               whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
               className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               style={{ background:"rgba(255,255,255,0.04)" }}>
@@ -539,7 +522,8 @@ Timestamp: ${new Date().toLocaleString()}
                   onClick={() => {
                     setMode(entry.mode);
                     if (entry.mode === "bast") setBastLevel(entry.bastLevel || 1);
-                    setState(prev => ({ ...prev, input: entry.input, result: entry.result }));
+                    setInput(entry.input);
+                    setResults(prev => ({ ...prev, [entry.mode]: entry.result }));
                   }}
                   whileHover={{ scale:1.01 }} whileTap={{ scale:0.98 }}
                   className="w-full text-left flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 hover:border-white/20 text-xs transition-all"
