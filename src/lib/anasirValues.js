@@ -66,6 +66,18 @@ export const ELEMENTS = {
   },
 };
 
+// ════════════════════════════════════════════════
+// MERTEBE HIERARCHY — 7 ranks per element
+// Order: Mertebe → Derece → Dakika → Saniye → Salise → Rabia → Hamise
+// ════════════════════════════════════════════════
+export const RANK_NAMES = ['Mertebe', 'Derece', 'Dakika', 'Saniye', 'Salise', 'Rabia', 'Hamise'];
+
+// Each element's letters are already listed in rank order (index 0 = highest rank)
+// fire:  ا ه ط م ف ش ذ
+// water: د ح ل ع ر خ ض
+// air:   ج ز ك س ق ت ظ
+// earth: ب و ي ن ص ث غ
+
 // Normalize common Arabic letter variants
 const NORMALIZE_MAP = {
   'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا',
@@ -84,6 +96,58 @@ for (const [key, el] of Object.entries(ELEMENTS)) {
   for (const letter of el.letters) {
     LETTER_TO_ELEMENT[letter] = key;
   }
+}
+
+// Build letter → rank index lookup: { letter: { elementKey, rankIndex } }
+const LETTER_RANK = {};
+for (const [key, el] of Object.entries(ELEMENTS)) {
+  el.letters.forEach((letter, idx) => {
+    LETTER_RANK[letter] = { elementKey: key, rankIndex: idx };
+  });
+}
+
+/**
+ * When two or more elements share the same count, resolve dominance using
+ * the book's internal rank hierarchy (Mertebe → Derece → Dakika → … → Hamise).
+ *
+ * For each tied element we find the HIGHEST-ranked letter it contributed
+ * (lowest rankIndex = highest rank).  The element whose best letter has the
+ * smallest rankIndex wins.  If still tied at every rank, the first tied element
+ * is returned (no further tiebreak defined by the book).
+ *
+ * Returns: { winner: elementKey, resolvedByRank: rankIndex, rankName: string }
+ *          or null if the letter set has no ranked letters at all.
+ */
+function resolveTieByRank(tiedKeys, letterDetails) {
+  // For each tied element, collect the minimum rankIndex among its contributed letters
+  const bestRank = {};
+  for (const key of tiedKeys) {
+    bestRank[key] = Infinity;
+  }
+
+  for (const { original, element } of letterDetails) {
+    if (!tiedKeys.includes(element)) continue;
+    const norm = NORMALIZE_MAP[original] || original;
+    const rankInfo = LETTER_RANK[norm];
+    if (rankInfo && rankInfo.elementKey === element) {
+      if (rankInfo.rankIndex < bestRank[element]) {
+        bestRank[element] = rankInfo.rankIndex;
+      }
+    }
+  }
+
+  // Sort tied keys by their best rank (ascending = higher rank wins)
+  const sorted = [...tiedKeys].sort((a, b) => bestRank[a] - bestRank[b]);
+  const winner = sorted[0];
+  const resolvedByRank = bestRank[winner];
+
+  if (resolvedByRank === Infinity) return null; // no ranked letters found
+
+  return {
+    winner,
+    resolvedByRank,
+    rankName: RANK_NAMES[resolvedByRank] ?? `Rank ${resolvedByRank + 1}`,
+  };
 }
 
 export function analyzeText(text) {
@@ -105,9 +169,37 @@ export function analyzeText(text) {
     percentages[key] = total > 0 ? Math.round((counts[key] / total) * 100) : 0;
   }
 
-  const dominant = total > 0
-    ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
-    : null;
+  if (total === 0) {
+    return { counts, percentages, total, dominant: null, letterDetails, tiebreak: null };
+  }
 
-  return { counts, percentages, total, dominant, letterDetails };
+  const maxCount = Math.max(...Object.values(counts));
+  const topKeys = Object.entries(counts)
+    .filter(([, v]) => v === maxCount)
+    .map(([k]) => k);
+
+  let dominant;
+  let tiebreak = null;
+
+  if (topKeys.length === 1) {
+    // Clear winner — no tiebreak needed
+    dominant = topKeys[0];
+  } else {
+    // Equal totals — resolve via rank hierarchy
+    const resolution = resolveTieByRank(topKeys, letterDetails);
+    if (resolution) {
+      dominant = resolution.winner;
+      tiebreak = {
+        tiedElements: topKeys,
+        resolvedByRank: resolution.resolvedByRank,
+        rankName: resolution.rankName,
+      };
+    } else {
+      // Fallback: first in element order
+      dominant = topKeys[0];
+      tiebreak = { tiedElements: topKeys, resolvedByRank: null, rankName: null };
+    }
+  }
+
+  return { counts, percentages, total, dominant, letterDetails, tiebreak };
 }

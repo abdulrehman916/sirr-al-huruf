@@ -1,5 +1,5 @@
 import { ABJAD_MAP } from "./abjadValues";
-import { ELEMENTS } from "./anasirValues";
+import { ELEMENTS, RANK_NAMES } from "./anasirValues";
 
 const CHUNK_SIZE = 500;
 
@@ -110,9 +110,44 @@ export async function analyzeTextAsync(text, onProgress) {
     percentages[key] = total > 0 ? Math.round((counts[key] / total) * 100) : 0;
   }
 
-  const dominant = total > 0
-    ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
-    : null;
+  if (total === 0) {
+    return { counts, percentages, total, dominant: null, letterDetails, tiebreak: null };
+  }
 
-  return { counts, percentages, total, dominant, letterDetails };
+  // Build letter → rank lookup from ELEMENTS
+  const LETTER_RANK_LOCAL = {};
+  for (const [key, el] of Object.entries(ELEMENTS)) {
+    el.letters.forEach((letter, idx) => { LETTER_RANK_LOCAL[letter] = { elementKey: key, rankIndex: idx }; });
+  }
+
+  const maxCount = Math.max(...Object.values(counts));
+  const topKeys = Object.entries(counts).filter(([, v]) => v === maxCount).map(([k]) => k);
+
+  let dominant;
+  let tiebreak = null;
+
+  if (topKeys.length === 1) {
+    dominant = topKeys[0];
+  } else {
+    // Resolve tie by rank hierarchy
+    const bestRank = {};
+    for (const key of topKeys) bestRank[key] = Infinity;
+
+    for (const { original, element } of letterDetails) {
+      if (!topKeys.includes(element)) continue;
+      const normalized = norm(original);
+      const ri = LETTER_RANK_LOCAL[normalized];
+      if (ri && ri.elementKey === element && ri.rankIndex < bestRank[element]) {
+        bestRank[element] = ri.rankIndex;
+      }
+    }
+
+    const sorted = [...topKeys].sort((a, b) => bestRank[a] - bestRank[b]);
+    dominant = sorted[0];
+    const resolvedByRank = bestRank[dominant];
+    const rankName = resolvedByRank !== Infinity ? (RANK_NAMES[resolvedByRank] ?? null) : null;
+    tiebreak = { tiedElements: topKeys, resolvedByRank: resolvedByRank !== Infinity ? resolvedByRank : null, rankName };
+  }
+
+  return { counts, percentages, total, dominant, letterDetails, tiebreak };
 }

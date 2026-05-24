@@ -61,16 +61,45 @@ export default function AnasirPage() {
               {/* Dominant Banner */}
               {result.dominant && (() => {
                 const el = ELEMENTS[result.dominant];
+                const tb = result.tiebreak;
                 return (
                   <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-                    className="rounded-2xl p-5 flex items-center justify-between border backdrop-blur-sm"
+                    className="rounded-2xl p-5 border backdrop-blur-sm"
                     style={{ background: el.dominantBg || el.bg, borderColor: el.border, boxShadow: el.dominantShadow || `0 4px 24px ${el.glow}`, borderRadius: "16px" }}>
-                    <div>
-                      <p className="font-inter text-[10px] uppercase tracking-widest mb-1 font-semibold" style={{ color: el.color }}>Dominant Element</p>
-                      <p className="font-amiri text-2xl font-bold text-white">{el.icon} {el.name}</p>
-                      <p className="font-inter text-xs text-white/55 mt-1">{result.counts[result.dominant]} letters · {result.percentages[result.dominant]}%</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-inter text-[10px] uppercase tracking-widest mb-1 font-semibold" style={{ color: el.color }}>Dominant Element</p>
+                        <p className="font-amiri text-2xl font-bold text-white">{el.icon} {el.name}</p>
+                        <p className="font-inter text-xs text-white/55 mt-1">{result.counts[result.dominant]} letters · {result.percentages[result.dominant]}%</p>
+                      </div>
+                      <span className="font-amiri text-5xl opacity-15" style={{ color: el.color }}>{el.arabic}</span>
                     </div>
-                    <span className="font-amiri text-5xl opacity-15" style={{ color: el.color }}>{el.arabic}</span>
+
+                    {/* Tiebreak notice */}
+                    {tb && tb.rankName && (
+                      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                        className="mt-3 rounded-xl border border-white/20 px-3 py-2.5 space-y-1"
+                        style={{ background: "rgba(0,0,0,0.22)" }}>
+                        <p className="font-inter text-[9px] uppercase tracking-widest text-white/50 font-semibold">
+                          ⚖ Equal Totals Detected
+                        </p>
+                        <p className="font-inter text-[11px] text-white/80">
+                          {tb.tiedElements.map(k => ELEMENTS[k].icon + ' ' + ELEMENTS[k].name).join('  =  ')}
+                        </p>
+                        <p className="font-inter text-[10px] font-bold" style={{ color: el.color }}>
+                          ✔ Dominance resolved by: {tb.rankName}
+                        </p>
+                      </motion.div>
+                    )}
+
+                    {/* Tie with no ranked letters (extremely rare) */}
+                    {tb && !tb.rankName && (
+                      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                        className="mt-3 rounded-xl border border-white/20 px-3 py-2 space-y-1"
+                        style={{ background: "rgba(0,0,0,0.22)" }}>
+                        <p className="font-inter text-[9px] uppercase tracking-widest text-white/50">⚖ Equal Totals — No rank resolution available</p>
+                      </motion.div>
+                    )}
                   </motion.div>
                 );
               })()}
