@@ -525,8 +525,7 @@ Timestamp: ${new Date().toLocaleString()}
           )}
         </AnimatePresence>
 
-        {/* ── Reference Table ── */}
-        <KabirReferenceTable />
+
 
         {/* ── History ── */}
         {history.length > 0 && (
