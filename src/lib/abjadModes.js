@@ -15,11 +15,7 @@ const NORM = { 'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ئ':'ي','ؤ':
 export function normalize(ch) { return NORM[ch] || ch; }
 
 function isArabic(ch) {
-  const n = normalize(ch);
-  if (n in KABIR_MAP) return true;
-  // Also accept via Unicode range check (Arabic block U+0621–U+064A core letters)
-  const code = n.charCodeAt(0);
-  return code >= 0x0621 && code <= 0x064A;
+  return normalize(ch) in KABIR_MAP;
 }
 
 // Strip all non-letter noise: tashkeel, diacritics, tatweel, zero-width chars,
@@ -54,10 +50,9 @@ function extractLetters(text) {
 // 1 — EBCED-İ KEBİR
 // ══════════════════════════════════════
 export function calcKebir(text) {
-  const letters = extractLetters(text).map(l => ({
-    ...l,
-    value: KABIR_MAP[l.normalized],
-  }));
+  const letters = extractLetters(text)
+    .filter(l => l.normalized in KABIR_MAP)
+    .map(l => ({ ...l, value: KABIR_MAP[l.normalized] }));
   const total = letters.reduce((s, l) => s + l.value, 0);
   return { letters, total };
 }

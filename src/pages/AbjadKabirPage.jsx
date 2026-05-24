@@ -106,10 +106,15 @@ function RunningStrip({ letters, valueKey = "value" }) {
 function KebirResults({ data }) {
   return (
     <div className="space-y-4">
+      {/* Total + letter count */}
       <TotalCard total={data.total} label="Total — Ebced-i Kebir" count={data.letters.length} />
-      <Section title="Letter Breakdown">
+
+      {/* Letter breakdown grid */}
+      <Section title={`Letter Breakdown — ${data.letters.length} Letters`}>
         <LetterGrid letters={data.letters} />
       </Section>
+
+      {/* Running total strip */}
       <Section title="Running Total">
         <RunningStrip letters={data.letters} />
       </Section>
