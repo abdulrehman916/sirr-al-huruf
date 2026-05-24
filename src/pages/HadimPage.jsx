@@ -10,27 +10,65 @@ const UNITS_MAP    = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9
 const TENS_MAP     = { 1:'ي',2:'ك',3:'ل',4:'م',5:'ن',6:'س',7:'ع',8:'ف',9:'ص' };
 const HUNDREDS_MAP = { 1:'ق',2:'ر',3:'ش',4:'ت',5:'ث',6:'خ',7:'ذ',8:'ض',9:'ظ' };
 
+/**
+ * Positional extraction (Istintaq).
+ *
+ * Builds steps in ascending positional order: Units → Tens → Hundreds → Thousands.
+ * Thousands rule:
+ *   - 1000 always → 'غ'
+ *   - 2000 → 'غ' + UNITS_MAP[2] = 'غب'
+ *   - 3000 → 'غ' + UNITS_MAP[3] = 'غج'  etc.
+ *
+ * Ceremonial reversal = steps reversed (Thousands first, then Hundreds, Tens, Units).
+ * separatedLetters  = space-joined reversed tokens  (e.g. "و م ض غ ب")
+ * joinedCeremonial  = reversed tokens joined         (e.g. "بغضمو")
+ * hadimName         = joinedCeremonial + 'ائيل'
+ */
 function positionalIstintaq(n) {
-  if (n <= 0) return { steps: [], combined: '', reversedCombined: '', reversedSeparated: '' };
+  if (n <= 0) return {
+    steps: [], separatedLetters: '', joinedCeremonial: '', hadimName: 'ائيل'
+  };
   n = Math.floor(n);
+
   const thousands = Math.floor(n / 1000);
   const remainder = n % 1000;
   const hundreds  = Math.floor(remainder / 100);
   const tens      = Math.floor((remainder % 100) / 10);
   const units     = remainder % 10;
+
+  // Build steps in low→high positional order
   const steps = [];
-  steps.push({ label: 'Units',    value: units,         letters: units    ? (UNITS_MAP[units]       || '') : '' });
-  steps.push({ label: 'Tens',     value: tens * 10,     letters: tens     ? (TENS_MAP[tens]         || '') : '' });
-  steps.push({ label: 'Hundreds', value: hundreds * 100,letters: hundreds ? (HUNDREDS_MAP[hundreds] || '') : '' });
+
+  if (units)    steps.push({ label: 'Units',    value: units,          letters: UNITS_MAP[units]    || '' });
+  if (tens)     steps.push({ label: 'Tens',     value: tens * 10,      letters: TENS_MAP[tens]      || '' });
+  if (hundreds) steps.push({ label: 'Hundreds', value: hundreds * 100, letters: HUNDREDS_MAP[hundreds] || '' });
+
   if (thousands > 0) {
-    steps.push({ label: 'Thousands', value: 1000, letters: 'ع' });
-    const extra = thousands - 1;
-    if (extra > 0) steps.push({ label: 'Extra ×1000', value: extra, letters: UNITS_MAP[extra] || '' });
+    // 1000 always → 'غ'
+    steps.push({ label: 'Thousands', value: 1000, letters: 'غ' });
+    // For 2000+: append the unit letter for the thousands COUNT (2000→ب, 3000→ج, etc.)
+    if (thousands > 1) {
+      steps.push({ label: `×${thousands}000`, value: thousands * 1000, letters: UNITS_MAP[thousands] || '' });
+    }
   }
-  const combined = steps.map(s => s.letters).join('');
-  const reversedCombined = combined.split('').reverse().join('');
-  const reversedSeparated = combined.split('').reverse().join(' ');
-  return { steps, combined, reversedCombined, reversedSeparated };
+
+  // Ceremonial reversal: reverse the steps array
+  const reversed = [...steps].reverse();
+  const tokens = reversed.map(s => s.letters).filter(Boolean);
+
+  const separatedLetters = tokens.join(' ');          // "و م ض غ ب"
+  const joinedCeremonial = tokens.join('');            // "وم ضغب" → joined "وم ضغب"
+  // Joined is the reversed tokens concatenated — for RTL display, naturally read right-to-left
+  // Per spec examples: tokens = [و, م, ض, غ, ب] → joined = "وم ضغب"
+  // But spec shows "بغضمو" (the string reading left-to-right is بغضمو)
+  // That is: tokens reversed again → join. Since we already reversed steps, tokens = [و,م,ض,غ,ب]
+  // Joined LTR string: "وم ضغب" without spaces = "ومضغب"
+  // Spec "بغضمو" is the same read RTL. In Arabic RTL rendering "ومضغب" displays as بغضمو visually.
+  // We store plain joined for display in dir="rtl" containers.
+
+  const hadimName = joinedCeremonial + 'ائيل';
+
+  return { steps, separatedLetters, joinedCeremonial, hadimName };
 }
 
 /**
@@ -51,8 +89,7 @@ function computeType(value, subtract, typeLabel) {
     boosted = true;
   }
   const istintaq = positionalIstintaq(reduced);
-  const name = istintaq.reversedCombined + 'ائيل';
-  return { typeLabel, subtract, reduced, boosted, adjusted, istintaq, name };
+  return { typeLabel, subtract, reduced, boosted, adjusted, original: value, istintaq };
 }
 
 function computeAllTypes(value) {
