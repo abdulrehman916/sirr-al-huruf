@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { analyzeText, ELEMENTS } from "../lib/anasirValues";
 import { processTextAsync, analyzeTextAsync, preprocessArabic } from "../lib/asyncProcessor";
 import { processText } from "../lib/abjadValues";
@@ -10,6 +10,8 @@ import LetterAnalysis from "../components/LetterAnalysis";
 import ElementInsight from "../components/ElementInsight";
 import HistorySection from "../components/HistorySection";
 import FavoritesSection from "../components/FavoritesSection";
+import MysticalHero from "../components/MysticalHero";
+import StickyNav from "../components/StickyNav";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, Trash2, Star, Copy, Share2, Check, Plus, Wand2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -64,8 +66,53 @@ export default function Home() {
   const [abjadProgress, setAbjadProgress] = useState(0);
   const [anasirLoading, setAnasirLoading] = useState(false);
   const [anasirProgress, setAnasirProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState("abjad");
   const abjadAbort = useRef(false);
   const anasirAbort = useRef(false);
+
+  // Section refs for scroll targeting
+  const abjadRef = useRef(null);
+  const anasirRef = useRef(null);
+  const hadimRef = useRef(null);
+  const mizaanRef = useRef(null);
+
+  const scrollTargets = {
+    abjad: abjadRef.current,
+    anasir: anasirRef.current,
+    hadim: hadimRef.current,
+    mizaan: mizaanRef.current,
+  };
+
+  // Update scrollTargets after mount
+  const getScrollTargets = () => ({
+    abjad: abjadRef.current,
+    anasir: anasirRef.current,
+    hadim: hadimRef.current,
+    mizaan: mizaanRef.current,
+  });
+
+  // Track active section via IntersectionObserver
+  useEffect(() => {
+    const refs = [
+      { id: "abjad", ref: abjadRef },
+      { id: "anasir", ref: anasirRef },
+      { id: "hadim", ref: hadimRef },
+      { id: "mizaan", ref: mizaanRef },
+    ];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const found = refs.find(r => r.ref.current === e.target);
+            if (found) setActiveTab(found.id);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    refs.forEach(({ ref }) => { if (ref.current) observer.observe(ref.current); });
+    return () => observer.disconnect();
+  }, []);
 
   // ── Hadim state ────────────────────────────────────
   const [hadimTalib, setHadimTalib] = useState("");
@@ -189,34 +236,46 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen text-white font-inter relative overflow-x-hidden" style={{ background: "linear-gradient(180deg, #1a3a5c 0%, #163350 40%, #112840 100%)" }}>
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-12 sm:py-16 space-y-12">
+    <div className="min-h-screen text-white font-inter relative overflow-x-hidden" style={{ background: "linear-gradient(180deg, #050d1a 0%, #0a1628 40%, #112840 100%)" }}>
 
-        {/* ══════════════════════════════════════════
-            HEADER
-        ══════════════════════════════════════════ */}
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute inset-0 z-0" style={{ background: "radial-gradient(ellipse 90% 55% at 50% 18%, rgba(56,189,248,0.20) 0%, rgba(99,102,241,0.08) 50%, transparent 75%)" }} />
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center relative z-10">
-          <Link to="/hadim-kasem"
-            className="inline-flex items-center gap-2 mb-6 text-xs font-inter uppercase tracking-widest border border-purple-500/30 rounded-full px-4 py-1.5 text-purple-300/70 hover:text-purple-200 hover:border-purple-400/60 transition-all"
-            style={{ background: "rgba(168,85,247,0.08)", boxShadow: "0 0 18px rgba(168,85,247,0.15)" }}>
-            <span className="font-amiri text-base">خ</span> Hadim &amp; Kasem Generator
-          </Link>
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-yellow-500/20 mb-5"
-            style={{ background: "linear-gradient(180deg, rgba(234,179,8,0.22) 0%, rgba(234,179,8,0.10) 100%)", boxShadow: "0 0 24px rgba(234,179,8,0.15)" }}>
-            <span className="font-amiri text-3xl text-yellow-400">ح</span>
-          </div>
-          <h1 className="font-amiri text-5xl sm:text-6xl font-bold" style={{ color: "#FFFFFF", textShadow: "0 2px 20px rgba(56,189,248,0.25)" }}>سرّ الحروف</h1>
-          <p className="font-inter text-xs mt-2 tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.70)" }}>Advanced Ilm al-Huruf Analysis</p>
-          <Divider color="yellow" />
-        </motion.div>
+      {/* ══ MYSTICAL HERO LANDING ══ */}
+      <MysticalHero
+        activeTab={activeTab}
+        onTabChange={(id) => {
+          setActiveTab(id);
+          const targets = getScrollTargets();
+          if (targets[id]) targets[id].scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        scrollTargets={getScrollTargets()}
+      />
+
+      {/* ══ STICKY NAV ══ */}
+      <StickyNav
+        activeTab={activeTab}
+        onTabChange={(id) => {
+          setActiveTab(id);
+          const targets = getScrollTargets();
+          if (targets[id]) targets[id].scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        scrollTargets={getScrollTargets()}
+      />
+
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-10 space-y-12">
 
         {/* ══════════════════════════════════════════
             ABJAD CALCULATOR
         ══════════════════════════════════════════ */}
+        <div ref={abjadRef} className="scroll-mt-16">
         <Section>
-          <SectionLabel>Abjad Calculator</SectionLabel>
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-yellow-500/25 mb-4"
+              style={{ background: "linear-gradient(180deg, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.08) 100%)", boxShadow: "0 0 24px rgba(212,175,55,0.15)" }}>
+              <span className="font-amiri text-2xl" style={{ color: "#D4AF37" }}>ح</span>
+            </div>
+            <h2 className="font-amiri text-4xl sm:text-5xl font-bold text-white">حاسبة الأبجد</h2>
+            <p className="font-inter text-xs mt-1.5 tracking-widest uppercase" style={{ color: "rgba(212,175,55,0.50)" }}>Abjad Numerical Calculator</p>
+            <Divider color="yellow" />
+          </div>
           <InputCard
             value={input}
             onChange={setInput}
@@ -253,12 +312,14 @@ export default function Home() {
             )}
           </AnimatePresence>
         </Section>
+        </div>
 
         <DividerLine />
 
         {/* ══════════════════════════════════════════
             ANASIR CALCULATOR
         ══════════════════════════════════════════ */}
+        <div ref={anasirRef} className="scroll-mt-16">
         <Section>
           <motion.div className="text-center mb-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-cyan-500/25 mb-4"
@@ -367,12 +428,14 @@ export default function Home() {
             )}
           </AnimatePresence>
         </Section>
+        </div>
 
         <DividerLine />
 
         {/* ══════════════════════════════════════════
             HADIM GENERATOR
         ══════════════════════════════════════════ */}
+        <div ref={hadimRef} className="scroll-mt-16">
         <Section>
           <motion.div className="text-center mb-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-purple-500/25 mb-4"
@@ -643,6 +706,22 @@ export default function Home() {
             )}
           </AnimatePresence>
         </Section>
+        </div>
+
+        <DividerLine />
+
+        {/* ══ MIZAAN 9 placeholder ══ */}
+        <div ref={mizaanRef} className="scroll-mt-16">
+          <div className="rounded-2xl border p-8 text-center"
+            style={{ background: "rgba(15,48,80,0.85)", borderColor: "rgba(212,175,55,0.20)", boxShadow: "0 0 32px rgba(212,175,55,0.06)" }}>
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-yellow-500/25 mb-4"
+              style={{ background: "linear-gradient(180deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.08) 100%)", boxShadow: "0 0 20px rgba(212,175,55,0.15)" }}>
+              <span className="font-amiri text-2xl" style={{ color: "#D4AF37" }}>٩</span>
+            </div>
+            <h2 className="font-amiri text-3xl font-bold text-white mb-2">ميزان الأعداد</h2>
+            <p className="font-inter text-xs tracking-widest uppercase" style={{ color: "rgba(212,175,55,0.50)" }}>Mizaan 9 System — Coming Soon</p>
+          </div>
+        </div>
 
         <DividerLine />
 
@@ -659,7 +738,7 @@ export default function Home() {
         {/* ══════════════════════════════════════════
             REFERENCE TABLE
         ══════════════════════════════════════════ */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="pb-8">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="pb-12">
           <AbjadReferenceTable />
         </motion.div>
 
@@ -720,7 +799,6 @@ function DividerLine() {
 
 function InputCard({ value, onChange, onCalculate, onClear, hasResult, accentColor, buttonLabel = "Calculate", loading = false, progress = 0 }) {
   const isYellow = accentColor === "yellow";
-  const accentHex = isYellow ? "rgba(234,179,8," : "rgba(6,182,212,";
   return (
     <div className="rounded-2xl border p-5"
       style={{ background: "rgba(15,48,80,0.92)", borderColor: isYellow ? "rgba(251,191,36,0.60)" : "rgba(56,189,248,0.60)", boxShadow: isYellow ? "0 0 28px rgba(251,191,36,0.18), 0 4px 20px rgba(0,0,0,0.35)" : "0 0 28px rgba(56,189,248,0.18), 0 4px 20px rgba(0,0,0,0.35)" }}>
