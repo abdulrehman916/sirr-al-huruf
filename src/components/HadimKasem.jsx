@@ -12,9 +12,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 const ENDING_LINES = [
-  "إلواهن إلواهن",
-  "العجل العجل",
-  "الساعة الساعة",
+  "الْوَاحًا الْوَاحًا الْوَاحًا",
+  "الْعَجَلْ الْعَجَلْ الْعَجَلْ",
+  "السَّاعَةُ السَّاعَةُ السَّاعَةُ",
 ];
 
 export default function HadimKasem({ hadimMode, individuals, grandTypes }) {
@@ -32,9 +32,12 @@ export default function HadimKasem({ hadimMode, individuals, grandTypes }) {
     ? "يا روحانية هذه الأسماء"
     : "يا خدام هذه الأسماء";
 
+  const isSufli = hadimMode === "SUFLI";
   const accent = isUlvi
-    ? { glow: "rgba(212,175,55,0.60)", border: "rgba(212,175,55,0.35)", text: "#F5D060", dim: "rgba(212,175,55,0.50)", inputBorder: "rgba(212,175,55,0.40)" }
-    : { glow: "rgba(168,85,247,0.60)", border: "rgba(168,85,247,0.35)", text: "#D8B4FE", dim: "rgba(168,85,247,0.50)", inputBorder: "rgba(168,85,247,0.40)" };
+    ? { glow: "rgba(212,175,55,0.60)", border: "rgba(212,175,55,0.35)", text: "#F5D060", dim: "rgba(212,175,55,0.50)", inputBorder: "rgba(212,175,55,0.40)", endingGlow: "rgba(212,175,55,0.70)", endingColor: "#FFE07A" }
+    : isSufli
+    ? { glow: "rgba(220,38,38,0.60)", border: "rgba(220,38,38,0.40)", text: "#FCA5A5", dim: "rgba(220,38,38,0.55)", inputBorder: "rgba(220,38,38,0.40)", endingGlow: "rgba(220,38,38,0.80)", endingColor: "#FCA5A5" }
+    : { glow: "rgba(168,85,247,0.60)", border: "rgba(168,85,247,0.35)", text: "#D8B4FE", dim: "rgba(168,85,247,0.50)", inputBorder: "rgba(168,85,247,0.40)", endingGlow: "rgba(139,40,180,0.80)", endingColor: "#C084FC" };
 
   return (
     <motion.div
@@ -164,17 +167,33 @@ export default function HadimKasem({ hadimMode, individuals, grandTypes }) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.6 }}
-        className="text-center space-y-3 pt-1"
+        transition={{ delay: 0.6, duration: 0.7 }}
+        className="rounded-2xl border py-6 px-4 text-center space-y-5"
+        style={{
+          background: "rgba(4,6,18,0.95)",
+          borderColor: accent.border,
+          boxShadow: `0 0 40px ${accent.endingGlow.replace("0.80","0.25")}, inset 0 0 30px ${accent.endingGlow.replace("0.80","0.06")}`,
+        }}
         dir="rtl"
       >
         {ENDING_LINES.map((line, i) => (
           <motion.p
             key={i}
-            className="font-amiri text-xl text-white/85 leading-relaxed"
-            style={{ textShadow: `0 0 12px ${accent.glow.replace("0.60","0.35")}` }}
-            animate={{ opacity: [0.60, 1, 0.60] }}
-            transition={{ duration: 2.8 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
+            className="font-amiri font-bold leading-loose"
+            style={{
+              fontSize: "clamp(1.4rem, 5vw, 2rem)",
+              color: accent.endingColor,
+              textShadow: `0 0 18px ${accent.endingGlow}, 0 0 50px ${accent.endingGlow.replace("0.80","0.35")}`,
+            }}
+            animate={{
+              textShadow: [
+                `0 0 12px ${accent.endingGlow.replace("0.80","0.55")}, 0 0 35px ${accent.endingGlow.replace("0.80","0.22")}`,
+                `0 0 28px ${accent.endingGlow}, 0 0 70px ${accent.endingGlow.replace("0.80","0.45")}`,
+                `0 0 12px ${accent.endingGlow.replace("0.80","0.55")}, 0 0 35px ${accent.endingGlow.replace("0.80","0.22")}`,
+              ],
+              opacity: [0.80, 1, 0.80],
+            }}
+            transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.7 }}
           >
             {line}
           </motion.p>
