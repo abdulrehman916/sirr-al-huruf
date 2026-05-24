@@ -14,11 +14,28 @@ const NORM = { 'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ئ':'ي','ؤ':
 
 export function normalize(ch) { return NORM[ch] || ch; }
 
-function isArabic(ch) { return normalize(ch) in KABIR_MAP; }
+function isArabic(ch) {
+  const n = normalize(ch);
+  if (n in KABIR_MAP) return true;
+  // Also accept via Unicode range check (Arabic block U+0621–U+064A core letters)
+  const code = n.charCodeAt(0);
+  return code >= 0x0621 && code <= 0x064A;
+}
 
-// Strip tashkeel / diacritics (U+0610–U+065F, U+0670, U+FC5E–U+FC63, U+0640 tatweel)
+// Strip all non-letter noise: tashkeel, diacritics, tatweel, zero-width chars,
+// directional marks, invisible Unicode, and anything outside visible Arabic/letter ranges.
 function stripDiacritics(text) {
-  return text.replace(/[\u0610-\u065F\u0670\u0640]/g, '');
+  return text
+    .replace(/[\u0610-\u065F]/g, '')   // tashkeel / Arabic extended marks
+    .replace(/\u0640/g, '')             // tatweel (kashida)
+    .replace(/\u0670/g, '')             // superscript alef
+    .replace(/[\u064B-\u065F]/g, '')    // harakat (belt & safety)
+    .replace(/[\u200B-\u200F]/g, '')    // zero-width / directional marks
+    .replace(/[\u202A-\u202E]/g, '')    // LTR/RTL embedding marks
+    .replace(/[\uFE70-\uFEFF]/g, '')    // Arabic presentation forms-B / BOM
+    .replace(/[\u0600-\u0605]/g, '')    // Arabic number signs / special
+    .replace(/[\u0606-\u060F]/g, '')    // Arabic poetic verse / signs
+    .replace(/[\u0610-\u061F]/g, '');   // Arabic sign / punctuation range
 }
 
 function extractLetters(text) {
