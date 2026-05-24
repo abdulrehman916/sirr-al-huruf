@@ -118,9 +118,9 @@ export default function HadimPage() {
       const iFinal = iAdj - sub;
       const iIstintaq = positionalIstintaq(iFinal);
       const iLetters = iIstintaq.reversedCombined;
-      return { label: `Ism ${index + 1}`, text, total: r.total, needed360: iNeeded, adjusted: iAdj, final: iFinal, extracted: iLetters, name: iLetters + 'ايل', istintaq: iIstintaq };
+      return { label: `Ism ${index + 1}`, text, total: r.total, needed360: iNeeded, adjusted: iAdj, final: iFinal, extracted: iLetters, name: iLetters + 'ائيل', istintaq: iIstintaq };
     });
-    setResult({ allFields, grandTotal, sub, needed360, adjusted, final, letters, name: letters + 'ايل', istintaq, perInput, type });
+    setResult({ allFields, grandTotal, sub, needed360, adjusted, final, letters, name: letters + 'ائيل', istintaq, perInput, type });
   };
 
   const handleClear = () => { setTalib(""); setMatloob(""); setIsms(["","","","",""]); setResult(null); };
@@ -316,7 +316,7 @@ export default function HadimPage() {
                 style={{ background: "rgba(168,85,247,0.12)", boxShadow: "0 0 32px rgba(168,85,247,0.25)" }}>
                 <p className="font-inter text-[10px] text-purple-300/60 uppercase tracking-widest mb-1">Step 6 — Final Hadim Name</p>
                 <p className="font-amiri text-5xl font-bold text-white mt-2" style={{ textShadow: "0 0 28px rgba(168,85,247,0.80)" }}>{result.name}</p>
-                <p className="font-inter text-xs text-purple-400/50 mt-2">{result.istintaq.reversedSeparated} + ايل</p>
+                <p className="font-inter text-xs text-purple-400/50 mt-2">{result.istintaq.reversedSeparated} + ائيل</p>
               </div>
 
               {/* Per-Input Names */}
@@ -341,7 +341,7 @@ export default function HadimPage() {
                         style={{ background: "rgba(168,85,247,0.14)", boxShadow: "0 0 20px rgba(168,85,247,0.22)" }}>
                         <p className="font-inter text-[9px] uppercase tracking-widest text-purple-300/55 mb-1">Hadim Name</p>
                         <p className="font-amiri text-4xl font-bold text-white" style={{ textShadow: "0 0 24px rgba(168,85,247,0.75)" }}>{item.name}</p>
-                        <p className="font-inter text-[10px] text-purple-400/45 mt-1" dir="rtl">{item.istintaq?.separated} + ايل</p>
+                        <p className="font-inter text-[10px] text-purple-400/45 mt-1" dir="rtl">{item.istintaq?.reversedSeparated} + ائيل</p>
                       </div>
                     </motion.div>
                   ))}
