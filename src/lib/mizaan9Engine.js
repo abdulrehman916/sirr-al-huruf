@@ -1,21 +1,29 @@
 // ═══════════════════════════════════════════════════════════════
 // MIZAAN 9 ENGINE — COMPLETELY ISOLATED
-// ═══════════════════════════════════════════════════════════════
-// This module is ONLY used by Mizaan9Page.
-// It shares NO logic, NO variables, NO imports with:
-//   - Abjad / Kebir / Saghir / Cumeli / Bast
-//   - Hadim / Kasem / Vefk / Anasir
-//   - Ulvi / Sufli / Sherli
+// Used ONLY by Mizaan9Page. Zero shared code with any other module.
 // ═══════════════════════════════════════════════════════════════
 
-// ── Mizaan 9 Abjad map (own copy, independent) ──
-const MIZAAN_ABJAD_MAP = {
-  'ا':1,'ب':2,'ج':3,'د':4,'ه':5,'و':6,'ز':7,'ح':8,'ط':9,
-  'ي':10,'ك':20,'ل':30,'م':40,'ن':50,'س':60,'ع':70,'ف':80,'ص':90,
-  'ق':100,'ر':200,'ش':300,'ت':400,'ث':500,'خ':600,'ذ':700,'ض':800,'ظ':900,'غ':1000,
+// ── Own Bast-ul Aval (Birinci Bast) table ──
+const MIZAAN_BAST1 = {
+  'ا': 16,  'ب': 616, 'ج': 1041,'د': 283, 'ه': 709,
+  'و': 141, 'ز': 612, 'ح': 539, 'ط': 579, 'ي': 579,
+  'ك': 1097,'ل': 339, 'م': 765, 'ن': 524, 'س': 197,
+  'ع': 657, 'ف': 595, 'ص': 60,  'ق': 517, 'ر': 1095,
+  'ش': 337, 'ت': 763, 'ث': 522, 'خ': 195, 'ذ': 655,
+  'ض': 593, 'ظ': 114, 'غ': 991,
 };
 
-// ── Normalization (own copy, independent) ──
+// ── Own element map (fire/water/air/earth), letters in Mertebe rank order ──
+const MIZAAN_ELEMENTS = {
+  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'] },
+  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','ض'] },
+  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ت','ظ'] },
+  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'الأرض',  icon: '🪨', letters: ['ب','و','ي','ن','ص','ث','غ'] },
+};
+
+const MIZAAN_RANK_NAMES = ['Mertebe','Derece','Dakika','Saniye','Salise','Rabia','Hamise'];
+
+// ── Own normalization ──
 const MIZAAN_NORM = {
   'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا',
   'ى':'ي','ئ':'ي',
@@ -23,105 +31,124 @@ const MIZAAN_NORM = {
   'ة':'ه',
 };
 
-function mizaanNormalize(ch) {
-  return MIZAAN_NORM[ch] || ch;
-}
+function mNorm(ch) { return MIZAAN_NORM[ch] || ch; }
 
-// ── Strip diacritics and noise ──
-function mizaanClean(text) {
+// ── Own text cleaner ──
+function mClean(text) {
   return text
-    .replace(/[\u064B-\u065F]/g, '')
-    .replace(/\u0640/g, '')
-    .replace(/\u0670/g, '')
-    .replace(/[\u0600-\u061F]/g, '')
-    .replace(/[\u200B-\u200F]/g, '')
-    .replace(/[\u202A-\u202E]/g, '')
-    .replace(/[\uFE70-\uFEFF]/g, '')
-    .replace(/\s+/g, '');
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '') // tashkeel / harakat
+    .replace(/\u0640/g, '')                               // tatweel
+    .replace(/[^\u0600-\u06FF]/g, '');                   // non-Arabic
 }
 
-// ── Extract Arabic letters ──
-function mizaanExtractLetters(text) {
-  const clean = mizaanClean(text);
-  const matches = clean.match(/[\u0621-\u063A\u0641-\u064A]/g);
-  if (!matches) return [];
-  return matches
-    .map(ch => ({ original: ch, normalized: mizaanNormalize(ch) }))
-    .filter(item => item.normalized in MIZAAN_ABJAD_MAP);
+// ── Internal lookup tables (built at module load) ──
+const M_LETTER_TO_ELEMENT = {};
+const M_LETTER_TO_RANK    = {};
+
+for (const [key, el] of Object.entries(MIZAAN_ELEMENTS)) {
+  el.letters.forEach((letter, idx) => {
+    M_LETTER_TO_ELEMENT[letter] = key;
+    M_LETTER_TO_RANK[letter]    = { elementKey: key, rankIndex: idx };
+  });
 }
 
-// ── Digital root (Mizan 9 reduction) ──
-// Reduces a number to a single digit 1–9 (9 stays as 9, not 0)
-export function mizaanDigitalRoot(n) {
-  if (n <= 0) return 0;
-  const r = n % 9;
-  return r === 0 ? 9 : r;
-}
+// ── Tie-break by Mertebe rank ──
+function mResolveTie(tiedKeys, letterDetails) {
+  const best = {};
+  for (const k of tiedKeys) best[k] = Infinity;
 
-// ── Parse text → letter objects with values ──
-export function mizaanParseText(text) {
-  const letters = mizaanExtractLetters(text);
-  return letters.map(l => ({
-    original: l.original,
-    normalized: l.normalized,
-    abjadValue: MIZAAN_ABJAD_MAP[l.normalized],
-    root: mizaanDigitalRoot(MIZAAN_ABJAD_MAP[l.normalized]),
-  }));
-}
-
-// ── Calculate totals for a parsed letter array ──
-export function mizaanCalcTotals(parsedLetters) {
-  const abjadTotal = parsedLetters.reduce((s, l) => s + l.abjadValue, 0);
-  const rootTotal  = parsedLetters.reduce((s, l) => s + l.root, 0);
-  const grandRoot  = mizaanDigitalRoot(abjadTotal);
-  return { abjadTotal, rootTotal, grandRoot, letterCount: parsedLetters.length };
-}
-
-// ── Full synchronous analysis of one text entry ──
-export function mizaanAnalyze(text) {
-  const letters = mizaanParseText(text);
-  const totals  = mizaanCalcTotals(letters);
-  return { text, letters, ...totals };
-}
-
-// ── Async chunked analysis (non-blocking for large texts) ──
-function yield_() {
-  return new Promise(resolve => setTimeout(resolve, 0));
-}
-
-export async function mizaanAnalyzeAsync(text, onProgress) {
-  const raw = mizaanExtractLetters(text);
-  const letters = [];
-  const CHUNK = 50;
-
-  for (let i = 0; i < raw.length; i++) {
-    const l = raw[i];
-    const abjadValue = MIZAAN_ABJAD_MAP[l.normalized];
-    letters.push({
-      original:   l.original,
-      normalized: l.normalized,
-      abjadValue,
-      root: mizaanDigitalRoot(abjadValue),
-    });
-    if (i % CHUNK === 0) {
-      onProgress && onProgress(Math.round((i / raw.length) * 100));
-      await yield_();
+  for (const { norm, element } of letterDetails) {
+    if (!tiedKeys.includes(element)) continue;
+    const ri = M_LETTER_TO_RANK[norm];
+    if (ri && ri.elementKey === element && ri.rankIndex < best[element]) {
+      best[element] = ri.rankIndex;
     }
   }
 
-  onProgress && onProgress(100);
-  const totals = mizaanCalcTotals(letters);
-  return { text, letters, ...totals };
-}
-
-// ── Comparison engine: compare two analyzed entries ──
-export function mizaanCompare(entryA, entryB) {
+  const sorted = [...tiedKeys].sort((a, b) => best[a] - best[b]);
+  const winner = sorted[0];
+  if (best[winner] === Infinity) return { winner: tiedKeys[0], rankName: null, rankIndex: null };
   return {
-    abjadDiff:   Math.abs(entryA.abjadTotal - entryB.abjadTotal),
-    rootDiff:    Math.abs(entryA.grandRoot  - entryB.grandRoot),
-    sameRoot:    entryA.grandRoot === entryB.grandRoot,
-    higherAbjad: entryA.abjadTotal >= entryB.abjadTotal ? 'A' : 'B',
-    higherRoot:  entryA.grandRoot  >= entryB.grandRoot  ? 'A' : 'B',
-    compatible:  entryA.grandRoot  === entryB.grandRoot,
+    winner,
+    rankIndex: best[winner],
+    rankName:  MIZAAN_RANK_NAMES[best[winner]] ?? `Rank ${best[winner] + 1}`,
   };
 }
+
+// ── Result builder (shared by sync + async paths) ──
+function mBuildResult(text, letters, counts) {
+  const letterCount = letters.length;
+  const bast1Total  = letters.reduce((s, l) => s + l.bast1, 0);
+
+  const elementTotal = Object.values(counts).reduce((a, b) => a + b, 0);
+  const percentages  = {};
+  for (const k of Object.keys(counts)) {
+    percentages[k] = elementTotal > 0 ? Math.round((counts[k] / elementTotal) * 100) : 0;
+  }
+
+  let dominant = null;
+  let tiebreak = null;
+
+  if (elementTotal > 0) {
+    const maxCount = Math.max(...Object.values(counts));
+    const topKeys  = Object.keys(counts).filter(k => counts[k] === maxCount);
+    if (topKeys.length === 1) {
+      dominant = topKeys[0];
+    } else {
+      const res = mResolveTie(topKeys, letters);
+      dominant = res.winner;
+      tiebreak = { tiedElements: topKeys, rankName: res.rankName, rankIndex: res.rankIndex };
+    }
+  }
+
+  return { text, letters, letterCount, bast1Total, counts, percentages, dominant, tiebreak };
+}
+
+// ── Synchronous analysis ──
+export function mizaanAnalyze(text) {
+  const clean   = mClean(text);
+  const counts  = { fire: 0, water: 0, air: 0, earth: 0 };
+  const letters = [];
+
+  for (const ch of clean) {
+    const norm    = mNorm(ch);
+    const bast1   = MIZAAN_BAST1[norm] ?? 0;
+    const element = M_LETTER_TO_ELEMENT[norm] ?? null;
+    if (norm in MIZAAN_BAST1) {
+      letters.push({ original: ch, norm, bast1, element });
+      if (element) counts[element]++;
+    }
+  }
+
+  return mBuildResult(text, letters, counts);
+}
+
+// ── Async chunked analysis (non-blocking for long Quranic texts) ──
+const CHUNK = 500;
+
+export async function mizaanAnalyzeAsync(text, onProgress) {
+  const clean   = mClean(text);
+  const counts  = { fire: 0, water: 0, air: 0, earth: 0 };
+  const letters = [];
+
+  for (let i = 0; i < clean.length; i += CHUNK) {
+    const chunk = clean.slice(i, i + CHUNK);
+    for (const ch of chunk) {
+      const norm    = mNorm(ch);
+      const bast1   = MIZAAN_BAST1[norm] ?? 0;
+      const element = M_LETTER_TO_ELEMENT[norm] ?? null;
+      if (norm in MIZAAN_BAST1) {
+        letters.push({ original: ch, norm, bast1, element });
+        if (element) counts[element]++;
+      }
+    }
+    onProgress?.(Math.min(99, Math.round(((i + CHUNK) / clean.length) * 100)));
+    await new Promise(r => setTimeout(r, 0));
+  }
+
+  onProgress?.(100);
+  return mBuildResult(text, letters, counts);
+}
+
+// ── Element metadata export (for UI only) ──
+export { MIZAAN_ELEMENTS, MIZAAN_RANK_NAMES };
