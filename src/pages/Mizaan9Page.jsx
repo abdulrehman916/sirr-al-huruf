@@ -3,11 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
-import {
-  BastTotalCard, LetterCountCard, AnasirBreakdownCard,
-  DominantCard, SecondMizaanCard, DayNightCard,
-  PlanetCard, SuitabilityCard, InterpretationCard,
-} from "../components/Mizaan9Results";
+import Mizaan1      from "../components/mizaan/Mizaan1";
+import Mizaan2      from "../components/mizaan/Mizaan2";
+import Mizaan3      from "../components/mizaan/Mizaan3";
+import Mizaan4      from "../components/mizaan/Mizaan4";
+import Mizaan5      from "../components/mizaan/Mizaan5";
+import Mizaan6      from "../components/mizaan/Mizaan6";
+import Mizaan7      from "../components/mizaan/Mizaan7";
+import Mizaan8      from "../components/mizaan/Mizaan8";
+import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -24,6 +28,17 @@ function GoldDivider() {
       <div className="h-px w-10" style={{ background: `linear-gradient(to right, transparent, ${G.borderHi})` }} />
       <div className="w-1.5 h-1.5 rounded-full" style={{ background: G.text }} />
       <div className="h-px w-10" style={{ background: `linear-gradient(to left, transparent, ${G.borderHi})` }} />
+    </div>
+  );
+}
+
+// Thin gold separator between mizaan sections
+function MizaanDivider({ num }) {
+  return (
+    <div className="flex items-center justify-center gap-3 py-1">
+      <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, rgba(212,175,55,0.20))` }} />
+      <span className="font-inter text-[8px] uppercase tracking-widest px-2" style={{ color: "rgba(212,175,55,0.30)" }}>⚖</span>
+      <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, rgba(212,175,55,0.20))` }} />
     </div>
   );
 }
@@ -89,7 +104,7 @@ export default function Mizaan9Page() {
           {loading && (
             <div className="mb-3">
               <div className="flex justify-between mb-1">
-                <span className="font-inter text-[10px] text-white/40 animate-pulse">Analyzing…</span>
+                <span className="font-inter text-[10px] text-white/40 animate-pulse">Analyzing 9 Mizaans…</span>
                 <span className="font-inter text-[10px]" style={{ color: G.dim }}>{progress}%</span>
               </div>
               <div className="h-1 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
@@ -122,43 +137,30 @@ export default function Mizaan9Page() {
           </div>
         </div>
 
-        {/* Results */}
+        {/* 9 Mizaans — sequential */}
         <AnimatePresence mode="wait">
           {result && (
-            <motion.div key="mizaan-results"
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              className="space-y-3">
+            <motion.div key="mizaan-9-flow"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="space-y-2">
 
-              {/* Row 1: Bast total + Letter count */}
-              <div className="grid grid-cols-2 gap-3">
-                <BastTotalCard total={result.bast1Total} />
-                <LetterCountCard count={result.letterCount} />
-              </div>
-
-              {/* Anasir breakdown */}
-              <AnasirBreakdownCard counts={result.counts} percentages={result.percentages} />
-
-              {/* Dominant element */}
-              <DominantCard dominant={result.dominant} tiebreak={result.tiebreak} />
-
-              {/* Second Mizan */}
-              <SecondMizaanCard dominant={result.dominant} bast2Value={result.bast2Value} tiebreak={result.tiebreak} />
-
-              {/* Row 2: Day/Night + Planet */}
-              <div className="grid grid-cols-2 gap-3">
-                <DayNightCard daynight={result.daynight} />
-                <PlanetCard planet={result.planet} />
-              </div>
-
-              {/* Best Mizan Suitability */}
-              <SuitabilityCard suitability={result.suitability} />
-
-              {/* Mystical Interpretation */}
-              <InterpretationCard
-                dominant={result.dominant}
-                letterCount={result.letterCount}
-                bast1Total={result.bast1Total}
-              />
+              <Mizaan1 result={result} />
+              <MizaanDivider />
+              <Mizaan2 dominant={result.dominant} tiebreak={result.tiebreak} />
+              <MizaanDivider />
+              <Mizaan3 dominant={result.dominant} />
+              <MizaanDivider />
+              <Mizaan4 dominant={result.dominant} />
+              <MizaanDivider />
+              <Mizaan5 dominant={result.dominant} />
+              <MizaanDivider />
+              <Mizaan6 dominant={result.dominant} />
+              <MizaanDivider />
+              <Mizaan7 dominant={result.dominant} />
+              <MizaanDivider />
+              <Mizaan8 dominant={result.dominant} />
+              <MizaanDivider />
+              <Mizaan9Final result={result} />
 
             </motion.div>
           )}
