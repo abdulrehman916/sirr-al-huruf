@@ -108,13 +108,13 @@ export default function HadimPage() {
     const grandTotal = allFields.reduce((a, x) => a + x.r.total, 0);
     const sub = HADIM_SUB[type];
     const needed360 = grandTotal < sub;
-    const adjusted = needed360 ? grandTotal + 360 : grandTotal;
+    const adjusted = needed360 ? grandTotal + 361 : grandTotal;
     const final = adjusted - sub;
     const istintaq = positionalIstintaq(final);
     const letters = istintaq.reversedCombined;
     const perInput = ismItems.map(({ text, r, index }) => {
       const iNeeded = r.total < sub;
-      const iAdj = iNeeded ? r.total + 360 : r.total;
+      const iAdj = iNeeded ? r.total + 361 : r.total;
       const iFinal = iAdj - sub;
       const iIstintaq = positionalIstintaq(iFinal);
       const iLetters = iIstintaq.reversedCombined;
@@ -274,7 +274,7 @@ export default function HadimPage() {
                 <div className="rounded-xl border border-purple-500/20 p-3 mb-3" style={{ background: "rgba(168,85,247,0.07)" }}>
                   <p className="font-inter text-xs text-white/50 mb-2">
                     {result.needed360
-                      ? `Total ${result.grandTotal} < ${result.sub} → add 360 → ${result.grandTotal + 360} − ${result.sub} = ${result.final}`
+                      ? `Total ${result.grandTotal} < ${result.sub} → add 361 → ${result.grandTotal + 361} − ${result.sub} = ${result.final}`
                       : `Total ${result.grandTotal} ≥ ${result.sub} → ${result.grandTotal} − ${result.sub} = ${result.final}`}
                   </p>
                   <div className="flex justify-between items-center">
