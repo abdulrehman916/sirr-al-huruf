@@ -9,41 +9,42 @@ const UNITS_MAP    = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9
 const TENS_MAP     = { 1:'ي',2:'ك',3:'ل',4:'م',5:'ن',6:'س',7:'ع',8:'ف',9:'ص' };
 const HUNDREDS_MAP = { 1:'ق',2:'ر',3:'ش',4:'ت',5:'ث',6:'خ',7:'ذ',8:'ض',9:'ظ' };
 
-function thousandsLetters(digit) {
-  if (digit === 0) return 'ع';
-  return 'ع' + (UNITS_MAP[digit] || '');
-}
-
 /**
- * Positional Cyclical Istintaq
- * Reads digits right-to-left through repeating cycle: units→tens→hundreds→thousands
+ * Positional Istintaq
+ * Decomposes n into: thousands part, hundreds, tens, units.
+ * Thousands: always one fixed marker ع, then if extra thousands (>1000),
+ *   encode (thousands_count - 1) as a unit letter.
+ * Order of steps (right-to-left): units → tens → hundreds → thousands → extra-thousands
  */
 function positionalIstintaq(n) {
   if (n <= 0) return { steps: [], combined: '', separated: '', reversedCombined: '', reversedSeparated: '' };
-  const str = String(Math.floor(n));
-  const digits = str.split('').reverse().map(Number);
-  const POS_LABELS = ['Units', 'Tens', 'Hundreds', 'Thousands'];
+  n = Math.floor(n);
+
+  const thousands = Math.floor(n / 1000);
+  const remainder = n % 1000;
+  const hundreds  = Math.floor(remainder / 100);
+  const tens      = Math.floor((remainder % 100) / 10);
+  const units     = remainder % 10;
+
   const steps = [];
 
-  digits.forEach((digit, posIndex) => {
-    const cycle = Math.floor(posIndex / 4);
-    const posSlot = posIndex % 4;
-    const posLabel = POS_LABELS[posSlot] + (cycle > 0 ? ` (cycle ${cycle + 1})` : '');
-    let letters = '';
-    if (posSlot === 3) {
-      letters = thousandsLetters(digit);
-    } else if (digit === 0) {
-      letters = '';
-    } else if (posSlot === 0) {
-      letters = UNITS_MAP[digit] || '';
-    } else if (posSlot === 1) {
-      letters = TENS_MAP[digit] || '';
-    } else if (posSlot === 2) {
-      letters = HUNDREDS_MAP[digit] || '';
+  // Units
+  steps.push({ label: 'Units',    value: units,    letters: units    ? (UNITS_MAP[units]    || '') : '' });
+  // Tens
+  steps.push({ label: 'Tens',     value: tens * 10, letters: tens    ? (TENS_MAP[tens]      || '') : '' });
+  // Hundreds
+  steps.push({ label: 'Hundreds', value: hundreds * 100, letters: hundreds ? (HUNDREDS_MAP[hundreds] || '') : '' });
+  // Thousands marker (ع) — only if there is a thousands component
+  if (thousands > 0) {
+    steps.push({ label: 'Thousands', value: 1000, letters: 'ع' });
+    // Extra thousands: (thousands - 1) encoded as unit letter
+    const extra = thousands - 1;
+    if (extra > 0) {
+      steps.push({ label: 'Extra ×1000', value: extra, letters: UNITS_MAP[extra] || '' });
     }
-    steps.push({ digit, posIndex, posSlot, posLabel, letters });
-  });
+  }
 
+  // Build combined string (in step order: units→tens→hundreds→thousands→extra)
   const combined = steps.map(s => s.letters).join('');
   const separated = steps.map(s => s.letters).filter(l => l).join(' ');
   const reversedCombined = combined.split('').reverse().join('');
@@ -235,8 +236,8 @@ export default function HadimPage() {
                         <div key={pi} className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[48px]"
                           style={{ background: step.letters ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.03)", borderColor: step.letters ? "rgba(168,85,247,0.35)" : "rgba(255,255,255,0.08)" }}>
                           <span className="font-amiri text-xl text-white leading-none mb-0.5">{step.letters || '—'}</span>
-                          <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(168,85,247,0.65)" }}>{step.digit}</span>
-                          <span className="font-inter text-[7px] uppercase tracking-wide text-white/25 mt-0.5">{step.posLabel.split(' ')[0]}</span>
+                          <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(168,85,247,0.65)" }}>{step.value}</span>
+                          <span className="font-inter text-[7px] uppercase tracking-wide text-white/25 mt-0.5">{step.label.split(' ')[0]}</span>
                         </div>
                       ))}
                     </div>
@@ -286,8 +287,8 @@ export default function HadimPage() {
                       <div key={pi} className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[52px]"
                         style={{ background: step.letters ? "rgba(168,85,247,0.18)" : "rgba(255,255,255,0.03)", borderColor: step.letters ? "rgba(168,85,247,0.50)" : "rgba(255,255,255,0.08)" }}>
                         <span className="font-amiri text-2xl text-white leading-none mb-0.5">{step.letters || '—'}</span>
-                        <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(200,150,255,0.80)" }}>{step.digit}</span>
-                        <span className="font-inter text-[7px] uppercase tracking-wide text-white/25 mt-0.5">{step.posLabel.split(' ')[0]}</span>
+                        <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(200,150,255,0.80)" }}>{step.value}</span>
+                        <span className="font-inter text-[7px] uppercase tracking-wide text-white/25 mt-0.5">{step.label.split(' ')[0]}</span>
                       </div>
                     ))}
                   </div>
