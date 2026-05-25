@@ -55,6 +55,16 @@ const NAV_CARDS = [
     bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
     glow: "0 0 40px rgba(212,175,55,0.20)",
   },
+  {
+    path: "/vefkin-yapilisi",
+    arabic: "طريقة الوفق",
+    label: "VEFKİN YAPILIŞI",
+    subtitle: "Ottoman Manuscript Method",
+    icon: "📜",
+    borderColor: "rgba(212,175,55,0.45)",
+    bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
+    glow: "0 0 40px rgba(212,175,55,0.20)",
+  },
 ];
 
 
