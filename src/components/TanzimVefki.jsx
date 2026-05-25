@@ -11,7 +11,17 @@ const G = {
   border:   "rgba(212,175,55,0.40)",
 };
 
-// Tabii sıralama — null = center (mathematically empty)
+// ── Abjad (Tanzim-only, isolated) ────────────────────────────────
+const ABJAD_MAP = {
+  'ا':1,'أ':1,'إ':1,'آ':1,'ب':2,'ج':3,'د':4,'ه':5,'و':6,'ز':7,'ح':8,'ط':9,
+  'ي':10,'ى':10,'ك':20,'ل':30,'م':40,'ن':50,'س':60,'ع':70,'ف':80,'ص':90,
+  'ق':100,'ر':200,'ش':300,'ت':400,'ث':500,'خ':600,'ذ':700,'ض':800,'ظ':900,'غ':1000,
+};
+function tanzimEbced(t) {
+  return [...t].reduce((s, c) => s + (ABJAD_MAP[c] || 0), 0);
+}
+
+// ── Ottoman layout — null = center (mathematically empty) ─────────
 const LAYOUT = [
   [11, 15, 24,  3,  7],
   [ 4,  8, 12, 16, 20],
@@ -20,7 +30,7 @@ const LAYOUT = [
   [23,  2,  6, 10, 19],
 ];
 
-// effectiveBase × tabii position for each of the 24 cells
+// Tanzim 2. Usul cell formula: effectiveBase × natural position (1–24)
 function computeCells(effectiveBase) {
   const cells = {};
   for (let pos = 1; pos <= 24; pos++) {
@@ -96,91 +106,33 @@ function TanzimGrid({ cells, esmaText }) {
   );
 }
 
-// Row/col/diag sums — center cell excluded (pos=null → skip)
-function getLineSums(cells) {
-  const sum = (positions) => positions.reduce((a, p) => a + (p === null ? 0 : cells[p]), 0);
-
-  const rows = LAYOUT.map(row => sum(row));
-
-  const cols = [0, 1, 2, 3, 4].map(c =>
-    sum(LAYOUT.map(row => row[c]))
-  );
-
-  // Diagonals skip center [2][2]
-  const diag1 = sum([LAYOUT[0][0], LAYOUT[1][1], LAYOUT[3][3], LAYOUT[4][4]]);
-  const diag2 = sum([LAYOUT[0][4], LAYOUT[1][3], LAYOUT[3][1], LAYOUT[4][0]]);
-
-  return { rows, cols, diag1, diag2 };
-}
-
-function VerificationPanel({ cells, effectiveBase, magicConst }) {
-  const { rows, cols, diag1, diag2 } = getLineSums(cells);
-
-  const Check = ({ label, value, target }) => {
-    const ok = value === target;
-    return (
-      <div className="flex items-center justify-between rounded-lg px-3 py-1.5"
-        style={{ background: ok ? "rgba(80,200,80,0.06)" : "rgba(255,80,80,0.06)", border: `1px solid ${ok ? "rgba(80,200,80,0.20)" : "rgba(255,80,80,0.20)"}` }}>
-        <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.55)" }}>{label}</span>
-        <div className="flex items-center gap-2">
-          <span className="font-amiri text-sm font-bold" style={{ color: ok ? "#86efac" : "rgba(255,120,120,0.90)" }}>
-            {value.toLocaleString()}
-          </span>
-          <span style={{ fontSize: "10px" }}>{ok ? "✓" : "✗"}</span>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-      className="rounded-xl border p-4 space-y-2"
-      style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(212,175,55,0.22)" }}
-    >
-      <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-        ⚖ Satır / Sütun / Köşegen — Verification
-      </p>
-      <div className="grid grid-cols-1 gap-1.5">
-        {rows.map((r, i) => <Check key={`r${i}`} label={`Satır ${i + 1}`} value={r} target={magicConst} />)}
-        {cols.map((c, i) => <Check key={`c${i}`} label={`Sütun ${i + 1}`} value={c} target={magicConst} />)}
-        <Check label="Köşegen ↘" value={diag1} target={magicConst} />
-        <Check label="Köşegen ↗" value={diag2} target={magicConst} />
-      </div>
-    </motion.div>
-  );
-}
-
 export default function TanzimVefki() {
-  const [mainNum,  setMainNum]  = useState("");
+  const [bazRaw,   setBazRaw]   = useState("");
   const [esmaText, setEsmaText] = useState("");
   const [showVerify, setShowVerify] = useState(false);
 
-  const inputBase = mainNum ? parseInt(mainNum) : null;
-
-  // Auto-square if base ≤ 40
-  const effectiveBase = inputBase
-    ? (inputBase <= 40 ? inputBase * inputBase : inputBase)
+  // ── Baz Sayı resolution (Tanzim 2. Usul only) ─────────────────
+  // If numeric → use directly. If text/Arabic → compute Ebced.
+  const bazTrimmed   = bazRaw.trim();
+  const bazIsNumeric = /^\d+$/.test(bazTrimmed);
+  const bazEbced     = (!bazIsNumeric && bazTrimmed) ? tanzimEbced(bazTrimmed) : null;
+  const bazResolved  = bazTrimmed
+    ? (bazIsNumeric ? parseInt(bazTrimmed) : bazEbced)
     : null;
 
-  const wasSquared = inputBase && inputBase <= 40;
+  // ── Small number rule: if resolved ≤ 40 → square it ──────────
+  const wasSquared    = bazResolved && bazResolved <= 40;
+  const effectiveBase = bazResolved
+    ? (wasSquared ? bazResolved * bazResolved : bazResolved)
+    : null;
+
+  // ── Magic Constant = effectiveBase² ──────────────────────────
+  const magicConst = effectiveBase ? effectiveBase * effectiveBase : null;
 
   const cells = useMemo(() => {
     if (!effectiveBase || effectiveBase < 1) return null;
     return computeCells(effectiveBase);
   }, [effectiveBase]);
-
-  // Magic constant = effectiveBase²
-  const magicConst = effectiveBase ? effectiveBase * effectiveBase : null;
-
-  // Verify all lines equal magicConst
-  const isBalanced = useMemo(() => {
-    if (!cells || !magicConst) return false;
-    const { rows, cols, diag1, diag2 } = getLineSums(cells);
-    return rows.every(r => r === magicConst) &&
-           cols.every(c => c === magicConst) &&
-           diag1 === magicConst && diag2 === magicConst;
-  }, [cells, magicConst]);
 
   return (
     <div className="space-y-4">
@@ -212,26 +164,33 @@ export default function TanzimVefki() {
 
         {/* Inputs */}
         <div className="space-y-3">
-          {/* Base number */}
+          {/* Baz Sayı — accepts number OR Arabic text */}
           <div className="rounded-xl border px-4 py-3 space-y-1.5"
             style={{ background: "rgba(4,10,28,0.99)", borderColor: G.border }}>
             <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
               1️⃣ Baz Sayı — الرقم الأساسي
             </p>
             <input
-              type="text" inputMode="numeric"
-              value={mainNum}
-              onChange={e => setMainNum(e.target.value.replace(/[^\d]/g, ""))}
-              placeholder="Sayı girin... (örn: 252, 20, 114)"
+              type="text"
+              value={bazRaw}
+              onChange={e => setBazRaw(e.target.value)}
+              placeholder="Sayı veya isim... (örn: 114 / الله / Vedud)"
+              dir="auto"
               className="w-full rounded-xl px-4 py-2.5 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
               style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
             />
+            {/* Ebced result for text input */}
+            {bazEbced !== null && bazEbced > 0 && (
+              <p className="font-inter text-[9px] text-center" style={{ color: "rgba(212,175,55,0.65)" }}>
+                ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{bazEbced.toLocaleString()}</span>
+              </p>
+            )}
             {/* Auto-square notice */}
-            {wasSquared && inputBase && effectiveBase && (
+            {wasSquared && bazResolved && effectiveBase && (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="font-inter text-[9px] text-center"
                 style={{ color: "rgba(212,175,55,0.75)" }}>
-                ✦ {inputBase} ≤ 40 → otomatik karesi alındı: <span className="font-amiri font-bold" style={{ color: G.text }}>{inputBase}² = {effectiveBase.toLocaleString()}</span>
+                ✦ {bazResolved} ≤ 40 → karesi alındı: <span className="font-amiri font-bold" style={{ color: G.text }}>{bazResolved}² = {effectiveBase.toLocaleString()}</span>
               </motion.p>
             )}
             {effectiveBase && !wasSquared && (
@@ -241,7 +200,7 @@ export default function TanzimVefki() {
             )}
           </div>
 
-          {/* Esma */}
+          {/* Esma — visual only, never affects math */}
           <div className="rounded-xl border px-4 py-3 space-y-1.5"
             style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
             <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
@@ -273,7 +232,7 @@ export default function TanzimVefki() {
               Hücre = <span style={{ color: G.text }}>Efektif Baz × Tabii Konum (1–24)</span>
             </p>
             <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-              Magic Constant = <span style={{ color: G.text }}>Efektif Baz²</span>
+              Kutsal Sabit = <span style={{ color: G.text }}>Efektif Baz²</span>
             </p>
             <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
               Baz ≤ 40 ise → <span style={{ color: G.text }}>önce karesi alınır</span>
@@ -301,28 +260,26 @@ export default function TanzimVefki() {
 
               <TanzimGrid cells={cells} esmaText={esmaText} />
 
-              {/* Stats */}
+              {/* Stats — always show Kutsal Sabit, never "Hata" */}
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
                   <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Baz Sayı</p>
-                  <p className="font-amiri text-lg font-bold leading-tight" style={{ color: G.text }}>{inputBase?.toLocaleString()}</p>
+                  <p className="font-amiri text-lg font-bold leading-tight" style={{ color: G.text }}>{bazResolved?.toLocaleString()}</p>
                 </div>
                 <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
                   <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Efektif Baz</p>
                   <p className="font-amiri text-lg font-bold leading-tight" style={{ color: G.text }}>{effectiveBase.toLocaleString()}</p>
                 </div>
-                <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: `1px solid ${isBalanced ? "rgba(80,200,80,0.30)" : "rgba(255,80,80,0.30)"}` }}>
-                  <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>
-                    {isBalanced ? "Magic ✓" : "⚠ Hata"}
-                  </p>
-                  <p className="font-amiri text-sm font-bold leading-tight" style={{ color: isBalanced ? G.text : "rgba(255,100,100,0.80)" }}>
+                <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Kutsal Sabit</p>
+                  <p className="font-amiri text-sm font-bold leading-tight" style={{ color: G.text }}>
                     {magicConst?.toLocaleString()}
                   </p>
                 </div>
               </div>
 
               {/* Magic constant display */}
-              {isBalanced && magicConst && (
+              {magicConst && (
                 <div className="rounded-xl border p-3 text-center"
                   style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.25)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
@@ -357,7 +314,7 @@ export default function TanzimVefki() {
                     exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }}
                     style={{ overflow: "hidden" }}
                   >
-                    <VerificationPanel cells={cells} effectiveBase={effectiveBase} magicConst={magicConst} />
+                    <TanzimVerificationPanel cells={cells} magicConst={magicConst} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -373,7 +330,7 @@ export default function TanzimVefki() {
                 animate={{ opacity: [0.12, 0.40, 0.12] }}
                 transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>✨</motion.span>
               <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.22)" }}>
-                Baz sayıyı girerek tanzim vefkini oluşturun
+                Baz sayıyı veya ismi girerek tanzim vefkini oluşturun
               </p>
             </motion.div>
           )}
@@ -381,5 +338,46 @@ export default function TanzimVefki() {
 
       </div>
     </div>
+  );
+}
+
+// ── Tanzim-only verification panel ───────────────────────────────
+function TanzimVerificationPanel({ cells, magicConst }) {
+  const sum = (positions) => positions.reduce((a, p) => a + (p === null ? 0 : cells[p]), 0);
+  const rows = LAYOUT.map(row => sum(row));
+  const cols = [0,1,2,3,4].map(c => sum(LAYOUT.map(row => row[c])));
+  const diag1 = sum([LAYOUT[0][0], LAYOUT[1][1], LAYOUT[3][3], LAYOUT[4][4]]);
+  const diag2 = sum([LAYOUT[0][4], LAYOUT[1][3], LAYOUT[3][1], LAYOUT[4][0]]);
+
+  const Check = ({ label, value }) => {
+    const ok = value === magicConst;
+    return (
+      <div className="flex items-center justify-between rounded-lg px-3 py-1.5"
+        style={{ background: ok ? "rgba(80,200,80,0.06)" : "rgba(255,80,80,0.06)", border: `1px solid ${ok ? "rgba(80,200,80,0.20)" : "rgba(255,80,80,0.20)"}` }}>
+        <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.55)" }}>{label}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-amiri text-sm font-bold" style={{ color: ok ? "#86efac" : "rgba(255,120,120,0.90)" }}>
+            {value.toLocaleString()}
+          </span>
+          <span style={{ fontSize: "10px" }}>{ok ? "✓" : "✗"}</span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+      className="rounded-xl border p-4 space-y-2"
+      style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(212,175,55,0.22)" }}>
+      <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+        ⚖ Satır / Sütun / Köşegen — Kutsal Sabit: {magicConst?.toLocaleString()}
+      </p>
+      <div className="grid grid-cols-1 gap-1.5">
+        {rows.map((r, i) => <Check key={`r${i}`} label={`Satır ${i + 1}`} value={r} />)}
+        {cols.map((c, i) => <Check key={`c${i}`} label={`Sütun ${i + 1}`} value={c} />)}
+        <Check label="Köşegen ↘" value={diag1} />
+        <Check label="Köşegen ↗" value={diag2} />
+      </div>
+    </motion.div>
   );
 }
