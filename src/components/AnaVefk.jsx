@@ -169,26 +169,21 @@ export default function AnaVefk() {
   // Resolve Ana Sayı
   const anaSayiNum = anaSayi.trim() ? parseInt(anaSayi) : null;
 
-  // Resolve Talib raw → base value
+  // Resolve Talib raw → number (direct numeric) or Ebced (Arabic text)
+  // ANA VEFK RULE: NO auto-squaring. Value is used exactly as resolved.
   const talibTrimmed   = talibRaw.trim();
   const talibIsNumeric = /^\d+$/.test(talibTrimmed);
   const talibEbced     = (!talibIsNumeric && talibTrimmed) ? calcAbjad(talibTrimmed) : null;
-  const talibBase      = talibTrimmed
+  const talibEffective = talibTrimmed
     ? (talibIsNumeric ? parseInt(talibTrimmed) : talibEbced)
     : null;
 
-  // Auto-square if ≤ 40
-  const talibEffective = talibBase
-    ? (talibBase <= 40 ? talibBase * talibBase : talibBase)
-    : null;
-  const wasSquared = talibBase && talibBase <= 40;
-
-  // specialStart = talibEffective − 40 (must be ≥ 1)
+  // specialStart = talibEffective − 40 (must be ≥ 1, so talibEffective must be ≥ 41)
   const specialStart = talibEffective ? talibEffective - 40 : null;
 
   // Validation
   const anaSayiValid = anaSayiNum && anaSayiNum >= 1;
-  const talibValid   = specialStart && specialStart >= 1;
+  const talibValid   = talibEffective && talibEffective >= 41;
   const canGenerate  = anaSayiValid && talibValid;
 
   // Magic constant = anaSayi × talibEffective
@@ -203,7 +198,7 @@ export default function AnaVefk() {
   }, [cells, magicConst]);
 
   const handleGenerate = () => {
-    if (!canGenerate) return;
+    if (!canGenerate || !talibEffective) return;
     const c = computeCells(anaSayiNum, talibEffective);
     setCells(c);
     setSavedAna(anaSayiNum);
@@ -308,25 +303,28 @@ export default function AnaVefk() {
           {talibEbced !== null && talibEbced > 0 && (
             <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
               ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{talibEbced.toLocaleString()}</span>
-              {wasSquared && <span style={{ color: "rgba(212,175,55,0.60)" }}> → {talibBase}² = <strong style={{ color: G.text }}>{talibEffective?.toLocaleString()}</strong></span>}
             </p>
           )}
-          {talibIsNumeric && talibTrimmed && talibBase && (
-            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.55)" }}>
-              ✦ <span className="font-amiri font-bold" style={{ color: G.text }}>{talibBase.toLocaleString()}</span>
-              {wasSquared && <span style={{ color: "rgba(212,175,55,0.60)" }}> ≤ 40 → {talibBase}² = <strong style={{ color: G.text }}>{talibEffective?.toLocaleString()}</strong></span>}
-            </p>
+          {/* Effective value + sequence preview */}
+          {talibEffective && talibEffective >= 41 && specialStart && (
+            <div className="rounded-lg px-3 py-2 space-y-1" style={{ background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.15)" }}>
+              <p className="font-inter text-[9px]" style={{ color: G.dim }}>
+                Efektif Talib: <span className="font-amiri font-bold" style={{ color: G.text }}>{talibEffective.toLocaleString()}</span>
+                <span style={{ color: "rgba(212,175,55,0.40)" }}> — SpecialStart = {talibEffective}−40 = {specialStart}</span>
+              </p>
+              <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.45)" }}>
+                20→24 dizisi: <span className="font-amiri" style={{ color: G.text }}>
+                  {[0,1,2,3,4].map(i => specialStart + i).join(", ")}
+                </span>
+              </p>
+            </div>
           )}
-          {/* Sequence preview */}
-          {specialStart && specialStart >= 1 && (
-            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.45)" }}>
-              SpecialStart = {talibEffective}−40 = <span style={{ color: G.text }}>{specialStart}</span>
-              {" → "}{[0,1,2,3,4].map(i => specialStart + i).join(", ")}
-            </p>
+          {talibEffective && talibEffective < 41 && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(255,100,100,0.70)" }}>⚠ Talib değeri 41'den büyük olmalı</p>
           )}
           {!talibTrimmed && (
             <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.30)" }}>
-              Sayı → doğrudan · Metin/Esma → Ebced · ≤40 → otomatik kare
+              Sayı → doğrudan kullanılır · Metin/Esma → Ebced hesaplanır
             </p>
           )}
         </div>
