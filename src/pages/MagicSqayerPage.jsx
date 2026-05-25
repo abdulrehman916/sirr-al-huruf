@@ -62,11 +62,61 @@ const ELEMENT_PATTERNS_6x6 = {
   water: [36, 5,33, 4, 2,31, 25,29,10, 9,26,12, 18,20,22,21,17,13, 19,14,16,15,23,24,  7,11,27,28, 8,30,  6,32, 3,34,35, 1],
 };
 
+// ── Authentic Ottoman 9×9 Dokuzlu Vefk Patterns (Kamer/Moon) ──────────────────────────────────────────────
+// Fire (النار) - Base Pattern
+const FIRE_9x9 = [
+  50,58,66,74, 1,18,26,34,42,
+  60,68,76, 3,11,19,36,44,52,
+  70,78, 5,13,21,29,37,54,62,
+  80, 7,15,23,31,39,47,55,72,
+   9,17,25,33,41,49,57,65,73,
+  10,27,35,43,51,59,67,75, 2,
+  20,28,45,53,61,69,77, 4,12,
+  30,38,46,63,71,79, 6,14,22,
+  40,48,56,64, 8,16,24,32,81
+];
+// Earth (التراب) - 180° Rotation
+const EARTH_9x9 = [
+  81,32,24,16, 8,64,56,48,40,
+  22,14, 6,79,71,63,46,38,30,
+  12, 4,77,69,61,53,45,28,20,
+   2,75,67,59,51,43,35,27,10,
+  73,65,57,49,41,33,25,17, 9,
+  72,55,47,39,31,23,15, 7,80,
+  62,54,37,29,21,13, 5,78,70,
+  52,44,36,19,11, 3,76,68,60,
+  42,34,26,18, 1,74,66,58,50
+];
+// Air (الهواء) - Vertical Mirror
+const AIR_9x9 = [
+  40,48,56,64, 8,16,24,32,81,
+  30,38,46,63,71,79, 6,14,22,
+  20,28,45,53,61,69,77, 4,12,
+  10,27,35,43,51,59,67,75, 2,
+   9,17,25,33,41,49,57,65,73,
+  80, 7,15,23,31,39,47,55,72,
+  70,78, 5,13,21,29,37,54,62,
+  60,68,76, 3,11,19,36,44,52,
+  50,58,66,74, 1,18,26,34,42
+];
+// Water (الماء) - Horizontal Mirror
+const WATER_9x9 = [
+  42,34,26,18, 1,74,66,58,50,
+  52,44,36,19,11, 3,76,68,60,
+  62,54,37,29,21,13, 5,78,70,
+  72,55,47,39,31,23,15, 7,80,
+  73,65,57,49,41,33,25,17, 9,
+   2,75,67,59,51,43,35,27,10,
+  12, 4,77,69,61,53,45,28,20,
+  22,14, 6,79,71,63,46,38,30,
+  81,32,24,16, 8,64,56,48,40
+];
+
 const ELEMENT_PATTERNS_9x9 = {
-  fire:  [ 50,58,66,74, 1,18,26,34,42, 60,68,76, 3,11,19,36,44,52, 70,78, 5,13,21,29,37,54,62, 80, 7,15,23,31,39,47,55,72,  9,17,25,33,41,49,57,65,73, 10,27,35,43,51,59,67,75, 2, 20,28,45,53,61,69,77, 4,12, 30,38,46,63,71,79, 6,14,22, 40,48,56,64, 8,16,24,32,81],
-  earth: [ 81,32,24,16, 8,64,56,48,40, 22,14, 6,79,71,63,46,38,30, 12, 4,77,69,61,53,45,28,20,  2,75,67,59,51,43,35,27,10, 73,65,57,49,41,33,25,17, 9, 72,55,47,39,31,23,15, 7,80, 62,54,37,29,21,13, 5,78,70, 52,44,36,19,11, 3,76,68,60, 42,34,26,18, 1,74,66,58,50],
-  air:   [ 40,48,56,64, 8,16,24,32,81, 30,38,46,63,71,79, 6,14,22, 20,28,45,53,61,69,77, 4,12, 10,27,35,43,51,59,67,75, 2,  9,17,25,33,41,49,57,65,73, 80, 7,15,23,31,39,47,55,72, 70,78, 5,13,21,29,37,54,62, 60,68,76, 3,11,19,36,44,52, 50,58,66,74, 1,18,26,34,42],
-  water: [ 42,34,26,18, 1,74,66,58,50, 52,44,36,19,11, 3,76,68,60, 62,54,37,29,21,13, 5,78,70, 72,55,47,39,31,23,15, 7,80, 73,65,57,49,41,33,25,17, 9,  2,75,67,59,51,43,35,27,10, 12, 4,77,69,61,53,45,28,20, 22,14, 6,79,71,63,46,38,30, 81,32,24,16, 8,64,56,48,40],
+  fire:  FIRE_9x9,
+  earth: EARTH_9x9,
+  air:   AIR_9x9,
+  water: WATER_9x9,
 };
 
 const ELEMENT_PATTERNS_8x8 = {
@@ -147,31 +197,43 @@ function generateVefk6x6(targetNumber, elementKey) {
   return [flat.slice(0,6), flat.slice(6,12), flat.slice(12,18), flat.slice(18,24), flat.slice(24,30), flat.slice(30,36)];
 }
 
+// ── Authentic Ottoman 9×9 Dokuzlu Vefk Generation (Kamer/Moon System) ──────────────────────────────────────────────
 function generateVefk9x9(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
   const remainder = (n - 369) % 9;
-  // Authentic Ottoman rule: if remainder exists, use half-value system
-  let values;
+  
+  // Authentic Ottoman rule: if remainder exists (1-8), use half-value system
+  let base;
   if (remainder !== 0) {
+    // Divide original target by 2
     const half = n / 2;
     const halfRemainder = (half - 369) % 9;
-    const halfBase = (half - 369 - halfRemainder) / 9;
-    values = Array.from({ length: 81 }, (_, i) => halfBase + i);
-    if (halfRemainder === 8) values[9]  += 1;
-    else if (halfRemainder === 7) values[18] += 1;
-    else if (halfRemainder === 6) values[27] += 1;
-    else if (halfRemainder === 5) values[36] += 1;
-    else if (halfRemainder === 4) values[45] += 1;
-    else if (halfRemainder === 3) values[54] += 1;
-    else if (halfRemainder === 2) values[63] += 1;
-    else if (halfRemainder === 1) values[72] += 1;
+    base = (half - 369 - halfRemainder) / 9;
   } else {
-    const base = (n - 369) / 9;
-    values = Array.from({ length: 81 }, (_, i) => base + i);
+    // No remainder: Target - 369, then divide by 9
+    base = (n - 369) / 9;
   }
-  const pattern = ELEMENT_PATTERNS_9x9[elementKey] || ELEMENT_PATTERNS_9x9.fire;
+  
+  // Generate 81 sequential values starting from base
+  const values = Array.from({ length: 81 }, (_, i) => base + i);
+  
+  // Get authentic elemental pattern
+  const pattern = ELEMENT_PATTERNS_9x9[elementKey] || FIRE_9x9;
+  
+  // Map values through pattern: pattern[cellIndex] = rank (1-based) → values[rank-1]
   const flat = pattern.map(rank => values[rank - 1]);
-  return [flat.slice(0,9), flat.slice(9,18), flat.slice(18,27), flat.slice(27,36), flat.slice(36,45), flat.slice(45,54), flat.slice(54,63), flat.slice(63,72), flat.slice(72,81)];
+  
+  return [
+    flat.slice(0, 9),
+    flat.slice(9, 18),
+    flat.slice(18, 27),
+    flat.slice(27, 36),
+    flat.slice(36, 45),
+    flat.slice(45, 54),
+    flat.slice(54, 63),
+    flat.slice(63, 72),
+    flat.slice(72, 81)
+  ];
 }
 
 function generateVefk8x8(targetNumber, elementKey) {
@@ -508,6 +570,24 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
             {isGenerated && inputNumber && (
               <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
                 · Base {Math.floor((parseInt(inputNumber) - 34) / 4)}
+              </span>
+            )}
+          </div>
+        )}
+        {gridSize === 9 && (
+          <div className="flex items-center justify-center gap-2">
+            {elMeta && <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>}
+            <span className="font-amiri text-sm" style={{ color: elMeta?.color || G.dim }}>
+              {elMeta?.arabic || "القمر"}
+            </span>
+            {elMeta && (
+              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+                · {elMeta.label}
+              </span>
+            )}
+            {isGenerated && inputNumber && (
+              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+                · Dokuzlu Base {Math.floor((parseInt(inputNumber) - 369) / 9)}
               </span>
             )}
           </div>
