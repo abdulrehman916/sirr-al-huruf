@@ -8,6 +8,7 @@ import {
   MIZAAN_PURPOSES,
   MIZAAN_ELEMENT_DEGREES,
 } from "../../lib/mizaan9Data";
+import { MIZAAN_BAST2 } from "../../lib/mizaan9Engine";
 import { calcBast } from "../../lib/abjadModes";
 
 const G = {
@@ -58,13 +59,13 @@ function MizaanRow({ number, numberAR, label, entries, bast, letters, color }) {
           <div className="text-right">
             <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Bast-ul Aval</p>
             <p className="font-inter text-xs font-bold tabular-nums" style={{ color: bast ? G.text : "rgba(255,255,255,0.20)" }}>
-              {bast != null ? bast.toLocaleString() : "—"}
+              {(bast ?? 0).toLocaleString()}
             </p>
           </div>
           <div className="text-right">
             <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Letters</p>
             <p className="font-inter text-xs font-bold tabular-nums" style={{ color: letters ? G.dim : "rgba(255,255,255,0.20)" }}>
-              {letters != null ? letters : "—"}
+              {letters ?? 0}
             </p>
           </div>
         </div>
@@ -96,77 +97,85 @@ function MizaanRow({ number, numberAR, label, entries, bast, letters, color }) {
 
 // ─── Main Component ──────────────────────────────────────────────
 export default function MizaanFinalSummary({ result, selections, degreeSels = {}, inputText = "", customPurpose = "" }) {
-  const { dominant, bastUlAval: inputBast = 0 } = result;
+  const { dominant, bast1Total: inputBast = 0, letterCount: inputLetterCount = 0 } = result ?? {};
 
   const mizaans = useMemo(() => {
     const list = [];
 
-    // ── Mizaan 1 — Input Text ─────────────────────────────────────
-    const m1Bast    = inputBast;
-    const m1Letters = countArabicLetters(inputText);
+    // ── Mizaan 1 — Input Text (Bast-ul Aval of the analyzed text) ─
     list.push({
       number: "1", numberAR: "الأول",
       label: "Input Text",
-      entries: inputText.trim() ? [{ arabic: inputText.trim(), bast: inputBast, color: G.text }] : [],
-      bast: m1Bast,
-      letters: m1Letters,
+      entries: inputText.trim() ? [{ arabic: inputText.trim().slice(0, 60) + (inputText.trim().length > 60 ? '…' : ''), bast: inputBast, color: G.text }] : [],
+      bast: inputBast ?? 0,
+      letters: inputLetterCount ?? 0,
     });
 
-    // ── Mizaan 2 — Element ────────────────────────────────────────
-    const elKeys = Array.isArray(selections.elements) ? selections.elements : (selections.elements ? [selections.elements] : []);
-    const m2Entries = elKeys.map(k => ELEMENT_META[k] ? { ...ELEMENT_META[k], bast: null } : null).filter(Boolean);
-    const m2Letters = m2Entries.reduce((s, e) => s + countArabicLetters(e.arabic), 0);
+    // ── Mizaan 2 — Element (MIZAAN_BAST2 value per selected element) ─
+    const elKeys = Array.isArray(selections?.elements) ? selections.elements : (selections?.elements ? [selections.elements] : []);
+    let m2Bast = 0;
+    let m2Letters = 0;
+    const m2Entries = elKeys.map(k => {
+      const meta = ELEMENT_META[k];
+      const bast2 = MIZAAN_BAST2[k] ?? 0;
+      if (meta) {
+        m2Bast += bast2;
+        m2Letters += countArabicLetters(meta.arabic);
+        return { ...meta, bast: bast2 };
+      }
+      return null;
+    }).filter(Boolean);
     list.push({
       number: "2", numberAR: "الثاني",
       label: "Element",
       entries: m2Entries,
-      bast: null,
-      letters: m2Letters || null,
+      bast: m2Bast,
+      letters: m2Letters,
     });
 
     // ── Mizaan 3 — Khayr / Sharr ─────────────────────────────────
-    const ks3 = selections.khayrSharr;
+    const ks3 = selections?.khayrSharr;
     const ks3Data = ks3 ? MIZAAN_KHAYR_SHARR[ks3] : null;
     list.push({
       number: "3", numberAR: "الثالث",
       label: "Khayr / Sharr",
       entries: ks3Data ? [{ arabic: ks3Data.arabic, icon: ks3Data.icon, bast: ks3Data.bast, color: ks3Data.color }] : [],
-      bast: ks3Data?.bast ?? null,
-      letters: ks3Data ? countArabicLetters(ks3Data.arabic) : null,
+      bast: ks3Data?.bast ?? 0,
+      letters: ks3Data ? countArabicLetters(ks3Data.arabic) : 0,
     });
 
     // ── Mizaan 4 — Hour ───────────────────────────────────────────
-    const hourEntry = MIZAAN_HOURS.find(h => h.hour === selections.hour);
+    const hourEntry = MIZAAN_HOURS.find(h => h.hour === selections?.hour);
     list.push({
       number: "4", numberAR: "الرابع",
       label: "Hour",
       entries: hourEntry ? [{ arabic: hourEntry.arabic, icon: '🕐', bast: hourEntry.bast, color: G.text }] : [],
-      bast: hourEntry?.bast ?? null,
-      letters: hourEntry ? countArabicLetters(hourEntry.arabic) : null,
+      bast: hourEntry?.bast ?? 0,
+      letters: hourEntry ? countArabicLetters(hourEntry.arabic) : 0,
     });
 
     // ── Mizaan 5 — Day ────────────────────────────────────────────
-    const dayEntry = MIZAAN_DAYS.find(d => d.key === selections.days);
+    const dayEntry = MIZAAN_DAYS.find(d => d.key === selections?.days);
     list.push({
       number: "5", numberAR: "الخامس",
       label: "Day",
       entries: dayEntry ? [{ arabic: dayEntry.arabic, icon: dayEntry.icon, bast: dayEntry.bast, color: dayEntry.color }] : [],
-      bast: dayEntry?.bast ?? null,
-      letters: dayEntry ? countArabicLetters(dayEntry.arabic) : null,
+      bast: dayEntry?.bast ?? 0,
+      letters: dayEntry ? countArabicLetters(dayEntry.arabic) : 0,
     });
 
     // ── Mizaan 6 — Planet ─────────────────────────────────────────
-    const planetEntry = MIZAAN_PLANETS_ALL.find(p => p.key === selections.planet);
+    const planetEntry = MIZAAN_PLANETS_ALL.find(p => p.key === selections?.planet);
     list.push({
       number: "6", numberAR: "السادس",
       label: "Planet",
       entries: planetEntry ? [{ arabic: planetEntry.arabic, icon: planetEntry.icon, bast: planetEntry.bast, color: planetEntry.color }] : [],
-      bast: planetEntry?.bast ?? null,
-      letters: planetEntry ? countArabicLetters(planetEntry.arabic) : null,
+      bast: planetEntry?.bast ?? 0,
+      letters: planetEntry ? countArabicLetters(planetEntry.arabic) : 0,
     });
 
     // ── Mizaan 7 — Purpose(s) + Custom ───────────────────────────
-    const purposeArr = Array.isArray(selections.purposes) ? selections.purposes : (selections.purposes ? [selections.purposes] : []);
+    const purposeArr = Array.isArray(selections?.purposes) ? selections.purposes : (selections?.purposes ? [selections.purposes] : []);
     const m7Entries = [];
     let m7Bast = 0;
     let m7Letters = 0;
@@ -178,8 +187,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
         m7Letters += countArabicLetters(pe.arabic);
       }
     });
-    // Custom purpose
-    const trimmedCustom = customPurpose?.trim();
+    const trimmedCustom = (customPurpose ?? "").trim();
     if (trimmedCustom) {
       const { total: customBast } = calcBast(trimmedCustom, 1);
       const customLetters = countArabicLetters(trimmedCustom);
@@ -191,45 +199,54 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
       number: "7", numberAR: "السابع",
       label: "Purpose",
       entries: m7Entries,
-      bast: m7Bast || null,
-      letters: m7Letters || null,
+      bast: m7Bast,
+      letters: m7Letters,
     });
 
     // ── Mizaan 8 — Khayr / Sharr (scale) ─────────────────────────
-    const ks8 = selections.khayrSharr8;
+    const ks8 = selections?.khayrSharr8;
     const ks8Data = ks8 ? KHAYR_SHARR_8[ks8] : null;
     list.push({
       number: "8", numberAR: "الثامن",
       label: "Khayr / Sharr",
       entries: ks8Data ? [{ arabic: ks8Data.arabic, icon: ks8Data.icon, bast: ks8Data.bast, color: ks8Data.color }] : [],
-      bast: ks8Data?.bast ?? null,
-      letters: ks8Data ? countArabicLetters(ks8Data.arabic) : null,
+      bast: ks8Data?.bast ?? 0,
+      letters: ks8Data ? countArabicLetters(ks8Data.arabic) : 0,
     });
 
-    // ── Mizaan 9 — Element Degree ─────────────────────────────────
-    const primaryEl = selections.elements?.[0] ?? dominant;
-    const selectedDegKey = primaryEl ? degreeSels[primaryEl] : null;
-    const elDegData = primaryEl ? MIZAAN_ELEMENT_DEGREES[primaryEl] : null;
-    const deg = selectedDegKey && elDegData ? elDegData.degrees.find(d => d.key === selectedDegKey) : null;
-    const elMeta9 = primaryEl ? ELEMENT_META[primaryEl] : null;
+    // ── Mizaan 9 — ALL selected element degrees (sum) ─────────────
+    const m9Entries = [];
+    let m9Bast = 0;
+    let m9Letters = 0;
+    Object.entries(degreeSels).forEach(([elKey, degKey]) => {
+      if (!degKey) return;
+      const elDegData = MIZAAN_ELEMENT_DEGREES[elKey];
+      const deg = elDegData?.degrees.find(d => d.key === degKey);
+      const elMeta = ELEMENT_META[elKey];
+      if (deg) {
+        m9Entries.push({ arabic: deg.arabic, icon: elMeta?.icon, bast: deg.bast, color: elMeta?.color });
+        m9Bast += deg.bast;
+        m9Letters += countArabicLetters(deg.arabic);
+      }
+    });
     list.push({
       number: "9", numberAR: "التاسع",
       label: "Degree",
-      entries: deg ? [{ arabic: deg.arabic, icon: elMeta9?.icon, bast: deg.bast, color: elMeta9?.color }] : [],
-      bast: deg?.bast ?? null,
-      letters: deg ? countArabicLetters(deg.arabic) : null,
+      entries: m9Entries,
+      bast: m9Bast,
+      letters: m9Letters,
     });
 
     return list;
-  }, [result, selections, degreeSels, inputText, customPurpose, dominant, inputBast]);
+  }, [result, selections, degreeSels, inputText, customPurpose, dominant, inputBast, inputLetterCount]);
 
-  // Grand total — only sum non-null bast/letters
+  // Grand total — sum all mizaans
   const { grandBast, grandLetters } = useMemo(() => {
     let grandBast = 0;
     let grandLetters = 0;
     mizaans.forEach(m => {
-      if (m.bast != null) grandBast += m.bast;
-      if (m.letters != null) grandLetters += m.letters;
+      grandBast   += m.bast   ?? 0;
+      grandLetters += m.letters ?? 0;
     });
     return { grandBast, grandLetters };
   }, [mizaans]);
