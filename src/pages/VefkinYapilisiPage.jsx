@@ -76,9 +76,15 @@ function GoldDivider() {
 // ── Ana Vefk: 5×5 Hâli Vasat Beşli ───────────────────────────────
 function AnaVefk() {
   const [anaSayi,  setAnaSayi]  = useState("");
-  const [esmaText, setEsmaText] = useState("");
+  const [talibRaw, setTalibRaw] = useState("");  // raw input from 2nd field
   const [grid,     setGrid]     = useState(null);
   const [base,     setBase]     = useState(null);
+
+  // Determine if 2nd field is numeric or text, and compute its Ebced if text
+  const talibIsNumeric = /^\d+$/.test(talibRaw.trim());
+  const talibEbced = !talibIsNumeric && talibRaw.trim() ? calcAbjad(talibRaw.trim()) : null;
+  // The display text for center cell is always the raw input (if any)
+  const esmaText = talibRaw.trim();
 
   const handleGenerate = () => {
     const baseNum = parseInt(anaSayi);
@@ -161,24 +167,38 @@ function AnaVefk() {
           )}
         </div>
 
-        {/* Esma Text (optional) */}
+        {/* Talib / Mathlub İsmi (optional) */}
         <div className="rounded-xl border px-4 py-3 space-y-1.5"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            2️⃣ Esma / İsim (İsteğe Bağlı) — الاسم الإلهي
+            2️⃣ Talib / Mathlub İsmi (İsteğe Bağlı) — اسم الطالب / المطلوب
           </p>
           <input
             type="text"
-            value={esmaText}
-            onChange={e => setEsmaText(e.target.value)}
-            placeholder="Camii / Vedud / الله..."
+            value={talibRaw}
+            onChange={e => setTalibRaw(e.target.value)}
+            placeholder="İsim / Esma / الله / 786..."
             dir="rtl"
             className="w-full rounded-xl px-4 py-2 font-amiri text-lg text-white text-right focus:outline-none caret-white placeholder:text-white/25"
             style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.15)` }}
           />
-          <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.30)" }}>
-            Girilirse ortadaki hücrede gösterilir — Shown in center cell if entered
-          </p>
+          {/* Show Ebced result if text was entered */}
+          {talibEbced !== null && talibEbced > 0 && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
+              ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{talibEbced.toLocaleString()}</span>
+              <span style={{ color: "rgba(212,175,55,0.35)" }}> — ortada gösterilir, hesaba dahil değil</span>
+            </p>
+          )}
+          {talibIsNumeric && talibRaw.trim() && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.35)" }}>
+              Sayısal değer girildi — ortada gösterilir, hesaba dahil değil
+            </p>
+          )}
+          {!talibRaw.trim() && (
+            <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.30)" }}>
+              Metin girilirse Ebced hesaplanır — Girilirse ortada gösterilir
+            </p>
+          )}
         </div>
 
         {/* Rule explanation */}
