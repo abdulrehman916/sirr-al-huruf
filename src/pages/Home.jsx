@@ -45,6 +45,16 @@ const NAV_CARDS = [
     bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
     glow: "0 0 40px rgba(212,175,55,0.20)",
   },
+  {
+    path: "/magic-sqayer",
+    arabic: "السحر المربع",
+    label: "MAGIC SQAYER",
+    subtitle: "Sacred Vefk Construction",
+    icon: "✨",
+    borderColor: "rgba(212,175,55,0.45)",
+    bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
+    glow: "0 0 40px rgba(212,175,55,0.20)",
+  },
 ];
 
 
