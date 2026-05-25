@@ -67,8 +67,14 @@ function GoldDivider() {
   );
 }
 
-function VefkGrid({ cells, centerCell1, centerCell2 }) {
+function VefkGrid({ cells, combinedCenter, esmaCenter }) {
   const cellW = 58;
+  // Build display strings from the 2 center objects
+  const combinedText = combinedCenter
+    ? [combinedCenter.talib, combinedCenter.mathloob, combinedCenter.niyyat].filter(Boolean).join(" · ")
+    : null;
+  const esmaText = esmaCenter?.esma || null;
+
   return (
     <div className="flex justify-center overflow-x-auto">
       <div style={{ display: "grid", gridTemplateColumns: `repeat(5, ${cellW}px)`, gap: "4px" }}>
@@ -94,37 +100,28 @@ function VefkGrid({ cells, centerCell1, centerCell2 }) {
               }}
             >
               {isEmpty ? (
-                <div className="flex flex-col items-center justify-center w-full h-full" style={{ gap: "1px" }}>
-                  {(centerCell1 || centerCell2) ? (
-                    <>
-                      {/* Cell 1 — Talib · Mathloob · Niyyat */}
-                      <div className="flex items-center justify-center w-full px-0.5"
-                        style={{ height: "50%", borderBottom: "1px solid rgba(212,175,55,0.20)" }}>
-                        {centerCell1 ? (
-                          <p className="font-amiri text-center leading-none"
-                            style={{ color: G.text, fontSize: centerCell1.length > 10 ? "6px" : "8px" }}
-                            dir="rtl">{centerCell1}</p>
-                        ) : (
-                          <span style={{ fontSize: "8px", color: "rgba(212,175,55,0.15)" }}>—</span>
-                        )}
-                      </div>
-                      {/* Cell 2 — Esma */}
-                      <div className="flex items-center justify-center w-full px-0.5"
-                        style={{ height: "50%" }}>
-                        {centerCell2 ? (
-                          <p className="font-amiri font-bold text-center leading-none"
-                            style={{ color: G.text, fontSize: centerCell2.length > 8 ? "7px" : "9px" }}
-                            dir="rtl">{centerCell2}</p>
-                        ) : (
-                          <span style={{ fontSize: "8px", color: "rgba(212,175,55,0.15)" }}>—</span>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <motion.span style={{ fontSize: "1.1rem", color: "rgba(212,175,55,0.18)" }}
-                      animate={{ opacity: [0.1, 0.35, 0.1] }}
-                      transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>□</motion.span>
-                  )}
+                <div className="flex flex-col w-full h-full">
+                  {/* combinedCenter — top half */}
+                  <div className="flex items-center justify-center w-full px-0.5 flex-1"
+                    style={{ borderBottom: "1px solid rgba(212,175,55,0.20)" }}>
+                    {combinedText ? (
+                      <p className="font-amiri text-center leading-none"
+                        style={{ color: G.text, fontSize: combinedText.length > 10 ? "6px" : "7px" }}
+                        dir="rtl">{combinedText}</p>
+                    ) : (
+                      <span style={{ fontSize: "7px", color: "rgba(212,175,55,0.15)" }}>—</span>
+                    )}
+                  </div>
+                  {/* esmaCenter — bottom half */}
+                  <div className="flex items-center justify-center w-full px-0.5 flex-1">
+                    {esmaText ? (
+                      <p className="font-amiri font-bold text-center leading-none"
+                        style={{ color: G.text, fontSize: esmaText.length > 8 ? "7px" : "9px" }}
+                        dir="rtl">{esmaText}</p>
+                    ) : (
+                      <span style={{ fontSize: "7px", color: "rgba(212,175,55,0.15)" }}>—</span>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <>
@@ -207,12 +204,16 @@ export default function AnaVefk() {
     });
   };
 
-  // Center cell 1: Talib / Mathloob / Niyyat combined (visual only)
-  // Center cell 2: Esma only (visual only)
-  const centerCell1 = result
-    ? [result.talibRaw, result.mathloobRaw, result.niyyat].filter(Boolean).join(" · ")
-    : "";
-  const centerCell2 = result ? result.esmaRaw : "";
+  // 2 center objects — visual only, no effect on calculations
+  const combinedCenter = result ? {
+    talib:    result.talibRaw,
+    mathloob: result.mathloobRaw,
+    niyyat:   result.niyyat,
+  } : null;
+
+  const esmaCenter = result ? {
+    esma: result.esmaRaw,
+  } : null;
 
   return (
     <div className="space-y-4">
@@ -351,7 +352,7 @@ export default function AnaVefk() {
               🜂 5×5 Hâli Vasat — Ana Vefk
             </p>
 
-            <VefkGrid cells={result.cells} centerCell1={centerCell1} centerCell2={centerCell2} />
+            <VefkGrid cells={result.cells} combinedCenter={combinedCenter} esmaCenter={esmaCenter} />
 
             {/* 2 Sacred Center Cells — visual only */}
             <div className="grid grid-cols-2 gap-2">
@@ -361,7 +362,7 @@ export default function AnaVefk() {
                   Merkez Hücre 1
                 </p>
                 <p className="font-amiri text-sm leading-snug" style={{ color: G.text }} dir="rtl">
-                  {[result.talibRaw, result.mathloobRaw, result.niyyat].filter(Boolean).join(" · ") || "—"}
+                  {[combinedCenter?.talib, combinedCenter?.mathloob, combinedCenter?.niyyat].filter(Boolean).join(" · ") || "—"}
                 </p>
                 <p className="font-inter text-[7px] mt-0.5" style={{ color: "rgba(212,175,55,0.30)" }}>
                   Talib · Mathloob · Niyyat
@@ -373,7 +374,7 @@ export default function AnaVefk() {
                   Merkez Hücre 2
                 </p>
                 <p className="font-amiri text-lg font-bold leading-snug" style={{ color: G.text }} dir="rtl">
-                  {result.esmaRaw || "—"}
+                  {esmaCenter?.esma || "—"}
                 </p>
                 <p className="font-inter text-[7px] mt-0.5" style={{ color: "rgba(212,175,55,0.30)" }}>
                   Esma
