@@ -237,10 +237,10 @@ export default function VefkinYapilisiPage() {
           {TABS.map(tab => {
             const active = activeTab === tab.id;
             return (
-              <motion.button
+              <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id)}
-                whileTap={{ scale: 0.97 }}
                 className="rounded-xl py-3 px-3 flex flex-col items-center gap-0.5 border transition-all"
                 style={{
                   background: active ? G.bg : "rgba(4,12,34,0.97)",
@@ -254,7 +254,7 @@ export default function VefkinYapilisiPage() {
                 <span className="font-amiri text-sm" style={{ color: active ? "rgba(212,175,55,0.70)" : "rgba(255,255,255,0.25)" }}>
                   {tab.arabic}
                 </span>
-              </motion.button>
+              </button>
             );
           })}
         </div>
