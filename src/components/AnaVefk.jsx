@@ -1,5 +1,7 @@
-import { useState, useMemo, memo } from "react";
+import { useState, useMemo, memo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useVefkSession } from "../context/VefkSessionContext";
+import { VefkActionButtons } from "./VefkSessionManager";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -157,11 +159,20 @@ const VefkGrid = memo(function VefkGrid({ cells, centerText, esmaRaw }) {
 });
 
 export default function AnaVefk() {
+  const { session, updateAnaData } = useVefkSession();
+
   // ONE unified center input (visual + sum-based base)
-  const [centerText, setCenterText] = useState("");
+  const [centerText, setCenterText] = useState(session.anaData?.centerText || "");
   // Esma — still needed separately for tanzim formula (esmaVal > 40)
-  const [esmaRaw, setEsmaRaw] = useState("");
-  const [result, setResult] = useState(null);
+  const [esmaRaw, setEsmaRaw] = useState(session.anaData?.esmaRaw || "");
+  const [result, setResult] = useState(session.anaData?.result || null);
+
+  // Auto-save to context whenever any state changes
+  useEffect(() => {
+    if (result) {
+      updateAnaData({ centerText, esmaRaw, result });
+    }
+  }, [result, centerText, esmaRaw, updateAnaData]);
 
   const centerSum = useMemo(() => parseCenterSum(centerText), [centerText]);
   const esmaVal   = resolveValue(esmaRaw);
@@ -185,6 +196,9 @@ export default function AnaVefk() {
 
   return (
     <div className="space-y-4">
+      {/* Grid wrapper with ID for export */}
+      <div id="ana-vefk-grid-export" style={{ display: "none" }} />
+
       <div className="rounded-2xl border p-5 space-y-4"
         style={{ background: "rgba(6,12,32,0.97)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}` }}>
 
@@ -343,7 +357,30 @@ export default function AnaVefk() {
               🜂 5×5 Hâli Vasat — Ana Vefk
             </p>
 
+            {/* Clone grid to export element */}
+            {typeof document !== "undefined" && result && (
+              <div
+                id="ana-vefk-grid-export-content"
+                style={{
+                  display: "none",
+                  padding: "20px",
+                  background: "rgba(6,12,32,0.97)",
+                  borderRadius: "16px",
+                  border: `2px solid ${G.borderHi}`,
+                }}
+              >
+                <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                  <p style={{ color: G.text, fontSize: "18px", fontWeight: "bold", fontFamily: "Amiri, serif", marginBottom: "10px" }}>الأصل</p>
+                  <p style={{ color: "#F5D060", fontSize: "12px", fontFamily: "Inter, sans-serif", letterSpacing: "0.1em" }}>ANA VEFK</p>
+                </div>
+                <VefkGrid cells={result.cells} centerText={result.centerText} esmaRaw={result.esmaRaw} />
+              </div>
+            )}
+
             <VefkGrid cells={result.cells} centerText={result.centerText} esmaRaw={result.esmaRaw} />
+
+            {/* Action Buttons */}
+            <VefkActionButtons gridId="ana-vefk-grid-export-content" mode="ana" hasResult={!!result} />
 
             {/* Zikir Count */}
             <div className="rounded-xl border p-3 text-center"

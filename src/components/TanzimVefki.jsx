@@ -1,4 +1,6 @@
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
+import { useVefkSession } from "../context/VefkSessionContext";
+import { VefkActionButtons } from "./VefkSessionManager";
 import { motion, AnimatePresence } from "framer-motion";
 
 const G = {
@@ -119,8 +121,10 @@ const TanzimGrid = memo(function TanzimGrid({ cells, esmaText }) {
 });
 
 export default function TanzimVefki() {
-  const [bazRaw,   setBazRaw]   = useState("");
-  const [esmaText, setEsmaText] = useState("");
+  const { session, updateTanzimData } = useVefkSession();
+
+  const [bazRaw,   setBazRaw]   = useState(session.tanzimData?.bazRaw || "");
+  const [esmaText, setEsmaText] = useState(session.tanzimData?.esmaText || "");
 
   // ── Esma/Baz value resolution ─────────────────────────────────
   // If numeric → use directly. If text/Arabic → compute Ebced.
@@ -138,8 +142,18 @@ export default function TanzimVefki() {
   const cells       = canGenerate ? computeTanzimCells(esmaValue) : null;
   const magicConst  = base ? base * base : null;
 
+  // Auto-save to context when cells are generated
+  useEffect(() => {
+    if (cells) {
+      updateTanzimData({ bazRaw, esmaText, cells, esmaValue, base, magicConst });
+    }
+  }, [cells, bazRaw, esmaText, esmaValue, base, magicConst, updateTanzimData]);
+
   return (
     <div className="space-y-4">
+      {/* Grid wrapper with ID for export */}
+      <div id="tanzim-vefk-grid-export" style={{ display: "none" }} />
+
       <div className="rounded-2xl border p-5 space-y-4"
         style={{ background: "rgba(6,12,32,0.97)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}` }}>
 
@@ -268,7 +282,30 @@ export default function TanzimVefki() {
                 ✨ Hâli Vasat Tanzim Vefki
               </p>
 
+              {/* Clone grid to export element */}
+              {typeof document !== "undefined" && cells && (
+                <div
+                  id="tanzim-vefk-grid-export-content"
+                  style={{
+                    display: "none",
+                    padding: "20px",
+                    background: "rgba(6,12,32,0.97)",
+                    borderRadius: "16px",
+                    border: `2px solid ${G.borderHi}`,
+                  }}
+                >
+                  <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                    <p style={{ color: G.text, fontSize: "18px", fontWeight: "bold", fontFamily: "Amiri, serif", marginBottom: "10px" }}>تنظيم</p>
+                    <p style={{ color: "#F5D060", fontSize: "12px", fontFamily: "Inter, sans-serif", letterSpacing: "0.1em" }}>TANZİM VEFKİ</p>
+                  </div>
+                  <TanzimGrid cells={cells} esmaText={esmaText} />
+                </div>
+              )}
+
               <TanzimGrid cells={cells} esmaText={esmaText} />
+
+              {/* Action Buttons */}
+              <VefkActionButtons gridId="tanzim-vefk-grid-export-content" mode="tanzim" hasResult={!!cells} />
 
               {/* Magic Constant display */}
               <div className="rounded-xl border p-3 text-center"

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import TanzimVefki from "../components/TanzimVefki";
 import AnaVefk from "../components/AnaVefk";
+import { VefkSessionProvider } from "../context/VefkSessionContext";
+import { VefkSessionIndicator } from "../components/VefkSessionManager";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -31,11 +33,15 @@ export default function VefkinYapilisiPage() {
   const [activeTab, setActiveTab] = useState("ana");
 
   return (
-    <PageLayout>
-      {/* will-change:transform promotes to GPU layer, preventing repaint cascade on pinch zoom */}
-      <div className="space-y-4" style={{ willChange: "transform" }}>
+    <VefkSessionProvider>
+      <PageLayout>
+        {/* will-change:transform promotes to GPU layer, preventing repaint cascade on pinch zoom */}
+        <div className="space-y-4" style={{ willChange: "transform" }}>
 
-        {/* Header */}
+          {/* Session Indicator */}
+          <VefkSessionIndicator />
+
+          {/* Header */}
         <div className="text-center">
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
             className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-yellow-500/25 mb-4"
@@ -86,5 +92,6 @@ export default function VefkinYapilisiPage() {
 
       </div>
     </PageLayout>
+    </VefkSessionProvider>
   );
 }
