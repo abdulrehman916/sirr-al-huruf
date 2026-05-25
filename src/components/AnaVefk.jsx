@@ -356,9 +356,9 @@ export default function AnaVefk() {
 
       {/* Result */}
       <AnimatePresence>
-        {cells && savedAna && savedEsma ? (
+        {cells && savedEsma ? (
           <motion.div
-            key={`ana-vefk-${savedAna}-${savedEsma}`}
+            key={`ana-vefk-${savedAna}-${savedEsma}-${mode}`}
             initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
             className="rounded-2xl border p-5 space-y-4"
@@ -390,7 +390,7 @@ export default function AnaVefk() {
 
             <GoldDivider />
             <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-              🜂 5×5 Hâli Vasat — {isMuahhir ? "Muahhir" : "Ana Vefk"}
+              🜂 5×5 Hâli Vasat — {isMuahhir ? "Muahhir" : isSpiritual ? "Tanzim Spiritual Sequence" : "Ana Vefk"}
             </p>
 
             <VefkGrid cells={cells} centerDisplay={savedEsmaRaw || null} />
