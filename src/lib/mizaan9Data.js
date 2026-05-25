@@ -112,6 +112,71 @@ export const MIZAAN_DAYNIGHT_FULL = {
   },
 };
 
+// ── MIZAAN 9: Element Degrees ──
+export const MIZAAN_ELEMENT_DEGREES = {
+  fire: {
+    key: 'fire',
+    arabic: 'درجات النار',
+    icon: '🔥',
+    color: '#FF6B35',
+    glow: 'rgba(255,107,53,0.40)',
+    bg: 'rgba(255,107,53,0.10)',
+    border: 'rgba(255,107,53,0.50)',
+    degrees: [
+      { key: 'f1', arabic: 'النار المستعمل',               bast: 6357  },
+      { key: 'f2', arabic: 'النار تأكل وتشرب',             bast: 7529  },
+      { key: 'f3', arabic: 'النار لا تأكل ولا تشرب',       bast: 9755  },
+      { key: 'f4', arabic: 'النار باردة',                   bast: 4552  },
+    ],
+  },
+  earth: {
+    key: 'earth',
+    arabic: 'درجات التراب',
+    icon: '🌍',
+    color: '#A5C880',
+    glow: 'rgba(165,200,128,0.40)',
+    bg: 'rgba(165,200,128,0.10)',
+    border: 'rgba(165,200,128,0.50)',
+    degrees: [
+      { key: 'e1', arabic: 'التراب القابل يهيج الزرع',                    bast: 10377 },
+      { key: 'e2', arabic: 'التراب جميع المعادن',                         bast: 7468  },
+      { key: 'e3', arabic: 'التراب المستعمل للعمارة',                     bast: 15517 },
+      { key: 'e4', arabic: 'التراب المسن الذي لا يطلع ريح نبات',         bast: 14194 },
+    ],
+  },
+  air: {
+    key: 'air',
+    arabic: 'درجات الهواء',
+    icon: '🌪',
+    color: '#B2EBF2',
+    glow: 'rgba(178,235,242,0.40)',
+    bg: 'rgba(178,235,242,0.10)',
+    border: 'rgba(178,235,242,0.50)',
+    degrees: [
+      { key: 'a1', arabic: 'الهواء يهب بما ينفع الناس',   bast: 9813  },
+      { key: 'a2', arabic: 'الهواء عشق ومحبة',             bast: 6418  },
+      { key: 'a3', arabic: 'الهواء لجميع الطيور',          bast: 8791  },
+      { key: 'a4', arabic: 'الهواء البارد المفسد',          bast: 7783  },
+    ],
+  },
+  water: {
+    key: 'water',
+    arabic: 'درجات الماء',
+    icon: '💧',
+    color: '#4FC3F7',
+    glow: 'rgba(79,195,247,0.40)',
+    bg: 'rgba(79,195,247,0.10)',
+    border: 'rgba(79,195,247,0.50)',
+    degrees: [
+      { key: 'w1', arabic: 'الماء الحلو العذب الفرات',              bast: 9535  },
+      { key: 'w2', arabic: 'الماء المر المنتن',                     bast: 6772  },
+      { key: 'w3', arabic: 'الماء الزعاق المالح',                   bast: 6188  },
+      { key: 'w4', arabic: 'الماء الراكد الذي لا طعم له',           bast: 9929  },
+      { key: 'w5', arabic: 'الماء النقي على الإنسان',               bast: 9073  },
+    ],
+  },
+};
+
 // ── Helpers ──
 export function getDominantDayNight(dominant) {
   if (!dominant) return null;

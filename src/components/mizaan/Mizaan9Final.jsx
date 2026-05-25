@@ -1,225 +1,161 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
-import { MIZAAN_ELEMENTS, getMizaanInterpretation } from "../../lib/mizaan9Engine";
-import { MIZAAN_PLANETS_ALL, MIZAAN_DAYNIGHT_FULL, MIZAAN_PURPOSES, MIZAAN_DAYS, MIZAAN_HOURS, MIZAAN_KHAYR_SHARR } from "../../lib/mizaan9Data";
+import { MIZAAN_ELEMENT_DEGREES } from "../../lib/mizaan9Data";
+import { MIZAAN_ELEMENTS } from "../../lib/mizaan9Engine";
 
-const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", glowHi: "rgba(212,175,55,0.55)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", bg: "rgba(212,175,55,0.07)" };
+const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", bg: "rgba(212,175,55,0.07)" };
 
-const EL_COLOR = {
-  fire: "#FF6B35", earth: "#A5C880", air: "#B2EBF2", water: "#4FC3F7",
-};
+const ELEMENT_ORDER = ['fire', 'earth', 'air', 'water'];
+
+function DegreeCard({ degree, isSelected, col, glow, bg, border, onToggle }) {
+  return (
+    <motion.button
+      onClick={() => onToggle(degree.key)}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{
+        opacity: isSelected ? 1 : 0.35,
+        boxShadow: isSelected
+          ? [`0 0 16px ${glow}`, `0 0 32px ${glow}`, `0 0 16px ${glow}`]
+          : "none",
+      }}
+      transition={{
+        opacity: { duration: 0.3 },
+        boxShadow: isSelected ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : { duration: 0.3 },
+      }}
+      whileTap={{ scale: 0.96 }}
+      className="w-full rounded-xl border p-3 flex items-center justify-between gap-2 text-right cursor-pointer"
+      style={{
+        background: isSelected ? bg : "rgba(255,255,255,0.02)",
+        borderColor: isSelected ? border : "rgba(255,255,255,0.07)",
+        borderWidth: isSelected ? 2 : 1,
+      }}>
+      <div className="flex flex-col items-end gap-0.5 flex-1">
+        <p className="font-amiri text-base leading-snug"
+          style={{ color: isSelected ? col : `${col}77` }}
+          dir="rtl">
+          {degree.arabic}
+        </p>
+        <p className="font-inter text-[9px] font-bold tabular-nums"
+          style={{ color: isSelected ? G.dim : "rgba(255,255,255,0.20)" }}>
+          Bast: {degree.bast.toLocaleString()}
+        </p>
+      </div>
+      {isSelected && (
+        <motion.span initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
+          className="font-inter text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full border flex-shrink-0"
+          style={{ color: col, borderColor: border, background: bg }}>
+          ✓
+        </motion.span>
+      )}
+    </motion.button>
+  );
+}
+
+function ElementSection({ elKey, isOpen, onToggle, selectedDegree, onSelectDegree }) {
+  const el = MIZAAN_ELEMENT_DEGREES[elKey];
+  if (!el) return null;
+  const { arabic, icon, color: col, glow, bg, border, degrees } = el;
+
+  return (
+    <div className="rounded-2xl border overflow-hidden"
+      style={{ borderColor: isOpen ? border : "rgba(255,255,255,0.07)", background: "rgba(4,10,28,0.97)" }}>
+      {/* Header / toggle */}
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-3 cursor-pointer"
+        style={{ background: isOpen ? bg : "transparent" }}>
+        <div className="flex items-center gap-2">
+          <span style={{ fontSize: "1.4rem" }}>{icon}</span>
+          <span className="font-amiri text-lg font-bold" style={{ color: isOpen ? col : `${col}88` }}>{arabic}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {selectedDegree && (
+            <span className="font-inter text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full border"
+              style={{ color: col, borderColor: border, background: bg }}>
+              ✓ Selected
+            </span>
+          )}
+          <motion.span
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.25 }}
+            className="font-inter text-xs"
+            style={{ color: isOpen ? col : "rgba(255,255,255,0.30)" }}>
+            ▼
+          </motion.span>
+        </div>
+      </button>
+
+      {/* Degree cards */}
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            key="degrees"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: "easeInOut" }}
+            style={{ overflow: "hidden" }}>
+            <div className="px-4 pb-4 space-y-2 pt-1">
+              {degrees.map((deg) => (
+                <DegreeCard
+                  key={deg.key}
+                  degree={deg}
+                  isSelected={selectedDegree === deg.key}
+                  col={col} glow={glow} bg={bg} border={border}
+                  onToggle={(k) => onSelectDegree(elKey, selectedDegree === k ? null : k)}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function Mizaan9Final({ result, selections }) {
-  const { dominant, tiebreak, bast1Total, letterCount } = result;
+  const { dominant } = result;
+  const primaryElement = (selections.elements?.[0] ?? dominant) || 'fire';
+
+  // Ordered sections: dominant element first
+  const orderedElements = [
+    primaryElement,
+    ...ELEMENT_ORDER.filter(e => e !== primaryElement),
+  ];
+
+  // Open state: dominant section open by default, rest closed
+  const [openSections, setOpenSections] = useState(() =>
+    Object.fromEntries(ELEMENT_ORDER.map(e => [e, e === primaryElement]))
+  );
+
+  // Per-element selected degree
+  const [degreeSels, setDegreeSels] = useState({});
+
   if (!dominant) return null;
 
-  // Use user selections where available, fall back to auto-computed
-  const activeElements = selections.elements.length > 0 ? selections.elements : [dominant];
-  const primaryElement = activeElements[0];
-  const el  = MIZAAN_ELEMENTS[primaryElement] ?? MIZAAN_ELEMENTS[dominant];
-  const col = EL_COLOR[primaryElement] ?? EL_COLOR[dominant];
-  const glow   = `${col}55`;
-  const bg     = `${col}14`;
-  const border = `${col}66`;
-
-  const planet  = selections.planet
-    ? MIZAAN_PLANETS_ALL.find(p => p.key === selections.planet)
-    : null;
-
-  const dn = selections.daynight
-    ? MIZAAN_DAYNIGHT_FULL[selections.daynight]
-    : null;
-
-  const purposes = selections.purposes.length > 0
-    ? selections.purposes.map(k => MIZAAN_PURPOSES.find(p => p.key === k)).filter(Boolean)
-    : [];
-
-  const days = selections.days.length > 0
-    ? selections.days.map(k => MIZAAN_DAYS.find(d => d.key === k)).filter(Boolean)
-    : [];
-
-  const hour = selections.hour
-    ? MIZAAN_HOURS.find(h => h.hour === selections.hour)
-    : null;
-
-  const khayrSharr = selections.khayrSharr
-    ? MIZAAN_KHAYR_SHARR[selections.khayrSharr]
-    : null;
-
-  const interp = getMizaanInterpretation(primaryElement, letterCount, bast1Total);
-  const powerLevel = bast1Total > 15000 ? 'Supreme' : bast1Total > 8000 ? 'Strong' : bast1Total > 3000 ? 'Moderate' : 'Subtle';
-
-  // Compatibility score based on how many selections match the dominant element
-  const compatCount = [
-    selections.elements.includes(dominant),
-    planet?.element === dominant,
-    dn?.elements?.includes(dominant),
-    purposes.some(p => p.elements.includes(dominant)),
-  ].filter(Boolean).length;
-  const compatLabel = compatCount >= 3 ? 'High ✦✦✦' : compatCount >= 2 ? 'Medium ✦✦' : compatCount >= 1 ? 'Low ✦' : 'Custom';
+  const toggleSection = (key) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  const selectDegree = (elKey, degKey) => setDegreeSels(prev => ({ ...prev, [elKey]: degKey }));
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}
-      className="rounded-2xl border p-5 space-y-5"
-      style={{ background: `linear-gradient(160deg, ${bg}, rgba(4,10,28,0.99))`, borderColor: border, boxShadow: `0 0 60px ${glow}, 0 4px 32px rgba(0,0,0,0.6)` }}>
-      <MizaanHeader number="٩" titleAR="الميزان التاسع — الخلاصة" titleTR="Ninth Mizan · Final Degree" />
+      className="rounded-2xl border p-5 space-y-4"
+      style={{ background: "rgba(6,14,36,0.98)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}>
+      <MizaanHeader number="٩" titleAR="الميزان التاسع — درجات العناصر" titleTR="Ninth Mizan · Element Degrees" />
+      <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+        Select a degree for each element
+      </p>
 
-      {/* Active elements hero */}
-      <div className="text-center space-y-2">
-        <div className="flex items-center justify-center gap-3">
-          {activeElements.map(ek => {
-            const e = MIZAAN_ELEMENTS[ek];
-            const c = EL_COLOR[ek];
-            return (
-              <motion.div key={ek} style={{ fontSize: ek === primaryElement ? "3.8rem" : "2.4rem", lineHeight: 1 }}
-                animate={{ filter: [`drop-shadow(0 0 10px ${c}55)`, `drop-shadow(0 0 28px ${c})`, `drop-shadow(0 0 10px ${c}55)`] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-                {e?.icon}
-              </motion.div>
-            );
-          })}
-        </div>
-        <motion.p className="font-inter text-3xl font-bold uppercase tracking-widest"
-          style={{ color: col }}
-          animate={{ textShadow: [`0 0 16px ${glow}`, `0 0 40px ${col}88`, `0 0 16px ${glow}`] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-          {el?.labelTR}
-        </motion.p>
-        <p className="font-amiri text-2xl" style={{ color: `${col}cc` }}>{el?.arabic}</p>
-        {activeElements.length > 1 && (
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: col, opacity: 0.6 }}>
-            {activeElements.length} Elements Active
-          </p>
-        )}
-        {tiebreak?.rankName && (
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: col, opacity: 0.5 }}>
-            ⚖ Resolved by {tiebreak.rankName}
-          </p>
-        )}
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 text-center">
-        {[
-          { label: 'Bast-ul Aval', value: bast1Total.toLocaleString() },
-          { label: 'Harf',         value: letterCount },
-          { label: 'Power',        value: powerLevel },
-        ].map((s, i) => (
-          <div key={i} className="rounded-xl border p-3" style={{ background: "rgba(0,0,0,0.3)", borderColor: `${col}33` }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: `${col}77` }}>{s.label}</p>
-            <p className="font-inter text-sm font-bold" style={{ color: col }}>{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* User selections summary */}
       <div className="space-y-2">
-        <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>User Selections Summary</p>
-        <div className="grid grid-cols-2 gap-2">
-
-          {/* Khayr / Sharr */}
-          <div className="rounded-xl border p-3 flex flex-col gap-1"
-            style={{ background: "rgba(0,0,0,0.3)", borderColor: khayrSharr ? `${khayrSharr.color}44` : "rgba(255,255,255,0.08)" }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Khayr / Sharr</p>
-            {khayrSharr ? (
-              <p className="font-amiri text-lg font-bold" style={{ color: khayrSharr.color }}>{khayrSharr.arabic} {khayrSharr.icon}</p>
-            ) : (
-              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.25)" }}>Not selected</p>
-            )}
-          </div>
-
-          {/* Planet */}
-          <div className="rounded-xl border p-3 flex flex-col gap-1"
-            style={{ background: "rgba(0,0,0,0.3)", borderColor: planet ? `${planet.color}44` : "rgba(255,255,255,0.08)" }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Planet</p>
-            {planet ? (
-              <div className="flex items-center gap-1.5">
-                <span className="font-inter text-lg" style={{ color: planet.color }}>{planet.symbol}</span>
-                <span className="font-inter text-xs font-bold" style={{ color: planet.color }}>{planet.name}</span>
-              </div>
-            ) : (
-              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.25)" }}>Not selected</p>
-            )}
-          </div>
-
-          {/* Day/Night */}
-          <div className="rounded-xl border p-3 flex flex-col gap-1"
-            style={{ background: "rgba(0,0,0,0.3)", borderColor: dn ? `${dn.color}44` : "rgba(255,255,255,0.08)" }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Day / Night</p>
-            {dn ? (
-              <div className="flex items-center gap-1.5">
-                <span style={{ fontSize: "1.2rem" }}>{dn.icon}</span>
-                <span className="font-inter text-xs font-bold" style={{ color: dn.color }}>{dn.label}</span>
-              </div>
-            ) : (
-              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.25)" }}>Not selected</p>
-            )}
-          </div>
-
-          {/* Hour */}
-          <div className="rounded-xl border p-3 flex flex-col gap-1"
-            style={{ background: "rgba(0,0,0,0.3)", borderColor: hour ? `${G.borderHi}` : "rgba(255,255,255,0.08)" }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Hour</p>
-            {hour ? (
-              <div className="flex items-center gap-1.5">
-                <span className="font-inter text-sm" style={{ color: G.text }}>{hour.symbol}</span>
-                <span className="font-inter text-xs font-bold" style={{ color: G.text }}>{hour.label} — {hour.planet}</span>
-              </div>
-            ) : (
-              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.25)" }}>Not selected</p>
-            )}
-          </div>
-        </div>
-
-        {/* Purposes */}
-        {purposes.length > 0 && (
-          <div className="rounded-xl border p-3" style={{ background: "rgba(0,0,0,0.3)", borderColor: `${purposes[0].color}33` }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Purposes</p>
-            <div className="flex flex-wrap gap-1.5">
-              {purposes.map(p => (
-                <span key={p.key} className="font-inter text-[9px] px-2 py-0.5 rounded-full border font-bold"
-                  style={{ color: p.color, borderColor: `${p.color}66`, background: `${p.color}10` }}>
-                  {p.icon} {p.label}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Days */}
-        {days.length > 0 && (
-          <div className="rounded-xl border p-3" style={{ background: "rgba(0,0,0,0.3)", borderColor: `${days[0].color}33` }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Days</p>
-            <div className="flex flex-wrap gap-1.5">
-              {days.map(d => (
-                <span key={d.key} className="font-inter text-[9px] px-2 py-0.5 rounded-full border font-bold"
-                  style={{ color: d.color, borderColor: `${d.color}66`, background: `${d.color}10` }}>
-                  {d.symbol} {d.label}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Compatibility */}
-        <div className="rounded-xl border p-3 text-center" style={{ background: "rgba(0,0,0,0.3)", borderColor: `${col}33` }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: `${col}77` }}>Compatibility</p>
-          <p className="font-inter text-sm font-bold" style={{ color: col }}>{compatLabel}</p>
-        </div>
-      </div>
-
-      {/* Mystical interpretation */}
-      <div className="space-y-2">
-        <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>التفسير الروحاني — Mystical Reading</p>
-        {interp.map((line, i) => (
-          <motion.div key={i}
-            initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.28 + i * 0.07 }}
-            className="flex items-start gap-2.5 rounded-xl border px-3 py-2.5"
-            style={{ background: bg, borderColor: border }}>
-            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ background: col, boxShadow: `0 0 6px ${glow}` }} />
-            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.78)" }}>{line}</p>
-          </motion.div>
+        {orderedElements.map(elKey => (
+          <ElementSection
+            key={elKey}
+            elKey={elKey}
+            isOpen={!!openSections[elKey]}
+            onToggle={() => toggleSection(elKey)}
+            selectedDegree={degreeSels[elKey] ?? null}
+            onSelectDegree={selectDegree}
+          />
         ))}
       </div>
 
