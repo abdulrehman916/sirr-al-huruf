@@ -67,7 +67,9 @@ function GoldDivider() {
   );
 }
 
-function VefkGrid({ cells, centerDisplay }) {
+function VefkGrid({ cells, centerCell1, centerCell2 }) {
+  // centerDisplay = combined label for the grid center square
+  const centerDisplay = centerCell1 || centerCell2 || null;
   const cellW = 58;
   return (
     <div className="flex justify-center overflow-x-auto">
@@ -158,8 +160,7 @@ export default function AnaVefk() {
   const [mathloobRaw, setMathloobRaw] = useState("");
   const [esmaRaw,     setEsmaRaw]     = useState("");
   const [niyyat,      setNiyyat]      = useState("");
-  const [centerChoice, setCenterChoice] = useState("esma"); // "talib"|"mathloob"|"esma"|"niyyat"
-  const [result,      setResult]      = useState(null);
+  const [result, setResult] = useState(null);
 
   const talibVal    = resolveValue(talibRaw);
   const mathloobVal = resolveValue(mathloobRaw);
@@ -187,12 +188,12 @@ export default function AnaVefk() {
     });
   };
 
-  const centerText = result ? {
-    talib:    result.talibRaw,
-    mathloob: result.mathloobRaw,
-    esma:     result.esmaRaw,
-    niyyat:   result.niyyat,
-  }[centerChoice] || "" : "";
+  // Center cell 1: Talib / Mathloob / Niyyat combined (visual only)
+  // Center cell 2: Esma only (visual only)
+  const centerCell1 = result
+    ? [result.talibRaw, result.mathloobRaw, result.niyyat].filter(Boolean).join(" · ")
+    : "";
+  const centerCell2 = result ? result.esmaRaw : "";
 
   return (
     <div className="space-y-4">
@@ -312,37 +313,40 @@ export default function AnaVefk() {
               </div>
             </div>
 
-            {/* Center cell selector */}
-            <div className="space-y-1">
-              <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-                Merkez Hücre Gösterimi
-              </p>
-              <div className="grid grid-cols-4 gap-1.5">
-                {[
-                  { id: "talib",    label: "Talib" },
-                  { id: "mathloob", label: "Mathloob" },
-                  { id: "esma",     label: "Esma" },
-                  { id: "niyyat",   label: "Niyyat" },
-                ].map(opt => (
-                  <button key={opt.id} onClick={() => setCenterChoice(opt.id)}
-                    className="rounded-lg py-1.5 font-inter text-[9px] border transition-all"
-                    style={{
-                      background: centerChoice === opt.id ? G.bg : "rgba(4,12,34,0.97)",
-                      borderColor: centerChoice === opt.id ? G.borderHi : "rgba(255,255,255,0.08)",
-                      color: centerChoice === opt.id ? G.text : "rgba(255,255,255,0.35)",
-                    }}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <GoldDivider />
             <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
               🜂 5×5 Hâli Vasat — Ana Vefk
             </p>
 
-            <VefkGrid cells={result.cells} centerDisplay={centerText || null} />
+            <VefkGrid cells={result.cells} centerCell1={centerCell1} centerCell2={centerCell2} />
+
+            {/* 2 Sacred Center Cells — visual only */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border px-3 py-2 text-center"
+                style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.22)" }}>
+                <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                  Merkez Hücre 1
+                </p>
+                <p className="font-amiri text-sm leading-snug" style={{ color: G.text }} dir="rtl">
+                  {[result.talibRaw, result.mathloobRaw, result.niyyat].filter(Boolean).join(" · ") || "—"}
+                </p>
+                <p className="font-inter text-[7px] mt-0.5" style={{ color: "rgba(212,175,55,0.30)" }}>
+                  Talib · Mathloob · Niyyat
+                </p>
+              </div>
+              <div className="rounded-xl border px-3 py-2 text-center"
+                style={{ background: "rgba(212,175,55,0.08)", borderColor: "rgba(212,175,55,0.35)" }}>
+                <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                  Merkez Hücre 2
+                </p>
+                <p className="font-amiri text-lg font-bold leading-snug" style={{ color: G.text }} dir="rtl">
+                  {result.esmaRaw || "—"}
+                </p>
+                <p className="font-inter text-[7px] mt-0.5" style={{ color: "rgba(212,175,55,0.30)" }}>
+                  Esma
+                </p>
+              </div>
+            </div>
 
             {/* Zikir Count */}
             <div className="rounded-xl border p-3 text-center"
