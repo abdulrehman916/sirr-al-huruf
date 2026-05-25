@@ -41,7 +41,12 @@ const PLANETS = [
 ];
 
 // ── Sacred Patterns ──────────────────────────────────────────────
-const PATTERN_3x3 = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+const PATTERNS_3x3 = {
+  fire:  [8, 6, 4, 3, 5, 7, 4, 9, 2],
+  earth: [4, 9, 2, 3, 5, 7, 8, 1, 6],
+  air:   [2, 7, 6, 9, 5, 1, 4, 3, 8],
+  water: [6, 7, 2, 1, 5, 9, 8, 3, 4],
+};
 
 const ELEMENT_PATTERNS_4x4 = {
   fire:  [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15],
@@ -51,7 +56,7 @@ const ELEMENT_PATTERNS_4x4 = {
 };
 
 function getSacredPattern(size, elementKey) {
-  if (size === 3) return PATTERN_3x3;
+  if (size === 3) return PATTERNS_3x3[elementKey] || PATTERNS_3x3.earth;
   if (size === 4) return ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
   return null;
 }
