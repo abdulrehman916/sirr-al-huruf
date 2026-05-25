@@ -33,18 +33,18 @@ export const MIZAAN_KHAYR_SHARR = {
 
 // ── MIZAAN 4: Hours ──
 export const MIZAAN_HOURS = [
-  { hour: 1,  label: '1st',  arabic: 'الأولى',    planet: 'Şems',    symbol: '☉', compatible: ['fire'] },
-  { hour: 2,  label: '2nd',  arabic: 'الثانية',   planet: 'Zühre',   symbol: '♀', compatible: ['water'] },
-  { hour: 3,  label: '3rd',  arabic: 'الثالثة',   planet: 'Utarid',  symbol: '☿', compatible: ['air'] },
-  { hour: 4,  label: '4th',  arabic: 'الرابعة',   planet: 'Kamer',   symbol: '☽', compatible: ['water'] },
-  { hour: 5,  label: '5th',  arabic: 'الخامسة',   planet: 'Zühal',   symbol: '♄', compatible: ['earth'] },
-  { hour: 6,  label: '6th',  arabic: 'السادسة',   planet: 'Müşteri', symbol: '♃', compatible: ['air'] },
-  { hour: 7,  label: '7th',  arabic: 'السابعة',   planet: 'Merih',   symbol: '♂', compatible: ['fire'] },
-  { hour: 8,  label: '8th',  arabic: 'الثامنة',   planet: 'Şems',    symbol: '☉', compatible: ['fire'] },
-  { hour: 9,  label: '9th',  arabic: 'التاسعة',   planet: 'Zühre',   symbol: '♀', compatible: ['water'] },
-  { hour: 10, label: '10th', arabic: 'العاشرة',   planet: 'Utarid',  symbol: '☿', compatible: ['air'] },
-  { hour: 11, label: '11th', arabic: 'الحادية عشر', planet: 'Kamer', symbol: '☽', compatible: ['water'] },
-  { hour: 12, label: '12th', arabic: 'الثانية عشر', planet: 'Zühal', symbol: '♄', compatible: ['earth'] },
+  { hour: 1,  arabic: 'الساعة الأولى',         bast: 5460 },
+  { hour: 2,  arabic: 'الساعة الثانية',        bast: 5760 },
+  { hour: 3,  arabic: 'الساعة الثالثة',        bast: 6276 },
+  { hour: 4,  arabic: 'الساعة الرابعة',        bast: 4983 },
+  { hour: 5,  arabic: 'الساعة الخامسة',        bast: 5038 },
+  { hour: 6,  arabic: 'الساعة السادسة',        bast: 4984 },
+  { hour: 7,  arabic: 'الساعة السابعة',        bast: 4466 },
+  { hour: 8,  arabic: 'الساعة الثامنة',        bast: 5520 },
+  { hour: 9,  arabic: 'الساعة التاسعة',        bast: 4711 },
+  { hour: 10, arabic: 'الساعة العاشرة',        bast: 5462 },
+  { hour: 11, arabic: 'الساعة الحادية عشرة',   bast: 7273 },
+  { hour: 12, arabic: 'الساعة الثانية عشرة',   bast: 7906 },
 ];
 
 // ── MIZAAN 5: Days ──
