@@ -18,6 +18,9 @@ const GRID_SIZES = [
   { label: "5×5", value: 5 },
   { label: "6×6", value: 6 },
   { label: "7×7", value: 7 },
+  { label: "8×8", value: 8 },
+  { label: "9×9", value: 9 },
+  { label: "10×10", value: 10 },
 ];
 
 const ELEMENTS = [
@@ -66,11 +69,43 @@ function SectionLabel({ children }) {
   );
 }
 
+function generateMagicSquare(size, baseNum) {
+  const grid = Array(size).fill(0).map(() => Array(size).fill(0));
+  let num = baseNum;
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      grid[i][j] = num;
+      num++;
+    }
+  }
+  return grid;
+}
+
 export default function MagicSqayerPage() {
-  const [inputText, setInputText]   = useState("");
-  const [gridSize,  setGridSize]    = useState(null);
-  const [element,   setElement]     = useState(null);
-  const [planet,    setPlanet]      = useState(null);
+  const [inputNumber, setInputNumber] = useState("");
+  const [gridSize,    setGridSize]    = useState(null);
+  const [element,     setElement]     = useState(null);
+  const [planet,      setPlanet]      = useState(null);
+  const [grid, setGrid]               = useState(null);
+
+  const handleNumberChange = (e) => {
+    const val = e.target.value.replace(/[^\d]/g, "");
+    setInputNumber(val);
+    if (val && gridSize) {
+      setGrid(generateMagicSquare(gridSize, parseInt(val)));
+    } else {
+      setGrid(null);
+    }
+  };
+
+  const handleGridSizeChange = (size) => {
+    setGridSize(gridSize === size ? null : size);
+    if (inputNumber && gridSize === size) {
+      setGrid(null);
+    } else if (inputNumber && size !== gridSize) {
+      setGrid(generateMagicSquare(size, parseInt(inputNumber)));
+    }
+  };
 
   return (
     <PageLayout>
@@ -97,54 +132,36 @@ export default function MagicSqayerPage() {
           <GoldDivider />
         </div>
 
-        {/* ── 1. Arabic Text Input ── */}
+        {/* ── 1. Number Input ── */}
         <SectionCard>
-          <SectionLabel>Arabic Text — النص العربي</SectionLabel>
-          <textarea
-            dir="rtl"
-            value={inputText}
-            onChange={e => setInputText(e.target.value)}
-            placeholder="أدخل النص العربي هنا..."
-            rows={4}
-            className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/30"
+          <SectionLabel>🔢 Base Number — الرقم الأساسي</SectionLabel>
+          <input
+            type="text"
+            value={inputNumber}
+            onChange={handleNumberChange}
+            placeholder="Enter any large number (100, 786, 12345...)"
+            className="w-full rounded-xl px-4 py-3 font-amiri text-3xl text-center text-white font-bold resize-none focus:outline-none caret-white placeholder:text-white/30"
             style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
           />
-
-          {/* Live placeholders */}
-          <div className="flex gap-3">
-            <div
-              className="flex-1 rounded-xl px-4 py-3 text-center border"
-              style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.18)" }}
-            >
-              <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>Abjad Value</p>
-              <p className="font-amiri text-2xl font-bold" style={{ color: inputText ? G.text : "rgba(255,255,255,0.15)" }}>
-                {inputText ? "—" : "···"}
-              </p>
-            </div>
-            <div
-              className="flex-1 rounded-xl px-4 py-3 text-center border"
-              style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.18)" }}
-            >
-              <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>Letter Count</p>
-              <p className="font-amiri text-2xl font-bold" style={{ color: inputText ? G.text : "rgba(255,255,255,0.15)" }}>
-                {inputText ? inputText.replace(/[^\u0600-\u06FF]/g, "").length : "···"}
-              </p>
-            </div>
-          </div>
+          {inputNumber && (
+            <p className="text-center font-inter text-[9px] uppercase tracking-widest mt-2" style={{ color: G.dim }}>
+              Starting from: {inputNumber}
+            </p>
+          )}
         </SectionCard>
 
         {/* ── 2. Grid Size ── */}
         <SectionCard>
           <SectionLabel>Grid Size — حجم المربع</SectionLabel>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {GRID_SIZES.map(g => {
               const sel = gridSize === g.value;
               return (
                 <motion.button
                   key={g.value}
-                  onClick={() => setGridSize(g.value)}
+                  onClick={() => handleGridSizeChange(g.value)}
                   whileTap={{ scale: 0.95 }}
-                  className="rounded-xl py-3 font-inter font-bold text-sm border transition-all"
+                  className="rounded-xl py-3 font-inter font-bold text-xs border transition-all"
                   style={{
                     background: sel ? G.bg : "rgba(4,12,34,0.97)",
                     borderColor: sel ? G.borderHi : "rgba(255,255,255,0.08)",
@@ -219,42 +236,94 @@ export default function MagicSqayerPage() {
 
         {/* ── 5. Generate Button ── */}
         <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a]"
+          disabled={!inputNumber || !gridSize}
+          whileHover={{ scale: !inputNumber || !gridSize ? 1 : 1.02 }}
+          whileTap={{ scale: !inputNumber || !gridSize ? 1 : 0.97 }}
+          className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             background: "linear-gradient(135deg,#fcd34d,#d97706)",
             boxShadow: `0 0 28px ${G.glowHi}`,
+          }}
+          onClick={() => {
+            if (inputNumber && gridSize) {
+              setGrid(generateMagicSquare(gridSize, parseInt(inputNumber)));
+            }
           }}
         >
           <span className="font-amiri text-base">✨</span>
           Generate Magic Sqayer
         </motion.button>
 
-        {/* ── 6. Preview Placeholder ── */}
-        <div
-          className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
-          style={{
-            background: "rgba(4,8,24,0.99)",
-            borderColor: G.borderHi,
-            boxShadow: `0 0 40px ${G.glow}`,
-          }}
-        >
-          <motion.span
-            className="font-amiri text-4xl"
-            style={{ color: "rgba(212,175,55,0.25)" }}
-            animate={{ opacity: [0.2, 0.5, 0.2] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        {/* ── 6. Sacred Grid Preview ── */}
+        {grid ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl border p-6"
+            style={{
+              background: "rgba(4,8,24,0.99)",
+              borderColor: G.borderHi,
+              boxShadow: `0 0 40px ${G.glow}`,
+            }}
           >
-            🜂
-          </motion.span>
-          <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.25)" }}>
-            Sacred Grid Preview
-          </p>
-          <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.20)" }} dir="rtl">
-            المربع السحري
-          </p>
-        </div>
+            <p className="font-inter text-[10px] uppercase tracking-widest text-center mb-4" style={{ color: G.dim }}>
+              🜂 Sacred Grid {gridSize}×{gridSize}
+            </p>
+            <div
+              className="inline-block mx-auto"
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+                gap: gridSize > 6 ? "4px" : "6px",
+              }}
+            >
+              {grid.flat().map((num, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.02 }}
+                  className="rounded-lg border flex items-center justify-center font-amiri font-bold"
+                  style={{
+                    width: gridSize > 6 ? "40px" : "50px",
+                    height: gridSize > 6 ? "40px" : "50px",
+                    background: "rgba(212,175,55,0.08)",
+                    borderColor: "rgba(212,175,55,0.35)",
+                    color: G.text,
+                    fontSize: gridSize > 7 ? "11px" : gridSize > 6 ? "12px" : "14px",
+                    boxShadow: `inset 0 0 8px rgba(212,175,55,0.12)`,
+                  }}
+                >
+                  {num}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        ) : (
+          <div
+            className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
+            style={{
+              background: "rgba(4,8,24,0.99)",
+              borderColor: G.borderHi,
+              boxShadow: `0 0 40px ${G.glow}`,
+            }}
+          >
+            <motion.span
+              className="font-amiri text-4xl"
+              style={{ color: "rgba(212,175,55,0.25)" }}
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              🜂
+            </motion.span>
+            <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.25)" }}>
+              Sacred Grid Preview
+            </p>
+            <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.20)" }} dir="rtl">
+              المربع السحري
+            </p>
+          </div>
+        )}
 
       </div>
     </PageLayout>
