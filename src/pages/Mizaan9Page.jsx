@@ -216,7 +216,7 @@ export default function Mizaan9Page() {
               <MizaanDivider />
               <Mizaan9Final result={result} selections={selections} degreeSels={degreeSels} onDegreeSels={setDegreeSels} />
               <MizaanDivider />
-              <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} />
+              <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} />
 
             </motion.div>
           )}

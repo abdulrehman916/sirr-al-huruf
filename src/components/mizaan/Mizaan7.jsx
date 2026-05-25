@@ -1,8 +1,69 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_PURPOSES } from "../../lib/mizaan9Data";
+import { calcBast } from "../../lib/abjadModes";
 
-const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.40)" };
+function countArabicLetters(str) {
+  if (!str) return 0;
+  return (str.match(/[\u0600-\u06FF]/g) || []).length;
+}
+
+function CustomPurposePanel({ customPurpose, onCustomPurpose }) {
+  const stats = useMemo(() => {
+    const trimmed = customPurpose.trim();
+    if (!trimmed) return null;
+    const { total } = calcBast(trimmed, 1);
+    return { bast: total, letters: countArabicLetters(trimmed) };
+  }, [customPurpose]);
+
+  const active = stats !== null;
+
+  return (
+    <div className="space-y-2 pt-1">
+      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+        ✨ Custom Purpose — النية الخاصة
+      </p>
+      <textarea
+        dir="rtl"
+        value={customPurpose}
+        onChange={e => onCustomPurpose(e.target.value)}
+        placeholder="اكتب نيتك أو مقصدك الخاص هنا..."
+        rows={2}
+        className="w-full rounded-xl px-4 py-2.5 font-amiri text-base text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/25"
+        style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${active ? G.borderHi : G.border}` }}
+      />
+      {active && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border p-3 grid grid-cols-3 gap-2 text-center"
+          style={{ background: "rgba(212,175,55,0.06)", borderColor: G.borderHi }}>
+          <div>
+            <p className="font-inter text-[8px] uppercase tracking-widest mb-0.5" style={{ color: G.dim }}>Bast-ul Aval</p>
+            <p className="font-amiri text-lg font-bold tabular-nums" style={{ color: G.text }}>{stats.bast.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="font-inter text-[8px] uppercase tracking-widest mb-0.5" style={{ color: G.dim }}>Letter Count</p>
+            <p className="font-amiri text-lg font-bold tabular-nums" style={{ color: G.text }}>{stats.letters}</p>
+          </div>
+          <div className="flex flex-col items-center justify-center">
+            <p className="font-inter text-[8px] uppercase tracking-widest mb-0.5" style={{ color: G.dim }}>Selected</p>
+            <motion.span
+              animate={{ boxShadow: [`0 0 6px rgba(212,175,55,0.4)`, `0 0 18px rgba(212,175,55,0.8)`, `0 0 6px rgba(212,175,55,0.4)`] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="font-inter text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border"
+              style={{ color: G.text, borderColor: G.borderHi, background: G.bg }}>
+              ✅ Active
+            </motion.span>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.40)", bg: "rgba(212,175,55,0.07)" };
 
 export default function Mizaan7({ selected, onChange, customPurpose, onCustomPurpose }) {
   // selected is now an array
@@ -81,23 +142,7 @@ export default function Mizaan7({ selected, onChange, customPurpose, onCustomPur
       </div>
 
       {/* Custom Purpose Input */}
-      <div className="space-y-2 pt-1">
-        <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-          ✨ Custom Purpose — النية الخاصة
-        </p>
-        <textarea
-          dir="rtl"
-          value={customPurpose}
-          onChange={e => onCustomPurpose(e.target.value)}
-          placeholder="اكتب نيتك أو مقصدك الخاص هنا..."
-          rows={2}
-          className="w-full rounded-xl px-4 py-2.5 font-amiri text-base text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/25"
-          style={{
-            background: "rgba(4,12,34,0.97)",
-            border: `1px solid ${G.border}`,
-          }}
-        />
-      </div>
+      <CustomPurposePanel customPurpose={customPurpose} onCustomPurpose={onCustomPurpose} />
     </motion.div>
   );
 }

@@ -8,6 +8,7 @@ import {
   MIZAAN_PURPOSES,
   MIZAAN_ELEMENT_DEGREES,
 } from "../../lib/mizaan9Data";
+import { calcBast } from "../../lib/abjadModes";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -54,13 +55,14 @@ function BreakdownRow({ label, arabic, bast, color, icon }) {
   );
 }
 
-export default function MizaanFinalSummary({ result, selections, degreeSels = {}, inputText = "" }) {
+export default function MizaanFinalSummary({ result, selections, degreeSels = {}, inputText = "", customPurpose = "" }) {
   const { dominant, bastUlAval: inputBast = 0 } = result;
 
   const summary = useMemo(() => {
     const rows = [];
     let totalBast = inputBast;
     let totalLetters = countArabicLetters(inputText);
+
 
     // Mizaan 2 — Element
     const el = selections.elements?.[0];
@@ -141,8 +143,18 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
       }
     }
 
+    // Mizaan 7 — Custom Purpose
+    const trimmedCustom = customPurpose?.trim();
+    if (trimmedCustom) {
+      const { total: customBast } = calcBast(trimmedCustom, 1);
+      const customLetters = countArabicLetters(trimmedCustom);
+      rows.push({ key: 'm7_custom', label: 'Mizaan 7 · Custom', arabic: trimmedCustom, icon: '✨', bast: customBast, color: G.text });
+      totalBast += customBast;
+      totalLetters += customLetters;
+    }
+
     return { rows, totalBast, totalLetters };
-  }, [result, selections, degreeSels, inputText, dominant, inputBast]);
+  }, [result, selections, degreeSels, inputText, customPurpose, dominant, inputBast]);
 
   if (!dominant) return null;
 
