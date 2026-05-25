@@ -68,8 +68,6 @@ function GoldDivider() {
 }
 
 function VefkGrid({ cells, centerCell1, centerCell2 }) {
-  // centerDisplay = combined label for the grid center square
-  const centerDisplay = centerCell1 || centerCell2 || null;
   const cellW = 58;
   return (
     <div className="flex justify-center overflow-x-auto">
@@ -87,20 +85,41 @@ function VefkGrid({ cells, centerCell1, centerCell2 }) {
               initial={{ opacity: 0, scale: 0.75 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.018, duration: 0.22 }}
-              className="rounded-lg border flex flex-col items-center justify-center"
+              className="rounded-lg border flex flex-col items-center justify-center overflow-hidden"
               style={{
                 width: cellW, height: cellW,
                 background: isEmpty ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.10)",
-                borderColor: isEmpty ? "rgba(212,175,55,0.18)" : "rgba(212,175,55,0.45)",
+                borderColor: isEmpty ? "rgba(212,175,55,0.35)" : "rgba(212,175,55,0.45)",
                 boxShadow: isEmpty ? "none" : "inset 0 0 8px rgba(212,175,55,0.12)",
               }}
             >
               {isEmpty ? (
-                <div className="flex items-center justify-center w-full h-full px-1">
-                  {centerDisplay ? (
-                    <p className="font-amiri text-center leading-tight"
-                      style={{ color: G.text, fontSize: centerDisplay.length > 8 ? "8px" : "10px" }}
-                      dir="rtl">{centerDisplay}</p>
+                <div className="flex flex-col items-center justify-center w-full h-full" style={{ gap: "1px" }}>
+                  {(centerCell1 || centerCell2) ? (
+                    <>
+                      {/* Cell 1 — Talib · Mathloob · Niyyat */}
+                      <div className="flex items-center justify-center w-full px-0.5"
+                        style={{ height: "50%", borderBottom: "1px solid rgba(212,175,55,0.20)" }}>
+                        {centerCell1 ? (
+                          <p className="font-amiri text-center leading-none"
+                            style={{ color: G.text, fontSize: centerCell1.length > 10 ? "6px" : "8px" }}
+                            dir="rtl">{centerCell1}</p>
+                        ) : (
+                          <span style={{ fontSize: "8px", color: "rgba(212,175,55,0.15)" }}>—</span>
+                        )}
+                      </div>
+                      {/* Cell 2 — Esma */}
+                      <div className="flex items-center justify-center w-full px-0.5"
+                        style={{ height: "50%" }}>
+                        {centerCell2 ? (
+                          <p className="font-amiri font-bold text-center leading-none"
+                            style={{ color: G.text, fontSize: centerCell2.length > 8 ? "7px" : "9px" }}
+                            dir="rtl">{centerCell2}</p>
+                        ) : (
+                          <span style={{ fontSize: "8px", color: "rgba(212,175,55,0.15)" }}>—</span>
+                        )}
+                      </div>
+                    </>
                   ) : (
                     <motion.span style={{ fontSize: "1.1rem", color: "rgba(212,175,55,0.18)" }}
                       animate={{ opacity: [0.1, 0.35, 0.1] }}
