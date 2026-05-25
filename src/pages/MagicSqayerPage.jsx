@@ -20,7 +20,6 @@ const GRID_SIZES = [
   { label: "7×7", value: 7 },
   { label: "8×8", value: 8 },
   { label: "9×9", value: 9 },
-  { label: "10×10", value: 10 },
 ];
 
 const ELEMENTS = [
