@@ -113,9 +113,10 @@ export default function TanzimVefki() {
     return computeCells(base);
   }, [base]);
 
-  const totalSum = useMemo(() => {
+  // Magic constant = ilk satır toplamı (merkez hariç, tüm satır/sütun/çapraz eşit)
+  const magicConstant = useMemo(() => {
     if (!cells) return null;
-    return Object.values(cells).reduce((a, b) => a + b, 0);
+    return LAYOUT[0].reduce((a, pos) => a + cells[pos], 0);
   }, [cells]);
 
   return (
@@ -233,8 +234,8 @@ export default function TanzimVefki() {
                   <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>{base.toLocaleString()}</p>
                 </div>
                 <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Toplam</p>
-                  <p className="font-amiri text-sm font-bold leading-tight" style={{ color: G.text }}>{totalSum.toLocaleString()}</p>
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Magic Constant</p>
+                  <p className="font-amiri text-sm font-bold leading-tight" style={{ color: G.text }}>{magicConstant.toLocaleString()}</p>
                 </div>
               </div>
             </motion.div>
