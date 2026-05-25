@@ -236,18 +236,7 @@ export default function AnaVefk() {
           <GoldDivider />
         </div>
 
-        {/* CENTER CELL 1 — Talib + Mathloob + Niyyat combined */}
-        <div className="rounded-xl border px-4 py-4 space-y-3"
-          style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.30)" }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-            🜁 Merkez Hücre 1 — Talib · Mathloob · Niyyat
-          </p>
-          <InlineInput label="Talib — الطالب" value={talibRaw} onChange={setTalibRaw} placeholder="İsim veya sayı..." showEbced />
-          <InlineInput label="Mathloob — المطلوب" value={mathloobRaw} onChange={setMathloobRaw} placeholder="İsim veya sayı..." showEbced />
-          <InlineInput label="Niyyat — النية" value={niyyat} onChange={setNiyyat} placeholder="Niyet metni..." />
-        </div>
-
-        {/* CENTER CELL 2 — Esma only */}
+        {/* CENTER CELL — Esma only */}
         <div className="rounded-xl border px-4 py-4 space-y-3"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.45)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
