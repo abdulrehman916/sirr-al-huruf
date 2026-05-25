@@ -27,6 +27,12 @@ function resolveValue(raw) {
   const v = toAbjad(trimmed);
   return v > 0 ? v : null;
 }
+function ebcedHint(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed || /^\d+$/.test(trimmed)) return null;
+  const v = toAbjad(trimmed);
+  return v > 0 ? v : null;
+}
 
 // ── Ottoman 5×5 layout — null = center ──────────────────────────
 const LAYOUT = [
@@ -37,18 +43,13 @@ const LAYOUT = [
   [23,  2,  6, 10, 19],
 ];
 
-// ── Tanzim positions 1–24 ─────────────────────────────────────────
-// Tanzim values: 1–19 = their position number
-//                20 = esmaValue − 40
-//                21 = esmaValue − 39
-//                ...
-//                24 = esmaValue − 36
+// ── Tanzim values ────────────────────────────────────────────────
 function tanzimValue(pos, esmaValue) {
   if (pos <= 19) return pos;
   return (esmaValue - 40) + (pos - 20);
 }
 
-// ── Ana Vefk cells: FinalCell = tanzimValue × baseNumber ─────────
+// ── Ana Vefk cells ───────────────────────────────────────────────
 function computeAnaVefkCells(baseNumber, esmaValue) {
   const cells = {};
   for (let pos = 1; pos <= 24; pos++) {
@@ -67,9 +68,33 @@ function GoldDivider() {
   );
 }
 
+// ── Single inline input row ──────────────────────────────────────
+function InlineInput({ label, value, onChange, placeholder, showEbced }) {
+  const hint = showEbced ? ebcedHint(value) : null;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</p>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        dir="auto"
+        className="w-full rounded-lg px-3 py-1.5 font-amiri text-base text-white text-right focus:outline-none caret-white placeholder:text-white/20"
+        style={{ background: "rgba(4,12,34,0.97)", border: "1px solid rgba(212,175,55,0.15)" }}
+      />
+      {hint && (
+        <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.55)" }}>
+          ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{hint.toLocaleString()}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Grid ─────────────────────────────────────────────────────────
 function VefkGrid({ cells, combinedCenter, esmaCenter }) {
   const cellW = 58;
-  // Build display strings from the 2 center objects
   const combinedText = combinedCenter
     ? [combinedCenter.talib, combinedCenter.mathloob, combinedCenter.niyyat].filter(Boolean).join(" · ")
     : null;
@@ -142,40 +167,11 @@ function VefkGrid({ cells, combinedCenter, esmaCenter }) {
   );
 }
 
-function InputField({ label, value, onChange, placeholder, isTextOnly }) {
-  return (
-    <div className="rounded-xl border px-4 py-3 space-y-1.5"
-      style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
-      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</p>
-      <input
-        type="text"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        dir="auto"
-        className="w-full rounded-xl px-4 py-2 font-amiri text-lg text-white text-right focus:outline-none caret-white placeholder:text-white/25"
-        style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.15)` }}
-      />
-      {!isTextOnly && (() => {
-        const trimmed = value.trim();
-        if (!trimmed || /^\d+$/.test(trimmed)) return null;
-        const ebced = toAbjad(trimmed);
-        if (ebced <= 0) return null;
-        return (
-          <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
-            ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{ebced.toLocaleString()}</span>
-          </p>
-        );
-      })()}
-    </div>
-  );
-}
-
 export default function AnaVefk() {
   const [talibRaw,    setTalibRaw]    = useState("");
   const [mathloobRaw, setMathloobRaw] = useState("");
-  const [esmaRaw,     setEsmaRaw]     = useState("");
   const [niyyat,      setNiyyat]      = useState("");
+  const [esmaRaw,     setEsmaRaw]     = useState("");
   const [result, setResult] = useState(null);
 
   const talibVal    = resolveValue(talibRaw);
@@ -240,24 +236,24 @@ export default function AnaVefk() {
           <GoldDivider />
         </div>
 
-        {/* CENTER CELL 1 — Talib + Mathloob + Niyyat */}
-        <div className="rounded-xl border px-4 py-3 space-y-2"
+        {/* CENTER CELL 1 — Talib + Mathloob + Niyyat combined */}
+        <div className="rounded-xl border px-4 py-3 space-y-3"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.30)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
             🜁 Merkez Hücre 1 — Talib · Mathloob · Niyyat
           </p>
-          <InputField label="Talib — الطالب" value={talibRaw} onChange={setTalibRaw} placeholder="İsim veya sayı..." />
-          <InputField label="Mathloob — المطلوب" value={mathloobRaw} onChange={setMathloobRaw} placeholder="İsim veya sayı..." />
-          <InputField label="Niyyat (Görsel) — النية" value={niyyat} onChange={setNiyyat} placeholder="Niyet metni..." isTextOnly />
+          <InlineInput label="Talib — الطالب" value={talibRaw} onChange={setTalibRaw} placeholder="İsim veya sayı..." showEbced />
+          <InlineInput label="Mathloob — المطلوب" value={mathloobRaw} onChange={setMathloobRaw} placeholder="İsim veya sayı..." showEbced />
+          <InlineInput label="Niyyat — النية" value={niyyat} onChange={setNiyyat} placeholder="Niyet metni..." />
         </div>
 
-        {/* CENTER CELL 2 — Esma */}
-        <div className="rounded-xl border px-4 py-3 space-y-2"
+        {/* CENTER CELL 2 — Esma only */}
+        <div className="rounded-xl border px-4 py-3 space-y-3"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.45)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
             ✦ Merkez Hücre 2 — Esma
           </p>
-          <InputField label="Esma — الاسم" value={esmaRaw} onChange={setEsmaRaw} placeholder="İsim, Esma veya sayı..." />
+          <InlineInput label="Esma — الاسم" value={esmaRaw} onChange={setEsmaRaw} placeholder="İsim, Esma veya sayı..." showEbced />
         </div>
 
         {/* Base number preview */}
@@ -353,34 +349,6 @@ export default function AnaVefk() {
             </p>
 
             <VefkGrid cells={result.cells} combinedCenter={combinedCenter} esmaCenter={esmaCenter} />
-
-            {/* 2 Sacred Center Cells — visual only */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-xl border px-3 py-2 text-center"
-                style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.22)" }}>
-                <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  Merkez Hücre 1
-                </p>
-                <p className="font-amiri text-sm leading-snug" style={{ color: G.text }} dir="rtl">
-                  {[combinedCenter?.talib, combinedCenter?.mathloob, combinedCenter?.niyyat].filter(Boolean).join(" · ") || "—"}
-                </p>
-                <p className="font-inter text-[7px] mt-0.5" style={{ color: "rgba(212,175,55,0.30)" }}>
-                  Talib · Mathloob · Niyyat
-                </p>
-              </div>
-              <div className="rounded-xl border px-3 py-2 text-center"
-                style={{ background: "rgba(212,175,55,0.08)", borderColor: "rgba(212,175,55,0.35)" }}>
-                <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  Merkez Hücre 2
-                </p>
-                <p className="font-amiri text-lg font-bold leading-snug" style={{ color: G.text }} dir="rtl">
-                  {esmaCenter?.esma || "—"}
-                </p>
-                <p className="font-inter text-[7px] mt-0.5" style={{ color: "rgba(212,175,55,0.30)" }}>
-                  Esma
-                </p>
-              </div>
-            </div>
 
             {/* Zikir Count */}
             <div className="rounded-xl border p-3 text-center"
