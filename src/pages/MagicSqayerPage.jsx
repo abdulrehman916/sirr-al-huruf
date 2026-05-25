@@ -55,6 +55,13 @@ const ELEMENT_PATTERNS_4x4 = {
   water: [10, 5, 4, 15, 3, 16, 9, 6, 13, 2, 7, 12, 8, 11, 14, 1],
 };
 
+const ELEMENT_PATTERNS_6x6 = {
+  fire:  [ 6,32, 3,34,35, 1,  7,11,27,28, 8,30, 19,14,16,15,23,24, 18,20,22,21,17,13, 25,29,10, 9,26,12, 36, 5,33, 4, 2,31],
+  earth: [ 1,35,34, 3,32, 6, 30, 8,28,27,11, 7, 24,23,15,16,14,19, 13,17,21,22,20,18, 12,26, 9,10,29,25, 31, 2, 4,33, 5,36],
+  air:   [31, 2, 4,33, 5,36, 12,26, 9,10,29,25, 13,17,21,22,20,18, 24,23,15,16,14,19, 30, 8,28,27,11, 7,  1,35,34, 3,32, 6],
+  water: [36, 5,33, 4, 2,31, 25,29,10, 9,26,12, 18,20,22,21,17,13, 19,14,16,15,23,24,  7,11,27,28, 8,30,  6,32, 3,34,35, 1],
+};
+
 const ELEMENT_PATTERNS_5x5 = {
   fire:  [17,24, 1, 8,15, 23, 5, 7,14,16,  4, 6,13,20,22, 10,12,19,21, 3, 11,18,25, 2, 9],
   earth: [ 9, 2,25,18,11,  3,21,19,12,10, 22,20,13, 6, 4, 16,14, 7, 5,23, 15, 8, 1,24,17],
@@ -66,6 +73,7 @@ function getSacredPattern(size, elementKey) {
   if (size === 3) return PATTERNS_3x3[elementKey] || PATTERNS_3x3.earth;
   if (size === 4) return ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
   if (size === 5) return ELEMENT_PATTERNS_5x5[elementKey] || ELEMENT_PATTERNS_5x5.fire;
+  if (size === 6) return ELEMENT_PATTERNS_6x6[elementKey] || ELEMENT_PATTERNS_6x6.fire;
   return null;
 }
 
@@ -97,6 +105,22 @@ function generateVefk4x4(targetNumber, elementKey) {
   const pattern = ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0, 4), flat.slice(4, 8), flat.slice(8, 12), flat.slice(12, 16)];
+}
+
+function generateVefk6x6(targetNumber, elementKey) {
+  const n = parseInt(targetNumber);
+  const remainder = (n - 111) % 6;
+  const base = (n - 111 - remainder) / 6;
+  const values = Array.from({ length: 36 }, (_, i) => base + i);
+  // remainder cells: pos 7=idx6, 13=idx12, 19=idx18, 25=idx24, 31=idx30
+  if (remainder === 5) values[6]  += 1;
+  else if (remainder === 4) values[12] += 1;
+  else if (remainder === 3) values[18] += 1;
+  else if (remainder === 2) values[24] += 1;
+  else if (remainder === 1) values[30] += 1;
+  const pattern = ELEMENT_PATTERNS_6x6[elementKey] || ELEMENT_PATTERNS_6x6.fire;
+  const flat = pattern.map(rank => values[rank - 1]);
+  return [flat.slice(0,6), flat.slice(6,12), flat.slice(12,18), flat.slice(18,24), flat.slice(24,30), flat.slice(30,36)];
 }
 
 function generateVefk5x5(targetNumber, elementKey) {
@@ -288,6 +312,7 @@ export default function MagicSqayerPage() {
     if (size === 3) return generateVefk3x3(num, el || "earth");
     if (size === 4) return generateVefk4x4(num, el || "fire");
     if (size === 5) return generateVefk5x5(num, el || "fire");
+    if (size === 6) return generateVefk6x6(num, el || "fire");
     return generateMagicSquare(size, parseInt(num));
   };
 
