@@ -90,12 +90,20 @@ function AnaVefk() {
   };
 
   // Calculate magic constant and validate
+  // Center cell (row 2, col 2) is always null — excluded from ALL sums
   const magicConst = useMemo(() => {
     if (!grid) return null;
-    const rowSums = grid.map(r => r.filter(v => v !== null).reduce((a,b)=>a+b,0));
-    const colSums = [0,1,2,3,4].map(c => grid.map(r => r[c]).filter(v => v !== null).reduce((a,b)=>a+b,0));
-    const diag1 = [0,1,3,4].reduce((sum, i) => sum + grid[i][i], 0);
-    const diag2 = [0,1,3,4].reduce((sum, i) => sum + grid[i][4-i], 0);
+    // Row sums: filter out null (center cell)
+    const rowSums = grid.map(r => r.reduce((a, v) => a + (v === null ? 0 : v), 0));
+    // Col sums: filter out null (center cell)
+    const colSums = [0,1,2,3,4].map(c =>
+      grid.reduce((a, r) => a + (r[c] === null ? 0 : r[c]), 0)
+    );
+    // Diagonals: skip center cell at [2][2]
+    // Main diagonal: [0][0], [1][1], [3][3], [4][4]
+    const diag1 = grid[0][0] + grid[1][1] + grid[3][3] + grid[4][4];
+    // Anti-diagonal: [0][4], [1][3], [3][1], [4][0]
+    const diag2 = grid[0][4] + grid[1][3] + grid[3][1] + grid[4][0];
     const expected = rowSums[0];
     const allEqual = rowSums.every(s => s === expected) &&
                      colSums.every(s => s === expected) &&
