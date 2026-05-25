@@ -62,6 +62,13 @@ const ELEMENT_PATTERNS_6x6 = {
   water: [36, 5,33, 4, 2,31, 25,29,10, 9,26,12, 18,20,22,21,17,13, 19,14,16,15,23,24,  7,11,27,28, 8,30,  6,32, 3,34,35, 1],
 };
 
+const ELEMENT_PATTERNS_9x9 = {
+  fire:  [ 50,58,66,74, 1,18,26,34,42, 60,68,76, 3,11,19,36,44,52, 70,78, 5,13,21,29,37,54,62, 80, 7,15,23,31,39,47,55,72,  9,17,25,33,41,49,57,65,73, 10,27,35,43,51,59,67,75, 2, 20,28,45,53,61,69,77, 4,12, 30,38,46,63,71,79, 6,14,22, 40,48,56,64, 8,16,24,32,81],
+  earth: [ 81,32,24,16, 8,64,56,48,40, 22,14, 6,79,71,63,46,38,30, 12, 4,77,69,61,53,45,28,20,  2,75,67,59,51,43,35,27,10, 73,65,57,49,41,33,25,17, 9, 72,55,47,39,31,23,15, 7,80, 62,54,37,29,21,13, 5,78,70, 52,44,36,19,11, 3,76,68,60, 42,34,26,18, 1,74,66,58,50],
+  air:   [ 40,48,56,64, 8,16,24,32,81, 30,38,46,63,71,79, 6,14,22, 20,28,45,53,61,69,77, 4,12, 10,27,35,43,51,59,67,75, 2,  9,17,25,33,41,49,57,65,73, 80, 7,15,23,31,39,47,55,72, 70,78, 5,13,21,29,37,54,62, 60,68,76, 3,11,19,36,44,52, 50,58,66,74, 1,18,26,34,42],
+  water: [ 42,34,26,18, 1,74,66,58,50, 52,44,36,19,11, 3,76,68,60, 62,54,37,29,21,13, 5,78,70, 72,55,47,39,31,23,15, 7,80, 73,65,57,49,41,33,25,17, 9,  2,75,67,59,51,43,35,27,10, 12, 4,77,69,61,53,45,28,20, 22,14, 6,79,71,63,46,38,30, 81,32,24,16, 8,64,56,48,40],
+};
+
 const ELEMENT_PATTERNS_8x8 = {
   fire:  [16,51,54, 9, 8,59,62, 1, 53,10,15,52,61, 2, 7,60, 11,56,49,14, 3,64,57, 6, 50,13,12,55,58, 5, 4,63, 32,35,38,25,24,43,46,17, 37,26,31,36,45,18,23,44, 27,40,33,30,19,48,41,22, 34,29,28,39,42,21,20,47],
   earth: [47,20,21,42,39,28,29,34, 22,41,48,19,30,33,40,27, 44,23,18,45,36,31,26,37, 17,46,43,24,25,38,35,32, 63, 4, 5,58,55,12,13,50,  6,57,64, 3,14,49,56,11, 60, 7, 2,61,52,15,10,53,  1,62,59, 8, 9,54,51,16],
@@ -90,6 +97,7 @@ function getSacredPattern(size, elementKey) {
   if (size === 6) return ELEMENT_PATTERNS_6x6[elementKey] || ELEMENT_PATTERNS_6x6.fire;
   if (size === 7) return ELEMENT_PATTERNS_7x7[elementKey] || ELEMENT_PATTERNS_7x7.fire;
   if (size === 8) return ELEMENT_PATTERNS_8x8[elementKey] || ELEMENT_PATTERNS_8x8.fire;
+  if (size === 9) return ELEMENT_PATTERNS_9x9[elementKey] || ELEMENT_PATTERNS_9x9.fire;
   return null;
 }
 
@@ -137,6 +145,33 @@ function generateVefk6x6(targetNumber, elementKey) {
   const pattern = ELEMENT_PATTERNS_6x6[elementKey] || ELEMENT_PATTERNS_6x6.fire;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0,6), flat.slice(6,12), flat.slice(12,18), flat.slice(18,24), flat.slice(24,30), flat.slice(30,36)];
+}
+
+function generateVefk9x9(targetNumber, elementKey) {
+  const n = parseInt(targetNumber);
+  const remainder = (n - 369) % 9;
+  // Authentic Ottoman rule: if remainder exists, use half-value system
+  let values;
+  if (remainder !== 0) {
+    const half = n / 2;
+    const halfRemainder = (half - 369) % 9;
+    const halfBase = (half - 369 - halfRemainder) / 9;
+    values = Array.from({ length: 81 }, (_, i) => halfBase + i);
+    if (halfRemainder === 8) values[9]  += 1;
+    else if (halfRemainder === 7) values[18] += 1;
+    else if (halfRemainder === 6) values[27] += 1;
+    else if (halfRemainder === 5) values[36] += 1;
+    else if (halfRemainder === 4) values[45] += 1;
+    else if (halfRemainder === 3) values[54] += 1;
+    else if (halfRemainder === 2) values[63] += 1;
+    else if (halfRemainder === 1) values[72] += 1;
+  } else {
+    const base = (n - 369) / 9;
+    values = Array.from({ length: 81 }, (_, i) => base + i);
+  }
+  const pattern = ELEMENT_PATTERNS_9x9[elementKey] || ELEMENT_PATTERNS_9x9.fire;
+  const flat = pattern.map(rank => values[rank - 1]);
+  return [flat.slice(0,9), flat.slice(9,18), flat.slice(18,27), flat.slice(27,36), flat.slice(36,45), flat.slice(45,54), flat.slice(54,63), flat.slice(63,72), flat.slice(72,81)];
 }
 
 function generateVefk8x8(targetNumber, elementKey) {
@@ -366,6 +401,7 @@ export default function MagicSqayerPage() {
     if (size === 6) return generateVefk6x6(num, el || "fire");
     if (size === 7) return generateVefk7x7(num, el || "fire");
     if (size === 8) return generateVefk8x8(num, el || "fire");
+    if (size === 9) return generateVefk9x9(num, el || "fire");
     return generateMagicSquare(size, parseInt(num));
   };
 
