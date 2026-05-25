@@ -11,16 +11,17 @@ const G = {
   border:   "rgba(212,175,55,0.40)",
 };
 
+// ── Abjad (Ana Vefk isolated) ─────────────────────────────────────
 const ABJAD_MAP = {
   'ا':1,'أ':1,'إ':1,'آ':1,'ب':2,'ج':3,'د':4,'ه':5,'و':6,'ز':7,'ح':8,'ط':9,
   'ي':10,'ى':10,'ك':20,'ل':30,'م':40,'ن':50,'س':60,'ع':70,'ف':80,'ص':90,
   'ق':100,'ر':200,'ش':300,'ت':400,'ث':500,'خ':600,'ذ':700,'ض':800,'ظ':900,'غ':1000,
 };
-function calcAbjad(t) {
+function anaEbced(t) {
   return [...t].reduce((s, c) => s + (ABJAD_MAP[c] || 0), 0);
 }
 
-// Ottoman 5×5 layout — null = center (visual only)
+// ── Ottoman 5×5 layout — null = center (visual only) ────────────
 const LAYOUT = [
   [11, 15, 24,  3,  7],
   [ 4,  8, 12, 16, 20],
@@ -29,21 +30,21 @@ const LAYOUT = [
   [23,  2,  6, 10, 19],
 ];
 
-// Ana Vefk formula:
-// Start from Tanzim pattern, multiply every cell by anaSayi.
-// Tanzim cells 1–19 = position value (1,2,...19)
-// Tanzim cells 20–24 = (esmaValue-40), (esmaValue-39), ..., (esmaValue-36)
-// Ana Vefk cell = anaSayi × tanzimCellValue
+// ── Ana Vefk cell formula ─────────────────────────────────────────
+// Start from Tanzim pattern, multiply every visible cell by anaSayi.
+// Tanzim values: cells 1–19 = position value (1,2,...19)
+//                cells 20–24 = (esmaValue − 40), +1 each
+// Ana Vefk:      cell value = anaSayi × tanzimValue
 function computeAnaVefkCells(anaSayi, esmaValue) {
   const cells = {};
   // Cells 1–19: anaSayi × pos
   for (let pos = 1; pos <= 19; pos++) {
     cells[pos] = anaSayi * pos;
   }
-  // Cells 20–24: anaSayi × tanzimValue (esmaValue-40 + offset)
+  // Cells 20–24: anaSayi × (esmaValue − 40 + offset)
   const base20 = esmaValue - 40;
-  for (let i = 0; i <= 4; i++) {
-    cells[20 + i] = anaSayi * (base20 + i);
+  for (let pos = 20; pos <= 24; pos++) {
+    cells[pos] = anaSayi * (base20 + (pos - 20));
   }
   return cells;
 }
@@ -103,7 +104,7 @@ function VefkGrid({ cells, centerDisplay }) {
                     {display}
                   </p>
                   <p className="font-inter" style={{ fontSize: "7px", color: "rgba(212,175,55,0.28)", marginTop: "1px" }}>
-                    [{pos}]
+                    ×{pos}
                   </p>
                 </>
               )}
@@ -116,62 +117,106 @@ function VefkGrid({ cells, centerDisplay }) {
 }
 
 export default function AnaVefk() {
-  const [anaSayi,  setAnaSayi]  = useState("");
-  const [esmaRaw,  setEsmaRaw]  = useState("");
-  const [centerText, setCenterText] = useState("");
-  const [cells,    setCells]    = useState(null);
-  const [savedAna, setSavedAna] = useState(null);
+  const [mode,    setMode]    = useState("normal"); // "normal" | "muahhir"
+  const [anaSayi, setAnaSayi] = useState("");
+  const [esmaRaw, setEsmaRaw] = useState("");
+  const [cells,   setCells]   = useState(null);
+  const [savedAna,  setSavedAna]  = useState(null);
   const [savedEsma, setSavedEsma] = useState(null);
+  const [savedEsmaRaw, setSavedEsmaRaw] = useState("");
 
-  // Resolve Ana Sayı (numeric only)
+  // ── Resolve Ana Sayı (numeric only) ──────────────────────────
   const anaSayiNum = anaSayi.trim() ? parseInt(anaSayi.trim()) : null;
 
-  // Resolve Esma: number → direct, text → Ebced
+  // ── Resolve Esma value: number → direct, text → Ebced ─────────
   const esmaTrimmed   = esmaRaw.trim();
   const esmaIsNumeric = /^\d+$/.test(esmaTrimmed);
-  const esmaEbced     = (!esmaIsNumeric && esmaTrimmed) ? calcAbjad(esmaTrimmed) : null;
+  const esmaEbced     = (!esmaIsNumeric && esmaTrimmed) ? anaEbced(esmaTrimmed) : null;
   const esmaValue     = esmaTrimmed
     ? (esmaIsNumeric ? parseInt(esmaTrimmed) : esmaEbced)
     : null;
 
   const canGenerate = anaSayiNum && anaSayiNum >= 1 && esmaValue && esmaValue > 40;
 
-  // Magic Constant = anaSayi × esmaValue (Base Number × Tanzim row total)
+  // Magic Constant / Zikir Count = anaSayi × esmaValue
   const magicConst = (savedAna && savedEsma) ? savedAna * savedEsma : null;
 
   const handleGenerate = () => {
     if (!canGenerate) return;
-    setCells(computeAnaVefkCells(anaSayiNum, esmaValue));
+    const c = computeAnaVefkCells(anaSayiNum, esmaValue);
+    setCells(c);
     setSavedAna(anaSayiNum);
     setSavedEsma(esmaValue);
+    setSavedEsmaRaw(esmaTrimmed);
   };
+
+  const isMuahhir = mode === "muahhir";
 
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border p-5 space-y-4"
-        style={{ background: "rgba(6,12,32,0.97)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}` }}>
+        style={{
+          background: "rgba(6,12,32,0.97)",
+          borderColor: isMuahhir ? "rgba(200,60,60,0.60)" : G.borderHi,
+          boxShadow: `0 0 28px ${isMuahhir ? "rgba(200,60,60,0.20)" : G.glow}`
+        }}>
 
         {/* Header */}
         <div className="text-center space-y-1">
           <motion.div
             className="inline-flex items-center justify-center w-11 h-11 rounded-2xl border mb-1"
-            style={{ background: "linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)", borderColor: "rgba(212,175,55,0.25)", boxShadow: "0 0 22px rgba(212,175,55,0.18)" }}
+            style={{
+              background: "linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)",
+              borderColor: isMuahhir ? "rgba(200,60,60,0.35)" : "rgba(212,175,55,0.25)",
+              boxShadow: "0 0 22px rgba(212,175,55,0.18)"
+            }}
           >
-            <span className="font-amiri text-lg">📜</span>
+            <span className="font-amiri text-lg">{isMuahhir ? "🔻" : "📜"}</span>
           </motion.div>
           <motion.h2 className="font-amiri text-2xl font-bold" style={{ color: G.text }}
             animate={{ textShadow: [`0 0 14px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 14px ${G.glow}`] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-            الأصل
+            {isMuahhir ? "المؤخِّر" : "الأصل"}
           </motion.h2>
-          <p className="font-inter text-[10px] font-bold text-white">ANA VEFK</p>
+          <p className="font-inter text-[10px] font-bold text-white">
+            {isMuahhir ? "MUAHHIR ANA VEFK" : "ANA VEFK"}
+          </p>
           <p className="font-inter text-[9px] uppercase tracking-[0.22em]" style={{ color: G.dim }}>
-            Hâli Vasat — Çarpım Usülü
+            Hâli Vasat Beşli System
           </p>
           <GoldDivider />
         </div>
 
-        {/* Ana Sayı */}
+        {/* Mode toggle */}
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: "normal",  label: "✦ Normal",    arabic: "الإيجابي" },
+            { id: "muahhir", label: "🔻 Muahhir",  arabic: "المؤخِّر" },
+          ].map(m => {
+            const active = mode === m.id;
+            const isMu = m.id === "muahhir";
+            return (
+              <button key={m.id} onClick={() => setMode(m.id)}
+                className="rounded-xl py-2 px-3 flex flex-col items-center gap-0.5 border transition-all"
+                style={{
+                  background: active ? (isMu ? "rgba(200,60,60,0.12)" : G.bg) : "rgba(4,12,34,0.97)",
+                  borderColor: active ? (isMu ? "rgba(200,60,60,0.50)" : G.borderHi) : "rgba(255,255,255,0.08)",
+                  boxShadow: active ? `0 0 14px ${isMu ? "rgba(200,60,60,0.18)" : G.glow}` : "none",
+                }}>
+                <span className="font-inter text-[10px] font-bold"
+                  style={{ color: active ? (isMu ? "#f87171" : G.text) : "rgba(255,255,255,0.40)" }}>
+                  {m.label}
+                </span>
+                <span className="font-amiri text-xs"
+                  style={{ color: active ? (isMu ? "rgba(248,113,113,0.70)" : "rgba(212,175,55,0.70)") : "rgba(255,255,255,0.20)" }}>
+                  {m.arabic}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Ana Sayı — numeric only */}
         <div className="rounded-xl border px-4 py-3 space-y-1.5"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: G.border }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
@@ -181,7 +226,7 @@ export default function AnaVefk() {
             type="text" inputMode="numeric"
             value={anaSayi}
             onChange={e => setAnaSayi(e.target.value.replace(/[^\d]/g, ""))}
-            placeholder="Sayı girin... (örn: 181)"
+            placeholder="Sayı girin... (örn: 66, 114, 252)"
             className="w-full rounded-xl px-4 py-2.5 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
             style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
           />
@@ -191,7 +236,7 @@ export default function AnaVefk() {
         <div className="rounded-xl border px-4 py-3 space-y-1.5"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            2️⃣ Esma / Talib Değeri — اسم الطالب
+            {isMuahhir ? "2️⃣ Esma / Mathlub — اسم المطلوب" : "2️⃣ Esma / Talib İsmi — اسم الطالب"}
           </p>
           <input
             type="text"
@@ -217,6 +262,13 @@ export default function AnaVefk() {
                   {[0,1,2,3,4].map(i => esmaValue - 40 + i).join(", ")}
                 </span>
               </p>
+              {anaSayiNum && (
+                <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.45)" }}>
+                  Ana Vefk 20→24: <span className="font-amiri" style={{ color: G.text }}>
+                    {[0,1,2,3,4].map(i => anaSayiNum * (esmaValue - 40 + i)).join(", ")}
+                  </span>
+                </p>
+              )}
             </div>
           )}
           {esmaValue && esmaValue <= 40 && (
@@ -226,37 +278,20 @@ export default function AnaVefk() {
           )}
         </div>
 
-        {/* Center cell text (visual only) */}
-        <div className="rounded-xl border px-4 py-3 space-y-1.5"
-          style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.15)" }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            3️⃣ Merkez Hücre Metni (İsteğe Bağlı)
-          </p>
-          <input
-            type="text"
-            value={centerText}
-            onChange={e => setCenterText(e.target.value)}
-            placeholder="الله / Vedud / ..."
-            dir="rtl"
-            className="w-full rounded-xl px-4 py-2 font-amiri text-lg text-white text-right focus:outline-none caret-white placeholder:text-white/25"
-            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.12)` }}
-          />
-          <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.30)" }}>
-            Sadece görsel — merkez hücrede gösterilir, hesaplara dahil değil
-          </p>
-        </div>
-
         {/* Rule card */}
         <div className="rounded-xl border px-4 py-3 space-y-1"
           style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.18)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            📜 Hesap Kuralı — Ana Vefk Çarpım Usülü
+            📜 Hesap Kuralı — Ana Vefk
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Tanzim hücreleri <span style={{ color: G.text }}>Ana Sayı</span> ile çarpılır
+            Hane 1–19: <span style={{ color: G.text }}>Ana Sayı × konum (1...19)</span>
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Zikir Sayısı = <span style={{ color: G.text }}>Ana Sayı × Esma Değeri</span>
+            Hane 20–24: <span style={{ color: G.text }}>Ana Sayı × Tanzim değeri</span>
+          </p>
+          <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+            Zikir Sayısı / Magic Constant: <span style={{ color: G.text }}>Ana Sayı × Esma Değeri</span>
           </p>
           {canGenerate && anaSayiNum && esmaValue && (
             <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
@@ -271,11 +306,13 @@ export default function AnaVefk() {
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           className="w-full py-3 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
-            background: "linear-gradient(135deg,#fcd34d,#d97706)",
-            boxShadow: `0 0 24px ${G.glowHi}`
+            background: isMuahhir
+              ? "linear-gradient(135deg,#f87171,#b91c1c)"
+              : "linear-gradient(135deg,#fcd34d,#d97706)",
+            boxShadow: `0 0 24px ${isMuahhir ? "rgba(200,60,60,0.45)" : G.glowHi}`
           }}
         >
-          ✨ Ana Vefki Oluştur
+          {isMuahhir ? "🔻 Muahhir Vefki Oluştur" : "✨ Hâli Vasat Vefki Oluştur"}
         </motion.button>
       </div>
 
@@ -287,7 +324,11 @@ export default function AnaVefk() {
             initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
             className="rounded-2xl border p-5 space-y-4"
-            style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 32px ${G.glow}` }}
+            style={{
+              background: "rgba(4,8,24,0.99)",
+              borderColor: isMuahhir ? "rgba(200,60,60,0.50)" : G.borderHi,
+              boxShadow: `0 0 32px ${isMuahhir ? "rgba(200,60,60,0.18)" : G.glow}`
+            }}
           >
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 text-center">
@@ -309,20 +350,17 @@ export default function AnaVefk() {
 
             <GoldDivider />
             <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-              🜂 5×5 Hâli Vasat — Ana Vefk
+              🜂 5×5 Hâli Vasat — {isMuahhir ? "Muahhir" : "Ana Vefk"}
             </p>
 
-            <VefkGrid cells={cells} centerDisplay={centerText || null} />
+            <VefkGrid cells={cells} centerDisplay={savedEsmaRaw || null} />
 
             {/* Magic Constant / Zikir Count */}
             {magicConst && (
               <div className="rounded-xl border p-3 text-center"
                 style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.25)" }}>
                 <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                  ⚖ Magic Constant — Zikir Sayısı
-                </p>
-                <p className="font-inter text-[8px] mt-0.5" style={{ color: "rgba(212,175,55,0.45)" }}>
-                  {savedAna.toLocaleString()} × {savedEsma.toLocaleString()}
+                  ⚖ Zikir Sayısı / Magic Constant — {savedAna} × {savedEsma}
                 </p>
                 <motion.p className="font-amiri text-3xl font-bold mt-1" style={{ color: G.text }}
                   animate={{ textShadow: [`0 0 12px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 12px ${G.glow}`] }}
