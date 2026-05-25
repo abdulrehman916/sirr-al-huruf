@@ -11,8 +11,7 @@ const G = {
   border:   "rgba(212,175,55,0.40)",
 };
 
-// Fixed 5×5 Halî Vasat layout — null = center (empty)
-// Each cell stores its "position number" (1–24), center = null
+// Tabii sıralama — null = center (mathematically empty)
 const LAYOUT = [
   [11, 15, 24,  3,  7],
   [ 4,  8, 12, 16, 20],
@@ -21,13 +20,11 @@ const LAYOUT = [
   [23,  2,  6, 10, 19],
 ];
 
-// Given base number, compute value for each position 1–24
-// All 24 positions follow the same rule: base × sıra_numarası (1 through 24)
-// This ensures the Halî Vasat 5×5 grid (center empty) is always balanced.
-function computeCells(base) {
+// effectiveBase × tabii position for each of the 24 cells
+function computeCells(effectiveBase) {
   const cells = {};
   for (let pos = 1; pos <= 24; pos++) {
-    cells[pos] = base * pos;
+    cells[pos] = effectiveBase * pos;
   }
   return cells;
 }
@@ -51,7 +48,7 @@ function TanzimGrid({ cells, esmaText }) {
           const isEmpty = pos === null;
           const val = isEmpty ? null : cells[pos];
           const display = val != null ? val.toLocaleString() : null;
-          const fontSize = display && display.length > 9 ? "8px"
+          const fontSize = display && display.length > 9 ? "7px"
             : display && display.length > 6 ? "9px"
             : display && display.length > 4 ? "11px" : "13px";
           return (
@@ -99,38 +96,91 @@ function TanzimGrid({ cells, esmaText }) {
   );
 }
 
+// Row/col/diag sums — center cell excluded (pos=null → skip)
+function getLineSums(cells) {
+  const sum = (positions) => positions.reduce((a, p) => a + (p === null ? 0 : cells[p]), 0);
+
+  const rows = LAYOUT.map(row => sum(row));
+
+  const cols = [0, 1, 2, 3, 4].map(c =>
+    sum(LAYOUT.map(row => row[c]))
+  );
+
+  // Diagonals skip center [2][2]
+  const diag1 = sum([LAYOUT[0][0], LAYOUT[1][1], LAYOUT[3][3], LAYOUT[4][4]]);
+  const diag2 = sum([LAYOUT[0][4], LAYOUT[1][3], LAYOUT[3][1], LAYOUT[4][0]]);
+
+  return { rows, cols, diag1, diag2 };
+}
+
+function VerificationPanel({ cells, effectiveBase, magicConst }) {
+  const { rows, cols, diag1, diag2 } = getLineSums(cells);
+
+  const Check = ({ label, value, target }) => {
+    const ok = value === target;
+    return (
+      <div className="flex items-center justify-between rounded-lg px-3 py-1.5"
+        style={{ background: ok ? "rgba(80,200,80,0.06)" : "rgba(255,80,80,0.06)", border: `1px solid ${ok ? "rgba(80,200,80,0.20)" : "rgba(255,80,80,0.20)"}` }}>
+        <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.55)" }}>{label}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-amiri text-sm font-bold" style={{ color: ok ? "#86efac" : "rgba(255,120,120,0.90)" }}>
+            {value.toLocaleString()}
+          </span>
+          <span style={{ fontSize: "10px" }}>{ok ? "✓" : "✗"}</span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+      className="rounded-xl border p-4 space-y-2"
+      style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(212,175,55,0.22)" }}
+    >
+      <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+        ⚖ Satır / Sütun / Köşegen — Verification
+      </p>
+      <div className="grid grid-cols-1 gap-1.5">
+        {rows.map((r, i) => <Check key={`r${i}`} label={`Satır ${i + 1}`} value={r} target={magicConst} />)}
+        {cols.map((c, i) => <Check key={`c${i}`} label={`Sütun ${i + 1}`} value={c} target={magicConst} />)}
+        <Check label="Köşegen ↘" value={diag1} target={magicConst} />
+        <Check label="Köşegen ↗" value={diag2} target={magicConst} />
+      </div>
+    </motion.div>
+  );
+}
+
 export default function TanzimVefki() {
   const [mainNum,  setMainNum]  = useState("");
   const [esmaText, setEsmaText] = useState("");
+  const [showVerify, setShowVerify] = useState(false);
 
-  const base = mainNum ? parseInt(mainNum) : null;
+  const inputBase = mainNum ? parseInt(mainNum) : null;
+
+  // Auto-square if base ≤ 40
+  const effectiveBase = inputBase
+    ? (inputBase <= 40 ? inputBase * inputBase : inputBase)
+    : null;
+
+  const wasSquared = inputBase && inputBase <= 40;
 
   const cells = useMemo(() => {
-    if (!base || isNaN(base) || base < 1) return null;
-    return computeCells(base);
-  }, [base]);
+    if (!effectiveBase || effectiveBase < 1) return null;
+    return computeCells(effectiveBase);
+  }, [effectiveBase]);
 
-  // Magic constant = ilk satır toplamı + validation
-  const magicConstant = useMemo(() => {
-    if (!cells) return null;
-    const row1 = LAYOUT[0].reduce((a, pos) => a + cells[pos], 0);
-    const row2 = LAYOUT[1].reduce((a, pos) => a + cells[pos], 0);
-    const row3 = LAYOUT[2].reduce((a, pos) => a + cells[pos], 0);
-    const row4 = LAYOUT[3].reduce((a, pos) => a + cells[pos], 0);
-    const row5 = LAYOUT[4].reduce((a, pos) => a + cells[pos], 0);
-    const col1 = [LAYOUT[0][0], LAYOUT[1][0], LAYOUT[2][0], LAYOUT[3][0], LAYOUT[4][0]].reduce((a, p) => a + cells[p], 0);
-    const col2 = [LAYOUT[0][1], LAYOUT[1][1], LAYOUT[2][1], LAYOUT[3][1], LAYOUT[4][1]].reduce((a, p) => a + cells[p], 0);
-    const col3 = [LAYOUT[0][2], LAYOUT[1][2], LAYOUT[3][2], LAYOUT[4][2]].reduce((a, p) => a + cells[p], 0);
-    const col4 = [LAYOUT[0][3], LAYOUT[1][3], LAYOUT[2][3], LAYOUT[3][3], LAYOUT[4][3]].reduce((a, p) => a + cells[p], 0);
-    const col5 = [LAYOUT[0][4], LAYOUT[1][4], LAYOUT[2][4], LAYOUT[3][4], LAYOUT[4][4]].reduce((a, p) => a + cells[p], 0);
-    const diag1 = [LAYOUT[0][0], LAYOUT[1][1], LAYOUT[3][3], LAYOUT[4][4]].reduce((a, p) => a + cells[p], 0);
-    const diag2 = [LAYOUT[0][4], LAYOUT[1][3], LAYOUT[3][1], LAYOUT[4][0]].reduce((a, p) => a + cells[p], 0);
-    // All should equal row1 (magic constant)
-    const valid = row2 === row1 && row3 === row1 && row4 === row1 && row5 === row1 &&
-                  col1 === row1 && col2 === row1 && col3 === row1 && col4 === row1 && col5 === row1 &&
-                  diag1 === row1 && diag2 === row1;
-    return valid ? row1 : null;
-  }, [cells]);
+  // Magic constant = effectiveBase²
+  const magicConst = effectiveBase ? effectiveBase * effectiveBase : null;
+
+  // Verify all lines equal magicConst
+  const isBalanced = useMemo(() => {
+    if (!cells || !magicConst) return false;
+    const { rows, cols, diag1, diag2 } = getLineSums(cells);
+    return rows.every(r => r === magicConst) &&
+           cols.every(c => c === magicConst) &&
+           diag1 === magicConst && diag2 === magicConst;
+  }, [cells, magicConst]);
 
   return (
     <div className="space-y-4">
@@ -150,9 +200,9 @@ export default function TanzimVefki() {
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
             تنظيم
           </motion.h2>
-          <p className="font-inter text-[10px] font-bold text-white">TANZİM</p>
+          <p className="font-inter text-[10px] font-bold text-white">TANZİM VEFKİ</p>
           <p className="font-inter text-[9px] uppercase tracking-[0.22em]" style={{ color: G.dim }}>
-            Halî Vasat Tanzim System
+            Hâli Vasat — 2. Usül
           </p>
           <GoldDivider />
           <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.30)" }}>
@@ -162,23 +212,31 @@ export default function TanzimVefki() {
 
         {/* Inputs */}
         <div className="space-y-3">
-          {/* Main number */}
+          {/* Base number */}
           <div className="rounded-xl border px-4 py-3 space-y-1.5"
             style={{ background: "rgba(4,10,28,0.99)", borderColor: G.border }}>
             <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-              1️⃣ Ana Sayı — الرقم الأساسي
+              1️⃣ Baz Sayı — الرقم الأساسي
             </p>
             <input
               type="text" inputMode="numeric"
               value={mainNum}
               onChange={e => setMainNum(e.target.value.replace(/[^\d]/g, ""))}
-              placeholder="Sayı girin... (örn: 114, 786)"
+              placeholder="Sayı girin... (örn: 252, 20, 114)"
               className="w-full rounded-xl px-4 py-2.5 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
               style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
             />
-            {base && base < 1 && (
-              <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,100,100,0.70)" }}>
-                ⚠ Geçerli bir sayı girin
+            {/* Auto-square notice */}
+            {wasSquared && inputBase && effectiveBase && (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="font-inter text-[9px] text-center"
+                style={{ color: "rgba(212,175,55,0.75)" }}>
+                ✦ {inputBase} ≤ 40 → otomatik karesi alındı: <span className="font-amiri font-bold" style={{ color: G.text }}>{inputBase}² = {effectiveBase.toLocaleString()}</span>
+              </motion.p>
+            )}
+            {effectiveBase && !wasSquared && (
+              <p className="font-inter text-[9px] text-center" style={{ color: "rgba(212,175,55,0.45)" }}>
+                Efektif Baz: <span className="font-amiri font-bold" style={{ color: G.text }}>{effectiveBase.toLocaleString()}</span>
               </p>
             )}
           </div>
@@ -199,24 +257,30 @@ export default function TanzimVefki() {
               style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.15)` }}
             />
             <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.30)" }}>
-              Girilirse ortadaki hücrede gösterilir — Shown in center cell if entered
+              Sadece görsel — Shown in center cell only (no math effect)
             </p>
           </div>
         </div>
 
-        {/* Rule explanation card */}
+        {/* Rule explanation */}
         <div className="rounded-xl border px-4 py-3 space-y-1.5"
           style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.18)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            📜 Hesap Kuralı — Calculation Rule
+            📜 Hesap Kuralı — 2. Usül
           </p>
           <div className="space-y-1">
             <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-              Hane 1–24: <span style={{ color: G.text }}>Ana Sayı × sıra numarası (1, 2, 3 … 24)</span>
+              Hücre = <span style={{ color: G.text }}>Efektif Baz × Tabii Konum (1–24)</span>
             </p>
-            {base && base >= 1 && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+              Magic Constant = <span style={{ color: G.text }}>Efektif Baz²</span>
+            </p>
+            <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+              Baz ≤ 40 ise → <span style={{ color: G.text }}>önce karesi alınır</span>
+            </p>
+            {effectiveBase && (
               <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
-                Örnek: {base}×1={base}, {base}×12={base*12}, {base}×24={base*24}
+                {effectiveBase}² = {(effectiveBase * effectiveBase).toLocaleString()} · Örnek: {effectiveBase}×11={effectiveBase * 11}, {effectiveBase}×24={effectiveBase * 24}
               </p>
             )}
           </div>
@@ -224,34 +288,80 @@ export default function TanzimVefki() {
 
         {/* Grid output */}
         <AnimatePresence mode="wait">
-          {cells ? (
-            <motion.div key={`tanzim-${base}`}
+          {cells && effectiveBase ? (
+            <motion.div key={`tanzim-${effectiveBase}`}
               initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }} transition={{ duration: 0.35 }}
               className="space-y-4"
             >
               <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
               <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-                ✨ Halî Vasat Tanzim Vefki
+                ✨ Hâli Vasat Tanzim Vefki
               </p>
 
               <TanzimGrid cells={cells} esmaText={esmaText} />
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-2 text-center">
-                <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Ana Sayı</p>
-                  <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>{base.toLocaleString()}</p>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Baz Sayı</p>
+                  <p className="font-amiri text-lg font-bold leading-tight" style={{ color: G.text }}>{inputBase?.toLocaleString()}</p>
                 </div>
-                <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-                    {magicConstant ? "Magic Constant ✓" : "⚠ Dengesiz"}
+                <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Efektif Baz</p>
+                  <p className="font-amiri text-lg font-bold leading-tight" style={{ color: G.text }}>{effectiveBase.toLocaleString()}</p>
+                </div>
+                <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: `1px solid ${isBalanced ? "rgba(80,200,80,0.30)" : "rgba(255,80,80,0.30)"}` }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>
+                    {isBalanced ? "Magic ✓" : "⚠ Hata"}
                   </p>
-                  <p className="font-amiri text-sm font-bold leading-tight" style={{ color: magicConstant ? G.text : "rgba(255,100,100,0.80)" }}>
-                    {magicConstant ? magicConstant.toLocaleString() : "Hata"}
+                  <p className="font-amiri text-sm font-bold leading-tight" style={{ color: isBalanced ? G.text : "rgba(255,100,100,0.80)" }}>
+                    {magicConst?.toLocaleString()}
                   </p>
                 </div>
               </div>
+
+              {/* Magic constant display */}
+              {isBalanced && magicConst && (
+                <div className="rounded-xl border p-3 text-center"
+                  style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.25)" }}>
+                  <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                    ⚖ Kutsal Sabit — {effectiveBase}² = Magic Constant
+                  </p>
+                  <motion.p className="font-amiri text-3xl font-bold mt-1" style={{ color: G.text }}
+                    animate={{ textShadow: [`0 0 12px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 12px ${G.glow}`] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+                    {magicConst.toLocaleString()}
+                  </motion.p>
+                </div>
+              )}
+
+              {/* Verification toggle */}
+              <button
+                onClick={() => setShowVerify(v => !v)}
+                className="w-full rounded-xl py-2 font-inter text-[9px] uppercase tracking-widest transition-all"
+                style={{
+                  background: showVerify ? "rgba(212,175,55,0.10)" : "rgba(212,175,55,0.04)",
+                  border: `1px solid ${showVerify ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.15)"}`,
+                  color: showVerify ? G.text : G.dim,
+                }}
+              >
+                {showVerify ? "▲ Doğrulamayı Gizle" : "▼ Satır/Sütun/Köşegen Doğrula"}
+              </button>
+
+              <AnimatePresence>
+                {showVerify && (
+                  <motion.div
+                    key="verify"
+                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <VerificationPanel cells={cells} effectiveBase={effectiveBase} magicConst={magicConst} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
             </motion.div>
           ) : (
             <motion.div key="tanzim-placeholder"
@@ -263,7 +373,7 @@ export default function TanzimVefki() {
                 animate={{ opacity: [0.12, 0.40, 0.12] }}
                 transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>✨</motion.span>
               <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.22)" }}>
-                Ana sayıyı girerek tanzim vefkini oluşturun
+                Baz sayıyı girerek tanzim vefkini oluşturun
               </p>
             </motion.div>
           )}
