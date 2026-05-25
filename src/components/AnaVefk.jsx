@@ -17,8 +17,15 @@ const ABJAD_MAP = {
   'ي':10,'ى':10,'ك':20,'ل':30,'م':40,'ن':50,'س':60,'ع':70,'ف':80,'ص':90,
   'ق':100,'ر':200,'ش':300,'ت':400,'ث':500,'خ':600,'ذ':700,'ض':800,'ظ':900,'غ':1000,
 };
-function anaEbced(t) {
+function toAbjad(t) {
   return [...t].reduce((s, c) => s + (ABJAD_MAP[c] || 0), 0);
+}
+function resolveValue(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (/^\d+$/.test(trimmed)) return parseInt(trimmed);
+  const v = toAbjad(trimmed);
+  return v > 0 ? v : null;
 }
 
 // ── Ottoman 5×5 layout — null = center ──────────────────────────
@@ -30,18 +37,22 @@ const LAYOUT = [
   [23,  2,  6, 10, 19],
 ];
 
-// ── Ana Vefk cell formula ─────────────────────────────────────────
-// Cells 1–19: anaSayi × position
-// Cells 20–24: anaSayi × (esmaValue − 40 + offset)
-// Magic Constant / Zikir: anaSayi × esmaValue
-function computeAnaVefkCells(anaSayi, esmaValue) {
+// ── Tanzim positions 1–24 ─────────────────────────────────────────
+// Tanzim values: 1–19 = their position number
+//                20 = esmaValue − 40
+//                21 = esmaValue − 39
+//                ...
+//                24 = esmaValue − 36
+function tanzimValue(pos, esmaValue) {
+  if (pos <= 19) return pos;
+  return (esmaValue - 40) + (pos - 20);
+}
+
+// ── Ana Vefk cells: FinalCell = tanzimValue × baseNumber ─────────
+function computeAnaVefkCells(baseNumber, esmaValue) {
   const cells = {};
-  for (let pos = 1; pos <= 19; pos++) {
-    cells[pos] = anaSayi * pos;
-  }
-  const base20 = esmaValue - 40;
-  for (let pos = 20; pos <= 24; pos++) {
-    cells[pos] = anaSayi * (base20 + (pos - 20));
+  for (let pos = 1; pos <= 24; pos++) {
+    cells[pos] = tanzimValue(pos, esmaValue) * baseNumber;
   }
   return cells;
 }
@@ -113,35 +124,75 @@ function VefkGrid({ cells, centerDisplay }) {
   );
 }
 
+function InputField({ label, value, onChange, placeholder, isTextOnly }) {
+  return (
+    <div className="rounded-xl border px-4 py-3 space-y-1.5"
+      style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
+      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</p>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        dir="auto"
+        className="w-full rounded-xl px-4 py-2 font-amiri text-lg text-white text-right focus:outline-none caret-white placeholder:text-white/25"
+        style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.15)` }}
+      />
+      {!isTextOnly && (() => {
+        const trimmed = value.trim();
+        if (!trimmed || /^\d+$/.test(trimmed)) return null;
+        const ebced = toAbjad(trimmed);
+        if (ebced <= 0) return null;
+        return (
+          <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
+            ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{ebced.toLocaleString()}</span>
+          </p>
+        );
+      })()}
+    </div>
+  );
+}
+
 export default function AnaVefk() {
-  const [anaSayi,      setAnaSayi]      = useState("");
-  const [esmaRaw,      setEsmaRaw]      = useState("");
-  const [cells,        setCells]        = useState(null);
-  const [savedAna,     setSavedAna]     = useState(null);
-  const [savedEsma,    setSavedEsma]    = useState(null);
-  const [savedEsmaRaw, setSavedEsmaRaw] = useState("");
+  const [talibRaw,    setTalibRaw]    = useState("");
+  const [mathloobRaw, setMathloobRaw] = useState("");
+  const [esmaRaw,     setEsmaRaw]     = useState("");
+  const [niyyat,      setNiyyat]      = useState("");
+  const [centerChoice, setCenterChoice] = useState("esma"); // "talib"|"mathloob"|"esma"|"niyyat"
+  const [result,      setResult]      = useState(null);
 
-  // ── Resolve Ana Sayı ──────────────────────────────────────────
-  const anaSayiNum = anaSayi.trim() ? parseInt(anaSayi.trim()) : null;
+  const talibVal    = resolveValue(talibRaw);
+  const mathloobVal = resolveValue(mathloobRaw);
+  const esmaVal     = resolveValue(esmaRaw);
 
-  // ── Resolve Esma value: number → direct, text → Ebced ─────────
-  const esmaTrimmed   = esmaRaw.trim();
-  const esmaIsNumeric = /^\d+$/.test(esmaTrimmed);
-  const esmaEbced     = (!esmaIsNumeric && esmaTrimmed) ? anaEbced(esmaTrimmed) : null;
-  const esmaValue     = esmaTrimmed
-    ? (esmaIsNumeric ? parseInt(esmaTrimmed) : esmaEbced)
+  const baseNumber = (talibVal && mathloobVal)
+    ? talibVal + mathloobVal + (esmaVal || 0)
     : null;
 
-  const canGenerate = anaSayiNum && anaSayiNum >= 1 && esmaValue && esmaValue > 40;
-  const magicConst  = (savedAna && savedEsma) ? savedAna * savedEsma : null;
+  const canGenerate = baseNumber && esmaVal && esmaVal > 40;
 
   const handleGenerate = () => {
     if (!canGenerate) return;
-    setCells(computeAnaVefkCells(anaSayiNum, esmaValue));
-    setSavedAna(anaSayiNum);
-    setSavedEsma(esmaValue);
-    setSavedEsmaRaw(esmaTrimmed);
+    setResult({
+      cells:      computeAnaVefkCells(baseNumber, esmaVal),
+      baseNumber,
+      esmaVal,
+      talibVal,
+      mathloobVal,
+      talibRaw:    talibRaw.trim(),
+      mathloobRaw: mathloobRaw.trim(),
+      esmaRaw:     esmaRaw.trim(),
+      niyyat:      niyyat.trim(),
+      zikirCount:  baseNumber * esmaVal,
+    });
   };
+
+  const centerText = result ? {
+    talib:    result.talibRaw,
+    mathloob: result.mathloobRaw,
+    esma:     result.esmaRaw,
+    niyyat:   result.niyyat,
+  }[centerChoice] || "" : "";
 
   return (
     <div className="space-y-4">
@@ -168,67 +219,39 @@ export default function AnaVefk() {
           <GoldDivider />
         </div>
 
-        {/* Ana Sayı */}
-        <div className="rounded-xl border px-4 py-3 space-y-1.5"
-          style={{ background: "rgba(4,10,28,0.99)", borderColor: G.border }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            1️⃣ Ana Sayı (Çarpan) — الرقم الأساسي
-          </p>
-          <input
-            type="text" inputMode="numeric"
-            value={anaSayi}
-            onChange={e => setAnaSayi(e.target.value.replace(/[^\d]/g, ""))}
-            placeholder="Sayı girin... (örn: 66, 114, 252)"
-            className="w-full rounded-xl px-4 py-2.5 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
-            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
-          />
-        </div>
+        {/* Inputs */}
+        <InputField label="1️⃣ Talib — الطالب" value={talibRaw} onChange={setTalibRaw} placeholder="İsim veya sayı..." />
+        <InputField label="2️⃣ Mathloob — المطلوب" value={mathloobRaw} onChange={setMathloobRaw} placeholder="İsim veya sayı..." />
+        <InputField label="3️⃣ Esma (İsteğe Bağlı) — الاسم" value={esmaRaw} onChange={setEsmaRaw} placeholder="İsim, Esma veya sayı..." />
+        <InputField label="4️⃣ Niyyat (Görsel) — النية" value={niyyat} onChange={setNiyyat} placeholder="Niyet metni..." isTextOnly />
 
-        {/* Esma / Talib */}
-        <div className="rounded-xl border px-4 py-3 space-y-1.5"
-          style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            2️⃣ Esma / Talib İsmi — اسم الطالب
-          </p>
-          <input
-            type="text"
-            value={esmaRaw}
-            onChange={e => setEsmaRaw(e.target.value)}
-            placeholder="İsim / Esma / الله / 114..."
-            dir="auto"
-            className="w-full rounded-xl px-4 py-2 font-amiri text-lg text-white text-right focus:outline-none caret-white placeholder:text-white/25"
-            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.15)` }}
-          />
-          {esmaEbced !== null && esmaEbced > 0 && (
-            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
-              ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{esmaEbced.toLocaleString()}</span>
+        {/* Base number preview */}
+        {baseNumber && (
+          <div className="rounded-xl border px-4 py-3 space-y-1"
+            style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.20)" }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+              📐 Base Number Hesabı
             </p>
-          )}
-          {esmaValue && esmaValue > 40 && (
-            <div className="rounded-lg px-3 py-2 space-y-1" style={{ background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.15)" }}>
-              <p className="font-inter text-[9px]" style={{ color: G.dim }}>
-                Esma Değeri: <span className="font-amiri font-bold" style={{ color: G.text }}>{esmaValue.toLocaleString()}</span>
-              </p>
+            <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Talib <span style={{ color: G.text }}>{talibVal}</span>
+              {" + "} Mathloob <span style={{ color: G.text }}>{mathloobVal}</span>
+              {esmaVal ? <> {" + "} Esma <span style={{ color: G.text }}>{esmaVal}</span></> : null}
+              {" = "}<span className="font-amiri font-bold" style={{ color: G.text }}>{baseNumber.toLocaleString()}</span>
+            </p>
+            {esmaVal && esmaVal > 40 && (
               <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.45)" }}>
                 Tanzim 20→24: <span className="font-amiri" style={{ color: G.text }}>
-                  {[0,1,2,3,4].map(i => esmaValue - 40 + i).join(", ")}
+                  {[0,1,2,3,4].map(i => esmaVal - 40 + i).join(", ")}
                 </span>
               </p>
-              {anaSayiNum && (
-                <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.45)" }}>
-                  Ana Vefk 20→24: <span className="font-amiri" style={{ color: G.text }}>
-                    {[0,1,2,3,4].map(i => anaSayiNum * (esmaValue - 40 + i)).join(", ")}
-                  </span>
-                </p>
-              )}
-            </div>
-          )}
-          {esmaValue && esmaValue <= 40 && (
-            <p className="font-inter text-[9px]" style={{ color: "rgba(255,160,80,0.80)" }}>
-              ⚠ Esma değeri 40'tan büyük olmalı
-            </p>
-          )}
-        </div>
+            )}
+            {esmaVal && esmaVal <= 40 && (
+              <p className="font-inter text-[9px]" style={{ color: "rgba(255,160,80,0.80)" }}>
+                ⚠ Esma değeri 40'tan büyük olmalı
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Rule card */}
         <div className="rounded-xl border px-4 py-3 space-y-1"
@@ -237,19 +260,17 @@ export default function AnaVefk() {
             📜 Hesap Kuralı — Ana Vefk
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Hane 1–19: <span style={{ color: G.text }}>Ana Sayı × konum (1...19)</span>
+            Base: <span style={{ color: G.text }}>Talib + Mathloob (+ Esma)</span>
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Hane 20–24: <span style={{ color: G.text }}>Ana Sayı × Tanzim değeri</span>
+            Hane 1–19: <span style={{ color: G.text }}>konum × Base</span>
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Zikir Sayısı / Magic Constant: <span style={{ color: G.text }}>Ana Sayı × Esma Değeri</span>
+            Hane 20–24: <span style={{ color: G.text }}>(Esma−40+i) × Base</span>
           </p>
-          {canGenerate && anaSayiNum && esmaValue && (
-            <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
-              {anaSayiNum} × {esmaValue} = {(anaSayiNum * esmaValue).toLocaleString()}
-            </p>
-          )}
+          <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+            Zikir: <span style={{ color: G.text }}>Base × Esma</span>
+          </p>
         </div>
 
         <motion.button
@@ -265,9 +286,9 @@ export default function AnaVefk() {
 
       {/* Result */}
       <AnimatePresence>
-        {cells && savedAna && savedEsma ? (
+        {result && (
           <motion.div
-            key={`ana-vefk-${savedAna}-${savedEsma}`}
+            key={`ana-vefk-${result.baseNumber}-${result.esmaVal}`}
             initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
             className="rounded-2xl border p-5 space-y-4"
@@ -276,18 +297,43 @@ export default function AnaVefk() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Ana Sayı</p>
-                <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{savedAna.toLocaleString()}</p>
+                <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Base Sayı</p>
+                <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{result.baseNumber.toLocaleString()}</p>
               </div>
               <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
                 <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Esma Değeri</p>
-                <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{savedEsma.toLocaleString()}</p>
+                <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{result.esmaVal.toLocaleString()}</p>
               </div>
               <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
                 <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Zikir Sayısı</p>
                 <p className="font-amiri text-sm font-bold leading-tight" style={{ color: G.text }}>
-                  {magicConst?.toLocaleString()}
+                  {result.zikirCount.toLocaleString()}
                 </p>
+              </div>
+            </div>
+
+            {/* Center cell selector */}
+            <div className="space-y-1">
+              <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+                Merkez Hücre Gösterimi
+              </p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { id: "talib",    label: "Talib" },
+                  { id: "mathloob", label: "Mathloob" },
+                  { id: "esma",     label: "Esma" },
+                  { id: "niyyat",   label: "Niyyat" },
+                ].map(opt => (
+                  <button key={opt.id} onClick={() => setCenterChoice(opt.id)}
+                    className="rounded-lg py-1.5 font-inter text-[9px] border transition-all"
+                    style={{
+                      background: centerChoice === opt.id ? G.bg : "rgba(4,12,34,0.97)",
+                      borderColor: centerChoice === opt.id ? G.borderHi : "rgba(255,255,255,0.08)",
+                      color: centerChoice === opt.id ? G.text : "rgba(255,255,255,0.35)",
+                    }}>
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -296,38 +342,36 @@ export default function AnaVefk() {
               🜂 5×5 Hâli Vasat — Ana Vefk
             </p>
 
-            <VefkGrid cells={cells} centerDisplay={savedEsmaRaw || null} />
+            <VefkGrid cells={result.cells} centerDisplay={centerText || null} />
 
-            {/* Magic Constant / Zikir Count */}
-            {magicConst && (
-              <div className="rounded-xl border p-3 text-center"
-                style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.25)" }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                  ⚖ Zikir Sayısı / Magic Constant — {savedAna} × {savedEsma}
-                </p>
-                <motion.p className="font-amiri text-3xl font-bold mt-1" style={{ color: G.text }}
-                  animate={{ textShadow: [`0 0 12px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 12px ${G.glow}`] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-                  {magicConst.toLocaleString()}
-                </motion.p>
-              </div>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div key="hali-placeholder"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="rounded-xl border p-8 flex flex-col items-center gap-3"
-            style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(212,175,55,0.12)" }}
-          >
-            <motion.span style={{ fontSize: "1.8rem", color: "rgba(212,175,55,0.18)" }}
-              animate={{ opacity: [0.12, 0.40, 0.12] }}
-              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>📜</motion.span>
-            <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.22)" }}>
-              Ana sayı ve esma girerek vefki oluşturun
-            </p>
+            {/* Zikir Count */}
+            <div className="rounded-xl border p-3 text-center"
+              style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.25)" }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                ⚖ Zikir Sayısı — {result.baseNumber} × {result.esmaVal}
+              </p>
+              <motion.p className="font-amiri text-3xl font-bold mt-1" style={{ color: G.text }}
+                animate={{ textShadow: [`0 0 12px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 12px ${G.glow}`] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+                {result.zikirCount.toLocaleString()}
+              </motion.p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {!result && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="rounded-xl border p-8 flex flex-col items-center gap-3"
+          style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(212,175,55,0.12)" }}>
+          <motion.span style={{ fontSize: "1.8rem", color: "rgba(212,175,55,0.18)" }}
+            animate={{ opacity: [0.12, 0.40, 0.12] }}
+            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>📜</motion.span>
+          <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.22)" }}>
+            Talib, Mathloob ve Esma girerek vefki oluşturun
+          </p>
+        </motion.div>
+      )}
     </div>
   );
 }
