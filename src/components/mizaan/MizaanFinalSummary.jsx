@@ -34,7 +34,11 @@ const KHAYR_SHARR_8 = {
 
 function countArabicLetters(str) {
   if (!str) return 0;
-  return (str.match(/[\u0600-\u06FF]/g) || []).length;
+  // Remove diacritics/harakat (U+0610–U+065F, U+0670) then count base Arabic letters only
+  const clean = str
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '')
+    .replace(/[^\u0600-\u06FF]/g, '');
+  return clean.length;
 }
 
 // ─── Individual Mizaan Row ───────────────────────────────────────
