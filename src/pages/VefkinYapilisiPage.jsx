@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import TanzimVefki from "../components/TanzimVefki";
 import AnaVefk from "../components/AnaVefk";
-import HaliVasat2Usul from "../components/HaliVasat2Usul";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -24,9 +23,8 @@ function GoldDivider() {
 }
 
 const TABS = [
-  { id: "ana",    label: "📜 Ana Vefk",       arabic: "الوفق الأصلي" },
-  { id: "tanzim", label: "✨ Tanzim Vefki",    arabic: "تنظيم الوفق" },
-  { id: "hv2",    label: "⬡ Hâli Vasat 2",   arabic: "الوسط الحالي" },
+  { id: "ana",    label: "📜 Ana Vefk",    arabic: "الوفق الأصلي" },
+  { id: "tanzim", label: "✨ Tanzim Vefki", arabic: "تنظيم الوفق" },
 ];
 
 export default function VefkinYapilisiPage() {
@@ -51,7 +49,7 @@ export default function VefkinYapilisiPage() {
         </div>
 
         {/* Tab switcher */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {TABS.map(tab => {
             const active = activeTab === tab.id;
             return (
@@ -86,7 +84,7 @@ export default function VefkinYapilisiPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
           >
-            {activeTab === "ana" ? <AnaVefk /> : activeTab === "tanzim" ? <TanzimVefki /> : <HaliVasat2Usul />}
+            {activeTab === "ana" ? <AnaVefk /> : <TanzimVefki />}
           </motion.div>
         </AnimatePresence>
 
