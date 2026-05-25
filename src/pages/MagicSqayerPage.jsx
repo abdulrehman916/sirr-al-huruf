@@ -23,10 +23,10 @@ const GRID_SIZES = [
 ];
 
 const ELEMENTS = [
-  { key: "fire",  arabic: "النار",  icon: "🔥", color: "#FF6B35", glow: "rgba(255,107,53,0.35)", bg: "rgba(255,107,53,0.10)", border: "rgba(255,107,53,0.50)" },
-  { key: "earth", arabic: "التراب", icon: "🌍", color: "#A5C880", glow: "rgba(165,200,128,0.35)", bg: "rgba(165,200,128,0.10)", border: "rgba(165,200,128,0.50)" },
-  { key: "air",   arabic: "الهواء", icon: "🌪",  color: "#B2EBF2", glow: "rgba(178,235,242,0.35)", bg: "rgba(178,235,242,0.10)", border: "rgba(178,235,242,0.50)" },
-  { key: "water", arabic: "الماء",  icon: "💧", color: "#4FC3F7", glow: "rgba(79,195,247,0.35)",  bg: "rgba(79,195,247,0.10)",  border: "rgba(79,195,247,0.50)" },
+  { key: "earth", arabic: "التراب",  icon: "🌍", color: "#A5C880", glow: "rgba(165,200,128,0.35)", bg: "rgba(165,200,128,0.10)", border: "rgba(165,200,128,0.50)", label: "Toprak" },
+  { key: "fire",  arabic: "النار",   icon: "🔥", color: "#FF6B35", glow: "rgba(255,107,53,0.35)", bg: "rgba(255,107,53,0.10)", border: "rgba(255,107,53,0.50)", label: "Ateş" },
+  { key: "air",   arabic: "الهواء",  icon: "🌬", color: "#B2EBF2", glow: "rgba(178,235,242,0.35)", bg: "rgba(178,235,242,0.10)", border: "rgba(178,235,242,0.50)", label: "Hava" },
+  { key: "water", arabic: "الماء",   icon: "💧", color: "#4FC3F7", glow: "rgba(79,195,247,0.35)", bg: "rgba(79,195,247,0.10)", border: "rgba(79,195,247,0.50)", label: "Su" },
 ];
 
 const PLANETS = [
@@ -40,11 +40,12 @@ const PLANETS = [
 ];
 
 // ── Sacred Patterns ──────────────────────────────────────────────
+// Authentic Ottoman 4 Elemental 3×3 Sacred Patterns
 const PATTERNS_3x3 = {
-  fire:  [8, 6, 4, 3, 5, 7, 4, 9, 2],
-  earth: [4, 9, 2, 3, 5, 7, 8, 1, 6],
-  air:   [2, 7, 6, 9, 5, 1, 4, 3, 8],
-  water: [6, 7, 2, 1, 5, 9, 8, 3, 4],
+  earth: [4, 9, 2, 3, 5, 7, 8, 1, 6],  // 🌍 Toprak
+  fire:  [8, 3, 4, 1, 5, 9, 6, 7, 2],  // 🔥 Ateş
+  air:   [6, 1, 8, 7, 5, 3, 2, 9, 4],  // 🌬 Hava
+  water: [2, 7, 6, 9, 5, 1, 4, 3, 8],  // 💧 Su
 };
 
 const ELEMENT_PATTERNS_4x4 = {
@@ -486,6 +487,11 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
             <span className="font-amiri text-sm" style={{ color: elMeta?.color || G.dim }}>
               {elMeta?.arabic || "التراب"}
             </span>
+            {elMeta && (
+              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+                · {elMeta.label}
+              </span>
+            )}
             {isGenerated && inputNumber && (
               <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
                 · Base {Math.floor((parseInt(inputNumber) - 15) / 3)}
