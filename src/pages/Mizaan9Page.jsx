@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
-import { getDominantPurpose, DAY_PLANET_MAP } from "../lib/mizaan9Data";
+import { DAY_PLANET_MAP } from "../lib/mizaan9Data";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
 import Mizaan3      from "../components/mizaan/Mizaan3";
@@ -56,7 +56,7 @@ function buildDefaultSelections(dominant) {
     hour:       (Math.floor(new Date().getHours() / 2) % 12) + 1,
     days:       ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()],
     planet:     DAY_PLANET_MAP[['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]] ?? null,
-    purposes:   dominant ? (getDominantPurpose(dominant) ? [getDominantPurpose(dominant)] : []) : [],
+    purposes:   null,
     daynight:   getTimeBasedDayNight(),
   };
 }
@@ -66,7 +66,8 @@ export default function Mizaan9Page() {
   const [result,      setResult]      = useState(null);
   const [loading,     setLoading]     = useState(false);
   const [progress,    setProgress]    = useState(0);
-  const [selections,  setSelections]  = useState(buildDefaultSelections(null));
+  const [selections,    setSelections]    = useState(buildDefaultSelections(null));
+  const [customPurpose, setCustomPurpose] = useState("");
   const abortRef = useRef(false);
 
   const handleAnalyze = useCallback(async () => {
@@ -203,9 +204,10 @@ export default function Mizaan9Page() {
               />
               <MizaanDivider />
               <Mizaan7
-                dominant={result.dominant}
                 selected={selections.purposes}
                 onChange={updateSel("purposes")}
+                customPurpose={customPurpose}
+                onCustomPurpose={setCustomPurpose}
               />
               <MizaanDivider />
               <Mizaan8

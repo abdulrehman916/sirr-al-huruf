@@ -1,18 +1,11 @@
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
-import { MIZAAN_PURPOSES, getDominantPurpose } from "../../lib/mizaan9Data";
+import { MIZAAN_PURPOSES } from "../../lib/mizaan9Data";
 
-const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
+const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.40)" };
 
-export default function Mizaan7({ dominant, selected, onChange }) {
-  const suggestedKey = getDominantPurpose(dominant);
-
-  const toggle = (key) => {
-    const next = selected.includes(key)
-      ? selected.filter(k => k !== key)
-      : [...selected, key];
-    onChange(next);
-  };
+export default function Mizaan7({ selected, onChange, customPurpose, onCustomPurpose }) {
+  const toggle = (key) => onChange(selected === key ? null : key);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}
@@ -20,52 +13,82 @@ export default function Mizaan7({ dominant, selected, onChange }) {
       style={{ background: "rgba(6,14,36,0.98)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}>
       <MizaanHeader number="٧" titleAR="الميزان السابع — المقصد" titleTR="Seventh Mizan · Purpose" />
       <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-        Tap to select — multiple allowed
+        Select your purpose
       </p>
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* 5 Purpose Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {MIZAAN_PURPOSES.map((p, i) => {
-          const isSuggested = p.key === suggestedKey;
-          const isSelected  = selected.includes(p.key);
-          const col = p.color;
+          const isSelected = selected === p.key;
+          const col        = p.color;
           return (
             <motion.button key={p.key}
               onClick={() => toggle(p.key)}
               initial={{ opacity: 0, scale: 0.88 }}
               animate={{
-                opacity: isSuggested || isSelected ? 1 : 0.35,
+                opacity: isSelected ? 1 : 0.32,
                 boxShadow: isSelected
                   ? [`0 0 18px ${col}55`, `0 0 36px ${col}88`, `0 0 18px ${col}55`]
                   : "none",
               }}
               transition={{
-                opacity: { duration: 0.3, delay: i * 0.05 },
+                opacity:   { duration: 0.3, delay: i * 0.05 },
                 boxShadow: isSelected ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : { duration: 0.3 },
               }}
               whileTap={{ scale: 0.95 }}
-              className="rounded-2xl border p-4 flex flex-col items-center gap-2 text-center cursor-pointer"
+              className="rounded-2xl border p-4 flex items-center gap-3 text-right cursor-pointer"
               style={{
-                background: isSelected ? `${col}14` : "rgba(255,255,255,0.02)",
-                borderColor: isSelected ? `${col}88` : isSuggested ? `${col}33` : "rgba(255,255,255,0.07)",
+                background:  isSelected ? `${col}14` : "rgba(255,255,255,0.02)",
+                borderColor: isSelected ? `${col}88` : "rgba(255,255,255,0.07)",
                 borderWidth: isSelected ? 2 : 1,
               }}>
-              <span style={{ fontSize: "1.6rem" }}>{p.icon}</span>
-              <p className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: isSelected ? col : `${col}66` }}>{p.label}</p>
-              <p className="font-amiri text-base font-bold" style={{ color: isSelected ? col : `${col}55` }}>{p.arabic}</p>
-              <p className="font-inter text-[9px] italic" style={{ color: isSelected ? `${col}cc` : `${col}44` }}>{p.desc}</p>
-              {isSuggested && !isSelected && (
-                <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: col, opacity: 0.7 }}>Suggested</span>
-              )}
+              <motion.span
+                style={{ fontSize: "1.8rem", lineHeight: 1, flexShrink: 0 }}
+                animate={isSelected ? {
+                  filter: [`drop-shadow(0 0 6px ${col}88)`, `drop-shadow(0 0 18px ${col})`, `drop-shadow(0 0 6px ${col}88)`]
+                } : { filter: "none" }}
+                transition={isSelected ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : {}}>
+                {p.icon}
+              </motion.span>
+              <div className="flex-1 flex flex-col items-start gap-0.5">
+                <p className="font-amiri text-lg font-bold leading-none"
+                  style={{ color: isSelected ? col : `${col}66` }}>
+                  {p.arabic}
+                </p>
+                <p className="font-inter text-[9px] font-bold tabular-nums"
+                  style={{ color: isSelected ? G.dim : "rgba(255,255,255,0.20)" }}>
+                  Bast: {p.bast.toLocaleString()}
+                </p>
+              </div>
               {isSelected && (
                 <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="font-inter text-[7px] uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                  style={{ color: col, borderColor: `${col}88`, background: `${col}14` }}>
-                  Selected ✓
+                  className="font-inter text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full border ml-auto"
+                  style={{ color: col, borderColor: `${col}88`, background: `${col}14`, flexShrink: 0 }}>
+                  ✓
                 </motion.span>
               )}
             </motion.button>
           );
         })}
+      </div>
+
+      {/* Custom Purpose Input */}
+      <div className="space-y-2 pt-1">
+        <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+          ✨ Custom Purpose — النية الخاصة
+        </p>
+        <textarea
+          dir="rtl"
+          value={customPurpose}
+          onChange={e => onCustomPurpose(e.target.value)}
+          placeholder="اكتب نيتك أو مقصدك الخاص هنا..."
+          rows={2}
+          className="w-full rounded-xl px-4 py-2.5 font-amiri text-base text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/25"
+          style={{
+            background: "rgba(4,12,34,0.97)",
+            border: `1px solid ${G.border}`,
+          }}
+        />
       </div>
     </motion.div>
   );

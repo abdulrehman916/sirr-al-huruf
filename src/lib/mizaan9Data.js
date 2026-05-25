@@ -77,11 +77,11 @@ export const DAY_PLANET_MAP = {
 
 // ── MIZAAN 7: Purposes ──
 export const MIZAAN_PURPOSES = [
-  { key: 'celb',    label: 'Celb',          arabic: 'الجلب',        desc: 'Attraction & drawing',   elements: ['fire'],         color: '#FF6B35', icon: '🧲' },
-  { key: 'tard',    label: 'Tard',          arabic: 'الطرد',        desc: 'Repulsion & banishment', elements: ['earth'],        color: '#A5C880', icon: '🛡' },
-  { key: 'sihhat',  label: 'Sıhhat',        arabic: 'الصحة',        desc: 'Health & restoration',   elements: ['air'],          color: '#B2EBF2', icon: '💚' },
-  { key: 'sekam',   label: 'Sekam',         arabic: 'السقام',       desc: 'Spiritual remedy',       elements: ['water'],        color: '#4FC3F7', icon: '🌊' },
-  { key: 'tarfet',  label: "Tarfetel Ayn",  arabic: 'طرفة العين',   desc: 'Instant manifestation',  elements: ['fire', 'air'],  color: '#D4AF37', icon: '👁' },
+  { key: 'celb',   arabic: 'جلب',          icon: '💖', color: '#FF6B6B', bast: 2754 },
+  { key: 'tard',   arabic: 'طرد',          icon: '🚫', color: '#A5C880', bast: 1339 },
+  { key: 'sihhat', arabic: 'الصحة',        icon: '🩺', color: '#4FC3F7', bast: 2657 },
+  { key: 'sekam',  arabic: 'السقم',        icon: '☠️', color: '#9B7FD4', bast: 2036 },
+  { key: 'tarfet', arabic: 'طرفة العين',   icon: '🧿', color: '#D4AF37', bast: 4704 },
 ];
 
 // ── MIZAAN 8: Day / Night (full) ──
