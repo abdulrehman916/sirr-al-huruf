@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import TanzimVefki from "../components/TanzimVefki";
@@ -23,20 +23,43 @@ function calcAbjad(t) {
   return [...t].reduce((s, c) => s + (ABJAD_MAP[c] || 0), 0);
 }
 
-// ── Vefk Generation ──────────────────────────────────────────────
-// Ottoman 3×3 water pattern — rank to cell mapping (reading order)
-const MAGIC_PATTERN_3 = [2,7,6,9,5,1,4,3,8];
+// ── Vefk Generation: 5×5 Hâli Vasat Beşli ────────────────────────
+// Fixed Ottoman manuscript layout — position numbers (1–24), center = null (empty)
+const HALI_VASAT_5_LAYOUT = [
+  [11, 15, 24,  3,  7],
+  [ 4,  8, 12, 16, 20],
+  [17, 21, null, 9, 13],
+  [ 5, 14, 18, 22,  1],
+  [23,  2,  6, 10, 19],
+];
 
-function generate3x3(target) {
-  const n = parseInt(target);
-  if (!n || n < 15) return null;
-  // Center value = n/3 (rounded). Place 9 consecutive values centered on it.
-  // All rows/cols/diagonals sum to 3 * center. All 9 values are unique.
-  const center = Math.round(n / 3);
-  const vals = [center-4, center-3, center-2, center-1, center,
-                center+1, center+2, center+3, center+4];
-  const flat = MAGIC_PATTERN_3.map(rank => vals[rank - 1]);
-  return [flat.slice(0,3), flat.slice(3,6), flat.slice(6,9)];
+// Compute cell values based on Ana Sayı (base number)
+// Hane 1–19: base × position_number
+// Hane 20–24: base × (base - 40 + offset) where offset = 0,1,2,3,4
+function computeHaliVasatCells(base) {
+  const cells = {};
+  // Positions 1–19: base × sıra numarası
+  for (let pos = 1; pos <= 19; pos++) {
+    cells[pos] = base * pos;
+  }
+  // Positions 20–24: base × (base − 40 + offset)
+  cells[20] = base * (base - 40);  // offset 0
+  cells[21] = base * (base - 39);  // offset 1
+  cells[22] = base * (base - 38);  // offset 2
+  cells[23] = base * (base - 37);  // offset 3
+  cells[24] = base * (base - 36);  // offset 4
+  return cells;
+}
+
+function generate5x5HaliVasat(base) {
+  const n = parseInt(base);
+  if (!n || n < 41) return null; // Must be >= 41 for hane 20-24 formula
+  const cells = computeHaliVasatCells(n);
+  // Map layout positions to values
+  const grid = HALI_VASAT_5_LAYOUT.map(row =>
+    row.map(pos => (pos === null ? null : cells[pos]))
+  );
+  return grid;
 }
 
 // ── Sub-components ────────────────────────────────────────────────
@@ -50,155 +73,244 @@ function GoldDivider() {
   );
 }
 
-// ── Ana Vefk (original generator) ────────────────────────────────
+// ── Ana Vefk: 5×5 Hâli Vasat Beşli ───────────────────────────────
 function AnaVefk() {
-  const [name,       setName]       = useState("");
-  const [targetName, setTargetName] = useState("");
-  const [grid,       setGrid]       = useState(null);
-  const [info,       setInfo]       = useState(null);
+  const [anaSayi,  setAnaSayi]  = useState("");
+  const [esmaText, setEsmaText] = useState("");
+  const [grid,     setGrid]     = useState(null);
+  const [base,     setBase]     = useState(null);
 
   const handleGenerate = () => {
-    const nameVal   = calcAbjad(name.trim());
-    const targetVal = calcAbjad(targetName.trim());
-    const total     = nameVal + targetVal;
-    const g         = generate3x3(total);
+    const baseNum = parseInt(anaSayi);
+    if (!baseNum || baseNum < 41) return;
+    const g = generate5x5HaliVasat(baseNum);
     if (!g) return;
     setGrid(g);
-    setInfo({ nameVal, targetVal, total });
+    setBase(baseNum);
   };
 
-  const rowSums = grid ? grid.map(r => r.reduce((a,b)=>a+b,0)) : [];
-  const magicConst = grid ? rowSums[0] : null;
+  // Calculate magic constant and validate
+  const magicConst = useMemo(() => {
+    if (!grid) return null;
+    const rowSums = grid.map(r => r.filter(v => v !== null).reduce((a,b)=>a+b,0));
+    const colSums = [0,1,2,3,4].map(c => grid.map(r => r[c]).filter(v => v !== null).reduce((a,b)=>a+b,0));
+    const diag1 = [0,1,3,4].reduce((sum, i) => sum + grid[i][i], 0);
+    const diag2 = [0,1,3,4].reduce((sum, i) => sum + grid[i][4-i], 0);
+    const expected = rowSums[0];
+    const allEqual = rowSums.every(s => s === expected) &&
+                     colSums.every(s => s === expected) &&
+                     diag1 === expected && diag2 === expected;
+    return allEqual ? expected : null;
+  }, [grid]);
 
   return (
     <div className="space-y-4">
       {/* Inputs */}
-      <div className="rounded-2xl border p-5 space-y-3"
+      <div className="rounded-2xl border p-5 space-y-4"
         style={{ background: "rgba(6,12,32,0.97)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}` }}>
-        <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-          📜 Vefk Oluşturma — طريقة الوفق
-        </p>
-        <GoldDivider />
+        
+        {/* Header */}
+        <div className="text-center space-y-1">
+          <motion.div
+            className="inline-flex items-center justify-center w-11 h-11 rounded-2xl border border-yellow-500/25 mb-1"
+            style={{ background: "linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)", boxShadow: "0 0 22px rgba(212,175,55,0.18)" }}
+          >
+            <span className="font-amiri text-lg" style={{ color: "#D4AF37" }}>📜</span>
+          </motion.div>
+          <motion.h2 className="font-amiri text-2xl font-bold" style={{ color: G.text }}
+            animate={{ textShadow: [`0 0 14px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 14px ${G.glow}`] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+            الأصل
+          </motion.h2>
+          <p className="font-inter text-[10px] font-bold text-white">ANA VEFK</p>
+          <p className="font-inter text-[9px] uppercase tracking-[0.22em]" style={{ color: G.dim }}>
+            Hâli Vasat Beşli System
+          </p>
+          <GoldDivider />
+          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.30)" }}>
+            5×5 Empty Center — Ottoman Manuscript Method
+          </p>
+        </div>
 
-        {/* Name input */}
-        <div className="space-y-1.5">
+        {/* Ana Sayı Input */}
+        <div className="rounded-xl border px-4 py-3 space-y-1.5"
+          style={{ background: "rgba(4,10,28,0.99)", borderColor: G.border }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            1️⃣ İsminiz — اسمك
+            1️⃣ Ana Sayı — الرقم الأساسي
           </p>
           <input
-            type="text" dir="rtl"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="عربي اسم گیرید..."
-            className="w-full rounded-xl px-4 py-2.5 font-amiri text-xl text-white text-right focus:outline-none caret-white placeholder:text-white/25"
+            type="text" inputMode="numeric"
+            value={anaSayi}
+            onChange={e => setAnaSayi(e.target.value.replace(/[^\d]/g, ""))}
+            placeholder="Sayı girin... (örn: 66, 114, 786)"
+            className="w-full rounded-xl px-4 py-2.5 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
             style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
           />
-          {name && (
-            <p className="text-right font-inter text-[9px]" style={{ color: G.dim }}>
-              Ebced: <span style={{ color: G.text }}>{calcAbjad(name.trim()).toLocaleString()}</span>
+          {base && base < 41 && (
+            <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,100,100,0.70)" }}>
+              ⚠ Sayı 41'den büyük olmalı (hane 20–24 için)
             </p>
           )}
         </div>
 
-        {/* Target name input */}
-        <div className="space-y-1.5">
+        {/* Esma Text (optional) */}
+        <div className="rounded-xl border px-4 py-3 space-y-1.5"
+          style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            2️⃣ Hedef İsim — اسم المقصود
+            2️⃣ Esma / İsim (İsteğe Bağlı) — الاسم الإلهي
           </p>
           <input
-            type="text" dir="rtl"
-            value={targetName}
-            onChange={e => setTargetName(e.target.value)}
-            placeholder="مطلوب اسم..."
-            className="w-full rounded-xl px-4 py-2.5 font-amiri text-xl text-white text-right focus:outline-none caret-white placeholder:text-white/25"
-            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
+            type="text"
+            value={esmaText}
+            onChange={e => setEsmaText(e.target.value)}
+            placeholder="Camii / Vedud / الله..."
+            dir="rtl"
+            className="w-full rounded-xl px-4 py-2 font-amiri text-lg text-white text-right focus:outline-none caret-white placeholder:text-white/25"
+            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.15)` }}
           />
-          {targetName && (
-            <p className="text-right font-inter text-[9px]" style={{ color: G.dim }}>
-              Ebced: <span style={{ color: G.text }}>{calcAbjad(targetName.trim()).toLocaleString()}</span>
+          <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.30)" }}>
+            Girilirse ortadaki hücrede gösterilir — Shown in center cell if entered
+          </p>
+        </div>
+
+        {/* Rule explanation */}
+        <div className="rounded-xl border px-4 py-3 space-y-1.5"
+          style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.18)" }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+            📜 Hesap Kuralı — Calculation Rule
+          </p>
+          <div className="space-y-1">
+            <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+              Hane 1–19: <span style={{ color: G.text }}>Ana Sayı × konum (1, 2, 3 … 19)</span>
             </p>
-          )}
+            <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+              Hane 20–24: <span style={{ color: G.text }}>Ana Sayı × (Ana Sayı−40, −39, −38, −37, −36)</span>
+            </p>
+            {base && base >= 41 && (
+              <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
+                Örnek: {base} − 40 = {base - 40} → ×{base-40}, ×{base-39}, ×{base-38}, ×{base-37}, ×{base-36}
+              </p>
+            )}
+          </div>
         </div>
 
         <motion.button
           onClick={handleGenerate}
-          disabled={!name.trim() || !targetName.trim()}
+          disabled={!anaSayi.trim() || (base && base < 41)}
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           className="w-full py-3 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)", boxShadow: `0 0 24px ${G.glowHi}` }}
         >
-          ✨ Vefk Oluştur
+          ✨ Hâli Vasat Vefki Oluştur
         </motion.button>
       </div>
 
       {/* Result */}
       <AnimatePresence>
-        {grid && info && (
+        {grid && base ? (
           <motion.div
-            key="vefk-result"
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            key={`hali-vasat-${base}`}
+            initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
             className="rounded-2xl border p-5 space-y-4"
             style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 32px ${G.glow}` }}
           >
-            {/* Calculation summary */}
-            <div className="grid grid-cols-3 gap-2 text-center">
-              {[
-                { label: "İsim", val: info.nameVal },
-                { label: "Hedef", val: info.targetVal },
-                { label: "Toplam", val: info.total },
-              ].map((item, i) => (
-                <div key={i} className="rounded-xl px-2 py-2"
-                  style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.18)" }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{item.label}</p>
-                  <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>{item.val.toLocaleString()}</p>
-                </div>
-              ))}
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Ana Sayı</p>
+                <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>{base.toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  {magicConst ? "Magic Constant ✓" : "⚠ Dengesiz"}
+                </p>
+                <p className="font-amiri text-sm font-bold leading-tight" style={{ color: magicConst ? G.text : "rgba(255,100,100,0.80)" }}>
+                  {magicConst ? magicConst.toLocaleString() : "Hata"}
+                </p>
+              </div>
             </div>
 
             <GoldDivider />
 
             <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-              🜂 3×3 Vefk — الوفق الثلاثي
+              🜂 5×5 Hâli Vasat Beşli — المربع الخماسي
             </p>
 
-            {/* 3×3 Grid */}
-            <div className="flex justify-center">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 72px)", gap: "5px" }}>
-                {grid.flat().map((num, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.04, duration: 0.22 }}
-                    className="rounded-xl border flex items-center justify-center font-amiri font-bold"
-                    style={{
-                      width: 72, height: 72,
-                      background: "rgba(212,175,55,0.12)",
-                      borderColor: "rgba(212,175,55,0.45)",
-                      color: G.text,
-                      fontSize: num > 9999 ? "12px" : num > 999 ? "14px" : "18px",
-                      boxShadow: "inset 0 0 10px rgba(212,175,55,0.14), 0 0 6px rgba(212,175,55,0.10)",
-                    }}
-                  >
-                    {num.toLocaleString()}
-                  </motion.div>
-                ))}
+            {/* 5×5 Grid */}
+            <div className="flex justify-center overflow-x-auto">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 58px)", gap: "4px" }}>
+                {grid.flat().map((val, idx) => {
+                  const isEmpty = val === null;
+                  const display = isEmpty ? null : val.toLocaleString();
+                  const fontSize = display && display.length > 9 ? "8px"
+                    : display && display.length > 6 ? "9px"
+                    : display && display.length > 4 ? "11px" : "13px";
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.75 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.018, duration: 0.22 }}
+                      className="rounded-lg border flex flex-col items-center justify-center"
+                      style={{
+                        width: 58, height: 58,
+                        background: isEmpty ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.10)",
+                        borderColor: isEmpty ? "rgba(212,175,55,0.18)" : "rgba(212,175,55,0.45)",
+                        boxShadow: isEmpty ? "none" : "inset 0 0 8px rgba(212,175,55,0.12)",
+                      }}
+                    >
+                      {isEmpty ? (
+                        <div className="flex items-center justify-center w-full h-full px-1">
+                          {esmaText ? (
+                            <p className="font-amiri text-center leading-tight"
+                              style={{ color: G.text, fontSize: esmaText.length > 8 ? "8px" : "10px" }}
+                              dir="rtl">{esmaText}</p>
+                          ) : (
+                            <motion.span style={{ fontSize: "1.1rem", color: "rgba(212,175,55,0.18)" }}
+                              animate={{ opacity: [0.1, 0.35, 0.1] }}
+                              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>□</motion.span>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="font-amiri font-bold tabular-nums leading-tight"
+                          style={{ color: G.text, fontSize, textShadow: "0 0 6px rgba(212,175,55,0.35)" }}>
+                          {display}
+                        </p>
+                      )}
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Magic constant */}
-            <div className="rounded-xl border p-3 text-center"
-              style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.25)" }}>
-              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                ⚖ Kutsal Sabit — Magic Constant
-              </p>
-              <motion.p className="font-amiri text-3xl font-bold mt-1" style={{ color: G.text }}
-                animate={{ textShadow: [`0 0 12px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 12px ${G.glow}`] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-                {magicConst?.toLocaleString()}
-              </motion.p>
-            </div>
+            {/* Magic constant display */}
+            {magicConst && (
+              <div className="rounded-xl border p-3 text-center"
+                style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.25)" }}>
+                <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  ⚖ Kutsal Sabit — Magic Constant
+                </p>
+                <motion.p className="font-amiri text-3xl font-bold mt-1" style={{ color: G.text }}
+                  animate={{ textShadow: [`0 0 12px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 12px ${G.glow}`] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+                  {magicConst.toLocaleString()}
+                </motion.p>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div key="hali-placeholder"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="rounded-xl border p-8 flex flex-col items-center gap-3"
+            style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(212,175,55,0.12)" }}
+          >
+            <motion.span style={{ fontSize: "1.8rem", color: "rgba(212,175,55,0.18)" }}
+              animate={{ opacity: [0.12, 0.40, 0.12] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>📜</motion.span>
+            <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.22)" }}>
+              Ana sayıyı girerek Hâli Vasat vefkini oluşturun
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
