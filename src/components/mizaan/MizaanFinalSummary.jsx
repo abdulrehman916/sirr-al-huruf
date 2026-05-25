@@ -334,6 +334,36 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
         </div>
 
         <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
+
+        {/* Combined Sacred Value */}
+        <div className="text-center space-y-1">
+          <p className="font-inter text-[8px] uppercase tracking-[0.3em]" style={{ color: G.dim }}>
+            ✨ Combined Sacred Value
+          </p>
+          <motion.p
+            className="font-amiri font-bold tabular-nums leading-none"
+            style={{
+              fontSize: "clamp(3rem, 12vw, 5rem)",
+              color: G.text,
+              textShadow: `0 0 30px ${G.glowHi}, 0 0 60px ${G.glow}`,
+            }}
+            animate={{
+              textShadow: [
+                `0 0 24px ${G.glowHi}`,
+                `0 0 48px rgba(212,175,55,0.80)`,
+                `0 0 24px ${G.glowHi}`,
+              ],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            {(grandBast + grandLetters).toLocaleString()}
+          </motion.p>
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.40)" }}>
+            مجموع السر الكامل
+          </p>
+        </div>
+
+        <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
       </div>
 
       {/* Sacred Seal Footer */}
