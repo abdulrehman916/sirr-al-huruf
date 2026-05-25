@@ -40,6 +40,45 @@ const PLANETS = [
   { key: "kamer",   arabic: "القمر",   icon: "🌙", color: "#818CF8", glow: "rgba(129,140,248,0.35)", bg: "rgba(129,140,248,0.10)", border: "rgba(129,140,248,0.50)" },
 ];
 
+// ── Sacred Patterns ──────────────────────────────────────────────
+const PATTERN_3x3 = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+
+const ELEMENT_PATTERNS_4x4 = {
+  fire:  [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15],
+  earth: [15, 4, 5, 10, 6, 9, 16, 3, 12, 7, 2, 13, 1, 14, 11, 8],
+  air:   [1, 14, 11, 8, 12, 7, 2, 13, 6, 9, 16, 3, 15, 4, 5, 10],
+  water: [10, 5, 4, 15, 3, 16, 9, 6, 13, 2, 7, 12, 8, 11, 14, 1],
+};
+
+function getSacredPattern(size, elementKey) {
+  if (size === 3) return PATTERN_3x3;
+  if (size === 4) return ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
+  return null;
+}
+
+// ── Vefk Generation ──────────────────────────────────────────────
+function generateVefk4x4(targetNumber, elementKey) {
+  const n = parseInt(targetNumber);
+  const remainder = (n - 30) % 4;
+  const base = (n - 30 - remainder) / 4;
+  const values = Array.from({ length: 16 }, (_, i) => base + i);
+  if (remainder === 3) values[4] += 1;
+  else if (remainder === 2) values[8] += 1;
+  else if (remainder === 1) values[12] += 1;
+  const pattern = ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
+  const flat = pattern.map(rank => values[rank - 1]);
+  return [flat.slice(0, 4), flat.slice(4, 8), flat.slice(8, 12), flat.slice(12, 16)];
+}
+
+function generateMagicSquare(size, baseNum) {
+  const grid = Array(size).fill(0).map(() => Array(size).fill(0));
+  let num = baseNum;
+  for (let i = 0; i < size; i++)
+    for (let j = 0; j < size; j++) { grid[i][j] = num; num++; }
+  return grid;
+}
+
+// ── Sub-components ───────────────────────────────────────────────
 function GoldDivider() {
   return (
     <div className="flex items-center justify-center gap-3 my-1">
@@ -52,10 +91,8 @@ function GoldDivider() {
 
 function SectionCard({ children }) {
   return (
-    <div
-      className="rounded-2xl border p-4 space-y-3"
-      style={{ background: "rgba(10,24,56,0.95)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}` }}
-    >
+    <div className="rounded-2xl border p-4 space-y-3"
+      style={{ background: "rgba(10,24,56,0.95)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}` }}>
       {children}
     </div>
   );
@@ -69,61 +106,130 @@ function SectionLabel({ children }) {
   );
 }
 
-// Sacred 4×4 placement patterns — each value is the rank (1-based) of the number to place
-// Pattern tells: "position index X in the flat grid gets the value of rank N"
-// e.g. FIRE_PATTERN[0] = 8 means cell 0 gets the 8th number (base+7)
-const ELEMENT_PATTERNS_4x4 = {
-  fire:  [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15],
-  earth: [15, 4, 5, 10, 6, 9, 16, 3, 12, 7, 2, 13, 1, 14, 11, 8],
-  air:   [1, 14, 11, 8, 12, 7, 2, 13, 6, 9, 16, 3, 15, 4, 5, 10],
-  water: [10, 5, 4, 15, 3, 16, 9, 6, 13, 2, 7, 12, 8, 11, 14, 1],
-};
+// ── Sacred Grid Preview ──────────────────────────────────────────
+function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
+  const sacredPattern = gridSize ? getSacredPattern(gridSize, element || "fire") : null;
+  // Prefer generated grid (from number), else show sacred pattern as preview
+  const displayFlat = grid ? grid.flat() : sacredPattern;
+  const isGenerated = !!grid;
+  const elMeta = ELEMENTS.find(e => e.key === element);
+  const cellSize = gridSize >= 9 ? 36 : gridSize >= 7 ? 40 : gridSize >= 6 ? 46 : gridSize === 3 ? 66 : 54;
 
-function generateVefk4x4(targetNumber, elementKey) {
-  const n = parseInt(targetNumber);
-  const remainder = (n - 30) % 4;
-  const base = (n - 30 - remainder) / 4;
-
-  // Build 16 sequential values starting from base
-  const values = Array.from({ length: 16 }, (_, i) => base + i);
-
-  // Apply remainder rule
-  if (remainder === 3) values[4] += 1;       // 5th cell (index 4)
-  else if (remainder === 2) values[8] += 1;  // 9th cell (index 8)
-  else if (remainder === 1) values[12] += 1; // 13th cell (index 12)
-
-  const pattern = ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
-
-  // pattern[cellIndex] = rank (1-based) → values[rank-1]
-  const flat = pattern.map(rank => values[rank - 1]);
-
-  // Return as 4×4 grid
-  return [
-    flat.slice(0, 4),
-    flat.slice(4, 8),
-    flat.slice(8, 12),
-    flat.slice(12, 16),
-  ];
-}
-
-function generateMagicSquare(size, baseNum) {
-  const grid = Array(size).fill(0).map(() => Array(size).fill(0));
-  let num = baseNum;
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
-      grid[i][j] = num;
-      num++;
-    }
+  if (!displayFlat) {
+    // No grid size selected
+    return (
+      <div className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
+        style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}>
+        <motion.span className="font-amiri text-4xl" style={{ color: "rgba(212,175,55,0.25)" }}
+          animate={{ opacity: [0.2, 0.5, 0.2] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+          🜂
+        </motion.span>
+        <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.25)" }}>
+          Select grid size to preview sacred pattern
+        </p>
+        <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.20)" }} dir="rtl">المربع السحري</p>
+      </div>
+    );
   }
-  return grid;
+
+  // For 5×5+ without a generated grid → placeholder
+  if (!sacredPattern && !isGenerated) {
+    return (
+      <div className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
+        style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}>
+        <motion.span className="font-amiri text-4xl" style={{ color: "rgba(212,175,55,0.25)" }}
+          animate={{ opacity: [0.2, 0.5, 0.2] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+          🜂
+        </motion.span>
+        <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.25)" }}>
+          {gridSize}×{gridSize} — Enter number to generate
+        </p>
+        <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.20)" }} dir="rtl">المربع السحري</p>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      key={`${gridSize}-${element}-${isGenerated}`}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      className="rounded-2xl border p-6"
+      style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}
+    >
+      {/* Header */}
+      <div className="text-center mb-5 space-y-1">
+        <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>
+          🜂 Sacred Vefk {gridSize}×{gridSize}
+        </p>
+        {gridSize === 3 && (
+          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+            Wafq al-Shams — الشمس
+          </p>
+        )}
+        {gridSize === 4 && (
+          <div className="flex items-center justify-center gap-2">
+            {elMeta && <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>}
+            <span className="font-amiri text-sm" style={{ color: elMeta?.color || G.dim }}>
+              {elMeta?.arabic || "النار"}
+            </span>
+            {isGenerated && inputNumber && (
+              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+                · Base {Math.floor((parseInt(inputNumber) - 30) / 4)}
+              </span>
+            )}
+          </div>
+        )}
+        {!isGenerated && (
+          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.25)" }}>
+            Sacred Pattern — enter number to generate values
+          </p>
+        )}
+      </div>
+
+      {/* Grid cells */}
+      <div className="flex justify-center">
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
+          gap: "4px",
+        }}>
+          {displayFlat.map((num, idx) => (
+            <motion.div
+              key={`${gridSize}-${element}-${idx}`}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.018, duration: 0.22 }}
+              className="rounded-lg border flex items-center justify-center font-amiri font-bold"
+              style={{
+                width: `${cellSize}px`,
+                height: `${cellSize}px`,
+                background: isGenerated ? "rgba(212,175,55,0.10)" : "rgba(212,175,55,0.05)",
+                borderColor: isGenerated ? "rgba(212,175,55,0.45)" : "rgba(212,175,55,0.22)",
+                color: isGenerated ? G.text : "rgba(212,175,55,0.60)",
+                fontSize: gridSize >= 8 ? "11px" : gridSize >= 6 ? "13px" : "16px",
+                boxShadow: isGenerated
+                  ? `inset 0 0 10px rgba(212,175,55,0.15), 0 0 6px rgba(212,175,55,0.10)`
+                  : "none",
+              }}
+            >
+              {num}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
+// ── Page ─────────────────────────────────────────────────────────
 export default function MagicSqayerPage() {
   const [inputNumber, setInputNumber] = useState("");
   const [gridSize,    setGridSize]    = useState(null);
   const [element,     setElement]     = useState(null);
   const [planet,      setPlanet]      = useState(null);
-  const [grid, setGrid]               = useState(null);
+  const [grid,        setGrid]        = useState(null);
 
   const buildGrid = (num, size, el) => {
     if (!num || !size) return null;
@@ -153,18 +259,11 @@ export default function MagicSqayerPage() {
     <PageLayout>
       <div className="space-y-4">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
             className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-yellow-500/25 mb-4"
-            style={{
-              background: "linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)",
-              boxShadow: "0 0 28px rgba(212,175,55,0.18)",
-            }}
-          >
+            style={{ background: "linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)", boxShadow: "0 0 28px rgba(212,175,55,0.18)" }}>
             <span className="font-amiri text-2xl" style={{ color: "#D4AF37" }}>✨</span>
           </motion.div>
           <h1 className="font-amiri text-4xl sm:text-5xl font-bold text-white">السحر المربع</h1>
@@ -174,7 +273,7 @@ export default function MagicSqayerPage() {
           <GoldDivider />
         </div>
 
-        {/* ── 1. Number Input ── */}
+        {/* 1. Number Input */}
         <SectionCard>
           <SectionLabel>🔢 Base Number — الرقم الأساسي</SectionLabel>
           <input
@@ -182,35 +281,31 @@ export default function MagicSqayerPage() {
             value={inputNumber}
             onChange={handleNumberChange}
             placeholder="Enter any large number (100, 786, 12345...)"
-            className="w-full rounded-xl px-4 py-3 font-amiri text-3xl text-center text-white font-bold resize-none focus:outline-none caret-white placeholder:text-white/30"
+            className="w-full rounded-xl px-4 py-3 font-amiri text-3xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/30"
             style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
           />
           {inputNumber && (
-            <p className="text-center font-inter text-[9px] uppercase tracking-widest mt-2" style={{ color: G.dim }}>
-              Starting from: {inputNumber}
+            <p className="text-center font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+              Target: {inputNumber}
             </p>
           )}
         </SectionCard>
 
-        {/* ── 2. Grid Size ── */}
+        {/* 2. Grid Size */}
         <SectionCard>
           <SectionLabel>Grid Size — حجم المربع</SectionLabel>
           <div className="grid grid-cols-4 gap-2">
             {GRID_SIZES.map(g => {
               const sel = gridSize === g.value;
               return (
-                <motion.button
-                  key={g.value}
-                  onClick={() => handleGridSizeChange(g.value)}
-                  whileTap={{ scale: 0.95 }}
+                <motion.button key={g.value} onClick={() => handleGridSizeChange(g.value)} whileTap={{ scale: 0.95 }}
                   className="rounded-xl py-3 font-inter font-bold text-xs border transition-all"
                   style={{
                     background: sel ? G.bg : "rgba(4,12,34,0.97)",
                     borderColor: sel ? G.borderHi : "rgba(255,255,255,0.08)",
                     color: sel ? G.text : "rgba(255,255,255,0.40)",
                     boxShadow: sel ? `0 0 14px ${G.glow}` : "none",
-                  }}
-                >
+                  }}>
                   {g.label}
                 </motion.button>
               );
@@ -218,24 +313,20 @@ export default function MagicSqayerPage() {
           </div>
         </SectionCard>
 
-        {/* ── 3. Anasir (Element) ── */}
+        {/* 3. Element */}
         <SectionCard>
           <SectionLabel>Element — العنصر</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
             {ELEMENTS.map(el => {
               const sel = element === el.key;
               return (
-                <motion.button
-                 key={el.key}
-                 onClick={() => handleElementChange(el.key)}
-                  whileTap={{ scale: 0.95 }}
+                <motion.button key={el.key} onClick={() => handleElementChange(el.key)} whileTap={{ scale: 0.95 }}
                   className="rounded-xl p-3 flex items-center gap-2 border transition-all"
                   style={{
                     background: sel ? el.bg : "rgba(4,12,34,0.97)",
                     borderColor: sel ? el.border : "rgba(255,255,255,0.08)",
                     boxShadow: sel ? `0 0 14px ${el.glow}` : "none",
-                  }}
-                >
+                  }}>
                   <span style={{ fontSize: "1.2rem" }}>{el.icon}</span>
                   <span className="font-amiri text-base font-bold" dir="rtl"
                     style={{ color: sel ? el.color : "rgba(255,255,255,0.45)" }}>
@@ -247,24 +338,20 @@ export default function MagicSqayerPage() {
           </div>
         </SectionCard>
 
-        {/* ── 4. Planet ── */}
+        {/* 4. Planet */}
         <SectionCard>
           <SectionLabel>Planet — الكوكب</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
             {PLANETS.map(pl => {
               const sel = planet === pl.key;
               return (
-                <motion.button
-                  key={pl.key}
-                  onClick={() => setPlanet(sel ? null : pl.key)}
-                  whileTap={{ scale: 0.95 }}
+                <motion.button key={pl.key} onClick={() => setPlanet(sel ? null : pl.key)} whileTap={{ scale: 0.95 }}
                   className="rounded-xl p-3 flex items-center gap-2 border transition-all"
                   style={{
                     background: sel ? pl.bg : "rgba(4,12,34,0.97)",
                     borderColor: sel ? pl.border : "rgba(255,255,255,0.08)",
                     boxShadow: sel ? `0 0 14px ${pl.glow}` : "none",
-                  }}
-                >
+                  }}>
                   <span style={{ fontSize: "1.1rem" }}>{pl.icon}</span>
                   <span className="font-amiri text-base font-bold" dir="rtl"
                     style={{ color: sel ? pl.color : "rgba(255,255,255,0.45)" }}>
@@ -276,107 +363,26 @@ export default function MagicSqayerPage() {
           </div>
         </SectionCard>
 
-        {/* ── 5. Generate Button ── */}
+        {/* 5. Generate Button */}
         <motion.button
           disabled={!inputNumber || !gridSize}
           whileHover={{ scale: !inputNumber || !gridSize ? 1 : 1.02 }}
           whileTap={{ scale: !inputNumber || !gridSize ? 1 : 0.97 }}
           className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{
-            background: "linear-gradient(135deg,#fcd34d,#d97706)",
-            boxShadow: `0 0 28px ${G.glowHi}`,
-          }}
-          onClick={() => {
-            setGrid(buildGrid(inputNumber, gridSize, element));
-          }}
+          style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)", boxShadow: `0 0 28px ${G.glowHi}` }}
+          onClick={() => setGrid(buildGrid(inputNumber, gridSize, element))}
         >
           <span className="font-amiri text-base">✨</span>
           Generate Magic Sqayer
         </motion.button>
 
-        {/* ── 6. Sacred Grid Preview ── */}
-        {grid ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl border p-6"
-            style={{
-              background: "rgba(4,8,24,0.99)",
-              borderColor: G.borderHi,
-              boxShadow: `0 0 40px ${G.glow}`,
-            }}
-          >
-            <div className="text-center mb-4 space-y-1">
-              <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>
-                🜂 Sacred Vefk {gridSize}×{gridSize}
-                {gridSize === 4 && element && ` — ${ELEMENTS.find(e => e.key === element)?.arabic || ""}`}
-              </p>
-              {gridSize !== 4 && (
-                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.30)" }}>
-                  Anasir Vefk system active for 4×4 only
-                </p>
-              )}
-              {gridSize === 4 && (
-                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.30)" }}>
-                  Base: {Math.floor((parseInt(inputNumber) - 30) / 4)} · Remainder: {(parseInt(inputNumber) - 30) % 4}
-                </p>
-              )}
-            </div>
-            <div
-              className="inline-block mx-auto"
-              style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
-                gap: gridSize > 6 ? "4px" : "6px",
-              }}
-            >
-              {grid.flat().map((num, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className="rounded-lg border flex items-center justify-center font-amiri font-bold"
-                  style={{
-                    width: gridSize > 6 ? "40px" : "50px",
-                    height: gridSize > 6 ? "40px" : "50px",
-                    background: "rgba(212,175,55,0.08)",
-                    borderColor: "rgba(212,175,55,0.35)",
-                    color: G.text,
-                    fontSize: gridSize > 7 ? "11px" : gridSize > 6 ? "12px" : "14px",
-                    boxShadow: `inset 0 0 8px rgba(212,175,55,0.12)`,
-                  }}
-                >
-                  {num}
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        ) : (
-          <div
-            className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
-            style={{
-              background: "rgba(4,8,24,0.99)",
-              borderColor: G.borderHi,
-              boxShadow: `0 0 40px ${G.glow}`,
-            }}
-          >
-            <motion.span
-              className="font-amiri text-4xl"
-              style={{ color: "rgba(212,175,55,0.25)" }}
-              animate={{ opacity: [0.2, 0.5, 0.2] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              🜂
-            </motion.span>
-            <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.25)" }}>
-              Sacred Grid Preview
-            </p>
-            <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.20)" }} dir="rtl">
-              المربع السحري
-            </p>
-          </div>
-        )}
+        {/* 6. Sacred Grid Preview */}
+        <SacredGridPreview
+          gridSize={gridSize}
+          element={element}
+          grid={grid}
+          inputNumber={inputNumber}
+        />
 
       </div>
     </PageLayout>
