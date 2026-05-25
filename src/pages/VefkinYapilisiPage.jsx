@@ -75,18 +75,13 @@ export default function VefkinYapilisiPage() {
           })}
         </div>
 
-        {/* Tab content — each system renders its own isolated component */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.25 }}
-          >
-            {activeTab === "ana" ? <AnaVefk /> : <TanzimVefki />}
-          </motion.div>
-        </AnimatePresence>
+        {/* Tab content — both always mounted to preserve state, shown/hidden via CSS */}
+        <div style={{ display: activeTab === "ana" ? "block" : "none" }}>
+          <AnaVefk />
+        </div>
+        <div style={{ display: activeTab === "tanzim" ? "block" : "none" }}>
+          <TanzimVefki />
+        </div>
 
       </div>
     </PageLayout>
