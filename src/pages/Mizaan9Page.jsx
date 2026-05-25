@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
-import { getDominantPurpose, getDominantPlanet } from "../lib/mizaan9Data";
+import { getDominantPurpose, DAY_PLANET_MAP } from "../lib/mizaan9Data";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
 import Mizaan3      from "../components/mizaan/Mizaan3";
@@ -55,7 +55,7 @@ function buildDefaultSelections(dominant) {
     khayrSharr: null,
     hour:       (Math.floor(new Date().getHours() / 2) % 12) + 1,
     days:       ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()],
-    planet:     null,
+    planet:     DAY_PLANET_MAP[['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]] ?? null,
     purposes:   dominant ? (getDominantPurpose(dominant) ? [getDominantPurpose(dominant)] : []) : [],
     daynight:   getTimeBasedDayNight(),
   };
@@ -197,7 +197,7 @@ export default function Mizaan9Page() {
               />
               <MizaanDivider />
               <Mizaan6
-                dominant={result.dominant}
+                selectedDay={selections.days}
                 selected={selections.planet}
                 onChange={updateSel("planet")}
               />

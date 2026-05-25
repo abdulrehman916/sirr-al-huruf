@@ -60,14 +60,20 @@ export const MIZAAN_DAYS = [
 
 // ── MIZAAN 6: Planets ──
 export const MIZAAN_PLANETS_ALL = [
-  { key: 'sems',    name: 'Şems',    arabic: 'الشمس',    symbol: '☉', element: 'fire',  color: '#FBBF24', bast: 2870 },
-  { key: 'kamer',   name: 'Kamer',   arabic: 'القمر',    symbol: '☽', element: 'water', color: '#818CF8', bast: 2520 },
-  { key: 'merih',   name: 'Merih',   arabic: 'المريخ',   symbol: '♂', element: 'fire',  color: '#FF4444', bast: 3124 },
-  { key: 'utarid',  name: 'Utarid',  arabic: 'عطارد',    symbol: '☿', element: 'air',   color: '#34D399', bast: 2160 },
-  { key: 'mustari', name: 'Müşteri', arabic: 'المشتري',  symbol: '♃', element: 'air',   color: '#74C0FC', bast: 3757 },
-  { key: 'zuhre',   name: 'Zühre',   arabic: 'الزهرة',   symbol: '♀', element: 'water', color: '#F9A8D4', bast: 3342 },
-  { key: 'zuhal',   name: 'Zühal',   arabic: 'زحل',      symbol: '♄', element: 'earth', color: '#9B7FD4', bast: 3886 },
+  { key: 'zuhal',   arabic: 'الزحل',    icon: '🪐', color: '#9B7FD4', bast: 2963 },
+  { key: 'mustari', arabic: 'المشتري',  icon: '✨', color: '#74C0FC', bast: 3980 },
+  { key: 'merih',   arabic: 'المريخ',   icon: '🔥', color: '#FF4444', bast: 3070 },
+  { key: 'sems',    arabic: 'الشمس',    icon: '☀️', color: '#FBBF24', bast: 3071 },
+  { key: 'zuhre',   arabic: 'الزهرة',   icon: '💖', color: '#F9A8D4', bast: 3189 },
+  { key: 'utarid',  arabic: 'العطارد',  icon: '🧠', color: '#34D399', bast: 2665 },
+  { key: 'kamer',   arabic: 'القمر',    icon: '🌙', color: '#818CF8', bast: 2029 },
 ];
+
+// Day key → planet key mapping
+export const DAY_PLANET_MAP = {
+  sun: 'sems', mon: 'kamer', tue: 'merih', wed: 'utarid',
+  thu: 'mustari', fri: 'zuhre', sat: 'zuhal',
+};
 
 // ── MIZAAN 7: Purposes ──
 export const MIZAAN_PURPOSES = [
