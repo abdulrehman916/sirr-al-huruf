@@ -259,6 +259,77 @@ function SectionLabel({ children }) {
   );
 }
 
+// ── Size → Planet Mapping ─────────────────────────────────────────
+const SIZE_PLANET_MAP = {
+  3: "zuhal",
+  4: "mustari",
+  5: "merih",
+  6: "sems",
+  7: "zuhre",
+  8: "utarid",
+  9: "kamer",
+};
+
+const PLANET_EN = {
+  zuhal:   "Saturn",
+  mustari: "Jupiter",
+  merih:   "Mars",
+  sems:    "Sun",
+  zuhre:   "Venus",
+  utarid:  "Mercury",
+  kamer:   "Moon",
+};
+
+function AutoPlanetCard({ gridSize }) {
+  const planetKey = SIZE_PLANET_MAP[gridSize];
+  const pl = PLANETS.find(p => p.key === planetKey);
+  if (!pl) return null;
+
+  return (
+    <motion.div
+      key={gridSize}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="rounded-2xl border p-4 flex items-center gap-4"
+      style={{
+        background: `rgba(4,8,24,0.99)`,
+        borderColor: pl.border,
+        boxShadow: `0 0 28px ${pl.glow}, 0 0 60px ${pl.glow}`,
+      }}
+    >
+      <motion.span
+        style={{ fontSize: "2.2rem", flexShrink: 0 }}
+        animate={{ textShadow: [`0 0 12px ${pl.glow}`, `0 0 28px ${pl.color}`, `0 0 12px ${pl.glow}`] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        {pl.icon}
+      </motion.span>
+      <div className="flex-1 min-w-0">
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(212,175,55,0.40)" }}>
+          🪐 Associated Planet
+        </p>
+        <motion.p
+          className="font-amiri text-2xl font-bold leading-tight"
+          style={{ color: pl.color, textShadow: `0 0 18px ${pl.glow}` }}
+          dir="rtl"
+          animate={{ textShadow: [`0 0 10px ${pl.glow}`, `0 0 24px ${pl.color}88`, `0 0 10px ${pl.glow}`] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {pl.arabic}
+        </motion.p>
+        <p className="font-inter text-[10px] tracking-widest uppercase mt-0.5" style={{ color: `${pl.color}99` }}>
+          {PLANET_EN[planetKey]}
+        </p>
+      </div>
+      <div className="flex-shrink-0 text-right">
+        <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.30)" }}>Square</p>
+        <p className="font-amiri text-lg font-bold" style={{ color: G.dim }}>{gridSize}×{gridSize}</p>
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Kutb Config ──────────────────────────────────────────────────
 const KUTB = { 3: 15, 4: 34, 5: 65, 6: 111, 7: 175, 8: 260, 9: 369 };
 
@@ -572,6 +643,9 @@ export default function MagicSqayerPage() {
             })}
           </div>
         </SectionCard>
+
+        {/* Auto Planet */}
+        {gridSize && <AutoPlanetCard gridSize={gridSize} />}
 
         {/* 3. Element */}
         <SectionCard>
