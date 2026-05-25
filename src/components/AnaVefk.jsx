@@ -220,11 +220,25 @@ export default function AnaVefk() {
           <GoldDivider />
         </div>
 
-        {/* Inputs */}
-        <InputField label="1️⃣ Talib — الطالب" value={talibRaw} onChange={setTalibRaw} placeholder="İsim veya sayı..." />
-        <InputField label="2️⃣ Mathloob — المطلوب" value={mathloobRaw} onChange={setMathloobRaw} placeholder="İsim veya sayı..." />
-        <InputField label="3️⃣ Esma (İsteğe Bağlı) — الاسم" value={esmaRaw} onChange={setEsmaRaw} placeholder="İsim, Esma veya sayı..." />
-        <InputField label="4️⃣ Niyyat (Görsel) — النية" value={niyyat} onChange={setNiyyat} placeholder="Niyet metni..." isTextOnly />
+        {/* CENTER CELL 1 — Talib + Mathloob + Niyyat */}
+        <div className="rounded-xl border px-4 py-3 space-y-2"
+          style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.30)" }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+            🜁 Merkez Hücre 1 — Talib · Mathloob · Niyyat
+          </p>
+          <InputField label="Talib — الطالب" value={talibRaw} onChange={setTalibRaw} placeholder="İsim veya sayı..." />
+          <InputField label="Mathloob — المطلوب" value={mathloobRaw} onChange={setMathloobRaw} placeholder="İsim veya sayı..." />
+          <InputField label="Niyyat (Görsel) — النية" value={niyyat} onChange={setNiyyat} placeholder="Niyet metni..." isTextOnly />
+        </div>
+
+        {/* CENTER CELL 2 — Esma */}
+        <div className="rounded-xl border px-4 py-3 space-y-2"
+          style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.45)" }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+            ✦ Merkez Hücre 2 — Esma
+          </p>
+          <InputField label="Esma — الاسم" value={esmaRaw} onChange={setEsmaRaw} placeholder="İsim, Esma veya sayı..." />
+        </div>
 
         {/* Base number preview */}
         {baseNumber && (
