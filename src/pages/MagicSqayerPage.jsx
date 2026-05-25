@@ -553,7 +553,6 @@ export default function MagicSqayerPage() {
   const [inputNumber, setInputNumber] = useState("");
   const [gridSize,    setGridSize]    = useState(null);
   const [element,     setElement]     = useState(null);
-  const [planet,      setPlanet]      = useState(null);
   const [grid,        setGrid]        = useState(null);
 
   const buildGrid = (num, size, el) => {
@@ -665,31 +664,6 @@ export default function MagicSqayerPage() {
                   <span className="font-amiri text-base font-bold" dir="rtl"
                     style={{ color: sel ? el.color : "rgba(255,255,255,0.45)" }}>
                     {el.arabic}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </SectionCard>
-
-        {/* 4. Planet */}
-        <SectionCard>
-          <SectionLabel>Planet — الكوكب</SectionLabel>
-          <div className="grid grid-cols-2 gap-2">
-            {PLANETS.map(pl => {
-              const sel = planet === pl.key;
-              return (
-                <motion.button key={pl.key} onClick={() => setPlanet(sel ? null : pl.key)} whileTap={{ scale: 0.95 }}
-                  className="rounded-xl p-3 flex items-center gap-2 border transition-all"
-                  style={{
-                    background: sel ? pl.bg : "rgba(4,12,34,0.97)",
-                    borderColor: sel ? pl.border : "rgba(255,255,255,0.08)",
-                    boxShadow: sel ? `0 0 14px ${pl.glow}` : "none",
-                  }}>
-                  <span style={{ fontSize: "1.1rem" }}>{pl.icon}</span>
-                  <span className="font-amiri text-base font-bold" dir="rtl"
-                    style={{ color: sel ? pl.color : "rgba(255,255,255,0.45)" }}>
-                    {pl.arabic}
                   </span>
                 </motion.button>
               );
