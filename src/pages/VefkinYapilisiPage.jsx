@@ -24,16 +24,17 @@ function calcAbjad(t) {
 }
 
 // ── Vefk Generation ──────────────────────────────────────────────
+// Ottoman 3×3 water pattern — rank to cell mapping (reading order)
 const MAGIC_PATTERN_3 = [2,7,6,9,5,1,4,3,8];
 
 function generate3x3(target) {
   const n = parseInt(target);
   if (!n || n < 15) return null;
-  const rem = (n - 15) % 3;
-  const base = (n - 15 - rem) / 3;
-  const vals = Array.from({ length: 9 }, (_, i) => base + i + 1);
-  if (rem === 2) vals[3] += 1;
-  else if (rem === 1) vals[6] += 1;
+  // Center value = n/3 (rounded). Place 9 consecutive values centered on it.
+  // All rows/cols/diagonals sum to 3 * center. All 9 values are unique.
+  const center = Math.round(n / 3);
+  const vals = [center-4, center-3, center-2, center-1, center,
+                center+1, center+2, center+3, center+4];
   const flat = MAGIC_PATTERN_3.map(rank => vals[rank - 1]);
   return [flat.slice(0,3), flat.slice(3,6), flat.slice(6,9)];
 }
