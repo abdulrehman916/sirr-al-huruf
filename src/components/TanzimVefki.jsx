@@ -22,20 +22,13 @@ const LAYOUT = [
 ];
 
 // Given base number, compute value for each position 1–24
-// Hane 1–19: base × position number
-// Hane 20–24: base × (base - 40 + offset) where offset = 0,1,2,3,4
+// All 24 positions follow the same rule: base × sıra_numarası (1 through 24)
+// This ensures the Halî Vasat 5×5 grid (center empty) is always balanced.
 function computeCells(base) {
   const cells = {};
-  // Positions 1–19: base × tabi sıra numarası
-  for (let pos = 1; pos <= 19; pos++) {
+  for (let pos = 1; pos <= 24; pos++) {
     cells[pos] = base * pos;
   }
-  // Positions 20–24: base × (base − 40 + offset)
-  cells[20] = base * (base - 40);  // offset 0
-  cells[21] = base * (base - 39);  // offset 1
-  cells[22] = base * (base - 38);  // offset 2
-  cells[23] = base * (base - 37);  // offset 3
-  cells[24] = base * (base - 36);  // offset 4
   return cells;
 }
 
@@ -113,7 +106,7 @@ export default function TanzimVefki() {
   const base = mainNum ? parseInt(mainNum) : null;
 
   const cells = useMemo(() => {
-    if (!base || isNaN(base) || base < 41) return null;
+    if (!base || isNaN(base) || base < 1) return null;
     return computeCells(base);
   }, [base]);
 
@@ -183,9 +176,9 @@ export default function TanzimVefki() {
               className="w-full rounded-xl px-4 py-2.5 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
               style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
             />
-            {base && base < 41 && (
+            {base && base < 1 && (
               <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,100,100,0.70)" }}>
-                ⚠ Sayı 41'den büyük olmalı (hane 20–24 için)
+                ⚠ Geçerli bir sayı girin
               </p>
             )}
           </div>
@@ -219,14 +212,11 @@ export default function TanzimVefki() {
           </p>
           <div className="space-y-1">
             <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-              Hane 1–19: <span style={{ color: G.text }}>Sayı × konum (1, 2, 3 … 19)</span>
+              Hane 1–24: <span style={{ color: G.text }}>Ana Sayı × sıra numarası (1, 2, 3 … 24)</span>
             </p>
-            <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-              Hane 20–24: <span style={{ color: G.text }}>Sayı × (Sayı−40, +1, +2, +3, +4)</span>
-            </p>
-            {base && base >= 41 && (
+            {base && base >= 1 && (
               <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
-                Örnek: {base} − 40 = {base - 40} → ×{base-40}, ×{base-39}, ×{base-38}, ×{base-37}, ×{base-36}
+                Örnek: {base}×1={base}, {base}×12={base*12}, {base}×24={base*24}
               </p>
             )}
           </div>
