@@ -62,6 +62,21 @@ function getSacredPattern(size, elementKey) {
 }
 
 // ── Vefk Generation ──────────────────────────────────────────────
+function generateVefk3x3(targetNumber, elementKey) {
+  const n = parseInt(targetNumber);
+  const remainder = (n - 15) % 3;
+  const base = (n - 15 - remainder) / 3;
+  // Generate 9 sequential values
+  const values = Array.from({ length: 9 }, (_, i) => base + i);
+  // Apply remainder rules
+  if (remainder === 2) values[3] += 1;
+  else if (remainder === 1) values[6] += 1;
+  const pattern = PATTERNS_3x3[elementKey] || PATTERNS_3x3.earth;
+  // pattern[cellIndex] = rank (1-based) → values[rank-1]
+  const flat = pattern.map(rank => values[rank - 1]);
+  return [flat.slice(0, 3), flat.slice(3, 6), flat.slice(6, 9)];
+}
+
 function generateVefk4x4(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
   const remainder = (n - 30) % 4;
@@ -169,9 +184,17 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
           🜂 Sacred Vefk {gridSize}×{gridSize}
         </p>
         {gridSize === 3 && (
-          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
-            Wafq al-Shams — الشمس
-          </p>
+          <div className="flex items-center justify-center gap-2">
+            {elMeta && <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>}
+            <span className="font-amiri text-sm" style={{ color: elMeta?.color || G.dim }}>
+              {elMeta?.arabic || "التراب"}
+            </span>
+            {isGenerated && inputNumber && (
+              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+                · Base {Math.floor((parseInt(inputNumber) - 15) / 3)}
+              </span>
+            )}
+          </div>
         )}
         {gridSize === 4 && (
           <div className="flex items-center justify-center gap-2">
@@ -238,6 +261,7 @@ export default function MagicSqayerPage() {
 
   const buildGrid = (num, size, el) => {
     if (!num || !size) return null;
+    if (size === 3) return generateVefk3x3(num, el || "earth");
     if (size === 4) return generateVefk4x4(num, el || "fire");
     return generateMagicSquare(size, parseInt(num));
   };
