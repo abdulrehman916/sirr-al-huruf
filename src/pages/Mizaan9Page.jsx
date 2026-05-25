@@ -13,6 +13,7 @@ import Mizaan6      from "../components/mizaan/Mizaan6";
 import Mizaan7      from "../components/mizaan/Mizaan7";
 import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
+import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -63,6 +64,7 @@ export default function Mizaan9Page() {
   const [progress,    setProgress]    = useState(0);
   const [selections,    setSelections]    = useState(buildDefaultSelections(null));
   const [customPurpose, setCustomPurpose] = useState("");
+  const [degreeSels,    setDegreeSels]    = useState({});
   const abortRef = useRef(false);
 
   const handleAnalyze = useCallback(async () => {
@@ -88,6 +90,7 @@ export default function Mizaan9Page() {
     setLoading(false);
     setProgress(0);
     setSelections(buildDefaultSelections(null));
+    setDegreeSels({});
   };
 
   const updateSel = (key) => (val) => setSelections(prev => ({ ...prev, [key]: val }));
@@ -211,7 +214,9 @@ export default function Mizaan9Page() {
                 selectedPurpose={selections.purposes}
               />
               <MizaanDivider />
-              <Mizaan9Final result={result} selections={selections} />
+              <Mizaan9Final result={result} selections={selections} degreeSels={degreeSels} onDegreeSels={setDegreeSels} />
+              <MizaanDivider />
+              <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} />
 
             </motion.div>
           )}

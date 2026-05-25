@@ -114,12 +114,11 @@ function ElementSection({ elKey, isOpen, onToggle, selectedDegree, onSelectDegre
   );
 }
 
-export default function Mizaan9Final({ result, selections }) {
+export default function Mizaan9Final({ result, selections, degreeSels = {}, onDegreeSels }) {
   // ALL hooks must be at the top — no early returns before this block
   const [openSections, setOpenSections] = useState(
     () => Object.fromEntries(ELEMENT_ORDER.map(e => [e, false]))
   );
-  const [degreeSels, setDegreeSels] = useState({});
 
   const { dominant } = result;
   if (!dominant) return null;
@@ -133,7 +132,7 @@ export default function Mizaan9Final({ result, selections }) {
   ];
 
   const toggleSection = (key) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
-  const selectDegree = (elKey, degKey) => setDegreeSels(prev => ({ ...prev, [elKey]: degKey }));
+  const selectDegree = (elKey, degKey) => onDegreeSels?.(prev => ({ ...prev, [elKey]: degKey }));
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}
@@ -151,7 +150,7 @@ export default function Mizaan9Final({ result, selections }) {
             elKey={elKey}
             isOpen={openSections[elKey] !== undefined ? !!openSections[elKey] : idx === 0}
             onToggle={() => toggleSection(elKey)}
-            selectedDegree={degreeSels[elKey] ?? null}
+            selectedDegree={degreeSels?.[elKey] ?? null}
             onSelectDegree={selectDegree}
           />
         ))}
