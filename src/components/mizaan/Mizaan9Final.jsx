@@ -115,7 +115,15 @@ function ElementSection({ elKey, isOpen, onToggle, selectedDegree, onSelectDegre
 }
 
 export default function Mizaan9Final({ result, selections }) {
+  // ALL hooks must be at the top — no early returns before this block
+  const [openSections, setOpenSections] = useState(
+    () => Object.fromEntries(ELEMENT_ORDER.map(e => [e, false]))
+  );
+  const [degreeSels, setDegreeSels] = useState({});
+
   const { dominant } = result;
+  if (!dominant) return null;
+
   const primaryElement = (selections.elements?.[0] ?? dominant) || 'fire';
 
   // Ordered sections: dominant element first
@@ -123,16 +131,6 @@ export default function Mizaan9Final({ result, selections }) {
     primaryElement,
     ...ELEMENT_ORDER.filter(e => e !== primaryElement),
   ];
-
-  // Open state: dominant section open by default, rest closed
-  const [openSections, setOpenSections] = useState(() =>
-    Object.fromEntries(ELEMENT_ORDER.map(e => [e, e === primaryElement]))
-  );
-
-  // Per-element selected degree
-  const [degreeSels, setDegreeSels] = useState({});
-
-  if (!dominant) return null;
 
   const toggleSection = (key) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
   const selectDegree = (elKey, degKey) => setDegreeSels(prev => ({ ...prev, [elKey]: degKey }));
@@ -147,11 +145,11 @@ export default function Mizaan9Final({ result, selections }) {
       </p>
 
       <div className="space-y-2">
-        {orderedElements.map(elKey => (
+        {orderedElements.map((elKey, idx) => (
           <ElementSection
             key={elKey}
             elKey={elKey}
-            isOpen={!!openSections[elKey]}
+            isOpen={openSections[elKey] !== undefined ? !!openSections[elKey] : idx === 0}
             onToggle={() => toggleSection(elKey)}
             selectedDegree={degreeSels[elKey] ?? null}
             onSelectDegree={selectDegree}
