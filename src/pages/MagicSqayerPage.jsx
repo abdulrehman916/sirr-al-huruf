@@ -272,6 +272,35 @@ function CalcBreakdown({ inputNumber, gridSize }) {
   const division = remaining / gridSize;
   const base = Math.floor(division);
 
+  const rows = [
+    {
+      step: "①",
+      label: "Entered Number",
+      formula: n.toLocaleString(),
+    },
+    {
+      step: "②",
+      label: "Kutb Number Removed",
+      formula: `${kutb} − ${gridSize} = ${removed}`,
+    },
+    {
+      step: "③",
+      label: "Remaining",
+      formula: `${n.toLocaleString()} − ${removed} = ${remaining.toLocaleString()}`,
+    },
+    {
+      step: "④",
+      label: "Division Number",
+      formula: `${remaining.toLocaleString()} ÷ ${gridSize} = ${division.toFixed(2)}`,
+    },
+    {
+      step: "⑤",
+      label: "Final Base Number",
+      formula: base.toLocaleString(),
+      highlight: true,
+    },
+  ];
+
   return (
     <motion.div
       key={`calc-${inputNumber}-${gridSize}`}
@@ -286,25 +315,37 @@ function CalcBreakdown({ inputNumber, gridSize }) {
       </p>
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
 
-      <div className="space-y-2.5">
-        {[
-          { label: "Entered Number", arabic: "الرقم المدخل", value: n.toLocaleString() },
-          { label: "Kutb Removed", arabic: `${kutb} − ${gridSize} = ${removed}`, value: `${n.toLocaleString()} − ${removed} = ${remaining.toLocaleString()}` },
-          { label: "Remaining", arabic: "الباقي", value: remaining.toLocaleString() },
-          { label: "Division", arabic: `${remaining.toLocaleString()} ÷ ${gridSize}`, value: division.toFixed(2) },
-          { label: "Base Used", arabic: "القاعدة", value: base.toLocaleString() },
-        ].map((row, i) => (
-          <div key={i} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2"
-            style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.12)" }}>
-            <div className="min-w-0">
-              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.45)" }}>{row.label}</p>
-              <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.55)" }} dir="rtl">{row.arabic}</p>
+      <div className="space-y-2">
+        {rows.map((row, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.06, duration: 0.28 }}
+            className="flex items-center gap-3 rounded-xl px-4 py-3"
+            style={{
+              background: row.highlight ? "rgba(212,175,55,0.10)" : "rgba(212,175,55,0.04)",
+              border: `1px solid ${row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)"}`,
+              boxShadow: row.highlight ? `0 0 14px rgba(212,175,55,0.15)` : "none",
+            }}
+          >
+            <span className="font-inter text-base flex-shrink-0" style={{ color: "rgba(212,175,55,0.50)" }}>{row.step}</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(212,175,55,0.40)" }}>
+                {row.label}
+              </p>
+              <p
+                className="font-amiri font-bold tabular-nums leading-snug"
+                style={{
+                  color: row.highlight ? G.text : "rgba(212,175,55,0.80)",
+                  fontSize: row.highlight ? "1.35rem" : "1rem",
+                  textShadow: row.highlight ? `0 0 16px ${G.glowHi}` : "none",
+                }}
+              >
+                {row.formula}
+              </p>
             </div>
-            <p className="font-amiri text-lg font-bold tabular-nums flex-shrink-0"
-              style={{ color: G.text, textShadow: `0 0 12px ${G.glow}` }}>
-              {row.value}
-            </p>
-          </div>
+          </motion.div>
         ))}
       </div>
     </motion.div>
