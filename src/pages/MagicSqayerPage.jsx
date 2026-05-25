@@ -69,6 +69,43 @@ function SectionLabel({ children }) {
   );
 }
 
+// Sacred 4×4 placement patterns — each value is the rank (1-based) of the number to place
+// Pattern tells: "position index X in the flat grid gets the value of rank N"
+// e.g. FIRE_PATTERN[0] = 8 means cell 0 gets the 8th number (base+7)
+const ELEMENT_PATTERNS_4x4 = {
+  fire:  [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15],
+  earth: [15, 4, 5, 10, 6, 9, 16, 3, 12, 7, 2, 13, 1, 14, 11, 8],
+  air:   [1, 14, 11, 8, 12, 7, 2, 13, 6, 9, 16, 3, 15, 4, 5, 10],
+  water: [10, 5, 4, 15, 3, 16, 9, 6, 13, 2, 7, 12, 8, 11, 14, 1],
+};
+
+function generateVefk4x4(targetNumber, elementKey) {
+  const n = parseInt(targetNumber);
+  const remainder = (n - 30) % 4;
+  const base = (n - 30 - remainder) / 4;
+
+  // Build 16 sequential values starting from base
+  const values = Array.from({ length: 16 }, (_, i) => base + i);
+
+  // Apply remainder rule
+  if (remainder === 3) values[4] += 1;       // 5th cell (index 4)
+  else if (remainder === 2) values[8] += 1;  // 9th cell (index 8)
+  else if (remainder === 1) values[12] += 1; // 13th cell (index 12)
+
+  const pattern = ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
+
+  // pattern[cellIndex] = rank (1-based) → values[rank-1]
+  const flat = pattern.map(rank => values[rank - 1]);
+
+  // Return as 4×4 grid
+  return [
+    flat.slice(0, 4),
+    flat.slice(4, 8),
+    flat.slice(8, 12),
+    flat.slice(12, 16),
+  ];
+}
+
 function generateMagicSquare(size, baseNum) {
   const grid = Array(size).fill(0).map(() => Array(size).fill(0));
   let num = baseNum;
@@ -88,23 +125,28 @@ export default function MagicSqayerPage() {
   const [planet,      setPlanet]      = useState(null);
   const [grid, setGrid]               = useState(null);
 
+  const buildGrid = (num, size, el) => {
+    if (!num || !size) return null;
+    if (size === 4) return generateVefk4x4(num, el || "fire");
+    return generateMagicSquare(size, parseInt(num));
+  };
+
   const handleNumberChange = (e) => {
     const val = e.target.value.replace(/[^\d]/g, "");
     setInputNumber(val);
-    if (val && gridSize) {
-      setGrid(generateMagicSquare(gridSize, parseInt(val)));
-    } else {
-      setGrid(null);
-    }
+    setGrid(buildGrid(val, gridSize, element));
   };
 
   const handleGridSizeChange = (size) => {
-    setGridSize(gridSize === size ? null : size);
-    if (inputNumber && gridSize === size) {
-      setGrid(null);
-    } else if (inputNumber && size !== gridSize) {
-      setGrid(generateMagicSquare(size, parseInt(inputNumber)));
-    }
+    const newSize = gridSize === size ? null : size;
+    setGridSize(newSize);
+    setGrid(buildGrid(inputNumber, newSize, element));
+  };
+
+  const handleElementChange = (key) => {
+    const newEl = element === key ? null : key;
+    setElement(newEl);
+    setGrid(buildGrid(inputNumber, gridSize, newEl));
   };
 
   return (
@@ -184,8 +226,8 @@ export default function MagicSqayerPage() {
               const sel = element === el.key;
               return (
                 <motion.button
-                  key={el.key}
-                  onClick={() => setElement(sel ? null : el.key)}
+                 key={el.key}
+                 onClick={() => handleElementChange(el.key)}
                   whileTap={{ scale: 0.95 }}
                   className="rounded-xl p-3 flex items-center gap-2 border transition-all"
                   style={{
@@ -245,9 +287,7 @@ export default function MagicSqayerPage() {
             boxShadow: `0 0 28px ${G.glowHi}`,
           }}
           onClick={() => {
-            if (inputNumber && gridSize) {
-              setGrid(generateMagicSquare(gridSize, parseInt(inputNumber)));
-            }
+            setGrid(buildGrid(inputNumber, gridSize, element));
           }}
         >
           <span className="font-amiri text-base">✨</span>
@@ -266,9 +306,22 @@ export default function MagicSqayerPage() {
               boxShadow: `0 0 40px ${G.glow}`,
             }}
           >
-            <p className="font-inter text-[10px] uppercase tracking-widest text-center mb-4" style={{ color: G.dim }}>
-              🜂 Sacred Grid {gridSize}×{gridSize}
-            </p>
+            <div className="text-center mb-4 space-y-1">
+              <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>
+                🜂 Sacred Vefk {gridSize}×{gridSize}
+                {gridSize === 4 && element && ` — ${ELEMENTS.find(e => e.key === element)?.arabic || ""}`}
+              </p>
+              {gridSize !== 4 && (
+                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.30)" }}>
+                  Anasir Vefk system active for 4×4 only
+                </p>
+              )}
+              {gridSize === 4 && (
+                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.30)" }}>
+                  Base: {Math.floor((parseInt(inputNumber) - 30) / 4)} · Remainder: {(parseInt(inputNumber) - 30) % 4}
+                </p>
+              )}
+            </div>
             <div
               className="inline-block mx-auto"
               style={{
