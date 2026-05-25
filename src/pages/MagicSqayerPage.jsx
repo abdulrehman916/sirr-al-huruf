@@ -62,6 +62,13 @@ const ELEMENT_PATTERNS_6x6 = {
   water: [36, 5,33, 4, 2,31, 25,29,10, 9,26,12, 18,20,22,21,17,13, 19,14,16,15,23,24,  7,11,27,28, 8,30,  6,32, 3,34,35, 1],
 };
 
+const ELEMENT_PATTERNS_8x8 = {
+  fire:  [16,51,54, 9, 8,59,62, 1, 53,10,15,52,61, 2, 7,60, 11,56,49,14, 3,64,57, 6, 50,13,12,55,58, 5, 4,63, 32,35,38,25,24,43,46,17, 37,26,31,36,45,18,23,44, 27,40,33,30,19,48,41,22, 34,29,28,39,42,21,20,47],
+  earth: [47,20,21,42,39,28,29,34, 22,41,48,19,30,33,40,27, 44,23,18,45,36,31,26,37, 17,46,43,24,25,38,35,32, 63, 4, 5,58,55,12,13,50,  6,57,64, 3,14,49,56,11, 60, 7, 2,61,52,15,10,53,  1,62,59, 8, 9,54,51,16],
+  air:   [34,29,28,39,42,21,20,47, 27,40,33,30,19,48,41,22, 37,26,31,36,45,18,23,44, 32,35,38,25,24,43,46,17, 50,13,12,55,58, 5, 4,63, 11,56,49,14, 3,64,57, 6, 53,10,15,52,61, 2, 7,60, 16,51,54, 9, 8,59,62, 1],
+  water: [ 1,62,59, 8, 9,54,51,16, 60, 7, 2,61,52,15,10,53,  6,57,64, 3,14,49,56,11, 63, 4, 5,58,55,12,13,50, 17,46,43,24,25,38,35,32, 44,23,18,45,36,31,26,37, 22,41,48,19,30,33,40,27, 47,20,21,42,39,28,29,34],
+};
+
 const ELEMENT_PATTERNS_7x7 = {
   fire:  [28,19,10, 1,48,39,30, 29,27,18, 9, 7,47,38, 37,35,26,17,15, 6,46, 45,36,34,25,23,14, 5,  4,44,42,33,24,22,13, 12, 3,43,41,32,20,21, 20,11, 2,49,40,31,22],
   earth: [ 4,35,10,41,16,47,22, 29,11,42,17,48,23, 5, 12,36,18,49,24, 6,30, 37,19,43,25, 7,31,13, 20,44,26, 1,32,14,38, 45,27, 2,33, 8,39,21, 28, 3,34, 9,40,15,46],
@@ -82,6 +89,7 @@ function getSacredPattern(size, elementKey) {
   if (size === 5) return ELEMENT_PATTERNS_5x5[elementKey] || ELEMENT_PATTERNS_5x5.fire;
   if (size === 6) return ELEMENT_PATTERNS_6x6[elementKey] || ELEMENT_PATTERNS_6x6.fire;
   if (size === 7) return ELEMENT_PATTERNS_7x7[elementKey] || ELEMENT_PATTERNS_7x7.fire;
+  if (size === 8) return ELEMENT_PATTERNS_8x8[elementKey] || ELEMENT_PATTERNS_8x8.fire;
   return null;
 }
 
@@ -129,6 +137,24 @@ function generateVefk6x6(targetNumber, elementKey) {
   const pattern = ELEMENT_PATTERNS_6x6[elementKey] || ELEMENT_PATTERNS_6x6.fire;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0,6), flat.slice(6,12), flat.slice(12,18), flat.slice(18,24), flat.slice(24,30), flat.slice(30,36)];
+}
+
+function generateVefk8x8(targetNumber, elementKey) {
+  const n = parseInt(targetNumber);
+  const remainder = (n - 260) % 8;
+  const base = (n - 260 - remainder) / 8;
+  const values = Array.from({ length: 64 }, (_, i) => base + i);
+  // remainder cells: pos 9=idx8, 17=idx16, 25=idx24, 33=idx32, 41=idx40, 49=idx48, 57=idx56
+  if (remainder === 7) values[8]  += 1;
+  else if (remainder === 6) values[16] += 1;
+  else if (remainder === 5) values[24] += 1;
+  else if (remainder === 4) values[32] += 1;
+  else if (remainder === 3) values[40] += 1;
+  else if (remainder === 2) values[48] += 1;
+  else if (remainder === 1) values[56] += 1;
+  const pattern = ELEMENT_PATTERNS_8x8[elementKey] || ELEMENT_PATTERNS_8x8.fire;
+  const flat = pattern.map(rank => values[rank - 1]);
+  return [flat.slice(0,8), flat.slice(8,16), flat.slice(16,24), flat.slice(24,32), flat.slice(32,40), flat.slice(40,48), flat.slice(48,56), flat.slice(56,64)];
 }
 
 function generateVefk7x7(targetNumber, elementKey) {
@@ -339,6 +365,7 @@ export default function MagicSqayerPage() {
     if (size === 5) return generateVefk5x5(num, el || "fire");
     if (size === 6) return generateVefk6x6(num, el || "fire");
     if (size === 7) return generateVefk7x7(num, el || "fire");
+    if (size === 8) return generateVefk8x8(num, el || "fire");
     return generateMagicSquare(size, parseInt(num));
   };
 
