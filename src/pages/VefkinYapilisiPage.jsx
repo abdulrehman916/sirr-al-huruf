@@ -33,29 +33,29 @@ const HALI_VASAT_5_LAYOUT = [
   [23,  2,  6, 10, 19],
 ];
 
-// Compute cell values based on Ana Sayı (base number)
-// Hane 1–19: base × position_number
-// Hane 20–24: base × (base - 40 + offset) where offset = 0,1,2,3,4
-function computeHaliVasatCells(base) {
+// anaSayi  = Field 1: the multiplication base for ALL 24 cells
+// talibVal = Field 2 resolved number: used ONLY to derive the 20–24 sequence
+//            sequence starts at (talibVal − 40), i.e. pos20 = talibVal−40, pos21 = talibVal−39, …
+// Hane 1–19:  anaSayi × position
+// Hane 20–24: anaSayi × (talibVal − 40 + offset)   offset = 0,1,2,3,4
+function computeHaliVasatCells(anaSayi, talibVal) {
   const cells = {};
-  // Positions 1–19: base × sıra numarası
   for (let pos = 1; pos <= 19; pos++) {
-    cells[pos] = base * pos;
+    cells[pos] = anaSayi * pos;
   }
-  // Positions 20–24: base × (base − 40 + offset)
-  cells[20] = base * (base - 40);  // offset 0
-  cells[21] = base * (base - 39);  // offset 1
-  cells[22] = base * (base - 38);  // offset 2
-  cells[23] = base * (base - 37);  // offset 3
-  cells[24] = base * (base - 36);  // offset 4
+  const x = talibVal - 40;
+  cells[20] = anaSayi * (x);
+  cells[21] = anaSayi * (x + 1);
+  cells[22] = anaSayi * (x + 2);
+  cells[23] = anaSayi * (x + 3);
+  cells[24] = anaSayi * (x + 4);
   return cells;
 }
 
-function generate5x5HaliVasat(base) {
-  const n = parseInt(base);
-  if (!n || n < 41) return null; // Must be >= 41 for hane 20-24 formula
-  const cells = computeHaliVasatCells(n);
-  // Map layout positions to values
+function generate5x5HaliVasat(anaSayi, talibVal) {
+  if (!anaSayi || anaSayi < 1) return null;
+  if (!talibVal || talibVal < 41) return null; // talibVal must be >= 41 so x = talibVal−40 >= 1
+  const cells = computeHaliVasatCells(anaSayi, talibVal);
   const grid = HALI_VASAT_5_LAYOUT.map(row =>
     row.map(pos => (pos === null ? null : cells[pos]))
   );
@@ -78,45 +78,43 @@ function AnaVefk() {
   const [anaSayi,  setAnaSayi]  = useState("");
   const [talibRaw, setTalibRaw] = useState("");
   const [grid,     setGrid]     = useState(null);
-  const [base,     setBase]     = useState(null);
+  const [savedAnaSayi, setSavedAnaSayi] = useState(null);
 
-  // Resolve: if talibRaw is a number → use it directly; if text → use its Ebced
+  // Field 1: multiplication base
+  const anaSayiNum = anaSayi.trim() ? parseInt(anaSayi) : null;
+
+  // Field 2: resolve to number (direct) or Ebced (text)
   const talibTrimmed   = talibRaw.trim();
   const talibIsNumeric = /^\d+$/.test(talibTrimmed);
   const talibEbced     = (!talibIsNumeric && talibTrimmed) ? calcAbjad(talibTrimmed) : null;
-  // Resolved BASE from talib field (number or Ebced)
-  const talibBase      = talibTrimmed
+  const talibVal       = talibTrimmed
     ? (talibIsNumeric ? parseInt(talibTrimmed) : talibEbced)
     : null;
-  // Center cell: show raw text if text was entered; if number entered show it; if empty show nothing
-  const centerDisplay  = talibTrimmed || null;
 
-  // Effective base = talib field takes priority if filled, else anaSayi
-  const effectiveBase  = talibBase ?? (anaSayi.trim() ? parseInt(anaSayi) : null);
+  // Center cell shows the raw typed Field 2 text/number (display only)
+  const centerDisplay = talibTrimmed || null;
+
+  // Validation
+  const anaSayiValid = anaSayiNum && anaSayiNum >= 1;
+  const talibValid   = talibVal && talibVal >= 41;
+  const canGenerate  = anaSayiValid && talibValid;
 
   const handleGenerate = () => {
-    const baseNum = effectiveBase;
-    if (!baseNum || baseNum < 41) return;
-    const g = generate5x5HaliVasat(baseNum);
+    if (!canGenerate) return;
+    const g = generate5x5HaliVasat(anaSayiNum, talibVal);
     if (!g) return;
     setGrid(g);
-    setBase(baseNum);
+    setSavedAnaSayi(anaSayiNum);
   };
 
-  // Calculate magic constant and validate
-  // Center cell (row 2, col 2) is always null — excluded from ALL sums
+  // Magic constant: all rows/cols/diagonals excluding center cell [2][2]
   const magicConst = useMemo(() => {
     if (!grid) return null;
-    // Row sums: filter out null (center cell)
     const rowSums = grid.map(r => r.reduce((a, v) => a + (v === null ? 0 : v), 0));
-    // Col sums: filter out null (center cell)
     const colSums = [0,1,2,3,4].map(c =>
       grid.reduce((a, r) => a + (r[c] === null ? 0 : r[c]), 0)
     );
-    // Diagonals: skip center cell at [2][2]
-    // Main diagonal: [0][0], [1][1], [3][3], [4][4]
     const diag1 = grid[0][0] + grid[1][1] + grid[3][3] + grid[4][4];
-    // Anti-diagonal: [0][4], [1][3], [3][1], [4][0]
     const diag2 = grid[0][4] + grid[1][3] + grid[3][1] + grid[4][0];
     const expected = rowSums[0];
     const allEqual = rowSums.every(s => s === expected) &&
@@ -168,9 +166,9 @@ function AnaVefk() {
             className="w-full rounded-xl px-4 py-2.5 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
             style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
           />
-          {effectiveBase && effectiveBase < 41 && (
+          {anaSayiNum && anaSayiNum < 1 && (
             <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,100,100,0.70)" }}>
-              ⚠ Sayı 41'den büyük olmalı (hane 20–24 için)
+              ⚠ Geçerli bir sayı girin
             </p>
           )}
         </div>
@@ -193,17 +191,21 @@ function AnaVefk() {
           {talibEbced !== null && talibEbced > 0 && (
             <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
               ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{talibEbced.toLocaleString()}</span>
-              <span style={{ color: "rgba(212,175,55,0.35)" }}> — baz sayı olarak kullanılır</span>
+              {talibEbced < 41 && <span style={{ color: "rgba(255,100,100,0.70)" }}> — ⚠ 41'den büyük olmalı</span>}
+              {talibEbced >= 41 && <span style={{ color: "rgba(212,175,55,0.35)" }}> → X={talibEbced - 40}, …, {talibEbced - 36}</span>}
             </p>
           )}
-          {talibIsNumeric && talibTrimmed && (
+          {talibIsNumeric && talibTrimmed && talibVal && (
             <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.50)" }}>
-              ✦ Sayı doğrudan baz olarak kullanılır: <span className="font-amiri font-bold" style={{ color: G.text }}>{talibTrimmed}</span>
+              ✦ <span className="font-amiri font-bold" style={{ color: G.text }}>{talibVal}</span>
+              {talibVal < 41
+                ? <span style={{ color: "rgba(255,100,100,0.70)" }}> — ⚠ 41'den büyük olmalı</span>
+                : <span style={{ color: "rgba(212,175,55,0.35)" }}> → X={talibVal - 40}, …, {talibVal - 36}</span>}
             </p>
           )}
           {!talibTrimmed && (
             <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.30)" }}>
-              Sayı girilirse doğrudan baz alınır — Metin girilirse Ebced hesaplanır
+              Sayı → doğrudan kullanılır · Metin/Esma → Ebced hesaplanır
             </p>
           )}
         </div>
@@ -219,11 +221,11 @@ function AnaVefk() {
               Hane 1–19: <span style={{ color: G.text }}>Ana Sayı × konum (1, 2, 3 … 19)</span>
             </p>
             <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-              Hane 20–24: <span style={{ color: G.text }}>Ana Sayı × (Ana Sayı−40, −39, −38, −37, −36)</span>
+              Hane 20–24: <span style={{ color: G.text }}>Ana Sayı × (Talib−40, −39, −38, −37, −36)</span>
             </p>
-            {base && base >= 41 && (
+            {talibVal && talibVal >= 41 && anaSayiNum && (
               <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
-                Örnek: {base} − 40 = {base - 40} → ×{base-40}, ×{base-39}, ×{base-38}, ×{base-37}, ×{base-36}
+                {talibVal}−40={talibVal-40} → {anaSayiNum}×{talibVal-40}, …, {anaSayiNum}×{talibVal-36}
               </p>
             )}
           </div>
@@ -231,7 +233,7 @@ function AnaVefk() {
 
         <motion.button
           onClick={handleGenerate}
-          disabled={!effectiveBase || effectiveBase < 41}
+          disabled={!canGenerate}
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           className="w-full py-3 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)", boxShadow: `0 0 24px ${G.glowHi}` }}
@@ -242,9 +244,9 @@ function AnaVefk() {
 
       {/* Result */}
       <AnimatePresence>
-        {grid && base ? (
+        {grid && savedAnaSayi ? (
           <motion.div
-            key={`hali-vasat-${base}`}
+            key={`hali-vasat-${savedAnaSayi}`}
             initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
             className="rounded-2xl border p-5 space-y-4"
@@ -254,7 +256,7 @@ function AnaVefk() {
             <div className="grid grid-cols-2 gap-2 text-center">
               <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
                 <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Ana Sayı</p>
-                <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>{base.toLocaleString()}</p>
+                <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>{savedAnaSayi.toLocaleString()}</p>
               </div>
               <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
                 <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
