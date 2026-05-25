@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
-import { getDominantPurpose, getBestHour, getBestDay, getDominantPlanet, getDominantDayNight } from "../lib/mizaan9Data";
+import { getDominantPurpose, getBestHour, getBestDay, getDominantPlanet } from "../lib/mizaan9Data";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
 import Mizaan3      from "../components/mizaan/Mizaan3";
@@ -43,6 +43,11 @@ function MizaanDivider() {
   );
 }
 
+function getTimeBasedDayNight() {
+  const h = new Date().getHours();
+  return (h >= 6 && h < 20) ? 'gunduz' : 'gece';
+}
+
 // Build initial selections from dominant element
 function buildDefaultSelections(dominant) {
   return {
@@ -52,7 +57,7 @@ function buildDefaultSelections(dominant) {
     days:       [],
     planet:     null,
     purposes:   dominant ? (getDominantPurpose(dominant) ? [getDominantPurpose(dominant)] : []) : [],
-    daynight:   null,
+    daynight:   getTimeBasedDayNight(),
   };
 }
 
@@ -206,7 +211,6 @@ export default function Mizaan9Page() {
               />
               <MizaanDivider />
               <Mizaan8
-                dominant={result.dominant}
                 selected={selections.daynight}
                 onChange={updateSel("daynight")}
               />

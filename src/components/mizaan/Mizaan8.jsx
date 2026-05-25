@@ -1,11 +1,16 @@
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
-import { MIZAAN_DAYNIGHT_FULL, getDominantDayNight } from "../../lib/mizaan9Data";
+import { MIZAAN_DAYNIGHT_FULL } from "../../lib/mizaan9Data";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
-export default function Mizaan8({ dominant, selected, onChange }) {
-  const suggestedKey = getDominantDayNight(dominant);
+function getTimeBasedKey() {
+  const h = new Date().getHours();
+  return (h >= 6 && h < 20) ? 'gunduz' : 'gece';
+}
+
+export default function Mizaan8({ selected, onChange }) {
+  const suggestedKey = getTimeBasedKey();
   const toggle = (key) => onChange(selected === key ? null : key);
 
   return (
