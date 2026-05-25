@@ -208,10 +208,10 @@ function generateVefk9x9(targetNumber, elementKey) {
     // Divide original target by 2
     const half = n / 2;
     const halfRemainder = (half - 369) % 9;
-    base = (half - 369 - halfRemainder) / 9;
+    base = Math.floor((half - 369 - halfRemainder) / 9);
   } else {
     // No remainder: Target - 369, then divide by 9
-    base = (n - 369) / 9;
+    base = Math.floor((n - 369) / 9);
   }
   
   // Get authentic elemental sacred pattern
@@ -224,17 +224,20 @@ function generateVefk9x9(targetNumber, elementKey) {
   // Example: sacred number 1 → base + 0
   const flat = pattern.map(sacredNumber => base + (sacredNumber - 1));
   
-  return [
-    flat.slice(0, 9),
-    flat.slice(9, 18),
-    flat.slice(18, 27),
-    flat.slice(27, 36),
-    flat.slice(36, 45),
-    flat.slice(45, 54),
-    flat.slice(54, 63),
-    flat.slice(63, 72),
-    flat.slice(72, 81)
-  ];
+  return {
+    grid: [
+      flat.slice(0, 9),
+      flat.slice(9, 18),
+      flat.slice(18, 27),
+      flat.slice(27, 36),
+      flat.slice(36, 45),
+      flat.slice(45, 54),
+      flat.slice(54, 63),
+      flat.slice(63, 72),
+      flat.slice(72, 81)
+    ],
+    base: base
+  };
 }
 
 function generateVefk8x8(targetNumber, elementKey) {
@@ -402,10 +405,30 @@ function CalcBreakdown({ inputNumber, gridSize }) {
   if (!inputNumber || !gridSize || !KUTB[gridSize]) return null;
   const n = parseInt(inputNumber);
   const kutb = KUTB[gridSize];
-  const removed = kutb - gridSize;
-  const remaining = n - removed;
-  const division = remaining / gridSize;
-  const base = Math.floor(division);
+  
+  // Special handling for 9×9 Ottoman Dokuzlu Vefk
+  let base, division, remaining, removed;
+  if (gridSize === 9) {
+    const remainder = (n - 369) % 9;
+    if (remainder !== 0) {
+      const half = n / 2;
+      const halfRemainder = (half - 369) % 9;
+      removed = 369 - 9;
+      remaining = half - removed;
+      division = remaining / 9;
+      base = Math.floor(division);
+    } else {
+      removed = 369 - 9;
+      remaining = n - removed;
+      division = remaining / 9;
+      base = Math.floor(division);
+    }
+  } else {
+    removed = kutb - gridSize;
+    remaining = n - removed;
+    division = remaining / gridSize;
+    base = Math.floor(division);
+  }
 
   const rows = [
     {
@@ -491,8 +514,10 @@ function CalcBreakdown({ inputNumber, gridSize }) {
 function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
   const sacredPattern = gridSize ? getSacredPattern(gridSize, element || "fire") : null;
   // Prefer generated grid (from number), else show sacred pattern as preview
-  const displayFlat = grid ? grid.flat() : sacredPattern;
-  const isGenerated = !!grid;
+  const gridData = grid?.grid || grid;
+  const actualBase = grid?.base || null;
+  const displayFlat = gridData ? gridData.flat() : sacredPattern;
+  const isGenerated = !!gridData;
   const elMeta = ELEMENTS.find(e => e.key === element);
   const cellSize = gridSize >= 9 ? 36 : gridSize >= 7 ? 40 : gridSize >= 6 ? 46 : gridSize === 3 ? 66 : 54;
 
@@ -586,9 +611,9 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
                 · {elMeta.label}
               </span>
             )}
-            {isGenerated && inputNumber && (
+            {isGenerated && actualBase && (
               <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
-                · Dokuzlu Base {Math.floor((parseInt(inputNumber) - 369) / 9)}
+                · Dokuzlu Base {actualBase.toLocaleString()}
               </span>
             )}
           </div>
@@ -644,14 +669,14 @@ export default function MagicSqayerPage() {
 
   const buildGrid = (num, size, el) => {
     if (!num || !size) return null;
-    if (size === 3) return generateVefk3x3(num, el || "earth");
-    if (size === 4) return generateVefk4x4(num, el || "fire");
-    if (size === 5) return generateVefk5x5(num, el || "fire");
-    if (size === 6) return generateVefk6x6(num, el || "fire");
-    if (size === 7) return generateVefk7x7(num, el || "fire");
-    if (size === 8) return generateVefk8x8(num, el || "fire");
+    if (size === 3) return { grid: generateVefk3x3(num, el || "earth"), base: null };
+    if (size === 4) return { grid: generateVefk4x4(num, el || "fire"), base: null };
+    if (size === 5) return { grid: generateVefk5x5(num, el || "fire"), base: null };
+    if (size === 6) return { grid: generateVefk6x6(num, el || "fire"), base: null };
+    if (size === 7) return { grid: generateVefk7x7(num, el || "fire"), base: null };
+    if (size === 8) return { grid: generateVefk8x8(num, el || "fire"), base: null };
     if (size === 9) return generateVefk9x9(num, el || "fire");
-    return generateMagicSquare(size, parseInt(num));
+    return { grid: generateMagicSquare(size, parseInt(num)), base: null };
   };
 
   const handleNumberChange = (e) => {
