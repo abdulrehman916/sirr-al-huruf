@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 
 const G = {
@@ -10,6 +11,55 @@ const G = {
   bg:       "rgba(212,175,55,0.07)",
   border:   "rgba(212,175,55,0.40)",
 };
+
+// Position order in the 5×5 grid (left-to-right, top-to-bottom)
+// null = center cell (position index 12)
+const HOUSE_POSITIONS = [
+   1, 15, 24,  3,  7,
+   4,  8, 12, 16, 20,
+  17, 21, null,  9, 13,
+   5, 14, 18, 22,  1,
+  23,  2,  6, 10, 19,
+];
+
+// The 24 house slots in reading order (position → houseNumber 1-24)
+// Maps each grid cell's rank slot to a house index 1-24 (null = center)
+const HOUSE_ORDER = [
+   1, 11, 19,  2,  6,
+   3,  7, 12,  8, 16,
+  13, 17, null, 18, 21,
+   4, 14, 15, 22,  5,
+  20,  9, 10, 23, 24,
+];
+
+// Corrected authentic layout: each cell holds its house number (1-24) or null
+// Layout from reference: row by row
+// Row 0: house 1,  house 11, house 19, house 2,  house 6
+// Row 1: house 3,  house 7,  house 12, house 8,  house 16
+// Row 2: house 13, house 17, CENTER,   house 18, house 21
+// Row 3: house 4,  house 14, house 15, house 22, house 5
+// Row 4: house 20, house 9,  house 10, house 23, house 24
+const LAYOUT = [
+  [ 1, 11, 19,  2,  6],
+  [ 3,  7, 12,  8, 16],
+  [13, 17, null, 18, 21],
+  [ 4, 14, 15, 22,  5],
+  [20,  9, 10, 23, 24],
+];
+
+// Generate the 24 house values given BASE
+function generateHouseValues(base) {
+  const vals = {};
+  for (let h = 1; h <= 19; h++) {
+    vals[h] = base * h;
+  }
+  // Houses 20-24: (BASE - 40 + offset) * BASE
+  for (let h = 20; h <= 24; h++) {
+    const offset = h - 20; // 0,1,2,3,4
+    vals[h] = (base - 40 + offset) * base;
+  }
+  return vals;
+}
 
 function GoldDivider() {
   return (
@@ -44,7 +94,7 @@ function SectionTitle({ arabic, latin }) {
     <div className="text-center space-y-1 mb-4">
       <motion.h2
         className="font-amiri text-2xl font-bold"
-        style={{ color: G.text, textShadow: `0 0 20px ${G.glowHi}` }}
+        style={{ color: G.text }}
         animate={{ textShadow: [`0 0 14px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 14px ${G.glow}`] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       >
@@ -60,8 +110,8 @@ function SectionTitle({ arabic, latin }) {
   );
 }
 
-// ── 5×5 Empty-Center Grid ─────────────────────────────────────────
-const GRID_5x5 = [
+// ── Static 5×5 preview grid (reference pattern) ──────────────────
+const STATIC_GRID = [
   [11, 15, 24,  3,  7],
   [ 4,  8, 12, 16, 20],
   [17, 21, null, 9, 13],
@@ -69,8 +119,8 @@ const GRID_5x5 = [
   [23,  2,  6, 10, 19],
 ];
 
-function Vefk5x5Grid() {
-  const flat = GRID_5x5.flat();
+function StaticVefk5x5() {
+  const flat = STATIC_GRID.flat();
   return (
     <div className="flex justify-center">
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 52px)", gap: "4px" }}>
@@ -84,31 +134,17 @@ function Vefk5x5Grid() {
               transition={{ delay: idx * 0.02, duration: 0.22 }}
               className="rounded-lg border flex items-center justify-center font-amiri font-bold"
               style={{
-                width: 52,
-                height: 52,
-                fontSize: "15px",
-                background: isEmpty
-                  ? "rgba(212,175,55,0.03)"
-                  : "rgba(212,175,55,0.10)",
-                borderColor: isEmpty
-                  ? "rgba(212,175,55,0.15)"
-                  : "rgba(212,175,55,0.45)",
+                width: 52, height: 52, fontSize: "15px",
+                background: isEmpty ? "rgba(212,175,55,0.03)" : "rgba(212,175,55,0.10)",
+                borderColor: isEmpty ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.45)",
                 color: isEmpty ? "transparent" : G.text,
-                boxShadow: isEmpty
-                  ? `inset 0 0 14px rgba(212,175,55,0.06)`
-                  : `inset 0 0 10px rgba(212,175,55,0.12), 0 0 6px rgba(212,175,55,0.08)`,
-                position: "relative",
+                boxShadow: isEmpty ? `inset 0 0 14px rgba(212,175,55,0.06)` : `inset 0 0 10px rgba(212,175,55,0.12)`,
               }}
             >
               {isEmpty ? (
-                <motion.span
-                  className="font-amiri"
-                  style={{ fontSize: "1.3rem", color: "rgba(212,175,55,0.18)" }}
+                <motion.span style={{ fontSize: "1.3rem", color: "rgba(212,175,55,0.18)" }}
                   animate={{ opacity: [0.12, 0.45, 0.12] }}
-                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  □
-                </motion.span>
+                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>□</motion.span>
               ) : num}
             </motion.div>
           );
@@ -118,42 +154,93 @@ function Vefk5x5Grid() {
   );
 }
 
-// ── Sequence Steps ────────────────────────────────────────────────
-function StepRow({ step, label, value, highlight, delay }) {
+// ── Dynamic Generated Grid ────────────────────────────────────────
+function DynamicVefkGrid({ houseValues, centerText }) {
+  const cellW = 58;
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.28 }}
-      className="flex items-center gap-3 rounded-xl px-4 py-3"
-      style={{
-        background: highlight ? "rgba(212,175,55,0.10)" : "rgba(212,175,55,0.04)",
-        border: `1px solid ${highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)"}`,
-        boxShadow: highlight ? `0 0 14px rgba(212,175,55,0.15)` : "none",
-      }}
-    >
-      <span className="font-inter text-sm flex-shrink-0" style={{ color: "rgba(212,175,55,0.45)" }}>{step}</span>
-      <div className="flex-1 min-w-0">
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(212,175,55,0.35)" }}>{label}</p>
-        <p className="font-amiri font-bold leading-snug"
-          style={{
-            color: highlight ? G.text : "rgba(212,175,55,0.80)",
-            fontSize: highlight ? "1.15rem" : "0.95rem",
-            textShadow: highlight ? `0 0 14px ${G.glowHi}` : "none",
-          }}>
-          {value}
-        </p>
+    <div className="flex justify-center overflow-x-auto pb-1">
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(5, ${cellW}px)`, gap: "4px" }}>
+        {LAYOUT.flat().map((houseNum, idx) => {
+          const isEmpty = houseNum === null;
+          const val = isEmpty ? null : houseValues[houseNum];
+          const display = val != null ? val.toLocaleString() : null;
+          const fontSize = display && display.length > 9 ? "9px"
+            : display && display.length > 6 ? "10px"
+            : display && display.length > 4 ? "11px"
+            : "13px";
+          return (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, scale: 0.75 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.018, duration: 0.22 }}
+              className="rounded-lg border flex flex-col items-center justify-center"
+              style={{
+                width: cellW, height: cellW,
+                background: isEmpty ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.12)",
+                borderColor: isEmpty ? "rgba(212,175,55,0.18)" : "rgba(212,175,55,0.50)",
+                boxShadow: isEmpty ? "none" : `inset 0 0 10px rgba(212,175,55,0.14), 0 0 6px rgba(212,175,55,0.10)`,
+              }}
+            >
+              {isEmpty ? (
+                <div className="flex flex-col items-center justify-center w-full h-full px-1">
+                  {centerText ? (
+                    <p className="font-amiri text-center leading-tight"
+                      style={{ color: G.text, fontSize: centerText.length > 8 ? "8px" : "10px", textAlign: "center" }}
+                      dir="rtl">
+                      {centerText}
+                    </p>
+                  ) : (
+                    <motion.span style={{ fontSize: "1.3rem", color: "rgba(212,175,55,0.20)" }}
+                      animate={{ opacity: [0.12, 0.45, 0.12] }}
+                      transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>□</motion.span>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <p className="font-amiri font-bold tabular-nums leading-tight"
+                    style={{ color: G.text, fontSize, textShadow: `0 0 8px rgba(212,175,55,0.40)` }}>
+                    {display}
+                  </p>
+                  <p className="font-inter" style={{ fontSize: "7px", color: "rgba(212,175,55,0.30)", marginTop: "1px" }}>
+                    h{houseNum}
+                  </p>
+                </>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
+// ── Main Page ─────────────────────────────────────────────────────
 export default function VefkinYapilisiPage() {
+  const [inputNumber, setInputNumber] = useState("");
+  const [centerText, setCenterText] = useState("");
+
+  const base = inputNumber ? parseInt(inputNumber) : null;
+
+  const houseValues = useMemo(() => {
+    if (!base || isNaN(base) || base < 1) return null;
+    return generateHouseValues(base);
+  }, [base]);
+
+  const totalSum = useMemo(() => {
+    if (!houseValues) return null;
+    return Object.values(houseValues).reduce((a, b) => a + b, 0);
+  }, [houseValues]);
+
+  const handleInput = (e) => {
+    setInputNumber(e.target.value.replace(/[^\d]/g, ""));
+  };
+
   return (
     <PageLayout>
       <div className="space-y-6">
 
-        {/* ── Page Header ────────────────────────────────── */}
+        {/* ── Header ────────────────────────────────────── */}
         <div className="text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
@@ -169,18 +256,144 @@ export default function VefkinYapilisiPage() {
           <GoldDivider />
         </div>
 
-        {/* ══════════════════════════════════════════════ */}
-        {/* SECTION 1 — BEŞLİ VEFK 2. USÛL              */}
-        {/* ══════════════════════════════════════════════ */}
-        <ManuscriptCard delay={0.1}>
-          <SectionTitle arabic="الوفق الخماسي — الطريقة الثانية" latin="BEŞLİ VEFK — 2. USÛL" />
+        {/* ══════════════════════════════════════════════════════ */}
+        {/* GENERATOR — BEŞLİ VEFK 2. USÛL                       */}
+        {/* ══════════════════════════════════════════════════════ */}
+        <ManuscriptCard delay={0.08}>
+          <SectionTitle arabic="الوفق الخماسي — المولِّد" latin="BEŞLİ VEFK — 2. USÛL GENERATOR" />
 
-          {/* Grid */}
-          <Vefk5x5Grid />
+          {/* Number input */}
+          <div className="rounded-2xl border p-4 space-y-2"
+            style={{ background: "rgba(4,10,28,0.99)", borderColor: G.border }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+              🔢 Temel Sayı — الرقم الأساسي
+            </p>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={inputNumber}
+              onChange={handleInput}
+              placeholder="Herhangi bir sayı girin... (örn: 90, 786, 12345)"
+              className="w-full rounded-xl px-4 py-3 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
+              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
+            />
+            {base && (
+              <p className="text-center font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                Temel: {base.toLocaleString()}
+              </p>
+            )}
+          </div>
 
-          <div className="h-px w-full mt-4" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
+          {/* Center text input */}
+          <div className="rounded-xl border px-4 py-3 space-y-1.5"
+            style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+              🕳 Merkez Hane (İsteğe Bağlı) — الهانة المركزية
+            </p>
+            <input
+              type="text"
+              value={centerText}
+              onChange={e => setCenterText(e.target.value)}
+              placeholder="İsim, Niyet, Ayet, Esma..."
+              dir="rtl"
+              className="w-full rounded-xl px-4 py-2 font-amiri text-lg text-white text-right focus:outline-none caret-white placeholder:text-white/25"
+              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.15)` }}
+            />
+          </div>
 
-          {/* Center explanation */}
+          {/* 20th house rule callout */}
+          {base && (
+            <motion.div
+              key={base}
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+              className="rounded-xl border p-4 space-y-2"
+              style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.35)" }}
+            >
+              <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+                ⚠ 20. Hane Kuralı — Kırk Çıkarma
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {[
+                  { label: "20. Hane", formula: `(${base} − 40) × ${base}`, val: (base - 40) * base },
+                  { label: "21. Hane", formula: `(${base} − 39) × ${base}`, val: (base - 39) * base },
+                  { label: "22. Hane", formula: `(${base} − 38) × ${base}`, val: (base - 38) * base },
+                ].map((item, i) => (
+                  <div key={i} className="rounded-lg px-2 py-2"
+                    style={{ background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.18)" }}>
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.45)" }}>{item.label}</p>
+                    <p className="font-amiri text-xs font-bold mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>{item.formula}</p>
+                    <p className="font-amiri text-sm font-bold mt-0.5" style={{ color: G.text }}>{item.val.toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Generated grid */}
+          <AnimatePresence mode="wait">
+            {houseValues ? (
+              <motion.div key={`grid-${base}`}
+                initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }} transition={{ duration: 0.35 }}
+                className="space-y-4"
+              >
+                <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
+                <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+                  ✨ Üretilen Vefk — الوفق المُولَّد
+                </p>
+                <DynamicVefkGrid houseValues={houseValues} centerText={centerText} />
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Aktif Hane</p>
+                    <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>24</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Temel</p>
+                    <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>{base.toLocaleString()}</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Toplam</p>
+                    <p className="font-amiri text-sm font-bold leading-tight" style={{ color: G.text }}>{totalSum.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border p-3 text-center"
+                  style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.18)" }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+                    ∅ Merkez hane toplama dahil edilmez — Center excluded from total
+                  </p>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="placeholder"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="rounded-xl border p-8 flex flex-col items-center gap-3"
+                style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(212,175,55,0.15)" }}
+              >
+                <motion.span style={{ fontSize: "2rem", color: "rgba(212,175,55,0.20)" }}
+                  animate={{ opacity: [0.15, 0.45, 0.15] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>🜂</motion.span>
+                <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.22)" }}>
+                  Sayı girerek vefki oluşturun
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </ManuscriptCard>
+
+        {/* ══════════════════════════════════════════════════════ */}
+        {/* SECTION — REFERENCE PATTERN                           */}
+        {/* ══════════════════════════════════════════════════════ */}
+        <ManuscriptCard delay={0.15}>
+          <SectionTitle arabic="الوفق الخماسي — النمط المرجعي" latin="BEŞLİ VEFK — REFERENCE LAYOUT" />
+
+          <StaticVefk5x5 />
+
+          <div className="h-px w-full mt-3" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
+
           <div className="space-y-2 pt-1">
             <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
               🕳 Merkez Hane — الهانة المركزية
@@ -190,10 +403,8 @@ export default function VefkinYapilisiPage() {
               { icon: "🌑", text: "Merkez hane gizli ve ruhani bir noktadır", sub: "The center is a secret spiritual point" },
               { icon: "∅", text: "Merkez hane toplama dahil edilmez", sub: "The center is NOT counted in totals" },
             ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
+              <motion.div key={i}
+                initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + i * 0.08 }}
                 className="flex items-start gap-3 rounded-xl px-4 py-2.5"
                 style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.10)" }}
@@ -207,8 +418,7 @@ export default function VefkinYapilisiPage() {
             ))}
           </div>
 
-          {/* Center may contain */}
-          <div className="rounded-xl border p-4 mt-2 space-y-2"
+          <div className="rounded-xl border p-4 mt-1 space-y-2"
             style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.30)" }}>
             <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
               ✨ Merkez Haneye Yazılabilir
@@ -230,23 +440,20 @@ export default function VefkinYapilisiPage() {
           </div>
         </ManuscriptCard>
 
-        {/* ══════════════════════════════════════════════ */}
-        {/* SECTION 2 — VEFKİN YAPILIŞI                  */}
-        {/* ══════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════ */}
+        {/* SECTION — OTTOMAN RULES                               */}
+        {/* ══════════════════════════════════════════════════════ */}
         <ManuscriptCard delay={0.2}>
           <SectionTitle arabic="طريقة عمل الوفق" latin="VEFKİN YAPILIŞI — OTTOMAN METHOD" />
-
           <div className="space-y-2">
             {[
-              { step: "①", label: "Birinci Hane Kuralı", value: "İlk haneye başlangıç sayısı yazılır", sub: "First house receives the base number" },
-              { step: "②", label: "Tabiî Sıralama", value: "Her hane doğal sırayla çarpılır", sub: "Every house is multiplied by its natural order" },
-              { step: "③", label: "20. Hane Kuralı", value: "20. haneden sonra 40 çıkarılır", sub: "After the 20th house, subtract 40" },
-              { step: "④", label: "Devam Eden Artış", value: "21. haneden itibaren artış sürer", sub: "From the 21st house onward, values continue increasing" },
+              { step: "①", label: "Birinci Hane Kuralı", value: "İlk haneye başlangıç sayısı yazılır", sub: "First house: BASE × 1" },
+              { step: "②", label: "Tabiî Sıralama", value: "Her hane doğal sırayla çarpılır", sub: "Every house: BASE × house number" },
+              { step: "③", label: "20. Hane Kuralı", value: "20. hanede BASE'den 40 çıkarılır", sub: "At house 20: subtract 40 from BASE" },
+              { step: "④", label: "Devam Eden Artış", value: "21–24. haneler: (BASE−39)×BASE, (BASE−38)×BASE...", sub: "Continues increasing from house 21 onward" },
             ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
+              <motion.div key={i}
+                initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.25 + i * 0.07, duration: 0.28 }}
                 className="rounded-xl px-4 py-3"
                 style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.12)" }}
@@ -264,55 +471,7 @@ export default function VefkinYapilisiPage() {
           </div>
         </ManuscriptCard>
 
-        {/* ══════════════════════════════════════════════ */}
-        {/* SECTION 3 — ANIMATED EXAMPLE                  */}
-        {/* ══════════════════════════════════════════════ */}
-        <ManuscriptCard delay={0.3}>
-          <SectionTitle arabic="مثال عملي" latin="ÖRNEK HESAP — LIVE EXAMPLE" />
-
-          <div className="rounded-xl border p-4 text-center mb-4"
-            style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.35)" }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>İlk Sayı — Birinci Hane</p>
-            <motion.p
-              className="font-amiri text-5xl font-bold mt-1"
-              style={{ color: G.text, textShadow: `0 0 24px ${G.glowHi}` }}
-              animate={{ textShadow: [`0 0 14px ${G.glow}`, `0 0 32px ${G.glowHi}`, `0 0 14px ${G.glow}`] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              90
-            </motion.p>
-          </div>
-
-          <div className="space-y-2">
-            <StepRow step="①" label="1. Hane" value="90" delay={0.35} />
-            <StepRow step="②" label="2. Hane" value="91" delay={0.40} />
-            <StepRow step="⋯" label="Devam eder..." value="92, 93, 94 …" delay={0.45} />
-            <StepRow step="⑳" label="20. Hane — 40 çıkar" value="90 + 19 = 109  →  109 − 40 = 69... sonraki hanelere 51'den devam" delay={0.50} highlight />
-            <StepRow step="㉑" label="21. Hane" value="51 × temel sayı" delay={0.55} />
-            <StepRow step="㉒" label="22. Hane" value="52 × temel sayı" delay={0.60} />
-            <StepRow step="㉓" label="23. Hane" value="53 × temel sayı" delay={0.65} highlight />
-          </div>
-
-          <div className="h-px w-full mt-3" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
-
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-            className="rounded-xl border p-4 mt-3 text-center"
-            style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.28)" }}
-          >
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              📜 Ottoman Vefk Kuralı
-            </p>
-            <p className="font-amiri text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }} dir="rtl">
-              كل هانة تُكتب بحسب الترتيب الطبيعي مضروبةً في رقمها
-            </p>
-            <p className="font-inter text-[10px] mt-2" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Each house is written according to natural order multiplied by its number
-            </p>
-          </motion.div>
-        </ManuscriptCard>
-
-        {/* ── Sacred Footer ─────────────────────────────── */}
+        {/* ── Sacred Footer ──────────────────────────────────── */}
         <div className="text-center pb-4">
           <motion.div
             className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full border"
