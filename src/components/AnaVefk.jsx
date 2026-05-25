@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const G = {
@@ -20,6 +20,13 @@ const ABJAD_MAP = {
 function toAbjad(t) {
   return [...t].reduce((s, c) => s + (ABJAD_MAP[c] || 0), 0);
 }
+function resolveToken(raw) {
+  const t = raw.trim();
+  if (!t) return 0;
+  if (/^\d+$/.test(t)) return parseInt(t);
+  const v = toAbjad(t);
+  return v > 0 ? v : 0;
+}
 function resolveValue(raw) {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -32,6 +39,14 @@ function ebcedHint(raw) {
   if (!trimmed || /^\d+$/.test(trimmed)) return null;
   const v = toAbjad(trimmed);
   return v > 0 ? v : null;
+}
+
+// Parse centerText: split by + and sum all tokens
+function parseCenterSum(text) {
+  if (!text.trim()) return null;
+  const tokens = text.split("+").map(t => t.trim()).filter(Boolean);
+  const sum = tokens.reduce((s, t) => s + resolveToken(t), 0);
+  return sum > 0 ? sum : null;
 }
 
 // ── Ottoman 5×5 layout — null = center ──────────────────────────
@@ -68,37 +83,11 @@ function GoldDivider() {
   );
 }
 
-// ── Single input field ───────────────────────────────────────────
-function InlineInput({ label, value, onChange, placeholder, showEbced }) {
-  const hint = showEbced ? ebcedHint(value) : null;
-  return (
-    <div className="space-y-1.5">
-      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</p>
-      <input
-        type="text"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        dir="auto"
-        className="w-full rounded-xl px-4 py-2.5 font-amiri text-xl text-white text-right focus:outline-none caret-white placeholder:text-white/25"
-        style={{ background: "rgba(4,12,34,0.97)", border: "1px solid rgba(212,175,55,0.15)" }}
-      />
-      {hint && (
-        <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
-          ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{hint.toLocaleString()}</span>
-        </p>
-      )}
-    </div>
-  );
-}
-
 // ── Grid ─────────────────────────────────────────────────────────
-function VefkGrid({ cells, combinedCenter, esmaCenter }) {
+function VefkGrid({ cells, centerText, esmaRaw }) {
   const cellW = 58;
-  const combinedText = combinedCenter
-    ? [combinedCenter.talib, combinedCenter.mathloob, combinedCenter.niyyat].filter(Boolean).join(" · ")
-    : null;
-  const esmaText = esmaCenter?.esma || null;
+  const displayText = centerText?.trim() || null;
+  const esmaDisplay = esmaRaw?.trim() || null;
 
   return (
     <div className="flex justify-center overflow-x-auto">
@@ -126,23 +115,23 @@ function VefkGrid({ cells, combinedCenter, esmaCenter }) {
             >
               {isEmpty ? (
                 <div className="flex flex-col w-full h-full">
-                  {/* combinedCenter — top half */}
+                  {/* top half: center text */}
                   <div className="flex items-center justify-center w-full px-0.5 flex-1"
                     style={{ borderBottom: "1px solid rgba(212,175,55,0.20)" }}>
-                    {combinedText ? (
+                    {displayText ? (
                       <p className="font-amiri text-center leading-none"
-                        style={{ color: G.text, fontSize: combinedText.length > 10 ? "6px" : "7px" }}
-                        dir="rtl">{combinedText}</p>
+                        style={{ color: G.text, fontSize: displayText.length > 10 ? "6px" : "7px" }}
+                        dir="rtl">{displayText}</p>
                     ) : (
                       <span style={{ fontSize: "7px", color: "rgba(212,175,55,0.15)" }}>—</span>
                     )}
                   </div>
-                  {/* esmaCenter — bottom half */}
+                  {/* bottom half: esma */}
                   <div className="flex items-center justify-center w-full px-0.5 flex-1">
-                    {esmaText ? (
+                    {esmaDisplay ? (
                       <p className="font-amiri font-bold text-center leading-none"
-                        style={{ color: G.text, fontSize: esmaText.length > 8 ? "7px" : "9px" }}
-                        dir="rtl">{esmaText}</p>
+                        style={{ color: G.text, fontSize: esmaDisplay.length > 8 ? "7px" : "9px" }}
+                        dir="rtl">{esmaDisplay}</p>
                     ) : (
                       <span style={{ fontSize: "7px", color: "rgba(212,175,55,0.15)" }}>—</span>
                     )}
@@ -168,20 +157,18 @@ function VefkGrid({ cells, combinedCenter, esmaCenter }) {
 }
 
 export default function AnaVefk() {
-  const [talibRaw,    setTalibRaw]    = useState("");
-  const [mathloobRaw, setMathloobRaw] = useState("");
-  const [niyyat,      setNiyyat]      = useState("");
-  const [esmaRaw,     setEsmaRaw]     = useState("");
+  // ONE unified center input (visual + sum-based base)
+  const [centerText, setCenterText] = useState("");
+  // Esma — still needed separately for tanzim formula (esmaVal > 40)
+  const [esmaRaw, setEsmaRaw] = useState("");
   const [result, setResult] = useState(null);
 
-  const talibVal    = resolveValue(talibRaw);
-  const mathloobVal = resolveValue(mathloobRaw);
-  const esmaVal     = resolveValue(esmaRaw);
+  const centerSum = useMemo(() => parseCenterSum(centerText), [centerText]);
+  const esmaVal   = resolveValue(esmaRaw);
+  const esmaHint  = ebcedHint(esmaRaw);
 
-  const baseNumber = (talibVal && mathloobVal)
-    ? talibVal + mathloobVal + (esmaVal || 0)
-    : null;
-
+  // baseNumber = sum of all center tokens + esmaVal
+  const baseNumber = centerSum ? centerSum + (esmaVal || 0) : null;
   const canGenerate = baseNumber && esmaVal && esmaVal > 40;
 
   const handleGenerate = () => {
@@ -190,26 +177,11 @@ export default function AnaVefk() {
       cells:      computeAnaVefkCells(baseNumber, esmaVal),
       baseNumber,
       esmaVal,
-      talibVal,
-      mathloobVal,
-      talibRaw:    talibRaw.trim(),
-      mathloobRaw: mathloobRaw.trim(),
-      esmaRaw:     esmaRaw.trim(),
-      niyyat:      niyyat.trim(),
-      zikirCount:  baseNumber * esmaVal,
+      centerText: centerText.trim(),
+      esmaRaw:    esmaRaw.trim(),
+      zikirCount: baseNumber * esmaVal,
     });
   };
-
-  // 2 center objects — visual only, no effect on calculations
-  const combinedCenter = result ? {
-    talib:    result.talibRaw,
-    mathloob: result.mathloobRaw,
-    niyyat:   result.niyyat,
-  } : null;
-
-  const esmaCenter = result ? {
-    esma: result.esmaRaw,
-  } : null;
 
   return (
     <div className="space-y-4">
@@ -236,13 +208,53 @@ export default function AnaVefk() {
           <GoldDivider />
         </div>
 
-        {/* CENTER CELL — Esma only */}
+        {/* UNIFIED CENTER CELL — free text */}
+        <div className="rounded-xl border px-4 py-4 space-y-3"
+          style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.30)" }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+            🜁 Merkez — Talib · Mathloob · Niyyat
+          </p>
+          <textarea
+            value={centerText}
+            onChange={e => setCenterText(e.target.value)}
+            placeholder={"Ali + Leyla\nYa Camii\n110 + 71 + 114"}
+            dir="auto"
+            rows={3}
+            className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white text-right focus:outline-none caret-white placeholder:text-white/20 resize-none"
+            style={{ background: "rgba(4,12,34,0.97)", border: "1px solid rgba(212,175,55,0.15)", lineHeight: "1.8" }}
+          />
+          {centerSum && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
+              ✦ Toplam: <span className="font-amiri font-bold" style={{ color: G.text }}>{centerSum.toLocaleString()}</span>
+            </p>
+          )}
+        </div>
+
+        {/* ESMA SACRED CELL */}
         <div className="rounded-xl border px-4 py-4 space-y-3"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.45)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-            ✦ Merkez Hücre 2 — Esma
+            ✦ Merkez Hücre — Esma
           </p>
-          <InlineInput label="Esma — الاسم" value={esmaRaw} onChange={setEsmaRaw} placeholder="İsim, Esma veya sayı..." showEbced />
+          <input
+            type="text"
+            value={esmaRaw}
+            onChange={e => setEsmaRaw(e.target.value)}
+            placeholder="İsim, Esma veya sayı..."
+            dir="auto"
+            className="w-full rounded-xl px-4 py-2.5 font-amiri text-xl text-white text-right focus:outline-none caret-white placeholder:text-white/25"
+            style={{ background: "rgba(4,12,34,0.97)", border: "1px solid rgba(212,175,55,0.15)" }}
+          />
+          {esmaHint && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
+              ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{esmaHint.toLocaleString()}</span>
+            </p>
+          )}
+          {esmaVal && esmaVal <= 40 && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(255,160,80,0.80)" }}>
+              ⚠ Esma değeri 40'tan büyük olmalı
+            </p>
+          )}
         </div>
 
         {/* Base number preview */}
@@ -253,8 +265,7 @@ export default function AnaVefk() {
               📐 Base Number Hesabı
             </p>
             <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-              Talib <span style={{ color: G.text }}>{talibVal}</span>
-              {" + "} Mathloob <span style={{ color: G.text }}>{mathloobVal}</span>
+              Merkez <span style={{ color: G.text }}>{centerSum}</span>
               {esmaVal ? <> {" + "} Esma <span style={{ color: G.text }}>{esmaVal}</span></> : null}
               {" = "}<span className="font-amiri font-bold" style={{ color: G.text }}>{baseNumber.toLocaleString()}</span>
             </p>
@@ -263,11 +274,6 @@ export default function AnaVefk() {
                 Tanzim 20→24: <span className="font-amiri" style={{ color: G.text }}>
                   {[0,1,2,3,4].map(i => esmaVal - 40 + i).join(", ")}
                 </span>
-              </p>
-            )}
-            {esmaVal && esmaVal <= 40 && (
-              <p className="font-inter text-[9px]" style={{ color: "rgba(255,160,80,0.80)" }}>
-                ⚠ Esma değeri 40'tan büyük olmalı
               </p>
             )}
           </div>
@@ -280,7 +286,7 @@ export default function AnaVefk() {
             📜 Hesap Kuralı — Ana Vefk
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Base: <span style={{ color: G.text }}>Talib + Mathloob (+ Esma)</span>
+            Base: <span style={{ color: G.text }}>Merkez Toplam + Esma</span>
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
             Hane 1–19: <span style={{ color: G.text }}>konum × Base</span>
@@ -337,7 +343,7 @@ export default function AnaVefk() {
               🜂 5×5 Hâli Vasat — Ana Vefk
             </p>
 
-            <VefkGrid cells={result.cells} combinedCenter={combinedCenter} esmaCenter={esmaCenter} />
+            <VefkGrid cells={result.cells} centerText={result.centerText} esmaRaw={result.esmaRaw} />
 
             {/* Zikir Count */}
             <div className="rounded-xl border p-3 text-center"
@@ -363,7 +369,7 @@ export default function AnaVefk() {
             animate={{ opacity: [0.12, 0.40, 0.12] }}
             transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>📜</motion.span>
           <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.22)" }}>
-            Talib, Mathloob ve Esma girerek vefki oluşturun
+            Merkez hücreye yazın ve Esma girerek vefki oluşturun
           </p>
         </motion.div>
       )}
