@@ -12,51 +12,27 @@ const G = {
   border:   "rgba(212,175,55,0.40)",
 };
 
-// Position order in the 5×5 grid (left-to-right, top-to-bottom)
-// null = center cell (position index 12)
-const HOUSE_POSITIONS = [
-   1, 15, 24,  3,  7,
-   4,  8, 12, 16, 20,
-  17, 21, null,  9, 13,
-   5, 14, 18, 22,  1,
-  23,  2,  6, 10, 19,
-];
-
-// The 24 house slots in reading order (position → houseNumber 1-24)
-// Maps each grid cell's rank slot to a house index 1-24 (null = center)
-const HOUSE_ORDER = [
-   1, 11, 19,  2,  6,
-   3,  7, 12,  8, 16,
-  13, 17, null, 18, 21,
-   4, 14, 15, 22,  5,
-  20,  9, 10, 23, 24,
-];
-
-// Corrected authentic layout: each cell holds its house number (1-24) or null
-// Layout from reference: row by row
-// Row 0: house 1,  house 11, house 19, house 2,  house 6
-// Row 1: house 3,  house 7,  house 12, house 8,  house 16
-// Row 2: house 13, house 17, CENTER,   house 18, house 21
-// Row 3: house 4,  house 14, house 15, house 22, house 5
-// Row 4: house 20, house 9,  house 10, house 23, house 24
+// Authentic Ottoman 5×5 layout — each cell holds its POSITION NUMBER (natural order)
+// or null for center. These ARE the multipliers: cell value = BASE × position.
+// Special rule: positions 20-24 use (BASE - 40 + offset) × BASE.
 const LAYOUT = [
-  [ 1, 11, 19,  2,  6],
-  [ 3,  7, 12,  8, 16],
-  [13, 17, null, 18, 21],
-  [ 4, 14, 15, 22,  5],
-  [20,  9, 10, 23, 24],
+  [11, 15, 24,  3,  7],
+  [ 4,  8, 12, 16, 20],
+  [17, 21, null,  9, 13],
+  [ 5, 14, 18, 22,  1],
+  [23,  2,  6, 10, 19],
 ];
 
-// Generate the 24 house values given BASE
+// Generate cell values: position → BASE × position, with special rule for pos 20-24
 function generateHouseValues(base) {
   const vals = {};
-  for (let h = 1; h <= 19; h++) {
-    vals[h] = base * h;
+  for (let pos = 1; pos <= 19; pos++) {
+    vals[pos] = base * pos;
   }
-  // Houses 20-24: (BASE - 40 + offset) * BASE
-  for (let h = 20; h <= 24; h++) {
-    const offset = h - 20; // 0,1,2,3,4
-    vals[h] = (base - 40 + offset) * base;
+  // pos 20 → (BASE−40)×BASE, pos 21 → (BASE−39)×BASE, ... pos 24 → (BASE−36)×BASE
+  for (let pos = 20; pos <= 24; pos++) {
+    const offset = pos - 20; // 0,1,2,3,4
+    vals[pos] = (base - 40 + offset) * base;
   }
   return vals;
 }
@@ -160,9 +136,9 @@ function DynamicVefkGrid({ houseValues, centerText }) {
   return (
     <div className="flex justify-center overflow-x-auto pb-1">
       <div style={{ display: "grid", gridTemplateColumns: `repeat(5, ${cellW}px)`, gap: "4px" }}>
-        {LAYOUT.flat().map((houseNum, idx) => {
-          const isEmpty = houseNum === null;
-          const val = isEmpty ? null : houseValues[houseNum];
+        {LAYOUT.flat().map((pos, idx) => {
+          const isEmpty = pos === null;
+          const val = isEmpty ? null : houseValues[pos];
           const display = val != null ? val.toLocaleString() : null;
           const fontSize = display && display.length > 9 ? "9px"
             : display && display.length > 6 ? "10px"
@@ -203,7 +179,7 @@ function DynamicVefkGrid({ houseValues, centerText }) {
                     {display}
                   </p>
                   <p className="font-inter" style={{ fontSize: "7px", color: "rgba(212,175,55,0.30)", marginTop: "1px" }}>
-                    h{houseNum}
+                    ×{pos}
                   </p>
                 </>
               )}
