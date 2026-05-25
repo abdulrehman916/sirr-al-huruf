@@ -33,14 +33,15 @@ const KHAYR_PURPOSES = ['celb', 'sihhat', 'tarfet'];
 const SHARR_PURPOSES = ['tard', 'sekam'];
 
 export default function Mizaan8({ selected, onChange, selectedPurpose }) {
-  // Auto-select based on Mizaan 7 purpose
+  // Auto-select based on Mizaan 7 purposes (array)
   useEffect(() => {
-    if (!selectedPurpose) return;
-    if (KHAYR_PURPOSES.includes(selectedPurpose)) {
-      onChange('khayr');
-    } else if (SHARR_PURPOSES.includes(selectedPurpose)) {
-      onChange('sharr');
-    }
+    const arr = Array.isArray(selectedPurpose) ? selectedPurpose : (selectedPurpose ? [selectedPurpose] : []);
+    if (!arr.length) return;
+    const hasKhayr = arr.some(k => KHAYR_PURPOSES.includes(k));
+    const hasSharr = arr.some(k => SHARR_PURPOSES.includes(k));
+    if (hasKhayr && !hasSharr) onChange('khayr');
+    else if (hasSharr && !hasKhayr) onChange('sharr');
+    // mixed — leave unchanged
   }, [selectedPurpose]);
 
   const toggle = (key) => onChange(selected === key ? null : key);

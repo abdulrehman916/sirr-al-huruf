@@ -103,13 +103,16 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
       totalLetters += countArabicLetters(planetEntry.arabic);
     }
 
-    // Mizaan 7 — Purpose
-    const purposeEntry = MIZAAN_PURPOSES.find(p => p.key === selections.purposes);
-    if (purposeEntry) {
-      rows.push({ key: 'm7', label: 'Mizaan 7 · Purpose', arabic: purposeEntry.arabic, icon: purposeEntry.icon, bast: purposeEntry.bast, color: purposeEntry.color });
-      totalBast += purposeEntry.bast;
-      totalLetters += countArabicLetters(purposeEntry.arabic);
-    }
+    // Mizaan 7 — Purposes (multi-select array)
+    const purposeArr = Array.isArray(selections.purposes) ? selections.purposes : (selections.purposes ? [selections.purposes] : []);
+    purposeArr.forEach((pk, idx) => {
+      const pe = MIZAAN_PURPOSES.find(p => p.key === pk);
+      if (pe) {
+        rows.push({ key: `m7_${idx}`, label: idx === 0 ? 'Mizaan 7 · Purpose' : '↳ Purpose', arabic: pe.arabic, icon: pe.icon, bast: pe.bast, color: pe.color });
+        totalBast += pe.bast;
+        totalLetters += countArabicLetters(pe.arabic);
+      }
+    });
 
     // Mizaan 8 — Khayr/Sharr (second scale)
     const ks8 = selections.khayrSharr8;

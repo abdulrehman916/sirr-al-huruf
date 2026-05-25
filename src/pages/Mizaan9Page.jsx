@@ -52,7 +52,7 @@ function buildDefaultSelections(dominant) {
     hour:       (Math.floor(new Date().getHours() / 2) % 12) + 1,
     days:       ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()],
     planet:     DAY_PLANET_MAP[['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]] ?? null,
-    purposes:   null,
+    purposes:   [],
     khayrSharr8: null,
   };
 }
