@@ -68,28 +68,26 @@ function GoldDivider() {
   );
 }
 
-// ── Single inline input row ──────────────────────────────────────
-function InlineInput({ label, value, onChange, placeholder, showEbced, noBorder }) {
+// ── Single input field ───────────────────────────────────────────
+function InlineInput({ label, value, onChange, placeholder, showEbced }) {
   const hint = showEbced ? ebcedHint(value) : null;
   return (
-    <div className="flex items-center gap-2 px-3 py-2"
-      style={{ borderBottom: noBorder ? "none" : "1px solid rgba(212,175,55,0.10)" }}>
-      <p className="font-inter text-[8px] uppercase tracking-widest shrink-0 w-16 text-right" style={{ color: G.dim }}>{label}</p>
-      <div className="flex-1 flex flex-col">
-        <input
-          type="text"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder={placeholder}
-          dir="auto"
-          className="w-full bg-transparent font-amiri text-base text-white text-right focus:outline-none caret-white placeholder:text-white/20"
-        />
-        {hint && (
-          <p className="font-inter text-[8px] text-right" style={{ color: "rgba(212,175,55,0.55)" }}>
-            ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{hint.toLocaleString()}</span>
-          </p>
-        )}
-      </div>
+    <div className="space-y-1.5">
+      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</p>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        dir="auto"
+        className="w-full rounded-xl px-4 py-2.5 font-amiri text-xl text-white text-right focus:outline-none caret-white placeholder:text-white/25"
+        style={{ background: "rgba(4,12,34,0.97)", border: "1px solid rgba(212,175,55,0.15)" }}
+      />
+      {hint && (
+        <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
+          ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{hint.toLocaleString()}</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -238,30 +236,24 @@ export default function AnaVefk() {
           <GoldDivider />
         </div>
 
-        {/* CENTER CELL 1 — single unified square: Talib + Mathloob + Niyyat */}
-        <div className="rounded-xl border overflow-hidden"
+        {/* CENTER CELL 1 — Talib + Mathloob + Niyyat combined */}
+        <div className="rounded-xl border px-4 py-4 space-y-3"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.30)" }}>
-          <div className="px-3 py-1.5 text-center"
-            style={{ borderBottom: "1px solid rgba(212,175,55,0.18)", background: "rgba(212,175,55,0.04)" }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-              🜁 Merkez Hücre 1 — Talib · Mathloob · Niyyat
-            </p>
-          </div>
-          <InlineInput label="Talib" value={talibRaw} onChange={setTalibRaw} placeholder="الطالب..." showEbced />
-          <InlineInput label="Mathloob" value={mathloobRaw} onChange={setMathloobRaw} placeholder="المطلوب..." showEbced />
-          <InlineInput label="Niyyat" value={niyyat} onChange={setNiyyat} placeholder="النية..." noBorder />
+          <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+            🜁 Merkez Hücre 1 — Talib · Mathloob · Niyyat
+          </p>
+          <InlineInput label="Talib — الطالب" value={talibRaw} onChange={setTalibRaw} placeholder="İsim veya sayı..." showEbced />
+          <InlineInput label="Mathloob — المطلوب" value={mathloobRaw} onChange={setMathloobRaw} placeholder="İsim veya sayı..." showEbced />
+          <InlineInput label="Niyyat — النية" value={niyyat} onChange={setNiyyat} placeholder="Niyet metni..." />
         </div>
 
-        {/* CENTER CELL 2 — single unified square: Esma only */}
-        <div className="rounded-xl border overflow-hidden"
+        {/* CENTER CELL 2 — Esma only */}
+        <div className="rounded-xl border px-4 py-4 space-y-3"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.45)" }}>
-          <div className="px-3 py-1.5 text-center"
-            style={{ borderBottom: "1px solid rgba(212,175,55,0.25)", background: "rgba(212,175,55,0.06)" }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-              ✦ Merkez Hücre 2 — Esma
-            </p>
-          </div>
-          <InlineInput label="Esma" value={esmaRaw} onChange={setEsmaRaw} placeholder="الاسم..." showEbced noBorder />
+          <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+            ✦ Merkez Hücre 2 — Esma
+          </p>
+          <InlineInput label="Esma — الاسم" value={esmaRaw} onChange={setEsmaRaw} placeholder="İsim, Esma veya sayı..." showEbced />
         </div>
 
         {/* Base number preview */}
