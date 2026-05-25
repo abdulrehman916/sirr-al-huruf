@@ -259,6 +259,58 @@ function SectionLabel({ children }) {
   );
 }
 
+// ── Kutb Config ──────────────────────────────────────────────────
+const KUTB = { 3: 15, 4: 34, 5: 65, 6: 111, 7: 175, 8: 260, 9: 369 };
+
+// ── Calculation Breakdown ─────────────────────────────────────────
+function CalcBreakdown({ inputNumber, gridSize }) {
+  if (!inputNumber || !gridSize || !KUTB[gridSize]) return null;
+  const n = parseInt(inputNumber);
+  const kutb = KUTB[gridSize];
+  const removed = kutb - gridSize;
+  const remaining = n - removed;
+  const division = remaining / gridSize;
+  const base = Math.floor(division);
+
+  return (
+    <motion.div
+      key={`calc-${inputNumber}-${gridSize}`}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="rounded-2xl border p-5 space-y-3"
+      style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}` }}
+    >
+      <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+        📜 Calculation Breakdown — شرح الحساب
+      </p>
+      <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
+
+      <div className="space-y-2.5">
+        {[
+          { label: "Entered Number", arabic: "الرقم المدخل", value: n.toLocaleString() },
+          { label: "Kutb Removed", arabic: `${kutb} − ${gridSize} = ${removed}`, value: `${n.toLocaleString()} − ${removed} = ${remaining.toLocaleString()}` },
+          { label: "Remaining", arabic: "الباقي", value: remaining.toLocaleString() },
+          { label: "Division", arabic: `${remaining.toLocaleString()} ÷ ${gridSize}`, value: division.toFixed(2) },
+          { label: "Base Used", arabic: "القاعدة", value: base.toLocaleString() },
+        ].map((row, i) => (
+          <div key={i} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2"
+            style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.12)" }}>
+            <div className="min-w-0">
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.45)" }}>{row.label}</p>
+              <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.55)" }} dir="rtl">{row.arabic}</p>
+            </div>
+            <p className="font-amiri text-lg font-bold tabular-nums flex-shrink-0"
+              style={{ color: G.text, textShadow: `0 0 12px ${G.glow}` }}>
+              {row.value}
+            </p>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Sacred Grid Preview ──────────────────────────────────────────
 function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
   const sacredPattern = gridSize ? getSacredPattern(gridSize, element || "fire") : null;
@@ -543,7 +595,10 @@ export default function MagicSqayerPage() {
           Generate Magic Sqayer
         </motion.button>
 
-        {/* 6. Sacred Grid Preview */}
+        {/* 6. Calculation Breakdown */}
+        {inputNumber && gridSize && <CalcBreakdown inputNumber={inputNumber} gridSize={gridSize} />}
+
+        {/* 7. Sacred Grid Preview */}
         <SacredGridPreview
           gridSize={gridSize}
           element={element}
