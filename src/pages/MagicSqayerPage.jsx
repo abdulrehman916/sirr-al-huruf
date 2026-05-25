@@ -215,13 +215,18 @@ function generateVefk9x9(targetNumber, elementKey) {
   }
   
   // Generate 81 sequential values starting from base
+  // values[0] = base, values[1] = base+1, ..., values[80] = base+80
   const values = Array.from({ length: 81 }, (_, i) => base + i);
   
-  // Get authentic elemental pattern
+  // Get authentic elemental sacred pattern
   const pattern = ELEMENT_PATTERNS_9x9[elementKey] || FIRE_9x9;
   
-  // Map values through pattern: pattern[cellIndex] = rank (1-based) → values[rank-1]
-  const flat = pattern.map(rank => values[rank - 1]);
+  // SACRED POSITION MAPPING (Authentic Ottoman Method):
+  // Each cell in the pattern contains a sacred number (1-81)
+  // This sacred number tells us WHICH generated value to place in that cell
+  // Example: if pattern cell = 50, place values[49] (the 50th value) in that cell
+  // Example: if pattern cell = 1, place values[0] (base value) in that cell
+  const flat = pattern.map(sacredNumber => values[sacredNumber - 1]);
   
   return [
     flat.slice(0, 9),
