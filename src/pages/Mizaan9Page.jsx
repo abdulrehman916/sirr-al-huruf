@@ -43,11 +43,6 @@ function MizaanDivider() {
   );
 }
 
-function getTimeBasedDayNight() {
-  const h = new Date().getHours();
-  return (h >= 6 && h < 20) ? 'gunduz' : 'gece';
-}
-
 // Build initial selections from dominant element
 function buildDefaultSelections(dominant) {
   return {
@@ -57,7 +52,7 @@ function buildDefaultSelections(dominant) {
     days:       ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()],
     planet:     DAY_PLANET_MAP[['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]] ?? null,
     purposes:   null,
-    daynight:   getTimeBasedDayNight(),
+    khayrSharr8: null,
   };
 }
 
@@ -211,8 +206,9 @@ export default function Mizaan9Page() {
               />
               <MizaanDivider />
               <Mizaan8
-                selected={selections.daynight}
-                onChange={updateSel("daynight")}
+                selected={selections.khayrSharr8}
+                onChange={updateSel("khayrSharr8")}
+                selectedPurpose={selections.purposes}
               />
               <MizaanDivider />
               <Mizaan9Final result={result} selections={selections} />

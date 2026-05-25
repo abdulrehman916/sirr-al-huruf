@@ -1,38 +1,69 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
-import { MIZAAN_DAYNIGHT_FULL } from "../../lib/mizaan9Data";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
-function getTimeBasedKey() {
-  const h = new Date().getHours();
-  return (h >= 6 && h < 20) ? 'gunduz' : 'gece';
-}
+const KHAYR_SHARR = [
+  {
+    key: 'khayr',
+    arabic: 'الخير',
+    icon: '✨',
+    bast: 2731,
+    color: '#4ADE80',
+    glow: 'rgba(74,222,128,0.40)',
+    bg: 'rgba(74,222,128,0.10)',
+    border: 'rgba(74,222,128,0.50)',
+  },
+  {
+    key: 'sharr',
+    arabic: 'الشر',
+    icon: '⚡',
+    bast: 2725,
+    color: '#F87171',
+    glow: 'rgba(248,113,113,0.40)',
+    bg: 'rgba(248,113,113,0.10)',
+    border: 'rgba(248,113,113,0.50)',
+  },
+];
 
-export default function Mizaan8({ selected, onChange }) {
-  const suggestedKey = getTimeBasedKey();
+// Purpose keys that map to Khayr
+const KHAYR_PURPOSES = ['celb', 'sihhat', 'tarfet'];
+// Purpose keys that map to Sharr
+const SHARR_PURPOSES = ['tard', 'sekam'];
+
+export default function Mizaan8({ selected, onChange, selectedPurpose }) {
+  // Auto-select based on Mizaan 7 purpose
+  useEffect(() => {
+    if (!selectedPurpose) return;
+    if (KHAYR_PURPOSES.includes(selectedPurpose)) {
+      onChange('khayr');
+    } else if (SHARR_PURPOSES.includes(selectedPurpose)) {
+      onChange('sharr');
+    }
+  }, [selectedPurpose]);
+
   const toggle = (key) => onChange(selected === key ? null : key);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
       className="rounded-2xl border p-5 space-y-4"
       style={{ background: "rgba(6,14,36,0.98)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}>
-      <MizaanHeader number="٨" titleAR="الميزان الثامن — النهار والليل" titleTR="Eighth Mizan · Day & Night" />
+      <MizaanHeader number="٨" titleAR="الميزان الثامن — الخير والشر" titleTR="Eighth Mizan · Khayr & Sharr" />
       <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-        Tap to select
+        Auto-detected · tap to change
       </p>
 
       <div className="grid grid-cols-2 gap-4">
-        {Object.entries(MIZAAN_DAYNIGHT_FULL).map(([key, item], i) => {
-          const isSuggested = key === suggestedKey;
-          const isSelected  = selected === key;
+        {KHAYR_SHARR.map((item, i) => {
+          const isSelected = selected === item.key;
           const col = item.color;
           return (
-            <motion.button key={key}
-              onClick={() => toggle(key)}
+            <motion.button key={item.key}
+              onClick={() => toggle(item.key)}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{
-                opacity: isSelected || isSuggested ? 1 : 0.3,
+                opacity: isSelected ? 1 : 0.3,
                 boxShadow: isSelected
                   ? [`0 0 22px ${item.glow}`, `0 0 44px ${item.glow}`, `0 0 22px ${item.glow}`]
                   : "none",
@@ -45,24 +76,21 @@ export default function Mizaan8({ selected, onChange }) {
               className="rounded-2xl border p-5 flex flex-col items-center gap-2 text-center cursor-pointer"
               style={{
                 background: isSelected ? item.bg : "rgba(255,255,255,0.02)",
-                borderColor: isSelected ? item.border : isSuggested ? `${item.border}55` : "rgba(255,255,255,0.07)",
+                borderColor: isSelected ? item.border : "rgba(255,255,255,0.07)",
                 borderWidth: isSelected ? 2 : 1,
               }}>
               <motion.span
                 style={{ fontSize: "2.8rem", lineHeight: 1 }}
                 animate={isSelected ? {
                   filter: [`drop-shadow(0 0 6px ${item.glow})`, `drop-shadow(0 0 20px ${col})`, `drop-shadow(0 0 6px ${item.glow})`]
-                } : {}}
+                } : { filter: "none" }}
                 transition={isSelected ? { duration: 2.8, repeat: Infinity, ease: "easeInOut" } : {}}>
                 {item.icon}
               </motion.span>
-              <p className="font-inter text-base font-bold uppercase tracking-widest" style={{ color: isSelected ? col : `${col}44` }}>{item.label}</p>
-              <p className="font-amiri text-2xl" style={{ color: isSelected ? col : `${col}44` }}>{item.arabic}</p>
-              <p className="font-inter text-sm font-bold tabular-nums" style={{ color: isSelected ? col : `${col}44` }}>{item.bast.toLocaleString()}</p>
-              <p className="font-inter text-[10px] italic" style={{ color: isSelected ? `${col}cc` : `${col}33` }}>{item.desc}</p>
-              {isSuggested && !isSelected && (
-                <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: col, opacity: 0.7 }}>Suggested</span>
-              )}
+              <p className="font-amiri text-2xl font-bold" style={{ color: isSelected ? col : `${col}44` }}>{item.arabic}</p>
+              <p className="font-inter text-sm font-bold tabular-nums" style={{ color: isSelected ? col : `${col}44` }}>
+                {item.bast.toLocaleString()}
+              </p>
               {isSelected && (
                 <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="font-inter text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full border"
