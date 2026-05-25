@@ -55,9 +55,17 @@ const ELEMENT_PATTERNS_4x4 = {
   water: [10, 5, 4, 15, 3, 16, 9, 6, 13, 2, 7, 12, 8, 11, 14, 1],
 };
 
+const ELEMENT_PATTERNS_5x5 = {
+  fire:  [17,24, 1, 8,15, 23, 5, 7,14,16,  4, 6,13,20,22, 10,12,19,21, 3, 11,18,25, 2, 9],
+  earth: [ 9, 2,25,18,11,  3,21,19,12,10, 22,20,13, 6, 4, 16,14, 7, 5,23, 15, 8, 1,24,17],
+  air:   [11,18,25, 2, 9, 10,12,19,21, 3,  4, 6,13,20,22, 23, 5, 7,14,16, 17,24, 1, 8,15],
+  water: [15, 8, 1,24,17, 16,14, 7, 5,23, 22,20,13, 6, 4,  3,21,19,12,10,  9, 2,25,18,11],
+};
+
 function getSacredPattern(size, elementKey) {
   if (size === 3) return PATTERNS_3x3[elementKey] || PATTERNS_3x3.earth;
   if (size === 4) return ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
+  if (size === 5) return ELEMENT_PATTERNS_5x5[elementKey] || ELEMENT_PATTERNS_5x5.fire;
   return null;
 }
 
@@ -89,6 +97,21 @@ function generateVefk4x4(targetNumber, elementKey) {
   const pattern = ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0, 4), flat.slice(4, 8), flat.slice(8, 12), flat.slice(12, 16)];
+}
+
+function generateVefk5x5(targetNumber, elementKey) {
+  const n = parseInt(targetNumber);
+  const remainder = (n - 65) % 5;
+  const base = (n - 65 - remainder) / 5;
+  const values = Array.from({ length: 25 }, (_, i) => base + i);
+  // remainder cells: position 6=idx5, 11=idx10, 16=idx15, 21=idx20
+  if (remainder === 4) values[5]  += 1;
+  else if (remainder === 3) values[10] += 1;
+  else if (remainder === 2) values[15] += 1;
+  else if (remainder === 1) values[20] += 1;
+  const pattern = ELEMENT_PATTERNS_5x5[elementKey] || ELEMENT_PATTERNS_5x5.fire;
+  const flat = pattern.map(rank => values[rank - 1]);
+  return [flat.slice(0,5), flat.slice(5,10), flat.slice(10,15), flat.slice(15,20), flat.slice(20,25)];
 }
 
 function generateMagicSquare(size, baseNum) {
@@ -264,6 +287,7 @@ export default function MagicSqayerPage() {
     if (!num || !size) return null;
     if (size === 3) return generateVefk3x3(num, el || "earth");
     if (size === 4) return generateVefk4x4(num, el || "fire");
+    if (size === 5) return generateVefk5x5(num, el || "fire");
     return generateMagicSquare(size, parseInt(num));
   };
 
