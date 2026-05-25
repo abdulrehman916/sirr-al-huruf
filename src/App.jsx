@@ -9,14 +9,14 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { NavigationProvider } from './context/NavigationContext';
 import { AnimatePresence, motion } from 'framer-motion';
 // Add page imports here
-import Home from './pages/Home.jsx';
+import Home from './pages/Home';
 import AbjadPage from './pages/AbjadPage';
 import AnasirPage from './pages/AnasirPage';
 import HadimPage from './pages/HadimPage';
 import Mizaan9Page from './pages/Mizaan9Page';
 import AbjadKabirPage from './pages/AbjadKabirPage';
 import MagicSqayerPage from './pages/MagicSqayerPage';
-import VefkinYapilisiPage from './pages/VefkinYapilisiPage.jsx';
+import VefkinYapilisiPage from './pages/VefkinYapilisiPage';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
