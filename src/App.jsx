@@ -16,7 +16,7 @@ import HadimPage from './pages/HadimPage';
 import Mizaan9Page from './pages/Mizaan9Page';
 import AbjadKabirPage from './pages/AbjadKabirPage';
 import MagicSqayerPage from './pages/MagicSqayerPage';
-import VefkinYapilisiPage from './pages/VefkinYapilisiPage';
+import VefkinYapilisiPage from './pages/VefkinYapilisiPage.jsx';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
