@@ -22,16 +22,20 @@ const LAYOUT = [
 ];
 
 // Given base number, compute value for each position 1–24
+// Hane 1–19: base × position number
+// Hane 20–24: base × (base - 40 + offset) where offset = 0,1,2,3,4
 function computeCells(base) {
-  const adjusted = base - 40; // for positions 20–24
   const cells = {};
+  // Positions 1–19: base × tabi sıra numarası
   for (let pos = 1; pos <= 19; pos++) {
     cells[pos] = base * pos;
   }
-  for (let pos = 20; pos <= 24; pos++) {
-    const offset = pos - 20; // 0,1,2,3,4
-    cells[pos] = base * (adjusted + offset);
-  }
+  // Positions 20–24: base × (base − 40 + offset)
+  cells[20] = base * (base - 40);  // offset 0
+  cells[21] = base * (base - 39);  // offset 1
+  cells[22] = base * (base - 38);  // offset 2
+  cells[23] = base * (base - 37);  // offset 3
+  cells[24] = base * (base - 36);  // offset 4
   return cells;
 }
 
@@ -113,10 +117,26 @@ export default function TanzimVefki() {
     return computeCells(base);
   }, [base]);
 
-  // Magic constant = ilk satır toplamı (merkez hariç, tüm satır/sütun/çapraz eşit)
+  // Magic constant = ilk satır toplamı + validation
   const magicConstant = useMemo(() => {
     if (!cells) return null;
-    return LAYOUT[0].reduce((a, pos) => a + cells[pos], 0);
+    const row1 = LAYOUT[0].reduce((a, pos) => a + cells[pos], 0);
+    const row2 = LAYOUT[1].reduce((a, pos) => a + cells[pos], 0);
+    const row3 = LAYOUT[2].reduce((a, pos) => a + cells[pos], 0);
+    const row4 = LAYOUT[3].reduce((a, pos) => a + cells[pos], 0);
+    const row5 = LAYOUT[4].reduce((a, pos) => a + cells[pos], 0);
+    const col1 = [LAYOUT[0][0], LAYOUT[1][0], LAYOUT[2][0], LAYOUT[3][0], LAYOUT[4][0]].reduce((a, p) => a + cells[p], 0);
+    const col2 = [LAYOUT[0][1], LAYOUT[1][1], LAYOUT[2][1], LAYOUT[3][1], LAYOUT[4][1]].reduce((a, p) => a + cells[p], 0);
+    const col3 = [LAYOUT[0][2], LAYOUT[1][2], LAYOUT[3][2], LAYOUT[4][2]].reduce((a, p) => a + cells[p], 0);
+    const col4 = [LAYOUT[0][3], LAYOUT[1][3], LAYOUT[2][3], LAYOUT[3][3], LAYOUT[4][3]].reduce((a, p) => a + cells[p], 0);
+    const col5 = [LAYOUT[0][4], LAYOUT[1][4], LAYOUT[2][4], LAYOUT[3][4], LAYOUT[4][4]].reduce((a, p) => a + cells[p], 0);
+    const diag1 = [LAYOUT[0][0], LAYOUT[1][1], LAYOUT[3][3], LAYOUT[4][4]].reduce((a, p) => a + cells[p], 0);
+    const diag2 = [LAYOUT[0][4], LAYOUT[1][3], LAYOUT[3][1], LAYOUT[4][0]].reduce((a, p) => a + cells[p], 0);
+    // All should equal row1 (magic constant)
+    const valid = row2 === row1 && row3 === row1 && row4 === row1 && row5 === row1 &&
+                  col1 === row1 && col2 === row1 && col3 === row1 && col4 === row1 && col5 === row1 &&
+                  diag1 === row1 && diag2 === row1;
+    return valid ? row1 : null;
   }, [cells]);
 
   return (
@@ -234,8 +254,12 @@ export default function TanzimVefki() {
                   <p className="font-amiri text-xl font-bold" style={{ color: G.text }}>{base.toLocaleString()}</p>
                 </div>
                 <div className="rounded-xl px-3 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Magic Constant</p>
-                  <p className="font-amiri text-sm font-bold leading-tight" style={{ color: G.text }}>{magicConstant.toLocaleString()}</p>
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                    {magicConstant ? "Magic Constant ✓" : "⚠ Dengesiz"}
+                  </p>
+                  <p className="font-amiri text-sm font-bold leading-tight" style={{ color: magicConstant ? G.text : "rgba(255,100,100,0.80)" }}>
+                    {magicConstant ? magicConstant.toLocaleString() : "Hata"}
+                  </p>
                 </div>
               </div>
             </motion.div>
