@@ -31,20 +31,30 @@ const LAYOUT = [
 ];
 
 // ── Ana Vefk cell formula ─────────────────────────────────────────
-// Start from Tanzim pattern, multiply every visible cell by anaSayi.
-// Tanzim values: cells 1–19 = position value (1,2,...19)
-//                cells 20–24 = (esmaValue − 40), +1 each
 // Ana Vefk:      cell value = anaSayi × tanzimValue
 function computeAnaVefkCells(anaSayi, esmaValue) {
   const cells = {};
-  // Cells 1–19: anaSayi × pos
   for (let pos = 1; pos <= 19; pos++) {
     cells[pos] = anaSayi * pos;
   }
-  // Cells 20–24: anaSayi × (esmaValue − 40 + offset)
   const base20 = esmaValue - 40;
   for (let pos = 20; pos <= 24; pos++) {
     cells[pos] = anaSayi * (base20 + (pos - 20));
+  }
+  return cells;
+}
+
+// ── Tanzim Type 2 – Spiritual Sequence Mode ──────────────────────
+// Cells 1–19: fixed natural values (1…19)
+// Cells 20–24: BASE20 = Esma − 40, then +1 each
+function computeSpiritualSequenceCells(esmaValue) {
+  const cells = {};
+  for (let pos = 1; pos <= 19; pos++) {
+    cells[pos] = pos;
+  }
+  const base20 = esmaValue - 40;
+  for (let pos = 20; pos <= 24; pos++) {
+    cells[pos] = base20 + (pos - 20);
   }
   return cells;
 }
@@ -117,7 +127,7 @@ function VefkGrid({ cells, centerDisplay }) {
 }
 
 export default function AnaVefk() {
-  const [mode,    setMode]    = useState("normal"); // "normal" | "muahhir"
+  const [mode,    setMode]    = useState("normal"); // "normal" | "muahhir" | "spiritual"
   const [anaSayi, setAnaSayi] = useState("");
   const [esmaRaw, setEsmaRaw] = useState("");
   const [cells,   setCells]   = useState(null);
@@ -136,16 +146,21 @@ export default function AnaVefk() {
     ? (esmaIsNumeric ? parseInt(esmaTrimmed) : esmaEbced)
     : null;
 
-  const canGenerate = anaSayiNum && anaSayiNum >= 1 && esmaValue && esmaValue > 40;
+  const isSpiritual = mode === "spiritual";
+  const canGenerate = isSpiritual
+    ? (esmaValue && esmaValue > 40)
+    : (anaSayiNum && anaSayiNum >= 1 && esmaValue && esmaValue > 40);
 
   // Magic Constant / Zikir Count = anaSayi × esmaValue
   const magicConst = (savedAna && savedEsma) ? savedAna * savedEsma : null;
 
   const handleGenerate = () => {
     if (!canGenerate) return;
-    const c = computeAnaVefkCells(anaSayiNum, esmaValue);
+    const c = isSpiritual
+      ? computeSpiritualSequenceCells(esmaValue)
+      : computeAnaVefkCells(anaSayiNum, esmaValue);
     setCells(c);
-    setSavedAna(anaSayiNum);
+    setSavedAna(isSpiritual ? null : anaSayiNum);
     setSavedEsma(esmaValue);
     setSavedEsmaRaw(esmaTrimmed);
   };
@@ -188,27 +203,29 @@ export default function AnaVefk() {
         </div>
 
         {/* Mode toggle */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { id: "normal",  label: "✦ Normal",    arabic: "الإيجابي" },
-            { id: "muahhir", label: "🔻 Muahhir",  arabic: "المؤخِّر" },
+            { id: "normal",   label: "✦ Normal",    arabic: "الإيجابي" },
+            { id: "muahhir",  label: "🔻 Muahhir",  arabic: "المؤخِّر" },
+            { id: "spiritual",label: "🌿 Ruhani",    arabic: "الروحاني" },
           ].map(m => {
             const active = mode === m.id;
             const isMu = m.id === "muahhir";
+            const isSp = m.id === "spiritual";
             return (
               <button key={m.id} onClick={() => setMode(m.id)}
-                className="rounded-xl py-2 px-3 flex flex-col items-center gap-0.5 border transition-all"
+                className="rounded-xl py-2 px-2 flex flex-col items-center gap-0.5 border transition-all"
                 style={{
-                  background: active ? (isMu ? "rgba(200,60,60,0.12)" : G.bg) : "rgba(4,12,34,0.97)",
-                  borderColor: active ? (isMu ? "rgba(200,60,60,0.50)" : G.borderHi) : "rgba(255,255,255,0.08)",
-                  boxShadow: active ? `0 0 14px ${isMu ? "rgba(200,60,60,0.18)" : G.glow}` : "none",
+                  background: active ? (isMu ? "rgba(200,60,60,0.12)" : isSp ? "rgba(80,180,120,0.10)" : G.bg) : "rgba(4,12,34,0.97)",
+                  borderColor: active ? (isMu ? "rgba(200,60,60,0.50)" : isSp ? "rgba(80,180,120,0.50)" : G.borderHi) : "rgba(255,255,255,0.08)",
+                  boxShadow: active ? `0 0 14px ${isMu ? "rgba(200,60,60,0.18)" : isSp ? "rgba(80,180,120,0.18)" : G.glow}` : "none",
                 }}>
                 <span className="font-inter text-[10px] font-bold"
-                  style={{ color: active ? (isMu ? "#f87171" : G.text) : "rgba(255,255,255,0.40)" }}>
+                  style={{ color: active ? (isMu ? "#f87171" : isSp ? "#6ee7b7" : G.text) : "rgba(255,255,255,0.40)" }}>
                   {m.label}
                 </span>
                 <span className="font-amiri text-xs"
-                  style={{ color: active ? (isMu ? "rgba(248,113,113,0.70)" : "rgba(212,175,55,0.70)") : "rgba(255,255,255,0.20)" }}>
+                  style={{ color: active ? (isMu ? "rgba(248,113,113,0.70)" : isSp ? "rgba(110,231,183,0.70)" : "rgba(212,175,55,0.70)") : "rgba(255,255,255,0.20)" }}>
                   {m.arabic}
                 </span>
               </button>
@@ -216,9 +233,9 @@ export default function AnaVefk() {
           })}
         </div>
 
-        {/* Ana Sayı — numeric only */}
+        {/* Ana Sayı — numeric only (hidden in spiritual mode) */}
         <div className="rounded-xl border px-4 py-3 space-y-1.5"
-          style={{ background: "rgba(4,10,28,0.99)", borderColor: G.border }}>
+          style={{ background: "rgba(4,10,28,0.99)", borderColor: G.border, display: isSpiritual ? "none" : undefined }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
             1️⃣ Ana Sayı (Çarpan) — الرقم الأساسي
           </p>
@@ -281,22 +298,43 @@ export default function AnaVefk() {
         {/* Rule card */}
         <div className="rounded-xl border px-4 py-3 space-y-1"
           style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.18)" }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-            📜 Hesap Kuralı — Ana Vefk
-          </p>
-          <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Hane 1–19: <span style={{ color: G.text }}>Ana Sayı × konum (1...19)</span>
-          </p>
-          <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Hane 20–24: <span style={{ color: G.text }}>Ana Sayı × Tanzim değeri</span>
-          </p>
-          <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Zikir Sayısı / Magic Constant: <span style={{ color: G.text }}>Ana Sayı × Esma Değeri</span>
-          </p>
-          {canGenerate && anaSayiNum && esmaValue && (
-            <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
-              {anaSayiNum} × {esmaValue} = {(anaSayiNum * esmaValue).toLocaleString()}
-            </p>
+          {isSpiritual ? (
+            <>
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                🌿 Tanzim Spiritual Sequence
+              </p>
+              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+                Hane 1–19: <span style={{ color: G.text }}>sabit değer (1, 2 ... 19)</span>
+              </p>
+              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+                Hane 20–24: <span style={{ color: G.text }}>Esma−40 yükselen dizi</span>
+              </p>
+              {esmaValue && esmaValue > 40 && (
+                <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(110,231,183,0.70)" }}>
+                  {esmaValue}−40 = {esmaValue - 40} → {[0,1,2,3,4].map(i => esmaValue - 40 + i).join(", ")}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                📜 Hesap Kuralı — Ana Vefk
+              </p>
+              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+                Hane 1–19: <span style={{ color: G.text }}>Ana Sayı × konum (1...19)</span>
+              </p>
+              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+                Hane 20–24: <span style={{ color: G.text }}>Ana Sayı × Tanzim değeri</span>
+              </p>
+              <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+                Zikir Sayısı / Magic Constant: <span style={{ color: G.text }}>Ana Sayı × Esma Değeri</span>
+              </p>
+              {canGenerate && anaSayiNum && esmaValue && (
+                <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
+                  {anaSayiNum} × {esmaValue} = {(anaSayiNum * esmaValue).toLocaleString()}
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -312,7 +350,7 @@ export default function AnaVefk() {
             boxShadow: `0 0 24px ${isMuahhir ? "rgba(200,60,60,0.45)" : G.glowHi}`
           }}
         >
-          {isMuahhir ? "🔻 Muahhir Vefki Oluştur" : "✨ Hâli Vasat Vefki Oluştur"}
+          {isMuahhir ? "🔻 Muahhir Vefki Oluştur" : isSpiritual ? "🌿 Ruhani Vefki Oluştur" : "✨ Hâli Vasat Vefki Oluştur"}
         </motion.button>
       </div>
 
@@ -331,19 +369,21 @@ export default function AnaVefk() {
             }}
           >
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Ana Sayı</p>
-                <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{savedAna.toLocaleString()}</p>
-              </div>
+            <div className={`grid gap-2 text-center ${isSpiritual ? "grid-cols-2" : "grid-cols-3"}`}>
+              {!isSpiritual && (
+                <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Ana Sayı</p>
+                  <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{savedAna?.toLocaleString()}</p>
+                </div>
+              )}
               <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
                 <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Esma Değeri</p>
                 <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{savedEsma.toLocaleString()}</p>
               </div>
               <div className="rounded-xl px-2 py-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Zikir Sayısı</p>
+                <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>{isSpiritual ? "Baz (Esma−40)" : "Zikir Sayısı"}</p>
                 <p className="font-amiri text-sm font-bold leading-tight" style={{ color: G.text }}>
-                  {magicConst?.toLocaleString()}
+                  {isSpiritual ? (savedEsma - 40).toLocaleString() : magicConst?.toLocaleString()}
                 </p>
               </div>
             </div>
