@@ -33,8 +33,8 @@ export default function VefkinYapilisiPage() {
   const [activeTab, setActiveTab] = useState("ana");
 
   return (
-    <VefkSessionProvider>
-      <PageLayout>
+    <PageLayout>
+      <VefkSessionProvider>
         {/* will-change:transform promotes to GPU layer, preventing repaint cascade on pinch zoom */}
         <div className="space-y-4" style={{ willChange: "transform" }}>
 
@@ -91,7 +91,7 @@ export default function VefkinYapilisiPage() {
         </div>
 
       </div>
+      </VefkSessionProvider>
     </PageLayout>
-    </VefkSessionProvider>
   );
 }
