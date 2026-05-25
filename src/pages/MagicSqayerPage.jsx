@@ -205,12 +205,11 @@ function generateVefk9x9(targetNumber, elementKey) {
   // Authentic Ottoman rule: if remainder exists (1-8), use half-value system
   let base;
   if (remainder !== 0) {
-    // Divide original target by 2
+    // Half-value system: base = floor((half - 369) / 9)
     const half = n / 2;
-    const halfRemainder = (half - 369) % 9;
-    base = Math.floor((half - 369 - halfRemainder) / 9);
+    base = Math.floor((half - 369) / 9);
   } else {
-    // No remainder: Target - 369, then divide by 9
+    // Direct system: base = floor((n - 369) / 9)
     base = Math.floor((n - 369) / 9);
   }
   
@@ -406,22 +405,23 @@ function CalcBreakdown({ inputNumber, gridSize }) {
   const n = parseInt(inputNumber);
   const kutb = KUTB[gridSize];
   
-  // Special handling for 9×9 Ottoman Dokuzlu Vefk
+  // Special handling for 9×9 Ottoman Dokuzlu Vefk - MUST match generation exactly
   let base, division, remaining, removed;
   if (gridSize === 9) {
     const remainder = (n - 369) % 9;
     if (remainder !== 0) {
+      // Half-value system: base = floor((half - 369) / 9)
       const half = n / 2;
-      const halfRemainder = (half - 369) % 9;
-      removed = 369 - 9;
-      remaining = half - removed;
-      division = remaining / 9;
+      division = (half - 369) / 9;
       base = Math.floor(division);
+      remaining = half - 369;
+      removed = 369;
     } else {
-      removed = 369 - 9;
-      remaining = n - removed;
-      division = remaining / 9;
+      // Direct system: base = (n - 369) / 9
+      division = (n - 369) / 9;
       base = Math.floor(division);
+      remaining = n - 369;
+      removed = 369;
     }
   } else {
     removed = kutb - gridSize;
@@ -439,12 +439,12 @@ function CalcBreakdown({ inputNumber, gridSize }) {
     {
       step: "②",
       label: "Kutb Number Removed",
-      formula: `${kutb} − ${gridSize} = ${removed}`,
+      formula: `${kutb}`,
     },
     {
       step: "③",
-      label: "Remaining",
-      formula: `${n.toLocaleString()} − ${removed} = ${remaining.toLocaleString()}`,
+      label: "Remaining After Kutb",
+      formula: gridSize === 9 ? `${n.toLocaleString()} − ${removed} = ${remaining.toLocaleString()}` : `${n.toLocaleString()} − ${removed} = ${remaining.toLocaleString()}`,
     },
     {
       step: "④",
