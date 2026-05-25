@@ -79,9 +79,10 @@ function generateVefk3x3(targetNumber, elementKey) {
 
 function generateVefk4x4(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
-  const remainder = (n - 30) % 4;
-  const base = (n - 30 - remainder) / 4;
+  const remainder = (n - 34) % 4;
+  const base = (n - 34 - remainder) / 4;
   const values = Array.from({ length: 16 }, (_, i) => base + i);
+  // remainder cells: position 5 = index 4, position 9 = index 8, position 13 = index 12
   if (remainder === 3) values[4] += 1;
   else if (remainder === 2) values[8] += 1;
   else if (remainder === 1) values[12] += 1;
@@ -204,7 +205,7 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
             </span>
             {isGenerated && inputNumber && (
               <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
-                · Base {Math.floor((parseInt(inputNumber) - 30) / 4)}
+                · Base {Math.floor((parseInt(inputNumber) - 34) / 4)}
               </span>
             )}
           </div>
