@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const G = {
@@ -61,7 +61,7 @@ function GoldDivider() {
   );
 }
 
-function TanzimGrid({ cells, esmaText }) {
+const TanzimGrid = memo(function TanzimGrid({ cells, esmaText }) {
   const cellW = 58;
   return (
     <div className="flex justify-center overflow-x-auto">
@@ -116,7 +116,7 @@ function TanzimGrid({ cells, esmaText }) {
       </div>
     </div>
   );
-}
+});
 
 export default function TanzimVefki() {
   const [bazRaw,   setBazRaw]   = useState("");

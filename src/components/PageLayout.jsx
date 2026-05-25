@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
@@ -12,20 +13,27 @@ const TABS = [
   { id: "vefkin-yapilisi", label: "VEFKİN",  arabic: "الوفق",    path: "/vefkin-yapilisi" },
 ];
 
-function CosmicBackground() {
-  const stars = Array.from({ length: 50 }, (_, i) => ({
-    width: Math.random() * 2 + 0.5,
-    height: Math.random() * 2 + 0.5,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    opacity: Math.random() * 0.5 + 0.1,
-    animation: `twinkle ${2 + Math.random() * 4}s ease-in-out infinite`,
-    animationDelay: `${Math.random() * 4}s`,
-  }));
+// Stars generated once at module level — never recalculates on rerenders
+const STARS = Array.from({ length: 50 }, (_, i) => {
+  const seed = i * 137.508; // golden angle — stable pseudo-random
+  const frac = (n) => (n % 1 + 1) % 1;
+  return {
+    width:  frac(Math.sin(seed) * 43758.5453) * 2 + 0.5,
+    height: frac(Math.sin(seed) * 43758.5453) * 2 + 0.5,
+    top:    `${frac(Math.cos(seed * 1.3) * 43758.5453) * 100}%`,
+    left:   `${frac(Math.sin(seed * 1.7) * 43758.5453) * 100}%`,
+    opacity: frac(Math.cos(seed * 2.1) * 43758.5453) * 0.5 + 0.1,
+    animation: `twinkle ${2 + frac(Math.sin(seed * 0.9) * 43758.5453) * 4}s ease-in-out infinite`,
+    animationDelay: `${frac(Math.cos(seed * 0.7) * 43758.5453) * 4}s`,
+  };
+});
 
+// Memoized — never remounts, never recalculates stars
+const CosmicBackground = memo(function CosmicBackground() {
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {stars.map((s, i) => (
+    // Use absolute (not fixed) to avoid iOS fixed-element repaint on zoom
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {STARS.map((s, i) => (
         <div key={i} className="absolute rounded-full bg-white" style={s} />
       ))}
       <div className="absolute inset-0" style={{
@@ -39,7 +47,7 @@ function CosmicBackground() {
       `}</style>
     </div>
   );
-}
+});
 
 export default function PageLayout({ children }) {
   const location = useLocation();
@@ -47,18 +55,20 @@ export default function PageLayout({ children }) {
   const activeId = TABS.find(t => t.path === location.pathname)?.id ?? undefined;
 
   return (
-    <div className="min-h-screen font-inter relative" style={{ background: "linear-gradient(180deg, #050d1a 0%, #0a1628 40%, #112840 100%)" }}>
+    // min-height via explicit px-equivalent avoids iOS 100vh recalc on scroll/zoom
+    <div className="font-inter relative" style={{ background: "linear-gradient(180deg, #050d1a 0%, #0a1628 40%, #112840 100%)", minHeight: "100%" }}>
       <CosmicBackground />
 
-      {/* Sticky Top Nav */}
+      {/* Sticky Top Nav — reduced blur to avoid iOS repaint cascade on zoom */}
       <div
         className="sticky top-0 z-50 w-full px-3 py-2"
         style={{
-          background: "rgba(4,10,22,0.94)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
+          background: "rgba(4,10,22,0.97)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
           borderBottom: "1px solid rgba(212,175,55,0.12)",
           boxShadow: "0 2px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.06)",
+          willChange: "transform",
         }}
       >
         <div className="max-w-2xl mx-auto flex gap-1 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
@@ -118,12 +128,11 @@ export default function PageLayout({ children }) {
                     transition={{ duration: 0.30, ease: "easeInOut" }}
                   />
 
+                  {/* layoutId removed — triggers layout recalc on every viewport resize/zoom */}
                   {isActive && (
-                    <motion.div
-                      layoutId="navGlow"
+                    <div
                       className="absolute inset-0 rounded-[9px] pointer-events-none"
                       style={{ background: "radial-gradient(ellipse 80% 60% at 50% 100%, rgba(212,175,55,0.14) 0%, transparent 75%)" }}
-                      transition={{ duration: 0.28, ease: "easeInOut" }}
                     />
                   )}
                 </Link>
@@ -133,16 +142,10 @@ export default function PageLayout({ children }) {
         </div>
       </div>
 
-      {/* Page content */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -16 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="relative z-10 max-w-2xl mx-auto px-4 py-8"
-      >
+      {/* Page content — plain div avoids framer-motion y-transform repaints on zoom */}
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
         {children}
-      </motion.div>
+      </div>
     </div>
   );
 }

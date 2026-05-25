@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const G = {
@@ -83,8 +83,8 @@ function GoldDivider() {
   );
 }
 
-// ── Grid ─────────────────────────────────────────────────────────
-function VefkGrid({ cells, centerText, esmaRaw }) {
+// ── Grid — memoized to prevent zoom-triggered rerenders ──────────
+const VefkGrid = memo(function VefkGrid({ cells, centerText, esmaRaw }) {
   const cellW = 58;
   const displayText = centerText?.trim() || null;
   const esmaDisplay = esmaRaw?.trim() || null;
@@ -154,7 +154,7 @@ function VefkGrid({ cells, centerText, esmaRaw }) {
       </div>
     </div>
   );
-}
+});
 
 export default function AnaVefk() {
   // ONE unified center input (visual + sum-based base)

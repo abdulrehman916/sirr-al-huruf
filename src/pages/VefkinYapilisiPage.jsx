@@ -32,7 +32,8 @@ export default function VefkinYapilisiPage() {
 
   return (
     <PageLayout>
-      <div className="space-y-4">
+      {/* will-change:transform promotes to GPU layer, preventing repaint cascade on pinch zoom */}
+      <div className="space-y-4" style={{ willChange: "transform" }}>
 
         {/* Header */}
         <div className="text-center">
