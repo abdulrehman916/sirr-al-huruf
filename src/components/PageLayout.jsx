@@ -3,11 +3,13 @@ import { Link, useLocation } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 
 const TABS = [
-  { id: "home",        label: "HOME",   arabic: "الرئيسية", path: "/" },
-  { id: "abjad-kabir", label: "ABJAD",  arabic: "الأبجد",   path: "/abjad" },
-  { id: "anasir",      label: "ANASIR", arabic: "عناصر",    path: "/anasir" },
-  { id: "hadim",       label: "HADIM",  arabic: "خادم",     path: "/hadim" },
-  { id: "mizaan9",     label: "MIZAN",  arabic: "ميزان",    path: "/mizaan9" },
+  { id: "home",            label: "HOME",    arabic: "الرئيسية", path: "/" },
+  { id: "abjad-kabir",     label: "ABJAD",   arabic: "الأبجد",   path: "/abjad" },
+  { id: "anasir",          label: "ANASIR",  arabic: "عناصر",    path: "/anasir" },
+  { id: "hadim",           label: "HADIM",   arabic: "خادم",     path: "/hadim" },
+  { id: "mizaan9",         label: "MIZAN",   arabic: "ميزان",    path: "/mizaan9" },
+  { id: "magic-sqayer",    label: "SQAYER",  arabic: "السحر",    path: "/magic-sqayer" },
+  { id: "vefkin-yapilisi", label: "VEFKİN",  arabic: "الوفق",    path: "/vefkin-yapilisi" },
 ];
 
 function CosmicBackground() {
@@ -42,9 +44,7 @@ function CosmicBackground() {
 export default function PageLayout({ children }) {
   const location = useLocation();
   const { startNav } = useNavigation();
-  const activeId = TABS.find(t => t.path === location.pathname)?.id
-    ?? (location.pathname === "/abjad" ? "abjad-kabir" : undefined)
-    ?? (location.pathname === "/mizaan9" ? "mizaan9" : undefined);
+  const activeId = TABS.find(t => t.path === location.pathname)?.id ?? undefined;
 
   return (
     <div className="min-h-screen font-inter relative" style={{ background: "linear-gradient(180deg, #050d1a 0%, #0a1628 40%, #112840 100%)" }}>
@@ -61,7 +61,7 @@ export default function PageLayout({ children }) {
           boxShadow: "0 2px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.06)",
         }}
       >
-        <div className="max-w-2xl mx-auto grid grid-cols-5 gap-1">
+        <div className="max-w-2xl mx-auto flex gap-1 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
           {TABS.map((tab) => {
             const isActive = activeId === tab.id;
             return (
@@ -73,37 +73,38 @@ export default function PageLayout({ children }) {
                     : "rgba(255,255,255,0.025)",
                   borderColor: isActive
                     ? "rgba(212,175,55,0.50)"
-                    : "rgba(255,255,255,0.06)",
+                    : "rgba(255,255,255,0.08)",
                   boxShadow: isActive
                     ? "0 0 18px rgba(212,175,55,0.22), inset 0 1px 0 rgba(212,175,55,0.18)"
                     : "none",
                 }}
                 transition={{ duration: 0.28, ease: "easeInOut" }}
-                style={{ borderRadius: 10, border: "1px solid" }}
+                style={{ borderRadius: 10, border: "1px solid", flexShrink: 0 }}
               >
                 <Link
                   to={tab.path}
                   onClick={startNav}
-                  className="relative flex flex-col items-center justify-center py-2 px-1 w-full h-full"
+                  className="relative flex flex-col items-center justify-center py-2 px-2 w-full h-full"
                   style={{
                     WebkitTapHighlightColor: "transparent",
                     touchAction: "manipulation",
                     userSelect: "none",
                     minHeight: 46,
+                    minWidth: 52,
                   }}
                 >
                   <motion.span
                     className="font-amiri font-bold leading-none"
-                    style={{ fontSize: "clamp(11px, 3vw, 14px)" }}
-                    animate={{ color: isActive ? "#D4AF37" : "rgba(255,255,255,0.40)" }}
+                    style={{ fontSize: 13 }}
+                    animate={{ color: isActive ? "#D4AF37" : "rgba(255,255,255,0.70)" }}
                     transition={{ duration: 0.25 }}
                   >
                     {tab.arabic}
                   </motion.span>
                   <motion.span
-                    className="font-inter font-bold tracking-widest mt-0.5 leading-none"
-                    style={{ fontSize: "clamp(6px, 1.6vw, 8px)" }}
-                    animate={{ color: isActive ? "rgba(212,175,55,0.88)" : "rgba(255,255,255,0.22)" }}
+                    className="font-inter font-bold tracking-wider mt-0.5 leading-none"
+                    style={{ fontSize: 8 }}
+                    animate={{ color: isActive ? "rgba(212,175,55,0.95)" : "rgba(255,255,255,0.55)" }}
                     transition={{ duration: 0.25 }}
                   >
                     {tab.label}
@@ -117,7 +118,6 @@ export default function PageLayout({ children }) {
                     transition={{ duration: 0.30, ease: "easeInOut" }}
                   />
 
-                  {/* Shared layout underline for smooth cross-tab travel */}
                   {isActive && (
                     <motion.div
                       layoutId="navGlow"
