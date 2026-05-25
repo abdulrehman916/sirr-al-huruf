@@ -49,13 +49,13 @@ export const MIZAAN_HOURS = [
 
 // ── MIZAAN 5: Days ──
 export const MIZAAN_DAYS = [
-  { key: 'sun',  label: 'Sunday',    arabic: 'الأحد',       planet: 'Şems',    symbol: '☉', compatible: ['fire'],  color: '#FBBF24' },
-  { key: 'mon',  label: 'Monday',    arabic: 'الاثنين',     planet: 'Kamer',   symbol: '☽', compatible: ['water'], color: '#818CF8' },
-  { key: 'tue',  label: 'Tuesday',   arabic: 'الثلاثاء',    planet: 'Merih',   symbol: '♂', compatible: ['fire'],  color: '#F87171' },
-  { key: 'wed',  label: 'Wednesday', arabic: 'الأربعاء',    planet: 'Utarid',  symbol: '☿', compatible: ['air'],   color: '#34D399' },
-  { key: 'thu',  label: 'Thursday',  arabic: 'الخميس',      planet: 'Müşteri', symbol: '♃', compatible: ['air'],   color: '#74C0FC' },
-  { key: 'fri',  label: 'Friday',    arabic: 'الجمعة',      planet: 'Zühre',   symbol: '♀', compatible: ['water'], color: '#F9A8D4' },
-  { key: 'sat',  label: 'Saturday',  arabic: 'السبت',       planet: 'Zühal',   symbol: '♄', compatible: ['earth'], color: '#9B7FD4' },
+  { key: 'sun', arabic: 'الأحد',     icon: '☀️', bast: 2024, color: '#FBBF24' },
+  { key: 'mon', arabic: 'الإثنين',   icon: '🌙', bast: 4001, color: '#818CF8' },
+  { key: 'tue', arabic: 'الثلاثاء',  icon: '🔥', bast: 3784, color: '#F87171' },
+  { key: 'wed', arabic: 'الأربعاء',  icon: '🌿', bast: 3491, color: '#34D399' },
+  { key: 'thu', arabic: 'الخميس',    icon: '⭐', bast: 3077, color: '#74C0FC' },
+  { key: 'fri', arabic: 'الجمعة',    icon: '🕌', bast: 3399, color: '#F9A8D4' },
+  { key: 'sat', arabic: 'السبت',     icon: '🪐', bast: 2590, color: '#9B7FD4' },
 ];
 
 // ── MIZAAN 6: Planets ──

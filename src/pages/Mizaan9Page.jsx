@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
-import { getDominantPurpose, getBestDay, getDominantPlanet } from "../lib/mizaan9Data";
+import { getDominantPurpose, getDominantPlanet } from "../lib/mizaan9Data";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
 import Mizaan3      from "../components/mizaan/Mizaan3";
@@ -54,7 +54,7 @@ function buildDefaultSelections(dominant) {
     elements:   dominant ? [dominant] : [],
     khayrSharr: null,
     hour:       (Math.floor(new Date().getHours() / 2) % 12) + 1,
-    days:       [],
+    days:       ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()],
     planet:     null,
     purposes:   dominant ? (getDominantPurpose(dominant) ? [getDominantPurpose(dominant)] : []) : [],
     daynight:   getTimeBasedDayNight(),
@@ -192,7 +192,6 @@ export default function Mizaan9Page() {
               />
               <MizaanDivider />
               <Mizaan5
-                dominant={result.dominant}
                 selected={selections.days}
                 onChange={updateSel("days")}
               />
