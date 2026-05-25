@@ -115,12 +115,12 @@ function ElementSection({ elKey, isOpen, onToggle, selectedDegree, onSelectDegre
 }
 
 export default function Mizaan9Final({ result, selections, degreeSels = {}, onDegreeSels }) {
-  // ALL hooks must be at the top — no early returns before this block
+  const { dominant } = result ?? {};
+
   const [openSections, setOpenSections] = useState(
     () => Object.fromEntries(ELEMENT_ORDER.map(e => [e, false]))
   );
 
-  const { dominant } = result;
   if (!dominant) return null;
 
   const primaryElement = (selections.elements?.[0] ?? dominant) || 'fire';
