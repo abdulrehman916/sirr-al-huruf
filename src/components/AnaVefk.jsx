@@ -162,10 +162,10 @@ export default function AnaVefk() {
   const { session, updateAnaData } = useVefkSession();
 
   // ONE unified center input (visual + sum-based base)
-  const [centerText, setCenterText] = useState(session.anaData?.centerText || "");
+  const [centerText, setCenterText] = useState(() => session?.anaData?.centerText || "");
   // Esma — still needed separately for tanzim formula (esmaVal > 40)
-  const [esmaRaw, setEsmaRaw] = useState(session.anaData?.esmaRaw || "");
-  const [result, setResult] = useState(session.anaData?.result || null);
+  const [esmaRaw, setEsmaRaw] = useState(() => session?.anaData?.esmaRaw || "");
+  const [result, setResult] = useState(() => session?.anaData?.result || null);
 
   // Auto-save to context whenever any state changes
   useEffect(() => {

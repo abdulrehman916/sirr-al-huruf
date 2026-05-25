@@ -123,8 +123,8 @@ const TanzimGrid = memo(function TanzimGrid({ cells, esmaText }) {
 export default function TanzimVefki() {
   const { session, updateTanzimData } = useVefkSession();
 
-  const [bazRaw,   setBazRaw]   = useState(session.tanzimData?.bazRaw || "");
-  const [esmaText, setEsmaText] = useState(session.tanzimData?.esmaText || "");
+  const [bazRaw,   setBazRaw]   = useState(() => session?.tanzimData?.bazRaw || "");
+  const [esmaText, setEsmaText] = useState(() => session?.tanzimData?.esmaText || "");
 
   // ── Esma/Baz value resolution ─────────────────────────────────
   // If numeric → use directly. If text/Arabic → compute Ebced.
