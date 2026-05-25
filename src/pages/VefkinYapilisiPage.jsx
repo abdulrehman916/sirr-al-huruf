@@ -76,18 +76,26 @@ function GoldDivider() {
 // ── Ana Vefk: 5×5 Hâli Vasat Beşli ───────────────────────────────
 function AnaVefk() {
   const [anaSayi,  setAnaSayi]  = useState("");
-  const [talibRaw, setTalibRaw] = useState("");  // raw input from 2nd field
+  const [talibRaw, setTalibRaw] = useState("");
   const [grid,     setGrid]     = useState(null);
   const [base,     setBase]     = useState(null);
 
-  // Determine if 2nd field is numeric or text, and compute its Ebced if text
-  const talibIsNumeric = /^\d+$/.test(talibRaw.trim());
-  const talibEbced = !talibIsNumeric && talibRaw.trim() ? calcAbjad(talibRaw.trim()) : null;
-  // The display text for center cell is always the raw input (if any)
-  const esmaText = talibRaw.trim();
+  // Resolve: if talibRaw is a number → use it directly; if text → use its Ebced
+  const talibTrimmed   = talibRaw.trim();
+  const talibIsNumeric = /^\d+$/.test(talibTrimmed);
+  const talibEbced     = (!talibIsNumeric && talibTrimmed) ? calcAbjad(talibTrimmed) : null;
+  // Resolved BASE from talib field (number or Ebced)
+  const talibBase      = talibTrimmed
+    ? (talibIsNumeric ? parseInt(talibTrimmed) : talibEbced)
+    : null;
+  // Center cell: show raw text if text was entered; if number entered show it; if empty show nothing
+  const centerDisplay  = talibTrimmed || null;
+
+  // Effective base = talib field takes priority if filled, else anaSayi
+  const effectiveBase  = talibBase ?? (anaSayi.trim() ? parseInt(anaSayi) : null);
 
   const handleGenerate = () => {
-    const baseNum = parseInt(anaSayi);
+    const baseNum = effectiveBase;
     if (!baseNum || baseNum < 41) return;
     const g = generate5x5HaliVasat(baseNum);
     if (!g) return;
@@ -160,14 +168,14 @@ function AnaVefk() {
             className="w-full rounded-xl px-4 py-2.5 font-amiri text-2xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/25"
             style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
           />
-          {base && base < 41 && (
+          {effectiveBase && effectiveBase < 41 && (
             <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,100,100,0.70)" }}>
               ⚠ Sayı 41'den büyük olmalı (hane 20–24 için)
             </p>
           )}
         </div>
 
-        {/* Talib / Mathlub İsmi (optional) */}
+        {/* Talib / Mathlub İsmi */}
         <div className="rounded-xl border px-4 py-3 space-y-1.5"
           style={{ background: "rgba(4,10,28,0.99)", borderColor: "rgba(212,175,55,0.20)" }}>
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
@@ -182,21 +190,20 @@ function AnaVefk() {
             className="w-full rounded-xl px-4 py-2 font-amiri text-lg text-white text-right focus:outline-none caret-white placeholder:text-white/25"
             style={{ background: "rgba(4,12,34,0.97)", border: `1px solid rgba(212,175,55,0.15)` }}
           />
-          {/* Show Ebced result if text was entered */}
           {talibEbced !== null && talibEbced > 0 && (
             <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.65)" }}>
               ✦ Ebced: <span className="font-amiri font-bold" style={{ color: G.text }}>{talibEbced.toLocaleString()}</span>
-              <span style={{ color: "rgba(212,175,55,0.35)" }}> — ortada gösterilir, hesaba dahil değil</span>
+              <span style={{ color: "rgba(212,175,55,0.35)" }}> — baz sayı olarak kullanılır</span>
             </p>
           )}
-          {talibIsNumeric && talibRaw.trim() && (
-            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.35)" }}>
-              Sayısal değer girildi — ortada gösterilir, hesaba dahil değil
+          {talibIsNumeric && talibTrimmed && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.50)" }}>
+              ✦ Sayı doğrudan baz olarak kullanılır: <span className="font-amiri font-bold" style={{ color: G.text }}>{talibTrimmed}</span>
             </p>
           )}
-          {!talibRaw.trim() && (
+          {!talibTrimmed && (
             <p className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.30)" }}>
-              Metin girilirse Ebced hesaplanır — Girilirse ortada gösterilir
+              Sayı girilirse doğrudan baz alınır — Metin girilirse Ebced hesaplanır
             </p>
           )}
         </div>
@@ -224,7 +231,7 @@ function AnaVefk() {
 
         <motion.button
           onClick={handleGenerate}
-          disabled={!anaSayi.trim() || (base && base < 41)}
+          disabled={!effectiveBase || effectiveBase < 41}
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           className="w-full py-3 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)", boxShadow: `0 0 24px ${G.glowHi}` }}
@@ -289,12 +296,12 @@ function AnaVefk() {
                       }}
                     >
                       {isEmpty ? (
-                        <div className="flex items-center justify-center w-full h-full px-1">
-                          {esmaText ? (
-                            <p className="font-amiri text-center leading-tight"
-                              style={{ color: G.text, fontSize: esmaText.length > 8 ? "8px" : "10px" }}
-                              dir="rtl">{esmaText}</p>
-                          ) : (
+                       <div className="flex items-center justify-center w-full h-full px-1">
+                         {centerDisplay ? (
+                           <p className="font-amiri text-center leading-tight"
+                             style={{ color: G.text, fontSize: centerDisplay.length > 8 ? "8px" : "10px" }}
+                             dir="rtl">{centerDisplay}</p>
+                         ) : (
                             <motion.span style={{ fontSize: "1.1rem", color: "rgba(212,175,55,0.18)" }}
                               animate={{ opacity: [0.1, 0.35, 0.1] }}
                               transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>□</motion.span>
