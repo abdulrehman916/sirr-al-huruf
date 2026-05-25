@@ -30,18 +30,23 @@ const LAYOUT = [
   [23,  2,  6, 10, 19],
 ];
 
-// ── Tanzim cell formula ──────────────────────────────────────────
-// Cells 1–19: value = position (1,2,3...19)
-// Cells 20–24: value = (esmaValue - 40) + (pos - 20)
-//   i.e. 20 → esmaValue-40, 21 → esmaValue-39, ... 24 → esmaValue-36
+// ── Tanzim cell formula (Ottoman Manuscript) ─────────────────────
+// If esmaValue < 40: first square it → BASE = esmaValue²
+// Cells 1–19: value = BASE × natural_position
+// Cells 20–24: value = (BASE − 40 + offset) × BASE
+//   20 → (BASE−40)×BASE, 21 → (BASE−39)×BASE, ... 24 → (BASE−36)×BASE
+// Magic Constant = BASE²
+function resolveBase(esmaValue) {
+  return esmaValue < 40 ? esmaValue * esmaValue : esmaValue;
+}
 function computeTanzimCells(esmaValue) {
+  const base = resolveBase(esmaValue);
   const cells = {};
   for (let pos = 1; pos <= 19; pos++) {
-    cells[pos] = pos;
+    cells[pos] = base * pos;
   }
-  const base20 = esmaValue - 40;
-  for (let pos = 20; pos <= 24; pos++) {
-    cells[pos] = base20 + (pos - 20);
+  for (let i = 0; i <= 4; i++) {
+    cells[20 + i] = (base - 40 + i) * base;
   }
   return cells;
 }
@@ -126,9 +131,12 @@ export default function TanzimVefki() {
     ? (bazIsNumeric ? parseInt(bazTrimmed) : bazEbced)
     : null;
 
-  // Need esmaValue > 40 for cells 20–24 to be positive
-  const canGenerate = esmaValue && esmaValue > 40;
+  // Any positive esmaValue is valid (small values get squared first)
+  const canGenerate = esmaValue && esmaValue > 0;
+  const base        = canGenerate ? resolveBase(esmaValue) : null;
+  const wasSquared  = canGenerate && esmaValue < 40;
   const cells       = canGenerate ? computeTanzimCells(esmaValue) : null;
+  const magicConst  = base ? base * base : null;
 
   return (
     <div className="space-y-4">
@@ -185,16 +193,21 @@ export default function TanzimVefki() {
                 <p className="font-inter text-[9px]" style={{ color: G.dim }}>
                   Esma Değeri: <span className="font-amiri font-bold" style={{ color: G.text }}>{esmaValue.toLocaleString()}</span>
                 </p>
-                {canGenerate && (
+                {wasSquared && (
+                  <p className="font-inter text-[9px]" style={{ color: "rgba(255,200,80,0.85)" }}>
+                    ✦ Küçük sayı → BASE = {esmaValue}² = <span className="font-amiri font-bold" style={{ color: G.text }}>{(esmaValue * esmaValue).toLocaleString()}</span>
+                  </p>
+                )}
+                {base && (
                   <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.45)" }}>
                     Hane 20→24: <span className="font-amiri" style={{ color: G.text }}>
-                      {[0,1,2,3,4].map(i => esmaValue - 40 + i).join(", ")}
+                      {[0,1,2,3,4].map(i => `${base - 40 + i}×${base}`).join(", ")}
                     </span>
                   </p>
                 )}
-                {!canGenerate && esmaValue <= 40 && (
-                  <p className="font-inter text-[9px]" style={{ color: "rgba(255,160,80,0.80)" }}>
-                    ⚠ Esma değeri 40'tan büyük olmalı
+                {base && (
+                  <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.45)" }}>
+                    Kutsal Sabit: <span className="font-amiri font-bold" style={{ color: G.text }}>{base}² = {(base * base).toLocaleString()}</span>
                   </p>
                 )}
               </div>
@@ -229,10 +242,16 @@ export default function TanzimVefki() {
             📜 Hesap Kuralı — Tanzim Usülü
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Hane 1–19: <span style={{ color: G.text }}>sabit değer (1, 2, 3 ... 19)</span>
+            BASE: <span style={{ color: G.text }}>Esma &lt; 40 ise BASE = Esma², aksi halde BASE = Esma</span>
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            Hane 20–24: <span style={{ color: G.text }}>Esma − 40, Esma − 39, ... Esma − 36</span>
+            Hane 1–19: <span style={{ color: G.text }}>BASE × konum</span>
+          </p>
+          <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+            Hane 20–24: <span style={{ color: G.text }}>(BASE−40+i) × BASE</span>
+          </p>
+          <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+            Kutsal Sabit: <span style={{ color: G.text }}>BASE²</span>
           </p>
         </div>
 
@@ -251,16 +270,21 @@ export default function TanzimVefki() {
 
               <TanzimGrid cells={cells} esmaText={esmaText} />
 
-              {/* Esma value display */}
+              {/* Magic Constant display */}
               <div className="rounded-xl border p-3 text-center"
                 style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.25)" }}>
                 <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                  ⚖ Esma Değeri
+                  ⚖ Kutsal Sabit — BASE²
                 </p>
+                {wasSquared && (
+                  <p className="font-inter text-[8px] mt-0.5" style={{ color: "rgba(212,175,55,0.45)" }}>
+                    {esmaValue}² = {base?.toLocaleString()} → {base?.toLocaleString()}²
+                  </p>
+                )}
                 <motion.p className="font-amiri text-3xl font-bold mt-1" style={{ color: G.text }}
                   animate={{ textShadow: [`0 0 12px ${G.glow}`, `0 0 28px ${G.glowHi}`, `0 0 12px ${G.glow}`] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-                  {esmaValue.toLocaleString()}
+                  {magicConst?.toLocaleString()}
                 </motion.p>
               </div>
 
