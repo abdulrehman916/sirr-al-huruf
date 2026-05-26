@@ -261,13 +261,14 @@ function generateVefk3x3(targetNumber, elementKey) {
   return [flat.slice(0, 3), flat.slice(3, 6), flat.slice(6, 9)];
 }
 
-// 4×4 — Kutb 34, subtract 4 → (target − 30) ÷ 4
-// Fraction rules: rem 1→pos13(idx12), rem2→pos9(idx8), rem3→pos5(idx4)
+// 4×4 — Kutb 34, subtract 4 → remaining = (target − 30), base = floor(remaining ÷ 4)
+// Fraction rules: rem 1→pos13, rem2→pos9, rem3→pos5
 function generateVefk4x4(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
   const kutbReduced = 34 - 4; // 30
-  const remainder = (n - kutbReduced) % 4;
-  const base = Math.floor((n - kutbReduced - remainder) / 4);
+  const remaining = n - kutbReduced;
+  const base = Math.floor(remaining / 4);
+  const remainder = remaining % 4;
   const pattern = ELEMENT_PATTERNS_4x4[elementKey] || PATTERN_4x4_BASE;
   const values = Array.from({ length: 16 }, (_, i) => base + i);
   // Remainder: add +1 to the cell at the given sacred position
@@ -278,13 +279,14 @@ function generateVefk4x4(targetNumber, elementKey) {
   return [flat.slice(0, 4), flat.slice(4, 8), flat.slice(8, 12), flat.slice(12, 16)];
 }
 
-// 6×6 — Kutb 111, subtract 6 → (target − 105) ÷ 6
+// 6×6 — Kutb 111, subtract 6 → remaining = (target − 105), base = floor(remaining ÷ 6)
 // Fraction rules: rem 1→pos31, rem2→pos25, rem3→pos19, rem4→pos13, rem5→pos7
 function generateVefk6x6(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
   const kutbReduced = 111 - 6; // 105
-  const remainder = (n - kutbReduced) % 6;
-  const base = Math.floor((n - kutbReduced - remainder) / 6);
+  const remaining = n - kutbReduced;
+  const base = Math.floor(remaining / 6);
+  const remainder = remaining % 6;
   const pattern = ELEMENT_PATTERNS_6x6[elementKey] || PATTERN_6x6_BASE;
   const values = Array.from({ length: 36 }, (_, i) => base + i);
   if (remainder === 5) values[posToIdx(pattern, 7)]  += 1;
@@ -356,13 +358,14 @@ function generateVefk8x8(targetNumber, elementKey) {
   return [flat.slice(0,8), flat.slice(8,16), flat.slice(16,24), flat.slice(24,32), flat.slice(32,40), flat.slice(40,48), flat.slice(48,56), flat.slice(56,64)];
 }
 
-// 7×7 — Kutb 175, subtract 7 → (target − 168) ÷ 7
+// 7×7 — Kutb 175, subtract 7 → remaining = (target − 168), base = floor(remaining ÷ 7)
 // Fraction rules: rem 1→pos43, rem2→pos36, rem3→pos29, rem4→pos22, rem5→pos15, rem6→pos8
 function generateVefk7x7(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
   const kutbReduced = 175 - 7; // 168
-  const remainder = (n - kutbReduced) % 7;
-  const base = Math.floor((n - kutbReduced - remainder) / 7);
+  const remaining = n - kutbReduced;
+  const base = Math.floor(remaining / 7);
+  const remainder = remaining % 7;
   const pattern = ELEMENT_PATTERNS_7x7[elementKey] || PATTERN_7x7_BASE;
   const values = Array.from({ length: 49 }, (_, i) => base + i);
   if (remainder === 6) values[posToIdx(pattern, 8)]  += 1;
@@ -375,13 +378,14 @@ function generateVefk7x7(targetNumber, elementKey) {
   return [flat.slice(0,7), flat.slice(7,14), flat.slice(14,21), flat.slice(21,28), flat.slice(28,35), flat.slice(35,42), flat.slice(42,49)];
 }
 
-// 5×5 — Kutb 65, subtract 5 → (target − 60) ÷ 5
+// 5×5 — Kutb 65, subtract 5 → remaining = (target − 60), base = floor(remaining ÷ 5)
 // Fraction rules: rem 1→pos21, rem2→pos16, rem3→pos11, rem4→pos6
 function generateVefk5x5(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
   const kutbReduced = 65 - 5; // 60
-  const remainder = (n - kutbReduced) % 5;
-  const base = Math.floor((n - kutbReduced - remainder) / 5);
+  const remaining = n - kutbReduced;
+  const base = Math.floor(remaining / 5);
+  const remainder = remaining % 5;
   const pattern = ELEMENT_PATTERNS_5x5[elementKey] || PATTERN_5x5_BASE;
   const values = Array.from({ length: 25 }, (_, i) => base + i);
   if (remainder === 4) values[posToIdx(pattern, 6)]  += 1;
@@ -739,11 +743,12 @@ export default function MagicSqayerPage() {
     if (!num || !size) return null;
     const n = parseInt(num);
     const kutbReduced = KUTB[size] ? KUTB[size] - size : 0;
-    const remainder = kutbReduced ? (n - kutbReduced) % size : 0;
     const halfValueSizes = [3, 8, 9];
+    const remaining = n - kutbReduced;
+    const remainder = kutbReduced ? remaining % size : 0;
     const base = halfValueSizes.includes(size) && remainder !== 0
       ? Math.floor((n / 2 - kutbReduced) / size)
-      : Math.floor((n - kutbReduced - (remainder || 0)) / size);
+      : Math.floor(remaining / size);
     if (KUTB[size] && base < 1) return { invalid: true };
     const e = el || "fire";
     if (size === 3) return { grid: generateVefk3x3(num, e), base: null };
