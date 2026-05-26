@@ -40,26 +40,41 @@ const PLANETS = [
 ];
 
 // ── Sacred Patterns ──────────────────────────────────────────────
-// Authentic Ottoman 4 Elemental 3×3 Sacred Patterns
+// Authentic Ottoman 3×3 Sacred Pattern (single universal pattern per spec)
+// Pattern: 4 9 2 / 3 5 7 / 8 1 6
+const PATTERN_3x3_BASE = [4, 9, 2, 3, 5, 7, 8, 1, 6];
 const PATTERNS_3x3 = {
-  earth: [4, 9, 2, 3, 5, 7, 8, 1, 6],  // 🌍 Toprak
-  fire:  [8, 3, 4, 1, 5, 9, 6, 7, 2],  // 🔥 Ateş
-  air:   [6, 1, 8, 7, 5, 3, 2, 9, 4],  // 🌬 Hava
-  water: [2, 7, 6, 9, 5, 1, 4, 3, 8],  // 💧 Su
+  fire:  PATTERN_3x3_BASE,
+  earth: PATTERN_3x3_BASE,
+  air:   PATTERN_3x3_BASE,
+  water: PATTERN_3x3_BASE,
 };
 
+// Authentic Ottoman 4×4 Sacred Pattern per spec:
+// 8 11 14 1 / 13 2 7 12 / 3 16 9 6 / 10 5 4 15
+const PATTERN_4x4_BASE = [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15];
 const ELEMENT_PATTERNS_4x4 = {
-  fire:  [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15],
-  earth: [15, 4, 5, 10, 6, 9, 16, 3, 12, 7, 2, 13, 1, 14, 11, 8],
-  air:   [1, 14, 11, 8, 12, 7, 2, 13, 6, 9, 16, 3, 15, 4, 5, 10],
-  water: [10, 5, 4, 15, 3, 16, 9, 6, 13, 2, 7, 12, 8, 11, 14, 1],
+  fire:  PATTERN_4x4_BASE,
+  earth: PATTERN_4x4_BASE,
+  air:   PATTERN_4x4_BASE,
+  water: PATTERN_4x4_BASE,
 };
 
+// Authentic Ottoman 6×6 Sacred Pattern per spec:
+// 36 13 7 30 24 1 / 20 11 31 2 29 18 / 15 27 5 34 8 22 / 25 35 17 19 3 12 / 6 21 28 10 14 32 / 9 4 23 16 33 26
+const PATTERN_6x6_BASE = [
+  36,13, 7,30,24, 1,
+  20,11,31, 2,29,18,
+  15,27, 5,34, 8,22,
+  25,35,17,19, 3,12,
+   6,21,28,10,14,32,
+   9, 4,23,16,33,26
+];
 const ELEMENT_PATTERNS_6x6 = {
-  fire:  [ 6,32, 3,34,35, 1,  7,11,27,28, 8,30, 19,14,16,15,23,24, 18,20,22,21,17,13, 25,29,10, 9,26,12, 36, 5,33, 4, 2,31],
-  earth: [ 1,35,34, 3,32, 6, 30, 8,28,27,11, 7, 24,23,15,16,14,19, 13,17,21,22,20,18, 12,26, 9,10,29,25, 31, 2, 4,33, 5,36],
-  air:   [31, 2, 4,33, 5,36, 12,26, 9,10,29,25, 13,17,21,22,20,18, 24,23,15,16,14,19, 30, 8,28,27,11, 7,  1,35,34, 3,32, 6],
-  water: [36, 5,33, 4, 2,31, 25,29,10, 9,26,12, 18,20,22,21,17,13, 19,14,16,15,23,24,  7,11,27,28, 8,30,  6,32, 3,34,35, 1],
+  fire:  PATTERN_6x6_BASE,
+  earth: PATTERN_6x6_BASE,
+  air:   PATTERN_6x6_BASE,
+  water: PATTERN_6x6_BASE,
 };
 
 // ── Authentic Ottoman 9×9 Dokuzlu Vefk Patterns (Kamer/Moon) ──────────────────────────────────────────────
@@ -119,25 +134,59 @@ const ELEMENT_PATTERNS_9x9 = {
   water: WATER_9x9,
 };
 
+// Authentic Ottoman 8×8 Sacred Pattern per spec:
+// 16 51 54 9 8 59 62 1 / 53 10 15 52 61 2 7 60 / 11 56 49 14 3 64 57 6 / 50 13 12 55 58 5 4 63 /
+// 32 35 38 25 24 43 46 17 / 37 26 31 36 45 18 23 44 / 27 40 33 30 19 48 41 22 / 34 29 28 39 42 21 20 47
+const PATTERN_8x8_BASE = [
+  16,51,54, 9, 8,59,62, 1,
+  53,10,15,52,61, 2, 7,60,
+  11,56,49,14, 3,64,57, 6,
+  50,13,12,55,58, 5, 4,63,
+  32,35,38,25,24,43,46,17,
+  37,26,31,36,45,18,23,44,
+  27,40,33,30,19,48,41,22,
+  34,29,28,39,42,21,20,47
+];
 const ELEMENT_PATTERNS_8x8 = {
-  fire:  [16,51,54, 9, 8,59,62, 1, 53,10,15,52,61, 2, 7,60, 11,56,49,14, 3,64,57, 6, 50,13,12,55,58, 5, 4,63, 32,35,38,25,24,43,46,17, 37,26,31,36,45,18,23,44, 27,40,33,30,19,48,41,22, 34,29,28,39,42,21,20,47],
-  earth: [47,20,21,42,39,28,29,34, 22,41,48,19,30,33,40,27, 44,23,18,45,36,31,26,37, 17,46,43,24,25,38,35,32, 63, 4, 5,58,55,12,13,50,  6,57,64, 3,14,49,56,11, 60, 7, 2,61,52,15,10,53,  1,62,59, 8, 9,54,51,16],
-  air:   [34,29,28,39,42,21,20,47, 27,40,33,30,19,48,41,22, 37,26,31,36,45,18,23,44, 32,35,38,25,24,43,46,17, 50,13,12,55,58, 5, 4,63, 11,56,49,14, 3,64,57, 6, 53,10,15,52,61, 2, 7,60, 16,51,54, 9, 8,59,62, 1],
-  water: [ 1,62,59, 8, 9,54,51,16, 60, 7, 2,61,52,15,10,53,  6,57,64, 3,14,49,56,11, 63, 4, 5,58,55,12,13,50, 17,46,43,24,25,38,35,32, 44,23,18,45,36,31,26,37, 22,41,48,19,30,33,40,27, 47,20,21,42,39,28,29,34],
+  fire:  PATTERN_8x8_BASE,
+  earth: PATTERN_8x8_BASE,
+  air:   PATTERN_8x8_BASE,
+  water: PATTERN_8x8_BASE,
 };
 
+// Authentic Ottoman 7×7 Sacred Pattern per spec:
+// 9 17 25 33 41 49 1 / 26 34 42 43 2 10 18 / 36 44 3 11 19 27 35 /
+// 4 12 20 28 29 37 45 / 21 22 30 38 46 5 13 / 31 39 47 6 14 15 23 / 48 7 8 16 24 32 40
+const PATTERN_7x7_BASE = [
+   9,17,25,33,41,49, 1,
+  26,34,42,43, 2,10,18,
+  36,44, 3,11,19,27,35,
+   4,12,20,28,29,37,45,
+  21,22,30,38,46, 5,13,
+  31,39,47, 6,14,15,23,
+  48, 7, 8,16,24,32,40
+];
 const ELEMENT_PATTERNS_7x7 = {
-  fire:  [28,19,10, 1,48,39,30, 29,27,18, 9, 7,47,38, 37,35,26,17,15, 6,46, 45,36,34,25,23,14, 5,  4,44,42,33,24,22,13, 12, 3,43,41,32,20,21, 20,11, 2,49,40,31,22],
-  earth: [ 4,35,10,41,16,47,22, 29,11,42,17,48,23, 5, 12,36,18,49,24, 6,30, 37,19,43,25, 7,31,13, 20,44,26, 1,32,14,38, 45,27, 2,33, 8,39,21, 28, 3,34, 9,40,15,46],
-  air:   [30,39,48, 1,10,19,28, 38,47, 7, 9,18,27,29, 46, 6,15,17,26,35,37,  5,14,23,25,34,36,45, 13,22,24,33,42,44, 4, 21,20,32,41,43, 3,12, 22,31,40,49, 2,11,20],
-  water: [46,15,40, 9,34, 3,28, 21,39, 8,33, 2,27,45, 38,14,32, 1,26,44,20, 13,31, 7,25,43,19,37, 30, 6,24,49,18,36,12,  5,23,48,17,42,11,29, 22,47,16,41,10,35, 4],
+  fire:  PATTERN_7x7_BASE,
+  earth: PATTERN_7x7_BASE,
+  air:   PATTERN_7x7_BASE,
+  water: PATTERN_7x7_BASE,
 };
 
+// Authentic Ottoman 5×5 Sacred Pattern per spec:
+// 7 13 19 25 1 / 20 21 2 8 14 / 3 9 15 16 22 / 11 17 23 4 10 / 24 5 6 12 18
+const PATTERN_5x5_BASE = [
+   7,13,19,25, 1,
+  20,21, 2, 8,14,
+   3, 9,15,16,22,
+  11,17,23, 4,10,
+  24, 5, 6,12,18
+];
 const ELEMENT_PATTERNS_5x5 = {
-  fire:  [17,24, 1, 8,15, 23, 5, 7,14,16,  4, 6,13,20,22, 10,12,19,21, 3, 11,18,25, 2, 9],
-  earth: [ 9, 2,25,18,11,  3,21,19,12,10, 22,20,13, 6, 4, 16,14, 7, 5,23, 15, 8, 1,24,17],
-  air:   [11,18,25, 2, 9, 10,12,19,21, 3,  4, 6,13,20,22, 23, 5, 7,14,16, 17,24, 1, 8,15],
-  water: [15, 8, 1,24,17, 16,14, 7, 5,23, 22,20,13, 6, 4,  3,21,19,12,10,  9, 2,25,18,11],
+  fire:  PATTERN_5x5_BASE,
+  earth: PATTERN_5x5_BASE,
+  air:   PATTERN_5x5_BASE,
+  water: PATTERN_5x5_BASE,
 };
 
 function getSacredPattern(size, elementKey) {
@@ -152,47 +201,66 @@ function getSacredPattern(size, elementKey) {
 }
 
 // ── Vefk Generation ──────────────────────────────────────────────
+// Shared helper: build values array and apply sacred pattern mapping
+function applyPattern(base, count, pattern) {
+  const values = Array.from({ length: count }, (_, i) => base + i);
+  return pattern.map(rank => values[rank - 1]);
+}
+
+// Shared helper: find position index in a pattern (1-based pos → flat index)
+function posToIdx(pattern, sacredPos) {
+  return pattern.indexOf(sacredPos);
+}
+
+// 3×3 — Kutb 15, subtract 3 → (target − 12) ÷ 3
+// Fraction rule: remainder 1 or 2 → use half-value system
 function generateVefk3x3(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
-  const remainder = (n - 15) % 3;
-  const base = (n - 15 - remainder) / 3;
-  // Generate 9 sequential values
-  const values = Array.from({ length: 9 }, (_, i) => base + i);
-  // Apply remainder rules
-  if (remainder === 2) values[3] += 1;
-  else if (remainder === 1) values[6] += 1;
-  const pattern = PATTERNS_3x3[elementKey] || PATTERNS_3x3.earth;
-  // pattern[cellIndex] = rank (1-based) → values[rank-1]
-  const flat = pattern.map(rank => values[rank - 1]);
+  const kutbReduced = 15 - 3; // 12
+  const remainder = (n - kutbReduced) % 3;
+  let base;
+  if (remainder !== 0) {
+    // Half-value system
+    base = Math.floor((n / 2 - kutbReduced) / 3);
+  } else {
+    base = Math.floor((n - kutbReduced) / 3);
+  }
+  const pattern = PATTERNS_3x3[elementKey] || PATTERN_3x3_BASE;
+  const flat = applyPattern(base, 9, pattern);
   return [flat.slice(0, 3), flat.slice(3, 6), flat.slice(6, 9)];
 }
 
+// 4×4 — Kutb 34, subtract 4 → (target − 30) ÷ 4
+// Fraction rules: rem 1→pos13(idx12), rem2→pos9(idx8), rem3→pos5(idx4)
 function generateVefk4x4(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
-  const remainder = (n - 34) % 4;
-  const base = (n - 34 - remainder) / 4;
+  const kutbReduced = 34 - 4; // 30
+  const remainder = (n - kutbReduced) % 4;
+  const base = Math.floor((n - kutbReduced - remainder) / 4);
+  const pattern = ELEMENT_PATTERNS_4x4[elementKey] || PATTERN_4x4_BASE;
   const values = Array.from({ length: 16 }, (_, i) => base + i);
-  // remainder cells: position 5 = index 4, position 9 = index 8, position 13 = index 12
-  if (remainder === 3) values[4] += 1;
-  else if (remainder === 2) values[8] += 1;
-  else if (remainder === 1) values[12] += 1;
-  const pattern = ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
+  // Remainder: add +1 to the cell at the given sacred position
+  if (remainder === 3) values[posToIdx(pattern, 5)]  += 1;
+  else if (remainder === 2) values[posToIdx(pattern, 9)]  += 1;
+  else if (remainder === 1) values[posToIdx(pattern, 13)] += 1;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0, 4), flat.slice(4, 8), flat.slice(8, 12), flat.slice(12, 16)];
 }
 
+// 6×6 — Kutb 111, subtract 6 → (target − 105) ÷ 6
+// Fraction rules: rem 1→pos31, rem2→pos25, rem3→pos19, rem4→pos13, rem5→pos7
 function generateVefk6x6(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
-  const remainder = (n - 111) % 6;
-  const base = (n - 111 - remainder) / 6;
+  const kutbReduced = 111 - 6; // 105
+  const remainder = (n - kutbReduced) % 6;
+  const base = Math.floor((n - kutbReduced - remainder) / 6);
+  const pattern = ELEMENT_PATTERNS_6x6[elementKey] || PATTERN_6x6_BASE;
   const values = Array.from({ length: 36 }, (_, i) => base + i);
-  // remainder cells: pos 7=idx6, 13=idx12, 19=idx18, 25=idx24, 31=idx30
-  if (remainder === 5) values[6]  += 1;
-  else if (remainder === 4) values[12] += 1;
-  else if (remainder === 3) values[18] += 1;
-  else if (remainder === 2) values[24] += 1;
-  else if (remainder === 1) values[30] += 1;
-  const pattern = ELEMENT_PATTERNS_6x6[elementKey] || ELEMENT_PATTERNS_6x6.fire;
+  if (remainder === 5) values[posToIdx(pattern, 7)]  += 1;
+  else if (remainder === 4) values[posToIdx(pattern, 13)] += 1;
+  else if (remainder === 3) values[posToIdx(pattern, 19)] += 1;
+  else if (remainder === 2) values[posToIdx(pattern, 25)] += 1;
+  else if (remainder === 1) values[posToIdx(pattern, 31)] += 1;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0,6), flat.slice(6,12), flat.slice(12,18), flat.slice(18,24), flat.slice(24,30), flat.slice(30,36)];
 }
@@ -200,17 +268,17 @@ function generateVefk6x6(targetNumber, elementKey) {
 // ── Authentic Ottoman 9×9 Dokuzlu Vefk Generation (Kamer/Moon System) ──────────────────────────────────────────────
 function generateVefk9x9(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
-  const remainder = (n - 369) % 9;
+  const kutbReduced = 369 - 9; // 360
+  const remainder = (n - kutbReduced) % 9;
   
-  // Authentic Ottoman rule: if remainder exists (1-8), use half-value system
+  // Dokuzlu Vefk does NOT accept fractions — remainder 1-8: use half-value system
   let base;
   if (remainder !== 0) {
-    // Half-value system: base = floor((half - 369) / 9)
-    const half = n / 2;
-    base = Math.floor((half - 369) / 9);
+    // Half-value system: base = floor((n/2 - kutbReduced) / 9)
+    base = Math.floor((n / 2 - kutbReduced) / 9);
   } else {
-    // Direct system: base = floor((n - 369) / 9)
-    base = Math.floor((n - 369) / 9);
+    // Direct system: base = (n - kutbReduced) / 9
+    base = Math.floor((n - kutbReduced) / 9);
   }
   
   // Get authentic elemental sacred pattern
@@ -239,52 +307,56 @@ function generateVefk9x9(targetNumber, elementKey) {
   };
 }
 
+// 8×8 — Kutb 260, subtract 8 → (target − 252) ÷ 8
+// Does NOT accept fractions — remainder 1-7: use half-value system
 function generateVefk8x8(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
-  const remainder = (n - 260) % 8;
-  const base = (n - 260 - remainder) / 8;
-  const values = Array.from({ length: 64 }, (_, i) => base + i);
-  // remainder cells: pos 9=idx8, 17=idx16, 25=idx24, 33=idx32, 41=idx40, 49=idx48, 57=idx56
-  if (remainder === 7) values[8]  += 1;
-  else if (remainder === 6) values[16] += 1;
-  else if (remainder === 5) values[24] += 1;
-  else if (remainder === 4) values[32] += 1;
-  else if (remainder === 3) values[40] += 1;
-  else if (remainder === 2) values[48] += 1;
-  else if (remainder === 1) values[56] += 1;
-  const pattern = ELEMENT_PATTERNS_8x8[elementKey] || ELEMENT_PATTERNS_8x8.fire;
-  const flat = pattern.map(rank => values[rank - 1]);
+  const kutbReduced = 260 - 8; // 252
+  const remainder = (n - kutbReduced) % 8;
+  let base;
+  if (remainder !== 0) {
+    // Half-value system
+    base = Math.floor((n / 2 - kutbReduced) / 8);
+  } else {
+    base = Math.floor((n - kutbReduced) / 8);
+  }
+  const pattern = ELEMENT_PATTERNS_8x8[elementKey] || PATTERN_8x8_BASE;
+  const flat = applyPattern(base, 64, pattern);
   return [flat.slice(0,8), flat.slice(8,16), flat.slice(16,24), flat.slice(24,32), flat.slice(32,40), flat.slice(40,48), flat.slice(48,56), flat.slice(56,64)];
 }
 
+// 7×7 — Kutb 175, subtract 7 → (target − 168) ÷ 7
+// Fraction rules: rem 1→pos43, rem2→pos36, rem3→pos29, rem4→pos22, rem5→pos15, rem6→pos8
 function generateVefk7x7(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
-  const remainder = (n - 175) % 7;
-  const base = (n - 175 - remainder) / 7;
+  const kutbReduced = 175 - 7; // 168
+  const remainder = (n - kutbReduced) % 7;
+  const base = Math.floor((n - kutbReduced - remainder) / 7);
+  const pattern = ELEMENT_PATTERNS_7x7[elementKey] || PATTERN_7x7_BASE;
   const values = Array.from({ length: 49 }, (_, i) => base + i);
-  // remainder cells: pos 8=idx7, 15=idx14, 22=idx21, 29=idx28, 36=idx35, 43=idx42
-  if (remainder === 6) values[7]  += 1;
-  else if (remainder === 5) values[14] += 1;
-  else if (remainder === 4) values[21] += 1;
-  else if (remainder === 3) values[28] += 1;
-  else if (remainder === 2) values[35] += 1;
-  else if (remainder === 1) values[42] += 1;
-  const pattern = ELEMENT_PATTERNS_7x7[elementKey] || ELEMENT_PATTERNS_7x7.fire;
+  if (remainder === 6) values[posToIdx(pattern, 8)]  += 1;
+  else if (remainder === 5) values[posToIdx(pattern, 15)] += 1;
+  else if (remainder === 4) values[posToIdx(pattern, 22)] += 1;
+  else if (remainder === 3) values[posToIdx(pattern, 29)] += 1;
+  else if (remainder === 2) values[posToIdx(pattern, 36)] += 1;
+  else if (remainder === 1) values[posToIdx(pattern, 43)] += 1;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0,7), flat.slice(7,14), flat.slice(14,21), flat.slice(21,28), flat.slice(28,35), flat.slice(35,42), flat.slice(42,49)];
 }
 
+// 5×5 — Kutb 65, subtract 5 → (target − 60) ÷ 5
+// Fraction rules: rem 1→pos21, rem2→pos16, rem3→pos11, rem4→pos6
 function generateVefk5x5(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
-  const remainder = (n - 65) % 5;
-  const base = (n - 65 - remainder) / 5;
+  const kutbReduced = 65 - 5; // 60
+  const remainder = (n - kutbReduced) % 5;
+  const base = Math.floor((n - kutbReduced - remainder) / 5);
+  const pattern = ELEMENT_PATTERNS_5x5[elementKey] || PATTERN_5x5_BASE;
   const values = Array.from({ length: 25 }, (_, i) => base + i);
-  // remainder cells: position 6=idx5, 11=idx10, 16=idx15, 21=idx20
-  if (remainder === 4) values[5]  += 1;
-  else if (remainder === 3) values[10] += 1;
-  else if (remainder === 2) values[15] += 1;
-  else if (remainder === 1) values[20] += 1;
-  const pattern = ELEMENT_PATTERNS_5x5[elementKey] || ELEMENT_PATTERNS_5x5.fire;
+  if (remainder === 4) values[posToIdx(pattern, 6)]  += 1;
+  else if (remainder === 3) values[posToIdx(pattern, 11)] += 1;
+  else if (remainder === 2) values[posToIdx(pattern, 16)] += 1;
+  else if (remainder === 1) values[posToIdx(pattern, 21)] += 1;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0,5), flat.slice(5,10), flat.slice(10,15), flat.slice(15,20), flat.slice(20,25)];
 }
@@ -404,30 +476,25 @@ function CalcBreakdown({ inputNumber, gridSize }) {
   if (!inputNumber || !gridSize || !KUTB[gridSize]) return null;
   const n = parseInt(inputNumber);
   const kutb = KUTB[gridSize];
-  
-  // Special handling for 9×9 Ottoman Dokuzlu Vefk - MUST match generation exactly
-  let base, division, remaining, removed;
-  if (gridSize === 9) {
-    const remainder = (n - 369) % 9;
-    if (remainder !== 0) {
-      // Half-value system: base = floor((half - 369) / 9)
-      const half = n / 2;
-      division = (half - 369) / 9;
-      base = Math.floor(division);
-      remaining = half - 369;
-      removed = 369;
-    } else {
-      // Direct system: base = (n - 369) / 9
-      division = (n - 369) / 9;
-      base = Math.floor(division);
-      remaining = n - 369;
-      removed = 369;
-    }
-  } else {
-    removed = kutb - gridSize;
-    remaining = n - removed;
+  const kutbReduced = kutb - gridSize; // authentic Ottoman: kutb − size
+
+  // 3×3 and 8×8 and 9×9: use half-value system when remainder ≠ 0
+  // Others: use remainder adjustment to specific sacred positions
+  const halfValueSizes = [3, 8, 9];
+  const remainder = (n - kutbReduced) % gridSize;
+  let base, division, remaining, usedN;
+
+  if (halfValueSizes.includes(gridSize) && remainder !== 0) {
+    // Half-value system
+    usedN = n / 2;
+    remaining = usedN - kutbReduced;
     division = remaining / gridSize;
     base = Math.floor(division);
+  } else {
+    usedN = n;
+    remaining = n - kutbReduced - remainder;
+    division = (n - kutbReduced) / gridSize;
+    base = Math.floor((n - kutbReduced - remainder) / gridSize);
   }
 
   const rows = [
@@ -438,18 +505,20 @@ function CalcBreakdown({ inputNumber, gridSize }) {
     },
     {
       step: "②",
-      label: "Kutb Number Removed",
-      formula: `${kutb}`,
+      label: "Kutb Reduced",
+      formula: `${kutb} − ${gridSize} = ${kutbReduced}`,
     },
     {
       step: "③",
-      label: "Remaining After Kutb",
-      formula: gridSize === 9 ? `${n.toLocaleString()} − ${removed} = ${remaining.toLocaleString()}` : `${n.toLocaleString()} − ${removed} = ${remaining.toLocaleString()}`,
+      label: halfValueSizes.includes(gridSize) && remainder !== 0 ? "Remaining (Half-Value)" : "Remaining After Kutb",
+      formula: halfValueSizes.includes(gridSize) && remainder !== 0
+        ? `${n} ÷ 2 = ${usedN} → ${usedN} − ${kutbReduced} = ${remaining.toFixed(2)}`
+        : `${n.toLocaleString()} − ${kutbReduced} = ${(n - kutbReduced).toLocaleString()}`,
     },
     {
       step: "④",
-      label: "Division Number",
-      formula: `${remaining.toLocaleString()} ÷ ${gridSize} = ${division.toFixed(2)}`,
+      label: "Division",
+      formula: `${typeof remaining === 'number' && !Number.isInteger(remaining) ? remaining.toFixed(2) : remaining.toLocaleString()} ÷ ${gridSize} = ${(remaining / gridSize).toFixed(2)}`,
     },
     {
       step: "⑤",
@@ -669,13 +738,14 @@ export default function MagicSqayerPage() {
 
   const buildGrid = (num, size, el) => {
     if (!num || !size) return null;
-    if (size === 3) return { grid: generateVefk3x3(num, el || "earth"), base: null };
-    if (size === 4) return { grid: generateVefk4x4(num, el || "fire"), base: null };
-    if (size === 5) return { grid: generateVefk5x5(num, el || "fire"), base: null };
-    if (size === 6) return { grid: generateVefk6x6(num, el || "fire"), base: null };
-    if (size === 7) return { grid: generateVefk7x7(num, el || "fire"), base: null };
-    if (size === 8) return { grid: generateVefk8x8(num, el || "fire"), base: null };
-    if (size === 9) return generateVefk9x9(num, el || "fire");
+    const e = el || "fire";
+    if (size === 3) return { grid: generateVefk3x3(num, e), base: null };
+    if (size === 4) return { grid: generateVefk4x4(num, e), base: null };
+    if (size === 5) return { grid: generateVefk5x5(num, e), base: null };
+    if (size === 6) return { grid: generateVefk6x6(num, e), base: null };
+    if (size === 7) return { grid: generateVefk7x7(num, e), base: null };
+    if (size === 8) return { grid: generateVefk8x8(num, e), base: null };
+    if (size === 9) return generateVefk9x9(num, e);
     return { grid: generateMagicSquare(size, parseInt(num)), base: null };
   };
 
