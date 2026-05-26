@@ -39,380 +39,160 @@ const PLANETS = [
   { key: "kamer",   arabic: "القمر",   icon: "🌙", color: "#818CF8", glow: "rgba(129,140,248,0.35)", bg: "rgba(129,140,248,0.10)", border: "rgba(129,140,248,0.50)" },
 ];
 
-// ── Sacred Patterns ──────────────────────────────────────────────
-// Helper: rotate a flat NxN pattern 90° clockwise
-function rot90(p, n) {
-  const r = Array(n * n);
+// ── True Magic Square Engine ──────────────────────────────────────
+// Kutb table: magic constant = n*(n²+1)/2 for 1..n²
+// Our squares use base..base+n²-1, so magic constant = n*base + n*(n²-1)/2
+const KUTB_MAGIC = { 3: 15, 4: 34, 5: 65, 6: 111, 7: 175, 8: 260, 9: 369 };
+
+// Compute magic constant for shifted square (base + 0..n²-1)
+function magicConstant(n, base) {
+  return n * base + Math.floor(n * (n * n - 1) / 2);
+}
+
+// ── ODD ORDER: Siamese (de la Loubère) method ─────────────────────
+// Generates canonical 1..n² square, then shifts by (base-1)
+function siamese(n, base) {
+  const g = Array.from({ length: n }, () => Array(n).fill(0));
+  let r = 0, c = Math.floor(n / 2);
+  for (let num = 1; num <= n * n; num++) {
+    g[r][c] = num + (base - 1);
+    const nr = (r - 1 + n) % n;
+    const nc = (c + 1) % n;
+    if (g[nr][nc] !== 0) { r = (r + 1) % n; }
+    else { r = nr; c = nc; }
+  }
+  return g;
+}
+
+// ── DOUBLY-EVEN ORDER (n % 4 === 0): Complement/inversion method ──
+// Fill sequentially, then complement cells whose (row%4, col%4) pattern matches
+function doublyEven(n, base) {
+  const g = Array.from({ length: n }, () => Array(n).fill(0));
+  // Fill sequentially
   for (let i = 0; i < n; i++)
     for (let j = 0; j < n; j++)
-      r[j * n + (n - 1 - i)] = p[i * n + j];
+      g[i][j] = i * n + j + 1;
+  // Complement: flip cells where position within 4x4 block is on either diagonal
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const bi = i % 4, bj = j % 4;
+      if (bi === bj || bi + bj === 3)
+        g[i][j] = n * n + 1 - g[i][j];
+    }
+  }
+  // Shift to base
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < n; j++)
+      g[i][j] += (base - 1);
+  return g;
+}
+
+// ── SINGLY-EVEN ORDER (n % 2 === 0, n % 4 !== 0): Strachey method ─
+function singlyEven(n, base) {
+  const h = n / 2;
+  // Build four odd-order sub-squares using siamese on h
+  // Quadrant offsets: A=0, B=2h², C=h², D=3h²
+  function makeQuadrant(offset) {
+    const q = siamese(h, 1);
+    for (let i = 0; i < h; i++)
+      for (let j = 0; j < h; j++)
+        q[i][j] += offset;
+    return q;
+  }
+  const A = makeQuadrant(0);
+  const B = makeQuadrant(2 * h * h);
+  const C = makeQuadrant(h * h);
+  const D = makeQuadrant(3 * h * h);
+
+  // Assemble into full grid: top-left=A, top-right=B, bottom-left=C, bottom-right=D
+  const g = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < h; i++) {
+    for (let j = 0; j < h; j++) {
+      g[i][j]         = A[i][j];
+      g[i][j + h]     = B[i][j];
+      g[i + h][j]     = C[i][j];
+      g[i + h][j + h] = D[i][j];
+    }
+  }
+
+  // Strachey column swaps: swap left k columns (except middle row)
+  const k = Math.floor((n - 2) / 4);
+  for (let i = 0; i < h; i++) {
+    for (let j = 0; j < k; j++) {
+      // swap g[i][j] with g[i+h][j]
+      [g[i][j], g[i + h][j]] = [g[i + h][j], g[i][j]];
+    }
+  }
+  // Middle row: swap from column k onward (skip j=0)
+  const mid = Math.floor(h / 2);
+  for (let j = 1; j < k + 1; j++) {
+    [g[mid][j], g[mid + h][j]] = [g[mid + h][j], g[mid][j]];
+  }
+  // Right-side column swaps: swap last (k-1) columns
+  for (let i = 0; i < h; i++) {
+    for (let j = n - k + 1; j < n; j++) {
+      [g[i][j], g[i + h][j]] = [g[i + h][j], g[i][j]];
+    }
+  }
+
+  // Shift to base
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < n; j++)
+      g[i][j] += (base - 1);
+  return g;
+}
+
+// ── Element rotation transforms ───────────────────────────────────
+// fire=0°, earth=90°CW, air=180°, water=270°CW
+function rotateGrid(g, times) {
+  let r = g;
+  for (let t = 0; t < times; t++) {
+    const n = r.length;
+    const nr = Array.from({ length: n }, () => Array(n).fill(0));
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++)
+        nr[j][n - 1 - i] = r[i][j];
+    r = nr;
+  }
   return r;
 }
-// Helper: rotate 180°
-function rot180(p, n) { return rot90(rot90(p, n), n); }
-// Helper: rotate 270°
-function rot270(p, n) { return rot90(rot180(p, n), n); }
-
-// 3×3 — four authentic elemental forms per user spec:
-// EARTH: 4 9 2 / 3 5 7 / 8 1 6
-// FIRE:  8 3 4 / 1 5 9 / 6 7 2
-// AIR:   6 1 8 / 7 5 3 / 2 9 4
-// WATER: 2 7 6 / 9 5 1 / 4 3 8
-const PATTERNS_3x3 = {
-  earth: [4, 9, 2,  3, 5, 7,  8, 1, 6],
-  fire:  [8, 3, 4,  1, 5, 9,  6, 7, 2],
-  air:   [6, 1, 8,  7, 5, 3,  2, 9, 4],
-  water: [2, 7, 6,  9, 5, 1,  4, 3, 8],
-};
-// Keep alias for fallback reference
-const PATTERN_3x3_BASE = PATTERNS_3x3.earth;
-
-// 4×4 — Fire base per spec; Earth/Air/Water derived by 90° rotations
-// FIRE:  8 11 14 1 / 13 2 7 12 / 3 16 9 6 / 10 5 4 15
-const _4x4_fire  = [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15];
-const _4x4_earth = rot90(_4x4_fire, 4);
-const _4x4_air   = rot180(_4x4_fire, 4);
-const _4x4_water = rot270(_4x4_fire, 4);
-const PATTERN_4x4_BASE = _4x4_fire;
-const ELEMENT_PATTERNS_4x4 = {
-  fire:  _4x4_fire,
-  earth: _4x4_earth,
-  air:   _4x4_air,
-  water: _4x4_water,
-};
-
-// 6×6 — Fire base per spec; Earth/Air/Water derived by 90° rotations
-const _6x6_fire = [
-  36,13, 7,30,24, 1,
-  20,11,31, 2,29,18,
-  15,27, 5,34, 8,22,
-  25,35,17,19, 3,12,
-   6,21,28,10,14,32,
-   9, 4,23,16,33,26
-];
-const _6x6_earth = rot90(_6x6_fire, 6);
-const _6x6_air   = rot180(_6x6_fire, 6);
-const _6x6_water = rot270(_6x6_fire, 6);
-const PATTERN_6x6_BASE = _6x6_fire;
-const ELEMENT_PATTERNS_6x6 = {
-  fire:  _6x6_fire,
-  earth: _6x6_earth,
-  air:   _6x6_air,
-  water: _6x6_water,
-};
-
-// ── Authentic Ottoman 9×9 Dokuzlu Vefk Patterns (Kamer/Moon) ──────────────────────────────────────────────
-// Fire (النار) - Base Pattern
-const FIRE_9x9 = [
-  50,58,66,74, 1,18,26,34,42,
-  60,68,76, 3,11,19,36,44,52,
-  70,78, 5,13,21,29,37,54,62,
-  80, 7,15,23,31,39,47,55,72,
-   9,17,25,33,41,49,57,65,73,
-  10,27,35,43,51,59,67,75, 2,
-  20,28,45,53,61,69,77, 4,12,
-  30,38,46,63,71,79, 6,14,22,
-  40,48,56,64, 8,16,24,32,81
-];
-// Earth (التراب) - 180° Rotation
-const EARTH_9x9 = [
-  81,32,24,16, 8,64,56,48,40,
-  22,14, 6,79,71,63,46,38,30,
-  12, 4,77,69,61,53,45,28,20,
-   2,75,67,59,51,43,35,27,10,
-  73,65,57,49,41,33,25,17, 9,
-  72,55,47,39,31,23,15, 7,80,
-  62,54,37,29,21,13, 5,78,70,
-  52,44,36,19,11, 3,76,68,60,
-  42,34,26,18, 1,74,66,58,50
-];
-// Air (الهواء) - Vertical Mirror
-const AIR_9x9 = [
-  40,48,56,64, 8,16,24,32,81,
-  30,38,46,63,71,79, 6,14,22,
-  20,28,45,53,61,69,77, 4,12,
-  10,27,35,43,51,59,67,75, 2,
-   9,17,25,33,41,49,57,65,73,
-  80, 7,15,23,31,39,47,55,72,
-  70,78, 5,13,21,29,37,54,62,
-  60,68,76, 3,11,19,36,44,52,
-  50,58,66,74, 1,18,26,34,42
-];
-// Water (الماء) - Horizontal Mirror
-const WATER_9x9 = [
-  42,34,26,18, 1,74,66,58,50,
-  52,44,36,19,11, 3,76,68,60,
-  62,54,37,29,21,13, 5,78,70,
-  72,55,47,39,31,23,15, 7,80,
-  73,65,57,49,41,33,25,17, 9,
-   2,75,67,59,51,43,35,27,10,
-  12, 4,77,69,61,53,45,28,20,
-  22,14, 6,79,71,63,46,38,30,
-  81,32,24,16, 8,64,56,48,40
-];
-
-const ELEMENT_PATTERNS_9x9 = {
-  fire:  FIRE_9x9,
-  earth: EARTH_9x9,
-  air:   AIR_9x9,
-  water: WATER_9x9,
-};
-
-// 8×8 — Fire base per spec; Earth/Air/Water derived by 90° rotations
-const _8x8_fire = [
-  16,51,54, 9, 8,59,62, 1,
-  53,10,15,52,61, 2, 7,60,
-  11,56,49,14, 3,64,57, 6,
-  50,13,12,55,58, 5, 4,63,
-  32,35,38,25,24,43,46,17,
-  37,26,31,36,45,18,23,44,
-  27,40,33,30,19,48,41,22,
-  34,29,28,39,42,21,20,47
-];
-const _8x8_earth = rot90(_8x8_fire, 8);
-const _8x8_air   = rot180(_8x8_fire, 8);
-const _8x8_water = rot270(_8x8_fire, 8);
-const PATTERN_8x8_BASE = _8x8_fire;
-const ELEMENT_PATTERNS_8x8 = {
-  fire:  _8x8_fire,
-  earth: _8x8_earth,
-  air:   _8x8_air,
-  water: _8x8_water,
-};
-
-// 7×7 — Fire base per spec; Earth/Air/Water derived by 90° rotations
-const _7x7_fire = [
-   9,17,25,33,41,49, 1,
-  26,34,42,43, 2,10,18,
-  36,44, 3,11,19,27,35,
-   4,12,20,28,29,37,45,
-  21,22,30,38,46, 5,13,
-  31,39,47, 6,14,15,23,
-  48, 7, 8,16,24,32,40
-];
-const _7x7_earth = rot90(_7x7_fire, 7);
-const _7x7_air   = rot180(_7x7_fire, 7);
-const _7x7_water = rot270(_7x7_fire, 7);
-const PATTERN_7x7_BASE = _7x7_fire;
-const ELEMENT_PATTERNS_7x7 = {
-  fire:  _7x7_fire,
-  earth: _7x7_earth,
-  air:   _7x7_air,
-  water: _7x7_water,
-};
-
-// 5×5 — Fire base per spec; Earth/Air/Water derived by 90° rotations
-const _5x5_fire = [
-   7,13,19,25, 1,
-  20,21, 2, 8,14,
-   3, 9,15,16,22,
-  11,17,23, 4,10,
-  24, 5, 6,12,18
-];
-const _5x5_earth = rot90(_5x5_fire, 5);
-const _5x5_air   = rot180(_5x5_fire, 5);
-const _5x5_water = rot270(_5x5_fire, 5);
-const PATTERN_5x5_BASE = _5x5_fire;
-const ELEMENT_PATTERNS_5x5 = {
-  fire:  _5x5_fire,
-  earth: _5x5_earth,
-  air:   _5x5_air,
-  water: _5x5_water,
-};
-
-function getSacredPattern(size, elementKey) {
-  if (size === 3) return PATTERNS_3x3[elementKey] || PATTERNS_3x3.earth;
-  if (size === 4) return ELEMENT_PATTERNS_4x4[elementKey] || ELEMENT_PATTERNS_4x4.fire;
-  if (size === 5) return ELEMENT_PATTERNS_5x5[elementKey] || ELEMENT_PATTERNS_5x5.fire;
-  if (size === 6) return ELEMENT_PATTERNS_6x6[elementKey] || ELEMENT_PATTERNS_6x6.fire;
-  if (size === 7) return ELEMENT_PATTERNS_7x7[elementKey] || ELEMENT_PATTERNS_7x7.fire;
-  if (size === 8) return ELEMENT_PATTERNS_8x8[elementKey] || ELEMENT_PATTERNS_8x8.fire;
-  if (size === 9) return ELEMENT_PATTERNS_9x9[elementKey] || ELEMENT_PATTERNS_9x9.fire;
-  return null;
+function elementRotations(g, elementKey) {
+  const t = { fire: 0, earth: 1, air: 2, water: 3 };
+  return rotateGrid(g, t[elementKey] || 0);
 }
 
-// ── Vefk Generation ──────────────────────────────────────────────
-// Shared helper: build values array and apply sacred pattern mapping
-function applyPattern(base, count, pattern) {
-  const values = Array.from({ length: count }, (_, i) => base + i);
-  return pattern.map(rank => values[rank - 1]);
+// ── Master generator ──────────────────────────────────────────────
+function generateTrueMagicSquare(n, base, elementKey) {
+  let g;
+  if (n % 2 === 1)       g = siamese(n, base);
+  else if (n % 4 === 0)  g = doublyEven(n, base);
+  else                   g = singlyEven(n, base);
+  return elementRotations(g, elementKey);
 }
 
-// Shared helper: find position index in a pattern (1-based pos → flat index)
-function posToIdx(pattern, sacredPos) {
-  return pattern.indexOf(sacredPos);
+// ── Verification ──────────────────────────────────────────────────
+function verifySquare(g) {
+  const n = g.length;
+  const mc = g[0].reduce((s, v) => s + v, 0); // use first row as reference
+  const rowOk  = g.every(row => row.reduce((s, v) => s + v, 0) === mc);
+  const colOk  = Array.from({ length: n }, (_, j) =>
+    g.reduce((s, row) => s + row[j], 0)).every(s => s === mc);
+  const d1Ok   = g.reduce((s, row, i) => s + row[i], 0) === mc;
+  const d2Ok   = g.reduce((s, row, i) => s + row[n - 1 - i], 0) === mc;
+  return { mc, rowOk, colOk, d1Ok, d2Ok, valid: rowOk && colOk && d1Ok && d2Ok };
 }
 
-// 3×3 — Kutb 15, subtract 3 → (target − 12) ÷ 3
-// Fraction rule: remainder 1 or 2 → use half-value system (floor half first)
-function generateVefk3x3(targetNumber, elementKey) {
-  const n = parseInt(targetNumber);
-  const kutbReduced = 15 - 3; // 12
-  const remainder = (n - kutbReduced) % 3;
-  let base;
-  if (remainder !== 0) {
-    // Half-value system: floor(n/2) first to avoid decimals
-    base = Math.floor((Math.floor(n / 2) - kutbReduced) / 3);
-  } else {
-    base = Math.floor((n - kutbReduced) / 3);
+// ── Ottoman base calculation ──────────────────────────────────────
+function computeBase(targetNumber, n) {
+  const kutb = KUTB_MAGIC[n] || Math.floor(n * (n * n + 1) / 2);
+  const kutbReduced = kutb - n;
+  const halfValueSizes = [3, 8, 9];
+  const remaining = targetNumber - kutbReduced;
+  const remainder = remaining % n;
+  if (halfValueSizes.includes(n) && remainder !== 0) {
+    return Math.floor((Math.floor(targetNumber / 2) - kutbReduced) / n);
   }
-  const pattern = PATTERNS_3x3[elementKey] || PATTERN_3x3_BASE;
-  const flat = applyPattern(base, 9, pattern);
-  return [flat.slice(0, 3), flat.slice(3, 6), flat.slice(6, 9)];
-}
-
-// 4×4 — Kutb 34, subtract 4 → remaining = (target − 30), base = floor(remaining ÷ 4)
-// Fraction rules: rem 1→pos13, rem2→pos9, rem3→pos5
-function generateVefk4x4(targetNumber, elementKey) {
-  const n = parseInt(targetNumber);
-  const kutbReduced = 34 - 4; // 30
-  const remaining = n - kutbReduced;
-  const base = Math.floor(remaining / 4);
-  const remainder = remaining % 4;
-  const pattern = ELEMENT_PATTERNS_4x4[elementKey] || PATTERN_4x4_BASE;
-  const values = Array.from({ length: 16 }, (_, i) => base + i);
-  // Carry: +1 at sacred rank and all following ranks → sequence stays unique & continuous
-  let carryRank = -1;
-  if (remainder === 3) carryRank = 5;
-  else if (remainder === 2) carryRank = 9;
-  else if (remainder === 1) carryRank = 13;
-  if (carryRank > 0) for (let r = carryRank; r <= 16; r++) values[r - 1] += 1;
-  const flat = pattern.map(rank => values[rank - 1]);
-  return [flat.slice(0, 4), flat.slice(4, 8), flat.slice(8, 12), flat.slice(12, 16)];
-}
-
-// 6×6 — Kutb 111, subtract 6 → remaining = (target − 105), base = floor(remaining ÷ 6)
-// Fraction rules: rem 1→pos31, rem2→pos25, rem3→pos19, rem4→pos13, rem5→pos7
-function generateVefk6x6(targetNumber, elementKey) {
-  const n = parseInt(targetNumber);
-  const kutbReduced = 111 - 6; // 105
-  const remaining = n - kutbReduced;
-  const base = Math.floor(remaining / 6);
-  const remainder = remaining % 6;
-  const pattern = ELEMENT_PATTERNS_6x6[elementKey] || PATTERN_6x6_BASE;
-  const values = Array.from({ length: 36 }, (_, i) => base + i);
-  // Carry: +1 at sacred rank and all following ranks → sequence stays unique & continuous
-  let carryRank = -1;
-  if (remainder === 5) carryRank = 7;
-  else if (remainder === 4) carryRank = 13;
-  else if (remainder === 3) carryRank = 19;
-  else if (remainder === 2) carryRank = 25;
-  else if (remainder === 1) carryRank = 31;
-  if (carryRank > 0) for (let r = carryRank; r <= 36; r++) values[r - 1] += 1;
-  const flat = pattern.map(rank => values[rank - 1]);
-  return [flat.slice(0,6), flat.slice(6,12), flat.slice(12,18), flat.slice(18,24), flat.slice(24,30), flat.slice(30,36)];
-}
-
-// ── Authentic Ottoman 9×9 Dokuzlu Vefk Generation (Kamer/Moon System) ──────────────────────────────────────────────
-function generateVefk9x9(targetNumber, elementKey) {
-  const n = parseInt(targetNumber);
-  const kutbReduced = 369 - 9; // 360
-  const remainder = (n - kutbReduced) % 9;
-  
-  // Dokuzlu Vefk does NOT accept fractions — remainder 1-8: use half-value system (floor half first)
-  let base;
-  if (remainder !== 0) {
-    // Half-value system: floor(n/2) first to avoid decimals
-    base = Math.floor((Math.floor(n / 2) - kutbReduced) / 9);
-  } else {
-    // Direct system: base = (n - kutbReduced) / 9
-    base = Math.floor((n - kutbReduced) / 9);
-  }
-  
-  // Get authentic elemental sacred pattern
-  const pattern = ELEMENT_PATTERNS_9x9[elementKey] || FIRE_9x9;
-  
-  // SACRED POSITION MAPPING (Authentic Ottoman Method):
-  // Each cell contains a sacred number (1-81) that determines which value to place
-  // Formula: displayValue = base + (sacredNumber - 1)
-  // Example: sacred number 50 → base + 49
-  // Example: sacred number 1 → base + 0
-  const flat = pattern.map(sacredNumber => base + (sacredNumber - 1));
-  
-  return {
-    grid: [
-      flat.slice(0, 9),
-      flat.slice(9, 18),
-      flat.slice(18, 27),
-      flat.slice(27, 36),
-      flat.slice(36, 45),
-      flat.slice(45, 54),
-      flat.slice(54, 63),
-      flat.slice(63, 72),
-      flat.slice(72, 81)
-    ],
-    base: base
-  };
-}
-
-// 8×8 — Kutb 260, subtract 8 → (target − 252) ÷ 8
-// Does NOT accept fractions — remainder 1-7: use half-value system (floor half first)
-function generateVefk8x8(targetNumber, elementKey) {
-  const n = parseInt(targetNumber);
-  const kutbReduced = 260 - 8; // 252
-  const remainder = (n - kutbReduced) % 8;
-  let base;
-  if (remainder !== 0) {
-    // Half-value system: floor(n/2) first to avoid decimals
-    base = Math.floor((Math.floor(n / 2) - kutbReduced) / 8);
-  } else {
-    base = Math.floor((n - kutbReduced) / 8);
-  }
-  const pattern = ELEMENT_PATTERNS_8x8[elementKey] || PATTERN_8x8_BASE;
-  const flat = applyPattern(base, 64, pattern);
-  return [flat.slice(0,8), flat.slice(8,16), flat.slice(16,24), flat.slice(24,32), flat.slice(32,40), flat.slice(40,48), flat.slice(48,56), flat.slice(56,64)];
-}
-
-// 7×7 — Kutb 175, subtract 7 → remaining = (target − 168), base = floor(remaining ÷ 7)
-// Fraction rules: rem 1→pos43, rem2→pos36, rem3→pos29, rem4→pos22, rem5→pos15, rem6→pos8
-function generateVefk7x7(targetNumber, elementKey) {
-  const n = parseInt(targetNumber);
-  const kutbReduced = 175 - 7; // 168
-  const remaining = n - kutbReduced;
-  const base = Math.floor(remaining / 7);
-  const remainder = remaining % 7;
-  const pattern = ELEMENT_PATTERNS_7x7[elementKey] || PATTERN_7x7_BASE;
-  const values = Array.from({ length: 49 }, (_, i) => base + i);
-  // Carry: +1 at sacred rank and all following ranks → sequence stays unique & continuous
-  let carryRank = -1;
-  if (remainder === 6) carryRank = 8;
-  else if (remainder === 5) carryRank = 15;
-  else if (remainder === 4) carryRank = 22;
-  else if (remainder === 3) carryRank = 29;
-  else if (remainder === 2) carryRank = 36;
-  else if (remainder === 1) carryRank = 43;
-  if (carryRank > 0) for (let r = carryRank; r <= 49; r++) values[r - 1] += 1;
-  const flat = pattern.map(rank => values[rank - 1]);
-  return [flat.slice(0,7), flat.slice(7,14), flat.slice(14,21), flat.slice(21,28), flat.slice(28,35), flat.slice(35,42), flat.slice(42,49)];
-}
-
-// 5×5 — Kutb 65, subtract 5 → remaining = (target − 60), base = floor(remaining ÷ 5)
-// Fraction rules: rem 1→pos21, rem2→pos16, rem3→pos11, rem4→pos6
-function generateVefk5x5(targetNumber, elementKey) {
-  const n = parseInt(targetNumber);
-  const kutbReduced = 65 - 5; // 60
-  const remaining = n - kutbReduced;
-  const base = Math.floor(remaining / 5);
-  const remainder = remaining % 5;
-  const pattern = ELEMENT_PATTERNS_5x5[elementKey] || PATTERN_5x5_BASE;
-  const values = Array.from({ length: 25 }, (_, i) => base + i);
-  // Carry: +1 at sacred rank and all following ranks → sequence stays unique & continuous
-  let carryRank = -1;
-  if (remainder === 4) carryRank = 6;
-  else if (remainder === 3) carryRank = 11;
-  else if (remainder === 2) carryRank = 16;
-  else if (remainder === 1) carryRank = 21;
-  if (carryRank > 0) for (let r = carryRank; r <= 25; r++) values[r - 1] += 1;
-  const flat = pattern.map(rank => values[rank - 1]);
-  return [flat.slice(0,5), flat.slice(5,10), flat.slice(10,15), flat.slice(15,20), flat.slice(20,25)];
-}
-
-function generateMagicSquare(size, baseNum) {
-  const grid = Array(size).fill(0).map(() => Array(size).fill(0));
-  let num = baseNum;
-  for (let i = 0; i < size; i++)
-    for (let j = 0; j < size; j++) { grid[i][j] = num; num++; }
-  return grid;
+  return Math.floor(remaining / n);
 }
 
 // ── Sub-components ───────────────────────────────────────────────
@@ -515,44 +295,29 @@ function AutoPlanetCard({ gridSize }) {
 }
 
 // ── Kutb Config ──────────────────────────────────────────────────
-const KUTB = { 3: 15, 4: 34, 5: 65, 6: 111, 7: 175, 8: 260, 9: 369 };
+const KUTB = KUTB_MAGIC;
 
 // ── Calculation Breakdown ─────────────────────────────────────────
 function CalcBreakdown({ inputNumber, gridSize }) {
   if (!inputNumber || !gridSize || !KUTB[gridSize]) return null;
   const n = parseInt(inputNumber);
   const kutb = KUTB[gridSize];
-  const kutbReduced = kutb - gridSize; // authentic Ottoman: kutb − size
+  const kutbReduced = kutb - gridSize;
 
   const halfValueSizes = [3, 8, 9];
-  // Step ③: remaining = n − kutbReduced (NEVER altered)
   const remaining = n - kutbReduced;
   const remainder = remaining % gridSize;
   const useHalf = halfValueSizes.includes(gridSize) && remainder !== 0;
 
-  // Half-value path: floor(n/2) − kutbReduced then ÷ gridSize (floor first to avoid decimals)
-  const halfN        = Math.floor(n / 2);
+  const halfN         = Math.floor(n / 2);
   const halfRemaining = halfN - kutbReduced;
-  const base = useHalf
-    ? Math.floor(halfRemaining / gridSize)
-    : Math.floor(remaining / gridSize);
+  const base = computeBase(n, gridSize);
+  const mc   = magicConstant(gridSize, base);
 
   const rows = [
-    {
-      step: "①",
-      label: "Entered Number",
-      formula: n.toLocaleString(),
-    },
-    {
-      step: "②",
-      label: "Kutb Reduced",
-      formula: `${kutb} − ${gridSize} = ${kutbReduced}`,
-    },
-    {
-      step: "③",
-      label: "Remaining After Kutb",
-      formula: `${n.toLocaleString()} − ${kutbReduced} = ${remaining.toLocaleString()}`,
-    },
+    { step: "①", label: "Entered Number",          formula: n.toLocaleString() },
+    { step: "②", label: "Kutb Reduced",             formula: `${kutb} − ${gridSize} = ${kutbReduced}` },
+    { step: "③", label: "Remaining After Kutb",     formula: `${n.toLocaleString()} − ${kutbReduced} = ${remaining.toLocaleString()}` },
     ...(useHalf ? [{
       step: "③½",
       label: "Half-Value Applied (remainder ≠ 0)",
@@ -562,15 +327,11 @@ function CalcBreakdown({ inputNumber, gridSize }) {
       step: "④",
       label: "Division",
       formula: useHalf
-        ? `${halfRemaining} ÷ ${gridSize} = ${Math.floor(halfRemaining / gridSize)} remainder ${halfRemaining % gridSize}`
-        : `${remaining.toLocaleString()} ÷ ${gridSize} = ${Math.floor(remaining / gridSize)}${remainder !== 0 ? ` remainder ${remainder}` : ""}`,
+        ? `${halfRemaining} ÷ ${gridSize} = ${Math.floor(halfRemaining / gridSize)} rem ${halfRemaining % gridSize}`
+        : `${remaining.toLocaleString()} ÷ ${gridSize} = ${Math.floor(remaining / gridSize)}${remainder !== 0 ? ` rem ${remainder}` : ""}`,
     },
-    {
-      step: "⑤",
-      label: "Final Base Number",
-      formula: base.toLocaleString(),
-      highlight: true,
-    },
+    { step: "⑤", label: "Final Base Number",        formula: base.toLocaleString(), highlight: true },
+    { step: "⑥", label: "Magic Constant (Kutb)",    formula: mc.toLocaleString(),   highlight: true },
   ];
 
   return (
@@ -672,6 +433,7 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
   }
 
   const displayFlat = gridData.flat();
+  const verification = verifySquare(gridData);
 
   return (
     <motion.div
@@ -679,7 +441,7 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      className="rounded-2xl border p-6"
+      className="rounded-2xl border p-6 space-y-4"
       style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}
     >
       {/* Header */}
@@ -739,6 +501,33 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
           </div>
         </div>
       </div>
+
+      {/* Verification Panel */}
+      <div className="rounded-xl border p-4 space-y-2"
+        style={{ background: "rgba(212,175,55,0.04)", borderColor: verification.valid ? "rgba(100,220,100,0.35)" : "rgba(255,80,80,0.40)" }}>
+        <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+          ⚖ Verification Report — Magic Constant: <span style={{ color: G.text }}>{verification.mc.toLocaleString()}</span>
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { label: "Rows",         ok: verification.rowOk },
+            { label: "Columns",      ok: verification.colOk },
+            { label: "Diagonal ↘",   ok: verification.d1Ok },
+            { label: "Diagonal ↙",   ok: verification.d2Ok },
+          ].map(({ label, ok }) => (
+            <div key={label} className="flex items-center gap-2 rounded-lg px-3 py-1.5"
+              style={{ background: ok ? "rgba(100,220,100,0.08)" : "rgba(255,80,80,0.08)", border: `1px solid ${ok ? "rgba(100,220,100,0.25)" : "rgba(255,80,80,0.25)"}` }}>
+              <span style={{ fontSize: "11px" }}>{ok ? "✅" : "❌"}</span>
+              <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: ok ? "rgba(120,230,120,0.90)" : "rgba(255,120,120,0.90)" }}>{label}</span>
+            </div>
+          ))}
+        </div>
+        {verification.valid && (
+          <p className="font-inter text-[8px] uppercase tracking-widest text-center" style={{ color: "rgba(100,220,100,0.65)" }}>
+            ✦ True Magic Square — All sums equal {verification.mc.toLocaleString()}
+          </p>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -753,23 +542,12 @@ export default function MagicSqayerPage() {
   const buildGrid = (num, size, el) => {
     if (!num || !size) return null;
     const n = parseInt(num);
-    const kutbReduced = KUTB[size] ? KUTB[size] - size : 0;
-    const halfValueSizes = [3, 8, 9];
-    const remaining = n - kutbReduced;
-    const remainder = kutbReduced ? remaining % size : 0;
-    const base = halfValueSizes.includes(size) && remainder !== 0
-      ? Math.floor((Math.floor(n / 2) - kutbReduced) / size)
-      : Math.floor(remaining / size);
-    if (KUTB[size] && base < 1) return { invalid: true };
+    if (!n || n < 1) return null;
+    const base = computeBase(n, size);
+    if (base < 1) return { invalid: true };
     const e = el || "fire";
-    if (size === 3) return { grid: generateVefk3x3(num, e), base: null };
-    if (size === 4) return { grid: generateVefk4x4(num, e), base: null };
-    if (size === 5) return { grid: generateVefk5x5(num, e), base: null };
-    if (size === 6) return { grid: generateVefk6x6(num, e), base: null };
-    if (size === 7) return { grid: generateVefk7x7(num, e), base: null };
-    if (size === 8) return { grid: generateVefk8x8(num, e), base: null };
-    if (size === 9) return generateVefk9x9(num, e);
-    return { grid: generateMagicSquare(size, parseInt(num)), base: null };
+    const gridData = generateTrueMagicSquare(size, base, e);
+    return { grid: gridData, base };
   };
 
   const handleNumberChange = (e) => {
