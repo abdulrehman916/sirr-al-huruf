@@ -244,15 +244,15 @@ function posToIdx(pattern, sacredPos) {
 }
 
 // 3×3 — Kutb 15, subtract 3 → (target − 12) ÷ 3
-// Fraction rule: remainder 1 or 2 → use half-value system
+// Fraction rule: remainder 1 or 2 → use half-value system (floor half first)
 function generateVefk3x3(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
   const kutbReduced = 15 - 3; // 12
   const remainder = (n - kutbReduced) % 3;
   let base;
   if (remainder !== 0) {
-    // Half-value system
-    base = Math.floor((n / 2 - kutbReduced) / 3);
+    // Half-value system: floor(n/2) first to avoid decimals
+    base = Math.floor((Math.floor(n / 2) - kutbReduced) / 3);
   } else {
     base = Math.floor((n - kutbReduced) / 3);
   }
@@ -304,11 +304,11 @@ function generateVefk9x9(targetNumber, elementKey) {
   const kutbReduced = 369 - 9; // 360
   const remainder = (n - kutbReduced) % 9;
   
-  // Dokuzlu Vefk does NOT accept fractions — remainder 1-8: use half-value system
+  // Dokuzlu Vefk does NOT accept fractions — remainder 1-8: use half-value system (floor half first)
   let base;
   if (remainder !== 0) {
-    // Half-value system: base = floor((n/2 - kutbReduced) / 9)
-    base = Math.floor((n / 2 - kutbReduced) / 9);
+    // Half-value system: floor(n/2) first to avoid decimals
+    base = Math.floor((Math.floor(n / 2) - kutbReduced) / 9);
   } else {
     // Direct system: base = (n - kutbReduced) / 9
     base = Math.floor((n - kutbReduced) / 9);
@@ -341,15 +341,15 @@ function generateVefk9x9(targetNumber, elementKey) {
 }
 
 // 8×8 — Kutb 260, subtract 8 → (target − 252) ÷ 8
-// Does NOT accept fractions — remainder 1-7: use half-value system
+// Does NOT accept fractions — remainder 1-7: use half-value system (floor half first)
 function generateVefk8x8(targetNumber, elementKey) {
   const n = parseInt(targetNumber);
   const kutbReduced = 260 - 8; // 252
   const remainder = (n - kutbReduced) % 8;
   let base;
   if (remainder !== 0) {
-    // Half-value system
-    base = Math.floor((n / 2 - kutbReduced) / 8);
+    // Half-value system: floor(n/2) first to avoid decimals
+    base = Math.floor((Math.floor(n / 2) - kutbReduced) / 8);
   } else {
     base = Math.floor((n - kutbReduced) / 8);
   }
@@ -519,8 +519,8 @@ function CalcBreakdown({ inputNumber, gridSize }) {
   const remainder = remaining % gridSize;
   const useHalf = halfValueSizes.includes(gridSize) && remainder !== 0;
 
-  // Half-value path: n/2 − kutbReduced then ÷ gridSize
-  const halfN        = n / 2;
+  // Half-value path: floor(n/2) − kutbReduced then ÷ gridSize (floor first to avoid decimals)
+  const halfN        = Math.floor(n / 2);
   const halfRemaining = halfN - kutbReduced;
   const base = useHalf
     ? Math.floor(halfRemaining / gridSize)
@@ -747,7 +747,7 @@ export default function MagicSqayerPage() {
     const remaining = n - kutbReduced;
     const remainder = kutbReduced ? remaining % size : 0;
     const base = halfValueSizes.includes(size) && remainder !== 0
-      ? Math.floor((n / 2 - kutbReduced) / size)
+      ? Math.floor((Math.floor(n / 2) - kutbReduced) / size)
       : Math.floor(remaining / size);
     if (KUTB[size] && base < 1) return { invalid: true };
     const e = el || "fire";
