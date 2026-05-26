@@ -40,29 +40,49 @@ const PLANETS = [
 ];
 
 // ── Sacred Patterns ──────────────────────────────────────────────
-// Authentic Ottoman 3×3 Sacred Pattern (single universal pattern per spec)
-// Pattern: 4 9 2 / 3 5 7 / 8 1 6
-const PATTERN_3x3_BASE = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+// Helper: rotate a flat NxN pattern 90° clockwise
+function rot90(p, n) {
+  const r = Array(n * n);
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < n; j++)
+      r[j * n + (n - 1 - i)] = p[i * n + j];
+  return r;
+}
+// Helper: rotate 180°
+function rot180(p, n) { return rot90(rot90(p, n), n); }
+// Helper: rotate 270°
+function rot270(p, n) { return rot90(rot180(p, n), n); }
+
+// 3×3 — four authentic elemental forms per user spec:
+// EARTH: 4 9 2 / 3 5 7 / 8 1 6
+// FIRE:  8 3 4 / 1 5 9 / 6 7 2
+// AIR:   6 1 8 / 7 5 3 / 2 9 4
+// WATER: 2 7 6 / 9 5 1 / 4 3 8
 const PATTERNS_3x3 = {
-  fire:  PATTERN_3x3_BASE,
-  earth: PATTERN_3x3_BASE,
-  air:   PATTERN_3x3_BASE,
-  water: PATTERN_3x3_BASE,
+  earth: [4, 9, 2,  3, 5, 7,  8, 1, 6],
+  fire:  [8, 3, 4,  1, 5, 9,  6, 7, 2],
+  air:   [6, 1, 8,  7, 5, 3,  2, 9, 4],
+  water: [2, 7, 6,  9, 5, 1,  4, 3, 8],
 };
+// Keep alias for fallback reference
+const PATTERN_3x3_BASE = PATTERNS_3x3.earth;
 
-// Authentic Ottoman 4×4 Sacred Pattern per spec:
-// 8 11 14 1 / 13 2 7 12 / 3 16 9 6 / 10 5 4 15
-const PATTERN_4x4_BASE = [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15];
+// 4×4 — Fire base per spec; Earth/Air/Water derived by 90° rotations
+// FIRE:  8 11 14 1 / 13 2 7 12 / 3 16 9 6 / 10 5 4 15
+const _4x4_fire  = [8, 11, 14, 1, 13, 2, 7, 12, 3, 16, 9, 6, 10, 5, 4, 15];
+const _4x4_earth = rot90(_4x4_fire, 4);
+const _4x4_air   = rot180(_4x4_fire, 4);
+const _4x4_water = rot270(_4x4_fire, 4);
+const PATTERN_4x4_BASE = _4x4_fire;
 const ELEMENT_PATTERNS_4x4 = {
-  fire:  PATTERN_4x4_BASE,
-  earth: PATTERN_4x4_BASE,
-  air:   PATTERN_4x4_BASE,
-  water: PATTERN_4x4_BASE,
+  fire:  _4x4_fire,
+  earth: _4x4_earth,
+  air:   _4x4_air,
+  water: _4x4_water,
 };
 
-// Authentic Ottoman 6×6 Sacred Pattern per spec:
-// 36 13 7 30 24 1 / 20 11 31 2 29 18 / 15 27 5 34 8 22 / 25 35 17 19 3 12 / 6 21 28 10 14 32 / 9 4 23 16 33 26
-const PATTERN_6x6_BASE = [
+// 6×6 — Fire base per spec; Earth/Air/Water derived by 90° rotations
+const _6x6_fire = [
   36,13, 7,30,24, 1,
   20,11,31, 2,29,18,
   15,27, 5,34, 8,22,
@@ -70,11 +90,15 @@ const PATTERN_6x6_BASE = [
    6,21,28,10,14,32,
    9, 4,23,16,33,26
 ];
+const _6x6_earth = rot90(_6x6_fire, 6);
+const _6x6_air   = rot180(_6x6_fire, 6);
+const _6x6_water = rot270(_6x6_fire, 6);
+const PATTERN_6x6_BASE = _6x6_fire;
 const ELEMENT_PATTERNS_6x6 = {
-  fire:  PATTERN_6x6_BASE,
-  earth: PATTERN_6x6_BASE,
-  air:   PATTERN_6x6_BASE,
-  water: PATTERN_6x6_BASE,
+  fire:  _6x6_fire,
+  earth: _6x6_earth,
+  air:   _6x6_air,
+  water: _6x6_water,
 };
 
 // ── Authentic Ottoman 9×9 Dokuzlu Vefk Patterns (Kamer/Moon) ──────────────────────────────────────────────
@@ -134,10 +158,8 @@ const ELEMENT_PATTERNS_9x9 = {
   water: WATER_9x9,
 };
 
-// Authentic Ottoman 8×8 Sacred Pattern per spec:
-// 16 51 54 9 8 59 62 1 / 53 10 15 52 61 2 7 60 / 11 56 49 14 3 64 57 6 / 50 13 12 55 58 5 4 63 /
-// 32 35 38 25 24 43 46 17 / 37 26 31 36 45 18 23 44 / 27 40 33 30 19 48 41 22 / 34 29 28 39 42 21 20 47
-const PATTERN_8x8_BASE = [
+// 8×8 — Fire base per spec; Earth/Air/Water derived by 90° rotations
+const _8x8_fire = [
   16,51,54, 9, 8,59,62, 1,
   53,10,15,52,61, 2, 7,60,
   11,56,49,14, 3,64,57, 6,
@@ -147,17 +169,19 @@ const PATTERN_8x8_BASE = [
   27,40,33,30,19,48,41,22,
   34,29,28,39,42,21,20,47
 ];
+const _8x8_earth = rot90(_8x8_fire, 8);
+const _8x8_air   = rot180(_8x8_fire, 8);
+const _8x8_water = rot270(_8x8_fire, 8);
+const PATTERN_8x8_BASE = _8x8_fire;
 const ELEMENT_PATTERNS_8x8 = {
-  fire:  PATTERN_8x8_BASE,
-  earth: PATTERN_8x8_BASE,
-  air:   PATTERN_8x8_BASE,
-  water: PATTERN_8x8_BASE,
+  fire:  _8x8_fire,
+  earth: _8x8_earth,
+  air:   _8x8_air,
+  water: _8x8_water,
 };
 
-// Authentic Ottoman 7×7 Sacred Pattern per spec:
-// 9 17 25 33 41 49 1 / 26 34 42 43 2 10 18 / 36 44 3 11 19 27 35 /
-// 4 12 20 28 29 37 45 / 21 22 30 38 46 5 13 / 31 39 47 6 14 15 23 / 48 7 8 16 24 32 40
-const PATTERN_7x7_BASE = [
+// 7×7 — Fire base per spec; Earth/Air/Water derived by 90° rotations
+const _7x7_fire = [
    9,17,25,33,41,49, 1,
   26,34,42,43, 2,10,18,
   36,44, 3,11,19,27,35,
@@ -166,27 +190,34 @@ const PATTERN_7x7_BASE = [
   31,39,47, 6,14,15,23,
   48, 7, 8,16,24,32,40
 ];
+const _7x7_earth = rot90(_7x7_fire, 7);
+const _7x7_air   = rot180(_7x7_fire, 7);
+const _7x7_water = rot270(_7x7_fire, 7);
+const PATTERN_7x7_BASE = _7x7_fire;
 const ELEMENT_PATTERNS_7x7 = {
-  fire:  PATTERN_7x7_BASE,
-  earth: PATTERN_7x7_BASE,
-  air:   PATTERN_7x7_BASE,
-  water: PATTERN_7x7_BASE,
+  fire:  _7x7_fire,
+  earth: _7x7_earth,
+  air:   _7x7_air,
+  water: _7x7_water,
 };
 
-// Authentic Ottoman 5×5 Sacred Pattern per spec:
-// 7 13 19 25 1 / 20 21 2 8 14 / 3 9 15 16 22 / 11 17 23 4 10 / 24 5 6 12 18
-const PATTERN_5x5_BASE = [
+// 5×5 — Fire base per spec; Earth/Air/Water derived by 90° rotations
+const _5x5_fire = [
    7,13,19,25, 1,
   20,21, 2, 8,14,
    3, 9,15,16,22,
   11,17,23, 4,10,
   24, 5, 6,12,18
 ];
+const _5x5_earth = rot90(_5x5_fire, 5);
+const _5x5_air   = rot180(_5x5_fire, 5);
+const _5x5_water = rot270(_5x5_fire, 5);
+const PATTERN_5x5_BASE = _5x5_fire;
 const ELEMENT_PATTERNS_5x5 = {
-  fire:  PATTERN_5x5_BASE,
-  earth: PATTERN_5x5_BASE,
-  air:   PATTERN_5x5_BASE,
-  water: PATTERN_5x5_BASE,
+  fire:  _5x5_fire,
+  earth: _5x5_earth,
+  air:   _5x5_air,
+  water: _5x5_water,
 };
 
 function getSacredPattern(size, elementKey) {
