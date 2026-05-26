@@ -612,17 +612,14 @@ function CalcBreakdown({ inputNumber, gridSize }) {
 
 // ── Sacred Grid Preview ──────────────────────────────────────────
 function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
-  const sacredPattern = gridSize ? getSacredPattern(gridSize, element || "fire") : null;
-  // Prefer generated grid (from number), else show sacred pattern as preview
   const gridData = grid?.grid || grid;
   const actualBase = grid?.base || null;
-  const displayFlat = gridData ? gridData.flat() : sacredPattern;
   const isGenerated = !!gridData;
   const elMeta = ELEMENTS.find(e => e.key === element);
   const cellSize = gridSize >= 9 ? 36 : gridSize >= 7 ? 40 : gridSize >= 6 ? 46 : gridSize === 3 ? 66 : 54;
 
-  if (!displayFlat) {
-    // No grid size selected
+  // Placeholder when nothing generated yet
+  if (!isGenerated) {
     return (
       <div className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
         style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}>
@@ -631,33 +628,18 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
           🜂
         </motion.span>
         <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.25)" }}>
-          Select grid size to preview sacred pattern
+          {gridSize ? `${gridSize}×${gridSize} — Enter number & generate` : "Select grid size to begin"}
         </p>
         <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.20)" }} dir="rtl">المربع السحري</p>
       </div>
     );
   }
 
-  // For 5×5+ without a generated grid → placeholder
-  if (!sacredPattern && !isGenerated) {
-    return (
-      <div className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
-        style={{ background: "rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}>
-        <motion.span className="font-amiri text-4xl" style={{ color: "rgba(212,175,55,0.25)" }}
-          animate={{ opacity: [0.2, 0.5, 0.2] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-          🜂
-        </motion.span>
-        <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: "rgba(212,175,55,0.25)" }}>
-          {gridSize}×{gridSize} — Enter number to generate
-        </p>
-        <p className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.20)" }} dir="rtl">المربع السحري</p>
-      </div>
-    );
-  }
+  const displayFlat = gridData.flat();
 
   return (
     <motion.div
-      key={`${gridSize}-${element}-${isGenerated}`}
+      key={`${gridSize}-${element}-generated`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
@@ -669,64 +651,28 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
         <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>
           🜂 Sacred Vefk {gridSize}×{gridSize}
         </p>
-        {gridSize === 3 && (
-          <div className="flex items-center justify-center gap-2">
-            {elMeta && <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>}
-            <span className="font-amiri text-sm" style={{ color: elMeta?.color || G.dim }}>
-              {elMeta?.arabic || "التراب"}
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          {elMeta && <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>}
+          {elMeta && (
+            <span className="font-amiri text-sm" style={{ color: elMeta.color }}>
+              {elMeta.arabic}
             </span>
-            {elMeta && (
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
-                · {elMeta.label}
-              </span>
-            )}
-            {isGenerated && inputNumber && (
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
-                · Base {Math.floor((parseInt(inputNumber) - 15) / 3)}
-              </span>
-            )}
-          </div>
-        )}
-        {gridSize === 4 && (
-          <div className="flex items-center justify-center gap-2">
-            {elMeta && <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>}
-            <span className="font-amiri text-sm" style={{ color: elMeta?.color || G.dim }}>
-              {elMeta?.arabic || "النار"}
+          )}
+          {elMeta && (
+            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+              · {elMeta.label}
             </span>
-            {isGenerated && inputNumber && (
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
-                · Base {Math.floor((parseInt(inputNumber) - 34) / 4)}
-              </span>
-            )}
-          </div>
-        )}
-        {gridSize === 9 && (
-          <div className="flex items-center justify-center gap-2">
-            {elMeta && <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>}
-            <span className="font-amiri text-sm" style={{ color: elMeta?.color || G.dim }}>
-              {elMeta?.arabic || "القمر"}
+          )}
+          {actualBase != null && (
+            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+              · Base {actualBase.toLocaleString()}
             </span>
-            {elMeta && (
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
-                · {elMeta.label}
-              </span>
-            )}
-            {isGenerated && actualBase && (
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
-                · Dokuzlu Base {actualBase.toLocaleString()}
-              </span>
-            )}
-          </div>
-        )}
-        {!isGenerated && (
-          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.25)" }}>
-            Sacred Pattern — enter number to generate values
-          </p>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Grid cells */}
-      <div className="flex justify-center">
+      <div className="flex justify-center overflow-x-auto">
         <div style={{
           display: "grid",
           gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
@@ -742,13 +688,11 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
               style={{
                 width: `${cellSize}px`,
                 height: `${cellSize}px`,
-                background: isGenerated ? "rgba(212,175,55,0.10)" : "rgba(212,175,55,0.05)",
-                borderColor: isGenerated ? "rgba(212,175,55,0.45)" : "rgba(212,175,55,0.22)",
-                color: isGenerated ? G.text : "rgba(212,175,55,0.60)",
+                background: "rgba(212,175,55,0.10)",
+                borderColor: "rgba(212,175,55,0.45)",
+                color: G.text,
                 fontSize: gridSize >= 8 ? "11px" : gridSize >= 6 ? "13px" : "16px",
-                boxShadow: isGenerated
-                  ? `inset 0 0 10px rgba(212,175,55,0.15), 0 0 6px rgba(212,175,55,0.10)`
-                  : "none",
+                boxShadow: "inset 0 0 10px rgba(212,175,55,0.15), 0 0 6px rgba(212,175,55,0.10)",
               }}
             >
               {num}
@@ -897,8 +841,8 @@ export default function MagicSqayerPage() {
           Generate Magic Sqayer
         </motion.button>
 
-        {/* 6. Calculation Breakdown */}
-        {inputNumber && gridSize && <CalcBreakdown inputNumber={inputNumber} gridSize={gridSize} />}
+        {/* 6. Calculation Breakdown — only after generating */}
+        {grid && inputNumber && gridSize && <CalcBreakdown inputNumber={inputNumber} gridSize={gridSize} />}
 
         {/* 7. Sacred Grid Preview */}
         <SacredGridPreview
