@@ -618,6 +618,28 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
   const elMeta = ELEMENTS.find(e => e.key === element);
   const cellSize = gridSize >= 9 ? 36 : gridSize >= 7 ? 40 : gridSize >= 6 ? 46 : gridSize === 3 ? 66 : 54;
 
+  // Invalid — below minimum threshold
+  if (grid?.invalid) {
+    return (
+      <div className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
+        style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(255,80,80,0.45)", boxShadow: "0 0 32px rgba(255,80,80,0.15)" }}>
+        <motion.span className="text-3xl"
+          animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
+          ⚠️
+        </motion.span>
+        <p className="font-inter text-[11px] uppercase tracking-widest text-center" style={{ color: "rgba(255,140,140,0.85)" }}>
+          Entered number is below minimum sacred threshold
+        </p>
+        <p className="font-amiri text-sm text-center" style={{ color: "rgba(255,120,120,0.60)" }} dir="rtl">
+          الرقم أقل من الحد الأدنى المقدس
+        </p>
+        <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: "rgba(255,255,255,0.25)" }}>
+          Base must be ≥ 1 — try a larger number
+        </p>
+      </div>
+    );
+  }
+
   // Placeholder when nothing generated yet
   if (!isGenerated) {
     return (
@@ -713,6 +735,14 @@ export default function MagicSqayerPage() {
 
   const buildGrid = (num, size, el) => {
     if (!num || !size) return null;
+    const n = parseInt(num);
+    const kutbReduced = KUTB[size] ? KUTB[size] - size : 0;
+    const remainder = kutbReduced ? (n - kutbReduced) % size : 0;
+    const halfValueSizes = [3, 8, 9];
+    const base = halfValueSizes.includes(size) && remainder !== 0
+      ? Math.floor((n / 2 - kutbReduced) / size)
+      : Math.floor((n - kutbReduced - (remainder || 0)) / size);
+    if (KUTB[size] && base < 1) return { invalid: true };
     const e = el || "fire";
     if (size === 3) return { grid: generateVefk3x3(num, e), base: null };
     if (size === 4) return { grid: generateVefk4x4(num, e), base: null };
@@ -841,8 +871,8 @@ export default function MagicSqayerPage() {
           Generate Magic Sqayer
         </motion.button>
 
-        {/* 6. Calculation Breakdown — only after generating */}
-        {grid && inputNumber && gridSize && <CalcBreakdown inputNumber={inputNumber} gridSize={gridSize} />}
+        {/* 6. Calculation Breakdown — only after generating valid grid */}
+        {grid && !grid.invalid && inputNumber && gridSize && <CalcBreakdown inputNumber={inputNumber} gridSize={gridSize} />}
 
         {/* 7. Sacred Grid Preview */}
         <SacredGridPreview
