@@ -509,24 +509,18 @@ function CalcBreakdown({ inputNumber, gridSize }) {
   const kutb = KUTB[gridSize];
   const kutbReduced = kutb - gridSize; // authentic Ottoman: kutb − size
 
-  // 3×3 and 8×8 and 9×9: use half-value system when remainder ≠ 0
-  // Others: use remainder adjustment to specific sacred positions
   const halfValueSizes = [3, 8, 9];
-  const remainder = (n - kutbReduced) % gridSize;
-  let base, division, remaining, usedN;
+  // Step ③: remaining = n − kutbReduced (NEVER altered)
+  const remaining = n - kutbReduced;
+  const remainder = remaining % gridSize;
+  const useHalf = halfValueSizes.includes(gridSize) && remainder !== 0;
 
-  if (halfValueSizes.includes(gridSize) && remainder !== 0) {
-    // Half-value system
-    usedN = n / 2;
-    remaining = usedN - kutbReduced;
-    division = remaining / gridSize;
-    base = Math.floor(division);
-  } else {
-    usedN = n;
-    remaining = n - kutbReduced - remainder;
-    division = (n - kutbReduced) / gridSize;
-    base = Math.floor((n - kutbReduced - remainder) / gridSize);
-  }
+  // Half-value path: n/2 − kutbReduced then ÷ gridSize
+  const halfN        = n / 2;
+  const halfRemaining = halfN - kutbReduced;
+  const base = useHalf
+    ? Math.floor(halfRemaining / gridSize)
+    : Math.floor(remaining / gridSize);
 
   const rows = [
     {
@@ -541,15 +535,20 @@ function CalcBreakdown({ inputNumber, gridSize }) {
     },
     {
       step: "③",
-      label: halfValueSizes.includes(gridSize) && remainder !== 0 ? "Remaining (Half-Value)" : "Remaining After Kutb",
-      formula: halfValueSizes.includes(gridSize) && remainder !== 0
-        ? `${n} ÷ 2 = ${usedN} → ${usedN} − ${kutbReduced} = ${remaining.toFixed(2)}`
-        : `${n.toLocaleString()} − ${kutbReduced} = ${(n - kutbReduced).toLocaleString()}`,
+      label: "Remaining After Kutb",
+      formula: `${n.toLocaleString()} − ${kutbReduced} = ${remaining.toLocaleString()}`,
     },
+    ...(useHalf ? [{
+      step: "③½",
+      label: "Half-Value Applied (remainder ≠ 0)",
+      formula: `${n} ÷ 2 = ${halfN} → ${halfN} − ${kutbReduced} = ${halfRemaining}`,
+    }] : []),
     {
       step: "④",
       label: "Division",
-      formula: `${typeof remaining === 'number' && !Number.isInteger(remaining) ? remaining.toFixed(2) : remaining.toLocaleString()} ÷ ${gridSize} = ${(remaining / gridSize).toFixed(2)}`,
+      formula: useHalf
+        ? `${halfRemaining} ÷ ${gridSize} = ${Math.floor(halfRemaining / gridSize)} remainder ${halfRemaining % gridSize}`
+        : `${remaining.toLocaleString()} ÷ ${gridSize} = ${Math.floor(remaining / gridSize)}${remainder !== 0 ? ` remainder ${remainder}` : ""}`,
     },
     {
       step: "⑤",
