@@ -271,10 +271,12 @@ function generateVefk4x4(targetNumber, elementKey) {
   const remainder = remaining % 4;
   const pattern = ELEMENT_PATTERNS_4x4[elementKey] || PATTERN_4x4_BASE;
   const values = Array.from({ length: 16 }, (_, i) => base + i);
-  // Remainder: add +1 to the cell at the given sacred position
-  if (remainder === 3) values[posToIdx(pattern, 5)]  += 1;
-  else if (remainder === 2) values[posToIdx(pattern, 9)]  += 1;
-  else if (remainder === 1) values[posToIdx(pattern, 13)] += 1;
+  // Carry: +1 at sacred position, then propagate forward to keep sequence unique
+  let carryIdx = -1;
+  if (remainder === 3) carryIdx = posToIdx(pattern, 5);
+  else if (remainder === 2) carryIdx = posToIdx(pattern, 9);
+  else if (remainder === 1) carryIdx = posToIdx(pattern, 13);
+  if (carryIdx >= 0) for (let i = carryIdx; i < values.length; i++) values[i] += 1;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0, 4), flat.slice(4, 8), flat.slice(8, 12), flat.slice(12, 16)];
 }
@@ -289,11 +291,14 @@ function generateVefk6x6(targetNumber, elementKey) {
   const remainder = remaining % 6;
   const pattern = ELEMENT_PATTERNS_6x6[elementKey] || PATTERN_6x6_BASE;
   const values = Array.from({ length: 36 }, (_, i) => base + i);
-  if (remainder === 5) values[posToIdx(pattern, 7)]  += 1;
-  else if (remainder === 4) values[posToIdx(pattern, 13)] += 1;
-  else if (remainder === 3) values[posToIdx(pattern, 19)] += 1;
-  else if (remainder === 2) values[posToIdx(pattern, 25)] += 1;
-  else if (remainder === 1) values[posToIdx(pattern, 31)] += 1;
+  // Carry: +1 at sacred position, then propagate forward to keep sequence unique
+  let carryIdx = -1;
+  if (remainder === 5) carryIdx = posToIdx(pattern, 7);
+  else if (remainder === 4) carryIdx = posToIdx(pattern, 13);
+  else if (remainder === 3) carryIdx = posToIdx(pattern, 19);
+  else if (remainder === 2) carryIdx = posToIdx(pattern, 25);
+  else if (remainder === 1) carryIdx = posToIdx(pattern, 31);
+  if (carryIdx >= 0) for (let i = carryIdx; i < values.length; i++) values[i] += 1;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0,6), flat.slice(6,12), flat.slice(12,18), flat.slice(18,24), flat.slice(24,30), flat.slice(30,36)];
 }
@@ -368,12 +373,15 @@ function generateVefk7x7(targetNumber, elementKey) {
   const remainder = remaining % 7;
   const pattern = ELEMENT_PATTERNS_7x7[elementKey] || PATTERN_7x7_BASE;
   const values = Array.from({ length: 49 }, (_, i) => base + i);
-  if (remainder === 6) values[posToIdx(pattern, 8)]  += 1;
-  else if (remainder === 5) values[posToIdx(pattern, 15)] += 1;
-  else if (remainder === 4) values[posToIdx(pattern, 22)] += 1;
-  else if (remainder === 3) values[posToIdx(pattern, 29)] += 1;
-  else if (remainder === 2) values[posToIdx(pattern, 36)] += 1;
-  else if (remainder === 1) values[posToIdx(pattern, 43)] += 1;
+  // Carry: +1 at sacred position, then propagate forward to keep sequence unique
+  let carryIdx = -1;
+  if (remainder === 6) carryIdx = posToIdx(pattern, 8);
+  else if (remainder === 5) carryIdx = posToIdx(pattern, 15);
+  else if (remainder === 4) carryIdx = posToIdx(pattern, 22);
+  else if (remainder === 3) carryIdx = posToIdx(pattern, 29);
+  else if (remainder === 2) carryIdx = posToIdx(pattern, 36);
+  else if (remainder === 1) carryIdx = posToIdx(pattern, 43);
+  if (carryIdx >= 0) for (let i = carryIdx; i < values.length; i++) values[i] += 1;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0,7), flat.slice(7,14), flat.slice(14,21), flat.slice(21,28), flat.slice(28,35), flat.slice(35,42), flat.slice(42,49)];
 }
@@ -388,10 +396,13 @@ function generateVefk5x5(targetNumber, elementKey) {
   const remainder = remaining % 5;
   const pattern = ELEMENT_PATTERNS_5x5[elementKey] || PATTERN_5x5_BASE;
   const values = Array.from({ length: 25 }, (_, i) => base + i);
-  if (remainder === 4) values[posToIdx(pattern, 6)]  += 1;
-  else if (remainder === 3) values[posToIdx(pattern, 11)] += 1;
-  else if (remainder === 2) values[posToIdx(pattern, 16)] += 1;
-  else if (remainder === 1) values[posToIdx(pattern, 21)] += 1;
+  // Carry: +1 at sacred position, then propagate forward to keep sequence unique
+  let carryIdx = -1;
+  if (remainder === 4) carryIdx = posToIdx(pattern, 6);
+  else if (remainder === 3) carryIdx = posToIdx(pattern, 11);
+  else if (remainder === 2) carryIdx = posToIdx(pattern, 16);
+  else if (remainder === 1) carryIdx = posToIdx(pattern, 21);
+  if (carryIdx >= 0) for (let i = carryIdx; i < values.length; i++) values[i] += 1;
   const flat = pattern.map(rank => values[rank - 1]);
   return [flat.slice(0,5), flat.slice(5,10), flat.slice(10,15), flat.slice(15,20), flat.slice(20,25)];
 }
