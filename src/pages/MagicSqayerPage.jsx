@@ -693,13 +693,15 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
         </div>
       </div>
 
-      {/* Grid cells */}
-      <div className="flex justify-center overflow-x-auto">
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
-          gap: "4px",
-        }}>
+      {/* Grid cells — responsive scaling to prevent cropping on mobile */}
+      <div className="flex justify-center w-full">
+        <div style={{ overflowX: "visible", width: "100%" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+            gap: "3px",
+            width: "100%",
+          }}>
           {displayFlat.map((num, idx) => (
             <motion.div
               key={`${gridSize}-${element}-${idx}`}
@@ -708,8 +710,8 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
               transition={{ delay: idx * 0.018, duration: 0.22 }}
               className="rounded-lg border flex items-center justify-center font-amiri font-bold"
               style={{
-                width: `${cellSize}px`,
-                height: `${cellSize}px`,
+                aspectRatio: "1 / 1",
+                minWidth: 0,
                 background: "rgba(212,175,55,0.10)",
                 borderColor: "rgba(212,175,55,0.45)",
                 color: G.text,
@@ -720,6 +722,7 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
               {num}
             </motion.div>
           ))}
+          </div>
         </div>
       </div>
     </motion.div>
