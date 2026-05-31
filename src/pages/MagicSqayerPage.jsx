@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "../components/PageLayout";
+import PageTitle from "../components/PageTitle";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -584,18 +585,7 @@ export default function MagicSqayerPage() {
       <div className="space-y-4">
 
         {/* Header */}
-        <div className="text-center">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-yellow-500/25 mb-4"
-            style={{ background: "linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)", boxShadow: "0 0 28px rgba(212,175,55,0.18)" }}>
-            <span className="font-amiri text-2xl" style={{ color: "#D4AF37" }}>✨</span>
-          </motion.div>
-          <h1 className="font-amiri text-4xl sm:text-5xl font-bold text-white">السحر المربع</h1>
-          <p className="font-inter text-xs mt-1 tracking-widest uppercase" style={{ color: G.dim }}>
-            Sacred Vefk Construction System
-          </p>
-          <GoldDivider />
-        </div>
+        <PageTitle arabic="السحر المربع" latin="Magic Sqayer" subtitle="Sacred Vefk Construction System" icon="✨" />
 
         {/* 1. Number Input */}
         <SectionCard>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Copy, Check, Download, FileText } from "lucide-react";
 import { calcKebir, calcSaghir, calcCumeli, calcBast } from "../lib/abjadModes";
 import PageLayout from "../components/PageLayout";
+import PageTitle from "../components/PageTitle";
 
 // ── Gold helpers ──────────────────────────────
 const G = {
@@ -380,16 +381,7 @@ Timestamp: ${new Date().toLocaleString()}
       <div className="space-y-4">
 
         {/* ── Header ── */}
-        <div className="text-center">
-          <motion.div initial={{ opacity:0, scale:0.8 }} animate={{ opacity:1, scale:1 }} transition={{ duration:0.5 }}
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-yellow-500/25 mb-4"
-            style={{ background:"linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)", boxShadow:"0 0 28px rgba(212,175,55,0.18)" }}>
-            <span className="font-amiri text-2xl" style={{ color:"#D4AF37" }}>ا</span>
-          </motion.div>
-          <h1 className="font-amiri text-4xl font-bold text-white">حاسبة الأبجد</h1>
-          <p className="font-inter text-xs mt-1 tracking-widest uppercase" style={{ color: G.dim }}>Abjad Calculator</p>
-          <GoldDivider />
-        </div>
+        <PageTitle arabic="حاسبة الأبجد" latin="Abjad Calculator" subtitle="Numerical Value System" icon="ا" />
 
         {/* ── Mode Selector ── */}
         <div className="rounded-2xl border p-3"

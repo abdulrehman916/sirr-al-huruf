@@ -6,6 +6,7 @@ import { ELEMENTS } from "../lib/anasirValues";
 import AnasirLetterGrid from "../components/AnasirLetterGrid";
 import ElementInsight from "../components/ElementInsight";
 import PageLayout from "../components/PageLayout";
+import PageTitle from "../components/PageTitle";
 
 export default function AnasirPage() {
   const [input, setInput] = useState("");
@@ -39,16 +40,7 @@ export default function AnasirPage() {
     <PageLayout accentColor="cyan">
       <div className="space-y-4">
         {/* Header */}
-        <div className="text-center mb-6">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-cyan-500/25 mb-4"
-            style={{ background: "linear-gradient(180deg, rgba(6,182,212,0.22) 0%, rgba(6,182,212,0.10) 100%)", boxShadow: "0 0 24px rgba(6,182,212,0.15)" }}>
-            <span className="text-2xl">🌊</span>
-          </motion.div>
-          <h1 className="font-amiri text-4xl sm:text-5xl font-bold text-white">حاسبة العناصر</h1>
-          <p className="font-inter text-xs text-cyan-400/50 mt-1.5 tracking-widest uppercase font-medium">Anasir Domination Calculator</p>
-          <CyanDivider />
-        </div>
+        <PageTitle arabic="حاسبة العناصر" latin="Anasir Calculator" subtitle="Elemental Domination Analysis" icon="🌊" />
 
         {/* Input */}
         <InputCard value={input} onChange={setInput} onAnalyze={handleAnalyze} onClear={handleClear} hasResult={!!result} loading={loading} progress={progress} />

@@ -229,31 +229,21 @@ export default function Home() {
         </motion.div>
 
         {/* Nav Cards */}
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.7 }}
-          className="relative z-10 w-full max-w-sm mt-10 grid grid-cols-2 gap-3 px-2">
-          {NAV_CARDS.map((card, i) => (
-            <motion.div key={card.path}
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3 + i * 0.1, duration: 0.5 }}
-              whileHover={{ scale: card.dimmed ? 1 : 1.03, y: card.dimmed ? 0 : -4 }}
-              whileTap={{ scale: card.dimmed ? 1 : 0.97 }}
-              style={{ opacity: card.dimmed ? 0.5 : 1 }}>
-              {card.dimmed ? (
-                <div className="rounded-2xl border p-5 flex flex-col items-center text-center cursor-default"
-                  style={{
-                    background: card.bg,
-                    borderColor: card.borderColor,
-                    boxShadow: card.glow,
-                    minHeight: 148,
-                    backdropFilter: "blur(4px)",
-                  }}>
-                  <CardInner card={card} />
-                </div>
-              ) : (
+        <div className="relative z-10 w-full max-w-sm mt-10 grid grid-cols-2 gap-3 px-2">
+          {NAV_CARDS.map((card, i) => {
+            const rgb = card.accent.match(/[\d.]+/g).slice(0,3).join(",");
+            return (
+              <motion.div key={card.path}
+                initial={{ opacity: 0, y: 24, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 1.2 + i * 0.09, duration: 0.50, ease: "easeOut" }}
+                whileHover={{ scale: 1.04, y: -5 }}
+                whileTap={{ scale: 0.97 }}
+              >
                 <Link
                   to={card.path}
                   onClick={startNav}
-                  className="block rounded-2xl border flex flex-col items-center text-center transition-all duration-300"
+                  className="block rounded-2xl border flex flex-col items-center text-center"
                   style={{
                     background: card.bg,
                     borderColor: card.borderColor,
@@ -264,22 +254,39 @@ export default function Home() {
                     willChange: "transform",
                     WebkitTapHighlightColor: "transparent",
                     touchAction: "manipulation",
-                    backdropFilter: "blur(4px)",
+                    backdropFilter: "blur(6px)",
                     position: "relative",
                     overflow: "hidden",
+                    transition: "border-color 0.3s ease, box-shadow 0.3s ease",
                   }}
                 >
-                  {/* Subtle inner top sheen */}
+                  {/* Top manuscript sheen */}
                   <div style={{
                     position: "absolute", top: 0, left: 0, right: 0, height: 1,
-                    background: `linear-gradient(90deg, transparent, rgba(${card.accent.match(/[\d.]+/g).slice(0,3).join(",")},0.30), transparent)`,
+                    background: `linear-gradient(90deg, transparent, rgba(${rgb},0.40), transparent)`,
+                  }} />
+                  {/* Floating light top-right */}
+                  <div style={{
+                    position: "absolute", top: -20, right: -20,
+                    width: 80, height: 80, borderRadius: "50%",
+                    background: `radial-gradient(circle, rgba(${rgb},0.15) 0%, transparent 70%)`,
+                    filter: "blur(12px)",
+                    pointerEvents: "none",
+                  }} />
+                  {/* Floating light bottom-left */}
+                  <div style={{
+                    position: "absolute", bottom: -16, left: -16,
+                    width: 60, height: 60, borderRadius: "50%",
+                    background: `radial-gradient(circle, rgba(${rgb},0.10) 0%, transparent 70%)`,
+                    filter: "blur(10px)",
+                    pointerEvents: "none",
                   }} />
                   <CardInner card={card} />
                 </Link>
-              )}
-            </motion.div>
-          ))}
-        </motion.div>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
 
 

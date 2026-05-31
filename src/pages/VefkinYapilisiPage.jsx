@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageLayout from "../components/PageLayout";
+import PageTitle from "../components/PageTitle";
 import TanzimVefki from "../components/TanzimVefki";
 import AnaVefk from "../components/AnaVefk";
 import { VefkSessionProvider } from "../context/VefkSessionContext";
@@ -42,18 +43,7 @@ export default function VefkinYapilisiPage() {
           <VefkSessionIndicator />
 
           {/* Header */}
-        <div className="text-center">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-yellow-500/25 mb-4"
-            style={{ background: "linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)", boxShadow: "0 0 28px rgba(212,175,55,0.18)" }}>
-            <span className="font-amiri text-2xl" style={{ color: "#D4AF37" }}>📜</span>
-          </motion.div>
-          <h1 className="font-amiri text-4xl sm:text-5xl font-bold text-white">طريقة الوفق</h1>
-          <p className="font-inter text-xs mt-1 tracking-widest uppercase" style={{ color: G.dim }}>
-            Vefkin Yapılışı — Ottoman Manuscript Method
-          </p>
-          <GoldDivider />
-        </div>
+          <PageTitle arabic="طريقة الوفق" latin="Vefkin Yapılışı" subtitle="Ottoman Manuscript Method" icon="📜" />
 
         {/* Tab switcher */}
         <div className="grid grid-cols-2 gap-2">

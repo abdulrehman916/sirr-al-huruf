@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Wand2, Plus } from "lucide-react";
 import { processText } from "../lib/abjadValues";
 import PageLayout from "../components/PageLayout";
+import PageTitle from "../components/PageTitle";
 import HadimTypePanel from "../components/HadimTypePanel";
 import HadimKasem from "../components/HadimKasem";
 import HadimZikr from "../components/HadimZikr";
@@ -190,16 +191,7 @@ export default function HadimPage() {
     <PageLayout accentColor="purple">
       <div className="space-y-4">
         {/* Header */}
-        <div className="text-center mb-6">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-purple-500/25 mb-4"
-            style={{ background: "linear-gradient(180deg, rgba(168,85,247,0.22) 0%, rgba(168,85,247,0.10) 100%)", boxShadow: "0 0 24px rgba(168,85,247,0.18)" }}>
-            <span className="font-amiri text-2xl text-purple-300">خ</span>
-          </motion.div>
-          <h1 className="font-amiri text-4xl sm:text-5xl font-bold text-white">مولّد الخادم</h1>
-          <p className="font-inter text-xs text-purple-400/55 mt-1.5 tracking-widest uppercase font-medium">Hadim Generator</p>
-          <PurpleDivider />
-        </div>
+        <PageTitle arabic="مولّد الخادم" latin="Hadim Generator" subtitle="Ottoman Name Construction" icon="✦" />
 
         {/* Hadim Type Selector */}
         <div className="rounded-2xl border p-3"

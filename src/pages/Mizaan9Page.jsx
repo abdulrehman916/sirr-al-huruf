@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
+import PageTitle from "../components/PageTitle";
 import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
 import { DAY_PLANET_MAP } from "../lib/mizaan9Data";
 import Mizaan1      from "../components/mizaan/Mizaan1";
@@ -100,16 +101,7 @@ export default function Mizaan9Page() {
       <div className="space-y-4">
 
         {/* Header */}
-        <div className="text-center">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-yellow-500/25 mb-4"
-            style={{ background: "linear-gradient(180deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 100%)", boxShadow: "0 0 28px rgba(212,175,55,0.18)" }}>
-            <span className="font-amiri text-2xl" style={{ color: "#D4AF37" }}>٩</span>
-          </motion.div>
-          <h1 className="font-amiri text-4xl sm:text-5xl font-bold text-white">ميزان الأعداد</h1>
-          <p className="font-inter text-xs mt-1 tracking-widest uppercase" style={{ color: G.dim }}>9 Mizan — Complete Occult Analysis</p>
-          <GoldDivider />
-        </div>
+        <PageTitle arabic="ميزان الأعداد" latin="9 Mizan" subtitle="Complete Occult Analysis System" icon="٩" />
 
         {/* Input card */}
         <div className="rounded-2xl border p-5 relative overflow-hidden"
