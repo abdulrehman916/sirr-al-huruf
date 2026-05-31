@@ -71,36 +71,15 @@ function computeTarh(targetNumber, n) {
   return { quotient, remainder, tarh };
 }
 
-// ── Build sequential flat array with Kesir correction ─────────────
-// Cells are filled sequentially starting at quotient.
-// At the correction cell (1-indexed), increment by +1 (skip a number).
-function buildKesirSequence(n, quotient, remainder) {
-  const total = n * n;
-  const corrTable = KESIR_CORRECTION[n] || {};
-  // Collect all correction cell positions for this remainder
-  // (apply corrections at all cells for r, r-1, ..., 1? No —
-  //  only the single correction cell for the exact remainder value)
-  const corrCell = remainder > 0 ? corrTable[remainder] : null; // 1-indexed
+// ── Step 1: Build a standard magic square using 1..n² ────────────
+// These algorithms only work correctly on consecutive integers.
 
-  const flat = [];
-  let val = quotient;
-  for (let pos = 1; pos <= total; pos++) {
-    flat.push(val);
-    if (corrCell && pos === corrCell) {
-      val += 2; // skip one number at correction cell
-    } else {
-      val += 1;
-    }
-  }
-  return flat;
-}
-
-// ── ODD ORDER: Siamese (de la Loubère) placement ─────────────────
-function siamese(n, flat) {
+function siameseStd(n) {
+  // Odd-order Siamese (de la Loubère) — fills 1..n²
   const g = Array.from({ length: n }, () => Array(n).fill(0));
   let r = 0, c = Math.floor(n / 2);
-  for (let k = 0; k < n * n; k++) {
-    g[r][c] = flat[k];
+  for (let k = 1; k <= n * n; k++) {
+    g[r][c] = k;
     const nr = (r - 1 + n) % n;
     const nc = (c + 1) % n;
     if (g[nr][nc] !== 0) { r = (r + 1) % n; }
@@ -109,89 +88,86 @@ function siamese(n, flat) {
   return g;
 }
 
-// ── DOUBLY-EVEN (n%4===0): complement/inversion placement ─────────
-function doublyEven(n, flat) {
-  // Build index permutation from the standard doubly-even pattern
-  const order = [];
+function doublyEvenStd(n) {
+  // Doubly-even (n%4===0) — diagonal complement method
+  const g = Array.from({ length: n }, () => Array(n).fill(0));
+  // Fill sequentially
   for (let i = 0; i < n; i++)
     for (let j = 0; j < n; j++)
-      order.push({ i, j, seq: i * n + j }); // sequential 0-based index
-  // Complement positions (on diagonal of each 4×4 block) get flipped index
-  const perm = Array(n * n);
-  for (let k = 0; k < n * n; k++) perm[k] = k;
+      g[i][j] = i * n + j + 1;
+  // Flip diagonal positions of each 4×4 block
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
       const bi = i % 4, bj = j % 4;
       if (bi === bj || bi + bj === 3)
-        perm[i * n + j] = n * n - 1 - (i * n + j);
+        g[i][j] = n * n + 1 - g[i][j];
     }
   }
-  const g = Array.from({ length: n }, () => Array(n).fill(0));
-  for (let i = 0; i < n; i++)
-    for (let j = 0; j < n; j++)
-      g[i][j] = flat[perm[i * n + j]];
   return g;
 }
 
-// ── SINGLY-EVEN (n%2===0, n%4!==0): Strachey placement ───────────
-function singlyEvenBase(h) {
-  // Returns canonical siamese for h, values 0-indexed (0..h²-1)
-  const g = Array.from({ length: h }, () => Array(h).fill(0));
+function singlyEvenStd(n) {
+  // Singly-even (n%2===0, n%4!==0) — Strachey method
+  const h = n / 2;
+
+  // Build odd-order (h×h) base square with values 0..h²-1
+  const base = Array.from({ length: h }, () => Array(h).fill(0));
   let r = 0, c = Math.floor(h / 2);
-  for (let num = 0; num < h * h; num++) {
-    g[r][c] = num;
+  for (let k = 0; k < h * h; k++) {
+    base[r][c] = k;
     const nr = (r - 1 + h) % h;
     const nc = (c + 1) % h;
-    if (g[nr][nc] !== 0 || (nr === 0 && nc === Math.floor(h / 2))) { r = (r + 1) % h; }
+    if (base[nr][nc] !== 0 || (nr === 0 && nc === Math.floor(h / 2))) { r = (r + 1) % h; }
     else { r = nr; c = nc; }
+  }
+
+  // 4 quadrant offsets: A=0, C=h², B=2h², D=3h²
+  const g = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < h; i++) {
+    for (let j = 0; j < h; j++) {
+      g[i][j]           = base[i][j] + 1;           // A
+      g[i][j + h]       = base[i][j] + 2 * h * h + 1; // B
+      g[i + h][j]       = base[i][j] + h * h + 1;   // C
+      g[i + h][j + h]   = base[i][j] + 3 * h * h + 1; // D
+    }
+  }
+
+  // Strachey column swaps (A↔C)
+  const k = Math.floor((n - 2) / 4);
+  const mid = Math.floor(h / 2);
+  for (let i = 0; i < h; i++) {
+    for (let j = 0; j < k; j++) {
+      if (i === mid && j === 0) continue; // skip mid-col-0
+      [g[i][j], g[i + h][j]] = [g[i + h][j], g[i][j]];
+    }
+  }
+  // Extra mid-row swap on right side
+  [g[mid][k], g[mid + h][k]] = [g[mid + h][k], g[mid][k]];
+  // Right-side B↔D swaps
+  for (let i = 0; i < h; i++) {
+    for (let j = n - k + 1; j < n; j++) {
+      [g[i][j], g[i + h][j]] = [g[i + h][j], g[i][j]];
+    }
   }
   return g;
 }
 
-function singlyEven(n, flat) {
-  const h = n / 2;
-  // Build index ordering using Strachey on the canonical 0..n²-1 sequence
-  // A=top-left, B=top-right, C=bottom-left, D=bottom-right quadrant indices
-  const qA = singlyEvenBase(h).flat();
-  const order = Array(n * n);
-  for (let i = 0; i < h; i++) {
-    for (let j = 0; j < h; j++) {
-      const qi = i * h + j;
-      order[i * n + j]           = qA[qi];            // A quadrant
-      order[i * n + j + h]       = qA[qi] + 2 * h * h; // B quadrant
-      order[(i + h) * n + j]     = qA[qi] + h * h;    // C quadrant
-      order[(i + h) * n + j + h] = qA[qi] + 3 * h * h; // D quadrant
-    }
-  }
-
-  // Strachey swaps between A and C (columns), then middle-row correction
-  const k = Math.floor((n - 2) / 4);
-  const mid = Math.floor(h / 2);
-  const swapSet = new Set();
-  for (let i = 0; i < h; i++) {
-    for (let j = 0; j < k; j++) swapSet.add(`${i},${j}`);
-  }
-  for (let j = 1; j < k + 1; j++) swapSet.add(`${mid},${j}`);
-  // Undo mid-row j=0 if it was added
-  swapSet.delete(`${mid},0`);
-  // Right-side
-  for (let i = 0; i < h; i++)
-    for (let j = n - k + 1; j < n; j++) swapSet.add(`${i + h},${j}`);
-
-  // Apply swaps on order array
-  for (const key of swapSet) {
-    const [ri, ci2] = key.split(",").map(Number);
-    if (ri < h && ci2 < h) {
-      const a = ri * n + ci2, b = (ri + h) * n + ci2;
-      [order[a], order[b]] = [order[b], order[a]];
-    }
-  }
-
-  const g = Array.from({ length: n }, () => Array(n).fill(0));
-  for (let i = 0; i < n; i++)
-    for (let j = 0; j < n; j++)
-      g[i][j] = flat[order[i * n + j]];
-  return g;
+// ── Build a verified magic square via affine mapping ─────────────
+// Strategy:
+//   1. Generate a standard magic square with values 1..n² (always valid).
+//   2. Affine-shift each cell: v → (v - 1) + quotient.
+//      This maps 1→quotient, 2→quotient+1, ..., n²→quotient+n²-1.
+//      All row/col/diagonal sums remain equal: MC = n*quotient + n*(n²-1)/2.
+//   3. Kesir remainder is shown in the breakdown panel only.
+//      It cannot be distributed into the grid without breaking magic property
+//      (remainder < n means it can't be split equally across n lines).
+//      The Ottoman manuscript tradition records remainder as an annotation (كسر).
+function buildMagicSquare(n, quotient) {
+  let std;
+  if (n % 2 === 1)      std = siameseStd(n);
+  else if (n % 4 === 0) std = doublyEvenStd(n);
+  else                  std = singlyEvenStd(n);
+  return std.map(row => row.map(v => v - 1 + quotient));
 }
 
 // ── Traditional elemental transformations ─────────────────────────
@@ -222,12 +198,8 @@ function elementTransform(g, elementKey) {
 }
 
 // ── Master generator ──────────────────────────────────────────────
-function generateTrueMagicSquare(n, quotient, remainder, elementKey) {
-  const flat = buildKesirSequence(n, quotient, remainder);
-  let g;
-  if (n % 2 === 1)      g = siamese(n, flat);
-  else if (n % 4 === 0) g = doublyEven(n, flat);
-  else                  g = singlyEven(n, flat);
+function generateTrueMagicSquare(n, quotient, elementKey) {
+  const g = buildMagicSquare(n, quotient);
   return elementTransform(g, elementKey);
 }
 
@@ -581,7 +553,7 @@ export default function MagicSqayerPage() {
     const { quotient, remainder } = computeTarh(n, size);
     if (quotient < 1) return { invalid: true };
     const e = el || "fire";
-    const gridData = generateTrueMagicSquare(size, quotient, remainder, e);
+    const gridData = generateTrueMagicSquare(size, quotient, e);
     return { grid: gridData, base: quotient, remainder };
   };
 
