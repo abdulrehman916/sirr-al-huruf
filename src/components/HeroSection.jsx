@@ -5,7 +5,7 @@ import SacredWheel from "./SacredWheel";
 import useIsMobile from "../hooks/useIsMobile";
 import useMouseParallax from "../hooks/useMouseParallax";
 
-// ── Static data (module-level — zero re-renders) ──────────────────
+// ── Static data ───────────────────────────────────────────────────
 const LIGHT_RAYS = Array.from({ length: 12 }, (_, i) => ({
   angle: (i / 12) * 360,
   opacity: 0.04 + (i % 3) * 0.02,
@@ -16,118 +16,154 @@ const LIGHT_RAYS = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 const ORBITAL_RINGS = [
-  { r: "min(340px, 70vw)", dur: 180, dir: 1,  opacity: 0.18, dash: "4 12",   width: 0.8 },
-  { r: "min(260px, 54vw)", dur: 120, dir: -1, opacity: 0.22, dash: "2 8",    width: 0.6 },
-  { r: "min(180px, 38vw)", dur:  80, dir: 1,  opacity: 0.28, dash: "1 6",    width: 0.5 },
-  { r: "min(430px, 88vw)", dur: 260, dir: -1, opacity: 0.10, dash: "6 18",   width: 0.6 },
+  { r: "min(340px, 70vw)", dur: 180, dir: 1,  opacity: 0.16, width: 0.8, solid: false },
+  { r: "min(260px, 54vw)", dur: 120, dir: -1, opacity: 0.20, width: 0.6, solid: false },
+  { r: "min(180px, 38vw)", dur:  80, dir: 1,  opacity: 0.26, width: 0.5, solid: false },
+  { r: "min(430px, 88vw)", dur: 260, dir: -1, opacity: 0.09, width: 0.6, solid: false },
 ];
 
 const CALLIGRAPHY_CHARS = [
-  { char: "ب", top: "8%",  left: "7%",  size: 48, opacity: 0.028, dur: 14, delay: 0 },
-  { char: "ح", top: "15%", left: "88%", size: 38, opacity: 0.022, dur: 18, delay: 3 },
-  { char: "ن", top: "72%", left: "5%",  size: 55, opacity: 0.025, dur: 16, delay: 6 },
-  { char: "ع", top: "80%", left: "85%", size: 42, opacity: 0.020, dur: 20, delay: 2 },
-  { char: "م", top: "45%", left: "3%",  size: 36, opacity: 0.018, dur: 22, delay: 8 },
-  { char: "ق", top: "40%", left: "92%", size: 44, opacity: 0.023, dur: 17, delay: 5 },
-  { char: "ر", top: "90%", left: "45%", size: 52, opacity: 0.019, dur: 19, delay: 1 },
-  { char: "و", top: "5%",  left: "48%", size: 40, opacity: 0.021, dur: 15, delay: 7 },
+  { char: "ب", top: "8%",  left: "7%",  size: 48, opacity: 0.026, dur: 14, delay: 0 },
+  { char: "ح", top: "15%", left: "88%", size: 38, opacity: 0.020, dur: 18, delay: 3 },
+  { char: "ن", top: "72%", left: "5%",  size: 55, opacity: 0.023, dur: 16, delay: 6 },
+  { char: "ع", top: "80%", left: "85%", size: 42, opacity: 0.018, dur: 20, delay: 2 },
+  { char: "م", top: "45%", left: "3%",  size: 36, opacity: 0.016, dur: 22, delay: 8 },
+  { char: "ق", top: "40%", left: "92%", size: 44, opacity: 0.021, dur: 17, delay: 5 },
+  { char: "ر", top: "90%", left: "45%", size: 52, opacity: 0.017, dur: 19, delay: 1 },
+  { char: "و", top: "5%",  left: "48%", size: 40, opacity: 0.019, dur: 15, delay: 7 },
 ];
+
+// SVG icon system — pure vector, no emojis
+const CARD_ICONS = {
+  abjad: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <text x="50%" y="56%" dominantBaseline="middle" textAnchor="middle"
+        fontFamily="Amiri, serif" fontWeight="700" fontSize="20" fill={color}>ح</text>
+      <circle cx="16" cy="16" r="14" stroke={color} strokeWidth="0.8" strokeOpacity="0.5"/>
+    </svg>
+  ),
+  anasir: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <path d="M16 4 C10 4 5 10 6 16 C7 22 11 27 16 28 C21 27 25 22 26 16 C27 10 22 4 16 4Z"
+        stroke={color} strokeWidth="1.2" strokeOpacity="0.8" fill="none"/>
+      <path d="M8 16 Q12 10 16 16 Q20 22 24 16" stroke={color} strokeWidth="1" strokeOpacity="0.6" fill="none"/>
+      <circle cx="16" cy="16" r="2.5" fill={color} fillOpacity="0.9"/>
+    </svg>
+  ),
+  hadim: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <polygon points="16,3 19.5,12 29,12 21.5,18 24,27 16,21.5 8,27 10.5,18 3,12 12.5,12"
+        stroke={color} strokeWidth="1" strokeOpacity="0.85" fill={color} fillOpacity="0.12"/>
+      <circle cx="16" cy="16" r="3" fill={color} fillOpacity="0.9"/>
+    </svg>
+  ),
+  mizaan: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <line x1="16" y1="4" x2="16" y2="28" stroke={color} strokeWidth="1.2" strokeOpacity="0.7"/>
+      <line x1="6" y1="12" x2="26" y2="12" stroke={color} strokeWidth="1" strokeOpacity="0.6"/>
+      <ellipse cx="9" cy="20" rx="5" ry="3" stroke={color} strokeWidth="0.9" strokeOpacity="0.75" fill={color} fillOpacity="0.10"/>
+      <ellipse cx="23" cy="20" rx="5" ry="3" stroke={color} strokeWidth="0.9" strokeOpacity="0.75" fill={color} fillOpacity="0.10"/>
+      <text x="50%" y="44%" dominantBaseline="middle" textAnchor="middle"
+        fontFamily="Amiri, serif" fontWeight="700" fontSize="9" fill={color} fillOpacity="0.9">٩</text>
+    </svg>
+  ),
+  sqayer: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <rect x="5" y="5" width="22" height="22" rx="2" stroke={color} strokeWidth="0.9" strokeOpacity="0.7" fill="none"/>
+      <line x1="5" y1="12.3" x2="27" y2="12.3" stroke={color} strokeWidth="0.5" strokeOpacity="0.45"/>
+      <line x1="5" y1="19.7" x2="27" y2="19.7" stroke={color} strokeWidth="0.5" strokeOpacity="0.45"/>
+      <line x1="12.3" y1="5" x2="12.3" y2="27" stroke={color} strokeWidth="0.5" strokeOpacity="0.45"/>
+      <line x1="19.7" y1="5" x2="19.7" y2="27" stroke={color} strokeWidth="0.5" strokeOpacity="0.45"/>
+      <circle cx="16" cy="16" r="2" fill={color} fillOpacity="0.85"/>
+    </svg>
+  ),
+  vefkin: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <rect x="6" y="8" width="20" height="16" rx="1.5" stroke={color} strokeWidth="1" strokeOpacity="0.75" fill="none"/>
+      <line x1="6" y1="12" x2="26" y2="12" stroke={color} strokeWidth="0.6" strokeOpacity="0.5"/>
+      <line x1="9" y1="16" x2="23" y2="16" stroke={color} strokeWidth="0.5" strokeOpacity="0.4"/>
+      <line x1="9" y1="19" x2="20" y2="19" stroke={color} strokeWidth="0.5" strokeOpacity="0.4"/>
+      <path d="M14 5 L16 8 L18 5" stroke={color} strokeWidth="0.8" strokeOpacity="0.65" fill="none"/>
+    </svg>
+  ),
+};
 
 const NAV_CARDS = [
-  { path: "/abjad",            arabic: "أبجد",         label: "ABJAD",          subtitle: "Numerical Calculator",       icon: "ح",  accent: [212, 175, 55] },
-  { path: "/anasir",           arabic: "عناصر",        label: "ANASIR",         subtitle: "Elemental Analysis",         icon: "🌊", accent: [56, 189, 248] },
-  { path: "/hadim",            arabic: "خادم",         label: "HADIM",          subtitle: "Name Generator",             icon: "✦",  accent: [192, 132, 252] },
-  { path: "/mizaan9",          arabic: "ميزان",        label: "MIZAAN 9",       subtitle: "Sacred Numerology",          icon: "٩",  accent: [212, 175, 55] },
-  { path: "/magic-sqayer",     arabic: "السحر المربع", label: "MAGIC SQAYER",   subtitle: "Sacred Vefk Construction",   icon: "✨", accent: [212, 175, 55] },
-  { path: "/vefkin-yapilisi",  arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI",subtitle: "Ottoman Manuscript Method",  icon: "📜", accent: [212, 175, 55] },
+  { path: "/abjad",           arabic: "أبجد",         label: "ABJAD",           subtitle: "Numerical Calculator",      iconKey: "abjad",  accent: [212, 175, 55] },
+  { path: "/anasir",          arabic: "عناصر",        label: "ANASIR",          subtitle: "Elemental Analysis",        iconKey: "anasir", accent: [56, 189, 248] },
+  { path: "/hadim",           arabic: "خادم",         label: "HADIM",           subtitle: "Name Generator",            iconKey: "hadim",  accent: [192, 132, 252] },
+  { path: "/mizaan9",         arabic: "ميزان",        label: "MIZAAN 9",        subtitle: "Sacred Numerology",         iconKey: "mizaan", accent: [212, 175, 55] },
+  { path: "/magic-sqayer",    arabic: "السحر المربع", label: "MAGIC SQAYER",    subtitle: "Sacred Vefk Construction",  iconKey: "sqayer", accent: [212, 175, 55] },
+  { path: "/vefkin-yapilisi", arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI", subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
 ];
 
-// ── Orbiting golden rings ─────────────────────────────────────────
+// ── Orbital rings ─────────────────────────────────────────────────
 function OrbitalRings({ paused }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
       {ORBITAL_RINGS.map((ring, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full"
+        <motion.div key={i} className="absolute rounded-full"
           style={{
             width: ring.r, height: ring.r,
             border: `${ring.width}px dashed rgba(212,175,55,${ring.opacity})`,
-            boxShadow: `0 0 12px rgba(212,175,55,${ring.opacity * 0.5}), inset 0 0 12px rgba(212,175,55,${ring.opacity * 0.3})`,
+            boxShadow: `0 0 16px rgba(212,175,55,${ring.opacity * 0.55})`,
           }}
           animate={paused ? {} : { rotate: ring.dir * 360 }}
           transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
         />
       ))}
-      {/* Solid accent rings */}
       <div className="absolute rounded-full" style={{
-        width: "min(235px, 49vw)", height: "min(235px, 49vw)",
-        border: "1px solid rgba(212,175,55,0.32)",
-        boxShadow: "0 0 20px rgba(212,175,55,0.12), 0 0 60px rgba(212,175,55,0.06)",
+        width: "min(235px,49vw)", height: "min(235px,49vw)",
+        border: "1px solid rgba(212,175,55,0.30)",
+        boxShadow: "0 0 24px rgba(212,175,55,0.12), 0 0 70px rgba(212,175,55,0.05)",
       }} />
       <div className="absolute rounded-full" style={{
-        width: "min(295px, 61vw)", height: "min(295px, 61vw)",
-        border: "0.5px solid rgba(212,175,55,0.15)",
+        width: "min(295px,61vw)", height: "min(295px,61vw)",
+        border: "0.5px solid rgba(212,175,55,0.13)",
       }} />
     </div>
   );
 }
 
-// ── Light rays from center ────────────────────────────────────────
+// ── Light rays ────────────────────────────────────────────────────
 function LightRays({ paused, isMobile }) {
   if (isMobile) return null;
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
       {LIGHT_RAYS.map((ray, i) => (
-        <motion.div
-          key={i}
-          className="absolute"
+        <motion.div key={i} className="absolute"
           style={{
-            width: ray.width,
-            height: ray.length,
-            background: `linear-gradient(to bottom, rgba(212,175,55,0.22), rgba(212,175,55,0.06), transparent)`,
+            width: ray.width, height: ray.length,
+            background: "linear-gradient(to bottom, rgba(212,175,55,0.20), rgba(212,175,55,0.05), transparent)",
             transformOrigin: "top center",
-            top: "50%",
-            left: "50%",
-            marginLeft: -ray.width / 2,
+            top: "50%", left: "50%", marginLeft: -ray.width / 2,
             rotate: `${ray.angle}deg`,
           }}
-          animate={paused ? {} : { opacity: [ray.opacity, ray.opacity * 3, ray.opacity] }}
+          animate={paused ? {} : { opacity: [ray.opacity, ray.opacity * 3.2, ray.opacity] }}
           transition={{ duration: ray.dur, repeat: Infinity, ease: "easeInOut", delay: ray.delay }}
         />
       ))}
-      {/* Central burst bloom */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          width: 200, height: 200,
-          background: "radial-gradient(circle, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 40%, transparent 70%)",
-          filter: "blur(20px)",
-        }}
-        animate={paused ? {} : { scale: [1, 1.4, 1], opacity: [0.5, 0.9, 0.5] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      <motion.div className="absolute rounded-full" style={{
+        width: 220, height: 220,
+        background: "radial-gradient(circle, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0.05) 45%, transparent 72%)",
+        filter: "blur(22px)",
+      }}
+        animate={paused ? {} : { scale: [1, 1.42, 1], opacity: [0.45, 0.88, 0.45] }}
+        transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
       />
     </div>
   );
 }
 
-// ── Background Arabic calligraphy atmosphere ──────────────────────
+// ── Calligraphy atmosphere ────────────────────────────────────────
 function CalligraphyAtmosphere({ mouse }) {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
       {CALLIGRAPHY_CHARS.map((c, i) => (
-        <motion.span
-          key={i}
-          className="absolute font-amiri select-none"
-          style={{
-            top: c.top, left: c.left,
-            fontSize: c.size,
-            color: "#D4AF37",
-            opacity: c.opacity,
-            x: mouse.x * -5,
-            y: mouse.y * -5,
-          }}
-          animate={{ opacity: [c.opacity * 0.4, c.opacity, c.opacity * 0.4], y: [0, -12, 0] }}
+        <motion.span key={i} className="absolute font-amiri select-none"
+          style={{ top: c.top, left: c.left, fontSize: c.size, color: "#D4AF37", opacity: c.opacity,
+            x: mouse.x * -5, y: mouse.y * -5 }}
+          animate={{ opacity: [c.opacity * 0.35, c.opacity, c.opacity * 0.35], y: [0, -13, 0] }}
           transition={{ duration: c.dur, repeat: Infinity, ease: "easeInOut", delay: c.delay }}
         >
           {c.char}
@@ -137,58 +173,80 @@ function CalligraphyAtmosphere({ mouse }) {
   );
 }
 
-// ── Manuscript introduction area ──────────────────────────────────
+// ── Manuscript intro with glassmorphism ───────────────────────────
 function ManuscriptIntro() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 1.6, duration: 0.8 }}
-      className="relative z-10 w-full max-w-sm mx-auto mt-8 px-4"
-    >
-      <div
-        className="rounded-2xl px-5 py-4 text-center relative overflow-hidden"
+      className="relative z-10 w-full max-w-xs mx-auto mt-7 px-4">
+      <div className="rounded-2xl px-6 py-4 text-center relative overflow-hidden"
         style={{
-          background: "linear-gradient(145deg, rgba(8,16,40,0.92) 0%, rgba(4,10,26,0.95) 100%)",
-          border: "1px solid rgba(212,175,55,0.20)",
-          boxShadow: "0 0 40px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.12)",
-        }}
-      >
-        {/* Top gold sheen */}
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 1,
-          background: "linear-gradient(90deg, transparent 10%, rgba(212,175,55,0.55) 50%, transparent 90%)",
-        }} />
+          background: "linear-gradient(145deg, rgba(10,20,50,0.75) 0%, rgba(4,10,28,0.85) 100%)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          border: "1px solid rgba(212,175,55,0.22)",
+          boxShadow: "0 8px 48px rgba(0,0,0,0.55), 0 0 24px rgba(212,175,55,0.08), inset 0 1px 0 rgba(212,175,55,0.15)",
+        }}>
+        {/* Top sheen */}
+        <div style={{ position:"absolute", top:0, left:0, right:0, height:1,
+          background:"linear-gradient(90deg,transparent 5%,rgba(212,175,55,0.60) 50%,transparent 95%)" }} />
         {/* Corner lights */}
-        <div style={{
-          position: "absolute", top: -12, left: -12, width: 60, height: 60,
-          background: "radial-gradient(circle, rgba(212,175,55,0.14) 0%, transparent 70%)",
-          filter: "blur(8px)", pointerEvents: "none",
-        }} />
-        <div style={{
-          position: "absolute", bottom: -12, right: -12, width: 60, height: 60,
-          background: "radial-gradient(circle, rgba(212,175,55,0.10) 0%, transparent 70%)",
-          filter: "blur(8px)", pointerEvents: "none",
-        }} />
+        <div style={{ position:"absolute", top:-14, left:-14, width:60, height:60, borderRadius:"50%",
+          background:"radial-gradient(circle, rgba(212,175,55,0.16) 0%, transparent 70%)",
+          filter:"blur(10px)", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", bottom:-14, right:-14, width:60, height:60, borderRadius:"50%",
+          background:"radial-gradient(circle, rgba(212,175,55,0.11) 0%, transparent 70%)",
+          filter:"blur(10px)", pointerEvents:"none" }} />
 
-        <p
-          className="font-amiri text-sm leading-relaxed"
-          dir="rtl"
-          style={{ color: "rgba(245,230,180,0.72)", lineHeight: 1.9, letterSpacing: "0.04em" }}
-        >
+        <p className="font-amiri text-sm leading-relaxed" dir="rtl"
+          style={{ color:"rgba(245,230,180,0.78)", lineHeight:2, letterSpacing:"0.04em", fontSize:"15px" }}>
           علم الحروف — الحكمة الربانية في ميزان الأعداد والأسرار
         </p>
-        <div className="flex items-center justify-center gap-3 mt-3">
-          <div className="h-px w-8" style={{ background: "linear-gradient(to right, transparent, rgba(212,175,55,0.45))" }} />
-          <div className="w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.55)" }} />
-          <p className="font-inter text-[9px] uppercase tracking-[0.25em]" style={{ color: "rgba(212,175,55,0.45)" }}>
+
+        {/* Premium divider */}
+        <div className="flex items-center justify-center gap-2.5 mt-3">
+          <div style={{ height:1, width:28, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.50))" }} />
+          <div style={{ width:3, height:3, borderRadius:"50%", background:"rgba(212,175,55,0.50)" }} />
+          <p className="font-inter text-[8px] uppercase tracking-[0.28em]" style={{ color:"rgba(212,175,55,0.50)" }}>
             Ilm al-Huruf
           </p>
-          <div className="w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.55)" }} />
-          <div className="h-px w-8" style={{ background: "linear-gradient(to left, transparent, rgba(212,175,55,0.45))" }} />
+          <div style={{ width:3, height:3, borderRadius:"50%", background:"rgba(212,175,55,0.50)" }} />
+          <div style={{ height:1, width:28, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.50))" }} />
         </div>
       </div>
     </motion.div>
+  );
+}
+
+// ── Premium section divider ───────────────────────────────────────
+function GoldDivider({ delay = 0 }) {
+  return (
+    <motion.div initial={{ scaleX:0, opacity:0 }} animate={{ scaleX:1, opacity:1 }}
+      transition={{ duration:0.7, delay, ease:"easeOut" }}
+      className="flex items-center justify-center gap-2 w-full max-w-xs mx-auto my-1">
+      <div style={{ flex:1, height:0.5, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.35))" }} />
+      <div style={{ width:4, height:4, borderRadius:"50%", background:"rgba(212,175,55,0.55)", boxShadow:"0 0 6px rgba(212,175,55,0.7)" }} />
+      <div style={{ flex:1, height:0.5, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.35))" }} />
+    </motion.div>
+  );
+}
+
+// ── SVG icon orb ──────────────────────────────────────────────────
+function IconOrb({ iconKey, accent }) {
+  const [r, g, b] = accent;
+  const color = `rgb(${r},${g},${b})`;
+  const renderIcon = CARD_ICONS[iconKey];
+  return (
+    <div className="mb-3 flex items-center justify-center w-11 h-11 rounded-xl relative"
+      style={{
+        background: `linear-gradient(145deg, rgba(${r},${g},${b},0.20) 0%, rgba(${r},${g},${b},0.07) 100%)`,
+        border: `1px solid rgba(${r},${g},${b},0.38)`,
+        boxShadow: `0 0 20px rgba(${r},${g},${b},0.25), inset 0 1px 0 rgba(${r},${g},${b},0.18), inset 0 0 12px rgba(${r},${g},${b},0.06)`,
+      }}>
+      {renderIcon ? renderIcon(color) : (
+        <span className="font-amiri text-xl" style={{ color }}>{iconKey}</span>
+      )}
+    </div>
   );
 }
 
@@ -197,214 +255,162 @@ function CardInner({ card }) {
   const [r, g, b] = card.accent;
   return (
     <>
-      <div className="mb-3.5 flex items-center justify-center w-11 h-11 rounded-2xl"
-        style={{
-          background: `linear-gradient(145deg, rgba(${r},${g},${b},0.18) 0%, rgba(${r},${g},${b},0.06) 100%)`,
-          border: `1px solid rgba(${r},${g},${b},0.35)`,
-          boxShadow: `0 0 18px rgba(${r},${g},${b},0.22), inset 0 1px 0 rgba(${r},${g},${b},0.15)`,
-        }}>
-        <span className="font-amiri text-2xl leading-none" style={{ color: `rgb(${r},${g},${b})` }}>{card.icon}</span>
-      </div>
-      <p className="font-amiri text-xl font-bold leading-tight mb-0.5" style={{ color: "#f5ead4" }}>{card.arabic}</p>
-      <p className="font-inter font-bold tracking-[0.20em] uppercase" style={{ fontSize: 7, color: `rgba(${r},${g},${b},0.90)` }}>{card.label}</p>
-      <div className="w-8 h-px my-2.5 rounded-full" style={{ background: `linear-gradient(90deg, transparent, rgba(${r},${g},${b},0.45), transparent)` }} />
-      <p className="font-inter leading-relaxed text-center" style={{ fontSize: 9, color: "rgba(255,255,255,0.35)" }}>{card.subtitle}</p>
+      <IconOrb iconKey={card.iconKey} accent={card.accent} />
+      <p className="font-amiri font-bold leading-tight mb-0.5"
+        style={{ fontSize:"clamp(1.05rem,4.5vw,1.3rem)", color:"#f5ead4", letterSpacing:"0.01em" }}>
+        {card.arabic}
+      </p>
+      <p className="font-inter font-bold tracking-[0.22em] uppercase"
+        style={{ fontSize:"6.5px", color:`rgba(${r},${g},${b},0.88)`, marginTop:1 }}>
+        {card.label}
+      </p>
+      <div className="my-2.5 rounded-full"
+        style={{ width:28, height:0.5, background:`linear-gradient(90deg,transparent,rgba(${r},${g},${b},0.55),transparent)` }} />
+      <p className="font-inter leading-relaxed text-center"
+        style={{ fontSize:"8.5px", color:"rgba(255,255,255,0.32)", letterSpacing:"0.04em" }}>
+        {card.subtitle}
+      </p>
     </>
   );
 }
 
-// ── Main title block ──────────────────────────────────────────────
+// ── Hero title ────────────────────────────────────────────────────
 function HeroTitle() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.9, delay: 0.4 }}
-      className="text-center z-10 px-4 mt-4"
-    >
-      {/* Main title */}
-      <motion.h1
-        className="font-amiri font-bold"
+    <motion.div initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }}
+      transition={{ duration:0.9, delay:0.4 }}
+      className="text-center z-10 px-4 mt-4">
+      <motion.h1 className="font-amiri font-bold"
         style={{
-          fontSize: "clamp(3rem, 13vw, 5.8rem)",
-          color: "#f5ecd4",
-          textShadow: "0 0 40px rgba(212,175,55,0.55), 0 0 90px rgba(212,175,55,0.20), 0 2px 24px rgba(0,0,0,0.65)",
-          lineHeight: 1.08,
-          letterSpacing: "0.02em",
+          fontSize:"clamp(3rem,13vw,5.8rem)",
+          color:"#f5ecd4",
+          lineHeight:1.08, letterSpacing:"0.025em",
         }}
         animate={{
-          textShadow: [
-            "0 0 30px rgba(212,175,55,0.45), 0 0 70px rgba(212,175,55,0.15), 0 2px 20px rgba(0,0,0,0.60)",
-            "0 0 55px rgba(212,175,55,0.70), 0 0 110px rgba(212,175,55,0.30), 0 2px 28px rgba(0,0,0,0.65)",
-            "0 0 30px rgba(212,175,55,0.45), 0 0 70px rgba(212,175,55,0.15), 0 2px 20px rgba(0,0,0,0.60)",
+          textShadow:[
+            "0 0 28px rgba(212,175,55,0.42), 0 0 65px rgba(212,175,55,0.14), 0 2px 20px rgba(0,0,0,0.60)",
+            "0 0 52px rgba(212,175,55,0.68), 0 0 105px rgba(212,175,55,0.28), 0 2px 28px rgba(0,0,0,0.65)",
+            "0 0 28px rgba(212,175,55,0.42), 0 0 65px rgba(212,175,55,0.14), 0 2px 20px rgba(0,0,0,0.60)",
           ],
         }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-      >
+        transition={{ duration:5.5, repeat:Infinity, ease:"easeInOut" }}>
         سرّ الحروف
       </motion.h1>
 
-      {/* Subtitle row */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.9, duration: 0.7 }}
-        className="mt-3 space-y-2"
-      >
-        <p
-          className="font-inter font-bold tracking-[0.35em] uppercase"
-          style={{ fontSize: "clamp(11px, 2.8vw, 15px)", color: "rgba(212,175,55,0.90)", textShadow: "0 0 14px rgba(212,175,55,0.35)" }}
-        >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
+        transition={{ delay:0.9, duration:0.7 }} className="mt-3 space-y-1.5">
+        <p className="font-inter font-bold tracking-[0.38em] uppercase"
+          style={{ fontSize:"clamp(10px,2.6vw,14px)", color:"rgba(212,175,55,0.88)", textShadow:"0 0 14px rgba(212,175,55,0.30)" }}>
           Sirrul Huruf
         </p>
-        <p
-          className="font-inter tracking-[0.2em] uppercase"
-          style={{ fontSize: "clamp(8px, 1.8vw, 11px)", color: "rgba(255,255,255,0.40)" }}
-        >
+        <p className="font-inter tracking-[0.22em] uppercase"
+          style={{ fontSize:"clamp(8px,1.6vw,10px)", color:"rgba(255,255,255,0.38)" }}>
           Advanced Ilm al-Huruf Analysis
         </p>
       </motion.div>
 
-      {/* Ornamental divider */}
-      <motion.div
-        initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
-        transition={{ delay: 1.1, duration: 0.9 }}
-        className="mt-5 flex items-center justify-center gap-3"
-      >
-        <div style={{ width: 40, height: 1, background: "linear-gradient(to right, transparent, rgba(212,175,55,0.7))" }} />
+      {/* Refined ornamental divider */}
+      <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }}
+        transition={{ delay:1.1, duration:0.9 }}
+        className="mt-5 flex items-center justify-center gap-2.5">
+        <div style={{ width:36, height:0.5, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.65))" }} />
+        <div style={{ width:10, height:10, borderRadius:"50%", border:"1px solid rgba(212,175,55,0.40)",
+          background:"rgba(212,175,55,0.08)", boxShadow:"0 0 8px rgba(212,175,55,0.35)" }} />
         <motion.div
-          style={{ width: 6, height: 6, borderRadius: "50%", background: "#D4AF37", boxShadow: "0 0 8px rgba(212,175,55,0.8)" }}
-          animate={{ boxShadow: ["0 0 6px rgba(212,175,55,0.6)", "0 0 18px rgba(212,175,55,1)", "0 0 6px rgba(212,175,55,0.6)"] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <div style={{ width: 14, height: 0.5, background: "rgba(212,175,55,0.4)" }} />
-        <motion.div
-          style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(212,175,55,0.7)" }}
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
-        />
-        <div style={{ width: 14, height: 0.5, background: "rgba(212,175,55,0.4)" }} />
-        <motion.div
-          style={{ width: 6, height: 6, borderRadius: "50%", background: "#D4AF37", boxShadow: "0 0 8px rgba(212,175,55,0.8)" }}
-          animate={{ boxShadow: ["0 0 6px rgba(212,175,55,0.6)", "0 0 18px rgba(212,175,55,1)", "0 0 6px rgba(212,175,55,0.6)"] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-        />
-        <div style={{ width: 40, height: 1, background: "linear-gradient(to left, transparent, rgba(212,175,55,0.7))" }} />
+          style={{ width:6, height:6, borderRadius:"50%", background:"#D4AF37" }}
+          animate={{ boxShadow:["0 0 5px rgba(212,175,55,0.55)","0 0 16px rgba(212,175,55,0.95)","0 0 5px rgba(212,175,55,0.55)"] }}
+          transition={{ duration:2.8, repeat:Infinity, ease:"easeInOut" }} />
+        <div style={{ width:10, height:10, borderRadius:"50%", border:"1px solid rgba(212,175,55,0.40)",
+          background:"rgba(212,175,55,0.08)", boxShadow:"0 0 8px rgba(212,175,55,0.35)" }} />
+        <div style={{ width:36, height:0.5, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.65))" }} />
       </motion.div>
     </motion.div>
   );
 }
 
-// ── Central Allah calligraphy floating above wheel ────────────────
+// ── Allah calligraphy ─────────────────────────────────────────────
 function AllahCalligraphy() {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 1.4, ease: "easeOut" }}
-      className="absolute z-20 flex items-center justify-center"
-    >
-      {/* Deep golden bloom */}
+    <motion.div initial={{ opacity:0, scale:0.5 }} animate={{ opacity:1, scale:1 }}
+      transition={{ duration:1.4, ease:"easeOut" }}
+      className="absolute z-20 flex items-center justify-center">
       <motion.div className="absolute rounded-full pointer-events-none" style={{
-        width: 220, height: 220,
-        background: "radial-gradient(circle, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.08) 35%, rgba(180,130,20,0.03) 60%, transparent 78%)",
-        filter: "blur(22px)", zIndex: 0,
-      }}
-        animate={{ scale: [1, 1.35, 1], opacity: [0.40, 0.85, 0.40] }}
-        transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* Tight core bloom */}
+        width:220, height:220,
+        background:"radial-gradient(circle,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 38%,transparent 75%)",
+        filter:"blur(22px)", zIndex:0 }}
+        animate={{ scale:[1,1.35,1], opacity:[0.38,0.82,0.38] }}
+        transition={{ duration:6.5, repeat:Infinity, ease:"easeInOut" }} />
       <motion.div className="absolute rounded-full pointer-events-none" style={{
-        width: 110, height: 110,
-        background: "radial-gradient(circle, rgba(212,175,55,0.32) 0%, rgba(212,175,55,0.10) 55%, transparent 80%)",
-        filter: "blur(12px)", zIndex: 1,
-      }}
-        animate={{ scale: [1, 1.22, 1], opacity: [0.50, 0.95, 0.50] }}
-        transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
-      />
-      {/* Floating shadow */}
+        width:110, height:110,
+        background:"radial-gradient(circle,rgba(212,175,55,0.32) 0%,rgba(212,175,55,0.10) 58%,transparent 82%)",
+        filter:"blur(12px)", zIndex:1 }}
+        animate={{ scale:[1,1.22,1], opacity:[0.48,0.92,0.48] }}
+        transition={{ duration:4.8, repeat:Infinity, ease:"easeInOut", delay:0.8 }} />
       <motion.div className="absolute pointer-events-none" style={{
-        width: 90, height: 18, borderRadius: "50%",
-        background: "radial-gradient(ellipse, rgba(0,0,0,0.48) 0%, transparent 70%)",
-        filter: "blur(8px)", bottom: -22, zIndex: 0,
-      }}
-        animate={{ scaleX: [1, 0.78, 1], opacity: [0.52, 0.28, 0.52] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* الله */}
-      <motion.span
-        className="font-amiri font-bold relative select-none"
-        style={{ fontSize: "3.4rem", color: "#D4AF37", lineHeight: 1, letterSpacing: "0.03em", zIndex: 2 }}
+        width:90, height:18, borderRadius:"50%",
+        background:"radial-gradient(ellipse,rgba(0,0,0,0.48) 0%,transparent 70%)",
+        filter:"blur(8px)", bottom:-22, zIndex:0 }}
+        animate={{ scaleX:[1,0.78,1], opacity:[0.50,0.26,0.50] }}
+        transition={{ duration:4.5, repeat:Infinity, ease:"easeInOut" }} />
+      <motion.span className="font-amiri font-bold relative select-none"
+        style={{ fontSize:"3.4rem", color:"#D4AF37", lineHeight:1, letterSpacing:"0.03em", zIndex:2 }}
         animate={{
-          textShadow: [
-            "0 0 10px rgba(212,175,55,0.50), 0 0 30px rgba(212,175,55,0.65), 0 0 65px rgba(212,175,55,0.22)",
-            "0 0 20px rgba(212,175,55,0.85), 0 0 55px rgba(212,175,55,0.98), 0 0 100px rgba(212,175,55,0.40)",
-            "0 0 10px rgba(212,175,55,0.50), 0 0 30px rgba(212,175,55,0.65), 0 0 65px rgba(212,175,55,0.22)",
+          textShadow:[
+            "0 0 10px rgba(212,175,55,0.52),0 0 30px rgba(212,175,55,0.68),0 0 65px rgba(212,175,55,0.24)",
+            "0 0 22px rgba(212,175,55,0.88),0 0 58px rgba(212,175,55,1),0 0 105px rgba(212,175,55,0.42)",
+            "0 0 10px rgba(212,175,55,0.52),0 0 30px rgba(212,175,55,0.68),0 0 65px rgba(212,175,55,0.24)",
           ],
-          y: [0, -5, 0],
+          y:[0,-5,0],
         }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-      >
+        transition={{ duration:4.5, repeat:Infinity, ease:"easeInOut" }}>
         الله
       </motion.span>
     </motion.div>
   );
 }
 
-// ── Nav cards grid ────────────────────────────────────────────────
+// ── Nav cards ─────────────────────────────────────────────────────
 function NavCards({ startNav }) {
   return (
-    <div className="relative z-10 w-full max-w-sm mt-8 grid grid-cols-2 gap-3 px-2">
+    <div className="relative z-10 w-full max-w-sm mt-7 grid grid-cols-2 gap-3 px-3">
       {NAV_CARDS.map((card, i) => {
         const [r, g, b] = card.accent;
         return (
-          <motion.div
-            key={card.path}
-            initial={{ opacity: 0, y: 24, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 1.8 + i * 0.08, duration: 0.55, ease: "easeOut" }}
-            whileHover={{ scale: 1.05, y: -5 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <Link
-              to={card.path}
-              onClick={startNav}
-              className="block rounded-2xl border flex flex-col items-center text-center"
+          <motion.div key={card.path}
+            initial={{ opacity:0, y:26, scale:0.93 }}
+            animate={{ opacity:1, y:0, scale:1 }}
+            transition={{ delay:1.85 + i * 0.08, duration:0.55, ease:"easeOut" }}
+            whileHover={{ scale:1.04, y:-6, transition:{ duration:0.22, ease:"easeOut" } }}
+            whileTap={{ scale:0.96, transition:{ duration:0.1 } }}>
+            <Link to={card.path} onClick={startNav}
+              className="block rounded-2xl border flex flex-col items-center text-center group"
               style={{
-                background: `linear-gradient(145deg, rgba(${r},${g},${b},0.12) 0%, rgba(${r},${g},${b},0.04) 100%)`,
-                borderColor: `rgba(${r},${g},${b},0.35)`,
-                boxShadow: `0 0 32px rgba(${r},${g},${b},0.15), 0 4px 20px rgba(0,0,0,0.50)`,
-                minHeight: 148,
-                padding: "20px 16px",
-                transform: "translateZ(0)",
-                willChange: "transform",
-                WebkitTapHighlightColor: "transparent",
-                touchAction: "manipulation",
-                backdropFilter: "blur(6px)",
-                position: "relative",
-                overflow: "hidden",
-                transition: "border-color 0.3s ease, box-shadow 0.3s ease",
-              }}
-            >
+                background:`linear-gradient(155deg,rgba(${r},${g},${b},0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(${r},${g},${b},0.05) 100%)`,
+                borderColor:`rgba(${r},${g},${b},0.32)`,
+                boxShadow:`0 0 28px rgba(${r},${g},${b},0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(${r},${g},${b},0.18)`,
+                minHeight:150,
+                padding:"20px 14px",
+                transform:"translateZ(0)",
+                willChange:"transform",
+                WebkitTapHighlightColor:"transparent",
+                touchAction:"manipulation",
+                backdropFilter:"blur(10px)",
+                WebkitBackdropFilter:"blur(10px)",
+                position:"relative",
+                overflow:"hidden",
+                transition:"border-color 0.28s ease,box-shadow 0.28s ease",
+              }}>
               {/* Top sheen */}
-              <div style={{
-                position: "absolute", top: 0, left: 0, right: 0, height: 1,
-                background: `linear-gradient(90deg, transparent, rgba(${r},${g},${b},0.40), transparent)`,
-              }} />
+              <div style={{ position:"absolute", top:0, left:0, right:0, height:1,
+                background:`linear-gradient(90deg,transparent 5%,rgba(${r},${g},${b},0.50) 50%,transparent 95%)` }} />
               {/* Floating light top-right */}
-              <div style={{
-                position: "absolute", top: -20, right: -20,
-                width: 80, height: 80, borderRadius: "50%",
-                background: `radial-gradient(circle, rgba(${r},${g},${b},0.15) 0%, transparent 70%)`,
-                filter: "blur(12px)", pointerEvents: "none",
-              }} />
-              {/* Floating light bottom-left */}
-              <div style={{
-                position: "absolute", bottom: -16, left: -16,
-                width: 60, height: 60, borderRadius: "50%",
-                background: `radial-gradient(circle, rgba(${r},${g},${b},0.10) 0%, transparent 70%)`,
-                filter: "blur(10px)", pointerEvents: "none",
-              }} />
+              <div style={{ position:"absolute", top:-22, right:-22, width:80, height:80, borderRadius:"50%",
+                background:`radial-gradient(circle,rgba(${r},${g},${b},0.18) 0%,transparent 70%)`,
+                filter:"blur(14px)", pointerEvents:"none" }} />
+              {/* Bottom left light */}
+              <div style={{ position:"absolute", bottom:-18, left:-18, width:64, height:64, borderRadius:"50%",
+                background:`radial-gradient(circle,rgba(${r},${g},${b},0.11) 0%,transparent 70%)`,
+                filter:"blur(10px)", pointerEvents:"none" }} />
               <CardInner card={card} />
             </Link>
           </motion.div>
@@ -414,47 +420,30 @@ function NavCards({ startNav }) {
   );
 }
 
-// ── Main export ───────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────
 export default function HeroSection() {
   const { startNav, isNavigating } = useNavigation();
   const isMobile = useIsMobile();
   const mouse = useMouseParallax(1);
-
-  const wheelSize = `min(${isMobile ? "420px" : "500px"}, 88vw)`;
+  const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
 
   return (
-    <div className="min-h-screen font-inter relative overflow-x-hidden flex flex-col items-center justify-center pb-10">
-
-      {/* ── Calligraphy atmosphere ── */}
+    <div className="min-h-screen font-inter relative overflow-x-hidden flex flex-col items-center justify-center pb-12 pt-4">
       <CalligraphyAtmosphere mouse={mouse} />
-
-      {/* ── Light rays ── */}
       <LightRays paused={isNavigating} isMobile={isMobile} />
 
-      {/* ── Sacred wheel + orbital rings + Allah ── */}
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+      {/* Wheel + rings + Allah */}
+      <motion.div animate={{ y:[0,-8,0] }} transition={{ duration:7.5, repeat:Infinity, ease:"easeInOut" }}
         className="relative flex items-center justify-center"
-        style={{ width: wheelSize, height: wheelSize, zIndex: 2 }}
-      >
-        {/* Orbital decorative rings behind wheel */}
+        style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
         <OrbitalRings paused={isNavigating} />
-
-        {/* Sacred wheel */}
         <SacredWheel />
-
-        {/* Allah calligraphy floating in center */}
         <AllahCalligraphy />
       </motion.div>
 
-      {/* ── Hero title ── */}
       <HeroTitle />
-
-      {/* ── Manuscript intro ── */}
+      <GoldDivider delay={1.55} />
       <ManuscriptIntro />
-
-      {/* ── Nav cards ── */}
       <NavCards startNav={startNav} />
     </div>
   );
