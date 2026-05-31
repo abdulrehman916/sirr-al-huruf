@@ -194,22 +194,31 @@ function singlyEven(n, flat) {
   return g;
 }
 
-// ── Element rotation transforms ───────────────────────────────────
-function rotateGrid(g, times) {
-  let r = g;
-  for (let t = 0; t < times; t++) {
-    const n = r.length;
-    const nr = Array.from({ length: n }, () => Array(n).fill(0));
-    for (let i = 0; i < n; i++)
-      for (let j = 0; j < n; j++)
-        nr[j][n - 1 - i] = r[i][j];
-    r = nr;
+// ── Traditional elemental transformations ─────────────────────────
+// Fire  (النار)  — original Siamese arrangement, no change
+// Water (الماء)  — horizontal mirror (flip left-right)
+// Earth (التراب) — vertical mirror (flip top-bottom)
+// Air   (الهواء) — 180° rotation (flip both axes)
+function elementTransform(g, elementKey) {
+  const n = g.length;
+  const clone = () => g.map(row => [...row]);
+  if (elementKey === "fire") {
+    // Fire: canonical arrangement as-is
+    return clone();
   }
-  return r;
-}
-function elementRotations(g, elementKey) {
-  const t = { fire: 0, earth: 1, air: 2, water: 3 };
-  return rotateGrid(g, t[elementKey] || 0);
+  if (elementKey === "water") {
+    // Water: mirror left-right (each row reversed)
+    return clone().map(row => [...row].reverse());
+  }
+  if (elementKey === "earth") {
+    // Earth: mirror top-bottom (rows reversed)
+    return [...clone()].reverse();
+  }
+  if (elementKey === "air") {
+    // Air: 180° rotation (rows reversed, each row also reversed)
+    return [...clone()].reverse().map(row => [...row].reverse());
+  }
+  return clone();
 }
 
 // ── Master generator ──────────────────────────────────────────────
@@ -219,7 +228,7 @@ function generateTrueMagicSquare(n, quotient, remainder, elementKey) {
   if (n % 2 === 1)      g = siamese(n, flat);
   else if (n % 4 === 0) g = doublyEven(n, flat);
   else                  g = singlyEven(n, flat);
-  return elementRotations(g, elementKey);
+  return elementTransform(g, elementKey);
 }
 
 // ── Verification ──────────────────────────────────────────────────
