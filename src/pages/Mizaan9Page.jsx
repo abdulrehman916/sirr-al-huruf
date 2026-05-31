@@ -112,8 +112,9 @@ export default function Mizaan9Page() {
         </div>
 
         {/* Input card */}
-        <div className="rounded-2xl border p-5"
-          style={{ background: "rgba(10,24,56,0.95)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}, 0 4px 20px rgba(0,0,0,0.40)` }}>
+        <div className="rounded-2xl border p-5 relative overflow-hidden"
+          style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
+          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
           <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
             Arabic Text — Surah · Ayah · Talib · Matloob
           </label>
@@ -129,11 +130,11 @@ export default function Mizaan9Page() {
 
           {loading && (
             <div className="mb-3">
-              <div className="flex justify-between mb-1">
-                <span className="font-inter text-[10px] text-white/40 animate-pulse">Analyzing 9 Mizaans…</span>
-                <span className="font-inter text-[10px]" style={{ color: G.dim }}>{progress}%</span>
+              <div className="flex justify-between mb-1.5">
+                <span className="font-inter text-[10px] text-white/40 animate-pulse">✦ Analyzing 9 Mizaans…</span>
+                <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>{progress}%</span>
               </div>
-              <div className="h-1 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+              <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                 <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }}
                   className="h-full rounded-full" style={{ background: `linear-gradient(90deg,${G.text},#d97706)` }} />
               </div>
@@ -145,8 +146,8 @@ export default function Mizaan9Page() {
               onClick={handleAnalyze}
               disabled={!input.trim() || loading}
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a]"
-              style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)", boxShadow: `0 0 28px ${G.glowHi}` }}>
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
+              style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow: `0 0 36px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}>
               {loading
                 ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 : <span className="font-amiri text-base">⚖</span>}
@@ -156,8 +157,8 @@ export default function Mizaan9Page() {
               onClick={handleClear}
               disabled={!input && !result}
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ background: "rgba(255,255,255,0.04)" }}>
+              className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}>
               <Trash2 className="w-3.5 h-3.5" /> Clear
             </motion.button>
           </div>

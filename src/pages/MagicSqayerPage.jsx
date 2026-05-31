@@ -492,18 +492,18 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
           {displayFlat.map((num, idx) => (
             <motion.div
               key={`${gridSize}-${element}-${idx}`}
-              initial={{ opacity: 0, scale: 0.7 }}
+              initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.018, duration: 0.22 }}
+              transition={{ delay: idx * 0.016, duration: 0.24, ease: "easeOut" }}
               className="rounded-lg border flex items-center justify-center font-amiri font-bold"
               style={{
                 aspectRatio: "1 / 1",
                 minWidth: 0,
-                background: "rgba(212,175,55,0.10)",
-                borderColor: "rgba(212,175,55,0.45)",
+                background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.06) 100%)",
+                borderColor: "rgba(212,175,55,0.40)",
                 color: G.text,
                 fontSize: gridSize >= 8 ? "11px" : gridSize >= 6 ? "13px" : "16px",
-                boxShadow: "inset 0 0 10px rgba(212,175,55,0.15), 0 0 6px rgba(212,175,55,0.10)",
+                boxShadow: "inset 0 1px 0 rgba(212,175,55,0.18), 0 0 8px rgba(212,175,55,0.08)",
               }}
             >
               {num}
@@ -622,14 +622,18 @@ export default function MagicSqayerPage() {
             {GRID_SIZES.map(g => {
               const sel = gridSize === g.value;
               return (
-                <motion.button key={g.value} onClick={() => handleGridSizeChange(g.value)} whileTap={{ scale: 0.95 }}
-                  className="rounded-xl py-3 font-inter font-bold text-xs border transition-all"
+                <motion.button key={g.value} onClick={() => handleGridSizeChange(g.value)}
+                  whileHover={{ scale: sel ? 1 : 1.04 }} whileTap={{ scale: 0.95 }}
+                  className="rounded-xl py-3.5 font-inter font-bold text-xs border transition-all relative overflow-hidden"
                   style={{
-                    background: sel ? G.bg : "rgba(4,12,34,0.97)",
+                    background: sel
+                      ? "linear-gradient(145deg, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0.06) 100%)"
+                      : "rgba(4,12,34,0.97)",
                     borderColor: sel ? G.borderHi : "rgba(255,255,255,0.08)",
-                    color: sel ? G.text : "rgba(255,255,255,0.40)",
-                    boxShadow: sel ? `0 0 14px ${G.glow}` : "none",
+                    color: sel ? G.text : "rgba(255,255,255,0.38)",
+                    boxShadow: sel ? `0 0 18px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.15)` : "none",
                   }}>
+                  {sel && <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />}
                   {g.label}
                 </motion.button>
               );
@@ -647,18 +651,28 @@ export default function MagicSqayerPage() {
             {ELEMENTS.map(el => {
               const sel = element === el.key;
               return (
-                <motion.button key={el.key} onClick={() => handleElementChange(el.key)} whileTap={{ scale: 0.95 }}
-                  className="rounded-xl p-3 flex items-center gap-2 border transition-all"
+                <motion.button key={el.key} onClick={() => handleElementChange(el.key)}
+                  whileHover={{ scale: sel ? 1 : 1.02 }} whileTap={{ scale: 0.96 }}
+                  className="rounded-xl px-3 py-3.5 flex items-center gap-2.5 border transition-all relative overflow-hidden"
                   style={{
-                    background: sel ? el.bg : "rgba(4,12,34,0.97)",
+                    background: sel
+                      ? `linear-gradient(145deg, ${el.bg} 0%, rgba(4,12,34,0.90) 100%)`
+                      : "rgba(4,12,34,0.97)",
                     borderColor: sel ? el.border : "rgba(255,255,255,0.08)",
-                    boxShadow: sel ? `0 0 14px ${el.glow}` : "none",
+                    boxShadow: sel ? `0 0 20px ${el.glow}, inset 0 1px 0 rgba(255,255,255,0.06)` : "none",
                   }}>
-                  <span style={{ fontSize: "1.2rem" }}>{el.icon}</span>
-                  <span className="font-amiri text-base font-bold" dir="rtl"
-                    style={{ color: sel ? el.color : "rgba(255,255,255,0.45)" }}>
-                    {el.arabic}
-                  </span>
+                  {sel && <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${el.color}55, transparent)` }} />}
+                  <span style={{ fontSize: "1.3rem", flexShrink: 0 }}>{el.icon}</span>
+                  <div className="flex flex-col items-start gap-0">
+                    <span className="font-amiri text-base font-bold" dir="rtl"
+                      style={{ color: sel ? el.color : "rgba(255,255,255,0.45)" }}>
+                      {el.arabic}
+                    </span>
+                    <span className="font-inter text-[8px] uppercase tracking-widest"
+                      style={{ color: sel ? `${el.color}88` : "rgba(255,255,255,0.20)" }}>
+                      {el.label}
+                    </span>
+                  </div>
                 </motion.button>
               );
             })}

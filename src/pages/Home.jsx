@@ -78,25 +78,26 @@ const NAV_CARDS = [
 
 
 function CardInner({ card }) {
+  const rgb = card.accent.match(/[\d.]+/g).slice(0,3).join(",");
   return (
     <>
       {/* Icon */}
-      <div className="mb-3 flex items-center justify-center w-10 h-10 rounded-xl"
+      <div className="mb-3.5 flex items-center justify-center w-11 h-11 rounded-2xl"
         style={{
-          background: `rgba(${card.accent.match(/[\d.]+/g).slice(0,3).join(",")},0.12)`,
+          background: `linear-gradient(145deg, rgba(${rgb},0.18) 0%, rgba(${rgb},0.06) 100%)`,
           border: `1px solid ${card.borderColor}`,
-          boxShadow: `0 0 14px rgba(${card.accent.match(/[\d.]+/g).slice(0,3).join(",")},0.18)`,
+          boxShadow: `0 0 18px rgba(${rgb},0.22), inset 0 1px 0 rgba(${rgb},0.15)`,
         }}>
-        <span className="font-amiri text-xl leading-none" style={{ color: card.accent }}>{card.icon}</span>
+        <span className="font-amiri text-2xl leading-none" style={{ color: card.accent }}>{card.icon}</span>
       </div>
       {/* Arabic */}
-      <p className="font-amiri text-lg font-bold leading-tight mb-0.5" style={{ color: "#f0e6c0" }}>{card.arabic}</p>
+      <p className="font-amiri text-xl font-bold leading-tight mb-0.5" style={{ color: "#f5ead4" }}>{card.arabic}</p>
       {/* Latin label */}
-      <p className="font-inter font-semibold tracking-[0.18em] uppercase" style={{ fontSize: 7.5, color: card.accent, opacity: 0.85 }}>{card.label}</p>
+      <p className="font-inter font-bold tracking-[0.20em] uppercase" style={{ fontSize: 7, color: `rgba(${rgb},0.90)` }}>{card.label}</p>
       {/* Divider */}
-      <div className="w-6 h-px my-2 rounded-full" style={{ background: card.borderColor }} />
+      <div className="w-8 h-px my-2.5 rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${card.borderColor}, transparent)` }} />
       {/* Subtitle */}
-      <p className="font-inter leading-relaxed text-center" style={{ fontSize: 9.5, color: "rgba(255,255,255,0.32)" }}>{card.subtitle}</p>
+      <p className="font-inter leading-relaxed text-center" style={{ fontSize: 9, color: "rgba(255,255,255,0.35)" }}>{card.subtitle}</p>
     </>
   );
 }

@@ -60,24 +60,31 @@ export default function VefkinYapilisiPage() {
           {TABS.map(tab => {
             const active = activeTab === tab.id;
             return (
-              <button
+              <motion.button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className="rounded-xl py-3 px-3 flex flex-col items-center gap-0.5 border transition-all"
+                whileHover={{ scale: active ? 1 : 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                className="rounded-xl py-3.5 px-3 flex flex-col items-center gap-1 border transition-all relative overflow-hidden"
                 style={{
-                  background: active ? G.bg : "rgba(4,12,34,0.97)",
+                  background: active
+                    ? "linear-gradient(145deg, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0.06) 100%)"
+                    : "linear-gradient(145deg, rgba(4,12,34,0.99) 0%, rgba(2,8,22,0.99) 100%)",
                   borderColor: active ? G.borderHi : "rgba(255,255,255,0.08)",
-                  boxShadow: active ? `0 0 16px ${G.glow}` : "none",
+                  boxShadow: active ? `0 0 24px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.15)` : "none",
                 }}
               >
-                <span className="font-inter text-xs font-bold" style={{ color: active ? G.text : "rgba(255,255,255,0.45)" }}>
+                {active && (
+                  <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />
+                )}
+                <span className="font-inter text-xs font-bold tracking-wide" style={{ color: active ? G.text : "rgba(255,255,255,0.40)" }}>
                   {tab.label}
                 </span>
-                <span className="font-amiri text-sm" style={{ color: active ? "rgba(212,175,55,0.70)" : "rgba(255,255,255,0.25)" }}>
+                <span className="font-amiri text-sm" style={{ color: active ? "rgba(212,175,55,0.75)" : "rgba(255,255,255,0.22)" }}>
                   {tab.arabic}
                 </span>
-              </button>
+              </motion.button>
             );
           })}
         </div>

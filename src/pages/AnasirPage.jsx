@@ -176,8 +176,13 @@ function CyanDivider() {
 
 function GlowCard({ children }) {
   return (
-    <div className="rounded-2xl border p-5"
-      style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(255,255,255,0.20)", boxShadow: "0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10)" }}>
+    <div className="rounded-2xl border p-5 relative overflow-hidden"
+      style={{
+        background: "linear-gradient(145deg, rgba(10,36,62,0.99) 0%, rgba(6,22,44,0.99) 100%)",
+        borderColor: "rgba(56,189,248,0.22)",
+        boxShadow: "0 4px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(56,189,248,0.10)",
+      }}>
+      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.25), transparent)" }} />
       {children}
     </div>
   );
@@ -185,20 +190,25 @@ function GlowCard({ children }) {
 
 function InputCard({ value, onChange, onAnalyze, onClear, hasResult, loading, progress }) {
   return (
-    <div className="rounded-2xl border p-5"
-      style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(56,189,248,0.60)", boxShadow: "0 0 28px rgba(56,189,248,0.18), 0 4px 20px rgba(0,0,0,0.35)" }}>
-      <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: "rgba(6,182,212,0.5)" }}>Arabic Text Input</label>
+    <div className="rounded-2xl border p-5 relative overflow-hidden"
+      style={{
+        background: "linear-gradient(145deg, rgba(10,36,62,0.99) 0%, rgba(6,22,44,0.99) 100%)",
+        borderColor: "rgba(56,189,248,0.55)",
+        boxShadow: "0 0 40px rgba(56,189,248,0.14), 0 4px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(56,189,248,0.12)",
+      }}>
+      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.40), transparent)" }} />
+      <label className="block font-inter text-[10px] uppercase tracking-[0.22em] mb-2.5" style={{ color: "rgba(6,182,212,0.55)" }}>Arabic Text Input</label>
       <textarea dir="rtl" value={value} onChange={(e) => onChange(e.target.value)}
         placeholder="أدخل النص العربي هنا..." rows={4}
         className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/35"
-        style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(56,189,248,0.50)", boxShadow: "0 0 16px rgba(56,189,248,0.14), inset 0 1px 0 rgba(255,255,255,0.06)" }} />
+        style={{ background: "rgba(4,16,32,0.98)", border: "1px solid rgba(56,189,248,0.40)" }} />
       {loading && (
         <div className="mb-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-inter text-[10px] text-white/40 animate-pulse">Analyzing…</span>
-            <span className="font-inter text-[10px]" style={{ color: "rgba(6,182,212,0.6)" }}>{progress}%</span>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="font-inter text-[10px] text-white/40 animate-pulse">✦ Analyzing…</span>
+            <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: "rgba(6,182,212,0.7)" }}>{progress}%</span>
           </div>
-          <div className="h-1 w-full rounded-full bg-white/8 overflow-hidden">
+          <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
             <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }}
               className="h-full rounded-full" style={{ background: "linear-gradient(90deg,#06b6d4,#3b82f6)" }} />
           </div>
@@ -207,15 +217,15 @@ function InputCard({ value, onChange, onAnalyze, onClear, hasResult, loading, pr
       <div className="flex gap-2">
         <motion.button onClick={onAnalyze} disabled={!value.trim() || loading}
           whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a]"
-          style={{ background: "linear-gradient(135deg,#38bdf8,#3b82f6)", boxShadow: "0 0 32px rgba(56,189,248,0.65), 0 2px 10px rgba(0,0,0,0.30)" }}>
+          className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#041220] tracking-wide"
+          style={{ background: "linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%)", boxShadow: "0 0 36px rgba(56,189,248,0.55), 0 2px 12px rgba(0,0,0,0.35)" }}>
           {loading ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : "🌊"}
           {loading ? "Analyzing…" : "Analyze Elements"}
         </motion.button>
         <motion.button onClick={onClear} disabled={!value && !hasResult && !loading}
           whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-          className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ background: "rgba(255,255,255,0.04)" }}>
+          className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}>
           <Trash2 className="w-3.5 h-3.5" /> Clear
         </motion.button>
       </div>

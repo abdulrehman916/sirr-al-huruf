@@ -203,8 +203,8 @@ export default function HadimPage() {
 
         {/* Hadim Type Selector */}
         <div className="rounded-2xl border p-3"
-          style={{ background: "rgba(8,18,40,0.90)", borderColor: "rgba(255,255,255,0.10)", boxShadow: "0 2px 16px rgba(0,0,0,0.40)" }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest text-white/30 text-center mb-2.5">Select Hadim Type</p>
+          style={{ background: "linear-gradient(145deg, rgba(8,18,40,0.99) 0%, rgba(4,10,24,0.99) 100%)", borderColor: "rgba(168,85,247,0.18)", boxShadow: "0 2px 24px rgba(0,0,0,0.50), inset 0 1px 0 rgba(168,85,247,0.08)" }}>
+          <p className="font-inter text-[9px] uppercase tracking-[0.22em] text-white/30 text-center mb-2.5">✦ Select Hadim Type</p>
           <div className="grid grid-cols-3 gap-2">
             {HADIM_MODES.map(mode => {
               const isActive = hadimMode === mode.key;
@@ -243,8 +243,9 @@ export default function HadimPage() {
         </div>
 
         {/* Input Card */}
-        <div className="rounded-2xl border p-5 space-y-4"
-          style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(168,85,247,0.55)", boxShadow: "0 0 28px rgba(168,85,247,0.14), 0 4px 20px rgba(0,0,0,0.35)" }}>
+        <div className="rounded-2xl border p-5 space-y-4 relative overflow-hidden"
+          style={{ background: "linear-gradient(145deg, rgba(12,22,50,0.99) 0%, rgba(6,12,32,0.99) 100%)", borderColor: "rgba(168,85,247,0.50)", boxShadow: "0 0 40px rgba(168,85,247,0.12), 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(168,85,247,0.12)" }}>
+          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(168,85,247,0.40), transparent)" }} />
 
           <div>
             <label className="block font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(168,85,247,0.70)" }}>Talib (طالب)</label>
@@ -294,14 +295,14 @@ export default function HadimPage() {
           <div className="flex gap-2 pt-1">
             <motion.button onClick={handleGenerate} disabled={!talib.trim() && !matloob.trim() && !isms.some(t => t.trim())}
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)", boxShadow: "0 0 32px rgba(168,85,247,0.55), 0 2px 10px rgba(0,0,0,0.3)" }}>
-              <Wand2 className="w-3.5 h-3.5" /> Generate Hadim
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm text-[#0d1b2a] disabled:opacity-30 disabled:cursor-not-allowed tracking-wide"
+              style={{ background: "linear-gradient(135deg,#c084fc 0%,#9333ea 50%,#7c3aed 100%)", boxShadow: "0 0 36px rgba(168,85,247,0.55), 0 2px 12px rgba(0,0,0,0.40)" }}>
+              <Wand2 className="w-4 h-4" /> Generate Hadim
             </motion.button>
             <motion.button onClick={handleClear} disabled={!talib && !matloob && !isms.some(t=>t.trim()) && !result}
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ background: "rgba(255,255,255,0.04)" }}>
+              className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}>
               <Trash2 className="w-3.5 h-3.5" /> Clear
             </motion.button>
           </div>
@@ -316,8 +317,9 @@ export default function HadimPage() {
               {result.individuals.map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}>
                   {/* Section header */}
-                  <div className="rounded-2xl border p-4 mb-3"
-                    style={{ background: "rgba(15,48,80,0.92)", borderColor: "rgba(255,255,255,0.20)", boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}>
+                  <div className="rounded-2xl border p-4 mb-3 relative overflow-hidden"
+                    style={{ background: "linear-gradient(145deg, rgba(12,22,50,0.99) 0%, rgba(6,12,32,0.99) 100%)", borderColor: "rgba(168,85,247,0.25)", boxShadow: "0 4px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(168,85,247,0.08)" }}>
+                    <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(168,85,247,0.25), transparent)" }} />
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-inter text-[10px] uppercase tracking-widest text-purple-300/55">{item.label}</span>
                       <div className="flex items-center gap-2">
@@ -348,8 +350,9 @@ export default function HadimPage() {
 
               {/* Grand Hadim */}
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: result.individuals.length * 0.07 + 0.1 }}>
-                <div className="rounded-2xl border border-purple-400/50 p-5 space-y-4"
-                  style={{ background: "rgba(20,10,50,0.96)", boxShadow: "0 0 40px rgba(168,85,247,0.30), 0 4px 24px rgba(0,0,0,0.50)" }}>
+                <div className="rounded-2xl border p-5 space-y-4 relative overflow-hidden"
+                  style={{ background: "linear-gradient(145deg, rgba(20,10,50,0.99) 0%, rgba(12,4,32,0.99) 100%)", borderColor: "rgba(168,85,247,0.55)", boxShadow: "0 0 48px rgba(168,85,247,0.22), 0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(168,85,247,0.12)" }}>
+                  <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(168,85,247,0.50), transparent)" }} />
 
                   <p className="font-inter text-[11px] text-purple-300/70 uppercase tracking-widest font-bold">⬡ Final Grand Hadim</p>
 

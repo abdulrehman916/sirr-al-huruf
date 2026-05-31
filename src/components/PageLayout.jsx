@@ -144,7 +144,7 @@ export default function PageLayout({ children }) {
       </div>
 
       {/* Page content */}
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 pb-12">
         {children}
       </div>
     </div>

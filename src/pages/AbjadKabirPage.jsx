@@ -38,12 +38,18 @@ function GoldDivider() {
 // ── Grand Total display ───────────────────────
 function TotalCard({ total, label, count }) {
   return (
-    <div className="rounded-2xl border p-5 text-center space-y-1"
-      style={{ background: "rgba(6,14,36,0.98)", borderColor: G.borderHi, boxShadow: `0 0 48px ${G.glow}, 0 4px 24px rgba(0,0,0,0.55)` }}>
-      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</p>
-      <motion.p className="font-inter font-bold tabular-nums"
-        style={{ fontSize: "clamp(2.6rem,12vw,4rem)", color: G.text }}
-        animate={{ textShadow: [`0 0 20px ${G.glow}`, `0 0 55px ${G.glowHi}`, `0 0 20px ${G.glow}`] }}
+    <div className="rounded-2xl border p-6 text-center space-y-2 relative overflow-hidden"
+      style={{
+        background: "linear-gradient(145deg, rgba(8,18,48,0.99) 0%, rgba(4,10,28,0.99) 100%)",
+        borderColor: G.borderHi,
+        boxShadow: `0 0 60px ${G.glow}, 0 4px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.12)`,
+      }}>
+      {/* Top sheen */}
+      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />
+      <p className="font-inter text-[9px] uppercase tracking-[0.25em]" style={{ color: G.dim }}>{label}</p>
+      <motion.p className="font-amiri font-bold tabular-nums"
+        style={{ fontSize: "clamp(2.8rem,12vw,4.2rem)", color: G.text, lineHeight: 1 }}
+        animate={{ textShadow: [`0 0 20px ${G.glow}`, `0 0 60px ${G.glowHi}`, `0 0 20px ${G.glow}`] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
         {total.toLocaleString()}
       </motion.p>
@@ -275,8 +281,13 @@ function BastResults({ data }) {
 function Section({ title, children }) {
   return (
     <div className="rounded-2xl border p-4 space-y-3"
-      style={{ background: "rgba(8,18,44,0.96)", borderColor: G.border }}>
-      <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>{title}</p>
+      style={{
+        background: "linear-gradient(145deg, rgba(8,18,44,0.98) 0%, rgba(4,10,28,0.99) 100%)",
+        borderColor: G.border,
+        boxShadow: "0 2px 20px rgba(0,0,0,0.40), inset 0 1px 0 rgba(212,175,55,0.06)",
+      }}>
+      <p className="font-inter text-[9px] uppercase tracking-[0.22em] text-center" style={{ color: G.dim }}>✦ {title}</p>
+      <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.18), transparent)` }} />
       {children}
     </div>
   );
@@ -382,8 +393,8 @@ Timestamp: ${new Date().toLocaleString()}
 
         {/* ── Mode Selector ── */}
         <div className="rounded-2xl border p-3"
-          style={{ background:"rgba(6,14,36,0.97)", borderColor:"rgba(255,255,255,0.09)", boxShadow:"0 2px 20px rgba(0,0,0,0.45)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest text-center text-white/25 mb-2.5">Select Calculation Mode</p>
+          style={{ background:"linear-gradient(145deg, rgba(6,14,36,0.99) 0%, rgba(4,10,24,0.99) 100%)", borderColor:"rgba(212,175,55,0.14)", boxShadow:"0 2px 24px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.06)" }}>
+          <p className="font-inter text-[8px] uppercase tracking-[0.22em] text-center text-white/25 mb-2.5">✦ Select Calculation Mode</p>
           <div className="grid grid-cols-2 gap-2">
             {MODES.map(m => {
               const active = mode === m.key;
@@ -418,8 +429,9 @@ Timestamp: ${new Date().toLocaleString()}
         </div>
 
         {/* ── Input ── */}
-        <div className="rounded-2xl border p-5"
-          style={{ background:"rgba(10,24,56,0.95)", borderColor: G.borderHi, boxShadow:`0 0 28px ${G.glow}, 0 4px 20px rgba(0,0,0,0.40)` }}>
+        <div className="rounded-2xl border p-5 relative overflow-hidden"
+          style={{ background:"linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow:`0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
+          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
           <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
             Arabic Text Input — {modeObj.label}
           </label>
@@ -462,14 +474,14 @@ Timestamp: ${new Date().toLocaleString()}
           <div className="flex gap-2">
             <motion.button onClick={handleCalculate} disabled={!input.trim()}
               whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-inter font-semibold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a]"
-              style={{ background:"linear-gradient(135deg,#fcd34d,#d97706)", boxShadow:`0 0 28px ${G.glowHi}` }}>
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
+              style={{ background:"linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow:`0 0 32px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}>
               <span className="font-amiri text-base">احسب</span> Calculate
             </motion.button>
             <motion.button onClick={handleClear} disabled={!input}
               whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-              className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-white/70 hover:text-white font-inter text-sm border border-white/15 hover:border-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ background:"rgba(255,255,255,0.04)" }}>
+              className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ background:"rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}>
               <Trash2 className="w-3.5 h-3.5" /> Clear
             </motion.button>
           </div>
@@ -514,7 +526,7 @@ Timestamp: ${new Date().toLocaleString()}
         {history.length > 0 && (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.4 }}
             className="rounded-2xl border p-4 space-y-2"
-            style={{ background:"rgba(6,14,36,0.95)", borderColor:G.faint }}>
+            style={{ background:"linear-gradient(145deg, rgba(6,14,36,0.99) 0%, rgba(4,10,24,0.99) 100%)", borderColor:"rgba(212,175,55,0.18)", boxShadow:"0 2px 20px rgba(0,0,0,0.40)" }}>
             <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>Recent Calculations</p>
             <div className="space-y-1 max-h-64 overflow-y-auto" dir="rtl">
               {history.slice(0, 10).map((entry, i) => (
