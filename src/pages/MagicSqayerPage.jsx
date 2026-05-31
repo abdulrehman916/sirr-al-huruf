@@ -39,23 +39,68 @@ const PLANETS = [
   { key: "kamer",   arabic: "القمر",   icon: "🌙", color: "#818CF8", glow: "rgba(129,140,248,0.35)", bg: "rgba(129,140,248,0.10)", border: "rgba(129,140,248,0.50)" },
 ];
 
-// ── True Magic Square Engine ──────────────────────────────────────
-// Kutb table: magic constant = n*(n²+1)/2 for 1..n²
-// Our squares use base..base+n²-1, so magic constant = n*base + n*(n²-1)/2
+// ── Ottoman Kesir Engine ──────────────────────────────────────────
+// Kutb (Tarh) values per grid size
 const KUTB_MAGIC = { 3: 15, 4: 34, 5: 65, 6: 111, 7: 175, 8: 260, 9: 369 };
 
-// Compute magic constant for shifted square (base + 0..n²-1)
+// Magic constant for a Kesir square: n*quotient + n*(n²-1)/2 + correction_count
+// where correction_count = remainder (one +1 is applied once per correction cell)
 function magicConstant(n, base) {
   return n * base + Math.floor(n * (n * n - 1) / 2);
 }
 
-// ── ODD ORDER: Siamese (de la Loubère) method ─────────────────────
-// Generates canonical 1..n² square, then shifts by (base-1)
-function siamese(n, base) {
+// ── Correction cell table (1-indexed flat position) ───────────────
+const KESIR_CORRECTION = {
+  3: { 2: 4,  1: 7 },
+  4: { 3: 5,  2: 9,  1: 13 },
+  5: { 4: 6,  3: 11, 2: 16, 1: 21 },
+  6: { 5: 7,  4: 13, 3: 19, 2: 25, 1: 31 },
+  7: { 6: 8,  5: 15, 4: 22, 3: 29, 2: 36, 1: 43 },
+  8: { 7: 9,  6: 17, 5: 25, 4: 33, 3: 41, 2: 49, 1: 57 },
+  9: { 8: 10, 7: 19, 6: 28, 5: 37, 4: 46, 3: 55, 2: 64, 1: 73 },
+};
+
+// ── Tarh (Ottoman base) calculation ───────────────────────────────
+// Returns { quotient, remainder }
+function computeTarh(targetNumber, n) {
+  const kutb = KUTB_MAGIC[n] || Math.floor(n * (n * n + 1) / 2);
+  const tarh = kutb - n;  // Tarh = Kutb - n
+  const remaining = targetNumber - tarh;
+  const quotient  = Math.floor(remaining / n);
+  const remainder = remaining % n;
+  return { quotient, remainder, tarh };
+}
+
+// ── Build sequential flat array with Kesir correction ─────────────
+// Cells are filled sequentially starting at quotient.
+// At the correction cell (1-indexed), increment by +1 (skip a number).
+function buildKesirSequence(n, quotient, remainder) {
+  const total = n * n;
+  const corrTable = KESIR_CORRECTION[n] || {};
+  // Collect all correction cell positions for this remainder
+  // (apply corrections at all cells for r, r-1, ..., 1? No —
+  //  only the single correction cell for the exact remainder value)
+  const corrCell = remainder > 0 ? corrTable[remainder] : null; // 1-indexed
+
+  const flat = [];
+  let val = quotient;
+  for (let pos = 1; pos <= total; pos++) {
+    flat.push(val);
+    if (corrCell && pos === corrCell) {
+      val += 2; // skip one number at correction cell
+    } else {
+      val += 1;
+    }
+  }
+  return flat;
+}
+
+// ── ODD ORDER: Siamese (de la Loubère) placement ─────────────────
+function siamese(n, flat) {
   const g = Array.from({ length: n }, () => Array(n).fill(0));
   let r = 0, c = Math.floor(n / 2);
-  for (let num = 1; num <= n * n; num++) {
-    g[r][c] = num + (base - 1);
+  for (let k = 0; k < n * n; k++) {
+    g[r][c] = flat[k];
     const nr = (r - 1 + n) % n;
     const nc = (c + 1) % n;
     if (g[nr][nc] !== 0) { r = (r + 1) % n; }
@@ -64,86 +109,92 @@ function siamese(n, base) {
   return g;
 }
 
-// ── DOUBLY-EVEN ORDER (n % 4 === 0): Complement/inversion method ──
-// Fill sequentially, then complement cells whose (row%4, col%4) pattern matches
-function doublyEven(n, base) {
-  const g = Array.from({ length: n }, () => Array(n).fill(0));
-  // Fill sequentially
+// ── DOUBLY-EVEN (n%4===0): complement/inversion placement ─────────
+function doublyEven(n, flat) {
+  // Build index permutation from the standard doubly-even pattern
+  const order = [];
   for (let i = 0; i < n; i++)
     for (let j = 0; j < n; j++)
-      g[i][j] = i * n + j + 1;
-  // Complement: flip cells where position within 4x4 block is on either diagonal
+      order.push({ i, j, seq: i * n + j }); // sequential 0-based index
+  // Complement positions (on diagonal of each 4×4 block) get flipped index
+  const perm = Array(n * n);
+  for (let k = 0; k < n * n; k++) perm[k] = k;
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
       const bi = i % 4, bj = j % 4;
       if (bi === bj || bi + bj === 3)
-        g[i][j] = n * n + 1 - g[i][j];
+        perm[i * n + j] = n * n - 1 - (i * n + j);
     }
   }
-  // Shift to base
+  const g = Array.from({ length: n }, () => Array(n).fill(0));
   for (let i = 0; i < n; i++)
     for (let j = 0; j < n; j++)
-      g[i][j] += (base - 1);
+      g[i][j] = flat[perm[i * n + j]];
   return g;
 }
 
-// ── SINGLY-EVEN ORDER (n % 2 === 0, n % 4 !== 0): Strachey method ─
-function singlyEven(n, base) {
-  const h = n / 2;
-  // Build four odd-order sub-squares using siamese on h
-  // Quadrant offsets: A=0, B=2h², C=h², D=3h²
-  function makeQuadrant(offset) {
-    const q = siamese(h, 1);
-    for (let i = 0; i < h; i++)
-      for (let j = 0; j < h; j++)
-        q[i][j] += offset;
-    return q;
+// ── SINGLY-EVEN (n%2===0, n%4!==0): Strachey placement ───────────
+function singlyEvenBase(h) {
+  // Returns canonical siamese for h, values 0-indexed (0..h²-1)
+  const g = Array.from({ length: h }, () => Array(h).fill(0));
+  let r = 0, c = Math.floor(h / 2);
+  for (let num = 0; num < h * h; num++) {
+    g[r][c] = num;
+    const nr = (r - 1 + h) % h;
+    const nc = (c + 1) % h;
+    if (g[nr][nc] !== 0 || (nr === 0 && nc === Math.floor(h / 2))) { r = (r + 1) % h; }
+    else { r = nr; c = nc; }
   }
-  const A = makeQuadrant(0);
-  const B = makeQuadrant(2 * h * h);
-  const C = makeQuadrant(h * h);
-  const D = makeQuadrant(3 * h * h);
+  return g;
+}
 
-  // Assemble into full grid: top-left=A, top-right=B, bottom-left=C, bottom-right=D
-  const g = Array.from({ length: n }, () => Array(n).fill(0));
+function singlyEven(n, flat) {
+  const h = n / 2;
+  // Build index ordering using Strachey on the canonical 0..n²-1 sequence
+  // A=top-left, B=top-right, C=bottom-left, D=bottom-right quadrant indices
+  const qA = singlyEvenBase(h).flat();
+  const order = Array(n * n);
   for (let i = 0; i < h; i++) {
     for (let j = 0; j < h; j++) {
-      g[i][j]         = A[i][j];
-      g[i][j + h]     = B[i][j];
-      g[i + h][j]     = C[i][j];
-      g[i + h][j + h] = D[i][j];
+      const qi = i * h + j;
+      order[i * n + j]           = qA[qi];            // A quadrant
+      order[i * n + j + h]       = qA[qi] + 2 * h * h; // B quadrant
+      order[(i + h) * n + j]     = qA[qi] + h * h;    // C quadrant
+      order[(i + h) * n + j + h] = qA[qi] + 3 * h * h; // D quadrant
     }
   }
 
-  // Strachey column swaps: swap left k columns (except middle row)
+  // Strachey swaps between A and C (columns), then middle-row correction
   const k = Math.floor((n - 2) / 4);
-  for (let i = 0; i < h; i++) {
-    for (let j = 0; j < k; j++) {
-      // swap g[i][j] with g[i+h][j]
-      [g[i][j], g[i + h][j]] = [g[i + h][j], g[i][j]];
-    }
-  }
-  // Middle row: swap from column k onward (skip j=0)
   const mid = Math.floor(h / 2);
-  for (let j = 1; j < k + 1; j++) {
-    [g[mid][j], g[mid + h][j]] = [g[mid + h][j], g[mid][j]];
-  }
-  // Right-side column swaps: swap last (k-1) columns
+  const swapSet = new Set();
   for (let i = 0; i < h; i++) {
-    for (let j = n - k + 1; j < n; j++) {
-      [g[i][j], g[i + h][j]] = [g[i + h][j], g[i][j]];
+    for (let j = 0; j < k; j++) swapSet.add(`${i},${j}`);
+  }
+  for (let j = 1; j < k + 1; j++) swapSet.add(`${mid},${j}`);
+  // Undo mid-row j=0 if it was added
+  swapSet.delete(`${mid},0`);
+  // Right-side
+  for (let i = 0; i < h; i++)
+    for (let j = n - k + 1; j < n; j++) swapSet.add(`${i + h},${j}`);
+
+  // Apply swaps on order array
+  for (const key of swapSet) {
+    const [ri, ci2] = key.split(",").map(Number);
+    if (ri < h && ci2 < h) {
+      const a = ri * n + ci2, b = (ri + h) * n + ci2;
+      [order[a], order[b]] = [order[b], order[a]];
     }
   }
 
-  // Shift to base
+  const g = Array.from({ length: n }, () => Array(n).fill(0));
   for (let i = 0; i < n; i++)
     for (let j = 0; j < n; j++)
-      g[i][j] += (base - 1);
+      g[i][j] = flat[order[i * n + j]];
   return g;
 }
 
 // ── Element rotation transforms ───────────────────────────────────
-// fire=0°, earth=90°CW, air=180°, water=270°CW
 function rotateGrid(g, times) {
   let r = g;
   for (let t = 0; t < times; t++) {
@@ -162,37 +213,25 @@ function elementRotations(g, elementKey) {
 }
 
 // ── Master generator ──────────────────────────────────────────────
-function generateTrueMagicSquare(n, base, elementKey) {
+function generateTrueMagicSquare(n, quotient, remainder, elementKey) {
+  const flat = buildKesirSequence(n, quotient, remainder);
   let g;
-  if (n % 2 === 1)       g = siamese(n, base);
-  else if (n % 4 === 0)  g = doublyEven(n, base);
-  else                   g = singlyEven(n, base);
+  if (n % 2 === 1)      g = siamese(n, flat);
+  else if (n % 4 === 0) g = doublyEven(n, flat);
+  else                  g = singlyEven(n, flat);
   return elementRotations(g, elementKey);
 }
 
 // ── Verification ──────────────────────────────────────────────────
 function verifySquare(g) {
   const n = g.length;
-  const mc = g[0].reduce((s, v) => s + v, 0); // use first row as reference
-  const rowOk  = g.every(row => row.reduce((s, v) => s + v, 0) === mc);
-  const colOk  = Array.from({ length: n }, (_, j) =>
+  const mc = g[0].reduce((s, v) => s + v, 0);
+  const rowOk = g.every(row => row.reduce((s, v) => s + v, 0) === mc);
+  const colOk = Array.from({ length: n }, (_, j) =>
     g.reduce((s, row) => s + row[j], 0)).every(s => s === mc);
-  const d1Ok   = g.reduce((s, row, i) => s + row[i], 0) === mc;
-  const d2Ok   = g.reduce((s, row, i) => s + row[n - 1 - i], 0) === mc;
+  const d1Ok  = g.reduce((s, row, i) => s + row[i], 0) === mc;
+  const d2Ok  = g.reduce((s, row, i) => s + row[n - 1 - i], 0) === mc;
   return { mc, rowOk, colOk, d1Ok, d2Ok, valid: rowOk && colOk && d1Ok && d2Ok };
-}
-
-// ── Ottoman base calculation ──────────────────────────────────────
-function computeBase(targetNumber, n) {
-  const kutb = KUTB_MAGIC[n] || Math.floor(n * (n * n + 1) / 2);
-  const kutbReduced = kutb - n;
-  const halfValueSizes = [3, 8, 9];
-  const remaining = targetNumber - kutbReduced;
-  const remainder = remaining % n;
-  if (halfValueSizes.includes(n) && remainder !== 0) {
-    return Math.floor((Math.floor(targetNumber / 2) - kutbReduced) / n);
-  }
-  return Math.floor(remaining / n);
 }
 
 // ── Sub-components ───────────────────────────────────────────────
@@ -294,44 +333,31 @@ function AutoPlanetCard({ gridSize }) {
   );
 }
 
-// ── Kutb Config ──────────────────────────────────────────────────
-const KUTB = KUTB_MAGIC;
-
 // ── Calculation Breakdown ─────────────────────────────────────────
 function CalcBreakdown({ inputNumber, gridSize }) {
-  if (!inputNumber || !gridSize || !KUTB[gridSize]) return null;
+  if (!inputNumber || !gridSize || !KUTB_MAGIC[gridSize]) return null;
   const n = parseInt(inputNumber);
-  const kutb = KUTB[gridSize];
-  const kutbReduced = kutb - gridSize;
-
-  const halfValueSizes = [3, 8, 9];
-  const remaining = n - kutbReduced;
-  const remainder = remaining % gridSize;
-  const useHalf = halfValueSizes.includes(gridSize) && remainder !== 0;
-
-  const halfN         = Math.floor(n / 2);
-  const halfRemaining = halfN - kutbReduced;
-  const base = computeBase(n, gridSize);
-  const mc   = magicConstant(gridSize, base);
+  const { quotient, remainder, tarh } = computeTarh(n, gridSize);
+  const kutb = KUTB_MAGIC[gridSize];
+  const remaining = n - tarh;
+  const corrTable = KESIR_CORRECTION[gridSize] || {};
+  const corrCell  = remainder > 0 ? corrTable[remainder] : null;
+  const mc = magicConstant(gridSize, quotient);
 
   const rows = [
-    { step: "①", label: "Entered Number",          formula: n.toLocaleString() },
-    { step: "②", label: "Kutb Reduced",             formula: `${kutb} − ${gridSize} = ${kutbReduced}` },
-    { step: "③", label: "Remaining After Kutb",     formula: `${n.toLocaleString()} − ${kutbReduced} = ${remaining.toLocaleString()}` },
-    ...(useHalf ? [{
-      step: "③½",
-      label: "Half-Value Applied (remainder ≠ 0)",
-      formula: `${n} ÷ 2 = ${halfN} → ${halfN} − ${kutbReduced} = ${halfRemaining}`,
+    { step: "①", label: "Entered Number",                formula: n.toLocaleString() },
+    { step: "②", label: "Kutb",                          formula: `${kutb}` },
+    { step: "③", label: "Tarh (Kutb − n)",               formula: `${kutb} − ${gridSize} = ${tarh}` },
+    { step: "④", label: "Remaining After Tarh",          formula: `${n.toLocaleString()} − ${tarh} = ${remaining.toLocaleString()}` },
+    { step: "⑤", label: "Division (Bölme)",              formula: `${remaining.toLocaleString()} ÷ ${gridSize} = ${quotient}${remainder !== 0 ? ` rem ${remainder}` : ""}` },
+    { step: "⑥", label: "Quotient (İlk Hane)",          formula: quotient.toLocaleString(), highlight: true },
+    ...(remainder > 0 ? [{
+      step: "⑦",
+      label: `Kesir (Remainder ${remainder}) → Correction Cell`,
+      formula: corrCell ? `Cell #${corrCell} → +1 (skip one)` : `r=${remainder} (no correction)`,
+      highlight: true,
     }] : []),
-    {
-      step: "④",
-      label: "Division",
-      formula: useHalf
-        ? `${halfRemaining} ÷ ${gridSize} = ${Math.floor(halfRemaining / gridSize)} rem ${halfRemaining % gridSize}`
-        : `${remaining.toLocaleString()} ÷ ${gridSize} = ${Math.floor(remaining / gridSize)}${remainder !== 0 ? ` rem ${remainder}` : ""}`,
-    },
-    { step: "⑤", label: "Final Base Number",        formula: base.toLocaleString(), highlight: true },
-    { step: "⑥", label: "Magic Constant (Kutb)",    formula: mc.toLocaleString(),   highlight: true },
+    { step: remainder > 0 ? "⑧" : "⑦", label: "Magic Constant (Kutb Sabit)", formula: mc.toLocaleString(), highlight: true },
   ];
 
   return (
@@ -543,11 +569,11 @@ export default function MagicSqayerPage() {
     if (!num || !size) return null;
     const n = parseInt(num);
     if (!n || n < 1) return null;
-    const base = computeBase(n, size);
-    if (base < 1) return { invalid: true };
+    const { quotient, remainder } = computeTarh(n, size);
+    if (quotient < 1) return { invalid: true };
     const e = el || "fire";
-    const gridData = generateTrueMagicSquare(size, base, e);
-    return { grid: gridData, base };
+    const gridData = generateTrueMagicSquare(size, quotient, remainder, e);
+    return { grid: gridData, base: quotient, remainder };
   };
 
   const handleNumberChange = (e) => {
