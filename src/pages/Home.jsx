@@ -11,9 +11,10 @@ const NAV_CARDS = [
     label: "ABJAD",
     subtitle: "Numerical Calculator",
     icon: "ح",
-    borderColor: "rgba(212,175,55,0.45)",
-    bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
-    glow: "0 0 40px rgba(212,175,55,0.20)",
+    accent: "rgba(212,175,55,1)",
+    borderColor: "rgba(212,175,55,0.35)",
+    bg: "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)",
+    glow: "0 0 32px rgba(212,175,55,0.15), 0 4px 20px rgba(0,0,0,0.50)",
   },
   {
     path: "/anasir",
@@ -21,9 +22,10 @@ const NAV_CARDS = [
     label: "ANASIR",
     subtitle: "Elemental Analysis",
     icon: "🌊",
-    borderColor: "rgba(6,182,212,0.45)",
-    bg: "linear-gradient(135deg, rgba(6,182,212,0.18) 0%, rgba(6,182,212,0.06) 100%)",
-    glow: "0 0 40px rgba(6,182,212,0.18)",
+    accent: "rgba(56,189,248,1)",
+    borderColor: "rgba(56,189,248,0.35)",
+    bg: "linear-gradient(145deg, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0.04) 100%)",
+    glow: "0 0 32px rgba(56,189,248,0.12), 0 4px 20px rgba(0,0,0,0.50)",
   },
   {
     path: "/hadim",
@@ -31,9 +33,10 @@ const NAV_CARDS = [
     label: "HADIM",
     subtitle: "Name Generator",
     icon: "✦",
-    borderColor: "rgba(168,85,247,0.45)",
-    bg: "linear-gradient(135deg, rgba(168,85,247,0.18) 0%, rgba(168,85,247,0.06) 100%)",
-    glow: "0 0 40px rgba(168,85,247,0.20)",
+    accent: "rgba(192,132,252,1)",
+    borderColor: "rgba(168,85,247,0.35)",
+    bg: "linear-gradient(145deg, rgba(168,85,247,0.12) 0%, rgba(168,85,247,0.04) 100%)",
+    glow: "0 0 32px rgba(168,85,247,0.15), 0 4px 20px rgba(0,0,0,0.50)",
   },
   {
     path: "/mizaan9",
@@ -41,9 +44,10 @@ const NAV_CARDS = [
     label: "MIZAAN 9",
     subtitle: "Sacred Numerology",
     icon: "٩",
-    borderColor: "rgba(212,175,55,0.45)",
-    bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
-    glow: "0 0 40px rgba(212,175,55,0.20)",
+    accent: "rgba(212,175,55,1)",
+    borderColor: "rgba(212,175,55,0.35)",
+    bg: "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)",
+    glow: "0 0 32px rgba(212,175,55,0.15), 0 4px 20px rgba(0,0,0,0.50)",
   },
   {
     path: "/magic-sqayer",
@@ -51,9 +55,10 @@ const NAV_CARDS = [
     label: "MAGIC SQAYER",
     subtitle: "Sacred Vefk Construction",
     icon: "✨",
-    borderColor: "rgba(212,175,55,0.45)",
-    bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
-    glow: "0 0 40px rgba(212,175,55,0.20)",
+    accent: "rgba(212,175,55,1)",
+    borderColor: "rgba(212,175,55,0.35)",
+    bg: "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)",
+    glow: "0 0 32px rgba(212,175,55,0.15), 0 4px 20px rgba(0,0,0,0.50)",
   },
   {
     path: "/vefkin-yapilisi",
@@ -61,9 +66,10 @@ const NAV_CARDS = [
     label: "VEFKİN YAPILIŞI",
     subtitle: "Ottoman Manuscript Method",
     icon: "📜",
-    borderColor: "rgba(212,175,55,0.45)",
-    bg: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
-    glow: "0 0 40px rgba(212,175,55,0.20)",
+    accent: "rgba(212,175,55,1)",
+    borderColor: "rgba(212,175,55,0.35)",
+    bg: "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)",
+    glow: "0 0 32px rgba(212,175,55,0.15), 0 4px 20px rgba(0,0,0,0.50)",
   },
 ];
 
@@ -74,12 +80,23 @@ const NAV_CARDS = [
 function CardInner({ card }) {
   return (
     <>
-      <div className="text-3xl mb-3">
-        <span className="font-amiri" style={{ color: card.borderColor.replace("0.45", "0.90").replace("0.30", "0.70") }}>{card.icon}</span>
+      {/* Icon */}
+      <div className="mb-3 flex items-center justify-center w-10 h-10 rounded-xl"
+        style={{
+          background: `rgba(${card.accent.match(/[\d.]+/g).slice(0,3).join(",")},0.12)`,
+          border: `1px solid ${card.borderColor}`,
+          boxShadow: `0 0 14px rgba(${card.accent.match(/[\d.]+/g).slice(0,3).join(",")},0.18)`,
+        }}>
+        <span className="font-amiri text-xl leading-none" style={{ color: card.accent }}>{card.icon}</span>
       </div>
-      <p className="font-amiri text-xl font-bold text-white mb-0.5">{card.arabic}</p>
-      <p className="font-inter font-bold tracking-widest uppercase text-white/80" style={{ fontSize: 9 }}>{card.label}</p>
-      <p className="font-inter text-[10px] text-white/35 mt-2 leading-relaxed">{card.subtitle}</p>
+      {/* Arabic */}
+      <p className="font-amiri text-lg font-bold leading-tight mb-0.5" style={{ color: "#f0e6c0" }}>{card.arabic}</p>
+      {/* Latin label */}
+      <p className="font-inter font-semibold tracking-[0.18em] uppercase" style={{ fontSize: 7.5, color: card.accent, opacity: 0.85 }}>{card.label}</p>
+      {/* Divider */}
+      <div className="w-6 h-px my-2 rounded-full" style={{ background: card.borderColor }} />
+      {/* Subtitle */}
+      <p className="font-inter leading-relaxed text-center" style={{ fontSize: 9.5, color: "rgba(255,255,255,0.32)" }}>{card.subtitle}</p>
     </>
   );
 }
@@ -175,7 +192,7 @@ export default function Home() {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }}
           className="text-center z-10 px-4 mt-2" style={{ marginTop: 16 }}>
           <h1 className="font-amiri font-bold"
-            style={{ fontSize: "clamp(3rem, 12vw, 5.5rem)", color: "#FFFFFF", textShadow: "0 0 34px rgba(212,175,55,0.42), 0 2px 17px rgba(56,189,248,0.17)", lineHeight: 1.1 }}>
+            style={{ fontSize: "clamp(2.8rem, 12vw, 5.5rem)", color: "#f5ecd4", textShadow: "0 0 40px rgba(212,175,55,0.50), 0 0 80px rgba(212,175,55,0.18), 0 2px 20px rgba(0,0,0,0.60)", lineHeight: 1.1, letterSpacing: "0.02em" }}>
             سرّ الحروف
           </h1>
           {/* Subtle blue atmospheric gradient behind lower text */}
@@ -217,30 +234,45 @@ export default function Home() {
             <motion.div key={card.path}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.3 + i * 0.1, duration: 0.5 }}
-              whileHover={{ scale: card.dimmed ? 1 : 1.04, y: card.dimmed ? 0 : -3 }}
+              whileHover={{ scale: card.dimmed ? 1 : 1.03, y: card.dimmed ? 0 : -4 }}
               whileTap={{ scale: card.dimmed ? 1 : 0.97 }}
               style={{ opacity: card.dimmed ? 0.5 : 1 }}>
               {card.dimmed ? (
                 <div className="rounded-2xl border p-5 flex flex-col items-center text-center cursor-default"
-                  style={{ background: card.bg, borderColor: card.borderColor, boxShadow: card.glow, minHeight: 140 }}>
+                  style={{
+                    background: card.bg,
+                    borderColor: card.borderColor,
+                    boxShadow: card.glow,
+                    minHeight: 148,
+                    backdropFilter: "blur(4px)",
+                  }}>
                   <CardInner card={card} />
                 </div>
               ) : (
                 <Link
                   to={card.path}
                   onClick={startNav}
-                  className="block rounded-2xl border p-5 flex flex-col items-center text-center transition-all duration-300"
+                  className="block rounded-2xl border flex flex-col items-center text-center transition-all duration-300"
                   style={{
                     background: card.bg,
                     borderColor: card.borderColor,
                     boxShadow: card.glow,
-                    minHeight: 140,
+                    minHeight: 148,
+                    padding: "20px 16px",
                     transform: "translateZ(0)",
                     willChange: "transform",
                     WebkitTapHighlightColor: "transparent",
                     touchAction: "manipulation",
+                    backdropFilter: "blur(4px)",
+                    position: "relative",
+                    overflow: "hidden",
                   }}
                 >
+                  {/* Subtle inner top sheen */}
+                  <div style={{
+                    position: "absolute", top: 0, left: 0, right: 0, height: 1,
+                    background: `linear-gradient(90deg, transparent, rgba(${card.accent.match(/[\d.]+/g).slice(0,3).join(",")},0.30), transparent)`,
+                  }} />
                   <CardInner card={card} />
                 </Link>
               )}

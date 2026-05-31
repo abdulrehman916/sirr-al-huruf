@@ -229,7 +229,11 @@ function GoldDivider() {
 function SectionCard({ children }) {
   return (
     <div className="rounded-2xl border p-4 space-y-3"
-      style={{ background: "rgba(10,24,56,0.95)", borderColor: G.borderHi, boxShadow: `0 0 28px ${G.glow}` }}>
+      style={{
+        background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+        borderColor: "rgba(212,175,55,0.22)",
+        boxShadow: "0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(212,175,55,0.08)",
+      }}>
       {children}
     </div>
   );
@@ -666,8 +670,8 @@ export default function MagicSqayerPage() {
           disabled={!inputNumber || !gridSize}
           whileHover={{ scale: !inputNumber || !gridSize ? 1 : 1.02 }}
           whileTap={{ scale: !inputNumber || !gridSize ? 1 : 0.97 }}
-          className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-semibold text-sm text-[#0d1b2a] disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)", boxShadow: `0 0 28px ${G.glowHi}` }}
+          className="w-full flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-inter font-bold text-sm text-[#0d1b2a] disabled:opacity-40 disabled:cursor-not-allowed tracking-wide"
+          style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow: `0 0 32px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}
           onClick={() => setGrid(buildGrid(inputNumber, gridSize, element))}
         >
           <span className="font-amiri text-base">✨</span>

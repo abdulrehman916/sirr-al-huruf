@@ -34,28 +34,28 @@ export function VefkActionButtons({ gridId, mode, hasResult }) {
       <button
         onClick={handleDownloadPNG}
         disabled={exporting}
-        className="rounded-lg px-4 py-2 font-inter font-semibold text-xs uppercase tracking-widest border transition-all disabled:opacity-50"
+        className="rounded-xl px-5 py-2.5 font-inter font-semibold text-[10px] uppercase tracking-[0.18em] border transition-all disabled:opacity-40"
         style={{
-          background: "rgba(212,175,55,0.08)",
+          background: "linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.06) 100%)",
           borderColor: G.borderHi,
           color: G.text,
-          boxShadow: `0 0 12px ${G.glow}`,
+          boxShadow: `0 0 16px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.12)`,
         }}
       >
-        📥 PNG
+        ↓ PNG
       </button>
       <button
         onClick={handleDownloadPDF}
         disabled={exporting}
-        className="rounded-lg px-4 py-2 font-inter font-semibold text-xs uppercase tracking-widest border transition-all disabled:opacity-50"
+        className="rounded-xl px-5 py-2.5 font-inter font-semibold text-[10px] uppercase tracking-[0.18em] border transition-all disabled:opacity-40"
         style={{
-          background: "rgba(212,175,55,0.08)",
+          background: "linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.06) 100%)",
           borderColor: G.borderHi,
           color: G.text,
-          boxShadow: `0 0 12px ${G.glow}`,
+          boxShadow: `0 0 16px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.12)`,
         }}
       >
-        📕 PDF
+        ↓ PDF
       </button>
     </div>
   );
@@ -68,18 +68,22 @@ export function VefkSessionIndicator() {
   if (!hasData) return null;
 
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs"
-      style={{ background: "rgba(212,175,55,0.05)", border: `1px solid ${G.dim}` }}>
-      <span style={{ color: G.dim }}>
-        ✓ Session saved locally
+    <div className="flex items-center justify-between gap-2 rounded-xl px-4 py-2.5"
+      style={{
+        background: "linear-gradient(135deg, rgba(212,175,55,0.07) 0%, rgba(212,175,55,0.03) 100%)",
+        border: `1px solid rgba(212,175,55,0.22)`,
+        boxShadow: "inset 0 1px 0 rgba(212,175,55,0.08)",
+      }}>
+      <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.55)" }}>
+        ✦ Session saved
       </span>
       <button
         onClick={clearSession}
-        className="font-inter text-[10px] uppercase tracking-wider px-2 py-1 rounded border transition-all"
+        className="font-inter text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all"
         style={{
-          background: "rgba(212,175,55,0.08)",
-          borderColor: "rgba(212,175,55,0.30)",
-          color: "rgba(255,100,100,0.80)",
+          background: "rgba(255,80,80,0.06)",
+          borderColor: "rgba(255,80,80,0.25)",
+          color: "rgba(255,110,110,0.75)",
         }}
       >
         Clear
