@@ -74,16 +74,20 @@ export function toAkramPieces(n) {
       i++;
       slot = 3;
     } else {
-      // Thousand slot — always emit غ
+      // Thousand slot — always emit غ regardless of digit value
       pieces.push({ value: 1000, letter: 'غ' });
 
-      if (d === 1) {
-        // Standalone 1000: digit 1 is consumed by غ itself, restart from Ten
+      if (d === 0) {
+        // Zero in thousands position: غ is emitted, digit consumed, restart from Ten
+        i++;
+        slot = 1;
+      } else if (d === 1) {
+        // Standalone 1000: digit 1 consumed by غ itself, restart from Ten
         i++;
         slot = 1;
       } else {
         // digit 2–9: emit as Unit after غ, then continue from Ten
-        if (d !== 0 && UNITS[d]) pieces.push({ value: d, letter: UNITS[d] });
+        pieces.push({ value: d, letter: UNITS[d] });
         i++;
         slot = 1;
       }
