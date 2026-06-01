@@ -23,7 +23,7 @@ function extractArabicLetters(text) {
 
 // ── Normalization (hamza variants → base form) ────────────────
 const NORM_MAP = {
-  'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا',
+  'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا', 'ء': 'ا',
   'ى': 'ي', 'ئ': 'ي',
   'ؤ': 'و',
   'ة': 'ه',
