@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { calcBastHuroof, BAST_LEVELS } from "../lib/bastHuroofEngine";
+import AkramCard from "../components/AkramCard";
 
 // ── Palette ───────────────────────────────────────────────────
 const G = {
@@ -342,6 +343,15 @@ export default function BastHuroofPage() {
             >
               {/* Total */}
               <TotalCard result={result} level={level} />
+
+              {/* Akram / Harf conversion */}
+              {!result.isPending && result.total > 0 && (
+                <AkramCard
+                  total={result.total}
+                  levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                  levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                />
+              )}
 
               <GoldDivider />
 
