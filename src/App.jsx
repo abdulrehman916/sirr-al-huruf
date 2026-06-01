@@ -9,6 +9,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { NavigationProvider } from './context/NavigationContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 // Add page imports here
 import Home from './pages/Home';
 import AbjadPage from './pages/AbjadPage';
@@ -86,6 +87,7 @@ function App() {
             </NavigationProvider>
           </Router>
           <Toaster />
+          <PWAInstallPrompt />
         </QueryClientProvider>
       </AuthProvider>
     </>
