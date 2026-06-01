@@ -18,6 +18,7 @@ import Mizaan9Page from './pages/Mizaan9Page';
 import AbjadKabirPage from './pages/AbjadKabirPage';
 import MagicSqayerPage from './pages/MagicSqayerPage';
 import VefkinYapilisiPage from './pages/VefkinYapilisiPage';
+import BastHuroofPage from './pages/BastHuroofPage';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -64,6 +65,7 @@ const AuthenticatedApp = () => {
           <Route path="/abjad-kabir" element={<AbjadKabirPage />} />
           <Route path="/magic-sqayer" element={<MagicSqayerPage />} />
           <Route path="/vefkin-yapilisi" element={<VefkinYapilisiPage />} />
+          <Route path="/basthul-huroof-2" element={<BastHuroofPage />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </motion.div>
