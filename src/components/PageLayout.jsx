@@ -12,6 +12,7 @@ const TABS = [
   { id: "mizaan9",         label: "MIZAN",  arabic: "ميزان",    path: "/mizaan9" },
   { id: "magic-sqayer",    label: "SQAYER", arabic: "السحر",    path: "/magic-sqayer" },
   { id: "vefkin-yapilisi", label: "VEFKİN", arabic: "الوفق",    path: "/vefkin-yapilisi" },
+  { id: "basthul-huroof-2", label: "BAST",   arabic: "البسط",   path: "/basthul-huroof-2" },
 ];
 
 // Page transition variants

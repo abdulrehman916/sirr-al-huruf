@@ -86,6 +86,14 @@ const CARD_ICONS = {
       <path d="M14 5 L16 8 L18 5" stroke={color} strokeWidth="0.8" strokeOpacity="0.65" fill="none"/>
     </svg>
   ),
+  bast: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle"
+        fontFamily="Amiri, serif" fontWeight="700" fontSize="16" fill={color}>بسط</text>
+      <circle cx="16" cy="16" r="13" stroke={color} strokeWidth="0.8" strokeOpacity="0.55"/>
+      <circle cx="16" cy="16" r="10" stroke={color} strokeWidth="0.4" strokeOpacity="0.25" strokeDasharray="2,4"/>
+    </svg>
+  ),
 };
 
 const NAV_CARDS = [
@@ -94,7 +102,8 @@ const NAV_CARDS = [
   { path: "/hadim",           arabic: "خادم",         label: "HADIM",           subtitle: "Name Generator",            iconKey: "hadim",  accent: [192, 132, 252] },
   { path: "/mizaan9",         arabic: "ميزان",        label: "MIZAAN 9",        subtitle: "Sacred Numerology",         iconKey: "mizaan", accent: [212, 175, 55] },
   { path: "/magic-sqayer",    arabic: "السحر المربع", label: "MAGIC SQAYER",    subtitle: "Sacred Vefk Construction",  iconKey: "sqayer", accent: [212, 175, 55] },
-  { path: "/vefkin-yapilisi", arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI", subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
+  { path: "/vefkin-yapilisi",   arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI", subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
+  { path: "/basthul-huroof-2", arabic: "بسط الحروف",  label: "BASTHUL HUROOF 2", subtitle: "Basti Adedi Cedveli",         iconKey: "bast",   accent: [180, 140, 255] },
 ];
 
 // ── Orbital rings ─────────────────────────────────────────────────
