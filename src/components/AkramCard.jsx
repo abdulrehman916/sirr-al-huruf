@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 
 // ── Palette ───────────────────────────────────────────────────
 const G = {
-  border:   "rgba(212,175,55,0.40)",
   borderHi: "rgba(212,175,55,0.65)",
   glow:     "rgba(212,175,55,0.22)",
   text:     "#F5D060",
@@ -17,63 +16,72 @@ const G = {
   bgHi:     "rgba(212,175,55,0.14)",
 };
 
-// ── Abjad Kabir map (units, tens, hundreds, thousands) ────────
-const UNITS = {
-  1:'ا', 2:'ب', 3:'ج', 4:'د', 5:'ه', 6:'و', 7:'ز', 8:'ح', 9:'ط',
-};
-const TENS = {
-  10:'ي', 20:'ك', 30:'ل', 40:'م', 50:'ن', 60:'س', 70:'ع', 80:'ف', 90:'ص',
-};
-const HUNDREDS = {
-  100:'ق', 200:'ر', 300:'ش', 400:'ت', 500:'ث', 600:'خ', 700:'ذ', 800:'ض', 900:'ظ',
-};
-// 1000 → غ, then the thousands digit re-starts as a UNIT (1-9 mapped via UNITS)
-const THOUSAND_LETTER = 'غ';
+// ── Letter tables ─────────────────────────────────────────────
+const UNITS    = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9:'ط' };
+const TENS     = { 10:'ي',20:'ك',30:'ل',40:'م',50:'ن',60:'س',70:'ع',80:'ف',90:'ص' };
+const HUNDREDS = { 100:'ق',200:'ر',300:'ش',400:'ت',500:'ث',600:'خ',700:'ذ',800:'ض',900:'ظ' };
 
+// ── Core algorithm ────────────────────────────────────────────
 /**
- * Convert a positive integer into an ordered array of { value, letter } pieces.
- * Pieces are ordered from lowest-place to highest-place (units first),
- * matching the right-to-left Akram reading convention.
+ * AKRAM rule:
+ *
+ * For any number, extract its digits in place-value order
+ * (units, tens, hundreds, thousands-group, ...).
+ *
+ * The thousands group works like this:
+ *   - Write غ for the thousand marker
+ *   - Then express how many thousands there are, using the
+ *     SAME place-value cycle restarting from units:
+ *       1000 → غ  (no extra digit — 1 is implicit)
+ *       2000 → غ ب  (thousands=2 → unit 2)
+ *       ...
+ *       9000 → غ ط  (thousands=9 → unit 9)
+ *      10000 → غ ي  (thousands=10 → ten 10)
+ *     488000 → غ ح ف ت  (thousands=488 → 8 + 80 + 400)
+ *
+ * Reading order: units first → tens → hundreds → غ → thousands-units → ...
+ * This matches the RTL letter output convention in the examples.
  */
 export function toAkramPieces(n) {
-  if (!n || n <= 0) return [];
+  if (!n || n < 1) return [];
+
+  n = Math.floor(n); // safety
+
+  const unit = n % 10;
+  const ten  = Math.floor(n / 10)  % 10 * 10;
+  const hund = Math.floor(n / 100) % 10 * 100;
+  const thou = Math.floor(n / 1000);           // how many full thousands
+
   const pieces = [];
 
-  const units     = n % 10;
-  const tens      = Math.floor(n / 10) % 10 * 10;
-  const hundreds  = Math.floor(n / 100) % 10 * 100;
-  const thousands = Math.floor(n / 1000);
+  // 1. units place
+  if (unit && UNITS[unit])     pieces.push({ value: unit, letter: UNITS[unit] });
+  // 2. tens place
+  if (ten  && TENS[ten])       pieces.push({ value: ten,  letter: TENS[ten]  });
+  // 3. hundreds place
+  if (hund && HUNDREDS[hund])  pieces.push({ value: hund, letter: HUNDREDS[hund] });
 
-  if (units    && UNITS[units])         pieces.push({ value: units,    letter: UNITS[units] });
-  if (tens     && TENS[tens])           pieces.push({ value: tens,     letter: TENS[tens] });
-  if (hundreds && HUNDREDS[hundreds])   pieces.push({ value: hundreds, letter: HUNDREDS[hundreds] });
+  // 4. thousands block
+  if (thou > 0) {
+    // Always write غ to mark the thousand boundary
+    pieces.push({ value: 1000, letter: 'غ' });
 
-  if (thousands > 0) {
-    // Always write غ for the 1000-place
-    pieces.push({ value: 1000, letter: THOUSAND_LETTER });
-    // Then the thousands digit itself re-restarts as a unit (e.g. 2000 → غ ب)
-    const kUnit = thousands % 10;
-    const kTens = Math.floor(thousands / 10) % 10 * 10;
-    const kHundreds = Math.floor(thousands / 100) % 10 * 100;
-    const kThousands = Math.floor(thousands / 1000);
-
-    if (kUnit    && UNITS[kUnit])         pieces.push({ value: kUnit,    letter: UNITS[kUnit] });
-    if (kTens    && TENS[kTens])          pieces.push({ value: kTens,    letter: TENS[kTens] });
-    if (kHundreds && HUNDREDS[kHundreds]) pieces.push({ value: kHundreds,letter: HUNDREDS[kHundreds] });
-    // Recursive for very large numbers (millions+)
-    if (kThousands > 0) {
-      pieces.push({ value: 1000, letter: THOUSAND_LETTER });
-      const deep = toAkramPieces(kThousands);
-      pieces.push(...deep);
+    // Special rule: 1000 = غ alone — no extra letter for the implicit "1"
+    // 2000+ = غ followed by the thousands-count expressed via the same cycle
+    if (thou > 1) {
+      const innerPieces = toAkramPieces(thou);
+      pieces.push(...innerPieces);
     }
   }
 
   return pieces;
 }
 
-// ── AkramCard Component ────────────────────────────────────────
+
+
+// ── Component ─────────────────────────────────────────────────
 export default function AkramCard({ total, levelLabel, levelArabic }) {
-  if (total === null || total === undefined || total <= 0) return null;
+  if (!total || total <= 0) return null;
 
   const pieces = toAkramPieces(total);
   if (!pieces.length) return null;
@@ -97,17 +105,16 @@ export default function AkramCard({ total, levelLabel, levelArabic }) {
       <div className="absolute top-0 left-0 right-0 h-px"
         style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.50), transparent)" }} />
 
-      {/* Section title */}
+      {/* Title */}
       <p className="font-inter text-[9px] uppercase tracking-[0.26em] text-center" style={{ color: G.dim }}>
         ✦ Akram / Harf — {levelLabel} — {levelArabic}
       </p>
-
       <div className="h-px w-full"
         style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.15), transparent)" }} />
 
-      {/* Bast value row */}
+      {/* Bast value */}
       <div className="flex items-center justify-between px-2">
-        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.40)" }}>
+        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.38)" }}>
           Bast Value
         </span>
         <span className="font-inter font-bold tabular-nums text-sm" style={{ color: G.text }}>
@@ -115,32 +122,35 @@ export default function AkramCard({ total, levelLabel, levelArabic }) {
         </span>
       </div>
 
-      {/* Breakdown pieces */}
+      {/* Breakdown tiles */}
       <div className="space-y-1.5">
         <p className="font-inter text-[9px] uppercase tracking-widest px-2" style={{ color: "rgba(212,175,55,0.38)" }}>
           Akram Breakdown
         </p>
-        <div className="flex flex-wrap gap-1.5 px-1" dir="ltr">
-          {pieces.map((p, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.75 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.04, duration: 0.25 }}
-              className="flex flex-col items-center rounded-xl border px-2.5 py-2 min-w-[46px]"
-              style={{
-                background: p.value === 1000 ? G.bgHi : G.bg,
-                borderColor: p.value === 1000 ? G.borderHi : G.faint,
-              }}
-            >
-              <span className="font-amiri text-xl leading-none mb-0.5" style={{ color: "#fff" }}>
-                {p.letter}
-              </span>
-              <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>
-                {p.value.toLocaleString()}
-              </span>
-            </motion.div>
-          ))}
+        <div className="flex flex-wrap gap-1.5 px-1">
+          {pieces.map((p, i) => {
+            const isGhain = p.letter === 'غ';
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.75 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.04, duration: 0.25 }}
+                className="flex flex-col items-center rounded-xl border px-2.5 py-2 min-w-[46px]"
+                style={{
+                  background: isGhain ? G.bgHi : G.bg,
+                  borderColor: isGhain ? G.borderHi : G.faint,
+                }}
+              >
+                <span className="font-amiri text-xl leading-none mb-0.5" style={{ color: "#fff" }}>
+                  {p.letter}
+                </span>
+                <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>
+                  {p.value.toLocaleString()}
+                </span>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
@@ -148,14 +158,15 @@ export default function AkramCard({ total, levelLabel, levelArabic }) {
       <div className="h-px w-full"
         style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.18), transparent)" }} />
 
-      {/* Akram letters result */}
+      {/* Akram letters */}
       <div className="space-y-2 text-center">
         <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.38)" }}>
           Akram Letters
         </p>
         <motion.p
           className="font-amiri font-bold leading-none"
-          style={{ fontSize: "clamp(2rem, 9vw, 3rem)", color: G.text, direction: "rtl" }}
+          dir="rtl"
+          style={{ fontSize: "clamp(2rem, 9vw, 3rem)", color: G.text }}
           animate={{
             textShadow: [
               "0 0 14px rgba(212,175,55,0.28)",
