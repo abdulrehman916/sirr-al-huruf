@@ -12,7 +12,6 @@ import SplashScreen from './components/SplashScreen';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 // Add page imports here
 import Home from './pages/Home';
-import AbjadPage from './pages/AbjadPage';
 import AnasirPage from './pages/AnasirPage';
 import HadimPage from './pages/HadimPage';
 import Mizaan9Page from './pages/Mizaan9Page';

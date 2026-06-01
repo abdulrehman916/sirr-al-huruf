@@ -51,17 +51,11 @@ function extractLetters(text) {
 // 1 — EBCED-İ KEBİR
 // ══════════════════════════════════════
 export function calcKebir(text) {
-  console.log('═══════════════════════════════════════');
-  console.log('[calcKebir] Original Input:', text);
   const rawLetters = extractLetters(text);
-  console.log('[calcKebir] Parsed Letters:', rawLetters.map(l => l.original));
   const letters = rawLetters
     .filter(l => l.normalized in KABIR_MAP)
     .map(l => ({ ...l, value: KABIR_MAP[l.normalized] }));
-  console.log('[calcKebir] Mapped Values:', letters.map(l => ({ letter: l.original, value: l.value })));
   const total = letters.reduce((s, l) => s + l.value, 0);
-  console.log('[calcKebir] Total:', total);
-  console.log('═══════════════════════════════════════');
   return { letters, total };
 }
 
@@ -77,10 +71,7 @@ export const SAGHIR_MAP = {
 };
 
 export function calcSaghir(text) {
-  console.log('═══════════════════════════════════════');
-  console.log('[calcSaghir] Original Input:', text);
   const rawLetters = extractLetters(text);
-  console.log('[calcSaghir] Parsed Letters:', rawLetters.map(l => l.original));
   const letters = rawLetters
     .filter(l => l.normalized in SAGHIR_MAP)
     .map(l => {
@@ -91,9 +82,6 @@ export function calcSaghir(text) {
   const activeLetters = letters.filter(l => !l.sakit);
   const total = activeLetters.reduce((s, l) => s + l.saghir, 0);
   const sakitLetters = letters.filter(l => l.sakit);
-  console.log('[calcSaghir] Mapped Values:', activeLetters.map(l => ({ letter: l.original, saghir: l.saghir })));
-  console.log('[calcSaghir] Total:', total);
-  console.log('═══════════════════════════════════════');
   return { letters, activeLetters, sakitLetters, total };
 }
 
@@ -117,10 +105,7 @@ export const LETTER_NAMES = {
 };
 
 export function calcCumeli(text) {
-  console.log('═══════════════════════════════════════');
-  console.log('[calcCumeli] Original Input:', text);
   const src = extractLetters(text);
-  console.log('[calcCumeli] Parsed Letters:', src.map(l => l.original));
   const entries = src.map(l => {
     const name = LETTER_NAMES[l.normalized] || l.normalized;
     const nameLetters = extractLetters(name).map(nl => ({
@@ -131,9 +116,6 @@ export function calcCumeli(text) {
     return { original: l.original, normalized: l.normalized, name, nameLetters, nameTotal };
   });
   const total = entries.reduce((s, e) => s + e.nameTotal, 0);
-  console.log('[calcCumeli] Mapped Values:', entries.map(e => ({ letter: e.original, name: e.name, total: e.nameTotal })));
-  console.log('[calcCumeli] Total:', total);
-  console.log('═══════════════════════════════════════');
   return { entries, total };
 }
 
@@ -174,11 +156,7 @@ export const BAST_TABLE = {
 };
 
 export function calcBast(text, bastLevel = 1) {
-  console.log('═══════════════════════════════════════');
-  console.log('[calcBast] Original Input:', text, '| bastLevel:', bastLevel);
   const src = extractLetters(text);
-  console.log('[calcBast] Parsed Letters:', src.map(l => l.original));
-
   const entries = src.map(l => {
     const bastValue = BAST_TABLE[l.normalized]?.[bastLevel] ?? 0;
     return {
@@ -187,10 +165,6 @@ export function calcBast(text, bastLevel = 1) {
       value: bastValue,
     };
   });
-
   const total = entries.reduce((s, e) => s + e.value, 0);
-  console.log('[calcBast] Mapped Values:', entries.map(e => ({ letter: e.original, bastLevel, value: e.value })));
-  console.log('[calcBast] Total:', total);
-  console.log('═══════════════════════════════════════');
   return { entries, total, bastLevel };
 }

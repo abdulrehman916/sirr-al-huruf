@@ -41,7 +41,7 @@ function Defs({ isMobile }) {
         <feGaussianBlur stdDeviation={bBlur} result="b" />
         <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
       </filter>
-      <radialGradient id="aura" cx="50%" cy="50%" r="50%">
+      <radialGradient id="sw-aura" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stopColor={GOLD} stopOpacity="0.14" />
         <stop offset="55%" stopColor={GOLD} stopOpacity="0.04" />
         <stop offset="100%" stopColor={GOLD} stopOpacity="0" />
@@ -67,7 +67,7 @@ function AuraLayers({ paused }) {
         animate={paused ? {} : { r: [238, 252, 238], opacity: [0.4, 0.75, 0.4] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.circle cx={CX} cy={CY} r={248} fill="url(#aura)"
+      <motion.circle cx={CX} cy={CY} r={248} fill="url(#sw-aura)"
         animate={paused ? {} : { r: [248, 262, 248], opacity: [0.50, 0.88, 0.50] }}
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
       />
