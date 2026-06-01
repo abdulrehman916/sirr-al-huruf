@@ -23,54 +23,70 @@ const HUNDREDS = { 100:'ق',200:'ر',300:'ش',400:'ت',500:'ث',600:'خ',700:'ذ
 
 // ── Core algorithm ────────────────────────────────────────────
 /**
- * AKRAM rule:
+ * AKRAM rule — process digits right-to-left through a fixed cycle:
+ *   Slot 0 = Unit (1–9)
+ *   Slot 1 = Ten  (10–90)
+ *   Slot 2 = Hundred (100–900)
+ *   Slot 3 = Thousand marker غ, consuming the digit that caused it:
+ *              digit=1 → غ alone, next slot restarts at Ten (slot 1)
+ *              digit=2–9 → غ + that digit as Unit, next slot = Ten (slot 1)
  *
- * For any number, extract its digits in place-value order
- * (units, tens, hundreds, thousands-group, ...).
- *
- * The thousands group works like this:
- *   - Write غ for the thousand marker
- *   - Then express how many thousands there are, using the
- *     SAME place-value cycle restarting from units:
- *       1000 → غ  (no extra digit — 1 is implicit)
- *       2000 → غ ب  (thousands=2 → unit 2)
- *       ...
- *       9000 → غ ط  (thousands=9 → unit 9)
- *      10000 → غ ي  (thousands=10 → ten 10)
- *     488000 → غ ح ف ت  (thousands=488 → 8 + 80 + 400)
- *
- * Reading order: units first → tens → hundreds → غ → thousands-units → ...
- * This matches the RTL letter output convention in the examples.
+ * Examples (verified):
+ *   1462  → 2(U)  60(T)  400(H)  غ[1]                → بستغ
+ *   2345  → 5(U)  40(T)  300(H)  غ[2→U]              → همشغب
+ *   31296 → 6(U)  90(T)  200(H)  غ[1-standalone] 30(T)→ وصرغل
+ *   488474→ 4(U)  70(T)  400(H)  غ[8→U]  80(T) 400(H)→ دعتغحفت
  */
 export function toAkramPieces(n) {
   if (!n || n < 1) return [];
+  n = Math.floor(n);
 
-  n = Math.floor(n); // safety
-
-  const unit = n % 10;
-  const ten  = Math.floor(n / 10)  % 10 * 10;
-  const hund = Math.floor(n / 100) % 10 * 100;
-  const thou = Math.floor(n / 1000);           // how many full thousands
+  // Extract all digits right-to-left (LSD first)
+  const digits = [];
+  let tmp = n;
+  while (tmp > 0) {
+    digits.push(tmp % 10);
+    tmp = Math.floor(tmp / 10);
+  }
 
   const pieces = [];
+  let i = 0;          // current digit index (0 = units digit)
+  let slot = 0;       // 0=unit, 1=ten, 2=hundred, 3=thousand-cycle
 
-  // 1. units place
-  if (unit && UNITS[unit])     pieces.push({ value: unit, letter: UNITS[unit] });
-  // 2. tens place
-  if (ten  && TENS[ten])       pieces.push({ value: ten,  letter: TENS[ten]  });
-  // 3. hundreds place
-  if (hund && HUNDREDS[hund])  pieces.push({ value: hund, letter: HUNDREDS[hund] });
+  while (i < digits.length) {
+    const d = digits[i];
 
-  // 4. thousands block
-  if (thou > 0) {
-    // Always write غ to mark the thousand boundary
-    pieces.push({ value: 1000, letter: 'غ' });
+    if (slot === 0) {
+      // Unit slot
+      if (d !== 0 && UNITS[d]) pieces.push({ value: d, letter: UNITS[d] });
+      i++;
+      slot = 1;
+    } else if (slot === 1) {
+      // Ten slot
+      const v = d * 10;
+      if (d !== 0 && TENS[v]) pieces.push({ value: v, letter: TENS[v] });
+      i++;
+      slot = 2;
+    } else if (slot === 2) {
+      // Hundred slot
+      const v = d * 100;
+      if (d !== 0 && HUNDREDS[v]) pieces.push({ value: v, letter: HUNDREDS[v] });
+      i++;
+      slot = 3;
+    } else {
+      // Thousand slot — always emit غ
+      pieces.push({ value: 1000, letter: 'غ' });
 
-    // Special rule: 1000 = غ alone — no extra letter for the implicit "1"
-    // 2000+ = غ followed by the thousands-count expressed via the same cycle
-    if (thou > 1) {
-      const innerPieces = toAkramPieces(thou);
-      pieces.push(...innerPieces);
+      if (d === 1) {
+        // Standalone 1000: digit 1 is consumed by غ itself, restart from Ten
+        i++;
+        slot = 1;
+      } else {
+        // digit 2–9: emit as Unit after غ, then continue from Ten
+        if (d !== 0 && UNITS[d]) pieces.push({ value: d, letter: UNITS[d] });
+        i++;
+        slot = 1;
+      }
     }
   }
 
