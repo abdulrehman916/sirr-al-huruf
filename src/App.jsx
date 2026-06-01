@@ -2,12 +2,13 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { NavigationProvider } from './context/NavigationContext';
 import { AnimatePresence, motion } from 'framer-motion';
+import SplashScreen from './components/SplashScreen';
 // Add page imports here
 import Home from './pages/Home';
 import AbjadPage from './pages/AbjadPage';
@@ -72,18 +73,22 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  const [splashDone, setSplashDone] = useState(false);
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationProvider>
-            <AuthenticatedApp />
-          </NavigationProvider>
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    <>
+      {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationProvider>
+              <AuthenticatedApp />
+            </NavigationProvider>
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </>
   )
 }
 
