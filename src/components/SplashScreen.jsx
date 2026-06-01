@@ -135,14 +135,6 @@ export default function SplashScreen({ onComplete }) {
             zIndex: 9999,
           }}
         >
-          {/* Splash background image — soft overlay */}
-          <div className="absolute inset-0 pointer-events-none" style={{
-            backgroundImage: `url(https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/9627dbf20_generated_image.png)`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.18,
-          }} />
-
           {/* ── Calligraphy atmosphere ── */}
           <div className="absolute inset-0 pointer-events-none" style={{ filter: "blur(1.5px)" }}>
             {CHARS.map((c, i) => (
