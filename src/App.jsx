@@ -19,6 +19,7 @@ import AbjadKabirPage from './pages/AbjadKabirPage';
 import MagicSqayerPage from './pages/MagicSqayerPage';
 import VefkinYapilisiPage from './pages/VefkinYapilisiPage';
 import BastHuroofPage from './pages/BastHuroofPage';
+import FaalHasrathPage from './pages/FaalHasrathPage';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -66,6 +67,7 @@ const AuthenticatedApp = () => {
           <Route path="/magic-sqayer" element={<MagicSqayerPage />} />
           <Route path="/vefkin-yapilisi" element={<VefkinYapilisiPage />} />
           <Route path="/basthul-huroof-2" element={<BastHuroofPage />} />
+          <Route path="/faal-hasrath" element={<FaalHasrathPage />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </motion.div>
