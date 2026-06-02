@@ -27,6 +27,24 @@
                 }
               });
             });
+
+            // Cache-warming: after app loads, send all loaded resource URLs to SW
+            // This ensures every JS chunk (containing all data/calc modules) is
+            // stored offline immediately — no second visit required.
+            function warmCache() {
+              if (!navigator.serviceWorker.controller) return;
+              const urls = performance.getEntriesByType('resource')
+                .map(e => e.name)
+                .filter(u => u.startsWith(location.origin) || u.includes('fonts.g'));
+              if (urls.length) {
+                navigator.serviceWorker.controller.postMessage({ type: 'CACHE_URLS', urls });
+              }
+            }
+
+            // Run after React has mounted and lazy chunks are loaded
+            setTimeout(warmCache, 3000);
+            // Run again after a longer delay to catch lazily loaded page chunks
+            setTimeout(warmCache, 10000);
           }).catch(() => {});
 
           // Reload once when a new SW takes control (avoids stale assets)

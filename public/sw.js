@@ -1,227 +1,234 @@
-// ═══════════════════════════════════════════════════════
-// Sirr al-Huruf — Service Worker
-// Strategy:
-//   Navigation  → Network-first, fallback to cache, fallback to shell
-//   JS/CSS/fonts → Cache-first, update in background (stale-while-revalidate)
-//   Images       → Cache-first with long TTL
-//   API/external → Network-only with graceful failure
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// Sirr al-Huruf — Service Worker v4
+//
+// Caching strategies:
+//   Shell / HTML navigation → Network-first → cache → offline page
+//   JS / CSS / fonts        → Stale-while-revalidate (cache + bg update)
+//   Images                  → Cache-first (long TTL)
+//   External APIs (base44)  → Network-only, graceful failure
+//
+// All lib/*, pages/*, data files are bundled into JS chunks by Vite
+// at build time — they are available offline automatically once the
+// chunk that contains them has been fetched and stored here.
+// ═══════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'sirr-v3';
-const SHELL_CACHE   = `${CACHE_VERSION}-shell`;
-const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
-const IMAGE_CACHE   = `${CACHE_VERSION}-images`;
+const CACHE_VER     = 'sirr-v4';
+const SHELL_CACHE   = `${CACHE_VER}-shell`;
+const ASSET_CACHE   = `${CACHE_VER}-assets`;   // JS, CSS, fonts
+const IMAGE_CACHE   = `${CACHE_VER}-images`;
 
-// App shell — always cache on install
-const SHELL_ASSETS = [
-  '/',
-  '/manifest.json',
+// Minimal shell — precached on install so the app can open offline
+const SHELL_ASSETS  = ['/', '/manifest.json'];
+
+// Origins that should never be cached (backend, analytics, CDN APIs)
+const BYPASS_ORIGINS = [
+  'api.base44.com',
+  'app.base44.com',
 ];
 
-// Google Fonts origins to cache
-const FONT_ORIGINS = [
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com',
-];
-
-// ── Install: precache shell ──────────────────────────────
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) =>
-      cache.addAll(SHELL_ASSETS).catch(() => {})
-    ).then(() => self.skipWaiting())
+// ── Install ─────────────────────────────────────────────────────
+self.addEventListener('install', (evt) => {
+  evt.waitUntil(
+    caches.open(SHELL_CACHE)
+      .then(c => c.addAll(SHELL_ASSETS).catch(() => {}))
+      .then(() => self.skipWaiting())
   );
 });
 
-// ── Activate: clean old caches ───────────────────────────
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
+// ── Activate: purge old cache versions ──────────────────────────
+self.addEventListener('activate', (evt) => {
+  evt.waitUntil(
+    caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter((k) => k.startsWith('sirr-') && k !== SHELL_CACHE && k !== DYNAMIC_CACHE && k !== IMAGE_CACHE)
-          .map((k) => caches.delete(k))
+          .filter(k => k.startsWith('sirr-') && ![SHELL_CACHE, ASSET_CACHE, IMAGE_CACHE].includes(k))
+          .map(k => caches.delete(k))
       )
     ).then(() => self.clients.claim())
   );
 });
 
-// ── Helpers ──────────────────────────────────────────────
-function isNavigation(request) {
-  return request.mode === 'navigate';
-}
+// ── Helpers ──────────────────────────────────────────────────────
+const isBypass   = url => BYPASS_ORIGINS.some(o => url.hostname.includes(o));
+const isNav      = req => req.mode === 'navigate';
+const isAsset    = url => /\.(js|jsx|ts|tsx|css|woff2?|ttf|otf|eot)(\?.*)?$/.test(url.pathname);
+const isImage    = url => /\.(png|jpe?g|svg|gif|webp|ico)(\?.*)?$/.test(url.pathname) || url.hostname === 'media.base44.com';
+const isFont     = url => ['fonts.googleapis.com','fonts.gstatic.com'].includes(url.hostname);
+const isExternal = url => url.origin !== self.location.origin && !isFont(url) && url.hostname !== 'media.base44.com';
 
-function isStaticAsset(url) {
-  return /\.(js|jsx|ts|tsx|css|woff2?|ttf|otf|eot)(\?.*)?$/.test(url.pathname);
-}
-
-function isImage(url) {
-  return /\.(png|jpg|jpeg|svg|gif|webp|ico)(\?.*)?$/.test(url.pathname) ||
-    url.hostname === 'media.base44.com';
-}
-
-function isFontRequest(url) {
-  return FONT_ORIGINS.some((o) => url.origin === new URL(o).origin) ||
-    url.hostname === 'fonts.gstatic.com' ||
-    url.hostname === 'fonts.googleapis.com';
-}
-
-function isExternal(url) {
-  return url.origin !== self.location.origin &&
-    !isFontRequest(url) &&
-    url.hostname !== 'media.base44.com';
-}
-
-// Offline fallback HTML — shown when navigation fails and no cache exists
-const OFFLINE_HTML = `<!DOCTYPE html>
+// Friendly offline page (shown only if no cached shell is available)
+const OFFLINE_PAGE = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>سرّ الحروف — غير متصل</title>
+  <title>سرّ الحروف</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{
-      min-height:100vh;display:flex;align-items:center;justify-content:center;
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;
       background:linear-gradient(180deg,#020710 0%,#050d1a 50%,#0b1326 100%);
-      font-family:'Amiri',serif;color:#f5ecd4;text-align:center;padding:24px;
-    }
-    .card{
-      border:1px solid rgba(212,175,55,0.22);border-radius:16px;padding:36px 28px;
-      background:rgba(10,20,50,0.80);max-width:340px;
-      box-shadow:0 0 48px rgba(212,175,55,0.10);
-    }
-    .icon{font-size:3rem;margin-bottom:16px;opacity:0.75}
-    h1{font-size:1.7rem;color:#D4AF37;margin-bottom:10px}
-    p{font-size:1rem;color:rgba(245,230,180,0.65);line-height:1.8}
-    small{display:block;margin-top:18px;font-size:0.75rem;color:rgba(255,255,255,0.25);letter-spacing:0.1em}
+      font-family:serif;color:#f5ecd4;text-align:center;padding:24px}
+    .card{border:1px solid rgba(212,175,55,.22);border-radius:16px;padding:36px 28px;
+      background:rgba(10,20,50,.80);max-width:340px;box-shadow:0 0 48px rgba(212,175,55,.10)}
+    .icon{font-size:2.8rem;margin-bottom:16px}
+    h1{font-size:1.6rem;color:#D4AF37;margin-bottom:10px}
+    p{font-size:1rem;color:rgba(245,230,180,.65);line-height:1.9}
+    small{display:block;margin-top:18px;font-size:.72rem;color:rgba(255,255,255,.22);letter-spacing:.1em}
+    button{margin-top:18px;padding:10px 28px;border-radius:10px;border:1px solid rgba(212,175,55,.45);
+      background:rgba(212,175,55,.10);color:#D4AF37;font-size:.85rem;cursor:pointer}
   </style>
 </head>
 <body>
   <div class="card">
     <div class="icon">☽</div>
     <h1>غير متصل بالإنترنت</h1>
-    <p>تحقق من اتصالك بالإنترنت وحاول مرة أخرى</p>
-    <p style="margin-top:10px;font-size:0.9rem;color:rgba(212,175,55,0.55)">
+    <p>تحقق من اتصالك وحاول مرة أخرى</p>
+    <p style="margin-top:10px;font-size:.88rem;color:rgba(212,175,55,.55)">
       You are offline. Connect to internet and retry.
     </p>
+    <button onclick="location.reload()">↺ Retry</button>
     <small>سرّ الحروف — Sirr al-Huruf</small>
   </div>
 </body>
 </html>`;
 
-// ── Fetch handler ─────────────────────────────────────────
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
+// ── Fetch handler ─────────────────────────────────────────────────
+self.addEventListener('fetch', (evt) => {
+  const { request } = evt;
   const url = new URL(request.url);
 
-  // Skip non-GET and chrome-extension requests
+  // Only handle GET; skip non-http
   if (request.method !== 'GET') return;
-  if (url.protocol === 'chrome-extension:') return;
-  if (url.protocol === 'data:') return;
+  if (!url.protocol.startsWith('http')) return;
 
-  // External APIs (base44 backend, etc.) — network only, no caching
-  if (isExternal(url)) {
-    event.respondWith(fetch(request).catch(() =>
-      new Response(JSON.stringify({ error: 'offline', offline: true }), {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    ));
+  // Backend / external APIs → network only, no caching
+  if (isBypass(url) || (isExternal(url) && !isFont(url) && !isImage(url))) {
+    evt.respondWith(
+      fetch(request).catch(() =>
+        new Response(JSON.stringify({ error: 'offline', offline: true }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      )
+    );
     return;
   }
 
-  // Images — cache-first with background refresh
+  // Images (including CDN icons) → cache-first
   if (isImage(url)) {
-    event.respondWith(cacheFirst(request, IMAGE_CACHE));
+    evt.respondWith(cacheFirst(request, IMAGE_CACHE));
     return;
   }
 
-  // Fonts — cache-first (long-lived)
-  if (isFontRequest(url)) {
-    event.respondWith(cacheFirst(request, DYNAMIC_CACHE));
+  // Fonts → cache-first (immutable)
+  if (isFont(url)) {
+    evt.respondWith(cacheFirst(request, ASSET_CACHE));
     return;
   }
 
-  // Static assets (JS, CSS, woff) — stale-while-revalidate
-  if (isStaticAsset(url)) {
-    event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE));
+  // JS / CSS (Vite bundles containing ALL data + logic) → stale-while-revalidate
+  if (isAsset(url)) {
+    evt.respondWith(staleWhileRevalidate(request, ASSET_CACHE));
     return;
   }
 
-  // Navigation requests — network-first, fallback to cached shell or offline page
-  if (isNavigation(request)) {
-    event.respondWith(networkFirstNavigation(request));
+  // HTML navigation → network-first → cached shell → offline page
+  if (isNav(request)) {
+    evt.respondWith(networkFirstNav(request));
     return;
   }
 
-  // Everything else — stale-while-revalidate
-  event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE));
+  // Anything else → stale-while-revalidate
+  evt.respondWith(staleWhileRevalidate(request, ASSET_CACHE));
 });
 
-// ── Strategies ────────────────────────────────────────────
+// ── Cache strategies ──────────────────────────────────────────────
 
-// Cache-first: serve from cache, fallback to network + store
 async function cacheFirst(request, cacheName) {
   const cached = await caches.match(request);
   if (cached) return cached;
   try {
-    const response = await fetch(request);
-    if (response && response.ok) {
+    const res = await fetch(request);
+    if (res && res.ok) {
       const cache = await caches.open(cacheName);
-      cache.put(request, response.clone()).catch(() => {});
+      cache.put(request, res.clone()).catch(() => {});
     }
-    return response;
+    return res;
   } catch {
-    return new Response('', { status: 408 });
+    return new Response('', { status: 408, statusText: 'Offline' });
   }
 }
 
-// Stale-while-revalidate: return cache immediately, update in background
 async function staleWhileRevalidate(request, cacheName) {
-  const cache = await caches.open(cacheName);
+  const cache  = await caches.open(cacheName);
   const cached = await cache.match(request);
 
-  const fetchPromise = fetch(request).then((response) => {
-    if (response && response.ok) {
-      cache.put(request, response.clone()).catch(() => {});
-    }
-    return response;
+  // Always kick off a background refresh
+  const fresh = fetch(request).then(res => {
+    if (res && res.ok) cache.put(request, res.clone()).catch(() => {});
+    return res;
   }).catch(() => null);
 
-  return cached || fetchPromise || new Response('', { status: 408 });
+  // Return cached immediately if available, otherwise wait for network
+  return cached ?? (await fresh) ?? new Response('', { status: 408 });
 }
 
-// Network-first for navigation: try network, fallback to cached page, fallback to offline HTML
-async function networkFirstNavigation(request) {
+async function networkFirstNav(request) {
   try {
-    const response = await fetch(request);
-    if (response && response.ok) {
-      // Cache the shell document for offline use
+    const res = await fetch(request);
+    if (res && res.ok) {
       const cache = await caches.open(SHELL_CACHE);
-      cache.put(request, response.clone()).catch(() => {});
+      cache.put(request, res.clone()).catch(() => {});
     }
-    return response;
+    return res;
   } catch {
-    // Try cached version of this exact URL
+    // Try the exact URL cached
     const cached = await caches.match(request);
     if (cached) return cached;
 
-    // Try the root shell (SPA — any route renders via React Router)
+    // SPA fallback: any route is served by the root index
     const shell = await caches.match('/');
     if (shell) return shell;
 
-    // Final fallback: friendly offline page
-    return new Response(OFFLINE_HTML, {
+    // Last resort: friendly offline HTML
+    return new Response(OFFLINE_PAGE, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
   }
 }
 
-// ── Background sync: notify clients when back online ──────
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+// ── Messages from main thread ──────────────────────────────────────
+self.addEventListener('message', (evt) => {
+  if (!evt.data) return;
+
+  // Activate new SW immediately when app requests it
+  if (evt.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+    return;
+  }
+
+  // Cache-warming: the app sends us all resource URLs loaded in this session
+  // so everything is available offline on first visit (no second visit needed).
+  if (evt.data.type === 'CACHE_URLS') {
+    const urls = evt.data.urls || [];
+    caches.open(ASSET_CACHE).then(cache => {
+      urls.forEach(url => {
+        try {
+          const parsed = new URL(url);
+          if (isAsset(parsed)) {
+            cache.match(url).then(hit => {
+              if (!hit) fetch(url).then(r => { if (r.ok) cache.put(url, r); }).catch(() => {});
+            });
+          } else if (isImage(parsed)) {
+            caches.open(IMAGE_CACHE).then(imgCache => {
+              imgCache.match(url).then(hit => {
+                if (!hit) fetch(url).then(r => { if (r.ok) imgCache.put(url, r); }).catch(() => {});
+              });
+            });
+          }
+        } catch {}
+      });
+    });
   }
 });
