@@ -63,7 +63,6 @@ const AuthenticatedApp = () => {
           <Route path="/anasir" element={<AnasirPage />} />
           <Route path="/hadim" element={<HadimPage />} />
           <Route path="/mizaan9" element={<Mizaan9Page />} />
-          <Route path="/abjad-kabir" element={<AbjadKabirPage />} />
           <Route path="/magic-sqayer" element={<MagicSqayerPage />} />
           <Route path="/vefkin-yapilisi" element={<VefkinYapilisiPage />} />
           <Route path="/basthul-huroof-2" element={<BastHuroofPage />} />
