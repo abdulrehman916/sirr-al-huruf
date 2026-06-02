@@ -10,6 +10,7 @@ import { NavigationProvider } from './context/NavigationContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import OfflineNotice from './components/OfflineNotice';
 // Add page imports here — lazy loaded for performance
 import Home from './pages/Home';
 const AnasirPage        = lazy(() => import('./pages/AnasirPage'));
@@ -97,6 +98,7 @@ function App() {
           </Router>
           <Toaster />
           <PWAInstallPrompt />
+          <OfflineNotice />
         </QueryClientProvider>
       </AuthProvider>
     </>

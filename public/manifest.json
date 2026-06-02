@@ -3,10 +3,14 @@
   "short_name": "سرّ الحروف",
   "description": "Advanced Ilm al-Huruf Analysis — Abjad Numerology Calculator",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#020710",
   "theme_color": "#020710",
-  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["education", "utilities"],
   "icons": [
     {
       "src": "https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/9627dbf20_generated_image.png",
@@ -21,7 +25,6 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["education", "utilities"],
-  "lang": "ar",
-  "dir": "rtl"
+  "screenshots": [],
+  "prefer_related_applications": false
 }
