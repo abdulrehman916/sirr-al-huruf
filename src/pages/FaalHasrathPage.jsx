@@ -477,30 +477,62 @@ function FaalLuqmanSection({ lang }) {
   const [selected, setSelected] = useState(null);
   return (
     <>
-      <div className="rounded-2xl border px-4 py-3 text-center"
-        style={{ background: P.bg, borderColor: P.faint }}>
-        {lang === "ml" ? (
-          <>
-            <p className="font-amiri text-base" style={{ color: P.dim }}>
-              മനസ്സ് ഒന്നടങ്ങി ഒരു അക്ഷരം സ്പർശിക്കുക
-            </p>
-            <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
-              style={{ color: "rgba(216,180,254,0.28)" }}>
-              ൨൮ അക്ഷര ചിഹ്നങ്ങൾ — ഓരോന്നിനും സ്വന്തം ഫലം
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="font-amiri text-base" style={{ color: P.dim }}>
-              Still your mind and touch one Arabic letter
-            </p>
-            <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
-              style={{ color: "rgba(216,180,254,0.28)" }}>
-              28 Arabic symbols — each with its own fixed result
-            </p>
-          </>
-        )}
-      </div>
+      {/* Permanent Instruction Panel */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="rounded-2xl border px-4 py-4 mb-3"
+        style={{
+          background: "linear-gradient(160deg, rgba(160,100,220,0.12) 0%, rgba(160,100,220,0.06) 100%)",
+          borderColor: P.border,
+          boxShadow: `0 0 20px ${P.glow}, inset 0 1px 0 rgba(216,180,254,0.08)`,
+        }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">📜</span>
+          <h3 className="font-amiri font-bold text-base" style={{ color: P.text }}>
+            ഫാൽ ലുഖ്മാൻ എടുക്കുന്ന വിധം
+          </h3>
+        </div>
+        <div className="space-y-2 text-sm">
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            1. സൂറത്ത് അൽ-ഫാതിഹ ഓതുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            2. അതിന്റെ സവാബ് റസൂലുല്ലാഹ് ﷺ യ്ക്ക് ഹദിയ ചെയ്യുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            3. ഒരു ഫാതിഹ ഓതി അഹ്‌ലുൽ ബൈത്തിന് (റസൂലുല്ലാഹ് ﷺ യുടെ കുടുംബത്തിന്) ഹദിയ ചെയ്യുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            4. ഒരു ഫാതിഹ ഓതി സഹാബാക്കൾക്ക് ഹദിയ ചെയ്യുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            5. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് അലി (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            6. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് ലുഖ്മാൻ (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            7. കണ്ണടയ്ക്കുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            8. കലിമാ ശരീഫ് ചൊല്ലി കലിമാവിരൽ ഉയർത്തുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            9. സൂറത്ത് അൽ-ഇഖ്‌ലാസ്, സൂറത്ത് അൽ-ഫലഖ്, സൂറത്ത് അൻ-നാസ് (3 കുൽ സൂറത്തുകൾ) ഓതുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            10. മനസ്സിൽ ഉദ്ദേശിക്കുന്ന കാര്യം കരുതുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            11. അക്ഷരങ്ങളുടെ കളത്തിൽ സ്പർശിക്കുക.
+          </p>
+          <p className="font-amiri leading-relaxed font-semibold" style={{ color: P.text }}>
+            12. ലഭിക്കുന്ന അക്ഷരത്തിന്റെ ഫലം വായിക്കുക.
+          </p>
+        </div>
+      </motion.div>
 
       {/* 4×7 grid for 28 cells */}
       <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
