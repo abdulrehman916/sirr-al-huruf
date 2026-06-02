@@ -2,172 +2,265 @@
 // FAAL HASRATH — Independent Data
 // Used ONLY by FaalHasrathPage. Zero shared logic with any module.
 // 16 heart symbols from the manuscript "Faal Nama Hasrath Ali (O)"
-// Positions preserved exactly as shown in the reference image.
-// Grid is right-to-left: cell 1 = top-right, cell 4 = top-left, etc.
+// Bilingual: Malayalam (default) + English
+// Each cell's result is permanently and exclusively linked to its id.
 // ═══════════════════════════════════════════════════════════════
-
-// Each cell's innerMark describes what is drawn inside the heart in the manuscript.
-// innerMark codes used by the SVG renderer in FaalHasrathPage:
-//   "dot"         — single central dot
-//   "two-dots"    — two dots side by side
-//   "three-dots"  — triangle of three dots
-//   "cross"       — plus/cross
-//   "x-cross"     — diagonal X
-//   "line-h"      — horizontal line
-//   "line-v"      — vertical line
-//   "line-diag"   — diagonal line
-//   "arc-up"      — arc opening upward (smile)
-//   "arc-down"    — arc opening downward (frown)
-//   "eye"         — eye shape
-//   "circle"      — small open circle
-//   "double-arc"  — two arcs (waves)
-//   "spiral"      — small spiral
-//   "star3"       — 3-point star / asterisk
-//   "zigzag"      — small zigzag line
 
 export const FAAL_CELLS = [
   {
     id: 1,
     innerMark: "dot",
-    arabic: "الفأل الأول",
-    title: "Faal One — The First Sign",
-    description: "The opening heart with a single mark — the simplest sign, yet carrying the fullest blessing. It is the seal of new beginnings.",
-    interpretation: "A journey, a new endeavor, or a fresh beginning is strongly favored. The way ahead is open with divine grace.",
-    advice: "Begin immediately. Hesitation will cost you. The first step taken with faith is already protected.",
+    ml: {
+      title: "ഒന്നാം ഫാൽ — ആദ്യ അടയാളം",
+      shortTitle: "ആദ്യ അടയാളം",
+      interpretation: "ഒരു പുതിയ യാത്രയോ ശ്രമമോ ആരംഭിക്കാൻ ദൈവിക അനുഗ്രഹം ഉണ്ട്. വഴി തുറന്നിരിക്കുന്നു.",
+      advice: "ഉടനടി ആരംഭിക്കുക. വിശ്വാസത്തോടെ എടുക്കുന്ന ആദ്യ ചുവട് ഇതിനകം സംരക്ഷിക്കപ്പെട്ടിരിക്കുന്നു.",
+    },
+    en: {
+      title: "Faal One — The First Sign",
+      shortTitle: "First Sign",
+      interpretation: "A journey or fresh beginning is strongly favored. The way ahead is open with divine grace.",
+      advice: "Begin immediately. The first step taken with faith is already protected.",
+    },
   },
   {
     id: 2,
     innerMark: "two-dots",
-    arabic: "الفأل الثاني",
-    title: "Faal Two — Duality",
-    description: "Two marks within the heart speak of partnership, balance, and the meeting of two forces or two people.",
-    interpretation: "A matter involving two people, two choices, or a partnership is central to your situation.",
-    advice: "Seek harmony between the two sides. Do not force one to dominate the other — balance is the key.",
+    ml: {
+      title: "രണ്ടാം ഫാൽ — ദ്വൈതം",
+      shortTitle: "ദ്വൈതം",
+      interpretation: "രണ്ട് വ്യക്തികളോ തിരഞ്ഞെടുപ്പുകളോ ഉൾക്കൊള്ളുന്ന ഒരു കാര്യം ഇപ്പോൾ കേന്ദ്രബിന്ദുവാണ്.",
+      advice: "ഇരുഭാഗത്തിനിടയിൽ സന്തുലനം തേടുക. ഒന്നിനെ ആധിപത്യം സ്ഥാപിക്കാൻ നിർബന്ധിക്കരുത്.",
+    },
+    en: {
+      title: "Faal Two — Duality",
+      shortTitle: "Duality",
+      interpretation: "A matter involving two people or two choices is central to your situation.",
+      advice: "Seek harmony between both sides. Balance is the key.",
+    },
   },
   {
     id: 3,
     innerMark: "arc-up",
-    arabic: "الفأل الثالث",
-    title: "Faal Three — The Rising Arc",
-    description: "An arc rising upward within the heart — a symbol of ascent, hope, and matters elevating toward resolution.",
-    interpretation: "Your situation is on the rise. What has been low or difficult is beginning to lift and improve.",
-    advice: "Maintain your upward momentum. Do not look down at where you were — keep your eyes on where you are going.",
+    ml: {
+      title: "മൂന്നാം ഫാൽ — ഉയർച്ചയുടെ വില്ല്",
+      shortTitle: "ഉയർച്ചയുടെ വില്ല്",
+      interpretation: "നിങ്ങളുടെ അവസ്ഥ ഉയരുകയാണ്. ബുദ്ധിമുട്ടുകൾ ഒഴിഞ്ഞ് കാര്യങ്ങൾ മെച്ചപ്പെടാൻ തുടങ്ങിയിരിക്കുന്നു.",
+      advice: "ഉയർന്ന ഗതിവേഗം നിലനിർത്തുക. നിങ്ങൾ പോകുന്ന ദിശ നോക്കുക, വന്ന വഴി നോക്കരുത്.",
+    },
+    en: {
+      title: "Faal Three — The Rising Arc",
+      shortTitle: "Rising Arc",
+      interpretation: "Your situation is on the rise. What has been difficult is beginning to lift and improve.",
+      advice: "Maintain your upward momentum. Keep your eyes on where you are going.",
+    },
   },
   {
     id: 4,
     innerMark: "three-dots",
-    arabic: "الفأل الرابع",
-    title: "Faal Four — The Three Witnesses",
-    description: "Three dots form a triangle within the heart — body, soul, and spirit aligned as one unified witness.",
-    interpretation: "A matter of travel, news from afar, or the involvement of a third party brings clarity to your situation.",
-    advice: "Seek counsel from a trusted third person. The answer you need exists outside your current circle.",
+    ml: {
+      title: "നാലാം ഫാൽ — മൂന്ന് സാക്ഷികൾ",
+      shortTitle: "മൂന്ന് സാക്ഷികൾ",
+      interpretation: "ഒരു മൂന്നാം കക്ഷിയുടെ ഇടപെടൽ അല്ലെങ്കിൽ ദൂരത്തു നിന്ന് വരുന്ന വാർത്ത നിങ്ങളുടെ കാര്യത്തിന് വ്യക്തത നൽകും.",
+      advice: "വിശ്വസ്തനായ ഒരു മൂന്നാമൻ്റെ ഉപദേശം തേടുക. ഉത്തരം നിങ്ങളുടെ നിലവിലെ വൃത്തത്തിന് പുറത്ത് ഉണ്ട്.",
+    },
+    en: {
+      title: "Faal Four — The Three Witnesses",
+      shortTitle: "Three Witnesses",
+      interpretation: "A third party or news from afar brings clarity to your situation.",
+      advice: "Seek counsel from a trusted third person. The answer exists outside your current circle.",
+    },
   },
   {
     id: 5,
     innerMark: "line-h",
-    arabic: "الفأل الخامس",
-    title: "Faal Five — The Horizon",
-    description: "A horizontal line divides the heart — the horizon between what is visible and what lies beyond sight.",
-    interpretation: "A period of waiting and patience is indicated. The answer exists but has not yet crossed into your visible world.",
-    advice: "Wait with active patience. Prepare for what is coming rather than chasing what is not yet here.",
+    ml: {
+      title: "അഞ്ചാം ഫാൽ — ചക്രവാളം",
+      shortTitle: "ചക്രവാളം",
+      interpretation: "ക്ഷമ ആവശ്യമായ ഒരു കാലഘട്ടം സൂചിപ്പിക്കപ്പെടുന്നു. ഉത്തരം ഉണ്ട്, എന്നാൽ ഇനിയും നിങ്ങളുടെ ദൃശ്യമേഖലയിൽ പ്രവേശിച്ചിട്ടില്ല.",
+      advice: "സജീവമായ ക്ഷമയോടെ കാത്തിരിക്കുക. ഇനിയും വരേണ്ടതിനായി ഇപ്പോൾ ഒരുങ്ങുക.",
+    },
+    en: {
+      title: "Faal Five — The Horizon",
+      shortTitle: "The Horizon",
+      interpretation: "A period of waiting is indicated. The answer exists but has not yet crossed into your visible world.",
+      advice: "Wait with active patience. Prepare for what is coming rather than chasing what is not yet here.",
+    },
   },
   {
     id: 6,
     innerMark: "eye",
-    arabic: "الفأل السادس",
-    title: "Faal Six — The Watchful Eye",
-    description: "An eye rests at the center of the heart — the divine witness that sees all hidden matters and intentions.",
-    interpretation: "You are being watched over with care. Hidden protection surrounds your situation. Sincerity matters greatly now.",
-    advice: "Act as though every deed is seen and recorded — because it is. Your true intentions will determine the outcome.",
+    ml: {
+      title: "ആറാം ഫാൽ — കാവൽ കണ്ണ്",
+      shortTitle: "കാവൽ കണ്ണ്",
+      interpretation: "നിങ്ങൾ ദൈവിക ദൃഷ്ടിയിൽ സൂക്ഷ്മമായി കാക്കപ്പെടുന്നു. മറഞ്ഞ സംരക്ഷണം നിങ്ങളെ ചുറ്റിപ്പറ്റിയിരിക്കുന്നു.",
+      advice: "ഓരോ പ്രവൃത്തിയും കാണപ്പെടുന്നുണ്ട് എന്ന് ഓർത്ത് പ്രവർത്തിക്കുക. നിങ്ങളുടെ യഥാർത്ഥ ഉദ്ദേശ്യം ഫലം നിർണ്ണയിക്കും.",
+    },
+    en: {
+      title: "Faal Six — The Watchful Eye",
+      shortTitle: "Watchful Eye",
+      interpretation: "You are being watched over with care. Hidden protection surrounds your situation.",
+      advice: "Act as though every deed is seen. Your true intentions will determine the outcome.",
+    },
   },
   {
     id: 7,
     innerMark: "x-cross",
-    arabic: "الفأل السابع",
-    title: "Faal Seven — The Crossroads",
-    description: "Two diagonal lines cross within the heart — a sign of obstacle, intersection, or a matter requiring resolution.",
-    interpretation: "A blockage or delay is present. Two forces or desires are crossing each other and creating friction.",
-    advice: "Identify the source of the conflict and address it directly. Avoidance only deepens the crossing.",
+    ml: {
+      title: "ഏഴാം ഫാൽ — കവലപ്പാത",
+      shortTitle: "കവലപ്പാത",
+      interpretation: "ഒരു തടസ്സം അല്ലെങ്കിൽ വൈകൽ ഉണ്ട്. രണ്ട് ശക്തികൾ പരസ്പരം മുട്ടി ഉരസൽ ഉണ്ടാക്കുന്നു.",
+      advice: "സംഘർഷത്തിൻ്റെ ഉറവിടം കണ്ടെത്തി നേരിട്ട് അഭിമുഖീകരിക്കുക. ഒഴിഞ്ഞുമാറൽ കൂടുതൽ ആഴത്തിലേക്ക് നയിക്കും.",
+    },
+    en: {
+      title: "Faal Seven — The Crossroads",
+      shortTitle: "Crossroads",
+      interpretation: "A blockage or delay is present. Two forces are crossing each other and creating friction.",
+      advice: "Identify the conflict source and address it directly. Avoidance only deepens the crossing.",
+    },
   },
   {
     id: 8,
     innerMark: "line-v",
-    arabic: "الفأل الثامن",
-    title: "Faal Eight — The Pillar",
-    description: "A single vertical line stands firm at the center of the heart — the pillar of steadfastness and will.",
-    interpretation: "Strength, determination, and individual will are the deciding forces in your situation. Stand firm.",
-    advice: "Be the pillar. Do not bend to pressure or persuasion that conflicts with your truth. Firmness is your protection.",
+    ml: {
+      title: "എട്ടാം ഫാൽ — തൂൺ",
+      shortTitle: "തൂൺ",
+      interpretation: "ദൃഢത, നിശ്ചയദാർഢ്യം, വ്യക്തിഗത ഇച്ഛാശക്തി എന്നിവ ഇപ്പോൾ നിർണ്ണായകശക്തികളാണ്. ഉറച്ചുനിൽക്കുക.",
+      advice: "തൂണായിരിക്കുക. നിങ്ങളുടെ സത്യത്തിന് വിരുദ്ധമായ സമ്മർദ്ദങ്ങൾക്ക് വഴങ്ങരുത്. ദൃഢത നിങ്ങളുടെ സംരക്ഷണമാണ്.",
+    },
+    en: {
+      title: "Faal Eight — The Pillar",
+      shortTitle: "The Pillar",
+      interpretation: "Strength and determination are the deciding forces in your situation. Stand firm.",
+      advice: "Be the pillar. Do not bend to pressure that conflicts with your truth. Firmness is your protection.",
+    },
   },
   {
     id: 9,
     innerMark: "circle",
-    arabic: "الفأل التاسع",
-    title: "Faal Nine — The Circle",
-    description: "A small open circle at the heart's center — the eternal loop of return, wholeness, and completion.",
-    interpretation: "What was sent out is returning. A cycle is completing. What you gave will come back to you.",
-    advice: "Prepare to receive. The circle closes in your favor — but only for those who remained consistent.",
+    ml: {
+      title: "ഒമ്പതാം ഫാൽ — വൃത്തം",
+      shortTitle: "വൃത്തം",
+      interpretation: "അയച്ചത് തിരിച്ചെത്തുന്നു. ഒരു ചക്രം പൂർത്തിയാകുന്നു. നിങ്ങൾ കൊടുത്തത് നിങ്ങളിലേക്ക് തിരിച്ചുവരും.",
+      advice: "സ്വീകരിക്കാൻ ഒരുങ്ങുക. വൃത്തം നിങ്ങൾക്ക് അനുകൂലമായി അടയുന്നു — സ്ഥിരതയോടെ ഇരുന്നവർക്ക് മാത്രം.",
+    },
+    en: {
+      title: "Faal Nine — The Circle",
+      shortTitle: "The Circle",
+      interpretation: "What was sent out is returning. A cycle is completing. What you gave will come back to you.",
+      advice: "Prepare to receive. The circle closes in your favor — but only for those who remained consistent.",
+    },
   },
   {
     id: 10,
     innerMark: "arc-down",
-    arabic: "الفأل العاشر",
-    title: "Faal Ten — The Descent",
-    description: "An arc falling downward within the heart — indicating the need for humility, descent, or a return to roots.",
-    interpretation: "Pride or overreaching may be causing stagnation. A willingness to lower yourself will open the way.",
-    advice: "Humble yourself before the situation. What you seek will come to you when you stop demanding it.",
+    ml: {
+      title: "പത്താം ഫാൽ — ഇറക്കം",
+      shortTitle: "ഇറക്കം",
+      interpretation: "അഹന്ത അല്ലെങ്കിൽ അമിത പ്രതീക്ഷ സ്തംഭനത്തിന് കാരണമാകുന്നു. വിനയം വഴി തുറക്കും.",
+      advice: "സ്ഥിതിഗതികൾക്ക് മുൻപിൽ വിനയത്തോടെ ഇരിക്കുക. നിങ്ങൾ ആവശ്യപ്പെടുന്നത് നിർത്തുമ്പോൾ അത് വരും.",
+    },
+    en: {
+      title: "Faal Ten — The Descent",
+      shortTitle: "The Descent",
+      interpretation: "Pride or overreaching may be causing stagnation. A willingness to be humble will open the way.",
+      advice: "Humble yourself before the situation. What you seek will come when you stop demanding it.",
+    },
   },
   {
     id: 11,
     innerMark: "cross",
-    arabic: "الفأل الحادي عشر",
-    title: "Faal Eleven — The Four Directions",
-    description: "A perfect cross at the center of the heart — the meeting of all four directions and the stillness at the center.",
-    interpretation: "You are at the center of several converging forces. A major decision point has arrived.",
-    advice: "Be still before you choose. The one who is centered when all directions pull is the one who chooses wisely.",
+    ml: {
+      title: "പതിനൊന്നാം ഫാൽ — നാലു ദിശകൾ",
+      shortTitle: "നാലു ദിശകൾ",
+      interpretation: "നിരവധി ഒത്തുചേരുന്ന ശക്തികളുടെ കേന്ദ്രത്തിലാണ് നിങ്ങൾ. ഒരു നിർണ്ണായക തീരുമാന നിമിഷം വന്നിരിക്കുന്നു.",
+      advice: "തിരഞ്ഞെടുക്കുന്നതിന് മുൻപ് ശാന്തനാകുക. എല്ലാ ദിശകളും വലിക്കുമ്പോൾ ആരു കേന്ദ്രീകൃതനാണോ അവൻ ജ്ഞാനത്തോടെ തിരഞ്ഞെടുക്കും.",
+    },
+    en: {
+      title: "Faal Eleven — The Four Directions",
+      shortTitle: "Four Directions",
+      interpretation: "You are at the center of converging forces. A major decision point has arrived.",
+      advice: "Be still before you choose. The one who is centered when all directions pull is the one who chooses wisely.",
+    },
   },
   {
     id: 12,
     innerMark: "spiral",
-    arabic: "الفأل الثاني عشر",
-    title: "Faal Twelve — The Spiral",
-    description: "A spiral unfurling within the heart — the symbol of deep inner movement and transforming from within.",
-    interpretation: "An inward process of growth or transformation is occurring beneath the surface of visible events.",
-    advice: "Trust the unseen work happening within you. Do not measure your progress by what is visible yet.",
+    ml: {
+      title: "പന്ത്രണ്ടാം ഫാൽ — ചുഴി",
+      shortTitle: "ചുഴി",
+      interpretation: "ദൃശ്യ സംഭവങ്ങളുടെ ഉപരിതലത്തിന് കീഴിൽ ഒരു ആന്തരിക വളർച്ചാ പ്രക്രിയ നടക്കുന്നു.",
+      advice: "നിങ്ങൾക്കുള്ളിൽ നടക്കുന്ന അദൃശ്യ പ്രവർത്തനത്തെ വിശ്വസിക്കുക. ഇനിയും ദൃശ്യമല്ലാത്തതിനെ അളക്കരുത്.",
+    },
+    en: {
+      title: "Faal Twelve — The Spiral",
+      shortTitle: "The Spiral",
+      interpretation: "An inner process of transformation is occurring beneath the surface of visible events.",
+      advice: "Trust the unseen work happening within you. Do not measure your progress by what is visible yet.",
+    },
   },
   {
     id: 13,
     innerMark: "double-arc",
-    arabic: "الفأل الثالث عشر",
-    title: "Faal Thirteen — The Two Waves",
-    description: "Two arcs stacked within the heart — waves of emotion or events arriving in succession, one after another.",
-    interpretation: "Two events or emotions are coming in sequence. The second wave brings the true resolution.",
-    advice: "Endure the first wave — it is not the final answer. Hold firm and the second movement will bring relief.",
+    ml: {
+      title: "പതിമൂന്നാം ഫാൽ — രണ്ടു തിരകൾ",
+      shortTitle: "രണ്ടു തിരകൾ",
+      interpretation: "രണ്ടു സംഭവങ്ങൾ അല്ലെങ്കിൽ വികാരങ്ങൾ ക്രമമായി വരുന്നു. രണ്ടാമത്തെ തിര യഥാർത്ഥ പരിഹാരം കൊണ്ടുവരുന്നു.",
+      advice: "ആദ്യ തിരയെ സഹിക്കുക — അത് അന്തിമ ഉത്തരമല്ല. ഉറച്ചുനിൽക്കൂ, രണ്ടാം ചലനം ആശ്വാസം നൽകും.",
+    },
+    en: {
+      title: "Faal Thirteen — The Two Waves",
+      shortTitle: "Two Waves",
+      interpretation: "Two events are coming in sequence. The second wave brings the true resolution.",
+      advice: "Endure the first wave — it is not the final answer. The second movement will bring relief.",
+    },
   },
   {
     id: 14,
     innerMark: "star3",
-    arabic: "الفأل الرابع عشر",
-    title: "Faal Fourteen — The Three-Point Star",
-    description: "A three-pointed star blazes within the heart — a sign of elevated spiritual blessing and divine intervention.",
-    interpretation: "A blessing from above is specifically directed toward your matter. Spiritual forces are actively involved.",
-    advice: "Recite your prayers and expressions of gratitude. The door of divine help is open — enter through supplication.",
+    ml: {
+      title: "പതിനാലാം ഫാൽ — മൂന്നു കൊടുമുടി നക്ഷത്രം",
+      shortTitle: "ദിവ്യ നക്ഷത്രം",
+      interpretation: "ഒരു ദൈവിക അനുഗ്രഹം പ്രത്യേകമായി നിങ്ങളുടെ കാര്യത്തിലേക്ക് നയിക്കപ്പെടുന്നു. ആത്മീയ ശക്തികൾ സജീവമായി ഇടപെടുന്നു.",
+      advice: "നിങ്ങളുടെ പ്രാർത്ഥനകളും കൃതജ്ഞതകളും ഉരുവിടുക. ദൈവിക സഹായത്തിൻ്റെ വാതിൽ തുറന്നിരിക്കുന്നു — പ്രാർത്ഥനയിലൂടെ പ്രവേശിക്കുക.",
+    },
+    en: {
+      title: "Faal Fourteen — The Three-Point Star",
+      shortTitle: "Divine Star",
+      interpretation: "A blessing from above is directed toward your matter. Spiritual forces are actively involved.",
+      advice: "Recite your prayers and gratitude. The door of divine help is open — enter through supplication.",
+    },
   },
   {
     id: 15,
     innerMark: "zigzag",
-    arabic: "الفأل الخامس عشر",
-    title: "Faal Fifteen — The Zigzag Path",
-    description: "A zigzag line within the heart — the path that moves back and forth before reaching its destination.",
-    interpretation: "The road to your goal is not straight. Twists and unexpected turns are part of the journey, not obstacles.",
-    advice: "Accept the indirect route. Each turn on the zigzag path is teaching you something essential for your arrival.",
+    ml: {
+      title: "പതിനഞ്ചാം ഫാൽ — വളഞ്ഞ പാത",
+      shortTitle: "വളഞ്ഞ പാത",
+      interpretation: "ലക്ഷ്യത്തിലേക്കുള്ള വഴി നേർരേഖയിലല്ല. വളവുകളും അപ്രതീക്ഷിത തിരിവുകളും ഈ യാത്രയുടെ ഭാഗമാണ്, തടസ്സങ്ങളല്ല.",
+      advice: "നേരിടാത്ത വഴി സ്വീകരിക്കുക. ഓരോ വളവും ലക്ഷ്യ പ്രാപ്തിക്ക് ആവശ്യമായ ഒരു പാഠം പഠിപ്പിക്കുന്നു.",
+    },
+    en: {
+      title: "Faal Fifteen — The Zigzag Path",
+      shortTitle: "Zigzag Path",
+      interpretation: "The road to your goal is not straight. Twists and turns are part of the journey, not obstacles.",
+      advice: "Accept the indirect route. Each turn is teaching you something essential for your arrival.",
+    },
   },
   {
     id: 16,
     innerMark: "line-diag",
-    arabic: "الفأل السادس عشر",
-    title: "Faal Sixteen — The Diagonal",
-    description: "A diagonal line cuts across the heart — bridging two separate realms, connecting what was apart.",
-    interpretation: "A connection, reconciliation, or bridge is forming between two separated things — people, situations, or desires.",
-    advice: "Be the bridge. The one who connects rather than divides will receive the blessing of both sides.",
+    ml: {
+      title: "പതിനാറാം ഫാൽ — ഇരുകരകളെ ബന്ധിക്കുന്ന രേഖ",
+      shortTitle: "ബന്ധനരേഖ",
+      interpretation: "വേർപിരിഞ്ഞ രണ്ട് കാര്യങ്ങൾക്കിടയിൽ ഒരു ബന്ധമോ അനുരഞ്ജനമോ രൂപപ്പെടുന്നു — ആളുകൾ, സ്ഥിതിഗതികൾ, ആഗ്രഹങ്ങൾ.",
+      advice: "പാലമായിരിക്കുക. ഭിന്നിപ്പിക്കുന്നതിന് പകരം ബന്ധിപ്പിക്കുന്നവൻ ഇരുഭാഗത്തിൻ്റെ അനുഗ്രഹം നേടും.",
+    },
+    en: {
+      title: "Faal Sixteen — The Diagonal",
+      shortTitle: "The Bridge",
+      interpretation: "A connection or reconciliation is forming between two separated things — people, situations, or desires.",
+      advice: "Be the bridge. The one who connects rather than divides will receive the blessing of both sides.",
+    },
   },
 ];
