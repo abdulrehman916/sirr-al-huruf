@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// FAAL HASRATH — Completely Independent Module
-// Own data: lib/faalHasrathData.js (Malayalam + English, permanent)
-// Zero imports from / exports to any other module.
+// FAAL HASRATH PAGE — Independent Module
+// Subsections: Faal Ali (16 hearts) + Faalul Luqman (28 symbols)
+// Each subsection uses its own isolated dataset.
+// Zero shared logic with any other module.
 // ═══════════════════════════════════════════════════════════════
 
 import { useState } from "react";
@@ -10,8 +11,9 @@ import { X } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { FAAL_CELLS } from "../lib/faalHasrathData";
+import { LUQMAN_CELLS } from "../lib/faalLuqmanData";
 
-// ── Palette ────────────────────────────────────────────────────
+// ── Shared Palette ─────────────────────────────────────────────
 const P = {
   border:   "rgba(160,100,220,0.40)",
   borderHi: "rgba(180,120,255,0.70)",
@@ -24,7 +26,7 @@ const P = {
   bgHi:     "rgba(160,100,220,0.16)",
 };
 
-// ── SVG inner mark renderer ────────────────────────────────────
+// ── SVG inner mark renderer (Faal Ali) ────────────────────────
 function InnerMark({ mark, size = 28, color = "#D8B4FE" }) {
   const cx = size / 2, cy = size / 2;
   const r = size * 0.14;
@@ -57,7 +59,7 @@ function InnerMark({ mark, size = 28, color = "#D8B4FE" }) {
   );
 }
 
-// ── Heart SVG ──────────────────────────────────────────────────
+// ── Heart SVG (Faal Ali) ───────────────────────────────────────
 function HeartSymbol({ mark, size = 64, active = false }) {
   const heartPath = "M50,30 C50,20 35,10 25,18 C15,26 15,40 25,50 L50,75 L75,50 C85,40 85,26 75,18 C65,10 50,20 50,30 Z";
   const markSize = size * 0.38;
@@ -78,6 +80,47 @@ function HeartSymbol({ mark, size = 64, active = false }) {
         </div>
       </foreignObject>
     </svg>
+  );
+}
+
+// ── Section Tab Selector ───────────────────────────────────────
+function SectionTabs({ section, setSection }) {
+  const tabs = [
+    { key: "ali",    arabic: "فأل حسرت علي",  label: "FAAL ALI"    },
+    { key: "luqman", arabic: "فال لقمان",      label: "FAAL LUQMAN" },
+  ];
+  return (
+    <div className="flex rounded-2xl overflow-hidden border" style={{ borderColor: P.faint }}>
+      {tabs.map((t) => (
+        <motion.button
+          key={t.key}
+          onClick={() => setSection(t.key)}
+          className="flex-1 flex flex-col items-center py-2.5 px-2 relative"
+          style={{
+            background: section === t.key ? P.bgHi : "transparent",
+            borderRight: t.key === "ali" ? `1px solid ${P.faint}` : "none",
+          }}
+          whileTap={{ scale: 0.97 }}
+        >
+          {section === t.key && (
+            <motion.div
+              layoutId="sectionHighlight"
+              className="absolute inset-0"
+              style={{ background: P.bgHi, borderRadius: "inherit" }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+            />
+          )}
+          <span className="font-amiri text-sm leading-none relative z-10"
+            style={{ color: section === t.key ? P.text : P.dim }}>
+            {t.arabic}
+          </span>
+          <span className="font-inter text-[8px] tracking-widest uppercase mt-0.5 relative z-10"
+            style={{ color: section === t.key ? P.text : "rgba(216,180,254,0.28)" }}>
+            {t.label}
+          </span>
+        </motion.button>
+      ))}
+    </div>
   );
 }
 
@@ -105,7 +148,10 @@ function LangToggle({ lang, setLang }) {
   );
 }
 
-// ── Grid Cell ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// FAAL ALI SECTION (unchanged)
+// ══════════════════════════════════════════════════════════════
+
 function FaalCell({ cell, lang, index, onTap }) {
   const t = cell[lang];
   return (
@@ -129,7 +175,6 @@ function FaalCell({ cell, lang, index, onTap }) {
         style={{ color: "rgba(216,180,254,0.30)" }}>
         {cell.id}
       </span>
-
       <motion.div
         className="flex-1 flex items-center justify-center w-full"
         animate={{ opacity: [0.72, 1, 0.72] }}
@@ -137,118 +182,77 @@ function FaalCell({ cell, lang, index, onTap }) {
       >
         <HeartSymbol mark={cell.innerMark} size={52} />
       </motion.div>
-
-      <span
-        className="font-inter text-center leading-tight px-0.5"
-        style={{
-          fontSize: "8px",
-          color: "rgba(216,180,254,0.42)",
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}
-      >
+      <span className="font-inter text-center leading-tight px-0.5"
+        style={{ fontSize: "8px", color: "rgba(216,180,254,0.42)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {t.shortTitle}
       </span>
     </motion.button>
   );
 }
 
-// ── Modal ──────────────────────────────────────────────────────
-function FaalModal({ cell, lang, onClose }) {
+function FaalAliModal({ cell, lang, onClose }) {
   if (!cell) return null;
   const t = cell[lang];
-
   return (
     <AnimatePresence>
-      <motion.div
-        key="faal-overlay"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+      <motion.div key="ali-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-3 pb-4 sm:pb-0"
         style={{ background: "rgba(0,0,0,0.84)", backdropFilter: "blur(8px)" }}
-        onClick={onClose}
-      >
-        <motion.div
-          key="faal-panel"
-          initial={{ opacity: 0, y: 60, scale: 0.94 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 40, scale: 0.96 }}
-          transition={{ duration: 0.30, ease: "easeOut" }}
+        onClick={onClose}>
+        <motion.div key="ali-panel" initial={{ opacity: 0, y: 60, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 40, scale: 0.96 }} transition={{ duration: 0.30, ease: "easeOut" }}
           onClick={e => e.stopPropagation()}
           className="relative w-full max-w-md rounded-3xl border overflow-hidden"
           style={{
             background: "linear-gradient(160deg, rgba(18,8,44,0.99) 0%, rgba(8,4,28,0.99) 100%)",
             borderColor: P.borderHi,
             boxShadow: `0 0 80px ${P.glow}, 0 8px 48px rgba(0,0,0,0.80), inset 0 1px 0 rgba(216,180,254,0.10)`,
-            maxHeight: "88vh",
-            overflowY: "auto",
-          }}
-        >
+            maxHeight: "88vh", overflowY: "auto",
+          }}>
           <div className="absolute top-0 left-0 right-0 h-px"
             style={{ background: `linear-gradient(90deg, transparent, ${P.borderHi}, transparent)` }} />
-
           <button onClick={onClose}
             className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border z-10"
             style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.12)" }}>
             <X className="w-4 h-4 text-white/60" />
           </button>
-
           <div className="p-6 space-y-5">
-            {/* Header */}
             <div className="text-center space-y-3 pt-1">
               <motion.div className="flex justify-center"
-                animate={{ scale: [1, 1.06, 1] }}
-                transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>
+                animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>
                 <HeartSymbol mark={cell.innerMark} size={86} active />
               </motion.div>
-
               <span className="font-inter text-[9px] uppercase tracking-[0.28em]"
                 style={{ color: "rgba(216,180,254,0.38)" }}>
                 {lang === "ml" ? `ഫാൽ ${cell.id} / ൧൬` : `Faal ${cell.id} of 16`}
               </span>
-
-              <motion.h2
-                className="font-amiri font-bold leading-snug"
+              <motion.h2 className="font-amiri font-bold leading-snug"
                 style={{ fontSize: "clamp(1.3rem, 5.5vw, 1.8rem)", color: P.text }}
                 animate={{ textShadow: [`0 0 12px ${P.glow}`, `0 0 32px ${P.glowHi}`, `0 0 12px ${P.glow}`] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
                 {t.result}
               </motion.h2>
-
               <div className="flex items-center justify-center gap-2.5">
                 <div style={{ width: 38, height: 0.5, background: `linear-gradient(to right, transparent, ${P.borderHi})` }} />
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: P.text, boxShadow: `0 0 6px ${P.glowHi}` }} />
                 <div style={{ width: 38, height: 0.5, background: `linear-gradient(to left, transparent, ${P.borderHi})` }} />
               </div>
             </div>
-
-            {/* Body */}
             <div className="rounded-2xl border p-4 space-y-2" style={{ background: P.bg, borderColor: P.faint }}>
               <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>
                 {lang === "ml" ? "◈ ഫലം" : "◈ Result"}
               </p>
               <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${P.faint}, transparent)` }} />
-              <p className="font-amiri text-base leading-relaxed" style={{ color: P.text }}>
-                {t.body}
-              </p>
+              <p className="font-amiri text-base leading-relaxed" style={{ color: P.text }}>{t.body}</p>
             </div>
-
-            {/* Remedy */}
             <div className="rounded-2xl border p-4 space-y-2" style={{ background: P.bg, borderColor: P.faint }}>
               <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>
                 {lang === "ml" ? "☽ പരിഹാരം" : "☽ Remedy"}
               </p>
               <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${P.faint}, transparent)` }} />
-              <p className="font-amiri text-base leading-relaxed text-white/70">
-                {t.remedy}
-              </p>
+              <p className="font-amiri text-base leading-relaxed text-white/70">{t.remedy}</p>
             </div>
-
             <p className="font-inter text-[8px] uppercase tracking-widest text-center pt-1"
               style={{ color: "rgba(216,180,254,0.18)" }}>
               فأل نامه حسرت علي — Faal Nama Hasrath Ali
@@ -260,12 +264,247 @@ function FaalModal({ cell, lang, onClose }) {
   );
 }
 
+function FaalAliSection({ lang }) {
+  const [selected, setSelected] = useState(null);
+  return (
+    <>
+      <div className="rounded-2xl border px-4 py-3 text-center"
+        style={{ background: P.bg, borderColor: P.faint }}>
+        {lang === "ml" ? (
+          <>
+            <p className="font-amiri text-base" style={{ color: P.dim }}>
+              മനസ്സ് ശാന്തമാക്കി ഒരു ഹൃദയം സ്പർശിക്കുക
+            </p>
+            <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
+              style={{ color: "rgba(216,180,254,0.28)" }}>
+              ൧൬ ഹൃദയ ചിഹ്നങ്ങൾ — ഓരോന്നിനും സ്വന്തം ഫലം
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="font-amiri text-base" style={{ color: P.dim }}>
+              Clear your mind and touch one heart with pure intention
+            </p>
+            <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
+              style={{ color: "rgba(216,180,254,0.28)" }}>
+              16 heart symbols — each with its own fixed result
+            </p>
+          </>
+        )}
+      </div>
+
+      <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
+        {FAAL_CELLS.map((cell, i) => (
+          <FaalCell key={cell.id} cell={cell} lang={lang} index={i} onTap={setSelected} />
+        ))}
+      </div>
+
+      <p className="font-inter text-[8px] uppercase tracking-widest text-center"
+        style={{ color: "rgba(216,180,254,0.16)" }}>
+        ✦ ൧ — ൧൬ ✦
+      </p>
+
+      <FaalAliModal cell={selected} lang={lang} onClose={() => setSelected(null)} />
+    </>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// FAALUL LUQMAN SECTION (new, independent)
+// ══════════════════════════════════════════════════════════════
+
+function LuqmanCell({ cell, lang, index, onTap }) {
+  const t = cell[lang];
+  return (
+    <motion.button
+      onClick={() => onTap(cell)}
+      initial={{ opacity: 0, scale: 0.72 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.03, duration: 0.26, ease: "easeOut" }}
+      whileHover={{ scale: 1.07 }}
+      whileTap={{ scale: 0.92 }}
+      className="relative flex flex-col items-center justify-between rounded-2xl border py-3 px-1"
+      style={{
+        background: P.bg,
+        borderColor: P.faint,
+        aspectRatio: "1 / 1",
+        WebkitTapHighlightColor: "transparent",
+        minHeight: 0,
+      }}
+    >
+      <span className="absolute top-1 left-1.5 font-inter text-[8px] tabular-nums"
+        style={{ color: "rgba(216,180,254,0.22)" }}>
+        {cell.lq_id - 100}
+      </span>
+
+      {/* Arabic letter — the main symbol */}
+      <motion.div
+        className="flex-1 flex items-center justify-center w-full"
+        animate={{ opacity: [0.75, 1, 0.75] }}
+        transition={{ duration: 3.4 + index * 0.18, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <span className="font-amiri font-bold select-none"
+          style={{
+            fontSize: "clamp(1.5rem, 7vw, 2.2rem)",
+            color: P.text,
+            textShadow: `0 0 14px ${P.glow}`,
+            lineHeight: 1,
+          }}>
+          {cell.symbol}
+        </span>
+      </motion.div>
+
+      <span className="font-inter text-center leading-tight px-0.5"
+        style={{ fontSize: "7.5px", color: "rgba(216,180,254,0.38)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+        {t.shortTitle}
+      </span>
+    </motion.button>
+  );
+}
+
+function LuqmanModal({ cell, lang, onClose }) {
+  if (!cell) return null;
+  const t = cell[lang];
+  const num = cell.lq_id - 100;
+  return (
+    <AnimatePresence>
+      <motion.div key="lq-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-3 pb-4 sm:pb-0"
+        style={{ background: "rgba(0,0,0,0.84)", backdropFilter: "blur(8px)" }}
+        onClick={onClose}>
+        <motion.div key="lq-panel" initial={{ opacity: 0, y: 60, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 40, scale: 0.96 }} transition={{ duration: 0.30, ease: "easeOut" }}
+          onClick={e => e.stopPropagation()}
+          className="relative w-full max-w-md rounded-3xl border overflow-hidden"
+          style={{
+            background: "linear-gradient(160deg, rgba(18,8,44,0.99) 0%, rgba(8,4,28,0.99) 100%)",
+            borderColor: P.borderHi,
+            boxShadow: `0 0 80px ${P.glow}, 0 8px 48px rgba(0,0,0,0.80), inset 0 1px 0 rgba(216,180,254,0.10)`,
+            maxHeight: "88vh", overflowY: "auto",
+          }}>
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: `linear-gradient(90deg, transparent, ${P.borderHi}, transparent)` }} />
+          <button onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border z-10"
+            style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.12)" }}>
+            <X className="w-4 h-4 text-white/60" />
+          </button>
+          <div className="p-6 space-y-5">
+            <div className="text-center space-y-3 pt-1">
+              {/* Large symbol display */}
+              <motion.div className="flex justify-center"
+                animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>
+                <div className="w-20 h-20 rounded-2xl border flex items-center justify-center"
+                  style={{
+                    background: P.bgHi,
+                    borderColor: P.borderHi,
+                    boxShadow: `0 0 40px ${P.glow}`,
+                  }}>
+                  <span className="font-amiri font-bold" style={{ fontSize: "3rem", color: P.text, lineHeight: 1 }}>
+                    {cell.symbol}
+                  </span>
+                </div>
+              </motion.div>
+
+              <span className="font-inter text-[9px] uppercase tracking-[0.28em]"
+                style={{ color: "rgba(216,180,254,0.38)" }}>
+                {cell.symbolName} — {lang === "ml" ? `${num} / ൨൮` : `${num} of 28`}
+              </span>
+
+              <motion.h2 className="font-amiri font-bold leading-snug"
+                style={{ fontSize: "clamp(1.3rem, 5.5vw, 1.8rem)", color: P.text }}
+                animate={{ textShadow: [`0 0 12px ${P.glow}`, `0 0 32px ${P.glowHi}`, `0 0 12px ${P.glow}`] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+                {t.result}
+              </motion.h2>
+
+              <div className="flex items-center justify-center gap-2.5">
+                <div style={{ width: 38, height: 0.5, background: `linear-gradient(to right, transparent, ${P.borderHi})` }} />
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: P.text, boxShadow: `0 0 6px ${P.glowHi}` }} />
+                <div style={{ width: 38, height: 0.5, background: `linear-gradient(to left, transparent, ${P.borderHi})` }} />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border p-4 space-y-2" style={{ background: P.bg, borderColor: P.faint }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>
+                {lang === "ml" ? "◈ ഫലം" : "◈ Result"}
+              </p>
+              <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${P.faint}, transparent)` }} />
+              <p className="font-amiri text-base leading-relaxed" style={{ color: P.text }}>{t.body}</p>
+            </div>
+
+            <div className="rounded-2xl border p-4 space-y-2" style={{ background: P.bg, borderColor: P.faint }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>
+                {lang === "ml" ? "☽ പരിഹാരം" : "☽ Remedy"}
+              </p>
+              <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${P.faint}, transparent)` }} />
+              <p className="font-amiri text-base leading-relaxed text-white/70">{t.remedy}</p>
+            </div>
+
+            <p className="font-inter text-[8px] uppercase tracking-widest text-center pt-1"
+              style={{ color: "rgba(216,180,254,0.18)" }}>
+              فال لقمان — Faalul Luqman
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function FaalLuqmanSection({ lang }) {
+  const [selected, setSelected] = useState(null);
+  return (
+    <>
+      <div className="rounded-2xl border px-4 py-3 text-center"
+        style={{ background: P.bg, borderColor: P.faint }}>
+        {lang === "ml" ? (
+          <>
+            <p className="font-amiri text-base" style={{ color: P.dim }}>
+              മനസ്സ് ഒന്നടങ്ങി ഒരു അക്ഷരം സ്പർശിക്കുക
+            </p>
+            <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
+              style={{ color: "rgba(216,180,254,0.28)" }}>
+              ൨൮ അക്ഷര ചിഹ്നങ്ങൾ — ഓരോന്നിനും സ്വന്തം ഫലം
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="font-amiri text-base" style={{ color: P.dim }}>
+              Still your mind and touch one Arabic letter
+            </p>
+            <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
+              style={{ color: "rgba(216,180,254,0.28)" }}>
+              28 Arabic symbols — each with its own fixed result
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* 4×7 grid for 28 cells */}
+      <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
+        {LUQMAN_CELLS.map((cell, i) => (
+          <LuqmanCell key={cell.lq_id} cell={cell} lang={lang} index={i} onTap={setSelected} />
+        ))}
+      </div>
+
+      <p className="font-inter text-[8px] uppercase tracking-widest text-center"
+        style={{ color: "rgba(216,180,254,0.16)" }}>
+        ✦ فال لقمان ✦
+      </p>
+
+      <LuqmanModal cell={selected} lang={lang} onClose={() => setSelected(null)} />
+    </>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════
 export default function FaalHasrathPage() {
   const [lang, setLang] = useState("ml");
-  const [selected, setSelected] = useState(null);
+  const [section, setSection] = useState("ali");
 
   return (
     <PageLayout>
@@ -274,58 +513,36 @@ export default function FaalHasrathPage() {
         <PageTitle
           arabic="فأل نامه حسرت علي"
           latin="Faal Nama Hasrath Ali"
-          subtitle="16 Sacred Heart Symbols"
+          subtitle="Sacred Omen System"
           icon="♡"
         />
 
+        {/* Section selector */}
+        <SectionTabs section={section} setSection={setSection} />
+
+        {/* Language toggle */}
         <LangToggle lang={lang} setLang={setLang} />
 
-        {/* Instruction */}
-        <div className="rounded-2xl border px-4 py-3 text-center"
-          style={{ background: P.bg, borderColor: P.faint }}>
-          {lang === "ml" ? (
-            <>
-              <p className="font-amiri text-base" style={{ color: P.dim }}>
-                മനസ്സ് ശാന്തമാക്കി ഒരു ഹൃദയം സ്പർശിക്കുക
-              </p>
-              <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
-                style={{ color: "rgba(216,180,254,0.28)" }}>
-                ൧൬ ഹൃദയ ചിഹ്നങ്ങൾ — ഓരോന്നിനും സ്വന്തം ഫലം
-              </p>
-            </>
+        {/* Conditional section render */}
+        <AnimatePresence mode="wait">
+          {section === "ali" ? (
+            <motion.div key="ali-section"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28 }}
+              className="space-y-4">
+              <FaalAliSection lang={lang} />
+            </motion.div>
           ) : (
-            <>
-              <p className="font-amiri text-base" style={{ color: P.dim }}>
-                Clear your mind and touch one heart with pure intention
-              </p>
-              <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
-                style={{ color: "rgba(216,180,254,0.28)" }}>
-                16 heart symbols — each with its own fixed result
-              </p>
-            </>
+            <motion.div key="luqman-section"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28 }}
+              className="space-y-4">
+              <FaalLuqmanSection lang={lang} />
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
 
-        {/* 4×4 Grid — RTL (cell 1 = top-right, matching manuscript) */}
-        <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
-          {FAAL_CELLS.map((cell, i) => (
-            <FaalCell
-              key={cell.id}
-              cell={cell}
-              lang={lang}
-              index={i}
-              onTap={setSelected}
-            />
-          ))}
-        </div>
-
-        <p className="font-inter text-[8px] uppercase tracking-widest text-center"
-          style={{ color: "rgba(216,180,254,0.16)" }}>
-          ✦ ൧ — ൧൬ ✦
-        </p>
       </div>
-
-      <FaalModal cell={selected} lang={lang} onClose={() => setSelected(null)} />
     </PageLayout>
   );
 }
