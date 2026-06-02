@@ -481,12 +481,6 @@ export default function HeroSection({ mouse }) {
   return (
     <div className="min-h-screen font-inter relative overflow-x-hidden flex flex-col items-center justify-center pb-12 pt-4">
 
-      {/* Calligraphy atmosphere — CSS on mobile, Framer Motion on desktop */}
-      {isMobile
-        ? <CalligraphyAtmosphereMobile />
-        : <CalligraphyAtmosphereDesktop mouse={safeMouse} paused={isNavigating} />
-      }
-
       {/* Light rays — desktop only */}
       {!isMobile && <LightRays paused={isNavigating} />}
 
