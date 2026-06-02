@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import SacredWheel from "./SacredWheel";
@@ -201,12 +202,25 @@ function CalligraphyAtmosphereDesktop({ mouse, paused }) {
   );
 }
 
-// Mobile: pure CSS calligraphy — zero JS animation
+// Mobile: pure CSS calligraphy — zero JS animation, visibility-paused
 function CalligraphyAtmosphereMobile() {
+  useEffect(() => {
+    const root = document.getElementById("hero-calligraphy-mobile");
+    if (!root) return;
+    const onVis = () => {
+      const state = document.hidden ? "paused" : "running";
+      root.querySelectorAll("[data-canim]").forEach(el => {
+        el.style.animationPlayState = state;
+      });
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
+    <div id="hero-calligraphy-mobile" className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
       {CALLIGRAPHY_CHARS.slice(0, 4).map((c, i) => (
-        <span key={i} className="absolute font-amiri select-none"
+        <span key={i} data-canim="1" className="absolute font-amiri select-none"
           style={{
             top: c.top, left: c.left, fontSize: c.size,
             color: "#D4AF37", opacity: c.opacity,
