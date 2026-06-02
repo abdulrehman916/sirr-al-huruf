@@ -281,21 +281,39 @@ function FaalAliSection({ lang }) {
             ഫാൽ അലി എടുക്കുന്ന വിധം
           </h3>
         </div>
-        <div className="space-y-2.5 text-sm">
+        <div className="space-y-2 text-sm">
           <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            ഫാൽ അലി (ع) ദാനിയേൽ (അ) നിൽനിന്നും ലഭിച്ചതായി പറയപ്പെടുന്നു.
+            1. സൂറത്ത് അൽ-ഫാതിഹ ഓതുക.
           </p>
           <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            ഇതെടുക്കുന്നതിന് ആദ്യം ഫാതിഹാ നബിമാരുടെ പേരിലും, അവിടുത്തെ കുടുംബാംഗങ്ങൾക്കും, സഹാബാക്കൾക്കും, വിശിഷ്യാ അലി (ع) യ്ക്കു വേണ്ടിയും ഓതി ഹദിയാ ചെയ്യുക.
+            2. അതിന്റെ സവാബ് റസൂലുല്ലാഹ് ﷺ യ്ക്ക് ഹദിയ ചെയ്യുക.
           </p>
           <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            ശേഷം 3 കുൽ സൂറത്തുകൾ (സൂറത്തുൽ ഇഖ്‌ലാസ്, സൂറത്തുൽ ഫലഖ്, സൂറത്തുന്നാസ്) ഓതുക.
+            3. ഒരു ഫാതിഹ ഓതി അഹ്‌ലുൽ ബൈത്തിന് (റസൂലുല്ലാഹ് ﷺ യുടെ കുടുംബത്തിന്) ഹദിയ ചെയ്യുക.
           </p>
           <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            കണ്ണടച്ചുകൊണ്ട് കലിമാവിരൽ ഉപയോഗിച്ച് മൂന്നു വട്ടം ചുറ്റിയശേഷം ഏതുകാര്യമാണോ അറിയേണ്ടത് അത് മനസ്സിൽ കരുതുക. തുടർന്ന് കളിയിൽ തൊടുക.
+            4. ഒരു ഫാതിഹ ഓതി സഹാബാക്കൾക്ക് ഹദിയ ചെയ്യുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            5. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് അലി (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            6. കണ്ണടയ്ക്കുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            7. കലിമാ ശരീഫ് ചൊല്ലി കലിമാവിരൽ ഉയർത്തുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            8. സൂറത്ത് അൽ-ഇഖ്‌ലാസ്, സൂറത്ത് അൽ-ഫലഖ്, സൂറത്ത് അൻ-നാസ് (3 കുൽ സൂറത്തുകൾ) ഓതുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            9. മനസ്സിൽ ഉദ്ദേശിക്കുന്ന കാര്യം കരുതുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            10. അക്ഷരങ്ങളുടെ കളത്തിൽ സ്പർശിക്കുക.
           </p>
           <p className="font-amiri leading-relaxed font-semibold" style={{ color: P.text }}>
-            ഒരു പ്രാവശ്യം മാത്രം ഫാൽ നോക്കുക.
+            11. ലഭിക്കുന്ന അക്ഷരത്തിന്റെ ഫലം വായിക്കുക.
           </p>
         </div>
       </motion.div>
