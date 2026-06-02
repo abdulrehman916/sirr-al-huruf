@@ -1,6 +1,5 @@
 import { motion, useMotionValue } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
-import useMouseParallax from "../hooks/useMouseParallax";
 import useIsMobile from "../hooks/useIsMobile";
 import { useNavigation } from "../context/NavigationContext";
 
@@ -313,39 +312,41 @@ function AsmaNames({ containerSize, mouseX, mouseY, paused, isMobile }) {
     }),
   [half, ORBIT_R]);
 
-  // CSS animation duration matches the original ORBIT_DURATION=120s
-  const orbitStyle = paused
-    ? {}
-    : { animation: "sw-orbit 120s linear infinite" };
-
   return (
     <>
+      {/* Outer ring wrapper — Framer Motion rotate only (no CSS animation conflict) */}
       <motion.div
         className="absolute inset-0 pointer-events-none"
         style={{
           zIndex: 8,
-          x: parallaxScale ? mouseX : 0,
-          y: parallaxScale ? mouseY : 0,
           willChange: isMobile ? "auto" : "transform",
-          // Rotate the whole ring with CSS — no JS per frame
           transformOrigin: `${half}px ${half}px`,
-          ...orbitStyle,
         }}
+        animate={paused ? {} : { rotate: 360 }}
+        transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
       >
+        {/* Parallax offset wrapper — separate from rotation to avoid transform conflict */}
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            x: parallaxScale ? mouseX : 0,
+            y: parallaxScale ? mouseY : 0,
+          }}
+        >
         {positions.map(({ x, y }, i) => {
           const name = ASMA[i];
           const breathDelay = (i / ASMA.length) * 4;
           return (
-            <div key={name}
+            // Counter-rotate each label with Framer Motion — consistent with outer ring
+            <motion.div key={name}
               style={{
                 position: "absolute",
                 left: x, top: y,
-                // Counter-rotate each label so text stays upright
-                transformOrigin: "center center",
-                transform: "translate(-50%, -50%) translateZ(0)",
-                // CSS counter-rotation keeps text readable as ring spins
-                animation: paused ? "none" : "sw-orbit-counter 120s linear infinite",
+                translateX: "-50%",
+                translateY: "-50%",
               }}
+              animate={paused ? {} : { rotate: -360 }}
+              transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
             >
               <motion.div
                 style={{
@@ -384,9 +385,10 @@ function AsmaNames({ containerSize, mouseX, mouseY, paused, isMobile }) {
               >
                 {name}
               </motion.span>
-            </div>
+            </motion.div>
           );
         })}
+        </motion.div>
       </motion.div>
     </>
   );
@@ -457,11 +459,17 @@ function getContainerSize() {
 }
 
 /* ── Main export ── */
-export default function SacredWheel() {
+// Accepts shared mouse MotionValues from Home — no own useMouseParallax call
+export default function SacredWheel({ mouse }) {
   const [containerSize, setContainerSize] = useState(getContainerSize);
-  const { x: mouseX, y: mouseY } = useMouseParallax(1);
   const isMobile = useIsMobile();
   const { isNavigating } = useNavigation();
+
+  // Always create fallback MotionValues (Rules of Hooks — must be unconditional)
+  const fallbackX = useMotionValue(0);
+  const fallbackY = useMotionValue(0);
+  const mouseX = mouse?.x ?? fallbackX;
+  const mouseY = mouse?.y ?? fallbackY;
 
   // Scale MotionValues for the outer bloom parallax (desktop only)
   const bloomX = useMotionValue(0);
@@ -469,7 +477,6 @@ export default function SacredWheel() {
 
   useEffect(() => {
     if (isMobile) return;
-    // Derive bloom offset from mouseX/mouseY MotionValues
     const unsubX = mouseX.on("change", v => bloomX.set(v * 2));
     const unsubY = mouseY.on("change", v => bloomY.set(v * 2));
     return () => { unsubX(); unsubY(); };

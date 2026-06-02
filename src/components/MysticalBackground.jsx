@@ -1,6 +1,5 @@
 import { motion, useTransform, useMotionValue } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
-import useMouseParallax from "../hooks/useMouseParallax";
+import { useEffect, useState, useRef, useMemo } from "react";
 import useIsMobile from "../hooks/useIsMobile";
 import { useNavigation } from "../context/NavigationContext";
 
@@ -362,19 +361,15 @@ function LightRays({ mouse, paused }) {
   );
 }
 
-// Zero-value static MotionValues for mobile — no parallax, no rAF
-const ZERO_MV = { x: { get: () => 0, on: () => () => {} }, y: { get: () => 0, on: () => () => {} } };
+// Zero-value static MotionValues used as fallback when no mouse prop provided
+const ZERO_X = { get: () => 0, set: () => {}, on: () => () => {} };
+const ZERO_Y = { get: () => 0, set: () => {}, on: () => () => {} };
 
-export default function MysticalBackground() {
+export default function MysticalBackground({ mouse }) {
   const isMobile = useIsMobile();
-  // On mobile: useMouseParallax returns zero MotionValues (no rAF runs)
-  // On desktop: returns live MotionValues driven by mousemove
-  const { x: mouseX, y: mouseY } = useMouseParallax(1);
   const { isNavigating } = useNavigation();
-
-  // Build a mouse-like object for child components that still use mouse.x/mouse.y
-  // These are MotionValues — passed as `x`/`y` props to motion.div, no re-renders
-  const mouse = { x: mouseX, y: mouseY };
+  // Use provided shared mouse or safe zero fallback (no rAF, no listeners)
+  const safeMouse = mouse ?? { x: ZERO_X, y: ZERO_Y };
 
   return (
     <div
@@ -385,11 +380,11 @@ export default function MysticalBackground() {
         willChange: "transform",
       }}
     >
-      <StarField mouse={mouse} paused={isNavigating} isMobile={isMobile} />
-      <NebulaLayers mouse={mouse} paused={isNavigating} isMobile={isMobile} />
-      <BackgroundLetters mouse={mouse} paused={isNavigating} isMobile={isMobile} />
-      <SacredGeoBg mouse={mouse} paused={isNavigating} isMobile={isMobile} />
-      {!isMobile && <LightRays mouse={mouse} paused={isNavigating} />}
+      <StarField mouse={safeMouse} paused={isNavigating} isMobile={isMobile} />
+      <NebulaLayers mouse={safeMouse} paused={isNavigating} isMobile={isMobile} />
+      <BackgroundLetters mouse={safeMouse} paused={isNavigating} isMobile={isMobile} />
+      <SacredGeoBg mouse={safeMouse} paused={isNavigating} isMobile={isMobile} />
+      {!isMobile && <LightRays mouse={safeMouse} paused={isNavigating} />}
       {!isMobile && <CosmicParticles paused={isNavigating} />}
       <GoldDust paused={isNavigating} isMobile={isMobile} />
       <EdgeStars paused={isNavigating} />

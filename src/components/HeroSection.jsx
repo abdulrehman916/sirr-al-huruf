@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import SacredWheel from "./SacredWheel";
 import useIsMobile from "../hooks/useIsMobile";
-import useMouseParallax from "../hooks/useMouseParallax";
 
 // ── Static data ───────────────────────────────────────────────────
 const LIGHT_RAYS = Array.from({ length: 12 }, (_, i) => ({
@@ -429,19 +428,19 @@ function NavCards({ startNav }) {
   );
 }
 
+const ZERO_MV = { x: { get: () => 0, set: () => {}, on: () => () => {} }, y: { get: () => 0, set: () => {}, on: () => () => {} } };
+
 // ── Main ──────────────────────────────────────────────────────────
-export default function HeroSection() {
+// Accepts shared mouse MotionValues from Home to avoid duplicate listeners
+export default function HeroSection({ mouse }) {
   const { startNav, isNavigating } = useNavigation();
   const isMobile = useIsMobile();
-  // useMouseParallax now returns MotionValues — no React re-renders
-  // On mobile it returns static zeros and runs no rAF loop
-  const { x: mouseX, y: mouseY } = useMouseParallax(1);
-  const mouse = { x: mouseX, y: mouseY };
+  const safeMouse = mouse ?? ZERO_MV;
   const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
 
   return (
     <div className="min-h-screen font-inter relative overflow-x-hidden flex flex-col items-center justify-center pb-12 pt-4">
-      <CalligraphyAtmosphere mouse={mouse} />
+      <CalligraphyAtmosphere mouse={safeMouse} />
       <LightRays paused={isNavigating} isMobile={isMobile} />
 
       {/* Wheel + rings + Allah */}
@@ -449,7 +448,7 @@ export default function HeroSection() {
         className="relative flex items-center justify-center"
         style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
         <OrbitalRings paused={isNavigating} />
-        <SacredWheel />
+        <SacredWheel mouse={safeMouse} />
         <AllahCalligraphy />
       </motion.div>
 
