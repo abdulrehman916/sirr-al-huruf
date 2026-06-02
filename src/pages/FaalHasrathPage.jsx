@@ -56,9 +56,10 @@ function CellBadge({ cell, index, onTap }) {
 
       {/* Symbol */}
       <motion.span
-        style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)", lineHeight: 1 }}
-        animate={{ filter: ["brightness(1)", "brightness(1.25)", "brightness(1)"] }}
-        transition={{ duration: 4 + index * 0.3, repeat: Infinity, ease: "easeInOut" }}
+        className="font-amiri"
+        style={{ fontSize: "clamp(1.5rem, 7vw, 2.2rem)", lineHeight: 1, color: P.text }}
+        animate={{ opacity: [0.75, 1, 0.75] }}
+        transition={{ duration: 3.5 + index * 0.25, repeat: Infinity, ease: "easeInOut" }}
       >
         {cell.symbol}
       </motion.span>
@@ -122,10 +123,12 @@ function DetailModal({ cell, onClose }) {
             {/* Header */}
             <div className="text-center space-y-2 pt-1">
               <motion.span
-                style={{ fontSize: "3.2rem", display: "block", lineHeight: 1 }}
+                className="font-amiri"
+                style={{ fontSize: "3.8rem", display: "block", lineHeight: 1, color: P.text }}
                 animate={{
-                  filter: ["brightness(1)", "brightness(1.35)", "brightness(1)"],
-                  scale: [1, 1.08, 1],
+                  opacity: [0.8, 1, 0.8],
+                  scale: [1, 1.07, 1],
+                  textShadow: [`0 0 20px ${P.glow}`, `0 0 50px ${P.glowHi}`, `0 0 20px ${P.glow}`],
                 }}
                 transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
               >
@@ -173,10 +176,10 @@ function DetailModal({ cell, onClose }) {
               </p>
             </Section>
 
-            {/* Guidance */}
-            <Section label="☽ Guidance" color={P.dim}>
+            {/* Advice */}
+            <Section label="☽ Advice" color={P.dim}>
               <p className="font-amiri text-base leading-relaxed text-white/70">
-                {cell.guidance}
+                {cell.advice}
               </p>
             </Section>
 
