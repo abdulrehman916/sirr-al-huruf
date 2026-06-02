@@ -278,43 +278,84 @@ function FaalAliSection({ lang }) {
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">📜</span>
           <h3 className="font-amiri font-bold text-base" style={{ color: P.text }}>
-            ഫാൽ അലി എടുക്കുന്ന വിധം
+            FAAL ALI – ഫാൽ അലി എടുക്കുന്ന വിധം
           </h3>
         </div>
-        <div className="space-y-2 text-sm">
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            1. സൂറത്ത് അൽ-ഫാതിഹ ഓതുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            2. അതിന്റെ സവാബ് റസൂലുല്ലാഹ് ﷺ യ്ക്ക് ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            3. ഒരു ഫാതിഹ ഓതി അഹ്‌ലുൽ ബൈത്തിന് (റസൂലുല്ലാഹ് ﷺ യുടെ കുടുംബത്തിന്) ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            4. ഒരു ഫാതിഹ ഓതി സഹാബാക്കൾക്ക് ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            5. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് അലി (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            6. കണ്ണടയ്ക്കുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            7. കലിമാ ശരീഫ് ചൊല്ലി കലിമാവിരൽ ഉയർത്തുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            8. സൂറത്ത് അൽ-ഇഖ്‌ലാസ്, സൂറത്ത് അൽ-ഫലഖ്, സൂറത്ത് അൻ-നാസ് (3 കുൽ സൂറത്തുകൾ) ഓതുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            9. മനസ്സിൽ ഉദ്ദേശിക്കുന്ന കാര്യം കരുതുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            10. അക്ഷരങ്ങളുടെ കളത്തിൽ സ്പർശിക്കുക.
-          </p>
-          <p className="font-amiri leading-relaxed font-semibold" style={{ color: P.text }}>
-            11. ലഭിക്കുന്ന അക്ഷരത്തിന്റെ ഫലം വായിക്കുക.
-          </p>
+        <div className="space-y-3 text-sm">
+          {/* Malayalam */}
+          <div className="space-y-2">
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              1. സൂറത്ത് അൽ-ഫാതിഹ ഓതുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              2. അതിന്റെ സവാബ് റസൂലുല്ലാഹ് ﷺ യ്ക്ക് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              3. ഒരു ഫാതിഹ ഓതി അഹ്‌ലുൽ ബൈത്തിന് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              4. ഒരു ഫാതിഹ ഓതി സഹാബാക്കൾക്ക് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              5. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് അലി (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              6. കണ്ണടയ്ക്കുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              7. കലിമാ ശരീഫ് ചൊല്ലി കലിമാവിരൽ ഉയർത്തുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              8. സൂറത്ത് അൽ-ഇഖ്‌ലാസ്, സൂറത്ത് അൽ-ഫലഖ്, സൂറത്ത് അൻ-നാസ് (3 കുൽ സൂറത്തുകൾ) ഓതുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              9. മനസ്സിൽ ഉദ്ദേശിക്കുന്ന കാര്യം കരുതുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              10. അക്ഷരങ്ങളുടെ കളത്തിൽ സ്പർശിക്കുക.
+            </p>
+            <p className="font-amiri leading-relaxed font-semibold" style={{ color: P.text }}>
+              11. ലഭിക്കുന്ന അക്ഷരത്തിന്റെ ഫലം വായിക്കുക.
+            </p>
+          </div>
+          {/* Divider */}
+          <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, rgba(216,180,254,0.25), transparent)` }} />
+          {/* English */}
+          <div className="space-y-1.5">
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              1. Recite Surah Al-Fatihah.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              2. Gift its reward to Prophet Muhammad ﷺ.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              3. Recite one Fatihah and gift its reward to Ahlul Bayt.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              4. Recite one Fatihah and gift its reward to the Sahabah.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              5. Recite one Fatihah and gift its reward to Hazrat Ali (RA).
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              6. Close your eyes.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              7. Recite the Kalimah and raise your index finger.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              8. Recite the three Qul Surahs: Surah Al-Ikhlas, Surah Al-Falaq, Surah An-Nas.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              9. Keep your intention firmly in your heart.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              10. Touch one of the letter cells.
+            </p>
+            <p className="font-inter text-xs leading-relaxed font-semibold" style={{ color: "rgba(216,180,254,0.85)" }}>
+              11. Read the result of the selected letter.
+            </p>
+          </div>
         </div>
       </motion.div>
 
@@ -491,46 +532,90 @@ function FaalLuqmanSection({ lang }) {
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">📜</span>
           <h3 className="font-amiri font-bold text-base" style={{ color: P.text }}>
-            ഫാൽ ലുഖ്മാൻ എടുക്കുന്ന വിധം
+            FAAL LUQMAN – ഫാൽ ലുഖ്മാൻ എടുക്കുന്ന വിധം
           </h3>
         </div>
-        <div className="space-y-2 text-sm">
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            1. സൂറത്ത് അൽ-ഫാതിഹ ഓതുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            2. അതിന്റെ സവാബ് റസൂലുല്ലാഹ് ﷺ യ്ക്ക് ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            3. ഒരു ഫാതിഹ ഓതി അഹ്‌ലുൽ ബൈത്തിന് (റസൂലുല്ലാഹ് ﷺ യുടെ കുടുംബത്തിന്) ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            4. ഒരു ഫാതിഹ ഓതി സഹാബാക്കൾക്ക് ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            5. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് അലി (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            6. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് ലുഖ്മാൻ (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            7. കണ്ണടയ്ക്കുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            8. കലിമാ ശരീഫ് ചൊല്ലി കലിമാവിരൽ ഉയർത്തുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            9. സൂറത്ത് അൽ-ഇഖ്‌ലാസ്, സൂറത്ത് അൽ-ഫലഖ്, സൂറത്ത് അൻ-നാസ് (3 കുൽ സൂറത്തുകൾ) ഓതുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            10. മനസ്സിൽ ഉദ്ദേശിക്കുന്ന കാര്യം കരുതുക.
-          </p>
-          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
-            11. അക്ഷരങ്ങളുടെ കളത്തിൽ സ്പർശിക്കുക.
-          </p>
-          <p className="font-amiri leading-relaxed font-semibold" style={{ color: P.text }}>
-            12. ലഭിക്കുന്ന അക്ഷരത്തിന്റെ ഫലം വായിക്കുക.
-          </p>
+        <div className="space-y-3 text-sm">
+          {/* Malayalam */}
+          <div className="space-y-2">
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              1. സൂറത്ത് അൽ-ഫാതിഹ ഓതുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              2. അതിന്റെ സവാബ് റസൂലുല്ലാഹ് ﷺ യ്ക്ക് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              3. ഒരു ഫാതിഹ ഓതി അഹ്‌ലുൽ ബൈത്തിന് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              4. ഒരു ഫാതിഹ ഓതി സഹാബാക്കൾക്ക് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              5. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് അലി (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              6. ഒരു ഫാതിഹ ഓതി ഹസ്രത്ത് ലുഖ്മാൻ (റ) യ്ക്ക് ഹദിയ ചെയ്യുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              7. കണ്ണടയ്ക്കുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              8. കലിമാ ശരീഫ് ചൊല്ലി കലിമാവിരൽ ഉയർത്തുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              9. സൂറത്ത് അൽ-ഇഖ്‌ലാസ്, സൂറത്ത് അൽ-ഫലഖ്, സൂറത്ത് അൻ-നാസ് (3 കുൽ സൂറത്തുകൾ) ഓതുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              10. മനസ്സിൽ ഉദ്ദേശിക്കുന്ന കാര്യം കരുതുക.
+            </p>
+            <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+              11. അക്ഷരങ്ങളുടെ കളത്തിൽ സ്പർശിക്കുക.
+            </p>
+            <p className="font-amiri leading-relaxed font-semibold" style={{ color: P.text }}>
+              12. ലഭിക്കുന്ന അക്ഷരത്തിന്റെ ഫലം വായിക്കുക.
+            </p>
+          </div>
+          {/* Divider */}
+          <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, rgba(216,180,254,0.25), transparent)` }} />
+          {/* English */}
+          <div className="space-y-1.5">
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              1. Recite Surah Al-Fatihah.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              2. Gift its reward to Prophet Muhammad ﷺ.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              3. Recite one Fatihah and gift its reward to Ahlul Bayt.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              4. Recite one Fatihah and gift its reward to the Sahabah.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              5. Recite one Fatihah and gift its reward to Hazrat Ali (RA).
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              6. Recite one Fatihah and gift its reward to Hazrat Luqman (RA).
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              7. Close your eyes.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              8. Recite the Kalimah and raise your index finger.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              9. Recite the three Qul Surahs: Surah Al-Ikhlas, Surah Al-Falaq, Surah An-Nas.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              10. Keep your intention firmly in your heart.
+            </p>
+            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(216,180,254,0.65)" }}>
+              11. Touch one of the letter cells.
+            </p>
+            <p className="font-inter text-xs leading-relaxed font-semibold" style={{ color: "rgba(216,180,254,0.85)" }}>
+              12. Read the result of the selected letter.
+            </p>
+          </div>
         </div>
       </motion.div>
 
