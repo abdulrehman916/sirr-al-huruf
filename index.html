@@ -47,11 +47,10 @@
             setTimeout(warmCache, 10000);
           }).catch(() => {});
 
-          // Reload once when a new SW takes control (avoids stale assets)
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) { refreshing = true; window.location.reload(); }
-          });
+          // NOTE: Do NOT reload on controllerchange — self.skipWaiting() in sw.js
+          // install fires immediately and causes controllerchange on every load,
+          // which triggers an infinite reload loop on iOS Safari.
+          // Vite asset filenames are content-hashed so stale assets are not possible.
         });
       }
     </script>
