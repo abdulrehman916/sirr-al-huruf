@@ -182,10 +182,6 @@ function FaalCell({ cell, lang, index, onTap }) {
       >
         <HeartSymbol mark={cell.innerMark} size={52} />
       </motion.div>
-      <span className="font-inter text-center leading-tight px-0.5"
-        style={{ fontSize: "8px", color: "rgba(216,180,254,0.42)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-        {t.shortTitle}
-      </span>
     </motion.button>
   );
 }
@@ -353,11 +349,6 @@ function LuqmanCell({ cell, lang, index, onTap }) {
           {cell.symbol}
         </span>
       </motion.div>
-
-      <span className="font-inter text-center leading-tight px-0.5"
-        style={{ fontSize: "7.5px", color: "rgba(216,180,254,0.38)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-        {t.shortTitle}
-      </span>
     </motion.button>
   );
 }
