@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // FAAL HASRATH — Completely Independent Module
-// Own data: lib/faalHasrathData.js
-// Own SVG symbols, own modal, own language toggle (ML / EN)
-// Zero imports from any other module.
+// Own data: lib/faalHasrathData.js (Malayalam only, permanent)
+// Zero imports from / exports to any other module.
 // ═══════════════════════════════════════════════════════════════
 
 import { useState } from "react";
@@ -12,7 +11,7 @@ import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { FAAL_CELLS } from "../lib/faalHasrathData";
 
-// ── Own palette ────────────────────────────────────────────────
+// ── Palette ────────────────────────────────────────────────────
 const P = {
   border:   "rgba(160,100,220,0.40)",
   borderHi: "rgba(180,120,255,0.70)",
@@ -58,15 +57,14 @@ function InnerMark({ mark, size = 28, color = "#D8B4FE" }) {
   );
 }
 
-// ── Heart SVG ─────────────────────────────────────────────────
+// ── Heart SVG ──────────────────────────────────────────────────
 function HeartSymbol({ mark, size = 64, active = false }) {
-  const glowColor = active ? P.glowHi : P.glow;
   const heartPath = "M50,30 C50,20 35,10 25,18 C15,26 15,40 25,50 L50,75 L75,50 C85,40 85,26 75,18 C65,10 50,20 50,30 Z";
   const markSize = size * 0.38;
 
   return (
     <svg width={size} height={size} viewBox="0 0 100 100"
-      style={{ filter: `drop-shadow(0 0 ${active ? 10 : 5}px ${glowColor})`, overflow: "visible" }}>
+      style={{ filter: `drop-shadow(0 0 ${active ? 10 : 5}px ${active ? P.glowHi : P.glow})`, overflow: "visible" }}>
       <path d={heartPath}
         fill={active ? "rgba(216,180,254,0.14)" : "rgba(216,180,254,0.06)"}
         stroke={active ? "rgba(216,180,254,0.85)" : "rgba(216,180,254,0.60)"}
@@ -83,33 +81,8 @@ function HeartSymbol({ mark, size = 64, active = false }) {
   );
 }
 
-// ── Language Toggle ────────────────────────────────────────────
-function LangToggle({ lang, setLang }) {
-  return (
-    <div className="flex items-center justify-center">
-      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: P.faint }}>
-        {["ml", "en"].map((l) => (
-          <button
-            key={l}
-            onClick={() => setLang(l)}
-            className="px-4 py-1.5 font-inter text-xs font-semibold tracking-widest uppercase transition-all"
-            style={{
-              background: lang === l ? P.bgHi : "transparent",
-              color: lang === l ? P.text : "rgba(216,180,254,0.35)",
-              borderRight: l === "ml" ? `1px solid ${P.faint}` : "none",
-            }}
-          >
-            {l === "ml" ? "മലയാളം" : "English"}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ── Grid Cell ──────────────────────────────────────────────────
-function FaalCell({ cell, lang, index, onTap }) {
-  const t = cell[lang];
+function FaalCell({ cell, index, onTap }) {
   return (
     <motion.button
       onClick={() => onTap(cell)}
@@ -154,16 +127,15 @@ function FaalCell({ cell, lang, index, onTap }) {
           overflow: "hidden",
         }}
       >
-        {t.shortTitle}
+        {cell.shortTitle}
       </span>
     </motion.button>
   );
 }
 
 // ── Modal ──────────────────────────────────────────────────────
-function FaalModal({ cell, lang, onClose }) {
+function FaalModal({ cell, onClose }) {
   if (!cell) return null;
-  const t = cell[lang];
 
   return (
     <AnimatePresence>
@@ -213,20 +185,20 @@ function FaalModal({ cell, lang, onClose }) {
                 <HeartSymbol mark={cell.innerMark} size={86} active />
               </motion.div>
 
-              <div>
-                <span className="font-inter text-[9px] uppercase tracking-[0.28em]"
-                  style={{ color: "rgba(216,180,254,0.38)" }}>
-                  {lang === "ml" ? `ഫാൽ ${cell.id} / ൧൬` : `Cell ${cell.id} of 16`}
-                </span>
-                <motion.h2
-                  className="font-amiri font-bold leading-snug mt-1"
-                  style={{ fontSize: "clamp(1.2rem, 5vw, 1.65rem)", color: P.text }}
-                  animate={{ textShadow: [`0 0 12px ${P.glow}`, `0 0 32px ${P.glowHi}`, `0 0 12px ${P.glow}`] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  {t.title}
-                </motion.h2>
-              </div>
+              <span className="font-inter text-[9px] uppercase tracking-[0.28em]"
+                style={{ color: "rgba(216,180,254,0.38)" }}>
+                ഫാൽ {cell.id} / ൧൬
+              </span>
+
+              {/* Result — prominent */}
+              <motion.h2
+                className="font-amiri font-bold leading-snug"
+                style={{ fontSize: "clamp(1.3rem, 5.5vw, 1.8rem)", color: P.text }}
+                animate={{ textShadow: [`0 0 12px ${P.glow}`, `0 0 32px ${P.glowHi}`, `0 0 12px ${P.glow}`] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {cell.result}
+              </motion.h2>
 
               {/* Divider */}
               <div className="flex items-center justify-center gap-2.5">
@@ -236,32 +208,23 @@ function FaalModal({ cell, lang, onClose }) {
               </div>
             </div>
 
-            {/* Result — prominent display */}
-            <div className="rounded-2xl border px-4 py-4 text-center"
-              style={{ background: P.bgHi, borderColor: P.borderHi }}>
-              <motion.p
-                className="font-amiri font-bold"
-                style={{ fontSize: "clamp(1.2rem, 5vw, 1.6rem)", color: P.text }}
-                animate={{ textShadow: [`0 0 12px ${P.glow}`, `0 0 32px ${P.glowHi}`, `0 0 12px ${P.glow}`] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                {t.result}
-              </motion.p>
+            {/* Body */}
+            <div className="rounded-2xl border p-4 space-y-2" style={{ background: P.bg, borderColor: P.faint }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>◈ ഫലം</p>
+              <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${P.faint}, transparent)` }} />
+              <p className="font-amiri text-base leading-relaxed" style={{ color: P.text }}>
+                {cell.body}
+              </p>
             </div>
 
-            {/* Interpretation */}
-            <ModalSection label={lang === "ml" ? "◈ വ്യാഖ്യാനം" : "◈ Interpretation"}>
-              <p className="font-amiri text-base leading-relaxed" style={{ color: P.text }}>
-                {t.interpretation}
-              </p>
-            </ModalSection>
-
-            {/* Advice */}
-            <ModalSection label={lang === "ml" ? "☽ ഉപദേശം" : "☽ Advice"}>
+            {/* Remedy */}
+            <div className="rounded-2xl border p-4 space-y-2" style={{ background: P.bg, borderColor: P.faint }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>☽ പരിഹാരം</p>
+              <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${P.faint}, transparent)` }} />
               <p className="font-amiri text-base leading-relaxed text-white/70">
-                {t.advice}
+                {cell.remedy}
               </p>
-            </ModalSection>
+            </div>
 
             {/* Footer */}
             <p className="font-inter text-[8px] uppercase tracking-widest text-center pt-1"
@@ -275,21 +238,10 @@ function FaalModal({ cell, lang, onClose }) {
   );
 }
 
-function ModalSection({ label, children }) {
-  return (
-    <div className="rounded-2xl border p-4 space-y-2" style={{ background: P.bg, borderColor: P.faint }}>
-      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>{label}</p>
-      <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${P.faint}, transparent)` }} />
-      {children}
-    </div>
-  );
-}
-
 // ═══════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════
 export default function FaalHasrathPage() {
-  const [lang, setLang] = useState("ml"); // Malayalam default
   const [selected, setSelected] = useState(null);
 
   return (
@@ -304,42 +256,24 @@ export default function FaalHasrathPage() {
           icon="♡"
         />
 
-        {/* Language Toggle */}
-        <LangToggle lang={lang} setLang={setLang} />
-
         {/* Instruction */}
         <div className="rounded-2xl border px-4 py-3 text-center"
           style={{ background: P.bg, borderColor: P.faint }}>
-          {lang === "ml" ? (
-            <>
-              <p className="font-amiri text-base" style={{ color: P.dim }}>
-                മനസ്സ് ശാന്തമാക്കി ഒരു ഹൃദയം സ്പർശിക്കുക
-              </p>
-              <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
-                style={{ color: "rgba(216,180,254,0.28)" }}>
-                ൧൬ ഹൃദയ ചിഹ്നങ്ങൾ — ഓരോന്നിനും സ്വന്തം ഫലം
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="font-amiri text-base" style={{ color: P.dim }}>
-                Clear your mind — tap one heart with pure intention
-              </p>
-              <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
-                style={{ color: "rgba(216,180,254,0.28)" }}>
-                16 heart symbols — each linked to its own result
-              </p>
-            </>
-          )}
+          <p className="font-amiri text-base" style={{ color: P.dim }}>
+            മനസ്സ് ശാന്തമാക്കി ഒരു ഹൃദയം സ്പർശിക്കുക
+          </p>
+          <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
+            style={{ color: "rgba(216,180,254,0.28)" }}>
+            ൧൬ ഹൃദയ ചിഹ്നങ്ങൾ — ഓരോന്നിനും സ്വന്തം ഫലം
+          </p>
         </div>
 
-        {/* 4×4 Grid — RTL to match manuscript (cell 1 = top-right) */}
+        {/* 4×4 Grid — RTL (cell 1 = top-right, matching manuscript) */}
         <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
           {FAAL_CELLS.map((cell, i) => (
             <FaalCell
               key={cell.id}
               cell={cell}
-              lang={lang}
               index={i}
               onTap={setSelected}
             />
@@ -349,12 +283,12 @@ export default function FaalHasrathPage() {
         {/* Footer */}
         <p className="font-inter text-[8px] uppercase tracking-widest text-center"
           style={{ color: "rgba(216,180,254,0.16)" }}>
-          ✦ ൧ — ൧൬ ✦ 1 — 16 ✦
+          ✦ ൧ — ൧൬ ✦
         </p>
       </div>
 
       {/* Modal — shows only the tapped cell's own data */}
-      <FaalModal cell={selected} lang={lang} onClose={() => setSelected(null)} />
+      <FaalModal cell={selected} onClose={() => setSelected(null)} />
     </PageLayout>
   );
 }
