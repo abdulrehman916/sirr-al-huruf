@@ -94,6 +94,14 @@ const CARD_ICONS = {
       <circle cx="16" cy="16" r="10" stroke={color} strokeWidth="0.4" strokeOpacity="0.25" strokeDasharray="2,4"/>
     </svg>
   ),
+  faal: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <text x="50%" y="56%" dominantBaseline="middle" textAnchor="middle"
+        fontFamily="Amiri, serif" fontWeight="700" fontSize="18" fill={color}>ف</text>
+      <circle cx="16" cy="16" r="13" stroke={color} strokeWidth="0.8" strokeOpacity="0.55"/>
+      <path d="M16 6 L16 26 M10 12 L16 16 L22 12" stroke={color} strokeWidth="0.6" strokeOpacity="0.45"/>
+    </svg>
+  ),
 };
 
 const NAV_CARDS = [
@@ -104,6 +112,7 @@ const NAV_CARDS = [
   { path: "/magic-sqayer",     arabic: "السحر المربع", label: "MAGIC SQAYER",     subtitle: "Sacred Vefk Construction",  iconKey: "sqayer", accent: [212, 175, 55] },
   { path: "/vefkin-yapilisi",  arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI",  subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
   { path: "/basthul-huroof-2", arabic: "بسط الحروف",   label: "BASTHUL HUROOF 2", subtitle: "Basti Adedi Cedveli",       iconKey: "bast",   accent: [180, 140, 255] },
+  { path: "/faal-hasrath",     arabic: "فأل",          label: "FAAL",             subtitle: "Sacred Omen System",        iconKey: "faal",   accent: [212, 175, 55] },
 ];
 
 // ── Static ring sizes for mobile (no Framer Motion) ──────────────
