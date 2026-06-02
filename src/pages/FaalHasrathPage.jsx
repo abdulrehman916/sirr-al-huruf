@@ -236,8 +236,21 @@ function FaalModal({ cell, lang, onClose }) {
               </div>
             </div>
 
+            {/* Result — prominent display */}
+            <div className="rounded-2xl border px-4 py-4 text-center"
+              style={{ background: P.bgHi, borderColor: P.borderHi }}>
+              <motion.p
+                className="font-amiri font-bold"
+                style={{ fontSize: "clamp(1.2rem, 5vw, 1.6rem)", color: P.text }}
+                animate={{ textShadow: [`0 0 12px ${P.glow}`, `0 0 32px ${P.glowHi}`, `0 0 12px ${P.glow}`] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {t.result}
+              </motion.p>
+            </div>
+
             {/* Interpretation */}
-            <ModalSection label={lang === "ml" ? "◈ ഫലം" : "◈ Interpretation"}>
+            <ModalSection label={lang === "ml" ? "◈ വ്യാഖ്യാനം" : "◈ Interpretation"}>
               <p className="font-amiri text-base leading-relaxed" style={{ color: P.text }}>
                 {t.interpretation}
               </p>
