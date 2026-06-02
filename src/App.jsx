@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -10,16 +10,21 @@ import { NavigationProvider } from './context/NavigationContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
-// Add page imports here
+// Add page imports here — lazy loaded for performance
 import Home from './pages/Home';
-import AnasirPage from './pages/AnasirPage';
-import HadimPage from './pages/HadimPage';
-import Mizaan9Page from './pages/Mizaan9Page';
-import AbjadKabirPage from './pages/AbjadKabirPage';
-import MagicSqayerPage from './pages/MagicSqayerPage';
-import VefkinYapilisiPage from './pages/VefkinYapilisiPage';
-import BastHuroofPage from './pages/BastHuroofPage';
-import FaalHasrathPage from './pages/FaalHasrathPage';
+const AnasirPage        = lazy(() => import('./pages/AnasirPage'));
+const HadimPage         = lazy(() => import('./pages/HadimPage'));
+const Mizaan9Page       = lazy(() => import('./pages/Mizaan9Page'));
+const AbjadKabirPage    = lazy(() => import('./pages/AbjadKabirPage'));
+const MagicSqayerPage   = lazy(() => import('./pages/MagicSqayerPage'));
+const VefkinYapilisiPage= lazy(() => import('./pages/VefkinYapilisiPage'));
+const BastHuroofPage    = lazy(() => import('./pages/BastHuroofPage'));
+const FaalHasrathPage   = lazy(() => import('./pages/FaalHasrathPage'));
+
+// Minimal fallback — matches app background, no flash
+const PageFallback = () => (
+  <div style={{ minHeight: "60vh", background: "transparent" }} />
+);
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,18 +62,20 @@ const AuthenticatedApp = () => {
         transition={{ duration: 0.18, ease: "easeInOut" }}
         style={{ willChange: "opacity" }}
       >
-        <Routes location={location}>
-          <Route path="/" element={<Home />} />
-          <Route path="/abjad" element={<AbjadKabirPage />} />
-          <Route path="/anasir" element={<AnasirPage />} />
-          <Route path="/hadim" element={<HadimPage />} />
-          <Route path="/mizaan9" element={<Mizaan9Page />} />
-          <Route path="/magic-sqayer" element={<MagicSqayerPage />} />
-          <Route path="/vefkin-yapilisi" element={<VefkinYapilisiPage />} />
-          <Route path="/basthul-huroof-2" element={<BastHuroofPage />} />
-          <Route path="/faal-hasrath" element={<FaalHasrathPage />} />
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
+        <Suspense fallback={<PageFallback />}>
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/abjad" element={<AbjadKabirPage />} />
+            <Route path="/anasir" element={<AnasirPage />} />
+            <Route path="/hadim" element={<HadimPage />} />
+            <Route path="/mizaan9" element={<Mizaan9Page />} />
+            <Route path="/magic-sqayer" element={<MagicSqayerPage />} />
+            <Route path="/vefkin-yapilisi" element={<VefkinYapilisiPage />} />
+            <Route path="/basthul-huroof-2" element={<BastHuroofPage />} />
+            <Route path="/faal-hasrath" element={<FaalHasrathPage />} />
+            <Route path="*" element={<PageNotFound />} />
+          </Routes>
+        </Suspense>
       </motion.div>
     </AnimatePresence>
   );

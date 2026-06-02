@@ -115,8 +115,8 @@ export default function SplashScreen({ onComplete }) {
   const wheelSize = 320;
 
   useEffect(() => {
-    // Hold for 2.5 s then exit
-    const hold = setTimeout(() => setPhase("out"), 2500);
+    // Hold for 2.2 s then exit
+    const hold = setTimeout(() => setPhase("out"), 2200);
     return () => clearTimeout(hold);
   }, []);
 

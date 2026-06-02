@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
@@ -117,7 +117,10 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
 export default function PageLayout({ children }) {
   const location = useLocation();
   const { startNav } = useNavigation();
-  const activeId = TABS.find(t => t.path === location.pathname)?.id ?? undefined;
+  const activeId = useMemo(
+    () => TABS.find(t => t.path === location.pathname)?.id ?? undefined,
+    [location.pathname]
+  );
 
   return (
     <div
@@ -128,7 +131,7 @@ export default function PageLayout({ children }) {
         minHeight: "100%",
       }}
     >
-      {/* Rich atmospheric background */}
+      {/* Atmospheric background — rendered before animated wrapper so it never remounts */}
       <AtmosphericBackground />
 
       {/* ── Sticky Top Nav ── */}
@@ -173,8 +176,9 @@ export default function PageLayout({ children }) {
           initial="initial"
           animate="animate"
           exit="exit"
-          transition={{ duration: 0.38, ease: "easeOut" }}
+          transition={{ duration: 0.32, ease: "easeOut" }}
           className="relative z-10 max-w-2xl mx-auto px-4 py-6 pb-14"
+          style={{ willChange: "opacity, transform" }}
         >
           {children}
         </motion.div>
