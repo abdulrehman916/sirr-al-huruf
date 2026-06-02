@@ -15,10 +15,10 @@ const LIGHT_RAYS = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 const ORBITAL_RINGS = [
-  { r: "min(340px, 70vw)", dur: 180, dir: 1,  opacity: 0.16, width: 0.8, solid: false },
-  { r: "min(260px, 54vw)", dur: 120, dir: -1, opacity: 0.20, width: 0.6, solid: false },
-  { r: "min(180px, 38vw)", dur:  80, dir: 1,  opacity: 0.26, width: 0.5, solid: false },
-  { r: "min(430px, 88vw)", dur: 260, dir: -1, opacity: 0.09, width: 0.6, solid: false },
+  { r: "min(340px, 70vw)", dur: 180, dir: 1,  opacity: 0.16, width: 0.8 },
+  { r: "min(260px, 54vw)", dur: 120, dir: -1, opacity: 0.20, width: 0.6 },
+  { r: "min(180px, 38vw)", dur:  80, dir: 1,  opacity: 0.26, width: 0.5 },
+  { r: "min(430px, 88vw)", dur: 260, dir: -1, opacity: 0.09, width: 0.6 },
 ];
 
 const CALLIGRAPHY_CHARS = [
@@ -32,7 +32,7 @@ const CALLIGRAPHY_CHARS = [
   { char: "و", top: "5%",  left: "48%", size: 40, opacity: 0.019, dur: 15, delay: 7 },
 ];
 
-// SVG icon system — pure vector, no emojis
+// SVG icon system
 const CARD_ICONS = {
   abjad: (color) => (
     <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
@@ -96,17 +96,38 @@ const CARD_ICONS = {
 };
 
 const NAV_CARDS = [
-  { path: "/abjad",           arabic: "أبجد",         label: "ABJAD",           subtitle: "Numerical Calculator",      iconKey: "abjad",  accent: [212, 175, 55] },
-  { path: "/anasir",          arabic: "عناصر",        label: "ANASIR",          subtitle: "Elemental Analysis",        iconKey: "anasir", accent: [56, 189, 248] },
-  { path: "/hadim",           arabic: "خادم",         label: "HADIM",           subtitle: "Name Generator",            iconKey: "hadim",  accent: [192, 132, 252] },
-  { path: "/mizaan9",         arabic: "ميزان",        label: "MIZAAN 9",        subtitle: "Sacred Numerology",         iconKey: "mizaan", accent: [212, 175, 55] },
-  { path: "/magic-sqayer",    arabic: "السحر المربع", label: "MAGIC SQAYER",    subtitle: "Sacred Vefk Construction",  iconKey: "sqayer", accent: [212, 175, 55] },
-  { path: "/vefkin-yapilisi",   arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI", subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
-  { path: "/basthul-huroof-2", arabic: "بسط الحروف",  label: "BASTHUL HUROOF 2", subtitle: "Basti Adedi Cedveli",         iconKey: "bast",   accent: [180, 140, 255] },
+  { path: "/abjad",            arabic: "أبجد",         label: "ABJAD",            subtitle: "Numerical Calculator",      iconKey: "abjad",  accent: [212, 175, 55] },
+  { path: "/anasir",           arabic: "عناصر",        label: "ANASIR",           subtitle: "Elemental Analysis",        iconKey: "anasir", accent: [56, 189, 248] },
+  { path: "/hadim",            arabic: "خادم",         label: "HADIM",            subtitle: "Name Generator",            iconKey: "hadim",  accent: [192, 132, 252] },
+  { path: "/mizaan9",          arabic: "ميزان",        label: "MIZAAN 9",         subtitle: "Sacred Numerology",         iconKey: "mizaan", accent: [212, 175, 55] },
+  { path: "/magic-sqayer",     arabic: "السحر المربع", label: "MAGIC SQAYER",     subtitle: "Sacred Vefk Construction",  iconKey: "sqayer", accent: [212, 175, 55] },
+  { path: "/vefkin-yapilisi",  arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI",  subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
+  { path: "/basthul-huroof-2", arabic: "بسط الحروف",   label: "BASTHUL HUROOF 2", subtitle: "Basti Adedi Cedveli",       iconKey: "bast",   accent: [180, 140, 255] },
 ];
 
-// ── Orbital rings ─────────────────────────────────────────────────
-function OrbitalRings({ paused }) {
+// ── Static ring sizes for mobile (no Framer Motion) ──────────────
+const STATIC_RINGS = [
+  { r: "min(235px,49vw)", border: "1px solid rgba(212,175,55,0.30)", shadow: "0 0 24px rgba(212,175,55,0.12)" },
+  { r: "min(295px,61vw)", border: "0.5px solid rgba(212,175,55,0.13)", shadow: "none" },
+];
+
+// ── Sub-components ────────────────────────────────────────────────
+
+function OrbitalRings({ paused, isMobile }) {
+  if (isMobile) {
+    // CSS-only rings on mobile — no Framer Motion
+    return (
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
+        {STATIC_RINGS.map((r, i) => (
+          <div key={i} className="absolute rounded-full" style={{
+            width: r.r, height: r.r,
+            border: r.border,
+            boxShadow: r.shadow,
+          }} />
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
       {ORBITAL_RINGS.map((ring, i) => (
@@ -133,9 +154,8 @@ function OrbitalRings({ paused }) {
   );
 }
 
-// ── Light rays ────────────────────────────────────────────────────
-function LightRays({ paused, isMobile }) {
-  if (isMobile) return null;
+function LightRays({ paused }) {
+  // Desktop only — caller already guards with !isMobile
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
       {LIGHT_RAYS.map((ray, i) => (
@@ -163,15 +183,15 @@ function LightRays({ paused, isMobile }) {
   );
 }
 
-// ── Calligraphy atmosphere ────────────────────────────────────────
-function CalligraphyAtmosphere({ mouse }) {
+// Desktop: parallax calligraphy with Framer Motion
+function CalligraphyAtmosphereDesktop({ mouse, paused }) {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
       {CALLIGRAPHY_CHARS.map((c, i) => (
         <motion.span key={i} className="absolute font-amiri select-none"
           style={{ top: c.top, left: c.left, fontSize: c.size, color: "#D4AF37", opacity: c.opacity,
             x: mouse.x * -5, y: mouse.y * -5 }}
-          animate={{ opacity: [c.opacity * 0.35, c.opacity, c.opacity * 0.35], y: [0, -13, 0] }}
+          animate={paused ? {} : { opacity: [c.opacity * 0.35, c.opacity, c.opacity * 0.35], y: [0, -13, 0] }}
           transition={{ duration: c.dur, repeat: Infinity, ease: "easeInOut", delay: c.delay }}
         >
           {c.char}
@@ -181,7 +201,26 @@ function CalligraphyAtmosphere({ mouse }) {
   );
 }
 
-// ── Manuscript intro with glassmorphism ───────────────────────────
+// Mobile: pure CSS calligraphy — zero JS animation
+function CalligraphyAtmosphereMobile() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
+      {CALLIGRAPHY_CHARS.slice(0, 4).map((c, i) => (
+        <span key={i} className="absolute font-amiri select-none"
+          style={{
+            top: c.top, left: c.left, fontSize: c.size,
+            color: "#D4AF37", opacity: c.opacity,
+            animation: `sh-twinkle ${c.dur}s ease-in-out infinite`,
+            animationDelay: `${c.delay}s`,
+          }}
+        >
+          {c.char}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function ManuscriptIntro() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -195,23 +234,12 @@ function ManuscriptIntro() {
           border: "1px solid rgba(212,175,55,0.22)",
           boxShadow: "0 8px 48px rgba(0,0,0,0.55), 0 0 24px rgba(212,175,55,0.08), inset 0 1px 0 rgba(212,175,55,0.15)",
         }}>
-        {/* Top sheen */}
         <div style={{ position:"absolute", top:0, left:0, right:0, height:1,
           background:"linear-gradient(90deg,transparent 5%,rgba(212,175,55,0.60) 50%,transparent 95%)" }} />
-        {/* Corner lights */}
-        <div style={{ position:"absolute", top:-14, left:-14, width:60, height:60, borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(212,175,55,0.16) 0%, transparent 70%)",
-          filter:"blur(10px)", pointerEvents:"none" }} />
-        <div style={{ position:"absolute", bottom:-14, right:-14, width:60, height:60, borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(212,175,55,0.11) 0%, transparent 70%)",
-          filter:"blur(10px)", pointerEvents:"none" }} />
-
         <p className="font-amiri text-sm leading-relaxed" dir="rtl"
           style={{ color:"rgba(245,230,180,0.78)", lineHeight:2, letterSpacing:"0.04em", fontSize:"15px" }}>
           علم الحروف — الحكمة الربانية في ميزان الأعداد والأسرار
         </p>
-
-        {/* Premium divider */}
         <div className="flex items-center justify-center gap-2.5 mt-3">
           <div style={{ height:1, width:28, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.50))" }} />
           <div style={{ width:3, height:3, borderRadius:"50%", background:"rgba(212,175,55,0.50)" }} />
@@ -226,7 +254,6 @@ function ManuscriptIntro() {
   );
 }
 
-// ── Premium section divider ───────────────────────────────────────
 function GoldDivider({ delay = 0 }) {
   return (
     <motion.div initial={{ scaleX:0, opacity:0 }} animate={{ scaleX:1, opacity:1 }}
@@ -239,7 +266,6 @@ function GoldDivider({ delay = 0 }) {
   );
 }
 
-// ── SVG icon orb ──────────────────────────────────────────────────
 function IconOrb({ iconKey, accent }) {
   const [r, g, b] = accent;
   const color = `rgb(${r},${g},${b})`;
@@ -249,16 +275,13 @@ function IconOrb({ iconKey, accent }) {
       style={{
         background: `linear-gradient(145deg, rgba(${r},${g},${b},0.20) 0%, rgba(${r},${g},${b},0.07) 100%)`,
         border: `1px solid rgba(${r},${g},${b},0.38)`,
-        boxShadow: `0 0 20px rgba(${r},${g},${b},0.25), inset 0 1px 0 rgba(${r},${g},${b},0.18), inset 0 0 12px rgba(${r},${g},${b},0.06)`,
+        boxShadow: `0 0 20px rgba(${r},${g},${b},0.25), inset 0 1px 0 rgba(${r},${g},${b},0.18)`,
       }}>
-      {renderIcon ? renderIcon(color) : (
-        <span className="font-amiri text-xl" style={{ color }}>{iconKey}</span>
-      )}
+      {renderIcon ? renderIcon(color) : <span className="font-amiri text-xl" style={{ color }}>{iconKey}</span>}
     </div>
   );
 }
 
-// ── Nav card inner ────────────────────────────────────────────────
 function CardInner({ card }) {
   const [r, g, b] = card.accent;
   return (
@@ -282,19 +305,15 @@ function CardInner({ card }) {
   );
 }
 
-// ── Hero title ────────────────────────────────────────────────────
-function HeroTitle() {
+// Desktop: full animated title
+function HeroTitleDesktop({ paused }) {
   return (
     <motion.div initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }}
       transition={{ duration:0.9, delay:0.4 }}
       className="text-center z-10 px-4 mt-4">
       <motion.h1 className="font-amiri font-bold"
-        style={{
-          fontSize:"clamp(3rem,13vw,5.8rem)",
-          color:"#f5ecd4",
-          lineHeight:1.08, letterSpacing:"0.025em",
-        }}
-        animate={{
+        style={{ fontSize:"clamp(3rem,13vw,5.8rem)", color:"#f5ecd4", lineHeight:1.08, letterSpacing:"0.025em" }}
+        animate={paused ? {} : {
           textShadow:[
             "0 0 28px rgba(212,175,55,0.42), 0 0 65px rgba(212,175,55,0.14), 0 2px 20px rgba(0,0,0,0.60)",
             "0 0 52px rgba(212,175,55,0.68), 0 0 105px rgba(212,175,55,0.28), 0 2px 28px rgba(0,0,0,0.65)",
@@ -304,9 +323,7 @@ function HeroTitle() {
         transition={{ duration:5.5, repeat:Infinity, ease:"easeInOut" }}>
         سرّ الحروف
       </motion.h1>
-
-      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
-        transition={{ delay:0.9, duration:0.7 }} className="mt-3 space-y-1.5">
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.9, duration:0.7 }} className="mt-3 space-y-1.5">
         <p className="font-inter font-bold tracking-[0.38em] uppercase"
           style={{ fontSize:"clamp(10px,2.6vw,14px)", color:"rgba(212,175,55,0.88)", textShadow:"0 0 14px rgba(212,175,55,0.30)" }}>
           Sirrul Huruf
@@ -316,53 +333,70 @@ function HeroTitle() {
           Advanced Ilm al-Huruf Analysis
         </p>
       </motion.div>
-
-      {/* Refined ornamental divider */}
-      <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }}
-        transition={{ delay:1.1, duration:0.9 }}
+      <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }} transition={{ delay:1.1, duration:0.9 }}
         className="mt-5 flex items-center justify-center gap-2.5">
         <div style={{ width:36, height:0.5, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.65))" }} />
-        <div style={{ width:10, height:10, borderRadius:"50%", border:"1px solid rgba(212,175,55,0.40)",
-          background:"rgba(212,175,55,0.08)", boxShadow:"0 0 8px rgba(212,175,55,0.35)" }} />
-        <motion.div
-          style={{ width:6, height:6, borderRadius:"50%", background:"#D4AF37" }}
-          animate={{ boxShadow:["0 0 5px rgba(212,175,55,0.55)","0 0 16px rgba(212,175,55,0.95)","0 0 5px rgba(212,175,55,0.55)"] }}
+        <div style={{ width:10, height:10, borderRadius:"50%", border:"1px solid rgba(212,175,55,0.40)", background:"rgba(212,175,55,0.08)", boxShadow:"0 0 8px rgba(212,175,55,0.35)" }} />
+        <motion.div style={{ width:6, height:6, borderRadius:"50%", background:"#D4AF37" }}
+          animate={paused ? {} : { boxShadow:["0 0 5px rgba(212,175,55,0.55)","0 0 16px rgba(212,175,55,0.95)","0 0 5px rgba(212,175,55,0.55)"] }}
           transition={{ duration:2.8, repeat:Infinity, ease:"easeInOut" }} />
-        <div style={{ width:10, height:10, borderRadius:"50%", border:"1px solid rgba(212,175,55,0.40)",
-          background:"rgba(212,175,55,0.08)", boxShadow:"0 0 8px rgba(212,175,55,0.35)" }} />
+        <div style={{ width:10, height:10, borderRadius:"50%", border:"1px solid rgba(212,175,55,0.40)", background:"rgba(212,175,55,0.08)", boxShadow:"0 0 8px rgba(212,175,55,0.35)" }} />
         <div style={{ width:36, height:0.5, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.65))" }} />
       </motion.div>
     </motion.div>
   );
 }
 
-// ── Allah calligraphy ─────────────────────────────────────────────
-function AllahCalligraphy() {
+// Mobile: entrance animations only, no infinite loops
+function HeroTitleMobile() {
+  return (
+    <motion.div initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }}
+      transition={{ duration:0.9, delay:0.4 }}
+      className="text-center z-10 px-4 mt-4">
+      <h1 className="font-amiri font-bold"
+        style={{
+          fontSize:"clamp(3rem,13vw,5.8rem)", color:"#f5ecd4",
+          lineHeight:1.08, letterSpacing:"0.025em",
+          textShadow:"0 0 32px rgba(212,175,55,0.50), 0 2px 20px rgba(0,0,0,0.60)",
+        }}>
+        سرّ الحروف
+      </h1>
+      <div className="mt-3 space-y-1.5">
+        <p className="font-inter font-bold tracking-[0.38em] uppercase"
+          style={{ fontSize:"clamp(10px,2.6vw,14px)", color:"rgba(212,175,55,0.88)" }}>
+          Sirrul Huruf
+        </p>
+        <p className="font-inter tracking-[0.22em] uppercase"
+          style={{ fontSize:"clamp(8px,1.6vw,10px)", color:"rgba(255,255,255,0.38)" }}>
+          Advanced Ilm al-Huruf Analysis
+        </p>
+      </div>
+      <div className="mt-5 flex items-center justify-center gap-2.5">
+        <div style={{ width:36, height:0.5, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.65))" }} />
+        <div style={{ width:6, height:6, borderRadius:"50%", background:"#D4AF37", boxShadow:"0 0 10px rgba(212,175,55,0.75)" }} />
+        <div style={{ width:36, height:0.5, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.65))" }} />
+      </div>
+    </motion.div>
+  );
+}
+
+// Desktop: full Allah animations
+function AllahCalligraphyDesktop({ paused }) {
   return (
     <motion.div initial={{ opacity:0, scale:0.5 }} animate={{ opacity:1, scale:1 }}
       transition={{ duration:1.4, ease:"easeOut" }}
       className="absolute z-20 flex items-center justify-center">
-      <motion.div className="absolute rounded-full pointer-events-none" style={{
-        width:220, height:220,
-        background:"radial-gradient(circle,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 38%,transparent 75%)",
-        filter:"blur(22px)", zIndex:0 }}
-        animate={{ scale:[1,1.35,1], opacity:[0.38,0.82,0.38] }}
+      <motion.div className="absolute rounded-full pointer-events-none"
+        style={{ width:220, height:220, background:"radial-gradient(circle,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 38%,transparent 75%)", filter:"blur(22px)", zIndex:0 }}
+        animate={paused ? {} : { scale:[1,1.35,1], opacity:[0.38,0.82,0.38] }}
         transition={{ duration:6.5, repeat:Infinity, ease:"easeInOut" }} />
-      <motion.div className="absolute rounded-full pointer-events-none" style={{
-        width:110, height:110,
-        background:"radial-gradient(circle,rgba(212,175,55,0.32) 0%,rgba(212,175,55,0.10) 58%,transparent 82%)",
-        filter:"blur(12px)", zIndex:1 }}
-        animate={{ scale:[1,1.22,1], opacity:[0.48,0.92,0.48] }}
+      <motion.div className="absolute rounded-full pointer-events-none"
+        style={{ width:110, height:110, background:"radial-gradient(circle,rgba(212,175,55,0.32) 0%,rgba(212,175,55,0.10) 58%,transparent 82%)", filter:"blur(12px)", zIndex:1 }}
+        animate={paused ? {} : { scale:[1,1.22,1], opacity:[0.48,0.92,0.48] }}
         transition={{ duration:4.8, repeat:Infinity, ease:"easeInOut", delay:0.8 }} />
-      <motion.div className="absolute pointer-events-none" style={{
-        width:90, height:18, borderRadius:"50%",
-        background:"radial-gradient(ellipse,rgba(0,0,0,0.48) 0%,transparent 70%)",
-        filter:"blur(8px)", bottom:-22, zIndex:0 }}
-        animate={{ scaleX:[1,0.78,1], opacity:[0.50,0.26,0.50] }}
-        transition={{ duration:4.5, repeat:Infinity, ease:"easeInOut" }} />
       <motion.span className="font-amiri font-bold relative select-none"
         style={{ fontSize:"3.4rem", color:"#D4AF37", lineHeight:1, letterSpacing:"0.03em", zIndex:2 }}
-        animate={{
+        animate={paused ? {} : {
           textShadow:[
             "0 0 10px rgba(212,175,55,0.52),0 0 30px rgba(212,175,55,0.68),0 0 65px rgba(212,175,55,0.24)",
             "0 0 22px rgba(212,175,55,0.88),0 0 58px rgba(212,175,55,1),0 0 105px rgba(212,175,55,0.42)",
@@ -377,7 +411,28 @@ function AllahCalligraphy() {
   );
 }
 
-// ── Nav cards ─────────────────────────────────────────────────────
+// Mobile: static Allah — no infinite animations
+function AllahCalligraphyMobile() {
+  return (
+    <motion.div initial={{ opacity:0, scale:0.5 }} animate={{ opacity:1, scale:1 }}
+      transition={{ duration:1.2, ease:"easeOut" }}
+      className="absolute z-20 flex items-center justify-center">
+      <div className="absolute rounded-full pointer-events-none" style={{
+        width:160, height:160,
+        background:"radial-gradient(circle,rgba(212,175,55,0.20) 0%,transparent 72%)",
+        filter:"blur(18px)",
+      }} />
+      <span className="font-amiri font-bold relative select-none"
+        style={{
+          fontSize:"3.4rem", color:"#D4AF37", lineHeight:1, letterSpacing:"0.03em",
+          textShadow:"0 0 18px rgba(212,175,55,0.70), 0 0 50px rgba(212,175,55,0.28)",
+        }}>
+        الله
+      </span>
+    </motion.div>
+  );
+}
+
 function NavCards({ startNav }) {
   return (
     <div className="relative z-10 w-full max-w-sm mt-7 grid grid-cols-2 gap-3 px-3">
@@ -391,34 +446,20 @@ function NavCards({ startNav }) {
             whileHover={{ scale:1.04, y:-6, transition:{ duration:0.22, ease:"easeOut" } }}
             whileTap={{ scale:0.96, transition:{ duration:0.1 } }}>
             <Link to={card.path} onClick={startNav}
-              className="block rounded-2xl border flex flex-col items-center text-center group"
+              className="block rounded-2xl border flex flex-col items-center text-center"
               style={{
                 background:`linear-gradient(155deg,rgba(${r},${g},${b},0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(${r},${g},${b},0.05) 100%)`,
                 borderColor:`rgba(${r},${g},${b},0.32)`,
                 boxShadow:`0 0 28px rgba(${r},${g},${b},0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(${r},${g},${b},0.18)`,
-                minHeight:150,
-                padding:"20px 14px",
-                transform:"translateZ(0)",
-                willChange:"transform",
+                minHeight:150, padding:"20px 14px",
                 WebkitTapHighlightColor:"transparent",
                 touchAction:"manipulation",
                 backdropFilter:"blur(10px)",
                 WebkitBackdropFilter:"blur(10px)",
-                position:"relative",
-                overflow:"hidden",
-                transition:"border-color 0.28s ease,box-shadow 0.28s ease",
+                position:"relative", overflow:"hidden",
               }}>
-              {/* Top sheen */}
               <div style={{ position:"absolute", top:0, left:0, right:0, height:1,
                 background:`linear-gradient(90deg,transparent 5%,rgba(${r},${g},${b},0.50) 50%,transparent 95%)` }} />
-              {/* Floating light top-right */}
-              <div style={{ position:"absolute", top:-22, right:-22, width:80, height:80, borderRadius:"50%",
-                background:`radial-gradient(circle,rgba(${r},${g},${b},0.18) 0%,transparent 70%)`,
-                filter:"blur(14px)", pointerEvents:"none" }} />
-              {/* Bottom left light */}
-              <div style={{ position:"absolute", bottom:-18, left:-18, width:64, height:64, borderRadius:"50%",
-                background:`radial-gradient(circle,rgba(${r},${g},${b},0.11) 0%,transparent 70%)`,
-                filter:"blur(10px)", pointerEvents:"none" }} />
               <CardInner card={card} />
             </Link>
           </motion.div>
@@ -431,7 +472,6 @@ function NavCards({ startNav }) {
 const ZERO_MV = { x: { get: () => 0, set: () => {}, on: () => () => {} }, y: { get: () => 0, set: () => {}, on: () => () => {} } };
 
 // ── Main ──────────────────────────────────────────────────────────
-// Accepts shared mouse MotionValues from Home to avoid duplicate listeners
 export default function HeroSection({ mouse }) {
   const { startNav, isNavigating } = useNavigation();
   const isMobile = useIsMobile();
@@ -440,19 +480,37 @@ export default function HeroSection({ mouse }) {
 
   return (
     <div className="min-h-screen font-inter relative overflow-x-hidden flex flex-col items-center justify-center pb-12 pt-4">
-      <CalligraphyAtmosphere mouse={safeMouse} />
-      <LightRays paused={isNavigating} isMobile={isMobile} />
 
-      {/* Wheel + rings + Allah */}
-      <motion.div animate={{ y:[0,-8,0] }} transition={{ duration:7.5, repeat:Infinity, ease:"easeInOut" }}
-        className="relative flex items-center justify-center"
-        style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
-        <OrbitalRings paused={isNavigating} />
-        <SacredWheel mouse={safeMouse} />
-        <AllahCalligraphy />
-      </motion.div>
+      {/* Calligraphy atmosphere — CSS on mobile, Framer Motion on desktop */}
+      {isMobile
+        ? <CalligraphyAtmosphereMobile />
+        : <CalligraphyAtmosphereDesktop mouse={safeMouse} paused={isNavigating} />
+      }
 
-      <HeroTitle />
+      {/* Light rays — desktop only */}
+      {!isMobile && <LightRays paused={isNavigating} />}
+
+      {/* Wheel container */}
+      {isMobile ? (
+        // Mobile: no floating animation on wrapper
+        <div className="relative flex items-center justify-center" style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
+          <OrbitalRings paused={isNavigating} isMobile={true} />
+          <SacredWheel mouse={safeMouse} />
+          <AllahCalligraphyMobile />
+        </div>
+      ) : (
+        <motion.div animate={{ y:[0,-8,0] }} transition={{ duration:7.5, repeat:Infinity, ease:"easeInOut" }}
+          className="relative flex items-center justify-center"
+          style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
+          <OrbitalRings paused={isNavigating} isMobile={false} />
+          <SacredWheel mouse={safeMouse} />
+          <AllahCalligraphyDesktop paused={isNavigating} />
+        </motion.div>
+      )}
+
+      {/* Title */}
+      {isMobile ? <HeroTitleMobile /> : <HeroTitleDesktop paused={isNavigating} />}
+
       <GoldDivider delay={1.55} />
       <ManuscriptIntro />
       <NavCards startNav={startNav} />
