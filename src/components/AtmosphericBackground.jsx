@@ -105,41 +105,7 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
         }}
       />
 
-      {/* ── Keyframes injected once ── */}
-      <style>{`
-        @keyframes sh-twinkle {
-          0%,100% { opacity: var(--op, 0.15); transform: scale(1); }
-          50%      { opacity: calc(var(--op, 0.15) * 2.8 + 0.1); transform: scale(1.6); }
-        }
-        @keyframes sh-bloom {
-          0%,100% { opacity: 0.65; }
-          50%      { opacity: 1; }
-        }
-        /* 4 drift variants for visual diversity */
-        @keyframes sh-drift-0 {
-          0%   { transform: translate(0px,  0px)   scale(1);    opacity: inherit; }
-          33%  { transform: translate(18px, -22px) scale(1.15); opacity: calc(inherit * 1.5); }
-          66%  { transform: translate(-12px,-38px) scale(0.90); opacity: inherit; }
-          100% { transform: translate(0px,  0px)   scale(1);    opacity: inherit; }
-        }
-        @keyframes sh-drift-1 {
-          0%   { transform: translate(0px,  0px)   scale(1);    }
-          40%  { transform: translate(-20px,-30px) scale(1.10); }
-          80%  { transform: translate(14px, -50px) scale(0.85); }
-          100% { transform: translate(0px,  0px)   scale(1);    }
-        }
-        @keyframes sh-drift-2 {
-          0%   { transform: translate(0px, 0px)    scale(1);    }
-          50%  { transform: translate(25px,-28px)  scale(1.20); }
-          100% { transform: translate(0px, 0px)    scale(1);    }
-        }
-        @keyframes sh-drift-3 {
-          0%   { transform: translate(0px,  0px)   scale(1);    }
-          30%  { transform: translate(-15px,-18px) scale(0.88); }
-          70%  { transform: translate(10px, -40px) scale(1.12); }
-          100% { transform: translate(0px,  0px)   scale(1);    }
-        }
-      `}</style>
+      {/* Keyframes are defined in index.css — no inline style injection */}
     </div>
   );
 });

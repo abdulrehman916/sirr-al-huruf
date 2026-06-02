@@ -433,7 +433,10 @@ function NavCards({ startNav }) {
 export default function HeroSection() {
   const { startNav, isNavigating } = useNavigation();
   const isMobile = useIsMobile();
-  const mouse = useMouseParallax(1);
+  // useMouseParallax now returns MotionValues — no React re-renders
+  // On mobile it returns static zeros and runs no rAF loop
+  const { x: mouseX, y: mouseY } = useMouseParallax(1);
+  const mouse = { x: mouseX, y: mouseY };
   const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
 
   return (
