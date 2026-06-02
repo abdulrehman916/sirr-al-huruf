@@ -264,30 +264,41 @@ function FaalAliSection({ lang }) {
   const [selected, setSelected] = useState(null);
   return (
     <>
-      <div className="rounded-2xl border px-4 py-3 text-center"
-        style={{ background: P.bg, borderColor: P.faint }}>
-        {lang === "ml" ? (
-          <>
-            <p className="font-amiri text-base" style={{ color: P.dim }}>
-              മനസ്സ് ശാന്തമാക്കി ഒരു ഹൃദയം സ്പർശിക്കുക
-            </p>
-            <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
-              style={{ color: "rgba(216,180,254,0.28)" }}>
-              ൧൬ ഹൃദയ ചിഹ്നങ്ങൾ — ഓരോന്നിനും സ്വന്തം ഫലം
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="font-amiri text-base" style={{ color: P.dim }}>
-              Clear your mind and touch one heart with pure intention
-            </p>
-            <p className="font-inter text-[9px] uppercase tracking-widest mt-1"
-              style={{ color: "rgba(216,180,254,0.28)" }}>
-              16 heart symbols — each with its own fixed result
-            </p>
-          </>
-        )}
-      </div>
+      {/* Permanent Instruction Panel */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="rounded-2xl border px-4 py-4 mb-3"
+        style={{
+          background: "linear-gradient(160deg, rgba(160,100,220,0.12) 0%, rgba(160,100,220,0.06) 100%)",
+          borderColor: P.border,
+          boxShadow: `0 0 20px ${P.glow}, inset 0 1px 0 rgba(216,180,254,0.08)`,
+        }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">📜</span>
+          <h3 className="font-amiri font-bold text-base" style={{ color: P.text }}>
+            ഫാൽ അലി എടുക്കുന്ന വിധം
+          </h3>
+        </div>
+        <div className="space-y-2.5 text-sm">
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            ഫാൽ അലി (ع) ദാനിയേൽ (അ) നിൽനിന്നും ലഭിച്ചതായി പറയപ്പെടുന്നു.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            ഇതെടുക്കുന്നതിന് ആദ്യം ഫാതിഹാ നബിമാരുടെ പേരിലും, അവിടുത്തെ കുടുംബാംഗങ്ങൾക്കും, സഹാബാക്കൾക്കും, വിശിഷ്യാ അലി (ع) യ്ക്കു വേണ്ടിയും ഓതി ഹദിയാ ചെയ്യുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            ശേഷം 3 കുൽ സൂറത്തുകൾ (സൂറത്തുൽ ഇഖ്‌ലാസ്, സൂറത്തുൽ ഫലഖ്, സൂറത്തുന്നാസ്) ഓതുക.
+          </p>
+          <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
+            കണ്ണടച്ചുകൊണ്ട് കലിമാവിരൽ ഉപയോഗിച്ച് മൂന്നു വട്ടം ചുറ്റിയശേഷം ഏതുകാര്യമാണോ അറിയേണ്ടത് അത് മനസ്സിൽ കരുതുക. തുടർന്ന് കളിയിൽ തൊടുക.
+          </p>
+          <p className="font-amiri leading-relaxed font-semibold" style={{ color: P.text }}>
+            ഒരു പ്രാവശ്യം മാത്രം ഫാൽ നോക്കുക.
+          </p>
+        </div>
+      </motion.div>
 
       <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
         {FAAL_CELLS.map((cell, i) => (
