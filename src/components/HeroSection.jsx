@@ -311,18 +311,13 @@ function HeroTitleDesktop({ paused }) {
     <motion.div initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }}
       transition={{ duration:0.9, delay:0.4 }}
       className="text-center z-10 px-4 mt-4">
-      <motion.h1 className="font-amiri font-bold"
-        style={{ fontSize:"clamp(3rem,13vw,5.8rem)", color:"#f5ecd4", lineHeight:1.08, letterSpacing:"0.025em" }}
-        animate={paused ? {} : {
-          textShadow:[
-            "0 0 28px rgba(212,175,55,0.42), 0 0 65px rgba(212,175,55,0.14), 0 2px 20px rgba(0,0,0,0.60)",
-            "0 0 52px rgba(212,175,55,0.68), 0 0 105px rgba(212,175,55,0.28), 0 2px 28px rgba(0,0,0,0.65)",
-            "0 0 28px rgba(212,175,55,0.42), 0 0 65px rgba(212,175,55,0.14), 0 2px 20px rgba(0,0,0,0.60)",
-          ],
-        }}
-        transition={{ duration:5.5, repeat:Infinity, ease:"easeInOut" }}>
+      <h1 className="font-amiri font-bold"
+        style={{
+          fontSize:"clamp(3rem,13vw,5.8rem)", color:"#f5ecd4", lineHeight:1.08, letterSpacing:"0.025em",
+          textShadow:"0 0 36px rgba(212,175,55,0.48), 0 0 70px rgba(212,175,55,0.18), 0 2px 20px rgba(0,0,0,0.60)",
+        }}>
         سرّ الحروف
-      </motion.h1>
+      </h1>
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.9, duration:0.7 }} className="mt-3 space-y-1.5">
         <p className="font-inter font-bold tracking-[0.38em] uppercase"
           style={{ fontSize:"clamp(10px,2.6vw,14px)", color:"rgba(212,175,55,0.88)", textShadow:"0 0 14px rgba(212,175,55,0.30)" }}>
@@ -337,9 +332,7 @@ function HeroTitleDesktop({ paused }) {
         className="mt-5 flex items-center justify-center gap-2.5">
         <div style={{ width:36, height:0.5, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.65))" }} />
         <div style={{ width:10, height:10, borderRadius:"50%", border:"1px solid rgba(212,175,55,0.40)", background:"rgba(212,175,55,0.08)", boxShadow:"0 0 8px rgba(212,175,55,0.35)" }} />
-        <motion.div style={{ width:6, height:6, borderRadius:"50%", background:"#D4AF37" }}
-          animate={paused ? {} : { boxShadow:["0 0 5px rgba(212,175,55,0.55)","0 0 16px rgba(212,175,55,0.95)","0 0 5px rgba(212,175,55,0.55)"] }}
-          transition={{ duration:2.8, repeat:Infinity, ease:"easeInOut" }} />
+        <div style={{ width:6, height:6, borderRadius:"50%", background:"#D4AF37", boxShadow:"0 0 10px rgba(212,175,55,0.75)" }} />
         <div style={{ width:10, height:10, borderRadius:"50%", border:"1px solid rgba(212,175,55,0.40)", background:"rgba(212,175,55,0.08)", boxShadow:"0 0 8px rgba(212,175,55,0.35)" }} />
         <div style={{ width:36, height:0.5, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.65))" }} />
       </motion.div>
@@ -386,24 +379,16 @@ function AllahCalligraphyDesktop({ paused }) {
     <motion.div initial={{ opacity:0, scale:0.5 }} animate={{ opacity:1, scale:1 }}
       transition={{ duration:1.4, ease:"easeOut" }}
       className="absolute z-20 flex items-center justify-center">
-      <motion.div className="absolute rounded-full pointer-events-none"
-        style={{ width:220, height:220, background:"radial-gradient(circle,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 38%,transparent 75%)", filter:"blur(22px)", zIndex:0 }}
-        animate={paused ? {} : { scale:[1,1.35,1], opacity:[0.38,0.82,0.38] }}
-        transition={{ duration:6.5, repeat:Infinity, ease:"easeInOut" }} />
-      <motion.div className="absolute rounded-full pointer-events-none"
-        style={{ width:110, height:110, background:"radial-gradient(circle,rgba(212,175,55,0.32) 0%,rgba(212,175,55,0.10) 58%,transparent 82%)", filter:"blur(12px)", zIndex:1 }}
-        animate={paused ? {} : { scale:[1,1.22,1], opacity:[0.48,0.92,0.48] }}
-        transition={{ duration:4.8, repeat:Infinity, ease:"easeInOut", delay:0.8 }} />
+      <div className="absolute rounded-full pointer-events-none"
+        style={{ width:220, height:220, background:"radial-gradient(circle,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.08) 38%,transparent 75%)", filter:"blur(22px)", zIndex:0, opacity:0.60 }} />
+      <div className="absolute rounded-full pointer-events-none"
+        style={{ width:110, height:110, background:"radial-gradient(circle,rgba(212,175,55,0.32) 0%,rgba(212,175,55,0.10) 58%,transparent 82%)", filter:"blur(12px)", zIndex:1, opacity:0.70 }} />
       <motion.span className="font-amiri font-bold relative select-none"
-        style={{ fontSize:"3.4rem", color:"#D4AF37", lineHeight:1, letterSpacing:"0.03em", zIndex:2 }}
-        animate={paused ? {} : {
-          textShadow:[
-            "0 0 10px rgba(212,175,55,0.52),0 0 30px rgba(212,175,55,0.68),0 0 65px rgba(212,175,55,0.24)",
-            "0 0 22px rgba(212,175,55,0.88),0 0 58px rgba(212,175,55,1),0 0 105px rgba(212,175,55,0.42)",
-            "0 0 10px rgba(212,175,55,0.52),0 0 30px rgba(212,175,55,0.68),0 0 65px rgba(212,175,55,0.24)",
-          ],
-          y:[0,-5,0],
+        style={{
+          fontSize:"3.4rem", color:"#D4AF37", lineHeight:1, letterSpacing:"0.03em", zIndex:2,
+          textShadow:"0 0 14px rgba(212,175,55,0.70), 0 0 40px rgba(212,175,55,0.35)",
         }}
+        animate={paused ? {} : { y:[0,-5,0] }}
         transition={{ duration:4.5, repeat:Infinity, ease:"easeInOut" }}>
         الله
       </motion.span>

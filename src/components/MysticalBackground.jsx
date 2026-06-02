@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useEffect } from "react";
 import useIsMobile from "../hooks/useIsMobile";
 import { useNavigation } from "../context/NavigationContext";
 
@@ -64,14 +64,31 @@ const MOBILE_DUST  = DUST_ALL.slice(0, 5);
 const MOBILE_LETTERS = BG_LETTER_DATA.slice(0, 4);
 
 function MobileBackground() {
+  // Pause all CSS animations when tab is hidden — prevents background GPU usage
+  useEffect(() => {
+    const el = document.getElementById("mobile-bg-root");
+    if (!el) return;
+    const onVis = () => {
+      el.style.animationPlayState = document.hidden ? "paused" : "running";
+      // Apply to all animated children
+      el.querySelectorAll("[data-anim]").forEach(child => {
+        child.style.animationPlayState = document.hidden ? "paused" : "running";
+      });
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   return (
     <div
+      id="mobile-bg-root"
       className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
       style={{ background: "linear-gradient(180deg, #010308 0%, #020a18 18%, #050d22 50%, #040a1c 75%, #020610 100%)" }}
     >
-      {/* Stars — CSS animation only */}
-      {MOBILE_STARS.map((s, i) => (
+      {/* Stars — reduced to 20, CSS animation only, no willChange */}
+      {MOBILE_STARS.slice(0, 20).map((s, i) => (
         <div key={i}
+          data-anim="1"
           className="absolute rounded-full"
           style={{
             width: s.size, height: s.size,
@@ -84,9 +101,10 @@ function MobileBackground() {
         />
       ))}
 
-      {/* Gold dust — CSS animation only */}
-      {MOBILE_DUST.map((d, i) => (
+      {/* Gold dust — reduced to 3, CSS animation only */}
+      {MOBILE_DUST.slice(0, 3).map((d, i) => (
         <div key={`d${i}`}
+          data-anim="1"
           className="absolute rounded-full"
           style={{
             width: d.size, height: d.size,
@@ -99,25 +117,9 @@ function MobileBackground() {
         />
       ))}
 
-      {/* Background Arabic letters — CSS only */}
-      {MOBILE_LETTERS.map((l, i) => (
-        <span key={`l${i}`}
-          className="absolute font-amiri select-none"
-          style={{
-            top: `${l.top}%`, left: `${l.left}%`,
-            fontSize: l.size,
-            color: "#D4AF37",
-            opacity: l.opacity,
-            animation: `sh-twinkle ${l.dur}s ease-in-out infinite`,
-            animationDelay: `${l.delay}s`,
-            filter: "blur(1px)",
-          }}
-        >
-          {l.char}
-        </span>
-      ))}
+      {/* Arabic background letters — REMOVED on mobile (decorative only, high GPU cost) */}
 
-      {/* Vignette */}
+      {/* Vignette — static, no animation */}
       <div className="absolute inset-0" style={{
         background: "radial-gradient(ellipse 80% 80% at 50% 50%, transparent 35%, rgba(1,3,8,0.65) 100%)",
       }} />

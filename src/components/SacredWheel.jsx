@@ -62,6 +62,20 @@ function injectMobileCSS() {
 function MobileSacredWheel({ containerSize }) {
   useEffect(() => { injectMobileCSS(); }, []);
 
+  // Pause all CSS animations in this subtree when tab is hidden
+  useEffect(() => {
+    const el = document.getElementById("sw-mobile-root");
+    if (!el) return;
+    const onVis = () => {
+      const state = document.hidden ? "paused" : "running";
+      el.querySelectorAll("[data-sw-anim]").forEach(n => {
+        n.style.animationPlayState = state;
+      });
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   const half = containerSize / 2;
   const scale = containerSize / SIZE;
   const orbitR = 194 * scale;
@@ -81,11 +95,12 @@ function MobileSacredWheel({ containerSize }) {
 
   return (
     <div
+      id="sw-mobile-root"
       className="relative flex items-center justify-center"
       style={{ width: containerSize, height: containerSize }}
     >
       {/* Outer bloom — static CSS pulse */}
-      <div style={{
+      <div data-sw-anim="1" style={{
         position: "absolute",
         width: outerBloom, height: outerBloom,
         borderRadius: "50%",
@@ -121,7 +136,7 @@ function MobileSacredWheel({ containerSize }) {
         <circle cx={CX} cy={CY} r={65}  fill="url(#core-m)" />
 
         {/* Outer ring — CSS spin slow */}
-        <g style={{ transformOrigin: `${CX}px ${CY}px`, animation: "sw-spin-cw 420s linear infinite" }}>
+        <g data-sw-anim="1" style={{ transformOrigin: `${CX}px ${CY}px`, animation: "sw-spin-cw 420s linear infinite" }}>
           <circle cx={CX} cy={CY} r={228} fill="none" stroke={GOLD} strokeWidth="1.4" strokeOpacity="0.35" filter="url(#sg-m)" />
           <circle cx={CX} cy={CY} r={220} fill="none" stroke={GOLD} strokeWidth="0.4" strokeOpacity="0.12" />
           {OUTER_DOTS.map(([x, y], i) => (
@@ -133,7 +148,7 @@ function MobileSacredWheel({ containerSize }) {
         </g>
 
         {/* Middle ring — CSS spin medium */}
-        <g style={{ transformOrigin: `${CX}px ${CY}px`, animation: "sw-spin-ccw 150s linear infinite" }}>
+        <g data-sw-anim="1" style={{ transformOrigin: `${CX}px ${CY}px`, animation: "sw-spin-ccw 150s linear infinite" }}>
           <circle cx={CX} cy={CY} r={164} fill="none" stroke={GOLD} strokeWidth="1.1" strokeOpacity="0.34" filter="url(#sg-m)" />
           <polyline points={HEX1} fill="none" stroke={GOLD} strokeWidth="0.65" strokeOpacity="0.20" />
           <polyline points={HEX2} fill="none" stroke={GOLD} strokeWidth="0.65" strokeOpacity="0.20" />
@@ -143,7 +158,7 @@ function MobileSacredWheel({ containerSize }) {
         </g>
 
         {/* Inner ring — CSS spin fast */}
-        <g style={{ transformOrigin: `${CX}px ${CY}px`, animation: "sw-spin-cw 90s linear infinite" }}>
+        <g data-sw-anim="1" style={{ transformOrigin: `${CX}px ${CY}px`, animation: "sw-spin-cw 90s linear infinite" }}>
           <circle cx={CX} cy={CY} r={110} fill="none" stroke={GOLD} strokeWidth="1" strokeOpacity="0.38" />
           <polyline points={SQ1} fill="none" stroke={GOLD} strokeWidth="0.55" strokeOpacity="0.24" />
           <polyline points={SQ2} fill="none" stroke={GOLD} strokeWidth="0.55" strokeOpacity="0.24" />
@@ -156,7 +171,7 @@ function MobileSacredWheel({ containerSize }) {
         </g>
 
         {/* Core halo */}
-        <g style={{ transformOrigin: `${CX}px ${CY}px`, animation: "sw-spin-ccw 55s linear infinite" }}>
+        <g data-sw-anim="1" style={{ transformOrigin: `${CX}px ${CY}px`, animation: "sw-spin-ccw 55s linear infinite" }}>
           <circle cx={CX} cy={CY} r={62} fill="none" stroke={GOLD} strokeWidth="1.1" strokeOpacity="0.45" />
           <circle cx={CX} cy={CY} r={52} fill="none" stroke={GOLD} strokeWidth="0.4" strokeOpacity="0.18" strokeDasharray="3,7" />
           {CORE_DOTS.map(([x, y], i) => (
@@ -177,6 +192,7 @@ function MobileSacredWheel({ containerSize }) {
 
       {/* Asma orbital names — CSS rotation only */}
       <div
+        data-sw-anim="1"
         style={{
           position: "absolute", inset: 0,
           animation: "sw-orbit 120s linear infinite",
@@ -192,7 +208,7 @@ function MobileSacredWheel({ containerSize }) {
               transform: "translate(-50%, -50%)",
             }}
           >
-            <div style={{
+            <div data-sw-anim="1" style={{
               animation: `sw-orbit-r 120s linear infinite`,
               transformOrigin: "50% 50%",
             }}>
@@ -467,24 +483,17 @@ function AsmaNames({ containerSize, mouseX, mouseY, paused }) {
                 animate={paused ? {} : { opacity: [0.35, 0.85, 0.35], scale: [0.9, 1.15, 0.9] }}
                 transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: breathDelay }}
               />
-              <motion.span
+              <span
                 style={{
                   fontFamily: "'Amiri', serif", fontWeight: "700",
                   fontSize: "13px", color: GOLD,
                   whiteSpace: "nowrap", display: "block",
                   letterSpacing: "0.05em", direction: "rtl", position: "relative", zIndex: 1,
+                  textShadow: `0 0 8px ${G("0.65")}, 0 0 20px ${G("0.28")}`,
                 }}
-                animate={paused ? {} : {
-                  textShadow: [
-                    `0 0 5px ${G("0.55")}, 0 0 14px ${G("0.22")}`,
-                    `0 0 10px ${G("0.90")}, 0 0 28px ${G("0.50")}, 0 0 50px ${G("0.18")}`,
-                    `0 0 5px ${G("0.55")}, 0 0 14px ${G("0.22")}`,
-                  ],
-                }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: breathDelay }}
               >
                 {name}
-              </motion.span>
+              </span>
             </motion.div>
           );
         })}
