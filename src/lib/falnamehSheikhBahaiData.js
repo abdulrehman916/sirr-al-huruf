@@ -190,8 +190,7 @@ export const FALNAMEH_QUESTIONS = [
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// PERSIAN LETTER GRID (18×12 = 216 cells)
-// Repeating pattern of 32 Persian/Arabic letters
+// BASE PERSIAN LETTERS (32 letters)
 // ═══════════════════════════════════════════════════════════════
 
 const BASE_LETTERS = [
@@ -199,10 +198,60 @@ const BASE_LETTERS = [
   "س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ک","گ","ل","م","ن","و","ه","ی"
 ];
 
+// ═══════════════════════════════════════════════════════════════
+// PERSIAN LETTER GRID (18×12 = 216 cells) - Generic fallback
+// ═══════════════════════════════════════════════════════════════
+
 export const PERSIAN_LETTERS = [];
 for (let i = 0; i < 216; i++) {
   PERSIAN_LETTERS.push(BASE_LETTERS[i % BASE_LETTERS.length]);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PERSIAN LETTER GRIDS (18×12 = 216 cells per question)
+// Each of the 26 questions has its own unique grid
+// Placeholder datasets - to be replaced with PDF import data
+// ═══════════════════════════════════════════════════════════════
+
+// Generate a placeholder grid (will be replaced with actual data)
+const generatePlaceholderGrid = (seed) => {
+  const grid = [];
+  for (let i = 0; i < 216; i++) {
+    const offset = (seed * 7 + i * 3) % BASE_LETTERS.length;
+    grid.push(BASE_LETTERS[offset]);
+  }
+  return grid;
+};
+
+// 26 unique grid datasets - one for each question
+export const FALNAMEH_GRIDS = {
+  1: generatePlaceholderGrid(1),
+  2: generatePlaceholderGrid(2),
+  3: generatePlaceholderGrid(3),
+  4: generatePlaceholderGrid(4),
+  5: generatePlaceholderGrid(5),
+  6: generatePlaceholderGrid(6),
+  7: generatePlaceholderGrid(7),
+  8: generatePlaceholderGrid(8),
+  9: generatePlaceholderGrid(9),
+  10: generatePlaceholderGrid(10),
+  11: generatePlaceholderGrid(11),
+  12: generatePlaceholderGrid(12),
+  13: generatePlaceholderGrid(13),
+  14: generatePlaceholderGrid(14),
+  15: generatePlaceholderGrid(15),
+  16: generatePlaceholderGrid(16),
+  17: generatePlaceholderGrid(17),
+  18: generatePlaceholderGrid(18),
+  19: generatePlaceholderGrid(19),
+  20: generatePlaceholderGrid(20),
+  21: generatePlaceholderGrid(21),
+  22: generatePlaceholderGrid(22),
+  23: generatePlaceholderGrid(23),
+  24: generatePlaceholderGrid(24),
+  25: generatePlaceholderGrid(25),
+  26: generatePlaceholderGrid(26),
+};
 
 // ═══════════════════════════════════════════════════════════════
 // VERSE INTERPRETATIONS (mapped by first letter of result poem)

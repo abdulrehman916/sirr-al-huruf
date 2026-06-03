@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft } from "lucide-react";
 import PageLayout from "../components/PageLayout";
-import { FALNAMEH_QUESTIONS, FALNAMEH_VERSES } from "../lib/falnamehSheikhBahaiData";
+import { FALNAMEH_QUESTIONS, FALNAMEH_VERSES, FALNAMEH_GRIDS } from "../lib/falnamehSheikhBahaiData";
 
 // ── Color Palette ─────────────────────────────────────────────
 const P = {
@@ -158,11 +158,8 @@ export default function FalnamehQuestionDetailPage() {
     const id = parseInt(params.get("question"));
     if (id && id >= 1 && id <= 26) {
       setQuestionId(id);
-      // Placeholder grid data - to be replaced with actual 18x12 grids per question
-      const placeholderLetters = Array.from({ length: 216 }, (_, i) => 
-        String.fromCharCode(65 + (i % 26))
-      );
-      setGridData(placeholderLetters);
+      // Load the unique grid for this specific question
+      setGridData(FALNAMEH_GRIDS[id] || []);
     }
   }, []);
 
