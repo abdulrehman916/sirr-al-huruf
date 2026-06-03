@@ -262,26 +262,50 @@ function FaalAliModal({ cell, lang, onClose }) {
 
 function FaalAliSection({ lang }) {
   const [selected, setSelected] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   return (
     <>
-      {/* Permanent Instruction Panel */}
+      {/* Collapsible Instruction Panel */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="rounded-2xl border px-4 py-4 mb-3"
+        className="rounded-2xl border px-4 py-3 mb-3 overflow-hidden"
         style={{
           background: "linear-gradient(160deg, rgba(160,100,220,0.12) 0%, rgba(160,100,220,0.06) 100%)",
           borderColor: P.border,
           boxShadow: `0 0 20px ${P.glow}, inset 0 1px 0 rgba(216,180,254,0.08)`,
         }}>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">📜</span>
-          <h3 className="font-amiri font-bold text-base" style={{ color: P.text }}>
-            {lang === "ml" ? "ഫാൽ അലി എടുക്കുന്ന വിധം" : "FAAL ALI – Method"}
-          </h3>
-        </div>
-        <div className="space-y-2 text-sm">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center justify-between gap-2"
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📜</span>
+            <h3 className="font-amiri font-bold text-base" style={{ color: P.text }}>
+              {lang === "ml" ? "ഫാൽ അലി എടുക്കുന്ന വിധം" : "FAAL ALI – Method"}
+            </h3>
+          </div>
+          <motion.span
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.25 }}
+            className="text-sm"
+            style={{ color: P.text }}
+          >
+            ▼
+          </motion.span>
+        </button>
+        <motion.div
+          initial={false}
+          animate={{
+            height: expanded ? "auto" : 0,
+            opacity: expanded ? 1 : 0,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="overflow-hidden"
+        >
+          <div className="pt-3 space-y-2 text-sm">
           {lang === "ml" ? (
             <>
               <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
@@ -355,7 +379,8 @@ function FaalAliSection({ lang }) {
               </p>
             </>
           )}
-        </div>
+          </div>
+        </motion.div>
       </motion.div>
 
       <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
@@ -515,26 +540,50 @@ function LuqmanModal({ cell, lang, onClose }) {
 
 function FaalLuqmanSection({ lang }) {
   const [selected, setSelected] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   return (
     <>
-      {/* Permanent Instruction Panel */}
+      {/* Collapsible Instruction Panel */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="rounded-2xl border px-4 py-4 mb-3"
+        className="rounded-2xl border px-4 py-3 mb-3 overflow-hidden"
         style={{
           background: "linear-gradient(160deg, rgba(160,100,220,0.12) 0%, rgba(160,100,220,0.06) 100%)",
           borderColor: P.border,
           boxShadow: `0 0 20px ${P.glow}, inset 0 1px 0 rgba(216,180,254,0.08)`,
         }}>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">📜</span>
-          <h3 className="font-amiri font-bold text-base" style={{ color: P.text }}>
-            {lang === "ml" ? "ഫാൽ ലുഖ്മാൻ എടുക്കുന്ന വിധം" : "FAAL LUQMAN – Method"}
-          </h3>
-        </div>
-        <div className="space-y-2 text-sm">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center justify-between gap-2"
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📜</span>
+            <h3 className="font-amiri font-bold text-base" style={{ color: P.text }}>
+              {lang === "ml" ? "ഫാൽ ലുഖ്മാൻ എടുക്കുന്ന വിധം" : "FAAL LUQMAN – Method"}
+            </h3>
+          </div>
+          <motion.span
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.25 }}
+            className="text-sm"
+            style={{ color: P.text }}
+          >
+            ▼
+          </motion.span>
+        </button>
+        <motion.div
+          initial={false}
+          animate={{
+            height: expanded ? "auto" : 0,
+            opacity: expanded ? 1 : 0,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="overflow-hidden"
+        >
+          <div className="pt-3 space-y-2 text-sm">
           {lang === "ml" ? (
             <>
               <p className="font-amiri leading-relaxed" style={{ color: "rgba(216,180,254,0.85)" }}>
@@ -614,7 +663,8 @@ function FaalLuqmanSection({ lang }) {
               </p>
             </>
           )}
-        </div>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* 4×7 grid for 28 cells */}
