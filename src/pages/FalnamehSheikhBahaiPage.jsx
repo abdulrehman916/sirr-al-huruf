@@ -5,10 +5,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft } from "lucide-react";
+import { X, ChevronLeft, CheckCircle, AlertCircle, TestTube } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { FALNAMEH_QUESTIONS, FALNAMEH_VERSES, PERSIAN_LETTERS } from "../lib/falnamehSheikhBahaiData";
+import { FALNAMEH_GRIDS_ARRAY } from "../lib/falnamehGrids.js";
 
 // ── Color Palette ─────────────────────────────────────────────
 const P = {
@@ -108,7 +109,7 @@ function LetterCell({ letter, index, isSelected, onSelect }) {
 }
 
 // ── Result Modal ──────────────────────────────────────────────
-function ResultModal({ result, lang, onClose }) {
+function ResultModal({ result, lang, onClose, verificationMode, verificationData }) {
   if (!result) return null;
 
   const verseData = FALNAMEH_VERSES[result.letter];
@@ -195,6 +196,143 @@ function ResultModal({ result, lang, onClose }) {
               </p>
             </div>
 
+            {/* Verification Results Panel */}
+            {verificationMode && verificationData && (
+              <div className="rounded-2xl border p-4 space-y-3"
+                style={{
+                  background: verificationData.isMatch 
+                    ? "rgba(34,197,94,0.08)" 
+                    : "rgba(239,68,68,0.08)",
+                  borderColor: verificationData.isMatch 
+                    ? "rgba(34,197,94,0.40)" 
+                    : "rgba(239,68,68,0.40)",
+                }}>
+                <div className="flex items-center gap-2 mb-2">
+                  {verificationData.isMatch ? (
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-red-500" />
+                  )}
+                  <p className="font-inter text-[9px] uppercase tracking-widest font-bold"
+                    style={{ color: verificationData.isMatch ? "#22c55e" : "#ef4444" }}>
+                    {lang === "ml" ? "വാക്യം പരിശോധന" : "Verse Verification"}
+                  </p>
+                </div>
+
+                {/* Collected Letters */}
+                <div className="space-y-1">
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>
+                    {lang === "ml" ? "ശേഖരിച്ച അക്ഷരങ്ങൾ (ഓരോ 6-ാമത്തെയും):" : "Collected Letters (every 6th):"}
+                  </p>
+                  <p className="font-amiri text-sm leading-relaxed" dir="rtl" style={{ color: P.text }}>
+                    {verificationData.collectedLetters.join(" ← ")}
+                  </p>
+                </div>
+
+                {/* Odd/Even Split */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: P.gold }}>
+                      {lang === "ml" ? "ഒറ്റ സ്ഥാനങ്ങൾ" : "Odd Positions"}
+                    </p>
+                    <p className="font-amiri text-xs leading-relaxed" dir="rtl" style={{ color: P.text }}>
+                      {verificationData.oddLetters.join(" ")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: P.gold }}>
+                      {lang === "ml" ? "ഇരട്ട സ്ഥാനങ്ങൾ" : "Even Positions"}
+                    </p>
+                    <p className="font-amiri text-xs leading-relaxed" dir="rtl" style={{ color: P.text }}>
+                      {verificationData.evenLetters.join(" ")}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Merged Verse */}
+                <div>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>
+                    {lang === "ml" ? "ചേർത്തുവെച്ച വാക്യം:" : "Merged Verse:"}
+                  </p>
+                  <p className="font-amiri text-sm leading-relaxed" dir="rtl" style={{ color: P.text }}>
+                    {verificationData.mergedLetters.join("")}
+                  </p>
+                </div>
+
+                {/* Comparison */}
+                <div className="space-y-2 pt-2 border-t" style={{ borderColor: P.faint }}>
+                  <div className="flex items-center justify-between">
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>
+                      {lang === "ml" ? "പുനർനിർമ്മിച്ച വാക്യം:" : "Reconstructed Verse:"}
+                    </p>
+                    <span className={`font-inter text-xs font-bold px-2 py-0.5 rounded ${
+                      verificationData.matchPercentage >= 85 
+                        ? "bg-green-600 text-white" 
+                        : "bg-red-600 text-white"
+                    }`}>
+                      {verificationData.matchPercentage}% {lang === "ml" ? "യോജിപ്പ്" : "Match"}
+                    </span>
+                  </div>
+                  <p className="font-amiri text-xs leading-relaxed" dir="rtl" style={{ color: verificationData.isMatch ? "#22c55e" : "#ef4444" }}>
+                    {verificationData.reconstructedVerse || "..."}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>
+                    {lang === "ml" ? "സൂക്ഷിച്ച വാക്യം:" : "Stored Verse:"}
+                  </p>
+                  <p className="font-amiri text-xs leading-relaxed" dir="rtl" style={{ color: P.gold }}>
+                    {verificationData.storedVerse || "..."}
+                  </p>
+                </div>
+
+                {/* Error Warning */}
+                {!verificationData.isMatch && (
+                  <div className="rounded-xl border p-3 mt-2"
+                    style={{
+                      background: "rgba(239,68,68,0.12)",
+                      borderColor: "rgba(239,68,68,0.30)",
+                    }}>
+                    <p className="font-inter text-[7px] uppercase tracking-widest font-bold mb-1"
+                      style={{ color: "#ef4444" }}>
+                      ⚠ {lang === "ml" ? "എക്സ്ട്രാക്ഷൻ പിശക് കണ്ടെത്തി" : "Extraction Error Detected"}
+                    </p>
+                    <p className="font-inter text-[7px] leading-relaxed" style={{ color: "rgba(239,68,68,0.80)" }}>
+                      {lang === "ml" 
+                        ? "ഈ ഗ്രിഡിലെ അക്ഷരങ്ങൾ ശരിയായി എക്സ്ട്രാക്ട് ചെയ്തിട്ടില്ല. മാനുസ്ക്രിപ്ത് പേജ് വീണ്ടും പരിശോധിക്കുക."
+                        : "This grid contains extraction errors. Please re-verify the manuscript page."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Verification Mode Toggle */}
+            <div className="rounded-2xl border p-4" style={{ background: P.bg, borderColor: P.faint }}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <TestTube className="w-4 h-4" style={{ color: P.gold }} />
+                  <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.gold }}>
+                    {lang === "ml" ? "◈ പരിശോധനാ രീതി" : "◈ Verification Mode"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setVerificationMode(prev => !prev)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    verificationMode ? "bg-green-600 text-white" : "bg-slate-600 text-white/60"
+                  }`}
+                >
+                  {verificationMode ? (lang === "ml" ? "സജീവം" : "ON") : (lang === "ml" ? "നിഷ്ക്രിയം" : "OFF")}
+                </button>
+              </div>
+              <p className="font-inter text-[8px] leading-relaxed" style={{ color: P.dim }}>
+                {lang === "ml" 
+                  ? "സജീവമാക്കുമ്പോൾ, ഓരോ അക്ഷരം തിരഞ്ഞെടുത്താലും 6-ാമത്തെ അക്ഷരങ്ങൾ ശേഖരിച്ച് വാക്യം പുനർനിർമ്മിച്ച് പരിശോധിക്കും."
+                  : "When enabled, collects every 6th letter after selection to reconstruct and verify the Persian verse."}
+              </p>
+            </div>
+
             <p className="font-inter text-[8px] uppercase tracking-widest text-center pt-2" style={{ color: P.faint }}>
               فالنامه شیخ بهایی — Falnameh Sheikh Bahai
             </p>
@@ -212,6 +350,8 @@ export default function FalnamehSheikhBahaiPage() {
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [result, setResult] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  const [verificationMode, setVerificationMode] = useState(false);
+  const [verificationData, setVerificationData] = useState(null);
 
   const handleSelectQuestion = (question) => {
     setSelectedQuestion(question);
@@ -220,7 +360,14 @@ export default function FalnamehSheikhBahaiPage() {
   const handleSelectLetter = (letter) => {
     setSelectedLetter(letter);
     setTimeout(() => {
-      setResult({ question: selectedQuestion, letter });
+      const resultData = { question: selectedQuestion, letter };
+      setResult(resultData);
+      
+      // Run verification if mode is enabled
+      if (verificationMode && selectedQuestion) {
+        const verification = runVerification(selectedQuestion.id, letter);
+        setVerificationData(verification);
+      }
     }, 300);
   };
 
@@ -228,6 +375,67 @@ export default function FalnamehSheikhBahaiPage() {
     setResult(null);
     setSelectedLetter(null);
     setSelectedQuestion(null);
+    setVerificationData(null);
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // VERIFICATION MODE: Collect every 6th letter, split odd/even,
+  // merge according to Sheikh Bahai method, compare with stored verse
+  // ═══════════════════════════════════════════════════════════
+  const runVerification = (questionId, selectedLetter) => {
+    const gridIndex = questionId - 1;
+    const grid = FALNAMEH_GRIDS_ARRAY[gridIndex];
+    
+    if (!grid) return null;
+
+    // Flatten grid to array (row-major order)
+    const flatLetters = grid.flat();
+    
+    // Collect every 6th letter starting from selected letter's position
+    const selectedIndex = flatLetters.indexOf(selectedLetter);
+    if (selectedIndex === -1) return null;
+
+    const collectedLetters = [];
+    for (let i = selectedIndex; i < flatLetters.length; i += 6) {
+      collectedLetters.push(flatLetters[i]);
+    }
+
+    // Split into odd and even positions (1-indexed)
+    const oddLetters = collectedLetters.filter((_, i) => (i + 1) % 2 !== 0);
+    const evenLetters = collectedLetters.filter((_, i) => (i + 1) % 2 === 0);
+
+    // Merge: interleave odd and even (Sheikh Bahai method)
+    const mergedLetters = [];
+    const maxLen = Math.max(oddLetters.length, evenLetters.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < oddLetters.length) mergedLetters.push(oddLetters[i]);
+      if (i < evenLetters.length) mergedLetters.push(evenLetters[i]);
+    }
+
+    // Reconstruct Persian verse from merged letters
+    const reconstructedVerse = mergedLetters.join("");
+
+    // Get stored verse for comparison
+    const storedVerse = FALNAMEH_VERSES[selectedLetter]?.persian || "";
+
+    // Calculate match percentage (character-by-character)
+    const maxLenCompare = Math.max(reconstructedVerse.length, storedVerse.length);
+    let matchCount = 0;
+    for (let i = 0; i < maxLenCompare; i++) {
+      if (reconstructedVerse[i] === storedVerse[i]) matchCount++;
+    }
+    const matchPercentage = Math.round((matchCount / maxLenCompare) * 100);
+
+    return {
+      collectedLetters,
+      oddLetters,
+      evenLetters,
+      mergedLetters,
+      reconstructedVerse,
+      storedVerse,
+      matchPercentage,
+      isMatch: matchPercentage >= 85,
+    };
   };
 
   return (
@@ -467,7 +675,13 @@ export default function FalnamehSheikhBahaiPage() {
         )}
 
         {/* Result Modal */}
-        <ResultModal result={result} lang={lang} onClose={handleCloseResult} />
+        <ResultModal 
+          result={result} 
+          lang={lang} 
+          onClose={handleCloseResult} 
+          verificationMode={verificationMode}
+          verificationData={verificationData}
+        />
 
       </div>
     </PageLayout>

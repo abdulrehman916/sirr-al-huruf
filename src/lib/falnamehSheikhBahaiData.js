@@ -552,3 +552,6 @@ export const FALNAMEH_VERSES = {
     }
   },
 };
+
+// Re-export grids from dedicated file for verification mode
+export { FALNAMEH_GRIDS_ARRAY } from './falnamehGrids.js';
