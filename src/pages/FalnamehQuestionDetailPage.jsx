@@ -223,11 +223,13 @@ export default function FalnamehQuestionDetailPage() {
     const startIndex = flat.indexOf(startLetter);
     if (startIndex === -1) return { finalLetter: startLetter, extracted: [], oddLetters: [], evenLetters: [], mergedSequence: [] };
 
-    // Collect every 6th letter for a full cycle (36 steps)
-    const steps = Math.floor(total / 6);
+    // Selected letter is a marker only — do NOT include it.
+    // Start counting from the NEXT cell. Every 6th counted cell is extracted.
+    // First extraction = startIndex + 6, second = startIndex + 12, etc.
+    const steps = Math.floor(total / 6); // 36 extractions for a 216-cell grid
     const extracted = [];
     for (let i = 0; i < steps; i++) {
-      extracted.push(flat[(startIndex + i * 6) % total]);
+      extracted.push(flat[(startIndex + (i + 1) * 6) % total]);
     }
 
     // Split by 1-indexed position: odd = index 0,2,4… | even = index 1,3,5…
