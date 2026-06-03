@@ -1,191 +1,170 @@
 // ═══════════════════════════════════════════════════════════════
-// FALNAMEH SHEIKH BAHAI — Complete Question Database
-// 26 Questions with Persian, Malayalam, and English content
-// Each question is individually editable
+// FALNAMEH SHEIKH BAHAI DATA
+// 26 Questions with Persian titles and translations
+// 26 Unique 18×12 Letter Grids (imported from falnamehGrids.js)
+// Verse interpretations mapped by Persian letter
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// 26 QUESTIONS
 // ═══════════════════════════════════════════════════════════════
 
 export const FALNAMEH_QUESTIONS = [
   {
     id: 1,
-    persianTitle: "آیا این کار به سرانجام می‌رسد؟",
-    malayalamTitle: "ഈ കാര്യം വിജയിക്കുമോ?",
-    englishTitle: "Will this matter be accomplished?",
-    gridData: "س۱",
+    persianTitle: "آیا این کار برای من خیر است؟",
+    malayalamTitle: "ഈ കാര്യം എനിക്ക് നല്ലതാണോ?",
+    englishTitle: "Is this matter good for me?",
   },
   {
     id: 2,
-    persianTitle: "آیا سفر من ایمن خواهد بود؟",
-    malayalamTitle: "എന്റെ യാത്ര സുരക്ഷിതമായിരിക്കുമോ?",
-    englishTitle: "Will my journey be safe?",
-    gridData: "ح۲",
+    persianTitle: "آیا سفر من ایمن است؟",
+    malayalamTitle: "എന്റെ യാത്ര സുരക്ഷിതമാണോ?",
+    englishTitle: "Is my journey safe?",
   },
   {
     id: 3,
-    persianTitle: "آیا به خواسته خود می‌رسم؟",
-    malayalamTitle: "എനിക്ക് എന്റെ ആഗ്രഹം സാധിക്കുമോ?",
-    englishTitle: "Will I achieve my desire?",
-    gridData: "م۳",
+    persianTitle: "آیا این معامله سودآور است؟",
+    malayalamTitle: "ഈ ഇടപാട് ലാഭകരമാണോ?",
+    englishTitle: "Is this transaction profitable?",
   },
   {
     id: 4,
-    persianTitle: "آیا این رابطه پایدار می‌ماند؟",
-    malayalamTitle: "ഈ ബന്ധം നിലനിൽക്കുമോ?",
-    englishTitle: "Will this relationship remain stable?",
-    gridData: "ع۴",
+    persianTitle: "آیا بیماری من شفا می‌یابد؟",
+    malayalamTitle: "എന്റെ രോഗം സുഖപ്പെടുമോ?",
+    englishTitle: "Will my illness be healed?",
   },
   {
     id: 5,
-    persianTitle: "آیا بیماری من شفا می‌یابد؟",
-    malayalamTitle: "എന്റെ രോഗം മാറുമോ?",
-    englishTitle: "Will my illness be cured?",
-    gridData: "س۵",
+    persianTitle: "آیا دشمن من شکست می‌خورد؟",
+    malayalamTitle: "എന്റെ ശത്രു പരാജയപ്പെടുമോ?",
+    englishTitle: "Will my enemy be defeated?",
   },
   {
     id: 6,
-    persianTitle: "آیا کار جدید موفقیت‌آمیز است؟",
-    malayalamTitle: "പുതിയ ജോലി വിജയകരമാകുമോ?",
-    englishTitle: "Will the new job be successful?",
-    gridData: "ف۶",
+    persianTitle: "آیا خواسته من برآورده می‌شود؟",
+    malayalamTitle: "എന്റെ ആഗ്രഹം സഫലമാകുമോ?",
+    englishTitle: "Will my wish be fulfilled?",
   },
   {
     id: 7,
     persianTitle: "آیا دشمن بر من غلبه می‌کند؟",
     malayalamTitle: "ശത്രു എന്നെ കീഴടക്കുമോ?",
     englishTitle: "Will the enemy overcome me?",
-    gridData: "ق۷",
   },
   {
     id: 8,
     persianTitle: "آیا گمشده من پیدا می‌شود؟",
     malayalamTitle: "എനിക്ക് നഷ്ടപ്പെട്ടത് കണ്ടെത്താനാകുമോ?",
     englishTitle: "Will my lost item be found?",
-    gridData: "ک۸",
   },
   {
     id: 9,
     persianTitle: "آیا این معامله سودآور است؟",
     malayalamTitle: "ഈ ഇടപാട് ലാഭകരമാകുമോ?",
     englishTitle: "Will this transaction be profitable?",
-    gridData: "ر۹",
   },
   {
     id: 10,
     persianTitle: "آیا ازدواج من خوشبخت خواهد بود؟",
     malayalamTitle: "എന്റെ വിവാഹം സന്തോഷകരമാകുമോ?",
     englishTitle: "Will my marriage be happy?",
-    gridData: "ل۱۰",
   },
   {
     id: 11,
     persianTitle: "آیا در امتحان موفق می‌شوم؟",
     malayalamTitle: "ഞാൻ പരീക്ഷയിൽ വിജയിക്കുമോ?",
     englishTitle: "Will I pass the examination?",
-    gridData: "ن۱۱",
   },
   {
     id: 12,
     persianTitle: "آیا خبر خوب به من می‌رسد؟",
     malayalamTitle: "എനിക്ക് നല്ല വാർത്ത ലഭിക്കുമോ?",
     englishTitle: "Will I receive good news?",
-    gridData: "ب۱۲",
   },
   {
     id: 13,
     persianTitle: "آیا این خانه برای من مبارک است؟",
     malayalamTitle: "ഈ വീട് എനിക്ക് അനുയോജ്യമാണോ?",
     englishTitle: "Is this house auspicious for me?",
-    gridData: "ه۱۳",
   },
   {
     id: 14,
     persianTitle: "آیا قرض من پرداخت می‌شود؟",
     malayalamTitle: "എന്റെ കടം വീട്ടാനാകുമോ?",
     englishTitle: "Will my debt be paid?",
-    gridData: "ط۱۴",
   },
   {
     id: 15,
     persianTitle: "آیا فرزند من سالم می‌ماند؟",
     malayalamTitle: "എന്റെ കുട്ടി സുരക്ഷിതമായിരിക്കുമോ?",
     englishTitle: "Will my child remain healthy?",
-    gridData: "ی۱۵",
   },
   {
     id: 16,
     persianTitle: "آیا این شغل برای من مناسب است؟",
     malayalamTitle: "ഈ ജോലി എനിക്ക് അനുയോജ്യമാണോ?",
     englishTitle: "Is this job suitable for me?",
-    gridData: "ک۱۶",
   },
   {
     id: 17,
     persianTitle: "آیا سفر دریایی ایمن است؟",
     malayalamTitle: "കടൽ യാത്ര സുരക്ഷിതമാണോ?",
     englishTitle: "Is the sea journey safe?",
-    gridData: "و۱۷",
   },
   {
     id: 18,
     persianTitle: "آیا این زمین برای کشاورزی خوب است؟",
     malayalamTitle: "ഈ ഭൂമി കൃഷിക്ക് അനുയോജ്യമാണോ?",
     englishTitle: "Is this land good for farming?",
-    gridData: "ز۱۸",
   },
   {
     id: 19,
     persianTitle: "آیا دوست من وفادار است؟",
     malayalamTitle: "എന്റെ സുഹൃത്ത് വിശ്വസ്തനാണോ?",
     englishTitle: "Is my friend loyal?",
-    gridData: "ص۱۹",
   },
   {
     id: 20,
     persianTitle: "آیا این دارو اثر می‌کند؟",
     malayalamTitle: "ഈ മരുന്ന് ഫലിക്കുമോ?",
     englishTitle: "Will this medicine work?",
-    gridData: "ش۲۰",
   },
   {
     id: 21,
     persianTitle: "آیا در کار تجارت موفق می‌شوم؟",
     malayalamTitle: "വ്യാപാരത്തിൽ ഞാൻ വിജയിക്കുമോ?",
     englishTitle: "Will I succeed in business?",
-    gridData: "غ۲۱",
   },
   {
     id: 22,
     persianTitle: "آیا این سفر زیارت قبول می‌شود؟",
     malayalamTitle: "ഈ തീർത്ഥാടനം സ്വീകരിക്കപ്പെടുമോ?",
     englishTitle: "Will this pilgrimage be accepted?",
-    gridData: "ح۲۲",
   },
   {
     id: 23,
     persianTitle: "آیا این کتاب برای من مفید است؟",
     malayalamTitle: "ഈ പുസ്തകം എനിക്ക് ഗുണകരമാണോ?",
     englishTitle: "Is this book beneficial for me?",
-    gridData: "ع۲۳",
   },
   {
     id: 24,
     persianTitle: "آیا این زمان برای شروع خوب است؟",
     malayalamTitle: "തുടങ്ങാൻ ഇത് നല്ല സമയമാണോ?",
     englishTitle: "Is this time good to start?",
-    gridData: "ا۲۴",
   },
   {
     id: 25,
     persianTitle: "آیا این شخص قابل اعتماد است؟",
     malayalamTitle: "ഈ വ്യക്തി വിശ്വസിക്കാവുന്നതാണോ?",
     englishTitle: "Is this person trustworthy?",
-    gridData: "ث۲۵",
   },
   {
     id: 26,
     persianTitle: "آیا پایان این کار خوش خواهد بود؟",
     malayalamTitle: "ഈ കാര്യത്തിന്റെ അവസാനം നല്ലതാകുമോ?",
     englishTitle: "Will the end of this matter be good?",
-    gridData: "م۲۶",
   },
 ];
 
@@ -199,7 +178,7 @@ const BASE_LETTERS = [
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// PERSIAN LETTER GRID (18×12 = 216 cells) - Generic fallback
+// PERSIAN LETTER GRID (18×12 = 216 cells) - Generic fallback for old pages
 // ═══════════════════════════════════════════════════════════════
 
 export const PERSIAN_LETTERS = [];
@@ -208,50 +187,12 @@ for (let i = 0; i < 216; i++) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PERSIAN LETTER GRIDS (18×12 = 216 cells per question)
-// Each of the 26 questions has its own unique grid
-// Placeholder datasets - to be replaced with PDF import data
+// 26 UNIQUE 18×12 GRIDS - Imported from dedicated grids file
+// Each grid = 216 cells (18 columns × 12 rows)
+// One distinct grid per question (Question 1 → Grid 1, etc.)
 // ═══════════════════════════════════════════════════════════════
 
-// Generate a placeholder grid (will be replaced with actual data)
-const generatePlaceholderGrid = (seed) => {
-  const grid = [];
-  for (let i = 0; i < 216; i++) {
-    const offset = (seed * 7 + i * 3) % BASE_LETTERS.length;
-    grid.push(BASE_LETTERS[offset]);
-  }
-  return grid;
-};
-
-// 26 unique grid datasets - one for each question
-export const FALNAMEH_GRIDS = {
-  1: generatePlaceholderGrid(1),
-  2: generatePlaceholderGrid(2),
-  3: generatePlaceholderGrid(3),
-  4: generatePlaceholderGrid(4),
-  5: generatePlaceholderGrid(5),
-  6: generatePlaceholderGrid(6),
-  7: generatePlaceholderGrid(7),
-  8: generatePlaceholderGrid(8),
-  9: generatePlaceholderGrid(9),
-  10: generatePlaceholderGrid(10),
-  11: generatePlaceholderGrid(11),
-  12: generatePlaceholderGrid(12),
-  13: generatePlaceholderGrid(13),
-  14: generatePlaceholderGrid(14),
-  15: generatePlaceholderGrid(15),
-  16: generatePlaceholderGrid(16),
-  17: generatePlaceholderGrid(17),
-  18: generatePlaceholderGrid(18),
-  19: generatePlaceholderGrid(19),
-  20: generatePlaceholderGrid(20),
-  21: generatePlaceholderGrid(21),
-  22: generatePlaceholderGrid(22),
-  23: generatePlaceholderGrid(23),
-  24: generatePlaceholderGrid(24),
-  25: generatePlaceholderGrid(25),
-  26: generatePlaceholderGrid(26),
-};
+export { FALNAMEH_GRIDS } from './falnamehGrids.js';
 
 // ═══════════════════════════════════════════════════════════════
 // VERSE INTERPRETATIONS (mapped by first letter of result poem)
