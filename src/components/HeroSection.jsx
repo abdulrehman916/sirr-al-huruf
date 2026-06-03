@@ -102,14 +102,6 @@ const CARD_ICONS = {
       <path d="M16 6 L16 26 M10 12 L16 16 L22 12" stroke={color} strokeWidth="0.6" strokeOpacity="0.45"/>
     </svg>
   ),
-  falnameh: (color) => (
-    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
-      <text x="50%" y="58%" dominantBaseline="middle" textAnchor="middle"
-        fontFamily="Amiri, serif" fontWeight="700" fontSize="16" fill={color}>ش</text>
-      <circle cx="16" cy="16" r="13" stroke={color} strokeWidth="0.8" strokeOpacity="0.55"/>
-      <path d="M10 10 L22 22 M22 10 L10 22" stroke={color} strokeWidth="0.5" strokeOpacity="0.35"/>
-    </svg>
-  ),
 };
 
 const NAV_CARDS = [
@@ -121,7 +113,6 @@ const NAV_CARDS = [
   { path: "/vefkin-yapilisi",  arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI",  subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
   { path: "/basthul-huroof-2", arabic: "بسط الحروف",   label: "BASTHUL HUROOF 2", subtitle: "Basti Adedi Cedveli",       iconKey: "bast",   accent: [180, 140, 255] },
   { path: "/faal-hasrath",     arabic: "فأل",          label: "FAAL",             subtitle: "Sacred Omen System",        iconKey: "faal",   accent: [212, 175, 55] },
-  { path: "/falnameh-sheikh-bahai", arabic: "فالنامه", label: "FALNAMEH",         subtitle: "Persian Falnameh System",   iconKey: "falnameh", accent: [212, 175, 55] },
 ];
 
 // ── Static ring sizes for mobile (no Framer Motion) ──────────────
