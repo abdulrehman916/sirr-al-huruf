@@ -11,9 +11,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ കാര്യം വിജയിക്കുമോ?",
     englishTitle: "Will this matter be accomplished?",
     gridData: "س۱",
-    resultPoem: "اول کار بخیر آید، صبر کن تا آخرش\nپیروزی از آنِ تو شود، غم مخور ای دلنشین",
-    malayalamMeaning: "കാര്യത്തിന്റെ തുടക്കം നല്ലതാണ്, അവസാനം വരെ ക്ഷമിക്കുക",
-    malayalamInterpretation: "തുടക്കം ശുഭകരമാണ്. ക്ഷമയോടെ കാത്തിരിക്കുക. വിജയം ലഭിക്കും. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക.",
   },
   {
     id: 2,
@@ -21,9 +18,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എന്റെ യാത്ര സുരക്ഷിതമായിരിക്കുമോ?",
     englishTitle: "Will my journey be safe?",
     gridData: "ح۲",
-    resultPoem: "سفر تو محفوظ ماند، از بلا دور باشی\nخدا نگهدار تو باشد، در هر راهی که روی",
-    malayalamMeaning: "നിങ്ങളുടെ യാത്ര സുരക്ഷിതമായിരിക്കും, അപകടങ്ങളിൽ നിന്ന് അകലെയായിരിക്കും",
-    malayalamInterpretation: "യാത്ര സുരക്ഷിതമാണ്. അല്ലാഹു നിങ്ങളെ സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട. നന്മയോടെ മടങ്ങിവരും.",
   },
   {
     id: 3,
@@ -31,9 +25,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എനിക്ക് എന്റെ ആഗ്രഹം സാധിക്കുമോ?",
     englishTitle: "Will I achieve my desire?",
     gridData: "م۳",
-    resultPoem: "مراد تو حاصل آید، شادی کن ای دوست\nدل خود شاد کن، که غم رفت از بر تو",
-    malayalamMeaning: "നിങ്ങളുടെ ആഗ്രഹം സഫലമാകും, സന്തോഷിക്കുക",
-    malayalamInterpretation: "ആഗ്രഹം സഫലമാകും. സന്തോഷിക്കുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. നന്മ ചെയ്യുക.",
   },
   {
     id: 4,
@@ -41,9 +32,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ ബന്ധം നിലനിൽക്കുമോ?",
     englishTitle: "Will this relationship remain stable?",
     gridData: "ع۴",
-    resultPoem: "عاقبت بخیر شوی، پیوند تو محکم ماند\nمحبت در دل‌ها بماند، تا ابد پایدار",
-    malayalamMeaning: "നിങ്ങൾക്ക് നല്ല അന്ത്യം ഉണ്ടാകും, ബന്ധം ഉറച്ചുനിൽക്കും",
-    malayalamInterpretation: "ബന്ധം ഉറച്ചുനിൽക്കും. പരസ്പര സ്നേഹം വർദ്ധിക്കും. ക്ഷമയും കരുതലും പാലിക്കുക.",
   },
   {
     id: 5,
@@ -51,9 +39,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എന്റെ രോഗം മാറുമോ?",
     englishTitle: "Will my illness be cured?",
     gridData: "س۵",
-    resultPoem: "سلامتی یابی، شکر بجا آور ای جان\nدعا مستجاب آید، شفا یابی زود",
-    malayalamMeaning: "നിങ്ങൾക്ക് ആരോഗ്യം ലഭിക്കും, നന്ദി അർപ്പിക്കുക",
-    malayalamInterpretation: "രോഗശാന്തി ലഭിക്കും. പ്രാർത്ഥന തുടരുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. സൽപ്രവൃത്തികൾ തുടരുക.",
   },
   {
     id: 6,
@@ -61,9 +46,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "പുതിയ ജോലി വിജയകരമാകുമോ?",
     englishTitle: "Will the new job be successful?",
     gridData: "ف۶",
-    resultPoem: "فلاح یابی، راه حق برو ای دوست\nکار تو به سر آید، با برکت و سود",
-    malayalamMeaning: "നിങ്ങൾക്ക് വിജയം ലഭിക്കും, നേരായ വഴിയിൽ പോകുക",
-    malayalamInterpretation: "പുതിയ ജോലി വിജയകരമാകും. നേരായ വഴിയിൽ സഞ്ചരിക്കുക. അധ്വാനിക്കുക. വിജയം ലഭിക്കും.",
   },
   {
     id: 7,
@@ -71,9 +53,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ശത്രു എന്നെ കീഴടക്കുമോ?",
     englishTitle: "Will the enemy overcome me?",
     gridData: "ق۷",
-    resultPoem: "قدر تو دانسته شود، دشمن ضعیف گردد\nپیروزی از آنِ تو باشد، نترس ای شیرمرد",
-    malayalamMeaning: "നിങ്ങളുടെ മൂല്യം അറിയാം, ശത്രു ദുർബലനാകും",
-    malayalamInterpretation: "ശത്രുവിനെ നിങ്ങൾക്ക് കീഴടക്കാം. ഭയപ്പെടേണ്ട. അല്ലാഹു നിങ്ങളോടൊപ്പമുണ്ട്. വിജയം ലഭിക്കും.",
   },
   {
     id: 8,
@@ -81,9 +60,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എനിക്ക് നഷ്ടപ്പെട്ടത് കണ്ടെത്താനാകുമോ?",
     englishTitle: "Will my lost item be found?",
     gridData: "ک۸",
-    resultPoem: "گمشده تو یابد، جستجو کن ای دوست\nکار تو به سر آید، دل آرام کن",
-    malayalamMeaning: "നഷ്ടപ്പെട്ടത് കണ്ടെത്തും, തിരയുക",
-    malayalamInterpretation: "നഷ്ടപ്പെട്ടത് കണ്ടെത്തും. തിരയൽ തുടരുക. വിജയം ലഭിക്കും. മനസ്സ് ശാന്തമാക്കുക.",
   },
   {
     id: 9,
@@ -91,9 +67,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ ഇടപാട് ലാഭകരമാകുമോ?",
     englishTitle: "Will this transaction be profitable?",
     gridData: "ر۹",
-    resultPoem: "رحمت خدا شامل تو شود، برکت یابی\nسود تو افزون گردد، شکر بجا آور",
-    malayalamMeaning: "ദൈവത്തിന്റെ കാരുണ്യം നിങ്ങളിൽ ഉണ്ടാകും, അനുഗ്രഹം ലഭിക്കും",
-    malayalamInterpretation: "ഇടപാട് ലാഭകരമാകും. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും. നന്ദി അർപ്പിക്കുക. കൂടുതൽ ലാഭം ലഭിക്കും.",
   },
   {
     id: 10,
@@ -101,9 +74,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എന്റെ വിവാഹം സന്തോഷകരമാകുമോ?",
     englishTitle: "Will my marriage be happy?",
     gridData: "ل۱۰",
-    resultPoem: "لطف خدا شامل تو شود، محبت افزون\nازدواج تو مبارک، شادی در دل‌ها",
-    malayalamMeaning: "ദൈവത്തിന്റെ അനുഗ്രഹം നിങ്ങളിൽ ഉണ്ടാകും, സ്നേഹം വർദ്ധിക്കും",
-    malayalamInterpretation: "വിവാഹം സന്തോഷകരമാകും. പരസ്പര സ്നേഹം വർദ്ധിക്കും. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും.",
   },
   {
     id: 11,
@@ -111,9 +81,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഞാൻ പരീക്ഷയിൽ വിജയിക്കുമോ?",
     englishTitle: "Will I pass the examination?",
     gridData: "ن۱۱",
-    resultPoem: "نور هدایت به دل تو آید، علم افزون\nموفقیت یابی، شادی کن ای دانشمند",
-    malayalamMeaning: "നിങ്ങളുടെ ഹൃദയത്തിൽ മാർഗ്ഗദർശനത്തിന്റെ വെളിച്ചം വരും, വിജയം ലഭിക്കും",
-    malayalamInterpretation: "പരീക്ഷയിൽ വിജയിക്കും. അധ്വാനിക്കുക. പ്രാർത്ഥന തുടരുക. വിജയം ലഭിക്കും.",
   },
   {
     id: 12,
@@ -121,9 +88,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എനിക്ക് നല്ല വാർത്ത ലഭിക്കുമോ?",
     englishTitle: "Will I receive good news?",
     gridData: "ب۱۲",
-    resultPoem: "بشارت به تو رسد، شادی کن ای دل\nخبر خوش آید، غم برود از بر تو",
-    malayalamMeaning: "നിങ്ങൾക്ക് സന്തോഷവാർത്ത ലഭിക്കും, സന്തോഷിക്കുക",
-    malayalamInterpretation: "നല്ല വാർത്ത വരുന്നു. സന്തോഷിക്കുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. സന്തോഷകരമായ സമയം.",
   },
   {
     id: 13,
@@ -131,9 +95,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ വീട് എനിക്ക് അനുയോജ്യമാണോ?",
     englishTitle: "Is this house auspicious for me?",
     gridData: "ه۱۳",
-    resultPoem: "هدایت یابی، راه مستقیم برو\nخانه تو مبارک، آرامش در آن باشد",
-    malayalamMeaning: "നിങ്ങൾക്ക് മാർഗ്ഗദർശനം ലഭിക്കും, വീട് അനുയോജ്യമാണ്",
-    malayalamInterpretation: "വീട് അനുയോജ്യമാണ്. സമാധാനം ലഭിക്കും. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും. സന്തോഷമായി താമസിക്കാം.",
   },
   {
     id: 14,
@@ -141,9 +102,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എന്റെ കടം വീട്ടാനാകുമോ?",
     englishTitle: "Will my debt be paid?",
     gridData: "ط۱۴",
-    resultPoem: "طاعت خدا بکن، رستگاری در آن است\nقرض تو ادا شود، آسایش یابی",
-    malayalamMeaning: "ദൈവത്തെ അനുസരിക്കുക, കടം വീട്ടാൻ കഴിയും",
-    malayalamInterpretation: "കടം വീട്ടാൻ കഴിയും. അധ്വാനിക്കുക. പ്രാർത്ഥന തുടരുക. അല്ലാഹു സഹായിക്കും.",
   },
   {
     id: 15,
@@ -151,9 +109,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എന്റെ കുട്ടി സുരക്ഷിതമായിരിക്കുമോ?",
     englishTitle: "Will my child remain healthy?",
     gridData: "ی۱۵",
-    resultPoem: "یقین دان که پیروزی با توست\nفرزند تو سالم، محفوظ از بلا",
-    malayalamMeaning: "ഉറപ്പായി അറിയുക, കുട്ടി സുരക്ഷിതമാണ്",
-    malayalamInterpretation: "കുട്ടി സുരക്ഷിതമാണ്. അല്ലാഹു സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട. ആരോഗ്യത്തോടെ ഇരിക്കും.",
   },
   {
     id: 16,
@@ -161,9 +116,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ ജോലി എനിക്ക് അനുയോജ്യമാണോ?",
     englishTitle: "Is this job suitable for me?",
     gridData: "ک۱۶",
-    resultPoem: "کار تو به سر آید، دل آرام کن\nشغل تو مناسب، برکت در آن باشد",
-    malayalamMeaning: "കാര്യം പൂർത്തിയാകും, ജോലി അനുയോജ്യമാണ്",
-    malayalamInterpretation: "ജോലി അനുയോജ്യമാണ്. വിജയം ലഭിക്കും. അധ്വാനിക്കുക. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും.",
   },
   {
     id: 17,
@@ -171,9 +123,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "കടൽ യാത്ര സുരക്ഷിതമാണോ?",
     englishTitle: "Is the sea journey safe?",
     gridData: "و۱۷",
-    resultPoem: "وعده خدا راست آید، ایمان دار\nسفر تو ایمن، از بلا دور باشی",
-    malayalamMeaning: "ദൈവത്തിന്റെ വാഗ്ദാനം സത്യമാകും, യാത്ര സുരക്ഷിതമാണ്",
-    malayalamInterpretation: "യാത്ര സുരക്ഷിതമാണ്. അല്ലാഹു സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട. സുരക്ഷിതമായി മടങ്ങിവരും.",
   },
   {
     id: 18,
@@ -181,9 +130,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ ഭൂമി കൃഷിക്ക് അനുയോജ്യമാണോ?",
     englishTitle: "Is this land good for farming?",
     gridData: "ز۱۸",
-    resultPoem: "زیان به تو نرسد، برکت یابی\nزمین تو حاصلخیز، محصول افزون",
-    malayalamMeaning: "നഷ്ടം സംഭവിക്കില്ല, ഭൂമി ഫലപ്രദമാണ്",
-    malayalamInterpretation: "ഭൂമി കൃഷിക്ക് അനുയോജ്യമാണ്. വിളവ് ലഭിക്കും. അധ്വാനിക്കുക. സമൃദ്ധി ലഭിക്കും.",
   },
   {
     id: 19,
@@ -191,9 +137,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "എന്റെ സുഹൃത്ത് വിശ്വസ്തനാണോ?",
     englishTitle: "Is my friend loyal?",
     gridData: "ص۱۹",
-    resultPoem: "صبر پیشه کن، فتح نزدیک است\nدوست تو وفادار، محبت افزون",
-    malayalamMeaning: "ക്ഷമ പാലിക്കുക, സുഹൃത്ത് വിശ്വസ്തനാണ്",
-    malayalamInterpretation: "സുഹൃത്ത് വിശ്വസ്തനാണ്. ബന്ധം ഉറച്ചുനിൽക്കും. പരസ്പര സ്നേഹം വർദ്ധിക്കും.",
   },
   {
     id: 20,
@@ -201,9 +144,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ മരുന്ന് ഫലിക്കുമോ?",
     englishTitle: "Will this medicine work?",
     gridData: "ش۲۰",
-    resultPoem: "شادی به دل تو آید، غم برود\nدارو تو اثر کند، شفا یابی",
-    malayalamMeaning: "നിങ്ങളുടെ ഹൃദയത്തിൽ സന്തോഷം വരും, മരുന്ന് ഫലിക്കും",
-    malayalamInterpretation: "മരുന്ന് ഫലിക്കും. രോഗശാന്തി ലഭിക്കും. പ്രാർത്ഥന തുടരുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക.",
   },
   {
     id: 21,
@@ -211,9 +151,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "വ്യാപാരത്തിൽ ഞാൻ വിജയിക്കുമോ?",
     englishTitle: "Will I succeed in business?",
     gridData: "غ۲۱",
-    resultPoem: "غم فردا مخور، که امروز کافیست\nتجارت تو سودآور، برکت یابی",
-    malayalamMeaning: "നാളത്തെക്കുറിച്ച് വിഷമിക്കരുത്, വ്യാപാരം ലാഭകരമാണ്",
-    malayalamInterpretation: "വ്യാപാരം ലാഭകരമാകും. അധ്വാനിക്കുക. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും. സമൃദ്ധി ലഭിക്കും.",
   },
   {
     id: 22,
@@ -221,9 +158,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ തീർത്ഥാടനം സ്വീകരിക്കപ്പെടുമോ?",
     englishTitle: "Will this pilgrimage be accepted?",
     gridData: "ح۲۲",
-    resultPoem: "حاجت تو روا شود، دعا مستجاب\nسفر تو مقبول، ثواب یابی",
-    malayalamMeaning: "നിങ്ങളുടെ ആവശ്യം സഫലമാകും, തീർത്ഥാടനം സ്വീകരിക്കപ്പെടും",
-    malayalamInterpretation: "തീർത്ഥാടനം സ്വീകരിക്കപ്പെടും. പ്രാർത്ഥനകൾ കേൾക്കപ്പെടും. അല്ലാഹുവിന്റെ അനുഗ്രഹം ലഭിക്കും.",
   },
   {
     id: 23,
@@ -231,9 +165,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ പുസ്തകം എനിക്ക് ഗുണകരമാണോ?",
     englishTitle: "Is this book beneficial for me?",
     gridData: "ع۲۳",
-    resultPoem: "عاقبت بخیر شوی، علم افزون\nکتاب تو مفید، دانش یابی",
-    malayalamMeaning: "നിങ്ങൾക്ക് നല്ല അന്ത്യം ഉണ്ടാകും, പുസ്തകം ഗുണകരമാണ്",
-    malayalamInterpretation: "പുസ്തകം ഗുണകരമാണ്. അറിവ് ലഭിക്കും. അധ്വാനിക്കുക. വിജയം ലഭിക്കും.",
   },
   {
     id: 24,
@@ -241,9 +172,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "തുടങ്ങാൻ ഇത് നല്ല സമയമാണോ?",
     englishTitle: "Is this time good to start?",
     gridData: "ا۲۴",
-    resultPoem: "اول کار بخیر آید، صبر کن\nزمان تو مناسب، شروع کن با نام خدا",
-    malayalamMeaning: "കാര്യത്തിന്റെ തുടക്കം നല്ലതാണ്, ഇത് നല്ല സമയമാണ്",
-    malayalamInterpretation: "തുടങ്ങാൻ നല്ല സമയമാണ്. അല്ലാഹുവിന്റെ നാമത്തിൽ തുടങ്ങുക. വിജയം ലഭിക്കും.",
   },
   {
     id: 25,
@@ -251,9 +179,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ വ്യക്തി വിശ്വസിക്കാവുന്നതാണോ?",
     englishTitle: "Is this person trustworthy?",
     gridData: "ث۲۵",
-    resultPoem: "ثابت قدم باش، که پیروزی نزدیک است\nشخص تو قابل اعتماد، راستگو باشد",
-    malayalamMeaning: "ഉറച്ചുനിൽക്കുക, ഈ വ്യക്തി വിശ്വസിക്കാവുന്നതാണ്",
-    malayalamInterpretation: "വ്യക്തി വിശ്വസിക്കാവുന്നതാണ്. സത്യസന്ധനാണ്. ബന്ധം പുലർത്താം. വിശ്വാസം അർഹിക്കുന്നു.",
   },
   {
     id: 26,
@@ -261,9 +186,6 @@ export const FALNAMEH_QUESTIONS = [
     malayalamTitle: "ഈ കാര്യത്തിന്റെ അവസാനം നല്ലതാകുമോ?",
     englishTitle: "Will the end of this matter be good?",
     gridData: "م۲۶",
-    resultPoem: "مراد تو حاصل آید، شادی کن\nپایان کار خوش، عاقبت بخیر",
-    malayalamMeaning: "നിങ്ങളുടെ ആഗ്രഹം സഫലമാകും, അവസാനം നല്ലതാണ്",
-    malayalamInterpretation: "അവസാനം നല്ലതാണ്. വിജയം ലഭിക്കും. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. സന്തോഷകരമായ അന്ത്യം.",
   },
 ];
 
