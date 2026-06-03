@@ -20,8 +20,8 @@ const AbjadKabirPage    = lazy(() => import('./pages/AbjadKabirPage'));
 const MagicSqayerPage   = lazy(() => import('./pages/MagicSqayerPage'));
 const VefkinYapilisiPage= lazy(() => import('./pages/VefkinYapilisiPage'));
 const BastHuroofPage    = lazy(() => import('./pages/BastHuroofPage'));
-const FaalHasrathPage       = lazy(() => import('./pages/FaalHasrathPage'));
-const FalnamehSheikhBahaiPage = lazy(() => import('./pages/FalnamehSheikhBahaiPage'));
+const FaalHasrathPage           = lazy(() => import('./pages/FaalHasrathPage'));
+const FalnamehSheikhBahaiPage   = lazy(() => import('./pages/FalnamehSheikhBahaiPage'));
 
 // Minimal fallback — matches app background, no flash
 const PageFallback = () => (

@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { FAAL_CELLS } from "../lib/faalHasrathData";
@@ -87,9 +87,8 @@ function HeartSymbol({ mark, size = 64, active = false }) {
 // ── Section Tab Selector ───────────────────────────────────────
 function SectionTabs({ section, setSection }) {
   const tabs = [
-    { key: "ali",      arabic: "فأل حسرت علي",    label: "FAAL ALI"      },
-    { key: "luqman",   arabic: "فال لقمان",        label: "FAAL LUQMAN"  },
-    { key: "sheikh",   arabic: "فالنامه شیخ بهایی", label: "SHEIKH BAHAI" },
+    { key: "ali",    arabic: "فأل حسرت علي", label: "FAAL ALI",    path: "/faal-hasrath" },
+    { key: "luqman", arabic: "فال لقمان",     label: "FAAL LUQMAN", path: "/faal-hasrath" },
   ];
   return (
     <div className="flex rounded-2xl overflow-hidden border" style={{ borderColor: P.faint }}>
@@ -100,7 +99,7 @@ function SectionTabs({ section, setSection }) {
           className="flex-1 flex flex-col items-center py-2.5 px-2 relative"
           style={{
             background: section === t.key ? P.bgHi : "transparent",
-            borderRight: t.key === "ali" ? `1px solid ${P.faint}` : "none",
+            borderRight: i === 0 ? `1px solid ${P.faint}` : "none",
           }}
           whileTap={{ scale: 0.97 }}
         >
@@ -122,6 +121,25 @@ function SectionTabs({ section, setSection }) {
           </span>
         </motion.button>
       ))}
+      {/* Third tab - links to separate page */}
+      <a
+        href="/falnameh-sheikh-bahai"
+        className="flex-1 flex flex-col items-center py-2.5 px-2 relative"
+        style={{
+          background: "transparent",
+          borderLeft: `1px solid ${P.faint}`,
+        }}
+      >
+        <span className="font-amiri text-sm leading-none relative z-10"
+          style={{ color: P.dim }}>
+          فالنامه شیخ بهایی
+        </span>
+        <span className="font-inter text-[8px] tracking-widest uppercase mt-0.5 relative z-10"
+          style={{ color: "rgba(216,180,254,0.28)" }}>
+          SHEIKH BAHAI
+        </span>
+        <ChevronRight className="absolute top-2 right-2 w-3 h-3" style={{ color: P.faint }} />
+      </a>
     </div>
   );
 }
@@ -1075,7 +1093,6 @@ function FalnamehSheikhBahaiSection({ lang }) {
 export default function FaalHasrathPage() {
   const [lang, setLang] = useState("ml");
   const [section, setSection] = useState("ali");
-  const [expandedSheikh, setExpandedSheikh] = useState(false);
 
   return (
     <PageLayout>
@@ -1103,19 +1120,12 @@ export default function FaalHasrathPage() {
               className="space-y-4">
               <FaalAliSection lang={lang} />
             </motion.div>
-          ) : section === "luqman" ? (
+          ) : (
             <motion.div key="luqman-section"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28 }}
               className="space-y-4">
               <FaalLuqmanSection lang={lang} />
-            </motion.div>
-          ) : (
-            <motion.div key="sheikh-section"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28 }}
-              className="space-y-4">
-              <FalnamehSheikhBahaiSection lang={lang} />
             </motion.div>
           )}
         </AnimatePresence>
