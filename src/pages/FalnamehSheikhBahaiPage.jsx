@@ -49,33 +49,34 @@ function LangToggle({ lang, setLang }) {
 }
 
 // ── Question Card ─────────────────────────────────────────────
-function QuestionCard({ question, index, onSelect, lang }) {
+function QuestionCard({ question, index, lang }) {
   return (
-    <motion.button
-      onClick={() => onSelect(question)}
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.02, duration: 0.25 }}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      className="rounded-2xl border p-3 text-center"
-      style={{
-        background: P.bg,
-        borderColor: P.faint,
-        boxShadow: `0 0 12px ${P.glow}`,
-        minHeight: 90,
-      }}
-    >
-      <span className="font-inter text-[8px] uppercase tracking-widest mb-1 block" style={{ color: P.gold }}>
-        سؤال {question.id}
-      </span>
-      <p className="font-amiri font-bold text-xs mb-1" style={{ color: P.text, lineHeight: 1.5 }}>
-        {question.persianTitle}
-      </p>
-      <p className="font-inter text-[8px]" style={{ color: P.dim }}>
-        {lang === "ml" ? question.malayalamTitle : question.englishTitle}
-      </p>
-    </motion.button>
+    <a href={`/falnameh-question-detail?question=${question.id}`}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: index * 0.02, duration: 0.25 }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        className="rounded-2xl border p-3 text-center"
+        style={{
+          background: P.bg,
+          borderColor: P.faint,
+          boxShadow: `0 0 12px ${P.glow}`,
+          minHeight: 90,
+        }}
+      >
+        <span className="font-inter text-[8px] uppercase tracking-widest mb-1 block" style={{ color: P.gold }}>
+          سؤال {question.id}
+        </span>
+        <p className="font-amiri font-bold text-xs mb-1" style={{ color: P.text, lineHeight: 1.5 }}>
+          {question.persianTitle}
+        </p>
+        <p className="font-inter text-[8px]" style={{ color: P.dim }}>
+          {lang === "ml" ? question.malayalamTitle : question.englishTitle}
+        </p>
+      </motion.div>
+    </a>
   );
 }
 
@@ -397,7 +398,6 @@ export default function FalnamehSheikhBahaiPage() {
                   question={q}
                   index={i}
                   lang={lang}
-                  onSelect={handleSelectQuestion}
                 />
               ))}
             </div>

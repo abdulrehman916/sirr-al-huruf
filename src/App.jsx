@@ -20,8 +20,9 @@ const AbjadKabirPage    = lazy(() => import('./pages/AbjadKabirPage'));
 const MagicSqayerPage   = lazy(() => import('./pages/MagicSqayerPage'));
 const VefkinYapilisiPage= lazy(() => import('./pages/VefkinYapilisiPage'));
 const BastHuroofPage    = lazy(() => import('./pages/BastHuroofPage'));
-const FaalHasrathPage           = lazy(() => import('./pages/FaalHasrathPage'));
-const FalnamehSheikhBahaiPage   = lazy(() => import('./pages/FalnamehSheikhBahaiPage'));
+const FaalHasrathPage             = lazy(() => import('./pages/FaalHasrathPage'));
+const FalnamehSheikhBahaiPage     = lazy(() => import('./pages/FalnamehSheikhBahaiPage'));
+const FalnamehQuestionDetailPage  = lazy(() => import('./pages/FalnamehQuestionDetailPage'));
 
 // Minimal fallback — matches app background, no flash
 const PageFallback = () => (
@@ -76,6 +77,7 @@ const AuthenticatedApp = () => {
             <Route path="/basthul-huroof-2" element={<BastHuroofPage />} />
             <Route path="/faal-hasrath" element={<FaalHasrathPage />} />
             <Route path="/falnameh-sheikh-bahai" element={<FalnamehSheikhBahaiPage />} />
+            <Route path="/falnameh-question-detail" element={<FalnamehQuestionDetailPage />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Suspense>
