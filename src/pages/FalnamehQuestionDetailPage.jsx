@@ -91,19 +91,56 @@ function ResultDisplay({ result, lang, onClose }) {
             <X className="w-4 h-4 text-white/60" />
           </button>
 
-          <div className="p-6 space-y-5">
-            <div className="text-center space-y-3">
+          <div className="p-6 space-y-4">
+
+            {/* Final Letter */}
+            <div className="text-center space-y-2">
               <div className="w-16 h-16 rounded-2xl border mx-auto flex items-center justify-center"
-                style={{
-                  background: P.bgHi,
-                  borderColor: P.borderHi,
-                  boxShadow: `0 0 40px ${P.glow}`,
-                }}>
+                style={{ background: P.bgHi, borderColor: P.borderHi, boxShadow: `0 0 40px ${P.glow}` }}>
                 <span className="font-amiri font-bold text-3xl" style={{ color: P.gold }}>{result.finalLetter}</span>
               </div>
               <p className="font-inter text-[9px] uppercase tracking-[0.28em]" style={{ color: P.dim }}>
-                {lang === "ml" ? `ഫലം` : `Result`}
+                {lang === "ml" ? "അന്തിമ അക്ഷരം" : "Final Letter"}
               </p>
+            </div>
+
+            {/* Extraction Steps */}
+            <div className="rounded-2xl border p-3 space-y-2" style={{ background: P.bg, borderColor: P.faint }}>
+              <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.gold }}>
+                {lang === "ml" ? "◈ ശേഖരിച്ച അക്ഷരങ്ങൾ (ഓരോ 6-ാമത്)" : "◈ Extracted Letters (every 6th)"}
+              </p>
+              <p className="font-amiri text-sm leading-loose tracking-widest" dir="rtl" style={{ color: P.text }}>
+                {result.extracted.join("  ")}
+              </p>
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t" style={{ borderColor: P.faint }}>
+                <div>
+                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>
+                    {lang === "ml" ? "ഒറ്റ" : "Odd"}
+                  </p>
+                  <p className="font-amiri text-xs leading-loose" dir="rtl" style={{ color: P.text }}>
+                    {result.oddLetters.join(" ")}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>
+                    {lang === "ml" ? "ഇരട്ട" : "Even"}
+                  </p>
+                  <p className="font-amiri text-xs leading-loose" dir="rtl" style={{ color: P.text }}>
+                    {result.evenLetters.join(" ")}
+                  </p>
+                </div>
+              </div>
+              <div className="pt-1 border-t" style={{ borderColor: P.faint }}>
+                <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>
+                  {lang === "ml" ? "ലയിപ്പിച്ച ശ്രേണി → അവസാന അക്ഷരം:" : "Merged sequence → last letter:"}
+                </p>
+                <p className="font-amiri text-xs leading-loose" dir="rtl" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  {result.mergedSequence.slice(0, -1).join(" ")}{" "}
+                  <span style={{ color: P.gold, fontWeight: "bold", fontSize: "1.1em" }}>
+                    {result.finalLetter}
+                  </span>
+                </p>
+              </div>
             </div>
 
             {/* Persian Verse */}
@@ -138,6 +175,7 @@ function ResultDisplay({ result, lang, onClose }) {
                 {lang === "ml" ? verseData?.ml?.interpretation : verseData?.en?.interpretation}
               </p>
             </div>
+
           </div>
         </motion.div>
       </motion.div>
@@ -168,12 +206,42 @@ export default function FalnamehQuestionDetailPage() {
 
   const handleSelectLetter = (letter) => {
     setSelectedLetter(letter);
-    // Placeholder: In future, this will trigger the Sheikh Bahai algorithm
-    // For now, just show a result based on the selected letter
     setTimeout(() => {
-      setResult({ finalLetter: letter });
+      setResult(runSheikhBahaiAlgorithm(gridData, letter));
     }, 300);
   };
+
+  // ── Sheikh Bahai Falnameh Algorithm ──────────────────────────
+  // 1. Find starting index of selected letter
+  // 2. Collect every 6th letter (wrapping), starting from that index
+  //    Stop after 36 steps (216 / 6 = one full cycle)
+  // 3. Split collected letters into odd-position (1,3,5…) and even-position (2,4,6…)
+  // 4. Write odd letters first, then even letters → merged sequence
+  // 5. The LAST letter of the merged sequence is the final result letter
+  function runSheikhBahaiAlgorithm(flat, startLetter) {
+    const total = flat.length; // 216
+    const startIndex = flat.indexOf(startLetter);
+    if (startIndex === -1) return { finalLetter: startLetter, extracted: [], oddLetters: [], evenLetters: [], mergedSequence: [] };
+
+    // Collect every 6th letter for a full cycle (36 steps)
+    const steps = Math.floor(total / 6);
+    const extracted = [];
+    for (let i = 0; i < steps; i++) {
+      extracted.push(flat[(startIndex + i * 6) % total]);
+    }
+
+    // Split by 1-indexed position: odd = index 0,2,4… | even = index 1,3,5…
+    const oddLetters  = extracted.filter((_, i) => i % 2 === 0);
+    const evenLetters = extracted.filter((_, i) => i % 2 !== 0);
+
+    // Merge: all odd first, then all even
+    const mergedSequence = [...oddLetters, ...evenLetters];
+
+    // Final result = last letter of merged sequence
+    const finalLetter = mergedSequence[mergedSequence.length - 1];
+
+    return { finalLetter, extracted, oddLetters, evenLetters, mergedSequence };
+  }
 
   if (!question) {
     return (
