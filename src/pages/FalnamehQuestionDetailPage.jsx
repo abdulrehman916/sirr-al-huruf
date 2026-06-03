@@ -158,8 +158,9 @@ export default function FalnamehQuestionDetailPage() {
     const id = parseInt(params.get("question"));
     if (id && id >= 1 && id <= 26) {
       setQuestionId(id);
-      // Load the unique grid for this specific question
-      setGridData(FALNAMEH_GRIDS[id] || []);
+      // Load the unique grid for this specific question (flatten 2D array to 216 letters)
+      const grid = FALNAMEH_GRIDS[`GRID_${id}`];
+      setGridData(grid ? grid.flat() : []);
     }
   }, []);
 

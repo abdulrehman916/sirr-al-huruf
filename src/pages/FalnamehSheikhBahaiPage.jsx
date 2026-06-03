@@ -109,7 +109,7 @@ function LetterCell({ letter, index, isSelected, onSelect }) {
 }
 
 // ── Result Modal ──────────────────────────────────────────────
-function ResultModal({ result, lang, onClose, verificationMode, verificationData }) {
+function ResultModal({ result, lang, onClose, verificationMode, setVerificationMode, verificationData }) {
   if (!result) return null;
 
   const verseData = FALNAMEH_VERSES[result.letter];
@@ -680,6 +680,7 @@ export default function FalnamehSheikhBahaiPage() {
           lang={lang} 
           onClose={handleCloseResult} 
           verificationMode={verificationMode}
+          setVerificationMode={setVerificationMode}
           verificationData={verificationData}
         />
 
