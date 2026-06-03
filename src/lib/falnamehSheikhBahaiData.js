@@ -1,738 +1,642 @@
 // ═══════════════════════════════════════════════════════════════
-// FALNAMEH SHEIKH BAHAI — 26 Questions Dataset
-// Independent from Faal Hasrath Ali system
-// Source: Traditional Persian Falnameh of Sheikh Bahai
+// FALNAMEH SHEIKH BAHAI — Complete Question Database
+// 26 Questions with Persian, Malayalam, and English content
+// Each question is individually editable
 // ═══════════════════════════════════════════════════════════════
 
 export const FALNAMEH_QUESTIONS = [
   {
     id: 1,
-    arabic: "آیا این کار خیر است؟",
-    latin: "آیا این کار خیر است؟",
-    ml: {
-      question: "ഈ കാര്യം നല്ലതാണോ?",
-      meaning: "Is this matter good?",
-    },
-    en: {
-      question: "Is this matter good?",
-      meaning: "Is this matter good?",
-    },
+    persianTitle: "آیا این کار به سرانجام می‌رسد؟",
+    malayalamTitle: "ഈ കാര്യം വിജയിക്കുമോ?",
+    englishTitle: "Will this matter be accomplished?",
+    gridData: "س۱",
+    resultPoem: "اول کار بخیر آید، صبر کن تا آخرش\nپیروزی از آنِ تو شود، غم مخور ای دلنشین",
+    malayalamMeaning: "കാര്യത്തിന്റെ തുടക്കം നല്ലതാണ്, അവസാനം വരെ ക്ഷമിക്കുക",
+    malayalamInterpretation: "തുടക്കം ശുഭകരമാണ്. ക്ഷമയോടെ കാത്തിരിക്കുക. വിജയം ലഭിക്കും. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക.",
   },
   {
     id: 2,
-    arabic: "آیا سفر کنم؟",
-    latin: "آیا سفر کنم؟",
-    ml: {
-      question: "ഞാൻ യാത്ര ചെയ്യണമോ?",
-      meaning: "Should I travel?",
-    },
-    en: {
-      question: "Should I travel?",
-      meaning: "Should I travel?",
-    },
+    persianTitle: "آیا سفر من ایمن خواهد بود؟",
+    malayalamTitle: "എന്റെ യാത്ര സുരക്ഷിതമായിരിക്കുമോ?",
+    englishTitle: "Will my journey be safe?",
+    gridData: "ح۲",
+    resultPoem: "سفر تو محفوظ ماند، از بلا دور باشی\nخدا نگهدار تو باشد، در هر راهی که روی",
+    malayalamMeaning: "നിങ്ങളുടെ യാത്ര സുരക്ഷിതമായിരിക്കും, അപകടങ്ങളിൽ നിന്ന് അകലെയായിരിക്കും",
+    malayalamInterpretation: "യാത്ര സുരക്ഷിതമാണ്. അല്ലാഹു നിങ്ങളെ സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട. നന്മയോടെ മടങ്ങിവരും.",
   },
   {
     id: 3,
-    arabic: "آیا این کار را انجام دهم؟",
-    latin: "آیا این کار را انجام دهم؟",
-    ml: {
-      question: "ഞാൻ ഈ കാര്യം ചെയ്യണമോ?",
-      meaning: "Should I do this matter?",
-    },
-    en: {
-      question: "Should I do this matter?",
-      meaning: "Should I do this matter?",
-    },
+    persianTitle: "آیا به خواسته خود می‌رسم؟",
+    malayalamTitle: "എനിക്ക് എന്റെ ആഗ്രഹം സാധിക്കുമോ?",
+    englishTitle: "Will I achieve my desire?",
+    gridData: "م۳",
+    resultPoem: "مراد تو حاصل آید، شادی کن ای دوست\nدل خود شاد کن، که غم رفت از بر تو",
+    malayalamMeaning: "നിങ്ങളുടെ ആഗ്രഹം സഫലമാകും, സന്തോഷിക്കുക",
+    malayalamInterpretation: "ആഗ്രഹം സഫലമാകും. സന്തോഷിക്കുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. നന്മ ചെയ്യുക.",
   },
   {
     id: 4,
-    arabic: "آیا دشمن دارم؟",
-    latin: "آیا دشمن دارم؟",
-    ml: {
-      question: "എനിക്ക് ശത്രുക്കൾ ഉണ്ടോ?",
-      meaning: "Do I have enemies?",
-    },
-    en: {
-      question: "Do I have enemies?",
-      meaning: "Do I have enemies?",
-    },
+    persianTitle: "آیا این رابطه پایدار می‌ماند؟",
+    malayalamTitle: "ഈ ബന്ധം നിലനിൽക്കുമോ?",
+    englishTitle: "Will this relationship remain stable?",
+    gridData: "ع۴",
+    resultPoem: "عاقبت بخیر شوی، پیوند تو محکم ماند\nمحبت در دل‌ها بماند، تا ابد پایدار",
+    malayalamMeaning: "നിങ്ങൾക്ക് നല്ല അന്ത്യം ഉണ്ടാകും, ബന്ധം ഉറച്ചുനിൽക്കും",
+    malayalamInterpretation: "ബന്ധം ഉറച്ചുനിൽക്കും. പരസ്പര സ്നേഹം വർദ്ധിക്കും. ക്ഷമയും കരുതലും പാലിക്കുക.",
   },
   {
     id: 5,
-    arabic: "آیا ثروتمند شوم؟",
-    latin: "آیا ثروتمند شوم؟",
-    ml: {
-      question: "ഞാൻ ധനവാൻ ആകുമോ?",
-      meaning: "Will I become wealthy?",
-    },
-    en: {
-      question: "Will I become wealthy?",
-      meaning: "Will I become wealthy?",
-    },
+    persianTitle: "آیا بیماری من شفا می‌یابد؟",
+    malayalamTitle: "എന്റെ രോഗം മാറുമോ?",
+    englishTitle: "Will my illness be cured?",
+    gridData: "س۵",
+    resultPoem: "سلامتی یابی، شکر بجا آور ای جان\nدعا مستجاب آید، شفا یابی زود",
+    malayalamMeaning: "നിങ്ങൾക്ക് ആരോഗ്യം ലഭിക്കും, നന്ദി അർപ്പിക്കുക",
+    malayalamInterpretation: "രോഗശാന്തി ലഭിക്കും. പ്രാർത്ഥന തുടരുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. സൽപ്രവൃത്തികൾ തുടരുക.",
   },
   {
     id: 6,
-    arabic: "آیا ازدواج کنم؟",
-    latin: "آیا ازدواج کنم؟",
-    ml: {
-      question: "ഞാൻ വിവാഹം കഴിക്കണമോ?",
-      meaning: "Should I marry?",
-    },
-    en: {
-      question: "Should I marry?",
-      meaning: "Should I marry?",
-    },
+    persianTitle: "آیا کار جدید موفقیت‌آمیز است؟",
+    malayalamTitle: "പുതിയ ജോലി വിജയകരമാകുമോ?",
+    englishTitle: "Will the new job be successful?",
+    gridData: "ف۶",
+    resultPoem: "فلاح یابی، راه حق برو ای دوست\nکار تو به سر آید، با برکت و سود",
+    malayalamMeaning: "നിങ്ങൾക്ക് വിജയം ലഭിക്കും, നേരായ വഴിയിൽ പോകുക",
+    malayalamInterpretation: "പുതിയ ജോലി വിജയകരമാകും. നേരായ വഴിയിൽ സഞ്ചരിക്കുക. അധ്വാനിക്കുക. വിജയം ലഭിക്കും.",
   },
   {
     id: 7,
-    arabic: "آیا بیمار شفا یابد؟",
-    latin: "آیا بیمار شفا یابد؟",
-    ml: {
-      question: "രോഗി സുഖം പ്രാപിക്കുമോ?",
-      meaning: "Will the patient recover?",
-    },
-    en: {
-      question: "Will the patient recover?",
-      meaning: "Will the patient recover?",
-    },
+    persianTitle: "آیا دشمن بر من غلبه می‌کند؟",
+    malayalamTitle: "ശത്രു എന്നെ കീഴടക്കുമോ?",
+    englishTitle: "Will the enemy overcome me?",
+    gridData: "ق۷",
+    resultPoem: "قدر تو دانسته شود، دشمن ضعیف گردد\nپیروزی از آنِ تو باشد، نترس ای شیرمرد",
+    malayalamMeaning: "നിങ്ങളുടെ മൂല്യം അറിയാം, ശത്രു ദുർബലനാകും",
+    malayalamInterpretation: "ശത്രുവിനെ നിങ്ങൾക്ക് കീഴടക്കാം. ഭയപ്പെടേണ്ട. അല്ലാഹു നിങ്ങളോടൊപ്പമുണ്ട്. വിജയം ലഭിക്കും.",
   },
   {
     id: 8,
-    arabic: "آیا گمشده پیدا شود؟",
-    latin: "آیا گمشده پیدا شود؟",
-    ml: {
-      question: "നഷ്ടപ്പെട്ടത് കണ്ടെത്തുമോ?",
-      meaning: "Will the lost be found?",
-    },
-    en: {
-      question: "Will the lost be found?",
-      meaning: "Will the lost be found?",
-    },
+    persianTitle: "آیا گمشده من پیدا می‌شود؟",
+    malayalamTitle: "എനിക്ക് നഷ്ടപ്പെട്ടത് കണ്ടെത്താനാകുമോ?",
+    englishTitle: "Will my lost item be found?",
+    gridData: "ک۸",
+    resultPoem: "گمشده تو یابد، جستجو کن ای دوست\nکار تو به سر آید، دل آرام کن",
+    malayalamMeaning: "നഷ്ടപ്പെട്ടത് കണ്ടെത്തും, തിരയുക",
+    malayalamInterpretation: "നഷ്ടപ്പെട്ടത് കണ്ടെത്തും. തിരയൽ തുടരുക. വിജയം ലഭിക്കും. മനസ്സ് ശാന്തമാക്കുക.",
   },
   {
     id: 9,
-    arabic: "آیا پیروز شوم؟",
-    latin: "آیا پیروز شوم؟",
-    ml: {
-      question: "ഞാൻ വിജയിക്കുമോ?",
-      meaning: "Will I be victorious?",
-    },
-    en: {
-      question: "Will I be victorious?",
-      meaning: "Will I be victorious?",
-    },
+    persianTitle: "آیا این معامله سودآور است؟",
+    malayalamTitle: "ഈ ഇടപാട് ലാഭകരമാകുമോ?",
+    englishTitle: "Will this transaction be profitable?",
+    gridData: "ر۹",
+    resultPoem: "رحمت خدا شامل تو شود، برکت یابی\nسود تو افزون گردد، شکر بجا آور",
+    malayalamMeaning: "ദൈവത്തിന്റെ കാരുണ്യം നിങ്ങളിൽ ഉണ്ടാകും, അനുഗ്രഹം ലഭിക്കും",
+    malayalamInterpretation: "ഇടപാട് ലാഭകരമാകും. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും. നന്ദി അർപ്പിക്കുക. കൂടുതൽ ലാഭം ലഭിക്കും.",
   },
   {
     id: 10,
-    arabic: "آیا این خانه را بخرم؟",
-    latin: "آیا این خانه را بخرم؟",
-    ml: {
-      question: "ഞാൻ ഈ വീട് വാങ്ങണമോ?",
-      meaning: "Should I buy this house?",
-    },
-    en: {
-      question: "Should I buy this house?",
-      meaning: "Should I buy this house?",
-    },
+    persianTitle: "آیا ازدواج من خوشبخت خواهد بود؟",
+    malayalamTitle: "എന്റെ വിവാഹം സന്തോഷകരമാകുമോ?",
+    englishTitle: "Will my marriage be happy?",
+    gridData: "ل۱۰",
+    resultPoem: "لطف خدا شامل تو شود، محبت افزون\nازدواج تو مبارک، شادی در دل‌ها",
+    malayalamMeaning: "ദൈവത്തിന്റെ അനുഗ്രഹം നിങ്ങളിൽ ഉണ്ടാകും, സ്നേഹം വർദ്ധിക്കും",
+    malayalamInterpretation: "വിവാഹം സന്തോഷകരമാകും. പരസ്പര സ്നേഹം വർദ്ധിക്കും. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും.",
   },
   {
     id: 11,
-    arabic: "آیا تجارت کنم؟",
-    latin: "آیا تجارت کنم؟",
-    ml: {
-      question: "ഞാൻ വ്യാപാരം ചെയ്യണമോ?",
-      meaning: "Should I do business?",
-    },
-    en: {
-      question: "Should I do business?",
-      meaning: "Should I do business?",
-    },
+    persianTitle: "آیا در امتحان موفق می‌شوم؟",
+    malayalamTitle: "ഞാൻ പരീക്ഷയിൽ വിജയിക്കുമോ?",
+    englishTitle: "Will I pass the examination?",
+    gridData: "ن۱۱",
+    resultPoem: "نور هدایت به دل تو آید، علم افزون\nموفقیت یابی، شادی کن ای دانشمند",
+    malayalamMeaning: "നിങ്ങളുടെ ഹൃദയത്തിൽ മാർഗ്ഗദർശനത്തിന്റെ വെളിച്ചം വരും, വിജയം ലഭിക്കും",
+    malayalamInterpretation: "പരീക്ഷയിൽ വിജയിക്കും. അധ്വാനിക്കുക. പ്രാർത്ഥന തുടരുക. വിജയം ലഭിക്കും.",
   },
   {
     id: 12,
-    arabic: "آیا دوست وفادار دارم؟",
-    latin: "آیا دوست وفادار دارم؟",
-    ml: {
-      question: "എനിക്ക് വിശ്വസ്ത സുഹൃത്ത് ഉണ്ടോ?",
-      meaning: "Do I have a loyal friend?",
-    },
-    en: {
-      question: "Do I have a loyal friend?",
-      meaning: "Do I have a loyal friend?",
-    },
+    persianTitle: "آیا خبر خوب به من می‌رسد؟",
+    malayalamTitle: "എനിക്ക് നല്ല വാർത്ത ലഭിക്കുമോ?",
+    englishTitle: "Will I receive good news?",
+    gridData: "ب۱۲",
+    resultPoem: "بشارت به تو رسد، شادی کن ای دل\nخبر خوش آید، غم برود از بر تو",
+    malayalamMeaning: "നിങ്ങൾക്ക് സന്തോഷവാർത്ത ലഭിക്കും, സന്തോഷിക്കുക",
+    malayalamInterpretation: "നല്ല വാർത്ത വരുന്നു. സന്തോഷിക്കുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. സന്തോഷകരമായ സമയം.",
   },
   {
     id: 13,
-    arabic: "آیا این شغل را بپذیرم؟",
-    latin: "آیا این شغل را بپذیرم؟",
-    ml: {
-      question: "ഞാൻ ഈ ജോലി സ്വീകരിക്കണമോ?",
-      meaning: "Should I accept this job?",
-    },
-    en: {
-      question: "Should I accept this job?",
-      meaning: "Should I accept this job?",
-    },
+    persianTitle: "آیا این خانه برای من مبارک است؟",
+    malayalamTitle: "ഈ വീട് എനിക്ക് അനുയോജ്യമാണോ?",
+    englishTitle: "Is this house auspicious for me?",
+    gridData: "ه۱۳",
+    resultPoem: "هدایت یابی، راه مستقیم برو\nخانه تو مبارک، آرامش در آن باشد",
+    malayalamMeaning: "നിങ്ങൾക്ക് മാർഗ്ഗദർശനം ലഭിക്കും, വീട് അനുയോജ്യമാണ്",
+    malayalamInterpretation: "വീട് അനുയോജ്യമാണ്. സമാധാനം ലഭിക്കും. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും. സന്തോഷമായി താമസിക്കാം.",
   },
   {
     id: 14,
-    arabic: "آیا فرزند دارم شوم؟",
-    latin: "آیا فرزند دارم شوم؟",
-    ml: {
-      question: "എനിക്ക് കുട്ടി ഉണ്ടാകുമോ?",
-      meaning: "Will I have a child?",
-    },
-    en: {
-      question: "Will I have a child?",
-      meaning: "Will I have a child?",
-    },
+    persianTitle: "آیا قرض من پرداخت می‌شود؟",
+    malayalamTitle: "എന്റെ കടം വീട്ടാനാകുമോ?",
+    englishTitle: "Will my debt be paid?",
+    gridData: "ط۱۴",
+    resultPoem: "طاعت خدا بکن، رستگاری در آن است\nقرض تو ادا شود، آسایش یابی",
+    malayalamMeaning: "ദൈവത്തെ അനുസരിക്കുക, കടം വീട്ടാൻ കഴിയും",
+    malayalamInterpretation: "കടം വീട്ടാൻ കഴിയും. അധ്വാനിക്കുക. പ്രാർത്ഥന തുടരുക. അല്ലാഹു സഹായിക്കും.",
   },
   {
     id: 15,
-    arabic: "آیا این سفر ایمن است؟",
-    latin: "آیا این سفر ایمن است؟",
-    ml: {
-      question: "ഈ യാത്ര സുരക്ഷിതമാണോ?",
-      meaning: "Is this journey safe?",
-    },
-    en: {
-      question: "Is this journey safe?",
-      meaning: "Is this journey safe?",
-    },
+    persianTitle: "آیا فرزند من سالم می‌ماند؟",
+    malayalamTitle: "എന്റെ കുട്ടി സുരക്ഷിതമായിരിക്കുമോ?",
+    englishTitle: "Will my child remain healthy?",
+    gridData: "ی۱۵",
+    resultPoem: "یقین دان که پیروزی با توست\nفرزند تو سالم، محفوظ از بلا",
+    malayalamMeaning: "ഉറപ്പായി അറിയുക, കുട്ടി സുരക്ഷിതമാണ്",
+    malayalamInterpretation: "കുട്ടി സുരക്ഷിതമാണ്. അല്ലാഹു സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട. ആരോഗ്യത്തോടെ ഇരിക്കും.",
   },
   {
     id: 16,
-    arabic: "آیا دشمن شکست یابد؟",
-    latin: "آیا دشمن شکست یابد؟",
-    ml: {
-      question: "ശത്രു പരാജയപ്പെടുമോ?",
-      meaning: "Will the enemy be defeated?",
-    },
-    en: {
-      question: "Will the enemy be defeated?",
-      meaning: "Will the enemy be defeated?",
-    },
+    persianTitle: "آیا این شغل برای من مناسب است؟",
+    malayalamTitle: "ഈ ജോലി എനിക്ക് അനുയോജ്യമാണോ?",
+    englishTitle: "Is this job suitable for me?",
+    gridData: "ک۱۶",
+    resultPoem: "کار تو به سر آید، دل آرام کن\nشغل تو مناسب، برکت در آن باشد",
+    malayalamMeaning: "കാര്യം പൂർത്തിയാകും, ജോലി അനുയോജ്യമാണ്",
+    malayalamInterpretation: "ജോലി അനുയോജ്യമാണ്. വിജയം ലഭിക്കും. അധ്വാനിക്കുക. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും.",
   },
   {
     id: 17,
-    arabic: "آیا این کار موفق شود؟",
-    latin: "آیا این کار موفق شود؟",
-    ml: {
-      question: "ഈ കാര്യം വിജയിക്കുമോ?",
-      meaning: "Will this matter succeed?",
-    },
-    en: {
-      question: "Will this matter succeed?",
-      meaning: "Will this matter succeed?",
-    },
+    persianTitle: "آیا سفر دریایی ایمن است؟",
+    malayalamTitle: "കടൽ യാത്ര സുരക്ഷിതമാണോ?",
+    englishTitle: "Is the sea journey safe?",
+    gridData: "و۱۷",
+    resultPoem: "وعده خدا راست آید، ایمان دار\nسفر تو ایمن، از بلا دور باشی",
+    malayalamMeaning: "ദൈവത്തിന്റെ വാഗ്ദാനം സത്യമാകും, യാത്ര സുരക്ഷിതമാണ്",
+    malayalamInterpretation: "യാത്ര സുരക്ഷിതമാണ്. അല്ലാഹു സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട. സുരക്ഷിതമായി മടങ്ങിവരും.",
   },
   {
     id: 18,
-    arabic: "آیا سلامتی یابم؟",
-    latin: "آیا سلامتی یابم؟",
-    ml: {
-      question: "ഞാൻ ആരോഗ്യം നേടുമോ?",
-      meaning: "Will I regain health?",
-    },
-    en: {
-      question: "Will I regain health?",
-      meaning: "Will I regain health?",
-    },
+    persianTitle: "آیا این زمین برای کشاورزی خوب است؟",
+    malayalamTitle: "ഈ ഭൂമി കൃഷിക്ക് അനുയോജ്യമാണോ?",
+    englishTitle: "Is this land good for farming?",
+    gridData: "ز۱۸",
+    resultPoem: "زیان به تو نرسد، برکت یابی\nزمین تو حاصلخیز، محصول افزون",
+    malayalamMeaning: "നഷ്ടം സംഭവിക്കില്ല, ഭൂമി ഫലപ്രദമാണ്",
+    malayalamInterpretation: "ഭൂമി കൃഷിക്ക് അനുയോജ്യമാണ്. വിളവ് ലഭിക്കും. അധ്വാനിക്കുക. സമൃദ്ധി ലഭിക്കും.",
   },
   {
     id: 19,
-    arabic: "آیا این رابطه خوب است؟",
-    latin: "آیا این رابطه خوب است؟",
-    ml: {
-      question: "ഈ ബന്ധം നല്ലതാണോ?",
-      meaning: "Is this relationship good?",
-    },
-    en: {
-      question: "Is this relationship good?",
-      meaning: "Is this relationship good?",
-    },
+    persianTitle: "آیا دوست من وفادار است؟",
+    malayalamTitle: "എന്റെ സുഹൃത്ത് വിശ്വസ്തനാണോ?",
+    englishTitle: "Is my friend loyal?",
+    gridData: "ص۱۹",
+    resultPoem: "صبر پیشه کن، فتح نزدیک است\nدوست تو وفادار، محبت افزون",
+    malayalamMeaning: "ക്ഷമ പാലിക്കുക, സുഹൃത്ത് വിശ്വസ്തനാണ്",
+    malayalamInterpretation: "സുഹൃത്ത് വിശ്വസ്തനാണ്. ബന്ധം ഉറച്ചുനിൽക്കും. പരസ്പര സ്നേഹം വർദ്ധിക്കും.",
   },
   {
     id: 20,
-    arabic: "آیا پول قرض دهم؟",
-    latin: "آیا پول قرض دهم؟",
-    ml: {
-      question: "ഞാൻ പണം വായ്പ നൽകണമോ?",
-      meaning: "Should I lend money?",
-    },
-    en: {
-      question: "Should I lend money?",
-      meaning: "Should I lend money?",
-    },
+    persianTitle: "آیا این دارو اثر می‌کند؟",
+    malayalamTitle: "ഈ മരുന്ന് ഫലിക്കുമോ?",
+    englishTitle: "Will this medicine work?",
+    gridData: "ش۲۰",
+    resultPoem: "شادی به دل تو آید، غم برود\nدارو تو اثر کند، شفا یابی",
+    malayalamMeaning: "നിങ്ങളുടെ ഹൃദയത്തിൽ സന്തോഷം വരും, മരുന്ന് ഫലിക്കും",
+    malayalamInterpretation: "മരുന്ന് ഫലിക്കും. രോഗശാന്തി ലഭിക്കും. പ്രാർത്ഥന തുടരുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക.",
   },
   {
     id: 21,
-    arabic: "آیا این مکان مناسب است؟",
-    latin: "آیا این مکان مناسب است؟",
-    ml: {
-      question: "ഈ സ്ഥലം അനുയോജ്യമാണോ?",
-      meaning: "Is this place suitable?",
-    },
-    en: {
-      question: "Is this place suitable?",
-      meaning: "Is this place suitable?",
-    },
+    persianTitle: "آیا در کار تجارت موفق می‌شوم؟",
+    malayalamTitle: "വ്യാപാരത്തിൽ ഞാൻ വിജയിക്കുമോ?",
+    englishTitle: "Will I succeed in business?",
+    gridData: "غ۲۱",
+    resultPoem: "غم فردا مخور، که امروز کافیست\nتجارت تو سودآور، برکت یابی",
+    malayalamMeaning: "നാളത്തെക്കുറിച്ച് വിഷമിക്കരുത്, വ്യാപാരം ലാഭകരമാണ്",
+    malayalamInterpretation: "വ്യാപാരം ലാഭകരമാകും. അധ്വാനിക്കുക. അല്ലാഹുവിന്റെ അനുഗ്രഹം ഉണ്ടാകും. സമൃദ്ധി ലഭിക്കും.",
   },
   {
     id: 22,
-    arabic: "آیا پیروزی نزدیک است؟",
-    latin: "آیا پیروزی نزدیک است؟",
-    ml: {
-      question: "വിജയം അടുത്തുണ്ടോ?",
-      meaning: "Is victory near?",
-    },
-    en: {
-      question: "Is victory near?",
-      meaning: "Is victory near?",
-    },
+    persianTitle: "آیا این سفر زیارت قبول می‌شود؟",
+    malayalamTitle: "ഈ തീർത്ഥാടനം സ്വീകരിക്കപ്പെടുമോ?",
+    englishTitle: "Will this pilgrimage be accepted?",
+    gridData: "ح۲۲",
+    resultPoem: "حاجت تو روا شود، دعا مستجاب\nسفر تو مقبول، ثواب یابی",
+    malayalamMeaning: "നിങ്ങളുടെ ആവശ്യം സഫലമാകും, തീർത്ഥാടനം സ്വീകരിക്കപ്പെടും",
+    malayalamInterpretation: "തീർത്ഥാടനം സ്വീകരിക്കപ്പെടും. പ്രാർത്ഥനകൾ കേൾക്കപ്പെടും. അല്ലാഹുവിന്റെ അനുഗ്രഹം ലഭിക്കും.",
   },
   {
     id: 23,
-    arabic: "آیا این غذا بخورم؟",
-    latin: "آیا این غذا بخورم؟",
-    ml: {
-      question: "ഞാൻ ഈ ഭക്ഷണം കഴിക്കണമോ?",
-      meaning: "Should I eat this food?",
-    },
-    en: {
-      question: "Should I eat this food?",
-      meaning: "Should I eat this food?",
-    },
+    persianTitle: "آیا این کتاب برای من مفید است؟",
+    malayalamTitle: "ഈ പുസ്തകം എനിക്ക് ഗുണകരമാണോ?",
+    englishTitle: "Is this book beneficial for me?",
+    gridData: "ع۲۳",
+    resultPoem: "عاقبت بخیر شوی، علم افزون\nکتاب تو مفید، دانش یابی",
+    malayalamMeaning: "നിങ്ങൾക്ക് നല്ല അന്ത്യം ഉണ്ടാകും, പുസ്തകം ഗുണകരമാണ്",
+    malayalamInterpretation: "പുസ്തകം ഗുണകരമാണ്. അറിവ് ലഭിക്കും. അധ്വാനിക്കുക. വിജയം ലഭിക്കും.",
   },
   {
     id: 24,
-    arabic: "آیا این کتاب بخوانم؟",
-    latin: "آیا این کتاب بخوانم؟",
-    ml: {
-      question: "ഞാൻ ഈ പുസ്തകം വായിക്കണമോ?",
-      meaning: "Should I read this book?",
-    },
-    en: {
-      question: "Should I read this book?",
-      meaning: "Should I read this book?",
-    },
+    persianTitle: "آیا این زمان برای شروع خوب است؟",
+    malayalamTitle: "തുടങ്ങാൻ ഇത് നല്ല സമയമാണോ?",
+    englishTitle: "Is this time good to start?",
+    gridData: "ا۲۴",
+    resultPoem: "اول کار بخیر آید، صبر کن\nزمان تو مناسب، شروع کن با نام خدا",
+    malayalamMeaning: "കാര്യത്തിന്റെ തുടക്കം നല്ലതാണ്, ഇത് നല്ല സമയമാണ്",
+    malayalamInterpretation: "തുടങ്ങാൻ നല്ല സമയമാണ്. അല്ലാഹുവിന്റെ നാമത്തിൽ തുടങ്ങുക. വിജയം ലഭിക്കും.",
   },
   {
     id: 25,
-    arabic: "آیا این زمان مناسب است؟",
-    latin: "آیا این زمان مناسب است؟",
-    ml: {
-      question: "ഈ സമയം അനുയോജ്യമാണോ?",
-      meaning: "Is this time suitable?",
-    },
-    en: {
-      question: "Is this time suitable?",
-      meaning: "Is this time suitable?",
-    },
+    persianTitle: "آیا این شخص قابل اعتماد است؟",
+    malayalamTitle: "ഈ വ്യക്തി വിശ്വസിക്കാവുന്നതാണോ?",
+    englishTitle: "Is this person trustworthy?",
+    gridData: "ث۲۵",
+    resultPoem: "ثابت قدم باش، که پیروزی نزدیک است\nشخص تو قابل اعتماد، راستگو باشد",
+    malayalamMeaning: "ഉറച്ചുനിൽക്കുക, ഈ വ്യക്തി വിശ്വസിക്കാവുന്നതാണ്",
+    malayalamInterpretation: "വ്യക്തി വിശ്വസിക്കാവുന്നതാണ്. സത്യസന്ധനാണ്. ബന്ധം പുലർത്താം. വിശ്വാസം അർഹിക്കുന്നു.",
   },
   {
     id: 26,
-    arabic: "آیا خداوند راضی است؟",
-    latin: "آیا خداوند راضی است؟",
-    ml: {
-      question: "ദൈവം സന്തുഷ്ടനാണോ?",
-      meaning: "Is Allah pleased?",
-    },
-    en: {
-      question: "Is Allah pleased?",
-      meaning: "Is Allah pleased?",
-    },
+    persianTitle: "آیا پایان این کار خوش خواهد بود؟",
+    malayalamTitle: "ഈ കാര്യത്തിന്റെ അവസാനം നല്ലതാകുമോ?",
+    englishTitle: "Will the end of this matter be good?",
+    gridData: "م۲۶",
+    resultPoem: "مراد تو حاصل آید، شادی کن\nپایان کار خوش، عاقبت بخیر",
+    malayalamMeaning: "നിങ്ങളുടെ ആഗ്രഹം സഫലമാകും, അവസാനം നല്ലതാണ്",
+    malayalamInterpretation: "അവസാനം നല്ലതാണ്. വിജയം ലഭിക്കും. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. സന്തോഷകരമായ അന്ത്യം.",
   },
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// PERSIAN LETTER GRID — 18 × 12 = 216 cells
-// Traditional Falnameh letter system
+// PERSIAN LETTER GRID (18×12 = 216 cells)
+// Repeating pattern of 32 Persian/Arabic letters
 // ═══════════════════════════════════════════════════════════════
 
-export const PERSIAN_LETTERS = [
-  // Row 1
-  "ا", "ب", "پ", "ت", "ث", "ج", "چ", "ح", "خ", "د", "ذ", "ر", "ز", "ژ", "س", "ش", "ص", "ض",
-  // Row 2
-  "ط", "ظ", "ع", "غ", "ف", "ق", "ک", "گ", "ل", "م", "ن", "و", "ه", "ی", "ا", "ب", "پ", "ت",
-  // Row 3
-  "ث", "ج", "چ", "ح", "خ", "د", "ذ", "ر", "ز", "ژ", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ",
-  // Row 4
-  "ف", "ق", "ک", "گ", "ل", "م", "ن", "و", "ه", "ی", "ا", "ب", "پ", "ت", "ث", "ج", "چ", "ح",
-  // Row 5
-  "خ", "د", "ذ", "ر", "ز", "ژ", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ک", "گ",
-  // Row 6
-  "ل", "م", "ن", "و", "ه", "ی", "ا", "ب", "پ", "ت", "ث", "ج", "چ", "ح", "خ", "د", "ذ", "ر",
-  // Row 7
-  "ز", "ژ", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ک", "گ", "ل", "م", "ن", "و",
-  // Row 8
-  "ه", "ی", "ا", "ب", "پ", "ت", "ث", "ج", "چ", "ح", "خ", "د", "ذ", "ر", "ز", "ژ", "س", "ش",
-  // Row 9
-  "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ک", "گ", "ل", "م", "ن", "و", "ه", "ی", "ا", "ب",
-  // Row 10
-  "پ", "ت", "ث", "ج", "چ", "ح", "خ", "د", "ذ", "ر", "ز", "ژ", "س", "ش", "ص", "ض", "ط", "ظ",
-  // Row 11
-  "ع", "غ", "ف", "ق", "ک", "گ", "ل", "م", "ن", "و", "ه", "ی", "ا", "ب", "پ", "ت", "ث", "ج",
-  // Row 12
-  "چ", "ح", "خ", "د", "ذ", "ر", "ز", "ژ", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق",
+const BASE_LETTERS = [
+  "ا","ب","پ","ت","ث","ج","چ","ح","خ","د","ذ","ر","ز","ژ",
+  "س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ک","گ","ل","م","ن","و","ه","ی"
 ];
 
+export const PERSIAN_LETTERS = [];
+for (let i = 0; i < 216; i++) {
+  PERSIAN_LETTERS.push(BASE_LETTERS[i % BASE_LETTERS.length]);
+}
+
 // ═══════════════════════════════════════════════════════════════
-// FALNAMEH VERSES — Sample interpretations for each letter
-// Each letter maps to a Persian verse with Malayalam & English
+// VERSE INTERPRETATIONS (mapped by first letter of result poem)
 // ═══════════════════════════════════════════════════════════════
 
 export const FALNAMEH_VERSES = {
   "ا": {
-    persian: "ای شاه، تو را بشارت باد، که مرادت حاصل آید",
+    persian: "اول کار بخیر آید، صبر کن تا آخرش",
     ml: {
-      meaning: "രാജാവേ, നിങ്ങൾക്ക് സന്തോഷവാർത്ത, നിങ്ങളുടെ ആഗ്രഹം സഫലമാകും",
-      interpretation: "നിങ്ങളുടെ ഉദ്ദേശം സഫലമാകും. അല്ലാഹുവിന്റെ അനുഗ്രഹം നിങ്ങളോടൊപ്പമുണ്ട്. വിജയം ഉറപ്പാണ്.",
+      meaning: "കാര്യത്തിന്റെ തുടക്കം നല്ലതാണ്, അവസാനം വരെ ക്ഷമിക്കുക",
+      interpretation: "തുടക്കം ശുഭകരമാണ്. ക്ഷമയോടെ കാത്തിരിക്കുക. വിജയം ലഭിക്കും. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക."
     },
     en: {
-      meaning: "O King, good tidings to you, your desire shall be fulfilled",
-      interpretation: "Your intention will be fulfilled. Allah's blessing is with you. Victory is certain.",
-    },
+      meaning: "Beginning of matter is good, be patient till the end",
+      interpretation: "Beginning is auspicious. Wait patiently. Success will come. Trust in Allah."
+    }
   },
   "ب": {
-    persian: "صبر کن، که عاقبت کار تو نیکو شود",
+    persian: "بشارت به تو رسد، شادی کن ای دل",
     ml: {
-      meaning: "ക്ഷമിക്കുക, അന്തിമഫലം നല്ലതാകും",
-      interpretation: "ക്ഷമയോടെ കാത്തിരിക്കുക. കാര്യങ്ങൾ നിങ്ങൾക്ക് അനുകൂലമായി മാറും. സഹിഷ്ണുത വിജയത്തിലേക്ക് നയിക്കും.",
+      meaning: "നിങ്ങൾക്ക് സന്തോഷവാർത്ത ലഭിക്കും, സന്തോഷിക്കുക",
+      interpretation: "സന്തോഷകരമായ വാർത്ത വരുന്നു. സന്തോഷിക്കുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക."
     },
     en: {
-      meaning: "Be patient, for in the end your matter will turn out well",
-      interpretation: "Wait with patience. Matters will turn in your favor. Patience leads to victory.",
-    },
+      meaning: "Good news shall reach you, rejoice O heart",
+      interpretation: "Happy news is coming. Rejoice. Give thanks to Allah."
+    }
   },
   "پ": {
-    persian: "همت عالی کن، که دولت با توست",
+    persian: "پنهان مکن، که آشکار شود حقیقت",
     ml: {
-      meaning: "ഉന്നത ലക്ഷ്യം വെക്കുക, ഭാഗ്യം നിങ്ങളോടൊപ്പമാണ്",
-      interpretation: "വലിയ ലക്ഷ്യങ്ങൾ സ്വീകരിക്കുക. ഭാഗ്യം നിങ്ങളുടെ പക്ഷത്താണ്. സാഹസികത കാണിക്കുക.",
+      meaning: "രഹസ്യം വെക്കരുത്, സത്യം വെളിപ്പെടും",
+      interpretation: "രഹസ്യങ്ങൾ വെളിപ്പെടും. സത്യം പറയുക. തുറന്നിരിക്കുക."
     },
     en: {
-      meaning: "Have high resolve, for fortune is with you",
-      interpretation: "Set high goals. Fortune is on your side. Show courage.",
-    },
+      meaning: "Hide not, for truth shall be revealed",
+      interpretation: "Secrets will be revealed. Speak truth. Be open."
+    }
   },
   "ت": {
-    persian: "از دشمن بپرهیز، که کمین کرده است",
+    persian: "توفیق یابی، دعا بکن ای دوست",
     ml: {
-      meaning: "ശത്രുവിൽ നിന്ന് സൂക്ഷിക്കുക, അവൻ പതിയിരിക്കുന്നു",
-      interpretation: "ശത്രുക്കളിൽ നിന്ന് ജാഗ്രത പാലിക്കുക. അവർ നിങ്ങൾക്ക് ദോഷം വരുത്താൻ ശ്രമിക്കും. സൂക്ഷ്മത ആവശ്യമാണ്.",
+      meaning: "നിങ്ങൾക്ക് വിജയം ലഭിക്കും, പ്രാർത്ഥിക്കുക",
+      interpretation: "വിജയം ലഭിക്കും. പ്രാർത്ഥന തുടരുക. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക."
     },
     en: {
-      meaning: "Beware of enemies, for they lie in wait",
-      interpretation: "Stay vigilant from enemies. They will try to harm you. Caution is needed.",
-    },
+      meaning: "You shall find success, make dua O friend",
+      interpretation: "Success will come. Continue prayer. Trust in Allah."
+    }
   },
   "ث": {
-    persian: "مال تو افزون شود، شکر بجا آور",
+    persian: "ثابت قدم باش، که پیروزی نزدیک است",
     ml: {
-      meaning: "നിങ്ങളുടെ സമ്പത്ത് വർദ്ധിക്കും, നന്ദി അർപ്പിക്കുക",
-      interpretation: "സാമ്പത്തിക നേട്ടം ഉണ്ടാകും. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. കൂടുതൽ സൽപ്രവൃത്തികൾ ചെയ്യുക.",
+      meaning: "ഉറച്ചുനിൽക്കുക, വിജയം അടുത്താണ്",
+      interpretation: "ഉറച്ചുനിൽക്കുക. വിജയം അടുത്തുണ്ട്. പ്രതീക്ഷ കൈവിടരുത്."
     },
     en: {
-      meaning: "Your wealth shall increase, give thanks",
-      interpretation: "Financial gain will come. Give thanks to Allah. Do more good deeds.",
-    },
+      meaning: "Stand firm, for victory is near",
+      interpretation: "Stand firm. Victory is near. Do not lose hope."
+    }
   },
   "ج": {
-    persian: "سفر مکن، که خطر در راه است",
+    persian: "جواب تو آید، منتظر باش",
     ml: {
-      meaning: "യാത്ര ചെയ്യരുത്, വഴിയിൽ അപകടമുണ്ട്",
-      interpretation: "യാത്ര ഒഴിവാക്കുക. അപകടസാധ്യതയുണ്ട്. സുരക്ഷിതമായി ഇരിക്കുക.",
+      meaning: "നിങ്ങളുടെ ഉത്തരം വരും, കാത്തിരിക്കുക",
+      interpretation: "ഉത്തരം വരുന്നു. ക്ഷമയോടെ കാത്തിരിക്കുക. സമയം അടുത്തു."
     },
     en: {
-      meaning: "Do not travel, for danger lies on the path",
-      interpretation: "Avoid travel. Danger is present. Stay safe.",
-    },
+      meaning: "Your answer shall come, wait",
+      interpretation: "Answer is coming. Wait patiently. Time is near."
+    }
   },
   "چ": {
-    persian: "غم مخور، که غم از تو بگزرد",
+    persian: "چشم امید داشته باش",
     ml: {
-      meaning: "വിഷമിക്കരുത്, വിഷം നിങ്ങളെ വിട്ടുപോകും",
-      interpretation: "ആശങ്കകൾ ഒഴിവാക്കുക. കഷ്ടപ്പാടുകൾ മാറും. സമാധാനം ലഭിക്കും.",
+      meaning: "പ്രതീക്ഷയോടെ കാത്തിരിക്കുക",
+      interpretation: "പ്രതീക്ഷ കൈവിടരുത്. നല്ല സമയം വരുന്നു. വിശ്വസിക്കുക."
     },
     en: {
-      meaning: "Do not grieve, for grief shall pass from you",
-      interpretation: "Avoid anxieties. Hardships will pass. Peace will come.",
-    },
+      meaning: "Keep eyes of hope",
+      interpretation: "Do not lose hope. Good times are coming. Trust."
+    }
   },
   "ح": {
-    persian: "حاجت تو روا شود، دعا بکن",
+    persian: "حاجت تو روا شود",
     ml: {
-      meaning: "നിങ്ങളുടെ ആവശ്യം സഫലമാകും, പ്രാർത്ഥിക്കുക",
-      interpretation: "നിങ്ങളുടെ ആഗ്രഹം സഫലമാകും. ദുആ കൂടുതൽ ചൊല്ലുക. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക.",
+      meaning: "നിങ്ങളുടെ ആവശ്യം സഫലമാകും",
+      interpretation: "ആവശ്യം സഫലമാകും. പ്രാർത്ഥന തുടരുക. അല്ലാഹു കേൾക്കുന്നു."
     },
     en: {
-      meaning: "Your need shall be granted, make supplication",
-      interpretation: "Your desire will be fulfilled. Recite more dua. Trust in Allah.",
-    },
+      meaning: "Your need shall be fulfilled",
+      interpretation: "Need will be fulfilled. Continue prayer. Allah hears."
+    }
   },
   "خ": {
-    persian: "خبر خوش شنوی، دل شاد کن",
+    persian: "خوبی به تو رسد",
     ml: {
-      meaning: "നല്ല വാർത്ത കേൾക്കും, സന്തോഷിക്കുക",
-      interpretation: "സന്തോഷകരമായ വിവരം ലഭിക്കും. സന്തോഷിക്കുക. നല്ല ദിവസങ്ങൾ വരുന്നു.",
+      meaning: "നന്മ നിങ്ങളിൽ എത്തും",
+      interpretation: "നന്മ വരുന്നു. നന്മ ചെയ്യുക. നന്മ ലഭിക്കും."
     },
     en: {
-      meaning: "You shall hear good news, rejoice",
-      interpretation: "Happy information will come. Rejoice. Good days are coming.",
-    },
+      meaning: "Goodness shall reach you",
+      interpretation: "Goodness is coming. Do good. Receive good."
+    }
   },
   "د": {
-    persian: "دشمن تو شکست خورد، پیروز شدی",
+    persian: "دعا مستجاب آید",
     ml: {
-      meaning: "നിങ്ങളുടെ ശത്രു പരാജയപ്പെട്ടു, നിങ്ങൾ വിജയിച്ചു",
-      interpretation: "ശത്രുക്കൾ പരാജയപ്പെടും. നിങ്ങൾ വിജയിക്കും. ധൈര്യം കൈവിടരുത്.",
+      meaning: "പ്രാർത്ഥന സ്വീകരിക്കപ്പെടും",
+      interpretation: "പ്രാർത്ഥന സ്വീകരിക്കപ്പെടും. തുടരുക. ഫലം ലഭിക്കും."
     },
     en: {
-      meaning: "Your enemy was defeated, you are victorious",
-      interpretation: "Enemies will be defeated. You will win. Do not lose courage.",
-    },
+      meaning: "Prayer shall be answered",
+      interpretation: "Prayer will be answered. Continue. Result will come."
+    }
   },
   "ذ": {
-    persian: "ذکر خدا بکن، که یاد او شفاست",
+    persian: "ذکر خدا بکن، که آرامی یابی",
     ml: {
-      meaning: "ദൈവത്തെ ഓർക്കുക, അവന്റെ ഓർമ്മ രോഗശമനമാണ്",
-      interpretation: "ദിക്ർ കൂടുതൽ ചൊല്ലുക. അല്ലാഹുവിന്റെ ഓർമ്മയിൽ സമാധാനമുണ്ട്. ആരോഗ്യം ലഭിക്കും.",
+      meaning: "ദൈവത്തെ ഓർക്കുക, നിങ്ങൾക്ക് സമാധാനം ലഭിക്കും",
+      interpretation: "അല്ലാഹുവിനെ ഓർക്കുക. സമാധാനം ലഭിക്കും. ഹൃദയം ശാന്തമാകും."
     },
     en: {
-      meaning: "Remember Allah, for His remembrance is healing",
-      interpretation: "Recite more dhikr. In Allah's remembrance is peace. Health will come.",
-    },
+      meaning: "Remember Allah, you shall find peace",
+      interpretation: "Remember Allah. Peace will come. Heart will calm."
+    }
   },
   "ر": {
-    persian: "رحمت خدا شامل حال تو شود",
+    persian: "رحمت خدا شامل تو شود",
     ml: {
-      meaning: "ദൈവത്തിന്റെ കാരുണ്യം നിങ്ങളിൽ വർഷിക്കും",
-      interpretation: "അല്ലാഹുവിന്റെ കാരുണ്യം നിങ്ങളിൽ ഉണ്ടാകും. അനുഗ്രഹങ്ങൾ ലഭിക്കും. നന്മ ചെയ്യുക.",
+      meaning: "ദൈവത്തിന്റെ കാരുണ്യം നിങ്ങളിൽ ഉണ്ടാകും",
+      interpretation: "അല്ലാഹുവിന്റെ കാരുണ്യം നിങ്ങളിൽ ഉണ്ടാകും. നന്മ ചെയ്യുക."
     },
     en: {
       meaning: "Allah's mercy shall encompass you",
-      interpretation: "Allah's mercy will be upon you. Blessings will come. Do good.",
-    },
+      interpretation: "Allah's mercy will be upon you. Do good."
+    }
   },
   "ز": {
-    persian: "زیان مبین، که سود تو در صبر است",
+    persian: "زیان به تو نرسد",
     ml: {
-      meaning: "നഷ്ടം കാണരുത്, നിങ്ങളുടെ നേട്ടം ക്ഷമയിലാണ്",
-      interpretation: "നഷ്ടത്തെക്കുറിച്ച് ചിന്തിക്കരുത്. ക്ഷമയിലൂടെ നേട്ടം ലഭിക്കും. സഹിഷ്ണുത പാലിക്കുക.",
+      meaning: "നിങ്ങൾക്ക് നഷ്ടം സംഭവിക്കില്ല",
+      interpretation: "നഷ്ടം സംഭവിക്കില്ല. അല്ലാഹു സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട."
     },
     en: {
-      meaning: "See no loss, for your gain is in patience",
-      interpretation: "Think not of loss. Through patience comes gain. Be patient.",
-    },
+      meaning: "Loss shall not reach you",
+      interpretation: "Loss will not occur. Allah protects. Fear not."
+    }
   },
   "ژ": {
-    persian: "ژاله رحمت بر تو بارد",
+    persian: "ژرف بین باش، که حقیقت آشکار است",
     ml: {
-      meaning: "കാരുണ്യത്തിന്റെ മഴ നിങ്ങളിൽ വർഷിക്കും",
-      interpretation: "അല്ലാഹുവിന്റെ കാരുണ്യം നിങ്ങളിൽ വർഷിക്കും. അനുഗ്രഹങ്ങൾ ലഭിക്കും. നന്ദി അർപ്പിക്കുക.",
+      meaning: "ആഴത്തിൽ ചിന്തിക്കുക, സത്യം വെളിപ്പെട്ടിരിക്കുന്നു",
+      interpretation: "ആഴത്തിൽ ചിന്തിക്കുക. സത്യം മനസ്സിലാകും. ശരിയായ തീരുമാനം എടുക്കുക."
     },
     en: {
-      meaning: "Rain of mercy shall pour upon you",
-      interpretation: "Mercy of Allah shall pour on you. Blessings will come. Give thanks.",
-    },
+      meaning: "Think deeply, truth is revealed",
+      interpretation: "Think deeply. Truth will be understood. Make right decision."
+    }
   },
   "س": {
     persian: "سلامتی یابی، شکر بجا آور",
     ml: {
       meaning: "നിങ്ങൾക്ക് ആരോഗ്യം ലഭിക്കും, നന്ദി അർപ്പിക്കുക",
-      interpretation: "ആരോഗ്യം ലഭിക്കും. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. സൽപ്രവൃത്തികൾ തുടരുക.",
+      interpretation: "ആരോഗ്യം ലഭിക്കും. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക. സൽപ്രവൃത്തികൾ തുടരുക."
     },
     en: {
       meaning: "You shall find health, give thanks",
-      interpretation: "Health will come. Give thanks to Allah. Continue good deeds.",
-    },
+      interpretation: "Health will come. Give thanks to Allah. Continue good deeds."
+    }
   },
   "ش": {
     persian: "شادی به دل تو آید، غم برود",
     ml: {
       meaning: "നിങ്ങളുടെ ഹൃദയത്തിൽ സന്തോഷം വരും, ദുഃഖം പോകും",
-      interpretation: "സന്തോഷം നിങ്ങളിൽ നിറയും. ദുഃഖങ്ങൾ മാറും. സന്തോഷകരമായ സമയം വരുന്നു.",
+      interpretation: "സന്തോഷം നിങ്ങളിൽ നിറയും. ദുഃഖങ്ങൾ മാറും. സന്തോഷകരമായ സമയം വരുന്നു."
     },
     en: {
       meaning: "Joy shall come to your heart, grief depart",
-      interpretation: "Joy will fill you. Griefs will depart. Happy times are coming.",
-    },
+      interpretation: "Joy will fill you. Griefs will depart. Happy times are coming."
+    }
   },
   "ص": {
     persian: "صبر پیشه کن، که فتح نزدیک است",
     ml: {
       meaning: "ക്ഷമ സ്വീകരിക്കുക, വിജയം അടുത്താണ്",
-      interpretation: "ക്ഷമ പാലിക്കുക. വിജയം അടുത്തുണ്ട്. പ്രതീക്ഷ കൈവിടരുത്.",
+      interpretation: "ക്ഷമ പാലിക്കുക. വിജയം അടുത്തുണ്ട്. പ്രതീക്ഷ കൈവിടരുത്."
     },
     en: {
       meaning: "Adopt patience, for victory is near",
-      interpretation: "Be patient. Victory is near. Do not lose hope.",
-    },
+      interpretation: "Be patient. Victory is near. Do not lose hope."
+    }
   },
   "ض": {
     persian: "ضرر به تو نرسد، محفوظ باشی",
     ml: {
       meaning: "നിങ്ങൾക്ക് ദോഷം സംഭവിക്കില്ല, നിങ്ങൾ സംരക്ഷിക്കപ്പെടും",
-      interpretation: "ദോഷങ്ങൾ നിങ്ങളെ ബാധിക്കില്ല. അല്ലാഹു നിങ്ങളെ സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട.",
+      interpretation: "ദോഷങ്ങൾ നിങ്ങളെ ബാധിക്കില്ല. അല്ലാഹു നിങ്ങളെ സംരക്ഷിക്കും. ഭയപ്പെടേണ്ട."
     },
     en: {
       meaning: "Harm shall not reach you, you are protected",
-      interpretation: "Harm will not reach you. Allah protects you. Fear not.",
-    },
+      interpretation: "Harm will not reach you. Allah protects you. Fear not."
+    }
   },
   "ط": {
     persian: "طاعت خدا بکن، که رستگاری در آن است",
     ml: {
       meaning: "ദൈവത്തെ അനുസരിക്കുക, അതിൽ മോക്ഷമുണ്ട്",
-      interpretation: "അല്ലാഹുവിനെ അനുസരിക്കുക. അതിലാണ് വിജയം. ധാർമ്മികത പാലിക്കുക.",
+      interpretation: "അല്ലാഹുവിനെ അനുസരിക്കുക. അതിലാണ് വിജയം. ധാർമ്മികത പാലിക്കുക."
     },
     en: {
       meaning: "Obey Allah, for salvation lies therein",
-      interpretation: "Obey Allah. In that is success. Maintain righteousness.",
-    },
+      interpretation: "Obey Allah. In that is success. Maintain righteousness."
+    }
   },
   "ظ": {
     persian: "ظلم مکن، که ستم برگردد",
     ml: {
       meaning: "അനീതി ചെയ്യരുത്, അത് തിരിച്ചുവരും",
-      interpretation: "അനീതി ചെയ്യരുത്. അത് നിങ്ങൾക്ക് തിരിച്ചുവരും. നീതി പാലിക്കുക.",
+      interpretation: "അനീതി ചെയ്യരുത്. അത് നിങ്ങൾക്ക് തിരിച്ചുവരും. നീതി പാലിക്കുക."
     },
     en: {
       meaning: "Do not oppress, for oppression returns",
-      interpretation: "Do not oppress. It will return to you. Maintain justice.",
-    },
+      interpretation: "Do not oppress. It will return to you. Maintain justice."
+    }
   },
   "ع": {
     persian: "عاقبت بخیر شوی، امید دار",
     ml: {
       meaning: "നിങ്ങൾക്ക് നല്ല അന്ത്യം ഉണ്ടാകും, പ്രതീക്ഷിക്കുക",
-      interpretation: "നല്ല അന്ത്യം ലഭിക്കും. പ്രതീക്ഷ കൈവിടരുത്. നന്മ ചെയ്യുക.",
+      interpretation: "നല്ല അന്ത്യം ലഭിക്കും. പ്രതീക്ഷ കൈവിടരുത്. നന്മ ചെയ്യുക."
     },
     en: {
       meaning: "You shall have good end, have hope",
-      interpretation: "Good end will come. Do not lose hope. Do good.",
-    },
+      interpretation: "Good end will come. Do not lose hope. Do good."
+    }
   },
   "غ": {
     persian: "غم فردا مخور، که امروز کافیست",
     ml: {
       meaning: "നാളത്തെക്കുറിച്ച് വിഷമിക്കരുത്, ഇന്ന് മതി",
-      interpretation: "ഭാവിയെക്കുറിച്ച് ആശങ്കപ്പെടരുത്. ഇന്നത്തെ ദിവസം മതി. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക.",
+      interpretation: "ഭാവിയെക്കുറിച്ച് ആശങ്കപ്പെടരുത്. ഇന്നത്തെ ദിവസം മതി. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക."
     },
     en: {
       meaning: "Worry not for tomorrow, for today is enough",
-      interpretation: "Worry not for future. Today is enough. Trust in Allah.",
-    },
+      interpretation: "Worry not for future. Today is enough. Trust in Allah."
+    }
   },
   "ف": {
     persian: "فلاح یابی، راه حق برو",
     ml: {
       meaning: "നിങ്ങൾക്ക് വിജയം ലഭിക്കും, നേരായ വഴിയിൽ പോകുക",
-      interpretation: "വിജയം ലഭിക്കും. നേരായ വഴിയിൽ സഞ്ചരിക്കുക. സത്യം പിന്തുടരുക.",
+      interpretation: "വിജയം ലഭിക്കും. നേരായ വഴിയിൽ സഞ്ചരിക്കുക. സത്യം പിന്തുടരുക."
     },
     en: {
       meaning: "You shall attain success, walk the right path",
-      interpretation: "Success will come. Walk the straight path. Follow truth.",
-    },
+      interpretation: "Success will come. Walk the straight path. Follow truth."
+    }
   },
   "ق": {
     persian: "قدر تو دانسته شود، صبر کن",
     ml: {
       meaning: "നിങ്ങളുടെ മൂല്യം അറിയാം, ക്ഷമിക്കുക",
-      interpretation: "നിങ്ങളുടെ മൂല്യം അംഗീകരിക്കപ്പെടും. ക്ഷമയോടെ കാത്തിരിക്കുക. സമയം വരും.",
+      interpretation: "നിങ്ങളുടെ മൂല്യം അംഗീകരിക്കപ്പെടും. ക്ഷമയോടെ കാത്തിരിക്കുക. സമയം വരും."
     },
     en: {
       meaning: "Your worth shall be known, be patient",
-      interpretation: "Your worth will be recognized. Wait patiently. Time will come.",
-    },
+      interpretation: "Your worth will be recognized. Wait patiently. Time will come."
+    }
   },
   "ک": {
     persian: "کار تو به سر آید، دل آرام کن",
     ml: {
       meaning: "നിങ്ങളുടെ കാര്യം പൂർത്തിയാകും, മനസ്സ് ശാന്തമാക്കുക",
-      interpretation: "കാര്യങ്ങൾ പൂർത്തിയാകും. മനസ്സ് ശാന്തമാക്കുക. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക.",
+      interpretation: "കാര്യങ്ങൾ പൂർത്തിയാകും. മനസ്സ് ശാന്തമാക്കുക. അല്ലാഹുവിങ്കൽ വിശ്വസിക്കുക."
     },
     en: {
       meaning: "Your matter shall complete, calm your heart",
-      interpretation: "Matters will complete. Calm your heart. Trust in Allah.",
-    },
+      interpretation: "Matters will complete. Calm your heart. Trust in Allah."
+    }
   },
   "گ": {
     persian: "گمشده تو یابد، جستجو کن",
     ml: {
       meaning: "നഷ്ടപ്പെട്ടത് കണ്ടെത്തും, തിരയുക",
-      interpretation: "നഷ്ടപ്പെട്ടത് കണ്ടെത്തും. തിരയൽ തുടരുക. വിജയം ലഭിക്കും.",
+      interpretation: "നഷ്ടപ്പെട്ടത് കണ്ടെത്തും. തിരയൽ തുടരുക. വിജയം ലഭിക്കും."
     },
     en: {
       meaning: "Your lost shall be found, keep searching",
-      interpretation: "Lost will be found. Continue searching. Success will come.",
-    },
+      interpretation: "Lost will be found. Continue searching. Success will come."
+    }
   },
   "ل": {
     persian: "لطف خدا شامل تو شود",
     ml: {
       meaning: "ദൈവത്തിന്റെ അനുഗ്രഹം നിങ്ങളിൽ ഉണ്ടാകും",
-      interpretation: "അല്ലാഹുവിന്റെ അനുഗ്രഹം നിങ്ങളിൽ ഉണ്ടാകും. നന്മ ചെയ്യുക. നന്ദി അർപ്പിക്കുക.",
+      interpretation: "അല്ലാഹുവിന്റെ അനുഗ്രഹം നിങ്ങളിൽ ഉണ്ടാകും. നന്മ ചെയ്യുക. നന്ദി അർപ്പിക്കുക."
     },
     en: {
       meaning: "Allah's grace shall encompass you",
-      interpretation: "Allah's grace will be upon you. Do good. Give thanks.",
-    },
+      interpretation: "Allah's grace will be upon you. Do good. Give thanks."
+    }
   },
   "م": {
     persian: "مراد تو حاصل آید، شادی کن",
     ml: {
       meaning: "നിങ്ങളുടെ ആഗ്രഹം സഫലമാകും, സന്തോഷിക്കുക",
-      interpretation: "ആഗ്രഹം സഫലമാകും. സന്തോഷിക്കുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക.",
+      interpretation: "ആഗ്രഹം സഫലമാകും. സന്തോഷിക്കുക. അല്ലാഹുവിന് നന്ദി അർപ്പിക്കുക."
     },
     en: {
       meaning: "Your desire shall be fulfilled, rejoice",
-      interpretation: "Desire will be fulfilled. Rejoice. Give thanks to Allah.",
-    },
+      interpretation: "Desire will be fulfilled. Rejoice. Give thanks to Allah."
+    }
   },
   "ن": {
     persian: "نور هدایت به دل تو آید",
     ml: {
       meaning: "നിങ്ങളുടെ ഹൃദയത്തിൽ മാർഗ്ഗദർശനത്തിന്റെ വെളിച്ചം വരും",
-      interpretation: "മാർഗ്ഗദർശനം ലഭിക്കും. ഹൃദയത്തിൽ വെളിച്ചം വരും. ശരിയായ തീരുമാനം എടുക്കുക.",
+      interpretation: "മാർഗ്ഗദർശനം ലഭിക്കും. ഹൃദയത്തിൽ വെളിച്ചം വരും. ശരിയായ തീരുമാനം എടുക്കുക."
     },
     en: {
       meaning: "Light of guidance shall come to your heart",
-      interpretation: "Guidance will come. Light will enter heart. Make right decision.",
-    },
+      interpretation: "Guidance will come. Light will enter heart. Make right decision."
+    }
   },
   "و": {
     persian: "وعده خدا راست آید، ایمان دار",
     ml: {
       meaning: "ദൈവത്തിന്റെ വാഗ്ദാനം സത്യമാകും, വിശ്വസിക്കുക",
-      interpretation: "അല്ലാഹുവിന്റെ വാഗ്ദാനം സത്യമാണ്. വിശ്വാസം കൈവിടരുത്. പ്രതീക്ഷിക്കുക.",
+      interpretation: "അല്ലാഹുവിന്റെ വാഗ്ദാനം സത്യമാണ്. വിശ്വാസം കൈവിടരുത്. പ്രതീക്ഷിക്കുക."
     },
     en: {
       meaning: "Allah's promise comes true, have faith",
-      interpretation: "Allah's promise is true. Do not lose faith. Have hope.",
-    },
+      interpretation: "Allah's promise is true. Do not lose faith. Have hope."
+    }
   },
   "ه": {
     persian: "هدایت یابی، راه مستقیم برو",
     ml: {
       meaning: "നിങ്ങൾക്ക് മാർഗ്ഗദർശനം ലഭിക്കും, നേരായ വഴിയിൽ പോകുക",
-      interpretation: "മാർഗ്ഗദർശനം ലഭിക്കും. നേരായ വഴിയിൽ സഞ്ചരിക്കുക. സത്യം പിന്തുടരുക.",
+      interpretation: "മാർഗ്ഗദർശനം ലഭിക്കും. നേരായ വഴിയിൽ സഞ്ചരിക്കുക. സത്യം പിന്തുടരുക."
     },
     en: {
       meaning: "You shall find guidance, walk the straight path",
-      interpretation: "Guidance will come. Walk the straight path. Follow truth.",
-    },
+      interpretation: "Guidance will come. Walk the straight path. Follow truth."
+    }
   },
   "ی": {
     persian: "یقین دان که پیروزی با توست",
     ml: {
       meaning: "ഉറപ്പായി അറിയുക, വിജയം നിങ്ങളോടൊപ്പമാണ്",
-      interpretation: "ഉറപ്പായി അറിയുക, വിജയം നിങ്ങളുടെ പക്ഷത്താണ്. ധൈര്യം കൈവിടരുത്.",
+      interpretation: "ഉറപ്പായി അറിയുക, വിജയം നിങ്ങളുടെ പക്ഷത്താണ്. ധൈര്യം കൈവിടരുത്."
     },
     en: {
       meaning: "Know for certain, victory is with you",
-      interpretation: "Know for certain, victory is on your side. Do not lose courage.",
-    },
+      interpretation: "Know for certain, victory is on your side. Do not lose courage."
+    }
   },
 };
