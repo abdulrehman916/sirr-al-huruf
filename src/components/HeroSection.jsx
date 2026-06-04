@@ -461,14 +461,14 @@ function AllahCalligraphyMobile() {
 
 function NavCards({ startNav }) {
   return (
-    <div className="relative z-10 w-full mt-7 grid grid-cols-2 gap-3">
+    <div className="relative z-20 w-full mt-8 grid grid-cols-2 gap-3">
       {NAV_CARDS.map((card, i) => {
         const [r, g, b] = card.accent;
         return (
           <motion.div key={card.path}
             initial={{ opacity:0, y:26, scale:0.93 }}
             animate={{ opacity:1, y:0, scale:1 }}
-            transition={{ delay:0.3 + i * 0.06, duration:0.45, ease:"easeOut" }}
+            transition={{ delay:0.05 + i * 0.05, duration:0.4, ease:"easeOut" }}
             whileHover={{ scale:1.04, y:-6, transition:{ duration:0.22, ease:"easeOut" } }}
             whileTap={{ scale:0.96, transition:{ duration:0.1 } }}>
             <Link to={card.path} onClick={startNav}
@@ -504,7 +504,7 @@ export default function HeroSection({ mouse }) {
   const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
 
   return (
-    <div className="font-inter relative flex flex-col items-center w-full pb-16 pt-4">
+    <div className="font-inter relative flex flex-col items-center w-full pb-20 pt-4">
 
       {/* Light rays — desktop only */}
       {!isMobile && <LightRays paused={isNavigating} />}
