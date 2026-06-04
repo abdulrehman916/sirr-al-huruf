@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // PLANTS & INGREDIENTS DICTIONARY — MAIN LIST PAGE
-// Features: search, category filter, alpha index, detail nav
+// Dictionary module only. Zero imports from sealed engines.
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useMemo } from "react";
@@ -43,10 +43,10 @@ function CategoryFilter({ active, onSelect }) {
           whileTap={{ scale: 0.95 }}
           className="flex-shrink-0 px-3 py-1.5 rounded-xl border font-inter text-[10px] font-semibold uppercase tracking-widest"
           style={{
-            background: active === cat.id ? P.bgHi : "transparent",
-            borderColor: active === cat.id ? P.borderHi : P.faint,
-            color: active === cat.id ? P.text : "rgba(134,239,172,0.38)",
-            boxShadow: active === cat.id ? `0 0 14px ${P.glow}` : "none",
+            background:   active === cat.id ? P.bgHi : "transparent",
+            borderColor:  active === cat.id ? P.borderHi : P.faint,
+            color:        active === cat.id ? P.text : "rgba(134,239,172,0.38)",
+            boxShadow:    active === cat.id ? `0 0 14px ${P.glow}` : "none",
             WebkitTapHighlightColor: "transparent",
           }}
         >
@@ -64,9 +64,9 @@ function AlphaIndex({ letters, activeLetter, onSelect }) {
         onClick={() => onSelect(null)}
         className="font-inter text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-lg border"
         style={{
-          background: activeLetter === null ? P.bgHi : "transparent",
+          background:  activeLetter === null ? P.bgHi : "transparent",
           borderColor: activeLetter === null ? P.borderHi : P.faint,
-          color: activeLetter === null ? P.text : "rgba(134,239,172,0.35)",
+          color:       activeLetter === null ? P.text : "rgba(134,239,172,0.35)",
           WebkitTapHighlightColor: "transparent",
         }}
       >
@@ -78,9 +78,9 @@ function AlphaIndex({ letters, activeLetter, onSelect }) {
           onClick={() => onSelect(l)}
           className="font-inter text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-lg border"
           style={{
-            background: activeLetter === l ? P.bgHi : "transparent",
+            background:  activeLetter === l ? P.bgHi : "transparent",
             borderColor: activeLetter === l ? P.borderHi : P.faint,
-            color: activeLetter === l ? P.text : "rgba(134,239,172,0.35)",
+            color:       activeLetter === l ? P.text : "rgba(134,239,172,0.35)",
             WebkitTapHighlightColor: "transparent",
             minWidth: 28,
           }}
@@ -121,7 +121,7 @@ function PlantRow({ plant, index, onOpen }) {
         </p>
         <p className="font-inter text-[10px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
           {plant.MalayalamName}
-          {plant.ScientificName ? ` · ` : ""}
+          {plant.ScientificName ? " · " : ""}
           {plant.ScientificName && <em>{plant.ScientificName}</em>}
         </p>
       </div>
@@ -144,7 +144,9 @@ function EmptyState() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 space-y-3">
       <Leaf className="w-10 h-10 mx-auto" style={{ color: P.dim }} />
       <p className="font-amiri text-lg" style={{ color: P.dim }}>No results found</p>
-      <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>Try a different search term or filter</p>
+      <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>
+        Try a different search term or filter
+      </p>
     </motion.div>
   );
 }
@@ -194,6 +196,7 @@ export default function PlantsPage() {
   return (
     <PageLayout>
       <div className="space-y-4">
+
         <PageTitle
           arabic="قاموس النباتات والمواد"
           latin="Dictionary of Plants & Ingredients"
@@ -226,7 +229,7 @@ export default function PlantsPage() {
         {/* Category filter */}
         <CategoryFilter active={category} onSelect={(c) => { setCategory(c); setLetter(null); }} />
 
-        {/* Alpha index */}
+        {/* Alpha index (hidden while searching) */}
         {!query && (
           <div>
             <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(134,239,172,0.28)" }}>
@@ -236,7 +239,7 @@ export default function PlantsPage() {
           </div>
         )}
 
-        {/* Sort + count */}
+        {/* Sort + count row */}
         <div className="flex items-center justify-between">
           <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
             {filtered.length} {filtered.length === 1 ? "entry" : "entries"} of {PLANTS_DATA.length}
@@ -251,7 +254,7 @@ export default function PlantsPage() {
           </button>
         </div>
 
-        {/* List */}
+        {/* Plant list */}
         <div className="space-y-2">
           <AnimatePresence mode="popLayout">
             {filtered.length === 0 ? (
@@ -279,6 +282,7 @@ export default function PlantsPage() {
           style={{ color: "rgba(134,239,172,0.12)" }}>
           ✦ قاموس النباتات والمواد — Plants & Ingredients Dictionary ✦
         </p>
+
       </div>
     </PageLayout>
   );

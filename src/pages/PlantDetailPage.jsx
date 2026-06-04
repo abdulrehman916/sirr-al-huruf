@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // PLANT DETAIL PAGE — Dictionary module only
+// Zero imports from sealed engines.
 // ═══════════════════════════════════════════════════════════════
 
 import { useMemo } from "react";
@@ -67,7 +68,7 @@ export default function PlantDetailPage() {
     <PageLayout>
       <div className="space-y-5">
 
-        {/* Back button */}
+        {/* Back */}
         <motion.button
           initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate("/plants")}
@@ -85,32 +86,21 @@ export default function PlantDetailPage() {
           className="rounded-2xl border p-5 space-y-3"
           style={{ background: P.bgHi, borderColor: P.borderHi, boxShadow: `0 0 32px ${P.glow}` }}
         >
-          {/* Arabic name */}
           <div dir="rtl">
-            <p className="font-amiri font-bold leading-tight" style={{ fontSize: "clamp(1.8rem,8vw,2.6rem)", color: P.text,
-              textShadow: "0 0 24px rgba(34,197,94,0.35)" }}>
+            <p className="font-amiri font-bold leading-tight"
+              style={{ fontSize: "clamp(1.8rem,8vw,2.6rem)", color: P.text, textShadow: "0 0 24px rgba(34,197,94,0.35)" }}>
               {plant.ArabicName}
             </p>
           </div>
-
-          {/* English name */}
           <p className="font-inter text-xl font-bold" style={{ color: "rgba(255,255,255,0.90)" }}>
             {plant.EnglishName}
           </p>
-
-          {/* Malayalam */}
           {plant.MalayalamName && (
-            <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-              {plant.MalayalamName}
-            </p>
+            <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>{plant.MalayalamName}</p>
           )}
-
-          {/* Category + Scientific row */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span
-              className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full border"
-              style={{ color: P.dim, borderColor: P.faint, background: "rgba(134,239,172,0.08)" }}
-            >
+            <span className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full border"
+              style={{ color: P.dim, borderColor: P.faint, background: "rgba(134,239,172,0.08)" }}>
               {catLabel}
             </span>
             {plant.ScientificName && (
@@ -119,8 +109,6 @@ export default function PlantDetailPage() {
               </span>
             )}
           </div>
-
-          {/* Page reference */}
           {plant.PageReference && (
             <div className="flex items-center gap-1.5 pt-1">
               <BookOpen className="w-3 h-3" style={{ color: P.dim }} />
@@ -131,7 +119,7 @@ export default function PlantDetailPage() {
           )}
         </motion.div>
 
-        {/* Detail sections */}
+        {/* Description */}
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.1 }}
@@ -143,19 +131,21 @@ export default function PlantDetailPage() {
           <Field label="വിവരണം" value={plant.DescriptionMalayalam} />
         </motion.div>
 
+        {/* Uses */}
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.18 }}
           className="rounded-2xl border p-5 space-y-1"
           style={{ background: P.bg, borderColor: P.border }}
         >
-          <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: P.dim }}>Medicinal Uses</p>
+          <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: P.dim }}>
+            Medicinal Uses
+          </p>
           <Field label="English" value={plant.UsesEnglish} />
           {plant.UsesEnglish && plant.UsesMalayalam && <Divider />}
           <Field label="Malayalam" value={plant.UsesMalayalam} />
         </motion.div>
 
-        {/* Footer */}
         <p className="font-inter text-[8px] uppercase tracking-widest text-center pt-2"
           style={{ color: "rgba(134,239,172,0.12)" }}>
           ✦ قاموس النباتات والمواد — Plants & Ingredients Dictionary ✦
