@@ -21,6 +21,7 @@ const MagicSqayerPage   = lazy(() => import('./pages/MagicSqayerPage'));
 const VefkinYapilisiPage= lazy(() => import('./pages/VefkinYapilisiPage'));
 const BastHuroofPage    = lazy(() => import('./pages/BastHuroofPage'));
 const FaalHasrathPage             = lazy(() => import('./pages/FaalHasrathPage'));
+const PlantsPage                  = lazy(() => import('./pages/PlantsPage'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
             <Route path="/vefkin-yapilisi" element={<VefkinYapilisiPage />} />
             <Route path="/basthul-huroof-2" element={<BastHuroofPage />} />
             <Route path="/faal-hasrath" element={<FaalHasrathPage />} />
+            <Route path="/plants" element={<PlantsPage />} />
 
             <Route path="*" element={<PageNotFound />} />
           </Routes>

@@ -14,6 +14,7 @@ const TABS = [
   { id: "vefkin-yapilisi", label: "VEFKİN", arabic: "الوفق",    path: "/vefkin-yapilisi" },
   { id: "basthul-huroof-2", label: "BAST",   arabic: "البسط",   path: "/basthul-huroof-2" },
   { id: "faal-hasrath",     label: "FAAL",   arabic: "فأل",      path: "/faal-hasrath" },
+  { id: "plants",           label: "PLANTS", arabic: "نباتات",    path: "/plants" },
 ];
 
 // Page transition variants
