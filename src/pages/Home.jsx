@@ -11,7 +11,7 @@ export default function Home() {
 
   return (
     <PageLayout>
-      <div className="relative -mx-4 -mt-6">
+      <div className="-mx-4 -mt-6">
         <MysticalBackground mouse={mouse} />
         <HeroSection mouse={mouse} />
       </div>

@@ -265,7 +265,6 @@ export default function PageLayout({ children }) {
             className="relative z-10 w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
               paddingBottom: "calc(72px + env(safe-area-inset-bottom))",
-              minHeight: "100%",
               boxSizing: "border-box",
             }}
           >
