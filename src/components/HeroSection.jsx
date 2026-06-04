@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import SacredWheel from "./SacredWheel";
@@ -460,8 +460,36 @@ function AllahCalligraphyMobile() {
 }
 
 function NavCards({ startNav }) {
+  const [debugInfo, setDebugInfo] = useState(null);
+  
+  useEffect(() => {
+    setTimeout(() => {
+      const container = document.getElementById("nav-cards-container");
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        const style = window.getComputedStyle(container);
+        const firstChild = container.querySelector("div");
+        const firstChildRect = firstChild ? firstChild.getBoundingClientRect() : null;
+        setDebugInfo({
+          containerVisible: rect.top < window.innerHeight && rect.bottom > 0,
+          containerTop: Math.round(rect.top),
+          containerHeight: Math.round(rect.height),
+          childCount: container.children.length,
+          firstChildHeight: firstChildRect ? Math.round(firstChildRect.height) : "N/A",
+          display: style.display,
+          overflow: style.overflow,
+        });
+      }
+    }, 1000);
+  }, []);
+  
   return (
-    <div className="relative z-20 w-full mt-8 grid grid-cols-2 gap-3">
+    <div id="nav-cards-container" className="relative z-20 w-full mt-8 grid grid-cols-2 gap-3">
+      {debugInfo && (
+        <div style={{ gridColumn: "1 / -1", padding: "12px", background: "rgba(255,0,0,0.1)", border: "1px solid red", fontSize: "11px", color: "white", marginBottom: "8px", fontFamily: "monospace" }}>
+          Container: visible={String(debugInfo.containerVisible)}, top={debugInfo.containerTop}px, height={debugInfo.containerHeight}px | Children: {debugInfo.childCount} | FirstChild: {debugInfo.firstChildHeight}px | Display: {debugInfo.display}
+        </div>
+      )}
       {NAV_CARDS.map((card, i) => {
         const [r, g, b] = card.accent;
         return (
@@ -502,6 +530,57 @@ export default function HeroSection({ mouse }) {
   const isMobile = useIsMobile();
   const safeMouse = mouse ?? ZERO_MV;
   const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
+
+  // DOM inspection debug
+  useEffect(() => {
+    setTimeout(() => {
+      const navCards = document.getElementById("nav-cards-container");
+      const cards = navCards ? navCards.querySelectorAll("a") : [];
+      const scrollParent = document.querySelector('[class*="flex-1 overflow-y-auto"]');
+      
+      if (navCards) {
+        const rect = navCards.getBoundingClientRect();
+        const style = window.getComputedStyle(navCards);
+        console.log("NavCards Container:", {
+          display: style.display,
+          width: style.width,
+          height: style.height,
+          top: rect.top, left: rect.left, bottom: rect.bottom,
+          isVisible: rect.top < window.innerHeight && rect.bottom > 0,
+          computed_z_index: style.zIndex,
+          opacity: style.opacity,
+        });
+      }
+      
+      if (cards.length > 0) {
+        const firstCard = cards[0];
+        const cardRect = firstCard.getBoundingClientRect();
+        const cardStyle = window.getComputedStyle(firstCard);
+        console.log("First Card:", {
+          display: cardStyle.display,
+          width: cardStyle.width,
+          height: cardStyle.height,
+          top: cardRect.top, left: cardRect.left, bottom: cardRect.bottom,
+          isVisible: cardRect.top < window.innerHeight && cardRect.bottom > 0,
+          opacity: cardStyle.opacity,
+          pointerEvents: cardStyle.pointerEvents,
+        });
+        console.log(`Total cards rendered: ${cards.length}`);
+      } else {
+        console.log("No cards found in DOM");
+      }
+      
+      if (scrollParent) {
+        const scrollStyle = window.getComputedStyle(scrollParent);
+        console.log("Scroll parent:", {
+          display: scrollStyle.display,
+          overflow: `${scrollStyle.overflowY} / ${scrollStyle.overflowX}`,
+          height: scrollStyle.height,
+          scrollHeight: scrollParent.scrollHeight,
+        });
+      }
+    }, 500);
+  }, []);
 
   return (
     <div className="font-inter relative flex flex-col items-center w-full pb-20 pt-4">
