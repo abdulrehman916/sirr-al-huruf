@@ -404,7 +404,6 @@ function FaalAliSection({ lang }) {
 // ══════════════════════════════════════════════════════════════
 
 function LuqmanCell({ cell, lang, index, onTap }) {
-  const t = cell[lang];
   return (
     <motion.button
       onClick={() => onTap(cell)}
@@ -413,33 +412,37 @@ function LuqmanCell({ cell, lang, index, onTap }) {
       transition={{ delay: index * 0.03, duration: 0.26, ease: "easeOut" }}
       whileHover={{ scale: 1.07 }}
       whileTap={{ scale: 0.92 }}
-      className="relative flex flex-col items-center justify-between rounded-2xl border py-3 px-1"
+      className="relative flex flex-col items-center justify-center rounded-lg border"
       style={{
         background: P.bg,
         borderColor: P.faint,
-        aspectRatio: "1 / 1",
         WebkitTapHighlightColor: "transparent",
         minHeight: 0,
+        minWidth: 0,
+        overflow: "hidden",
       }}
     >
-      <span className="absolute top-1 left-1.5 font-inter text-[8px] tabular-nums"
-        style={{ color: "rgba(216,180,254,0.22)" }}>
+      <span
+        className="absolute top-0.5 left-1 font-inter tabular-nums leading-none"
+        style={{ fontSize: "min(1.8vw, 1.4dvh)", color: "rgba(216,180,254,0.22)" }}
+      >
         {cell.lq_id - 100}
       </span>
 
-      {/* Arabic letter — the main symbol */}
       <motion.div
-        className="flex-1 flex items-center justify-center w-full"
+        className="flex items-center justify-center w-full h-full"
         animate={{ opacity: [0.75, 1, 0.75] }}
         transition={{ duration: 3.4 + index * 0.18, repeat: Infinity, ease: "easeInOut" }}
       >
-        <span className="font-amiri font-bold select-none"
+        <span
+          className="font-amiri font-bold select-none"
           style={{
-            fontSize: "clamp(1.5rem, 7vw, 2.2rem)",
+            fontSize: "clamp(0.75rem, min(4.8vw, 3.8dvh), 1.6rem)",
             color: P.text,
-            textShadow: `0 0 14px ${P.glow}`,
+            textShadow: `0 0 10px ${P.glow}`,
             lineHeight: 1,
-          }}>
+          }}
+        >
           {cell.symbol}
         </span>
       </motion.div>
@@ -667,8 +670,17 @@ function FaalLuqmanSection({ lang }) {
         </motion.div>
       </motion.div>
 
-      {/* 4×7 grid for 28 cells */}
-      <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
+      {/* 7×4 grid — all 28 cells visible in one screen */}
+      <div
+        dir="rtl"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gridTemplateRows: "repeat(4, 1fr)",
+          gap: "clamp(3px, 1vw, 8px)",
+          height: "clamp(220px, 42dvh, 380px)",
+        }}
+      >
         {LUQMAN_CELLS.map((cell, i) => (
           <LuqmanCell key={cell.lq_id} cell={cell} lang={lang} index={i} onTap={setSelected} />
         ))}
