@@ -1,3 +1,5 @@
+import { PLANTS_DATA_2 } from './plantsData2.js';
+
 // ═══════════════════════════════════════════════════════════════
 // PLANTS & INGREDIENTS DICTIONARY — STANDALONE DATA
 // Schema: ArabicName, EnglishName, MalayalamName, ScientificName,
@@ -644,11 +646,12 @@ export const PLANTS_DATA = [
     EnglishName: 'Henna',
     MalayalamName: 'മൈലാഞ്ചി',
     ScientificName: 'Lawsonia inermis',
-    DescriptionEnglish: 'Appears on pages 7v-8 and 14v-20. Has been traditionally used in medicinal and cosmetic applications.',
-    DescriptionMalayalam: 'ഔഷധ, സൗന്ദര്യ ആവശ്യങ്ങൾക്ക് പരമ്പരാഗതമായി ഉപയോഗിക്കുന്നു.',
-    UsesEnglish: 'Traditional medicinal and cosmetic applications.',
-    UsesMalayalam: 'ഔഷധ, സൗന്ദര്യ ഉപയോഗം.',
+    DescriptionEnglish: 'Appears on pages 7v-8 and 14v-20. Traditionally used medicinally and cosmetically. Used for treatment of burns, ulcers of the mouth and stomach, and hot swellings. Mixed with butter or oil as a poultice, and as a treatment for scabies, mites and mange.',
+    DescriptionMalayalam: 'ഔഷധ, സൗന്ദര്യ ആവശ്യങ്ങൾക്ക് പരമ്പരാഗതമായി ഉപയോഗിക്കുന്നു. പൊള്ളൽ, വായ്, ഉദര വ്രണം, ചൂട് നീർക്കെട്ട്, ചൊറി, ചേർ, കുഷ്ഠ ചർമ്മ രോഗം ചികിത്സ.',
+    UsesEnglish: 'Burns; mouth and stomach ulcers; hot swellings; poultice (with butter or oil); scabies; mites; mange.',
+    UsesMalayalam: 'പൊള്ളൽ; വായ്, ഉദര വ്രണം; ചൂട് നീർക്കെട്ട്; ചൊറി; ചേർ; ചർമ്മ രോഗം.',
     PageReference: '7v-8, 14v-20',
     SourcePage: 200,
   },
+  ...PLANTS_DATA_2,
 ];
