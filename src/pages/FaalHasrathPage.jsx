@@ -403,50 +403,94 @@ function FaalAliSection({ lang }) {
 // FAALUL LUQMAN SECTION (new, independent)
 // ══════════════════════════════════════════════════════════════
 
-function LuqmanCell({ cell, lang, index, onTap }) {
+const MYSTERY_CHARS = ["☽", "✦", "✧", "◈", "⊙", "⋆", "☾", "✩", "⟡", "❋", "✵", "⊛", "⌖", "✴"];
+
+function LuqmanCell({ cell, index, onTap }) {
+  const [flipped, setFlipped] = useState(false);
+  const mysteryChar = MYSTERY_CHARS[index % MYSTERY_CHARS.length];
+
+  const handleClick = () => {
+    if (flipped) return;
+    setFlipped(true);
+    setTimeout(() => onTap(cell), 1400);
+  };
+
   return (
-    <motion.button
-      onClick={() => onTap(cell)}
-      initial={{ opacity: 0, scale: 0.72 }}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.03, duration: 0.26, ease: "easeOut" }}
-      whileHover={{ scale: 1.07 }}
-      whileTap={{ scale: 0.92 }}
-      className="relative flex flex-col items-center justify-center rounded-lg border"
+      onClick={handleClick}
       style={{
-        background: P.bg,
-        borderColor: P.faint,
-        WebkitTapHighlightColor: "transparent",
+        perspective: "500px",
         minHeight: 0,
         minWidth: 0,
-        overflow: "hidden",
+        cursor: flipped ? "default" : "pointer",
+        WebkitTapHighlightColor: "transparent",
       }}
     >
-      <span
-        className="absolute top-0.5 left-1 font-inter tabular-nums leading-none"
-        style={{ fontSize: "min(1.8vw, 1.4dvh)", color: "rgba(216,180,254,0.22)" }}
-      >
-        {cell.lq_id - 100}
-      </span>
-
       <motion.div
-        className="flex items-center justify-center w-full h-full"
-        animate={{ opacity: [0.75, 1, 0.75] }}
-        transition={{ duration: 3.4 + index * 0.18, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ rotateY: flipped ? 180 : 0 }}
+        transition={{ duration: 0.65, ease: [0.4, 0, 0.2, 1] }}
+        style={{
+          transformStyle: "preserve-3d",
+          width: "100%",
+          height: "100%",
+          position: "relative",
+        }}
       >
-        <span
-          className="font-amiri font-bold select-none"
+        {/* Front face — mystery symbol */}
+        <div
+          className="absolute inset-0 rounded-lg border flex items-center justify-center"
           style={{
-            fontSize: "clamp(0.75rem, min(4.8vw, 3.8dvh), 1.6rem)",
-            color: P.text,
-            textShadow: `0 0 10px ${P.glow}`,
-            lineHeight: 1,
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            background: P.bg,
+            borderColor: P.faint,
           }}
         >
-          {cell.symbol}
-        </span>
+          <span className="absolute top-0.5 left-1 font-inter tabular-nums leading-none"
+            style={{ fontSize: "min(1.8vw, 1.4dvh)", color: "rgba(216,180,254,0.22)" }}>
+            {cell.lq_id - 100}
+          </span>
+          <span className="select-none" style={{
+            fontSize: "clamp(0.6rem, min(3.8vw, 2.8dvh), 1.05rem)",
+            color: P.dim,
+            opacity: 0.50,
+            userSelect: "none",
+          }}>
+            {mysteryChar}
+          </span>
+        </div>
+
+        {/* Back face — Arabic letter revealed */}
+        <div
+          className="absolute inset-0 rounded-lg border flex items-center justify-center"
+          style={{
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            background: P.bgHi,
+            borderColor: P.borderHi,
+            boxShadow: `0 0 18px ${P.glow}`,
+          }}
+        >
+          <span className="absolute top-0.5 left-1 font-inter tabular-nums leading-none"
+            style={{ fontSize: "min(1.8vw, 1.4dvh)", color: "rgba(216,180,254,0.45)" }}>
+            {cell.lq_id - 100}
+          </span>
+          <span className="font-amiri font-bold select-none"
+            style={{
+              fontSize: "clamp(0.75rem, min(4.8vw, 3.8dvh), 1.6rem)",
+              color: P.text,
+              textShadow: `0 0 14px ${P.glowHi}`,
+              lineHeight: 1,
+            }}>
+            {cell.symbol}
+          </span>
+        </div>
       </motion.div>
-    </motion.button>
+    </motion.div>
   );
 }
 
@@ -682,7 +726,7 @@ function FaalLuqmanSection({ lang }) {
         }}
       >
         {LUQMAN_CELLS.map((cell, i) => (
-          <LuqmanCell key={cell.lq_id} cell={cell} lang={lang} index={i} onTap={setSelected} />
+          <LuqmanCell key={cell.lq_id} cell={cell} index={i} onTap={setSelected} />
         ))}
       </div>
 
