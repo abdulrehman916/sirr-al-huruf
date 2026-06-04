@@ -104,25 +104,25 @@ function PlantRow({ plant, index, onOpen }) {
       style={{ background: P.bg, borderColor: P.border, WebkitTapHighlightColor: "transparent" }}
       whileTap={{ scale: 0.985 }}
     >
-      <div className="flex-1 min-w-0 space-y-0.5">
+      <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-amiri font-bold text-base leading-none" style={{ color: P.text }}>
+          <span className="font-amiri font-bold text-lg leading-tight" style={{ color: P.text, textShadow: "0 0 12px rgba(134,239,172,0.20)", WebkitTextStroke: "0.3px #86EFAC" }}>
             {plant.ArabicName}
           </span>
           <span
             className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border"
-            style={{ color: P.dim, borderColor: P.faint, background: "rgba(134,239,172,0.06)" }}
+            style={{ color: P.text, borderColor: P.border, background: "rgba(134,239,172,0.10)" }}
           >
             {catLabel}
           </span>
         </div>
-        <p className="font-inter text-sm font-semibold truncate" style={{ color: "rgba(255,255,255,0.80)" }}>
+        <p className="font-inter text-base font-bold truncate" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.3px" }}>
           {plant.EnglishName}
         </p>
-        <p className="font-inter text-[10px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="font-inter text-xs font-semibold truncate" style={{ color: "rgba(255,255,255,0.65)", letterSpacing: "-0.2px" }}>
           {plant.MalayalamName}
           {plant.ScientificName ? " · " : ""}
-          {plant.ScientificName && <em>{plant.ScientificName}</em>}
+          {plant.ScientificName && <em className="not-italic text-[10px]">{plant.ScientificName}</em>}
         </p>
       </div>
       <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: P.dim }} />

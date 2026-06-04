@@ -30,12 +30,12 @@ function Divider() {
 function Field({ label, value, arabic = false, rtl = false }) {
   if (!value) return null;
   return (
-    <div className="space-y-1">
-      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>{label}</p>
+    <div className="space-y-1.5">
+      <p className="font-inter text-[8.5px] uppercase tracking-widest font-semibold" style={{ color: P.text, opacity: 0.75 }}>{label}</p>
       <p
         dir={rtl ? "rtl" : "ltr"}
-        className={arabic ? "font-amiri text-xl leading-relaxed" : "font-inter text-sm leading-relaxed"}
-        style={{ color: "rgba(255,255,255,0.85)" }}
+        className={arabic ? "font-amiri text-lg leading-relaxed font-semibold" : "font-inter text-base leading-relaxed font-medium"}
+        style={{ color: "rgba(255,255,255,0.92)", WebkitFontSmoothing: "antialiased" }}
       >
         {value}
       </p>
@@ -88,15 +88,15 @@ export default function PlantDetailPage() {
         >
           <div dir="rtl">
             <p className="font-amiri font-bold leading-tight"
-              style={{ fontSize: "clamp(1.8rem,8vw,2.6rem)", color: P.text, textShadow: "0 0 24px rgba(34,197,94,0.35)" }}>
+              style={{ fontSize: "clamp(2.0rem,9vw,3.0rem)", color: P.text, textShadow: "0 0 28px rgba(34,197,94,0.40)", WebkitTextStroke: "0.4px #86EFAC" }}>
               {plant.ArabicName}
             </p>
           </div>
-          <p className="font-inter text-xl font-bold" style={{ color: "rgba(255,255,255,0.90)" }}>
+          <p className="font-inter text-2xl font-bold" style={{ color: "rgba(255,255,255,0.98)", letterSpacing: "-0.4px" }}>
             {plant.EnglishName}
           </p>
           {plant.MalayalamName && (
-            <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>{plant.MalayalamName}</p>
+            <p className="font-inter text-base font-semibold" style={{ color: "rgba(255,255,255,0.75)", letterSpacing: "-0.2px" }}>{plant.MalayalamName}</p>
           )}
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <span className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full border"
