@@ -148,41 +148,73 @@ function LangToggle({ lang, setLang }) {
   );
 }
 
+// ── Shared shuffle utility ─────────────────────────────────────
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 // ══════════════════════════════════════════════════════════════
-// FAAL ALI SECTION (unchanged)
+// FAAL ALI SECTION
 // ══════════════════════════════════════════════════════════════
 
 function FaalCell({ cell, lang, index, onTap }) {
-  const t = cell[lang];
+  const [revealed, setRevealed] = useState(false);
+
+  const handleClick = () => {
+    if (revealed) return;
+    setRevealed(true);
+    setTimeout(() => onTap(cell), 900);
+  };
+
+  const dealOffset = useMemo(() => ({
+    x: (Math.random() - 0.5) * 24,
+    y: (Math.random() - 0.5) * 24,
+    rotate: (Math.random() - 0.5) * 18,
+  }), []);
+
   return (
-    <motion.button
-      onClick={() => onTap(cell)}
-      initial={{ opacity: 0, scale: 0.72 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.04, duration: 0.28, ease: "easeOut" }}
-      whileHover={{ scale: 1.06 }}
-      whileTap={{ scale: 0.93 }}
-      className="relative flex flex-col items-center justify-between rounded-2xl border pt-2 pb-2 px-1"
+    <motion.div
+      initial={{ opacity: 0, scale: 0.72, x: dealOffset.x, y: dealOffset.y, rotate: dealOffset.rotate }}
+      animate={{ opacity: 1, scale: 1, x: 0, y: 0, rotate: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.38, ease: [0.34, 1.56, 0.64, 1] }}
+      onClick={handleClick}
+      className="relative rounded-2xl border flex items-center justify-center"
       style={{
-        background: P.bg,
-        borderColor: P.faint,
         aspectRatio: "1 / 1",
-        WebkitTapHighlightColor: "transparent",
         minHeight: 0,
+        cursor: revealed ? "default" : "pointer",
+        WebkitTapHighlightColor: "transparent",
+        background: revealed ? P.bgHi : P.bg,
+        borderColor: revealed ? P.borderHi : P.faint,
+        transition: "background 0.3s, border-color 0.3s",
+        boxShadow: revealed ? `0 0 18px ${P.glow}` : "none",
       }}
     >
-      <span className="absolute top-1.5 left-2 font-inter text-[9px] font-bold tabular-nums"
-        style={{ color: "rgba(216,180,254,0.30)" }}>
-        {cell.id}
-      </span>
-      <motion.div
-        className="flex-1 flex items-center justify-center w-full"
-        animate={{ opacity: [0.72, 1, 0.72] }}
-        transition={{ duration: 3.2 + index * 0.22, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <HeartSymbol mark={cell.innerMark} size={52} />
-      </motion.div>
-    </motion.button>
+      <AnimatePresence>
+        {revealed && (
+          <motion.span
+            key="letter"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
+            className="font-amiri font-bold select-none text-center px-1"
+            style={{
+              fontSize: "clamp(0.55rem, min(3.5vw, 3dvh), 1rem)",
+              color: P.text,
+              textShadow: `0 0 14px ${P.glowHi}`,
+              lineHeight: 1.2,
+            }}
+          >
+            {cell[lang].shortTitle}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -263,6 +295,7 @@ function FaalAliModal({ cell, lang, onClose }) {
 function FaalAliSection({ lang }) {
   const [selected, setSelected] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  const shuffledCells = useMemo(() => shuffleArray(FAAL_CELLS), []);
   return (
     <>
       {/* Collapsible Instruction Panel */}
@@ -384,7 +417,7 @@ function FaalAliSection({ lang }) {
       </motion.div>
 
       <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
-        {FAAL_CELLS.map((cell, i) => (
+        {shuffledCells.map((cell, i) => (
           <FaalCell key={cell.id} cell={cell} lang={lang} index={i} onTap={setSelected} />
         ))}
       </div>
@@ -557,15 +590,6 @@ function LuqmanModal({ cell, lang, onClose }) {
       </motion.div>
     </AnimatePresence>
   );
-}
-
-function shuffleArray(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
 }
 
 function FaalLuqmanSection({ lang }) {
