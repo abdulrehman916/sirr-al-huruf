@@ -461,7 +461,7 @@ function NavCards({ startNav }) {
           <motion.div key={card.path}
             initial={{ opacity:0, y:26, scale:0.93 }}
             animate={{ opacity:1, y:0, scale:1 }}
-            transition={{ delay:1.85 + i * 0.08, duration:0.55, ease:"easeOut" }}
+            transition={{ delay:0.3 + i * 0.06, duration:0.45, ease:"easeOut" }}
             whileHover={{ scale:1.04, y:-6, transition:{ duration:0.22, ease:"easeOut" } }}
             whileTap={{ scale:0.96, transition:{ duration:0.1 } }}>
             <Link to={card.path} onClick={startNav}
