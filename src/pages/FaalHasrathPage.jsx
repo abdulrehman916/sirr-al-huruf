@@ -195,12 +195,29 @@ function FaalCell({ cell, lang, index, onTap }) {
         boxShadow: revealed ? `0 0 18px ${P.glow}` : "none",
       }}
     >
-      <AnimatePresence>
-        {revealed && (
+      <AnimatePresence mode="wait">
+        {!revealed ? (
+          <motion.span
+            key="placeholder"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.2 }}
+            className="select-none"
+            style={{
+              fontSize: "clamp(0.7rem, min(4vw, 3.5dvh), 1.2rem)",
+              color: P.dim,
+              lineHeight: 1,
+            }}
+          >
+            ❖
+          </motion.span>
+        ) : (
           <motion.span
             key="letter"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
             className="font-amiri font-bold select-none text-center px-1"
             style={{
@@ -469,21 +486,29 @@ function LuqmanCell({ cell, index, onTap }) {
         boxShadow: revealed ? `0 0 18px ${P.glow}` : "none",
       }}
     >
-      {/* Hidden back — plain card, no content */}
-      {!revealed && (
-        <div
-          className="absolute inset-0 rounded-lg"
-          style={{ background: P.bg }}
-        />
-      )}
-
-      {/* Revealed letter */}
-      <AnimatePresence>
-        {revealed && (
+      <AnimatePresence mode="wait">
+        {!revealed ? (
+          <motion.span
+            key="placeholder"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.2 }}
+            className="select-none"
+            style={{
+              fontSize: "clamp(0.6rem, min(3.5vw, 3dvh), 1rem)",
+              color: P.dim,
+              lineHeight: 1,
+            }}
+          >
+            ۞
+          </motion.span>
+        ) : (
           <motion.span
             key="letter"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
             className="font-amiri font-bold select-none"
             style={{
