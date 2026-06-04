@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import SacredWheel from "./SacredWheel";
+import NavCards from "./NavCards";
 import useIsMobile from "../hooks/useIsMobile";
 
 // ── Static data ───────────────────────────────────────────────────
@@ -459,40 +459,7 @@ function AllahCalligraphyMobile() {
   );
 }
 
-function NavCards({ startNav }) {
-  return (
-    <div className="relative z-20 w-full mt-8 grid grid-cols-2 gap-3">
-      {NAV_CARDS.map((card, i) => {
-        const [r, g, b] = card.accent;
-        return (
-          <motion.div key={card.path}
-            initial={{ opacity:0, y:26, scale:0.93 }}
-            animate={{ opacity:1, y:0, scale:1 }}
-            transition={{ delay:2.0 + i * 0.05, duration:0.4, ease:"easeOut" }}
-            whileHover={{ scale:1.04, y:-6, transition:{ duration:0.22, ease:"easeOut" } }}
-            whileTap={{ scale:0.96, transition:{ duration:0.1 } }}>
-            <Link to={card.path} onClick={startNav}
-              className="block rounded-2xl border flex flex-col items-center text-center"
-              style={{
-                background:`linear-gradient(155deg,rgba(${r},${g},${b},0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(${r},${g},${b},0.05) 100%)`,
-                borderColor:`rgba(${r},${g},${b},0.32)`,
-                boxShadow:`0 0 28px rgba(${r},${g},${b},0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(${r},${g},${b},0.18)`,
-                minHeight:185, padding:"24px 16px",
-                WebkitTapHighlightColor:"transparent",
-                touchAction:"manipulation",
 
-                position:"relative", overflow:"hidden",
-              }}>
-              <div style={{ position:"absolute", top:0, left:0, right:0, height:1,
-                background:`linear-gradient(90deg,transparent 5%,rgba(${r},${g},${b},0.50) 50%,transparent 95%)` }} />
-              <CardInner card={card} />
-            </Link>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
 
 const ZERO_MV = { x: { get: () => 0, set: () => {}, on: () => () => {} }, y: { get: () => 0, set: () => {}, on: () => () => {} } };
 
