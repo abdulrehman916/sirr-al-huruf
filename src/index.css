@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap&font-display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -99,6 +99,10 @@
     position: fixed;
     width: 100%;
     overflow: hidden;
+    /* Prevent double-tap zoom on mobile — doesn't affect pinch zoom */
+    touch-action: manipulation;
+    /* RTL/LTR font fallbacks for Arabic + Malayalam */
+    font-feature-settings: "kern" 1, "liga" 1;
   }
 
   #root {
@@ -119,6 +123,38 @@
   /* Hide scrollbar but keep scroll */
   .scrollbar-none { scrollbar-width: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  /* Safe RTL text containers */
+  [dir="rtl"] { text-align: right; }
+
+  /* Prevent horizontal overflow globally */
+  * { max-width: 100%; box-sizing: border-box; }
+  img, svg, video { max-width: 100%; height: auto; }
+
+  /* Arabic & Malayalam text: allow safe line-breaking */
+  .font-amiri {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* Prevent inputs from causing zoom on iOS (font-size >= 16px) */
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
+
+  /* Landscape mode: adjust safe areas */
+  @media (orientation: landscape) and (max-height: 500px) {
+    body { font-size: 14px; }
+  }
+
+  /* Tablet: wider max content width */
+  @media (min-width: 768px) {
+    .max-w-2xl { max-width: 680px; }
+  }
+  @media (min-width: 1024px) {
+    .max-w-2xl { max-width: 760px; }
+  }
 }
 
 /* ── AtmosphericBackground keyframes — defined once globally ── */

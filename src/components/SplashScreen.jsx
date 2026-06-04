@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ── Static particles — seeded, deterministic, no Math.random() ───
@@ -113,7 +113,14 @@ function SacredGeometry({ size = 320 }) {
 // ── Main component ────────────────────────────────────────────────
 export default function SplashScreen({ onComplete }) {
   const [phase, setPhase] = useState("in");  // in → hold → out
-  const wheelSize = 320;
+  const wheelSize = 280;
+  // Reduce animation count on low-end / mobile devices
+  const isLowPower = useRef(
+    typeof window !== "undefined" && window.innerWidth < 480
+  ).current;
+  const visibleParticles = isLowPower ? PARTICLES.slice(0, 10) : PARTICLES;
+  const visibleChars     = isLowPower ? CHARS.slice(0, 3) : CHARS;
+  const visibleRings     = isLowPower ? RINGS.slice(0, 2) : RINGS;
 
   useEffect(() => {
     // Hold for 2.2 s then exit
@@ -138,7 +145,7 @@ export default function SplashScreen({ onComplete }) {
         >
           {/* ── Calligraphy atmosphere ── */}
           <div className="absolute inset-0 pointer-events-none" style={{ filter: "blur(1.5px)" }}>
-            {CHARS.map((c, i) => (
+            {visibleChars.map((c, i) => (
               <motion.span key={i} className="absolute font-amiri select-none"
                 style={{ top: c.top, left: c.left, fontSize: c.size, color: "#D4AF37", opacity: c.opacity }}
                 animate={{ opacity: [c.opacity * 0.4, c.opacity, c.opacity * 0.4], y: [0, -10, 0] }}
@@ -151,7 +158,7 @@ export default function SplashScreen({ onComplete }) {
 
           {/* ── Gold dust particles ── */}
           <div className="absolute inset-0 pointer-events-none">
-            {PARTICLES.map(p => (
+            {visibleParticles.map(p => (
               <motion.div key={p.id} className="absolute rounded-full"
                 style={{
                   left: p.x, top: p.y, width: p.size, height: p.size,
@@ -191,7 +198,7 @@ export default function SplashScreen({ onComplete }) {
             style={{ width: wheelSize, height: wheelSize }}
           >
             {/* Orbital rings */}
-            {RINGS.map((ring, i) => (
+            {visibleRings.map((ring, i) => (
               <motion.div key={i} className="absolute rounded-full"
                 style={{
                   width: ring.r * 2, height: ring.r * 2,

@@ -212,12 +212,16 @@ export default function PlantsPage() {
           <Search className="w-4 h-4 flex-shrink-0" style={{ color: P.dim }} />
           <input
             type="text"
+            inputMode="search"
             value={query}
             onChange={(e) => { setQuery(e.target.value); setLetter(null); }}
             placeholder="Search: English / عربي / മലയാളം / scientific…"
             className="flex-1 bg-transparent outline-none font-inter text-sm placeholder:text-[rgba(134,239,172,0.28)]"
-            style={{ color: "rgba(255,255,255,0.85)" }}
+            style={{ color: "rgba(255,255,255,0.85)", minWidth: 0 }}
             dir="auto"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
           />
           {query && (
             <button onClick={() => setQuery("")} style={{ color: P.dim }}>

@@ -46,8 +46,11 @@ export default function PWAInstallPrompt() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 80 }}
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed bottom-5 left-1/2 z-[9998] w-[calc(100%-2.5rem)] max-w-sm"
-          style={{ transform: "translateX(-50%)", x: "-50%" }}
+          className="fixed left-1/2 z-[9998] w-[calc(100%-2.5rem)] max-w-sm"
+          style={{
+            transform: "translateX(-50%)",
+            bottom: "calc(env(safe-area-inset-bottom) + 80px)", // above bottom tab bar
+          }}
         >
           <div className="relative rounded-2xl overflow-hidden"
             style={{

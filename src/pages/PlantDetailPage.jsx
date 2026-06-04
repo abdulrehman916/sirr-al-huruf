@@ -87,12 +87,12 @@ export default function PlantDetailPage() {
           style={{ background: P.bgHi, borderColor: P.borderHi, boxShadow: `0 0 32px ${P.glow}` }}
         >
           <div dir="rtl">
-            <p className="font-amiri font-bold leading-tight"
-              style={{ fontSize: "clamp(2.0rem,9vw,3.0rem)", color: P.text, textShadow: "0 0 28px rgba(34,197,94,0.40)", WebkitTextStroke: "0.4px #86EFAC" }}>
+            <p className="font-amiri font-bold leading-tight break-words"
+              style={{ fontSize: "clamp(1.7rem,8vw,3.0rem)", color: P.text, textShadow: "0 0 28px rgba(34,197,94,0.40)", WebkitTextStroke: "0.4px #86EFAC", wordBreak: "break-word", overflowWrap: "break-word" }}>
               {plant.ArabicName}
             </p>
           </div>
-          <p className="font-inter text-2xl font-bold" style={{ color: "rgba(255,255,255,0.98)", letterSpacing: "-0.4px" }}>
+          <p className="font-inter font-bold break-words" style={{ fontSize: "clamp(1.2rem, 5vw, 1.5rem)", color: "rgba(255,255,255,0.98)", letterSpacing: "-0.4px", overflowWrap: "break-word" }}>
             {plant.EnglishName}
           </p>
           {plant.MalayalamName && (

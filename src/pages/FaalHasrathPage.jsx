@@ -186,7 +186,7 @@ function FaalCell({ cell, lang, index, onTap }) {
       className="relative rounded-2xl border flex items-center justify-center"
       style={{
         aspectRatio: "1 / 1",
-        minHeight: 0,
+        minHeight: "clamp(52px, 18vw, 90px)",
         cursor: revealed ? "default" : "pointer",
         WebkitTapHighlightColor: "transparent",
         background: revealed ? P.bgHi : P.bg,
@@ -267,8 +267,13 @@ function FaalAliModal({ cell, lang, onClose }) {
     <AnimatePresence>
       <motion.div key="ali-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-3 pb-4 sm:pb-0"
-        style={{ background: "rgba(0,0,0,0.84)", backdropFilter: "blur(8px)" }}
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-3"
+        style={{
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)",
+          background: "rgba(0,0,0,0.84)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
         onClick={onClose}>
         <motion.div key="ali-panel" initial={{ opacity: 0, y: 60, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.96 }} transition={{ duration: 0.30, ease: "easeOut" }}
@@ -278,7 +283,8 @@ function FaalAliModal({ cell, lang, onClose }) {
             background: "linear-gradient(160deg, rgba(18,8,44,0.99) 0%, rgba(8,4,28,0.99) 100%)",
             borderColor: P.borderHi,
             boxShadow: `0 0 80px ${P.glow}, 0 8px 48px rgba(0,0,0,0.80), inset 0 1px 0 rgba(216,180,254,0.10)`,
-            maxHeight: "88vh", overflowY: "auto",
+            maxHeight: "min(88vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px))",
+            overflowY: "auto",
           }}>
           <div className="absolute top-0 left-0 right-0 h-px"
             style={{ background: `linear-gradient(90deg, transparent, ${P.borderHi}, transparent)` }} />
@@ -458,7 +464,7 @@ function FaalAliSection({ lang }) {
         </motion.div>
       </motion.div>
 
-      <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
+      <div dir="rtl" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "clamp(6px, 2vw, 12px)" }}>
         {shuffledCells.map((cell, i) => (
           <FaalCell key={cell.id} cell={cell} lang={lang} index={i} onTap={setSelected} />
         ))}
@@ -501,7 +507,7 @@ function LuqmanCell({ cell, index, onTap }) {
       onClick={handleClick}
       className="relative rounded-lg border flex items-center justify-center"
       style={{
-        minHeight: 0,
+        minHeight: "clamp(36px, 10vw, 60px)",
         minWidth: 0,
         cursor: revealed ? "default" : "pointer",
         WebkitTapHighlightColor: "transparent",
@@ -584,8 +590,13 @@ function LuqmanModal({ cell, lang, onClose }) {
     <AnimatePresence>
       <motion.div key="lq-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-3 pb-4 sm:pb-0"
-        style={{ background: "rgba(0,0,0,0.84)", backdropFilter: "blur(8px)" }}
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-3"
+        style={{
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)",
+          background: "rgba(0,0,0,0.84)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
         onClick={onClose}>
         <motion.div key="lq-panel" initial={{ opacity: 0, y: 60, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.96 }} transition={{ duration: 0.30, ease: "easeOut" }}
@@ -595,7 +606,8 @@ function LuqmanModal({ cell, lang, onClose }) {
             background: "linear-gradient(160deg, rgba(18,8,44,0.99) 0%, rgba(8,4,28,0.99) 100%)",
             borderColor: P.borderHi,
             boxShadow: `0 0 80px ${P.glow}, 0 8px 48px rgba(0,0,0,0.80), inset 0 1px 0 rgba(216,180,254,0.10)`,
-            maxHeight: "88vh", overflowY: "auto",
+            maxHeight: "min(88vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px))",
+            overflowY: "auto",
           }}>
           <div className="absolute top-0 left-0 right-0 h-px"
             style={{ background: `linear-gradient(90deg, transparent, ${P.borderHi}, transparent)` }} />
@@ -798,15 +810,14 @@ function FaalLuqmanSection({ lang }) {
         </motion.div>
       </motion.div>
 
-      {/* 7×4 grid — all 28 cells visible in one screen */}
+      {/* 7×4 grid — responsive: 4 cols on tiny phones, 7 on normal+ */}
       <div
         dir="rtl"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          gridTemplateRows: "repeat(4, 1fr)",
-          gap: "clamp(3px, 1vw, 8px)",
-          height: "clamp(220px, 42dvh, 380px)",
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+          gap: "clamp(3px, 1.2vw, 8px)",
+          minHeight: "clamp(180px, 38dvh, 360px)",
         }}
       >
         {shuffledCells.map((cell, i) => (

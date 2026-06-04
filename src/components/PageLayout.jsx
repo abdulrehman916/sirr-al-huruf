@@ -67,8 +67,8 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
           WebkitTapHighlightColor: "transparent",
           touchAction: "manipulation",
           userSelect: "none",
-          minHeight: 48,
-          minWidth: 54,
+          minHeight: 44,
+          minWidth: 52,
         }}
       >
         <motion.span
@@ -205,8 +205,10 @@ export default function PageLayout({ children }) {
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         height: "100%",
-        // Safe area: top for notch, bottom for home indicator
+        // Safe area: top for notch/Dynamic Island, bottom for home indicator, sides for landscape
         paddingTop: "env(safe-area-inset-top)",
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
       }}
     >
       <AtmosphericBackground />
@@ -214,6 +216,8 @@ export default function PageLayout({ children }) {
       {/* ── Sticky Top Nav ── */}
       <div
         className="sticky top-0 z-50 w-full px-2 py-1.5 flex-shrink-0"
+        role="navigation"
+        aria-label="Main navigation"
         style={{
           background: "rgba(2,6,16,0.97)",
           backdropFilter: "blur(16px)",
@@ -261,12 +265,13 @@ export default function PageLayout({ children }) {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.20, ease: "easeOut" }}
-            className="relative z-10 max-w-2xl mx-auto px-4 py-6"
+            className="relative z-10 w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
               // Bottom padding = bottom tab bar height + safe area
-              paddingBottom: "calc(68px + env(safe-area-inset-bottom))",
+              paddingBottom: "calc(72px + env(safe-area-inset-bottom))",
               willChange: "opacity",
               minHeight: "100%",
+              boxSizing: "border-box",
             }}
           >
             {children}
@@ -277,6 +282,8 @@ export default function PageLayout({ children }) {
       {/* ── Bottom Tab Bar ── */}
       <div
         className="flex-shrink-0 z-50 w-full"
+        role="navigation"
+        aria-label="Tab navigation"
         style={{
           background: "rgba(2,6,16,0.97)",
           backdropFilter: "blur(20px)",
@@ -284,6 +291,8 @@ export default function PageLayout({ children }) {
           borderTop: "1px solid rgba(212,175,55,0.12)",
           boxShadow: "0 -4px 32px rgba(0,0,0,0.60), 0 -1px 0 rgba(212,175,55,0.06)",
           paddingBottom: "env(safe-area-inset-bottom)",
+          paddingLeft: "env(safe-area-inset-left)",
+          paddingRight: "env(safe-area-inset-right)",
         }}
       >
         {/* Top gold accent line */}
@@ -293,7 +302,7 @@ export default function PageLayout({ children }) {
         }} />
 
         <div className="relative max-w-2xl mx-auto flex overflow-x-auto scrollbar-none"
-          style={{ height: 58 }}>
+          style={{ height: 58, minHeight: 44 }}>
           {TABS.map((tab) => (
             <BottomTab
               key={tab.id}

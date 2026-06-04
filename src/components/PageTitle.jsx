@@ -12,7 +12,7 @@ export default function PageTitle({ arabic, latin, subtitle, icon }) {
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.52, ease: "easeOut" }}
-      className="text-center relative mb-3"
+      className="text-center relative mb-3 overflow-hidden"
     >
       {/* Celestial bloom */}
       <div className="absolute pointer-events-none" style={{

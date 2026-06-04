@@ -548,7 +548,11 @@ function GoldenDust({ containerSize, paused }) {
 
 function getContainerSize() {
   if (typeof window === "undefined") return 400;
-  return Math.min(500, Math.max(280, window.innerWidth * 0.88));
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  // On landscape mobile, constrain to height so wheel doesn't overflow
+  const maxByHeight = Math.min(h * 0.70, 500);
+  return Math.min(maxByHeight, Math.max(260, w * 0.85));
 }
 
 // ────────────────────────────────────────────────────────────

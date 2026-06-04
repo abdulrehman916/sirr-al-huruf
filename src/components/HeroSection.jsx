@@ -455,7 +455,7 @@ function AllahCalligraphyMobile() {
 
 function NavCards({ startNav }) {
   return (
-    <div className="relative z-10 w-full max-w-sm mt-7 grid grid-cols-2 gap-3 px-3">
+    <div className="relative z-10 w-full max-w-sm sm:max-w-lg md:max-w-2xl mt-7 grid grid-cols-2 sm:grid-cols-3 gap-3 px-3">
       {NAV_CARDS.map((card, i) => {
         const [r, g, b] = card.accent;
         return (
@@ -499,7 +499,7 @@ export default function HeroSection({ mouse }) {
   const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
 
   return (
-    <div className="min-h-screen font-inter relative overflow-x-hidden flex flex-col items-center justify-center pb-12 pt-4">
+    <div className="font-inter relative overflow-x-hidden flex flex-col items-center justify-center pb-12 pt-4" style={{ minHeight: "min(100dvh, 100vh)" }}>
 
       {/* Light rays — desktop only */}
       {!isMobile && <LightRays paused={isNavigating} />}

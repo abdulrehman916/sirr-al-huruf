@@ -35,7 +35,10 @@ export default function OfflineNotice() {
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
-            padding: "8px 16px",
+            paddingTop: "calc(env(safe-area-inset-top) + 8px)",
+            paddingBottom: "8px",
+            paddingLeft: "calc(env(safe-area-inset-left) + 16px)",
+            paddingRight: "calc(env(safe-area-inset-right) + 16px)",
           }}
         >
           <span style={{ fontSize: 14, color: "#fff3c4", fontFamily: "Amiri, serif" }}>
