@@ -5,7 +5,7 @@
 // Zero shared logic with any other module.
 // ═══════════════════════════════════════════════════════════════
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -437,11 +437,18 @@ function LuqmanCell({ cell, index, onTap }) {
     setTimeout(() => onTap(cell), 1400);
   };
 
+  // Stable per-card random offset for the deal animation (computed once)
+  const dealOffset = useMemo(() => ({
+    x: (Math.random() - 0.5) * 24,
+    y: (Math.random() - 0.5) * 24,
+    rotate: (Math.random() - 0.5) * 18,
+  }), []);
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.03, duration: 0.26, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.72, x: dealOffset.x, y: dealOffset.y, rotate: dealOffset.rotate }}
+      animate={{ opacity: 1, scale: 1, x: 0, y: 0, rotate: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.38, ease: [0.34, 1.56, 0.64, 1] }}
       onClick={handleClick}
       style={{
         perspective: "500px",
@@ -616,9 +623,20 @@ function LuqmanModal({ cell, lang, onClose }) {
   );
 }
 
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function FaalLuqmanSection({ lang }) {
   const [selected, setSelected] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  // Shuffle once on mount — positions change each session, letter→result links never change
+  const shuffledCells = useMemo(() => shuffleArray(LUQMAN_CELLS), []);
   return (
     <>
       {/* Collapsible Instruction Panel */}
@@ -756,7 +774,7 @@ function FaalLuqmanSection({ lang }) {
           height: "clamp(220px, 42dvh, 380px)",
         }}
       >
-        {LUQMAN_CELLS.map((cell, i) => (
+        {shuffledCells.map((cell, i) => (
           <LuqmanCell key={cell.lq_id} cell={cell} index={i} onTap={setSelected} />
         ))}
       </div>
