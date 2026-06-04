@@ -95,10 +95,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    /* Prevent bounce scroll on iOS when installed as PWA */
-    position: fixed;
-    width: 100%;
-    overflow: hidden;
     /* Prevent double-tap zoom on mobile — doesn't affect pinch zoom */
     touch-action: manipulation;
     /* RTL/LTR font fallbacks for Arabic + Malayalam */
@@ -109,7 +105,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
+    overscroll-behavior: none;
     /* Promote root to its own compositor layer for smooth scrolling */
     transform: translateZ(0);
   }
