@@ -102,17 +102,29 @@ const CARD_ICONS = {
       <path d="M16 6 L16 26 M10 12 L16 16 L22 12" stroke={color} strokeWidth="0.6" strokeOpacity="0.45"/>
     </svg>
   ),
-};
+  plants: (color) => (
+    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+      <path d="M16 2 Q12 8 12 14 Q12 22 16 28 Q20 22 20 14 Q20 8 16 2Z"
+        stroke={color} strokeWidth="1" strokeOpacity="0.75" fill={color} fillOpacity="0.12"/>
+      <path d="M8 16 Q10 12 14 12 L14 20 Q10 20 8 18Z"
+        stroke={color} strokeWidth="0.8" strokeOpacity="0.70" fill={color} fillOpacity="0.08"/>
+      <path d="M24 16 Q22 12 18 12 L18 20 Q22 20 24 18Z"
+        stroke={color} strokeWidth="0.8" strokeOpacity="0.70" fill={color} fillOpacity="0.08"/>
+      <circle cx="16" cy="16" r="1.5" fill={color} fillOpacity="0.9"/>
+    </svg>
+  ),
+  };
 
 const NAV_CARDS = [
-  { path: "/abjad",            arabic: "أبجد",         label: "ABJAD",            subtitle: "Numerical Calculator",      iconKey: "abjad",  accent: [212, 175, 55] },
-  { path: "/anasir",           arabic: "عناصر",        label: "ANASIR",           subtitle: "Elemental Analysis",        iconKey: "anasir", accent: [56, 189, 248] },
-  { path: "/hadim",            arabic: "خادم",         label: "HADIM",            subtitle: "Name Generator",            iconKey: "hadim",  accent: [192, 132, 252] },
-  { path: "/mizaan9",          arabic: "ميزان",        label: "MIZAAN 9",         subtitle: "Sacred Numerology",         iconKey: "mizaan", accent: [212, 175, 55] },
-  { path: "/magic-sqayer",     arabic: "السحر المربع", label: "MAGIC SQAYER",     subtitle: "Sacred Vefk Construction",  iconKey: "sqayer", accent: [212, 175, 55] },
-  { path: "/vefkin-yapilisi",  arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI",  subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
-  { path: "/basthul-huroof-2", arabic: "بسط الحروف",   label: "BASTHUL HUROOF 2", subtitle: "Basti Adedi Cedveli",       iconKey: "bast",   accent: [180, 140, 255] },
-  { path: "/faal-hasrath",     arabic: "فأل",          label: "FAAL",             subtitle: "Sacred Omen System",        iconKey: "faal",   accent: [212, 175, 55] },
+   { path: "/abjad",            arabic: "أبجد",         label: "ABJAD",            subtitle: "Numerical Calculator",      iconKey: "abjad",  accent: [212, 175, 55] },
+   { path: "/anasir",           arabic: "عناصر",        label: "ANASIR",           subtitle: "Elemental Analysis",        iconKey: "anasir", accent: [56, 189, 248] },
+   { path: "/hadim",            arabic: "خادم",         label: "HADIM",            subtitle: "Name Generator",            iconKey: "hadim",  accent: [192, 132, 252] },
+   { path: "/mizaan9",          arabic: "ميزان",        label: "MIZAAN 9",         subtitle: "Sacred Numerology",         iconKey: "mizaan", accent: [212, 175, 55] },
+   { path: "/magic-sqayer",     arabic: "السحر المربع", label: "MAGIC SQAYER",     subtitle: "Sacred Vefk Construction",  iconKey: "sqayer", accent: [212, 175, 55] },
+   { path: "/vefkin-yapilisi",  arabic: "طريقة الوفق",  label: "VEFKİN YAPILIŞI",  subtitle: "Ottoman Manuscript Method", iconKey: "vefkin", accent: [212, 175, 55] },
+   { path: "/basthul-huroof-2", arabic: "بسط الحروف",   label: "BASTHUL HUROOF 2", subtitle: "Basti Adedi Cedveli",       iconKey: "bast",   accent: [180, 140, 255] },
+   { path: "/faal-hasrath",     arabic: "فأل",          label: "FAAL",             subtitle: "Sacred Omen System",        iconKey: "faal",   accent: [212, 175, 55] },
+   { path: "/plants",           arabic: "نباتات",       label: "PLANTS",           subtitle: "Medicinal Dictionary",      iconKey: "plants", accent: [34, 197, 94] },
 ];
 
 // ── Static ring sizes for mobile (no Framer Motion) ──────────────
