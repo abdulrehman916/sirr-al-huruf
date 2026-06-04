@@ -113,47 +113,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
   );
 });
 
-// ── Bottom tab bar — CSS transitions only, zero Framer Motion ──
-const BottomTab = memo(function BottomTab({ tab, isActive, onClick }) {
-  return (
-    <Link
-      to={tab.path}
-      onClick={onClick}
-      style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation", userSelect: "none" }}
-      className="flex-1 flex flex-col items-center justify-center py-1.5 gap-0.5 min-w-0 relative"
-    >
-      <span
-        className="font-amiri font-bold leading-none"
-        style={{
-          fontSize: 15,
-          color: isActive ? "#E8C84A" : "rgba(255,255,255,0.40)",
-          transition: "color 0.20s",
-        }}
-      >
-        {tab.arabic}
-      </span>
-      <span
-        className="font-inter font-semibold tracking-widest leading-none truncate w-full text-center"
-        style={{
-          fontSize: 6.5,
-          color: isActive ? "rgba(232,200,74,0.80)" : "rgba(255,255,255,0.22)",
-          transition: "color 0.20s",
-        }}
-      >
-        {tab.label}
-      </span>
-      <div
-        className="absolute bottom-0 rounded-t-full"
-        style={{
-          height: 2, width: 28,
-          background: "linear-gradient(90deg, transparent, #E8C84A, transparent)",
-          opacity: isActive ? 1 : 0,
-          transition: "opacity 0.25s",
-        }}
-      />
-    </Link>
-  );
-});
+
 
 // ── Scroll position memory per route ─────────────────────────────
 const scrollMemory = {};
@@ -167,9 +127,6 @@ export default function PageLayout({ children }) {
     () => TABS.find(t => t.path === location.pathname)?.id ?? undefined,
     [location.pathname]
   );
-
-  // Detect if we're on a detail page (e.g. /plants/:id) — no bottom tab active
-  const isTopLevelRoute = TABS.some(t => t.path === location.pathname) || location.pathname === "/";
 
   const scrollRef = useRef(null);
 
@@ -264,7 +221,7 @@ export default function PageLayout({ children }) {
             transition={{ duration: 0.20, ease: "easeOut" }}
             className="relative z-10 w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
-              paddingBottom: "calc(72px + env(safe-area-inset-bottom))",
+              paddingBottom: "env(safe-area-inset-bottom)",
               boxSizing: "border-box",
             }}
           >
@@ -273,38 +230,7 @@ export default function PageLayout({ children }) {
         </AnimatePresence>
       </div>
 
-      {/* ── Bottom Tab Bar ── */}
-      <div
-        className="flex-shrink-0 z-50 w-full"
-        role="navigation"
-        aria-label="Tab navigation"
-        style={{
-          background: "rgba(2,6,16,0.98)",
-          borderTop: "1px solid rgba(212,175,55,0.12)",
-          boxShadow: "0 -2px 16px rgba(0,0,0,0.60)",
-          paddingBottom: "env(safe-area-inset-bottom)",
-          paddingLeft: "env(safe-area-inset-left)",
-          paddingRight: "env(safe-area-inset-right)",
-        }}
-      >
-        {/* Top gold accent line */}
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 1,
-          background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.30) 40%, rgba(232,200,74,0.45) 50%, rgba(212,175,55,0.30) 60%, transparent 95%)",
-        }} />
 
-        <div className="relative max-w-2xl mx-auto flex overflow-x-auto scrollbar-none"
-          style={{ height: 58, minHeight: 44 }}>
-          {TABS.map((tab) => (
-            <BottomTab
-              key={tab.id}
-              tab={tab}
-              isActive={activeId === tab.id}
-              onClick={startNav}
-            />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
