@@ -86,8 +86,6 @@
 
   html, body, #root {
     height: 100%;
-    /* Prevent overscroll rubber-banding on iOS */
-    overscroll-behavior: none;
   }
 
   body {
@@ -95,19 +93,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    /* Prevent double-tap zoom on mobile — doesn't affect pinch zoom */
     touch-action: manipulation;
-    /* RTL/LTR font fallbacks for Arabic + Malayalam */
     font-feature-settings: "kern" 1, "liga" 1;
+    overflow: hidden;
   }
 
   #root {
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: none;
-    /* Promote root to its own compositor layer for smooth scrolling */
-    transform: translateZ(0);
+    height: 100%;
+    overflow: hidden;
   }
 
   /* Scrollbar */
@@ -123,8 +116,7 @@
   /* Safe RTL text containers */
   [dir="rtl"] { text-align: right; }
 
-  /* Prevent horizontal overflow globally */
-  * { max-width: 100%; box-sizing: border-box; }
+  /* Prevent horizontal overflow globally — only on media, not layout containers */
   img, svg, video { max-width: 100%; height: auto; }
 
   /* Arabic & Malayalam text: allow safe line-breaking */

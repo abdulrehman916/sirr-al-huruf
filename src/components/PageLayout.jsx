@@ -253,7 +253,6 @@ export default function PageLayout({ children }) {
         style={{
           overscrollBehaviorY: "none",
           WebkitOverflowScrolling: "touch",
-          contain: "strict",
           touchAction: "pan-y",
         }}
       >
