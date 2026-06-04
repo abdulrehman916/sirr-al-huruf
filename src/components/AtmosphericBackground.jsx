@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect } from "react";
 
 // All data generated once at module level — zero re-render cost
 const seed = (i, k = 1) => {
@@ -7,8 +7,8 @@ const seed = (i, k = 1) => {
   return (v % 1 + 1) % 1;
 };
 
-// Star field — 60 stars, varied sizes & twinkle speeds
-const STARS = Array.from({ length: 60 }, (_, i) => ({
+// Star field — 48 stars (reduced from 60), varied sizes & twinkle speeds
+const STARS = Array.from({ length: 48 }, (_, i) => ({
   w:     seed(i, 1) * 2.2 + 0.4,
   top:   `${seed(i, 1.3) * 100}%`,
   left:  `${seed(i, 1.7) * 100}%`,
@@ -18,8 +18,8 @@ const STARS = Array.from({ length: 60 }, (_, i) => ({
   layer: i % 3, // 0=small, 1=medium, 2=bright
 }));
 
-// Golden dust particles — 20 slow-drifting orbs
-const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+// Golden dust particles — 14 slow-drifting orbs (reduced from 20)
+const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
   size:  seed(i, 3.1) * 5 + 2,
   top:   `${seed(i, 3.7) * 110 - 5}%`,
   left:  `${seed(i, 4.1) * 100}%`,
@@ -31,10 +31,26 @@ const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
 }));
 
 const AtmosphericBackground = memo(function AtmosphericBackground() {
+  // Pause CSS animations when tab is hidden — saves GPU/battery
+  useEffect(() => {
+    const el = document.getElementById("atm-bg-root");
+    if (!el) return;
+    const onVis = () => {
+      const state = document.hidden ? "paused" : "running";
+      el.querySelectorAll(".atm-anim").forEach(n => {
+        n.style.animationPlayState = state;
+      });
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   return (
     <div
+      id="atm-bg-root"
       className="absolute inset-0 overflow-hidden pointer-events-none z-0"
       aria-hidden="true"
+      style={{ contain: "strict" }}
     >
       {/* ── Deep space gradient base ── */}
       <div
@@ -50,7 +66,7 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
       {STARS.map((s, i) => (
         <div
           key={i}
-          className="absolute rounded-full"
+          className="absolute rounded-full atm-anim"
           style={{
             width:  s.w,
             height: s.w,
@@ -63,7 +79,7 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
             opacity: s.op,
             animation: `sh-twinkle ${s.dur} ease-in-out infinite`,
             animationDelay: s.delay,
-            willChange: "opacity, transform",
+            willChange: s.layer === 2 ? "opacity, transform" : "opacity",
           }}
         />
       ))}
@@ -72,7 +88,7 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
       {PARTICLES.map((p, i) => (
         <div
           key={`p${i}`}
-          className="absolute rounded-full"
+          className="absolute rounded-full atm-anim"
           style={{
             width:  p.size,
             height: p.size,
@@ -91,7 +107,7 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
 
       {/* ── Ambient gold top bloom ── */}
       <div
-        className="absolute"
+        className="absolute atm-anim"
         style={{
           top: -60,
           left: "50%",

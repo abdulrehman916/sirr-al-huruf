@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
+import { useNavigation } from "../context/NavigationContext";
 
 /**
  * Premium page header — celestial glow bloom, manuscript divider, entrance animation.
  * Usage: <PageTitle arabic="..." latin="..." subtitle="..." icon="..." />
  */
 export default function PageTitle({ arabic, latin, subtitle, icon }) {
+  const { isNavigating } = useNavigation();
   return (
     <motion.div
       initial={{ opacity: 0, y: -16 }}
@@ -40,7 +42,7 @@ export default function PageTitle({ arabic, latin, subtitle, icon }) {
           <motion.span
             className="font-amiri text-2xl"
             style={{ color: "#D4AF37" }}
-            animate={{ textShadow: [
+            animate={isNavigating ? {} : { textShadow: [
               "0 0 6px rgba(212,175,55,0.35)",
               "0 0 18px rgba(212,175,55,0.78)",
               "0 0 6px rgba(212,175,55,0.35)",

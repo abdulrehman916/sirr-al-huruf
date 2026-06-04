@@ -94,6 +94,7 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     /* Prevent bounce scroll on iOS when installed as PWA */
     position: fixed;
     width: 100%;
@@ -105,6 +106,8 @@
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
+    /* Promote root to its own compositor layer for smooth scrolling */
+    transform: translateZ(0);
   }
 
   /* Scrollbar */

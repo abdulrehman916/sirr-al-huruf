@@ -575,9 +575,16 @@ export default function SacredWheel({ mouse }) {
   }, [isMobile, mouseX, mouseY, bloomX, bloomY]);
 
   useEffect(() => {
-    const onResize = () => setContainerSize(getContainerSize());
+    let raf;
+    const onResize = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setContainerSize(getContainerSize()));
+    };
     window.addEventListener("resize", onResize, { passive: true });
-    return () => window.removeEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   // Mobile: zero Framer Motion animation instances

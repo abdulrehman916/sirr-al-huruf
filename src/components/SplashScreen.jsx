@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ── Static particles ──────────────────────────────────────────────
-const PARTICLES = Array.from({ length: 38 }, (_, i) => ({
+// ── Static particles — seeded, deterministic, no Math.random() ───
+const _seed = (i, k = 1) => { const v = Math.sin(i * 137.508 * k) * 43758.5453; return (v % 1 + 1) % 1; };
+const PARTICLES = Array.from({ length: 24 }, (_, i) => ({
   id: i,
-  x: `${Math.random() * 100}%`,
-  y: `${Math.random() * 100}%`,
-  size: 1 + Math.random() * 2.2,
-  opacity: 0.12 + Math.random() * 0.35,
-  dur: 3.5 + Math.random() * 5,
-  delay: Math.random() * 4,
+  x: `${_seed(i, 1.3) * 100}%`,
+  y: `${_seed(i, 1.7) * 100}%`,
+  size: 1 + _seed(i, 2.1) * 2.2,
+  opacity: 0.12 + _seed(i, 2.5) * 0.35,
+  dur: 3.5 + _seed(i, 0.9) * 5,
+  delay: _seed(i, 0.7) * 4,
 }));
 
 // ── Calligraphy atmosphere ────────────────────────────────────────

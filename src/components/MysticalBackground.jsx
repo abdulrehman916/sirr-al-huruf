@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { memo, useMemo, useEffect } from "react";
+import { memo, useEffect } from "react";
 import useIsMobile from "../hooks/useIsMobile";
 import { useNavigation } from "../context/NavigationContext";
 
@@ -83,7 +83,11 @@ function MobileBackground() {
     <div
       id="mobile-bg-root"
       className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
-      style={{ background: "linear-gradient(180deg, #010308 0%, #020a18 18%, #050d22 50%, #040a1c 75%, #020610 100%)" }}
+      style={{
+        background: "linear-gradient(180deg, #010308 0%, #020a18 18%, #050d22 50%, #040a1c 75%, #020610 100%)",
+        transform: "translateZ(0)",
+        backfaceVisibility: "hidden",
+      }}
     >
       {/* Stars — reduced to 20, CSS animation only, no willChange */}
       {MOBILE_STARS.slice(0, 20).map((s, i) => (
@@ -301,20 +305,25 @@ function LightRays({ mouse, paused }) {
   );
 }
 
+// Module-level constant — generated once, never re-created
+const COSMIC_PARTICLES = Array.from({ length: 16 }, (_, i) => {
+  const s = (i * 137.508);
+  const rand = (k) => { const v = Math.sin(s * k) * 43758.5453; return (v % 1 + 1) % 1; };
+  return {
+    size:    rand(1) * 1.0 + 0.5,
+    top:     rand(2) * 100,
+    left:    rand(3) * 100,
+    driftX:  (rand(4) - 0.5) * 30,
+    driftY:  rand(5) * -22 + rand(6) * 8 - 8,
+    dur:     rand(7) * 25 + 20,
+    delay:   rand(8) * 30,
+    opacity: rand(9) * 0.14 + 0.06,
+    gold:    rand(10) < 0.2,
+  };
+});
+
 function CosmicParticles({ paused }) {
-  const particles = useMemo(() =>
-    Array.from({ length: 20 }, () => ({
-      size:    randomBetween(0.5, 1.5),
-      top:     randomBetween(0, 100),
-      left:    randomBetween(0, 100),
-      driftX:  randomBetween(-15, 15),
-      driftY:  randomBetween(-22, 8),
-      dur:     randomBetween(20, 45),
-      delay:   randomBetween(0, 30),
-      opacity: randomBetween(0.06, 0.20),
-      gold:    Math.random() < 0.2,
-    })),
-  []);
+  const particles = COSMIC_PARTICLES;
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {particles.map((p, i) => (
@@ -341,7 +350,11 @@ const DesktopBackground = memo(function DesktopBackground({ mouse, isNavigating 
   return (
     <div
       className="fixed inset-0 z-0 overflow-hidden"
-      style={{ background: "linear-gradient(180deg, #010308 0%, #020a18 18%, #050d22 50%, #040a1c 75%, #020610 100%)" }}
+      style={{
+        background: "linear-gradient(180deg, #010308 0%, #020a18 18%, #050d22 50%, #040a1c 75%, #020610 100%)",
+        transform: "translateZ(0)",
+        backfaceVisibility: "hidden",
+      }}
     >
       <StarField mouse={safeMouse} paused={isNavigating} />
       <NebulaLayers mouse={safeMouse} paused={isNavigating} />
