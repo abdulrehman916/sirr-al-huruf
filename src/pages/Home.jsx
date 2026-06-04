@@ -8,10 +8,13 @@ export default function Home() {
 
   return (
     <PageLayout>
-      {/* Background is fixed-position, fully out of layout flow */}
+      {/* MysticalBackground is fixed inset-0, fully out of layout flow */}
       <MysticalBackground mouse={mouse} />
-      {/* HeroSection sits in normal document flow — cards scroll naturally */}
-      <HeroSection mouse={mouse} />
+      {/* Negative margins cancel PageLayout's px-3/py-4 padding so HeroSection
+          occupies full available width — identical to the original structure */}
+      <div className="-mx-3 sm:-mx-4 md:-mx-6 -mt-4 sm:-mt-6">
+        <HeroSection mouse={mouse} />
+      </div>
     </PageLayout>
   );
 }
