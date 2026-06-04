@@ -79,7 +79,7 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
             opacity: s.op,
             animation: `sh-twinkle ${s.dur} ease-in-out infinite`,
             animationDelay: s.delay,
-            willChange: s.layer === 2 ? "opacity, transform" : "opacity",
+            willChange: "opacity",
           }}
         />
       ))}
@@ -94,18 +94,15 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
             height: p.size,
             top:    p.top,
             left:   p.left,
-            background:
-              "radial-gradient(circle, rgba(212,175,55,0.85) 0%, rgba(212,175,55,0.20) 55%, transparent 100%)",
+            background: "rgba(212,175,55,0.55)",
             opacity: p.op,
-            filter: "blur(1px)",
             animation: `sh-drift-${i % 4} ${p.dur} ease-in-out infinite`,
             animationDelay: p.delay,
-            willChange: "transform, opacity",
           }}
         />
       ))}
 
-      {/* ── Ambient gold top bloom ── */}
+      {/* ── Ambient gold top bloom — no blur filter (GPU cost) ── */}
       <div
         className="absolute atm-anim"
         style={{
@@ -115,8 +112,7 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
           width: "70%",
           height: 200,
           background:
-            "radial-gradient(ellipse 100% 100% at 50% 0%, rgba(212,175,55,0.12) 0%, transparent 70%)",
-          filter: "blur(20px)",
+            "radial-gradient(ellipse 100% 100% at 50% 0%, rgba(212,175,55,0.10) 0%, transparent 70%)",
           animation: "sh-bloom 8s ease-in-out infinite",
         }}
       />
