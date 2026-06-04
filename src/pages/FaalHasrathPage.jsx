@@ -15,15 +15,15 @@ import { LUQMAN_CELLS } from "../lib/faalLuqmanData";
 
 // ── Shared Palette ─────────────────────────────────────────────
 const P = {
-  border:   "rgba(160,100,220,0.40)",
-  borderHi: "rgba(180,120,255,0.70)",
-  glow:     "rgba(160,100,220,0.25)",
-  glowHi:   "rgba(180,120,255,0.55)",
-  text:     "#D8B4FE",
-  dim:      "rgba(216,180,254,0.55)",
-  faint:    "rgba(216,180,254,0.18)",
-  bg:       "rgba(160,100,220,0.07)",
-  bgHi:     "rgba(160,100,220,0.16)",
+  border:   "rgba(160,100,220,0.50)",
+  borderHi: "rgba(190,130,255,0.80)",
+  glow:     "rgba(140,80,210,0.35)",
+  glowHi:   "rgba(190,130,255,0.65)",
+  text:     "#E2C6FF",
+  dim:      "rgba(226,198,255,0.65)",
+  faint:    "rgba(216,180,254,0.24)",
+  bg:       "rgba(10,4,28,0.82)",
+  bgHi:     "rgba(30,10,60,0.92)",
 };
 
 // ── SVG inner mark renderer (Faal Ali) ────────────────────────
@@ -833,7 +833,15 @@ export default function FaalHasrathPage() {
 
   return (
     <PageLayout>
-      <div className="space-y-4">
+      {/* Deep cosmic background layer for this page */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 120% 80% at 50% 0%, rgba(60,20,120,0.38) 0%, transparent 60%), linear-gradient(180deg, rgba(4,1,16,0.92) 0%, rgba(6,2,20,0.96) 100%)",
+          zIndex: 0,
+        }}
+      />
+      <div className="space-y-4 relative" style={{ zIndex: 1 }}>
 
         <PageTitle
           arabic="فأل نامه حسرت علي"
@@ -867,7 +875,7 @@ export default function FaalHasrathPage() {
           )}
         </AnimatePresence>
 
-      </div>
+        </div>
     </PageLayout>
   );
 }
