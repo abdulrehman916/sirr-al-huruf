@@ -197,21 +197,46 @@ function FaalCell({ cell, lang, index, onTap }) {
     >
       <AnimatePresence mode="wait">
         {!revealed ? (
-          <motion.span
+          <motion.div
             key="placeholder"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.2 }}
-            className="select-none"
-            style={{
-              fontSize: "clamp(0.7rem, min(4vw, 3.5dvh), 1.2rem)",
-              color: P.dim,
-              lineHeight: 1,
-            }}
+            className="absolute inset-0 flex items-center justify-center"
           >
-            ❖
-          </motion.span>
+            {/* Outer ornamental border */}
+            <div style={{
+              position: "absolute", inset: 3, borderRadius: 9,
+              border: `1px solid rgba(216,180,254,0.22)`,
+              pointerEvents: "none",
+            }} />
+            {/* Inner ornamental border */}
+            <div style={{
+              position: "absolute", inset: 6, borderRadius: 6,
+              border: `1px solid rgba(216,180,254,0.10)`,
+              pointerEvents: "none",
+            }} />
+            {/* Corner dots */}
+            {[["3px","3px"],["3px","auto"],["auto","3px"],["auto","auto"]].map(([t,b], i) => (
+              <div key={i} style={{
+                position: "absolute",
+                top: t !== "auto" ? 5 : "auto", bottom: b !== "auto" ? 5 : "auto",
+                left: i % 2 === 0 ? 5 : "auto", right: i % 2 !== 0 ? 5 : "auto",
+                width: 3, height: 3, borderRadius: "50%",
+                background: "rgba(216,180,254,0.30)",
+              }} />
+            ))}
+            {/* Center symbol with glow */}
+            <span style={{
+              fontSize: "clamp(1.1rem, min(6vw, 5dvh), 1.9rem)",
+              color: P.text,
+              lineHeight: 1,
+              textShadow: `0 0 8px ${P.glowHi}, 0 0 20px ${P.glow}, 0 0 40px rgba(160,100,220,0.30)`,
+            }}>
+              ❖
+            </span>
+          </motion.div>
         ) : (
           <motion.span
             key="letter"
@@ -488,21 +513,46 @@ function LuqmanCell({ cell, index, onTap }) {
     >
       <AnimatePresence mode="wait">
         {!revealed ? (
-          <motion.span
+          <motion.div
             key="placeholder"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.2 }}
-            className="select-none"
-            style={{
-              fontSize: "clamp(0.6rem, min(3.5vw, 3dvh), 1rem)",
-              color: P.dim,
-              lineHeight: 1,
-            }}
+            className="absolute inset-0 flex items-center justify-center"
           >
-            ۞
-          </motion.span>
+            {/* Outer ornamental border */}
+            <div style={{
+              position: "absolute", inset: 2, borderRadius: 5,
+              border: `1px solid rgba(216,180,254,0.20)`,
+              pointerEvents: "none",
+            }} />
+            {/* Inner ornamental border */}
+            <div style={{
+              position: "absolute", inset: 4, borderRadius: 3,
+              border: `1px solid rgba(216,180,254,0.09)`,
+              pointerEvents: "none",
+            }} />
+            {/* Corner dots */}
+            {[0,1,2,3].map((i) => (
+              <div key={i} style={{
+                position: "absolute",
+                top: i < 2 ? 4 : "auto", bottom: i >= 2 ? 4 : "auto",
+                left: i % 2 === 0 ? 4 : "auto", right: i % 2 !== 0 ? 4 : "auto",
+                width: 2, height: 2, borderRadius: "50%",
+                background: "rgba(216,180,254,0.28)",
+              }} />
+            ))}
+            {/* Center symbol with glow */}
+            <span style={{
+              fontSize: "clamp(0.8rem, min(4.5vw, 3.8dvh), 1.3rem)",
+              color: P.text,
+              lineHeight: 1,
+              textShadow: `0 0 6px ${P.glowHi}, 0 0 16px ${P.glow}, 0 0 32px rgba(160,100,220,0.28)`,
+            }}>
+              ۞
+            </span>
+          </motion.div>
         ) : (
           <motion.span
             key="letter"
