@@ -84,10 +84,27 @@
     @apply border-border outline-ring/50;
   }
 
+  html, body, #root {
+    height: 100%;
+    /* Prevent overscroll rubber-banding on iOS */
+    overscroll-behavior: none;
+  }
+
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent bounce scroll on iOS when installed as PWA */
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  #root {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
   }
 
   /* Scrollbar */
