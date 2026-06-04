@@ -403,41 +403,15 @@ function FaalAliSection({ lang }) {
 // FAALUL LUQMAN SECTION (new, independent)
 // ══════════════════════════════════════════════════════════════
 
-const MYSTERY_CHARS = ["☽", "✦", "✧", "◈", "⊙", "⋆", "☾", "✩", "⟡", "❋", "✵", "⊛", "⌖", "✴"];
-
-function playRevealChime() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const freqs = [528, 660, 792];
-    freqs.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.5, ctx.currentTime + i * 0.12 + 0.6);
-      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
-      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + i * 0.12 + 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.7);
-      osc.start(ctx.currentTime + i * 0.12);
-      osc.stop(ctx.currentTime + i * 0.12 + 0.75);
-    });
-  } catch (_) {}
-}
-
 function LuqmanCell({ cell, index, onTap }) {
-  const [flipped, setFlipped] = useState(false);
-  const mysteryChar = MYSTERY_CHARS[index % MYSTERY_CHARS.length];
+  const [revealed, setRevealed] = useState(false);
 
   const handleClick = () => {
-    if (flipped) return;
-    setFlipped(true);
-    playRevealChime();
-    setTimeout(() => onTap(cell), 1400);
+    if (revealed) return;
+    setRevealed(true);
+    setTimeout(() => onTap(cell), 900);
   };
 
-  // Stable per-card random offset for the deal animation (computed once)
   const dealOffset = useMemo(() => ({
     x: (Math.random() - 0.5) * 24,
     y: (Math.random() - 0.5) * 24,
@@ -450,84 +424,46 @@ function LuqmanCell({ cell, index, onTap }) {
       animate={{ opacity: 1, scale: 1, x: 0, y: 0, rotate: 0 }}
       transition={{ delay: index * 0.04, duration: 0.38, ease: [0.34, 1.56, 0.64, 1] }}
       onClick={handleClick}
+      className="relative rounded-lg border flex items-center justify-center"
       style={{
-        perspective: "500px",
         minHeight: 0,
         minWidth: 0,
-        cursor: flipped ? "default" : "pointer",
+        cursor: revealed ? "default" : "pointer",
         WebkitTapHighlightColor: "transparent",
+        background: revealed ? P.bgHi : P.bg,
+        borderColor: revealed ? P.borderHi : P.faint,
+        transition: "background 0.3s, border-color 0.3s",
+        boxShadow: revealed ? `0 0 18px ${P.glow}` : "none",
       }}
     >
-      <motion.div
-        animate={{ rotateY: flipped ? 180 : 0 }}
-        transition={{ duration: 0.65, ease: [0.4, 0, 0.2, 1] }}
-        style={{
-          transformStyle: "preserve-3d",
-          width: "100%",
-          height: "100%",
-          position: "relative",
-        }}
-      >
-        {/* Front face — mystery symbol */}
+      {/* Hidden back — plain card, no content */}
+      {!revealed && (
         <div
-          className="absolute inset-0 rounded-lg border flex items-center justify-center"
-          style={{
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-            background: P.bg,
-            borderColor: P.faint,
-          }}
-        >
-          <span className="absolute top-0.5 left-1 font-inter tabular-nums leading-none"
-            style={{ fontSize: "min(1.8vw, 1.4dvh)", color: "rgba(216,180,254,0.22)" }}>
-            {cell.lq_id - 100}
-          </span>
-          <span className="select-none" style={{
-            fontSize: "clamp(0.6rem, min(3.8vw, 2.8dvh), 1.05rem)",
-            color: P.dim,
-            opacity: 0.50,
-            userSelect: "none",
-          }}>
-            {mysteryChar}
-          </span>
-        </div>
+          className="absolute inset-0 rounded-lg"
+          style={{ background: P.bg }}
+        />
+      )}
 
-        {/* Back face — Arabic letter revealed */}
-        <motion.div
-          className="absolute inset-0 rounded-lg border flex items-center justify-center"
-          style={{
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
-            background: P.bgHi,
-            borderColor: P.borderHi,
-          }}
-          animate={flipped ? {
-            boxShadow: [
-              `0 0 8px ${P.glow}`,
-              `0 0 40px ${P.glowHi}, 0 0 80px ${P.glow}`,
-              `0 0 20px ${P.glow}`,
-              `0 0 30px ${P.glowHi}`,
-              `0 0 14px ${P.glow}`,
-            ],
-          } : { boxShadow: `0 0 8px ${P.glow}` }}
-          transition={{ duration: 1.4, ease: "easeOut" }}
-        >
-          <span className="absolute top-0.5 left-1 font-inter tabular-nums leading-none"
-            style={{ fontSize: "min(1.8vw, 1.4dvh)", color: "rgba(216,180,254,0.45)" }}>
-            {cell.lq_id - 100}
-          </span>
-          <span className="font-amiri font-bold select-none"
+      {/* Revealed letter */}
+      <AnimatePresence>
+        {revealed && (
+          <motion.span
+            key="letter"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
+            className="font-amiri font-bold select-none"
             style={{
               fontSize: "clamp(0.75rem, min(4.8vw, 3.8dvh), 1.6rem)",
               color: P.text,
               textShadow: `0 0 14px ${P.glowHi}`,
               lineHeight: 1,
-            }}>
+            }}
+          >
             {cell.symbol}
-          </span>
-        </motion.div>
-      </motion.div>
+          </motion.span>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
