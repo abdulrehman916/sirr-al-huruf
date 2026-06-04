@@ -264,8 +264,7 @@ function ManuscriptIntro() {
       <div className="rounded-2xl px-6 py-4 text-center relative overflow-hidden"
         style={{
           background: "linear-gradient(145deg, rgba(10,20,50,0.75) 0%, rgba(4,10,28,0.85) 100%)",
-          backdropFilter: "blur(18px)",
-          WebkitBackdropFilter: "blur(18px)",
+
           border: "1px solid rgba(212,175,55,0.22)",
           boxShadow: "0 8px 48px rgba(0,0,0,0.55), 0 0 24px rgba(212,175,55,0.08), inset 0 1px 0 rgba(212,175,55,0.15)",
         }}>
@@ -474,8 +473,7 @@ function NavCards({ startNav }) {
                 minHeight:150, padding:"20px 14px",
                 WebkitTapHighlightColor:"transparent",
                 touchAction:"manipulation",
-                backdropFilter:"blur(10px)",
-                WebkitBackdropFilter:"blur(10px)",
+
                 position:"relative", overflow:"hidden",
               }}>
               <div style={{ position:"absolute", top:0, left:0, right:0, height:1,
@@ -499,7 +497,7 @@ export default function HeroSection({ mouse }) {
   const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
 
   return (
-    <div className="font-inter relative flex flex-col items-center pb-12 pt-4" style={{ minHeight: "100vh" }}>
+    <div className="font-inter relative flex flex-col items-center pb-16 pt-4">
 
       {/* Light rays — desktop only */}
       {!isMobile && <LightRays paused={isNavigating} />}
