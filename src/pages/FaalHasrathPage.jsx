@@ -405,6 +405,27 @@ function FaalAliSection({ lang }) {
 
 const MYSTERY_CHARS = ["☽", "✦", "✧", "◈", "⊙", "⋆", "☾", "✩", "⟡", "❋", "✵", "⊛", "⌖", "✴"];
 
+function playRevealChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const freqs = [528, 660, 792];
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.5, ctx.currentTime + i * 0.12 + 0.6);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + i * 0.12 + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.7);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.75);
+    });
+  } catch (_) {}
+}
+
 function LuqmanCell({ cell, index, onTap }) {
   const [flipped, setFlipped] = useState(false);
   const mysteryChar = MYSTERY_CHARS[index % MYSTERY_CHARS.length];
@@ -412,6 +433,7 @@ function LuqmanCell({ cell, index, onTap }) {
   const handleClick = () => {
     if (flipped) return;
     setFlipped(true);
+    playRevealChime();
     setTimeout(() => onTap(cell), 1400);
   };
 
@@ -464,7 +486,7 @@ function LuqmanCell({ cell, index, onTap }) {
         </div>
 
         {/* Back face — Arabic letter revealed */}
-        <div
+        <motion.div
           className="absolute inset-0 rounded-lg border flex items-center justify-center"
           style={{
             backfaceVisibility: "hidden",
@@ -472,8 +494,17 @@ function LuqmanCell({ cell, index, onTap }) {
             transform: "rotateY(180deg)",
             background: P.bgHi,
             borderColor: P.borderHi,
-            boxShadow: `0 0 18px ${P.glow}`,
           }}
+          animate={flipped ? {
+            boxShadow: [
+              `0 0 8px ${P.glow}`,
+              `0 0 40px ${P.glowHi}, 0 0 80px ${P.glow}`,
+              `0 0 20px ${P.glow}`,
+              `0 0 30px ${P.glowHi}`,
+              `0 0 14px ${P.glow}`,
+            ],
+          } : { boxShadow: `0 0 8px ${P.glow}` }}
+          transition={{ duration: 1.4, ease: "easeOut" }}
         >
           <span className="absolute top-0.5 left-1 font-inter tabular-nums leading-none"
             style={{ fontSize: "min(1.8vw, 1.4dvh)", color: "rgba(216,180,254,0.45)" }}>
@@ -488,7 +519,7 @@ function LuqmanCell({ cell, index, onTap }) {
             }}>
             {cell.symbol}
           </span>
-        </div>
+        </motion.div>
       </motion.div>
     </motion.div>
   );
