@@ -304,14 +304,21 @@ function IconOrb({ iconKey, accent }) {
   const [r, g, b] = accent;
   const color = `rgb(${r},${g},${b})`;
   const renderIcon = CARD_ICONS[iconKey];
+  // Pass larger size to icon renderers
+  const iconEl = renderIcon
+    ? (() => {
+        const el = renderIcon(color);
+        return el ? { ...el, props: { ...el.props, width: 26, height: 26 } } : null;
+      })()
+    : <span className="font-amiri text-2xl" style={{ color }}>{iconKey}</span>;
   return (
-    <div className="mb-3 flex items-center justify-center w-11 h-11 rounded-xl relative"
+    <div className="mb-3 flex items-center justify-center w-14 h-14 rounded-xl relative"
       style={{
         background: `linear-gradient(145deg, rgba(${r},${g},${b},0.20) 0%, rgba(${r},${g},${b},0.07) 100%)`,
         border: `1px solid rgba(${r},${g},${b},0.38)`,
         boxShadow: `0 0 20px rgba(${r},${g},${b},0.25), inset 0 1px 0 rgba(${r},${g},${b},0.18)`,
       }}>
-      {renderIcon ? renderIcon(color) : <span className="font-amiri text-xl" style={{ color }}>{iconKey}</span>}
+      {iconEl}
     </div>
   );
 }
@@ -322,17 +329,17 @@ function CardInner({ card }) {
     <>
       <IconOrb iconKey={card.iconKey} accent={card.accent} />
       <p className="font-amiri font-bold leading-tight mb-0.5"
-        style={{ fontSize:"clamp(1.05rem,4.5vw,1.3rem)", color:"#f5ead4", letterSpacing:"0.01em" }}>
+        style={{ fontSize:"clamp(1.2rem,5vw,1.5rem)", color:"#f5ead4", letterSpacing:"0.01em" }}>
         {card.arabic}
       </p>
       <p className="font-inter font-bold tracking-[0.22em] uppercase"
-        style={{ fontSize:"6.5px", color:`rgba(${r},${g},${b},0.88)`, marginTop:1 }}>
+        style={{ fontSize:"7px", color:`rgba(${r},${g},${b},0.88)`, marginTop:1 }}>
         {card.label}
       </p>
       <div className="my-2.5 rounded-full"
         style={{ width:28, height:0.5, background:`linear-gradient(90deg,transparent,rgba(${r},${g},${b},0.55),transparent)` }} />
       <p className="font-inter leading-relaxed text-center"
-        style={{ fontSize:"8.5px", color:"rgba(255,255,255,0.32)", letterSpacing:"0.04em" }}>
+        style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)", letterSpacing:"0.04em" }}>
         {card.subtitle}
       </p>
     </>
@@ -454,7 +461,7 @@ function AllahCalligraphyMobile() {
 
 function NavCards({ startNav }) {
   return (
-    <div className="relative z-10 w-full mt-7 grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <div className="relative z-10 w-full mt-7 grid grid-cols-2 gap-3">
       {NAV_CARDS.map((card, i) => {
         const [r, g, b] = card.accent;
         return (
@@ -470,7 +477,7 @@ function NavCards({ startNav }) {
                 background:`linear-gradient(155deg,rgba(${r},${g},${b},0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(${r},${g},${b},0.05) 100%)`,
                 borderColor:`rgba(${r},${g},${b},0.32)`,
                 boxShadow:`0 0 28px rgba(${r},${g},${b},0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(${r},${g},${b},0.18)`,
-                minHeight:150, padding:"20px 14px",
+                minHeight:185, padding:"24px 16px",
                 WebkitTapHighlightColor:"transparent",
                 touchAction:"manipulation",
 
