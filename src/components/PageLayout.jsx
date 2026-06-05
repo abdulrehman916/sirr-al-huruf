@@ -336,7 +336,6 @@ export default function PageLayout({ children }) {
           overscrollBehaviorY: "none",
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
-          minHeight: "100vh",
           willChange: 'scroll-position',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
