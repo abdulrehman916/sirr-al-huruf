@@ -7,11 +7,12 @@ import PageTitle from "../components/PageTitle";
 import { usePageState } from "../context/PageStateContext";
 
 const G = {
-  borderHi: "rgba(212,175,55,0.65)",
-  glow:     "rgba(212,175,55,0.22)",
-  glowHi:   "rgba(212,175,55,0.55)",
+  borderHi: "rgba(212,175,55,0.75)",
+  glow:     "rgba(212,175,55,0.35)",
+  glowHi:   "rgba(212,175,55,0.65)",
   text:     "#F5D060",
-  dim:      "rgba(212,175,55,0.55)",
+  dim:      "rgba(212,175,55,0.60)",
+  cardBg:   "linear-gradient(145deg, rgba(10,20,45,0.98) 0%, rgba(5,12,30,0.99) 100%)",
 };
 
 const PAGE_KEY = 'abjadKabir';
@@ -170,20 +171,23 @@ export default function AbjadKabirPage() {
                   className="rounded-lg py-2.5 px-2 border transition-all relative overflow-hidden"
                   style={{
                     background: isActive
-                      ? "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)"
+                      ? "linear-gradient(145deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.08) 100%)"
                       : "rgba(4,12,34,0.95)",
-                    borderColor: isActive ? "rgba(212,175,55,0.35)" : "rgba(255,255,255,0.06)",
-                    boxShadow: isActive ? `0 0 12px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.10)` : "none",
+                    borderColor: isActive ? G.borderHi : "rgba(255,255,255,0.08)",
+                    boxShadow: isActive 
+                      ? `0 0 20px ${G.glow}, 0 0 40px ${G.glowHi}, inset 0 1px 0 rgba(212,175,55,0.18)`
+                      : "none",
                   }}
                 >
-                  <span className="block font-inter font-bold text-[9px] tracking-wide" style={{ color: isActive ? G.text : "rgba(255,255,255,0.35)" }}>
+                  <div className="absolute inset-0" style={{ background: isActive ? "radial-gradient(ellipse 80% 60% at 50% 120%, rgba(212,175,55,0.20) 0%, transparent 70%)" : "transparent" }} />
+                  <span className="block font-inter font-bold text-[9px] tracking-wide relative z-10" style={{ color: isActive ? G.text : "rgba(255,255,255,0.40)" }}>
                     {labels.en}
                   </span>
-                  <span className="block font-amiri text-[11px] font-bold mt-0.5" style={{ color: isActive ? "rgba(212,175,55,0.65)" : "rgba(212,175,55,0.40)" }}>
+                  <span className="block font-amiri text-[11px] font-bold mt-0.5 relative z-10" style={{ color: isActive ? "rgba(212,175,55,0.80)" : "rgba(212,175,55,0.45)" }}>
                     {labels.ar}
                   </span>
                   {isActive && (
-                    <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-px rounded-full" style={{ background: G.text }} />
+                    <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-px rounded-full relative z-10" style={{ background: G.text, boxShadow: `0 0 8px ${G.text}` }} />
                   )}
                 </motion.button>
               );
@@ -230,8 +234,8 @@ export default function AbjadKabirPage() {
               placeholder="أدخل النص العربي هنا..."
               className="w-full rounded-lg border bg-slate-950/60 p-3 text-right font-amiri text-sm text-white placeholder-slate-600 focus:outline-none transition-all"
               style={{
-                borderColor: "rgba(212,175,55,0.20)",
-                boxShadow: "inset 0 1px 8px rgba(0,0,0,0.35)",
+                borderColor: "rgba(212,175,55,0.30)",
+                boxShadow: "inset 0 2px 12px rgba(0,0,0,0.45), 0 0 20px rgba(212,175,55,0.05)",
               }}
               rows={3}
               dir="rtl"
@@ -244,29 +248,31 @@ export default function AbjadKabirPage() {
               onClick={() => calculateResults(input)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 py-2.5 rounded-lg font-amiri font-bold text-sm border transition-all"
+              className="flex-1 py-2.5 rounded-lg font-amiri font-bold text-sm border transition-all relative overflow-hidden"
               style={{
-                background: "linear-gradient(135deg, rgba(212,175,55,0.35) 0%, rgba(212,175,55,0.15) 100%)",
-                borderColor: "rgba(212,175,55,0.35)",
-                color: G.text,
-                boxShadow: `0 0 12px ${G.glow}`,
+                background: "linear-gradient(135deg, rgba(212,175,55,0.45) 0%, rgba(212,175,55,0.25) 100%)",
+                borderColor: G.borderHi,
+                color: "#0d1b2a",
+                boxShadow: `0 0 20px ${G.glow}, 0 0 35px ${G.glowHi}, inset 0 1px 0 rgba(255,255,255,0.20)`,
               }}
             >
-              احسب
+              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%)" }} />
+              <span className="relative z-10">احسب</span>
             </motion.button>
             <motion.button
               onClick={handleClear}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg font-inter font-bold text-[11px] border transition-all"
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg font-inter font-bold text-[11px] border transition-all relative overflow-hidden"
               style={{
-                background: "rgba(4,12,34,0.95)",
-                borderColor: "rgba(255,255,255,0.08)",
-                color: "rgba(212,175,55,0.55)",
+                background: "linear-gradient(145deg, rgba(212,175,55,0.08) 0%, rgba(4,12,34,0.95) 100%)",
+                borderColor: "rgba(212,175,55,0.25)",
+                color: "rgba(212,175,55,0.70)",
+                boxShadow: `inset 0 1px 0 rgba(212,175,55,0.12)`,
               }}
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              Clear
+              <Trash2 className="w-3.5 h-3.5 relative z-10" />
+              <span className="relative z-10">Clear</span>
             </motion.button>
           </div>
         </SectionCard>
@@ -288,10 +294,11 @@ export default function AbjadKabirPage() {
                   transition={{ duration: 0.3 }}
                   className="inline-block font-inter font-bold"
                   style={{
-                    color: G.text,
+                    color: "#F5D060",
                     fontSize: results[mode].total.toString().length > 6 ? '2.5rem' : 
                               results[mode].total.toString().length > 4 ? '3rem' : '3.5rem',
-                    textShadow: `0 0 24px ${G.glow}`,
+                    textShadow: `0 0 28px ${G.glowHi}, 0 0 55px ${G.glow}, 0 0 85px rgba(212,175,55,0.35)`,
+                    filter: "drop-shadow(0 0 12px rgba(212,175,55,0.50))",
                   }}
                 >
                   {results[mode].total}
@@ -372,29 +379,33 @@ export default function AbjadKabirPage() {
                   onClick={handleCopy}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md font-inter font-bold text-[10px] border transition-all"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md font-inter font-bold text-[10px] border transition-all relative overflow-hidden"
                   style={{
-                    background: copied ? "rgba(16,185,129,0.12)" : "rgba(4,12,34,0.95)",
-                    borderColor: copied ? "rgba(16,185,129,0.35)" : "rgba(255,255,255,0.08)",
-                    color: copied ? "#10B981" : "rgba(212,175,55,0.55)",
+                    background: copied ? "linear-gradient(145deg, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.08) 100%)" : "linear-gradient(145deg, rgba(212,175,55,0.08) 0%, rgba(4,12,34,0.95) 100%)",
+                    borderColor: copied ? "rgba(16,185,129,0.45)" : "rgba(212,175,55,0.25)",
+                    color: copied ? "#10B981" : "rgba(212,175,55,0.70)",
+                    boxShadow: copied ? "0 0 16px rgba(16,185,129,0.25)" : `inset 0 1px 0 rgba(212,175,55,0.12)`,
                   }}
                 >
-                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {copied ? 'Copied' : 'Copy'}
+                  <div className="absolute inset-0" style={{ background: copied ? "transparent" : "radial-gradient(ellipse 80% 60% at 50% 120%, rgba(212,175,55,0.12) 0%, transparent 70%)" }} />
+                  {copied ? <Check className="w-3 h-3 relative z-10" /> : <Copy className="w-3 h-3 relative z-10" />}
+                  <span className="relative z-10">{copied ? 'Copied' : 'Copy'}</span>
                 </motion.button>
                 <motion.button
                   onClick={handleExport}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md font-inter font-bold text-[10px] border transition-all"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md font-inter font-bold text-[10px] border transition-all relative overflow-hidden"
                   style={{
-                    background: "rgba(4,12,34,0.95)",
-                    borderColor: "rgba(255,255,255,0.08)",
-                    color: "rgba(212,175,55,0.55)",
+                    background: "linear-gradient(145deg, rgba(212,175,55,0.08) 0%, rgba(4,12,34,0.95) 100%)",
+                    borderColor: "rgba(212,175,55,0.25)",
+                    color: "rgba(212,175,55,0.70)",
+                    boxShadow: `inset 0 1px 0 rgba(212,175,55,0.12)`,
                   }}
                 >
-                  <Download className="w-3 h-3" />
-                  Export
+                  <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 120%, rgba(212,175,55,0.12) 0%, transparent 70%)" }} />
+                  <Download className="w-3 h-3 relative z-10" />
+                  <span className="relative z-10">Export</span>
                 </motion.button>
               </div>
             </SectionCard>
@@ -459,9 +470,9 @@ function SectionCard({ children }) {
     <div
       className="rounded-lg border p-3"
       style={{
-        background: "linear-gradient(145deg, rgba(8,16,38,0.95) 0%, rgba(4,10,24,0.98) 100%)",
-        borderColor: "rgba(212,175,55,0.18)",
-        boxShadow: "0 2px 20px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.06)",
+        background: G.cardBg,
+        borderColor: "rgba(212,175,55,0.28)",
+        boxShadow: "0 4px 32px rgba(0,0,0,0.65), inset 0 1px 0 rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.08)",
       }}
     >
       {children}
