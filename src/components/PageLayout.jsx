@@ -178,32 +178,27 @@ export default function PageLayout({ children }) {
   const navRef = useRef(null);
   const tabRefs = useRef({});
 
-  // Auto-scroll navigation bar to keep active tab visible only if completely out of view
+  // Auto-scroll navigation bar to center the active tab (mobile/tablet only)
   useEffect(() => {
     const navEl = navRef.current;
     const activeTabEl = tabRefs.current[activeId];
     
     if (!navEl || !activeTabEl) return;
 
-    // Only scroll if the active tab is completely out of view
+    // Use requestAnimationFrame for 60fps smooth scrolling
     const timer = setTimeout(() => {
       requestAnimationFrame(() => {
         const tabRect = activeTabEl.getBoundingClientRect();
         const navRect = navEl.getBoundingClientRect();
         
-        // Check if tab is completely outside visible area
-        const isOutOfView = tabRect.right < navRect.left || tabRect.left > navRect.right;
+        // Calculate position to center the active tab
+        const centerPosition = navEl.scrollLeft + (tabRect.left - navRect.left) - (navRect.width / 2) + (tabRect.width / 2);
         
-        if (isOutOfView) {
-          // Scroll just enough to bring the tab into view
-          if (tabRect.right < navRect.left) {
-            // Tab is to the left - scroll left
-            navEl.scrollLeft -= (navRect.left - tabRect.right) + 10;
-          } else if (tabRect.left > navRect.right) {
-            // Tab is to the right - scroll right
-            navEl.scrollLeft += (tabRect.left - navRect.right) + 10;
-          }
-        }
+        // Smooth scroll with native behavior
+        navEl.scrollTo({
+          left: Math.max(0, Math.min(centerPosition, navEl.scrollWidth - navRect.width)),
+          behavior: 'smooth',
+        });
       });
     }, 50);
 
