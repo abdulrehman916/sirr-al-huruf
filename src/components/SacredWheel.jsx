@@ -455,16 +455,21 @@ function AsmaNames({ containerSize, paused, deviceType }) {
     ASMA.map((_, i) => {
       const angle = (i / ASMA.length) * Math.PI * 2 - Math.PI / 2;
       return {
-        x: half + Math.cos(angle) * ORBIT_R,
-        y: half + Math.sin(angle) * ORBIT_R,
+        x: Math.cos(angle) * ORBIT_R,
+        y: Math.sin(angle) * ORBIT_R,
       };
     }),
-  [half, ORBIT_R]);
+  [ORBIT_R]);
 
   return (
     <motion.div
       className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 8, transformOrigin: `${half}px ${half}px` }}
+      style={{
+        zIndex: 8,
+        transformOrigin: `${half}px ${half}px`,
+        left: half,
+        top: half,
+      }}
       animate={paused ? {} : { rotate: 360 }}
       transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
     >
@@ -473,7 +478,13 @@ function AsmaNames({ containerSize, paused, deviceType }) {
         const breathDelay = (i / ASMA.length) * 4;
         return (
           <motion.div key={name}
-            style={{ position: "absolute", left: x, top: y, translateX: "-50%", translateY: "-50%" }}
+            style={{
+              position: "absolute",
+              left: x,
+              top: y,
+              translateX: "-50%",
+              translateY: "-50%",
+            }}
             animate={paused ? {} : { rotate: -360 }}
             transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
           >
