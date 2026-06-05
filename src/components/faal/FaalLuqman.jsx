@@ -100,7 +100,15 @@ export default function FaalLuqman() {
   };
 
   return (
-    <div className="space-y-4">
+    <div 
+      className="space-y-4"
+      style={{
+        minHeight: 0,
+        height: "auto",
+        maxHeight: "none",
+        overflow: "visible",
+      }}
+    >
       {/* Language Toggle */}
       <SectionCard>
         <SectionLabel>🌐 Language — ഭാഷ — اللغة</SectionLabel>

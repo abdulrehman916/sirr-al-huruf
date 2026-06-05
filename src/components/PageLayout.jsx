@@ -263,10 +263,12 @@ export default function PageLayout({ children }) {
         ref={scrollRef}
         className="flex-1 overflow-y-auto overflow-x-hidden"
         style={{
-          overscrollBehaviorY: "none",
+          overscrollBehaviorY: "auto",
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
           minHeight: 0,
+          height: "auto",
+          maxHeight: "none",
           willChange: 'scroll-position',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
