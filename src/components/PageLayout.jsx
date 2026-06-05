@@ -235,7 +235,7 @@ export default function PageLayout({ children }) {
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         minHeight: "100vh",
-        height: "auto",
+        height: "100%",
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
