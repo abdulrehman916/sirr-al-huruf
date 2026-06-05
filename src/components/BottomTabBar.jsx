@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const BOTTOM_TABS = [
   { id: "home",             arabic: "الرئيسية", path: "/" },
@@ -8,7 +8,51 @@ const BOTTOM_TABS = [
   { id: "plants",           arabic: "نباتات",   path: "/plants" },
 ];
 
+// Per-tab history stack: maps tab id → last visited path within that tab
+const TAB_HISTORY = {
+  "home": "/",
+  "abjad-kabir": "/abjad",
+  "hadim": "/hadim",
+  "basthul-huroof-2": "/basthul-huroof-2",
+  "plants": "/plants",
+};
+
+// Which path prefix belongs to which tab
+const TAB_ROOT = {
+  "/": "home",
+  "/abjad": "abjad-kabir",
+  "/hadim": "hadim",
+  "/basthul-huroof-2": "basthul-huroof-2",
+  "/plants": "plants",
+};
+
+function getTabForPath(pathname) {
+  if (pathname.startsWith("/plants")) return "plants";
+  if (pathname.startsWith("/abjad")) return "abjad-kabir";
+  if (pathname.startsWith("/hadim")) return "hadim";
+  if (pathname.startsWith("/basthul-huroof-2")) return "basthul-huroof-2";
+  if (pathname === "/") return "home";
+  return null;
+}
+
 export default function BottomTabBar({ activeId, onNavigate }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Keep TAB_HISTORY updated whenever the path changes
+  const tabForCurrentPath = getTabForPath(location.pathname);
+  if (tabForCurrentPath) {
+    TAB_HISTORY[tabForCurrentPath] = location.pathname;
+  }
+
+  const handleTabPress = (tab) => {
+    onNavigate?.();
+    if (activeId === tab.id) return; // already on this tab — do nothing
+    // Navigate to last visited path within the tab
+    const target = TAB_HISTORY[tab.id] ?? tab.path;
+    navigate(target);
+  };
+
   return (
     <div
       className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch justify-around"
@@ -22,17 +66,20 @@ export default function BottomTabBar({ activeId, onNavigate }) {
       {BOTTOM_TABS.map((tab) => {
         const isActive = activeId === tab.id;
         return (
-          <Link
+          <button
             key={tab.id}
-            to={tab.path}
-            onClick={onNavigate}
+            onClick={() => handleTabPress(tab)}
             className="flex flex-col items-center justify-center flex-1 py-2.5 gap-1"
             style={{
               WebkitTapHighlightColor: "transparent",
               userSelect: "none",
               WebkitUserSelect: "none",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
               minHeight: 52,
               position: "relative",
+              outline: "none",
             }}
           >
             {isActive && (
@@ -50,11 +97,12 @@ export default function BottomTabBar({ activeId, onNavigate }) {
                 fontSize: 15,
                 color: isActive ? "#E8C84A" : "rgba(255,255,255,0.32)",
                 textShadow: isActive ? "0 0 10px rgba(232,200,74,0.55)" : "none",
+                pointerEvents: "none",
               }}
             >
               {tab.arabic}
             </span>
-          </Link>
+          </button>
         );
       })}
     </div>

@@ -3,31 +3,57 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const THRESHOLD = 72;
 
+/**
+ * PullToRefresh — iOS-compatible pull-to-refresh.
+ *
+ * Key design decisions:
+ * - We do NOT call e.preventDefault() on touchmove so the browser's native
+ *   momentum/rubber-band scrolling is never blocked (required for passive iOS).
+ * - overscroll-behavior: none is set on the *outer scroll container* (PageLayout),
+ *   not here, so this component doesn't need to interfere with it.
+ * - We only activate the pull gesture when the scroll container is at the very
+ *   top (scrollTop ≤ 2), letting normal scrolling work everywhere else.
+ * - Content translation is done via a CSS transform on a child div, not by
+ *   manipulating the scroll container, so layout is never disrupted.
+ */
 export default function PullToRefresh({ onRefresh, children }) {
   const [pullY, setPullY] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(null);
   const pulling = useRef(false);
 
+  const getScrollContainer = useCallback((el) => {
+    // Walk up the DOM to find the data-scroll-container
+    let node = el;
+    while (node) {
+      if (node.dataset?.scrollContainer) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }, []);
+
   const handleTouchStart = useCallback((e) => {
-    // Only activate when scrolled to top
-    const el = e.currentTarget.closest("[data-scroll-container]") || document.documentElement;
-    if (el.scrollTop > 2) return;
+    const container = getScrollContainer(e.currentTarget);
+    const scrollTop = container ? container.scrollTop : window.scrollY;
+    if (scrollTop > 2) return;
     startY.current = e.touches[0].clientY;
     pulling.current = true;
-  }, []);
+  }, [getScrollContainer]);
 
   const handleTouchMove = useCallback((e) => {
     if (!pulling.current || startY.current === null || refreshing) return;
     const dy = e.touches[0].clientY - startY.current;
-    if (dy < 0) { pulling.current = false; return; }
-    const resistance = Math.min(dy * 0.45, THRESHOLD + 16);
+    if (dy <= 0) { pulling.current = false; return; }
+    // Rubber-band-style resistance: sqrt curve feels natural
+    const resistance = Math.min(dy * 0.42, THRESHOLD + 20);
     setPullY(resistance);
+    // Do NOT call e.preventDefault() — keeps iOS scroll momentum intact
   }, [refreshing]);
 
   const handleTouchEnd = useCallback(async () => {
     if (!pulling.current) return;
     pulling.current = false;
+    startY.current = null;
     if (pullY >= THRESHOLD * 0.45) {
       setRefreshing(true);
       setPullY(0);
@@ -36,7 +62,6 @@ export default function PullToRefresh({ onRefresh, children }) {
     } else {
       setPullY(0);
     }
-    startY.current = null;
   }, [pullY, onRefresh]);
 
   const progress = Math.min(pullY / (THRESHOLD * 0.45), 1);
@@ -47,6 +72,7 @@ export default function PullToRefresh({ onRefresh, children }) {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       style={{ position: "relative", touchAction: "pan-y" }}
     >
       {/* Pull indicator */}
@@ -107,7 +133,13 @@ export default function PullToRefresh({ onRefresh, children }) {
       </AnimatePresence>
 
       {/* Content shifts down while pulling */}
-      <div style={{ transform: pullY > 0 ? `translateY(${pullY}px)` : "none", transition: pullY === 0 ? "transform 0.25s ease" : "none" }}>
+      <div
+        style={{
+          transform: pullY > 0 ? `translateY(${pullY}px)` : "none",
+          transition: pullY === 0 ? "transform 0.25s ease" : "none",
+          willChange: pullY > 0 ? "transform" : "auto",
+        }}
+      >
         {children}
       </div>
     </div>
