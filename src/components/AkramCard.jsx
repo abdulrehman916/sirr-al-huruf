@@ -147,13 +147,12 @@ export default function AkramCard({ total, levelLabel, levelArabic }) {
         <p className="font-inter text-[9px] uppercase tracking-widest px-2" style={{ color: "rgba(212,175,55,0.38)" }}>
           Akram Breakdown
         </p>
-        <div className="flex flex-wrap gap-1.5 px-1" dir="rtl">
-          {[...pieces].reverse().map((p, i) => {
+        <div className="flex flex-wrap gap-1.5 px-1">
+          {pieces.map((p, i) => {
             const isGhain = p.letter === 'غ';
-            const originalIndex = pieces.length - 1 - i;
             return (
               <motion.div
-                key={originalIndex}
+                key={i}
                 initial={{ opacity: 0, scale: 0.75 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.04, duration: 0.25 }}
