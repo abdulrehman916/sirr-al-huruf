@@ -329,41 +329,12 @@ const ZERO_MV = { x: { get: () => 0, set: () => {}, on: () => () => {} }, y: { g
 
 // ── Main ──────────────────────────────────────────────────────────
 export default function HeroSection({ mouse }) {
-  const { startNav, isNavigating } = useNavigation();
-  const isMobile = useIsMobile();
-  const safeMouse = mouse ?? ZERO_MV;
-  const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
-
   return (
     <div className="font-inter relative flex flex-col items-center w-full pb-20 pt-4" style={{ minHeight: "auto", height: "auto" }}>
-
-      {/* Light rays — desktop only */}
-      {!isMobile && <LightRays paused={isNavigating} />}
-
-      {/* Wheel container */}
-      {isMobile ? (
-        // Mobile: no floating animation on wrapper
-        <div className="relative flex items-center justify-center" style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
-          <OrbitalRings paused={isNavigating} isMobile={true} />
-          <SacredWheel mouse={safeMouse} />
-          <AllahCalligraphyMobile />
-        </div>
-      ) : (
-        <motion.div animate={{ y:[0,-8,0] }} transition={{ duration:7.5, repeat:Infinity, ease:"easeInOut" }}
-          className="relative flex items-center justify-center"
-          style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
-          <OrbitalRings paused={isNavigating} isMobile={false} />
-          <SacredWheel mouse={safeMouse} />
-          <AllahCalligraphyDesktop paused={isNavigating} />
-        </motion.div>
-      )}
-
-      {/* Title */}
-      {isMobile ? <HeroTitleMobile /> : <HeroTitleDesktop paused={isNavigating} />}
-
-      <GoldDivider delay={1.55} />
-      <ManuscriptIntro />
-      <NavCards />
+      <h1 style={{color:"red",fontSize:"40px"}}>TEST</h1>
+      <div style={{background:"red",height:"300px",marginTop:"20px"}}>
+        CARD GRID TEST
+      </div>
     </div>
   );
 }
