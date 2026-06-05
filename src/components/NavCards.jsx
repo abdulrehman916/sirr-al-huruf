@@ -141,7 +141,7 @@ export default function NavCards() {
   const { startNav } = useNavigation();
   
   return (
-    <div className="relative z-20 w-full mt-8 grid grid-cols-2 gap-3" style={{ minHeight: "400px" }}>
+    <div className="relative z-20 w-full mt-8 px-3 grid grid-cols-2 gap-3 sm:gap-4">
       {NAV_CARDS.map((card, i) => {
         const [r, g, b] = card.accent;
         return (
@@ -152,13 +152,13 @@ export default function NavCards() {
             whileHover={{ scale: 1.04, y: -6, transition: { duration: 0.22, ease: "easeOut" } }}
             whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}>
             <Link to={card.path} onClick={startNav}
-              className="block rounded-2xl border flex flex-col items-center text-center"
+              className="block rounded-2xl border flex flex-col items-center justify-center text-center"
               style={{
                 background: `linear-gradient(155deg,rgba(${r},${g},${b},0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(${r},${g},${b},0.05) 100%)`,
                 borderColor: `rgba(${r},${g},${b},0.32)`,
                 boxShadow: `0 0 28px rgba(${r},${g},${b},0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(${r},${g},${b},0.18)`,
-                minHeight: 185,
-                padding: "24px 16px",
+                minHeight: 160,
+                padding: "20px 16px",
                 WebkitTapHighlightColor: "transparent",
                 touchAction: "manipulation",
                 position: "relative",
