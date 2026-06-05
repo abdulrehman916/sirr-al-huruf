@@ -378,7 +378,7 @@ export default function HeroSection({ mouse }) {
       <ManuscriptIntro />
 
       {/* Card Grid - 2 columns mobile, 3 columns desktop */}
-      <div className="relative z-20 w-full mt-8 px-3 grid grid-cols-2 md:grid-cols-3 gap-3" style={{ marginBottom: "40px" }}>
+      <div className="relative z-20 w-full mt-4 px-3 grid grid-cols-2 md:grid-cols-3 gap-3" style={{ marginBottom: "40px" }}>
         {NAV_CARDS.map((card) => (
           <NavCard key={card.path} card={card} />
         ))}
