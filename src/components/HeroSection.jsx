@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useNavigation } from "../context/NavigationContext";
 import SacredWheel from "./SacredWheel";
-import NavCards from "./NavCards";
+import NavCards from "./NavCards.jsx";
 import useIsMobile from "../hooks/useIsMobile";
 
 // ── Static data ───────────────────────────────────────────────────

@@ -146,9 +146,8 @@ export default function NavCards() {
         const [r, g, b] = card.accent;
         return (
           <motion.div key={card.path}
-            initial={{ opacity: 0, y: 26, scale: 0.93 }}
+            initial={{ opacity: 1, y: 0, scale: 1 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 2.0 + i * 0.05, duration: 0.4, ease: "easeOut" }}
             whileHover={{ scale: 1.04, y: -6, transition: { duration: 0.22, ease: "easeOut" } }}
             whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}>
             <Link to={card.path} onClick={startNav}
