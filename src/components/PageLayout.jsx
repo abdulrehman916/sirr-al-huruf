@@ -25,6 +25,17 @@ const pageVariants = {
 
 // ── Top horizontal nav tab — instant activation, zero delay ──
 const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
+  const handleTouchStart = (e) => {
+    // Instant visual feedback on touch
+    e.currentTarget.style.opacity = '0.7';
+  };
+
+  const handleTouchEnd = (e) => {
+    e.currentTarget.style.opacity = '1';
+    // Trigger navigation immediately
+    onClick();
+  };
+
   return (
     <div
       ref={tabRef}
@@ -41,6 +52,9 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         boxShadow: isActive
           ? "0 0 16px rgba(212,175,55,0.22), inset 0 1px 0 rgba(212,175,55,0.22)"
           : "none",
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
       }}
     >
       {isActive && (
@@ -56,13 +70,19 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
       <Link
         to={tab.path}
         onClick={onClick}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         className="relative flex flex-col items-center justify-center py-2 px-2.5"
         style={{
           WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
+          touchAction: "pan-x pan-y",
           userSelect: "none",
+          WebkitUserSelect: "none",
           minHeight: 44,
           minWidth: 52,
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
         }}
       >
         <span
@@ -70,6 +90,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
           style={{
             fontSize: 14,
             color: isActive ? "#E8C84A" : "rgba(255,255,255,0.52)",
+            willChange: 'color',
           }}
         >
           {tab.arabic}
@@ -80,6 +101,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
           style={{
             fontSize: 7.5,
             color: isActive ? "rgba(232,200,74,0.88)" : "rgba(255,255,255,0.28)",
+            willChange: 'color',
           }}
         >
           {tab.label}
@@ -92,6 +114,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
             background: "linear-gradient(90deg, transparent, #E8C84A, transparent)",
             width: isActive ? 26 : 0,
             opacity: isActive ? 1 : 0,
+            willChange: 'width, opacity',
           }}
         />
 
@@ -132,20 +155,22 @@ export default function PageLayout({ children }) {
     
     if (!navEl || !activeTabEl) return;
 
-    // Small delay to ensure DOM is ready
+    // Use requestAnimationFrame for 60fps smooth scrolling
     const timer = setTimeout(() => {
-      const tabRect = activeTabEl.getBoundingClientRect();
-      const navRect = navEl.getBoundingClientRect();
-      
-      // Calculate position to center the active tab
-      const centerPosition = navEl.scrollLeft + (tabRect.left - navRect.left) - (navRect.width / 2) + (tabRect.width / 2);
-      
-      // Smooth scroll to center the active tab
-      navEl.scrollTo({
-        left: centerPosition,
-        behavior: 'smooth',
+      requestAnimationFrame(() => {
+        const tabRect = activeTabEl.getBoundingClientRect();
+        const navRect = navEl.getBoundingClientRect();
+        
+        // Calculate position to center the active tab
+        const centerPosition = navEl.scrollLeft + (tabRect.left - navRect.left) - (navRect.width / 2) + (tabRect.width / 2);
+        
+        // Smooth scroll with native behavior
+        navEl.scrollTo({
+          left: Math.max(0, Math.min(centerPosition, navEl.scrollWidth - navRect.width)),
+          behavior: 'smooth',
+        });
       });
-    }, 100);
+    }, 50);
 
     return () => clearTimeout(timer);
   }, [activeId, location.pathname]);
@@ -209,6 +234,17 @@ export default function PageLayout({ children }) {
         <div 
           ref={navRef}
           className="max-w-2xl mx-auto flex gap-1 overflow-x-auto scrollbar-none"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            willChange: 'scroll-position',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            touchAction: 'pan-x',
+          }}
+          onTouchMove={(e) => {
+            // Enable passive scrolling
+            e.stopPropagation();
+          }}
         >
           {TABS.map((tab) => (
             <NavTab
@@ -231,6 +267,9 @@ export default function PageLayout({ children }) {
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
           minHeight: 0,
+          willChange: 'scroll-position',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
         }}
       >
         <AnimatePresence mode="wait">
@@ -240,13 +279,16 @@ export default function PageLayout({ children }) {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.20, ease: "easeOut" }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
             className="relative z-10 w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
               paddingBottom: "env(safe-area-inset-bottom)",
               boxSizing: "border-box",
               minHeight: "auto",
               height: "auto",
+              willChange: 'opacity',
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden',
             }}
           >
             {children}
