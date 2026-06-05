@@ -167,9 +167,18 @@ export default function AnaVefk() {
   const [esmaRaw, setEsmaRaw] = useState(() => session?.anaData?.esmaRaw || "");
   const [result, setResult] = useState(() => session?.anaData?.result || null);
 
-  // Auto-save to context whenever any state changes
+  // Reset local state when session is cleared
   useEffect(() => {
-    if (result) {
+    if (!session?.anaData) {
+      setCenterText("");
+      setEsmaRaw("");
+      setResult(null);
+    }
+  }, [session?.anaData]);
+
+  // Auto-save to context whenever any state changes (only if result exists)
+  useEffect(() => {
+    if (result && centerText && esmaRaw) {
       updateAnaData({ centerText, esmaRaw, result });
     }
   }, [result, centerText, esmaRaw, updateAnaData]);

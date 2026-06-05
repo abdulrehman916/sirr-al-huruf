@@ -126,6 +126,14 @@ export default function TanzimVefki() {
   const [bazRaw,   setBazRaw]   = useState(() => session?.tanzimData?.bazRaw || "");
   const [esmaText, setEsmaText] = useState(() => session?.tanzimData?.esmaText || "");
 
+  // Reset local state when session is cleared
+  useEffect(() => {
+    if (!session?.tanzimData) {
+      setBazRaw("");
+      setEsmaText("");
+    }
+  }, [session?.tanzimData]);
+
   // ── Esma/Baz value resolution ─────────────────────────────────
   // If numeric → use directly. If text/Arabic → compute Ebced.
   const bazTrimmed   = bazRaw.trim();
@@ -142,9 +150,9 @@ export default function TanzimVefki() {
   const cells       = canGenerate ? computeTanzimCells(esmaValue) : null;
   const magicConst  = base ? base * base : null;
 
-  // Auto-save to context when cells are generated
+  // Auto-save to context when cells are generated (only if inputs exist)
   useEffect(() => {
-    if (cells) {
+    if (cells && bazRaw && esmaText) {
       updateTanzimData({ bazRaw, esmaText, cells, esmaValue, base, magicConst });
     }
   }, [cells, bazRaw, esmaText, esmaValue, base, magicConst, updateTanzimData]);
