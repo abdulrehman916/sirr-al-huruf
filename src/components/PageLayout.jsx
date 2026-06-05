@@ -42,6 +42,8 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
   return (
     <div
       ref={tabRef}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       style={{
         borderRadius: 10,
         border: "1px solid",
@@ -58,6 +60,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         willChange: 'transform',
         transform: 'translateZ(0)',
         backfaceVisibility: 'hidden',
+        touchAction: 'none',
       }}
     >
       {isActive && (
@@ -73,12 +76,10 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
       <Link
         to={tab.path}
         onClick={onClick}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
         className="relative flex flex-col items-center justify-center py-2 px-2.5"
         style={{
           WebkitTapHighlightColor: "transparent",
-          touchAction: "pan-y",
+          touchAction: 'none',
           userSelect: "none",
           WebkitUserSelect: "none",
           minHeight: 44,
@@ -262,9 +263,9 @@ export default function PageLayout({ children }) {
           }}
         />
 
-        {/* Mobile header: back button on child pages */}
-        {isChildPage ? (
-          <div className="md:hidden flex items-center justify-between px-3 py-2.5">
+        {/* Back button for child pages only (all devices) */}
+        {isChildPage && (
+          <div className="flex items-center justify-between px-3 py-2.5">
             <button
               onClick={() => { startNav(); navigate(-1); }}
               className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl"
@@ -279,39 +280,30 @@ export default function PageLayout({ children }) {
               <span className="font-inter text-xs font-semibold tracking-wide">Back</span>
             </button>
           </div>
-        ) : (
-          /* Mobile header: title + account icon */
-          <div className="md:hidden flex items-center justify-between px-3 py-2">
-            <span className="font-amiri font-bold" style={{ fontSize: 16, color: "#f5ecd4", letterSpacing: "0.02em" }}>
-              {pageTitle || "سرّ الحروف"}
-            </span>
-            <button
-              onClick={() => setShowAccount(true)}
-              className="flex items-center justify-center w-8 h-8 rounded-xl"
-              style={{
-                background: "rgba(212,175,55,0.08)",
-                border: "1px solid rgba(212,175,55,0.18)",
-                color: "rgba(212,175,55,0.75)",
-                WebkitTapHighlightColor: "transparent",
-                userSelect: "none", WebkitUserSelect: "none",
-              }}
-            >
-              <User className="w-4 h-4" />
-            </button>
-          </div>
         )}
 
-        {/* Desktop/Tablet: scrollable horizontal tab bar */}
-        <div className="px-2 py-1.5 w-full">
+        {/* Enhanced horizontal navigation with improved touch scrolling */}
+        <div className="px-2 py-2 w-full">
           <div
             ref={navRef}
             className="nav-scroll-container flex gap-1 flex-nowrap"
+            onWheel={(e) => {
+              // Allow horizontal scroll with mouse wheel
+              if (e.deltaY !== 0) {
+                e.currentTarget.scrollLeft += e.deltaY;
+                e.preventDefault();
+              }
+            }}
             style={{
               willChange: 'scroll-position',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
-              touchAction: 'pan-x',
+              touchAction: 'pan-x pan-y',
+              WebkitOverflowScrolling: 'touch',
+              cursor: 'grab',
               width: '100%',
+              overflowX: 'auto',
+              overflowY: 'hidden',
             }}
           >
             {TABS.map((tab) => (
