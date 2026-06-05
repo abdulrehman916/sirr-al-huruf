@@ -499,7 +499,7 @@ export default function HeroSection({ mouse }) {
 
       <GoldDivider delay={1.55} />
       <ManuscriptIntro />
-      <NavCards startNav={startNav} />
+      <NavCards />
     </div>
   );
 }
