@@ -180,14 +180,14 @@ function ManuscriptIntro() {
         <div style={{ position:"absolute", top:0, left:0, right:0, height:1,
           background:"linear-gradient(90deg,transparent 5%,rgba(212,175,55,0.60) 50%,transparent 95%)" }} />
         <p className="font-amiri text-sm leading-relaxed" dir="rtl"
-          style={{ color:"rgba(245,230,180,0.78)", lineHeight:2, letterSpacing:"0.04em", fontSize:"15px" }}>
+          style={{ color:"rgba(245,230,180,0.78)", lineHeight:2, letterSpacing:"0.04em", fontSize:"15px", textAlign:"center" }}>
           علم الحروف — الحكمة الربانية في ميزان الأعداد والأسرار
         </p>
         <div className="flex items-center justify-center gap-2.5 mt-3">
           <div style={{ height:1, width:28, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.50))" }} />
           <div style={{ width:3, height:3, borderRadius:"50%", background:"rgba(212,175,55,0.50)" }} />
-          <p className="font-inter text-[8px] uppercase tracking-[0.28em]" style={{ color:"rgba(212,175,55,0.50)" }}>
-            Ilm al-Huruf
+          <p className="font-inter text-[8px] uppercase tracking-[0.28em]" style={{ color:"rgba(212,175,55,0.50)", textAlign:"center" }}>
+            ILM AL-HURUF
           </p>
           <div style={{ width:3, height:3, borderRadius:"50%", background:"rgba(212,175,55,0.50)" }} />
           <div style={{ height:1, width:28, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.50))" }} />
