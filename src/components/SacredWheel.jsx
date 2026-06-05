@@ -550,9 +550,22 @@ function getContainerSize() {
   if (typeof window === "undefined") return 400;
   const w = window.innerWidth;
   const h = window.innerHeight;
-  // On landscape mobile, constrain to height so wheel doesn't overflow
-  const maxByHeight = Math.min(h * 0.70, 500);
-  return Math.min(maxByHeight, Math.max(260, w * 0.85));
+  
+  // Responsive breakpoints for Sacred Wheel
+  // Phone: < 768px, Tablet: 768-1023px, Desktop: >= 1024px
+  if (w < 768) {
+    // Phone: smaller scale, fit within viewport
+    const maxByHeight = h * 0.55;
+    return Math.min(maxByHeight, Math.max(260, w * 0.75));
+  } else if (w < 1024) {
+    // Tablet: medium scale, ensure full visibility
+    const maxByHeight = h * 0.60;
+    return Math.min(maxByHeight, Math.max(340, w * 0.65));
+  } else {
+    // Desktop: larger scale, maintain proportions
+    const maxByHeight = h * 0.65;
+    return Math.min(maxByHeight, Math.max(420, w * 0.55));
+  }
 }
 
 // ────────────────────────────────────────────────────────────
