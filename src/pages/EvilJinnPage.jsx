@@ -61,6 +61,7 @@ function CategoryFilter({ active, onSelect }) {
 
 function JinnRow({ jinn, index, onOpen }) {
   const valueCategory = jinn.abjadValue <= 200 ? "Low" : jinn.abjadValue <= 400 ? "Medium" : "High";
+  const hasProfile = jinn.malayalam && (jinn.malayalam.roopam || jinn.malayalam.thamasam || jinn.malayalam.swabhavam);
   return (
     <motion.button
       initial={{ opacity: 0, y: 10 }}
@@ -68,21 +69,31 @@ function JinnRow({ jinn, index, onOpen }) {
       transition={{ delay: Math.min(index * 0.025, 0.35), duration: 0.22 }}
       onClick={() => onOpen(jinn)}
       className="w-full flex items-center justify-between px-4 py-3 rounded-2xl border text-left gap-3"
-      style={{ background: P.bg, borderColor: P.border }}
+      style={{ background: P.bg, borderColor: hasProfile ? "rgba(212,175,55,0.45)" : P.border }}
       whileTap={{ scale: 0.985 }}
     >
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-inter text-[8px] font-semibold" style={{ color: "rgba(255,255,255,0.30)" }}>#{jinn.serialNo}</span>
           <span className="font-amiri font-bold text-lg" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{jinn.arabicName}</span>
           <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border whitespace-nowrap"
             style={{ color: P.text, borderColor: P.border, background: "rgba(245,208,96,0.10)" }}>
             {valueCategory}
           </span>
+          {hasProfile && (
+            <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border whitespace-nowrap"
+              style={{ color: "#86efac", borderColor: "rgba(134,239,172,0.35)", background: "rgba(134,239,172,0.08)" }}>
+              മലയാളം ✓
+            </span>
+          )}
         </div>
         <p className="font-inter text-base font-bold truncate" style={{ color: "rgba(255,255,255,0.95)" }}>{jinn.englishName}</p>
         <p className="font-inter text-xs truncate" style={{ color: "rgba(255,255,255,0.65)" }}>Abjad: {jinn.abjadValue} · Letters: {jinn.letterCount}</p>
       </div>
-      <Eye className="w-4 h-4 flex-shrink-0" style={{ color: P.dim }} />
+      <div className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center"
+        style={{ background: hasProfile ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.06)", border: "1px solid " + (hasProfile ? P.borderHi : P.faint) }}>
+        <Eye className="w-4 h-4" style={{ color: hasProfile ? P.text : P.dim }} />
+      </div>
     </motion.button>
   );
 }
@@ -118,11 +129,21 @@ function JinnDetail({ jinn, onClose }) {
           <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-xl" style={{ color: P.dim }}>
             <X className="w-5 h-5" />
           </button>
-          <span className="font-amiri font-bold text-3xl block" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.4px rgba(212,175,55,0.4)" }}>{jinn.arabicHarakat}</span>
+          <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>#{jinn.serialNo} · Evil Jinn Profile</p>
+          <span className="font-amiri font-bold text-4xl block" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.4px rgba(212,175,55,0.4)", textShadow: "0 0 24px rgba(212,175,55,0.3)" }}>{jinn.arabicHarakat}</span>
+          {jinn.arabicName !== jinn.arabicHarakat && (
+            <span className="font-amiri text-base block mt-0.5" dir="rtl" style={{ color: "rgba(245,208,96,0.40)" }}>{jinn.arabicName}</span>
+          )}
           <p className="font-inter text-lg font-bold mt-2" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.englishName}</p>
-          <div className="flex items-center justify-center gap-4 mt-3">
-            <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: P.dim }}>Abjad: {jinn.abjadValue}</span>
-            <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: P.dim }}>Letters: {jinn.letterCount}</span>
+          <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
+            <span className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-lg border"
+              style={{ color: P.dim, borderColor: P.faint, background: P.bg }}>Abjad: {jinn.abjadValue}</span>
+            <span className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-lg border"
+              style={{ color: P.dim, borderColor: P.faint, background: P.bg }}>Letters: {jinn.letterCount}</span>
+            <span className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-lg border"
+              style={{ color: P.dim, borderColor: P.faint, background: P.bg }}>
+              {jinn.abjadValue <= 200 ? "Low" : jinn.abjadValue <= 400 ? "Medium" : "High"}
+            </span>
           </div>
         </div>
         <div className="p-6 space-y-4 overflow-y-auto" style={{ maxHeight: "65vh" }}>
