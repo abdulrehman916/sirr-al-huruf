@@ -147,7 +147,7 @@ export default function AkramCard({ total, levelLabel, levelArabic }) {
         <p className="font-inter text-[9px] uppercase tracking-widest px-2" style={{ color: "rgba(212,175,55,0.38)" }}>
           Akram Breakdown
         </p>
-        <div className="flex flex-wrap gap-1.5 px-1">
+        <div className="flex flex-wrap gap-1.5 px-1" dir="rtl">
           {pieces.map((p, i) => {
             const isGhain = p.letter === 'غ';
             return (
