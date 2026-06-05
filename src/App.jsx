@@ -12,6 +12,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import OfflineNotice from './components/OfflineNotice';
+import ErrorBoundary from './components/ErrorBoundary';
 // Add page imports here — lazy loaded for performance
 import Home from './pages/Home';
 const AnasirPage        = lazy(() => import('./pages/AnasirPage'));
@@ -21,9 +22,9 @@ const AbjadKabirPage    = lazy(() => import('./pages/AbjadKabirPage'));
 const MagicSqayerPage   = lazy(() => import('./pages/MagicSqayerPage'));
 const VefkinYapilisiPage= lazy(() => import('./pages/VefkinYapilisiPage'));
 const BastHuroofPage    = lazy(() => import('./pages/BastHuroofPage'));
-const FaalHasrathPage             = lazy(() => import('./pages/FaalHasrathPage'));
-const PlantsPage                  = lazy(() => import('./pages/PlantsPage.jsx'));
-const PlantDetailPage             = lazy(() => import('./pages/PlantDetailPage'));
+const FaalHasrathPage   = lazy(() => import('./pages/FaalHasrathPage'));
+const PlantsPage        = lazy(() => import('./pages/PlantsPage.jsx'));
+const PlantDetailPage   = lazy(() => import('./pages/PlantDetailPage'));
 
 
 // Minimal fallback — matches app background, no flash
