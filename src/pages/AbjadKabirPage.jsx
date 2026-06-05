@@ -281,22 +281,21 @@ export default function AbjadKabirPage() {
             <SectionCard>
               <SectionLabel>RESULT</SectionLabel>
 
-              <div className="text-center mt-3 mb-3">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
+              <div className="text-center mt-4 mb-4">
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="inline-flex items-center justify-center w-20 h-20 rounded-xl border mb-2"
+                  className="inline-block font-inter font-bold"
                   style={{
-                    background: "linear-gradient(145deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.03) 100%)",
-                    borderColor: "rgba(212,175,55,0.30)",
-                    boxShadow: `0 0 20px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.10)`,
+                    color: G.text,
+                    fontSize: results[mode].total.toString().length > 6 ? '2.5rem' : 
+                              results[mode].total.toString().length > 4 ? '3rem' : '3.5rem',
+                    textShadow: `0 0 24px ${G.glow}`,
                   }}
                 >
-                  <span className="text-4xl font-bold font-inter" style={{ color: G.text }}>
-                    {results[mode].total}
-                  </span>
-                </motion.div>
+                  {results[mode].total}
+                </motion.span>
               </div>
 
               <div className="space-y-2">
