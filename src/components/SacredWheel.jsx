@@ -78,7 +78,9 @@ function MobileSacredWheel({ containerSize }) {
 
   const half = containerSize / 2;
   const scale = containerSize / SIZE;
-  const orbitR = 194 * scale;
+  // Tablet fix: reduce orbit radius to keep names within visual circle
+  const isTablet = typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1366;
+  const orbitR = isTablet ? 164 * scale : 194 * scale;
 
   // Asma positions — static
   const asmaPositions = useMemo(() =>
@@ -445,7 +447,9 @@ function SigilSVG({ mouseX, mouseY, paused }) {
 function AsmaNames({ containerSize, mouseX, mouseY, paused }) {
   const half = containerSize / 2;
   const SVG_SCALE = containerSize / SIZE;
-  const ORBIT_R = 194 * SVG_SCALE;
+  // Tablet fix: reduce orbit radius to keep names within visual circle
+  const isTablet = typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1366;
+  const ORBIT_R = isTablet ? 164 * SVG_SCALE : 194 * SVG_SCALE;
 
   const positions = useMemo(() =>
     ASMA.map((_, i) => {
