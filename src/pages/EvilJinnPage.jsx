@@ -44,7 +44,7 @@ function CategoryFilter({ active, onSelect }) {
           key={cat.id}
           onClick={() => onSelect(cat.id)}
           whileTap={{ scale: 0.95 }}
-          className="flex-shrink-0 px-3 py-1.5 rounded-xl border font-inter text-[10px] font-semibold uppercase tracking-widest"
+          className="flex-shrink-0 px-3 py-1.5 rounded-xl border font-inter text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap"
           style={{
             background: active === cat.id ? P.bgHi : "transparent",
             borderColor: active === cat.id ? P.borderHi : P.faint,
@@ -73,8 +73,8 @@ function JinnRow({ jinn, index, onOpen }) {
     >
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-amiri font-bold text-lg" style={{ color: P.text }}>{jinn.arabicName}</span>
-          <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border"
+          <span className="font-amiri font-bold text-lg" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{jinn.arabicName}</span>
+          <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border whitespace-nowrap"
             style={{ color: P.text, borderColor: P.border, background: "rgba(245,208,96,0.10)" }}>
             {valueCategory}
           </span>
@@ -89,12 +89,17 @@ function JinnRow({ jinn, index, onOpen }) {
 
 function JinnDetail({ jinn, onClose }) {
   const [copied, setCopied] = useState(false);
+
   const handleCopy = async () => {
-    const text = jinn.arabicName + " - " + jinn.englishName + "\nAbjad: " + jinn.abjadValue + "\n\n" + jinn.breakdown.map(b => b.letter + ": " + b.value).join("\n");
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      const text = jinn.arabicHarakat + " - " + jinn.englishName + "\nAbjad: " + jinn.abjadValue + "\n\nLetter Breakdown:\n" + jinn.breakdown.map(function(b) { return b.letter + ": " + b.value; }).join("\n");
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(function() { setCopied(false); }, 2000);
+    } catch(e) {}
   };
+
+  const cols = jinn.breakdown.length <= 3 ? "grid-cols-3" : jinn.breakdown.length === 4 ? "grid-cols-4" : "grid-cols-5";
 
   return (
     <motion.div
@@ -109,11 +114,11 @@ function JinnDetail({ jinn, onClose }) {
         style={{ background: "linear-gradient(145deg, rgba(12,22,48,0.98), rgba(6,12,28,0.99))", border: "1px solid " + P.borderHi }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 text-center" style={{ background: P.bg }}>
+        <div className="p-6 text-center relative" style={{ background: P.bg }}>
           <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-xl" style={{ color: P.dim }}>
             <X className="w-5 h-5" />
           </button>
-          <span className="font-amiri font-bold text-3xl" style={{ color: P.text }}>{jinn.arabicName}</span>
+          <span className="font-amiri font-bold text-3xl block" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.4px rgba(212,175,55,0.4)" }}>{jinn.arabicHarakat}</span>
           <p className="font-inter text-lg font-bold mt-2" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.englishName}</p>
           <div className="flex items-center justify-center gap-4 mt-3">
             <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: P.dim }}>Abjad: {jinn.abjadValue}</span>
@@ -129,17 +134,17 @@ function JinnDetail({ jinn, onClose }) {
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-2">
+          <div className={"grid " + cols + " gap-2"}>
             {jinn.breakdown.map((b, i) => (
               <div key={i} className="text-center p-3 rounded-xl" style={{ background: P.bg, border: "1px solid " + P.border }}>
-                <p className="font-amiri text-xl font-bold mb-1" style={{ color: P.text }}>{b.letter}</p>
+                <p className="font-amiri text-xl font-bold mb-1" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{b.letter}</p>
                 <p className="font-inter text-xs font-bold" style={{ color: P.dim }}>{b.value}</p>
               </div>
             ))}
           </div>
           <div className="rounded-xl p-4 text-center border" style={{ background: P.bgHi, borderColor: P.borderHi }}>
             <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Total Abjad Value</p>
-            <p className="font-amiri font-bold text-2xl" style={{ color: P.text }}>{jinn.abjadValue}</p>
+            <p className="font-amiri font-bold text-2xl" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{jinn.abjadValue}</p>
           </div>
         </div>
       </motion.div>

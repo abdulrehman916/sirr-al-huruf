@@ -1,13 +1,14 @@
 // Evil Jinn Names Database
+// Abjad values calculated using standard Abjad al-Kabir system
 export const EVIL_JINN_NAMES = [
   {
     id: 1,
     serialNo: 1,
-    arabicName: "مَهْمَس",
+    arabicName: "مهمس",
     arabicHarakat: "مَهْمَس",
     englishName: "Mahmas",
     abjadValue: 145,
-    letterCount: 3,
+    letterCount: 4,
     breakdown: [
       { letter: "م", value: 40 },
       { letter: "ه", value: 5 },
@@ -18,11 +19,11 @@ export const EVIL_JINN_NAMES = [
   {
     id: 2,
     serialNo: 2,
-    arabicName: "بَرْقَن",
+    arabicName: "برقن",
     arabicHarakat: "بَرْقَن",
     englishName: "Barqan",
     abjadValue: 352,
-    letterCount: 5,
+    letterCount: 4,
     breakdown: [
       { letter: "ب", value: 2 },
       { letter: "ر", value: 200 },
@@ -33,11 +34,11 @@ export const EVIL_JINN_NAMES = [
   {
     id: 3,
     serialNo: 3,
-    arabicName: "شَمْهُوش",
+    arabicName: "شمهوش",
     arabicHarakat: "شَمْهُوش",
     englishName: "Shamhush",
-    abjadValue: 556,
-    letterCount: 6,
+    abjadValue: 651,
+    letterCount: 5,
     breakdown: [
       { letter: "ش", value: 300 },
       { letter: "م", value: 40 },
@@ -49,11 +50,11 @@ export const EVIL_JINN_NAMES = [
   {
     id: 4,
     serialNo: 4,
-    arabicName: "فَقْطُوس",
+    arabicName: "فقطوس",
     arabicHarakat: "فَقْطُوس",
     englishName: "Faqthus",
-    abjadValue: 496,
-    letterCount: 6,
+    abjadValue: 255,
+    letterCount: 5,
     breakdown: [
       { letter: "ف", value: 80 },
       { letter: "ق", value: 100 },
@@ -65,7 +66,7 @@ export const EVIL_JINN_NAMES = [
   {
     id: 5,
     serialNo: 5,
-    arabicName: "مَرُّو",
+    arabicName: "مرو",
     arabicHarakat: "مَرُّو",
     englishName: "Marroo",
     abjadValue: 246,
@@ -79,11 +80,11 @@ export const EVIL_JINN_NAMES = [
   {
     id: 6,
     serialNo: 6,
-    arabicName: "شَكَرْتِي",
+    arabicName: "شكرتي",
     arabicHarakat: "شَكَرْتِي",
     englishName: "Shakarti",
-    abjadValue: 622,
-    letterCount: 6,
+    abjadValue: 930,
+    letterCount: 5,
     breakdown: [
       { letter: "ش", value: 300 },
       { letter: "ك", value: 20 },
@@ -95,10 +96,10 @@ export const EVIL_JINN_NAMES = [
   {
     id: 7,
     serialNo: 7,
-    arabicName: "مَيْمُور",
+    arabicName: "ميمور",
     arabicHarakat: "مَيْمُور",
     englishName: "Maymoor",
-    abjadValue: 256,
+    abjadValue: 296,
     letterCount: 5,
     breakdown: [
       { letter: "م", value: 40 },
@@ -111,11 +112,11 @@ export const EVIL_JINN_NAMES = [
   {
     id: 8,
     serialNo: 8,
-    arabicName: "سَامُوج",
+    arabicName: "ساموج",
     arabicHarakat: "سَامُوج",
     englishName: "Samooj",
-    abjadValue: 109,
-    letterCount: 4,
+    abjadValue: 110,
+    letterCount: 5,
     breakdown: [
       { letter: "س", value: 60 },
       { letter: "ا", value: 1 },
@@ -127,7 +128,7 @@ export const EVIL_JINN_NAMES = [
   {
     id: 9,
     serialNo: 9,
-    arabicName: "نَحُوش",
+    arabicName: "نحوش",
     arabicHarakat: "نَحُوش",
     englishName: "Nahush",
     abjadValue: 364,
@@ -142,7 +143,7 @@ export const EVIL_JINN_NAMES = [
   {
     id: 10,
     serialNo: 10,
-    arabicName: "بَهْمُور",
+    arabicName: "بهمور",
     arabicHarakat: "بَهْمُور",
     englishName: "Bahmoor",
     abjadValue: 253,
@@ -159,7 +160,7 @@ export const EVIL_JINN_NAMES = [
 
 export const EVIL_JINN_CATEGORIES = [
   { id: "all", label: "All" },
-  { id: "low", label: "Low (1-100)", min: 0, max: 100 },
-  { id: "medium", label: "Medium (101-300)", min: 101, max: 300 },
-  { id: "high", label: "High (301+)", min: 301, max: Infinity }
+  { id: "low", label: "Low (≤200)" },
+  { id: "medium", label: "Medium (201-400)" },
+  { id: "high", label: "High (>400)" }
 ];
