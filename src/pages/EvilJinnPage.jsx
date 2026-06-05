@@ -74,9 +74,9 @@ function JinnRow({ jinn, index, onOpen }) {
       whileTap={{ scale: 0.985 }}
     >
       <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-start gap-2 flex-wrap" dir="rtl">
           <span className="font-inter text-[8px] font-semibold" style={{ color: "rgba(255,255,255,0.30)" }}>#{jinn.serialNo}</span>
-          <span className="font-amiri font-bold text-lg" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{jinn.arabicName}</span>
+          <span className="font-amiri" dir="rtl" style={{ color: P.text, fontSize: "1.35rem", fontWeight: 600, lineHeight: 1.7, letterSpacing: "0.01em", wordBreak: "break-word", overflowWrap: "break-word" }}>{jinn.arabicName}</span>
           <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border whitespace-nowrap"
             style={{ color: P.text, borderColor: P.border, background: "rgba(245,208,96,0.10)" }}>
             {valueCategory}
@@ -130,9 +130,9 @@ function JinnDetail({ jinn, onClose }) {
             <X className="w-5 h-5" />
           </button>
           <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>#{jinn.serialNo} · Evil Jinn Profile</p>
-          <span className="font-amiri font-bold text-4xl block" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.4px rgba(212,175,55,0.4)", textShadow: "0 0 24px rgba(212,175,55,0.3)" }}>{jinn.arabicHarakat}</span>
+          <span className="font-amiri block" dir="rtl" style={{ color: P.text, fontSize: "2.4rem", fontWeight: 600, lineHeight: 1.6, letterSpacing: "0.02em", textShadow: "0 0 24px rgba(212,175,55,0.3)", wordBreak: "break-word", overflowWrap: "break-word" }}>{jinn.arabicHarakat}</span>
           {jinn.arabicName !== jinn.arabicHarakat && (
-            <span className="font-amiri text-base block mt-0.5" dir="rtl" style={{ color: "rgba(245,208,96,0.40)" }}>{jinn.arabicName}</span>
+            <span className="font-amiri block mt-1" dir="rtl" style={{ color: "rgba(245,208,96,0.45)", fontSize: "1.15rem", fontWeight: 500, lineHeight: 1.6 }}>{jinn.arabicName}</span>
           )}
           <p className="font-inter text-lg font-bold mt-2" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.englishName}</p>
           <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
@@ -158,7 +158,7 @@ function JinnDetail({ jinn, onClose }) {
           <div className={"grid " + cols + " gap-2"}>
             {jinn.breakdown.map((b, i) => (
               <div key={i} className="text-center p-3 rounded-xl" style={{ background: P.bg, border: "1px solid " + P.border }}>
-                <p className="font-amiri text-xl font-bold mb-1" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{b.letter}</p>
+                <p className="font-amiri mb-1" dir="rtl" style={{ color: P.text, fontSize: "1.5rem", fontWeight: 600, lineHeight: 1.4 }}>{b.letter}</p>
                 <p className="font-inter text-xs font-bold" style={{ color: P.dim }}>{b.value}</p>
               </div>
             ))}
@@ -201,7 +201,7 @@ function EmptyState() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 space-y-3">
       <Eye className="w-10 h-10 mx-auto" style={{ color: P.dim }} />
-      <p className="font-amiri text-lg" style={{ color: P.dim }}>No results found</p>
+      <p className="font-amiri" style={{ color: P.dim, fontSize: "1.25rem", fontWeight: 500 }}>No results found</p>
       <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>Try a different search or filter</p>
     </motion.div>
   );
