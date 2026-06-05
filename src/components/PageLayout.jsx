@@ -18,7 +18,8 @@ const TABS = [
   { id: "basthul-huroof-2", label: "BAST",   arabic: "البسط",    path: "/basthul-huroof-2" },
   { id: "faal-hasrath",     label: "FAAL",   arabic: "فأل",       path: "/faal-hasrath" },
   { id: "plants",           label: "PLANTS", arabic: "نباتات",    path: "/plants" },
-  { id: "evil-jinn",        label: "EVIL JINN", arabic: "الجن",    path: "/evil-jinn" },
+  { id: "evil-jinn",        label: "EVIL JINN", arabic: "الجن",      path: "/evil-jinn" },
+  { id: "holy-names",       label: "HOLY NAMES",arabic: "الأسماء",   path: "/holy-names" },
 ];
 
 const pageVariants = {
@@ -153,6 +154,7 @@ const PAGE_TITLES = {
   "/faal-hasrath":      "فأل",
   "/plants":            "نباتات",
   "/evil-jinn":         "الجن",
+  "/holy-names":        "الأسماء",
 };
 
 const scrollMemory = {};
