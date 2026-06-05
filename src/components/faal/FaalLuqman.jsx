@@ -43,6 +43,30 @@ export default function FaalLuqman() {
   const [hasShuffledOnce, setHasShuffledOnce] = useState(initialState.hasShuffledOnce);
   const [instructionsExpanded, setInstructionsExpanded] = useState(false);
 
+  const luqmanInstructionsML = [
+    "റസൂൽ ﷺ യുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.",
+    "അഹ്‌ലുൽ ബൈത്തിന്റെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.",
+    "സഹാബാക്കളുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.",
+    "ഹസ്രത്ത് അലി (റ) യുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.",
+    "ഹസ്രത്ത് ലുഖ്മാൻ (റ) യുടെ പേരിൽ ഒരു ഫാതിഹ കൂടി ഓതുക.",
+    "ഇവർക്കെല്ലാം സവാബ് ഹദിയ ചെയ്യുക.",
+    "കലിമാവിരൽ ഉയർത്തി മൂന്ന് കുൽ സൂറത്തുകൾ ഓതുക.",
+    "ഉദ്ദേശ്യം മനസ്സിൽ വെച്ച് ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക.",
+  ];
+
+  const luqmanInstructionsEN = [
+    "Recite Al-Fatiha in the name of Prophet Muhammad ﷺ.",
+    "Recite Al-Fatiha in the name of Ahlul Bayt (the Prophet's family).",
+    "Recite Al-Fatiha in the name of the Sahaba (companions).",
+    "Recite Al-Fatiha in the name of Hazrat Ali (RA).",
+    "Recite an additional Al-Fatiha in the name of Hazrat Luqman (RA).",
+    "Dedicate the reward (Sawab) to all of them.",
+    "Raise your index finger and recite the three Qul surahs (Ikhlas, Falaq, Nas).",
+    "Keep your intention in mind and select one card.",
+  ];
+
+  const currentInstructions = lang === 'ml' ? luqmanInstructionsML : luqmanInstructionsEN;
+
   useEffect(() => {
     setPageState(PAGE_KEY, { lang, shuffled, selectedCell, hasShuffledOnce });
   }, [lang, shuffled, selectedCell, hasShuffledOnce, setPageState]);
@@ -127,63 +151,46 @@ export default function FaalLuqman() {
           >
             {/* Reading Instructions Card */}
             <SectionCard>
-              <SectionLabel>📜 ഫാൽ ലുഖ്മാൻ എടുക്കുന്ന വിധം</SectionLabel>
+              <div className="flex items-center justify-between mb-2">
+                <SectionLabel>📜 {lang === 'ml' ? 'ഫാൽ ലുഖ്മാൻ എടുക്കുന്ന വിധം' : 'How to Perform Faal Luqman'}</SectionLabel>
+                <motion.button
+                  onClick={() => setInstructionsExpanded(!instructionsExpanded)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-inter font-bold text-[10px]"
+                  style={{
+                    background: "rgba(212,175,55,0.10)",
+                    border: "1px solid rgba(212,175,55,0.25)",
+                    color: G.text,
+                  }}
+                >
+                  {instructionsExpanded ? (
+                    <>
+                      <ChevronUp className="w-3 h-3" />
+                      {lang === 'ml' ? 'ചുരുക്കുക' : 'Collapse'}
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3 h-3" />
+                      {lang === 'ml' ? 'വായിക്കുക' : 'Read'}
+                    </>
+                  )}
+                </motion.button>
+              </div>
               <motion.div
                 initial={false}
-                animate={{ height: instructionsExpanded ? 'auto' : 78 }}
-                transition={{ duration: 0.3 }}
+                animate={{ height: instructionsExpanded ? 'auto' : 0, opacity: instructionsExpanded ? 1 : 0 }}
+                transition={{ duration: 0.25 }}
                 className="overflow-hidden"
               >
-                <div className="space-y-2 pt-3">
-                  <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">1.</span> റസൂൽ ﷺ യുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
-                  </p>
-                  <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">2.</span> അഹ്‌ലുൽ ബൈത്തിന്റെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
-                  </p>
-                  <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">3.</span> സഹാബാക്കളുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
-                  </p>
-                  <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">4.</span> ഹസ്രത്ത് അലി (റ) യുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
-                  </p>
-                  <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">5.</span> ഹസ്രത്ത് ലുഖ്മാൻ (റ) യുടെ പേരിൽ ഒരു ഫാതിഹ കൂടി ഓതുക.
-                  </p>
-                  <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">6.</span> ഇവർക്കെല്ലാം സവാബ് ഹദിയ ചെയ്യുക.
-                  </p>
-                  <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">7.</span> കലിമാവിരൽ ഉയർത്തി മൂന്ന് കുൽ സൂറത്തുകൾ ഓതുക.
-                  </p>
-                  <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">8.</span> ഉദ്ദേശ്യം മനസ്സിൽ വെച്ച് ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക.
-                  </p>
+                <div className="space-y-1.5 pt-2 pb-1">
+                  {currentInstructions.map((text, idx) => (
+                    <p key={idx} className="font-inter text-[11px] text-white/85 leading-snug">
+                      <span className="font-bold text-[#F5D060]">{idx + 1}.</span> {text}
+                    </p>
+                  ))}
                 </div>
               </motion.div>
-              <motion.button
-                onClick={() => setInstructionsExpanded(!instructionsExpanded)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full flex items-center justify-center gap-2 mt-3 py-2.5 rounded-lg font-inter font-bold text-xs"
-                style={{
-                  background: "rgba(212,175,55,0.10)",
-                  border: "1px solid rgba(212,175,55,0.25)",
-                  color: G.text,
-                }}
-              >
-                {instructionsExpanded ? (
-                  <>
-                    <ChevronUp className="w-3.5 h-3.5" />
-                    Collapse Instructions
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-3.5 h-3.5" />
-                    Read Full Instructions
-                  </>
-                )}
-              </motion.button>
             </SectionCard>
 
             <SectionCard glow>
