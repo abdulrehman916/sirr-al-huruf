@@ -12,18 +12,36 @@ import PullToRefresh from "../components/PullToRefresh";
 import { usePageState } from "../context/PageStateContext";
 import { HOLY_NAMES, MHN_CATEGORIES } from "../lib/magicalHolyNamesData";
 
-// ── Scoped font for this page only ──────────────────────────────
+// ── Scoped fonts for this page only ──────────────────────────────
 const MHN_FONT_STYLE = `
-  @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;700&display=swap');
+  
   .mhn-arabic {
-    font-family: 'Scheherazade New', 'Amiri', serif;
+    font-family: 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', serif;
     font-weight: 700;
     direction: rtl;
     unicode-bidi: embed;
-    letter-spacing: 0.03em;
-    line-height: 1.6;
+    letter-spacing: 0.02em;
+    line-height: 1.8;
     word-break: break-word;
     overflow-wrap: break-word;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .mhn-arabic-large {
+    font-family: 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', serif;
+    font-weight: 700;
+    direction: rtl;
+    unicode-bidi: embed;
+    letter-spacing: 0.01em;
+    line-height: 2.2;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 `;
 function MhnFont() {
@@ -111,9 +129,10 @@ function HolyNameCard({ name, index, isOpen, onToggle }) {
             <span
               className="mhn-arabic"
               style={{
-                fontSize: "1.40rem",
+                fontSize: "1.65rem",
                 color: P.text,
-                textShadow: isOpen ? "0 0 18px rgba(212,175,55,0.30)" : "none",
+                textShadow: isOpen ? "0 0 20px rgba(212,175,55,0.35)" : "0 0 12px rgba(212,175,55,0.20)",
+                letterSpacing: "0.02em",
               }}
             >
               {name.arabicName}
@@ -154,12 +173,18 @@ function HolyNameCard({ name, index, isOpen, onToggle }) {
               className="px-4 pb-4 pt-1 grid grid-cols-2 gap-3"
               style={{ borderTop: "1px solid " + P.faint }}
             >
-              {/* Arabic Name */}
-              <div className="col-span-2 rounded-xl p-3 text-center" style={{ background: P.bgHi, border: "1px solid " + P.borderHi }}>
-                <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Arabic Name</p>
+              {/* Arabic Name with Full Harakat */}
+              <div className="col-span-2 rounded-xl p-4 text-center" style={{ background: P.bgHi, border: "1px solid " + P.borderHi }}>
+                <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: P.dim }}>Arabic Name (Full Harakat)</p>
                 <p
-                  className="mhn-arabic"
-                  style={{ fontSize: "2.4rem", lineHeight: 1.6, color: P.text, textShadow: "0 0 20px rgba(212,175,55,0.30)" }}
+                  className="mhn-arabic-large"
+                  style={{ 
+                    fontSize: "2.8rem", 
+                    lineHeight: 2.4, 
+                    color: P.text, 
+                    textShadow: "0 0 24px rgba(212,175,55,0.40)",
+                    letterSpacing: "0.01em",
+                  }}
                 >
                   {name.arabicHarakat}
                 </p>
