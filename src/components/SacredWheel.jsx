@@ -550,16 +550,23 @@ function getContainerSize() {
   if (typeof window === "undefined") return 400;
   const w = window.innerWidth;
   const h = window.innerHeight;
-  // On landscape mobile, constrain to height so wheel doesn't overflow
-  const maxByHeight = Math.min(h * 0.70, 500);
-  const baseSize = Math.min(maxByHeight, Math.max(260, w * 0.85));
   
-  // Tablet (768-1023px): scale down to ensure full visibility within viewport
-  if (w >= 768 && w < 1024) {
-    return Math.min(baseSize * 0.85, h * 0.55);
+  // Mobile (<768px): original behavior, unchanged
+  if (w < 768) {
+    const maxByHeight = Math.min(h * 0.70, 500);
+    return Math.min(maxByHeight, Math.max(260, w * 0.85));
   }
   
-  return baseSize;
+  // Large Tablet (768-1366px): Galaxy Tab A7 FE optimized
+  // Scale down to ensure entire circle fits within viewport
+  if (w < 1366) {
+    const maxByHeight = Math.min(h * 0.50, 420);
+    return Math.min(maxByHeight, w * 0.55);
+  }
+  
+  // Desktop (>=1366px): original desktop behavior
+  const maxByHeight = Math.min(h * 0.70, 500);
+  return Math.min(maxByHeight, Math.max(260, w * 0.85));
 }
 
 // ────────────────────────────────────────────────────────────

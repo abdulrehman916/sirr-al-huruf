@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import SacredWheel from "./SacredWheel";
@@ -346,13 +346,25 @@ export default function HeroSection({ mouse }) {
   const { startNav, isNavigating } = useNavigation();
   const isMobile = useIsMobile();
   const safeMouse = mouse ?? ZERO_MV;
-  const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
+  const [isLargeTablet, setIsLargeTablet] = useState(false);
+  
+  useEffect(() => {
+    const checkTablet = () => {
+      const w = window.innerWidth;
+      setIsLargeTablet(w >= 768 && w < 1366);
+    };
+    checkTablet();
+    window.addEventListener('resize', checkTablet, { passive: true });
+    return () => window.removeEventListener('resize', checkTablet);
+  }, []);
+  
+  const wheelSize = isMobile ? "min(420px, 88vw)" : isLargeTablet ? "min(420px, 55vw)" : "min(500px, 88vw)";
 
   return (
     <div className="font-inter relative flex flex-col items-center w-full pb-8 pt-4" style={{ minHeight: "auto", height: "auto", overflowY: "visible" }}>
 
-      {/* Light rays — desktop only */}
-      {!isMobile && <LightRays paused={isNavigating} />}
+      {/* Light rays — desktop only (not on large tablet) */}
+      {!isMobile && !isLargeTablet && <LightRays paused={isNavigating} />}
 
       {/* Wheel container */}
       {isMobile ? (
@@ -365,7 +377,7 @@ export default function HeroSection({ mouse }) {
         <motion.div animate={{ y:[0,-8,0] }} transition={{ duration:7.5, repeat:Infinity, ease:"easeInOut" }}
           className="relative flex items-center justify-center"
           style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
-          <OrbitalRings paused={isNavigating} isMobile={false} />
+          <OrbitalRings paused={isNavigating} isMobile={isLargeTablet} />
           <SacredWheel mouse={safeMouse} />
           <AllahCalligraphyDesktop paused={isNavigating} />
         </motion.div>
