@@ -130,7 +130,7 @@ export default function FaalAli() {
               <SectionLabel>📜 ഫാൽ അലി എടുക്കുന്ന വിധം</SectionLabel>
               <motion.div
                 initial={false}
-                animate={{ height: instructionsExpanded ? 'auto' : 72 }}
+                animate={{ height: instructionsExpanded ? 'auto' : 68 }}
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
               >
@@ -139,22 +139,22 @@ export default function FaalAli() {
                     <span className="font-bold text-[#F5D060]">1.</span> റസൂൽ ﷺ യുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
                   </p>
                   <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">2.</span> റസൂൽ ﷺ യുടെ കുടുംബത്തിന്റെ (അഹ്‌ലുൽ ബൈത്ത്) പേരിൽ ഒരു ഫാതിഹ ഓതുക.
+                    <span className="font-bold text-[#F5D060]">2.</span> അഹ്‌ലുൽ ബൈത്തിന്റെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
                   </p>
                   <p className="font-inter text-sm text-white/90 leading-relaxed">
                     <span className="font-bold text-[#F5D060]">3.</span> സഹാബാക്കളുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
                   </p>
                   <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">4.</span> ഹസ്രത്ത് അലി (റ) യുടെ പേരിൽ പ്രത്യേകമായി ഒരു ഫാതിഹ ഓതുക.
+                    <span className="font-bold text-[#F5D060]">4.</span> ഹസ്രത്ത് അലി (റ) യുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
                   </p>
                   <p className="font-inter text-sm text-white/90 leading-relaxed">
                     <span className="font-bold text-[#F5D060]">5.</span> ഇവർക്കെല്ലാം സവാബ് ഹദിയ ചെയ്യുക.
                   </p>
                   <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">6.</span> തുടർന്ന് കലിമാവിരൽ ഉയർത്തി മൂന്ന് കുൽ സൂറത്തുകൾ (ഇഖ്‌ലാസ്, ഫലഖ്, നാസ്) ഓതുക.
+                    <span className="font-bold text-[#F5D060]">6.</span> കലിമാവിരൽ ഉയർത്തി മൂന്ന് കുൽ സൂറത്തുകൾ ഓതുക.
                   </p>
                   <p className="font-inter text-sm text-white/90 leading-relaxed">
-                    <span className="font-bold text-[#F5D060]">7.</span> നിങ്ങളുടെ ഉദ്ദേശ്യം മനസ്സിൽ ഉറപ്പിച്ച് ഒരു കാർഡിൽ സ്പർശിക്കുക.
+                    <span className="font-bold text-[#F5D060]">7.</span> ഉദ്ദേശ്യം മനസ്സിൽ വെച്ച് ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക.
                   </p>
                 </div>
               </motion.div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shuffle, Trash2, Star } from "lucide-react";
+import { Shuffle, Trash2, Star, ChevronDown, ChevronUp } from "lucide-react";
 import { LUQMAN_CELLS } from "../../lib/faalLuqmanData";
 import { usePageState } from "../../context/PageStateContext";
 
@@ -41,6 +41,7 @@ export default function FaalLuqman() {
   const [shuffled, setShuffled] = useState(initialState.shuffled);
   const [selectedCell, setSelectedCell] = useState(initialState.selectedCell);
   const [hasShuffledOnce, setHasShuffledOnce] = useState(initialState.hasShuffledOnce);
+  const [instructionsExpanded, setInstructionsExpanded] = useState(false);
 
   useEffect(() => {
     setPageState(PAGE_KEY, { lang, shuffled, selectedCell, hasShuffledOnce });
@@ -124,6 +125,67 @@ export default function FaalLuqman() {
             exit={{ opacity: 0 }}
             className="space-y-4"
           >
+            {/* Reading Instructions Card */}
+            <SectionCard>
+              <SectionLabel>📜 ഫാൽ ലുഖ്മാൻ എടുക്കുന്ന വിധം</SectionLabel>
+              <motion.div
+                initial={false}
+                animate={{ height: instructionsExpanded ? 'auto' : 78 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-2 pt-3">
+                  <p className="font-inter text-sm text-white/90 leading-relaxed">
+                    <span className="font-bold text-[#F5D060]">1.</span> റസൂൽ ﷺ യുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
+                  </p>
+                  <p className="font-inter text-sm text-white/90 leading-relaxed">
+                    <span className="font-bold text-[#F5D060]">2.</span> അഹ്‌ലുൽ ബൈത്തിന്റെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
+                  </p>
+                  <p className="font-inter text-sm text-white/90 leading-relaxed">
+                    <span className="font-bold text-[#F5D060]">3.</span> സഹാബാക്കളുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
+                  </p>
+                  <p className="font-inter text-sm text-white/90 leading-relaxed">
+                    <span className="font-bold text-[#F5D060]">4.</span> ഹസ്രത്ത് അലി (റ) യുടെ പേരിൽ ഒരു ഫാതിഹ ഓതുക.
+                  </p>
+                  <p className="font-inter text-sm text-white/90 leading-relaxed">
+                    <span className="font-bold text-[#F5D060]">5.</span> ഹസ്രത്ത് ലുഖ്മാൻ (റ) യുടെ പേരിൽ ഒരു ഫാതിഹ കൂടി ഓതുക.
+                  </p>
+                  <p className="font-inter text-sm text-white/90 leading-relaxed">
+                    <span className="font-bold text-[#F5D060]">6.</span> ഇവർക്കെല്ലാം സവാബ് ഹദിയ ചെയ്യുക.
+                  </p>
+                  <p className="font-inter text-sm text-white/90 leading-relaxed">
+                    <span className="font-bold text-[#F5D060]">7.</span> കലിമാവിരൽ ഉയർത്തി മൂന്ന് കുൽ സൂറത്തുകൾ ഓതുക.
+                  </p>
+                  <p className="font-inter text-sm text-white/90 leading-relaxed">
+                    <span className="font-bold text-[#F5D060]">8.</span> ഉദ്ദേശ്യം മനസ്സിൽ വെച്ച് ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക.
+                  </p>
+                </div>
+              </motion.div>
+              <motion.button
+                onClick={() => setInstructionsExpanded(!instructionsExpanded)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full flex items-center justify-center gap-2 mt-3 py-2.5 rounded-lg font-inter font-bold text-xs"
+                style={{
+                  background: "rgba(212,175,55,0.10)",
+                  border: "1px solid rgba(212,175,55,0.25)",
+                  color: G.text,
+                }}
+              >
+                {instructionsExpanded ? (
+                  <>
+                    <ChevronUp className="w-3.5 h-3.5" />
+                    Collapse Instructions
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                    Read Full Instructions
+                  </>
+                )}
+              </motion.button>
+            </SectionCard>
+
             <SectionCard glow>
               <SectionLabel>🌟 Select Your Omen — Choose a Card</SectionLabel>
               <p className="font-inter text-[9px] text-white/60 text-center mb-4">
