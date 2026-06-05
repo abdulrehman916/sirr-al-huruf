@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -217,10 +217,34 @@ function BreakdownTable({ entries, level }) {
 // ═══════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════
+const PAGE_STATE_KEY = 'bastHuroofPageState';
+
+const getInitialState = () => {
+  try {
+    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
+    if (savedState) {
+      return JSON.parse(savedState);
+    }
+  } catch (e) {
+    console.error("Failed to parse saved state:", e);
+  }
+  return { input: "", level: 1, allResults: null };
+};
+
 export default function BastHuroofPage() {
-  const [input,      setInput]      = useState("");
-  const [level,      setLevel]      = useState(1);
-  const [allResults, setAllResults] = useState(null); // { 1: result, 2: result, ... }
+  const [initialState] = useState(getInitialState);
+  const [input, setInput] = useState(initialState.input);
+  const [level, setLevel] = useState(initialState.level);
+  const [allResults, setAllResults] = useState(initialState.allResults);
+
+  useEffect(() => {
+    try {
+      const stateToSave = JSON.stringify({ input, level, allResults });
+      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
+    } catch (e) {
+      console.error("Failed to save state:", e);
+    }
+  }, [input, level, allResults]);
 
   const handleCalculate = useCallback(() => {
     if (!input.trim()) return;
@@ -234,6 +258,8 @@ export default function BastHuroofPage() {
   const handleClear = () => {
     setInput("");
     setAllResults(null);
+    setLevel(1);
+    sessionStorage.removeItem(PAGE_STATE_KEY);
   };
 
   const handleLevelChange = (newLevel) => {

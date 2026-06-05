@@ -3,10 +3,10 @@
 // Dictionary module only. Zero imports from sealed engines.
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Leaf, ArrowUpDown, ChevronRight } from "lucide-react";
+import { Search, X, Leaf, ArrowUpDown, ChevronRight, Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { PLANTS_DATA, PLANT_CATEGORIES } from "../lib/plantsData";
@@ -151,13 +151,42 @@ function EmptyState() {
   );
 }
 
+const PAGE_STATE_KEY = 'plantsPageState';
+
+const getInitialState = () => {
+  try {
+    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
+    if (savedState) {
+      return JSON.parse(savedState);
+    }
+  } catch (e) {
+    console.error("Failed to parse saved state:", e);
+  }
+  return {
+    query: "",
+    category: "all",
+    activeLetter: null,
+    sortIdx: 0,
+  };
+};
+
 export default function PlantsPage() {
   const navigate = useNavigate();
-  const [query, setQuery]         = useState("");
-  const [category, setCategory]   = useState("all");
-  const [activeLetter, setLetter] = useState(null);
-  const [sortIdx, setSortIdx]     = useState(0);
+  const [initialState] = useState(getInitialState);
+  const [query, setQuery] = useState(initialState.query);
+  const [category, setCategory] = useState(initialState.category);
+  const [activeLetter, setLetter] = useState(initialState.activeLetter);
+  const [sortIdx, setSortIdx] = useState(initialState.sortIdx);
   const sort = SORT_CYCLE[sortIdx];
+
+  useEffect(() => {
+    try {
+      const stateToSave = JSON.stringify({ query, category, activeLetter, sortIdx });
+      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
+    } catch (e) {
+      console.error("Failed to save state:", e);
+    }
+  }, [query, category, activeLetter, sortIdx]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -244,18 +273,34 @@ export default function PlantsPage() {
         )}
 
         {/* Sort + count row */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
             {filtered.length} {filtered.length === 1 ? "entry" : "entries"} of {PLANTS_DATA.length}
           </p>
-          <button
-            onClick={() => setSortIdx((sortIdx + 1) % SORT_CYCLE.length)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-inter text-[10px] font-semibold uppercase tracking-widest"
-            style={{ background: P.bg, borderColor: P.border, color: P.dim, WebkitTapHighlightColor: "transparent" }}
-          >
-            <ArrowUpDown className="w-3 h-3" />
-            {SORT_LABELS[sort]}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setQuery("");
+                setCategory("all");
+                setLetter(null);
+                setSortIdx(0);
+                sessionStorage.removeItem(PAGE_STATE_KEY);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-inter text-[10px] font-semibold uppercase tracking-widest"
+              style={{ background: P.bg, borderColor: P.border, color: P.dim, WebkitTapHighlightColor: "transparent" }}
+            >
+              <Trash2 className="w-3 h-3" />
+              Clear
+            </button>
+            <button
+              onClick={() => setSortIdx((sortIdx + 1) % SORT_CYCLE.length)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-inter text-[10px] font-semibold uppercase tracking-widest"
+              style={{ background: P.bg, borderColor: P.border, color: P.dim, WebkitTapHighlightColor: "transparent" }}
+            >
+              <ArrowUpDown className="w-3 h-3" />
+              {SORT_LABELS[sort]}
+            </button>
+          </div>
         </div>
 
         {/* Plant list */}

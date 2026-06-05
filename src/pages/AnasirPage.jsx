@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Copy, Check } from "lucide-react";
 import { analyzeAnasirAsync } from "../lib/anasirEngine";
@@ -8,13 +8,37 @@ import ElementInsight from "../components/ElementInsight";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 
+const PAGE_STATE_KEY = 'anasirPageState';
+
+const getInitialState = () => {
+  try {
+    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
+    if (savedState) {
+      return JSON.parse(savedState);
+    }
+  } catch (e) {
+    console.error("Failed to parse saved state:", e);
+  }
+  return { input: "", result: null };
+};
+
 export default function AnasirPage() {
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState(null);
+  const [initialState] = useState(getInitialState);
+  const [input, setInput] = useState(initialState.input);
+  const [result, setResult] = useState(initialState.result);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [copied, setCopied] = useState(false);
   const abortRef = useRef(false);
+
+  useEffect(() => {
+    try {
+      const stateToSave = JSON.stringify({ input, result });
+      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
+    } catch (e) {
+      console.error("Failed to save state:", e);
+    }
+  }, [input, result]);
 
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
@@ -27,7 +51,14 @@ export default function AnasirPage() {
     setLoading(false);
   }, [input]);
 
-  const handleClear = () => { abortRef.current = true; setInput(""); setResult(null); setLoading(false); };
+  const handleClear = () => {
+    abortRef.current = true;
+    setInput("");
+    setResult(null);
+    setLoading(false);
+    setProgress(0);
+    sessionStorage.removeItem(PAGE_STATE_KEY);
+};
 
   const handleCopy = () => {
     const dominant = result?.dominant ? ELEMENTS[result.dominant] : null;

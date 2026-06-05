@@ -297,17 +297,48 @@ function Section({ title, children }) {
 // ═══════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════
-export default function AbjadKabirPage() {
-  const [mode, setMode] = useState("kebir");
-  const [bastLevel, setBastLevel] = useState(1);
-  const [copied, setCopied] = useState(false);
-  const [history, setHistory] = useState([]);
-  const debounceTimerRef = useRef(null);
+const PAGE_STATE_KEY = 'abjadKabirPageState';
 
-  // ONE shared input — persists across all mode switches
-  const [input, setInput] = useState("");
-  // Per-mode results — each mode stores its own last result
-  const [results, setResults] = useState({ kebir: null, saghir: null, cumeli: null, bast: null });
+const getInitialState = () => {
+  try {
+    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
+    if (savedState) {
+      const parsed = JSON.parse(savedState);
+      // Ensure history is an array, guard against corrupted storage
+      if (Array.isArray(parsed.history)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse saved state:", e);
+  }
+  return {
+    mode: "kebir",
+    bastLevel: 1,
+    history: [],
+    input: "",
+    results: { kebir: null, saghir: null, cumeli: null, bast: null },
+  };
+};
+
+export default function AbjadKabirPage() {
+  const [initialState] = useState(getInitialState);
+  const [mode, setMode] = useState(initialState.mode);
+  const [bastLevel, setBastLevel] = useState(initialState.bastLevel);
+  const [copied, setCopied] = useState(false);
+  const [history, setHistory] = useState(initialState.history);
+  const debounceTimerRef = useRef(null);
+  const [input, setInput] = useState(initialState.input);
+  const [results, setResults] = useState(initialState.results);
+
+  useEffect(() => {
+    try {
+      const stateToSave = JSON.stringify({ mode, bastLevel, history, input, results });
+      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
+    } catch (e) {
+      console.error("Failed to save state:", e);
+    }
+  }, [mode, bastLevel, history, input, results]);
 
   const modeObj = MODES.find(m => m.key === mode);
   const result  = results[mode];
@@ -346,7 +377,14 @@ export default function AbjadKabirPage() {
     // Input persists; result for the new mode will auto-calculate via the effect above
   };
 
-  const handleClear = () => { setInput(""); setResults({ kebir: null, saghir: null, cumeli: null, bast: null }); };
+  const handleClear = () => {
+    setInput("");
+    setResults({ kebir: null, saghir: null, cumeli: null, bast: null });
+    setHistory([]);
+    setBastLevel(1);
+    setMode('kebir');
+    sessionStorage.removeItem(PAGE_STATE_KEY);
+};
 
   const handleCopy = () => {
     if (!result) return;

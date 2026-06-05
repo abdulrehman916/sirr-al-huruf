@@ -5,7 +5,7 @@
 // Zero shared logic with any other module.
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -340,10 +340,9 @@ function FaalAliModal({ cell, lang, onClose }) {
   );
 }
 
-function FaalAliSection({ lang }) {
+function FaalAliSection({ lang, shuffledCells, onShuffle }) {
   const [selected, setSelected] = useState(null);
   const [expanded, setExpanded] = useState(false);
-  const shuffledCells = useMemo(() => shuffleArray(FAAL_CELLS), []);
   return (
     <>
       {/* Collapsible Instruction Panel */}
@@ -476,6 +475,11 @@ function FaalAliSection({ lang }) {
       </p>
 
       <FaalAliModal cell={selected} lang={lang} onClose={() => setSelected(null)} />
+      <div className="text-center mt-4">
+        <motion.button onClick={onShuffle} whileTap={{ scale: 0.95 }} className="px-4 py-2 rounded-xl border font-inter text-xs font-semibold" style={{ background: P.bg, borderColor: P.border, color: P.dim }}>
+          New Reading (Shuffle)
+        </motion.button>
+      </div>
     </>
   );
 }
@@ -679,11 +683,9 @@ function LuqmanModal({ cell, lang, onClose }) {
   );
 }
 
-function FaalLuqmanSection({ lang }) {
+function FaalLuqmanSection({ lang, shuffledCells, onShuffle }) {
   const [selected, setSelected] = useState(null);
   const [expanded, setExpanded] = useState(false);
-  // Shuffle once on mount — positions change each session, letter→result links never change
-  const shuffledCells = useMemo(() => shuffleArray(LUQMAN_CELLS), []);
   return (
     <>
       {/* Collapsible Instruction Panel */}
@@ -831,6 +833,11 @@ function FaalLuqmanSection({ lang }) {
       </p>
 
       <LuqmanModal cell={selected} lang={lang} onClose={() => setSelected(null)} />
+       <div className="text-center mt-4">
+        <motion.button onClick={onShuffle} whileTap={{ scale: 0.95 }} className="px-4 py-2 rounded-xl border font-inter text-xs font-semibold" style={{ background: P.bg, borderColor: P.border, color: P.dim }}>
+          New Reading (Shuffle)
+        </motion.button>
+      </div>
     </>
   );
 }
@@ -838,9 +845,48 @@ function FaalLuqmanSection({ lang }) {
 // ═══════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════
+const PAGE_STATE_KEY = 'faalHasrathPageState';
+
+const getInitialState = () => {
+  try {
+    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
+    if (savedState) {
+      const parsed = JSON.parse(savedState);
+      if (parsed.shuffledAli && parsed.shuffledLuqman) {
+        return parsed;
+      }
+    }
+  } catch(e) {
+    console.error("Failed to load Faal state", e);
+  }
+  return {
+    lang: "ml",
+    section: "ali",
+    shuffledAli: shuffleArray(FAAL_CELLS),
+    shuffledLuqman: shuffleArray(LUQMAN_CELLS),
+  };
+};
+
 export default function FaalHasrathPage() {
-  const [lang, setLang] = useState("ml");
-  const [section, setSection] = useState("ali");
+  const [initialState] = useState(getInitialState);
+  const [lang, setLang] = useState(initialState.lang);
+  const [section, setSection] = useState(initialState.section);
+  const [shuffledAli, setShuffledAli] = useState(initialState.shuffledAli);
+  const [shuffledLuqman, setShuffledLuqman] = useState(initialState.shuffledLuqman);
+
+  useEffect(() => {
+    try {
+      const stateToSave = JSON.stringify({ lang, section, shuffledAli, shuffledLuqman });
+      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
+    } catch(e) {
+      console.error("Failed to save Faal state", e);
+    }
+  }, [lang, section, shuffledAli, shuffledLuqman]);
+
+  const handleShuffle = (type) => {
+    if (type === 'ali') setShuffledAli(shuffleArray(FAAL_CELLS));
+    if (type === 'luqman') setShuffledLuqman(shuffleArray(LUQMAN_CELLS));
+  };
 
   return (
     <PageLayout>
@@ -874,14 +920,14 @@ export default function FaalHasrathPage() {
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28 }}
               className="space-y-4">
-              <FaalAliSection lang={lang} />
+              <FaalAliSection lang={lang} shuffledCells={shuffledAli} onShuffle={() => handleShuffle('ali')} />
             </motion.div>
           ) : (
             <motion.div key="luqman-section"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28 }}
               className="space-y-4">
-              <FaalLuqmanSection lang={lang} />
+              <FaalLuqmanSection lang={lang} shuffledCells={shuffledLuqman} onShuffle={() => handleShuffle('luqman')} />
             </motion.div>
           )}
         </AnimatePresence>

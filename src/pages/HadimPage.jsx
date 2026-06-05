@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Wand2, Plus } from "lucide-react";
 import { processText } from "../lib/abjadValues";
@@ -149,12 +149,45 @@ const HADIM_MODES = [
   },
 ];
 
+const PAGE_STATE_KEY = 'hadimPageState';
+
+const getInitialState = () => {
+  try {
+    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
+    if (savedState) {
+      const parsed = JSON.parse(savedState);
+      if (Array.isArray(parsed.isms)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse saved state:", e);
+  }
+  return {
+    hadimMode: 'ULVI',
+    talib: "",
+    matloob: "",
+    isms: ["", "", "", "", ""],
+    result: null,
+  };
+};
+
 export default function HadimPage() {
-  const [hadimMode, setHadimMode] = useState('ULVI');
-  const [talib, setTalib]     = useState("");
-  const [matloob, setMatloob] = useState("");
-  const [isms, setIsms]       = useState(["", "", "", "", ""]);
-  const [result, setResult]   = useState(null);
+  const [initialState] = useState(getInitialState);
+  const [hadimMode, setHadimMode] = useState(initialState.hadimMode);
+  const [talib, setTalib] = useState(initialState.talib);
+  const [matloob, setMatloob] = useState(initialState.matloob);
+  const [isms, setIsms] = useState(initialState.isms);
+  const [result, setResult] = useState(initialState.result);
+
+  useEffect(() => {
+    try {
+      const stateToSave = JSON.stringify({ hadimMode, talib, matloob, isms, result });
+      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
+    } catch (e) {
+      console.error("Failed to save state:", e);
+    }
+  }, [hadimMode, talib, matloob, isms, result]);
 
   const addIsm    = () => setIsms(p => [...p, ""]);
   const removeIsm = (i) => setIsms(p => p.filter((_, idx) => idx !== i));
@@ -185,7 +218,14 @@ export default function HadimPage() {
     setResult({ individuals, grandSum, grandTypes });
   };
 
-  const handleClear = () => { setTalib(""); setMatloob(""); setIsms(["","","","",""]); setResult(null); };
+  const handleClear = () => {
+    setTalib("");
+    setMatloob("");
+    setIsms(["", "", "", "", ""]);
+    setResult(null);
+    setHadimMode('ULVI');
+    sessionStorage.removeItem(PAGE_STATE_KEY);
+};
 
   return (
     <PageLayout accentColor="purple">

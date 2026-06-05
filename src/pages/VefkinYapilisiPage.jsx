@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
@@ -30,8 +30,25 @@ const TABS = [
   { id: "tanzim", label: "✨ Tanzim Vefki", arabic: "تنظيم الوفق" },
 ];
 
+const PAGE_STATE_KEY = 'vefkinYapilisiState';
+
 export default function VefkinYapilisiPage() {
-  const [activeTab, setActiveTab] = useState("ana");
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(PAGE_STATE_KEY);
+      return saved ? JSON.parse(saved).activeTab : "ana";
+    } catch {
+      return "ana";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(PAGE_STATE_KEY, JSON.stringify({ activeTab }));
+    } catch (e) {
+      console.error("Failed to save Vefkin state", e);
+    }
+  }, [activeTab]);
 
   return (
     <PageLayout>

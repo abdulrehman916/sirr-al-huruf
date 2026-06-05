@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -58,15 +58,45 @@ function buildDefaultSelections(dominant) {
   };
 }
 
+const PAGE_STATE_KEY = 'mizaan9PageState';
+
+const getInitialState = () => {
+  try {
+    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
+    if (savedState) {
+      return JSON.parse(savedState);
+    }
+  } catch (e) {
+    console.error("Failed to parse saved state:", e);
+  }
+  return {
+    input: "",
+    result: null,
+    selections: buildDefaultSelections(null),
+    customPurpose: "",
+    degreeSels: {},
+  };
+};
+
 export default function Mizaan9Page() {
-  const [input,       setInput]       = useState("");
-  const [result,      setResult]      = useState(null);
-  const [loading,     setLoading]     = useState(false);
-  const [progress,    setProgress]    = useState(0);
-  const [selections,    setSelections]    = useState(buildDefaultSelections(null));
-  const [customPurpose, setCustomPurpose] = useState("");
-  const [degreeSels,    setDegreeSels]    = useState({});
+  const [initialState] = useState(getInitialState);
+  const [input, setInput] = useState(initialState.input);
+  const [result, setResult] = useState(initialState.result);
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [selections, setSelections] = useState(initialState.selections);
+  const [customPurpose, setCustomPurpose] = useState(initialState.customPurpose);
+  const [degreeSels, setDegreeSels] = useState(initialState.degreeSels);
   const abortRef = useRef(false);
+
+  useEffect(() => {
+    try {
+      const stateToSave = JSON.stringify({ input, result, selections, customPurpose, degreeSels });
+      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
+    } catch (e) {
+      console.error("Failed to save state:", e);
+    }
+  }, [input, result, selections, customPurpose, degreeSels]);
 
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
@@ -91,7 +121,9 @@ export default function Mizaan9Page() {
     setLoading(false);
     setProgress(0);
     setSelections(buildDefaultSelections(null));
+    setCustomPurpose("");
     setDegreeSels({});
+    sessionStorage.removeItem(PAGE_STATE_KEY);
   };
 
   const updateSel = (key) => (val) => setSelections(prev => ({ ...prev, [key]: val }));
