@@ -141,7 +141,7 @@ export default function NavCards() {
   const { startNav } = useNavigation();
   
   return (
-    <div className="relative z-20 w-full mt-8 px-3 grid grid-cols-2 gap-3 sm:gap-4">
+    <div className="relative z-20 w-full mt-12 px-3 grid grid-cols-2 gap-3 sm:gap-4" style={{ marginBottom: "40px" }}>
       {NAV_CARDS.map((card, i) => {
         const [r, g, b] = card.accent;
         return (
