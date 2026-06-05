@@ -290,6 +290,20 @@ export default function PageLayout({ children }) {
           <div
             ref={navRef}
             className="nav-scroll-container flex gap-1 flex-nowrap"
+            onTouchStart={(e) => {
+              // Enable touch drag scrolling
+              const touch = e.touches[0];
+              navRef.current.dataset.startX = touch.clientX;
+              navRef.current.dataset.scrollStart = navRef.current.scrollLeft;
+            }}
+            onTouchMove={(e) => {
+              // Enable touch drag scrolling
+              const touch = e.touches[0];
+              const startX = parseFloat(navRef.current.dataset.startX || 0);
+              const scrollStart = parseFloat(navRef.current.dataset.scrollStart || 0);
+              const deltaX = startX - touch.clientX;
+              navRef.current.scrollLeft = scrollStart + deltaX;
+            }}
             onWheel={(e) => {
               // Allow horizontal scroll with mouse wheel
               if (e.deltaY !== 0) {
@@ -297,16 +311,41 @@ export default function PageLayout({ children }) {
                 e.preventDefault();
               }
             }}
+            onMouseDown={(e) => {
+              // Enable mouse drag scrolling
+              e.currentTarget.style.cursor = 'grabbing';
+              navRef.current.dataset.mouseStartX = e.clientX;
+              navRef.current.dataset.mouseScrollStart = navRef.current.scrollLeft;
+              navRef.current.dataset.isDragging = 'true';
+            }}
+            onMouseMove={(e) => {
+              // Enable mouse drag scrolling
+              if (navRef.current.dataset.isDragging !== 'true') return;
+              const mouseStartX = parseFloat(navRef.current.dataset.mouseStartX || 0);
+              const scrollStart = parseFloat(navRef.current.dataset.mouseScrollStart || 0);
+              const deltaX = mouseStartX - e.clientX;
+              navRef.current.scrollLeft = scrollStart + deltaX;
+            }}
+            onMouseUp={() => {
+              navRef.current.dataset.isDragging = 'false';
+              navRef.current.style.cursor = 'grab';
+            }}
+            onMouseLeave={() => {
+              navRef.current.dataset.isDragging = 'false';
+              navRef.current.style.cursor = 'grab';
+            }}
             style={{
               willChange: 'scroll-position',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
-              touchAction: 'pan-x',
+              touchAction: 'none',
               WebkitOverflowScrolling: 'touch',
               cursor: 'grab',
               overflowX: 'auto',
               overflowY: 'hidden',
               flexShrink: 0,
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
             }}
           >
             {TABS.map((tab) => (
