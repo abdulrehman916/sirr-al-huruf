@@ -463,12 +463,14 @@ function AsmaNames({ containerSize, paused, deviceType }) {
 
   return (
     <motion.div
-      className="absolute inset-0 pointer-events-none"
+      className="absolute pointer-events-none"
       style={{
         zIndex: 8,
-        transformOrigin: `${half}px ${half}px`,
+        transformOrigin: "0px 0px",
         left: half,
         top: half,
+        width: 0,
+        height: 0,
       }}
       animate={paused ? {} : { rotate: 360 }}
       transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
