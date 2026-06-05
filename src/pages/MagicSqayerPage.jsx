@@ -482,8 +482,8 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
       </div>
 
       {/* Grid cells — responsive scaling to prevent cropping on mobile */}
-      <div className="flex justify-center w-full">
-        <div style={{ overflowX: "visible", width: "100%" }}>
+      <ZoomableContainer className="flex justify-center w-full rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
+        <div style={{ overflowX: "visible", width: "100%", padding: "8px" }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
@@ -512,7 +512,7 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
           ))}
           </div>
         </div>
-      </div>
+      </ZoomableContainer>
 
       {/* Verification Panel */}
       <div className="rounded-xl border p-4 space-y-2"

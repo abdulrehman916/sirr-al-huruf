@@ -199,29 +199,6 @@ export default function PageLayout({ children }) {
     return () => window.removeEventListener("popstate", onPop);
   }, [startNav]);
 
-  // Prevent scroll position loss during pinch-to-zoom on mobile
-  useEffect(() => {
-    const visualViewport = window.visualViewport;
-    if (!visualViewport) return;
-
-    let lastScale = visualViewport.scale;
-    
-    const handleZoom = () => {
-      // Detect zoom start/end - prevent scroll reset
-      if (visualViewport.scale !== lastScale) {
-        lastScale = visualViewport.scale;
-      }
-    };
-
-    visualViewport.addEventListener('resize', handleZoom);
-    visualViewport.addEventListener('scroll', handleZoom);
-
-    return () => {
-      visualViewport.removeEventListener('resize', handleZoom);
-      visualViewport.removeEventListener('scroll', handleZoom);
-    };
-  }, []);
-
   return (
     <div
       className="font-inter relative flex flex-col"
