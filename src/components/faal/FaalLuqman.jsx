@@ -194,12 +194,12 @@ export default function FaalLuqman() {
             </SectionCard>
 
             <SectionCard glow>
-              <SectionLabel>🌟 Select Your Omen — Choose a Card</SectionLabel>
-              <p className="font-inter text-[9px] text-white/60 text-center mb-4">
+              <SectionLabel>📜 Select Your Omen — Choose a Card</SectionLabel>
+              <p className="font-inter text-[8px] text-white/60 text-center mb-3">
                 Focus on your question and select one card from the sacred grid
               </p>
               
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-2 mt-2">
                 {shuffled.map((cell, idx) => (
                   <motion.button
                     key={cell.lq_id}
@@ -221,24 +221,24 @@ export default function FaalLuqman() {
                                    repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(212,175,55,0.03) 8px, rgba(212,175,55,0.03) 16px)`
                     }} />
                     <div className="relative z-10 flex flex-col items-center">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center"
                         style={{
                           background: "linear-gradient(145deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
                           border: "1px solid rgba(212,175,55,0.30)",
                           boxShadow: "0 0 16px rgba(212,175,55,0.20), inset 0 1px 0 rgba(212,175,55,0.15)"
                         }}>
-                        <Star className="w-4 h-4" style={{ color: G.text, opacity: 0.85 }} />
+                        <span className="font-amiri text-xs" style={{ color: G.text }}>📜</span>
                       </div>
                     </div>
-                    <div className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
-                    <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
-                    <div className="absolute bottom-1.5 left-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
-                    <div className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute top-1 left-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute top-1 right-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute bottom-1 left-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute bottom-1 right-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
                   </motion.button>
                 ))}
               </div>
 
-              <p className="font-inter text-[8px] uppercase tracking-widest text-center mt-4" style={{ color: G.dim }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest text-center mt-3" style={{ color: G.dim }}>
                 28 Cards Total — Nakshatra Sulamani
               </p>
             </SectionCard>
