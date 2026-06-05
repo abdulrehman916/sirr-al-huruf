@@ -211,7 +211,7 @@ export default function FaalAli() {
               <p className="font-inter text-[8px] text-white/60 text-center mb-3">
                 Focus on your question and select one card from the sacred grid
               </p>
-              <div className="grid grid-cols-4 gap-2 mt-2">
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2 mt-2">
                 {shuffled.map((cell, idx) => (
                   <motion.button
                     key={cell.id}
@@ -226,6 +226,7 @@ export default function FaalAli() {
                       background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(6,14,32,0.98) 100%)",
                       borderColor: "rgba(212,175,55,0.38)",
                       boxShadow: "0 0 20px rgba(212,175,55,0.14), inset 0 1px 0 rgba(212,175,55,0.10)",
+                      maxWidth: "120px",
                     }}
                   >
                     <div className="absolute inset-0" style={{ 
