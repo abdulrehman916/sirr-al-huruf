@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, User } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
-import BottomTabBar from "./BottomTabBar";
 import AccountModal from "./AccountModal";
 import { base44 } from "../api/base44Client";
 
@@ -353,11 +352,6 @@ export default function PageLayout({ children }) {
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="relative z-10 w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
-              /* Extra bottom padding on mobile to clear the bottom tab bar */
-              paddingBottom: "calc(env(safe-area-inset-bottom) + 64px)",
-              boxSizing: "border-box",
-              minHeight: "auto",
-              height: "auto",
               willChange: 'opacity',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
@@ -367,9 +361,6 @@ export default function PageLayout({ children }) {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* ── Fixed Bottom Tab Bar (mobile only) ── */}
-      <BottomTabBar activeId={activeId} onNavigate={startNav} />
 
     </div>
 
