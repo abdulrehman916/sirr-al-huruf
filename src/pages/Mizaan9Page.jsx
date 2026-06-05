@@ -15,6 +15,7 @@ import Mizaan7      from "../components/mizaan/Mizaan7";
 import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
+import { usePageState } from "../context/PageStateContext";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -58,28 +59,18 @@ function buildDefaultSelections(dominant) {
   };
 }
 
-const PAGE_STATE_KEY = 'mizaan9PageState';
+const PAGE_KEY = 'mizaan9';
 
-const getInitialState = () => {
-  try {
-    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
-    if (savedState) {
-      return JSON.parse(savedState);
-    }
-  } catch (e) {
-    console.error("Failed to parse saved state:", e);
-  }
-  return {
+export default function Mizaan9Page() {
+  const { getPageState, setPageState, clearPageState } = usePageState();
+  const initialState = getPageState(PAGE_KEY, {
     input: "",
     result: null,
     selections: buildDefaultSelections(null),
     customPurpose: "",
     degreeSels: {},
-  };
-};
-
-export default function Mizaan9Page() {
-  const [initialState] = useState(getInitialState);
+  });
+  
   const [input, setInput] = useState(initialState.input);
   const [result, setResult] = useState(initialState.result);
   const [loading, setLoading] = useState(false);
@@ -90,13 +81,8 @@ export default function Mizaan9Page() {
   const abortRef = useRef(false);
 
   useEffect(() => {
-    try {
-      const stateToSave = JSON.stringify({ input, result, selections, customPurpose, degreeSels });
-      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
-    } catch (e) {
-      console.error("Failed to save state:", e);
-    }
-  }, [input, result, selections, customPurpose, degreeSels]);
+    setPageState(PAGE_KEY, { input, result, selections, customPurpose, degreeSels });
+  }, [input, result, selections, customPurpose, degreeSels, setPageState]);
 
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
@@ -123,7 +109,7 @@ export default function Mizaan9Page() {
     setSelections(buildDefaultSelections(null));
     setCustomPurpose("");
     setDegreeSels({});
-    sessionStorage.removeItem(PAGE_STATE_KEY);
+    clearPageState(PAGE_KEY);
   };
 
   const updateSel = (key) => (val) => setSelections(prev => ({ ...prev, [key]: val }));

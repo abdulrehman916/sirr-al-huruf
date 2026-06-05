@@ -30,25 +30,17 @@ const TABS = [
   { id: "tanzim", label: "✨ Tanzim Vefki", arabic: "تنظيم الوفق" },
 ];
 
-const PAGE_STATE_KEY = 'vefkinYapilisiState';
+import { usePageState } from "../context/PageStateContext";
+
+const PAGE_KEY = 'vefkinYapilisi';
 
 export default function VefkinYapilisiPage() {
-  const [activeTab, setActiveTab] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem(PAGE_STATE_KEY);
-      return saved ? JSON.parse(saved).activeTab : "ana";
-    } catch {
-      return "ana";
-    }
-  });
+  const { getPageState, setPageState } = usePageState();
+  const [activeTab, setActiveTab] = useState(() => getPageState(PAGE_KEY, "ana"));
 
   useEffect(() => {
-    try {
-      sessionStorage.setItem(PAGE_STATE_KEY, JSON.stringify({ activeTab }));
-    } catch (e) {
-      console.error("Failed to save Vefkin state", e);
-    }
-  }, [activeTab]);
+    setPageState(PAGE_KEY, { activeTab });
+  }, [activeTab, setPageState]);
 
   return (
     <PageLayout>

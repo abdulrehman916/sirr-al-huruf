@@ -7,6 +7,7 @@ import PageTitle from "../components/PageTitle";
 import HadimTypePanel from "../components/HadimTypePanel";
 import HadimKasem from "../components/HadimKasem";
 import HadimZikr from "../components/HadimZikr";
+import { usePageState } from "../context/PageStateContext";
 
 // ── Positional lookup maps ──
 const UNITS_MAP    = { 1:'ا', 2:'ب', 3:'ج', 4:'د', 5:'ه', 6:'و', 7:'ز', 8:'ح', 9:'ط' };
@@ -149,31 +150,18 @@ const HADIM_MODES = [
   },
 ];
 
-const PAGE_STATE_KEY = 'hadimPageState';
+const PAGE_KEY = 'hadim';
 
-const getInitialState = () => {
-  try {
-    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
-    if (savedState) {
-      const parsed = JSON.parse(savedState);
-      if (Array.isArray(parsed.isms)) {
-        return parsed;
-      }
-    }
-  } catch (e) {
-    console.error("Failed to parse saved state:", e);
-  }
-  return {
+export default function HadimPage() {
+  const { getPageState, setPageState, clearPageState } = usePageState();
+  const initialState = getPageState(PAGE_KEY, {
     hadimMode: 'ULVI',
     talib: "",
     matloob: "",
     isms: ["", "", "", "", ""],
     result: null,
-  };
-};
-
-export default function HadimPage() {
-  const [initialState] = useState(getInitialState);
+  });
+  
   const [hadimMode, setHadimMode] = useState(initialState.hadimMode);
   const [talib, setTalib] = useState(initialState.talib);
   const [matloob, setMatloob] = useState(initialState.matloob);
@@ -181,13 +169,8 @@ export default function HadimPage() {
   const [result, setResult] = useState(initialState.result);
 
   useEffect(() => {
-    try {
-      const stateToSave = JSON.stringify({ hadimMode, talib, matloob, isms, result });
-      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
-    } catch (e) {
-      console.error("Failed to save state:", e);
-    }
-  }, [hadimMode, talib, matloob, isms, result]);
+    setPageState(PAGE_KEY, { hadimMode, talib, matloob, isms, result });
+  }, [hadimMode, talib, matloob, isms, result, setPageState]);
 
   const addIsm    = () => setIsms(p => [...p, ""]);
   const removeIsm = (i) => setIsms(p => p.filter((_, idx) => idx !== i));
@@ -224,7 +207,7 @@ export default function HadimPage() {
     setIsms(["", "", "", "", ""]);
     setResult(null);
     setHadimMode('ULVI');
-    sessionStorage.removeItem(PAGE_STATE_KEY);
+    clearPageState(PAGE_KEY);
 };
 
   return (

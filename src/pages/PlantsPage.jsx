@@ -151,28 +151,20 @@ function EmptyState() {
   );
 }
 
-const PAGE_STATE_KEY = 'plantsPageState';
+import { usePageState } from "../context/PageStateContext";
 
-const getInitialState = () => {
-  try {
-    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
-    if (savedState) {
-      return JSON.parse(savedState);
-    }
-  } catch (e) {
-    console.error("Failed to parse saved state:", e);
-  }
-  return {
+const PAGE_KEY = 'plants';
+
+export default function PlantsPage() {
+  const navigate = useNavigate();
+  const { getPageState, setPageState, clearPageState } = usePageState();
+  const initialState = getPageState(PAGE_KEY, {
     query: "",
     category: "all",
     activeLetter: null,
     sortIdx: 0,
-  };
-};
-
-export default function PlantsPage() {
-  const navigate = useNavigate();
-  const [initialState] = useState(getInitialState);
+  });
+  
   const [query, setQuery] = useState(initialState.query);
   const [category, setCategory] = useState(initialState.category);
   const [activeLetter, setLetter] = useState(initialState.activeLetter);
@@ -180,13 +172,8 @@ export default function PlantsPage() {
   const sort = SORT_CYCLE[sortIdx];
 
   useEffect(() => {
-    try {
-      const stateToSave = JSON.stringify({ query, category, activeLetter, sortIdx });
-      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
-    } catch (e) {
-      console.error("Failed to save state:", e);
-    }
-  }, [query, category, activeLetter, sortIdx]);
+    setPageState(PAGE_KEY, { query, category, activeLetter, sortIdx });
+  }, [query, category, activeLetter, sortIdx, setPageState]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -284,7 +271,7 @@ export default function PlantsPage() {
                 setCategory("all");
                 setLetter(null);
                 setSortIdx(0);
-                sessionStorage.removeItem(PAGE_STATE_KEY);
+                clearPageState(PAGE_KEY);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-inter text-[10px] font-semibold uppercase tracking-widest"
               style={{ background: P.bg, borderColor: P.border, color: P.dim, WebkitTapHighlightColor: "transparent" }}

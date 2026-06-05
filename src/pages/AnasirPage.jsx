@@ -7,23 +7,14 @@ import AnasirLetterGrid from "../components/AnasirLetterGrid";
 import ElementInsight from "../components/ElementInsight";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
+import { usePageState } from "../context/PageStateContext";
 
-const PAGE_STATE_KEY = 'anasirPageState';
-
-const getInitialState = () => {
-  try {
-    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
-    if (savedState) {
-      return JSON.parse(savedState);
-    }
-  } catch (e) {
-    console.error("Failed to parse saved state:", e);
-  }
-  return { input: "", result: null };
-};
+const PAGE_KEY = 'anasir';
 
 export default function AnasirPage() {
-  const [initialState] = useState(getInitialState);
+  const { getPageState, setPageState, clearPageState } = usePageState();
+  const initialState = getPageState(PAGE_KEY, { input: "", result: null });
+  
   const [input, setInput] = useState(initialState.input);
   const [result, setResult] = useState(initialState.result);
   const [loading, setLoading] = useState(false);
@@ -32,13 +23,8 @@ export default function AnasirPage() {
   const abortRef = useRef(false);
 
   useEffect(() => {
-    try {
-      const stateToSave = JSON.stringify({ input, result });
-      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
-    } catch (e) {
-      console.error("Failed to save state:", e);
-    }
-  }, [input, result]);
+    setPageState(PAGE_KEY, { input, result });
+  }, [input, result, setPageState]);
 
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
@@ -57,7 +43,7 @@ export default function AnasirPage() {
     setResult(null);
     setLoading(false);
     setProgress(0);
-    sessionStorage.removeItem(PAGE_STATE_KEY);
+    clearPageState(PAGE_KEY);
 };
 
   const handleCopy = () => {

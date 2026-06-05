@@ -5,6 +5,7 @@ import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { calcBastHuroof, BAST_LEVELS } from "../lib/bastHuroofEngine";
 import AkramCard from "../components/AkramCard";
+import { usePageState } from "../context/PageStateContext";
 
 // ── Palette ───────────────────────────────────────────────────
 const G = {
@@ -217,34 +218,19 @@ function BreakdownTable({ entries, level }) {
 // ═══════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════
-const PAGE_STATE_KEY = 'bastHuroofPageState';
-
-const getInitialState = () => {
-  try {
-    const savedState = sessionStorage.getItem(PAGE_STATE_KEY);
-    if (savedState) {
-      return JSON.parse(savedState);
-    }
-  } catch (e) {
-    console.error("Failed to parse saved state:", e);
-  }
-  return { input: "", level: 1, allResults: null };
-};
+const PAGE_KEY = 'bastHuroof';
 
 export default function BastHuroofPage() {
-  const [initialState] = useState(getInitialState);
+  const { getPageState, setPageState, clearPageState } = usePageState();
+  const initialState = getPageState(PAGE_KEY, { input: "", level: 1, allResults: null });
+  
   const [input, setInput] = useState(initialState.input);
   const [level, setLevel] = useState(initialState.level);
   const [allResults, setAllResults] = useState(initialState.allResults);
 
   useEffect(() => {
-    try {
-      const stateToSave = JSON.stringify({ input, level, allResults });
-      sessionStorage.setItem(PAGE_STATE_KEY, stateToSave);
-    } catch (e) {
-      console.error("Failed to save state:", e);
-    }
-  }, [input, level, allResults]);
+    setPageState(PAGE_KEY, { input, level, allResults });
+  }, [input, level, allResults, setPageState]);
 
   const handleCalculate = useCallback(() => {
     if (!input.trim()) return;
@@ -259,7 +245,7 @@ export default function BastHuroofPage() {
     setInput("");
     setAllResults(null);
     setLevel(1);
-    sessionStorage.removeItem(PAGE_STATE_KEY);
+    clearPageState(PAGE_KEY);
   };
 
   const handleLevelChange = (newLevel) => {

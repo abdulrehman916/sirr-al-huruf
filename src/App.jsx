@@ -7,6 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { NavigationProvider } from './context/NavigationContext';
+import { PageStateProvider } from './context/PageStateContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
@@ -98,9 +99,11 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
           <Router>
-            <NavigationProvider>
-              <AuthenticatedApp />
-            </NavigationProvider>
+            <PageStateProvider>
+              <NavigationProvider>
+                <AuthenticatedApp />
+              </NavigationProvider>
+            </PageStateProvider>
           </Router>
           <Toaster />
           <PWAInstallPrompt />
