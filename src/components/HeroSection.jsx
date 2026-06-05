@@ -346,7 +346,7 @@ export default function HeroSection({ mouse }) {
   const { startNav, isNavigating } = useNavigation();
   const isMobile = useIsMobile();
   const safeMouse = mouse ?? ZERO_MV;
-  const wheelSize = isMobile ? "min(340px, 75vw)" : "min(500px, 65vw)";
+  const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
 
   return (
     <div className="font-inter relative flex flex-col items-center w-full pb-8 pt-4" style={{ minHeight: "auto", height: "auto", overflowY: "visible" }}>
