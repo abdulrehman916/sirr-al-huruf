@@ -209,6 +209,7 @@ export default function PageLayout({ children }) {
           overscrollBehaviorY: "none",
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
+          minHeight: 0,
         }}
       >
         <AnimatePresence mode="wait">
@@ -223,6 +224,8 @@ export default function PageLayout({ children }) {
             style={{
               paddingBottom: "env(safe-area-inset-bottom)",
               boxSizing: "border-box",
+              minHeight: "auto",
+              height: "auto",
             }}
           >
             {children}

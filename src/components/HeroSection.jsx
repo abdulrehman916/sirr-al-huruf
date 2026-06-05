@@ -349,7 +349,7 @@ export default function HeroSection({ mouse }) {
   const wheelSize = `min(${isMobile ? "420px" : "500px"},88vw)`;
 
   return (
-    <div className="font-inter relative flex flex-col items-center w-full pb-20 pt-4" style={{ minHeight: "auto", height: "auto" }}>
+    <div className="font-inter relative flex flex-col items-center w-full pb-20 pt-4" style={{ minHeight: "100vh", height: "auto", overflowY: "visible" }}>
 
       {/* Light rays — desktop only */}
       {!isMobile && <LightRays paused={isNavigating} />}
