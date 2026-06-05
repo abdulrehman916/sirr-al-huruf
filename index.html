@@ -13,6 +13,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="سرّ الحروف" />
+    <!-- Prevent caching of JS files -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <!-- Android Chrome customization -->
     <meta name="msapplication-TileColor" content="#020710" />
     <!-- Prevent phone number detection -->
@@ -21,7 +25,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>
+      // Unregister any existing service workers to clear stale cache
       if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        }).catch(() => {});
+      }
+
+      if ('serviceWorker' in navigator && !import.meta.env.DEV) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').then((reg) => {
             // When a new SW is waiting, activate it immediately
