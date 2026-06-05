@@ -150,7 +150,8 @@ export default function FaalAli() {
                        cell.innerMark === "spiral" ? "🌀" :
                        cell.innerMark === "double-arc" ? "≈" :
                        cell.innerMark === "star3" ? "✦" :
-                       cell.innerMark === "zigzag" ? "⚡" : "✧"}
+                       cell.innerMark === "zigzag" ? "⚡" :
+                       cell.innerMark === "line-diag" ? "⚡" : "✧"}
                     </span>
                     <span className="font-inter text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(212,175,55,0.60)", zIndex: 1 }}>
                       #{cell.id}
@@ -185,22 +186,23 @@ export default function FaalAli() {
                     }}
                   >
                     <span className="font-amiri text-3xl" style={{ color: G.text }}>
-                      {selectedCell.innerMark === "dot" ? "•" : 
-                       selectedCell.innerMark === "two-dots" ? "••" :
-                       selectedCell.innerMark === "arc-up" ? "⌒" :
-                       selectedCell.innerMark === "three-dots" ? "∴" :
-                       selectedCell.innerMark === "line-h" ? "─" :
-                       selectedCell.innerMark === "eye" ? "◉" :
-                       selectedCell.innerMark === "x-cross" ? "✕" :
-                       selectedCell.innerMark === "line-v" ? "│" :
-                       selectedCell.innerMark === "circle" ? "○" :
-                       selectedCell.innerMark === "arc-down" ? "⌃" :
-                       selectedCell.innerMark === "cross" ? "＋" :
-                       selectedCell.innerMark === "spiral" ? "🌀" :
-                       selectedCell.innerMark === "double-arc" ? "≈" :
-                       selectedCell.innerMark === "star3" ? "✦" :
-                       selectedCell.innerMark === "zigzag" ? "⚡" : "✧"}
-                    </span>
+                       {selectedCell.innerMark === "dot" ? "•" : 
+                        selectedCell.innerMark === "two-dots" ? "••" :
+                        selectedCell.innerMark === "arc-up" ? "⌒" :
+                        selectedCell.innerMark === "three-dots" ? "∴" :
+                        selectedCell.innerMark === "line-h" ? "─" :
+                        selectedCell.innerMark === "eye" ? "◉" :
+                        selectedCell.innerMark === "x-cross" ? "✕" :
+                        selectedCell.innerMark === "line-v" ? "│" :
+                        selectedCell.innerMark === "circle" ? "○" :
+                        selectedCell.innerMark === "arc-down" ? "⌃" :
+                        selectedCell.innerMark === "cross" ? "＋" :
+                        selectedCell.innerMark === "spiral" ? "🌀" :
+                        selectedCell.innerMark === "double-arc" ? "≈" :
+                        selectedCell.innerMark === "star3" ? "✦" :
+                        selectedCell.innerMark === "zigzag" ? "⚡" :
+                        selectedCell.innerMark === "line-diag" ? "⚡" : "✧"}
+                     </span>
                   </motion.div>
                   <h3 className="font-amiri text-2xl font-bold" style={{ color: G.text }} dir="rtl">
                     {selectedCell[lang]?.shortTitle}
