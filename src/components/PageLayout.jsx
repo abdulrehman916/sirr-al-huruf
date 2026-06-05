@@ -283,7 +283,10 @@ export default function PageLayout({ children }) {
         )}
 
         {/* Enhanced horizontal navigation with improved touch scrolling */}
-        <div className="px-2 py-2 w-full">
+        <div 
+          className="px-2 py-2 w-full"
+          style={{ overflowX: 'auto', overflowY: 'hidden' }}
+        >
           <div
             ref={navRef}
             className="nav-scroll-container flex gap-1 flex-nowrap"
@@ -298,12 +301,12 @@ export default function PageLayout({ children }) {
               willChange: 'scroll-position',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
-              touchAction: 'pan-x pan-y',
+              touchAction: 'pan-x',
               WebkitOverflowScrolling: 'touch',
               cursor: 'grab',
-              width: '100%',
               overflowX: 'auto',
               overflowY: 'hidden',
+              flexShrink: 0,
             }}
           >
             {TABS.map((tab) => (
