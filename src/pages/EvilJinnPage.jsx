@@ -1,4 +1,23 @@
 import { useState, useMemo, useEffect } from "react";
+
+// Scoped Arabic font for Evil Jinn page only
+const ARABIC_FONT_STYLE = `
+  @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap');
+  .ej-arabic {
+    font-family: 'Scheherazade New', 'Amiri', serif;
+    font-weight: 700;
+    direction: rtl;
+    unicode-bidi: embed;
+    letter-spacing: 0.03em;
+    line-height: 1.5;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+`;
+
+function EvilJinnArabicFont() {
+  return <style>{ARABIC_FONT_STYLE}</style>;
+}
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ArrowUpDown, ChevronDown } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -87,9 +106,8 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-inter text-[8px] font-semibold" style={{ color: "rgba(255,255,255,0.28)" }}>#{jinn.serialNo}</span>
             <span
-              className="font-amiri font-bold text-xl"
-              dir="rtl"
-              style={{ fontFamily: "'Amiri', serif", fontWeight: 700, color: P.text, textShadow: isOpen ? "0 0 18px rgba(212,175,55,0.30)" : "none" }}
+              className="ej-arabic"
+              style={{ fontSize: "1.35rem", color: P.text, textShadow: isOpen ? "0 0 18px rgba(212,175,55,0.30)" : "none" }}
             >
               {jinn.arabicName}
             </span>
@@ -131,8 +149,8 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
               <div className="col-span-2 rounded-xl p-3 text-center" style={{ background: P.bgHi, border: "1px solid " + P.borderHi }}>
                 <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Arabic Name</p>
                 <p
-                  dir="rtl"
-                  style={{ fontFamily: "'Amiri', serif", fontWeight: 700, fontSize: "2rem", lineHeight: 1.3, color: P.text, textShadow: "0 0 20px rgba(212,175,55,0.30)" }}
+                  className="ej-arabic"
+                  style={{ fontSize: "2.2rem", lineHeight: 1.6, color: P.text, textShadow: "0 0 20px rgba(212,175,55,0.30)" }}
                 >
                   {jinn.arabicHarakat}
                 </p>
@@ -147,7 +165,7 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
               {/* Abjad Value */}
               <div className="rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
                 <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Abjad Value</p>
-                <p style={{ fontFamily: "'Amiri', serif", fontWeight: 700, fontSize: "1.6rem", color: P.text }}>{jinn.abjadValue}</p>
+                <p className="ej-arabic" style={{ fontSize: "1.8rem", color: P.text }}>{jinn.abjadValue}</p>
               </div>
 
               {/* Letter Count */}
@@ -203,6 +221,7 @@ export default function EvilJinnPage() {
 
   return (
     <PageLayout>
+      <EvilJinnArabicFont />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="space-y-4">
           <PageTitle arabic="أسماء الجن الشريرة" latin="Evil Jinn Names" subtitle="Reference Database" icon="👁" />
