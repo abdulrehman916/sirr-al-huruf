@@ -129,34 +129,34 @@ export default function AbjadKabirPage() {
 
   return (
     <PageLayout>
-      <div className="text-center mb-3">
+      <div className="text-center mb-2">
         <motion.div
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.05 }}
-          className="inline-flex items-center justify-center w-9 h-9 rounded-xl border mb-2.5"
+          transition={{ duration: 0.3 }}
+          className="inline-flex items-center justify-center w-8 h-8 rounded-lg border mb-2"
           style={{
-            background: "linear-gradient(145deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
-            borderColor: "rgba(212,175,55,0.25)",
-            boxShadow: "0 0 18px rgba(212,175,55,0.15)",
+            background: "linear-gradient(145deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%)",
+            borderColor: "rgba(212,175,55,0.20)",
+            boxShadow: "0 0 12px rgba(212,175,55,0.10)",
           }}
         >
-          <span className="font-amiri text-base" style={{ color: "#D4AF37" }}>🔢</span>
+          <span className="font-amiri text-sm" style={{ color: "#D4AF37" }}>🔢</span>
         </motion.div>
-        <h1 className="font-amiri font-bold leading-tight" style={{ fontSize: "1.55rem", color: "#f5ead4", textShadow: "0 0 18px rgba(212,175,55,0.30)" }}>
+        <h1 className="font-amiri font-bold leading-tight" style={{ fontSize: "1.35rem", color: "#f5ead4", textShadow: "0 0 12px rgba(212,175,55,0.20)" }}>
           حاسبة الأبجد
         </h1>
-        <p className="font-inter font-bold tracking-[0.22em] uppercase mt-1" style={{ fontSize: "7.5px", color: "rgba(212,175,55,0.70)" }}>
+        <p className="font-inter font-bold tracking-[0.18em] uppercase mt-0.5" style={{ fontSize: "6.5px", color: "rgba(212,175,55,0.60)" }}>
           Abjad Calculator
         </p>
       </div>
 
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-3">
         {/* Mode Selection Card */}
         <SectionCard>
           <SectionLabel>SELECT CALCULATION MODE</SectionLabel>
           
-          <div className="grid grid-cols-2 gap-2 mt-3">
+          <div className="grid grid-cols-2 gap-1.5 mt-2">
             {['kebir', 'saghir', 'cumeli', 'bast'].map((modeId) => {
               const labels = getModeLabel(modeId);
               const isActive = mode === modeId;
@@ -167,23 +167,23 @@ export default function AbjadKabirPage() {
                   onClick={() => handleModeChange(modeId)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="rounded-xl py-3 px-2 border transition-all relative overflow-hidden"
+                  className="rounded-lg py-2.5 px-2 border transition-all relative overflow-hidden"
                   style={{
                     background: isActive
-                      ? "linear-gradient(145deg, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0.06) 100%)"
-                      : "rgba(4,12,34,0.97)",
-                    borderColor: isActive ? G.borderHi : "rgba(255,255,255,0.08)",
-                    boxShadow: isActive ? `0 0 18px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.15)` : "none",
+                      ? "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)"
+                      : "rgba(4,12,34,0.95)",
+                    borderColor: isActive ? "rgba(212,175,55,0.35)" : "rgba(255,255,255,0.06)",
+                    boxShadow: isActive ? `0 0 12px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.10)` : "none",
                   }}
                 >
-                  <span className="block font-inter font-bold text-[10px] tracking-wide" style={{ color: isActive ? G.text : "rgba(255,255,255,0.40)" }}>
+                  <span className="block font-inter font-bold text-[9px] tracking-wide" style={{ color: isActive ? G.text : "rgba(255,255,255,0.35)" }}>
                     {labels.en}
                   </span>
-                  <span className="block font-amiri text-xs font-bold mt-0.5" style={{ color: isActive ? "rgba(212,175,55,0.75)" : "rgba(212,175,55,0.45)" }}>
+                  <span className="block font-amiri text-[11px] font-bold mt-0.5" style={{ color: isActive ? "rgba(212,175,55,0.65)" : "rgba(212,175,55,0.40)" }}>
                     {labels.ar}
                   </span>
                   {isActive && (
-                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full" style={{ background: G.text }} />
+                    <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-px rounded-full" style={{ background: G.text }} />
                   )}
                 </motion.button>
               );
@@ -195,21 +195,21 @@ export default function AbjadKabirPage() {
         {mode === 'bast' && (
           <SectionCard>
             <SectionLabel>BAST LEVEL</SectionLabel>
-            <div className="grid grid-cols-5 gap-1.5 mt-2.5">
+            <div className="grid grid-cols-5 gap-1 mt-1.5">
               {[1, 2, 3, 4, 5].map((level) => (
                 <motion.button
                   key={level}
                   onClick={() => handleBastLevelChange(level)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="rounded-lg py-2 text-xs font-bold font-inter border transition-all"
+                  className="rounded-md py-1.5 text-[11px] font-bold font-inter border transition-all"
                   style={{
                     background: bastLevel === level
-                      ? "linear-gradient(145deg, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0.06) 100%)"
-                      : "rgba(4,12,34,0.97)",
-                    borderColor: bastLevel === level ? G.borderHi : "rgba(255,255,255,0.08)",
-                    color: bastLevel === level ? G.text : "rgba(255,255,255,0.38)",
-                    boxShadow: bastLevel === level ? `0 0 18px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.15)` : "none",
+                      ? "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)"
+                      : "rgba(4,12,34,0.95)",
+                    borderColor: bastLevel === level ? "rgba(212,175,55,0.35)" : "rgba(255,255,255,0.06)",
+                    color: bastLevel === level ? G.text : "rgba(255,255,255,0.35)",
+                    boxShadow: bastLevel === level ? `0 0 12px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.10)` : "none",
                   }}
                 >
                   {level}
@@ -223,33 +223,33 @@ export default function AbjadKabirPage() {
         <SectionCard>
           <SectionLabel>ARABIC TEXT INPUT — {mode.toUpperCase()}</SectionLabel>
           
-          <div className="relative mt-3">
+          <div className="relative mt-2">
             <textarea
               value={input}
               onChange={handleInputChange}
               placeholder="أدخل النص العربي هنا..."
-              className="w-full rounded-xl border bg-slate-950/60 p-4 text-right font-amiri text-base text-white placeholder-slate-600 focus:outline-none transition-all"
+              className="w-full rounded-lg border bg-slate-950/60 p-3 text-right font-amiri text-sm text-white placeholder-slate-600 focus:outline-none transition-all"
               style={{
-                borderColor: "rgba(212,175,55,0.25)",
-                boxShadow: "inset 0 2px 12px rgba(0,0,0,0.40)",
+                borderColor: "rgba(212,175,55,0.20)",
+                boxShadow: "inset 0 1px 8px rgba(0,0,0,0.35)",
               }}
-              rows={4}
+              rows={3}
               dir="rtl"
             />
           </div>
 
           {/* Calculate & Clear Buttons */}
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-1.5 mt-2">
             <motion.button
               onClick={() => calculateResults(input)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 py-3 rounded-xl font-amiri font-bold text-base border transition-all"
+              className="flex-1 py-2.5 rounded-lg font-amiri font-bold text-sm border transition-all"
               style={{
-                background: "linear-gradient(135deg, rgba(212,175,55,0.40) 0%, rgba(212,175,55,0.20) 100%)",
-                borderColor: "rgba(212,175,55,0.45)",
+                background: "linear-gradient(135deg, rgba(212,175,55,0.35) 0%, rgba(212,175,55,0.15) 100%)",
+                borderColor: "rgba(212,175,55,0.35)",
                 color: G.text,
-                boxShadow: `0 0 18px ${G.glow}`,
+                boxShadow: `0 0 12px ${G.glow}`,
               }}
             >
               احسب
@@ -258,14 +258,14 @@ export default function AbjadKabirPage() {
               onClick={handleClear}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-inter font-bold text-sm border transition-all"
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg font-inter font-bold text-[11px] border transition-all"
               style={{
-                background: "rgba(4,12,34,0.97)",
-                borderColor: "rgba(255,255,255,0.12)",
-                color: "rgba(212,175,55,0.60)",
+                background: "rgba(4,12,34,0.95)",
+                borderColor: "rgba(255,255,255,0.08)",
+                color: "rgba(212,175,55,0.55)",
               }}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
               Clear
             </motion.button>
           </div>
@@ -281,19 +281,19 @@ export default function AbjadKabirPage() {
             <SectionCard>
               <SectionLabel>RESULT</SectionLabel>
 
-              <div className="text-center mt-4 mb-4">
+              <div className="text-center mt-3 mb-3">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.4 }}
-                  className="inline-flex items-center justify-center w-24 h-24 rounded-2xl border mb-3"
+                  transition={{ duration: 0.3 }}
+                  className="inline-flex items-center justify-center w-20 h-20 rounded-xl border mb-2"
                   style={{
-                    background: "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)",
-                    borderColor: G.borderHi,
-                    boxShadow: `0 0 28px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.15)`,
+                    background: "linear-gradient(145deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.03) 100%)",
+                    borderColor: "rgba(212,175,55,0.30)",
+                    boxShadow: `0 0 20px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.10)`,
                   }}
                 >
-                  <span className="text-5xl font-bold font-inter" style={{ color: G.text }}>
+                  <span className="text-4xl font-bold font-inter" style={{ color: G.text }}>
                     {results[mode].total}
                   </span>
                 </motion.div>
@@ -368,33 +368,33 @@ export default function AbjadKabirPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 mt-4">
+              <div className="flex gap-1.5 mt-3">
                 <motion.button
                   onClick={handleCopy}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-inter font-bold text-xs border transition-all"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md font-inter font-bold text-[10px] border transition-all"
                   style={{
-                    background: copied ? "rgba(16,185,129,0.15)" : "rgba(4,12,34,0.97)",
-                    borderColor: copied ? "rgba(16,185,129,0.40)" : "rgba(255,255,255,0.12)",
-                    color: copied ? "#10B981" : "rgba(212,175,55,0.60)",
+                    background: copied ? "rgba(16,185,129,0.12)" : "rgba(4,12,34,0.95)",
+                    borderColor: copied ? "rgba(16,185,129,0.35)" : "rgba(255,255,255,0.08)",
+                    color: copied ? "#10B981" : "rgba(212,175,55,0.55)",
                   }}
                 >
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                   {copied ? 'Copied' : 'Copy'}
                 </motion.button>
                 <motion.button
                   onClick={handleExport}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-inter font-bold text-xs border transition-all"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md font-inter font-bold text-[10px] border transition-all"
                   style={{
-                    background: "rgba(4,12,34,0.97)",
-                    borderColor: "rgba(255,255,255,0.12)",
-                    color: "rgba(212,175,55,0.60)",
+                    background: "rgba(4,12,34,0.95)",
+                    borderColor: "rgba(255,255,255,0.08)",
+                    color: "rgba(212,175,55,0.55)",
                   }}
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3 h-3" />
                   Export
                 </motion.button>
               </div>
@@ -458,11 +458,11 @@ export default function AbjadKabirPage() {
 function SectionCard({ children }) {
   return (
     <div
-      className="rounded-xl border p-4"
+      className="rounded-lg border p-3"
       style={{
-        background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
-        borderColor: "rgba(212,175,55,0.22)",
-        boxShadow: "0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(212,175,55,0.08)",
+        background: "linear-gradient(145deg, rgba(8,16,38,0.95) 0%, rgba(4,10,24,0.98) 100%)",
+        borderColor: "rgba(212,175,55,0.18)",
+        boxShadow: "0 2px 20px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.06)",
       }}
     >
       {children}
@@ -472,7 +472,7 @@ function SectionCard({ children }) {
 
 function SectionLabel({ children }) {
   return (
-    <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>
+    <p className="font-inter text-[9px] uppercase tracking-wide" style={{ color: G.dim }}>
       {children}
     </p>
   );
