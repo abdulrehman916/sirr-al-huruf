@@ -2,7 +2,6 @@ import { useState, useMemo, memo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useVefkSession } from "../context/VefkSessionContext";
 import { VefkActionButtons } from "./VefkSessionManager";
-import ZoomableContainer from "./ZoomableContainer";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -387,9 +386,11 @@ export default function AnaVefk() {
               </div>
             )}
 
-            <ZoomableContainer className="rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
-              <VefkGrid cells={result.cells} centerText={result.centerText} esmaRaw={result.esmaRaw} />
-            </ZoomableContainer>
+            <div className="rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
+              <div className="flex justify-center overflow-x-auto">
+                <VefkGrid cells={result.cells} centerText={result.centerText} esmaRaw={result.esmaRaw} />
+              </div>
+            </div>
 
             {/* Action Buttons */}
             <VefkActionButtons gridId="ana-vefk-grid-export-content" mode="ana" hasResult={!!result} />

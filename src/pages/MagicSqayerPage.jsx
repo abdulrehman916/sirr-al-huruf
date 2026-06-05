@@ -2,7 +2,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
-import ZoomableContainer from "../components/ZoomableContainer";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -482,9 +481,9 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
         </div>
       </div>
 
-      {/* Grid cells — responsive scaling to prevent cropping on mobile */}
-      <ZoomableContainer className="flex justify-center w-full rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
-        <div style={{ overflowX: "visible", width: "100%", padding: "8px" }}>
+      {/* Grid cells */}
+      <div className="flex justify-center w-full rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
+        <div style={{ overflowX: "auto", width: "100%", padding: "8px" }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
@@ -513,7 +512,7 @@ function SacredGridPreview({ gridSize, element, grid, inputNumber }) {
           ))}
           </div>
         </div>
-      </ZoomableContainer>
+      </div>
 
       {/* Verification Panel */}
       <div className="rounded-xl border p-4 space-y-2"

@@ -2,7 +2,6 @@ import { useState, memo, useEffect } from "react";
 import { useVefkSession } from "../context/VefkSessionContext";
 import { VefkActionButtons } from "./VefkSessionManager";
 import { motion, AnimatePresence } from "framer-motion";
-import ZoomableContainer from "./ZoomableContainer";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -311,9 +310,11 @@ export default function TanzimVefki() {
                 </div>
               )}
 
-              <ZoomableContainer className="rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
-                <TanzimGrid cells={cells} esmaText={esmaText} />
-              </ZoomableContainer>
+              <div className="rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
+                <div className="flex justify-center overflow-x-auto">
+                  <TanzimGrid cells={cells} esmaText={esmaText} />
+                </div>
+              </div>
 
               {/* Action Buttons */}
               <VefkActionButtons gridId="tanzim-vefk-grid-export-content" mode="tanzim" hasResult={!!cells} />
