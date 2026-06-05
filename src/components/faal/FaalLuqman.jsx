@@ -57,12 +57,6 @@ export default function FaalLuqman() {
     }
   }, [hasShuffledOnce, createShuffled]);
 
-  const handleShuffle = () => {
-    setShuffled(createShuffled());
-    setSelectedCell(null);
-    setHasShuffledOnce(false);
-  };
-  
   const handleClear = () => {
     clearPageState(PAGE_KEY);
     setLang("ml");
@@ -76,6 +70,7 @@ export default function FaalLuqman() {
   };
 
   const handleBack = () => {
+    setShuffled(createShuffled());
     setSelectedCell(null);
   };
 
@@ -262,35 +257,20 @@ export default function FaalLuqman() {
         )}
       </AnimatePresence>
 
-      {/* Action Buttons */}
-      <div className="grid grid-cols-2 gap-2">
-        <motion.button
-          onClick={handleShuffle}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-inter font-bold text-sm text-[#0d1b2a] tracking-wide"
-          style={{
-            background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)",
-            boxShadow: `0 0 32px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)`,
-          }}
-        >
-          <Shuffle className="w-4 h-4" />
-          Shuffle
-        </motion.button>
-        <motion.button
-          onClick={handleClear}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-inter font-bold text-sm text-white border transition-all"
-          style={{
-            background: "rgba(4,12,34,0.97)",
-            borderColor: "rgba(255,255,255,0.12)",
-          }}
-        >
-          <Trash2 className="w-4 h-4" />
-          Clear
-        </motion.button>
-      </div>
+      {/* Clear Button */}
+      <motion.button
+        onClick={handleClear}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
+        className="w-full flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-inter font-bold text-sm text-white border transition-all"
+        style={{
+          background: "rgba(4,12,34,0.97)",
+          borderColor: "rgba(255,255,255,0.12)",
+        }}
+      >
+        <Trash2 className="w-4 h-4" />
+        Clear All
+      </motion.button>
     </div>
   );
 }
