@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shuffle, Trash2, Sparkles } from "lucide-react";
+import { Shuffle, Trash2, Star } from "lucide-react";
 import { FAAL_CELLS } from "../../lib/faalHasrathData";
 import { usePageState } from "../../context/PageStateContext";
 
@@ -34,19 +34,33 @@ export default function FaalAli() {
     lang: "ml",
     shuffled: initialShuffled,
     selectedCell: null,
+    hasShuffledOnce: false,
   });
   
   const [lang, setLang] = useState(initialState.lang);
   const [shuffled, setShuffled] = useState(initialState.shuffled);
   const [selectedCell, setSelectedCell] = useState(initialState.selectedCell);
+  const [hasShuffledOnce, setHasShuffledOnce] = useState(initialState.hasShuffledOnce);
 
   useEffect(() => {
-    setPageState(PAGE_KEY, { lang, shuffled, selectedCell });
-  }, [lang, shuffled, selectedCell, setPageState]);
+    setPageState(PAGE_KEY, { lang, shuffled, selectedCell, hasShuffledOnce });
+  }, [lang, shuffled, selectedCell, hasShuffledOnce, setPageState]);
+
+  // Auto-shuffle once on mount for fresh reading
+  useEffect(() => {
+    if (!hasShuffledOnce) {
+      const timer = setTimeout(() => {
+        setShuffled(createShuffled());
+        setHasShuffledOnce(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [hasShuffledOnce, createShuffled]);
 
   const handleShuffle = useCallback(() => {
     setShuffled(createShuffled());
     setSelectedCell(null);
+    setHasShuffledOnce(false);
   }, [createShuffled]);
 
   const handleClear = useCallback(() => {
@@ -54,6 +68,7 @@ export default function FaalAli() {
     setLang("ml");
     setShuffled(createShuffled());
     setSelectedCell(null);
+    setHasShuffledOnce(false);
   }, [clearPageState, createShuffled]);
 
   const handleSelectCell = (cell) => {
@@ -107,7 +122,6 @@ export default function FaalAli() {
 
       <AnimatePresence mode="wait">
         {!selectedCell ? (
-          /* Card Grid Selection View */
           <motion.div
             key="grid"
             initial={{ opacity: 0 }}
@@ -117,52 +131,53 @@ export default function FaalAli() {
           >
             <SectionCard glow>
               <SectionLabel>✨ Select Your Omen — Choose a Card</SectionLabel>
+              <p className="font-inter text-[9px] text-white/60 text-center mb-4">
+                Focus on your question and select one card from the sacred grid
+              </p>
               <div className="grid grid-cols-4 gap-2 mt-3">
                 {shuffled.map((cell, idx) => (
                   <motion.button
                     key={cell.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.02, duration: 0.2 }}
+                    initial={{ opacity: 0, scale: 0.75, rotate: -5 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ delay: idx * 0.015, duration: 0.35, ease: "easeOut" }}
                     onClick={() => handleSelectCell(cell)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 relative overflow-hidden"
+                    whileHover={{ scale: 1.06, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="aspect-square rounded-xl border flex items-center justify-center relative overflow-hidden"
                     style={{
-                      background: "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(4,12,34,0.97) 100%)",
-                      borderColor: "rgba(212,175,55,0.35)",
-                      boxShadow: "0 0 16px rgba(212,175,55,0.12), inset 0 1px 0 rgba(212,175,55,0.08)",
+                      background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(6,14,32,0.98) 100%)",
+                      borderColor: "rgba(212,175,55,0.38)",
+                      boxShadow: "0 0 20px rgba(212,175,55,0.14), inset 0 1px 0 rgba(212,175,55,0.10)",
                     }}
                   >
-                    <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 50% 120%, rgba(212,175,55,0.15) 0%, transparent 70%)` }} />
-                    <span className="font-amiri text-2xl font-bold" style={{ color: G.text, zIndex: 1 }}>
-                      {cell.innerMark === "dot" ? "•" : 
-                       cell.innerMark === "two-dots" ? "••" :
-                       cell.innerMark === "arc-up" ? "⌒" :
-                       cell.innerMark === "three-dots" ? "∴" :
-                       cell.innerMark === "line-h" ? "─" :
-                       cell.innerMark === "eye" ? "◉" :
-                       cell.innerMark === "x-cross" ? "✕" :
-                       cell.innerMark === "line-v" ? "│" :
-                       cell.innerMark === "circle" ? "○" :
-                       cell.innerMark === "arc-down" ? "⌃" :
-                       cell.innerMark === "cross" ? "＋" :
-                       cell.innerMark === "spiral" ? "🌀" :
-                       cell.innerMark === "double-arc" ? "≈" :
-                       cell.innerMark === "star3" ? "✦" :
-                       cell.innerMark === "zigzag" ? "⚡" :
-                       cell.innerMark === "line-diag" ? "⚡" : "✧"}
-                    </span>
-                    <span className="font-inter text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(212,175,55,0.60)", zIndex: 1 }}>
-                      #{cell.id}
-                    </span>
+                    <div className="absolute inset-0" style={{ 
+                      background: `radial-gradient(ellipse 60% 50% at 50% 50%, rgba(212,175,55,0.08) 0%, transparent 60%),
+                                   repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(212,175,55,0.03) 8px, rgba(212,175,55,0.03) 16px)`
+                    }} />
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{
+                          background: "linear-gradient(145deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
+                          border: "1px solid rgba(212,175,55,0.30)",
+                          boxShadow: "0 0 16px rgba(212,175,55,0.20), inset 0 1px 0 rgba(212,175,55,0.15)"
+                        }}>
+                        <Star className="w-5 h-5" style={{ color: G.text, opacity: 0.85 }} />
+                      </div>
+                    </div>
+                    <div className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute bottom-1.5 left-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
                   </motion.button>
                 ))}
               </div>
+              <p className="font-inter text-[8px] uppercase tracking-widest text-center mt-4" style={{ color: G.dim }}>
+                16 Cards — Faal Ali Oracle
+              </p>
             </SectionCard>
           </motion.div>
         ) : (
-          /* Result View */
           <motion.div
             key="result"
             initial={{ opacity: 0, y: 16 }}
