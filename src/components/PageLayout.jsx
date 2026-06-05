@@ -219,7 +219,7 @@ export default function PageLayout({ children }) {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.20, ease: "easeOut" }}
-            className="relative z-10 w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6"
+            className="relative z-10 w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
               paddingBottom: "env(safe-area-inset-bottom)",
               boxSizing: "border-box",
