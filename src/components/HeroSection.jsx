@@ -23,18 +23,6 @@ const ORBITAL_RINGS = [
   { r: "min(430px, 88vw)", dur: 260, dir: -1, opacity: 0.09, width: 0.6 },
 ];
 
-const CALLIGRAPHY_CHARS = [
-  { char: "ب", top: "8%",  left: "7%",  size: 48, opacity: 0.026, dur: 14, delay: 0 },
-  { char: "ح", top: "15%", left: "88%", size: 38, opacity: 0.020, dur: 18, delay: 3 },
-  { char: "ن", top: "72%", left: "5%",  size: 55, opacity: 0.023, dur: 16, delay: 6 },
-  { char: "ع", top: "80%", left: "85%", size: 42, opacity: 0.018, dur: 20, delay: 2 },
-  { char: "م", top: "45%", left: "3%",  size: 36, opacity: 0.016, dur: 22, delay: 8 },
-  { char: "ق", top: "40%", left: "92%", size: 44, opacity: 0.021, dur: 17, delay: 5 },
-  { char: "ر", top: "90%", left: "45%", size: 52, opacity: 0.017, dur: 19, delay: 1 },
-  { char: "و", top: "5%",  left: "48%", size: 40, opacity: 0.019, dur: 15, delay: 7 },
-];
-
-
 
 // ── Static ring sizes for mobile (no Framer Motion) ──────────────
 const STATIC_RINGS = [
@@ -136,91 +124,13 @@ function LightRays({ paused }) {
   );
 }
 
-// Desktop: parallax calligraphy with Framer Motion
-function CalligraphyAtmosphereDesktop({ mouse, paused }) {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
-      {CALLIGRAPHY_CHARS.map((c, i) => (
-        <motion.span key={i} className="absolute font-amiri select-none"
-          style={{ top: c.top, left: c.left, fontSize: c.size, color: "#D4AF37", opacity: c.opacity,
-            x: mouse.x * -5, y: mouse.y * -5 }}
-          animate={paused ? {} : { opacity: [c.opacity * 0.35, c.opacity, c.opacity * 0.35], y: [0, -13, 0] }}
-          transition={{ duration: c.dur, repeat: Infinity, ease: "easeInOut", delay: c.delay }}
-        >
-          {c.char}
-        </motion.span>
-      ))}
-    </div>
-  );
-}
 
 
 
-// Tablet: CSS calligraphy with reduced scale — no parallax
-function CalligraphyAtmosphereTablet() {
-  useEffect(() => {
-    const root = document.getElementById("hero-calligraphy-tablet");
-    if (!root) return;
-    const onVis = () => {
-      const state = document.hidden ? "paused" : "running";
-      root.querySelectorAll("[data-canim]").forEach(el => {
-        el.style.animationPlayState = state;
-      });
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
 
-  return (
-    <div id="hero-calligraphy-tablet" className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
-      {CALLIGRAPHY_CHARS.slice(0, 6).map((c, i) => (
-        <span key={i} data-canim="1" className="absolute font-amiri select-none"
-          style={{
-            top: c.top, left: c.left, fontSize: c.size * 0.85,
-            color: "#D4AF37", opacity: c.opacity * 0.85,
-            animation: `sh-twinkle ${c.dur}s ease-in-out infinite`,
-            animationDelay: `${c.delay}s`,
-          }}
-        >
-          {c.char}
-        </span>
-      ))}
-    </div>
-  );
-}
 
-// Mobile: pure CSS calligraphy — zero JS animation, visibility-paused
-function CalligraphyAtmosphereMobile() {
-  useEffect(() => {
-    const root = document.getElementById("hero-calligraphy-mobile");
-    if (!root) return;
-    const onVis = () => {
-      const state = document.hidden ? "paused" : "running";
-      root.querySelectorAll("[data-canim]").forEach(el => {
-        el.style.animationPlayState = state;
-      });
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
 
-  return (
-    <div id="hero-calligraphy-mobile" className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
-      {CALLIGRAPHY_CHARS.slice(0, 4).map((c, i) => (
-        <span key={i} data-canim="1" className="absolute font-amiri select-none"
-          style={{
-            top: c.top, left: c.left, fontSize: c.size,
-            color: "#D4AF37", opacity: c.opacity,
-            animation: `sh-twinkle ${c.dur}s ease-in-out infinite`,
-            animationDelay: `${c.delay}s`,
-          }}
-        >
-          {c.char}
-        </span>
-      ))}
-    </div>
-  );
-}
+
 
 function ManuscriptIntro() {
   return (
@@ -457,11 +367,6 @@ export default function HeroSection({ mouse }) {
 
       {/* Light rays — desktop only */}
       {deviceType === 'desktop' && <LightRays paused={isNavigating} />}
-
-      {/* Calligraphy backgrounds — three independent layers */}
-      {deviceType === 'desktop' && <CalligraphyAtmosphereDesktop mouse={safeMouse} paused={isNavigating} />}
-      {deviceType === 'tablet' && <CalligraphyAtmosphereTablet />}
-      {deviceType === 'mobile' && <CalligraphyAtmosphereMobile />}
 
       {/* Wheel container */}
       {deviceType === 'mobile' ? (
