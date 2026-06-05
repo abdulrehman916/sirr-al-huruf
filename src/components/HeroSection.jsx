@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import SacredWheel from "./SacredWheel";
-import NavCards from "./NavCards.jsx";
 import useIsMobile from "../hooks/useIsMobile";
 
 // ── Static data ───────────────────────────────────────────────────
@@ -329,11 +329,177 @@ const ZERO_MV = { x: { get: () => 0, set: () => {}, on: () => () => {} }, y: { g
 
 // ── Main ──────────────────────────────────────────────────────────
 export default function HeroSection({ mouse }) {
+  const { startNav } = useNavigation();
+  
   return (
     <div className="font-inter relative flex flex-col items-center w-full pb-20 pt-4" style={{ minHeight: "auto", height: "auto" }}>
-      <h1 style={{color:"red",fontSize:"40px"}}>TEST</h1>
-      <div style={{background:"red",height:"300px",marginTop:"20px"}}>
-        CARD GRID TEST
+      {/* Title */}
+      <motion.div initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }}
+        transition={{ duration:0.9, delay:0.4 }}
+        className="text-center z-10 px-4 mt-4">
+        <h1 className="font-amiri font-bold"
+          style={{
+            fontSize:"clamp(3rem,13vw,5.8rem)", color:"#f5ecd4", lineHeight:1.08, letterSpacing:"0.025em",
+            textShadow:"0 0 36px rgba(212,175,55,0.48), 0 0 70px rgba(212,175,55,0.18), 0 2px 20px rgba(0,0,0,0.60)",
+          }}>
+          سرّ الحروف
+        </h1>
+        <div className="mt-3 space-y-1.5">
+          <p className="font-inter font-bold tracking-[0.38em] uppercase"
+            style={{ fontSize:"clamp(10px,2.6vw,14px)", color:"rgba(212,175,55,0.88)" }}>
+            Sirrul Huruf
+          </p>
+          <p className="font-inter tracking-[0.22em] uppercase"
+            style={{ fontSize:"clamp(8px,1.6vw,10px)", color:"rgba(255,255,255,0.38)" }}>
+            Advanced Ilm al-Huruf Analysis
+          </p>
+        </div>
+        <div className="mt-5 flex items-center justify-center gap-2.5">
+          <div style={{ width:36, height:0.5, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.65))" }} />
+          <div style={{ width:6, height:6, borderRadius:"50%", background:"#D4AF37", boxShadow:"0 0 10px rgba(212,175,55,0.75)" }} />
+          <div style={{ width:36, height:0.5, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.65))" }} />
+        </div>
+      </motion.div>
+
+      <GoldDivider delay={1.55} />
+      <ManuscriptIntro />
+
+      {/* Card Grid - 2 columns mobile, 3 columns desktop */}
+      <div className="relative z-20 w-full mt-8 px-3 grid grid-cols-2 md:grid-cols-3 gap-3" style={{ marginBottom: "40px" }}>
+        {/* ABJAD */}
+        <Link to="/abjad" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(212,175,55,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(212,175,55,0.05) 100%)",
+            borderColor: "rgba(212,175,55,0.32)",
+            boxShadow: "0 0 28px rgba(212,175,55,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(212,175,55,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>أبجد</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(212,175,55,0.88)", marginTop:4 }}>ABJAD</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Numerical Calculator</p>
+        </Link>
+
+        {/* ANASIR */}
+        <Link to="/anasir" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(56,189,248,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(56,189,248,0.05) 100%)",
+            borderColor: "rgba(56,189,248,0.32)",
+            boxShadow: "0 0 28px rgba(56,189,248,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(56,189,248,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>عناصر</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(56,189,248,0.88)", marginTop:4 }}>ANASIR</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(56,189,248,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Elemental Analysis</p>
+        </Link>
+
+        {/* HADIM */}
+        <Link to="/hadim" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(192,132,252,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(192,132,252,0.05) 100%)",
+            borderColor: "rgba(192,132,252,0.32)",
+            boxShadow: "0 0 28px rgba(192,132,252,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(192,132,252,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>خادم</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(192,132,252,0.88)", marginTop:4 }}>HADIM</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(192,132,252,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Name Generator</p>
+        </Link>
+
+        {/* MIZAN */}
+        <Link to="/mizaan9" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(212,175,55,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(212,175,55,0.05) 100%)",
+            borderColor: "rgba(212,175,55,0.32)",
+            boxShadow: "0 0 28px rgba(212,175,55,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(212,175,55,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>ميزان</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(212,175,55,0.88)", marginTop:4 }}>MIZAN 9</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Sacred Numerology</p>
+        </Link>
+
+        {/* SQAYER */}
+        <Link to="/magic-sqayer" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(212,175,55,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(212,175,55,0.05) 100%)",
+            borderColor: "rgba(212,175,55,0.32)",
+            boxShadow: "0 0 28px rgba(212,175,55,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(212,175,55,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>السحر المربع</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(212,175,55,0.88)", marginTop:4 }}>SQAYER</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Sacred Vefk Construction</p>
+        </Link>
+
+        {/* VEFKIN */}
+        <Link to="/vefkin-yapilisi" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(212,175,55,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(212,175,55,0.05) 100%)",
+            borderColor: "rgba(212,175,55,0.32)",
+            boxShadow: "0 0 28px rgba(212,175,55,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(212,175,55,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>طريقة الوفق</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(212,175,55,0.88)", marginTop:4 }}>VEFKIN</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Ottoman Manuscript Method</p>
+        </Link>
+
+        {/* BAST */}
+        <Link to="/basthul-huroof-2" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(180,140,255,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(180,140,255,0.05) 100%)",
+            borderColor: "rgba(180,140,255,0.32)",
+            boxShadow: "0 0 28px rgba(180,140,255,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(180,140,255,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>بسط الحروف</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(180,140,255,0.88)", marginTop:4 }}>BAST</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(180,140,255,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Basti Adedi Cedveli</p>
+        </Link>
+
+        {/* FAAL */}
+        <Link to="/faal-hasrath" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(212,175,55,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(212,175,55,0.05) 100%)",
+            borderColor: "rgba(212,175,55,0.32)",
+            boxShadow: "0 0 28px rgba(212,175,55,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(212,175,55,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>فأل</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(212,175,55,0.88)", marginTop:4 }}>FAAL</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Sacred Omen System</p>
+        </Link>
+
+        {/* PLANTS */}
+        <Link to="/plants" onClick={startNav}
+          className="block rounded-2xl border flex flex-col items-center justify-center text-center p-4"
+          style={{
+            background: "linear-gradient(155deg,rgba(34,197,94,0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(34,197,94,0.05) 100%)",
+            borderColor: "rgba(34,197,94,0.32)",
+            boxShadow: "0 0 28px rgba(34,197,94,0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(34,197,94,0.18)",
+            minHeight: 140,
+          }}>
+          <p className="font-amiri font-bold" style={{ fontSize:"1.4rem", color:"#f5ead4" }}>نباتات</p>
+          <p className="font-inter font-bold tracking-[0.22em] uppercase" style={{ fontSize:"7px", color:"rgba(34,197,94,0.88)", marginTop:4 }}>PLANTS</p>
+          <div style={{ width:28, height:0.5, background:"linear-gradient(90deg,transparent,rgba(34,197,94,0.55),transparent)", margin:"10px 0" }} />
+          <p className="font-inter" style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)" }}>Medicinal Dictionary</p>
+        </Link>
       </div>
     </div>
   );
