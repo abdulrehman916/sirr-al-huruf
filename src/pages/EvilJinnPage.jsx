@@ -62,7 +62,7 @@ function CategoryFilter({ active, onSelect }) {
 
 function JinnRow({ jinn, index, onOpen }) {
   const valueCategory = jinn.abjadValue <= 200 ? "Low" : jinn.abjadValue <= 400 ? "Medium" : "High";
-  const hasProfile = jinn.malayalam && (jinn.malayalam.roopam || jinn.malayalam.thamasam || jinn.malayalam.swabhavam);
+  const hasProfile = jinn.malayalam && Object.values(jinn.malayalam).some(Boolean);
   return (
     <motion.button
       initial={{ opacity: 0, y: 10 }}
@@ -99,95 +99,108 @@ function JinnRow({ jinn, index, onOpen }) {
   );
 }
 
+const ML_FIELDS = [
+  { key: "roopam",       label: "രൂപം" },
+  { key: "thamasam",     label: "താമസം" },
+  { key: "swabhavam",    label: "സ്വഭാവം" },
+  { key: "swaadheenom",  label: "സ്വാധീനങ്ങൾ" },
+  { key: "prashnam",     label: "പ്രശ്നങ്ങൾ" },
+  { key: "munnariyippu", label: "മുന്നറിയിപ്പുകൾ" },
+  { key: "kuripp",       label: "കുറിപ്പുകൾ" },
+];
+
+function MlField({ label, value }) {
+  if (!value) return null;
+  return (
+    <div style={{ borderRadius: "0.75rem", padding: "0.75rem 1rem", background: P.bg, border: "1px solid " + P.border }}>
+      <p style={{ fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: P.dim, marginBottom: "0.35rem", fontFamily: "Inter, sans-serif" }}>{label}</p>
+      <p style={{ fontSize: "0.9rem", lineHeight: 1.65, color: "rgba(255,255,255,0.88)", fontFamily: "Inter, sans-serif" }}>{value}</p>
+    </div>
+  );
+}
+
 function JinnDetail({ jinn, onClose }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    try {
-      const text = jinn.arabicHarakat + " - " + jinn.englishName + "\nAbjad: " + jinn.abjadValue + "\n\nLetter Breakdown:\n" + jinn.breakdown.map(function(b) { return b.letter + ": " + b.value; }).join("\n");
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(function() { setCopied(false); }, 2000);
-    } catch(e) {}
-  };
-
-  const cols = jinn.breakdown.length <= 3 ? "grid-cols-3" : jinn.breakdown.length === 4 ? "grid-cols-4" : "grid-cols-5";
+  const ml = jinn.malayalam || {};
+  const hasAnyMl = ML_FIELDS.some(f => ml[f.key]);
 
   return createPortal(
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "1rem", background: "rgba(2,6,16,0.88)", backdropFilter: "blur(10px)" }}
+      style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "0.75rem", background: "rgba(2,6,16,0.92)", backdropFilter: "blur(12px)" }}
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 30 }}
-        transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        style={{ width: "100%", maxWidth: "28rem", borderRadius: "1.5rem", overflow: "hidden", background: "linear-gradient(145deg, rgba(12,22,48,0.99), rgba(6,12,28,1))", border: "1px solid " + P.borderHi, boxShadow: "0 0 60px rgba(212,175,55,0.18), 0 24px 64px rgba(0,0,0,0.80)" }}
+        initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 340, damping: 30 }}
+        style={{ width: "100%", maxWidth: "30rem", borderRadius: "1.5rem", overflow: "hidden", background: "linear-gradient(160deg, rgba(10,18,42,1) 0%, rgba(4,9,22,1) 100%)", border: "1px solid " + P.borderHi, boxShadow: "0 0 80px rgba(212,175,55,0.15), 0 32px 80px rgba(0,0,0,0.90)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 text-center relative" style={{ background: P.bg }}>
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-xl" style={{ color: P.dim }}>
-            <X className="w-5 h-5" />
+        {/* Header */}
+        <div style={{ padding: "1.5rem 1.5rem 1.25rem", background: "rgba(212,175,55,0.05)", borderBottom: "1px solid " + P.border, position: "relative", textAlign: "center" }}>
+          <button
+            onClick={onClose}
+            style={{ position: "absolute", top: "1rem", right: "1rem", width: "2rem", height: "2rem", borderRadius: "0.6rem", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)", cursor: "pointer" }}
+          >
+            <X style={{ width: "1rem", height: "1rem" }} />
           </button>
-          <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>#{jinn.serialNo} · Evil Jinn Profile</p>
-          <span className="font-amiri font-bold text-4xl block" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.4px rgba(212,175,55,0.4)", textShadow: "0 0 24px rgba(212,175,55,0.3)" }}>{jinn.arabicHarakat}</span>
-          {jinn.arabicName !== jinn.arabicHarakat && (
-            <span className="font-amiri text-base block mt-0.5" dir="rtl" style={{ color: "rgba(245,208,96,0.40)" }}>{jinn.arabicName}</span>
-          )}
-          <p className="font-inter text-lg font-bold mt-2" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.englishName}</p>
-          <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
-            <span className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-lg border"
-              style={{ color: P.dim, borderColor: P.faint, background: P.bg }}>Abjad: {jinn.abjadValue}</span>
-            <span className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-lg border"
-              style={{ color: P.dim, borderColor: P.faint, background: P.bg }}>Letters: {jinn.letterCount}</span>
-            <span className="font-inter text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-lg border"
-              style={{ color: P.dim, borderColor: P.faint, background: P.bg }}>
-              {jinn.abjadValue <= 200 ? "Low" : jinn.abjadValue <= 400 ? "Medium" : "High"}
+
+          {/* Serial + category */}
+          <p style={{ fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", marginBottom: "0.6rem", fontFamily: "Inter, sans-serif" }}>
+            #{jinn.serialNo} · {jinn.abjadValue <= 200 ? "Low" : jinn.abjadValue <= 400 ? "Medium" : "High"} · ജിന്ന് പ്രൊഫൈൽ
+          </p>
+
+          {/* Arabic name — Amiri Bold, large */}
+          <p dir="rtl" style={{ fontFamily: "'Amiri', 'Scheherazade New', serif", fontWeight: 700, fontSize: "2.6rem", lineHeight: 1.2, color: P.text, textShadow: "0 0 28px rgba(212,175,55,0.35)", letterSpacing: "0.02em", marginBottom: "0.25rem" }}>
+            {jinn.arabicHarakat}
+          </p>
+
+          {/* English name */}
+          <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: "1rem", color: "rgba(255,255,255,0.88)", marginBottom: "0.75rem" }}>
+            {jinn.englishName}
+          </p>
+
+          {/* Badges */}
+          <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", padding: "0.3rem 0.75rem", borderRadius: "0.5rem", background: P.bg, border: "1px solid " + P.faint, color: P.dim }}>
+              അബ്ജദ്: {jinn.abjadValue}
             </span>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", padding: "0.3rem 0.75rem", borderRadius: "0.5rem", background: P.bg, border: "1px solid " + P.faint, color: P.dim }}>
+              അക്ഷരങ്ങൾ: {jinn.letterCount}
+            </span>
+            {hasAnyMl && (
+              <span style={{ fontFamily: "Inter, sans-serif", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", padding: "0.3rem 0.75rem", borderRadius: "0.5rem", background: "rgba(134,239,172,0.08)", border: "1px solid rgba(134,239,172,0.30)", color: "#86efac" }}>
+                മലയാളം ✓
+              </span>
+            )}
           </div>
         </div>
-        <div className="p-6 space-y-4 overflow-y-auto" style={{ maxHeight: "65vh" }}>
-          <div className="flex items-center justify-between">
-            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>Letter Breakdown</p>
-            <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] uppercase tracking-widest"
-              style={{ background: P.bg, color: P.dim, border: "1px solid " + P.border }}>
-              {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-              {copied ? "Copied" : "Copy"}
-            </button>
+
+        {/* Scrollable body */}
+        <div style={{ padding: "1.25rem 1.25rem 1.5rem", overflowY: "auto", maxHeight: "60vh", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+
+          {/* Arabic name info row */}
+          <div style={{ borderRadius: "0.75rem", padding: "0.75rem 1rem", background: P.bg, border: "1px solid " + P.border }}>
+            <p style={{ fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: P.dim, marginBottom: "0.35rem", fontFamily: "Inter, sans-serif" }}>ജിന്നിന്റെ പേര്</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+              <p dir="rtl" style={{ fontFamily: "'Amiri', 'Scheherazade New', serif", fontWeight: 700, fontSize: "1.5rem", color: P.text, lineHeight: 1.3 }}>{jinn.arabicHarakat}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: "0.85rem", color: "rgba(255,255,255,0.65)" }}>{jinn.englishName}</p>
+            </div>
           </div>
-          <div className={"grid " + cols + " gap-2"}>
-            {jinn.breakdown.map((b, i) => (
-              <div key={i} className="text-center p-3 rounded-xl" style={{ background: P.bg, border: "1px solid " + P.border }}>
-                <p className="font-amiri text-xl font-bold mb-1" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{b.letter}</p>
-                <p className="font-inter text-xs font-bold" style={{ color: P.dim }}>{b.value}</p>
-              </div>
-            ))}
+
+          {/* Abjad value */}
+          <div style={{ borderRadius: "0.75rem", padding: "0.75rem 1rem", background: P.bgHi, border: "1px solid " + P.borderHi, textAlign: "center" }}>
+            <p style={{ fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: P.dim, marginBottom: "0.3rem", fontFamily: "Inter, sans-serif" }}>അബ്ജദ് മൂല്യം</p>
+            <p style={{ fontFamily: "'Amiri', serif", fontWeight: 700, fontSize: "2rem", color: P.text, textShadow: "0 0 16px rgba(212,175,55,0.3)" }}>{jinn.abjadValue}</p>
           </div>
-          <div className="rounded-xl p-4 text-center border" style={{ background: P.bgHi, borderColor: P.borderHi }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Total Abjad Value</p>
-            <p className="font-amiri font-bold text-2xl" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{jinn.abjadValue}</p>
-          </div>
-          {jinn.malayalam && (jinn.malayalam.roopam || jinn.malayalam.thamasam || jinn.malayalam.swabhavam) && (
-            <div className="space-y-2 pt-1">
-              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>Malayalam Profile · മലയാളം</p>
-              {jinn.malayalam.roopam && (
-                <div className="rounded-xl p-3 border" style={{ background: P.bg, borderColor: P.border }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>രൂപം</p>
-                  <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>{jinn.malayalam.roopam}</p>
-                </div>
-              )}
-              {jinn.malayalam.thamasam && (
-                <div className="rounded-xl p-3 border" style={{ background: P.bg, borderColor: P.border }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>താമസം</p>
-                  <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>{jinn.malayalam.thamasam}</p>
-                </div>
-              )}
-              {jinn.malayalam.swabhavam && (
-                <div className="rounded-xl p-3 border" style={{ background: P.bg, borderColor: P.border }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>സ്വഭാവം</p>
-                  <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>{jinn.malayalam.swabhavam}</p>
-                </div>
-              )}
+
+          {/* Malayalam profile fields */}
+          {hasAnyMl ? (
+            ML_FIELDS.map(f => <MlField key={f.key} label={f.label} value={ml[f.key]} />)
+          ) : (
+            <div style={{ borderRadius: "0.75rem", padding: "1.25rem", background: P.bg, border: "1px solid " + P.faint, textAlign: "center" }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: "0.82rem", color: "rgba(255,255,255,0.30)", lineHeight: 1.6 }}>
+                ഈ ജിന്നിനെ കുറിച്ചുള്ള മലയാളം വിവരണം ഇതുവരെ ചേർത്തിട്ടില്ല.
+              </p>
             </div>
           )}
         </div>
