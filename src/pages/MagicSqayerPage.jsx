@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
+import ZoomableContainer from "../components/ZoomableContainer";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",

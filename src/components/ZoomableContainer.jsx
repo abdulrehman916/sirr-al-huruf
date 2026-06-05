@@ -29,7 +29,7 @@ export default function ZoomableContainer({ children, className = "", style = {}
 
   const handleTouchStart = useCallback((e) => {
     if (e.touches.length === 2) {
-      e.preventDefault();
+      e.stopPropagation();
       lastTouchRef.current = {
         x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
         y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
@@ -46,7 +46,7 @@ export default function ZoomableContainer({ children, className = "", style = {}
 
   const handleTouchMove = useCallback((e) => {
     if (e.touches.length === 2 && lastTouchRef.current.distance > 0) {
-      e.preventDefault();
+      e.stopPropagation();
       
       const newDistance = getDistance(e.touches);
       const center = getCenter(e.touches);
@@ -71,7 +71,7 @@ export default function ZoomableContainer({ children, className = "", style = {}
         distance: newDistance,
       };
     } else if (e.touches.length === 1 && scale > 1) {
-      e.preventDefault();
+      e.stopPropagation();
       
       const dx = e.touches[0].clientX - lastTouchRef.current.x;
       const dy = e.touches[0].clientY - lastTouchRef.current.y;
@@ -102,10 +102,12 @@ export default function ZoomableContainer({ children, className = "", style = {}
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden ${className}`}
+      className={`relative overflow-auto ${className}`}
       style={{
-        touchAction: 'none',
+        touchAction: 'pan-x pan-y',
         WebkitOverflowScrolling: 'touch',
+        contain: 'layout style paint',
+        isolation: 'isolate',
         ...style,
       }}
       onTouchStart={handleTouchStart}
@@ -118,6 +120,7 @@ export default function ZoomableContainer({ children, className = "", style = {}
           transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
           transformOrigin: 'center center',
           touchAction: 'none',
+          willChange: 'transform',
         }}
         animate={{
           transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
