@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Shuffle, Trash2 } from "lucide-react";
 import { LUQMAN_CELLS } from "../../lib/faalLuqmanData";
-import { usePageState } from "../context/PageStateContext";
+import { usePageState } from "../../context/PageStateContext";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
