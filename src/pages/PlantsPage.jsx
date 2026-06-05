@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Leaf, ArrowUpDown, ChevronRight, Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
+import PullToRefresh from "../components/PullToRefresh";
 import { PLANTS_DATA, PLANT_CATEGORIES } from "../lib/plantsData";
 
 const P = {
@@ -209,8 +210,11 @@ export default function PlantsPage() {
     return groups;
   }, [filtered, query, sort]);
 
+  const handleRefresh = () => new Promise(res => setTimeout(res, 700));
+
   return (
     <PageLayout>
+    <PullToRefresh onRefresh={handleRefresh}>
       <div className="space-y-4">
 
         <PageTitle
@@ -320,6 +324,7 @@ export default function PlantsPage() {
         </p>
 
       </div>
+    </PullToRefresh>
     </PageLayout>
   );
 }

@@ -1,8 +1,12 @@
-import { memo, useMemo, useRef, useEffect } from "react";
+import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ChevronLeft, User } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
+import BottomTabBar from "./BottomTabBar";
+import AccountModal from "./AccountModal";
+import { base44 } from "../api/base44Client";
 
 const TABS = [
   { id: "home",             label: "HOME",   arabic: "الرئيسية", path: "/" },
@@ -132,12 +136,38 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
   );
 });
 
+// Pages where we show a back button instead of breadcrumb nav
+const CHILD_PAGES = ["/plants/"];
+
+// Map pathnames to display titles for the mobile header
+const PAGE_TITLES = {
+  "/":                  "سرّ الحروف",
+  "/abjad":             "الأبجد",
+  "/anasir":            "عناصر",
+  "/hadim":             "خادم",
+  "/mizaan9":           "ميزان",
+  "/magic-sqayer":      "السحر",
+  "/vefkin-yapilisi":   "الوفق",
+  "/basthul-huroof-2":  "بسط الحروف",
+  "/faal-hasrath":      "فأل",
+  "/plants":            "نباتات",
+};
+
 const scrollMemory = {};
 
 export default function PageLayout({ children }) {
   const location = useLocation();
   const navigate  = useNavigate();
   const { startNav } = useNavigation();
+  const [showAccount, setShowAccount] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  const isChildPage = CHILD_PAGES.some(p => location.pathname.startsWith(p));
+  const pageTitle = isChildPage ? null : PAGE_TITLES[location.pathname];
 
   const activeId = useMemo(
     () => TABS.find(t => t.path === location.pathname)?.id ?? undefined,
@@ -200,6 +230,7 @@ export default function PageLayout({ children }) {
   }, [startNav]);
 
   return (
+    <>
     <div
       className="font-inter relative flex flex-col"
       style={{
@@ -213,9 +244,9 @@ export default function PageLayout({ children }) {
     >
       <AtmosphericBackground />
 
-      {/* ── Sticky Top Nav ── */}
+      {/* ── Sticky Top Nav — desktop + child page back button on mobile ── */}
       <div
-        className="sticky top-0 z-50 w-full px-2 py-1.5 flex-shrink-0"
+        className="sticky top-0 z-50 w-full flex-shrink-0"
         role="navigation"
         aria-label="Main navigation"
         style={{
@@ -231,39 +262,79 @@ export default function PageLayout({ children }) {
               "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.42) 40%, rgba(232,200,74,0.55) 50%, rgba(212,175,55,0.42) 60%, transparent 95%)",
           }}
         />
-        <div 
-          ref={navRef}
-          className="max-w-2xl mx-auto flex gap-1 overflow-x-auto scrollbar-none"
-          style={{
-            WebkitOverflowScrolling: 'touch',
-            willChange: 'scroll-position',
-            transform: 'translateZ(0)',
-            backfaceVisibility: 'hidden',
-            touchAction: 'pan-x',
-          }}
-          onTouchMove={(e) => {
-            // Enable passive scrolling
-            e.stopPropagation();
-          }}
-        >
-          {TABS.map((tab) => (
-            <NavTab
-              key={tab.id}
-              tab={tab}
-              isActive={activeId === tab.id}
-              onClick={startNav}
-              tabRef={(el) => (tabRefs.current[tab.id] = el)}
-            />
-          ))}
+
+        {/* Mobile header: back button on child pages */}
+        {isChildPage ? (
+          <div className="md:hidden flex items-center justify-between px-3 py-2.5">
+            <button
+              onClick={() => { startNav(); navigate(-1); }}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl"
+              style={{
+                color: "#D4AF37", background: "rgba(212,175,55,0.08)",
+                border: "1px solid rgba(212,175,55,0.18)",
+                WebkitTapHighlightColor: "transparent",
+                userSelect: "none", WebkitUserSelect: "none",
+              }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="font-inter text-xs font-semibold tracking-wide">Back</span>
+            </button>
+          </div>
+        ) : (
+          /* Mobile header: title + account icon */
+          <div className="md:hidden flex items-center justify-between px-3 py-2">
+            <span className="font-amiri font-bold" style={{ fontSize: 16, color: "#f5ecd4", letterSpacing: "0.02em" }}>
+              {pageTitle || "سرّ الحروف"}
+            </span>
+            <button
+              onClick={() => setShowAccount(true)}
+              className="flex items-center justify-center w-8 h-8 rounded-xl"
+              style={{
+                background: "rgba(212,175,55,0.08)",
+                border: "1px solid rgba(212,175,55,0.18)",
+                color: "rgba(212,175,55,0.75)",
+                WebkitTapHighlightColor: "transparent",
+                userSelect: "none", WebkitUserSelect: "none",
+              }}
+            >
+              <User className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Desktop: full horizontal tab bar (unchanged) */}
+        <div className="hidden md:block px-2 py-1.5">
+          <div
+            ref={navRef}
+            className="max-w-2xl mx-auto flex gap-1 overflow-x-auto scrollbar-none"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              willChange: 'scroll-position',
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden',
+              touchAction: 'pan-x',
+            }}
+          >
+            {TABS.map((tab) => (
+              <NavTab
+                key={tab.id}
+                tab={tab}
+                isActive={activeId === tab.id}
+                onClick={startNav}
+                tabRef={(el) => (tabRefs.current[tab.id] = el)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* ── Scrollable page content ── */}
       <div
         ref={scrollRef}
+        data-scroll-container="true"
         className="flex-1 overflow-y-auto overflow-x-hidden"
         style={{
-          overscrollBehaviorY: "auto",
+          overscrollBehaviorY: "none",
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
           minHeight: "100vh",
@@ -282,7 +353,8 @@ export default function PageLayout({ children }) {
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="relative z-10 w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
-              paddingBottom: "env(safe-area-inset-bottom)",
+              /* Extra bottom padding on mobile to clear the bottom tab bar */
+              paddingBottom: "calc(env(safe-area-inset-bottom) + 64px)",
               boxSizing: "border-box",
               minHeight: "auto",
               height: "auto",
@@ -296,6 +368,15 @@ export default function PageLayout({ children }) {
         </AnimatePresence>
       </div>
 
+      {/* ── Fixed Bottom Tab Bar (mobile only) ── */}
+      <BottomTabBar activeId={activeId} onNavigate={startNav} />
+
     </div>
+
+    {/* Account modal */}
+    <AnimatePresence>
+      {showAccount && <AccountModal user={user} onClose={() => setShowAccount(false)} />}
+    </AnimatePresence>
+    </>
   );
 }

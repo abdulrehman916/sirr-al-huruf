@@ -126,9 +126,22 @@
     hyphens: auto;
   }
 
+  /* Non-selectable interactive elements — Arabic text remains selectable */
+  button, a, [role="button"], nav, .font-inter {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* Arabic/Amiri text stays selectable for copy */
+  .font-amiri {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   /* Prevent inputs from causing zoom on iOS (font-size >= 16px) */
   input, select, textarea {
     font-size: max(16px, 1em);
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   /* Landscape mode: adjust safe areas */
