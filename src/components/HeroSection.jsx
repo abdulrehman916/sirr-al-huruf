@@ -360,7 +360,23 @@ export default function HeroSection({ mouse }) {
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
   
-  const wheelSize = deviceType === 'mobile' ? "min(420px, 88vw)" : deviceType === 'tablet' ? "min(400px, 52vw)" : "min(500px, 88vw)";
+  // Shared wheel size calculation — used by both HeroSection and SacredWheel
+  const getWheelSize = () => {
+    if (typeof window === "undefined") return 400;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    if (w < 768) return Math.min(h * 0.70, 500, w * 0.85);
+    if (w < 1366) return Math.min(h * 0.50, 400, w * 0.55);
+    return Math.min(h * 0.70, 500, w * 0.85);
+  };
+  
+  const [wheelSize, setWheelSize] = useState(getWheelSize());
+  
+  useEffect(() => {
+    const onResize = () => setWheelSize(getWheelSize());
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   return (
     <div className="font-inter relative flex flex-col items-center w-full pb-6 sm:pb-8 pt-3 sm:pt-4" style={{ minHeight: "auto", height: "auto", overflowY: "visible" }}>
@@ -368,11 +384,11 @@ export default function HeroSection({ mouse }) {
       {/* Light rays — desktop only */}
       {deviceType === 'desktop' && <LightRays paused={isNavigating} />}
 
-      {/* Wheel container */}
+      {/* Wheel container — SacredWheel receives containerSize for synchronized rendering */}
       {deviceType === 'mobile' ? (
         <div className="relative flex items-center justify-center" style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
           <OrbitalRings paused={isNavigating} isMobile={true} />
-          <SacredWheel mouse={safeMouse} />
+          <SacredWheel mouse={safeMouse} containerSize={wheelSize} deviceType={deviceType} />
           <AllahCalligraphyMobile />
         </div>
       ) : (
@@ -380,7 +396,7 @@ export default function HeroSection({ mouse }) {
           className="relative flex items-center justify-center"
           style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
           <OrbitalRings paused={isNavigating} isMobile={deviceType === 'tablet'} />
-          <SacredWheel mouse={safeMouse} />
+          <SacredWheel mouse={safeMouse} containerSize={wheelSize} deviceType={deviceType} />
           {deviceType === 'tablet' ? <AllahCalligraphyMobile /> : <AllahCalligraphyDesktop paused={isNavigating} />}
         </motion.div>
       )}

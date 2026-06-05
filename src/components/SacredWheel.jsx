@@ -59,7 +59,7 @@ function injectMobileCSS() {
   document.head.appendChild(el);
 }
 
-function MobileSacredWheel({ containerSize }) {
+function MobileSacredWheel({ containerSize, deviceType }) {
   useEffect(() => { injectMobileCSS(); }, []);
 
   // Pause all CSS animations in this subtree when tab is hidden
@@ -78,8 +78,8 @@ function MobileSacredWheel({ containerSize }) {
 
   const half = containerSize / 2;
   const scale = containerSize / SIZE;
-  // Tablet fix: reduce orbit radius to keep names within visual circle
-  const isTablet = typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1366;
+  // Use deviceType prop from HeroSection for consistent orbit radius
+  const isTablet = deviceType === 'tablet';
   const orbitR = isTablet ? 164 * scale : 194 * scale;
 
   // Asma positions — static
@@ -444,11 +444,11 @@ function SigilSVG({ mouseX, mouseY, paused }) {
   );
 }
 
-function AsmaNames({ containerSize, mouseX, mouseY, paused }) {
+function AsmaNames({ containerSize, paused, deviceType }) {
   const half = containerSize / 2;
   const SVG_SCALE = containerSize / SIZE;
-  // Tablet fix: reduce orbit radius to keep names within visual circle
-  const isTablet = typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1366;
+  // Use deviceType prop from HeroSection for consistent orbit radius
+  const isTablet = deviceType === 'tablet';
   const ORBIT_R = isTablet ? 164 * SVG_SCALE : 194 * SVG_SCALE;
 
   const positions = useMemo(() =>
@@ -468,40 +468,38 @@ function AsmaNames({ containerSize, mouseX, mouseY, paused }) {
       animate={paused ? {} : { rotate: 360 }}
       transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
     >
-      <motion.div className="absolute inset-0" style={{ x: mouseX, y: mouseY }}>
-        {positions.map(({ x, y }, i) => {
-          const name = ASMA[i];
-          const breathDelay = (i / ASMA.length) * 4;
-          return (
-            <motion.div key={name}
-              style={{ position: "absolute", left: x, top: y, translateX: "-50%", translateY: "-50%" }}
-              animate={paused ? {} : { rotate: -360 }}
-              transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+      {positions.map(({ x, y }, i) => {
+        const name = ASMA[i];
+        const breathDelay = (i / ASMA.length) * 4;
+        return (
+          <motion.div key={name}
+            style={{ position: "absolute", left: x, top: y, translateX: "-50%", translateY: "-50%" }}
+            animate={paused ? {} : { rotate: -360 }}
+            transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+          >
+            <motion.div
+              style={{
+                position: "absolute", inset: "-10px -16px", borderRadius: "50%",
+                background: `radial-gradient(ellipse, ${G("0.30")} 0%, transparent 68%)`,
+                pointerEvents: "none",
+              }}
+              animate={paused ? {} : { opacity: [0.35, 0.85, 0.35], scale: [0.9, 1.15, 0.9] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: breathDelay }}
+            />
+            <span
+              style={{
+                fontFamily: "'Amiri', serif", fontWeight: "700",
+                fontSize: "13px", color: GOLD,
+                whiteSpace: "nowrap", display: "block",
+                letterSpacing: "0.05em", direction: "rtl", position: "relative", zIndex: 1,
+                textShadow: `0 0 8px ${G("0.65")}, 0 0 20px ${G("0.28")}`,
+              }}
             >
-              <motion.div
-                style={{
-                  position: "absolute", inset: "-10px -16px", borderRadius: "50%",
-                  background: `radial-gradient(ellipse, ${G("0.30")} 0%, transparent 68%)`,
-                  pointerEvents: "none",
-                }}
-                animate={paused ? {} : { opacity: [0.35, 0.85, 0.35], scale: [0.9, 1.15, 0.9] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: breathDelay }}
-              />
-              <span
-                style={{
-                  fontFamily: "'Amiri', serif", fontWeight: "700",
-                  fontSize: "13px", color: GOLD,
-                  whiteSpace: "nowrap", display: "block",
-                  letterSpacing: "0.05em", direction: "rtl", position: "relative", zIndex: 1,
-                  textShadow: `0 0 8px ${G("0.65")}, 0 0 20px ${G("0.28")}`,
-                }}
-              >
-                {name}
-              </span>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+              {name}
+            </span>
+          </motion.div>
+        );
+      })}
     </motion.div>
   );
 }
@@ -576,11 +574,13 @@ function getContainerSize() {
 // ────────────────────────────────────────────────────────────
 // Main export
 // ────────────────────────────────────────────────────────────
-export default function SacredWheel({ mouse }) {
-  const [containerSize, setContainerSize] = useState(getContainerSize);
+export default function SacredWheel({ mouse, containerSize: parentContainerSize, deviceType }) {
   const isMobile = useIsMobile();
   const { isNavigating } = useNavigation();
 
+  // Use parent-provided size if available (HeroSection), otherwise calculate internally
+  const containerSize = parentContainerSize || getContainerSize();
+  
   const fallbackX = useMotionValue(0);
   const fallbackY = useMotionValue(0);
   const mouseX = mouse?.x ?? fallbackX;
@@ -596,25 +596,12 @@ export default function SacredWheel({ mouse }) {
     return () => { unsubX(); unsubY(); };
   }, [isMobile, mouseX, mouseY, bloomX, bloomY]);
 
-  useEffect(() => {
-    let raf;
-    const onResize = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setContainerSize(getContainerSize()));
-    };
-    window.addEventListener("resize", onResize, { passive: true });
-    return () => {
-      window.removeEventListener("resize", onResize);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
-
   // Mobile: zero Framer Motion animation instances
   if (isMobile) {
-    return <MobileSacredWheel containerSize={containerSize} />;
+    return <MobileSacredWheel containerSize={containerSize} deviceType={deviceType} />;
   }
 
-  // Desktop: full experience
+  // Desktop/Tablet: experience with synchronized container size
   return (
     <div
       className="relative flex items-center justify-center"
@@ -630,7 +617,7 @@ export default function SacredWheel({ mouse }) {
       }} />
       <SigilSVG mouseX={mouseX} mouseY={mouseY} paused={isNavigating} />
       <GoldenDust containerSize={containerSize} paused={isNavigating} />
-      <AsmaNames containerSize={containerSize} mouseX={mouseX} mouseY={mouseY} paused={isNavigating} />
+      <AsmaNames containerSize={containerSize} paused={isNavigating} deviceType={deviceType} />
     </div>
   );
 }
