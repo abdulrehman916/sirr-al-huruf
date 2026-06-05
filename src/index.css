@@ -95,12 +95,12 @@
     text-rendering: optimizeLegibility;
     touch-action: manipulation;
     font-feature-settings: "kern" 1, "liga" 1;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   #root {
     height: 100%;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   /* Scrollbar */
