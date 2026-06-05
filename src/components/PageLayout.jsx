@@ -24,7 +24,7 @@ const pageVariants = {
   exit:    { opacity: 0 },
 };
 
-// ── Top horizontal nav tab — CSS transitions only, zero Framer Motion ──
+// ── Top horizontal nav tab — instant activation, zero delay ──
 const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
   return (
     <div
@@ -34,7 +34,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
         flexShrink: 0,
         position: "relative",
         overflow: "hidden",
-        transition: "background 0.25s, border-color 0.25s, box-shadow 0.25s",
         background: isActive
           ? "linear-gradient(160deg, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.07) 100%)"
           : "transparent",
@@ -71,7 +70,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
           style={{
             fontSize: 14,
             color: isActive ? "#E8C84A" : "rgba(255,255,255,0.52)",
-            transition: "color 0.22s",
           }}
         >
           {tab.arabic}
@@ -82,7 +80,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
           style={{
             fontSize: 7.5,
             color: isActive ? "rgba(232,200,74,0.88)" : "rgba(255,255,255,0.28)",
-            transition: "color 0.22s",
           }}
         >
           {tab.label}
@@ -95,7 +92,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
             background: "linear-gradient(90deg, transparent, #E8C84A, transparent)",
             width: isActive ? 26 : 0,
             opacity: isActive ? 1 : 0,
-            transition: "width 0.28s, opacity 0.28s",
           }}
         />
 

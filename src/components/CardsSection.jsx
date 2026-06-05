@@ -145,11 +145,7 @@ export default function CardsSection() {
       {NAV_CARDS.map((card) => {
         const [r, g, b] = card.accent;
         return (
-          <motion.div key={card.path}
-            initial={{ opacity: 1, y: 0, scale: 1 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            whileHover={{ scale: 1.04, y: -6, transition: { duration: 0.22, ease: "easeOut" } }}
-            whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}>
+          <div key={card.path}>
             <Link to={card.path} onClick={startNav}
               className="block rounded-2xl border flex flex-col items-center justify-center text-center"
               style={{
@@ -167,7 +163,7 @@ export default function CardsSection() {
                 background: `linear-gradient(90deg,transparent 5%,rgba(${r},${g},${b},0.50) 50%,transparent 95%)` }} />
               <CardInner card={card} />
             </Link>
-          </motion.div>
+          </div>
         );
       })}
     </div>
