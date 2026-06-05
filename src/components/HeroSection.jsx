@@ -189,45 +189,6 @@ function CalligraphyAtmosphereTablet() {
   );
 }
 
-// Tablet: CSS calligraphy — reduced scale, CSS-only
-function CalligraphyAtmosphereTablet() {
-  useEffect(() => {
-    const root = document.getElementById("hero-calligraphy-tablet");
-    if (!root) return;
-    const onVis = () => {
-      const state = document.hidden ? "paused" : "running";
-      root.querySelectorAll("[data-canim]").forEach(el => {
-        el.style.animationPlayState = state;
-      });
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
-
-  const tabletChars = CALLIGRAPHY_CHARS.slice(0, 5).map((c, i) => ({
-    ...c,
-    size: c.size * 0.8,
-    opacity: c.opacity * 0.75,
-  }));
-
-  return (
-    <div id="hero-calligraphy-tablet" className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
-      {tabletChars.map((c, i) => (
-        <span key={i} data-canim="1" className="absolute font-amiri select-none"
-          style={{
-            top: c.top, left: c.left, fontSize: c.size,
-            color: "#D4AF37", opacity: c.opacity,
-            animation: `sh-twinkle ${c.dur}s ease-in-out infinite`,
-            animationDelay: `${c.delay}s`,
-          }}
-        >
-          {c.char}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 // Mobile: pure CSS calligraphy — zero JS animation, visibility-paused
 function CalligraphyAtmosphereMobile() {
   useEffect(() => {
