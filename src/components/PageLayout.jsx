@@ -60,7 +60,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         willChange: 'transform',
         transform: 'translateZ(0)',
         backfaceVisibility: 'hidden',
-        touchAction: 'none',
+        touchAction: 'pan-y',
       }}
     >
       {isActive && (
@@ -79,7 +79,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         className="relative flex flex-col items-center justify-center py-2 px-2.5"
         style={{
           WebkitTapHighlightColor: "transparent",
-          touchAction: 'none',
+          touchAction: 'pan-y',
           userSelect: "none",
           WebkitUserSelect: "none",
           minHeight: 44,
@@ -338,7 +338,7 @@ export default function PageLayout({ children }) {
               willChange: 'scroll-position',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
-              touchAction: 'none',
+              touchAction: 'pan-x',
               WebkitOverflowScrolling: 'touch',
               cursor: 'grab',
               overflowX: 'auto',
