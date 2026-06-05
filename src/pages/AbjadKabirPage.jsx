@@ -129,12 +129,27 @@ export default function AbjadKabirPage() {
 
   return (
     <PageLayout>
-      <PageTitle 
-        arabic="حاسبة الأبجد" 
-        latin="Abjad Calculator" 
-        subtitle="Sacred Numerology Calculator" 
-        icon="🔢" 
-      />
+      <div className="text-center mb-4">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="inline-flex items-center justify-center w-10 h-10 rounded-xl border mb-2"
+          style={{
+            background: "linear-gradient(145deg, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.05) 100%)",
+            borderColor: "rgba(212,175,55,0.28)",
+            boxShadow: "0 0 20px rgba(212,175,55,0.18)",
+          }}
+        >
+          <span className="font-amiri text-lg" style={{ color: "#D4AF37" }}>🔢</span>
+        </motion.div>
+        <h1 className="font-amiri font-bold leading-tight" style={{ fontSize: "1.6rem", color: "#f5ead4", textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
+          حاسبة الأبجد
+        </h1>
+        <p className="font-inter font-bold tracking-[0.25em] uppercase mt-1" style={{ fontSize: "8px", color: "rgba(212,175,55,0.75)" }}>
+          Abjad Calculator
+        </p>
+      </div>
 
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Mode Selection Card */}
