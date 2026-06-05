@@ -121,8 +121,8 @@ export default function FaalLuqman() {
                 Focus on your question and select one card from the grid below
               </p>
               
-              <div className="grid grid-cols-4 gap-2">
-                {shuffled.slice(0, 16).map((cell, idx) => (
+              <div className="grid grid-cols-7 gap-2">
+                {shuffled.map((cell, idx) => (
                   <motion.button
                     key={cell.lq_id}
                     initial={{ opacity: 0, scale: 0.8 }}
