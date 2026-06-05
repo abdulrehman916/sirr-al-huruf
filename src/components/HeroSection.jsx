@@ -44,7 +44,10 @@ const STATIC_RINGS = [
 
 // ── Sub-components ────────────────────────────────────────────────
 
-function OrbitalRings({ paused, isMobile }) {
+function OrbitalRings({ paused, deviceType }) {
+  const isMobile = deviceType === 'mobile';
+  const isTablet = deviceType === 'tablet';
+  
   if (isMobile) {
     // CSS-only rings on mobile — no Framer Motion
     return (
@@ -59,6 +62,25 @@ function OrbitalRings({ paused, isMobile }) {
       </div>
     );
   }
+  
+  if (isTablet) {
+    // Tablet: CSS rings with reduced scale
+    return (
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
+        <div className="absolute rounded-full" style={{
+          width: "min(220px,46vw)", height: "min(220px,46vw)",
+          border: "1px solid rgba(212,175,55,0.28)",
+          boxShadow: "0 0 20px rgba(212,175,55,0.10)",
+        }} />
+        <div className="absolute rounded-full" style={{
+          width: "min(280px,58vw)", height: "min(280px,58vw)",
+          border: "0.5px solid rgba(212,175,55,0.12)",
+        }} />
+      </div>
+    );
+  }
+  
+  // Desktop: full Framer Motion rings
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
       {ORBITAL_RINGS.map((ring, i) => (
@@ -127,6 +149,80 @@ function CalligraphyAtmosphereDesktop({ mouse, paused }) {
         >
           {c.char}
         </motion.span>
+      ))}
+    </div>
+  );
+}
+
+
+
+// Tablet: CSS calligraphy with reduced scale — no parallax
+function CalligraphyAtmosphereTablet() {
+  useEffect(() => {
+    const root = document.getElementById("hero-calligraphy-tablet");
+    if (!root) return;
+    const onVis = () => {
+      const state = document.hidden ? "paused" : "running";
+      root.querySelectorAll("[data-canim]").forEach(el => {
+        el.style.animationPlayState = state;
+      });
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  return (
+    <div id="hero-calligraphy-tablet" className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
+      {CALLIGRAPHY_CHARS.slice(0, 6).map((c, i) => (
+        <span key={i} data-canim="1" className="absolute font-amiri select-none"
+          style={{
+            top: c.top, left: c.left, fontSize: c.size * 0.85,
+            color: "#D4AF37", opacity: c.opacity * 0.85,
+            animation: `sh-twinkle ${c.dur}s ease-in-out infinite`,
+            animationDelay: `${c.delay}s`,
+          }}
+        >
+          {c.char}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Tablet: CSS calligraphy — reduced scale, CSS-only
+function CalligraphyAtmosphereTablet() {
+  useEffect(() => {
+    const root = document.getElementById("hero-calligraphy-tablet");
+    if (!root) return;
+    const onVis = () => {
+      const state = document.hidden ? "paused" : "running";
+      root.querySelectorAll("[data-canim]").forEach(el => {
+        el.style.animationPlayState = state;
+      });
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  const tabletChars = CALLIGRAPHY_CHARS.slice(0, 5).map((c, i) => ({
+    ...c,
+    size: c.size * 0.8,
+    opacity: c.opacity * 0.75,
+  }));
+
+  return (
+    <div id="hero-calligraphy-tablet" className="absolute inset-0 pointer-events-none overflow-hidden" style={{ filter: "blur(1px)", zIndex: 0 }}>
+      {tabletChars.map((c, i) => (
+        <span key={i} data-canim="1" className="absolute font-amiri select-none"
+          style={{
+            top: c.top, left: c.left, fontSize: c.size,
+            color: "#D4AF37", opacity: c.opacity,
+            animation: `sh-twinkle ${c.dur}s ease-in-out infinite`,
+            animationDelay: `${c.delay}s`,
+          }}
+        >
+          {c.char}
+        </span>
       ))}
     </div>
   );
@@ -279,6 +375,39 @@ function HeroTitleMobile() {
   );
 }
 
+// Tablet: balanced proportions — reduced spacing, scaled typography
+function HeroTitleTablet({ paused }) {
+  return (
+    <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
+      transition={{ duration:0.8, delay:0.3 }}
+      className="text-center z-10 px-4 mt-3">
+      <h1 className="font-amiri font-bold"
+        style={{
+          fontSize:"clamp(2.2rem,8vw,4.2rem)", color:"#f5ecd4", lineHeight:1.1, letterSpacing:"0.02em",
+          textShadow:"0 0 28px rgba(212,175,55,0.42), 0 2px 16px rgba(0,0,0,0.55)",
+        }}>
+        سرّ الحروف
+      </h1>
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.7, duration:0.6 }} className="mt-2.5 space-y-1">
+        <p className="font-inter font-bold tracking-[0.32em] uppercase"
+          style={{ fontSize:"clamp(9px,2.2vw,12px)", color:"rgba(212,175,55,0.85)", textShadow:"0 0 10px rgba(212,175,55,0.25)" }}>
+          Sirrul Huruf
+        </p>
+        <p className="font-inter tracking-[0.20em] uppercase"
+          style={{ fontSize:"clamp(7px,1.4vw,9px)", color:"rgba(255,255,255,0.35)" }}>
+          Advanced Ilm al-Huruf Analysis
+        </p>
+      </motion.div>
+      <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }} transition={{ delay:0.9, duration:0.7 }}
+        className="mt-4 flex items-center justify-center gap-2">
+        <div style={{ width:28, height:0.5, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.58))" }} />
+        <div style={{ width:5, height:5, borderRadius:"50%", background:"#D4AF37", boxShadow:"0 0 8px rgba(212,175,55,0.65)" }} />
+        <div style={{ width:28, height:0.5, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.58))" }} />
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // Desktop: full Allah animations
 function AllahCalligraphyDesktop({ paused }) {
   return (
@@ -346,47 +475,54 @@ export default function HeroSection({ mouse }) {
   const { startNav, isNavigating } = useNavigation();
   const isMobile = useIsMobile();
   const safeMouse = mouse ?? ZERO_MV;
-  const [isLargeTablet, setIsLargeTablet] = useState(false);
+  const [deviceType, setDeviceType] = useState('desktop');
   
   useEffect(() => {
-    const checkTablet = () => {
+    const checkDevice = () => {
       const w = window.innerWidth;
-      setIsLargeTablet(w >= 768 && w < 1366);
+      if (w < 768) setDeviceType('mobile');
+      else if (w < 1366) setDeviceType('tablet');
+      else setDeviceType('desktop');
     };
-    checkTablet();
-    window.addEventListener('resize', checkTablet, { passive: true });
-    return () => window.removeEventListener('resize', checkTablet);
+    checkDevice();
+    window.addEventListener('resize', checkDevice, { passive: true });
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
   
-  const wheelSize = isMobile ? "min(420px, 88vw)" : isLargeTablet ? "min(420px, 55vw)" : "min(500px, 88vw)";
+  const wheelSize = deviceType === 'mobile' ? "min(420px, 88vw)" : deviceType === 'tablet' ? "min(400px, 52vw)" : "min(500px, 88vw)";
 
   return (
-    <div className="font-inter relative flex flex-col items-center w-full pb-8 pt-4" style={{ minHeight: "auto", height: "auto", overflowY: "visible" }}>
+    <div className="font-inter relative flex flex-col items-center w-full pb-6 sm:pb-8 pt-3 sm:pt-4" style={{ minHeight: "auto", height: "auto", overflowY: "visible" }}>
 
-      {/* Light rays — desktop only (not on large tablet) */}
-      {!isMobile && !isLargeTablet && <LightRays paused={isNavigating} />}
+      {/* Light rays — desktop only */}
+      {deviceType === 'desktop' && <LightRays paused={isNavigating} />}
+
+      {/* Calligraphy backgrounds — three independent layers */}
+      {deviceType === 'desktop' && <CalligraphyAtmosphereDesktop mouse={safeMouse} paused={isNavigating} />}
+      {deviceType === 'tablet' && <CalligraphyAtmosphereTablet />}
+      {deviceType === 'mobile' && <CalligraphyAtmosphereMobile />}
 
       {/* Wheel container */}
-      {isMobile ? (
+      {deviceType === 'mobile' ? (
         <div className="relative flex items-center justify-center" style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
           <OrbitalRings paused={isNavigating} isMobile={true} />
           <SacredWheel mouse={safeMouse} />
           <AllahCalligraphyMobile />
         </div>
       ) : (
-        <motion.div animate={{ y:[0,-8,0] }} transition={{ duration:7.5, repeat:Infinity, ease:"easeInOut" }}
+        <motion.div animate={{ y: deviceType === 'tablet' ? [0,-4,0] : [0,-8,0] }} transition={{ duration: deviceType === 'tablet' ? 6 : 7.5, repeat:Infinity, ease:"easeInOut" }}
           className="relative flex items-center justify-center"
           style={{ width:wheelSize, height:wheelSize, zIndex:2 }}>
-          <OrbitalRings paused={isNavigating} isMobile={isLargeTablet} />
+          <OrbitalRings paused={isNavigating} isMobile={deviceType === 'tablet'} />
           <SacredWheel mouse={safeMouse} />
-          <AllahCalligraphyDesktop paused={isNavigating} />
+          {deviceType === 'tablet' ? <AllahCalligraphyMobile /> : <AllahCalligraphyDesktop paused={isNavigating} />}
         </motion.div>
       )}
 
-      {/* Title */}
-      {isMobile ? <HeroTitleMobile /> : <HeroTitleDesktop paused={isNavigating} />}
+      {/* Title — three independent layouts */}
+      {deviceType === 'mobile' ? <HeroTitleMobile /> : deviceType === 'tablet' ? <HeroTitleTablet paused={isNavigating} /> : <HeroTitleDesktop paused={isNavigating} />}
 
-      <GoldDivider delay={1.55} />
+      <GoldDivider delay={deviceType === 'tablet' ? 1.2 : 1.55} />
       <ManuscriptIntro />
     </div>
   );
