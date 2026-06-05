@@ -144,9 +144,14 @@ export default function AkramCard({ total, levelLabel, levelArabic }) {
 
       {/* Breakdown tiles */}
       <div className="space-y-1.5">
-        <p className="font-inter text-[9px] uppercase tracking-widest px-2" style={{ color: "rgba(212,175,55,0.38)" }}>
-          Akram Breakdown
-        </p>
+        <div className="flex items-center justify-between px-2">
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.38)" }}>
+            Akram Breakdown
+          </p>
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.text }}>
+            {pieces.length} Letter{pieces.length !== 1 ? 's' : ''}
+          </p>
+        </div>
         <div className="flex flex-wrap gap-1.5 px-1 justify-start">
           {pieces.map((p, i) => {
             const isGhain = p.letter === 'غ';
