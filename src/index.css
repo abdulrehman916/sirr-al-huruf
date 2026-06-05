@@ -135,8 +135,20 @@
   ::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.50); }
 
   /* Hide scrollbar but keep scroll */
-  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
+  
+  /* Navigation scroll container */
+  .nav-scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .nav-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
 
   /* Safe RTL text containers */
   [dir="rtl"] { text-align: right; }

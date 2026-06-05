@@ -79,7 +79,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         className="relative flex flex-col items-center justify-center py-2 px-2.5"
         style={{
           WebkitTapHighlightColor: "transparent",
-          touchAction: "pan-x pan-y",
+          touchAction: "pan-y",
           userSelect: "none",
           WebkitUserSelect: "none",
           minHeight: 44,
@@ -302,17 +302,17 @@ export default function PageLayout({ children }) {
           </div>
         )}
 
-        {/* Desktop: full horizontal tab bar (unchanged) */}
-        <div className="hidden md:block px-2 py-1.5">
+        {/* Desktop/Tablet: scrollable horizontal tab bar */}
+        <div className="px-2 py-1.5 w-full">
           <div
             ref={navRef}
-            className="max-w-2xl mx-auto flex gap-1 overflow-x-auto scrollbar-none"
+            className="nav-scroll-container flex gap-1 flex-nowrap"
             style={{
-              WebkitOverflowScrolling: 'touch',
               willChange: 'scroll-position',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
               touchAction: 'pan-x',
+              width: '100%',
             }}
           >
             {TABS.map((tab) => (
