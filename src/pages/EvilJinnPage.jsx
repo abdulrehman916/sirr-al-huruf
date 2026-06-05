@@ -125,7 +125,7 @@ function JinnDetail({ jinn, onClose }) {
             <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: P.dim }}>Letters: {jinn.letterCount}</span>
           </div>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto" style={{ maxHeight: "65vh" }}>
           <div className="flex items-center justify-between">
             <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>Letter Breakdown</p>
             <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] uppercase tracking-widest"
@@ -146,6 +146,29 @@ function JinnDetail({ jinn, onClose }) {
             <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Total Abjad Value</p>
             <p className="font-amiri font-bold text-2xl" dir="rtl" style={{ color: P.text, WebkitTextStroke: "0.3px rgba(212,175,55,0.3)" }}>{jinn.abjadValue}</p>
           </div>
+          {jinn.malayalam && (jinn.malayalam.roopam || jinn.malayalam.thamasam || jinn.malayalam.swabhavam) && (
+            <div className="space-y-2 pt-1">
+              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>Malayalam Profile · മലയാളം</p>
+              {jinn.malayalam.roopam && (
+                <div className="rounded-xl p-3 border" style={{ background: P.bg, borderColor: P.border }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>രൂപം</p>
+                  <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>{jinn.malayalam.roopam}</p>
+                </div>
+              )}
+              {jinn.malayalam.thamasam && (
+                <div className="rounded-xl p-3 border" style={{ background: P.bg, borderColor: P.border }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>താമസം</p>
+                  <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>{jinn.malayalam.thamasam}</p>
+                </div>
+              )}
+              {jinn.malayalam.swabhavam && (
+                <div className="rounded-xl p-3 border" style={{ background: P.bg, borderColor: P.border }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>സ്വഭാവം</p>
+                  <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>{jinn.malayalam.swabhavam}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </motion.div>
     </motion.div>

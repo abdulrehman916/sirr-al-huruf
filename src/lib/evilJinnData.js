@@ -32,12 +32,22 @@ export const EVIL_JINN_NAMES = [
   {
     id: 1, serialNo: 1, arabicName: "مهمس", arabicHarakat: "مَهْمَس",
     englishName: "Mahmas", abjadValue: 145, letterCount: 4,
-    breakdown: [{ letter: "م", value: 40 }, { letter: "ه", value: 5 }, { letter: "م", value: 40 }, { letter: "س", value: 60 }]
+    breakdown: [{ letter: "م", value: 40 }, { letter: "ه", value: 5 }, { letter: "م", value: 40 }, { letter: "س", value: 60 }],
+    malayalam: {
+      roopam: "",
+      thamasam: "മലകൾ",
+      swabhavam: "മനുഷ്യരിൽ വിറയൽ, ശരീരദൗർബല്യം, അസുഖങ്ങൾ ഉണ്ടാക്കുന്നു."
+    }
   },
   {
     id: 2, serialNo: 2, arabicName: "برقن", arabicHarakat: "بَرْقَن",
     englishName: "Barqan", abjadValue: 352, letterCount: 4,
-    breakdown: [{ letter: "ب", value: 2 }, { letter: "ر", value: 200 }, { letter: "ق", value: 100 }, { letter: "ن", value: 50 }]
+    breakdown: [{ letter: "ب", value: 2 }, { letter: "ر", value: 200 }, { letter: "ق", value: 100 }, { letter: "ن", value: 50 }],
+    malayalam: {
+      roopam: "തീപോലുള്ള ജിന്ന്",
+      thamasam: "ശൂന്യപ്രദേശങ്ങൾ",
+      swabhavam: "പെട്ടെന്നുള്ള കോപം, കലഹം, അശാന്തി സൃഷ്ടിക്കുന്നു."
+    }
   },
   {
     id: 3, serialNo: 3, arabicName: "شمهوش", arabicHarakat: "شَمْهُوش",
@@ -84,12 +94,22 @@ export const EVIL_JINN_NAMES = [
   {
     id: 11, serialNo: 11, arabicName: "لطوش", arabicHarakat: "لَطُوش",
     englishName: "Latush", abjadValue: 345, letterCount: 4,
-    breakdown: [{ letter: "ل", value: 30 }, { letter: "ط", value: 9 }, { letter: "و", value: 6 }, { letter: "ش", value: 300 }]
+    breakdown: [{ letter: "ل", value: 30 }, { letter: "ط", value: 9 }, { letter: "و", value: 6 }, { letter: "ش", value: 300 }],
+    malayalam: {
+      roopam: "സന്യാസി/മോങ്ക്",
+      thamasam: "കടൽ ദ്വീപുകൾ",
+      swabhavam: "ശ്വാസംമുട്ടൽ, ബോധക്ഷയം, ചിലപ്പോൾ മരണകാരണമാകുന്ന രോഗങ്ങൾ."
+    }
   },
   {
     id: 12, serialNo: 12, arabicName: "الدولات وهيرام الصبيان", arabicHarakat: "الدُّولَات وَهِيرَام الصِّبْيَان",
     englishName: "Aldulat Wa Hiram Alsebiyan", abjadValue: 918, letterCount: 14,
-    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "د", value: 4 }, { letter: "و", value: 6 }, { letter: "ل", value: 30 }, { letter: "ا", value: 1 }, { letter: "ت", value: 400 }, { letter: "و", value: 6 }, { letter: "ه", value: 5 }, { letter: "ي", value: 10 }, { letter: "ر", value: 200 }, { letter: "ا", value: 1 }, { letter: "م", value: 40 }, { letter: "ا", value: 1 }]
+    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "د", value: 4 }, { letter: "و", value: 6 }, { letter: "ل", value: 30 }, { letter: "ا", value: 1 }, { letter: "ت", value: 400 }, { letter: "و", value: 6 }, { letter: "ه", value: 5 }, { letter: "ي", value: 10 }, { letter: "ر", value: 200 }, { letter: "ا", value: 1 }, { letter: "م", value: 40 }, { letter: "ا", value: 1 }],
+    malayalam: {
+      roopam: "ഏഴ് തലകളുള്ള സ്ത്രീ",
+      thamasam: "മലകൾ",
+      swabhavam: "ഗർഭിണികളെയും കുഞ്ഞുങ്ങളെയും ബാധിക്കുന്നതായി പുസ്തകത്തിൽ പറയുന്നു."
+    }
   },
   {
     id: 13, serialNo: 13, arabicName: "الوق", arabicHarakat: "الوَق",
