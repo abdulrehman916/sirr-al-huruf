@@ -235,7 +235,8 @@ export default function PageLayout({ children }) {
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         minHeight: "100vh",
-        height: "100%",
+        display: "flex",
+        flexDirection: "column",
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
@@ -333,6 +334,8 @@ export default function PageLayout({ children }) {
         data-scroll-container="true"
         className="flex-1 overflow-y-auto overflow-x-hidden"
         style={{
+          flex: 1,
+          minHeight: 0,
           overscrollBehaviorY: "none",
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
