@@ -136,21 +136,21 @@ export default function FaalAli() {
                   >
                     <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 50% 120%, rgba(212,175,55,0.15) 0%, transparent 70%)` }} />
                     <span className="font-amiri text-2xl font-bold" style={{ color: G.text, zIndex: 1 }}>
-                      {selectedCell.innerMark === "dot" ? "•" : 
-                       selectedCell.innerMark === "two-dots" ? "••" :
-                       selectedCell.innerMark === "arc-up" ? "⌒" :
-                       selectedCell.innerMark === "three-dots" ? "∴" :
-                       selectedCell.innerMark === "line-h" ? "─" :
-                       selectedCell.innerMark === "eye" ? "◉" :
-                       selectedCell.innerMark === "x-cross" ? "✕" :
-                       selectedCell.innerMark === "line-v" ? "│" :
-                       selectedCell.innerMark === "circle" ? "○" :
-                       selectedCell.innerMark === "arc-down" ? "⌃" :
-                       selectedCell.innerMark === "cross" ? "＋" :
-                       selectedCell.innerMark === "spiral" ? "🌀" :
-                       selectedCell.innerMark === "double-arc" ? "≈" :
-                       selectedCell.innerMark === "star3" ? "✦" :
-                       selectedCell.innerMark === "zigzag" ? "⚡" : "✧"}
+                      {cell.innerMark === "dot" ? "•" : 
+                       cell.innerMark === "two-dots" ? "••" :
+                       cell.innerMark === "arc-up" ? "⌒" :
+                       cell.innerMark === "three-dots" ? "∴" :
+                       cell.innerMark === "line-h" ? "─" :
+                       cell.innerMark === "eye" ? "◉" :
+                       cell.innerMark === "x-cross" ? "✕" :
+                       cell.innerMark === "line-v" ? "│" :
+                       cell.innerMark === "circle" ? "○" :
+                       cell.innerMark === "arc-down" ? "⌃" :
+                       cell.innerMark === "cross" ? "＋" :
+                       cell.innerMark === "spiral" ? "🌀" :
+                       cell.innerMark === "double-arc" ? "≈" :
+                       cell.innerMark === "star3" ? "✦" :
+                       cell.innerMark === "zigzag" ? "⚡" : "✧"}
                     </span>
                     <span className="font-inter text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(212,175,55,0.60)", zIndex: 1 }}>
                       #{cell.id}
