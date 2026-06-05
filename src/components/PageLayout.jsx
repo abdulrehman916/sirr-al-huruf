@@ -1,5 +1,5 @@
 import { memo, useMemo, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // AnimatePresence used for page transitions
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
@@ -17,7 +17,6 @@ const TABS = [
   { id: "plants",           label: "PLANTS", arabic: "نباتات",    path: "/plants" },
 ];
 
-// Page transition — subtle fade only (no y-shift) for snappier feel on mobile
 const pageVariants = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
@@ -25,9 +24,10 @@ const pageVariants = {
 };
 
 // ── Top horizontal nav tab — instant activation, zero delay ──
-const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
+const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
   return (
     <div
+      ref={tabRef}
       style={{
         borderRadius: 10,
         border: "1px solid",
@@ -109,9 +109,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
   );
 });
 
-
-
-// ── Scroll position memory per route ─────────────────────────────
 const scrollMemory = {};
 
 export default function PageLayout({ children }) {
@@ -125,28 +122,52 @@ export default function PageLayout({ children }) {
   );
 
   const scrollRef = useRef(null);
+  const navRef = useRef(null);
+  const tabRefs = useRef({});
+
+  // Auto-scroll navigation bar to keep active tab visible and centered
+  useEffect(() => {
+    const navEl = navRef.current;
+    const activeTabEl = tabRefs.current[activeId];
+    
+    if (!navEl || !activeTabEl) return;
+
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      const tabRect = activeTabEl.getBoundingClientRect();
+      const navRect = navEl.getBoundingClientRect();
+      
+      // Calculate position to center the active tab
+      const centerPosition = navEl.scrollLeft + (tabRect.left - navRect.left) - (navRect.width / 2) + (tabRect.width / 2);
+      
+      // Smooth scroll to center the active tab
+      navEl.scrollTo({
+        left: centerPosition,
+        behavior: 'smooth',
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [activeId, location.pathname]);
 
   // Save / restore scroll position per route
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
-    // Restore saved scroll for this route
     const saved = scrollMemory[location.pathname] ?? 0;
     el.scrollTop = saved;
 
     return () => {
-      // Save scroll when leaving
       if (scrollRef.current) {
         scrollMemory[location.pathname] = scrollRef.current.scrollTop;
       }
     };
   }, [location.pathname]);
 
-  // Native back gesture support — popstate fires on Android back & iOS swipe
+  // Native back gesture support
   useEffect(() => {
     const onPop = () => {
-      // React Router already handles URL change; just trigger animation hint
       startNav();
     };
     window.addEventListener("popstate", onPop);
@@ -160,7 +181,6 @@ export default function PageLayout({ children }) {
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         minHeight: "100vh",
         height: "auto",
-        // Safe area: top for notch/Dynamic Island, bottom for home indicator, sides for landscape
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
@@ -186,13 +206,17 @@ export default function PageLayout({ children }) {
               "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.42) 40%, rgba(232,200,74,0.55) 50%, rgba(212,175,55,0.42) 60%, transparent 95%)",
           }}
         />
-        <div className="max-w-2xl mx-auto flex gap-1 overflow-x-auto scrollbar-none">
+        <div 
+          ref={navRef}
+          className="max-w-2xl mx-auto flex gap-1 overflow-x-auto scrollbar-none"
+        >
           {TABS.map((tab) => (
             <NavTab
               key={tab.id}
               tab={tab}
               isActive={activeId === tab.id}
               onClick={startNav}
+              tabRef={(el) => (tabRefs.current[tab.id] = el)}
             />
           ))}
         </div>
@@ -229,7 +253,6 @@ export default function PageLayout({ children }) {
           </motion.div>
         </AnimatePresence>
       </div>
-
 
     </div>
   );
