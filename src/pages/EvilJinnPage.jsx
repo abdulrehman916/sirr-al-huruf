@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Copy, Check, ArrowUpDown, Eye } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -112,17 +113,16 @@ function JinnDetail({ jinn, onClose }) {
 
   const cols = jinn.breakdown.length <= 3 ? "grid-cols-3" : jinn.breakdown.length === 4 ? "grid-cols-4" : "grid-cols-5";
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: "rgba(2,6,16,0.85)", backdropFilter: "blur(8px)" }}
+      style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "1rem", background: "rgba(2,6,16,0.88)", backdropFilter: "blur(10px)" }}
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }}
-        className="w-full max-w-md rounded-3xl overflow-hidden"
-        style={{ background: "linear-gradient(145deg, rgba(12,22,48,0.98), rgba(6,12,28,0.99))", border: "1px solid " + P.borderHi }}
+        initial={{ scale: 0.95, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 30 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        style={{ width: "100%", maxWidth: "28rem", borderRadius: "1.5rem", overflow: "hidden", background: "linear-gradient(145deg, rgba(12,22,48,0.99), rgba(6,12,28,1))", border: "1px solid " + P.borderHi, boxShadow: "0 0 60px rgba(212,175,55,0.18), 0 24px 64px rgba(0,0,0,0.80)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 text-center relative" style={{ background: P.bg }}>
@@ -192,7 +192,8 @@ function JinnDetail({ jinn, onClose }) {
           )}
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
