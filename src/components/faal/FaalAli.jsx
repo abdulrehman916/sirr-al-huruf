@@ -180,8 +180,15 @@ export default function FaalAli() {
                 animate={{ height: instructionsExpanded ? 'auto' : 0, opacity: instructionsExpanded ? 1 : 0 }}
                 transition={{ duration: 0.25 }}
                 className="overflow-hidden"
+                style={{ touchAction: 'auto' }}
               >
-                <div className="space-y-1.5 pt-2 pb-1">
+                <div 
+                  className="space-y-1.5 pt-2 pb-1"
+                  style={{ 
+                    touchAction: 'auto',
+                    overscrollBehavior: 'contain'
+                  }}
+                >
                   {currentInstructions.map((text, idx) => (
                     <p key={idx} className="font-inter text-[11px] text-white/85 leading-snug">
                       <span className="font-bold text-[#F5D060]">{idx + 1}.</span> {text}
