@@ -5,6 +5,7 @@ import PageTitle from "../components/PageTitle";
 import ErrorBoundary from "../components/ErrorBoundary";
 import FaalAli from "../components/faal/FaalAli";
 import FaalLuqman from "../components/faal/FaalLuqman";
+import FaalHikmah from "../components/faal/FaalHikmah";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -13,8 +14,9 @@ const G = {
 };
 
 const TABS = [
-  { id: "ali",    label: "✨ Faal Ali",    arabic: "فأل علي" },
-  { id: "luqman", label: "🌟 Faal Luqman", arabic: "فأل لقمان" },
+  { id: "ali",     label: "✨ Faal Ali",     arabic: "فأل علي" },
+  { id: "luqman",  label: "🌟 Faal Luqman",  arabic: "فأل لقمان" },
+  { id: "hikmah",  label: "💎 Faal Hikmah",  arabic: "فأل الحكمة" },
 ];
 
 function FaalHasrathContent() {
@@ -25,7 +27,7 @@ function FaalHasrathContent() {
       <PageTitle arabic="فأل" latin="Faal Hasrath" subtitle="Divination System" icon="🔮" />
       
       {/* Tab Navigation */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {TABS.map(tab => {
           const active = activeTab === tab.id;
           return (
@@ -67,7 +69,7 @@ function FaalHasrathContent() {
           exit={{ opacity: 0, y: -16 }}
           transition={{ duration: 0.25 }}
         >
-          {activeTab === 'ali' ? <FaalAli /> : <FaalLuqman />}
+          {activeTab === 'ali' ? <FaalAli /> : activeTab === 'luqman' ? <FaalLuqman /> : <FaalHikmah />}
         </motion.div>
       </AnimatePresence>
     </div>
