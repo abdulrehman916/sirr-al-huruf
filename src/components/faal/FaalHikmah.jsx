@@ -70,13 +70,34 @@ export default function FaalHikmah() {
   };
 
   const instructions = [
-    "طهارت داشته باشید و بسم‌الله الرحمن الرحیم بگویید.",
-    "سورهٔ الحمد را بخوانید.",
-    "فاتحه به روح پرفتوح سرور کائنات صلوات‌الله علیه و آله بخوانید.",
-    "این آیهٔ شریفه را برزبان آورید: سبحانک لا علم لنا الا ما علمتنا انک انت العلیم‌الحکیم.",
-    "نیت نموده و چوب را بدست گرفت چشمها را بسته و چوب را به‌زمین و یا میز بیاندازید.",
-    "هردفعه که انداخته شد باید حروف نوشته تا سه حروف دلخواه به‌دست بیاید.",
-    "بعد به‌صفحات فال مراجعه کرده تا خیر و شر آن معلوم شود.",
+    {
+      ar: "طهارت داشته باشید و بسم‌الله الرحمن الرحیم بگویید.",
+      ml: "ശുദ്ധിയോടെ (ത്വഹാറത്ത്) ഇരിക്കുക. ബിസ്മില്ലാഹിർ റഹ്മാനിർ റഹീം എന്ന് ഉരുക്കഴിക്കുക.",
+    },
+    {
+      ar: "سورهٔ الحمد را بخوانید.",
+      ml: "സൂറത്തുൽ ഹംദ് (അൽ-ഫാതിഹ) ഓതുക.",
+    },
+    {
+      ar: "فاتحه به روح پرفتوح سرور کائنات صلوات‌الله علیه و آله بخوانید.",
+      ml: "സർവ്വ സൃഷ്ടികളുടെ നേതാവും (سرور کائنات) അല്ലാഹുവിന്റെ സ്വലവാത്ത് ഏറ്റവും അർഹനുമായ നബി (സ.അ.വ.) യുടേയും അഹ്ലുൽ ബൈത്തിന്റേയും ആത്മാക്കൾക്ക് ഫാതിഹ ഓതി ഹദ്‌യ ചെയ്യുക.",
+    },
+    {
+      ar: "این آیهٔ شریفه را برزبان آورید: سبحانک لا علم لنا الا ما علمتنا انک انت العلیم‌الحکیم.",
+      ml: "ഈ ശ്രേഷ്ഠ ആയത്ത് ഉരുക്കഴിക്കുക: سُبْحَانَکَ لَا عِلْمَ لَنَا إِلَّا مَا عَلَّمْتَنَا إِنَّکَ أَنْتَ الْعَلِیمُ الْحَکِیمُ — (അർത്ഥം: നിന്റെ പരിശുദ്ധി! നീ ഞങ്ങൾക്ക് പഠിപ്പിച്ചത് മാത്രമേ ഞങ്ങൾക്ക് അറിവുള്ളൂ. തീർച്ചയായും നീ സർവ്വജ്ഞനും യുക്തിമാനുമാകുന്നു.)",
+    },
+    {
+      ar: "نیت نموده و چوب را بدست گرفت چشمها را بسته و چوب را به‌زمین و یا میز بیاندازید.",
+      ml: "ഹൃദയത്തിൽ നിയ്യത്ത് (ഉദ്ദേശ്യം) ഉറപ്പിക്കുക. ചൂരൽ/കോൽ (چوب) കൈയ്യിലെടുക്കുക. കണ്ണുകൾ അടക്കുക. പിന്നെ ആ കോൽ നിലത്തോ മേശ മേലോ എറിയുക.",
+    },
+    {
+      ar: "هردفعه که انداخته شد باید حروف نوشته تا سه حروف دلخواه به‌دست بیاید.",
+      ml: "ഓരോ തവണ എറിയുമ്പോഴും ലഭിക്കുന്ന അക്ഷരം കുറിച്ചുവെക്കുക. ഇങ്ങനെ മൂന്ന് ഇഷ്ടമുള്ള അക്ഷരങ്ങൾ ലഭിക്കുന്നതുവരെ തുടരുക.",
+    },
+    {
+      ar: "بعد به‌صفحات فال مراجعه کرده تا خیر و شر آن معلوم شود.",
+      ml: "തുടർന്ന് ഫാൽ (فال) ന്റെ പേജുകൾ നോക്കി ആ അക്ഷര സംയോജനത്തിന്റെ ഗുണദോഷങ്ങൾ മനസ്സിലാക്കുക.",
+    },
   ];
 
   return (
@@ -85,7 +106,12 @@ export default function FaalHikmah() {
       {/* Instructions */}
       <SectionCard>
         <div className="flex items-center justify-between mb-1">
-          <SectionLabel>📜 طریقهٔ ساخت چوب — روش فال</SectionLabel>
+          <div>
+            <SectionLabel>📜 طریقهٔ ساخت چوب — روش فال</SectionLabel>
+            <p className="font-inter text-[9px] mt-0.5" style={{ color: "rgba(255,255,255,0.40)" }}>
+              ഫാൽ ചോബ് — നിർദ്ദേശ രീതി
+            </p>
+          </div>
           <motion.button
             onClick={() => setInstructionsOpen(!instructionsOpen)}
             whileTap={{ scale: 0.95 }}
@@ -93,7 +119,7 @@ export default function FaalHikmah() {
             style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.25)", color: G.text }}
           >
             {instructionsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            {instructionsOpen ? "بستن" : "خواندن"}
+            {instructionsOpen ? "بستن / അടക്കുക" : "خواندن / വായിക്കുക"}
           </motion.button>
         </div>
         <motion.div
@@ -102,11 +128,30 @@ export default function FaalHikmah() {
           transition={{ duration: 0.25 }}
           className="overflow-hidden"
         >
-          <div className="space-y-1.5 pt-2 pb-1" dir="rtl">
-            {instructions.map((t, i) => (
-              <p key={i} className="font-amiri text-sm leading-snug text-white/85">
-                <span className="font-bold" style={{ color: G.text }}>{i + 1}.</span> {t}
-              </p>
+          <div className="space-y-4 pt-3 pb-1">
+            {instructions.map((step, i) => (
+              <div key={i} className="rounded-xl border p-3 space-y-2"
+                style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.12)" }}>
+                <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  Step {i + 1}
+                </p>
+                <div>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.40)" }}>
+                    Arabic / Persian
+                  </p>
+                  <p className="font-amiri text-sm leading-relaxed text-white/85" dir="rtl">
+                    <span className="font-bold" style={{ color: G.text }}>{i + 1}.</span> {step.ar}
+                  </p>
+                </div>
+                <div className="pt-1.5 border-t" style={{ borderColor: "rgba(212,175,55,0.10)" }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.40)" }}>
+                    Malayalam
+                  </p>
+                  <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    {step.ml}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         </motion.div>
@@ -135,13 +180,19 @@ export default function FaalHikmah() {
               }}
             >
               <Shuffle className="w-4 h-4" />
-              بزن بریم — اختلاط کارت‌ها
+              <span>بزن بریم — اختلاط کارت‌ها <span className="font-normal opacity-70">| കാർഡ് ഇളക്കുക</span></span>
             </motion.button>
 
             <SectionCard glow>
               <SectionLabel>✨ یک کارت انتخاب کنید — فال چوب</SectionLabel>
-              <p className="font-amiri text-sm text-white/60 text-center mb-3" dir="rtl">
+              <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,255,255,0.40)" }}>
+                ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക — ഫാൽ ചോബ്
+              </p>
+              <p className="font-amiri text-sm text-white/60 text-center mb-1" dir="rtl">
                 نیت کنید و یک کارت را انتخاب نمایید
+              </p>
+              <p className="font-inter text-xs text-center mb-2" style={{ color: "rgba(255,255,255,0.40)" }}>
+                നിയ്യത്ത് ചെയ്ത് ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക
               </p>
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {shuffled.map((entry, idx) => (
@@ -190,7 +241,12 @@ export default function FaalHikmah() {
             className="space-y-4"
           >
             <SectionCard glow>
-              <SectionLabel>✨ نتیجهٔ فال چوب</SectionLabel>
+              <div>
+                <SectionLabel>✨ نتیجهٔ فال چوب</SectionLabel>
+                <p className="font-inter text-[9px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  ✨ ഫാൽ ചോബ് ഫലം
+                </p>
+              </div>
 
               {/* Symbol header */}
               <div className="text-center py-3">
@@ -317,7 +373,7 @@ export default function FaalHikmah() {
                   boxShadow: `0 0 32px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)`,
                 }}
               >
-                ← بازگشت به کارت‌ها
+                ← بازگشت به کارت‌ها &nbsp;|&nbsp; കാർഡുകളിലേക്ക് മടങ്ങുക
               </motion.button>
             </SectionCard>
           </motion.div>
@@ -333,7 +389,7 @@ export default function FaalHikmah() {
         style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(255,255,255,0.12)" }}
       >
         <Trash2 className="w-4 h-4" />
-        پاک کردن همه
+        <span>پاک کردن همه <span className="opacity-60 font-normal">| എല്ലാം മായ്ക്കുക</span></span>
       </motion.button>
     </div>
   );
