@@ -1,28 +1,329 @@
-import { motion } from "framer-motion";
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Shuffle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { FAAL_CHOB_ENTRIES } from "../../lib/faalChobData";
+import { usePageState } from "../../context/PageStateContext";
+
+const G = {
+  borderHi: "rgba(212,175,55,0.65)",
+  glow:     "rgba(212,175,55,0.22)",
+  glowHi:   "rgba(212,175,55,0.55)",
+  text:     "#F5D060",
+  dim:      "rgba(212,175,55,0.55)",
+};
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const PAGE_KEY = "faalChob";
 
 export default function FaalHikmah() {
+  const { getPageState, setPageState, clearPageState } = usePageState();
+
+  const init = getPageState(PAGE_KEY, {
+    shuffled: shuffleArray(FAAL_CHOB_ENTRIES),
+    selected: null,
+    expanded: false,
+  });
+
+  const [shuffled, setShuffled]     = useState(init.shuffled);
+  const [selected, setSelected]     = useState(init.selected);
+  const [expanded, setExpanded]     = useState(init.expanded);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
+
+  const persist = useCallback((s, sel, ex) => {
+    setPageState(PAGE_KEY, { shuffled: s, selected: sel, expanded: ex });
+  }, [setPageState]);
+
+  const handleShuffle = () => {
+    const s = shuffleArray(FAAL_CHOB_ENTRIES);
+    setShuffled(s);
+    setSelected(null);
+    persist(s, null, false);
+  };
+
+  const handleSelect = (entry) => {
+    setSelected(entry);
+    persist(shuffled, entry, false);
+  };
+
+  const handleBack = () => {
+    const s = shuffleArray(FAAL_CHOB_ENTRIES);
+    setShuffled(s);
+    setSelected(null);
+    persist(s, null, false);
+  };
+
+  const handleClear = () => {
+    clearPageState(PAGE_KEY);
+    const s = shuffleArray(FAAL_CHOB_ENTRIES);
+    setShuffled(s);
+    setSelected(null);
+    setExpanded(false);
+  };
+
+  const instructions = [
+    "طهارت داشته باشید و بسم‌الله الرحمن الرحیم بگویید.",
+    "سورهٔ الحمد را بخوانید.",
+    "فاتحه به روح پرفتوح سرور کائنات صلوات‌الله علیه و آله بخوانید.",
+    "این آیهٔ شریفه را برزبان آورید: سبحانک لا علم لنا الا ما علمتنا انک انت العلیم‌الحکیم.",
+    "نیت نموده و چوب را بدست گرفت چشمها را بسته و چوب را به‌زمین و یا میز بیاندازید.",
+    "هردفعه که انداخته شد باید حروف نوشته تا سه حروف دلخواه به‌دست بیاید.",
+    "بعد به‌صفحات فال مراجعه کرده تا خیر و شر آن معلوم شود.",
+  ];
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-4"
-    >
-      {/* Empty placeholder for source pages */}
-      <div
-        className="rounded-2xl border p-8 flex flex-col items-center justify-center min-h-[300px]"
-        style={{
-          background: "linear-gradient(145deg, rgba(212,175,55,0.08) 0%, rgba(212,175,55,0.03) 100%)",
-          borderColor: "rgba(212,175,55,0.25)",
-        }}
+    <div className="space-y-4" style={{ minHeight: 0, height: "auto", overflow: "visible" }}>
+
+      {/* Instructions */}
+      <SectionCard>
+        <div className="flex items-center justify-between mb-1">
+          <SectionLabel>📜 طریقهٔ ساخت چوب — روش فال</SectionLabel>
+          <motion.button
+            onClick={() => setInstructionsOpen(!instructionsOpen)}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-inter font-bold text-[10px]"
+            style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.25)", color: G.text }}
+          >
+            {instructionsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {instructionsOpen ? "بستن" : "خواندن"}
+          </motion.button>
+        </div>
+        <motion.div
+          initial={false}
+          animate={{ height: instructionsOpen ? "auto" : 0, opacity: instructionsOpen ? 1 : 0 }}
+          transition={{ duration: 0.25 }}
+          className="overflow-hidden"
+        >
+          <div className="space-y-1.5 pt-2 pb-1" dir="rtl">
+            {instructions.map((t, i) => (
+              <p key={i} className="font-amiri text-sm leading-snug text-white/85">
+                <span className="font-bold" style={{ color: G.text }}>{i + 1}.</span> {t}
+              </p>
+            ))}
+          </div>
+        </motion.div>
+      </SectionCard>
+
+      <AnimatePresence mode="wait">
+        {!selected ? (
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-4"
+          >
+            {/* Shuffle button */}
+            <motion.button
+              onClick={handleShuffle}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-inter font-bold text-sm border transition-all"
+              style={{
+                background: "linear-gradient(145deg, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0.05) 100%)",
+                borderColor: G.borderHi,
+                color: G.text,
+                boxShadow: `0 0 24px ${G.glow}`,
+              }}
+            >
+              <Shuffle className="w-4 h-4" />
+              بزن بریم — اختلاط کارت‌ها
+            </motion.button>
+
+            <SectionCard glow>
+              <SectionLabel>✨ یک کارت انتخاب کنید — فال چوب</SectionLabel>
+              <p className="font-amiri text-sm text-white/60 text-center mb-3" dir="rtl">
+                نیت کنید و یک کارت را انتخاب نمایید
+              </p>
+              <div className="grid grid-cols-4 gap-2 mt-2">
+                {shuffled.map((entry, idx) => (
+                  <motion.button
+                    key={entry.id}
+                    initial={{ opacity: 0, scale: 0.75 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.01, duration: 0.3, ease: "easeOut" }}
+                    onClick={() => handleSelect(entry)}
+                    whileHover={{ scale: 1.06, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="aspect-square rounded-xl border flex items-center justify-center relative overflow-hidden"
+                    style={{
+                      background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(6,14,32,0.98) 100%)",
+                      borderColor: "rgba(212,175,55,0.38)",
+                      boxShadow: "0 0 20px rgba(212,175,55,0.14), inset 0 1px 0 rgba(212,175,55,0.10)",
+                    }}
+                  >
+                    <div className="absolute inset-0" style={{
+                      background: "repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(212,175,55,0.03) 8px, rgba(212,175,55,0.03) 16px)"
+                    }} />
+                    <div className="relative z-10 flex flex-col items-center gap-1">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center"
+                        style={{
+                          background: "linear-gradient(145deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
+                          border: "1px solid rgba(212,175,55,0.30)",
+                        }}>
+                        <span className="font-amiri text-xs font-bold" style={{ color: G.text }}>چوب</span>
+                      </div>
+                    </div>
+                    <div className="absolute top-1 left-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute top-1 right-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute bottom-1 left-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                    <div className="absolute bottom-1 right-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
+                  </motion.button>
+                ))}
+              </div>
+              <p className="font-inter text-[7px] uppercase tracking-widest text-center mt-3" style={{ color: G.dim }}>
+                {FAAL_CHOB_ENTRIES.length} Cards — فال چوب
+              </p>
+            </SectionCard>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className="space-y-4"
+          >
+            <SectionCard glow>
+              <SectionLabel>✨ نتیجهٔ فال چوب</SectionLabel>
+
+              {/* Symbol header */}
+              <div className="text-center py-3">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="inline-flex items-center justify-center px-5 py-2 rounded-2xl border mb-2"
+                  style={{
+                    background: "linear-gradient(145deg, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.05) 100%)",
+                    borderColor: "rgba(212,175,55,0.40)",
+                    boxShadow: "0 0 28px rgba(212,175,55,0.25), inset 0 1px 0 rgba(212,175,55,0.15)",
+                  }}
+                >
+                  <span className="font-amiri text-3xl font-bold tracking-widest" style={{ color: G.text }} dir="rtl">
+                    {selected.symbol}
+                  </span>
+                </motion.div>
+                <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  Card #{selected.id} — فال چوب
+                </p>
+              </div>
+
+              {/* Verse */}
+              {selected.verse && (
+                <div className="rounded-xl border p-4"
+                  style={{ background: "rgba(212,175,55,0.07)", borderColor: "rgba(212,175,55,0.22)" }}>
+                  <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                    آیه / حدیث
+                  </p>
+                  <p className="font-amiri text-lg leading-relaxed text-center" style={{ color: G.text }} dir="rtl">
+                    {selected.verse}
+                  </p>
+                </div>
+              )}
+
+              {/* Main text */}
+              {selected.text && (
+                <div className="rounded-xl border p-4"
+                  style={{ background: "rgba(8,16,38,0.95)", borderColor: "rgba(212,175,55,0.18)" }}>
+                  <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                    فال
+                  </p>
+                  <p className="font-amiri text-base leading-loose text-white/90" dir="rtl">
+                    {selected.text}
+                  </p>
+                  {selected.continuation && (
+                    <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl">
+                      {selected.continuation}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Danyal */}
+              {selected.danyal && (
+                <div className="rounded-xl border p-4"
+                  style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
+                  <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                    حضرت دانیال نبی علیه‌السلام می‌فرمایند
+                  </p>
+                  <p className="font-amiri text-base leading-loose text-white/85" dir="rtl">
+                    {selected.danyal}
+                  </p>
+                </div>
+              )}
+
+              {/* Sadiq */}
+              {selected.sadiq && (
+                <div className="rounded-xl border p-4"
+                  style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
+                  <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                    حضرت امام جعفر صادق علیه‌السلام می‌فرمایند
+                  </p>
+                  <p className="font-amiri text-base leading-loose text-white/85" dir="rtl">
+                    {selected.sadiq}
+                  </p>
+                </div>
+              )}
+
+              <motion.button
+                onClick={handleBack}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full py-3 rounded-xl font-inter font-bold text-sm text-[#0d1b2a] tracking-wide mt-2"
+                style={{
+                  background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)",
+                  boxShadow: `0 0 32px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)`,
+                }}
+              >
+                ← بازگشت به کارت‌ها
+              </motion.button>
+            </SectionCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clear */}
+      <motion.button
+        onClick={handleClear}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
+        className="w-full flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-inter font-bold text-sm text-white border transition-all"
+        style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(255,255,255,0.12)" }}
       >
-        <p className="font-amiri text-center" style={{ fontSize: "1.3rem", color: "rgba(245,208,96,0.60)" }}>
-          فال الحكمة
-        </p>
-        <p className="font-inter text-xs mt-2 text-center" style={{ color: "rgba(255,255,255,0.30)" }}>
-          Source pages pending
-        </p>
-      </div>
-    </motion.div>
+        <Trash2 className="w-4 h-4" />
+        پاک کردن همه
+      </motion.button>
+    </div>
+  );
+}
+
+function SectionCard({ children, glow = false }) {
+  return (
+    <div className="rounded-2xl border p-4 space-y-3"
+      style={{
+        background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+        borderColor: "rgba(212,175,55,0.22)",
+        boxShadow: glow
+          ? `0 8px 48px rgba(0,0,0,0.62), 0 0 32px rgba(212,175,55,0.22), inset 0 1px 0 rgba(212,175,55,0.12)`
+          : `0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(212,175,55,0.08)`,
+      }}>
+      {children}
+    </div>
+  );
+}
+
+function SectionLabel({ children }) {
+  return (
+    <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>
+      {children}
+    </p>
   );
 }
