@@ -16,7 +16,7 @@ const G = {
 const TABS = [
   { id: "ali",     label: "✨ Faal Ali",     arabic: "فأل علي" },
   { id: "luqman",  label: "🌟 Faal Luqman",  arabic: "فأل لقمان" },
-  { id: "hikmah",  label: "💎 Faal Hikmah",  arabic: "فأل الحكمة" },
+  { id: "hikmah",  label: "🪵 Faal Chob",  arabic: "فال چوب" },
 ];
 
 function FaalHasrathContent() {
