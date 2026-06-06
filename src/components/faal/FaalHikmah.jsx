@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shuffle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { FAAL_CHOB_ENTRIES } from "../../lib/faalChobData";
+import { FAAL_CHOB_ML } from "../../lib/faalChobTranslations";
 import { usePageState } from "../../context/PageStateContext";
 
 const G = {
@@ -162,14 +163,11 @@ export default function FaalHikmah() {
                     <div className="absolute inset-0" style={{
                       background: "repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(212,175,55,0.03) 8px, rgba(212,175,55,0.03) 16px)"
                     }} />
-                    <div className="relative z-10 flex flex-col items-center gap-1">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center"
-                        style={{
-                          background: "linear-gradient(145deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
-                          border: "1px solid rgba(212,175,55,0.30)",
-                        }}>
-                        <span className="font-amiri text-xs font-bold" style={{ color: G.text }}>چوب</span>
-                      </div>
+                    <div className="relative z-10 flex flex-col items-center gap-0.5 px-1">
+                      <span className="font-amiri font-bold text-center leading-tight" dir="rtl"
+                        style={{ color: G.text, fontSize: "11px", wordBreak: "break-all" }}>
+                        {entry.symbol}
+                      </span>
                     </div>
                     <div className="absolute top-1 left-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
                     <div className="absolute top-1 right-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
@@ -231,45 +229,81 @@ export default function FaalHikmah() {
 
               {/* Main text */}
               {selected.text && (
-                <div className="rounded-xl border p-4"
+                <div className="rounded-xl border p-4 space-y-3"
                   style={{ background: "rgba(8,16,38,0.95)", borderColor: "rgba(212,175,55,0.18)" }}>
-                  <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                    فال
-                  </p>
-                  <p className="font-amiri text-base leading-loose text-white/90" dir="rtl">
-                    {selected.text}
-                  </p>
-                  {selected.continuation && (
-                    <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl">
-                      {selected.continuation}
+                  <div>
+                    <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                      فال — Arabic/Persian
                     </p>
+                    <p className="font-amiri text-base leading-loose text-white/90" dir="rtl">
+                      {selected.text}
+                    </p>
+                    {selected.continuation && (
+                      <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl">
+                        {selected.continuation}
+                      </p>
+                    )}
+                  </div>
+                  {FAAL_CHOB_ML[selected.id]?.text && (
+                    <div className="pt-2 border-t" style={{ borderColor: "rgba(212,175,55,0.12)" }}>
+                      <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                        Malayalam
+                      </p>
+                      <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
+                        {FAAL_CHOB_ML[selected.id].text}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
 
               {/* Danyal */}
               {selected.danyal && (
-                <div className="rounded-xl border p-4"
+                <div className="rounded-xl border p-4 space-y-3"
                   style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
-                  <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                    حضرت دانیال نبی علیه‌السلام می‌فرمایند
-                  </p>
-                  <p className="font-amiri text-base leading-loose text-white/85" dir="rtl">
-                    {selected.danyal}
-                  </p>
+                  <div>
+                    <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                      حضرت دانیال نبی علیه‌السلام — Arabic/Persian
+                    </p>
+                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl">
+                      {selected.danyal}
+                    </p>
+                  </div>
+                  {FAAL_CHOB_ML[selected.id]?.danyal && (
+                    <div className="pt-2 border-t" style={{ borderColor: "rgba(212,175,55,0.10)" }}>
+                      <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                        Hazrat Danyal (A.S.) — Malayalam
+                      </p>
+                      <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>
+                        {FAAL_CHOB_ML[selected.id].danyal}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Sadiq */}
               {selected.sadiq && (
-                <div className="rounded-xl border p-4"
+                <div className="rounded-xl border p-4 space-y-3"
                   style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
-                  <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                    حضرت امام جعفر صادق علیه‌السلام می‌فرمایند
-                  </p>
-                  <p className="font-amiri text-base leading-loose text-white/85" dir="rtl">
-                    {selected.sadiq}
-                  </p>
+                  <div>
+                    <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                      حضرت امام جعفر صادق علیه‌السلام — Arabic/Persian
+                    </p>
+                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl">
+                      {selected.sadiq}
+                    </p>
+                  </div>
+                  {FAAL_CHOB_ML[selected.id]?.sadiq && (
+                    <div className="pt-2 border-t" style={{ borderColor: "rgba(212,175,55,0.10)" }}>
+                      <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                        Imam Ja'far Sadiq (A.S.) — Malayalam
+                      </p>
+                      <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>
+                        {FAAL_CHOB_ML[selected.id].sadiq}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
