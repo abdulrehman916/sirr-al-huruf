@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shuffle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { FAAL_CHOB_ENTRIES } from "../../lib/faalChobData";
 
-// Grid cards only: has a gridPos, not invalid
-const GRID_ENTRIES = FAAL_CHOB_ENTRIES.filter(e => e.gridPos !== null && e.status !== "invalid");
+// Grid cards only: fixed standard order ا ا ا → د د د
+const GRID_ENTRIES = FAAL_CHOB_ENTRIES
+  .filter(e => e.gridPos !== null && e.status !== "invalid")
+  .sort((a, b) => a.gridPos - b.gridPos);
 import { FAAL_CHOB_ML } from "../../lib/faalChobTranslations";
 import { usePageState } from "../../context/PageStateContext";
 
@@ -16,15 +18,6 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-function shuffleArray(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 const PAGE_KEY = "faalChob";
 
 // Derive the standard 64-combination code from gridPos (1-based)
@@ -35,7 +28,7 @@ function getCombinationCode(gridPos) {
   const l1 = LETTERS[Math.floor(idx / 16) % 4];
   const l2 = LETTERS[Math.floor(idx / 4) % 4];
   const l3 = LETTERS[idx % 4];
-  return l1 + l2 + l3;
+  return l1 + " " + l2 + " " + l3;
 }
 
 const instructions = [
@@ -80,47 +73,29 @@ const instructions = [
 export default function FaalHikmah() {
   const { getPageState, setPageState, clearPageState } = usePageState();
 
-  const init = getPageState(PAGE_KEY, {
-    shuffled: shuffleArray(GRID_ENTRIES),
-    selected: null,
-    expanded: false,
-  });
+  const init = getPageState(PAGE_KEY, { selected: null });
 
-  const [shuffled, setShuffled]         = useState(init.shuffled);
-  const [selected, setSelected]         = useState(init.selected);
-  const [expanded, setExpanded]         = useState(init.expanded);
+  const [selected, setSelected] = useState(init.selected);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
-  const [lang, setLang]                 = useState("ml"); // default: Malayalam
+  const [lang, setLang]         = useState("ml");
 
-  const persist = useCallback((s, sel, ex) => {
-    setPageState(PAGE_KEY, { shuffled: s, selected: sel, expanded: ex });
+  const persist = useCallback((sel) => {
+    setPageState(PAGE_KEY, { selected: sel });
   }, [setPageState]);
-
-  const handleShuffle = () => {
-    const s = shuffleArray(GRID_ENTRIES);
-    setShuffled(s);
-    setSelected(null);
-    persist(s, null, false);
-  };
 
   const handleSelect = (entry) => {
     setSelected(entry);
-    persist(shuffled, entry, false);
+    persist(entry);
   };
 
   const handleBack = () => {
-    const s = shuffleArray(GRID_ENTRIES);
-    setShuffled(s);
     setSelected(null);
-    persist(s, null, false);
+    persist(null);
   };
 
   const handleClear = () => {
     clearPageState(PAGE_KEY);
-    const s = shuffleArray(GRID_ENTRIES);
-    setShuffled(s);
     setSelected(null);
-    setExpanded(false);
   };
 
   const isAr = lang === "ar";
@@ -213,23 +188,6 @@ export default function FaalHikmah() {
             exit={{ opacity: 0 }}
             className="space-y-4"
           >
-            {/* Shuffle button */}
-            <motion.button
-              onClick={handleShuffle}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-inter font-bold text-sm border transition-all"
-              style={{
-                background: "linear-gradient(145deg, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0.05) 100%)",
-                borderColor: G.borderHi,
-                color: G.text,
-                boxShadow: `0 0 24px ${G.glow}`,
-              }}
-            >
-              <Shuffle className="w-4 h-4" />
-              {isAr ? "بزن بریم — اختلاط کارت‌ها" : "കാർഡ് ഇളക്കുക"}
-            </motion.button>
-
             <SectionCard glow>
               <SectionLabel>
                 {isAr ? "✨ یک کارت انتخاب کنید — فال چوب" : "✨ ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക — ഫാൽ ചോബ്"}
@@ -238,7 +196,7 @@ export default function FaalHikmah() {
                 {isAr ? "نیت کنید و یک کارت را انتخاب نمایید" : "നിയ്യത്ത് ചെയ്ത് ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക"}
               </p>
               <div className="grid grid-cols-4 gap-2 mt-2">
-                {shuffled.map((entry, idx) => (
+                {GRID_ENTRIES.map((entry, idx) => (
                   <motion.button
                     key={entry.id}
                     initial={{ opacity: 0, scale: 0.75 }}
