@@ -7,7 +7,7 @@ import { FAAL_CHOB_ENTRIES } from "../../lib/faalChobData";
 const GRID_ENTRIES = FAAL_CHOB_ENTRIES
   .filter(e => e.gridPos !== null && e.status !== "invalid")
   .sort((a, b) => a.gridPos - b.gridPos);
-import { FAAL_CHOB_ML } from "../../lib/faalChobTranslations";
+import { FAAL_CHOB_ML, FAAL_CHOB_AR } from "../../lib/faalChobTranslations";
 import { usePageState } from "../../context/PageStateContext";
 
 const G = {
@@ -99,9 +99,11 @@ export default function FaalHikmah() {
   };
 
   const isAr = lang === "ar";
+  const isMl = lang === "ml";
   // For cards with id:null, use gridPos as the translation key
-  const cardKey = selected?.id ?? selected?.gridPos;
+  const cardKey = selected?.gridPos;
   const ml = selected && cardKey ? FAAL_CHOB_ML[cardKey] : null;
+  const ar = selected && cardKey ? FAAL_CHOB_AR[cardKey] : null;
   
   // Ensure selected card has all required fields by finding it in GRID_ENTRIES
   // This handles cases where stale state from page state may be incomplete
@@ -307,7 +309,7 @@ export default function FaalHikmah() {
               )}
 
               {/* Main text */}
-              {(selectedCard?.text || (ml?.text && !isAr)) && (
+              {(selectedCard?.text || ml?.text || ar?.text) && (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(8,16,38,0.95)", borderColor: "rgba(212,175,55,0.18)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
@@ -315,7 +317,11 @@ export default function FaalHikmah() {
                   </p>
                   {isAr ? (
                     <>
-                      <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.text}</p>
+                      {ar?.text ? (
+                        <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{ar.text}</p>
+                      ) : (
+                        <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.text}</p>
+                      )}
                       {selectedCard?.continuation && (
                         <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard.continuation}</p>
                       )}
@@ -337,14 +343,20 @@ export default function FaalHikmah() {
               )}
 
               {/* Danyal */}
-              {(selectedCard?.danyal || (ml?.danyal && !isAr)) && (
+              {(selectedCard?.danyal || ml?.danyal || ar?.danyal) && (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
                     {isAr ? "حضرت دانیال نبی علیه‌السلام" : "ഹസ്രത്ത് ദാനിയ്യൽ നബി (അ.സ.)"}
                   </p>
                   {isAr ? (
-                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.danyal}</p>
+                    <>
+                      {ar?.danyal ? (
+                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{ar.danyal}</p>
+                      ) : (
+                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.danyal}</p>
+                      )}
+                    </>
                   ) : (
                     <>
                       {ml?.danyal ? (
@@ -362,14 +374,20 @@ export default function FaalHikmah() {
               )}
 
               {/* Sadiq */}
-              {(selectedCard?.sadiq || (ml?.sadiq && !isAr)) && (
+              {(selectedCard?.sadiq || ml?.sadiq || ar?.sadiq) && (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
                     {isAr ? "حضرت امام جعفر صادق علیه‌السلام" : "ഇമാം ജഅ്ഫർ സ്വാദിഖ് (അ.സ.)"}
                   </p>
                   {isAr ? (
-                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.sadiq}</p>
+                    <>
+                      {ar?.sadiq ? (
+                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{ar.sadiq}</p>
+                      ) : (
+                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.sadiq}</p>
+                      )}
+                    </>
                   ) : (
                     <>
                       {ml?.sadiq ? (
