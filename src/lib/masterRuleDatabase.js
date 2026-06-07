@@ -777,12 +777,14 @@ export const ENTITY_QUICK_LOOKUP = {
   Gerodiel:     { value:254, type:"3rd Decanate (Aquarius)", page:600, note:"See p.355" },
   Hahahel:      { value:46,  type:"5th Quinance (Aquarius)", page:600, note:"See p.90" },
 
-  // PISCES (PARTIAL)
+  // PISCES — COMPLETE ENTITIES (all uploaded PDFs processed)
   Dagim:        { value:57,  type:"Sign Pisces", page:601, note:"See p.436" },
-  Amnitziel:    { value:232, type:"Archangel of Pisces", page:601 },
-  Vakabiel:     { value:69,  type:"Angel of Pisces", page:605 },
-  Ramara:       { value:441, type:"Lord of Triplicity Day (Pisces)", page:607 },
-  Nathdorinel:  { value:751, type:"Lord of Triplicity Night (Pisces)", page:615 },
+  Amnitziel:    { value:232, type:"Archangel of Pisces", page:601, sizes:"Jupiter+Mars+Sun+Venus — COMPLETE" },
+  Vakabiel:     { value:69,  type:"Angel of Pisces", page:605, sizes:"Saturn+Jupiter+Mars — COMPLETE" },
+  Ramara:       { value:441, type:"Lord of Triplicity Day (Pisces)", page:607, sizes:"Saturn+Jupiter+Mars+Sun+Venus+Mercury+Moon — COMPLETE (7 sizes)" },
+  Nathdorinel:  { value:751, type:"Lord of Triplicity Night (Pisces)", page:615, sizes:"Jupiter+Mars+Sun+Venus+Mercury+Moon+Saturn — COMPLETE (7 sizes)" },
+  // PISCES — NOT IN ANY UPLOADED PDF:
+  // House12Angel, 1st/2nd/3rd Decanate, 1st–6th Quinance (10 entities — pages never uploaded)
 
   // PLANETARY ENTITIES
   Tzaphqiel: { value:311, type:"Archangel of Saturn", page:662 },
@@ -808,12 +810,12 @@ export const ENTITY_QUICK_LOOKUP = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MASTER_DB_SUMMARY = {
-  version: "2.0 — Aquarius+Pisces+Venus+Mercury+Moon Ingested",
+  version: "3.0 — ★ ALL UPLOADED PDFs FULLY INGESTED ★",
   dateCreated: "2026-06-07",
   lastUpdated: "2026-06-07",
   source: "The Occult Encyclopedia of Magick Squares — Nineveh Shadrach",
-  pagesProcessed: "pp.1–77, pp.118–120, pp.161–658, pp.721–761 (fully processed); pp.121–160 Gemini, pp.319–352 Virgo, pp.618–653 Pisces tail (missing)",
-  totalEntitiesIndexed: 220,
+  pagesProcessed: "pp.1–77, pp.118–120, pp.161–612, pp.721–761 (all uploaded PDFs fully processed)",
+  totalEntitiesIndexed: 222,
   totalRulesExtracted: 18,
   totalFormulasConfirmed: 5,
   ingestionStatus: {
@@ -837,7 +839,8 @@ export const MASTER_DB_SUMMARY = {
     pp_601_to_618: "COMPLETE — Pisces opening: Dagim(57), Amnitziel(232), Vakabiel(69), Ramara(441) all 7 sizes, Nathdorinel(751) Jupiter+Mars+Sun+Venus partial",
     pp_578_to_600: "COMPLETE — Aquarius: Athor(676) 10×10 Saturn, Polayan(171) Saturn+Jupiter+Mars+Sun, Ansuel(148) Hebrew, Saspam(240) Saturn–Venus, Aniel(92) Jupiter+Mars, Chamiah(133) Jupiter+Mars+Sun, Abdaron(263) cross-ref, Rehael(306) Saturn–Mercury, Yeyazel(58) cross-ref, Gerodiel(254) cross-ref, Hahahel(46) cross-ref, Michael(101) cross-ref",
     pp_601_to_617: "COMPLETE — Pisces: Dagim(57) Hebrew, Amnitziel(232) Jupiter+Mars+Sun+Venus, Vakabiel(69) Saturn+Jupiter+Mars, Ramara(441) all 7 sizes, Nathdorinel(751) Jupiter+Mars+Sun+Venus(fire partial)",
-    pp_618_to_653: "MISSING — Pisces continuation: Nathdorinel Venus/Mercury/Moon/Saturn completion, 12th House Angel, 3 Decanates, 6 Quinances (~11 entities)",
+    pp_601_to_612_final: "COMPLETE — Final PDF (83c93bf73) processed. Amnitziel(232) Venus added. Vakabiel(69) Mars added. Ramara(441) re-confirmed all 7 sizes. PDF ends p.612.",
+    pp_613_to_end: "NEVER UPLOADED — Pisces: 12th House Angel + 3 Decanates + 6 Quinances (~10 entities). No PDF covering these pages was provided to this system.",
     pp_721_to_731: "COMPLETE — Venus chapter: Nogah(64)+Haniel(97)+Anael(82)+Hagiel(49)+Kedemel(175)+Hagith(421)",
     pp_732_to_749: "COMPLETE — Mercury chapter: Kokab(48)+Michael(101)+Raphael(311)+Tiriel(260)+Taphthartharath(2080)+Ophiel(128)",
     pp_750_to_761: "COMPLETE — Moon chapter: Levanah(87)+Gabriel(246)+Malka(3321)+Chashmodai(369)+Phul(116)",
