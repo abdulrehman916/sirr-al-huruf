@@ -26,22 +26,19 @@ export default function AdminFaalChobUpload() {
     },
   });
 
-  const handleFileSelect = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setFiles(selectedFiles);
-  };
-
   const handleUpload = async () => {
     if (files.length === 0) return;
     
     setUploading(true);
     try {
+      // Upload files to storage
       const fileUrls = [];
       for (const file of files) {
         const res = await base44.integrations.Core.UploadFile({ file });
         fileUrls.push(res.file_url);
       }
 
+      // Process screenshots
       const result = await processMutation.mutateAsync(fileUrls);
       setResults(result);
     } catch (error) {
@@ -50,6 +47,13 @@ export default function AdminFaalChobUpload() {
       setUploading(false);
     }
   };
+
+  const handleFileSelect = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setFiles(selectedFiles);
+  };
+
+
 
   return (
     <PageLayout>
