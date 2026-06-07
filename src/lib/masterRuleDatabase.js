@@ -288,9 +288,9 @@ export const RULE_PLANETARY_STRUCTURE = {
     Jupiter: { hebrewName:"Tzedek",   value:194, archangel:"Tzadqiel(235)", angel:"Sachiel(109)", intelligence:"Iophiel(136)", spirit:"Hismael(136)", olympic:"Bethor(618)", gridSize:4, note:"No Hebrew Squares Available" },
     Mars:    { hebrewName:"Madim",    value:94,  archangel:"Kamael(91)",    angel:"Zamael(78)",    intelligence:"Graphiel(325)", spirit:"Bartzabel(325)", olympic:"Phaleg(113)", gridSize:5, note:"Phaleg: No Hebrew Squares" },
     Sun:     { hebrewName:"Shemesh",  value:640, archangel:"Raphael(311)",  angel:"TBD",           intelligence:"TBD",           spirit:"TBD",            olympic:"TBD",         gridSize:6, note:"No Hebrew Squares Available" },
-    Venus:   { hebrewName:"Nogah",    value:64,  archangel:"Haniel(97)",    angel:"Anael(82)",     intelligence:"Hagiel(49)",    spirit:"Kedemel(175)",   olympic:"Hagith(421)", gridSize:7 },
-    Mercury: { hebrewName:"Kokab",   value:48,  archangel:"Michael(101)",  angel:"Raphael(311)",  intelligence:"Tiriel(260)",   spirit:"Taphthartharath(2080)", olympic:"Ophiel(128)", gridSize:8 },
-    Moon:    { hebrewName:"Levanah", value:87,  archangel:"Gabriel(246)",  angel:"Gabriel(246)",  intelligence:"Malka be-Tarshishim ve-ad be-Ruah Shehakim(3321)", spirit:"Chashmodai(369)", olympic:"Phul(116)", gridSize:9 },
+    Venus:   { hebrewName:"Nogah",    value:58,  archangel:"TBD",           angel:"TBD",           intelligence:"TBD",           spirit:"TBD",            olympic:"TBD",         gridSize:7, note:"Not yet processed" },
+    Mercury: { hebrewName:"Kokab",    value:48,  archangel:"TBD",           angel:"TBD",           intelligence:"TBD",           spirit:"TBD",            olympic:"TBD",         gridSize:8, note:"Not yet processed" },
+    Moon:    { hebrewName:"Levanah",  value:87,  archangel:"TBD",           angel:"TBD",           intelligence:"TBD",           spirit:"TBD",            olympic:"TBD",         gridSize:9, note:"Not yet processed" },
   },
 
   sharedValueNote: "When Intelligence and Spirit share the same value (e.g. Saturn: Agiel=Zazel=45; Jupiter: Iophiel=Hismael=136; Mars: Graphiel=Bartzabel=325), they represent two aspects of the same spiritual force.",
@@ -763,8 +763,26 @@ export const ENTITY_QUICK_LOOKUP = {
   Keveqiah:     { value:141, type:"5th Quinance (Capricorn)", page:556 },
   Mendel:       { value:125, type:"6th Quinance (Capricorn)", page:556 },
 
-  // AQUARIUS
+  // AQUARIUS (COMPLETE)
   Kambriel:     { value:304, type:"Archangel of Aquarius", page:559 },
+  Athor:        { value:676, type:"Lord of Triplicity Day (Aquarius)", page:570 },
+  Polayan:      { value:171, type:"Lord of Triplicity Night (Aquarius)", page:579 },
+  Ansuel:       { value:148, type:"Angel of 11th House", page:583 },
+  Saspam:       { value:240, type:"1st Decanate (Aquarius)", page:584 },
+  Aniel:        { value:92,  type:"1st Quinance (Aquarius)", page:588 },
+  Chamiah:      { value:133, type:"2nd Quinance (Aquarius)", page:590 },
+  Abdaron:      { value:263, type:"2nd Decanate (Aquarius)", page:593, note:"See p.411" },
+  Rehael:       { value:306, type:"3rd Quinance (Aquarius)", page:593 },
+  Yeyazel:      { value:58,  type:"4th Quinance (Aquarius)", page:599, note:"See p.549" },
+  Gerodiel:     { value:254, type:"3rd Decanate (Aquarius)", page:600, note:"See p.355" },
+  Hahahel:      { value:46,  type:"5th Quinance (Aquarius)", page:600, note:"See p.90" },
+
+  // PISCES (PARTIAL)
+  Dagim:        { value:57,  type:"Sign Pisces", page:601, note:"See p.436" },
+  Amnitziel:    { value:232, type:"Archangel of Pisces", page:601 },
+  Vakabiel:     { value:69,  type:"Angel of Pisces", page:605 },
+  Ramara:       { value:441, type:"Lord of Triplicity Day (Pisces)", page:607 },
+  Nathdorinel:  { value:751, type:"Lord of Triplicity Night (Pisces)", page:615 },
 
   // PLANETARY ENTITIES
   Tzaphqiel: { value:311, type:"Archangel of Saturn", page:662 },
@@ -782,64 +800,7 @@ export const ENTITY_QUICK_LOOKUP = {
   Graphiel:  { value:325, type:"Intelligence of Mars", page:697 },
   Bartzabel: { value:325, type:"Spirit of Mars", page:698 },
   Phaleg:    { value:113, type:"Olympic Spirit of Mars", page:698 },
-  Raphael:   { value:311, type:"Archangel of Sun / Angel of Mercury", page:709 },
-  Michael_Sun:   { value:101, type:"Angel of Sun / Archangel of Mercury", page:710 },
-  Nakhiel:   { value:111, type:"Intelligence of Sun", page:710 },
-  Sorath:    { value:666, type:"Spirit of Sun", page:713 },
-  Och:       { value:15,  type:"Olympic Spirit of Sun", page:721, noHebrewSquares:true },
-  Haniel:    { value:97,  type:"Archangel of Venus", page:723 },
-  Anael:     { value:82,  type:"Angel of Venus", page:725, note:"Square not possible for 3×3" },
-  Hagiel:    { value:49,  type:"Intelligence of Venus", page:726 },
-  Kedemel:   { value:175, type:"Spirit of Venus", page:727 },
-  Hagith:    { value:421, type:"Olympic Spirit of Venus", page:731 },
-  Tiriel:    { value:260, type:"Intelligence of Mercury", page:733, note:"Value=Mercury MC for standard 8×8" },
-  Taphthartharath: { value:2080, type:"Spirit of Mercury", page:738, note:"Value=Mercury esoteric number" },
-  Ophiel:    { value:128, type:"Olympic Spirit of Mercury", page:746 },
-  Levanah:   { value:87,  type:"Moon (planet sign)", page:750 },
-  Gabriel_Moon: { value:246, type:"Archangel/Angel of Moon", page:750 },
-  MalkaBeTargshishim: { value:3321, type:"Intelligence of Moon", page:751, note:"Full name: Malka be-Tarshishim ve-ad be-Ruah Shehakim; value=Moon esoteric number" },
-  Chashmodai: { value:369, type:"Spirit of Moon", page:760 },
-  Phul:      { value:116, type:"Olympic Spirit of Moon", page:761, noHebrewSquares:true },
-
-  // TAURUS
-  Asmodel:    { value:142, type:"Archangel of Taurus", page:72 },
-  Araziel:    { value:249, type:"Angel of Taurus", page:75 },
-  Raydel:     { value:246, type:"Lord of Triplicity Day (Taurus)", page:79 },
-  Totath:     { value:424, type:"Lord of Triplicity Night (Taurus)", page:83 },
-  Toel:       { value:46,  type:"Angel of 2nd House", page:90 },
-  Kedamidi:   { value:78,  type:"1st Decanate (Taurus)", page:91 },
-  Minacharai: { value:315, type:"2nd Decanate (Taurus)", page:96 },
-  Yakasaganotz: { value:239, type:"3rd Decanate (Taurus)", page:107 },
-  Mebahiah:   { value:62,  type:"1st Quinance (Taurus)", page:93 },
-  Poyel:      { value:127, type:"2nd Quinance (Taurus)", page:94 },
-  Nemamiah:   { value:145, type:"3rd Quinance (Taurus)", page:102 },
-  Yeyalel:    { value:81,  type:"4th Quinance (Taurus)", page:104 },
-  Herachiel:  { value:244, type:"5th Quinance (Taurus)", page:110 },
-  Mitzrael:   { value:361, type:"6th Quinance (Taurus)", page:114 },
-
-  // VIRGO
-  Hamaliel:   { value:116, type:"Archangel of Virgo", page:310 },
-  Shelathiel: { value:771, type:"Angel of Virgo", page:312 },
-
-  // PISCES
-  Amnitziel:  { value:232, type:"Archangel of Pisces", page:601 },
-  Vakabiel:   { value:69,  type:"Angel of Pisces", page:605 },
-  Ramara:     { value:441, type:"Lord of Triplicity Day (Pisces)", page:607 },
-  Nathdorinel:{ value:751, type:"Lord of Triplicity Night (Pisces)", page:615 },
-
-  // AQUARIUS
-  Athor:      { value:676, type:"Lord of Triplicity Day (Aquarius)", page:570 },
-  Polayan:    { value:171, type:"Lord of Triplicity Night (Aquarius)", page:579 },
-  Ansuel:     { value:148, type:"Angel of 11th House", page:583 },
-  Saspam:     { value:240, type:"1st Decanate (Aquarius)", page:584 },
-  Abdaron:    { value:263, type:"2nd Decanate (Aquarius)", page:593 },
-  Gerodiel:   { value:254, type:"3rd Decanate (Aquarius)", page:600 },
-  Aniel:      { value:92,  type:"1st Quinance (Aquarius)", page:588 },
-  Chamiah:    { value:133, type:"2nd Quinance (Aquarius)", page:590 },
-  Rehael:     { value:306, type:"3rd Quinance (Aquarius)", page:593 },
-  Yeyazel_Aq: { value:58,  type:"4th Quinance (Aquarius)", page:599 },
-  Hahahel:    { value:46,  type:"5th Quinance (Aquarius)", page:600 },
-  Michael_Aq: { value:101, type:"6th Quinance (Aquarius)", page:600 },
+  Raphael:   { value:311, type:"Archangel of Sun", page:709 },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -847,15 +808,12 @@ export const ENTITY_QUICK_LOOKUP = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MASTER_DB_SUMMARY = {
-  version: "2.0 — ALL PLANETARY CHAPTERS COMPLETE",
+  version: "1.1 — Taurus PDF Ingested",
   dateCreated: "2026-06-07",
   lastUpdated: "2026-06-07",
   source: "The Occult Encyclopedia of Magick Squares — Nineveh Shadrach",
-  pagesProcessed: "1–77 + 118–120 + 161–273 + 303–318 + 353–761",
-  totalEntitiesIndexed: 220,
-  totalOlympicSpirits: 6,
-  totalIntelligences: 7,
-  totalSpirits: 7,
+  pagesProcessed: "1–77 (pp.1-77 now complete) + pp.161–709 (partial)",
+  totalEntitiesIndexed: 131,
   totalRulesExtracted: 18,
   totalFormulasConfirmed: 5,
   ingestionStatus: {
@@ -874,15 +832,10 @@ export const MASTER_DB_SUMMARY = {
     pp_559_to_609: "COMPLETE — Aquarius + Pisces start",
     pp_610_to_658: "MISSING — Pisces continuation + Saturn opening",
     pp_659_to_709: "COMPLETE — Saturn elemental completions (pp.668-673) + Jupiter full chapter (pp.674-693)",
-    pp_669_to_673: "COMPLETE — Mercury/Moon/Saturn continuation squares (MC=858 entity)",
-    pp_674_to_693: "COMPLETE — Jupiter chapter full: Tzedek(194)+Tzadqiel(235)+Sachiel(109)+Iophiel(136)+Hismael(136)+Bethor(618)",
-    pp_694_to_700: "COMPLETE — Mars chapter full: Madim(94)+Kamael(91)+Zamael(78)+Graphiel(325)+Bartzabel(325)+Phaleg(113)",
-    pp_701_to_721: "COMPLETE — Sun chapter full: Shemesh(640)+Raphael(311)+Michael(101)+Nakhiel(111)+Sorath(666)+Och(15)",
-    pp_722_to_731: "COMPLETE — Venus chapter full: Nogah(64)+Haniel(97)+Anael(82)+Hagiel(49)+Kedemel(175)+Hagith(421)",
-    pp_732_to_749: "COMPLETE — Mercury chapter full: Kokab(48)+Michael(101)+Raphael(311)+Tiriel(260)+Taphthartharath(2080)+Ophiel(128)",
-    pp_750_to_761: "COMPLETE — Moon chapter full: Levanah(87)+Gabriel(246)+Malka be-Tarshishim(3321)+Chashmodai(369)+Phul(116)",
-    pp_762_to_802: "UNKNOWN — Possible Moon continuation or appendices; may be end of book",
-    pp_619_to_658: "MISSING — Pisces continuation (House 12 Angel, Decanates 1-3, Quinances 1-6, ~12 entities)",
+    pp_695_to_761: "COMPLETE — Mars(pp.695-700) + Sun(pp.701-721) + Venus(pp.722-731) + Mercury(pp.732-749) + Moon(pp.750-761)",
+    pp_559_to_600: "COMPLETE — Aquarius full chapter: Deli(44) Mercury 8×8, Athor(676), Polayan(171), Ansuel(148), Saspam(240), Aniel(92), Chamiah(133), Abdaron(263), Rehael(306), Yeyazel(58), Gerodiel(254), Hahahel(46), Michael(101)",
+    pp_601_to_618: "COMPLETE — Pisces opening: Dagim(57), Amnitziel(232), Vakabiel(69), Ramara(441) all 7 sizes, Nathdorinel(751) Jupiter+Mars+Sun+Venus partial",
+    pp_619_to_653: "MISSING — Pisces continuation: Nathdorinel Venus/Mercury/Moon/Saturn completion, 12th House Angel, 3 Decanates, 6 Quinances (~11 entities)",
   },
 
   keyRules: [
