@@ -813,8 +813,9 @@ export const MASTER_DB_SUMMARY = {
     pp_460_to_559: "COMPLETE — Sag end + Capricorn + Aquarius start",
     pp_559_to_609: "COMPLETE — Aquarius + Pisces start",
     pp_610_to_658: "MISSING — Pisces continuation + Saturn opening",
-    pp_659_to_709: "COMPLETE — Saturn/Jupiter/Mars/Sun planetary chapters",
-    pp_710_to_end: "MISSING — Sun continuation + Venus + Mercury + Moon planetary",
+    pp_659_to_709: "COMPLETE — Saturn elemental completions (pp.668-673) + Jupiter full chapter (pp.674-693)",
+    pp_695_to_761: "COMPLETE — Mars(pp.695-700) + Sun(pp.701-721) + Venus(pp.722-731) + Mercury(pp.732-749) + Moon(pp.750-761)",
+    pp_619_to_658: "MISSING — Pisces continuation (House 12 Angel, Decanates 1-3, Quinances 1-6, ~12 entities)",
   },
 
   keyRules: [
