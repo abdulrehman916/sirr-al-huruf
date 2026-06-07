@@ -176,14 +176,14 @@ export default function FaalHikmah() {
                   {isAr ? `مرحله ${i + 1}` : `ഘട്ടം ${i + 1}`}
                 </p>
                 {isAr ? (
-                  <p className="font-amiri text-sm leading-relaxed text-white/85" dir="rtl">
-                    <span className="font-bold" style={{ color: G.text }}>{i + 1}.</span> {step.ar}
-                  </p>
-                ) : (
-                  <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.80)" }}>
-                    {step.ml}
-                  </p>
-                )}
+                   <p className="font-amiri text-sm leading-relaxed text-white/85" dir="rtl" style={{ fontWeight: 500 }}>
+                     <span className="font-bold" style={{ color: G.text }}>{i + 1}.</span> {step.ar}
+                   </p>
+                 ) : (
+                   <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 500 }}>
+                     {step.ml}
+                   </p>
+                 )}
               </div>
             ))}
           </div>
@@ -303,7 +303,7 @@ export default function FaalHikmah() {
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     {isAr ? "آیه / حدیث" : "ആയത്ത് / ഹദീഥ്"}
                   </p>
-                  <p className="font-amiri text-lg leading-relaxed text-center" style={{ color: G.text }} dir="rtl">
+                  <p className="font-amiri text-lg leading-relaxed text-center" style={{ color: G.text, fontWeight: 600 }} dir="rtl">
                     {selected.verse}
                   </p>
                 </div>
@@ -318,13 +318,13 @@ export default function FaalHikmah() {
                   </p>
                   {isAr ? (
                     <>
-                      <p className="font-amiri text-base leading-loose text-white/90" dir="rtl">{selected.text}</p>
+                      <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{selected.text}</p>
                       {selected.continuation && (
-                        <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl">{selected.continuation}</p>
+                        <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl" style={{ fontWeight: 600 }}>{selected.continuation}</p>
                       )}
                     </>
                   ) : (
-                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
                       {ml?.text}
                     </p>
                   )}
@@ -339,9 +339,9 @@ export default function FaalHikmah() {
                     {isAr ? "حضرت دانیال نبی علیه‌السلام" : "ഹസ്രത്ത് ദാനിയ്യൽ നബി (അ.സ.)"}
                   </p>
                   {isAr ? (
-                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl">{selected.danyal}</p>
+                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selected.danyal}</p>
                   ) : (
-                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)" }}>
+                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
                       {ml?.danyal}
                     </p>
                   )}
@@ -356,9 +356,9 @@ export default function FaalHikmah() {
                     {isAr ? "حضرت امام جعفر صادق علیه‌السلام" : "ഇമാം ജഅ്ഫർ സ്വാദിഖ് (അ.സ.)"}
                   </p>
                   {isAr ? (
-                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl">{selected.sadiq}</p>
+                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selected.sadiq}</p>
                   ) : (
-                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)" }}>
+                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
                       {ml?.sadiq}
                     </p>
                   )}

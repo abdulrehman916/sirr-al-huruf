@@ -198,7 +198,7 @@ export default function FaalAli() {
                   }}
                 >
                   {currentInstructions.map((text, idx) => (
-                    <p key={idx} className="font-inter text-[11px] text-white/85 leading-snug">
+                    <p key={idx} className="font-inter text-[11px] text-white/85 leading-snug" style={{ fontWeight: 500 }}>
                       <span className="font-bold text-[#F5D060]">{idx + 1}.</span> {text}
                     </p>
                   ))}
@@ -309,7 +309,7 @@ export default function FaalAli() {
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     Result — ഫലം
                   </p>
-                  <p className="font-amiri text-lg font-bold leading-relaxed" style={{ color: G.text }}>
+                  <p className="font-amiri text-lg font-bold leading-relaxed" style={{ color: G.text, fontWeight: 600 }}>
                     {selectedCell[lang]?.result}
                   </p>
                 </div>
@@ -318,7 +318,7 @@ export default function FaalAli() {
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     Interpretation — വ്യാഖ്യാനം
                   </p>
-                  <p className="font-inter text-sm text-white/80 leading-relaxed">
+                  <p className="font-inter text-sm text-white/80 leading-relaxed" style={{ fontWeight: 500 }}>
                     {selectedCell[lang]?.body}
                   </p>
                 </div>
@@ -327,12 +327,12 @@ export default function FaalAli() {
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     Remedy — പരിഹാരം
                   </p>
-                  <p className="font-inter text-sm text-white/80 leading-relaxed">
+                  <p className="font-inter text-sm text-white/80 leading-relaxed" style={{ fontWeight: 500 }}>
                     {selectedCell[lang]?.remedy}
                   </p>
-                </div>
+                  </div>
 
-                <motion.button
+                  <motion.button
                   onClick={handleBack}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
