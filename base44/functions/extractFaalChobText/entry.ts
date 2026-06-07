@@ -84,18 +84,17 @@ Extract EXACTLY what's visible - NO translation, NO summarization, NO AI generat
           continue;
         }
 
-        // Step 3: Check if card already has content
-        const hasContent = matchingCard.text && matchingCard.text.trim().length > 0;
-        const hasArabic = matchingCard.arabic?.text && matchingCard.arabic.text.trim().length > 0;
-        const hasMalayalam = matchingCard.malayalam?.text && matchingCard.malayalam.text.trim().length > 0;
+        // Step 3: Check if card already has main Faal result
+        const hasMainText = (matchingCard.arabic?.text && matchingCard.arabic.text.trim().length > 0) ||
+                           (matchingCard.malayalam?.text && matchingCard.malayalam.text.trim().length > 0);
 
-        if (hasContent && hasArabic && hasMalayalam) {
+        if (hasMainText) {
           results.push({
             url,
             success: true,
             combination: comboKey,
             gridPos: matchingCard.gridPos,
-            message: 'Card already complete - no update needed',
+            message: 'Card already has main Faal result - no update needed',
             skipped: true
           });
           skipped++;
@@ -103,62 +102,49 @@ Extract EXACTLY what's visible - NO translation, NO summarization, NO AI generat
         }
 
         // Step 4: Generate translations only if needed
-        const persianText = extracted.mainText || matchingCard.text;
-        const persianDanyal = extracted.danyal || matchingCard.danyal;
-        const persianSadiq = extracted.sadiq || matchingCard.sadiq;
-        const verse = extracted.verse || matchingCard.verse;
+        const persianText = extracted.mainText;
 
-        let arabic = matchingCard.arabic;
-        let malayalam = matchingCard.malayalam;
+        let arabic = { text: null, danyal: null, sadiq: null };
+        let malayalam = { text: null, danyal: null, sadiq: null };
 
-        if (!hasArabic && persianText) {
+        if (persianText) {
           const arabicGen = await base44.integrations.Core.InvokeLLM({
             prompt: `Translate this Faal Chob divination text to Arabic (العربية). 
 Keep the spiritual and traditional tone.
 
 Original Persian:
 ${persianText}
-${persianDanyal ? '\nDanyal: ' + persianDanyal : ''}
-${persianSadiq ? '\nSadiq: ' + persianSadiq : ''}
 
 JSON format:
 {
-  "text": "Arabic translation of main text",
-  "danyal": "Arabic translation of Danyal text",
-  "sadiq": "Arabic translation of Sadiq text"
+  "text": "Arabic translation of main text"
 }`,
             model: "gemini_3_flash"
           });
-          arabic = typeof arabicGen === 'string' ? JSON.parse(arabicGen) : arabicGen;
-        }
+          arabic.text = typeof arabicGen === 'string' ? JSON.parse(arabicGen).text : arabicGen.text;
 
-        if (!hasMalayalam && persianText) {
           const mlGen = await base44.integrations.Core.InvokeLLM({
             prompt: `Translate this Faal Chob divination text to Malayalam (മലയാളം). 
 Keep the spiritual and traditional tone.
 
 Original Persian:
 ${persianText}
-${persianDanyal ? '\nDanyal: ' + persianDanyal : ''}
-${persianSadiq ? '\nSadiq: ' + persianSadiq : ''}
 
 JSON format:
 {
-  "text": "Malayalam translation of main text",
-  "danyal": "Malayalam translation of Danyal text",
-  "sadiq": "Malayalam translation of Sadiq text"
+  "text": "Malayalam translation of main text"
 }`,
             model: "gemini_3_flash"
           });
-          malayalam = typeof mlGen === 'string' ? JSON.parse(mlGen) : mlGen;
+          malayalam.text = typeof mlGen === 'string' ? JSON.parse(mlGen).text : mlGen.text;
         }
 
         // Step 5: Update the card
         const updateData = {
           gridPos: matchingCard.gridPos,
           source_text: persianText,
-          arabic: arabic || matchingCard.arabic,
-          malayalam: malayalam || matchingCard.malayalam
+          arabic: arabic.text ? { text: arabic.text, danyal: null, sadiq: null } : undefined,
+          malayalam: malayalam.text ? { text: malayalam.text, danyal: null, sadiq: null } : undefined
         };
 
         // Only update if there are changes
@@ -170,11 +156,7 @@ JSON format:
           combination: comboKey,
           gridPos: matchingCard.gridPos,
           cardId: matchingCard.id,
-          updated: {
-            persian: !hasContent,
-            arabic: !hasArabic,
-            malayalam: !hasMalayalam
-          },
+          updated: true,
           message: 'Card updated successfully'
         });
         updated++;

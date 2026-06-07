@@ -78,6 +78,7 @@ export default function FaalHikmah() {
   const [selected, setSelected] = useState(init.selected);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [lang, setLang]         = useState("ml");
+  const [showArabicWithML, setShowArabicWithML] = useState(true);
 
   const persist = useCallback((sel) => {
     setPageState(PAGE_KEY, { selected: sel });
@@ -115,7 +116,7 @@ export default function FaalHikmah() {
     <div className="space-y-4" style={{ minHeight: 0, height: "auto", overflow: "visible" }}>
 
       {/* ── Language Switcher ── */}
-      <div className="flex gap-2 justify-center">
+      <div className="flex gap-2 justify-center flex-wrap">
         {[
           { id: "ar", flag: "🇸🇦", label: "العربية" },
           { id: "ml", flag: "🇮🇳", label: "മലയാളം" },
@@ -141,6 +142,22 @@ export default function FaalHikmah() {
             </motion.button>
           );
         })}
+        <motion.button
+          onClick={() => setShowArabicWithML(!showArabicWithML)}
+          whileTap={{ scale: 0.96 }}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-inter font-bold text-xs border transition-all"
+          style={{
+            background: showArabicWithML
+              ? "linear-gradient(145deg, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.07) 100%)"
+              : "rgba(4,12,34,0.90)",
+            borderColor: showArabicWithML ? G.borderHi : "rgba(255,255,255,0.10)",
+            color: showArabicWithML ? G.text : "rgba(255,255,255,0.45)",
+            boxShadow: showArabicWithML ? `0 0 18px ${G.glow}` : "none",
+          }}
+        >
+          <span>📖</span>
+          <span>{showArabicWithML ? "Arabic + ML" : "Arabic Only"}</span>
+        </motion.button>
       </div>
 
       {/* ── Instructions ── */}
@@ -328,10 +345,21 @@ export default function FaalHikmah() {
                     </>
                   ) : (
                     <>
+                      {ar?.text && showArabicWithML && (
+                        <div className="mb-3 pb-3 border-b" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
+                          <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Arabic</p>
+                          <p className="font-amiri text-lg leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{ar.text}</p>
+                        </div>
+                      )}
                       {ml?.text ? (
-                        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-                          {ml.text}
-                        </p>
+                        <div>
+                          {showArabicWithML && ar?.text && (
+                            <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Malayalam</p>
+                          )}
+                          <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
+                            {ml.text}
+                          </p>
+                        </div>
                       ) : (
                         <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>
                           {selectedCard?.text}
@@ -342,67 +370,39 @@ export default function FaalHikmah() {
                 </div>
               )}
 
-              {/* Danyal */}
-              {(selectedCard?.danyal || ml?.danyal || ar?.danyal) && (
+              {/* Danyal - Only show if translation exists */}
+              {(isAr && ar?.danyal) || (!isAr && ml?.danyal) ? (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
                     {isAr ? "حضرت دانیال نبی علیه‌السلام" : "ഹസ്രത്ത് ദാനിയ്യൽ നബി (അ.സ.)"}
                   </p>
                   {isAr ? (
-                    <>
-                      {ar?.danyal ? (
-                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{ar.danyal}</p>
-                      ) : (
-                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.danyal}</p>
-                      )}
-                    </>
+                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{ar.danyal}</p>
                   ) : (
-                    <>
-                      {ml?.danyal ? (
-                        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
-                          {ml.danyal}
-                        </p>
-                      ) : selectedCard?.danyal ? (
-                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>
-                          {selectedCard.danyal}
-                        </p>
-                      ) : null}
-                    </>
+                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
+                      {ml.danyal}
+                    </p>
                   )}
                 </div>
-              )}
+              ) : null}
 
-              {/* Sadiq */}
-              {(selectedCard?.sadiq || ml?.sadiq || ar?.sadiq) && (
+              {/* Sadiq - Only show if translation exists */}
+              {(isAr && ar?.sadiq) || (!isAr && ml?.sadiq) ? (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
                     {isAr ? "حضرت امام جعفر صادق علیه‌السلام" : "ഇമാം ജഅ്ഫർ സ്വാദിഖ് (അ.സ.)"}
                   </p>
                   {isAr ? (
-                    <>
-                      {ar?.sadiq ? (
-                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{ar.sadiq}</p>
-                      ) : (
-                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.sadiq}</p>
-                      )}
-                    </>
+                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{ar.sadiq}</p>
                   ) : (
-                    <>
-                      {ml?.sadiq ? (
-                        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
-                          {ml.sadiq}
-                        </p>
-                      ) : selectedCard?.sadiq ? (
-                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>
-                          {selectedCard.sadiq}
-                        </p>
-                      ) : null}
-                    </>
+                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
+                      {ml.sadiq}
+                    </p>
                   )}
                 </div>
-              )}
+              ) : null}
 
               <motion.button
                 onClick={handleBack}
