@@ -198,7 +198,7 @@ export default function FaalAli() {
                   }}
                 >
                   {currentInstructions.map((text, idx) => (
-                    <p key={idx} className="font-inter text-[11px] text-white/85 leading-snug" style={{ fontWeight: 500 }}>
+                    <p key={idx} className="font-inter text-[1rem] text-white/90 leading-[1.9]" style={{ fontWeight: 500 }}>
                       <span className="font-bold text-[#F5D060]">{idx + 1}.</span> {text}
                     </p>
                   ))}
@@ -211,7 +211,7 @@ export default function FaalAli() {
               <p className="font-inter text-[8px] text-white/60 text-center mb-3">
                 Focus on your question and select one card from the sacred grid
               </p>
-              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2 mt-2">
+              <div className="grid grid-cols-4 gap-2.5 mt-2">
                 {shuffled.map((cell, idx) => (
                   <motion.button
                     key={cell.id}
@@ -309,7 +309,7 @@ export default function FaalAli() {
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     Result — ഫലം
                   </p>
-                  <p className="font-amiri text-lg font-bold leading-relaxed" style={{ color: G.text, fontWeight: 600 }}>
+                  <p className="font-amiri text-[1.2rem] font-bold leading-[2.2]" style={{ color: G.text, fontWeight: 700 }}>
                     {selectedCell[lang]?.result}
                   </p>
                 </div>
@@ -318,7 +318,7 @@ export default function FaalAli() {
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     Interpretation — വ്യാഖ്യാനം
                   </p>
-                  <p className="font-inter text-sm text-white/80 leading-relaxed" style={{ fontWeight: 500 }}>
+                  <p className="font-inter text-[1.05rem] text-white/90 leading-[2.0]" style={{ fontWeight: 500 }}>
                     {selectedCell[lang]?.body}
                   </p>
                 </div>
@@ -327,7 +327,7 @@ export default function FaalAli() {
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     Remedy — പരിഹാരം
                   </p>
-                  <p className="font-inter text-sm text-white/80 leading-relaxed" style={{ fontWeight: 500 }}>
+                  <p className="font-inter text-[1.05rem] text-white/90 leading-[2.0]" style={{ fontWeight: 500 }}>
                     {selectedCell[lang]?.remedy}
                   </p>
                   </div>

@@ -200,7 +200,7 @@ export default function FaalLuqman() {
                   }}
                 >
                   {currentInstructions.map((text, idx) => (
-                    <p key={idx} className="font-inter text-[11px] text-white/85 leading-snug" style={{ fontWeight: 500 }}>
+                    <p key={idx} className="font-inter text-[1rem] text-white/90 leading-[1.9]" style={{ fontWeight: 500 }}>
                       <span className="font-bold text-[#F5D060]">{idx + 1}.</span> {text}
                     </p>
                   ))}
@@ -301,7 +301,7 @@ export default function FaalLuqman() {
                   <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
                     Result — ഫലം
                   </p>
-                  <p className="font-inter text-sm text-white/90 leading-relaxed" style={{ fontWeight: 500 }}>
+                  <p className="font-inter text-[1.05rem] text-white/95 leading-[2.0]" style={{ fontWeight: 500 }}>
                     {selectedCell[lang]?.result}
                   </p>
                 </div>
@@ -310,7 +310,7 @@ export default function FaalLuqman() {
                   <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
                     Interpretation — വ്യാഖ്യാനം
                   </p>
-                  <p className="font-inter text-sm text-white/80 leading-relaxed" style={{ fontWeight: 500 }}>
+                  <p className="font-inter text-[1.05rem] text-white/90 leading-[2.0]" style={{ fontWeight: 500 }}>
                     {selectedCell[lang]?.body}
                   </p>
                   </div>
@@ -319,7 +319,7 @@ export default function FaalLuqman() {
                   <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
                     Remedy — പരിഹാരം
                   </p>
-                  <p className="font-inter text-sm text-white/80 leading-relaxed" style={{ fontWeight: 500 }}>
+                  <p className="font-inter text-[1.05rem] text-white/90 leading-[2.0]" style={{ fontWeight: 500 }}>
                     {selectedCell[lang]?.remedy}
                   </p>
                   </div>

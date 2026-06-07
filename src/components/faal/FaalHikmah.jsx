@@ -167,19 +167,19 @@ export default function FaalHikmah() {
           transition={{ duration: 0.25 }}
           className="overflow-hidden"
         >
-          <div className="space-y-2 pt-3 pb-1">
+          <div className="space-y-4 pt-3 pb-2">
             {instructions.map((step, i) => (
-              <div key={i} className="rounded-xl border p-3"
+              <div key={i} className="rounded-xl border p-4"
                 style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.12)" }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                   {isAr ? `مرحله ${i + 1}` : `ഘട്ടം ${i + 1}`}
                 </p>
                 {isAr ? (
-                   <p className="font-amiri text-sm leading-relaxed text-white/85" dir="rtl" style={{ fontWeight: 500 }}>
+                   <p className="font-amiri text-[1.25rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>
                      <span className="font-bold" style={{ color: G.text }}>{i + 1}.</span> {step.ar}
                    </p>
                  ) : (
-                   <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 500 }}>
+                   <p className="font-inter text-[1.1rem] leading-[2.0] text-white/90" style={{ fontWeight: 600 }}>
                      {step.ml}
                    </p>
                  )}
@@ -205,7 +205,7 @@ export default function FaalHikmah() {
               <p className={`text-sm text-white/60 text-center mb-3 ${isAr ? "font-amiri" : "font-inter text-xs"}`} dir={isAr ? "rtl" : "ltr"}>
                 {isAr ? "نیت کنید و یک کارت را انتخاب نمایید" : "നിയ്യത്ത് ചെയ്ത് ഒരു കാർഡ് തിരഞ്ഞെടുക്കുക"}
               </p>
-              <div className="grid grid-cols-4 gap-2 mt-2">
+              <div className="grid grid-cols-4 gap-2.5 mt-2">
                 {GRID_ENTRIES.map((entry, idx) => (
                   <motion.button
                     key={entry.id}
@@ -302,7 +302,7 @@ export default function FaalHikmah() {
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     {isAr ? "آیه / حدیث" : "ആയത്ത് / ഹദീഥ്"}
                   </p>
-                  <p className="font-amiri text-lg leading-relaxed text-center" style={{ color: G.text, fontWeight: 600 }} dir="rtl">
+                  <p className="font-amiri text-[1.5rem] leading-[2.4] text-center" style={{ color: G.text, fontWeight: 700 }} dir="rtl">
                     {selectedCard.verse}
                   </p>
                 </div>
@@ -318,32 +318,32 @@ export default function FaalHikmah() {
                   {isAr ? (
                     <>
                       {ar?.text ? (
-                        <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{ar.text}</p>
+                        <p className="font-amiri text-[1.35rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>{ar.text}</p>
                       ) : (
-                        <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.text}</p>
+                        <p className="font-amiri text-[1.35rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.text}</p>
                       )}
                       {selectedCard?.continuation && (
-                        <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard.continuation}</p>
+                        <p className="font-amiri text-[1.35rem] leading-[2.2] text-white/95 mt-4" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard.continuation}</p>
                       )}
                     </>
                   ) : (
                     <>
                       {ar?.text && (
-                        <div className="mb-3 pb-3 border-b" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-                          <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Arabic</p>
-                          <p className="font-amiri text-lg leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{ar.text}</p>
+                        <div className="mb-4 pb-4 border-b" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
+                          <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Arabic</p>
+                          <p className="font-amiri text-[1.35rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>{ar.text}</p>
                         </div>
                       )}
                       {ml?.text && (
                         <div className="mb-3">
-                          <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Malayalam</p>
-                          <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
+                          <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Malayalam</p>
+                          <p className="font-inter text-[1.15rem] leading-[2.0] text-white/90" style={{ fontWeight: 600 }}>
                             {ml.text}
                           </p>
                         </div>
                       )}
                       {!ar?.text && !ml?.text && selectedCard?.text && (
-                        <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>
+                        <p className="font-amiri text-[1.35rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>
                           {selectedCard.text}
                         </p>
                       )}
@@ -360,7 +360,7 @@ export default function FaalHikmah() {
                     <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
                       حضرت دانیال نبی علیه‌السلام
                     </p>
-                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{ar.danyal}</p>
+                    <p className="font-amiri text-[1.3rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>{ar.danyal}</p>
                   </div>
                 )
               ) : (
@@ -373,7 +373,7 @@ export default function FaalHikmah() {
                     {ar?.danyal && (
                       <div className="mb-3 pb-3 border-b" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
                         <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Arabic</p>
-                        <p className="font-amiri text-lg leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{ar.danyal}</p>
+                        <p className="font-amiri text-[1.35rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>{ar.danyal}</p>
                       </div>
                     )}
                     {ml?.danyal && (
@@ -381,7 +381,7 @@ export default function FaalHikmah() {
                         {ar?.danyal && (
                           <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Malayalam</p>
                         )}
-                        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
+                        <p className="font-inter text-[1.15rem] leading-[2.0] text-white/90" style={{ fontWeight: 600 }}>
                           {ml.danyal}
                         </p>
                       </div>
@@ -398,7 +398,7 @@ export default function FaalHikmah() {
                     <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
                       حضرت امام جعفر صادق علیه‌السلام
                     </p>
-                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{ar.sadiq}</p>
+                    <p className="font-amiri text-[1.3rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>{ar.sadiq}</p>
                   </div>
                 )
               ) : (
@@ -411,7 +411,7 @@ export default function FaalHikmah() {
                     {ar?.sadiq && (
                       <div className="mb-3 pb-3 border-b" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
                         <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Arabic</p>
-                        <p className="font-amiri text-lg leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{ar.sadiq}</p>
+                        <p className="font-amiri text-[1.35rem] leading-[2.2] text-white/95" dir="rtl" style={{ fontWeight: 600 }}>{ar.sadiq}</p>
                       </div>
                     )}
                     {ml?.sadiq && (
@@ -419,7 +419,7 @@ export default function FaalHikmah() {
                         {ar?.sadiq && (
                           <p className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Malayalam</p>
                         )}
-                        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
+                        <p className="font-inter text-[1.15rem] leading-[2.0] text-white/90" style={{ fontWeight: 600 }}>
                           {ml.sadiq}
                         </p>
                       </div>
