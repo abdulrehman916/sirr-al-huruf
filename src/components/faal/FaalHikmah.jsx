@@ -99,7 +99,8 @@ export default function FaalHikmah() {
   };
 
   const isAr = lang === "ar";
-  const ml = selected ? FAAL_CHOB_ML[selected.id] : null;
+  const cardKey = selected?.id ?? selected?.gridPos;
+  const ml = selected && cardKey ? FAAL_CHOB_ML[cardKey] : null;
 
   return (
     <div className="space-y-4" style={{ minHeight: 0, height: "auto", overflow: "visible" }}>
