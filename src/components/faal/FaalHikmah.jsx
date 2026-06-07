@@ -2,6 +2,9 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shuffle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { FAAL_CHOB_ENTRIES } from "../../lib/faalChobData";
+
+// Grid cards only: has a gridPos, not invalid
+const GRID_ENTRIES = FAAL_CHOB_ENTRIES.filter(e => e.gridPos !== null && e.status !== "invalid");
 import { FAAL_CHOB_ML } from "../../lib/faalChobTranslations";
 import { usePageState } from "../../context/PageStateContext";
 
@@ -67,7 +70,7 @@ export default function FaalHikmah() {
   const { getPageState, setPageState, clearPageState } = usePageState();
 
   const init = getPageState(PAGE_KEY, {
-    shuffled: shuffleArray(FAAL_CHOB_ENTRIES),
+    shuffled: shuffleArray(GRID_ENTRIES),
     selected: null,
     expanded: false,
   });
@@ -83,7 +86,7 @@ export default function FaalHikmah() {
   }, [setPageState]);
 
   const handleShuffle = () => {
-    const s = shuffleArray(FAAL_CHOB_ENTRIES);
+    const s = shuffleArray(GRID_ENTRIES);
     setShuffled(s);
     setSelected(null);
     persist(s, null, false);
@@ -95,7 +98,7 @@ export default function FaalHikmah() {
   };
 
   const handleBack = () => {
-    const s = shuffleArray(FAAL_CHOB_ENTRIES);
+    const s = shuffleArray(GRID_ENTRIES);
     setShuffled(s);
     setSelected(null);
     persist(s, null, false);
@@ -103,7 +106,7 @@ export default function FaalHikmah() {
 
   const handleClear = () => {
     clearPageState(PAGE_KEY);
-    const s = shuffleArray(FAAL_CHOB_ENTRIES);
+    const s = shuffleArray(GRID_ENTRIES);
     setShuffled(s);
     setSelected(null);
     setExpanded(false);
@@ -257,7 +260,7 @@ export default function FaalHikmah() {
                 ))}
               </div>
               <p className="font-inter text-[7px] uppercase tracking-widest text-center mt-3" style={{ color: G.dim }}>
-                {FAAL_CHOB_ENTRIES.length} Cards — فال چوب
+                {GRID_ENTRIES.length} Cards — فال چوب
               </p>
             </SectionCard>
           </motion.div>
