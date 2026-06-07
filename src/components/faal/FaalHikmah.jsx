@@ -27,6 +27,17 @@ function shuffleArray(arr) {
 
 const PAGE_KEY = "faalChob";
 
+// Derive the standard 64-combination code from gridPos (1-based)
+// Letters: ا=0, ب=1, ج=2, د=3
+const LETTERS = ["ا", "ب", "ج", "د"];
+function getCombinationCode(gridPos) {
+  const idx = (gridPos - 1); // 0-based
+  const l1 = LETTERS[Math.floor(idx / 16) % 4];
+  const l2 = LETTERS[Math.floor(idx / 4) % 4];
+  const l3 = LETTERS[idx % 4];
+  return l1 + l2 + l3;
+}
+
 const instructions = [
   {
     ar: "نالو قطع چوب لے کر آئیں۔",
@@ -248,8 +259,8 @@ export default function FaalHikmah() {
                     }} />
                     <div className="relative z-10 flex flex-col items-center gap-0.5 px-1">
                       <span className="font-amiri font-bold text-center leading-tight" dir="rtl"
-                        style={{ color: G.text, fontSize: "11px", wordBreak: "break-all" }}>
-                        {entry.symbol}
+                        style={{ color: G.text, fontSize: "13px", letterSpacing: "0.06em" }}>
+                        {entry.gridPos ? getCombinationCode(entry.gridPos) : entry.symbol}
                       </span>
                     </div>
                     <div className="absolute top-1 left-1 w-1 h-1 rounded-full" style={{ background: "rgba(212,175,55,0.25)" }} />
@@ -279,6 +290,23 @@ export default function FaalHikmah() {
 
               {/* Symbol header */}
               <div className="text-center py-3">
+                {/* Combination code label */}
+                <div className="mb-2">
+                  <span
+                    className="font-amiri font-bold tracking-widest"
+                    dir="rtl"
+                    style={{ color: G.dim, fontSize: "13px", letterSpacing: "0.12em" }}
+                  >
+                    {isAr ? "التركيبة" : "കോഡ്"}
+                  </span>
+                  <div
+                    className="font-amiri font-bold mt-0.5"
+                    dir="rtl"
+                    style={{ color: G.text, fontSize: "22px", letterSpacing: "0.08em" }}
+                  >
+                    {selected.gridPos ? getCombinationCode(selected.gridPos) : ""}
+                  </div>
+                </div>
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
