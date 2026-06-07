@@ -84,6 +84,13 @@ export default function FaalHikmah() {
   }, [setPageState]);
 
   const handleSelect = (entry) => {
+    console.log("🔍 CARD SELECTED:", entry);
+    console.log("🔍 Entry ID:", entry?.id);
+    console.log("🔍 Entry gridPos:", entry?.gridPos);
+    console.log("🔍 Entry symbol:", entry?.symbol);
+    console.log("🔍 Entry text (first 50 chars):", entry?.text?.substring(0, 50));
+    console.log("🔍 Entry danyal:", entry?.danyal);
+    console.log("🔍 Entry sadiq:", entry?.sadiq);
     setSelected(entry);
     persist(entry);
   };
@@ -101,6 +108,21 @@ export default function FaalHikmah() {
   const isAr = lang === "ar";
   const cardKey = selected?.id ?? selected?.gridPos;
   const ml = selected && cardKey ? FAAL_CHOB_ML[cardKey] : null;
+  
+  // Debug: Check if selected card has ALL required fields
+  if (selected) {
+    console.log("🔍 SELECTED CARD FULL OBJECT:", JSON.stringify(selected, null, 2));
+    console.log("🔍 RENDER CHECK:");
+    console.log("  - cardKey:", cardKey);
+    console.log("  - selected.text length:", selected.text?.length);
+    console.log("  - selected.danyal length:", selected.danyal?.length);
+    console.log("  - selected.sadiq length:", selected.sadiq?.length);
+    console.log("  - ml?.text length:", ml?.text?.length);
+    console.log("  - ml?.danyal length:", ml?.danyal?.length);
+    console.log("  - ml?.sadiq length:", ml?.sadiq?.length);
+    console.log("  - isAr:", isAr);
+    console.log("  - Should show text section:", !!(selected.text || (ml?.text && !isAr)));
+  }
 
   return (
     <div className="space-y-4" style={{ minHeight: 0, height: "auto", overflow: "visible" }}>
