@@ -12,14 +12,65 @@ Deno.serve(async (req) => {
     const { screenshotUrls } = await req.json();
 
     const results = [];
+    
     for (const url of screenshotUrls) {
       try {
-        const res = await base44.integrations.Core.InvokeLLM({
-          prompt: "Extract ALL visible text from this FAAL CHOB divination card screenshot. Include: 1) The combination code (3 Arabic letters like ا ب د), 2) Any grid position number visible, 3) ALL Persian/Arabic text in the main content area, 4) Any text labeled as Danyal or Sadiq, 5) Any verse text at top. Return as JSON with fields: combination, gridPos, mainText, danyalText, sadiqText, verseText. Extract EXACTLY what's visible - no summarization, no translation, no AI generation.",
+        // Extract text from screenshot
+        const extraction = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract text from this FAAL CHOB card screenshot. Return JSON with:
+1. combination: 3 Arabic letters (e.g., "ددج" or "د د ج")
+2. gridPos: grid position number (1-64) if visible
+3. verseText: Quran verse at top (if any)
+4. mainText: ALL Persian text in main result area
+5. danyalText: text under دانیال (Danyal)
+6. sadiqText: text under صادق (Sadiq)
+
+Extract EXACTLY what's visible - NO translation, NO summarization.`,
           file_urls: [url],
           model: "gemini_3_flash"
         });
-        results.push({ url, text: res, success: true });
+
+        const extracted = typeof extraction === 'string' ? JSON.parse(extraction) : extraction;
+        
+        if (!extracted.combination) {
+          results.push({ url, error: 'No combination detected', success: false });
+          continue;
+        }
+
+        // Generate Arabic translation
+        const arabicGen = await base44.integrations.Core.InvokeLLM({
+          prompt: `Translate to Arabic (keep spiritual tone):
+${extracted.mainText}
+${extracted.danyalText ? '\nDanyal: ' + extracted.danyalText : ''}
+${extracted.sadiqText ? '\nSadiq: ' + extracted.sadiqText : ''}
+
+JSON: {"text": "...", "danyal": "...", "sadiq": "..."}`,
+          model: "gemini_3_flash"
+        });
+        const arabic = typeof arabicGen === 'string' ? JSON.parse(arabicGen) : arabicGen;
+
+        // Generate Malayalam translation
+        const mlGen = await base44.integrations.Core.InvokeLLM({
+          prompt: `Translate to Malayalam (keep spiritual tone):
+${extracted.mainText}
+${extracted.danyalText ? '\nDanyal: ' + extracted.danyalText : ''}
+${extracted.sadiqText ? '\nSadiq: ' + extracted.sadiqText : ''}
+
+JSON: {"text": "...", "danyal": "...", "sadiq": "..."}`,
+          model: "gemini_3_flash"
+        });
+        const malayalam = typeof mlGen === 'string' ? JSON.parse(mlGen) : mlGen;
+
+        results.push({
+          url,
+          success: true,
+          combination: extracted.combination,
+          gridPos: extracted.gridPos,
+          persian: { text: extracted.mainText, danyal: extracted.danyalText, sadiq: extracted.sadiqText, verse: extracted.verseText },
+          arabic,
+          malayalam
+        });
+
       } catch (e) {
         results.push({ url, error: e.message, success: false });
       }

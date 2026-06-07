@@ -27,6 +27,7 @@ const PlantsPage        = lazy(() => import('./pages/PlantsPage.jsx'));
 const PlantDetailPage   = lazy(() => import('./pages/PlantDetailPage'));
 const EvilJinnPage          = lazy(() => import('./pages/EvilJinnPage.jsx'));
 const MagicalHolyNamesPage  = lazy(() => import('./pages/MagicalHolyNamesPage'));
+const AdminFaalChobUpload   = lazy(() => import('./pages/AdminFaalChobUpload'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -85,6 +86,7 @@ const AuthenticatedApp = () => {
             <Route path="/plants/:id" element={<PlantDetailPage />} />
             <Route path="/evil-jinn" element={<EvilJinnPage />} />
             <Route path="/holy-names" element={<MagicalHolyNamesPage />} />
+            <Route path="/admin/faal-chob-upload" element={<AdminFaalChobUpload />} />
 
             <Route path="*" element={<PageNotFound />} />
           </Routes>
