@@ -82,6 +82,24 @@ const CARD_ICONS = {
       <circle cx="16" cy="16" r="1.5" fill={color} fillOpacity="0.9"/>
     </svg>
   ),
+  holyNames: (color) => (
+    <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+      <text x="50%" y="56%" dominantBaseline="middle" textAnchor="middle"
+        fontFamily="Amiri, serif" fontWeight="700" fontSize="16" fill={color}>الله</text>
+      <circle cx="16" cy="16" r="13" stroke={color} strokeWidth="0.8" strokeOpacity="0.55"/>
+      <circle cx="16" cy="16" r="9" stroke={color} strokeWidth="0.4" strokeOpacity="0.25" strokeDasharray="1.5,3"/>
+    </svg>
+  ),
+  evilJinn: (color) => (
+    <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+      <path d="M16 4 C10 4 6 10 6 16 C6 22 10 28 16 28 C22 28 26 22 26 16 C26 10 22 4 16 4Z"
+        stroke={color} strokeWidth="1" strokeOpacity="0.75" fill="none"/>
+      <path d="M12 14 Q14 12 16 14 Q18 12 20 14" stroke={color} strokeWidth="0.8" strokeOpacity="0.7" fill="none"/>
+      <circle cx="12" cy="18" r="1.5" fill={color} fillOpacity="0.8"/>
+      <circle cx="20" cy="18" r="1.5" fill={color} fillOpacity="0.8"/>
+      <path d="M14 22 Q16 24 18 22" stroke={color} strokeWidth="0.8" strokeOpacity="0.7" fill="none"/>
+    </svg>
+  ),
 };
 
 const NAV_CARDS = [
@@ -94,6 +112,8 @@ const NAV_CARDS = [
   { path: "/basthul-huroof-2", arabic: "بسط الحروف",   label: "BASTHUL HUROOF 2", subtitle: "Basti Adedi Cedveli",       iconKey: "bast",   accent: [180, 140, 255] },
   { path: "/faal-hasrath",     arabic: "فأل",          label: "FAAL",             subtitle: "Sacred Omen System",        iconKey: "faal",   accent: [212, 175, 55] },
   { path: "/plants",           arabic: "نباتات",       label: "PLANTS",           subtitle: "Medicinal Dictionary",      iconKey: "plants", accent: [34, 197, 94] },
+  { path: "/holy-names",       arabic: "أسماء مقدسة",  label: "HOLY NAMES",       subtitle: "Sacred Names Reference",    iconKey: "holyNames", accent: [212, 175, 55] },
+  { path: "/evil-jinn",        arabic: "الجن الشرير",  label: "EVIL JINN",        subtitle: "Jinn Classification",       iconKey: "evilJinn", accent: [239, 68, 68] },
 ];
 
 function IconOrb({ iconKey, accent }) {
