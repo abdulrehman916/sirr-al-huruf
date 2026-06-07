@@ -109,6 +109,22 @@ export default function FaalHikmah() {
     ? (GRID_ENTRIES.find(e => e.gridPos === selected.gridPos) || selected)
     : null;
 
+  // DEBUG: Log runtime values when a card is selected
+  if (selectedCard) {
+    console.log("🔍 FAAL CHOB DEBUG:", {
+      gridPos: selectedCard.gridPos,
+      combination: getCombinationCode(selectedCard.gridPos),
+      hasText: !!selectedCard.text,
+      textLength: selectedCard.text?.length,
+      hasDanyal: !!selectedCard.danyal,
+      hasSadiq: !!selectedCard.sadiq,
+      mlHasKey: !!ml,
+      mlTextLength: ml?.text?.length,
+      isArabic: isAr,
+      willShowText: !!(selectedCard.text || (ml?.text && !isAr)),
+    });
+  }
+
   return (
     <div className="space-y-4" style={{ minHeight: 0, height: "auto", overflow: "visible" }}>
 
