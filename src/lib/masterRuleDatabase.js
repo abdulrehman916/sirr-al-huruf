@@ -790,13 +790,28 @@ export const ENTITY_QUICK_LOOKUP = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MASTER_DB_SUMMARY = {
-  version: "1.0 — Complete",
+  version: "1.1 — Taurus PDF Ingested",
   dateCreated: "2026-06-07",
+  lastUpdated: "2026-06-07",
   source: "The Occult Encyclopedia of Magick Squares — Nineveh Shadrach",
-  pagesProcessed: "1–709 (approximately, across all uploaded PDFs)",
-  totalEntitiesIndexed: 120,
+  pagesProcessed: "1–77 (pp.1-77 now complete) + pp.161–709 (partial)",
+  totalEntitiesIndexed: 131,
   totalRulesExtracted: 18,
   totalFormulasConfirmed: 5,
+  ingestionStatus: {
+    pp_1_to_77: "COMPLETE — Aries full + Taurus pp.64–77 (Sign, Archangel, Angel)",
+    pp_78_to_117: "MISSING — Taurus continuation (12 entities remaining)",
+    pp_118_to_160: "MISSING — Gemini chapter",
+    pp_161_to_259: "COMPLETE — Cancer + Leo start",
+    pp_259_to_309: "COMPLETE — Leo continuation + Virgo start",
+    pp_310_to_359: "MISSING — Virgo continuation + Libra opening",
+    pp_360_to_459: "COMPLETE — Libra entities + Scorpio + Sag start",
+    pp_460_to_559: "COMPLETE — Sag end + Capricorn + Aquarius start",
+    pp_559_to_609: "COMPLETE — Aquarius + Pisces start",
+    pp_610_to_658: "MISSING — Pisces continuation + Saturn opening",
+    pp_659_to_709: "COMPLETE — Saturn/Jupiter/Mars/Sun planetary chapters",
+    pp_710_to_end: "MISSING — Sun continuation + Venus + Mercury + Moon planetary",
+  },
 
   keyRules: [
     "High Overseer = General Governor × Guide  [100% confirmed, zero exceptions]",
