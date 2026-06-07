@@ -1,95 +1,40 @@
 // ═══════════════════════════════════════════════════════════════════════════
-//  PERMANENT BOOK KNOWLEDGE DATABASE — TAURUS COMPLETION + GEMINI OPENING
+//  PERMANENT BOOK KNOWLEDGE DATABASE — TAURUS COMPLETE + GEMINI OPENING
 //  Source: "The Occult Encyclopedia of Magick Squares" — Nineveh Shadrach
-//  PDF File: 5e7a9f0eb_...-118-160.pdf
-//  PDF Pages (book page numbers): 78–120
+//  PDF File: 7519f26e2_...-121-160.pdf
+//  Book Pages: 81–120
 //  Processed: 2026-06-07
 //  Covers:
-//    - Taurus: Araziel Venus continuation (p.78)
-//    - Taurus: Lord Day Raydel (246) pp.79–82
-//    - Taurus: Lord Night Totath (424) pp.83–89
-//    - Taurus: Angel 2nd House Toel (46) pp.90–91
-//    - Taurus: 1st Decanate Kedamidi (78) pp.91–93
-//    - Taurus: 1st Quinance Mebahiah (62) p.93
-//    - Taurus: 2nd Quinance Poyel (127) pp.94–95
-//    - Taurus: 2nd Decanate Minacharai (315) pp.96–101
-//    - Taurus: 3rd Quinance Nemamiah (145) pp.102–104
-//    - Taurus: 4th Quinance Yeyalel (81) pp.104–106
-//    - Taurus: 3rd Decanate Yakasaganotz (239) pp.107–109
-//    - Taurus: 5th Quinance Herachiel (244) pp.110–113
-//    - Taurus: 6th Quinance Mitzrael (361) pp.114–119
+//    - Taurus: Lord of Triplicity by Night Raydel (246) continuation — Sun/Venus/Moon squares p.81–82
+//    - Taurus: Lord of Triplicity by Night Totath (424) pp.83–89 — COMPLETE all planets
+//    - Taurus: Angel Ruling 2nd House: Toel (46) pp.90–91
+//    - Taurus: Angel of First Decanate: Kedamidi (78) p.91–93
+//    - Taurus: Angel of First Quinance: Mebahiah (62) p.93 — Numerical See Page: 39
+//    - Taurus: Angel of Second Quinance: Poyel (127) pp.94–95
+//    - Taurus: Angel of Second Decanate: Minacharai (315) pp.96–97
+//    - Taurus: Angel of Third Quinance: Nemamiah (145) pp.102–103
+//    - Taurus: Angel of Fourth Quinance: Yeyalel (81) pp.104–105
+//    - Taurus: Angel of Third Decanate: Yakasaganotz (239) pp.107–109
+//    - Taurus: Angel of Fifth Quinance: Herachiel (244) pp.110–112
+//    - Taurus: Angel of Sixth Quinance: Mitzrael (361) pp.114–119
 //    - Gemini: Sign Teomim (497) p.120
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION A — TAURUS: ARAZIEL (249) — VENUS 7×7 CONTINUATION (p.78)
-//  This completes the Araziel entity started in bookKnowledgeBase_Taurus.js
+//  SECTION A — TAURUS: RAYDEL (246) CONTINUATION (p.81–82)
+//  Lord of Triplicity by Day — remaining planetary sizes
+//  Adjuster = 246 confirmed (all sizes share same MC/Adjuster)
 // ─────────────────────────────────────────────────────────────────────────────
-export const TAURUS_ARAZIEL_VENUS_CONTINUATION = {
-  name: "Angel of Taurus: Araziel (249) — Venus 7×7 variant A (usurper=24)",
-  hebrewValue: 249, page: "78",
-  venusSquare_A: {
-    fire:  [[11,52,37,22,42,59,26],[60,27,12,46,38,23,43],[24,44,61,28,13,47,32],[48,33,18,45,62,29,14],[30,15,49,34,19,39,63],[40,57,31,16,50,35,20],[36,21,41,58,25,17,51]],
-    air:   [[51,17,25,58,41,21,36],[20,35,50,16,31,57,40],[63,39,19,34,49,15,30],[14,29,62,45,18,33,48],[32,47,13,28,61,44,24],[43,23,38,46,12,27,60],[26,59,42,22,37,52,11]],
-    earth: [[36,40,30,48,24,60,11],[21,57,15,33,44,27,52],[41,31,49,18,61,12,37],[58,16,34,45,28,46,22],[25,50,19,62,13,38,42],[17,35,39,29,47,23,59],[51,20,63,14,32,43,26]],
-    water: [[26,43,32,14,63,20,51],[59,23,47,29,39,35,17],[42,38,13,62,19,50,25],[22,46,28,45,34,16,58],[37,12,61,18,49,31,41],[52,27,44,33,15,57,21],[11,60,24,48,30,40,36]],
-    hierarchy: { usurper:11, guide:63, mystery:74, adjuster:249, leader:747, regulator:996, genGov:1992, highOverseer:125496 },
-    angelArabic: { usurper:330, guide:22, mystery:33, adjuster:208, leader:706, regulator:955, genGov:1951, highOverseer:125455 },
-    angelHebrew: { usurper:340, guide:32, mystery:43, adjuster:218, leader:716, regulator:965, genGov:1961, highOverseer:125465 },
-    jinnArabic:  { usurper:52, guide:104, mystery:115, adjuster:290, leader:428, regulator:677, genGov:1673, highOverseer:125177 },
-    jinnHebrew:  { usurper:42, guide:94, mystery:105, adjuster:280, leader:418, regulator:667, genGov:1663, highOverseer:125167 },
-  },
-  venusSquare_B: {
-    // usurper=24 variant (p.78)
-    hierarchy: { usurper:24, guide:59, mystery:83, adjuster:249, leader:747, regulator:996, genGov:1992, highOverseer:117528 },
-    angelArabic: { usurper:343, guide:18, mystery:42, adjuster:208, leader:706, regulator:955, genGov:1951, highOverseer:117487 },
-    angelHebrew: { usurper:353, guide:28, mystery:52, adjuster:218, leader:716, regulator:965, genGov:1961, highOverseer:117497 },
-    jinnArabic:  { usurper:65, guide:100, mystery:124, adjuster:290, leader:428, regulator:677, genGov:1673, highOverseer:117209 },
-    jinnHebrew:  { usurper:55, guide:90, mystery:114, adjuster:280, leader:418, regulator:667, genGov:1663, highOverseer:117199 },
-  },
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION B — TAURUS: LORD OF TRIPLICITY BY DAY: RAYDEL (246)
-//  Page 79. gridSize=3, planet=Saturn
-// ─────────────────────────────────────────────────────────────────────────────
-export const TAURUS_RAYDEL = {
+export const TAURUS_RAYDEL_CONTINUATION = {
   name: "Lord of Triplicity by Day: Raydel", hebrewValue: 246,
-  gridSize: 3, planet: "Saturn",
-  page: "79",
+  page: "81",
+  note: "Continuation from prior batch — Mars/Jupiter already stored; Sun/Venus/Moon added here",
 
-  hebrewSquare: { numerical: [[200,11,7,28],[6,29,199,12],[9,202,30,5]] },
-
-  saturnSquare: {
-    fire:  [[83,78,85],[84,82,80],[79,86,81]],
-    earth: [[79,84,83],[86,82,78],[81,80,85]],
-    air:   [[81,86,79],[80,82,84],[85,78,83]],
-    water: [[85,80,81],[78,82,86],[83,84,79]],
-    hierarchy: { usurper:78, guide:86, mystery:164, adjuster:246, leader:738, regulator:984, genGov:1968, highOverseer:169248 },
-    angelArabic: { usurper:37, guide:45, mystery:123, adjuster:205, leader:697, regulator:943, genGov:1927, highOverseer:169207 },
-    angelHebrew: { usurper:47, guide:55, mystery:133, adjuster:215, leader:707, regulator:953, genGov:1937, highOverseer:169217 },
-    jinnArabic:  { usurper:119, guide:127, mystery:205, adjuster:287, leader:419, regulator:665, genGov:1649, highOverseer:168929 },
-    jinnHebrew:  { usurper:109, guide:117, mystery:195, adjuster:277, leader:409, regulator:655, genGov:1639, highOverseer:168919 },
-  },
-
-  // Jupiter 4×4 (p.80)
-  jupiterSquare: {
-    fire:  [[54,65,59,68],[67,60,62,57],[64,55,69,58],[61,66,56,63]],
-    earth: [[61,64,67,54],[66,55,60,65],[56,69,62,59],[63,58,57,68]],
-    air:   [[63,56,66,61],[58,69,55,64],[57,62,60,67],[68,59,65,54]],
-    water: [[68,57,58,63],[59,62,69,56],[65,60,55,66],[54,67,64,61]],
-    hierarchy: { usurper:54, guide:69, mystery:123, adjuster:1968, leader:5904, regulator:7872, genGov:15744, highOverseer:1086336 },
-    angelArabic: { usurper:13, guide:28, mystery:82, adjuster:1927, leader:5863, regulator:7831, genGov:15703, highOverseer:1086295 },
-    angelHebrew: { usurper:23, guide:38, mystery:92, adjuster:1937, leader:5873, regulator:7841, genGov:15713, highOverseer:1086305 },
-    jinnArabic:  { usurper:95, guide:110, mystery:164, adjuster:1649, leader:5585, regulator:7553, genGov:15425, highOverseer:1086017 },
-    jinnHebrew:  { usurper:85, guide:100, mystery:154, adjuster:1639, leader:5575, regulator:7543, genGov:15415, highOverseer:1086007 },
-  },
-
-  // Mars 5×5 (p.81)
+  // p.81 — Mars 5×5 (usurper=37, guide=62, Adjuster=246)
   marsSquare: {
     fire:  [[37,62,55,49,43],[50,44,38,58,56],[59,52,51,45,39],[46,40,60,53,47],[54,48,42,41,61]],
-    air:   [[54,46,59,50,37],[48,40,52,44,62],[42,60,51,38,55],[41,53,45,58,49],[61,47,39,56,43]],
     earth: [[61,41,42,48,54],[47,53,60,40,46],[39,45,51,52,59],[56,58,38,44,50],[43,49,55,62,37]],
+    air:   [[54,46,59,50,37],[48,40,52,44,62],[42,60,51,38,55],[41,53,45,58,49],[61,47,39,56,43]],
     water: [[43,56,39,47,61],[49,58,45,53,41],[55,38,51,60,42],[62,44,52,40,48],[37,50,59,46,54]],
     hierarchy: { usurper:37, guide:62, mystery:99, adjuster:246, leader:738, regulator:984, genGov:1968, highOverseer:122016 },
     angelArabic: { usurper:356, guide:21, mystery:58, adjuster:205, leader:697, regulator:943, genGov:1927, highOverseer:121975 },
@@ -98,7 +43,7 @@ export const TAURUS_RAYDEL = {
     jinnHebrew:  { usurper:68, guide:93, mystery:130, adjuster:277, leader:409, regulator:655, genGov:1639, highOverseer:121687 },
   },
 
-  // Sun 6×6 (pp.81)
+  // p.81 — Sun 6×6 (usurper=23, guide=61, Adjuster=246)
   sunSquare: {
     fire:  [[23,34,57,40,44,48],[29,39,50,56,27,45],[35,60,43,33,49,26],[46,25,36,51,30,58],[52,41,32,24,59,38],[61,47,28,42,37,31]],
     earth: [[61,52,46,35,29,23],[47,41,25,60,39,34],[28,32,36,43,50,57],[42,24,51,33,56,40],[37,59,30,49,27,44],[31,38,58,26,45,48]],
@@ -111,11 +56,11 @@ export const TAURUS_RAYDEL = {
     jinnHebrew:  { usurper:54, guide:92, mystery:115, adjuster:277, leader:409, regulator:655, genGov:1639, highOverseer:119719 },
   },
 
-  // Venus 7×7 (p.82) — two variants shown
+  // p.81–82 — Venus 7×7 (usurper=11, guide=60, Adjuster=246)
   venusSquare: {
     fire:  [[11,52,37,22,42,56,26],[57,27,12,46,38,23,43],[24,44,58,28,13,47,32],[48,33,18,45,59,29,14],[30,15,49,34,19,39,60],[40,54,31,16,50,35,20],[36,21,41,55,25,17,51]],
-    air:   [[51,17,25,55,41,21,36],[20,35,50,16,31,54,40],[60,39,19,34,49,15,30],[14,29,59,45,18,33,48],[32,47,13,28,58,44,24],[43,23,38,46,12,27,57],[26,56,42,22,37,52,11]],
     earth: [[36,40,30,48,24,57,11],[21,54,15,33,44,27,52],[41,31,49,18,58,12,37],[55,16,34,45,28,46,22],[25,50,19,59,13,38,42],[17,35,39,29,47,23,56],[51,20,60,14,32,43,26]],
+    air:   [[51,17,25,55,41,21,36],[20,35,50,16,31,54,40],[60,39,19,34,49,15,30],[14,29,59,45,18,33,48],[32,47,13,28,58,44,24],[43,23,38,46,12,27,57],[26,56,42,22,37,52,11]],
     water: [[26,43,32,14,60,20,51],[56,23,47,29,39,35,17],[42,38,13,59,19,50,25],[22,46,28,45,34,16,55],[37,12,58,18,49,31,41],[52,27,44,33,15,54,21],[11,57,24,48,30,40,36]],
     hierarchy: { usurper:11, guide:60, mystery:71, adjuster:246, leader:738, regulator:984, genGov:1968, highOverseer:118080 },
     angelArabic: { usurper:330, guide:19, mystery:30, adjuster:205, leader:697, regulator:943, genGov:1927, highOverseer:118039 },
@@ -126,15 +71,14 @@ export const TAURUS_RAYDEL = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION C — TAURUS: LORD OF TRIPLICITY BY NIGHT: TOTATH (424)
-//  Page 83. gridSize=4, planet=Jupiter
+//  SECTION B — TAURUS: TOTATH (424) — LORD OF TRIPLICITY BY NIGHT (pp.83–89)
+//  COMPLETE — All planetary sizes
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_TOTATH = {
   name: "Lord of Triplicity by Night: Totath", hebrewValue: 424,
-  gridSize: 4, planet: "Jupiter",
   page: "83",
-
-  hebrewSquare: { numerical: [[8,7,12,397],[11,398,7,8],[5,10,399,10]] },
+  hebrewSquare4x4: { numerical: [[8,7,12,397],[11,398,7,8],[5,10,399,10]] },
+  hebrewSquare5x5: "letter square present — see PDF p.83",
 
   jupiterSquare: {
     fire:  [[98,109,103,114],[113,104,106,101],[108,99,115,102],[105,112,100,107]],
@@ -150,8 +94,8 @@ export const TAURUS_TOTATH = {
 
   marsSquare: {
     fire:  [[72,100,90,84,78],[85,79,73,96,91],[97,87,86,80,74],[81,75,98,88,82],[89,83,77,76,99]],
-    air:   [[89,81,97,85,72],[83,75,87,79,100],[77,98,86,73,90],[76,88,80,96,84],[99,82,74,91,78]],
     earth: [[99,76,77,83,89],[82,88,98,75,81],[74,80,86,87,97],[91,96,73,79,85],[78,84,90,100,72]],
+    air:   [[89,81,97,85,72],[83,75,87,79,100],[77,98,86,73,90],[76,88,80,96,84],[99,82,74,91,78]],
     water: [[78,91,74,82,99],[84,96,80,88,76],[90,73,86,98,77],[100,79,87,75,83],[72,85,97,81,89]],
     hierarchy: { usurper:72, guide:100, mystery:172, adjuster:424, leader:1272, regulator:1696, genGov:3392, highOverseer:339200 },
     angelArabic: { usurper:31, guide:59, mystery:131, adjuster:383, leader:1231, regulator:1655, genGov:3351, highOverseer:339159 },
@@ -162,8 +106,8 @@ export const TAURUS_TOTATH = {
 
   sunSquare: {
     fire:  [[53,64,85,70,74,78],[59,69,80,84,57,75],[65,88,73,63,79,56],[76,55,66,81,60,86],[82,71,62,54,87,68],[89,77,58,72,67,61]],
-    air:   [[61,67,72,58,77,89],[68,87,54,62,71,82],[86,60,81,66,55,76],[56,79,63,73,88,65],[75,57,84,80,69,59],[78,74,70,85,64,53]],
     earth: [[89,82,76,65,59,53],[77,71,55,88,69,64],[58,62,66,73,80,85],[72,54,81,63,84,70],[67,87,60,79,57,74],[61,68,86,56,75,78]],
+    air:   [[61,67,72,58,77,89],[68,87,54,62,71,82],[86,60,81,66,55,76],[56,79,63,73,88,65],[75,57,84,80,69,59],[78,74,70,85,64,53]],
     water: [[78,75,56,86,68,61],[74,57,79,60,87,67],[70,84,63,81,54,72],[85,80,73,66,62,58],[64,69,88,55,71,77],[53,59,65,76,82,89]],
     hierarchy: { usurper:53, guide:89, mystery:142, adjuster:424, leader:1272, regulator:1696, genGov:3392, highOverseer:301888 },
     angelArabic: { usurper:12, guide:48, mystery:101, adjuster:383, leader:1231, regulator:1655, genGov:3351, highOverseer:301847 },
@@ -196,6 +140,7 @@ export const TAURUS_TOTATH = {
     jinnHebrew:  { usurper:52, guide:119, mystery:140, adjuster:95, leader:943, regulator:1367, genGov:3063, highOverseer:298167 },
   },
 
+  // pp.88–89 — Moon 9×9 (usurper=7, guide=88, Adjuster=424)
   moonSquare: {
     fire:  [[51,64,26,35,88,19,55,71,15],[11,54,76,31,47,63,18,40,84],[80,23,39,75,7,59,68,30,43],[78,10,53,62,33,46,83,17,42],[38,82,22,58,74,9,45,67,29],[25,50,66,21,34,87,14,57,70],[24,37,81,8,60,73,28,44,69],[65,27,49,86,20,36,72,13,56],[52,77,12,48,61,32,41,85,16]],
     earth: [[15,84,43,42,29,70,69,56,16],[71,40,30,17,67,57,44,13,85],[55,18,68,83,45,14,28,72,41],[19,63,59,46,9,87,73,36,32],[88,47,7,33,74,34,60,20,61],[35,31,75,62,58,21,8,86,48],[26,76,39,53,22,66,81,49,12],[64,54,23,10,82,50,37,27,77],[51,11,80,78,38,25,24,65,52]],
@@ -210,15 +155,14 @@ export const TAURUS_TOTATH = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION D — TAURUS: ANGEL RULING 2ND HOUSE: TOEL (46)
-//  Page 90. gridSize=4, planet=Jupiter
+//  SECTION C — TAURUS: ANGEL RULING 2ND HOUSE: TOEL (46) (pp.90–91)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_TOEL = {
   name: "Angel Ruling 2nd House: Toel", hebrewValue: 46,
   house: 2, gridSize: 4, planet: "Jupiter",
   page: "90",
-
-  hebrewSquare: { numerical: [[8,7,4,27],[3,28,7,8],[5,10,29,2]] },
+  hebrewSquare4x4: { numerical: [[8,7,4,27],[3,28,7,8],[5,10,29,2]] },
+  hebrewSquare4x4_letter: "letter square present — see PDF p.90",
 
   jupiterSquare: {
     fire:  [[4,15,9,18],[17,10,12,7],[14,5,19,8],[11,16,6,13]],
@@ -234,15 +178,14 @@ export const TAURUS_TOEL = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION E — TAURUS: ANGEL OF FIRST DECANATE: KEDAMIDI (78)
-//  Page 91. gridSize=3, planet=Saturn
+//  SECTION D — TAURUS: ANGEL OF FIRST DECANATE: KEDAMIDI (78) (pp.91–93)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_KEDAMIDI = {
   name: "Angel of First Decanate: Kedamidi", hebrewValue: 78,
   gridSize: 3, planet: "Saturn",
   page: "91",
-
-  hebrewSquare: { numerical: [[23,41,7,7],[6,8,22,42],[39,25,9,5]] },
+  hebrewSquare4x4: { numerical: [[23,41,7,7],[6,8,22,42],[39,25,9,5]] },
+  hebrewSquare5x5: "letter square present — see PDF p.91",
 
   saturnSquare: {
     fire:  [[27,22,29],[28,26,24],[23,30,25]],
@@ -270,8 +213,8 @@ export const TAURUS_KEDAMIDI = {
 
   marsSquare: {
     fire:  [[3,30,21,15,9],[16,10,4,26,22],[27,18,17,11,5],[12,6,28,19,13],[20,14,8,7,29]],
-    air:   [[20,12,27,16,3],[14,6,18,10,30],[8,28,17,4,21],[7,19,11,26,15],[29,13,5,22,9]],
     earth: [[29,7,8,14,20],[13,19,28,6,12],[5,11,17,18,27],[22,26,4,10,16],[9,15,21,30,3]],
+    air:   [[20,12,27,16,3],[14,6,18,10,30],[8,28,17,4,21],[7,19,11,26,15],[29,13,5,22,9]],
     water: [[9,22,5,13,29],[15,26,11,19,7],[21,4,17,28,8],[30,10,18,6,14],[3,16,27,12,20]],
     hierarchy: { usurper:3, guide:30, mystery:33, adjuster:78, leader:234, regulator:312, genGov:624, highOverseer:18720 },
     angelArabic: { usurper:322, guide:349, mystery:352, adjuster:37, leader:193, regulator:271, genGov:583, highOverseer:18679 },
@@ -282,27 +225,25 @@ export const TAURUS_KEDAMIDI = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION F — TAURUS: ANGEL OF FIRST QUINANCE: MEBAHIAH (62)
-//  Page 93. Note: "Numerical Squares See Page: 39"
+//  SECTION E — TAURUS: ANGEL OF FIRST QUINANCE: MEBAHIAH (62) (p.93)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_MEBAHIAH = {
   name: "Angel of First Quinance: Mebahiah", hebrewValue: 62,
-  gridSize: 3, planet: "Saturn",
   note: "Numerical Squares See Page: 39",
   page: "93",
-  hebrewSquare: { numerical: [[39,3,8,12],[7,13,38,4],[1,41,14,6]] },
+  hebrewSquare4x4: { numerical: [[39,3,8,12],[7,13,38,4],[1,41,14,6]] },
+  hebrewSquare5x5: "letter square present — see PDF p.93",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION G — TAURUS: ANGEL OF SECOND QUINANCE: POYEL (127)
-//  Page 94. gridSize=4, planet=Jupiter
+//  SECTION F — TAURUS: ANGEL OF SECOND QUINANCE: POYEL (127) (pp.94–95)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_POYEL = {
   name: "Angel of Second Quinance: Poyel", hebrewValue: 127,
   gridSize: 4, planet: "Jupiter",
   page: "94",
-
-  hebrewSquare: { numerical: [[79,7,13,28],[12,29,78,8],[5,81,30,11]] },
+  hebrewSquare4x4: { numerical: [[79,7,13,28],[12,29,78,8],[5,81,30,11]] },
+  hebrewSquare5x5: "letter square present — see PDF p.94",
 
   jupiterSquare: {
     fire:  [[24,35,29,39],[38,30,32,27],[34,25,40,28],[31,37,26,33]],
@@ -316,23 +257,10 @@ export const TAURUS_POYEL = {
     jinnHebrew:  { usurper:55, guide:71, mystery:95, adjuster:687, leader:2719, regulator:3735, genGov:7799, highOverseer:324791 },
   },
 
+  // p.95 — Mars squares (usurper=3, guide=42, Adjuster=127)
   marsSquare: {
-    fire:  [[13,39,31,25,19],[26,20,14,35,32],[36,28,27,21,15],[22,16,37,29,23],[30,24,18,17,38]],
-    air:   [[30,22,36,26,13],[24,16,28,20,39],[18,37,27,14,31],[17,29,21,35,25],[38,23,15,32,19]],
-    earth: [[38,17,18,24,30],[23,29,37,16,22],[15,21,27,28,36],[32,35,14,20,26],[19,25,31,39,13]],
-    water: [[19,32,15,23,38],[25,35,21,29,17],[31,14,27,37,18],[39,20,28,16,24],[13,26,36,22,30]],
-    hierarchy: { usurper:3, guide:42, mystery:45, adjuster:127, leader:381, regulator:508, genGov:1016, highOverseer:42672 },
-    angelArabic: { usurper:322, guide:1, mystery:4, adjuster:86, leader:340, regulator:467, genGov:975, highOverseer:42631 },
-    angelHebrew: { usurper:332, guide:11, mystery:14, adjuster:96, leader:350, regulator:477, genGov:985, highOverseer:42641 },
-    jinnArabic:  { usurper:44, guide:83, mystery:86, adjuster:168, leader:62, regulator:189, genGov:697, highOverseer:42353 },
-    jinnHebrew:  { usurper:34, guide:73, mystery:76, adjuster:158, leader:52, regulator:179, genGov:687, highOverseer:42343 },
-  },
-
-  sunSquare: {
-    fire:  [[3,14,38,20,24,28],[9,19,30,37,7,25],[15,41,23,13,29,6],[26,5,16,31,10,39],[32,21,12,4,40,18],[42,27,8,22,17,11]],
-    air:   [[11,17,22,8,27,42],[18,40,4,12,21,32],[39,10,31,16,5,26],[6,29,13,23,41,15],[25,7,37,30,19,9],[28,24,20,38,14,3]],
-    earth: [[42,32,26,15,9,3],[27,21,5,41,19,14],[8,12,16,23,30,38],[22,4,31,13,37,20],[17,40,10,29,7,24],[11,18,39,6,25,28]],
-    water: [[28,25,6,39,18,11],[24,7,29,10,40,17],[20,37,13,31,4,22],[38,30,23,16,12,8],[14,19,41,5,21,27],[3,9,15,26,32,42]],
+    fire:  [[3,42,32,26,20],[33,27,21,38,38],[43,35,34,28,22],[29,23,44,36,30],[37,31,25,24,45]],
+    note: "Hierarchy on p.95 confirms Adjuster=127, GenGov=1016",
     hierarchy: { usurper:3, guide:42, mystery:45, adjuster:127, leader:381, regulator:508, genGov:1016, highOverseer:42672 },
     angelArabic: { usurper:322, guide:1, mystery:4, adjuster:86, leader:340, regulator:467, genGov:975, highOverseer:42631 },
     angelHebrew: { usurper:332, guide:11, mystery:14, adjuster:96, leader:350, regulator:477, genGov:985, highOverseer:42641 },
@@ -342,15 +270,14 @@ export const TAURUS_POYEL = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION H — TAURUS: ANGEL OF SECOND DECANATE: MINACHARAI (315)
-//  Page 96. gridSize=3, planet=Saturn
+//  SECTION G — TAURUS: ANGEL OF SECOND DECANATE: MINACHARAI (315) (pp.96–97)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_MINACHARAI = {
   name: "Angel of Second Decanate: Minacharai", hebrewValue: 315,
   gridSize: 3, planet: "Saturn",
   page: "96",
-
-  hebrewSquare: { numerical: [[89,9,203,8],[202,9,88,10],[7,91,10,201]] },
+  hebrewSquare4x4: { numerical: [[89,9,203,8],[202,9,88,10],[7,91,10,201]] },
+  hebrewSquare6x6: "letter square present — see PDF p.96",
 
   saturnSquare: {
     fire:  [[104,99,106],[105,103,101],[100,107,102]],
@@ -364,22 +291,21 @@ export const TAURUS_MINACHARAI = {
     jinnHebrew:  { usurper:130, guide:138, mystery:237, adjuster:340, leader:598, regulator:907, genGov:2143, highOverseer:264175 },
   },
 
-  jupiterSquare_A: {
-    fire:  [[69,80,74,86],[85,75,77,72],[79,70,87,73],[76,84,71,78]],
-    earth: [[76,79,85,69],[84,70,75,80],[71,87,77,74],[78,73,72,86]],
-    air:   [[78,71,84,76],[73,87,70,79],[72,77,75,85],[86,74,80,69]],
-    water: [[86,72,73,78],[74,77,87,71],[80,75,70,84],[69,85,79,76]],
-    hierarchy: { usurper:69, guide:87, mystery:156, adjuster:2472, leader:7416, regulator:9888, genGov:19776, highOverseer:1720512 },
-    angelArabic: { usurper:28, guide:46, mystery:115, adjuster:2431, leader:7375, regulator:9847, genGov:19735, highOverseer:1720471 },
-    angelHebrew: { usurper:38, guide:56, mystery:125, adjuster:2441, leader:7385, regulator:9857, genGov:19745, highOverseer:1720481 },
-    jinnArabic:  { usurper:110, guide:128, mystery:197, adjuster:2153, leader:7097, regulator:9569, genGov:19457, highOverseer:1720193 },
-    jinnHebrew:  { usurper:100, guide:118, mystery:187, adjuster:2143, leader:7087, regulator:9559, genGov:19447, highOverseer:1720183 },
-  },
+  jupiterSquare_fire:  [[69,80,74,86],[85,75,77,72],[79,70,87,73],[76,84,71,78]],
+  jupiterSquare_air:   [[78,71,84,76],[73,87,70,79],[72,77,75,85],[86,74,80,69]],
+  jupiterSquare_earth: [[76,79,85,69],[84,70,75,80],[71,87,77,74],[78,73,72,86]],
+  jupiterSquare_water: [[86,72,73,78],[74,77,87,71],[80,75,70,84],[69,85,79,76]],
+  jupiterHierarchy: { usurper:69, guide:87, mystery:156, adjuster:2472, leader:7416, regulator:9888, genGov:19776, highOverseer:1720512 },
+  jupiterAngelArabic: { usurper:28, guide:46, mystery:115, adjuster:2431, leader:7375, regulator:9847, genGov:19735, highOverseer:1720471 },
+  jupiterAngelHebrew: { usurper:38, guide:56, mystery:125, adjuster:2441, leader:7385, regulator:9857, genGov:19745, highOverseer:1720481 },
+  jupiterJinnArabic:  { usurper:110, guide:128, mystery:197, adjuster:2153, leader:7097, regulator:9569, genGov:19457, highOverseer:1720193 },
+  jupiterJinnHebrew:  { usurper:100, guide:118, mystery:187, adjuster:2143, leader:7087, regulator:9559, genGov:19447, highOverseer:1720183 },
 
+  // p.98 — Mars squares for Minacharai (usurper=49, guide=77)
   marsSquare: {
     fire:  [[49,77,67,61,55],[62,56,50,73,68],[74,64,63,57,51],[58,52,75,65,59],[66,60,54,53,76]],
-    air:   [[66,58,74,62,49],[60,52,64,56,77],[54,75,63,50,67],[53,65,57,73,61],[76,59,51,68,55]],
     earth: [[76,53,54,60,66],[59,65,75,52,58],[51,57,63,64,74],[68,73,50,56,62],[55,61,67,77,49]],
+    air:   [[66,58,74,62,49],[60,52,64,56,77],[54,75,63,50,67],[53,65,57,73,61],[76,59,51,68,55]],
     water: [[55,68,51,59,76],[61,73,57,65,53],[67,50,63,75,54],[77,56,64,52,60],[49,62,74,58,66]],
     hierarchy: { usurper:49, guide:77, mystery:126, adjuster:309, leader:927, regulator:1236, genGov:2472, highOverseer:190344 },
     angelArabic: { usurper:8, guide:36, mystery:85, adjuster:268, leader:886, regulator:1195, genGov:2431, highOverseer:190303 },
@@ -388,6 +314,7 @@ export const TAURUS_MINACHARAI = {
     jinnHebrew:  { usurper:80, guide:108, mystery:157, adjuster:340, leader:598, regulator:907, genGov:2143, highOverseer:190015 },
   },
 
+  // p.98–99 — Sun squares for Minacharai (usurper=34, guide=69)
   sunSquare: {
     fire:  [[34,45,65,51,55,59],[40,50,61,64,38,56],[46,68,54,44,60,37],[57,36,47,62,41,66],[63,52,43,35,67,49],[69,58,39,53,48,42]],
     earth: [[69,63,57,46,40,34],[58,52,36,68,50,45],[39,43,47,54,61,65],[53,35,62,44,64,51],[48,67,41,60,38,55],[42,49,66,37,56,59]],
@@ -400,10 +327,11 @@ export const TAURUS_MINACHARAI = {
     jinnHebrew:  { usurper:65, guide:100, mystery:134, adjuster:340, leader:598, regulator:907, genGov:2143, highOverseer:170239 },
   },
 
+  // p.99 — Venus squares (usurper=20, guide=69)
   venusSquare: {
     fire:  [[20,61,46,31,51,65,35],[66,36,21,55,47,32,52],[33,53,67,37,22,56,41],[57,42,27,54,68,38,23],[39,24,58,43,28,48,69],[49,63,40,25,59,44,29],[45,30,50,64,34,26,60]],
-    air:   [[60,26,34,64,50,30,45],[29,44,59,25,40,63,49],[69,48,28,43,58,24,39],[23,38,68,54,27,42,57],[41,56,22,37,67,53,33],[52,32,47,55,21,36,66],[35,65,51,31,46,61,20]],
     earth: [[45,49,39,57,33,66,20],[30,63,24,42,53,36,61],[50,40,58,27,67,21,46],[64,25,43,54,37,55,31],[34,59,28,68,22,47,51],[26,44,48,38,56,32,65],[60,29,69,23,41,52,35]],
+    air:   [[60,26,34,64,50,30,45],[29,44,59,25,40,63,49],[69,48,28,43,58,24,39],[23,38,68,54,27,42,57],[41,56,22,37,67,53,33],[52,32,47,55,21,36,66],[35,65,51,31,46,61,20]],
     water: [[35,52,41,23,69,29,60],[65,32,56,38,48,44,26],[51,47,22,68,28,59,34],[31,55,37,54,43,25,64],[46,21,67,27,58,40,50],[61,36,53,42,24,63,30],[20,66,33,57,39,49,45]],
     hierarchy: { usurper:20, guide:69, mystery:89, adjuster:309, leader:927, regulator:1236, genGov:2472, highOverseer:170568 },
     angelArabic: { usurper:339, guide:28, mystery:48, adjuster:268, leader:886, regulator:1195, genGov:2431, highOverseer:170527 },
@@ -412,6 +340,7 @@ export const TAURUS_MINACHARAI = {
     jinnHebrew:  { usurper:51, guide:100, mystery:120, adjuster:340, leader:598, regulator:907, genGov:2143, highOverseer:170239 },
   },
 
+  // p.100 — Mercury 8×8 (usurper=7, guide=71, Adjuster=309)
   mercurySquare: {
     fire:  [[7,23,69,52,41,57,38,22],[15,31,60,44,49,66,30,14],[58,42,21,37,24,8,51,68],[67,50,13,29,32,16,43,59],[36,20,39,55,71,54,9,25],[28,12,47,64,62,46,17,33],[53,70,26,10,19,35,56,40],[45,61,34,18,11,27,65,48]],
     earth: [[45,53,28,36,67,58,15,7],[61,70,12,20,50,42,31,23],[34,26,47,39,13,21,60,69],[18,10,64,55,29,37,44,52],[11,19,62,71,32,24,49,41],[27,35,46,54,16,8,66,57],[65,56,17,9,43,51,30,38],[48,40,33,25,59,68,14,22]],
@@ -426,15 +355,14 @@ export const TAURUS_MINACHARAI = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION I — TAURUS: ANGEL OF THIRD QUINANCE: NEMAMIAH (145)
-//  Page 102. gridSize=4, planet=Jupiter
+//  SECTION H — TAURUS: ANGEL OF THIRD QUINANCE: NEMAMIAH (145) (pp.102–103)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_NEMAMIAH = {
   name: "Angel of Third Quinance: Nemamiah", hebrewValue: 145,
   gridSize: 4, planet: "Jupiter",
   page: "102",
-
-  hebrewSquare: { numerical: [[49,41,43,12],[42,13,48,42],[39,51,14,41]] },
+  hebrewSquare4x4: { numerical: [[49,41,43,12],[42,13,48,42],[39,51,14,41]] },
+  hebrewSquare5x5: "letter square present — see PDF p.102",
 
   jupiterSquare: {
     fire:  [[28,39,33,45],[44,34,36,31],[38,29,46,32],[35,43,30,37]],
@@ -450,8 +378,8 @@ export const TAURUS_NEMAMIAH = {
 
   marsSquare: {
     fire:  [[17,41,35,29,23],[30,24,18,37,36],[38,32,31,25,19],[26,20,39,33,27],[34,28,22,21,40]],
-    air:   [[34,26,38,30,17],[28,20,32,24,41],[22,39,31,18,35],[21,33,25,37,29],[40,27,19,36,23]],
     earth: [[40,21,22,28,34],[27,33,39,20,26],[19,25,31,32,38],[36,37,18,24,30],[23,29,35,41,17]],
+    air:   [[34,26,38,30,17],[28,20,32,24,41],[22,39,31,18,35],[21,33,25,37,29],[40,27,19,36,23]],
     water: [[23,36,19,27,40],[29,37,25,33,21],[35,18,31,39,22],[41,24,32,20,28],[17,30,38,26,34]],
     hierarchy: { usurper:17, guide:41, mystery:58, adjuster:145, leader:435, regulator:580, genGov:1160, highOverseer:47560 },
     angelArabic: { usurper:336, guide:360, mystery:17, adjuster:104, leader:394, regulator:539, genGov:1119, highOverseer:47519 },
@@ -474,15 +402,14 @@ export const TAURUS_NEMAMIAH = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION J — TAURUS: ANGEL OF FOURTH QUINANCE: YEYALEL (81)
-//  Page 104. gridSize=3, planet=Saturn
+//  SECTION I — TAURUS: ANGEL OF FOURTH QUINANCE: YEYALEL (81) (pp.104–105)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_YEYALEL = {
   name: "Angel of Fourth Quinance: Yeyalel", hebrewValue: 81,
   gridSize: 3, planet: "Saturn",
   page: "104",
-
-  hebrewSquare: { numerical: [[9,11,33,28],[32,29,8,12],[9,11,30,31]] },
+  hebrewSquare4x4: { numerical: [[9,11,33,28],[32,29,8,12],[9,11,30,31]] },
+  hebrewSquare5x5: "letter square present — see PDF p.104",
 
   saturnSquare: {
     fire:  [[28,23,30],[29,27,25],[24,31,26]],
@@ -510,8 +437,8 @@ export const TAURUS_YEYALEL = {
 
   marsSquare: {
     fire:  [[4,29,22,16,10],[17,11,5,25,23],[26,19,18,12,6],[13,7,27,20,14],[21,15,9,8,28]],
-    air:   [[21,13,26,17,4],[15,7,19,11,29],[9,27,18,5,22],[8,20,12,25,16],[28,14,6,23,10]],
     earth: [[28,8,9,15,21],[14,20,27,7,13],[6,12,18,19,26],[23,25,5,11,17],[10,16,22,29,4]],
+    air:   [[21,13,26,17,4],[15,7,19,11,29],[9,27,18,5,22],[8,20,12,25,16],[28,14,6,23,10]],
     water: [[10,23,6,14,28],[16,25,12,20,8],[22,5,18,27,9],[29,11,19,7,15],[4,17,26,13,21]],
     hierarchy: { usurper:4, guide:29, mystery:33, adjuster:81, leader:243, regulator:324, genGov:648, highOverseer:18792 },
     angelArabic: { usurper:323, guide:348, mystery:352, adjuster:40, leader:202, regulator:283, genGov:607, highOverseer:18751 },
@@ -522,15 +449,15 @@ export const TAURUS_YEYALEL = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION K — TAURUS: ANGEL OF THIRD DECANATE: YAKASAGANOTZ (239)
-//  Page 107. gridSize=4, planet=Jupiter
+//  SECTION J — TAURUS: ANGEL OF THIRD DECANATE: YAKASAGANOTZ (239) (pp.107–109)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_YAKASAGANOTZ = {
   name: "Angel of Third Decanate: Yakasaganotz", hebrewValue: 239,
   gridSize: 4, planet: "Jupiter",
   page: "107",
-
-  hebrewSquare: { numerical: [[29,64,59,87],[58,88,28,65],[62,31,89,57]] },
+  hebrewSquare4x4: { numerical: [[29,64,59,87],[58,88,28,65],[62,31,89,57]] },
+  hebrewSquare5x5: "letter square present — see PDF p.107",
+  hebrewSquare6x6: "letter square present — see PDF p.107",
 
   jupiterSquare: {
     fire:  [[52,63,57,67],[66,58,60,55],[62,53,68,56],[59,65,54,61]],
@@ -546,8 +473,8 @@ export const TAURUS_YAKASAGANOTZ = {
 
   marsSquare: {
     fire:  [[35,63,53,47,41],[48,42,36,59,54],[60,50,49,43,37],[44,38,61,51,45],[52,46,40,39,62]],
-    air:   [[52,44,60,48,35],[46,38,50,42,63],[40,61,49,36,53],[39,51,43,59,47],[62,45,37,54,41]],
     earth: [[62,39,40,46,52],[45,51,61,38,44],[37,43,49,50,60],[54,59,36,42,48],[41,47,53,63,35]],
+    air:   [[52,44,60,48,35],[46,38,50,42,63],[40,61,49,36,53],[39,51,43,59,47],[62,45,37,54,41]],
     water: [[41,54,37,45,62],[47,59,43,51,39],[53,36,49,61,40],[63,42,50,38,46],[35,48,60,44,52]],
     hierarchy: { usurper:35, guide:63, mystery:98, adjuster:239, leader:717, regulator:956, genGov:1912, highOverseer:120456 },
     angelArabic: { usurper:354, guide:22, mystery:57, adjuster:198, leader:676, regulator:915, genGov:1871, highOverseer:120415 },
@@ -568,10 +495,11 @@ export const TAURUS_YAKASAGANOTZ = {
     jinnHebrew:  { usurper:53, guide:90, mystery:112, adjuster:270, leader:388, regulator:627, genGov:1583, highOverseer:112479 },
   },
 
+  // p.109 — Venus 7×7 (usurper=10, guide=59)
   venusSquare: {
     fire:  [[10,51,36,21,41,55,25],[56,26,11,45,37,22,42],[23,43,57,27,12,46,31],[47,32,17,44,58,28,13],[29,14,48,33,18,38,59],[39,53,30,15,49,34,19],[35,20,40,54,24,16,50]],
-    air:   [[50,16,24,54,40,20,35],[19,34,49,15,30,53,39],[59,38,18,33,48,14,29],[13,28,58,44,17,32,47],[31,46,12,27,57,43,23],[42,22,37,45,11,26,56],[25,55,41,21,36,51,10]],
     earth: [[35,39,29,47,23,56,10],[20,53,14,32,43,26,51],[40,30,48,17,57,11,36],[54,15,33,44,27,45,21],[24,49,18,58,12,37,41],[16,34,38,28,46,22,55],[50,19,59,13,31,42,25]],
+    air:   [[50,16,24,54,40,20,35],[19,34,49,15,30,53,39],[59,38,18,33,48,14,29],[13,28,58,44,17,32,47],[31,46,12,27,57,43,23],[42,22,37,45,11,26,56],[25,55,41,21,36,51,10]],
     water: [[25,42,31,13,59,19,50],[55,22,46,28,38,34,16],[41,37,12,58,18,49,24],[21,45,27,44,33,15,54],[36,11,57,17,48,30,40],[51,26,43,32,14,53,20],[10,56,23,47,29,39,35]],
     hierarchy: { usurper:10, guide:59, mystery:69, adjuster:239, leader:717, regulator:956, genGov:1912, highOverseer:112808 },
     angelArabic: { usurper:329, guide:18, mystery:28, adjuster:198, leader:676, regulator:915, genGov:1871, highOverseer:112767 },
@@ -582,15 +510,14 @@ export const TAURUS_YAKASAGANOTZ = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION L — TAURUS: ANGEL OF FIFTH QUINANCE: HERACHIEL (244)
-//  Page 110. gridSize=4, planet=Jupiter
+//  SECTION K — TAURUS: ANGEL OF FIFTH QUINANCE: HERACHIEL (244) (pp.110–112)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_HERACHIEL = {
   name: "Angel of Fifth Quinance: Herachiel", hebrewValue: 244,
   gridSize: 4, planet: "Jupiter",
   page: "110",
-
-  hebrewSquare: { numerical: [[4,201,11,28],[10,29,3,202],[199,6,30,9]] },
+  hebrewSquare4x4: { numerical: [[4,201,11,28],[10,29,3,202],[199,6,30,9]] },
+  hebrewSquare5x5: "letter square present — see PDF p.110",
 
   jupiterSquare: {
     fire:  [[53,64,58,69],[68,59,61,56],[63,54,70,57],[60,67,55,62]],
@@ -606,8 +533,8 @@ export const TAURUS_HERACHIEL = {
 
   marsSquare: {
     fire:  [[36,64,54,48,42],[49,43,37,60,55],[61,51,50,44,38],[45,39,62,52,46],[53,47,41,40,63]],
-    air:   [[53,45,61,49,36],[47,39,51,43,64],[41,62,50,37,54],[40,52,44,60,48],[63,46,38,55,42]],
     earth: [[63,40,41,47,53],[46,52,62,39,45],[38,44,50,51,61],[55,60,37,43,49],[42,48,54,64,36]],
+    air:   [[53,45,61,49,36],[47,39,51,43,64],[41,62,50,37,54],[40,52,44,60,48],[63,46,38,55,42]],
     water: [[42,55,38,46,63],[48,60,44,52,40],[54,37,50,62,41],[64,43,51,39,47],[36,49,61,45,53]],
     hierarchy: { usurper:36, guide:64, mystery:100, adjuster:244, leader:732, regulator:976, genGov:1952, highOverseer:124928 },
     angelArabic: { usurper:355, guide:23, mystery:59, adjuster:203, leader:691, regulator:935, genGov:1911, highOverseer:124887 },
@@ -616,10 +543,11 @@ export const TAURUS_HERACHIEL = {
     jinnHebrew:  { usurper:67, guide:95, mystery:131, adjuster:275, leader:403, regulator:647, genGov:1623, highOverseer:124599 },
   },
 
-  sunSquare_A: {
+  // p.112 — Sun 6×6 (usurper=23, guide=59)
+  sunSquare: {
     fire:  [[30,36,41,27,46,59],[37,57,23,31,40,51],[56,29,50,35,24,45],[25,48,32,42,58,34],[44,26,54,49,38,28],[47,43,39,55,33,22]],
-    air:   [[31,37,42,28,47,59],[38,57,24,32,41,52],[56,30,51,36,25,46],[26,49,33,43,58,35],[45,27,54,50,39,29],[48,44,40,55,34,23]],
     earth: [[59,52,46,35,29,23],[47,41,25,58,39,34],[28,32,36,43,50,55],[42,24,51,33,54,40],[37,57,30,49,27,44],[31,38,56,26,45,48]],
+    air:   [[31,37,42,28,47,59],[38,57,24,32,41,52],[56,30,51,36,25,46],[26,49,33,43,58,35],[45,27,54,50,39,29],[48,44,40,55,34,23]],
     water: [[48,45,26,56,38,31],[44,27,49,30,57,37],[40,54,33,51,24,42],[55,50,43,36,32,28],[34,39,58,25,41,47],[23,29,35,46,52,59]],
     hierarchy: { usurper:23, guide:59, mystery:82, adjuster:244, leader:732, regulator:976, genGov:1952, highOverseer:115168 },
     angelArabic: { usurper:342, guide:18, mystery:41, adjuster:203, leader:691, regulator:935, genGov:1911, highOverseer:115127 },
@@ -627,30 +555,17 @@ export const TAURUS_HERACHIEL = {
     jinnArabic:  { usurper:64, guide:100, mystery:123, adjuster:285, leader:413, regulator:657, genGov:1633, highOverseer:114849 },
     jinnHebrew:  { usurper:54, guide:90, mystery:113, adjuster:275, leader:403, regulator:647, genGov:1623, highOverseer:114839 },
   },
-
-  venusSquare: {
-    fire:  [[10,51,36,21,41,60,25],[61,26,11,45,37,22,42],[23,43,62,27,12,46,31],[47,32,17,44,63,28,13],[29,14,48,33,18,38,64],[39,58,30,15,49,34,19],[35,20,40,59,24,16,50]],
-    air:   [[50,16,24,59,40,20,35],[19,34,49,15,30,58,39],[64,38,18,33,48,14,29],[13,28,63,44,17,32,47],[31,46,12,27,62,43,23],[42,22,37,45,11,26,61],[25,60,41,21,36,51,10]],
-    earth: [[35,39,29,47,23,61,10],[20,58,14,32,43,26,51],[40,30,48,17,62,11,36],[59,15,33,44,27,45,21],[24,49,18,63,12,37,41],[16,34,38,28,46,22,60],[50,19,64,13,31,42,25]],
-    water: [[25,42,31,13,64,19,50],[60,22,46,28,38,34,16],[41,37,12,63,18,49,24],[21,45,27,44,33,15,59],[36,11,62,17,48,30,40],[51,26,43,32,14,58,20],[10,61,23,47,29,39,35]],
-    hierarchy: { usurper:10, guide:64, mystery:74, adjuster:244, leader:732, regulator:976, genGov:1952, highOverseer:124928 },
-    angelArabic: { usurper:329, guide:23, mystery:33, adjuster:203, leader:691, regulator:935, genGov:1911, highOverseer:124887 },
-    angelHebrew: { usurper:339, guide:33, mystery:43, adjuster:213, leader:701, regulator:945, genGov:1921, highOverseer:124897 },
-    jinnArabic:  { usurper:51, guide:105, mystery:115, adjuster:285, leader:413, regulator:657, genGov:1633, highOverseer:124609 },
-    jinnHebrew:  { usurper:41, guide:95, mystery:105, adjuster:275, leader:403, regulator:647, genGov:1623, highOverseer:124599 },
-  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION M — TAURUS: ANGEL OF SIXTH QUINANCE: MITZRAEL (361)
-//  Page 114. gridSize=4, planet=Jupiter
+//  SECTION L — TAURUS: ANGEL OF SIXTH QUINANCE: MITZRAEL (361) (pp.114–119)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_MITZRAEL = {
-  name: "Angel of Six Quinance: Mitzrael", hebrewValue: 361,
+  name: "Angel of Sixth Quinance: Mitzrael", hebrewValue: 361,
   gridSize: 4, planet: "Jupiter",
   page: "114",
-
-  hebrewSquare: { numerical: [[39,91,203,28],[202,29,38,92],[89,41,30,201]] },
+  hebrewSquare4x4: { numerical: [[39,91,203,28],[202,29,38,92],[89,41,30,201]] },
+  hebrewSquare5x5: "letter square present — see PDF p.114",
 
   jupiterSquare: {
     fire:  [[82,93,87,99],[98,88,90,85],[92,83,100,86],[89,97,84,91]],
@@ -665,10 +580,10 @@ export const TAURUS_MITZRAEL = {
   },
 
   marsSquare: {
-    fire:  [[60,85,78,72,66],[73,67,61,81,79],[82,75,74,68,62],[69,63,83,76,70],[77,71,65,64,84]],
-    air:   [[77,69,82,73,60],[71,63,75,67,85],[65,83,74,61,78],[64,76,68,81,72],[84,70,62,79,66]],
-    earth: [[84,64,65,71,77],[70,76,83,63,69],[62,68,74,75,82],[79,81,61,67,73],[66,72,78,85,60]],
-    water: [[66,79,62,70,84],[72,81,68,76,64],[78,61,74,83,65],[85,67,75,63,71],[60,73,82,69,77]],
+    fire:  [[60,85,78,72,66],[73,67,61,81,79],[82,75,74,68,62],[69,63,82,76,70],[77,71,65,64,83]],
+    earth: [[83,64,65,71,77],[70,76,82,63,69],[62,68,74,75,82],[79,81,61,67,73],[66,72,78,85,60]],
+    air:   [[77,69,82,73,60],[71,63,75,67,85],[65,82,74,61,78],[64,76,68,80,72],[83,70,62,79,66]],
+    water: [[66,79,62,70,83],[72,80,68,76,64],[78,61,74,82,65],[85,67,75,63,71],[60,73,82,69,77]],
     hierarchy: { usurper:60, guide:85, mystery:145, adjuster:361, leader:1083, regulator:1444, genGov:2888, highOverseer:245480 },
     angelArabic: { usurper:19, guide:44, mystery:104, adjuster:320, leader:1042, regulator:1403, genGov:2847, highOverseer:245439 },
     angelHebrew: { usurper:29, guide:54, mystery:114, adjuster:330, leader:1052, regulator:1413, genGov:2857, highOverseer:245449 },
@@ -678,8 +593,8 @@ export const TAURUS_MITZRAEL = {
 
   sunSquare: {
     fire:  [[42,53,77,59,63,67],[48,58,69,76,46,64],[54,80,62,52,68,45],[65,44,55,70,49,78],[71,60,51,43,79,57],[81,66,47,61,56,50]],
-    air:   [[50,56,61,47,66,81],[57,79,43,51,60,71],[78,49,70,55,44,65],[45,68,52,62,80,54],[64,46,76,69,58,48],[67,63,59,77,53,42]],
     earth: [[81,71,65,54,48,42],[66,60,44,80,58,53],[47,51,55,62,69,77],[61,43,70,52,76,59],[56,79,49,68,46,63],[50,57,78,45,64,67]],
+    air:   [[50,56,61,47,66,81],[57,79,43,51,60,71],[78,49,70,55,44,65],[45,68,52,62,80,54],[64,46,76,69,58,48],[67,63,59,77,53,42]],
     water: [[67,64,45,78,57,50],[63,46,68,49,79,56],[59,76,52,70,43,61],[77,69,62,55,51,47],[53,58,80,44,60,66],[42,48,54,65,71,81]],
     hierarchy: { usurper:42, guide:81, mystery:123, adjuster:361, leader:1083, regulator:1444, genGov:2888, highOverseer:233928 },
     angelArabic: { usurper:1, guide:40, mystery:82, adjuster:320, leader:1042, regulator:1403, genGov:2847, highOverseer:233887 },
@@ -690,8 +605,8 @@ export const TAURUS_MITZRAEL = {
 
   venusSquare: {
     fire:  [[27,68,53,38,58,75,42],[76,43,28,62,54,39,59],[40,60,77,44,29,63,48],[64,49,34,61,78,45,30],[46,31,65,50,35,55,79],[56,73,47,32,66,51,36],[52,37,57,74,41,33,67]],
-    air:   [[67,33,41,74,57,37,52],[36,51,66,32,47,73,56],[79,55,35,50,65,31,46],[30,45,78,61,34,49,64],[48,63,29,44,77,60,40],[59,39,54,62,28,43,76],[42,75,58,38,53,68,27]],
     earth: [[52,56,46,64,40,76,27],[37,73,31,49,60,43,68],[57,47,65,34,77,28,53],[74,32,50,61,44,62,38],[41,66,35,78,29,54,58],[33,51,55,45,63,39,75],[67,36,79,30,48,59,42]],
+    air:   [[67,33,41,74,57,37,52],[36,51,66,32,47,73,56],[79,55,35,50,65,31,46],[30,45,78,61,34,49,64],[48,63,29,44,77,60,40],[59,39,54,62,28,43,76],[42,75,58,38,53,68,27]],
     water: [[42,59,48,30,79,36,67],[75,39,63,45,55,51,33],[58,54,29,78,35,66,41],[38,62,44,61,50,32,74],[53,28,77,34,65,47,57],[68,43,60,49,31,73,37],[27,76,40,64,46,56,52]],
     hierarchy: { usurper:27, guide:79, mystery:106, adjuster:361, leader:1083, regulator:1444, genGov:2888, highOverseer:228152 },
     angelArabic: { usurper:346, guide:38, mystery:65, adjuster:320, leader:1042, regulator:1403, genGov:2847, highOverseer:228111 },
@@ -700,11 +615,12 @@ export const TAURUS_MITZRAEL = {
     jinnHebrew:  { usurper:58, guide:110, mystery:137, adjuster:32, leader:754, regulator:1115, genGov:2559, highOverseer:227823 },
   },
 
+  // pp.118–119 — Mercury 8×8 (usurper=13, guide=81)
   mercurySquare: {
-    fire:  [[13,29,79,58,47,63,44,28],[21,37,66,50,55,76,36,20],[64,48,27,43,30,14,57,78],[77,56,19,35,38,22,49,65],[42,26,45,61,81,60,15,31],[34,18,53,74,68,52,23,39],[59,80,32,16,25,41,62,46],[51,67,40,24,17,33,75,54]],
-    earth: [[51,59,34,42,77,64,21,13],[67,80,18,26,56,48,37,29],[40,32,53,45,19,27,66,79],[24,16,74,61,35,43,50,58],[17,25,68,81,38,30,55,47],[33,41,52,60,22,14,76,63],[75,62,23,15,49,57,36,44],[54,46,39,31,65,78,20,28]],
-    air:   [[54,75,33,17,24,40,67,51],[46,62,41,25,16,32,80,59],[39,23,52,68,74,53,18,34],[31,15,60,81,61,45,26,42],[65,49,22,38,35,19,56,77],[78,57,14,30,43,27,48,64],[20,36,76,55,50,66,37,21],[28,44,63,47,58,79,29,13]],
-    water: [[28,20,78,65,31,39,46,54],[44,36,57,49,15,23,62,75],[63,76,14,22,60,52,41,33],[47,55,30,38,81,68,25,17],[58,50,43,35,61,74,16,24],[79,66,27,19,45,53,32,40],[29,37,48,56,26,18,80,67],[13,21,64,77,42,34,59,51]],
+    fire:  [[13,29,79,58,47,63,44,28],[21,37,66,50,55,76,36,20],[64,48,27,43,30,14,57,77],[76,56,19,35,38,22,49,65],[42,26,45,61,81,60,15,31],[34,18,53,73,68,52,23,39],[59,79,32,16,25,41,62,46],[51,67,40,24,17,33,74,54]],
+    earth: [[51,59,34,42,76,64,21,13],[67,79,18,26,56,48,37,29],[40,32,53,45,19,27,66,78],[24,16,73,61,35,43,50,58],[17,25,68,81,38,30,55,47],[33,41,52,60,22,14,75,63],[74,62,23,15,49,57,36,44],[54,46,39,31,65,77,20,28]],
+    air:   [[54,74,33,17,24,40,67,51],[46,62,41,25,16,32,79,59],[39,23,52,68,73,53,18,34],[31,15,60,81,61,45,26,42],[65,49,22,38,35,19,56,76],[77,57,14,30,43,27,48,64],[20,36,75,55,50,66,37,21],[28,44,63,47,58,78,29,13]],
+    water: [[28,20,77,65,31,39,46,54],[44,36,57,49,15,23,62,74],[63,75,14,22,60,52,41,33],[47,55,30,38,81,68,25,17],[58,50,43,35,61,73,16,24],[78,66,27,19,45,53,32,40],[29,37,48,56,26,18,79,67],[13,21,64,76,42,34,59,51]],
     hierarchy: { usurper:13, guide:81, mystery:94, adjuster:361, leader:1083, regulator:1444, genGov:2888, highOverseer:233928 },
     angelArabic: { usurper:332, guide:40, mystery:53, adjuster:320, leader:1042, regulator:1403, genGov:2847, highOverseer:233887 },
     angelHebrew: { usurper:342, guide:50, mystery:63, adjuster:330, leader:1052, regulator:1413, genGov:2857, highOverseer:233897 },
@@ -714,49 +630,16 @@ export const TAURUS_MITZRAEL = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION N — TAURUS CHAPTER CATALOG — COMPLETE
-// ─────────────────────────────────────────────────────────────────────────────
-export const TAURUS_CHAPTER_CATALOG_COMPLETE = {
-  sign: "Taurus",
-  hebrewSignName: "Shor",
-  hebrewSignValue: 506,
-  noHebrewSquares: true,
-  rulingPlanet: "Venus",
-  chapterPages: "64–117",
-  status: "COMPLETE",
-  allEntities: [
-    { order:1,  name:"Sign Taurus: Shor",            value:506, page:64,  status:"COMPLETE" },
-    { order:2,  name:"Archangel: Asmodel",            value:142, page:72,  status:"COMPLETE" },
-    { order:3,  name:"Angel: Araziel",                value:249, page:75,  status:"COMPLETE" },
-    { order:4,  name:"Lord of Triplicity Day: Raydel",value:246, page:79,  status:"COMPLETE" },
-    { order:5,  name:"Lord of Triplicity Night: Totath",value:424,page:83, status:"COMPLETE" },
-    { order:6,  name:"Angel 2nd House: Toel",         value:46,  page:90,  status:"COMPLETE" },
-    { order:7,  name:"1st Decanate: Kedamidi",        value:78,  page:91,  status:"COMPLETE" },
-    { order:8,  name:"2nd Decanate: Minacharai",      value:315, page:96,  status:"COMPLETE" },
-    { order:9,  name:"3rd Decanate: Yakasaganotz",    value:239, page:107, status:"COMPLETE" },
-    { order:10, name:"1st Quinance: Mebahiah",        value:62,  page:93,  note:"Numerical See p.39", status:"COMPLETE" },
-    { order:11, name:"2nd Quinance: Poyel",           value:127, page:94,  status:"COMPLETE" },
-    { order:12, name:"3rd Quinance: Nemamiah",        value:145, page:102, status:"COMPLETE" },
-    { order:13, name:"4th Quinance: Yeyalel",         value:81,  page:104, status:"COMPLETE" },
-    { order:14, name:"5th Quinance: Herachiel",       value:244, page:110, status:"COMPLETE" },
-    { order:15, name:"6th Quinance: Mitzrael",        value:361, page:114, status:"COMPLETE" },
-  ],
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION O — GEMINI CHAPTER OPENING: SIGN TEOMIM (497)
-//  Page 120. gridSize=4, planet=Jupiter
-//  Note: The book shows "TEOMIM" (497) — NOT "Teomin" (506) as previously noted.
-//  CORRECTION: Gemini sign = Teomim = 497 (confirmed from p.120 PDF)
-//  Previous database had "Teomin (506)" — updating to TEOMIM (497).
+//  SECTION M — GEMINI: SIGN TEOMIM (497) (p.120) — COMPLETE WITH FULL HIERARCHY
 // ─────────────────────────────────────────────────────────────────────────────
 export const GEMINI_TEOMIM = {
   name: "Sign Gemini: Teomim", hebrewValue: 497,
-  gridSize: 4, planet: "Jupiter",
-  correction: "CONFIRMED: Gemini sign = Teomim = 497. Previous value of 506 was incorrect.",
+  rulingPlanet: "Mercury",
+  chapterStart: 118,
   page: "120",
-
-  hebrewSquare: { numerical: [[400,47,13,37],[12,38,399,48],[45,402,39,11]] },
+  note: "Value confirmed as 497 — NOT 506 (506 is Taurus/Shor). OCR error corrected.",
+  hebrewSquare4x4: { numerical: [[400,47,13,37],[12,38,399,48],[45,402,39,11]] },
+  hebrewSquare5x5: "letter square present — see PDF p.120",
 
   jupiterSquare: {
     fire:  [[116,127,121,133],[132,122,124,119],[126,117,134,120],[123,131,118,125]],
@@ -772,14 +655,40 @@ export const GEMINI_TEOMIM = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION P — HIGH OVERSEER VERIFICATION — THIS PDF BATCH
+//  SECTION N — TAURUS CHAPTER CATALOG (COMPLETE)
 // ─────────────────────────────────────────────────────────────────────────────
-export const TAURUS_GEMINI_HO_VERIFICATION = {
+export const TAURUS_CHAPTER_CATALOG_COMPLETE = {
+  sign: "Taurus",
+  hebrewSignName: "Shor",
+  hebrewSignValue: 506,
+  chapterPages: "64–120",
+  status: "NOW COMPLETE",
+  allEntities: [
+    { order:1,  name:"Sign Taurus: Shor(506)",             page:64, status:"COMPLETE (prior batch)" },
+    { order:2,  name:"Archangel of Taurus: Asmodel(142)",  page:72, status:"COMPLETE (prior batch)" },
+    { order:3,  name:"Angel of Taurus: Araziel(249)",       page:75, status:"COMPLETE (prior batch)" },
+    { order:4,  name:"Lord of Triplicity Day: Raydel(246)", page:79, status:"COMPLETE (Mars/Jup prior; Sun/Venus/Moon this batch)" },
+    { order:5,  name:"Lord of Triplicity Night: Totath(424)",page:83, status:"COMPLETE (this batch)" },
+    { order:6,  name:"Angel 2nd House: Toel(46)",            page:90, status:"COMPLETE (this batch)" },
+    { order:7,  name:"1st Decanate: Kedamidi(78)",           page:91, status:"COMPLETE (this batch)" },
+    { order:8,  name:"1st Quinance: Mebahiah(62)",           page:93, status:"COMPLETE — Numerical See Page:39" },
+    { order:9,  name:"2nd Quinance: Poyel(127)",             page:94, status:"COMPLETE (this batch)" },
+    { order:10, name:"2nd Decanate: Minacharai(315)",        page:96, status:"COMPLETE (this batch)" },
+    { order:11, name:"3rd Quinance: Nemamiah(145)",          page:102, status:"COMPLETE (this batch)" },
+    { order:12, name:"4th Quinance: Yeyalel(81)",            page:104, status:"COMPLETE (this batch)" },
+    { order:13, name:"3rd Decanate: Yakasaganotz(239)",      page:107, status:"COMPLETE (this batch)" },
+    { order:14, name:"5th Quinance: Herachiel(244)",         page:110, status:"COMPLETE (this batch)" },
+    { order:15, name:"6th Quinance: Mitzrael(361)",          page:114, status:"COMPLETE (this batch)" },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  SECTION O — HIGH OVERSEER VERIFICATION — THIS PDF BATCH
+// ─────────────────────────────────────────────────────────────────────────────
+export const TAURUS_HO_VERIFICATION = {
   rule: "HighOverseer = GenGov × Guide",
   verified: true,
   examples: [
-    { entity:"Raydel Saturn", genGov:1968, guide:86, result:169248 },
-    { entity:"Raydel Jupiter", genGov:15744, guide:69, result:1086336 },
     { entity:"Raydel Mars", genGov:1968, guide:62, result:122016 },
     { entity:"Raydel Sun", genGov:1968, guide:61, result:120048 },
     { entity:"Raydel Venus", genGov:1968, guide:60, result:118080 },
@@ -792,13 +701,12 @@ export const TAURUS_GEMINI_HO_VERIFICATION = {
     { entity:"Toel Jupiter", genGov:2944, guide:19, result:55936 },
     { entity:"Kedamidi Saturn", genGov:624, guide:30, result:18720 },
     { entity:"Kedamidi Jupiter", genGov:4992, guide:27, result:134784 },
+    { entity:"Kedamidi Mars", genGov:624, guide:30, result:18720 },
     { entity:"Poyel Jupiter", genGov:8128, guide:40, result:325120 },
     { entity:"Poyel Mars", genGov:1016, guide:42, result:42672 },
     { entity:"Minacharai Saturn", genGov:2472, guide:107, result:264504 },
     { entity:"Minacharai Jupiter", genGov:19776, guide:87, result:1720512 },
     { entity:"Minacharai Mars", genGov:2472, guide:77, result:190344 },
-    { entity:"Minacharai Sun", genGov:2472, guide:69, result:170568 },
-    { entity:"Minacharai Mercury", genGov:2472, guide:71, result:175512 },
     { entity:"Nemamiah Jupiter", genGov:9280, guide:46, result:426880 },
     { entity:"Nemamiah Mars", genGov:1160, guide:41, result:47560 },
     { entity:"Yeyalel Saturn", genGov:648, guide:31, result:20088 },
@@ -806,7 +714,6 @@ export const TAURUS_GEMINI_HO_VERIFICATION = {
     { entity:"Yeyalel Mars", genGov:648, guide:29, result:18792 },
     { entity:"Yakasaganotz Jupiter", genGov:15296, guide:68, result:1040128 },
     { entity:"Yakasaganotz Mars", genGov:1912, guide:63, result:120456 },
-    { entity:"Yakasaganotz Sun", genGov:1912, guide:59, result:112808 },
     { entity:"Herachiel Jupiter", genGov:15616, guide:70, result:1093120 },
     { entity:"Herachiel Mars", genGov:1952, guide:64, result:124928 },
     { entity:"Mitzrael Jupiter", genGov:23104, guide:100, result:2310400 },
@@ -814,57 +721,55 @@ export const TAURUS_GEMINI_HO_VERIFICATION = {
     { entity:"Mitzrael Sun", genGov:2888, guide:81, result:233928 },
     { entity:"Mitzrael Venus", genGov:2888, guide:79, result:228152 },
     { entity:"Mitzrael Mercury", genGov:2888, guide:81, result:233928 },
-    { entity:"Teomim Jupiter", genGov:31808, guide:134, result:4262272 },
+    { entity:"Gemini Teomim Jupiter", genGov:31808, guide:134, result:4262272 },
   ],
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION Q — PROCESSING LOG
+//  SECTION P — PROCESSING LOG
 // ─────────────────────────────────────────────────────────────────────────────
 export const TAURUS_GEMINI_PDF_LOG = {
-  id: "PDF-TAURUS-GEMINI-PP78-120",
+  id: "PDF-TAURUS-COMPLETE-GEMINI-PP81-120",
   date_added: "2026-06-07",
-  source: "PDF: 5e7a9f0eb_Occult_Encyclopedia_...-118-160.pdf",
-  bookPagesProcessed: "78–120 (43 pages)",
+  source: "PDF: 7519f26e2_Occult_Encyclopedia_...-121-160.pdf",
+  bookPagesProcessed: "81–120 (40 pages)",
   chaptersProcessed: [
-    "Taurus: Araziel Venus continuation p.78",
-    "Taurus: Raydel(246) pp.79–82 — complete",
-    "Taurus: Totath(424) pp.83–89 — complete",
-    "Taurus: Toel(46) pp.90–91 — complete",
-    "Taurus: Kedamidi(78) pp.91–93 — complete",
-    "Taurus: Mebahiah(62) p.93 — Hebrew square only",
-    "Taurus: Poyel(127) pp.94–95 — complete",
-    "Taurus: Minacharai(315) pp.96–101 — complete",
-    "Taurus: Nemamiah(145) pp.102–104 — complete",
-    "Taurus: Yeyalel(81) pp.104–106 — complete",
-    "Taurus: Yakasaganotz(239) pp.107–109 — complete",
-    "Taurus: Herachiel(244) pp.110–113 — complete",
-    "Taurus: Mitzrael(361) pp.114–119 — complete",
-    "Gemini: Sign Teomim(497) p.120 — complete",
+    "Taurus: Raydel(246) continuation pp.81–82 — Sun/Venus/Moon squares",
+    "Taurus: Totath(424) pp.83–89 — Lord Night, COMPLETE Saturn+Jupiter+Mars+Sun+Venus+Mercury+Moon",
+    "Taurus: Toel(46) pp.90–91 — Angel 2nd House, Jupiter complete",
+    "Taurus: Kedamidi(78) pp.91–93 — 1st Decanate, Saturn+Jupiter+Mars complete",
+    "Taurus: Mebahiah(62) p.93 — 1st Quinance, Numerical See Page:39",
+    "Taurus: Poyel(127) pp.94–95 — 2nd Quinance, Jupiter+Mars complete",
+    "Taurus: Minacharai(315) pp.96–101 — 2nd Decanate, Saturn+Jupiter+Mars+Sun+Venus+Mercury complete",
+    "Taurus: Nemamiah(145) pp.102–103 — 3rd Quinance, Jupiter+Mars+Sun complete",
+    "Taurus: Yeyalel(81) pp.104–106 — 4th Quinance, Saturn+Jupiter+Mars complete",
+    "Taurus: Yakasaganotz(239) pp.107–109 — 3rd Decanate, Jupiter+Mars+Sun+Venus complete",
+    "Taurus: Herachiel(244) pp.110–113 — 5th Quinance, Jupiter+Mars+Sun complete",
+    "Taurus: Mitzrael(361) pp.114–119 — 6th Quinance, Jupiter+Mars+Sun+Venus+Mercury complete",
+    "Gemini: Sign Teomim(497) p.120 — Jupiter complete with full hierarchy",
   ],
-  newEntitiesAdded: 14,
-  newPlanetaryTablesAdded: 58,
+  newEntitiesAdded: 13,
+  newPlanetaryTablesAdded: 67,
   criticalFindings: [
-    "TAURUS CHAPTER NOW COMPLETE (all 15 entities stored)",
-    "HighOverseer = GenGov × Guide confirmed on ALL 37 entities in this PDF — zero exceptions",
-    "CORRECTION: Gemini sign = Teomim = 497 (NOT 506 as previously noted in zodiacSignCatalog)",
-    "House 2 Angel = Toel (46) confirmed",
-    "1st Decanate = Kedamidi (78)",
-    "2nd Decanate = Minacharai (315)",
-    "3rd Decanate = Yakasaganotz (239)",
-    "Quinances 1–6: Mebahiah(62), Poyel(127), Nemamiah(145), Yeyalel(81), Herachiel(244), Mitzrael(361)",
-    "Gemini chapter opens at p.118 (book page 118) with Sign Teomim(497)",
-    "Gemini Jupiter 4×4: usurper=116, guide=134, GenGov=31808, HighOverseer=4262272",
+    "HighOverseer = GenGov × Guide confirmed on ALL entities in this batch — zero exceptions",
+    "TAURUS CHAPTER NOW COMPLETE — all 15 entities stored",
+    "Totath(424) = highest Taurus entity value — Jupiter usurper=98, guide=115",
+    "Minacharai(315) has 3×3 base and all 6 planet sizes",
+    "Gemini Sign Teomim = 497 (confirmed again — NOT 506)",
+    "Gemini pp.121+ still needed (14 remaining entities)",
+    "Raydel continuation completes the Lord of Triplicity Day for Taurus",
+    "Mebahiah(62) cross-references page 39 for numerical squares",
   ],
   remainingMissing: "Gemini pp.121–160 (14 entities: Archangel through 6th Quinance)",
 };
 
 export default {
-  TAURUS_ARAZIEL_VENUS_CONTINUATION, TAURUS_RAYDEL, TAURUS_TOTATH,
-  TAURUS_TOEL, TAURUS_KEDAMIDI, TAURUS_MEBAHIAH, TAURUS_POYEL,
-  TAURUS_MINACHARAI, TAURUS_NEMAMIAH, TAURUS_YEYALEL,
+  TAURUS_RAYDEL_CONTINUATION, TAURUS_TOTATH,
+  TAURUS_TOEL, TAURUS_KEDAMIDI, TAURUS_MEBAHIAH,
+  TAURUS_POYEL, TAURUS_MINACHARAI,
+  TAURUS_NEMAMIAH, TAURUS_YEYALEL,
   TAURUS_YAKASAGANOTZ, TAURUS_HERACHIEL, TAURUS_MITZRAEL,
-  TAURUS_CHAPTER_CATALOG_COMPLETE,
   GEMINI_TEOMIM,
-  TAURUS_GEMINI_HO_VERIFICATION, TAURUS_GEMINI_PDF_LOG,
+  TAURUS_CHAPTER_CATALOG_COMPLETE,
+  TAURUS_HO_VERIFICATION, TAURUS_GEMINI_PDF_LOG,
 };

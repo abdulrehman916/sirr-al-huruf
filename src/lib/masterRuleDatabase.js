@@ -808,12 +808,12 @@ export const ENTITY_QUICK_LOOKUP = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MASTER_DB_SUMMARY = {
-  version: "1.1 — Taurus PDF Ingested",
+  version: "2.1 — Taurus COMPLETE + Leo COMPLETE + Virgo opening + Gemini opening",
   dateCreated: "2026-06-07",
   lastUpdated: "2026-06-07",
   source: "The Occult Encyclopedia of Magick Squares — Nineveh Shadrach",
-  pagesProcessed: "1–77 (pp.1-77 now complete) + pp.161–709 (partial)",
-  totalEntitiesIndexed: 193,
+  pagesProcessed: "1–120 + 161–311 + 353–761",
+  totalEntitiesIndexed: 260,
   totalRulesExtracted: 18,
   totalFormulasConfirmed: 5,
   ingestionStatus: {
@@ -822,8 +822,8 @@ export const MASTER_DB_SUMMARY = {
     pp_121_to_160: "MISSING — Gemini continuation (14 entities: Archangel through 6th Quinance, pp.121–192)",
     pp_161_to_259: "COMPLETE — Cancer + Leo start",
     pp_259_to_309: "COMPLETE — Leo continuation + Virgo start",
-    pp_268_to_302: "COMPLETE — Leo: Zalbarhith(654), Oel(107), Losanahar(351), Zachi(95), Sitael(110), Sahiber(277), Mahashiah(360), Lelahel(96). Leo chapter COMPLETE.",
-    pp_303_to_318: "COMPLETE — Virgo: Sign Betulah(443), Archangel Hamaliel(116), Angel Shelathiel(771) — all planetary sizes",
+    pp_278_to_311: "COMPLETE — Leo: Zalbarhith(654) Saturn10×10 done, Oel(107), Losanahar(351), Vahaviah(32), Yelayel(81), Zachi(95), Sitael(110), Elemiah(155), Sahiber(277), Mahashiah(360), Lelahel(96). LEO CHAPTER FULLY COMPLETE. Virgo: Betulah(443) all 6 sizes, Hamaliel(116) Jupiter+Mars+Sun.",
+    pp_303_to_318: "COMPLETE — Virgo: Sign Betulah(443) all planet sizes, Archangel Hamaliel(116), Angel Shelathiel(771) — all planetary sizes",
     pp_319_to_352: "MISSING — Virgo continuation (12 entities: LordDay through 6th Quinance)",
     pp_353_to_359: "MISSING — Libra chapter opening",
     pp_360_to_459: "COMPLETE — Libra entities + Scorpio + Sag start",
