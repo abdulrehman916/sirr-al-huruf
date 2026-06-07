@@ -84,13 +84,6 @@ export default function FaalHikmah() {
   }, [setPageState]);
 
   const handleSelect = (entry) => {
-    console.log("🔍 CARD SELECTED:", entry);
-    console.log("🔍 Entry ID:", entry?.id);
-    console.log("🔍 Entry gridPos:", entry?.gridPos);
-    console.log("🔍 Entry symbol:", entry?.symbol);
-    console.log("🔍 Entry text (first 50 chars):", entry?.text?.substring(0, 50));
-    console.log("🔍 Entry danyal:", entry?.danyal);
-    console.log("🔍 Entry sadiq:", entry?.sadiq);
     setSelected(entry);
     persist(entry);
   };
@@ -106,23 +99,15 @@ export default function FaalHikmah() {
   };
 
   const isAr = lang === "ar";
+  // For cards with id:null, use gridPos as the translation key
   const cardKey = selected?.id ?? selected?.gridPos;
   const ml = selected && cardKey ? FAAL_CHOB_ML[cardKey] : null;
   
-  // Debug: Check if selected card has ALL required fields
-  if (selected) {
-    console.log("🔍 SELECTED CARD FULL OBJECT:", JSON.stringify(selected, null, 2));
-    console.log("🔍 RENDER CHECK:");
-    console.log("  - cardKey:", cardKey);
-    console.log("  - selected.text length:", selected.text?.length);
-    console.log("  - selected.danyal length:", selected.danyal?.length);
-    console.log("  - selected.sadiq length:", selected.sadiq?.length);
-    console.log("  - ml?.text length:", ml?.text?.length);
-    console.log("  - ml?.danyal length:", ml?.danyal?.length);
-    console.log("  - ml?.sadiq length:", ml?.sadiq?.length);
-    console.log("  - isAr:", isAr);
-    console.log("  - Should show text section:", !!(selected.text || (ml?.text && !isAr)));
-  }
+  // Ensure selected card has all required fields by finding it in GRID_ENTRIES
+  // This handles cases where stale state from page state may be incomplete
+  const selectedCard = selected 
+    ? (GRID_ENTRIES.find(e => e.gridPos === selected.gridPos) || selected)
+    : null;
 
   return (
     <div className="space-y-4" style={{ minHeight: 0, height: "auto", overflow: "visible" }}>
@@ -285,7 +270,7 @@ export default function FaalHikmah() {
                     dir="rtl"
                     style={{ color: G.text, fontSize: "22px", letterSpacing: "0.08em" }}
                   >
-                    {selected.gridPos ? getCombinationCode(selected.gridPos) : ""}
+                    {selectedCard?.gridPos ? getCombinationCode(selectedCard.gridPos) : ""}
                   </div>
                 </div>
                 <motion.div
@@ -300,29 +285,29 @@ export default function FaalHikmah() {
                   }}
                 >
                   <span className="font-amiri text-3xl font-bold tracking-widest" style={{ color: G.text }} dir="rtl">
-                    {selected.symbol}
+                    {selectedCard?.symbol}
                   </span>
                 </motion.div>
                 <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                  Card #{selected.id} — فال چوب
+                  Card #{selectedCard?.id ?? selectedCard?.gridPos} — فال چوب
                 </p>
               </div>
 
               {/* Verse — always Arabic, shown in both modes */}
-              {selected.verse && (
+              {selectedCard?.verse && (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(212,175,55,0.07)", borderColor: "rgba(212,175,55,0.22)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     {isAr ? "آیه / حدیث" : "ആയത്ത് / ഹദീഥ്"}
                   </p>
                   <p className="font-amiri text-lg leading-relaxed text-center" style={{ color: G.text, fontWeight: 600 }} dir="rtl">
-                    {selected.verse}
+                    {selectedCard.verse}
                   </p>
                 </div>
               )}
 
               {/* Main text */}
-              {(selected.text || (ml?.text && !isAr)) && (
+              {(selectedCard?.text || (ml?.text && !isAr)) && (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(8,16,38,0.95)", borderColor: "rgba(212,175,55,0.18)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
@@ -330,9 +315,9 @@ export default function FaalHikmah() {
                   </p>
                   {isAr ? (
                     <>
-                      <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{selected.text}</p>
-                      {selected.continuation && (
-                        <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl" style={{ fontWeight: 600 }}>{selected.continuation}</p>
+                      <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.text}</p>
+                      {selectedCard?.continuation && (
+                        <p className="font-amiri text-base leading-loose text-white/90 mt-2" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard.continuation}</p>
                       )}
                     </>
                   ) : (
@@ -344,14 +329,14 @@ export default function FaalHikmah() {
               )}
 
               {/* Danyal */}
-              {(selected.danyal || (ml?.danyal && !isAr)) && (
+              {(selectedCard?.danyal || (ml?.danyal && !isAr)) && (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
                     {isAr ? "حضرت دانیال نبی علیه‌السلام" : "ഹസ്രത്ത് ദാനിയ്യൽ നബി (അ.സ.)"}
                   </p>
                   {isAr ? (
-                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selected.danyal}</p>
+                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.danyal}</p>
                   ) : (
                     <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
                       {ml?.danyal}
@@ -361,14 +346,14 @@ export default function FaalHikmah() {
               )}
 
               {/* Sadiq */}
-              {(selected.sadiq || (ml?.sadiq && !isAr)) && (
+              {(selectedCard?.sadiq || (ml?.sadiq && !isAr)) && (
                 <div className="rounded-xl border p-4"
                   style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.14)" }}>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
                     {isAr ? "حضرت امام جعفر صادق علیه‌السلام" : "ഇമാം ജഅ്ഫർ സ്വാദിഖ് (അ.സ.)"}
                   </p>
                   {isAr ? (
-                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selected.sadiq}</p>
+                    <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.sadiq}</p>
                   ) : (
                     <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
                       {ml?.sadiq}
