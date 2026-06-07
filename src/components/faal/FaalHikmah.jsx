@@ -109,22 +109,6 @@ export default function FaalHikmah() {
     ? (GRID_ENTRIES.find(e => e.gridPos === selected.gridPos) || selected)
     : null;
 
-  // DEBUG: Log runtime values when a card is selected
-  if (selectedCard) {
-    console.log("🔍 FAAL CHOB DEBUG:", {
-      gridPos: selectedCard.gridPos,
-      combination: getCombinationCode(selectedCard.gridPos),
-      hasText: !!selectedCard.text,
-      textLength: selectedCard.text?.length,
-      hasDanyal: !!selectedCard.danyal,
-      hasSadiq: !!selectedCard.sadiq,
-      mlHasKey: !!ml,
-      mlTextLength: ml?.text?.length,
-      isArabic: isAr,
-      willShowText: !!(selectedCard.text || (ml?.text && !isAr)),
-    });
-  }
-
   return (
     <div className="space-y-4" style={{ minHeight: 0, height: "auto", overflow: "visible" }}>
 
@@ -337,9 +321,17 @@ export default function FaalHikmah() {
                       )}
                     </>
                   ) : (
-                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-                      {ml?.text}
-                    </p>
+                    <>
+                      {ml?.text ? (
+                        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
+                          {ml.text}
+                        </p>
+                      ) : (
+                        <p className="font-amiri text-base leading-loose text-white/90" dir="rtl" style={{ fontWeight: 600 }}>
+                          {selectedCard?.text}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -354,9 +346,17 @@ export default function FaalHikmah() {
                   {isAr ? (
                     <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.danyal}</p>
                   ) : (
-                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
-                      {ml?.danyal}
-                    </p>
+                    <>
+                      {ml?.danyal ? (
+                        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
+                          {ml.danyal}
+                        </p>
+                      ) : selectedCard?.danyal ? (
+                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>
+                          {selectedCard.danyal}
+                        </p>
+                      ) : null}
+                    </>
                   )}
                 </div>
               )}
@@ -371,9 +371,17 @@ export default function FaalHikmah() {
                   {isAr ? (
                     <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>{selectedCard?.sadiq}</p>
                   ) : (
-                    <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
-                      {ml?.sadiq}
-                    </p>
+                    <>
+                      {ml?.sadiq ? (
+                        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>
+                          {ml.sadiq}
+                        </p>
+                      ) : selectedCard?.sadiq ? (
+                        <p className="font-amiri text-base leading-loose text-white/85" dir="rtl" style={{ fontWeight: 600 }}>
+                          {selectedCard.sadiq}
+                        </p>
+                      ) : null}
+                    </>
                   )}
                 </div>
               )}
