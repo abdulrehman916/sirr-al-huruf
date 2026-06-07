@@ -252,7 +252,7 @@ export const RULE_ZODIAC_STRUCTURE = {
   zodiacSignCatalog: [
     { sign:"Aries",       hebrew:"Taleh",   value:44,  planet:"Jupiter", note:"No Hebrew Squares Available" },
     { sign:"Taurus",      hebrew:"Shor",    value:506, planet:"Jupiter" },
-    { sign:"Gemini",      hebrew:"Teomin",  value:506, planet:"Jupiter" },
+    { sign:"Gemini",      hebrew:"Teomim",  value:497, planet:"Jupiter", correction:"Confirmed p.120 — value is 497 NOT 506. 506 was incorrect." },
     { sign:"Cancer",      hebrew:"Sarton",  value:319, planet:"Jupiter" },
     { sign:"Leo",         hebrew:"Ari",     value:216, planet:"Saturn" },
     { sign:"Virgo",       hebrew:"Betulah", value:443, planet:"Jupiter" },
@@ -800,8 +800,9 @@ export const MASTER_DB_SUMMARY = {
   totalFormulasConfirmed: 5,
   ingestionStatus: {
     pp_1_to_77: "COMPLETE — Aries full + Taurus pp.64–77 (Sign, Archangel, Angel)",
-    pp_78_to_117: "MISSING — Taurus continuation (12 entities remaining)",
-    pp_118_to_160: "MISSING — Gemini chapter",
+    pp_78_to_117: "COMPLETE — All 15 Taurus entities (Raydel, Totath, Toel, Kedamidi, Mebahiah, Poyel, Minacharai, Nemamiah, Yeyalel, Yakasaganotz, Herachiel, Mitzrael)",
+    pp_118_to_120: "COMPLETE — Gemini Sign Teomim(497) stored",
+    pp_121_to_160: "MISSING — Gemini continuation (14 entities: Archangel through 6th Quinance)",
     pp_161_to_259: "COMPLETE — Cancer + Leo start",
     pp_259_to_309: "COMPLETE — Leo continuation + Virgo start",
     pp_310_to_359: "MISSING — Virgo continuation + Libra opening",
