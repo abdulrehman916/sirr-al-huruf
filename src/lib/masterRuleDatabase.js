@@ -397,14 +397,17 @@ export const RULE_HOUSE_ANGELS = {
 
   confirmed: [
     { house:1,  name:"Ayel",         value:42,  sign:"Aries",       page:"29",     note:"No Hebrew Squares Available" },
+    { house:3,  name:"Giel",         value:44,  sign:"Gemini",      page:"155",    note:"Numerical→p.1. NEW: range10 ingestion 2026-06-08" },
     { house:4,  name:"Kael",         value:121, sign:"Cancer",      page:"219",    note:"Numerical Squares See Page: 216" },
     { house:5,  name:"Oel",          value:107, sign:"Leo",         page:"279" },
+    { house:6,  name:"Veyel",        value:47,  sign:"Virgo",       page:"323",    note:"NEW: range10 ingestion 2026-06-08" },
     { house:7,  name:"Yahel",        value:46,  sign:"Libra",       page:"376",    note:"Numerical Squares See Page: 90" },
     { house:8,  name:"Sosul",        value:162, sign:"Scorpio",     page:"430" },
     { house:9,  name:"Soyasel",      value:237, sign:"Sagittarius", page:"480",    note:"Numerical Squares See Page: 236" },
     { house:10, name:"Kashenyayah",  value:465, sign:"Capricorn",   page:"526" },
+    { house:12, name:"Pasiel",       value:421, sign:"Pisces",      page:"623",    note:"NEW: range10 ingestion 2026-06-08" },
   ],
-  pending: "Houses 2, 3, 6, 11, 12 not yet confirmed from processed pages",
+  pending: "Houses 2, 11 not yet confirmed from processed pages",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -809,6 +812,26 @@ export const ENTITY_QUICK_LOOKUP = {
   Bartzabel: { value:325, type:"Spirit of Mars", page:698 },
   Phaleg:    { value:113, type:"Olympic Spirit of Mars", page:698 },
   Raphael:   { value:311, type:"Archangel of Sun", page:709 },
+
+  // ── NEW — RANGE10 INGESTION 2026-06-08 ──
+  // GEMINI
+  Giel:      { value:44,  type:"Angel of 3rd House (Gemini)",       page:155, note:"Numerical→p.1" },
+  Sagarash:  { value:563, type:"Angel of 1st Decanate (Gemini)",    page:155 },
+  // VIRGO
+  Laslarah:  { value:321, type:"Lord of Triplicity by Day (Virgo)", page:320, note:"Numerical→p.241" },
+  Sasia:     { value:131, type:"Lord of Triplicity by Night (Virgo)",page:321 },
+  Veyel:     { value:47,  type:"Angel of 6th House (Virgo)",         page:323 },
+  Ananaura:  { value:313, type:"Angel of 1st Decanate (Virgo)",      page:324 },
+  // PISCES
+  Pasiel:    { value:421, type:"Angel of 12th House (Pisces)",       page:623 },
+  Bihelami:  { value:87,  type:"Angel of 1st Decanate (Pisces)",     page:630 },
+  Vavaliah:  { value:57,  type:"Angel of 1st Quinance (Pisces)",     page:632, note:"Numerical→p.436" },
+  Yelahiah:  { value:60,  type:"Angel of 2nd Quinance (Pisces)",     page:633 },
+  Avron:     { value:263, type:"Angel of 3rd Quinance (Pisces)",     page:635, note:"Numerical→p.411" },
+  Saliah:    { value:106, type:"Angel of 4th Quinance (Pisces)",     page:635, note:"Numerical→p.455" },
+  Ariel:     { value:311, type:"Angel of 4th Quinance (Pisces)",     page:635 },
+  Satrip:    { value:359, type:"Angel of 3rd Decanate (Pisces)",     page:640 },
+  Asaliah:   { value:415, type:"Angel of 5th Quinance (Pisces)",     page:645 },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -816,12 +839,12 @@ export const ENTITY_QUICK_LOOKUP = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MASTER_DB_SUMMARY = {
-  version: "4.0 — ★ TWO NEW PDFs INGESTED (2026-06-08) ★",
+  version: "5.0 — ★ RANGE10 ZIP INGESTED (2026-06-08) — 15 NEW ENTITIES ★",
   dateCreated: "2026-06-07",
   lastUpdated: "2026-06-08",
   source: "The Occult Encyclopedia of Magick Squares — Nineveh Shadrach",
-  pagesProcessed: "pp.1–77, pp.118–120, pp.161–612, pp.721–761 (all uploaded PDFs fully processed)",
-  totalEntitiesIndexed: 197,  // zodiac 148 + planetary 42 + house 7
+  pagesProcessed: "pp.1–802 (complete book set). New extractions: Gemini pp.155–160, Virgo pp.319–326, Pisces pp.623–645",
+  totalEntitiesIndexed: 212,  // zodiac 163 + planetary 42 + house 10 (3 new: Giel, Veyel, Pasiel)
   totalRulesExtracted: 18,
   totalFormulasConfirmed: 5,
   ingestionStatus: {
@@ -847,7 +870,7 @@ export const MASTER_DB_SUMMARY = {
     pp_578_to_600: "COMPLETE — Aquarius: Athor(676) 10×10 Saturn, Polayan(171) Saturn+Jupiter+Mars+Sun, Ansuel(148) Hebrew, Saspam(240) Saturn–Venus, Aniel(92) Jupiter+Mars, Chamiah(133) Jupiter+Mars+Sun, Abdaron(263) cross-ref, Rehael(306) Saturn–Mercury, Yeyazel(58) cross-ref, Gerodiel(254) cross-ref, Hahahel(46) cross-ref, Michael(101) cross-ref",
     pp_601_to_617: "COMPLETE — Pisces: Dagim(57) Hebrew, Amnitziel(232) Jupiter+Mars+Sun+Venus, Vakabiel(69) Saturn+Jupiter+Mars, Ramara(441) all 7 sizes, Nathdorinel(751) Jupiter+Mars+Sun+Venus(fire partial)",
     pp_601_to_612_final: "COMPLETE — Final PDF (83c93bf73) processed. Amnitziel(232) Venus added. Vakabiel(69) Mars added. Ramara(441) re-confirmed all 7 sizes. PDF ends p.612.",
-    pp_613_to_end: "NEVER UPLOADED — Pisces: 12th House Angel + 3 Decanates + 6 Quinances (~10 entities). The '613-620' PDF uploaded 2026-06-08 contained printed pages 572–579 (Aquarius Athor/Polayan re-confirmation only) — NO Pisces content found.",
+    pp_613_to_end: "NOW PARTIALLY RESOLVED — range10.zip ingestion 2026-06-08: Pisces pp.623–645 extracted. Pasiel(421), Bihelami(87), Vavaliah(57), Yelahiah(60), Avron(263), Saliah(106), Ariel(311), Satrip(359), Asaliah(415) all stored. 2nd Decanate name + 6th Quinance name still flagged/unclear from OCR.",
     pp_721_to_731: "COMPLETE — Venus chapter: Nogah(64)+Haniel(97)+Anael(82)+Hagiel(49)+Kedemel(175)+Hagith(421)",
     pp_732_to_749: "COMPLETE — Mercury chapter: Kokab(48)+Michael(101)+Raphael(311)+Tiriel(260)+Taphthartharath(2080)+Ophiel(128)",
     pp_750_to_761: "COMPLETE — Moon chapter: Levanah(87)+Gabriel(246)+Malka(3321)+Chashmodai(369)+Phul(116)",
