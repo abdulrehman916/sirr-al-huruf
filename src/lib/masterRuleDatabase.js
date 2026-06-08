@@ -653,6 +653,12 @@ export function getPlanetForSize(size) {
 
 export const ENTITY_QUICK_LOOKUP = {
   // Format: name → { value, sign/planet, page }
+  // GEMINI (newly added 2026-06-08)
+  Ambriel:      { value:284, type:"Archangel of Gemini", page:127 },
+  Sarayel:      { value:302, type:"Angel of Gemini", page:132 },
+  Sarash:       { value:630, type:"Lord of Triplicity by Day (Gemini)", page:138 },
+  Ogarman:      { value:439, type:"Lord of Triplicity by Night (Gemini)", page:148, note:"Partial — Mercury Air+Water+Moon missing" },
+
   // ARIES
   Malkidiel: { value:135, type:"Archangel of Aries", page:2 },
   Sharhiel:  { value:546, type:"Angel of Aries", page:6 },
@@ -810,19 +816,20 @@ export const ENTITY_QUICK_LOOKUP = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MASTER_DB_SUMMARY = {
-  version: "3.0 — ★ ALL UPLOADED PDFs FULLY INGESTED ★",
+  version: "4.0 — ★ TWO NEW PDFs INGESTED (2026-06-08) ★",
   dateCreated: "2026-06-07",
-  lastUpdated: "2026-06-07",
+  lastUpdated: "2026-06-08",
   source: "The Occult Encyclopedia of Magick Squares — Nineveh Shadrach",
   pagesProcessed: "pp.1–77, pp.118–120, pp.161–612, pp.721–761 (all uploaded PDFs fully processed)",
-  totalEntitiesIndexed: 222,
+  totalEntitiesIndexed: 197,  // zodiac 148 + planetary 42 + house 7
   totalRulesExtracted: 18,
   totalFormulasConfirmed: 5,
   ingestionStatus: {
     pp_1_to_77: "COMPLETE — Aries full + Taurus pp.64–77 (Sign, Archangel, Angel)",
     pp_78_to_117: "COMPLETE — All 15 Taurus entities (Raydel, Totath, Toel, Kedamidi, Mebahiah, Poyel, Minacharai, Nemamiah, Yeyalel, Yakasaganotz, Herachiel, Mitzrael)",
     pp_118_to_120: "COMPLETE — Gemini Sign Teomim(497) stored",
-    pp_121_to_160: "MISSING — Gemini continuation (14 entities: Archangel through 6th Quinance)",
+    pp_121_to_152: "COMPLETE — Gemini: Teomim Mars/Sun/Venus/Mercury/Moon + Ambriel(284) + Sarayel(302) + Sarash(630) full + Ogarman(439) Jupiter/Mars/Sun/Venus/Mercury(partial)",
+    pp_153_to_192: "MISSING — Gemini: 3rd House Angel + 3 Decanates + 6 Quinances (PDF ended at p.152)",
     pp_161_to_259: "COMPLETE — Cancer + Leo start",
     pp_259_to_309: "COMPLETE — Leo continuation + Virgo start",
     pp_268_to_302: "COMPLETE — Leo: Zalbarhith(654), Oel(107), Losanahar(351), Zachi(95), Sitael(110), Sahiber(277), Mahashiah(360), Lelahel(96). Leo chapter COMPLETE.",
@@ -840,7 +847,7 @@ export const MASTER_DB_SUMMARY = {
     pp_578_to_600: "COMPLETE — Aquarius: Athor(676) 10×10 Saturn, Polayan(171) Saturn+Jupiter+Mars+Sun, Ansuel(148) Hebrew, Saspam(240) Saturn–Venus, Aniel(92) Jupiter+Mars, Chamiah(133) Jupiter+Mars+Sun, Abdaron(263) cross-ref, Rehael(306) Saturn–Mercury, Yeyazel(58) cross-ref, Gerodiel(254) cross-ref, Hahahel(46) cross-ref, Michael(101) cross-ref",
     pp_601_to_617: "COMPLETE — Pisces: Dagim(57) Hebrew, Amnitziel(232) Jupiter+Mars+Sun+Venus, Vakabiel(69) Saturn+Jupiter+Mars, Ramara(441) all 7 sizes, Nathdorinel(751) Jupiter+Mars+Sun+Venus(fire partial)",
     pp_601_to_612_final: "COMPLETE — Final PDF (83c93bf73) processed. Amnitziel(232) Venus added. Vakabiel(69) Mars added. Ramara(441) re-confirmed all 7 sizes. PDF ends p.612.",
-    pp_613_to_end: "NEVER UPLOADED — Pisces: 12th House Angel + 3 Decanates + 6 Quinances (~10 entities). No PDF covering these pages was provided to this system.",
+    pp_613_to_end: "NEVER UPLOADED — Pisces: 12th House Angel + 3 Decanates + 6 Quinances (~10 entities). The '613-620' PDF uploaded 2026-06-08 contained printed pages 572–579 (Aquarius Athor/Polayan re-confirmation only) — NO Pisces content found.",
     pp_721_to_731: "COMPLETE — Venus chapter: Nogah(64)+Haniel(97)+Anael(82)+Hagiel(49)+Kedemel(175)+Hagith(421)",
     pp_732_to_749: "COMPLETE — Mercury chapter: Kokab(48)+Michael(101)+Raphael(311)+Tiriel(260)+Taphthartharath(2080)+Ophiel(128)",
     pp_750_to_761: "COMPLETE — Moon chapter: Levanah(87)+Gabriel(246)+Malka(3321)+Chashmodai(369)+Phul(116)",
