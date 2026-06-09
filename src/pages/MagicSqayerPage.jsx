@@ -7,7 +7,7 @@ import PageTitle from "../components/PageTitle";
 import {
   PLANETS, ELEMENTS, SIZE_PLANET_MAP, PLANET_EN,
   SUFFIX_VAL, applyISuffix, isCompatible, compatibleSizes,
-  computeUsurper, buildHierarchy, generateSquare, verifySquare,
+  computeUsurper, buildHierarchy, generateSquare, verifySquare, toArabicIndic,
 } from "../components/magicsqayer/msEngine";
 
 // ── Display components ───────────────────────────────────────────
@@ -205,7 +205,7 @@ const SacredGrid = memo(function SacredGrid({ gridSize, element, grid, lang, L }
               <div key={idx}
                 className="rounded border flex items-center justify-center font-amiri font-bold"
                 style={{ aspectRatio:"1/1", minWidth:0, background:"linear-gradient(145deg,rgba(212,175,55,0.14) 0%,rgba(212,175,55,0.06) 100%)", borderColor:"rgba(212,175,55,0.35)", color: G.text, fontSize }}>
-                {num}
+                {lang === "ar" ? toArabicIndic(num) : num}
               </div>
             ))}
           </div>
@@ -216,7 +216,7 @@ const SacredGrid = memo(function SacredGrid({ gridSize, element, grid, lang, L }
       <div className="rounded-xl border p-3 space-y-2"
         style={{ background:"rgba(212,175,55,0.04)", borderColor: v.valid ? "rgba(100,220,100,0.35)" : "rgba(255,80,80,0.40)" }}>
         <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-          {L.verification} — {L.mcLabel}: <span style={{ color:G.text }}>{v.mc.toLocaleString()}</span>
+          {L.verification} — {L.mcLabel}: <span style={{ color:G.text }}>{lang === "ar" ? toArabicIndic(v.mc.toLocaleString()) : v.mc.toLocaleString()}</span>
         </p>
         <div className="grid grid-cols-2 gap-2">
           {[
@@ -407,7 +407,7 @@ export default function MagicSqayerPage() {
                   {L.subtracted} →
                 </span>
               )}
-              <span className="font-amiri font-bold text-xl" style={{ color: G.text }}>{L.workingMC}: {workingMC.toLocaleString()}</span>
+              <span className="font-amiri font-bold text-xl" style={{ color: G.text }}>{L.workingMC}: {lang === "ar" ? toArabicIndic(workingMC.toLocaleString()) : workingMC.toLocaleString()}</span>
               {negFixed && <span className="font-inter text-[8px]" style={{ color:"rgba(255,150,80,0.80)" }}>({L.negFix})</span>}
             </div>
           )}

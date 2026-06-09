@@ -1,6 +1,6 @@
 import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
-import { PLANETS, SIZE_PLANET_MAP, PLANET_EN, buildHierarchy, triangle } from "./msEngine";
+import { PLANETS, SIZE_PLANET_MAP, PLANET_EN, buildHierarchy, triangle, toArabicIndic } from "./msEngine";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -20,12 +20,12 @@ const MsPlanetReport = memo(function MsPlanetReport({ mc, gridSize, lang, L }) {
   const planetName = lang === "en" ? PLANET_EN[planetKey] : pl.arabic;
 
   const items = [
-    { label: L.mcLabel,    val: hier.adjuster.toLocaleString() },
-    { label: L.totalCells, val: (gridSize * gridSize).toLocaleString() },
-    { label: L.totalValue, val: hier.leader.toLocaleString() },
-    { label: L.regulator,  val: hier.regulator.toLocaleString() },
-    { label: L.genGov,     val: hier.genGov.toLocaleString() },
-    { label: L.highOver,   val: hier.highOver.toLocaleString() },
+    { label: L.mcLabel,    val: lang === "ar" ? toArabicIndic(hier.adjuster.toLocaleString()) : hier.adjuster.toLocaleString() },
+    { label: L.totalCells, val: lang === "ar" ? toArabicIndic((gridSize * gridSize).toLocaleString()) : (gridSize * gridSize).toLocaleString() },
+    { label: L.totalValue, val: lang === "ar" ? toArabicIndic(hier.leader.toLocaleString()) : hier.leader.toLocaleString() },
+    { label: L.regulator,  val: lang === "ar" ? toArabicIndic(hier.regulator.toLocaleString()) : hier.regulator.toLocaleString() },
+    { label: L.genGov,     val: lang === "ar" ? toArabicIndic(hier.genGov.toLocaleString()) : hier.genGov.toLocaleString() },
+    { label: L.highOver,   val: lang === "ar" ? toArabicIndic(hier.highOver.toLocaleString()) : hier.highOver.toLocaleString() },
   ];
 
   return (

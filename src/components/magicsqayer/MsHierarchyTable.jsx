@@ -1,6 +1,6 @@
 import { useMemo, memo, useState } from "react";
 import { motion } from "framer-motion";
-import { buildHierarchy, angelJinn, numToHebrew, numToArabic } from "./msEngine";
+import { buildHierarchy, angelJinn, numToHebrew, numToArabic, toArabicIndic } from "./msEngine";
 import { perfStore } from "./perfStore";
 
 const G = {
@@ -97,7 +97,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       <div className="flex flex-wrap gap-2">
         <div className="flex-1 rounded-xl px-3 py-2 min-w-0" style={{ background:"rgba(212,175,55,0.06)", border:"1px solid rgba(212,175,55,0.15)" }}>
           <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:G.dim }}>{L.inputLabel}</p>
-          <p className="font-amiri font-bold text-lg" style={{ color:"rgba(212,175,55,0.70)" }}>{rawInput?.toLocaleString()}</p>
+          <p className="font-amiri font-bold text-lg" style={{ color:"rgba(212,175,55,0.70)" }}>{lang === "ar" ? toArabicIndic(rawInput?.toLocaleString()) : rawInput?.toLocaleString()}</p>
         </div>
         {negFixed && (
           <div className="flex-1 rounded-xl px-3 py-2 min-w-0" style={{ background:"rgba(255,120,60,0.08)", border:"1px solid rgba(255,120,60,0.30)" }}>
@@ -106,7 +106,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         )}
         <div className="flex-1 rounded-xl px-3 py-2 min-w-0" style={{ background:"rgba(212,175,55,0.10)", border:"1px solid rgba(212,175,55,0.30)" }}>
           <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:G.dim }}>{L.workingMC}</p>
-          <p className="font-amiri font-bold text-xl" style={{ color:G.text }}>{mc?.toLocaleString()}</p>
+          <p className="font-amiri font-bold text-xl" style={{ color:G.text }}>{lang === "ar" ? toArabicIndic(mc?.toLocaleString()) : mc?.toLocaleString()}</p>
         </div>
       </div>
 
@@ -127,7 +127,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 </p>
                 <p className="font-amiri font-bold tabular-nums"
                   style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.80)", fontSize: row.highlight ? "1.2rem" : "1rem" }}>
-                  {row.val.toLocaleString()}
+                  {lang === "ar" ? toArabicIndic(row.val.toLocaleString()) : row.val.toLocaleString()}
                 </p>
               </div>
               {/* Angel / Jinn sub-columns — 2 cols for active system */}
@@ -139,7 +139,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       {col.lbl}
                     </p>
                     <p className="font-amiri font-bold tabular-nums text-xs" style={{ color:col.c }}>
-                      {col.v.toLocaleString()}
+                      {lang === "ar" ? toArabicIndic(col.v.toLocaleString()) : col.v.toLocaleString()}
                     </p>
                     <p className="font-amiri" dir="rtl" style={{ color:col.c, letterSpacing:0, fontSize:"32px", fontWeight:900, lineHeight:1.2, wordWrap:"break-word", overflowWrap:"break-word", textShadow:`0 0 12px ${col.c}44, 0 0 24px ${col.c}22` }}>
                       {col.text}

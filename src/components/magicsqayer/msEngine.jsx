@@ -317,3 +317,10 @@ export function numToArabic(n) {
 export function numToHebrew(n) {
   return akramPositional(n, HEB_UNITS, HEB_TENS, HEB_HUNDREDS, HEB_THOUSAND).join('');
 }
+
+/** Convert Western digits to Arabic-Indic digits (display only) */
+export function toArabicIndic(num) {
+  if (num === null || num === undefined) return "";
+  const arabicDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  return String(num).replace(/\d/g, d => arabicDigits[parseInt(d)]);
+}
