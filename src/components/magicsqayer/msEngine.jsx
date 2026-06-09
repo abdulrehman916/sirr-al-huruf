@@ -78,14 +78,17 @@ export function buildHierarchy(mc, n) {
   const leader    = adjuster * n;
   const regulator = adjuster * (n + 1);
   const genGov    = adjuster * 2 * (n + 1);
-  // High Overseer pattern confirmed from book: Leader × Regulator / n
-  const highOver  = Math.round(leader * regulator / n);
+  // High Overseer — Book formula: General Governor × Guide
+  const highOver  = genGov * guide;
   return { usurper, guide, mystery, adjuster, leader, regulator, genGov, highOver };
 }
 
 // ── Angel/Jinn derivation (±41 Arabic, ±31 Hebrew) ───────────────
+// Book rule: if angel result ≤ 0, add 360 (negative fix)
 export function angelJinn(v) {
-  return { angelAr: v-41, angelHeb: v-31, jinnAr: v+41, jinnHeb: v+31 };
+  let angelAr  = v - 41; if (angelAr  <= 0) angelAr  += 360;
+  let angelHeb = v - 31; if (angelHeb <= 0) angelHeb += 360;
+  return { angelAr, angelHeb, jinnAr: v + 41, jinnHeb: v + 31 };
 }
 
 // ════════════════════════════════════════════════════════════════
