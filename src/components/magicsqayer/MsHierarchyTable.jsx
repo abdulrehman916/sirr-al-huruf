@@ -43,12 +43,12 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       return {
         ...row,
         ar:  [
-          { lbl: L.angelAr, v: aj.angelAr, c:"#74C0FC", text: arAngel + "إيل" },
-          { lbl: L.jinnAr,  v: aj.jinnAr,  c:"#F87171", text: arJinn           },
+          { lbl: L.angelAr, v: aj.angelAr, c:"#4FE3FF", text: arAngel + "إيل" },
+          { lbl: L.jinnAr,  v: aj.jinnAr,  c:"#FF5555", text: arJinn           },
         ],
         heb: [
-          { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", text: hebAngel + "אל" },
-          { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C", text: hebJinn          },
+          { lbl: L.angelHeb, v: aj.angelHeb, c:"#C4B5FD", text: hebAngel + "אל" },
+          { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FFA84D", text: hebJinn          },
         ],
       };
     });
@@ -141,7 +141,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     <p className="font-amiri font-bold tabular-nums text-xs" style={{ color:col.c }}>
                       {col.v.toLocaleString()}
                     </p>
-                    <p className="font-amiri leading-tight" dir="rtl" style={{ color:col.c, letterSpacing:0, fontSize:"24px", fontWeight:700 }}>
+                    <p className="font-amiri" dir="rtl" style={{ color:col.c, letterSpacing:0, fontSize:"32px", fontWeight:900, lineHeight:1.2, wordWrap:"break-word", overflowWrap:"break-word", textShadow:`0 0 12px ${col.c}44, 0 0 24px ${col.c}22` }}>
                       {col.text}
                     </p>
                   </div>
