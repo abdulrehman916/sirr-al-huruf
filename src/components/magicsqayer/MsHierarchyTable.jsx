@@ -226,17 +226,18 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       lang={isArabic ? "ar" : "he"}
                       style={{
                         color: n.color,
-                        fontSize: isArabic ? "52px" : "38px",
+                        fontSize: isArabic ? "50px" : "38px",
                         fontWeight: isArabic ? 600 : 900,
-                        lineHeight: isArabic ? 2.2 : 1.4,
-                        letterSpacing: isArabic ? "0.06em" : 0,
-                        wordSpacing: isArabic ? "0.15em" : 0,
+                        lineHeight: isArabic ? 2.0 : 1.4,
+                        letterSpacing: 0,
+                        wordSpacing: 0,
                         wordWrap: "break-word",
                         overflowWrap: "break-word",
                         textShadow: `0 0 16px ${n.color}55, 0 0 32px ${n.color}33, 0 2px 4px rgba(0,0,0,0.8)`,
                         padding: "8px 4px 16px",
                         // Scheherazade New: purpose-built for fully-vocalized Arabic,
                         // best tashkeel glyph spacing and mark positioning of any web font.
+                        // Arabic letters stay naturally connected — no artificial spacing.
                         fontFamily: isArabic
                           ? "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif"
                           : "'Amiri', serif",
