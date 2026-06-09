@@ -1,4 +1,4 @@
-import { useMemo, memo } from "react";
+import { useMemo, memo, useState } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, angelJinn, numToHebrew, numToArabic } from "./msEngine";
 import { perfStore } from "./perfStore";
@@ -11,6 +11,7 @@ const G = {
 };
 
 const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lang, L }) {
+  const [system, setSystem] = useState("ar"); // "ar" | "heb"
   const hier = useMemo(() => {
     if (!mc || !gridSize) return null;
     const t0 = performance.now();
@@ -41,11 +42,13 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       const hebJinn  = numToHebrew(aj.jinnHeb);
       return {
         ...row,
-        cols: [
-          { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC", text: arAngel  + "إيل" },
-          { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", text: hebAngel  + "אל"  },
-          { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171", text: arJinn            },
-          { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C", text: hebJinn           },
+        ar:  [
+          { lbl: L.angelAr, v: aj.angelAr, c:"#74C0FC", text: arAngel + "إيل" },
+          { lbl: L.jinnAr,  v: aj.jinnAr,  c:"#F87171", text: arJinn           },
+        ],
+        heb: [
+          { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", text: hebAngel + "אל" },
+          { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C", text: hebJinn          },
         ],
       };
     });
@@ -65,6 +68,29 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
         {L.hierarchy}
       </p>
+
+      {/* System toggle */}
+      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor:"rgba(212,175,55,0.25)" }}>
+        {[
+          { id:"ar",  label: lang === "ar" ? "النظام العربي"  : "Arabic System"  },
+          { id:"heb", label: lang === "ar" ? "النظام العبري" : "Hebrew System" },
+        ].map(opt => {
+          const active = system === opt.id;
+          return (
+            <button key={opt.id} onClick={() => setSystem(opt.id)}
+              className="flex-1 py-2 font-inter text-[10px] uppercase tracking-widest transition-all"
+              style={{
+                background: active ? "rgba(212,175,55,0.18)" : "rgba(4,8,24,0.80)",
+                color: active ? G.text : "rgba(212,175,55,0.35)",
+                fontWeight: active ? 700 : 400,
+                borderRight: opt.id === "ar" ? "1px solid rgba(212,175,55,0.18)" : "none",
+              }}>
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="h-px w-full" style={{ background:`linear-gradient(90deg,transparent,${G.borderHi},transparent)` }} />
 
       {/* Summary row */}
@@ -104,9 +130,9 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                   {row.val.toLocaleString()}
                 </p>
               </div>
-              {/* Angel / Jinn sub-columns — letters pre-computed in useMemo above */}
-              <div className="grid grid-cols-4" style={{ background:"rgba(4,8,24,0.80)" }}>
-                {row.cols.map(col => (
+              {/* Angel / Jinn sub-columns — 2 cols for active system */}
+              <div className="grid grid-cols-2" style={{ background:"rgba(4,8,24,0.80)" }}>
+                {(system === "ar" ? row.ar : row.heb).map(col => (
                   <div key={col.lbl} className="px-2 py-1.5 text-center border-r last:border-r-0"
                     style={{ borderColor:"rgba(212,175,55,0.08)" }}>
                     <p className="font-inter leading-tight" style={{ fontSize:"7px", color:"rgba(255,255,255,0.30)" }}>
