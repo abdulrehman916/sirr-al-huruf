@@ -218,7 +218,137 @@ function vocalizeNameWithEnding(body, ending) {
 }
 
 /**
+ * buildSyllablePattern(chars, isAngel)
+ * 
+ * AUTHENTIC ARABIC PHONETIC ENGINE
+ * 
+ * Builds a syllable pattern for the given consonant sequence.
+ * Returns array of {consonant, vowel} objects where vowel can be:
+ * - FATHA, KASRA, DAMMA (open syllable CV)
+ * - SUKUN (closed syllable CVC, used sparingly)
+ * - null (skip - next char is Madd/vowel carrier)
+ * 
+ * ARABIC SYLLABLE RULES:
+ * 1. Every Arabic word starts with CV (never Sukun on first letter)
+ * 2. Syllables are: CV (open), CVC (closed), CVV (long vowel), CVVC (long + closure)
+ * 3. Sukun ONLY appears to close a syllable when followed by another consonant
+ * 4. Never place Sukun on consecutive consonants (creates unpronounceable clusters)
+ * 5. Alternate vowels for natural flow: Fatha → Kasra → Damma pattern
+ * 6. Angel names prefer flowing vowels (Kasra/Fatha) for melodic quality
+ * 7. The last consonant before suffix gets a vowel to connect smoothly
+ */
+function buildSyllablePattern(chars, isAngel) {
+  const pattern = [];
+  const n = chars.length;
+  
+  for (let i = 0; i < n; i++) {
+    const ch = chars[i];
+    const nextCh = chars[i + 1];
+    
+    // Madd letters ARE vowels — skip them (no haraka needed)
+    if (MADD_LETTERS.has(ch)) {
+      pattern.push({ consonant: ch, vowel: null });
+      continue;
+    }
+    
+    // Hamza forms are vowel carriers — skip (no haraka needed)
+    if (HAMZA_FORMS.has(ch)) {
+      pattern.push({ consonant: ch, vowel: null });
+      continue;
+    }
+    
+    // CRITICAL: First letter ALWAYS gets a vowel (CV start)
+    // Arabic words cannot begin with a closed consonant
+    if (i === 0) {
+      pattern.push({ consonant: ch, vowel: FATHA });
+      continue;
+    }
+    
+    // Last consonant before suffix — MUST have vowel to connect
+    // Angel suffix starts with kasra, Jinn suffix starts with fatha
+    if (i === n - 1) {
+      pattern.push({ consonant: ch, vowel: isAngel ? KASRA : FATHA });
+      continue;
+    }
+    
+    // Next char is Madd/vowel carrier — this consonant needs appropriate vowel
+    if (nextCh && VOWEL_CARRIERS.has(nextCh)) {
+      if (MADD_LETTERS.has(nextCh)) {
+        // Consonant + Madd = long vowel syllable (CVV)
+        pattern.push({ consonant: ch, vowel: getHarakaForMadd(nextCh) });
+      } else {
+        // Hamza form — use Fatha as default
+        pattern.push({ consonant: ch, vowel: FATHA });
+      }
+      continue;
+    }
+    
+    // Next char is consonant — decide: vowel or Sukun?
+    // AUTHENTIC ARABIC RULE: Prefer vowels for pronounceability
+    // Only use Sukun when it creates a proper CVC syllable
+    
+    // Check previous syllable — avoid consecutive Sukun
+    const prevPattern = pattern[pattern.length - 1];
+    const prevHasSukun = prevPattern && prevPattern.vowel === SUKUN;
+    
+    if (prevHasSukun) {
+      // Previous was Sukun → this MUST be a vowel (prevents C-C clusters)
+      // Use position-based alternation for natural variety
+      const vowelCycle = [KASRA, FATHA, DAMMA];
+      pattern.push({ consonant: ch, vowel: vowelCycle[i % 3] });
+    } else {
+      // Decide based on name type and position
+      if (isAngel) {
+        // Angel names: flowing, melodic — prefer vowels over Sukun
+        // Pattern: alternate Kasra/Fatha for elegance
+        // Only use Sukun if we have 3+ consonants in a row
+        const consonantRun = countConsonantRun(chars, i);
+        if (consonantRun >= 3) {
+          // Long consonant sequence — need one Sukun for CVC syllable
+          // Place it on every 3rd consonant to maintain pronounceability
+          pattern.push({ consonant: ch, vowel: (i % 3 === 2) ? SUKUN : KASRA });
+        } else {
+          // Short sequence — use vowels only
+          pattern.push({ consonant: ch, vowel: (i % 2 === 0) ? KASRA : FATHA });
+        }
+      } else {
+        // Jinn names: can use more Sukun for harsher sound
+        // But still maintain pronounceability — max 1 Sukun per 2 consonants
+        const consonantRun = countConsonantRun(chars, i);
+        if (consonantRun >= 2 && i % 2 === 1) {
+          pattern.push({ consonant: ch, vowel: SUKUN });
+        } else {
+          pattern.push({ consonant: ch, vowel: FATHA });
+        }
+      }
+    }
+  }
+  
+  return pattern;
+}
+
+/**
+ * countConsonantRun(chars, startIndex)
+ * 
+ * Counts consecutive consonants starting from startIndex.
+ * Used to determine if we need Sukun for syllable closure.
+ */
+function countConsonantRun(chars, startIndex) {
+  let count = 0;
+  for (let i = startIndex; i < chars.length; i++) {
+    if (!MADD_LETTERS.has(chars[i]) && !HAMZA_FORMS.has(chars[i])) {
+      count++;
+    } else {
+      break;
+    }
+  }
+  return count;
+}
+
+/**
  * addTashkeelToArabicName(name, suffixType)
+ *
+ * AUTHENTIC ARABIC PHONETIC ENGINE
  *
  * CRITICAL: This is a DISPLAY-ONLY function — it does NOT modify the actual letters.
  * The Arabic name comes PURELY from the Abjad conversion algorithm.
@@ -229,12 +359,16 @@ function vocalizeNameWithEnding(body, ending) {
  *
  * suffixType: "angel" | "jinn"
  *
- * Arabic phonetic rules applied:
- * 1. Madd letters (ا، و، ي) NEVER receive harakat — they ARE the vowel.
- * 2. Consonant + Madd → appropriate haraka for long vowel syllable (CV).
- * 3. Consonant + Consonant → Sukun (close syllable, CVC pattern).
- * 4. First letter NEVER gets Sukun — always pronounceable (Fatha default).
- * 5. ONLY pronunciation marks are added — base letters remain unchanged.
+ * AUTHENTIC ARABIC RULES APPLIED:
+ * 1. Every name is fully pronounceable by native Arabic speakers
+ * 2. Balanced harakat distribution: Fatha, Kasra, Damma — Sukun ONLY when needed
+ * 3. Syllable structures: CV, CVC, CVV, CVVC (natural Arabic patterns)
+ * 4. Madd letters (ا، و، ي) never receive harakat — they ARE the vowel
+ * 5. First letter NEVER gets Sukun — Arabic words start with vowel sound
+ * 6. Sukun only appears to close syllables (CVC), never on consecutive consonants
+ * 7. Angel names use flowing vowels (Kasra/Fatha) for melodic quality
+ * 8. Ending variants determined by preceding letter: رِيل، فِيل، كَائِيل، etc.
+ * 9. Output resembles authentic names: جِبْرِيل، مِيكَائِيل، إِسْرَافِيل
  */
 export function addTashkeelToArabicName(name, suffixType) {
   if (!name || typeof name !== 'string') return name;
@@ -259,92 +393,19 @@ export function addTashkeelToArabicName(name, suffixType) {
 
   if (!body) return vocSuffix;
 
-  // NO FORCED ENDINGS - vocalize the actual letters from conversion
-  const chars = [...body]; // spread handles BMP Arabic correctly
+  // Build authentic syllable pattern using Arabic phonetic rules
+  const chars = [...body];
+  const pattern = buildSyllablePattern(chars, isAngel);
+  
+  // Apply the pattern to generate vocalized output
   let out = '';
-
-  for (let i = 0; i < chars.length; i++) {
-    const ch = chars[i];
-    const nextCh = chars[i + 1];
-
-    // Madd letters NEVER get harakat — they ARE the vowel
-    if (MADD_LETTERS.has(ch)) {
-      out += ch;
-      continue;
-    }
-
-    // Hamza forms (أ، إ، ئ، ؤ) — treat as vowel carriers, no harakat
-    if (HAMZA_FORMS.has(ch)) {
-      out += ch;
-      continue;
-    }
-
-    // Determine haraka based on phonetic context (Arabic syllable structure)
-    // CRITICAL: Use balanced vowels (Fatha/Kasra/Damma) — Sukun ONLY where required
-    // Arabic names must be pronounceable, not consonant clusters with Sukun
-    let haraka;
-
-    // CRITICAL RULE: First letter NEVER gets Sukun — must be pronounceable
-    // Arabic words always begin with a vowel sound (CV pattern)
-    if (i === 0) {
-      // First consonant — use Fatha as default opening vowel
-      // Creates natural CV start like جَ، بَ، رَ
-      haraka = FATHA;
-
-    } else if (nextCh === undefined) {
-      // Last consonant before suffix — flows into suffix's vowel
-      // Angel suffix starts with kasra → use Kasra for smooth transition
-      // Jinn suffix starts with fatha → use Fatha
-      haraka = isAngel ? KASRA : FATHA;
-
-    } else if (VOWEL_CARRIERS.has(nextCh)) {
-      // Next letter is a vowel carrier (Madd or Hamza form)
-      // Apply appropriate haraka to create long vowel syllable (CVV or CVVC)
-      if (MADD_LETTERS.has(nextCh)) {
-        // Consonant + Madd → long vowel (CVV pattern)
-        // ا → Fatha (creates /aː/), و → Damma (creates /uː/), ي → Kasra (creates /iː/)
-        haraka = getHarakaForMadd(nextCh);
-      } else {
-        // Hamza form — use Fatha as default (most common in angel names)
-        haraka = FATHA;
-      }
-
+  for (const { consonant, vowel } of pattern) {
+    // Skip Madd/Hamza — they don't get harakat
+    if (vowel === null) {
+      out += consonant;
     } else {
-      // Next letter is a consonant
-      // ARABIC PHONETIC RULE: Don't default to Sukun — use varied vowels
-      // Only use Sukun for true syllable closure (CVC pattern)
-      // Alternate between Fatha, Kasra, Damma for natural flow
-      
-      // Check if we already have a Sukun in the previous position
-      // Avoid consecutive Sukun (creates unpronounceable clusters)
-      const prevChar = out[out.length - 1];
-      const prevHasSukun = prevChar && prevChar.charCodeAt(prevChar.length - 1) === SUKUN.charCodeAt(0);
-      
-      if (prevHasSukun) {
-        // Previous consonant has Sukun → this one MUST have a vowel
-        // Alternate between Fatha, Kasra, Damma for variety
-        // Use position-based alternation for consistency
-        haraka = (i % 3 === 0) ? FATHA : (i % 3 === 1) ? KASRA : DAMMA;
-      } else {
-        // Decide: vowel or Sukun based on syllable position
-        // Prefer vowels for pronounceability — only use Sukun when needed
-        // Rule: Use Sukun only if this creates a proper CVC syllable
-        // and the next letter is not a vowel carrier
-        
-        // For angel names: prefer vowels to create flowing, melodic patterns
-        // like مِيكَائِيل (CV-CV-CVV-CVVC) not مِكْأَلْيِل
-        if (isAngel) {
-          // Angel names: use Kasra for elegance (common in angelic names)
-          // or Fatha for openness — avoid Sukun unless truly needed
-          haraka = (i % 2 === 0) ? KASRA : FATHA;
-        } else {
-          // Jinn names: can use more Sukun for harsher sound, but still balanced
-          haraka = SUKUN;
-        }
-      }
+      out += consonant + vowel;
     }
-
-    out += ch + haraka;
   }
 
   return out + vocSuffix;
