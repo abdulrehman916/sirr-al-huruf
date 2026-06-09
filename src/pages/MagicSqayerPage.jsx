@@ -260,7 +260,7 @@ function msReducer(state, action) {
 // ═════════════════════════════════════════════════════════════════
 export default function MagicSqayerPage() {
   const [state, dispatch] = useReducer(msReducer, {
-    lang: "ar", inputNum: "", suffix: "none",
+    lang: "ar", inputNum: "", suffix: "ar-angel",
     gridSize: null, element: null, grid: null,
   });
   const { lang, inputNum, suffix, gridSize, element, grid } = state;
@@ -347,7 +347,6 @@ export default function MagicSqayerPage() {
 
   // ── Suffix options (name-only — never affects MC or grid) ──────
   const suffixOpts = [
-    { key:"none",      label: L.suffixNone,     color: G.text,     borderActive: G.borderHi },
     { key:"ar-angel",  label: L.suffixArAngel,  color: "#4FE3FF",  borderActive: "rgba(79,227,255,0.55)" },
     { key:"ar-jinn",   label: L.suffixArJinn,   color: "#FF9F5A",  borderActive: "rgba(255,159,90,0.55)"  },
     { key:"heb-angel", label: L.suffixHebAngel, color: "#C4B5FD",  borderActive: "rgba(196,181,253,0.55)" },
@@ -415,7 +414,6 @@ export default function MagicSqayerPage() {
                     background: sel ? `${opt.color}18` : "rgba(4,12,34,0.97)",
                     borderColor: sel ? opt.borderActive : "rgba(255,255,255,0.08)",
                     color: sel ? opt.color : "rgba(255,255,255,0.35)",
-                    gridColumn: opt.key === "none" ? "span 2" : undefined,
                   }}>
                   {opt.label}
                 </motion.button>

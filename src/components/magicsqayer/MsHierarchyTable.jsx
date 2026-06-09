@@ -126,13 +126,12 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       {/* Active system badge */}
       {(() => {
         const badgeCfg = {
-          "none":      { c: "rgba(212,175,55,0.45)", b: "rgba(212,175,55,0.20)", bg: "rgba(212,175,55,0.04)", label: lang==="ar" ? "بدون لاحقة — أرقام فقط" : "No Suffix — Numeric Only" },
           "ar-angel":  { c: "#4FE3FF", b: "rgba(79,227,255,0.35)",   bg: "rgba(79,227,255,0.06)",   label: lang==="ar" ? "ملاك عربي — إيل (−٤١)" : "Arabic Angel — إيل (−41)" },
           "ar-jinn":   { c: "#FF9F5A", b: "rgba(255,159,90,0.35)",   bg: "rgba(255,159,90,0.06)",   label: lang==="ar" ? "جن عربي — طيش (−٣١٩)" : "Arabic Jinn — طيش (−319)" },
           "heb-angel": { c: "#C4B5FD", b: "rgba(196,181,253,0.35)",  bg: "rgba(196,181,253,0.06)",  label: lang==="ar" ? "ملاك عبري — אל (−٣١)" : "Hebrew Angel — אל (−31)" },
           "heb-jinn":  { c: "#F9A8D4", b: "rgba(249,168,212,0.35)",  bg: "rgba(249,168,212,0.06)",  label: lang==="ar" ? "جن عبري — תקש (−٣٢٩)" : "Hebrew Jinn — תקש (−329)" },
         };
-        const cfg = badgeCfg[suffix] || badgeCfg["none"];
+        const cfg = badgeCfg[suffix] || badgeCfg["ar-angel"];
         return (
           <div className="flex justify-center">
             <span className="font-inter text-[9px] uppercase tracking-widest px-3 py-1 rounded-full border"
