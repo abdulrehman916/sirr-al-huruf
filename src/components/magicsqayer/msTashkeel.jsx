@@ -41,19 +41,21 @@ const SUFFIX_ANGEL = 'إيل';
 const SUFFIX_JINN  = 'طيش';
 
 // Pre-vocalized suffixes — authentic classical pronunciation
-// إِيلُ  = إ + kasra + ي (bare, madd) + ل + damma → /ʔiːlu/
-const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u064F'; // إِيلُ
+// Final Lam (ل) in angel suffix gets Sukun when closing the word (not Damma)
+// إِيلْ  = إ + kasra + ي (bare, madd) + ل + sukun → /ʔiːl/
+const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u0652'; // إِيلْ
 
 // طَيْشُ = ط + fatha + ي + sukun + ش + damma → /tajʃu/
 const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
 
 // Common Arabic name endings — treat as complete phonetic units
 // These patterns override automatic syllable rules
+// Final Lam gets Sukun (لْ) when closing the word, following Arabic phonetic structure
 const NAME_ENDINGS = [
-  { pattern: 'ائيل', vocalization: '\u0627\u0626\u0650\u064A\u0644\u064F' }, // ائِلُ
-  { pattern: 'ئيل',  vocalization: '\u0626\u0650\u064A\u0644\u064F' },      // ئِلُ
-  { pattern: 'ييل',  vocalization: '\u064A\u0650\u064A\u0644\u064F' },      // يِلُ
-  { pattern: 'ايل',  vocalization: '\u0627\u064A\u0644\u064F' },           // ايلُ
+  { pattern: 'ائيل', vocalization: '\u0627\u0626\u0650\u064A\u0644\u0652' }, // ائِلْ
+  { pattern: 'ئيل',  vocalization: '\u0626\u0650\u064A\u0644\u0652' },      // ئِلْ
+  { pattern: 'ييل',  vocalization: '\u064A\u0650\u064A\u0644\u0652' },      // يِلْ
+  { pattern: 'ايل',  vocalization: '\u0627\u064A\u0644\u0652' },           // ايلْ
 ];
 
 /**
@@ -126,7 +128,7 @@ function vocalizeNameWithEnding(body, ending) {
       haraka = FATHA;
 
     } else if (nextCh === undefined) {
-      // Last consonant before the ending — use Kasra to flow into the ending
+      // Last consonant before the ending — flows into ending's first vowel
       haraka = KASRA;
 
     } else if (VOWEL_CARRIERS.has(nextCh)) {
@@ -216,9 +218,9 @@ export function addTashkeelToArabicName(name, suffixType) {
       haraka = FATHA;
 
     } else if (nextCh === undefined) {
-      // Last consonant before suffix — use suffix entry vowel
-      // Angel suffix إِيلُ starts with kasra → /ʔiːlu/
-      // Jinn suffix طَيْشُ starts with fatha → /tajʃu/
+      // Last consonant before suffix — flows into suffix's first vowel
+      // Angel suffix إِيلْ starts with kasra on Hamza → /ʔiːl/
+      // Jinn suffix طَيْشُ starts with fatha on Ta → /tajʃu/
       haraka = isAngel ? KASRA : FATHA;
 
     } else if (VOWEL_CARRIERS.has(nextCh)) {
