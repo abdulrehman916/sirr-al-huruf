@@ -1,21 +1,20 @@
 // ═══════════════════════════════════════════════════════════════
-//  ARABIC TASHKEEL ENGINE — CLASSICAL PHONOLOGY (REWRITTEN)
+//  ARABIC TASHKEEL ENGINE — SIMPLE PHONETIC VOCALIZATION
 //  Pure display layer — does NOT modify calculation logic.
 //
 //  CRITICAL RULES:
-//  1. Balanced vowel distribution (Fatha/Kasra/Damma) — Sukun used sparingly
-//  2. CCC clusters FORBIDDEN — max 2 consecutive consonants
-//  3. First letter NEVER gets Sukun — Arabic words start with CV
-//  4. Madd letters (ا، و، ي) NEVER receive harakat — they ARE the vowel
-//  5. Final ending determined by preceding letter (NOT universal "ـيل")
-//  6. Every name validated for Arabic pronounceability
+//  1. NO Sukun — ALL consonants get vowels (Fatha/Kasra/Damma)
+//  2. First letter ALWAYS gets Fatha (CV start)
+//  3. Madd letters (ا، و، ي) NEVER receive harakat
+//  4. Angel names: flowing Kasra/Fatha pattern
+//  5. Jinn names: stronger Fatha/Damma pattern
+//  6. Pre-vocalized suffixes for correct morphology
 // ═══════════════════════════════════════════════════════════════
 
 // Unicode combining harakat
 const FATHA = '\u064E'; // َ (short "a")
 const KASRA = '\u0650'; // ِ (short "i")
 const DAMMA = '\u064F'; // ُ (short "u")
-const SUKUN = '\u0652'; // ْ (no vowel)
 
 // Madd (long vowel) letters — NEVER get harakat
 const MADD_LETTERS = new Set(['ا', 'و', 'ي', 'ى']);
@@ -37,34 +36,13 @@ const ANGEL_ENDING_VARIANTS = [
   { pattern: 'ئيل',  vocalization: '\u0626\u0650\u064A\u0644\u0652',  desc: 'iʾīl (hamza carrier)' },
 ];
 
-// Suffix vocalizations
+// Suffix vocalizations (pre-built)
 const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u0652'; // إِيلْ
 const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
 
 /**
- * getHarakaForMadd(maddChar)
- * Returns appropriate haraka for consonant preceding Madd letter.
- */
-function getHarakaForMadd(maddChar) {
-  if (maddChar === 'ا' || maddChar === 'آ' || maddChar === 'أ' || maddChar === 'إ') return FATHA;
-  if (maddChar === 'و' || maddChar === 'ؤ') return DAMMA;
-  if (maddChar === 'ي' || maddChar === 'ئ') return KASRA;
-  return FATHA;
-}
-
-/**
  * detectAngelEndingVariant(name)
- * 
- * MORPHOLOGICAL ENDING DETECTION — FINAL LETTER ANALYSIS
- * 
- * Determines ending based on the FINAL CONSONANT before إيل.
- * NEVER uses universal ending — each name gets phonologically appropriate form.
- * 
- * RULES:
- * 1. ا (Alif) → ائيل (āʾīl) — alif requires hamza carrier
- * 2. و (Waw) → ؤيل (ūʾīl) — waw requires hamza carrier
- * 3. ي (Ya) → ييل (yīl) — ya extends naturally
- * 4. Consonant → ئيل (iʾīl) — direct kasra connection
+ * Determines ending based on final letter before إيل
  */
 function detectAngelEndingVariant(name) {
   if (!name.endsWith(SUFFIX_ANGEL)) return null;
@@ -74,106 +52,37 @@ function detectAngelEndingVariant(name) {
   
   const lastChar = body[body.length - 1];
   
-  // Alif → ائيل (āʾīl)
   if (lastChar === 'ا') return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ائيل');
-  
-  // Waw → ؤيل (ūʾīl)
   if (lastChar === 'و') return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ؤيل');
-  
-  // Ya → ييل (yīl)
   if (lastChar === 'ي') return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ييل');
-  
-  // Consonant → ئيل (iʾīl) — default
   return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ئيل');
 }
 
 /**
- * validateArabicSyllable(pattern)
- * 
- * PHONOLOGICAL VALIDATION — checks Arabic syllable rules.
- * Returns { valid, issues, fixedPattern }
- * 
- * RULES CHECKED:
- * 1. No word-initial Sukun (must start CV)
- * 2. No CCC clusters (max 2 consonants)
- * 3. No consecutive Sukun
- * 4. Balanced vowel distribution
+ * getHarakaForMadd(maddChar)
+ * Returns appropriate haraka for consonant preceding Madd letter
  */
-function validateArabicSyllable(pattern) {
-  const issues = [];
-  const fixed = JSON.parse(JSON.stringify(pattern));
-  let hasIssues = false;
-  
-  // Rule 1: First letter must have vowel
-  if (fixed[0] && fixed[0].vowel === SUKUN) {
-    issues.push("Word-initial Sukun forbidden");
-    fixed[0].vowel = FATHA;
-    hasIssues = true;
-  }
-  
-  // Rules 2 & 3: Check consonant clusters and consecutive Sukun
-  let consonantCount = 0;
-  for (let i = 0; i < fixed.length; i++) {
-    const p = fixed[i];
-    
-    if (p.vowel === null) { // Madd/Hamza
-      consonantCount = 0;
-      continue;
-    }
-    
-    if (p.vowel === SUKUN) {
-      consonantCount++;
-      
-      // Consecutive Sukun check
-      if (i > 0 && fixed[i-1].vowel === SUKUN) {
-        issues.push(`Consecutive Sukun at ${i}`);
-        fixed[i].vowel = KASRA;
-        consonantCount = 1;
-        hasIssues = true;
-      }
-      
-      // CCC cluster check
-      if (consonantCount >= 3) {
-        issues.push(`CCC cluster at ${i}`);
-        fixed[i].vowel = (i % 2 === 0) ? KASRA : FATHA;
-        consonantCount = 1;
-        hasIssues = true;
-      }
-    } else {
-      consonantCount = 0;
-    }
-  }
-  
-  // Final consonant must have vowel for suffix connection
-  const lastValid = fixed.findLast(p => p.vowel !== null);
-  if (lastValid && lastValid.vowel === SUKUN) {
-    issues.push("Final consonant Sukun blocks suffix");
-    lastValid.vowel = KASRA;
-    hasIssues = true;
-  }
-  
-  return { valid: !hasIssues, issues, fixedPattern: fixed };
+function getHarakaForMadd(maddChar) {
+  if (maddChar === 'ا' || maddChar === 'آ' || maddChar === 'أ' || maddChar === 'إ') return FATHA;
+  if (maddChar === 'و' || maddChar === 'ؤ') return DAMMA;
+  if (maddChar === 'ي' || maddChar === 'ئ') return KASRA;
+  return FATHA;
 }
 
 /**
- * buildSyllablePattern(chars, isAngel)
+ * vocalizeArabicName(chars, isAngel)
  * 
- * AUTHENTIC ARABIC PHONETIC ENGINE
- * 
- * Builds syllable pattern following classical Arabic phonology.
- * Returns array of {consonant, vowel} where vowel is:
- * - FATHA/KASRA/DAMMA (open syllable CV)
- * - SUKUN (closed syllable CVC, used sparingly)
- * - null (Madd/vowel carrier)
+ * SIMPLE VOCALIZATION — NO Sukun
+ * Every consonant gets a vowel (Fatha/Kasra/Damma)
  * 
  * RULES:
- * 1. First letter ALWAYS gets vowel (CV start)
- * 2. CCC clusters forbidden
- * 3. Sukun ONLY for syllable closure (max 20% of characters)
- * 4. Angel names: prefer Kasra/Fatha for melodic flow
- * 5. Long vowels never receive harakat
+ * 1. First letter ALWAYS gets Fatha
+ * 2. Madd/Hamza never get harakat
+ * 3. Consonant before Madd gets appropriate haraka
+ * 4. Angel: alternate Kasra/Fatha for flowing sound
+ * 5. Jinn: Fatha/Damma for stronger sound
  */
-function buildSyllablePattern(chars, isAngel) {
+function vocalizeArabicName(chars, isAngel) {
   const pattern = [];
   const n = chars.length;
   
@@ -187,15 +96,9 @@ function buildSyllablePattern(chars, isAngel) {
       continue;
     }
     
-    // RULE 1: First letter ALWAYS gets vowel
+    // RULE 1: First letter ALWAYS gets Fatha
     if (i === 0) {
       pattern.push({ consonant: ch, vowel: FATHA });
-      continue;
-    }
-    
-    // Last consonant before suffix — MUST have vowel
-    if (i === n - 1) {
-      pattern.push({ consonant: ch, vowel: isAngel ? KASRA : FATHA });
       continue;
     }
     
@@ -209,93 +112,40 @@ function buildSyllablePattern(chars, isAngel) {
       continue;
     }
     
-    // Next char is consonant — decide vowel or Sukun
-    const prevPattern = pattern[pattern.length - 1];
-    const prevHasSukun = prevPattern && prevPattern.vowel === SUKUN;
-    
-    // Count consonant run to prevent CCC
-    let consonantRun = 0;
-    for (let j = i; j < n; j++) {
-      if (!MADD_LETTERS.has(chars[j]) && !HAMZA_FORMS.has(chars[j])) {
-        consonantRun++;
-      } else {
-        break;
-      }
-    }
-    
-    if (prevHasSukun) {
-      // Previous Sukun → this MUST be vowel
+    // Regular consonant — assign vowel (NO Sukun)
+    if (isAngel) {
+      // Angel: flowing, melodic — alternate Kasra/Fatha
       const vowelCycle = [KASRA, FATHA, DAMMA];
       pattern.push({ consonant: ch, vowel: vowelCycle[i % 3] });
-    } else if (consonantRun >= 3) {
-      // Long run — ONE Sukun for CVC, rest vowels
-      if (i % 3 === 1) {
-        pattern.push({ consonant: ch, vowel: SUKUN });
-      } else {
-        pattern.push({ consonant: ch, vowel: isAngel ? KASRA : FATHA });
-      }
     } else {
-      // Short sequence — use vowels for readability
-      if (isAngel) {
-        // Angel: flowing, melodic — alternate Kasra/Fatha
-        pattern.push({ consonant: ch, vowel: (i % 2 === 0) ? KASRA : FATHA });
-      } else {
-        // Jinn: occasional Sukun for harsher sound
-        if (consonantRun === 2 && i % 2 === 1) {
-          pattern.push({ consonant: ch, vowel: SUKUN });
-        } else {
-          pattern.push({ consonant: ch, vowel: FATHA });
-        }
-      }
+      // Jinn: stronger — Fatha/Damma
+      const vowelCycle = [FATHA, DAMMA, FATHA, KASRA];
+      pattern.push({ consonant: ch, vowel: vowelCycle[i % 4] });
     }
   }
   
-  // Validate and fix
-  const validation = validateArabicSyllable(pattern);
-  return validation.fixedPattern;
+  return pattern;
 }
 
 /**
  * validateNamePronounceability(vocalizedName, isAngel)
- * 
- * QUALITY CONTROL — Arabic pronunciation validation.
- * Returns { valid, issues }
- * 
- * REJECTION CRITERIA:
- * 1. Sukun density > 25%
- * 2. CCC clusters
- * 3. Consecutive Sukun
- * 4. Unbalanced vowel distribution
+ * Quality control — should always pass with new engine
  */
 function validateNamePronounceability(vocalizedName, isAngel) {
   const issues = [];
   
-  // Sukun density check
-  const sukunCount = (vocalizedName.match(new RegExp(SUKUN, 'g')) || []).length;
-  const sukunDensity = sukunCount / vocalizedName.length;
-  
-  if (sukunDensity > 0.25) {
-    issues.push(`Excessive Sukun: ${(sukunDensity * 100).toFixed(1)}%`);
+  // Check for any Sukun (should be none)
+  const sukunCount = (vocalizedName.match(new RegExp('\u0652', 'g')) || []).length;
+  // Sukun only allowed in suffix (final Lam), not in body
+  const bodySukun = vocalizedName.slice(0, vocalizedName.length - 4).match(new RegExp('\u0652', 'g'));
+  if (bodySukun && bodySukun.length > 0) {
+    issues.push(`Unexpected Sukun in body: ${bodySukun.length}`);
   }
   
-  // CCC cluster check
+  // Check for CCC clusters
   const clusters = vocalizedName.match(/([^اويآأإئؤ\u064E\u0650\u064F]{3,})/g);
   if (clusters) {
     issues.push(`CCC clusters: ${clusters.join(', ')}`);
-  }
-  
-  // Consecutive Sukun check
-  if (/[\u0652]{2,}/.test(vocalizedName)) {
-    issues.push("Consecutive Sukun detected");
-  }
-  
-  // Vowel balance check
-  const fathaCount = (vocalizedName.match(new RegExp(FATHA, 'g')) || []).length;
-  const kasraCount = (vocalizedName.match(new RegExp(KASRA, 'g')) || []).length;
-  const dammaCount = (vocalizedName.match(new RegExp(DAMMA, 'g')) || []).length;
-  
-  if (isAngel && dammaCount > fathaCount + kasraCount) {
-    issues.push("Unbalanced vowels for angel name");
   }
   
   return { valid: issues.length === 0, issues };
@@ -304,16 +154,7 @@ function validateNamePronounceability(vocalizedName, isAngel) {
 /**
  * addTashkeelToArabicName(name, suffixType)
  * 
- * AUTHENTIC ARABIC NAME GENERATION SYSTEM
- * 
- * CRITICAL: Display-only — does NOT modify base letters from Abjad conversion.
- * 
- * PROCESS:
- * 1. Detect morphological ending variant based on final letter
- * 2. Build syllable pattern using Arabic phonetic rules
- * 3. Apply balanced harakat (Fatha/Kasra/Damma)
- * 4. Validate pronounceability
- * 5. Return vocalized name with complete Tashkīl
+ * AUTHENTIC ARABIC NAME VOCALIZATION
  * 
  * suffixType: "angel" | "jinn"
  */
@@ -327,7 +168,7 @@ export function addTashkeelToArabicName(name, suffixType) {
 
   const body = name.slice(0, name.length - bareSuffix.length);
   
-  // Detect ending variant for angel names
+  // Get vocalized suffix
   let vocSuffix = isAngel ? SUFFIX_ANGEL_VOC : SUFFIX_JINN_VOC;
   if (isAngel) {
     const variant = detectAngelEndingVariant(name);
@@ -338,9 +179,9 @@ export function addTashkeelToArabicName(name, suffixType) {
 
   if (!body) return vocSuffix;
 
-  // Build syllable pattern
+  // Vocalize body
   const chars = [...body];
-  const pattern = buildSyllablePattern(chars, isAngel);
+  const pattern = vocalizeArabicName(chars, isAngel);
   
   // Apply pattern
   let out = '';
