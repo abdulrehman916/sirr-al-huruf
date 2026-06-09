@@ -1,4 +1,4 @@
-import { useMemo, memo, useState } from "react";
+import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, angelJinn, numToHebrew, numToArabic, toArabicIndic } from "./msEngine";
 import { perfStore } from "./perfStore";
@@ -10,8 +10,12 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lang, L }) {
-  const [system, setSystem] = useState("ar"); // "ar" | "heb"
+// suffix prop controls name display:
+//   "none"   → numeric hierarchy only (no names)
+//   "arabic" → Arabic Angel names (suffix إيل, value 41)
+//   "hebrew" → Hebrew Angel names (suffix אל, value 31)
+
+const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, suffix, lang, L }) {
   const hier = useMemo(() => {
     if (!mc || !gridSize) return null;
     const t0 = performance.now();
@@ -20,47 +24,58 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     return result;
   }, [mc, gridSize]);
 
-  // All 8 rows with pre-computed angel/jinn letters — only recomputes when mc/gridSize change
+  // Build rows — only compute names when suffix is active
   const rows = useMemo(() => {
     if (!hier) return [];
     const t0 = performance.now();
-    const result = [
-    { key:"usurper",   label: L.usurper,   val: hier.usurper },
-    { key:"guide",     label: L.guide,     val: hier.guide },
-    { key:"mystery",   label: L.mystery,   val: hier.mystery },
-    { key:"adjuster",  label: L.adjuster,  val: hier.adjuster,  highlight: true },
-    { key:"leader",    label: L.leader,    val: hier.leader },
-    { key:"regulator", label: L.regulator, val: hier.regulator },
-    { key:"genGov",    label: L.genGov,    val: hier.genGov },
-    { key:"highOver",  label: L.highOver,  val: hier.highOver },
-  ].map(row => {
+    const base = [
+      { key:"usurper",   label: L.usurper,   val: hier.usurper },
+      { key:"guide",     label: L.guide,     val: hier.guide },
+      { key:"mystery",   label: L.mystery,   val: hier.mystery },
+      { key:"adjuster",  label: L.adjuster,  val: hier.adjuster, highlight: true },
+      { key:"leader",    label: L.leader,    val: hier.leader },
+      { key:"regulator", label: L.regulator, val: hier.regulator },
+      { key:"genGov",    label: L.genGov,    val: hier.genGov },
+      { key:"highOver",  label: L.highOver,  val: hier.highOver },
+    ];
+
+    const result = base.map(row => {
+      if (suffix === "none") return { ...row, nameCol: null };
+
       const aj = angelJinn(row.val);
-      // numToArabic emits pieces LSD-first; reverse for RTL reading order
-      const arAngel  = numToArabic(aj.angelAr).split('').reverse().join('');
-      const arJinn   = numToArabic(aj.jinnAr).split('').reverse().join('');
-      const hebAngel = numToHebrew(aj.angelHeb);
-      const hebJinn  = numToHebrew(aj.jinnHeb);
-      return {
-        ...row,
-        ar:  [
-          { lbl: L.angelAr, v: aj.angelAr, c:"#4FE3FF", text: arAngel + "إيل" },
-          { lbl: L.jinnAr,  v: aj.jinnAr,  c:"#FF5555", text: arJinn  + "طيش" },
-        ],
-        heb: [
-          { lbl: L.angelHeb, v: aj.angelHeb, c:"#C4B5FD", text: hebAngel + "אל"  },
-          { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FFA84D", text: hebJinn  + "תקש" },
-        ],
-      };
+
+      if (suffix === "arabic") {
+        // Angel: v−41 → letters → إيل
+        const letters = numToArabic(aj.angelAr).split('').reverse().join('');
+        return {
+          ...row,
+          nameCol: { lbl: L.angelAr, v: aj.angelAr, c: "#4FE3FF", text: letters + "إيل" },
+        };
+      }
+
+      if (suffix === "hebrew") {
+        // Angel: v−31 → letters → אל
+        const letters = numToHebrew(aj.angelHeb);
+        return {
+          ...row,
+          nameCol: { lbl: L.angelHeb, v: aj.angelHeb, c: "#C4B5FD", text: letters + "אל" },
+        };
+      }
+
+      return { ...row, nameCol: null };
     });
+
     perfStore.set("angelJinnNames", parseFloat((performance.now()-t0).toFixed(2)));
     return result;
-  }, [hier, L]);
+  }, [hier, suffix, L]);
 
   if (!mc || !gridSize || !hier) return null;
 
+  const showNames = suffix !== "none";
+
   return (
     <motion.div
-      key={`hier-${mc}-${gridSize}`}
+      key={`hier-${mc}-${gridSize}-${suffix}`}
       initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.35 }}
       className="rounded-2xl border p-4 space-y-3"
       style={{ background:"rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow:`0 0 28px ${G.glow}` }}
@@ -69,26 +84,21 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         {L.hierarchy}
       </p>
 
-      {/* System toggle */}
-      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor:"rgba(212,175,55,0.25)" }}>
-        {[
-          { id:"ar",  label: lang === "ar" ? "النظام العربي"  : "Arabic System"  },
-          { id:"heb", label: lang === "ar" ? "النظام العبري" : "Hebrew System" },
-        ].map(opt => {
-          const active = system === opt.id;
-          return (
-            <button key={opt.id} onClick={() => setSystem(opt.id)}
-              className="flex-1 py-2 font-inter text-[10px] uppercase tracking-widest transition-all"
-              style={{
-                background: active ? "rgba(212,175,55,0.18)" : "rgba(4,8,24,0.80)",
-                color: active ? G.text : "rgba(212,175,55,0.35)",
-                fontWeight: active ? 700 : 400,
-                borderRight: opt.id === "ar" ? "1px solid rgba(212,175,55,0.18)" : "none",
-              }}>
-              {opt.label}
-            </button>
-          );
-        })}
+      {/* Active system badge */}
+      <div className="flex justify-center">
+        <span className="font-inter text-[9px] uppercase tracking-widest px-3 py-1 rounded-full border"
+          style={{
+            borderColor: suffix === "none" ? "rgba(212,175,55,0.20)" : suffix === "arabic" ? "rgba(79,227,255,0.35)" : "rgba(196,181,253,0.35)",
+            color:        suffix === "none" ? "rgba(212,175,55,0.45)" : suffix === "arabic" ? "#4FE3FF" : "#C4B5FD",
+            background:   suffix === "none" ? "rgba(212,175,55,0.04)" : suffix === "arabic" ? "rgba(79,227,255,0.06)" : "rgba(196,181,253,0.06)",
+          }}>
+          {suffix === "none"
+            ? (lang === "ar" ? "بدون لاحقة — أرقام فقط" : "No Suffix — Numeric Only")
+            : suffix === "arabic"
+              ? (lang === "ar" ? "ملائكة عربية — إيل (٤١)" : "Arabic Angels — إيل (41)")
+              : (lang === "ar" ? "ملائكة عبرية — אל (٣١)" : "Hebrew Angels — אל (31)")
+          }
+        </span>
       </div>
 
       <div className="h-px w-full" style={{ background:`linear-gradient(90deg,transparent,${G.borderHi},transparent)` }} />
@@ -97,7 +107,9 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       <div className="flex flex-wrap gap-2">
         <div className="flex-1 rounded-xl px-3 py-2 min-w-0" style={{ background:"rgba(212,175,55,0.06)", border:"1px solid rgba(212,175,55,0.15)" }}>
           <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:G.dim }}>{L.inputLabel}</p>
-          <p className="font-amiri font-bold text-lg" style={{ color:"rgba(212,175,55,0.70)" }}>{lang === "ar" ? toArabicIndic(rawInput?.toLocaleString()) : rawInput?.toLocaleString()}</p>
+          <p className="font-amiri font-bold text-lg" style={{ color:"rgba(212,175,55,0.70)" }}>
+            {lang === "ar" ? toArabicIndic(rawInput?.toLocaleString()) : rawInput?.toLocaleString()}
+          </p>
         </div>
         {negFixed && (
           <div className="flex-1 rounded-xl px-3 py-2 min-w-0" style={{ background:"rgba(255,120,60,0.08)", border:"1px solid rgba(255,120,60,0.30)" }}>
@@ -106,48 +118,53 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         )}
         <div className="flex-1 rounded-xl px-3 py-2 min-w-0" style={{ background:"rgba(212,175,55,0.10)", border:"1px solid rgba(212,175,55,0.30)" }}>
           <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:G.dim }}>{L.workingMC}</p>
-          <p className="font-amiri font-bold text-xl" style={{ color:G.text }}>{lang === "ar" ? toArabicIndic(mc?.toLocaleString()) : mc?.toLocaleString()}</p>
+          <p className="font-amiri font-bold text-xl" style={{ color:G.text }}>
+            {lang === "ar" ? toArabicIndic(mc?.toLocaleString()) : mc?.toLocaleString()}
+          </p>
         </div>
       </div>
 
       {/* 8 hierarchy rows */}
       <div className="space-y-1.5">
         {rows.map((row, i) => (
-            <motion.div key={row.key}
-              initial={{ opacity:0 }} animate={{ opacity:1 }}
-              transition={{ delay: i*0.03, duration:0.15 }}
-              className="rounded-xl overflow-hidden border"
-              style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
-            >
-              <div className="flex items-center justify-between px-3 py-2"
-                style={{ background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest"
-                  style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.55)" }}>
-                  {row.label}
+          <motion.div key={row.key}
+            initial={{ opacity:0 }} animate={{ opacity:1 }}
+            transition={{ delay: i*0.03, duration:0.15 }}
+            className="rounded-xl overflow-hidden border"
+            style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
+          >
+            {/* Numeric row header */}
+            <div className="flex items-center justify-between px-3 py-2"
+              style={{ background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest"
+                style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.55)" }}>
+                {row.label}
+              </p>
+              <p className="font-amiri font-bold tabular-nums"
+                style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.80)", fontSize: row.highlight ? "1.2rem" : "1rem" }}>
+                {lang === "ar" ? toArabicIndic(row.val.toLocaleString()) : row.val.toLocaleString()}
+              </p>
+            </div>
+
+            {/* Name column — only shown when suffix is active */}
+            {showNames && row.nameCol && (
+              <div className="px-3 py-2 text-center" style={{ background:"rgba(4,8,24,0.80)", borderTop:"1px solid rgba(212,175,55,0.08)" }}>
+                <p className="font-inter leading-tight mb-0.5" style={{ fontSize:"7px", color:"rgba(255,255,255,0.30)" }}>
+                  {row.nameCol.lbl}
                 </p>
-                <p className="font-amiri font-bold tabular-nums"
-                  style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.80)", fontSize: row.highlight ? "1.2rem" : "1rem" }}>
-                  {lang === "ar" ? toArabicIndic(row.val.toLocaleString()) : row.val.toLocaleString()}
+                <p className="font-amiri font-bold tabular-nums text-xs mb-1" style={{ color: row.nameCol.c }}>
+                  {lang === "ar" ? toArabicIndic(row.nameCol.v.toLocaleString()) : row.nameCol.v.toLocaleString()}
+                </p>
+                <p className="font-amiri" dir="rtl" style={{
+                  color: row.nameCol.c, letterSpacing:0, fontSize:"32px", fontWeight:900,
+                  lineHeight:1.2, wordWrap:"break-word", overflowWrap:"break-word",
+                  textShadow:`0 0 12px ${row.nameCol.c}44, 0 0 24px ${row.nameCol.c}22`
+                }}>
+                  {row.nameCol.text}
                 </p>
               </div>
-              {/* Angel / Jinn sub-columns — 2 cols for active system */}
-              <div className="grid grid-cols-2" style={{ background:"rgba(4,8,24,0.80)" }}>
-                {(system === "ar" ? row.ar : row.heb).map(col => (
-                  <div key={col.lbl} className="px-2 py-1.5 text-center border-r last:border-r-0"
-                    style={{ borderColor:"rgba(212,175,55,0.08)" }}>
-                    <p className="font-inter leading-tight" style={{ fontSize:"7px", color:"rgba(255,255,255,0.30)" }}>
-                      {col.lbl}
-                    </p>
-                    <p className="font-amiri font-bold tabular-nums text-xs" style={{ color:col.c }}>
-                      {lang === "ar" ? toArabicIndic(col.v.toLocaleString()) : col.v.toLocaleString()}
-                    </p>
-                    <p className="font-amiri" dir="rtl" style={{ color:col.c, letterSpacing:0, fontSize:"32px", fontWeight:900, lineHeight:1.2, wordWrap:"break-word", overflowWrap:"break-word", textShadow:`0 0 12px ${col.c}44, 0 0 24px ${col.c}22` }}>
-                      {col.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
+            )}
+          </motion.div>
         ))}
       </div>
     </motion.div>
