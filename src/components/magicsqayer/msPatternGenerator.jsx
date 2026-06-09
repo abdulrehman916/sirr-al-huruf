@@ -1,39 +1,53 @@
 // ═══════════════════════════════════════════════════════════════
 //  PATTERN-BASED ARABIC NAME GENERATOR
-//  Maps numeric values to 200+ authentic morphological patterns
+//  Contextual ending formation with varied pre-īl syllables
 // ═══════════════════════════════════════════════════════════════
 
 import { MORPHOLOGICAL_PATTERNS } from './msPatterns';
 import { validateName } from './msNameValidator';
 
-// Valid Arabic consonants for name generation
+// Valid Arabic consonants
 const VALID_CONSONANTS = [
   'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش',
   'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي'
 ];
 
-// Forbidden consonant sequences
+// Forbidden sequences
 const FORBIDDEN_SEQUENCES = [
   'غك', 'قغ', 'ظغ', 'غظ', 'كغ', 'غق', 'كش', 'نش', 'سش', 'غش',
   'طغ', 'ظط', 'غط', 'قك', 'كق', 'صك', 'كص', 'ضك', 'كض'
 ];
 
+// Pre-īl syllable patterns (varied structures)
+const PRE_IL_SYLLABLES = [
+  { pattern: 'رِ', vowels: 'ِ', consonant: 'ر' },      // -rīl (جِبْرِيل)
+  { pattern: 'فِ', vowels: 'ِ', consonant: 'ف' },      // -fīl (إِسْرَافِيل)
+  { pattern: 'زْ', vowels: '', consonant: 'ز' },       // -zāʾīl (عَزْرَائِيل)
+  { pattern: 'كْ', vowels: '', consonant: 'ك' },       // -kāʾīl (مِيكَائِيل)
+  { pattern: 'بِ', vowels: 'ِ', consonant: 'ب' },      // -bīl
+  { pattern: 'لِ', vowels: 'ِ', consonant: 'ل' },      // -līl
+  { pattern: 'مِ', vowels: 'ِ', consonant: 'م' },      // -mīl
+  { pattern: 'نِ', vowels: 'ِ', consonant: 'ن' },      // -nīl
+  { pattern: 'سِ', vowels: 'ِ', consonant: 'س' },      // -sīl
+  { pattern: 'عِ', vowels: 'ِ', consonant: 'ع' },      // -ʿīl
+  { pattern: 'قِ', vowels: 'ِ', consonant: 'ق' },      // -qīl
+  { pattern: 'هِ', vowels: 'ِ', consonant: 'ه' },      // -hīl
+];
+
 /**
  * selectPatternByNumber(number, category)
- * Select morphological pattern based on numeric value
  */
 export function selectPatternByNumber(number, category = 'angel') {
   const patterns = MORPHOLOGICAL_PATTERNS.filter(p => p.category === category);
   if (patterns.length === 0) return null;
   
-  // Deterministic selection based on number
   const idx = Math.abs(number) % patterns.length;
   return patterns[idx];
 }
 
 /**
  * extractConsonantsFromNumber(number)
- * Extract 2-4 consonants from number using phonetic mapping
+ * Extract 2-4 consonants with phonetic validation
  */
 export function extractConsonantsFromNumber(number) {
   const n = Math.abs(number);
@@ -77,13 +91,46 @@ export function extractConsonantsFromNumber(number) {
 }
 
 /**
- * applyPatternToConsonants(pattern, consonants)
- * Apply pattern template to consonants
+ * buildContextualEnding(consonants, number)
+ * Build varied pre-īl syllable based on consonants
  */
-export function applyPatternToConsonants(pattern, consonants) {
+export function buildContextualEnding(consonants, number) {
+  if (!consonants || consonants.length === 0) {
+    return { syllable: 'رِ', consonant: 'ر' };
+  }
+  
+  // Select pre-īl consonant based on number (deterministic but varied)
+  const idx = Math.abs(number) % PRE_IL_SYLLABLES.length;
+  const syllableData = PRE_IL_SYLLABLES[idx];
+  
+  // Check if selected consonant creates forbidden sequence
+  const lastConsonant = consonants[consonants.length - 1];
+  const sequence = lastConsonant + syllableData.consonant;
+  
+  if (FORBIDDEN_SEQUENCES.includes(sequence)) {
+    // Try next available consonant
+    for (let i = 1; i < PRE_IL_SYLLABLES.length; i++) {
+      const altIdx = (idx + i) % PRE_IL_SYLLABLES.length;
+      const alt = PRE_IL_SYLLABLES[altIdx];
+      if (!FORBIDDEN_SEQUENCES.includes(lastConsonant + alt.consonant)) {
+        return { syllable: alt.pattern, consonant: alt.consonant };
+      }
+    }
+  }
+  
+  return { syllable: syllableData.pattern, consonant: syllableData.consonant };
+}
+
+/**
+ * applyPatternWithVariedEnding(pattern, consonants, value)
+ * Apply pattern with contextual pre-īl ending
+ */
+export function applyPatternWithVariedEnding(pattern, consonants, value) {
   if (!pattern || !consonants || consonants.length === 0) return null;
   
   const template = pattern.template;
+  const isAngelPattern = pattern.category === 'angel';
+  
   let result = '';
   let cIdx = 0;
   
@@ -94,12 +141,32 @@ export function applyPatternToConsonants(pattern, consonants) {
     'ل': consonants[2] || consonants[0] || 'د'
   };
   
-  for (let char of template) {
+  // Build name from template
+  for (let i = 0; i < template.length; i++) {
+    const char = template[i];
+    
     if (['ف', 'ع', 'ل'].includes(char)) {
       result += cMap[char];
+    } else if (['ا', 'و', 'ي', 'ى', 'آ', 'أ', 'إ'].includes(char)) {
+      // Long vowel - keep as is
+      result += char;
+    } else if (['َ', 'ِ', 'ُ', 'ْ', 'ّ'].includes(char)) {
+      // Vowel mark - keep as is
+      result += char;
     } else {
+      // Other characters - keep
       result += char;
     }
+  }
+  
+  // For angel patterns, ensure varied pre-īl ending
+  if (isAngelPattern && !result.endsWith('إيل')) {
+    // Build contextual ending
+    const endingData = buildContextualEnding(consonants, value);
+    
+    // Remove any existing 'يل' ending and replace with contextual one + إيل
+    const baseName = result.replace(/يل$/, '');
+    result = baseName + endingData.syllable + 'يل';
   }
   
   return result;
@@ -107,7 +174,7 @@ export function applyPatternToConsonants(pattern, consonants) {
 
 /**
  * generatePatternBasedName(value, category)
- * Generate name using pattern-based approach
+ * Generate name with contextual ending formation
  */
 export function generatePatternBasedName(value, category = 'angel') {
   const pattern = selectPatternByNumber(value, category);
@@ -120,12 +187,12 @@ export function generatePatternBasedName(value, category = 'angel') {
     return { success: false, error: 'No consonants', value, category };
   }
   
-  const bareName = applyPatternToConsonants(pattern, consonants);
-  if (!bareName) {
+  const generatedName = applyPatternWithVariedEnding(pattern, consonants, value);
+  if (!generatedName) {
     return { success: false, error: 'Failed to apply pattern', value, category };
   }
   
-  const validation = validateName(bareName, category === 'angel');
+  const validation = validateName(generatedName, category === 'angel');
   
   return {
     success: true,
@@ -139,7 +206,7 @@ export function generatePatternBasedName(value, category = 'angel') {
       example: pattern.example
     },
     consonants,
-    generatedName: bareName,
+    generatedName,
     validation: {
       score: validation.score,
       passed: validation.passed,
@@ -151,7 +218,6 @@ export function generatePatternBasedName(value, category = 'angel') {
 
 /**
  * generateMultipleNames(count, category, startValue)
- * Generate multiple names
  */
 export function generateMultipleNames(count, category = 'angel', startValue = 1) {
   const results = [], failed = [];
@@ -177,7 +243,6 @@ export function generateMultipleNames(count, category = 'angel', startValue = 1)
 
 /**
  * getNameForHierarchyValue(value, suffixType)
- * Generate name for hierarchy level
  */
 export function getNameForHierarchyValue(value, suffixType = 'ar-angel') {
   const category = suffixType.includes('angel') ? 'angel' : 
@@ -187,7 +252,6 @@ export function getNameForHierarchyValue(value, suffixType = 'ar-angel') {
 
 /**
  * getPatternInfo(patternId)
- * Get pattern details
  */
 export function getPatternInfo(patternId) {
   const pattern = MORPHOLOGICAL_PATTERNS.find(p => p.id === patternId);
