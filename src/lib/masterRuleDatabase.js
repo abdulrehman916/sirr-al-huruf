@@ -68,7 +68,7 @@ export const RULE_MAGIC_CONSTANT = {
 
   // Jupiter 4×4 entity squares use a SCALED adjuster
   jupiterAdjusterRule: "For Jupiter 4×4, the Adjuster = General Governor of the base (smaller) square. Example: Losanahar (351, 3×3): GenGov=2808 becomes the 4×4 Adjuster.",
-  sharedAdjusterRule: "For a given entity, the Adjuster (MC) is the SAME for all planet sizes. Only usurper/guide/mystery change by planet size.",
+  sharedAdjusterRule: "For a given entity, the Adjuster (MC) is the SAME for all planet sizes. Usurper, Guide, Mystery, Leader, Regulator, General Governor, and High Overseer ALL change when n changes.",
 
   usurperFormula: "Usurper = (MC - T(n)) / n where T(n) = n(n-1)/2 (triangular number)",
 };
@@ -368,10 +368,45 @@ export const RULE_COMPATIBILITY = {
   status: "CONFIRMED",
 
   replacementRule: "A larger square of the SAME planetary correspondence can replace a smaller one. Example: 10×10 (Saturn) can replace 3×3 (Saturn).",
-  
+
   harmonicPlanetRule: "If a number doesn't fit its planet's primary size, use a harmonious planet's size. Mars (5×5) is considered a friend of Saturn (3×3). Mercury (8×8) is neutral — malefic with malefic, benefic with benefic.",
 
   multipleSquaresRule: "You can have ALL planetary squares (3×3 through 10×10) for a single entity or purpose simultaneously.",
+
+  // ── BOOK AUTHORITY RULE (replaces the former Non-Interference Rule) ──────────
+  // Established: 2026-06-09 | Authority: Book formulas + audit-verified mathematics
+  BOOK_AUTHORITY_RULE: {
+    status: "ACTIVE — supersedes all previous Non-Interference Rule entries",
+    rule: "The book is the sole authority for all Magic Square calculations.",
+    statement: [
+      "When the grid size (n) changes, the system MUST recalculate and regenerate ALL associated values according to book formulas.",
+      "No identity preservation is permitted across different square sizes unless explicitly stated in the book.",
+      "A change of square size represents a new square context with its own complete hierarchy.",
+      "Compatibility, fallback, substitution, adaptation, or convenience rules may NOT override the book.",
+      "The book formulas and hierarchy definitions always take precedence.",
+    ],
+    whatChangesWithN: [
+      "Planet assignment — SIZE_PLANET_MAP[n] maps each n directly to a planet",
+      "Usurper — (MC - triangle(n)) / n — n appears in both numerator and denominator",
+      "Guide — Usurper + n² - 1 — contains n² term",
+      "Mystery — Usurper + Guide — inherits n-dependence from both",
+      "Leader — MC × n — n is a direct multiplier",
+      "Regulator — MC × (n+1) — contains n+1",
+      "General Governor — MC × 2 × (n+1) — contains n+1",
+      "High Overseer — General Governor × Guide — doubly n-dependent",
+      "All Angel and Jinn names derived from the above tiers — all change",
+    ],
+    whatStaysConstantWithN: [
+      "Adjuster — always equals MC, which is fixed for a given entity",
+      "Adjuster-derived Angel and Jinn names — the only tier immune to n-change",
+    ],
+    bookEvidence: {
+      source: "RULE_MAGIC_CONSTANT + RULE_HIERARCHY, p.xxii–xxv",
+      confirmed: "Verified mathematically and against 150+ book entity tables",
+      highOverseerFormula: "HO = General Governor × Guide (NOT leader × regulator / n)",
+    },
+    formerRuleStatus: "The former 'Strict Non-Interference Rule' is REMOVED. It was a system implementation decision with no book support. It has been replaced by this Book Authority Rule.",
+  },
 
   hebrewSquareUnavailable: {
     rule: "Hebrew squares are not available when the entity's gematria value uses compound Hebrew letters only (values > 400 that cannot be represented by a single letter combination elegantly).",
@@ -865,7 +900,8 @@ export const MASTER_DB_SUMMARY = {
     "Angel = tier − 41 (Arabic) / − 31 (Hebrew); Jinn = tier + 41 (Arabic) / + 31 (Hebrew)  [100% confirmed]",
     "Element sequence: Fire → Earth → Air → Water (astrological, not alchemical)  [confirmed p.xvii]",
     "MC formula: n(n²+1)/2  [standard]",
-    "Shared Adjuster rule: MC stays constant across all planetary sizes for same entity",
+    "BOOK AUTHORITY RULE (2026-06-09): Grid size change triggers full recalculation of all 8 tiers — only Adjuster stays constant",
+    "Shared Adjuster rule: MC stays constant; all other tiers (Usurper, Guide, Mystery, Leader, Regulator, GenGov, HighOverseer) change when n changes",
     "Jupiter 4×4 Adjuster = GenGov of entity's base square",
     "15 entities per zodiac sign in fixed order",
     "6 entities per planetary chapter in fixed order: Planet→Archangel→Angel→Intelligence→Spirit→Olympic Spirit",
