@@ -146,14 +146,14 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         <div className="flex-1 rounded-xl px-4 py-2.5 min-w-0"
           style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
           <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim, letterSpacing: "0.5px" }}>{L.inputLabel}</p>
-          <p className="font-amiri font-bold" style={{ color: "rgba(212,175,55,0.75)", fontSize: "1.3rem", textShadow: "0 0 8px rgba(212,175,55,0.25)" }}>
+          <p className="font-amiri font-bold" style={{ color: "rgba(212,175,55,0.75)", fontSize: "1.55rem", textShadow: "0 0 8px rgba(212,175,55,0.25)" }}>
             {lang === "ar" ? toArabicIndic(rawInput?.toLocaleString()) : rawInput?.toLocaleString()}
           </p>
         </div>
         <div className="flex-1 rounded-xl px-4 py-2.5 min-w-0"
           style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.30)" }}>
           <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim, letterSpacing: "0.5px" }}>{L.workingMC}</p>
-          <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.5rem", textShadow: `0 0 12px ${G.glow}` }}>
+          <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.75rem", textShadow: `0 0 12px ${G.glow}` }}>
             {lang === "ar" ? toArabicIndic(mc?.toLocaleString()) : mc?.toLocaleString()}
           </p>
         </div>
@@ -193,7 +193,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 <p className="font-amiri font-bold tabular-nums"
                   style={{ 
                     color: row.highlight ? G.text : "rgba(212,175,55,0.85)", 
-                    fontSize: row.highlight ? "1.4rem" : "1.2rem",
+                    fontSize: row.highlight ? "1.7rem" : "1.45rem",
                     textShadow: row.highlight ? `0 0 12px ${G.glow}` : "none",
                     letterSpacing: "0.5px"
                   }}>
@@ -213,7 +213,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     </p>
                     <p className={`font-amiri font-bold tabular-nums mb-1.5`} style={{ 
                       color: n.color, 
-                      fontSize: "14px",
+                      fontSize: "17px",
                       textShadow: `0 0 8px ${n.color}44`
                     }}>
                       {lang === "ar" ? toArabicIndic(n.remainder.toLocaleString()) : n.remainder.toLocaleString()}
@@ -224,7 +224,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       className={isArabic ? "font-amiri" : "font-amiri"}
                       style={{
                         color: n.color,
-                        fontSize: isArabic ? "38px" : "32px",
+                        fontSize: isArabic ? "46px" : "38px",
                         fontWeight: 900,
                         lineHeight: 1.4,
                         letterSpacing: isArabic ? "0.5px" : "0",
