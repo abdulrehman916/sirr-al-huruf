@@ -143,17 +143,17 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
 
       {/* Summary row */}
       <div className="flex flex-wrap gap-2">
-        <div className="flex-1 rounded-xl px-3 py-2 min-w-0"
+        <div className="flex-1 rounded-xl px-4 py-2.5 min-w-0"
           style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{L.inputLabel}</p>
-          <p className="font-amiri font-bold text-lg" style={{ color: "rgba(212,175,55,0.70)" }}>
+          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim, letterSpacing: "0.5px" }}>{L.inputLabel}</p>
+          <p className="font-amiri font-bold" style={{ color: "rgba(212,175,55,0.75)", fontSize: "1.3rem", textShadow: "0 0 8px rgba(212,175,55,0.25)" }}>
             {lang === "ar" ? toArabicIndic(rawInput?.toLocaleString()) : rawInput?.toLocaleString()}
           </p>
         </div>
-        <div className="flex-1 rounded-xl px-3 py-2 min-w-0"
+        <div className="flex-1 rounded-xl px-4 py-2.5 min-w-0"
           style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.30)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{L.workingMC}</p>
-          <p className="font-amiri font-bold text-xl" style={{ color: G.text }}>
+          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim, letterSpacing: "0.5px" }}>{L.workingMC}</p>
+          <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.5rem", textShadow: `0 0 12px ${G.glow}` }}>
             {lang === "ar" ? toArabicIndic(mc?.toLocaleString()) : mc?.toLocaleString()}
           </p>
         </div>
@@ -184,14 +184,19 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
             >
               {/* Numeric row */}
-              <div className="flex items-center justify-between px-3 py-2"
+              <div className="flex items-center justify-between px-4 py-2.5"
                 style={{ background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest"
-                  style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.55)" }}>
+                <p className="font-inter text-[10px] uppercase tracking-widest"
+                  style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.60)", letterSpacing: "0.8px" }}>
                   {row.label}
                 </p>
                 <p className="font-amiri font-bold tabular-nums"
-                  style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.80)", fontSize: row.highlight ? "1.2rem" : "1rem" }}>
+                  style={{ 
+                    color: row.highlight ? G.text : "rgba(212,175,55,0.85)", 
+                    fontSize: row.highlight ? "1.4rem" : "1.2rem",
+                    textShadow: row.highlight ? `0 0 12px ${G.glow}` : "none",
+                    letterSpacing: "0.5px"
+                  }}>
                   {lang === "ar" ? toArabicIndic(row.val.toLocaleString()) : row.val.toLocaleString()}
                 </p>
               </div>
@@ -199,20 +204,40 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               {/* Name column — single entry (angel OR jinn depending on active suffix) */}
               {showNames && activeNameKey && row[activeNameKey] && (() => {
                 const n = row[activeNameKey];
+                const isArabic = suffix === "ar-angel" || suffix === "ar-jinn";
                 return (
-                  <div className="px-3 py-2 text-center"
+                  <div className="px-3 py-2.5 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
-                    <p className="font-inter leading-tight mb-0.5" style={{ fontSize: "7px", color: "rgba(255,255,255,0.30)" }}>
+                    <p className="font-inter leading-tight mb-1" style={{ fontSize: "8px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.5px" }}>
                       {n.lbl}
                     </p>
-                    <p className="font-amiri font-bold tabular-nums text-xs mb-1" style={{ color: n.color }}>
+                    <p className={`font-amiri font-bold tabular-nums mb-1.5`} style={{ 
+                      color: n.color, 
+                      fontSize: "14px",
+                      textShadow: `0 0 8px ${n.color}44`
+                    }}>
                       {lang === "ar" ? toArabicIndic(n.remainder.toLocaleString()) : n.remainder.toLocaleString()}
                     </p>
-                    <p className="font-amiri" dir="rtl" style={{
-                      color: n.color, letterSpacing: 0, fontSize: "28px", fontWeight: 900,
-                      lineHeight: 1.2, wordWrap: "break-word", overflowWrap: "break-word",
-                      textShadow: `0 0 12px ${n.color}44, 0 0 24px ${n.color}22`
-                    }}>
+                    <p 
+                      dir="rtl" 
+                      lang={isArabic ? "ar" : "he"}
+                      className={isArabic ? "font-amiri" : "font-amiri"}
+                      style={{
+                        color: n.color,
+                        fontSize: isArabic ? "38px" : "32px",
+                        fontWeight: 900,
+                        lineHeight: 1.4,
+                        letterSpacing: isArabic ? "0.5px" : "0",
+                        wordWrap: "break-word",
+                        overflowWrap: "break-word",
+                        textShadow: `0 0 16px ${n.color}55, 0 0 32px ${n.color}33, 0 2px 4px rgba(0,0,0,0.8)`,
+                        padding: "4px 0",
+                        fontFeatureSettings: isArabic ? "'liga' 1, 'calt' 1, 'kern' 1" : "'kern' 1",
+                        textRendering: "optimizeLegibility",
+                        WebkitFontSmoothing: "antialiased",
+                        MozOsxFontSmoothing: "grayscale"
+                      }}
+                    >
                       {n.name}
                     </p>
                   </div>
