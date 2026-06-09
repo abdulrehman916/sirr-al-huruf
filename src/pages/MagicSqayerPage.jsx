@@ -165,9 +165,11 @@ function SacredGrid({ gridSize, element, grid, lang, L }) {
     </div>
   );
 
+  const t0 = performance.now();
   const flat = gridData.flat();
   const v = verifySquare(gridData);
   const fontSize = gridSize >= 14 ? "9px" : gridSize >= 10 ? "10px" : gridSize >= 8 ? "11px" : gridSize >= 6 ? "13px" : "16px";
+  console.log(`[PERF] SacredGrid flat+verify (${gridSize}×${gridSize}, ${flat.length} cells): ${(performance.now()-t0).toFixed(2)}ms`);
 
   return (
     <motion.div key={`grid-${gridSize}-${element}`}
@@ -274,7 +276,11 @@ export default function MagicSqayerPage() {
     const usurper = computeUsurper(mc, size);
     if (!usurper || usurper < 1) return { incompatible: true };
     const e = el || "fire";
-    return { grid: generateSquare(size, usurper, e), usurper };
+    const t0 = performance.now();
+    const result = { grid: generateSquare(size, usurper, e), usurper };
+    const t1 = performance.now();
+    console.log(`[PERF] generateSquare(${size}×${size}): ${(t1-t0).toFixed(2)}ms`);
+    return result;
   };
 
   // ── Handlers ───────────────────────────────────────────────────
@@ -294,9 +300,13 @@ export default function MagicSqayerPage() {
   };
 
   const handleSize = (size) => {
+    const t0 = performance.now();
     const ns = gridSize === size ? null : size;
     setGridSize(ns);
-    setGrid(buildGrid(workingMC, ns, element));
+    const g = buildGrid(workingMC, ns, element);
+    setGrid(g);
+    const t1 = performance.now();
+    console.log(`[PERF] handleSize(${size}) total state update: ${(t1-t0).toFixed(2)}ms`);
   };
 
   const handleElement = (key) => {

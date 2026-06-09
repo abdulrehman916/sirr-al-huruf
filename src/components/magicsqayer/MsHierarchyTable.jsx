@@ -15,10 +15,19 @@ function toArabicLetters(v) {
 }
 
 const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lang, L }) {
-  const hier = useMemo(() => (mc && gridSize) ? buildHierarchy(mc, gridSize) : null, [mc, gridSize]);
+  const hier = useMemo(() => {
+    if (!mc || !gridSize) return null;
+    const t0 = performance.now();
+    const result = buildHierarchy(mc, gridSize);
+    console.log(`[PERF] buildHierarchy(mc=${mc}, n=${gridSize}): ${(performance.now()-t0).toFixed(2)}ms`);
+    return result;
+  }, [mc, gridSize]);
 
   // All 8 rows with pre-computed angel/jinn letters — only recomputes when mc/gridSize change
-  const rows = useMemo(() => hier ? [
+  const rows = useMemo(() => {
+    if (!hier) return [];
+    const t0 = performance.now();
+    const result = [
     { key:"usurper",   label: L.usurper,   val: hier.usurper },
     { key:"guide",     label: L.guide,     val: hier.guide },
     { key:"mystery",   label: L.mystery,   val: hier.mystery },
@@ -28,17 +37,26 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     { key:"genGov",    label: L.genGov,    val: hier.genGov },
     { key:"highOver",  label: L.highOver,  val: hier.highOver },
   ].map(row => {
-    const aj = angelJinn(row.val);
-    return {
-      ...row,
-      cols: [
-        { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC", text: toArabicLetters(aj.angelAr)  + "إيل" },
-        { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", text: numToHebrew(aj.angelHeb)      + "אל"  },
-        { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171", text: toArabicLetters(aj.jinnAr)            },
-        { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C", text: numToHebrew(aj.jinnHeb)               },
-      ],
-    };
-  }) : [], [hier, L]);
+      const aj = angelJinn(row.val);
+      const tA0 = performance.now();
+      const arAngel = toArabicLetters(aj.angelAr);
+      const arJinn  = toArabicLetters(aj.jinnAr);
+      const hebAngel = numToHebrew(aj.angelHeb);
+      const hebJinn  = numToHebrew(aj.jinnHeb);
+      console.log(`[PERF]   names for row ${row.key} (val=${row.val}): ${(performance.now()-tA0).toFixed(3)}ms`);
+      return {
+        ...row,
+        cols: [
+          { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC", text: arAngel  + "إيل" },
+          { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", text: hebAngel  + "אל"  },
+          { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171", text: arJinn            },
+          { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C", text: hebJinn           },
+        ],
+      };
+    });
+    console.log(`[PERF] all 8 rows + angel/jinn names: ${(performance.now()-t0).toFixed(2)}ms`);
+    return result;
+  }, [hier, L]);
 
   if (!mc || !gridSize || !hier) return null;
 
