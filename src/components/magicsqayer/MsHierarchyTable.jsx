@@ -44,7 +44,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         ...row,
         ar:  [
           { lbl: L.angelAr, v: aj.angelAr, c:"#4FE3FF", text: arAngel + "إيل" },
-          { lbl: L.jinnAr,  v: aj.jinnAr,  c:"#FF5555", text: arJinn           },
+          { lbl: L.jinnAr,  v: aj.jinnAr,  c:"#FF5555", text: arJinn  + "طيش" },
         ],
         heb: [
           { lbl: L.angelHeb, v: aj.angelHeb, c:"#C4B5FD", text: hebAngel + "אל" },

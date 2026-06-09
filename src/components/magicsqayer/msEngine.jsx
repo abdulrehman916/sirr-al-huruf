@@ -38,7 +38,10 @@ export const ELEMENTS = [
 export function triangle(n) { return n * (n * n - 1) / 2; }
 
 // ── Suffix constants (book authority) ───────────────────────────
+// arabic: subtract إيل (41) from input to get working magic constant
 export const SUFFIX_VAL = { none:0, arabic:41, hebrew:31 };
+// Jinn suffix طيش value (for reference)
+export const JINN_SUFFIX_AR = 319;
 
 // ── Apply suffix + negative-360 fix ─────────────────────────────
 export function applyISuffix(raw, mode) {
@@ -83,12 +86,18 @@ export function buildHierarchy(mc, n) {
   return { usurper, guide, mystery, adjuster, leader, regulator, genGov, highOver };
 }
 
-// ── Angel/Jinn derivation (±41 Arabic, ±31 Hebrew) ───────────────
-// Book rule: if angel result ≤ 0, add 360 (negative fix)
+// ── Angel/Jinn derivation — Book authority: pages 27–31 ──────────
+// Arabic Angel: v − 41  → Abjad letters → append إيل  (suffix val = 41)
+// Arabic Jinn:  v − 319 → Abjad letters → append طيش  (suffix val = 319)
+// Hebrew Angel: v − 31  → Gematria letters → append אל (suffix val = 31)
+// Hebrew Jinn:  v + 31  → Gematria letters (no suffix — Hebrew not specified)
+// Negative fix: add 360 if result ≤ 0
 export function angelJinn(v) {
-  let angelAr  = v - 41; if (angelAr  <= 0) angelAr  += 360;
-  let angelHeb = v - 31; if (angelHeb <= 0) angelHeb += 360;
-  return { angelAr, angelHeb, jinnAr: v + 41, jinnHeb: v + 31 };
+  let angelAr  = v - 41;  if (angelAr  <= 0) angelAr  += 360;
+  let angelHeb = v - 31;  if (angelHeb <= 0) angelHeb += 360;
+  let jinnAr   = v - 319; if (jinnAr   <= 0) jinnAr   += 360;
+  let jinnHeb  = v + 31;
+  return { angelAr, angelHeb, jinnAr, jinnHeb };
 }
 
 // ════════════════════════════════════════════════════════════════
