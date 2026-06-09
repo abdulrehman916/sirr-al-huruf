@@ -2,7 +2,11 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, numToArabic, numToHebrew, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
-import { addTashkeelToArabicName } from "./msTashkeel";
+import { getNameForHierarchyValue, getPatternInfo } from "./msPatternGenerator";
+import { validateName } from "./msNameValidator";
+
+// Helper to get display name (pattern-based names are already valid)
+const addTashkeelToArabicName = (name) => name;
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -11,38 +15,25 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-// ── Manuscript name derivation ────────────────────────────────────
-// Underflow rule: if val < subtractVal → use val + 360 − subtractVal
-function applySubtract(val, subtractVal) {
-  return val < subtractVal ? val + 360 - subtractVal : val - subtractVal;
-}
+// ── Pattern-based name generation ─────────────────────────────────
+// Uses 200+ authentic morphological patterns instead of mechanical conversion
 
-// Arabic Angel: remainder → Arabic letters (LSD-first reversed for RTL) + إيل
-function arabicAngelName(val) {
-  const r = applySubtract(val, 41);
-  const letters = numToArabic(r).split('').reverse().join('');
-  return { remainder: r, name: letters + "إيل" };
-}
-
-// Arabic Jinn: remainder → Arabic letters + طيش  (suffix val 319 = 9+10+300 = ط+ي+ش)
-function arabicJinnName(val) {
-  const r = applySubtract(val, 319);
-  const letters = numToArabic(r).split('').reverse().join('');
-  return { remainder: r, name: letters + "طيش" };
-}
-
-// Hebrew Angel: remainder → Hebrew letters + אל
-function hebrewAngelName(val) {
-  const r = applySubtract(val, 31);
-  const letters = numToHebrew(r);
-  return { remainder: r, name: letters + "אל" };
-}
-
-// Hebrew Jinn: remainder → Hebrew letters + תקש  (suffix val 329 = 9+20+300 = ט+כ+ש)
-function hebrewJinnName(val) {
-  const r = applySubtract(val, 329);
-  const letters = numToHebrew(r);
-  return { remainder: r, name: letters + "תקש" };
+function generateNameForValue(val, suffixType) {
+  const category = suffixType === 'ar-angel' || suffixType === 'heb-angel' ? 'angel' : 'jinn';
+  const result = getNameForHierarchyValue(val, suffixType);
+  
+  if (!result || !result.success) {
+    return { remainder: val, name: '—', pattern: null, score: 0, passed: false };
+  }
+  
+  return {
+    remainder: val,
+    name: result.generatedName,
+    pattern: result.pattern,
+    score: result.validation.score,
+    passed: result.validation.passed,
+    failureReason: result.validation.failureReason
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -67,7 +58,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     return result;
   }, [mc, gridSize]);
 
-  // Build display rows with Angel + Jinn name columns
+  // Build display rows with pattern-based names
   const rows = useMemo(() => {
     if (!hier) return [];
     const t0 = performance.now();
@@ -84,21 +75,16 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     ];
 
     const result = base.map(row => {
-      if (suffix === "ar-angel") {
-        const name = arabicAngelName(row.val);
-        return { ...row, angel: { lbl: L.angelAr, ...name, color: "#4FE3FF" }, jinn: null };
-      }
-      if (suffix === "ar-jinn") {
-        const name = arabicJinnName(row.val);
-        return { ...row, angel: null, jinn: { lbl: L.jinnAr, ...name, color: "#FF9F5A" } };
-      }
-      if (suffix === "heb-angel") {
-        const name = hebrewAngelName(row.val);
-        return { ...row, angel: { lbl: L.angelHeb, ...name, color: "#C4B5FD" }, jinn: null };
-      }
-      // "heb-jinn"
-      const name = hebrewJinnName(row.val);
-      return { ...row, angel: null, jinn: { lbl: L.jinnHeb, ...name, color: "#F9A8D4" } };
+      const nameData = generateNameForValue(row.val, suffix);
+      const isAngel = suffix.includes('angel');
+      const color = isAngel ? "#4FE3FF" : suffix === 'ar-jinn' ? "#FF9F5A" : "#F9A8D4";
+      const lbl = isAngel ? (suffix === 'heb-angel' ? L.angelHeb : L.angelAr) : (suffix === 'heb-jinn' ? L.jinnHeb : L.jinnAr);
+      
+      return {
+        ...row,
+        angel: isAngel ? { lbl, ...nameData, color } : null,
+        jinn: !isAngel ? { lbl, ...nameData, color } : null
+      };
     });
 
     perfStore.set("angelJinnNames", parseFloat((performance.now() - t0).toFixed(2)));
@@ -215,18 +201,28 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 </p>
               </div>
 
-              {/* Name column — single entry (angel OR jinn depending on active suffix) */}
+              {/* Name column with pattern info and validation */}
               {showNames && activeNameKey && row[activeNameKey] && (() => {
                 const n = row[activeNameKey];
                 const isArabic = suffix === "ar-angel" || suffix === "ar-jinn";
-                const suffixType = suffix === "ar-angel" ? "angel" : suffix === "ar-jinn" ? "jinn" : null;
-                const displayName = isArabic && suffixType ? addTashkeelToArabicName(n.name, suffixType) : n.name;
+                const displayName = n.name || '—';
+                const isValid = n.passed !== false;
+                const patternInfo = n.pattern ? getPatternInfo(n.pattern.id) : null;
+                
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
-                    <p className="font-inter leading-tight mb-1" style={{ fontSize: "8px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.5px" }}>
-                      {n.lbl}
-                    </p>
+                    {/* Pattern info */}
+                    {patternInfo && (
+                      <div className="mb-2 px-2 py-1 rounded-lg inline-block"
+                        style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                        <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
+                          Pattern: {patternInfo.template}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Value */}
                     <p className={`font-amiri font-bold tabular-nums mb-1.5`} style={{ 
                       color: n.color, 
                       fontSize: "17px",
@@ -234,21 +230,20 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     }}>
                       {lang === "ar" ? toArabicIndic(n.remainder.toLocaleString()) : n.remainder.toLocaleString()}
                     </p>
+                    
+                    {/* Generated name */}
                     <p 
                       dir="rtl" 
                       lang={isArabic ? "ar" : "he"}
                       style={{
-                        color: n.color,
+                        color: isValid ? n.color : "rgba(255,100,100,0.70)",
                         fontSize: isArabic ? "50px" : "38px",
                         fontWeight: isArabic ? 600 : 900,
                         lineHeight: isArabic ? 2.0 : 1.4,
                         wordWrap: "break-word",
                         overflowWrap: "break-word",
-                        textShadow: `0 0 16px ${n.color}55, 0 0 32px ${n.color}33, 0 2px 4px rgba(0,0,0,0.8)`,
+                        textShadow: isValid ? `0 0 16px ${n.color}55, 0 0 32px ${n.color}33` : 'none',
                         padding: "8px 4px 16px",
-                        // Scheherazade New: purpose-built for fully-vocalized Arabic,
-                        // best tashkeel glyph spacing and mark positioning of any web font.
-                        // Arabic letters stay naturally connected — no artificial spacing.
                         fontFamily: isArabic
                           ? "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif"
                           : "'Amiri', serif",
@@ -260,6 +255,23 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     >
                       {displayName}
                     </p>
+                    
+                    {/* Pronunciation score and validation */}
+                    <div className="mt-2 flex items-center justify-center gap-2">
+                      <span className="font-inter text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full"
+                        style={{ 
+                          background: isValid ? "rgba(100,220,100,0.10)" : "rgba(255,100,100,0.10)",
+                          color: isValid ? "rgba(100,220,100,0.90)" : "rgba(255,100,100,0.90)",
+                          border: `1px solid ${isValid ? "rgba(100,220,100,0.30)" : "rgba(255,100,100,0.30)"}`
+                        }}>
+                        Score: {n.score || 0}/100
+                      </span>
+                      {isValid ? (
+                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ Valid</span>
+                      ) : (
+                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(255,100,100,0.70)" }}>✗ {n.failureReason || 'Invalid'}</span>
+                      )}
+                    </div>
                   </div>
                 );
               })()}
