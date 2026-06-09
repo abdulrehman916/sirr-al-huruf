@@ -530,8 +530,8 @@ export default function MagicSqayerPage() {
           <MsPlanetReport mc={squareMC} gridSize={gridSize} lang={lang} L={L} />
         )}
 
-        {/* Hierarchy Table */}
-        {gridReady && (
+        {/* Hierarchy Table — always shown when a number is entered */}
+        {rawNum && (
           <MsHierarchyTable
             mc={squareMC}
             gridSize={gridSize}

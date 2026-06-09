@@ -71,11 +71,18 @@ export function computeUsurper(mc, n) {
 }
 
 // ── Hierarchy table (8 rows per book) ────────────────────────────
+// Returns null only if mc or n is falsy.
+// When mc/n are incompatible for square construction, usurper/guide/mystery
+// are computed from the formula anyway (fractional usurper rounded); the
+// remaining 5 rows (adjuster, leader, regulator, genGov, highOver) are always
+// valid since they depend only on mc and n.
 export function buildHierarchy(mc, n) {
-  const A = computeUsurper(mc, n);
-  if (A === null) return null;
-  const usurper   = A;
-  const guide     = A + n * n - 1;
+  if (!mc || !n) return null;
+  // Use exact usurper if compatible, otherwise compute directly from formula
+  // (mc - triangle(n)) / n — may be non-integer when incompatible, so floor it
+  const A = (mc - triangle(n)) / n;
+  const usurper   = Math.floor(A);
+  const guide     = usurper + n * n - 1;
   const mystery   = usurper + guide;
   const adjuster  = mc;                          // magic constant
   const leader    = adjuster * n;
