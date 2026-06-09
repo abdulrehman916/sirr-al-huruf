@@ -17,11 +17,7 @@ export default function MsPlanetReport({ mc, gridSize, lang, L }) {
   const pl = PLANETS.find(p => p.key === planetKey);
   if (!pl) return null;
 
-  const planetName = lang === "en"
-    ? PLANET_EN[planetKey]
-    : lang === "ml"
-    ? pl.malayalam
-    : pl.arabic;
+  const planetName = lang === "en" ? PLANET_EN[planetKey] : pl.arabic;
 
   const items = [
     { label: L.mcLabel,    val: hier.adjuster.toLocaleString() },

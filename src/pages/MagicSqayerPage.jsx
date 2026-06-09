@@ -73,7 +73,7 @@ function PlanetCard({ gridSize, lang, L }) {
   const planetKey = SIZE_PLANET_MAP[gridSize];
   const pl = PLANETS.find(p => p.key === planetKey);
   if (!pl) return null;
-  const name = lang === "en" ? PLANET_EN[planetKey] : lang === "ml" ? pl.malayalam : pl.arabic;
+  const name = lang === "en" ? PLANET_EN[planetKey] : pl.arabic;
   return (
     <motion.div key={gridSize} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.35 }}
       className="rounded-2xl border p-4 flex items-center gap-4"
@@ -184,7 +184,7 @@ function SacredGrid({ gridSize, element, grid, lang, L }) {
           {elMeta && <span>{elMeta.icon}</span>}
           {elMeta && <span className="font-amiri text-sm" style={{ color:elMeta.color }}>{elMeta.arabic}</span>}
           {elMeta && <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color:"rgba(212,175,55,0.35)" }}>
-            · {lang==="en" ? elMeta.english : lang==="ml" ? elMeta.malayalam : elMeta.arabic}
+            · {lang==="en" ? elMeta.english : elMeta.arabic}
           </span>}
         </div>
       </div>
@@ -321,12 +321,11 @@ export default function MagicSqayerPage() {
   const langOpts = [
     { id:"en", flag:"🇺🇸", label:"English"  },
     { id:"ar", flag:"🇸🇦", label:"العربية"  },
-    { id:"ml", flag:"🇮🇳", label:"മലയാളം" },
   ];
 
   return (
     <PageLayout>
-      <div className="space-y-4">
+      <div className="space-y-4" dir={lang === "ar" ? "rtl" : "ltr"}>
 
         {/* Header */}
         <PageTitle arabic="السحر المربع" latin="Magic Sqayer" subtitle="Sacred Vefk Construction System" icon="✨" />
@@ -440,7 +439,7 @@ export default function MagicSqayerPage() {
                       style={{ color: sel ? el.color : "rgba(255,255,255,0.45)" }}>{el.arabic}</span>
                     <span className="font-inter text-[8px] uppercase tracking-widest"
                       style={{ color: sel ? `${el.color}88` : "rgba(255,255,255,0.20)" }}>
-                      {lang==="en" ? el.english : lang==="ml" ? el.malayalam : ""}
+                      {lang==="en" ? el.english : ""}
                     </span>
                   </div>
                 </motion.button>
