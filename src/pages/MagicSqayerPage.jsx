@@ -6,8 +6,8 @@ import PageTitle from "../components/PageTitle";
 // ── Engine & data ────────────────────────────────────────────────
 import {
   PLANETS, ELEMENTS, SIZE_PLANET_MAP, PLANET_EN,
-  SUFFIX_VAL, applyISuffix, isCompatible, compatibleSizes,
-  computeUsurper, buildHierarchy, generateSquare, verifySquare, toArabicIndic,
+  isCompatible, compatibleSizes,
+  computeUsurper, generateSquare, verifySquare, toArabicIndic,
 } from "../components/magicsqayer/msEngine";
 
 // ── Display components ───────────────────────────────────────────
@@ -270,23 +270,19 @@ export default function MagicSqayerPage() {
 
   const L = useMemo(() => LABELS[lang], [lang]);
 
-  // ── Raw number from input field ────────────────────────────────
+  // ── Raw number = Magic Constant for all square mathematics ───
+  // Suffix subtraction applies ONLY to name generation, not to square construction.
   const rawNum = useMemo(() => { const n = parseInt(inputNum); return isNaN(n) ? null : n; }, [inputNum]);
-
-  // ── Working MC after suffix application ───────────────────────
-  const { mc: workingMC, subtracted, negFixed } = useMemo(() => {
-    if (!rawNum) return { mc: null, subtracted: false, negFixed: false };
-    return applyISuffix(rawNum, suffix);
-  }, [rawNum, suffix]);
+  const squareMC = rawNum; // alias for clarity — the square always uses the raw input
 
   // ── Compatible sizes — expensive, memoized ────────────────────
-  const compatSizes = useMemo(() => workingMC ? compatibleSizes(workingMC) : [], [workingMC]);
+  const compatSizes = useMemo(() => squareMC ? compatibleSizes(squareMC) : [], [squareMC]);
 
   // ── Per-button compatibility map — avoids 14 calls per render ─
   const compatMap = useMemo(() => {
-    if (!workingMC) return {};
-    return Object.fromEntries(GRID_SIZES.map(gs => [gs.value, isCompatible(workingMC, gs.value)]));
-  }, [workingMC]);
+    if (!squareMC) return {};
+    return Object.fromEntries(GRID_SIZES.map(gs => [gs.value, isCompatible(squareMC, gs.value)]));
+  }, [squareMC]);
 
   // ── Build grid (pure fn, no side-effects) ─────────────────────
   const buildGrid = useCallback((mc, size, el) => {
@@ -301,59 +297,54 @@ export default function MagicSqayerPage() {
     return result;
   }, []);
 
-  // ── Handlers — all dispatch single atomic updates ──────────────
+  // ── Handlers — all use squareMC (rawNum) for grid construction ─
   const handleNumber = useCallback((e) => {
     const val = e.target.value.replace(/[^\d]/g, "");
-    const r = parseInt(val);
-    const mc = !isNaN(r) ? applyISuffix(r, suffix).mc : null;
-    // Input update is immediate; grid rebuild is a transition (non-blocking)
+    const mc = parseInt(val) || null;
     dispatch({ type: "SET_NUMBER", val, grid: state.grid });
     startTransition(() => {
       dispatch({ type: "SET_NUMBER", val, grid: mc ? buildGrid(mc, gridSize, element) : null });
     });
-  }, [suffix, gridSize, element, state.grid, buildGrid]);
+  }, [gridSize, element, state.grid, buildGrid]);
 
   const handleSuffix = useCallback((mode) => {
-    startTransition(() => {
-      const mc = rawNum ? applyISuffix(rawNum, mode).mc : null;
-      dispatch({ type: "SET_SUFFIX", mode, grid: mc ? buildGrid(mc, gridSize, element) : null });
-    });
-  }, [rawNum, gridSize, element, buildGrid]);
+    // Suffix change does NOT affect square — just update suffix state, grid stays
+    dispatch({ type: "SET_SUFFIX", mode, grid: grid });
+  }, [grid]);
 
   const handleSize = useCallback((size) => {
     perfStore.clear();
     const t0 = performance.now();
     const ns = gridSize === size ? null : size;
-    // Dispatch size immediately (button visual feedback), then grid in transition
     dispatch({ type: "SET_SIZE", size: ns, grid: null });
     startTransition(() => {
-      const g = buildGrid(workingMC, ns, element);
+      const g = buildGrid(squareMC, ns, element);
       perfStore.set("gridClickTotal", parseFloat((performance.now()-t0).toFixed(2)));
       dispatch({ type: "SET_SIZE", size: ns, grid: g });
     });
-  }, [gridSize, workingMC, element, buildGrid]);
+  }, [gridSize, squareMC, element, buildGrid]);
 
   const handleElement = useCallback((key) => {
     const ne = element === key ? null : key;
     startTransition(() => {
-      dispatch({ type: "SET_ELEMENT", el: ne, grid: buildGrid(workingMC, gridSize, ne) });
+      dispatch({ type: "SET_ELEMENT", el: ne, grid: buildGrid(squareMC, gridSize, ne) });
     });
-  }, [element, workingMC, gridSize, buildGrid]);
+  }, [element, squareMC, gridSize, buildGrid]);
 
   const handleCompatSelect = useCallback((size) => {
     startTransition(() => {
-      dispatch({ type: "SET_SIZE", size, grid: buildGrid(workingMC, size, element) });
+      dispatch({ type: "SET_SIZE", size, grid: buildGrid(squareMC, size, element) });
     });
-  }, [workingMC, element, buildGrid]);
+  }, [squareMC, element, buildGrid]);
 
   const handleGenerate = useCallback(() => {
     startTransition(() => {
-      dispatch({ type: "SET_GRID", grid: buildGrid(workingMC, gridSize, element) });
+      dispatch({ type: "SET_GRID", grid: buildGrid(squareMC, gridSize, element) });
     });
-  }, [workingMC, gridSize, element, buildGrid]);
+  }, [squareMC, gridSize, element, buildGrid]);
 
   const canGenerate = !!inputNum && !!gridSize;
-  const gridReady = grid && !grid.incompatible && workingMC && gridSize;
+  const gridReady = grid && !grid.incompatible && squareMC && gridSize;
 
   // ── Suffix options ─────────────────────────────────────────────
   const suffixOpts = [
@@ -400,15 +391,9 @@ export default function MagicSqayerPage() {
             className="w-full rounded-xl px-4 py-3 font-amiri text-3xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/30"
             style={{ background:"rgba(4,12,34,0.97)", border:`1px solid ${G.border}`, fontSize:"clamp(20px,5vw,30px)" }}
           />
-          {workingMC && (
+          {squareMC && (
             <div className="flex flex-wrap gap-2 items-center justify-center">
-              {subtracted && (
-                <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color:"rgba(255,200,100,0.70)" }}>
-                  {L.subtracted} →
-                </span>
-              )}
-              <span className="font-amiri font-bold text-xl" style={{ color: G.text }}>{L.workingMC}: {lang === "ar" ? toArabicIndic(workingMC.toLocaleString()) : workingMC.toLocaleString()}</span>
-              {negFixed && <span className="font-inter text-[8px]" style={{ color:"rgba(255,150,80,0.80)" }}>({L.negFix})</span>}
+              <span className="font-amiri font-bold text-xl" style={{ color: G.text }}>{L.workingMC}: {lang === "ar" ? toArabicIndic(squareMC.toLocaleString()) : squareMC.toLocaleString()}</span>
             </div>
           )}
         </SectionCard>
@@ -452,7 +437,7 @@ export default function MagicSqayerPage() {
               );
             })}
           </div>
-          {workingMC && (
+          {squareMC && (
             <p className="font-inter text-[8px] uppercase tracking-widest text-center" style={{ color:"rgba(100,220,100,0.50)" }}>
               🟢 = {L.compatible}: {compatSizes.map(s=>`${s}×${s}`).join(", ") || "none"}
             </p>
@@ -460,7 +445,7 @@ export default function MagicSqayerPage() {
         </SectionCard>
 
         {/* No compatible sizes at all — show clear error */}
-        {workingMC && compatSizes.length === 0 && (
+        {squareMC && compatSizes.length === 0 && (
           <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
             className="rounded-2xl border p-4 space-y-2"
             style={{ background:"rgba(4,8,24,0.99)", borderColor:"rgba(255,80,80,0.50)", boxShadow:"0 0 24px rgba(255,80,80,0.14)" }}>
@@ -469,15 +454,9 @@ export default function MagicSqayerPage() {
             </p>
             <p className="font-inter text-[9px] text-center" style={{ color:"rgba(255,255,255,0.45)" }}>
               {lang === "ar"
-                ? `القيمة الفعّالة ${toArabicIndic(workingMC)} لا تقبل أي حجم من 3×3 إلى 16×16. جرّب رقمًا آخر.`
-                : `Working MC = ${workingMC} is not divisible into any grid size from 3×3 to 16×16. Try a different number.`}
+                ? `القيمة ${toArabicIndic(squareMC)} لا تقبل أي حجم من 3×3 إلى 16×16. جرّب رقمًا آخر.`
+                : `MC = ${squareMC} is not divisible into any grid size from 3×3 to 16×16. Try a different number.`}
             </p>
-            <div className="rounded-xl px-3 py-2 text-center" style={{ background:"rgba(255,80,80,0.06)", border:"1px solid rgba(255,80,80,0.20)" }}>
-              <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:"rgba(255,160,160,0.60)" }}>
-                {lang === "ar" ? "الرقم المُدخل" : "Input"}: {lang === "ar" ? toArabicIndic(rawNum) : rawNum}
-                {suffix !== "none" && ` → MC = ${lang === "ar" ? toArabicIndic(workingMC) : workingMC}`}
-              </p>
-            </div>
           </motion.div>
         )}
 
@@ -485,8 +464,8 @@ export default function MagicSqayerPage() {
         {gridSize && <PlanetCard gridSize={gridSize} lang={lang} L={L} />}
 
         {/* Compatibility notice (size selected but incompatible) */}
-        {workingMC && gridSize && !isCompatible(workingMC, gridSize) && (
-          <CompatNotice mc={workingMC} gridSize={gridSize} lang={lang} L={L} onSelectSize={handleCompatSelect} />
+        {squareMC && gridSize && !isCompatible(squareMC, gridSize) && (
+          <CompatNotice mc={squareMC} gridSize={gridSize} lang={lang} L={L} onSelectSize={handleCompatSelect} />
         )}
 
         {/* 4. Element */}
@@ -532,23 +511,23 @@ export default function MagicSqayerPage() {
 
         {/* Planet Report */}
         {gridReady && (
-          <MsPlanetReport mc={workingMC} gridSize={gridSize} lang={lang} L={L} />
+          <MsPlanetReport mc={squareMC} gridSize={gridSize} lang={lang} L={L} />
         )}
 
         {/* Hierarchy Table */}
         {gridReady && (
           <MsHierarchyTable
-            mc={workingMC}
+            mc={squareMC}
             gridSize={gridSize}
             rawInput={rawNum}
-            negFixed={negFixed}
+            suffix={suffix}
             lang={lang}
             L={L}
           />
         )}
 
         {/* Letter Tables */}
-        <MsLetterTables mc={workingMC} L={L} />
+        <MsLetterTables mc={squareMC} L={L} />
 
       </div>
     </PageLayout>

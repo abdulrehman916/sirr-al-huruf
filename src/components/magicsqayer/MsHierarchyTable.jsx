@@ -15,7 +15,7 @@ const G = {
 //   "arabic" → Arabic Angel names (suffix إيل, value 41)
 //   "hebrew" → Hebrew Angel names (suffix אל, value 31)
 
-const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, suffix, lang, L }) {
+const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, suffix, lang, L }) {
   const hier = useMemo(() => {
     if (!mc || !gridSize) return null;
     const t0 = performance.now();
@@ -111,11 +111,6 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
             {lang === "ar" ? toArabicIndic(rawInput?.toLocaleString()) : rawInput?.toLocaleString()}
           </p>
         </div>
-        {negFixed && (
-          <div className="flex-1 rounded-xl px-3 py-2 min-w-0" style={{ background:"rgba(255,120,60,0.08)", border:"1px solid rgba(255,120,60,0.30)" }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:"rgba(255,180,100,0.80)" }}>{L.negFix}</p>
-          </div>
-        )}
         <div className="flex-1 rounded-xl px-3 py-2 min-w-0" style={{ background:"rgba(212,175,55,0.10)", border:"1px solid rgba(212,175,55,0.30)" }}>
           <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:G.dim }}>{L.workingMC}</p>
           <p className="font-amiri font-bold text-xl" style={{ color:G.text }}>
