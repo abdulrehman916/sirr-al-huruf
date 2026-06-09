@@ -99,7 +99,7 @@ export function angelJinn(v) {
 function siameseStd(n) {
   const g = Array.from({length:n}, () => Array(n).fill(0));
   let r = 0, c = Math.floor(n/2);
-  for (let k = 1; k <= n*n; k++) {
+  for (let k = 1; k <= n * n; k++) {
     g[r][c] = k;
     const nr = (r-1+n)%n, nc = (c+1)%n;
     if (g[nr][nc] !== 0) r = (r+1)%n;
@@ -124,7 +124,7 @@ function singlyEvenStd(n) {
   const h = n/2;
   const base = Array.from({length:h}, () => Array(h).fill(0));
   let r=0, c=Math.floor(h/2);
-  for (let k=0;k<h*h;k++) {
+  for (let k=1;k<=h*h;k++) {
     base[r][c] = k;
     const nr=(r-1+h)%h, nc=(c+1)%h;
     if (base[nr][nc]!==0||(nr===0&&nc===Math.floor(h/2))) r=(r+1)%h;
@@ -132,10 +132,10 @@ function singlyEvenStd(n) {
   }
   const g = Array.from({length:n}, () => Array(n).fill(0));
   for (let i=0;i<h;i++) for (let j=0;j<h;j++) {
-    g[i][j]       = base[i][j]+1;
-    g[i][j+h]     = base[i][j]+2*h*h+1;
-    g[i+h][j]     = base[i][j]+h*h+1;
-    g[i+h][j+h]   = base[i][j]+3*h*h+1;
+    g[i][j]       = base[i][j];
+    g[i][j+h]     = base[i][j]+2*h*h;
+    g[i+h][j]     = base[i][j]+h*h;
+    g[i+h][j+h]   = base[i][j]+3*h*h;
   }
   const k = Math.floor((n-2)/4), mid = Math.floor(h/2);
   for (let i=0;i<h;i++) for (let j=0;j<k;j++) {
