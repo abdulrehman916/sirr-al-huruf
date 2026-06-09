@@ -87,16 +87,16 @@ export function buildHierarchy(mc, n) {
 }
 
 // ── Angel/Jinn derivation — Book authority: pages 27–31 ──────────
-// Arabic Angel: v − 41  → Abjad letters → append إيل  (suffix val = 41)
-// Arabic Jinn:  v − 319 → Abjad letters → append طيش  (suffix val = 319)
-// Hebrew Angel: v − 31  → Gematria letters → append אל (suffix val = 31)
-// Hebrew Jinn:  v + 31  → Gematria letters (no suffix — Hebrew not specified)
-// Negative fix: add 360 if result ≤ 0
+// Underflow rule: if value < suffix, add 360 first, then subtract suffix.
+// Arabic Angel:  suffix = 41  → append إيل
+// Arabic Jinn:   suffix = 319 → append طيش
+// Hebrew Angel:  suffix = 31  → append אל
+// Hebrew Jinn:   suffix = 329 → append תקש
 export function angelJinn(v) {
-  let angelAr  = v - 41;  if (angelAr  <= 0) angelAr  += 360;
-  let angelHeb = v - 31;  if (angelHeb <= 0) angelHeb += 360;
-  let jinnAr   = v - 319; if (jinnAr   <= 0) jinnAr   += 360;
-  let jinnHeb  = v + 31;
+  const angelAr  = (v < 41)  ? (v + 360 - 41)  : (v - 41);
+  const angelHeb = (v < 31)  ? (v + 360 - 31)  : (v - 31);
+  const jinnAr   = (v < 319) ? (v + 360 - 319) : (v - 319);
+  const jinnHeb  = (v < 329) ? (v + 360 - 329) : (v - 329);
   return { angelAr, angelHeb, jinnAr, jinnHeb };
 }
 
