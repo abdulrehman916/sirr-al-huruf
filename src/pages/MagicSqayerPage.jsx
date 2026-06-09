@@ -18,7 +18,6 @@ import MsPlanetReport   from "../components/magicsqayer/MsPlanetReport";
 // ── Labels ───────────────────────────────────────────────────────
 import LABELS from "../components/magicsqayer/msLabels";
 import { perfStore } from "../components/magicsqayer/perfStore";
-import MsPerfPanel from "../components/magicsqayer/MsPerfPanel";
 
 // ── Theme ────────────────────────────────────────────────────────
 const G = {
@@ -525,9 +524,6 @@ export default function MagicSqayerPage() {
             L={L}
           />
         )}
-
-        {/* Performance Report */}
-        <MsPerfPanel />
 
         {/* Letter Tables */}
         <MsLetterTables mc={workingMC} L={L} />
