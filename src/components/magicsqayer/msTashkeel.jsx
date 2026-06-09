@@ -120,7 +120,14 @@ export function addTashkeelToArabicName(name, suffixType) {
     // Determine haraka based on phonetic context (Arabic syllable structure)
     let haraka;
 
-    if (nextCh === undefined) {
+    // CRITICAL RULE: First letter NEVER gets Sukun — must be pronounceable
+    // Arabic words always begin with a vowel sound, never a closed consonant
+    if (i === 0) {
+      // First consonant — always use Fatha as default opening vowel
+      // This ensures names like قَصْحَايِل not قْصَحَايِل
+      haraka = FATHA;
+
+    } else if (nextCh === undefined) {
       // Last consonant before suffix — use suffix entry vowel
       // Angel suffix إِيلُ starts with kasra → /ʔiːlu/
       // Jinn suffix طَيْشُ starts with fatha → /tajʃu/
