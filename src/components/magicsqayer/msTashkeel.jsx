@@ -47,6 +47,28 @@ const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u064F'; // إِيلُ
 // طَيْشُ = ط + fatha + ي + sukun + ش + damma → /tajʃu/
 const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
 
+// Common Arabic name endings — treat as complete phonetic units
+// These patterns override automatic syllable rules
+const NAME_ENDINGS = [
+  { pattern: 'ائيل', vocalization: '\u0627\u0626\u0650\u064A\u0644\u064F' }, // ائِلُ
+  { pattern: 'ئيل',  vocalization: '\u0626\u0650\u064A\u0644\u064F' },      // ئِلُ
+  { pattern: 'ييل',  vocalization: '\u064A\u0650\u064A\u0644\u064F' },      // يِلُ
+  { pattern: 'ايل',  vocalization: '\u0627\u064A\u0644\u064F' },           // ايلُ
+];
+
+/**
+ * findMatchingEnding(name)
+ * Returns the matching ending pattern and its pre-vocalized form, or null.
+ */
+function findMatchingEnding(name) {
+  for (const ending of NAME_ENDINGS) {
+    if (name.endsWith(ending.pattern)) {
+      return ending;
+    }
+  }
+  return null;
+}
+
 /**
  * getHarakaForMadd(maddChar)
  * Returns the appropriate haraka for a consonant preceding a Madd letter.
@@ -68,6 +90,63 @@ function getHarakaForMadd(maddChar) {
 }
 
 /**
+ * vocalizeNameWithEnding(body, ending)
+ * Vocalizes a name body that ends with a recognized Arabic pattern (ائيل، ئيل، etc.).
+ * Uses pre-vocalized ending for authentic pronunciation.
+ */
+function vocalizeNameWithEnding(body, ending) {
+  const bodyWithoutEnding = body.slice(0, body.length - ending.pattern.length);
+  if (!bodyWithoutEnding) {
+    return ending.vocalization;
+  }
+
+  const chars = [...bodyWithoutEnding];
+  let out = '';
+
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    const nextCh = chars[i + 1];
+
+    // Madd letters NEVER get harakat — they ARE the vowel
+    if (MADD_LETTERS.has(ch)) {
+      out += ch;
+      continue;
+    }
+
+    // Hamza forms — treat as vowel carriers, no harakat
+    if (HAMZA_FORMS.has(ch)) {
+      out += ch;
+      continue;
+    }
+
+    let haraka;
+
+    // CRITICAL: First letter NEVER gets Sukun — must be pronounceable
+    if (i === 0) {
+      haraka = FATHA;
+
+    } else if (nextCh === undefined) {
+      // Last consonant before the ending — use Kasra to flow into the ending
+      haraka = KASRA;
+
+    } else if (VOWEL_CARRIERS.has(nextCh)) {
+      if (MADD_LETTERS.has(nextCh)) {
+        haraka = getHarakaForMadd(nextCh);
+      } else {
+        haraka = FATHA;
+      }
+
+    } else {
+      haraka = SUKUN;
+    }
+
+    out += ch + haraka;
+  }
+
+  return out + ending.vocalization;
+}
+
+/**
  * addTashkeelToArabicName(name, suffixType)
  *
  * Display-only function. Returns a fully vocalized copy of `name`.
@@ -78,10 +157,11 @@ function getHarakaForMadd(maddChar) {
  *
  * Arabic phonetic rules applied:
  * 1. Madd letters (ا، و، ي) NEVER receive harakat — they ARE the vowel.
- * 2. Consonant + Madd → appropriate haraka for long vowel syllable (CV).
- * 3. Consonant + Consonant → Sukun (close syllable, CVC pattern).
- * 4. Final consonant before suffix → follows suffix entry vowel.
- * 5. No unnatural vowel sequences — proper CV / CVC syllable structure.
+ * 2. Recognized name endings (ائيل، ئيل، ييل، ايل) use pre-vocalized patterns.
+ * 3. Consonant + Madd → appropriate haraka for long vowel syllable (CV).
+ * 4. Consonant + Consonant → Sukun (close syllable, CVC pattern).
+ * 5. First letter NEVER gets Sukun — always pronounceable (Fatha default).
+ * 6. Final consonant flows into suffix with appropriate vowel.
  */
 export function addTashkeelToArabicName(name, suffixType) {
   if (!name || typeof name !== 'string') return name;
@@ -98,6 +178,14 @@ export function addTashkeelToArabicName(name, suffixType) {
 
   if (!body) return vocSuffix;
 
+  // Check for recognized Arabic name endings (ائيل، ئيل، ييل، ايل)
+  // These override automatic syllable rules for authentic pronunciation
+  const ending = findMatchingEnding(body + bareSuffix);
+  if (ending) {
+    return vocalizeNameWithEnding(body, ending);
+  }
+
+  // Default vocalization for names without recognized endings
   const chars = [...body]; // spread handles BMP Arabic correctly
   let out = '';
 
