@@ -17,6 +17,8 @@ import MsPlanetReport   from "../components/magicsqayer/MsPlanetReport";
 
 // ── Labels ───────────────────────────────────────────────────────
 import LABELS from "../components/magicsqayer/msLabels";
+import { perfStore } from "../components/magicsqayer/perfStore";
+import MsPerfPanel from "../components/magicsqayer/MsPerfPanel";
 
 // ── Theme ────────────────────────────────────────────────────────
 const G = {
@@ -169,7 +171,7 @@ function SacredGrid({ gridSize, element, grid, lang, L }) {
   const flat = gridData.flat();
   const v = verifySquare(gridData);
   const fontSize = gridSize >= 14 ? "9px" : gridSize >= 10 ? "10px" : gridSize >= 8 ? "11px" : gridSize >= 6 ? "13px" : "16px";
-  console.log(`[PERF] SacredGrid flat+verify (${gridSize}×${gridSize}, ${flat.length} cells): ${(performance.now()-t0).toFixed(2)}ms`);
+  perfStore.set("gridFlatVerify", parseFloat((performance.now()-t0).toFixed(2)));
 
   return (
     <motion.div key={`grid-${gridSize}-${element}`}
@@ -278,8 +280,7 @@ export default function MagicSqayerPage() {
     const e = el || "fire";
     const t0 = performance.now();
     const result = { grid: generateSquare(size, usurper, e), usurper };
-    const t1 = performance.now();
-    console.log(`[PERF] generateSquare(${size}×${size}): ${(t1-t0).toFixed(2)}ms`);
+    perfStore.set("generateSquare", parseFloat((performance.now()-t0).toFixed(2)));
     return result;
   };
 
@@ -301,12 +302,12 @@ export default function MagicSqayerPage() {
 
   const handleSize = (size) => {
     const t0 = performance.now();
+    perfStore.clear();
     const ns = gridSize === size ? null : size;
     setGridSize(ns);
     const g = buildGrid(workingMC, ns, element);
     setGrid(g);
-    const t1 = performance.now();
-    console.log(`[PERF] handleSize(${size}) total state update: ${(t1-t0).toFixed(2)}ms`);
+    perfStore.set("gridClickTotal", parseFloat((performance.now()-t0).toFixed(2)));
   };
 
   const handleElement = (key) => {
@@ -496,6 +497,9 @@ export default function MagicSqayerPage() {
             L={L}
           />
         )}
+
+        {/* Performance Report */}
+        <MsPerfPanel />
 
         {/* Letter Tables */}
         <MsLetterTables mc={workingMC} L={L} />

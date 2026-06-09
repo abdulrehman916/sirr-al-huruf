@@ -2,6 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, angelJinn, numToHebrew } from "./msEngine";
 import { toAkramPieces } from "@/components/AkramCard";
+import { perfStore } from "./perfStore";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -19,7 +20,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     if (!mc || !gridSize) return null;
     const t0 = performance.now();
     const result = buildHierarchy(mc, gridSize);
-    console.log(`[PERF] buildHierarchy(mc=${mc}, n=${gridSize}): ${(performance.now()-t0).toFixed(2)}ms`);
+    perfStore.set("buildHierarchy", parseFloat((performance.now()-t0).toFixed(2)));
     return result;
   }, [mc, gridSize]);
 
@@ -38,12 +39,10 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     { key:"highOver",  label: L.highOver,  val: hier.highOver },
   ].map(row => {
       const aj = angelJinn(row.val);
-      const tA0 = performance.now();
-      const arAngel = toArabicLetters(aj.angelAr);
-      const arJinn  = toArabicLetters(aj.jinnAr);
+      const arAngel  = toArabicLetters(aj.angelAr);
+      const arJinn   = toArabicLetters(aj.jinnAr);
       const hebAngel = numToHebrew(aj.angelHeb);
       const hebJinn  = numToHebrew(aj.jinnHeb);
-      console.log(`[PERF]   names for row ${row.key} (val=${row.val}): ${(performance.now()-tA0).toFixed(3)}ms`);
       return {
         ...row,
         cols: [
@@ -54,7 +53,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         ],
       };
     });
-    console.log(`[PERF] all 8 rows + angel/jinn names: ${(performance.now()-t0).toFixed(2)}ms`);
+    perfStore.set("angelJinnNames", parseFloat((performance.now()-t0).toFixed(2)));
     return result;
   }, [hier, L]);
 
