@@ -229,8 +229,6 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         fontSize: isArabic ? "50px" : "38px",
                         fontWeight: isArabic ? 600 : 900,
                         lineHeight: isArabic ? 2.0 : 1.4,
-                        letterSpacing: 0,
-                        wordSpacing: 0,
                         wordWrap: "break-word",
                         overflowWrap: "break-word",
                         textShadow: `0 0 16px ${n.color}55, 0 0 32px ${n.color}33, 0 2px 4px rgba(0,0,0,0.8)`,
@@ -245,8 +243,6 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         textRendering: "optimizeLegibility",
                         WebkitFontSmoothing: "antialiased",
                         MozOsxFontSmoothing: "grayscale",
-                        unicodeBidi: "plaintext",
-                        direction: "rtl",
                       }}
                     >
                       {displayName}
