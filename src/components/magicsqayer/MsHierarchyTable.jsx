@@ -59,6 +59,8 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
   // Requires a gridSize to compute usurper-based rows — show placeholder if no size chosen
   const hier = useMemo(() => {
     if (!mc || !gridSize) return null;
+    // BOOK AUTHORITY: No compatible square = no hierarchy = no names
+    if (!isCompatible(mc, gridSize)) return null;
     const t0 = performance.now();
     const result = buildHierarchy(mc, gridSize);
     perfStore.set("buildHierarchy", parseFloat((performance.now() - t0).toFixed(2)));
@@ -166,12 +168,23 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
           {lang === "ar" ? "اختر حجم المربع لحساب التسلسل الهرمي الكامل" : "Select a grid size to compute the full hierarchy"}
         </p>
       )}
-      {/* Incompatible notice — hierarchy shown but square cannot be generated */}
-      {gridSize && hier && !isCompatible(mc, gridSize) && (
-        <p className="font-inter text-[8px] uppercase tracking-widest text-center py-1 rounded-lg"
-          style={{ color: "rgba(255,160,80,0.75)", background: "rgba(255,120,0,0.06)", border: "1px solid rgba(255,120,0,0.15)" }}>
-          {lang === "ar" ? "⚠️ عرض الهرمية — المربع السحري غير متوافق" : "⚠️ Hierarchy shown — square incompatible"}
-        </p>
+      {/* No compatible square — no hierarchy, no names */}
+      {gridSize && !hier && mc && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border p-4 space-y-2"
+          style={{ background: "rgba(4,8,24,0.99)", borderColor: "rgba(255,80,80,0.50)", boxShadow: "0 0 24px rgba(255,80,80,0.14)" }}
+        >
+          <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color: "rgba(255,140,140,0.90)" }}>
+            {lang === "ar" ? "⚠️ لا يمكن بناء مربع سحري متوافق" : "⚠️ No Compatible Magic Square"}
+          </p>
+          <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,255,255,0.45)" }}>
+            {lang === "ar"
+              ? `لا يمكن بناء مربع سحري للقيمة ${toArabicIndic(mc.toLocaleString())}. جرّب حجم مربع آخر.`
+              : `No compatible magic square can be constructed for MC = ${mc.toLocaleString()}. Try a different grid size.`}
+          </p>
+        </motion.div>
       )}
 
       {/* 8 hierarchy rows */}
