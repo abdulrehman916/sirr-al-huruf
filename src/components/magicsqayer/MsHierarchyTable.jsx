@@ -209,8 +209,8 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 const suffixType = suffix === "ar-angel" ? "angel" : suffix === "ar-jinn" ? "jinn" : null;
                 const displayName = isArabic && suffixType ? addTashkeelToArabicName(n.name, suffixType) : n.name;
                 return (
-                  <div className="px-3 py-2.5 text-center"
-                    style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
+                  <div className="px-3 text-center"
+                    style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "10px 12px 14px" }}>
                     <p className="font-inter leading-tight mb-1" style={{ fontSize: "8px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.5px" }}>
                       {n.lbl}
                     </p>
@@ -224,21 +224,26 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     <p 
                       dir="rtl" 
                       lang={isArabic ? "ar" : "he"}
-                      className={isArabic ? "font-amiri" : "font-amiri"}
                       style={{
                         color: n.color,
                         fontSize: isArabic ? "46px" : "38px",
-                        fontWeight: 900,
-                        lineHeight: 1.4,
-                        letterSpacing: isArabic ? "0.5px" : "0",
+                        fontWeight: isArabic ? 700 : 900,
+                        lineHeight: isArabic ? 1.8 : 1.4,
+                        letterSpacing: 0,
                         wordWrap: "break-word",
                         overflowWrap: "break-word",
                         textShadow: `0 0 16px ${n.color}55, 0 0 32px ${n.color}33, 0 2px 4px rgba(0,0,0,0.8)`,
                         padding: "4px 0",
-                        fontFeatureSettings: isArabic ? "'liga' 1, 'calt' 1, 'kern' 1" : "'kern' 1",
+                        // Noto Naskh Arabic has best-in-class tashkeel rendering;
+                        // fall back to Amiri then system Arabic fonts
+                        fontFamily: isArabic
+                          ? "'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', 'Arabic Typesetting', serif"
+                          : "'Amiri', serif",
+                        fontFeatureSettings: "'liga' 1, 'calt' 1, 'kern' 1",
                         textRendering: "optimizeLegibility",
                         WebkitFontSmoothing: "antialiased",
-                        MozOsxFontSmoothing: "grayscale"
+                        MozOsxFontSmoothing: "grayscale",
+                        unicodeBidi: "plaintext",
                       }}
                     >
                       {displayName}

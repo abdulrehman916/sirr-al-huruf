@@ -2,105 +2,86 @@
 //  ARABIC TASHKEEL (HARAKAT) FOR ABJAD-GENERATED NAMES
 //  Pure display layer — does NOT modify any calculation logic.
 //
-//  Rules applied (based on classical Abjad name vocalization):
-//  - Each body consonant receives Fatha (َ) + Sukun (ْ) except
-//    the last body letter which gets Kasra (ِ) before إيل suffix
-//    (to facilitate the natural glide into إيل).
-//  - For Jinn names (طيش suffix): last body consonant gets Fatha.
-//  - Long-vowel carriers (ا و ي) are treated as vowel letters and
-//    NOT given an additional haraka — they carry their own sound.
-//  - غ (thousands marker) follows the same consonant rules.
-//  - The fixed suffixes are fully vocalized:
-//      إيل  →  إِيلُ
-//      طيش  →  طَيْشُ
-//      אל / תקש remain unchanged (Hebrew, no tashkeel system here)
+//  Unicode combining marks attach directly to the preceding letter
+//  codepoint. Arabic shaping engines (browser/OS) handle rendering.
+//
+//  Vocalization pattern for Abjad positional names:
+//  - Each consonant gets Fatha (open CV syllable).
+//  - Long-vowel carriers (ا، و، ي) are left bare — they supply
+//    their own inherent vowel sound.
+//  - Last body consonant before إيل → Kasra (glide into /i/).
+//  - Last body consonant before طيش → Fatha (open /a/ before /ṭ/).
+//  - Fixed suffixes are pre-vocalized as literal strings with
+//    combining marks already embedded in the source.
 // ═══════════════════════════════════════════════════════════════
 
-// Unicode combining marks
-const FATHA  = '\u064E'; // َ
-const KASRA  = '\u0650'; // ِ
-const DAMMA  = '\u064F'; // ُ
-const SUKUN  = '\u0652'; // ْ
-const SHADDA = '\u0651'; // ّ
+// Unicode combining harakat — attach immediately after base letter
+const FATHA = '\u064E'; // َ  above
+const KASRA = '\u0650'; // ِ  below
+const SUKUN = '\u0652'; // ْ  above (used only on ي in إيل suffix)
 
-// Long-vowel carrier letters — do not add haraka to these
-const LONG_VOWEL = new Set(['ا', 'و', 'ي', 'ى', 'آ']);
+// Long-vowel carrier letters — inherent vowel, no extra haraka
+const LONG_VOWEL = new Set(['ا', 'و', 'ي', 'ى', 'آ', 'أ', 'إ', 'ئ', 'ؤ']);
 
-// The two fixed Arabic suffixes (bare, no tashkeel)
+// Bare suffixes as they appear in generated names
 const SUFFIX_ANGEL = 'إيل';
 const SUFFIX_JINN  = 'طيش';
 
-// Fully vocalized fixed suffixes
-const SUFFIX_ANGEL_VOCALIZED = `إِيلُ`;
-const SUFFIX_JINN_VOCALIZED  = `طَيْشُ`;
+// Pre-vocalized suffixes — harakat embedded as combining codepoints
+// إِيلُ  = إ + kasra + ي + ل + damma
+// طَيْشُ = ط + fatha + ي + sukun + ش + damma
+const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u064F'; // إِيلُ
+const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
 
 /**
  * addTashkeelToArabicName(name, suffixType)
  *
- * Takes a generated Arabic name string and the suffix type,
- * returns a fully vocalized version for display.
+ * Display-only function. Returns a fully vocalized copy of `name`.
+ * The original `name` string (used for all calculations) is never
+ * mutated or replaced.
  *
  * suffixType: "angel" | "jinn"
- *
- * This function is DISPLAY-ONLY. The underlying `name` value
- * is never modified — only the rendered string differs.
  */
 export function addTashkeelToArabicName(name, suffixType) {
   if (!name || typeof name !== 'string') return name;
 
   const isAngel = suffixType === 'angel';
-  const suffix  = isAngel ? SUFFIX_ANGEL : SUFFIX_JINN;
+  const bareSuffix = isAngel ? SUFFIX_ANGEL : SUFFIX_JINN;
 
-  // Verify the name ends with the expected suffix
-  if (!name.endsWith(suffix)) return name; // safety: return unchanged if unexpected
+  if (!name.endsWith(bareSuffix)) return name; // unexpected format — render as-is
 
-  // Extract body (everything before the suffix)
-  const body = name.slice(0, name.length - suffix.length);
+  // Body = everything before the fixed suffix
+  const body = name.slice(0, name.length - bareSuffix.length);
 
-  if (!body) {
-    // Name is suffix-only — just return vocalized suffix
-    return isAngel ? SUFFIX_ANGEL_VOCALIZED : SUFFIX_JINN_VOCALIZED;
+  const vocSuffix = isAngel ? SUFFIX_ANGEL_VOC : SUFFIX_JINN_VOC;
+
+  if (!body) return vocSuffix;
+
+  // Iterate body characters; attach harakat directly after each base letter.
+  // Arabic combining marks MUST immediately follow their base codepoint.
+  const chars = [...body]; // spread handles BMP Arabic correctly
+
+  // Find index of last true consonant (skip long-vowel carriers at end)
+  let lastCons = -1;
+  for (let i = chars.length - 1; i >= 0; i--) {
+    if (!LONG_VOWEL.has(chars[i])) { lastCons = i; break; }
   }
 
-  // Split body into individual Unicode grapheme-safe characters
-  // (Arabic letters are single codepoints — no surrogates needed)
-  const bodyChars = [...body];
-
-  // Build vocalized body
-  // Rule: apply Fatha+Sukun to each consonant except:
-  //   - long-vowel carriers (ا و ي) → untouched
-  //   - last consonant before إيل suffix → Kasra instead (smooth glide)
-  //   - last consonant before طيش suffix → Fatha (open syllable into ط)
-  const result = [];
-
-  // Find index of last true consonant (non-long-vowel)
-  let lastConsonantIdx = -1;
-  for (let i = bodyChars.length - 1; i >= 0; i--) {
-    if (!LONG_VOWEL.has(bodyChars[i])) { lastConsonantIdx = i; break; }
-  }
-
-  for (let i = 0; i < bodyChars.length; i++) {
-    const ch = bodyChars[i];
+  let out = '';
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
     if (LONG_VOWEL.has(ch)) {
-      // Long-vowel letters carry their own sound — no haraka added
-      result.push(ch);
-    } else if (i === lastConsonantIdx) {
+      // Long-vowel carrier — no haraka added, inherent sound
+      out += ch;
+    } else if (i === lastCons) {
       // Last consonant before suffix
-      if (isAngel) {
-        // Kasra to glide into إيل
-        result.push(ch + KASRA);
-      } else {
-        // Fatha before طيش
-        result.push(ch + FATHA);
-      }
+      out += ch + (isAngel ? KASRA : FATHA);
     } else {
-      // Middle consonant: Fatha + Sukun (closed syllable)
-      result.push(ch + FATHA + SUKUN);
+      // All other consonants — open syllable: Fatha only (no Sukun)
+      // Sukun would create a closed syllable cluster that looks broken
+      out += ch + FATHA;
     }
   }
 
-  const vocalizedBody = result.join('');
-  const vocalizedSuffix = isAngel ? SUFFIX_ANGEL_VOCALIZED : SUFFIX_JINN_VOCALIZED;
-
-  return vocalizedBody + vocalizedSuffix;
+  return out + vocSuffix;
 }
