@@ -83,35 +83,22 @@ const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
 // Do not append or inject fixed "Eel/Il" suffixes or force specific ending patterns.
 const NAME_ENDINGS = []; // Empty - no forced ending patterns
 
-/**
- * findMatchingEnding(name)
- * Returns the matching ending pattern and its pre-vocalized form, or null.
- */
-function findMatchingEnding(name) {
-  for (const ending of NAME_ENDINGS) {
-    if (name.endsWith(ending.pattern)) {
-      return ending;
-    }
-  }
-  return null;
-}
+
 
 /**
  * detectAngelEndingVariant(name)
  * 
  * CLASSICAL ARABIC MORPHOLOGICAL ENDING DETECTION
  * 
- * Analyzes the final syllable structure to determine the authentic angelic ending.
+ * Analyzes the letter immediately before the final long vowel (إيل).
  * Returns the appropriate vocalization pattern based on Arabic phonotactics.
  * 
  * ARABIC MORPHOLOGICAL RULES:
- * 1. Alif (ا) before إيل → ائيل (Vʾīl pattern, like إِسْرَافِيل)
- * 2. Waw (و) before إيل → ؤيل (ūʾīl pattern, like جِبْرَائِيل)
- * 3. Ya (ي) before إيل → depends on preceding vowel:
- *    - Vowel + ي → ئيل (iʾīl, like مِيكَائِيل)
- *    - Consonant + ي → ييل (yīl, direct connection)
- * 4. Consonant before إيل → Cīl pattern (like جِبْرِيل، عَزْرَائِيل)
- * 5. The ending is determined by the FINAL SYLLABLE, not forced uniformly
+ * 1. Consonant (ر، ف، etc.) before إيل → Cīl pattern (like جِبْرِيل، مِيكَائِيل)
+ * 2. Alif (ا) before إيل → ائيل pattern (Vʾīl, like إِسْرَافِيل، عَزْرَائِيل)
+ * 3. Waw (و) before إيل → ؤيل pattern (ūʾīl, like جِبْرَائِيل)
+ * 4. Ya (ي) before إيل → ييل pattern (yīl, direct connection like جِبْرِيل)
+ * 5. The ending is determined by the FINAL LETTER before إيل, not forced uniformly
  * 
  * This ensures each name gets its own unique, phonetically appropriate ending.
  */
@@ -123,46 +110,43 @@ function detectAngelEndingVariant(name) {
   
   const lastChar = body[body.length - 1];
   const secondLastChar = body.length > 1 ? body[body.length - 2] : null;
-  const thirdLastChar = body.length > 2 ? body[body.length - 3] : null;
   
-  // Analyze final syllable structure for authentic ending selection
+  // Analyze the final letter before إيل for authentic ending selection
   
-  // Case 1: Alif (ا) before إيل → ائيل pattern (Vʾīl)
-  // Examples: إِسْرَافِيل، عَزْرَائِيل
+  // Case 1: Consonant before إيل → Cīl pattern (most common)
+  // Examples: جِبْرِيل (ر + إيل)، مِيكَائِيل (ك + إيل)، عَزْرَائِيل (ر + إيل)
+  // The final consonant gets kasra to connect smoothly to hamza
+  if (!['ا', 'و', 'ي'].includes(lastChar)) {
+    return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ئيل') || ANGEL_ENDING_VARIANTS[0];
+  }
+  
+  // Case 2: Alif (ا) before إيل → ائيل pattern (Vʾīl)
+  // Examples: إِسْرَافِيل (فا + إيل → فائِيل)، عَزْرَائِيل (را + إيل → رائِيل)
+  // Alif cannot directly connect to hamza — needs hamza carrier (ئ)
   if (lastChar === 'ا') {
     return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ائيل') || ANGEL_ENDING_VARIANTS[0];
   }
   
-  // Case 2: Waw (و) before إيل → ؤيل pattern (ūʾīl)
-  // Example: جِبْرَائِيل (with waw-hamza carrier)
+  // Case 3: Waw (و) before إيل → ؤيل pattern (ūʾīl)
+  // Example: جِبْرَائِيل (وا + إيل → وائِيل → ؤيل for smooth transition)
+  // Waw as long vowel needs hamza carrier for proper morphology
   if (lastChar === 'و') {
     return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ؤيل') || ANGEL_ENDING_VARIANTS[0];
   }
   
-  // Case 3: Ya (ي) before إيل — analyze preceding context
+  // Case 4: Ya (ي) before إيل → ييل pattern (yīl)
+  // Examples: جِبْرِيل (ي + إيل), مِيكَائِيل (ي + إيل)
+  // Ya can directly connect to إيل with kasra for smooth CVCCyīl pattern
   if (lastChar === 'ي') {
-    // Sub-case 3a: Double vowel letters → need hamza carrier (ئيل)
-    // Prevents awkward VVʾīl sequences
+    // Check if preceded by another vowel letter — rare case needing hamza
     if (secondLastChar && ['ا', 'و', 'ي'].includes(secondLastChar)) {
       return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ئيل') || ANGEL_ENDING_VARIANTS[0];
     }
-    // Sub-case 3b: Consonant + Ya → direct yīl connection (ييل)
-    // Creates smooth CVCCyīl pattern
+    // Direct ya connection — most common for ya-ending names
     return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ييل') || ANGEL_ENDING_VARIANTS[0];
   }
   
-  // Case 4: Consonant before إيل → Cīl pattern (direct kasra connection)
-  // Most common pattern: جِبْرِيل، مِيكَائِيل
-  // The final consonant gets kasra to connect to hamza
-  // Analyze the consonant type for optimal ending variant
-  
-  // If preceded by vowel letter, use hamza carrier for smooth transition
-  if (secondLastChar && ['ا', 'و', 'ي'].includes(secondLastChar)) {
-    return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ئيل') || ANGEL_ENDING_VARIANTS[0];
-  }
-  
-  // Default: consonant cluster → use ئيل for proper morphology
-  // Creates CVCC-īl or CVC-īl patterns
+  // Fallback: consonant → ئيل pattern
   return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ئيل') || ANGEL_ENDING_VARIANTS[0];
 }
 
@@ -186,62 +170,7 @@ function getHarakaForMadd(maddChar) {
   return FATHA; // default
 }
 
-/**
- * vocalizeNameWithEnding(body, ending)
- * Vocalizes a name body that ends with a recognized Arabic pattern (ائيل، ئيل، etc.).
- * Uses pre-vocalized ending for authentic pronunciation.
- */
-function vocalizeNameWithEnding(body, ending) {
-  const bodyWithoutEnding = body.slice(0, body.length - ending.pattern.length);
-  if (!bodyWithoutEnding) {
-    return ending.vocalization;
-  }
 
-  const chars = [...bodyWithoutEnding];
-  let out = '';
-
-  for (let i = 0; i < chars.length; i++) {
-    const ch = chars[i];
-    const nextCh = chars[i + 1];
-
-    // Madd letters NEVER get harakat — they ARE the vowel
-    if (MADD_LETTERS.has(ch)) {
-      out += ch;
-      continue;
-    }
-
-    // Hamza forms — treat as vowel carriers, no harakat
-    if (HAMZA_FORMS.has(ch)) {
-      out += ch;
-      continue;
-    }
-
-    let haraka;
-
-    // CRITICAL: First letter NEVER gets Sukun — must be pronounceable
-    if (i === 0) {
-      haraka = FATHA;
-
-    } else if (nextCh === undefined) {
-      // Last consonant before the ending — flows into ending's first vowel
-      haraka = KASRA;
-
-    } else if (VOWEL_CARRIERS.has(nextCh)) {
-      if (MADD_LETTERS.has(nextCh)) {
-        haraka = getHarakaForMadd(nextCh);
-      } else {
-        haraka = FATHA;
-      }
-
-    } else {
-      haraka = SUKUN;
-    }
-
-    out += ch + haraka;
-  }
-
-  return out + ending.vocalization;
-}
 
 /**
  * validateArabicSyllable(pattern)
@@ -442,23 +371,7 @@ function buildSyllablePattern(chars, isAngel) {
   return validation.fixedPattern;
 }
 
-/**
- * countConsonantRun(chars, startIndex)
- * 
- * Counts consecutive consonants starting from startIndex.
- * Used to determine if we need Sukun for syllable closure.
- */
-function countConsonantRun(chars, startIndex) {
-  let count = 0;
-  for (let i = startIndex; i < chars.length; i++) {
-    if (!MADD_LETTERS.has(chars[i]) && !HAMZA_FORMS.has(chars[i])) {
-      count++;
-    } else {
-      break;
-    }
-  }
-  return count;
-}
+
 
 /**
  * validateNamePronounceability(name, isAngel)
