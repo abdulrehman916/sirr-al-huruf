@@ -1,57 +1,85 @@
 // ═══════════════════════════════════════════════════════════════
-//  ARABIC TASHKEEL ENGINE — SIMPLE PHONETIC VOCALIZATION
-//  Pure display layer — does NOT modify calculation logic.
-//
-//  CRITICAL RULES:
-//  1. NO Sukun — ALL consonants get vowels (Fatha/Kasra/Damma)
-//  2. First letter ALWAYS gets Fatha (CV start)
-//  3. Madd letters (ا، و، ي) NEVER receive harakat
-//  4. Angel names: flowing Kasra/Fatha pattern
-//  5. Jinn names: stronger Fatha/Damma pattern
-//  6. Pre-vocalized suffixes for correct morphology
+//  ARABIC NAME GENERATOR — AUTHENTIC PHONOLOGY
+//  Generates names that follow actual Arabic morphological patterns
 // ═══════════════════════════════════════════════════════════════
 
+import { validateName } from './msNameValidator';
+
 // Unicode combining harakat
-const FATHA = '\u064E'; // َ (short "a")
-const KASRA = '\u0650'; // ِ (short "i")
-const DAMMA = '\u064F'; // ُ (short "u")
+const FATHA = '\u064E';
+const KASRA = '\u0650';
+const DAMMA = '\u064F';
+const SUKUN = '\u0652';
 
-// Madd (long vowel) letters — NEVER get harakat
+// Long vowel letters
 const MADD_LETTERS = new Set(['ا', 'و', 'ي', 'ى']);
-
-// Hamza forms — vowel carriers, never get harakat
 const HAMZA_FORMS = new Set(['آ', 'أ', 'إ', 'ئ', 'ؤ']);
-
 const VOWEL_CARRIERS = new Set([...MADD_LETTERS, ...HAMZA_FORMS]);
 
-// Bare suffixes
+// Suffixes
 const SUFFIX_ANGEL = 'إيل';
 const SUFFIX_JINN  = 'طيش';
 
-// Angel ending variants with pre-vocalized forms
+// Angel ending variants
 const ANGEL_ENDING_VARIANTS = [
-  { pattern: 'ائيل', vocalization: '\u0627\u0626\u0650\u064A\u0644\u0652', desc: 'āʾīl (after alif)' },
-  { pattern: 'ييل',  vocalization: '\u064A\u0650\u064A\u0644\u0652',  desc: 'yīl (after ya)' },
-  { pattern: 'ؤيل',  vocalization: '\u0624\u0650\u064A\u0644\u0652',  desc: 'ūʾīl (after waw)' },
-  { pattern: 'ئيل',  vocalization: '\u0626\u0650\u064A\u0644\u0652',  desc: 'iʾīl (hamza carrier)' },
+  { pattern: 'ائيل', vocalization: '\u0627\u0626\u0650\u064A\u0644\u0652' },
+  { pattern: 'ييل',  vocalization: '\u064A\u0650\u064A\u0644\u0652' },
+  { pattern: 'ؤيل',  vocalization: '\u0624\u0650\u064A\u0644\u0652' },
+  { pattern: 'ئيل',  vocalization: '\u0626\u0650\u064A\u0644\u0652' },
 ];
 
-// Suffix vocalizations (pre-built)
-const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u0652'; // إِيلْ
-const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
+const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u0652';
+const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F';
+
+// Arabic Abjad for conversion
+const AR_UNITS = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9:'ط' };
+const AR_TENS = { 10:'ي',20:'ك',30:'ل',40:'م',50:'ن',60:'س',70:'ع',80:'ف',90:'ص' };
+const AR_HUNDREDS = { 100:'ق',200:'ر',300:'ش',400:'ت',500:'ث',600:'خ',700:'ذ',800:'ض',900:'ظ' };
+const AR_THOUSAND = 'غ';
+
+/**
+ * numToArabic(n)
+ * Convert number to Arabic letters using positional Akram method
+ */
+function numToArabic(n) {
+  if (!n || n < 1) return '';
+  n = Math.floor(n);
+  const digits = [];
+  let tmp = n;
+  while (tmp > 0) { digits.push(tmp % 10); tmp = Math.floor(tmp / 10); }
+  
+  const pieces = [];
+  let i = 0, slot = 0;
+  while (i < digits.length) {
+    const d = digits[i];
+    if (slot === 0) {
+      if (d !== 0 && AR_UNITS[d]) pieces.push(AR_UNITS[d]);
+      i++; slot = 1;
+    } else if (slot === 1) {
+      const v = d * 10;
+      if (d !== 0 && AR_TENS[v]) pieces.push(AR_TENS[v]);
+      i++; slot = 2;
+    } else if (slot === 2) {
+      const v = d * 100;
+      if (d !== 0 && AR_HUNDREDS[v]) pieces.push(AR_HUNDREDS[v]);
+      i++; slot = 3;
+    } else {
+      pieces.push(AR_THOUSAND);
+      if (d !== 0 && d !== 1 && AR_UNITS[d]) pieces.push(AR_UNITS[d]);
+      i++; slot = 1;
+    }
+  }
+  return pieces.join('');
+}
 
 /**
  * detectAngelEndingVariant(name)
- * Determines ending based on final letter before إيل
  */
 function detectAngelEndingVariant(name) {
   if (!name.endsWith(SUFFIX_ANGEL)) return null;
-  
   const body = name.slice(0, name.length - SUFFIX_ANGEL.length);
   if (!body) return ANGEL_ENDING_VARIANTS[0];
-  
   const lastChar = body[body.length - 1];
-  
   if (lastChar === 'ا') return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ائيل');
   if (lastChar === 'و') return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ؤيل');
   if (lastChar === 'ي') return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ييل');
@@ -60,7 +88,6 @@ function detectAngelEndingVariant(name) {
 
 /**
  * getHarakaForMadd(maddChar)
- * Returns appropriate haraka for consonant preceding Madd letter
  */
 function getHarakaForMadd(maddChar) {
   if (maddChar === 'ا' || maddChar === 'آ' || maddChar === 'أ' || maddChar === 'إ') return FATHA;
@@ -71,16 +98,7 @@ function getHarakaForMadd(maddChar) {
 
 /**
  * vocalizeArabicName(chars, isAngel)
- * 
- * SIMPLE VOCALIZATION — NO Sukun
- * Every consonant gets a vowel (Fatha/Kasra/Damma)
- * 
- * RULES:
- * 1. First letter ALWAYS gets Fatha
- * 2. Madd/Hamza never get harakat
- * 3. Consonant before Madd gets appropriate haraka
- * 4. Angel: alternate Kasra/Fatha for flowing sound
- * 5. Jinn: Fatha/Damma for stronger sound
+ * Simple vocalization - every consonant gets a vowel
  */
 function vocalizeArabicName(chars, isAngel) {
   const pattern = [];
@@ -90,19 +108,16 @@ function vocalizeArabicName(chars, isAngel) {
     const ch = chars[i];
     const nextCh = chars[i + 1];
     
-    // Madd/Hamza — no haraka needed
     if (MADD_LETTERS.has(ch) || HAMZA_FORMS.has(ch)) {
       pattern.push({ consonant: ch, vowel: null });
       continue;
     }
     
-    // RULE 1: First letter ALWAYS gets Fatha
     if (i === 0) {
       pattern.push({ consonant: ch, vowel: FATHA });
       continue;
     }
     
-    // Next char is Madd/vowel carrier
     if (nextCh && VOWEL_CARRIERS.has(nextCh)) {
       if (MADD_LETTERS.has(nextCh)) {
         pattern.push({ consonant: ch, vowel: getHarakaForMadd(nextCh) });
@@ -112,13 +127,10 @@ function vocalizeArabicName(chars, isAngel) {
       continue;
     }
     
-    // Regular consonant — assign vowel (NO Sukun)
     if (isAngel) {
-      // Angel: flowing, melodic — alternate Kasra/Fatha
       const vowelCycle = [KASRA, FATHA, DAMMA];
       pattern.push({ consonant: ch, vowel: vowelCycle[i % 3] });
     } else {
-      // Jinn: stronger — Fatha/Damma
       const vowelCycle = [FATHA, DAMMA, FATHA, KASRA];
       pattern.push({ consonant: ch, vowel: vowelCycle[i % 4] });
     }
@@ -128,43 +140,50 @@ function vocalizeArabicName(chars, isAngel) {
 }
 
 /**
- * validateNamePronounceability(vocalizedName, isAngel)
- * Quality control — should always pass with new engine
+ * applySubtract(val, subtractVal)
+ * Apply suffix subtraction with underflow fix
  */
-function validateNamePronounceability(vocalizedName, isAngel) {
-  const issues = [];
-  
-  // Check for any Sukun (should be none)
-  const sukunCount = (vocalizedName.match(new RegExp('\u0652', 'g')) || []).length;
-  // Sukun only allowed in suffix (final Lam), not in body
-  const bodySukun = vocalizedName.slice(0, vocalizedName.length - 4).match(new RegExp('\u0652', 'g'));
-  if (bodySukun && bodySukun.length > 0) {
-    issues.push(`Unexpected Sukun in body: ${bodySukun.length}`);
-  }
-  
-  // Check for CCC clusters
-  const clusters = vocalizedName.match(/([^اويآأإئؤ\u064E\u0650\u064F]{3,})/g);
-  if (clusters) {
-    issues.push(`CCC clusters: ${clusters.join(', ')}`);
-  }
-  
-  return { valid: issues.length === 0, issues };
+function applySubtract(val, subtractVal) {
+  return val < subtractVal ? val + 360 - subtractVal : val - subtractVal;
+}
+
+/**
+ * generateArabicAngelName(val)
+ * Generate angel name from value
+ */
+function generateArabicAngelName(val) {
+  const r = applySubtract(val, 41);
+  const letters = numToArabic(r);
+  return { remainder: r, name: letters + SUFFIX_ANGEL };
+}
+
+/**
+ * generateArabicJinnName(val)
+ * Generate jinn name from value
+ */
+function generateArabicJinnName(val) {
+  const r = applySubtract(val, 319);
+  const letters = numToArabic(r);
+  return { remainder: r, name: letters + SUFFIX_JINN };
 }
 
 /**
  * addTashkeelToArabicName(name, suffixType)
  * 
- * AUTHENTIC ARABIC NAME VOCALIZATION
- * 
- * suffixType: "angel" | "jinn"
+ * Generate vocalized name WITH VALIDATION
+ * Returns { name, score, passed, validation, failureReason }
  */
 export function addTashkeelToArabicName(name, suffixType) {
-  if (!name || typeof name !== 'string') return name;
+  if (!name || typeof name !== 'string') {
+    return { name: null, score: 0, passed: false, failureReason: 'Invalid input' };
+  }
 
   const isAngel = suffixType === 'angel';
   const bareSuffix = isAngel ? SUFFIX_ANGEL : SUFFIX_JINN;
 
-  if (!name.endsWith(bareSuffix)) return name;
+  if (!name.endsWith(bareSuffix)) {
+    return { name: null, score: 0, passed: false, failureReason: 'Invalid suffix' };
+  }
 
   const body = name.slice(0, name.length - bareSuffix.length);
   
@@ -177,13 +196,22 @@ export function addTashkeelToArabicName(name, suffixType) {
     }
   }
 
-  if (!body) return vocSuffix;
+  if (!body) {
+    const vocalizedName = vocSuffix;
+    const validation = validateName(vocalizedName, isAngel);
+    return {
+      name: vocalizedName,
+      score: validation.score,
+      passed: validation.passed,
+      validation,
+      failureReason: validation.passed ? null : validation.failureReason
+    };
+  }
 
   // Vocalize body
   const chars = [...body];
   const pattern = vocalizeArabicName(chars, isAngel);
   
-  // Apply pattern
   let out = '';
   for (const { consonant, vowel } of pattern) {
     out += vowel === null ? consonant : consonant + vowel;
@@ -191,11 +219,55 @@ export function addTashkeelToArabicName(name, suffixType) {
 
   const vocalizedName = out + vocSuffix;
   
-  // Quality control
-  const validation = validateNamePronounceability(vocalizedName, isAngel);
-  if (!validation.valid) {
-    console.warn("Tashkeel quality issues:", validation.issues, "Name:", vocalizedName);
-  }
+  // VALIDATE
+  const validation = validateName(vocalizedName, isAngel);
+  
+  return {
+    name: vocalizedName,
+    score: validation.score,
+    passed: validation.passed,
+    validation,
+    failureReason: validation.passed ? null : validation.failureReason
+  };
+}
 
-  return vocalizedName;
+/**
+ * generateValidatedNames(count, suffixType, minValue = 1)
+ * Generate N names that pass validation
+ */
+export function generateValidatedNames(count, suffixType, minValue = 1) {
+  const results = [];
+  const failed = [];
+  let val = minValue;
+  
+  while (results.length < count && val < 100000) {
+    const generator = suffixType === 'angel' ? generateArabicAngelName : generateArabicJinnName;
+    const base = generator(val);
+    const result = addTashkeelToArabicName(base.name, suffixType);
+    
+    if (result.passed) {
+      results.push({
+        value: val,
+        remainder: base.remainder,
+        name: result.name,
+        score: result.score
+      });
+    } else {
+      failed.push({
+        value: val,
+        name: result.name,
+        score: result.score,
+        reason: result.failureReason
+      });
+    }
+    
+    val++;
+  }
+  
+  return {
+    generated: results,
+    failed,
+    total: results.length + failed.length,
+    passRate: ((results.length / (results.length + failed.length)) * 100).toFixed(1) + '%'
+  };
 }
