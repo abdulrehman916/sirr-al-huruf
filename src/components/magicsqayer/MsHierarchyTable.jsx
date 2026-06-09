@@ -210,7 +210,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 const displayName = isArabic && suffixType ? addTashkeelToArabicName(n.name, suffixType) : n.name;
                 return (
                   <div className="px-3 text-center"
-                    style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "10px 12px 14px" }}>
+                    style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
                     <p className="font-inter leading-tight mb-1" style={{ fontSize: "8px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.5px" }}>
                       {n.lbl}
                     </p>
@@ -226,24 +226,26 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       lang={isArabic ? "ar" : "he"}
                       style={{
                         color: n.color,
-                        fontSize: isArabic ? "46px" : "38px",
-                        fontWeight: isArabic ? 700 : 900,
-                        lineHeight: isArabic ? 1.8 : 1.4,
-                        letterSpacing: 0,
+                        fontSize: isArabic ? "52px" : "38px",
+                        fontWeight: isArabic ? 600 : 900,
+                        lineHeight: isArabic ? 2.2 : 1.4,
+                        letterSpacing: isArabic ? "0.06em" : 0,
+                        wordSpacing: isArabic ? "0.15em" : 0,
                         wordWrap: "break-word",
                         overflowWrap: "break-word",
                         textShadow: `0 0 16px ${n.color}55, 0 0 32px ${n.color}33, 0 2px 4px rgba(0,0,0,0.8)`,
-                        padding: "4px 0",
-                        // Noto Naskh Arabic has best-in-class tashkeel rendering;
-                        // fall back to Amiri then system Arabic fonts
+                        padding: "8px 4px 16px",
+                        // Scheherazade New: purpose-built for fully-vocalized Arabic,
+                        // best tashkeel glyph spacing and mark positioning of any web font.
                         fontFamily: isArabic
-                          ? "'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', 'Arabic Typesetting', serif"
+                          ? "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif"
                           : "'Amiri', serif",
                         fontFeatureSettings: "'liga' 1, 'calt' 1, 'kern' 1",
                         textRendering: "optimizeLegibility",
                         WebkitFontSmoothing: "antialiased",
                         MozOsxFontSmoothing: "grayscale",
                         unicodeBidi: "plaintext",
+                        direction: "rtl",
                       }}
                     >
                       {displayName}
