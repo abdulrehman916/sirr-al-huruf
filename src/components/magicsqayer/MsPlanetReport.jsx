@@ -48,7 +48,7 @@ export default function MsPlanetReport({ mc, gridSize, lang, L }) {
           {pl.icon}
         </motion.span>
         <div>
-          <p className="font-amiri text-3xl font-bold" dir="rtl" style={{ color: pl.color }}>{pl.arabic}</p>
+          <p className="font-amiri" dir="rtl" style={{ color: pl.color, fontSize:"28px", fontWeight:700, letterSpacing:0 }}>{pl.arabic}</p>
           <p className="font-inter text-sm font-bold uppercase tracking-widest" style={{ color:`${pl.color}aa` }}>
             {planetName} — {gridSize}×{gridSize}
           </p>

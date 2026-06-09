@@ -168,7 +168,7 @@ export default function AkramCard({ total, levelLabel, levelArabic }) {
                   borderColor: isGhain ? G.borderHi : G.faint,
                 }}
               >
-                <span className="font-amiri text-xl leading-none mb-0.5" style={{ color: "#fff" }}>
+                <span className="font-amiri leading-none mb-0.5" style={{ color: "#fff", fontSize:"26px", fontWeight:700 }}>
                   {p.letter}
                 </span>
                 <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>
@@ -190,9 +190,9 @@ export default function AkramCard({ total, levelLabel, levelArabic }) {
           Akram Letters
         </p>
         <motion.p
-          className="font-amiri font-bold leading-none"
+          className="font-amiri leading-none"
           dir="rtl"
-          style={{ fontSize: "clamp(2rem, 9vw, 3rem)", color: G.text }}
+          style={{ fontSize: "clamp(2rem, 9vw, 3rem)", fontWeight:700, color: G.text, letterSpacing:0 }}
           animate={{
             textShadow: [
               "0 0 14px rgba(212,175,55,0.28)",
