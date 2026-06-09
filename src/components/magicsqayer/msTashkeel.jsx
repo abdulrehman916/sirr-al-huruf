@@ -2,17 +2,19 @@
 //  ARABIC TASHKEEL (HARAKAT) FOR ABJAD-GENERATED NAMES
 //  Pure display layer — does NOT modify any calculation logic.
 //
-//  Unicode combining marks attach directly to the preceding letter
-//  codepoint. Arabic shaping engines (browser/OS) handle rendering.
+//  Unicode combining marks attach directly to the preceding base letter.
+//  Arabic shaping engines (browser/OS) handle glyph formation and positioning.
 //
-//  Vocalization follows classical Arabic orthographic rules:
-//  - Consonants get appropriate harakat based on following letter.
-//  - Long vowels (ا، و، ي) are NEVER vocalized — they ARE the vowel.
-//  - Consonant before ا → Fatha (produces "aa" sound)
-//  - Consonant before و → Damma (produces "uu" sound)
-//  - Consonant before ي → Kasra (produces "ii" sound)
-//  - Final consonant before suffix follows suffix vowel pattern.
-//  - Suffixes are pre-vocalized with authentic pronunciation.
+//  Vocalization follows classical Arabic phonetic and orthographic rules:
+//  - Syllable structure: CV (open) or CVC (closed) — no unnatural clusters.
+//  - Madd letters (ا، و، ي) NEVER receive harakat — they ARE the vowel.
+//  - Consonant + ا → Fatha (creates /aː/ "aa" long vowel)
+//  - Consonant + و → Damma (creates /uː/ "uu" long vowel)
+//  - Consonant + ي → Kasra (creates /iː/ "ii" long vowel)
+//  - Consonant + Consonant → Sukun (closes syllable, CVC pattern)
+//  - Final consonant before suffix → follows suffix entry vowel pattern.
+//  - Suffixes pre-vocalized with authentic classical pronunciation.
+//  - Result: naturally readable Arabic resembling printed manuscripts.
 // ═══════════════════════════════════════════════════════════════
 
 // Unicode combining harakat — attach immediately after base letter
@@ -21,19 +23,49 @@ const KASRA = '\u0650'; // ِ  below (short "i")
 const DAMMA = '\u064F'; // ُ  above (short "u")
 const SUKUN = '\u0652'; // ْ  above (no vowel)
 
-// Long-vowel letters (Madd) — these ARE vowels, never get harakat
-const LONG_VOWEL = new Set(['ا', 'و', 'ي', 'ى', 'آ', 'أ', 'إ', 'ئ', 'ؤ']);
+// Madd (long vowel) letters — these ARE vowels, never get harakat
+// When preceded by a consonant, they create long vowels:
+//   C + ا → /aː/ (aa)
+//   C + و → /uː/ (uu)
+//   C + ي → /iː/ (ii)
+const MADD_LETTERS = new Set(['ا', 'و', 'ي', 'ى']);
+
+// Hamza forms that can carry Madd — treated as vowel carriers
+const HAMZA_FORMS = new Set(['آ', 'أ', 'إ', 'ئ', 'ؤ']);
+
+// All vowel carriers (Madd + Hamza forms) — never receive harakat
+const VOWEL_CARRIERS = new Set([...MADD_LETTERS, ...HAMZA_FORMS]);
 
 // Bare suffixes as they appear in generated names
 const SUFFIX_ANGEL = 'إيل';
 const SUFFIX_JINN  = 'طيش';
 
 // Pre-vocalized suffixes — authentic classical pronunciation
-// إِيلُ  = إ + kasra + ي (bare) + ل + damma → /ʔiːlu/
+// إِيلُ  = إ + kasra + ي (bare, madd) + ل + damma → /ʔiːlu/
 const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u064F'; // إِيلُ
 
 // طَيْشُ = ط + fatha + ي + sukun + ش + damma → /tajʃu/
 const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
+
+/**
+ * getHarakaForMadd(maddChar)
+ * Returns the appropriate haraka for a consonant preceding a Madd letter.
+ * - ا → Fatha (creates /aː/ "aa")
+ * - و → Damma (creates /uː/ "uu")
+ * - ي → Kasra (creates /iː/ "ii")
+ */
+function getHarakaForMadd(maddChar) {
+  if (maddChar === 'ا' || maddChar === 'آ' || maddChar === 'أ' || maddChar === 'إ') {
+    return FATHA; // /aː/
+  }
+  if (maddChar === 'و' || maddChar === 'ؤ') {
+    return DAMMA; // /uː/
+  }
+  if (maddChar === 'ي' || maddChar === 'ئ') {
+    return KASRA; // /iː/
+  }
+  return FATHA; // default
+}
 
 /**
  * addTashkeelToArabicName(name, suffixType)
@@ -44,13 +76,12 @@ const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
  *
  * suffixType: "angel" | "jinn"
  *
- * Arabic vocalization rules applied:
- * 1. Long vowels (ا، و، ي) NEVER receive harakat — they ARE the vowel.
- * 2. Consonant before ا gets Fatha (creates "aa" sound).
- * 3. Consonant before و gets Damma (creates "uu" sound).
- * 4. Consonant before ي gets Kasra (creates "ii" sound).
- * 5. Consonant followed by consonant → Sukun (closes syllable, e.g., مْ in رَمْعَطِيش).
- * 6. Final consonant before suffix follows suffix entry vowel.
+ * Arabic phonetic rules applied:
+ * 1. Madd letters (ا، و، ي) NEVER receive harakat — they ARE the vowel.
+ * 2. Consonant + Madd → appropriate haraka for long vowel syllable (CV).
+ * 3. Consonant + Consonant → Sukun (close syllable, CVC pattern).
+ * 4. Final consonant before suffix → follows suffix entry vowel.
+ * 5. No unnatural vowel sequences — proper CV / CVC syllable structure.
  */
 export function addTashkeelToArabicName(name, suffixType) {
   if (!name || typeof name !== 'string') return name;
@@ -74,32 +105,42 @@ export function addTashkeelToArabicName(name, suffixType) {
     const ch = chars[i];
     const nextCh = chars[i + 1];
 
-    // Long vowel letters NEVER get harakat — they ARE the vowel
-    if (LONG_VOWEL.has(ch)) {
+    // Madd letters NEVER get harakat — they ARE the vowel
+    if (MADD_LETTERS.has(ch)) {
       out += ch;
       continue;
     }
 
-    // Determine harakat based on following letter (Arabic syllable rules)
+    // Hamza forms (أ، إ، ئ، ؤ) — treat as vowel carriers, no harakat
+    if (HAMZA_FORMS.has(ch)) {
+      out += ch;
+      continue;
+    }
+
+    // Determine haraka based on phonetic context (Arabic syllable structure)
     let haraka;
+
     if (nextCh === undefined) {
       // Last consonant before suffix — use suffix entry vowel
+      // Angel suffix إِيلُ starts with kasra → /ʔiːlu/
+      // Jinn suffix طَيْشُ starts with fatha → /tajʃu/
       haraka = isAngel ? KASRA : FATHA;
-    } else if (nextCh === 'ا' || nextCh === 'آ' || nextCh === 'أ' || nextCh === 'إ') {
-      // Consonant before alif → Fatha (creates "aa" long vowel)
-      haraka = FATHA;
-    } else if (nextCh === 'و' || nextCh === 'ؤ') {
-      // Consonant before waw → Damma (creates "uu" long vowel)
-      haraka = DAMMA;
-    } else if (nextCh === 'ي' || nextCh === 'ئ') {
-      // Consonant before ya → Kasra (creates "ii" long vowel)
-      haraka = KASRA;
-    } else if (LONG_VOWEL.has(nextCh)) {
-      // Other long vowel forms → no haraka (let next letter stand)
-      haraka = '';
+
+    } else if (VOWEL_CARRIERS.has(nextCh)) {
+      // Next letter is a vowel carrier (Madd or Hamza form)
+      // Apply appropriate haraka to create long vowel syllable
+      if (MADD_LETTERS.has(nextCh)) {
+        // Consonant + Madd → long vowel (CV pattern)
+        haraka = getHarakaForMadd(nextCh);
+      } else {
+        // Hamza form — use Fatha as default (most common)
+        haraka = FATHA;
+      }
+
     } else {
-      // Next letter is a consonant → Sukun (close the syllable)
+      // Next letter is a consonant → Sukun (close the syllable, CVC pattern)
       // Example: رَمْعَطِيش — مْ has sukun because ع follows
+      // This creates natural Arabic syllable boundaries
       haraka = SUKUN;
     }
 
