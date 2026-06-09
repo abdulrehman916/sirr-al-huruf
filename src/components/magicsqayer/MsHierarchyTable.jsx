@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { buildHierarchy, angelJinn } from "./msEngine";
+import { toAkramPieces } from "@/components/AkramCard";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -82,7 +83,9 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
                   { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA" },
                   { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171" },
                   { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C" },
-                ].map(col => (
+                ].map(col => {
+                  const letters = toAkramPieces(col.v).map(p => p.letter).join('');
+                  return (
                   <div key={col.lbl} className="px-2 py-1.5 text-center border-r last:border-r-0"
                     style={{ borderColor:"rgba(212,175,55,0.08)" }}>
                     <p className="font-inter leading-tight" style={{ fontSize:"7px", color:"rgba(255,255,255,0.30)" }}>
@@ -91,8 +94,12 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
                     <p className="font-amiri font-bold tabular-nums text-xs" style={{ color:col.c }}>
                       {col.v.toLocaleString()}
                     </p>
+                    <p className="font-amiri font-bold text-sm leading-tight" dir="rtl" style={{ color:col.c, letterSpacing:0 }}>
+                      {letters}
+                    </p>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
           );
