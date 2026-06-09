@@ -80,7 +80,7 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
               <div className="grid grid-cols-4" style={{ background:"rgba(4,8,24,0.80)" }}>
                 {[
                   { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC", suffix:"إيل" },
-                  { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA" },
+                  { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", suffix:"אל" },
                   { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171" },
                   { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C" },
                 ].map(col => {
