@@ -46,10 +46,10 @@ function hebrewJinnName(val) {
 
 // ─────────────────────────────────────────────────────────────────
 //  Props:
-//   mc        — working magic constant (rawNum when suffix=none, rawNum−suffix otherwise)
-//   gridSize  — selected grid size (can be null — hierarchy still shows if mc is valid)
+//   mc        — rawNum (Magic Constant — never modified by suffix)
+//   gridSize  — selected grid size
 //   rawInput  — original user input (for display)
-//   suffix    — "none" | "arabic" | "hebrew"
+//   suffix    — "none" | "ar-angel" | "ar-jinn" | "heb-angel" | "heb-jinn"
 //   lang, L   — language / labels
 // ─────────────────────────────────────────────────────────────────
 const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, suffix, lang, L }) {
@@ -81,30 +81,23 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     ];
 
     const result = base.map(row => {
-      if (suffix === "none") {
-        return { ...row, angel: null, jinn: null };
+      if (suffix === "ar-angel") {
+        const name = arabicAngelName(row.val);
+        return { ...row, angel: { lbl: L.angelAr, ...name, color: "#4FE3FF" }, jinn: null };
       }
-
-      if (suffix === "arabic") {
-        const angel = arabicAngelName(row.val);
-        const jinn  = arabicJinnName(row.val);
-        return {
-          ...row,
-          angel: { lbl: L.angelAr, ...angel, color: "#4FE3FF" },
-          jinn:  { lbl: L.jinnAr,  ...jinn,  color: "#FF9F5A" },
-        };
+      if (suffix === "ar-jinn") {
+        const name = arabicJinnName(row.val);
+        return { ...row, angel: null, jinn: { lbl: L.jinnAr, ...name, color: "#FF9F5A" } };
       }
-
-      if (suffix === "hebrew") {
-        const angel = hebrewAngelName(row.val);
-        const jinn  = hebrewJinnName(row.val);
-        return {
-          ...row,
-          angel: { lbl: L.angelHeb, ...angel, color: "#C4B5FD" },
-          jinn:  { lbl: L.jinnHeb,  ...jinn,  color: "#F9A8D4" },
-        };
+      if (suffix === "heb-angel") {
+        const name = hebrewAngelName(row.val);
+        return { ...row, angel: { lbl: L.angelHeb, ...name, color: "#C4B5FD" }, jinn: null };
       }
-
+      if (suffix === "heb-jinn") {
+        const name = hebrewJinnName(row.val);
+        return { ...row, angel: null, jinn: { lbl: L.jinnHeb, ...name, color: "#F9A8D4" } };
+      }
+      // "none"
       return { ...row, angel: null, jinn: null };
     });
 
@@ -116,6 +109,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
   if (!mc) return null;
 
   const showNames = suffix !== "none";
+  const activeNameKey = suffix.includes("angel") ? "angel" : suffix.includes("jinn") ? "jinn" : null;
 
   return (
     <motion.div
@@ -130,21 +124,24 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       </p>
 
       {/* Active system badge */}
-      <div className="flex justify-center">
-        <span className="font-inter text-[9px] uppercase tracking-widest px-3 py-1 rounded-full border"
-          style={{
-            borderColor: suffix === "none" ? "rgba(212,175,55,0.20)" : suffix === "arabic" ? "rgba(79,227,255,0.35)" : "rgba(196,181,253,0.35)",
-            color:       suffix === "none" ? "rgba(212,175,55,0.45)" : suffix === "arabic" ? "#4FE3FF" : "#C4B5FD",
-            background:  suffix === "none" ? "rgba(212,175,55,0.04)" : suffix === "arabic" ? "rgba(79,227,255,0.06)" : "rgba(196,181,253,0.06)",
-          }}>
-          {suffix === "none"
-            ? (lang === "ar" ? "بدون لاحقة — أرقام فقط" : "No Suffix — Numeric Only")
-            : suffix === "arabic"
-              ? (lang === "ar" ? "ملائكة وجن عربي — إيل / طيش" : "Arabic Angels & Jinn — إيل / طيش")
-              : (lang === "ar" ? "ملائكة وجن عبري — אל / תקש" : "Hebrew Angels & Jinn — אל / תקש")
-          }
-        </span>
-      </div>
+      {(() => {
+        const badgeCfg = {
+          "none":      { c: "rgba(212,175,55,0.45)", b: "rgba(212,175,55,0.20)", bg: "rgba(212,175,55,0.04)", label: lang==="ar" ? "بدون لاحقة — أرقام فقط" : "No Suffix — Numeric Only" },
+          "ar-angel":  { c: "#4FE3FF", b: "rgba(79,227,255,0.35)",   bg: "rgba(79,227,255,0.06)",   label: lang==="ar" ? "ملاك عربي — إيل (−٤١)" : "Arabic Angel — إيل (−41)" },
+          "ar-jinn":   { c: "#FF9F5A", b: "rgba(255,159,90,0.35)",   bg: "rgba(255,159,90,0.06)",   label: lang==="ar" ? "جن عربي — طيش (−٣١٩)" : "Arabic Jinn — طيش (−319)" },
+          "heb-angel": { c: "#C4B5FD", b: "rgba(196,181,253,0.35)",  bg: "rgba(196,181,253,0.06)",  label: lang==="ar" ? "ملاك عبري — אל (−٣١)" : "Hebrew Angel — אל (−31)" },
+          "heb-jinn":  { c: "#F9A8D4", b: "rgba(249,168,212,0.35)",  bg: "rgba(249,168,212,0.06)",  label: lang==="ar" ? "جن عبري — תקש (−٣٢٩)" : "Hebrew Jinn — תקש (−329)" },
+        };
+        const cfg = badgeCfg[suffix] || badgeCfg["none"];
+        return (
+          <div className="flex justify-center">
+            <span className="font-inter text-[9px] uppercase tracking-widest px-3 py-1 rounded-full border"
+              style={{ borderColor: cfg.b, color: cfg.c, background: cfg.bg }}>
+              {cfg.label}
+            </span>
+          </div>
+        );
+      })()}
 
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg,transparent,${G.borderHi},transparent)` }} />
 
@@ -203,47 +200,28 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 </p>
               </div>
 
-              {/* Angel + Jinn name columns — side by side */}
-              {showNames && row.angel && (
-                <div className="grid grid-cols-2 divide-x divide-white/5"
-                  style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
-
-                  {/* Angel */}
-                  <div className="px-3 py-2 text-center">
+              {/* Name column — single entry (angel OR jinn depending on active suffix) */}
+              {showNames && activeNameKey && row[activeNameKey] && (() => {
+                const n = row[activeNameKey];
+                return (
+                  <div className="px-3 py-2 text-center"
+                    style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
                     <p className="font-inter leading-tight mb-0.5" style={{ fontSize: "7px", color: "rgba(255,255,255,0.30)" }}>
-                      {row.angel.lbl}
+                      {n.lbl}
                     </p>
-                    <p className="font-amiri font-bold tabular-nums text-xs mb-1" style={{ color: row.angel.color }}>
-                      {lang === "ar" ? toArabicIndic(row.angel.remainder.toLocaleString()) : row.angel.remainder.toLocaleString()}
+                    <p className="font-amiri font-bold tabular-nums text-xs mb-1" style={{ color: n.color }}>
+                      {lang === "ar" ? toArabicIndic(n.remainder.toLocaleString()) : n.remainder.toLocaleString()}
                     </p>
                     <p className="font-amiri" dir="rtl" style={{
-                      color: row.angel.color, letterSpacing: 0, fontSize: "28px", fontWeight: 900,
+                      color: n.color, letterSpacing: 0, fontSize: "28px", fontWeight: 900,
                       lineHeight: 1.2, wordWrap: "break-word", overflowWrap: "break-word",
-                      textShadow: `0 0 12px ${row.angel.color}44, 0 0 24px ${row.angel.color}22`
+                      textShadow: `0 0 12px ${n.color}44, 0 0 24px ${n.color}22`
                     }}>
-                      {row.angel.name}
+                      {n.name}
                     </p>
                   </div>
-
-                  {/* Jinn */}
-                  <div className="px-3 py-2 text-center">
-                    <p className="font-inter leading-tight mb-0.5" style={{ fontSize: "7px", color: "rgba(255,255,255,0.30)" }}>
-                      {row.jinn.lbl}
-                    </p>
-                    <p className="font-amiri font-bold tabular-nums text-xs mb-1" style={{ color: row.jinn.color }}>
-                      {lang === "ar" ? toArabicIndic(row.jinn.remainder.toLocaleString()) : row.jinn.remainder.toLocaleString()}
-                    </p>
-                    <p className="font-amiri" dir="rtl" style={{
-                      color: row.jinn.color, letterSpacing: 0, fontSize: "28px", fontWeight: 900,
-                      lineHeight: 1.2, wordWrap: "break-word", overflowWrap: "break-word",
-                      textShadow: `0 0 12px ${row.jinn.color}44, 0 0 24px ${row.jinn.color}22`
-                    }}>
-                      {row.jinn.name}
-                    </p>
-                  </div>
-
-                </div>
-              )}
+                );
+              })()}
             </motion.div>
           ))}
         </div>

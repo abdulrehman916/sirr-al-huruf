@@ -8,7 +8,6 @@ import {
   PLANETS, ELEMENTS, SIZE_PLANET_MAP, PLANET_EN,
   isCompatible, compatibleSizes,
   computeUsurper, generateSquare, verifySquare, toArabicIndic,
-  applyISuffix,
 } from "../components/magicsqayer/msEngine";
 
 // ── Display components ───────────────────────────────────────────
@@ -247,7 +246,7 @@ const SacredGrid = memo(function SacredGrid({ gridSize, element, grid, lang, L }
 function msReducer(state, action) {
   switch (action.type) {
     case "SET_NUMBER": return { ...state, inputNum: action.val, grid: action.grid };
-    case "SET_SUFFIX": return { ...state, suffix: action.mode, grid: action.grid };
+    case "SET_SUFFIX": return { ...state, suffix: action.mode }; // grid unchanged
     case "SET_SIZE":   return { ...state, gridSize: action.size, grid: action.grid };
     case "SET_ELEMENT":return { ...state, element: action.el, grid: action.grid };
     case "SET_GRID":   return { ...state, grid: action.grid };
@@ -271,15 +270,9 @@ export default function MagicSqayerPage() {
 
   const L = useMemo(() => LABELS[lang], [lang]);
 
-  // ── Raw number (user's entered value, display only) ──────────
+  // ── Raw number = Magic Constant. Suffix NEVER changes this. ──
   const rawNum = useMemo(() => { const n = parseInt(inputNum); return isNaN(n) ? null : n; }, [inputNum]);
-
-  // ── Working MC = rawNum after suffix subtraction (book methodology) ──
-  // Arabic −41, Hebrew −31; underflow rule: add 360 if result ≤ 0
-  const squareMC = useMemo(() => {
-    if (!rawNum) return null;
-    return applyISuffix(rawNum, suffix).mc;
-  }, [rawNum, suffix]);
+  const squareMC = rawNum; // MC is always the raw input — suffix only affects name generation
 
   // ── Compatible sizes — expensive, memoized ────────────────────
   const compatSizes = useMemo(() => squareMC ? compatibleSizes(squareMC) : [], [squareMC]);
@@ -306,20 +299,17 @@ export default function MagicSqayerPage() {
   // ── Handlers — all use squareMC (rawNum) for grid construction ─
   const handleNumber = useCallback((e) => {
     const val = e.target.value.replace(/[^\d]/g, "");
-    const raw = parseInt(val) || null;
-    const mc = raw ? applyISuffix(raw, suffix).mc : null;
+    const mc = parseInt(val) || null;
     dispatch({ type: "SET_NUMBER", val, grid: state.grid });
     startTransition(() => {
       dispatch({ type: "SET_NUMBER", val, grid: mc ? buildGrid(mc, gridSize, element) : null });
     });
-  }, [gridSize, element, suffix, state.grid, buildGrid]);
+  }, [gridSize, element, state.grid, buildGrid]);
 
+  // Suffix only changes name display — never rebuilds the grid
   const handleSuffix = useCallback((mode) => {
-    const newMC = rawNum ? applyISuffix(rawNum, mode).mc : null;
-    startTransition(() => {
-      dispatch({ type: "SET_SUFFIX", mode, grid: buildGrid(newMC, gridSize, element) });
-    });
-  }, [rawNum, gridSize, element, buildGrid]);
+    dispatch({ type: "SET_SUFFIX", mode, grid: state.grid });
+  }, [state.grid]);
 
   const handleSize = useCallback((size) => {
     perfStore.clear();
@@ -355,11 +345,13 @@ export default function MagicSqayerPage() {
   const canGenerate = !!inputNum && !!gridSize;
   const gridReady = grid && !grid.incompatible && squareMC && gridSize;
 
-  // ── Suffix options ─────────────────────────────────────────────
+  // ── Suffix options (name-only — never affects MC or grid) ──────
   const suffixOpts = [
-    { key:"none",   label: L.suffixNone   },
-    { key:"arabic", label: L.suffixArabic },
-    { key:"hebrew", label: L.suffixHebrew },
+    { key:"none",      label: L.suffixNone,     color: G.text,     borderActive: G.borderHi },
+    { key:"ar-angel",  label: L.suffixArAngel,  color: "#4FE3FF",  borderActive: "rgba(79,227,255,0.55)" },
+    { key:"ar-jinn",   label: L.suffixArJinn,   color: "#FF9F5A",  borderActive: "rgba(255,159,90,0.55)"  },
+    { key:"heb-angel", label: L.suffixHebAngel, color: "#C4B5FD",  borderActive: "rgba(196,181,253,0.55)" },
+    { key:"heb-jinn",  label: L.suffixHebJinn,  color: "#F9A8D4",  borderActive: "rgba(249,168,212,0.55)" },
   ];
 
   // ── Lang options ───────────────────────────────────────────────
@@ -401,30 +393,30 @@ export default function MagicSqayerPage() {
             style={{ background:"rgba(4,12,34,0.97)", border:`1px solid ${G.border}`, fontSize:"clamp(20px,5vw,30px)" }}
           />
           {rawNum && (
-            <div className="flex flex-wrap gap-3 items-center justify-center">
-              {suffix !== "none" && (
-                <span className="font-amiri font-bold text-base" style={{ color:"rgba(212,175,55,0.55)" }}>
-                  {L.inputLabel}: {lang === "ar" ? toArabicIndic(rawNum.toLocaleString()) : rawNum.toLocaleString()}
-                </span>
-              )}
+            <div className="flex justify-center">
               <span className="font-amiri font-bold text-xl" style={{ color: G.text }}>
-                {L.workingMC}: {lang === "ar" ? toArabicIndic(squareMC.toLocaleString()) : squareMC.toLocaleString()}
+                {L.workingMC}: {lang === "ar" ? toArabicIndic(rawNum.toLocaleString()) : rawNum.toLocaleString()}
               </span>
             </div>
           )}
         </SectionCard>
 
-        {/* 2. Suffix System */}
+        {/* 2. Suffix System — name generation only, never affects MC/grid */}
         <SectionCard>
           <SLabel>{L.suffix}</SLabel>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {suffixOpts.map(opt => {
               const sel = suffix === opt.key;
               return (
                 <motion.button key={opt.key} onClick={() => handleSuffix(opt.key)}
                   whileTap={{ scale:0.96 }}
                   className="rounded-xl py-2.5 px-2 font-inter font-bold text-[10px] border transition-all text-center"
-                  style={{ background: sel ? "rgba(212,175,55,0.15)" : "rgba(4,12,34,0.97)", borderColor: sel ? G.borderHi : "rgba(255,255,255,0.08)", color: sel ? G.text : "rgba(255,255,255,0.35)" }}>
+                  style={{
+                    background: sel ? `${opt.color}18` : "rgba(4,12,34,0.97)",
+                    borderColor: sel ? opt.borderActive : "rgba(255,255,255,0.08)",
+                    color: sel ? opt.color : "rgba(255,255,255,0.35)",
+                    gridColumn: opt.key === "none" ? "span 2" : undefined,
+                  }}>
                   {opt.label}
                 </motion.button>
               );
@@ -530,10 +522,10 @@ export default function MagicSqayerPage() {
           <MsPlanetReport mc={squareMC} gridSize={gridSize} lang={lang} L={L} />
         )}
 
-        {/* Hierarchy Table — always shown when a number is entered */}
+        {/* Hierarchy Table — always shown when a number is entered; suffix only affects names */}
         {rawNum && (
           <MsHierarchyTable
-            mc={squareMC}
+            mc={rawNum}
             gridSize={gridSize}
             rawInput={rawNum}
             suffix={suffix}
