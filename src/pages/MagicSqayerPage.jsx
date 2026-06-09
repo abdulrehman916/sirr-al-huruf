@@ -459,10 +459,32 @@ export default function MagicSqayerPage() {
           )}
         </SectionCard>
 
+        {/* No compatible sizes at all — show clear error */}
+        {workingMC && compatSizes.length === 0 && (
+          <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
+            className="rounded-2xl border p-4 space-y-2"
+            style={{ background:"rgba(4,8,24,0.99)", borderColor:"rgba(255,80,80,0.50)", boxShadow:"0 0 24px rgba(255,80,80,0.14)" }}>
+            <p className="font-inter text-[10px] uppercase tracking-widest text-center" style={{ color:"rgba(255,140,140,0.90)" }}>
+              {lang === "ar" ? "⚠️ لا يوجد مربع سحري متوافق" : "⚠️ No Compatible Magic Square"}
+            </p>
+            <p className="font-inter text-[9px] text-center" style={{ color:"rgba(255,255,255,0.45)" }}>
+              {lang === "ar"
+                ? `القيمة الفعّالة ${toArabicIndic(workingMC)} لا تقبل أي حجم من 3×3 إلى 16×16. جرّب رقمًا آخر.`
+                : `Working MC = ${workingMC} is not divisible into any grid size from 3×3 to 16×16. Try a different number.`}
+            </p>
+            <div className="rounded-xl px-3 py-2 text-center" style={{ background:"rgba(255,80,80,0.06)", border:"1px solid rgba(255,80,80,0.20)" }}>
+              <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:"rgba(255,160,160,0.60)" }}>
+                {lang === "ar" ? "الرقم المُدخل" : "Input"}: {lang === "ar" ? toArabicIndic(rawNum) : rawNum}
+                {suffix !== "none" && ` → MC = ${lang === "ar" ? toArabicIndic(workingMC) : workingMC}`}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Planet card */}
         {gridSize && <PlanetCard gridSize={gridSize} lang={lang} L={L} />}
 
-        {/* Compatibility notice */}
+        {/* Compatibility notice (size selected but incompatible) */}
         {workingMC && gridSize && !isCompatible(workingMC, gridSize) && (
           <CompatNotice mc={workingMC} gridSize={gridSize} lang={lang} L={L} onSelectSize={handleCompatSelect} />
         )}
