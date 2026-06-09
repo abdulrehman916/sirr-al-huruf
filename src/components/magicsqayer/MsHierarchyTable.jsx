@@ -94,7 +94,7 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
                     <p className="font-amiri font-bold tabular-nums text-xs" style={{ color:col.c }}>
                       {col.v.toLocaleString()}
                     </p>
-                    <p className="font-amiri font-bold text-sm leading-tight" dir="rtl" style={{ color:col.c, letterSpacing:0 }}>
+                    <p className="font-amiri leading-tight" dir="rtl" style={{ color:col.c, letterSpacing:0, fontSize:"24px", fontWeight:700 }}>
                       {letters}
                     </p>
                   </div>
