@@ -12,9 +12,10 @@
 //  - Consonant + و → Damma (creates /uː/ "uu" long vowel)
 //  - Consonant + ي → Kasra (creates /iː/ "ii" long vowel)
 //  - Consonant + Consonant → Sukun (closes syllable, CVC pattern)
-//  - Final consonant before suffix → follows suffix entry vowel pattern.
-//  - Suffixes pre-vocalized with authentic classical pronunciation.
-//  - Result: naturally readable Arabic resembling printed manuscripts.
+//  - CONSISTENT ENDING RULE: All Angel names use ا + ي + ل → ـايِلْ pattern.
+//  - No random alternation between different ending styles.
+//  - First letter NEVER receives Sukun — always pronounceable.
+//  - Result: naturally readable Arabic with uniform naming convention.
 // ═══════════════════════════════════════════════════════════════
 
 // Unicode combining harakat — attach immediately after base letter
@@ -41,21 +42,22 @@ const SUFFIX_ANGEL = 'إيل';
 const SUFFIX_JINN  = 'طيش';
 
 // Pre-vocalized suffixes — authentic classical pronunciation
-// Final Lam (ل) in angel suffix gets Sukun when closing the word (not Damma)
-// إِيلْ  = إ + kasra + ي (bare, madd) + ل + sukun → /ʔiːl/
-const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u0652'; // إِيلْ
+// CONSISTENT ENDING: Angel suffix uses ا + ي + ل → ـايِلْ pattern
+// ايلْ  = ا + ي (with kasra) + ل (with sukun) → /aːil/
+const SUFFIX_ANGEL_VOC = '\u0627\u064A\u0650\u0644\u0652'; // ايلْ (consistent pattern)
 
 // طَيْشُ = ط + fatha + ي + sukun + ش + damma → /tajʃu/
 const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
 
-// Common Arabic name endings — treat as complete phonetic units
-// These patterns override automatic syllable rules
-// Final Lam gets Sukun (لْ) when closing the word, following Arabic phonetic structure
+// CONSISTENT ENDING RULE: All angel names end with ا + ي + ل → ـايِلْ
+// This ensures uniformity across the entire Angel/Jinn database.
+// Final Lam gets Sukun (لْ) when closing the word, following Arabic phonetic structure.
+// Pattern: Alif + Ya (with Kasra) + Lam (with Sukun) = ـايِلْ
 const NAME_ENDINGS = [
-  { pattern: 'ائيل', vocalization: '\u0627\u0626\u0650\u064A\u0644\u0652' }, // ائِلْ
-  { pattern: 'ئيل',  vocalization: '\u0626\u0650\u064A\u0644\u0652' },      // ئِلْ
-  { pattern: 'ييل',  vocalization: '\u064A\u0650\u064A\u0644\u0652' },      // يِلْ
-  { pattern: 'ايل',  vocalization: '\u0627\u064A\u0644\u0652' },           // ايلْ
+  { pattern: 'ائيل', vocalization: '\u0627\u064A\u0650\u0644\u0652' }, // ايلْ (standardized)
+  { pattern: 'ئيل',  vocalization: '\u0627\u064A\u0650\u0644\u0652' }, // ايلْ (standardized)
+  { pattern: 'ييل',  vocalization: '\u0627\u064A\u0650\u0644\u0652' }, // ايلْ (standardized)
+  { pattern: 'ايل',  vocalization: '\u0627\u064A\u0650\u0644\u0652' }, // ايلْ (standardized)
 ];
 
 /**
