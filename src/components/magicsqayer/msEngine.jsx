@@ -248,25 +248,96 @@ export const HEBREW_GEMATRIA = [
   {letter:"ת", name:"Tav",   val:400},
 ];
 
-// Convert number to Hebrew letters (max 400 per letter; compounds for >400)
+// ── Hebrew letter maps (positional, same Akram digit-cycle as Arabic) ──
+const HEB_UNITS    = { 1:'א',2:'ב',3:'ג',4:'ד',5:'ה',6:'ו',7:'ז',8:'ח',9:'ט' };
+const HEB_TENS     = { 10:'י',20:'כ',30:'ל',40:'מ',50:'נ',60:'ס',70:'ע',80:'פ',90:'צ' };
+// Hebrew hundreds: 100–400 are single letters; 500–900 are compounds (standard gematria)
+const HEB_HUNDREDS = {
+  100:'ק', 200:'ר', 300:'ש', 400:'ת',
+  500:'תק', 600:'תר', 700:'תש', 800:'תת', 900:'תתק',
+};
+
+/**
+ * numToHebrew — POSITIONAL Akram-style decomposition (mirrors toAkramPieces).
+ * Processes digits right-to-left through a fixed slot cycle:
+ *   slot 0 = Unit (1–9)
+ *   slot 1 = Ten  (10–90)
+ *   slot 2 = Hundred (100–900, using compound letters above 400)
+ *   slot 3 = Thousand marker: emits nothing extra (Hebrew has no distinct thousands
+ *            letter in standard gematria), just advances the cycle from Ten again.
+ *            The digit consumed at slot 3 is treated as additional units of 1000 —
+ *            we emit it as a Unit letter so the name stays compact and readable.
+ *
+ * This guarantees O(digits) output — never repeats letters for large values.
+ */
 export function numToHebrew(n) {
-  let remaining = n;
-  const result = [];
-  const vals = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1];
-  const hMap = {400:"ת",300:"ש",200:"ר",100:"ק",90:"צ",80:"פ",70:"ע",60:"ס",50:"נ",40:"מ",30:"ל",20:"כ",10:"י",9:"ט",8:"ח",7:"ז",6:"ו",5:"ה",4:"ד",3:"ג",2:"ב",1:"א"};
-  for (const v of vals) {
-    while (remaining >= v) { result.push(hMap[v]); remaining -= v; }
+  if (!n || n < 1) return '';
+  n = Math.floor(n);
+
+  // Extract digits right-to-left (LSD first)
+  const digits = [];
+  let tmp = n;
+  while (tmp > 0) { digits.push(tmp % 10); tmp = Math.floor(tmp / 10); }
+
+  const pieces = [];
+  let i = 0, slot = 0;
+
+  while (i < digits.length) {
+    const d = digits[i];
+
+    if (slot === 0) {
+      if (d !== 0 && HEB_UNITS[d]) pieces.push(HEB_UNITS[d]);
+      i++; slot = 1;
+    } else if (slot === 1) {
+      const v = d * 10;
+      if (d !== 0 && HEB_TENS[v]) pieces.push(HEB_TENS[v]);
+      i++; slot = 2;
+    } else if (slot === 2) {
+      const v = d * 100;
+      if (d !== 0 && HEB_HUNDREDS[v]) pieces.push(HEB_HUNDREDS[v]);
+      i++; slot = 3;
+    } else {
+      // Thousand slot — Hebrew uses the digit as a plain unit marker (compact)
+      if (d !== 0 && HEB_UNITS[d]) pieces.push(HEB_UNITS[d]);
+      i++; slot = 1;
+    }
   }
-  return result.join("");
+
+  return pieces.join('');
 }
 
-// Convert number to Arabic Abjad letters
+// Convert number to Arabic Abjad letters — positional Akram method (no greedy repeats)
+const AR_UNITS    = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9:'ط' };
+const AR_TENS     = { 10:'ي',20:'ك',30:'ل',40:'م',50:'ن',60:'س',70:'ع',80:'ف',90:'ص' };
+const AR_HUNDREDS = { 100:'ق',200:'ر',300:'ش',400:'ت',500:'ث',600:'خ',700:'ذ',800:'ض',900:'ظ' };
+
 export function numToArabic(n) {
-  let remaining = n;
-  const result = [];
-  const sorted = [...ARABIC_ABJAD].sort((a,b)=>b.val-a.val);
-  for (const {letter,val} of sorted) {
-    while (remaining >= val) { result.push(letter); remaining -= val; }
+  if (!n || n < 1) return '';
+  n = Math.floor(n);
+  const digits = [];
+  let tmp = n;
+  while (tmp > 0) { digits.push(tmp % 10); tmp = Math.floor(tmp / 10); }
+  const pieces = [];
+  let i = 0, slot = 0;
+  while (i < digits.length) {
+    const d = digits[i];
+    if (slot === 0) {
+      if (d !== 0 && AR_UNITS[d])    pieces.push(AR_UNITS[d]);
+      i++; slot = 1;
+    } else if (slot === 1) {
+      const v = d * 10;
+      if (d !== 0 && AR_TENS[v])     pieces.push(AR_TENS[v]);
+      i++; slot = 2;
+    } else if (slot === 2) {
+      const v = d * 100;
+      if (d !== 0 && AR_HUNDREDS[v]) pieces.push(AR_HUNDREDS[v]);
+      i++; slot = 3;
+    } else {
+      // Thousand slot: غ marker, then digit as Unit if non-zero/non-1
+      pieces.push('غ');
+      if (d !== 0 && d !== 1) pieces.push(AR_UNITS[d]);
+      i++; slot = 1;
+    }
   }
-  return result.join("");
+  return pieces.join('');
 }

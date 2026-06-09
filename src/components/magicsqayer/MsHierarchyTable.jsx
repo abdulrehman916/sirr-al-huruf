@@ -1,7 +1,6 @@
 import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
-import { buildHierarchy, angelJinn, numToHebrew } from "./msEngine";
-import { toAkramPieces } from "@/components/AkramCard";
+import { buildHierarchy, angelJinn, numToHebrew, numToArabic } from "./msEngine";
 import { perfStore } from "./perfStore";
 
 const G = {
@@ -10,10 +9,6 @@ const G = {
   text:     "#F5D060",
   dim:      "rgba(212,175,55,0.55)",
 };
-
-function toArabicLetters(v) {
-  return toAkramPieces(v).map(p => p.letter).join('').split('').reverse().join('');
-}
 
 const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lang, L }) {
   const hier = useMemo(() => {
@@ -39,8 +34,9 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     { key:"highOver",  label: L.highOver,  val: hier.highOver },
   ].map(row => {
       const aj = angelJinn(row.val);
-      const arAngel  = toArabicLetters(aj.angelAr);
-      const arJinn   = toArabicLetters(aj.jinnAr);
+      // numToArabic emits pieces LSD-first; reverse for RTL reading order
+      const arAngel  = numToArabic(aj.angelAr).split('').reverse().join('');
+      const arJinn   = numToArabic(aj.jinnAr).split('').reverse().join('');
       const hebAngel = numToHebrew(aj.angelHeb);
       const hebJinn  = numToHebrew(aj.jinnHeb);
       return {
