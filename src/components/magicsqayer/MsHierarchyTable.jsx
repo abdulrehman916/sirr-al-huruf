@@ -79,12 +79,13 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
               {/* Angel / Jinn sub-columns */}
               <div className="grid grid-cols-4" style={{ background:"rgba(4,8,24,0.80)" }}>
                 {[
-                  { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC" },
+                  { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC", suffix:"إيل" },
                   { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA" },
                   { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171" },
                   { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C" },
                 ].map(col => {
                   const letters = toAkramPieces(col.v).map(p => p.letter).join('').split('').reverse().join('');
+                  const displayText = col.suffix ? letters + col.suffix : letters;
                   return (
                   <div key={col.lbl} className="px-2 py-1.5 text-center border-r last:border-r-0"
                     style={{ borderColor:"rgba(212,175,55,0.08)" }}>
@@ -95,7 +96,7 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
                       {col.v.toLocaleString()}
                     </p>
                     <p className="font-amiri leading-tight" dir="rtl" style={{ color:col.c, letterSpacing:0, fontSize:"24px", fontWeight:700 }}>
-                      {letters}
+                      {displayText}
                     </p>
                   </div>
                   );
