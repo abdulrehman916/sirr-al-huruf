@@ -28,11 +28,14 @@ function generateNameForValue(val, suffixType) {
   
   return {
     remainder: val,
-    name: result.generatedName,
+    name: result.fullName || result.generatedName,
     pattern: result.pattern,
     score: result.validation.score,
     passed: result.validation.passed,
-    failureReason: result.validation.failureReason
+    failureReason: result.validation.failureReason,
+    phoneticRules: result.phoneticRules,
+    consonants: result.consonants,
+    vowels: result.vowels
   };
 }
 
@@ -183,6 +186,19 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               className="rounded-xl overflow-hidden border"
               style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
             >
+              {/* Phonetic rules display */}
+              {row[activeNameKey]?.phoneticRules && (
+                <div className="px-3 py-1.5" style={{ background: "rgba(212,175,55,0.04)", borderBottom: "1px solid rgba(212,175,55,0.08)" }}>
+                  <div className="flex flex-wrap gap-1">
+                    {row[activeNameKey].phoneticRules.slice(0, 4).map((rule, idx) => (
+                      <span key={idx} className="font-inter text-[7px] px-1.5 py-0.5 rounded"
+                        style={{ background: "rgba(212,175,55,0.08)", color: "rgba(212,175,55,0.60)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                        {rule}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* Numeric row */}
               <div className="flex items-center justify-between px-4 py-2.5"
                 style={{ background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}>
@@ -212,12 +228,12 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
-                    {/* Pattern info */}
-                    {patternInfo && (
+                    {/* Phonetic rules breakdown */}
+                    {n.phoneticRules && n.phoneticRules.length > 0 && (
                       <div className="mb-2 px-2 py-1 rounded-lg inline-block"
                         style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
                         <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
-                          Pattern: {patternInfo.template}
+                          Phonetic Rules: {n.phoneticRules.slice(0, 3).join(' · ')}{n.phoneticRules.length > 3 ? '...' : ''}
                         </p>
                       </div>
                     )}
@@ -231,7 +247,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       {lang === "ar" ? toArabicIndic(n.remainder.toLocaleString()) : n.remainder.toLocaleString()}
                     </p>
                     
-                    {/* Generated name */}
+                    {/* Generated name with full tashkeel */}
                     <p 
                       dir="rtl" 
                       lang={isArabic ? "ar" : "he"}
@@ -255,6 +271,18 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     >
                       {displayName}
                     </p>
+                    
+                    {/* Consonant/vowel breakdown */}
+                    {n.consonants && n.vowels && (
+                      <div className="mt-2 flex items-center justify-center gap-1 flex-wrap">
+                        {n.consonants.map((c, i) => (
+                          <span key={i} className="font-inter text-[7px] px-1.5 py-0.5 rounded"
+                            style={{ background: "rgba(212,175,55,0.10)", color: "rgba(212,175,55,0.70)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                            {c}{n.vowels[i] || ''}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     
                     {/* Pronunciation score and validation */}
                     <div className="mt-2 flex items-center justify-center gap-2">
