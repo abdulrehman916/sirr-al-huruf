@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { buildHierarchy, angelJinn } from "./msEngine";
+import { buildHierarchy, angelJinn, numToHebrew } from "./msEngine";
 import { toAkramPieces } from "@/components/AkramCard";
 
 const G = {
@@ -80,11 +80,13 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
               <div className="grid grid-cols-4" style={{ background:"rgba(4,8,24,0.80)" }}>
                 {[
                   { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC", suffix:"إيل" },
-                  { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", suffix:"אל" },
+                  { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", suffix:"אל", hebrew:true },
                   { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171" },
-                  { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C" },
+                  { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C", hebrew:true },
                 ].map(col => {
-                  const letters = toAkramPieces(col.v).map(p => p.letter).join('').split('').reverse().join('');
+                  const letters = col.hebrew
+                    ? numToHebrew(col.v)
+                    : toAkramPieces(col.v).map(p => p.letter).join('').split('').reverse().join('');
                   const displayText = col.suffix ? letters + col.suffix : letters;
                   return (
                   <div key={col.lbl} className="px-2 py-1.5 text-center border-r last:border-r-0"
