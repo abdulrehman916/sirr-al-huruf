@@ -2,6 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, numToArabic, numToHebrew, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
+import { addTashkeelToArabicName } from "./msTashkeel";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -205,6 +206,8 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               {showNames && activeNameKey && row[activeNameKey] && (() => {
                 const n = row[activeNameKey];
                 const isArabic = suffix === "ar-angel" || suffix === "ar-jinn";
+                const suffixType = suffix === "ar-angel" ? "angel" : suffix === "ar-jinn" ? "jinn" : null;
+                const displayName = isArabic && suffixType ? addTashkeelToArabicName(n.name, suffixType) : n.name;
                 return (
                   <div className="px-3 py-2.5 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
@@ -238,7 +241,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         MozOsxFontSmoothing: "grayscale"
                       }}
                     >
-                      {n.name}
+                      {displayName}
                     </p>
                   </div>
                 );
