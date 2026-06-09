@@ -1,6 +1,6 @@
 import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
-import { buildHierarchy, angelJinn, numToHebrew, numToArabic, toArabicIndic } from "./msEngine";
+import { buildHierarchy, numToHebrew, numToArabic, toArabicIndic } from "./msEngine";
 import { perfStore } from "./perfStore";
 
 const G = {
@@ -42,23 +42,22 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     const result = base.map(row => {
       if (suffix === "none") return { ...row, nameCol: null };
 
-      const aj = angelJinn(row.val);
-
       if (suffix === "arabic") {
-        // Angel: v−41 → letters → إيل
-        const letters = numToArabic(aj.angelAr).split('').reverse().join('');
+        // Hierarchy value already IS the post-suffix working value.
+        // Name = positional letters of that value + إيل suffix.
+        const letters = numToArabic(row.val).split('').reverse().join('');
         return {
           ...row,
-          nameCol: { lbl: L.angelAr, v: aj.angelAr, c: "#4FE3FF", text: letters + "إيل" },
+          nameCol: { lbl: L.angelAr, v: row.val, c: "#4FE3FF", text: letters + "إيل" },
         };
       }
 
       if (suffix === "hebrew") {
-        // Angel: v−31 → letters → אל
-        const letters = numToHebrew(aj.angelHeb);
+        // Same logic for Hebrew: letters + אל suffix.
+        const letters = numToHebrew(row.val);
         return {
           ...row,
-          nameCol: { lbl: L.angelHeb, v: aj.angelHeb, c: "#C4B5FD", text: letters + "אל" },
+          nameCol: { lbl: L.angelHeb, v: row.val, c: "#C4B5FD", text: letters + "אל" },
         };
       }
 

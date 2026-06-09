@@ -8,6 +8,7 @@ import {
   PLANETS, ELEMENTS, SIZE_PLANET_MAP, PLANET_EN,
   isCompatible, compatibleSizes,
   computeUsurper, generateSquare, verifySquare, toArabicIndic,
+  applyISuffix,
 } from "../components/magicsqayer/msEngine";
 
 // ── Display components ───────────────────────────────────────────
@@ -270,10 +271,15 @@ export default function MagicSqayerPage() {
 
   const L = useMemo(() => LABELS[lang], [lang]);
 
-  // ── Raw number = Magic Constant for all square mathematics ───
-  // Suffix subtraction applies ONLY to name generation, not to square construction.
+  // ── Raw number (user's entered value, display only) ──────────
   const rawNum = useMemo(() => { const n = parseInt(inputNum); return isNaN(n) ? null : n; }, [inputNum]);
-  const squareMC = rawNum; // alias for clarity — the square always uses the raw input
+
+  // ── Working MC = rawNum after suffix subtraction (book methodology) ──
+  // Arabic −41, Hebrew −31; underflow rule: add 360 if result ≤ 0
+  const squareMC = useMemo(() => {
+    if (!rawNum) return null;
+    return applyISuffix(rawNum, suffix).mc;
+  }, [rawNum, suffix]);
 
   // ── Compatible sizes — expensive, memoized ────────────────────
   const compatSizes = useMemo(() => squareMC ? compatibleSizes(squareMC) : [], [squareMC]);
@@ -300,17 +306,20 @@ export default function MagicSqayerPage() {
   // ── Handlers — all use squareMC (rawNum) for grid construction ─
   const handleNumber = useCallback((e) => {
     const val = e.target.value.replace(/[^\d]/g, "");
-    const mc = parseInt(val) || null;
+    const raw = parseInt(val) || null;
+    const mc = raw ? applyISuffix(raw, suffix).mc : null;
     dispatch({ type: "SET_NUMBER", val, grid: state.grid });
     startTransition(() => {
       dispatch({ type: "SET_NUMBER", val, grid: mc ? buildGrid(mc, gridSize, element) : null });
     });
-  }, [gridSize, element, state.grid, buildGrid]);
+  }, [gridSize, element, suffix, state.grid, buildGrid]);
 
   const handleSuffix = useCallback((mode) => {
-    // Suffix change does NOT affect square — just update suffix state, grid stays
-    dispatch({ type: "SET_SUFFIX", mode, grid: grid });
-  }, [grid]);
+    const newMC = rawNum ? applyISuffix(rawNum, mode).mc : null;
+    startTransition(() => {
+      dispatch({ type: "SET_SUFFIX", mode, grid: buildGrid(newMC, gridSize, element) });
+    });
+  }, [rawNum, gridSize, element, buildGrid]);
 
   const handleSize = useCallback((size) => {
     perfStore.clear();
@@ -391,9 +400,16 @@ export default function MagicSqayerPage() {
             className="w-full rounded-xl px-4 py-3 font-amiri text-3xl text-center text-white font-bold focus:outline-none caret-white placeholder:text-white/30"
             style={{ background:"rgba(4,12,34,0.97)", border:`1px solid ${G.border}`, fontSize:"clamp(20px,5vw,30px)" }}
           />
-          {squareMC && (
-            <div className="flex flex-wrap gap-2 items-center justify-center">
-              <span className="font-amiri font-bold text-xl" style={{ color: G.text }}>{L.workingMC}: {lang === "ar" ? toArabicIndic(squareMC.toLocaleString()) : squareMC.toLocaleString()}</span>
+          {rawNum && (
+            <div className="flex flex-wrap gap-3 items-center justify-center">
+              {suffix !== "none" && (
+                <span className="font-amiri font-bold text-base" style={{ color:"rgba(212,175,55,0.55)" }}>
+                  {L.inputLabel}: {lang === "ar" ? toArabicIndic(rawNum.toLocaleString()) : rawNum.toLocaleString()}
+                </span>
+              )}
+              <span className="font-amiri font-bold text-xl" style={{ color: G.text }}>
+                {L.workingMC}: {lang === "ar" ? toArabicIndic(squareMC.toLocaleString()) : squareMC.toLocaleString()}
+              </span>
             </div>
           )}
         </SectionCard>
