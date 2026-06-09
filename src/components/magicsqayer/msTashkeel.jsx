@@ -9,6 +9,14 @@
 //  The Arabic name letters come PURELY from the Abjad conversion algorithm.
 //  No forced endings, no injected suffixes, no artificial letter changes.
 //
+//  MORPHOLOGICAL VARIANT DETECTION FOR ANGEL NAMES:
+//  - Angel names ending with إيل use different patterns based on preceding letters.
+//  - ا + إيل → ائيل (like إِسْرَافِيل)
+//  - ي + إيل → ييل or ئيل (like مِيكَائِيل)
+//  - و + إيل → ؤيل (like جِبْرَائِيل)
+//  - Consonant + إيل → Cīl pattern (like جِبْرِيل)
+//  - This ensures authentic Arabic morphology, not mechanical uniformity.
+//
 //  Vocalization follows classical Arabic phonetic and orthographic rules:
 //  - Syllable structure: CV (open) or CVC (closed) — no unnatural clusters.
 //  - Madd letters (ا، و، ي) NEVER receive harakat — they ARE the vowel.
@@ -18,7 +26,7 @@
 //  - Consonant + Consonant → Sukun (closes syllable, CVC pattern)
 //  - First letter NEVER receives Sukun — always pronounceable.
 //  - ONLY pronunciation marks are added — the base letters remain unchanged.
-//  - Result: naturally readable Arabic that preserves the original conversion.
+//  - Result: naturally readable Arabic with varied, authentic morphological patterns.
 // ═══════════════════════════════════════════════════════════════
 
 // Unicode combining harakat — attach immediately after base letter
@@ -43,6 +51,19 @@ const VOWEL_CARRIERS = new Set([...MADD_LETTERS, ...HAMZA_FORMS]);
 // Bare suffixes as they appear in generated names
 const SUFFIX_ANGEL = 'إيل';
 const SUFFIX_JINN  = 'طيش';
+
+// Angel name ending patterns — morphological variants based on preceding consonant.
+// Arabic angel names don't use one fixed pattern; the syllable before إيل determines the form.
+// Examples: جِبْرِيل (CVCC-īl), مِيكَائِيل (CVCCVʾ-īl), إِسْرَافِيل (VCCVVC-īl), عَزْرَائِيل (VCCCVʾ-īl)
+// The key is the vowel BEFORE إيل and whether a hamza is needed for proper Arabic morphology.
+const ANGEL_ENDING_VARIANTS = [
+  { pattern: 'ائيل', vocalization: '\u0627\u0626\u0650\u064A\u0644\u0652', description: 'āʾīl — after alif' },    // ا + ئ + يل
+  { pattern: 'ييل',  vocalization: '\u064A\u0650\u064A\u0644\u0652',  description: 'yīl — after ya' },         // ي + يل
+  { pattern: 'ايل',  vocalization: '\u0627\u0650\u064A\u0644\u0652',  description: 'āl — after alif (no hamza)' }, // ا + يل
+  { pattern: 'ءيل',  vocalization: '\u0621\u0650\u064A\u0644\u0652',  description: 'ʾīl — standalone hamza' },   // ء + يل
+  { pattern: 'ؤيل',  vocalization: '\u0624\u0650\u064A\u0644\u0652',  description: 'ūʾīl — after waw' },        // ؤ + يل
+  { pattern: 'ئيل',  vocalization: '\u0626\u0650\u064A\u0644\u0652',  description: 'iʾīl — after ya' },         // ئ + يل
+];
 
 // Suffix vocalization — applied to the EXISTING suffix letters from conversion.
 // Angel suffix: إ + ي + ل (from conversion) → إِيلْ (with pronunciation marks only)
@@ -69,6 +90,50 @@ function findMatchingEnding(name) {
     }
   }
   return null;
+}
+
+/**
+ * detectAngelEndingVariant(name)
+ * Detects which angel ending variant applies based on the letters before إيل.
+ * Returns the appropriate vocalization pattern for authentic Arabic morphology.
+ * 
+ * Arabic angel names follow morphological rules:
+ * - Long vowel (ا، و، ي) before إيل → often needs hamza carrier (ائيل، ؤيل، ئيل)
+ * - Consonant before إيل → direct kasra connection (Cīl pattern)
+ * - The goal is natural Arabic phonetics, not mechanical uniformity
+ */
+function detectAngelEndingVariant(name) {
+  if (!name.endsWith(SUFFIX_ANGEL)) return null;
+  
+  const body = name.slice(0, name.length - SUFFIX_ANGEL.length);
+  if (!body) return ANGEL_ENDING_VARIANTS[0]; // Default to ائيل for bare suffix
+  
+  const lastChar = body[body.length - 1];
+  const secondLastChar = body.length > 1 ? body[body.length - 2] : null;
+  
+  // Check for long vowels that typically take hamza in angel names
+  if (lastChar === 'ا') {
+    // Alif before إيل → ائيل pattern (like إِسْرَافِيل)
+    return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ائيل') || ANGEL_ENDING_VARIANTS[0];
+  }
+  
+  if (lastChar === 'ي') {
+    // Ya before إيل → could be ييل or ئيل depending on context
+    // If preceded by another vowel letter, use hamza form
+    if (secondLastChar && ['ا', 'و', 'ي'].includes(secondLastChar)) {
+      return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ئيل') || ANGEL_ENDING_VARIANTS[0];
+    }
+    return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ييل') || ANGEL_ENDING_VARIANTS[0];
+  }
+  
+  if (lastChar === 'و') {
+    // Waw before إيل → ؤيل pattern (like جِبْرَائِيل with waw-hamza)
+    return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ؤيل') || ANGEL_ENDING_VARIANTS[0];
+  }
+  
+  // Default: consonant before إيل → use hamza carrier for proper morphology
+  // This creates the CVCC-īl pattern like جِبْرِيل
+  return ANGEL_ENDING_VARIANTS.find(v => v.pattern === 'ئيل') || ANGEL_ENDING_VARIANTS[0];
 }
 
 /**
@@ -178,7 +243,15 @@ export function addTashkeelToArabicName(name, suffixType) {
   // Body = everything before the suffix (letters from conversion only)
   const body = name.slice(0, name.length - bareSuffix.length);
 
-  const vocSuffix = isAngel ? SUFFIX_ANGEL_VOC : SUFFIX_JINN_VOC;
+  // For angel names: detect morphological variant based on preceding letters
+  // This ensures natural Arabic patterns (جِبْرِيل، مِيكَائِيل، إِسْرَافِيل) instead of uniform template
+  let vocSuffix = isAngel ? SUFFIX_ANGEL_VOC : SUFFIX_JINN_VOC;
+  if (isAngel) {
+    const variant = detectAngelEndingVariant(name);
+    if (variant) {
+      vocSuffix = variant.vocalization;
+    }
+  }
 
   if (!body) return vocSuffix;
 
