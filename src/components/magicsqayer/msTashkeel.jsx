@@ -45,11 +45,11 @@ const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
  * suffixType: "angel" | "jinn"
  *
  * Arabic vocalization rules applied:
- * 1. Long vowels (ا، و، ي) never receive harakat — they are the vowel.
+ * 1. Long vowels (ا، و، ي) NEVER receive harakat — they ARE the vowel.
  * 2. Consonant before ا gets Fatha (creates "aa" sound).
  * 3. Consonant before و gets Damma (creates "uu" sound).
  * 4. Consonant before ي gets Kasra (creates "ii" sound).
- * 5. Other consonants get Fatha for open syllables (default).
+ * 5. Consonant followed by consonant → Sukun (closes syllable, e.g., مْ in رَمْعَطِيش).
  * 6. Final consonant before suffix follows suffix entry vowel.
  */
 export function addTashkeelToArabicName(name, suffixType) {
@@ -98,8 +98,9 @@ export function addTashkeelToArabicName(name, suffixType) {
       // Other long vowel forms → no haraka (let next letter stand)
       haraka = '';
     } else {
-      // Default: open syllable with Fatha (most common in Arabic names)
-      haraka = FATHA;
+      // Next letter is a consonant → Sukun (close the syllable)
+      // Example: رَمْعَطِيش — مْ has sukun because ع follows
+      haraka = SUKUN;
     }
 
     out += ch + haraka;
