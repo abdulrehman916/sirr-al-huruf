@@ -49,7 +49,7 @@ function hebrewJinnName(val) {
 //   mc        — rawNum (Magic Constant — never modified by suffix)
 //   gridSize  — selected grid size
 //   rawInput  — original user input (for display)
-//   suffix    — "none" | "ar-angel" | "ar-jinn" | "heb-angel" | "heb-jinn"
+//   suffix    — "ar-angel" | "ar-jinn" | "heb-angel" | "heb-jinn"
 //   lang, L   — language / labels
 // ─────────────────────────────────────────────────────────────────
 const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, suffix, lang, L }) {
@@ -93,12 +93,9 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         const name = hebrewAngelName(row.val);
         return { ...row, angel: { lbl: L.angelHeb, ...name, color: "#C4B5FD" }, jinn: null };
       }
-      if (suffix === "heb-jinn") {
-        const name = hebrewJinnName(row.val);
-        return { ...row, angel: null, jinn: { lbl: L.jinnHeb, ...name, color: "#F9A8D4" } };
-      }
-      // "none"
-      return { ...row, angel: null, jinn: null };
+      // "heb-jinn"
+      const name = hebrewJinnName(row.val);
+      return { ...row, angel: null, jinn: { lbl: L.jinnHeb, ...name, color: "#F9A8D4" } };
     });
 
     perfStore.set("angelJinnNames", parseFloat((performance.now() - t0).toFixed(2)));
@@ -108,8 +105,8 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
   // Always render if we have mc — show "choose grid size" message if no gridSize
   if (!mc) return null;
 
-  const showNames = suffix !== "none";
-  const activeNameKey = suffix.includes("angel") ? "angel" : suffix.includes("jinn") ? "jinn" : null;
+  const showNames = true; // All 4 suffix modes display names
+  const activeNameKey = suffix.includes("angel") ? "angel" : "jinn";
 
   return (
     <motion.div
