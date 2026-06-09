@@ -92,8 +92,8 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       <div className="space-y-1.5">
         {rows.map((row, i) => (
             <motion.div key={row.key}
-              initial={{ opacity:0, x:-6 }} animate={{ opacity:1, x:0 }}
-              transition={{ delay: i*0.05, duration:0.25 }}
+              initial={{ opacity:0 }} animate={{ opacity:1 }}
+              transition={{ delay: i*0.03, duration:0.15 }}
               className="rounded-xl overflow-hidden border"
               style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
             >

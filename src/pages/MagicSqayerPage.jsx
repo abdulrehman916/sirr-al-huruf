@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useReducer, useTransition, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
@@ -141,11 +141,22 @@ function CompatNotice({ mc, gridSize, lang, L, onSelectSize }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-//  SACRED GRID
+//  SACRED GRID — memoized, no per-cell framer-motion
 // ─────────────────────────────────────────────────────────────────
-function SacredGrid({ gridSize, element, grid, lang, L }) {
+const SacredGrid = memo(function SacredGrid({ gridSize, element, grid, lang, L }) {
   const gridData = grid?.grid;
-  const elMeta = ELEMENTS.find(e => e.key === element);
+  const elMeta = useMemo(() => ELEMENTS.find(e => e.key === element), [element]);
+
+  // Memoize expensive flat + verify — only recomputes when grid data changes
+  const { flat, v, fontSize } = useMemo(() => {
+    if (!gridData) return { flat: null, v: null, fontSize: "16px" };
+    const t0 = performance.now();
+    const flat = gridData.flat();
+    const v = verifySquare(gridData);
+    const fontSize = gridSize >= 14 ? "9px" : gridSize >= 10 ? "10px" : gridSize >= 8 ? "11px" : gridSize >= 6 ? "13px" : "16px";
+    perfStore.set("gridFlatVerify", parseFloat((performance.now()-t0).toFixed(2)));
+    return { flat, v, fontSize };
+  }, [gridData, gridSize]);
 
   if (grid?.incompatible) return (
     <div className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
@@ -155,7 +166,7 @@ function SacredGrid({ gridSize, element, grid, lang, L }) {
     </div>
   );
 
-  if (!gridData) return (
+  if (!gridData || !flat) return (
     <div className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 min-h-[200px]"
       style={{ background:"rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow:`0 0 40px ${G.glow}` }}>
       <motion.span className="font-amiri text-4xl" style={{ color:"rgba(212,175,55,0.25)" }}
@@ -167,15 +178,9 @@ function SacredGrid({ gridSize, element, grid, lang, L }) {
     </div>
   );
 
-  const t0 = performance.now();
-  const flat = gridData.flat();
-  const v = verifySquare(gridData);
-  const fontSize = gridSize >= 14 ? "9px" : gridSize >= 10 ? "10px" : gridSize >= 8 ? "11px" : gridSize >= 6 ? "13px" : "16px";
-  perfStore.set("gridFlatVerify", parseFloat((performance.now()-t0).toFixed(2)));
-
   return (
     <motion.div key={`grid-${gridSize}-${element}`}
-      initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} transition={{ duration:0.3 }}
+      initial={{ opacity:0, scale:0.97 }} animate={{ opacity:1, scale:1 }} transition={{ duration:0.2 }}
       className="rounded-2xl border p-4 space-y-4"
       style={{ background:"rgba(4,8,24,0.99)", borderColor: G.borderHi, boxShadow:`0 0 40px ${G.glow}` }}>
 
@@ -193,18 +198,16 @@ function SacredGrid({ gridSize, element, grid, lang, L }) {
         </div>
       </div>
 
-      {/* Grid cells */}
+      {/* Grid cells — plain divs, no per-cell animation (container already animates) */}
       <div className="rounded-xl border overflow-hidden" style={{ background:"rgba(4,12,34,0.97)", borderColor:"rgba(212,175,55,0.15)" }}>
         <div style={{ overflowX:"auto", padding:"6px" }}>
           <div style={{ display:"grid", gridTemplateColumns:`repeat(${gridSize},1fr)`, gap:"2px", minWidth: gridSize > 9 ? `${gridSize * 32}px` : "100%" }}>
             {flat.map((num, idx) => (
-              <motion.div key={`cell-${idx}`}
-                initial={{ opacity:0, scale:0.6 }} animate={{ opacity:1, scale:1 }}
-                transition={{ delay: Math.min(idx * 0.008, 0.5), duration:0.2, ease:"easeOut" }}
+              <div key={idx}
                 className="rounded border flex items-center justify-center font-amiri font-bold"
                 style={{ aspectRatio:"1/1", minWidth:0, background:"linear-gradient(145deg,rgba(212,175,55,0.14) 0%,rgba(212,175,55,0.06) 100%)", borderColor:"rgba(212,175,55,0.35)", color: G.text, fontSize }}>
                 {num}
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -238,18 +241,33 @@ function SacredGrid({ gridSize, element, grid, lang, L }) {
       </div>
     </motion.div>
   );
+});
+
+// ── Batch state reducer — one setState = one render ──────────────
+function msReducer(state, action) {
+  switch (action.type) {
+    case "SET_NUMBER": return { ...state, inputNum: action.val, grid: action.grid };
+    case "SET_SUFFIX": return { ...state, suffix: action.mode, grid: action.grid };
+    case "SET_SIZE":   return { ...state, gridSize: action.size, grid: action.grid };
+    case "SET_ELEMENT":return { ...state, element: action.el, grid: action.grid };
+    case "SET_GRID":   return { ...state, grid: action.grid };
+    case "SET_LANG":   return { ...state, lang: action.lang };
+    default: return state;
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════
 //  PAGE
 // ═════════════════════════════════════════════════════════════════
 export default function MagicSqayerPage() {
-  const [lang,       setLang]       = useState("ar");
-  const [inputNum,   setInputNum]   = useState("");
-  const [suffix,     setSuffix]     = useState("none");
-  const [gridSize,   setGridSize]   = useState(null);
-  const [element,    setElement]    = useState(null);
-  const [grid,       setGrid]       = useState(null);
+  const [state, dispatch] = useReducer(msReducer, {
+    lang: "ar", inputNum: "", suffix: "none",
+    gridSize: null, element: null, grid: null,
+  });
+  const { lang, inputNum, suffix, gridSize, element, grid } = state;
+
+  // useTransition: heavy renders (grid/hierarchy) are interruptible — button feels instant
+  const [, startTransition] = useTransition();
 
   const L = useMemo(() => LABELS[lang], [lang]);
 
@@ -271,8 +289,8 @@ export default function MagicSqayerPage() {
     return Object.fromEntries(GRID_SIZES.map(gs => [gs.value, isCompatible(workingMC, gs.value)]));
   }, [workingMC]);
 
-  // ── Build grid ─────────────────────────────────────────────────
-  const buildGrid = (mc, size, el) => {
+  // ── Build grid (pure fn, no side-effects) ─────────────────────
+  const buildGrid = useCallback((mc, size, el) => {
     if (!mc || !size) return null;
     if (!isCompatible(mc, size)) return { incompatible: true };
     const usurper = computeUsurper(mc, size);
@@ -282,48 +300,58 @@ export default function MagicSqayerPage() {
     const result = { grid: generateSquare(size, usurper, e), usurper };
     perfStore.set("generateSquare", parseFloat((performance.now()-t0).toFixed(2)));
     return result;
-  };
+  }, []);
 
-  // ── Handlers ───────────────────────────────────────────────────
-  const handleNumber = (e) => {
+  // ── Handlers — all dispatch single atomic updates ──────────────
+  const handleNumber = useCallback((e) => {
     const val = e.target.value.replace(/[^\d]/g, "");
-    setInputNum(val);
     const r = parseInt(val);
-    if (!isNaN(r)) {
-      const { mc } = applyISuffix(r, suffix);
-      setGrid(buildGrid(mc, gridSize, element));
-    } else setGrid(null);
-  };
+    const mc = !isNaN(r) ? applyISuffix(r, suffix).mc : null;
+    // Input update is immediate; grid rebuild is a transition (non-blocking)
+    dispatch({ type: "SET_NUMBER", val, grid: state.grid });
+    startTransition(() => {
+      dispatch({ type: "SET_NUMBER", val, grid: mc ? buildGrid(mc, gridSize, element) : null });
+    });
+  }, [suffix, gridSize, element, state.grid, buildGrid]);
 
-  const handleSuffix = (mode) => {
-    setSuffix(mode);
-    if (rawNum) { const { mc } = applyISuffix(rawNum, mode); setGrid(buildGrid(mc, gridSize, element)); }
-  };
+  const handleSuffix = useCallback((mode) => {
+    startTransition(() => {
+      const mc = rawNum ? applyISuffix(rawNum, mode).mc : null;
+      dispatch({ type: "SET_SUFFIX", mode, grid: mc ? buildGrid(mc, gridSize, element) : null });
+    });
+  }, [rawNum, gridSize, element, buildGrid]);
 
-  const handleSize = (size) => {
-    const t0 = performance.now();
+  const handleSize = useCallback((size) => {
     perfStore.clear();
+    const t0 = performance.now();
     const ns = gridSize === size ? null : size;
-    setGridSize(ns);
-    const g = buildGrid(workingMC, ns, element);
-    setGrid(g);
-    perfStore.set("gridClickTotal", parseFloat((performance.now()-t0).toFixed(2)));
-  };
+    // Dispatch size immediately (button visual feedback), then grid in transition
+    dispatch({ type: "SET_SIZE", size: ns, grid: null });
+    startTransition(() => {
+      const g = buildGrid(workingMC, ns, element);
+      perfStore.set("gridClickTotal", parseFloat((performance.now()-t0).toFixed(2)));
+      dispatch({ type: "SET_SIZE", size: ns, grid: g });
+    });
+  }, [gridSize, workingMC, element, buildGrid]);
 
-  const handleElement = (key) => {
+  const handleElement = useCallback((key) => {
     const ne = element === key ? null : key;
-    setElement(ne);
-    setGrid(buildGrid(workingMC, gridSize, ne));
-  };
+    startTransition(() => {
+      dispatch({ type: "SET_ELEMENT", el: ne, grid: buildGrid(workingMC, gridSize, ne) });
+    });
+  }, [element, workingMC, gridSize, buildGrid]);
 
-  const handleCompatSelect = (size) => {
-    setGridSize(size);
-    setGrid(buildGrid(workingMC, size, element));
-  };
+  const handleCompatSelect = useCallback((size) => {
+    startTransition(() => {
+      dispatch({ type: "SET_SIZE", size, grid: buildGrid(workingMC, size, element) });
+    });
+  }, [workingMC, element, buildGrid]);
 
-  const handleGenerate = () => {
-    setGrid(buildGrid(workingMC, gridSize, element));
-  };
+  const handleGenerate = useCallback(() => {
+    startTransition(() => {
+      dispatch({ type: "SET_GRID", grid: buildGrid(workingMC, gridSize, element) });
+    });
+  }, [workingMC, gridSize, element, buildGrid]);
 
   const canGenerate = !!inputNum && !!gridSize;
   const gridReady = grid && !grid.incompatible && workingMC && gridSize;
@@ -353,7 +381,7 @@ export default function MagicSqayerPage() {
           {langOpts.map(opt => {
             const active = lang === opt.id;
             return (
-              <motion.button key={opt.id} onClick={() => setLang(opt.id)} whileTap={{ scale:0.96 }}
+              <motion.button key={opt.id} onClick={() => dispatch({ type:"SET_LANG", lang: opt.id })} whileTap={{ scale:0.96 }}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-inter font-bold text-xs border transition-all"
                 style={{ background: active ? "rgba(212,175,55,0.15)" : "rgba(4,12,34,0.97)", borderColor: active ? G.borderHi : "rgba(255,255,255,0.10)", color: active ? G.text : "rgba(255,255,255,0.40)" }}>
                 {opt.flag} {opt.label}
