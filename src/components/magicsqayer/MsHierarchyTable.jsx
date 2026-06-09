@@ -84,7 +84,7 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
                   { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171" },
                   { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C" },
                 ].map(col => {
-                  const letters = toAkramPieces(col.v).map(p => p.letter).join('');
+                  const letters = toAkramPieces(col.v).map(p => p.letter).join('').split('').reverse().join('');
                   return (
                   <div key={col.lbl} className="px-2 py-1.5 text-center border-r last:border-r-0"
                     style={{ borderColor:"rgba(212,175,55,0.08)" }}>
