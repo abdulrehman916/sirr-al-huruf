@@ -5,6 +5,10 @@
 //  Unicode combining marks attach directly to the preceding base letter.
 //  Arabic shaping engines (browser/OS) handle glyph formation and positioning.
 //
+//  CRITICAL: This is a DISPLAY-ONLY layer — it does NOT modify the actual letters.
+//  The Arabic name letters come PURELY from the Abjad conversion algorithm.
+//  No forced endings, no injected suffixes, no artificial letter changes.
+//
 //  Vocalization follows classical Arabic phonetic and orthographic rules:
 //  - Syllable structure: CV (open) or CVC (closed) — no unnatural clusters.
 //  - Madd letters (ا، و، ي) NEVER receive harakat — they ARE the vowel.
@@ -12,10 +16,9 @@
 //  - Consonant + و → Damma (creates /uː/ "uu" long vowel)
 //  - Consonant + ي → Kasra (creates /iː/ "ii" long vowel)
 //  - Consonant + Consonant → Sukun (closes syllable, CVC pattern)
-//  - CONSISTENT ENDING RULE: All Angel names use ا + ي + ل → ـايِلْ pattern.
-//  - No random alternation between different ending styles.
 //  - First letter NEVER receives Sukun — always pronounceable.
-//  - Result: naturally readable Arabic with uniform naming convention.
+//  - ONLY pronunciation marks are added — the base letters remain unchanged.
+//  - Result: naturally readable Arabic that preserves the original conversion.
 // ═══════════════════════════════════════════════════════════════
 
 // Unicode combining harakat — attach immediately after base letter
@@ -41,24 +44,19 @@ const VOWEL_CARRIERS = new Set([...MADD_LETTERS, ...HAMZA_FORMS]);
 const SUFFIX_ANGEL = 'إيل';
 const SUFFIX_JINN  = 'طيش';
 
-// Pre-vocalized suffixes — authentic classical pronunciation
-// CONSISTENT ENDING: Angel suffix uses ا + ي + ل → ـايِلْ pattern
-// ايلْ  = ا + ي (with kasra) + ل (with sukun) → /aːil/
-const SUFFIX_ANGEL_VOC = '\u0627\u064A\u0650\u0644\u0652'; // ايلْ (consistent pattern)
+// Suffix vocalization — applied to the EXISTING suffix letters from conversion.
+// Angel suffix: إ + ي + ل (from conversion) → إِيلْ (with pronunciation marks only)
+// Jinn suffix: ط + ي + ش (from conversion) → طَيْشُ (with pronunciation marks only)
+// No letters are added or removed — only harakat/sukun are applied for pronunciation.
+const SUFFIX_ANGEL_VOC = '\u0625\u0650\u064A\u0644\u0652'; // إِيلْ (pronunciation only)
 
 // طَيْشُ = ط + fatha + ي + sukun + ش + damma → /tajʃu/
 const SUFFIX_JINN_VOC  = '\u0637\u064E\u064A\u0652\u0634\u064F'; // طَيْشُ
 
-// CONSISTENT ENDING RULE: All angel names end with ا + ي + ل → ـايِلْ
-// This ensures uniformity across the entire Angel/Jinn database.
-// Final Lam gets Sukun (لْ) when closing the word, following Arabic phonetic structure.
-// Pattern: Alif + Ya (with Kasra) + Lam (with Sukun) = ـايِلْ
-const NAME_ENDINGS = [
-  { pattern: 'ائيل', vocalization: '\u0627\u064A\u0650\u0644\u0652' }, // ايلْ (standardized)
-  { pattern: 'ئيل',  vocalization: '\u0627\u064A\u0650\u0644\u0652' }, // ايلْ (standardized)
-  { pattern: 'ييل',  vocalization: '\u0627\u064A\u0650\u0644\u0652' }, // ايلْ (standardized)
-  { pattern: 'ايل',  vocalization: '\u0627\u064A\u0650\u0644\u0652' }, // ايلْ (standardized)
-];
+// NO FORCED ENDINGS - Disabled to preserve original Abjad conversion results.
+// The Arabic name letters come PURELY from the conversion algorithm.
+// Do not append or inject fixed "Eel/Il" suffixes or force specific ending patterns.
+const NAME_ENDINGS = []; // Empty - no forced ending patterns
 
 /**
  * findMatchingEnding(name)
@@ -153,19 +151,21 @@ function vocalizeNameWithEnding(body, ending) {
 /**
  * addTashkeelToArabicName(name, suffixType)
  *
- * Display-only function. Returns a fully vocalized copy of `name`.
- * The original `name` string (used for all calculations) is never
- * mutated or replaced.
+ * CRITICAL: This is a DISPLAY-ONLY function — it does NOT modify the actual letters.
+ * The Arabic name comes PURELY from the Abjad conversion algorithm.
+ * No forced endings, no injected suffixes, no artificial letter changes.
+ *
+ * Returns a vocalized copy of `name` with pronunciation marks only.
+ * The original `name` string (used for all calculations) is never mutated.
  *
  * suffixType: "angel" | "jinn"
  *
  * Arabic phonetic rules applied:
  * 1. Madd letters (ا، و، ي) NEVER receive harakat — they ARE the vowel.
- * 2. Recognized name endings (ائيل، ئيل، ييل، ايل) use pre-vocalized patterns.
- * 3. Consonant + Madd → appropriate haraka for long vowel syllable (CV).
- * 4. Consonant + Consonant → Sukun (close syllable, CVC pattern).
- * 5. First letter NEVER gets Sukun — always pronounceable (Fatha default).
- * 6. Final consonant flows into suffix with appropriate vowel.
+ * 2. Consonant + Madd → appropriate haraka for long vowel syllable (CV).
+ * 3. Consonant + Consonant → Sukun (close syllable, CVC pattern).
+ * 4. First letter NEVER gets Sukun — always pronounceable (Fatha default).
+ * 5. ONLY pronunciation marks are added — base letters remain unchanged.
  */
 export function addTashkeelToArabicName(name, suffixType) {
   if (!name || typeof name !== 'string') return name;
@@ -175,21 +175,14 @@ export function addTashkeelToArabicName(name, suffixType) {
 
   if (!name.endsWith(bareSuffix)) return name; // unexpected format — render as-is
 
-  // Body = everything before the fixed suffix
+  // Body = everything before the suffix (letters from conversion only)
   const body = name.slice(0, name.length - bareSuffix.length);
 
   const vocSuffix = isAngel ? SUFFIX_ANGEL_VOC : SUFFIX_JINN_VOC;
 
   if (!body) return vocSuffix;
 
-  // Check for recognized Arabic name endings (ائيل، ئيل، ييل، ايل)
-  // These override automatic syllable rules for authentic pronunciation
-  const ending = findMatchingEnding(body + bareSuffix);
-  if (ending) {
-    return vocalizeNameWithEnding(body, ending);
-  }
-
-  // Default vocalization for names without recognized endings
+  // NO FORCED ENDINGS - vocalize the actual letters from conversion
   const chars = [...body]; // spread handles BMP Arabic correctly
   let out = '';
 
