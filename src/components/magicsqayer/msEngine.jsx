@@ -248,71 +248,37 @@ export const HEBREW_GEMATRIA = [
   {letter:"ת", name:"Tav",   val:400},
 ];
 
-// ── Hebrew letter maps (positional, same Akram digit-cycle as Arabic) ──
-const HEB_UNITS    = { 1:'א',2:'ב',3:'ג',4:'ד',5:'ה',6:'ו',7:'ז',8:'ח',9:'ט' };
-const HEB_TENS     = { 10:'י',20:'כ',30:'ל',40:'מ',50:'נ',60:'ס',70:'ע',80:'פ',90:'צ' };
-// Hebrew hundreds: 100–400 are single letters; 500–900 are compounds (standard gematria)
-const HEB_HUNDREDS = {
-  100:'ק', 200:'ר', 300:'ש', 400:'ת',
-  500:'תק', 600:'תר', 700:'תש', 800:'תת', 900:'תתק',
-};
+// ════════════════════════════════════════════════════════════════
+//  POSITIONAL AKRAM LETTER TABLES
+//  Arabic and Hebrew share the SAME digit-cycle engine.
+//  Only the letter tables differ.
+// ════════════════════════════════════════════════════════════════
 
-/**
- * numToHebrew — POSITIONAL Akram-style decomposition (mirrors toAkramPieces).
- * Processes digits right-to-left through a fixed slot cycle:
- *   slot 0 = Unit (1–9)
- *   slot 1 = Ten  (10–90)
- *   slot 2 = Hundred (100–900, using compound letters above 400)
- *   slot 3 = Thousand marker: emits nothing extra (Hebrew has no distinct thousands
- *            letter in standard gematria), just advances the cycle from Ten again.
- *            The digit consumed at slot 3 is treated as additional units of 1000 —
- *            we emit it as a Unit letter so the name stays compact and readable.
- *
- * This guarantees O(digits) output — never repeats letters for large values.
- */
-export function numToHebrew(n) {
-  if (!n || n < 1) return '';
-  n = Math.floor(n);
-
-  // Extract digits right-to-left (LSD first)
-  const digits = [];
-  let tmp = n;
-  while (tmp > 0) { digits.push(tmp % 10); tmp = Math.floor(tmp / 10); }
-
-  const pieces = [];
-  let i = 0, slot = 0;
-
-  while (i < digits.length) {
-    const d = digits[i];
-
-    if (slot === 0) {
-      if (d !== 0 && HEB_UNITS[d]) pieces.push(HEB_UNITS[d]);
-      i++; slot = 1;
-    } else if (slot === 1) {
-      const v = d * 10;
-      if (d !== 0 && HEB_TENS[v]) pieces.push(HEB_TENS[v]);
-      i++; slot = 2;
-    } else if (slot === 2) {
-      const v = d * 100;
-      if (d !== 0 && HEB_HUNDREDS[v]) pieces.push(HEB_HUNDREDS[v]);
-      i++; slot = 3;
-    } else {
-      // Thousand slot — Hebrew uses the digit as a plain unit marker (compact)
-      if (d !== 0 && HEB_UNITS[d]) pieces.push(HEB_UNITS[d]);
-      i++; slot = 1;
-    }
-  }
-
-  return pieces.join('');
-}
-
-// Convert number to Arabic Abjad letters — positional Akram method (no greedy repeats)
 const AR_UNITS    = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9:'ط' };
 const AR_TENS     = { 10:'ي',20:'ك',30:'ل',40:'م',50:'ن',60:'س',70:'ع',80:'ف',90:'ص' };
 const AR_HUNDREDS = { 100:'ق',200:'ر',300:'ش',400:'ت',500:'ث',600:'خ',700:'ذ',800:'ض',900:'ظ' };
+const AR_THOUSAND = 'غ'; // explicit thousands marker (Akram rule)
 
-export function numToArabic(n) {
-  if (!n || n < 1) return '';
+const HEB_UNITS    = { 1:'א',2:'ב',3:'ג',4:'ד',5:'ה',6:'ו',7:'ז',8:'ח',9:'ט' };
+const HEB_TENS     = { 10:'י',20:'כ',30:'ל',40:'מ',50:'נ',60:'ס',70:'ע',80:'פ',90:'צ' };
+// 100–400 single letters; 500–900 standard gematria compounds
+const HEB_HUNDREDS = { 100:'ק',200:'ר',300:'ש',400:'ת',500:'תק',600:'תר',700:'תש',800:'תת',900:'תתק' };
+const HEB_THOUSAND = 'א'; // thousands marker — parallels Arabic غ in the Akram cycle
+
+/**
+ * akramPositional — single shared engine for both Arabic and Hebrew.
+ *
+ * Digit-cycle (LSD-first, mirrors toAkramPieces in AkramCard):
+ *   slot 0 = Units   (1–9)
+ *   slot 1 = Tens    (10–90)
+ *   slot 2 = Hundreds (100–900)
+ *   slot 3 = Thousands marker + optional digit-as-unit (2–9); then restart from Ten
+ *
+ * Returns the raw pieces array (LSD-first order).
+ * Callers reverse for display if needed (RTL).
+ */
+function akramPositional(n, units, tens, hundreds, thousandMark) {
+  if (!n || n < 1) return [];
   n = Math.floor(n);
   const digits = [];
   let tmp = n;
@@ -322,22 +288,32 @@ export function numToArabic(n) {
   while (i < digits.length) {
     const d = digits[i];
     if (slot === 0) {
-      if (d !== 0 && AR_UNITS[d])    pieces.push(AR_UNITS[d]);
+      if (d !== 0 && units[d])         pieces.push(units[d]);
       i++; slot = 1;
     } else if (slot === 1) {
       const v = d * 10;
-      if (d !== 0 && AR_TENS[v])     pieces.push(AR_TENS[v]);
+      if (d !== 0 && tens[v])          pieces.push(tens[v]);
       i++; slot = 2;
     } else if (slot === 2) {
       const v = d * 100;
-      if (d !== 0 && AR_HUNDREDS[v]) pieces.push(AR_HUNDREDS[v]);
+      if (d !== 0 && hundreds[v])      pieces.push(hundreds[v]);
       i++; slot = 3;
     } else {
-      // Thousand slot: غ marker, then digit as Unit if non-zero/non-1
-      pieces.push('غ');
-      if (d !== 0 && d !== 1) pieces.push(AR_UNITS[d]);
+      // Thousands slot: always emit the marker, then digit as unit if 2–9
+      pieces.push(thousandMark);
+      if (d !== 0 && d !== 1 && units[d]) pieces.push(units[d]);
       i++; slot = 1;
     }
   }
-  return pieces.join('');
+  return pieces;
+}
+
+/** Arabic: pieces LSD-first — caller reverses for RTL display */
+export function numToArabic(n) {
+  return akramPositional(n, AR_UNITS, AR_TENS, AR_HUNDREDS, AR_THOUSAND).join('');
+}
+
+/** Hebrew: same positional pieces, Hebrew letter tables */
+export function numToHebrew(n) {
+  return akramPositional(n, HEB_UNITS, HEB_TENS, HEB_HUNDREDS, HEB_THOUSAND).join('');
 }
