@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
@@ -247,17 +247,25 @@ export default function MagicSqayerPage() {
   const [element,    setElement]    = useState(null);
   const [grid,       setGrid]       = useState(null);
 
-  const L = LABELS[lang];
+  const L = useMemo(() => LABELS[lang], [lang]);
 
   // ── Raw number from input field ────────────────────────────────
-  const rawNum = () => { const n = parseInt(inputNum); return isNaN(n) ? null : n; };
+  const rawNum = useMemo(() => { const n = parseInt(inputNum); return isNaN(n) ? null : n; }, [inputNum]);
 
   // ── Working MC after suffix application ───────────────────────
-  const { mc: workingMC, subtracted, negFixed } = (() => {
-    const r = rawNum();
-    if (!r) return { mc: null, subtracted: false, negFixed: false };
-    return applyISuffix(r, suffix);
-  })();
+  const { mc: workingMC, subtracted, negFixed } = useMemo(() => {
+    if (!rawNum) return { mc: null, subtracted: false, negFixed: false };
+    return applyISuffix(rawNum, suffix);
+  }, [rawNum, suffix]);
+
+  // ── Compatible sizes — expensive, memoized ────────────────────
+  const compatSizes = useMemo(() => workingMC ? compatibleSizes(workingMC) : [], [workingMC]);
+
+  // ── Per-button compatibility map — avoids 14 calls per render ─
+  const compatMap = useMemo(() => {
+    if (!workingMC) return {};
+    return Object.fromEntries(GRID_SIZES.map(gs => [gs.value, isCompatible(workingMC, gs.value)]));
+  }, [workingMC]);
 
   // ── Build grid ─────────────────────────────────────────────────
   const buildGrid = (mc, size, el) => {
@@ -282,8 +290,7 @@ export default function MagicSqayerPage() {
 
   const handleSuffix = (mode) => {
     setSuffix(mode);
-    const r = rawNum();
-    if (r) { const { mc } = applyISuffix(r, mode); setGrid(buildGrid(mc, gridSize, element)); }
+    if (rawNum) { const { mc } = applyISuffix(rawNum, mode); setGrid(buildGrid(mc, gridSize, element)); }
   };
 
   const handleSize = (size) => {
@@ -392,7 +399,7 @@ export default function MagicSqayerPage() {
           <div className="grid grid-cols-4 gap-2">
             {GRID_SIZES.map(gs => {
               const sel = gridSize === gs.value;
-              const compat = workingMC ? isCompatible(workingMC, gs.value) : null;
+              const compat = compatMap[gs.value] ?? null;
               return (
                 <motion.button key={gs.value} onClick={() => handleSize(gs.value)}
                   whileHover={{ scale: sel ? 1 : 1.04 }} whileTap={{ scale:0.95 }}
@@ -409,7 +416,7 @@ export default function MagicSqayerPage() {
           </div>
           {workingMC && (
             <p className="font-inter text-[8px] uppercase tracking-widest text-center" style={{ color:"rgba(100,220,100,0.50)" }}>
-              🟢 = {L.compatible}: {compatibleSizes(workingMC).map(s=>`${s}×${s}`).join(", ") || "none"}
+              🟢 = {L.compatible}: {compatSizes.map(s=>`${s}×${s}`).join(", ") || "none"}
             </p>
           )}
         </SectionCard>
@@ -473,7 +480,7 @@ export default function MagicSqayerPage() {
           <MsHierarchyTable
             mc={workingMC}
             gridSize={gridSize}
-            rawInput={rawNum()}
+            rawInput={rawNum}
             negFixed={negFixed}
             lang={lang}
             L={L}

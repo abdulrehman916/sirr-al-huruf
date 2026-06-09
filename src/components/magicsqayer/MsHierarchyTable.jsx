@@ -1,3 +1,4 @@
+import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, angelJinn, numToHebrew } from "./msEngine";
 import { toAkramPieces } from "@/components/AkramCard";
@@ -9,12 +10,15 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lang, L }) {
-  if (!mc || !gridSize) return null;
-  const hier = buildHierarchy(mc, gridSize);
-  if (!hier) return null;
+function toArabicLetters(v) {
+  return toAkramPieces(v).map(p => p.letter).join('').split('').reverse().join('');
+}
 
-  const rows = [
+const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lang, L }) {
+  const hier = useMemo(() => (mc && gridSize) ? buildHierarchy(mc, gridSize) : null, [mc, gridSize]);
+
+  // All 8 rows with pre-computed angel/jinn letters — only recomputes when mc/gridSize change
+  const rows = useMemo(() => hier ? [
     { key:"usurper",   label: L.usurper,   val: hier.usurper },
     { key:"guide",     label: L.guide,     val: hier.guide },
     { key:"mystery",   label: L.mystery,   val: hier.mystery },
@@ -23,7 +27,20 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
     { key:"regulator", label: L.regulator, val: hier.regulator },
     { key:"genGov",    label: L.genGov,    val: hier.genGov },
     { key:"highOver",  label: L.highOver,  val: hier.highOver },
-  ];
+  ].map(row => {
+    const aj = angelJinn(row.val);
+    return {
+      ...row,
+      cols: [
+        { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC", text: toArabicLetters(aj.angelAr)  + "إيل" },
+        { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", text: numToHebrew(aj.angelHeb)      + "אל"  },
+        { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171", text: toArabicLetters(aj.jinnAr)            },
+        { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C", text: numToHebrew(aj.jinnHeb)               },
+      ],
+    };
+  }) : [], [hier, L]);
+
+  if (!mc || !gridSize || !hier) return null;
 
   return (
     <motion.div
@@ -56,9 +73,7 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
 
       {/* 8 hierarchy rows */}
       <div className="space-y-1.5">
-        {rows.map((row, i) => {
-          const aj = angelJinn(row.val);
-          return (
+        {rows.map((row, i) => (
             <motion.div key={row.key}
               initial={{ opacity:0, x:-6 }} animate={{ opacity:1, x:0 }}
               transition={{ delay: i*0.05, duration:0.25 }}
@@ -76,19 +91,9 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
                   {row.val.toLocaleString()}
                 </p>
               </div>
-              {/* Angel / Jinn sub-columns */}
+              {/* Angel / Jinn sub-columns — letters pre-computed in useMemo above */}
               <div className="grid grid-cols-4" style={{ background:"rgba(4,8,24,0.80)" }}>
-                {[
-                  { lbl: L.angelAr,  v: aj.angelAr,  c:"#74C0FC", suffix:"إيل" },
-                  { lbl: L.angelHeb, v: aj.angelHeb, c:"#A78BFA", suffix:"אל", hebrew:true },
-                  { lbl: L.jinnAr,   v: aj.jinnAr,   c:"#F87171" },
-                  { lbl: L.jinnHeb,  v: aj.jinnHeb,  c:"#FB923C", hebrew:true },
-                ].map(col => {
-                  const letters = col.hebrew
-                    ? numToHebrew(col.v)
-                    : toAkramPieces(col.v).map(p => p.letter).join('').split('').reverse().join('');
-                  const displayText = col.suffix ? letters + col.suffix : letters;
-                  return (
+                {row.cols.map(col => (
                   <div key={col.lbl} className="px-2 py-1.5 text-center border-r last:border-r-0"
                     style={{ borderColor:"rgba(212,175,55,0.08)" }}>
                     <p className="font-inter leading-tight" style={{ fontSize:"7px", color:"rgba(255,255,255,0.30)" }}>
@@ -98,16 +103,16 @@ export default function MsHierarchyTable({ mc, gridSize, rawInput, negFixed, lan
                       {col.v.toLocaleString()}
                     </p>
                     <p className="font-amiri leading-tight" dir="rtl" style={{ color:col.c, letterSpacing:0, fontSize:"24px", fontWeight:700 }}>
-                      {displayText}
+                      {col.text}
                     </p>
                   </div>
-                  );
-                })}
+                ))}
               </div>
             </motion.div>
-          );
-        })}
+        ))}
       </div>
     </motion.div>
   );
-}
+});
+
+export default MsHierarchyTable;

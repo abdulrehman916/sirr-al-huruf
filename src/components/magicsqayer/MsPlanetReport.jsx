@@ -1,3 +1,4 @@
+import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { PLANETS, SIZE_PLANET_MAP, PLANET_EN, buildHierarchy, triangle } from "./msEngine";
 
@@ -8,14 +9,13 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-export default function MsPlanetReport({ mc, gridSize, lang, L }) {
-  if (!mc || !gridSize) return null;
-  const hier = buildHierarchy(mc, gridSize);
-  if (!hier) return null;
+const MsPlanetReport = memo(function MsPlanetReport({ mc, gridSize, lang, L }) {
+  const hier = useMemo(() => (mc && gridSize) ? buildHierarchy(mc, gridSize) : null, [mc, gridSize]);
 
-  const planetKey = SIZE_PLANET_MAP[gridSize];
-  const pl = PLANETS.find(p => p.key === planetKey);
-  if (!pl) return null;
+  const planetKey = hier ? SIZE_PLANET_MAP[gridSize] : null;
+  const pl = planetKey ? PLANETS.find(p => p.key === planetKey) : null;
+
+  if (!mc || !gridSize || !hier || !pl) return null;
 
   const planetName = lang === "en" ? PLANET_EN[planetKey] : pl.arabic;
 
@@ -67,4 +67,6 @@ export default function MsPlanetReport({ mc, gridSize, lang, L }) {
       </div>
     </motion.div>
   );
-}
+});
+
+export default MsPlanetReport;
