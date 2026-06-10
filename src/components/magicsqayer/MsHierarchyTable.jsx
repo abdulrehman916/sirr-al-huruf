@@ -30,12 +30,15 @@ function generateNameForValue(val, suffixType) {
     remainder: val,
     name: result.fullName || result.generatedName,
     pattern: result.pattern,
+    root: result.root,
     score: result.validation.score,
     passed: result.validation.passed,
     failureReason: result.validation.failureReason,
     phoneticRules: result.phoneticRules,
     consonants: result.consonants,
-    vowels: result.vowels
+    vowels: result.vowels,
+    morphology: result.validation.morphology,
+    phonology: result.validation.phonology
   };
 }
 
@@ -228,6 +231,16 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
+                    {/* Root and pattern */}
+                    {n.root && (
+                      <div className="mb-2 px-2 py-1 rounded-lg inline-block"
+                        style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                        <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
+                          Root: {n.root} {n.pattern ? `· Pattern: ${n.pattern}` : ''}
+                        </p>
+                      </div>
+                    )}
+                    
                     {/* Phonetic rules breakdown */}
                     {n.phoneticRules && n.phoneticRules.length > 0 && (
                       <div className="mb-2 px-2 py-1 rounded-lg inline-block"
@@ -284,18 +297,32 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       </div>
                     )}
                     
-                    {/* Pronunciation score and validation */}
-                    <div className="mt-2 flex items-center justify-center gap-2">
-                      <span className="font-inter text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full"
-                        style={{ 
-                          background: isValid ? "rgba(100,220,100,0.10)" : "rgba(255,100,100,0.10)",
-                          color: isValid ? "rgba(100,220,100,0.90)" : "rgba(255,100,100,0.90)",
-                          border: `1px solid ${isValid ? "rgba(100,220,100,0.30)" : "rgba(255,100,100,0.30)"}`
-                        }}>
-                        Score: {n.score || 0}/100
-                      </span>
+                    {/* Morphology and phonology scores */}
+                    <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
+                      {n.morphology && (
+                        <span className="font-inter text-[7px] uppercase tracking-widest px-2 py-0.5 rounded-full"
+                          style={{ 
+                            background: n.morphology.passed ? "rgba(100,220,100,0.10)" : "rgba(255,100,100,0.10)",
+                            color: n.morphology.passed ? "rgba(100,220,100,0.90)" : "rgba(255,100,100,0.90)",
+                            border: `1px solid ${n.morphology.passed ? "rgba(100,220,100,0.30)" : "rgba(255,100,100,0.30)"}`
+                          }}>
+                          Morphology: {n.morphology.score}/100
+                        </span>
+                      )}
+                      {n.phonology && (
+                        <span className="font-inter text-[7px] uppercase tracking-widest px-2 py-0.5 rounded-full"
+                          style={{ 
+                            background: n.phonology.passed ? "rgba(100,220,100,0.10)" : "rgba(255,100,100,0.10)",
+                            color: n.phonology.passed ? "rgba(100,220,100,0.90)" : "rgba(255,100,100,0.90)",
+                            border: `1px solid ${n.phonology.passed ? "rgba(100,220,100,0.30)" : "rgba(255,100,100,0.30)"}`
+                          }}>
+                          Phonology: {n.phonology.score}/100
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 flex items-center justify-center gap-1">
                       {isValid ? (
-                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ Valid</span>
+                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ Morphologically & Phonetically Valid</span>
                       ) : (
                         <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(255,100,100,0.70)" }}>✗ {n.failureReason || 'Invalid'}</span>
                       )}
