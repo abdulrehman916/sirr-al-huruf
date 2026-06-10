@@ -318,6 +318,21 @@ export function resolveGalipAnasir(dominant) {
  */
 export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementElement = 'fire') {
   // MANUSCRIPT RULE: Use input letters directly - NO Bast expansion
+  if (!inputLetters || inputLetters.length === 0) {
+    return {
+      inputLetters: [],
+      satrVahidLetters: [],
+      satrVahidCount: 0,
+      isZevc: true,
+      isFerd: false,
+      groupSize: 4,
+      finalExpandedLetters: [],
+      supplementLetters: [],
+      remainder: 0,
+      names: [],
+    };
+  }
+  
   const satrVahidLetters = inputLetters;
   const satrVahidCount = satrVahidLetters.length;
   
