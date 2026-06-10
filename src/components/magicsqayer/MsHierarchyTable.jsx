@@ -34,7 +34,7 @@ function extractLettersFromValue(value) {
   const letters = [];
   let remaining = value;
   
-  // Greedy decomposition: largest values first
+  // Greedy decomposition: largest values first (original extraction order)
   for (let i = ARABIC_ABJAD.length - 1; i >= 0 && remaining > 0; i--) {
     const { val, letter } = ARABIC_ABJAD[i];
     while (remaining >= val) {
@@ -43,8 +43,9 @@ function extractLettersFromValue(value) {
     }
   }
   
-  // Reverse to get proper reading order (RTL)
-  return letters.reverse();
+  // Return in original extraction order (ش ل ز for 337) - NO REVERSAL
+  // This order is used for final name generation
+  return letters;
 }
 
 function generateTraditionalName(value, suffixType) {
@@ -307,7 +308,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         ))}
                       </div>
                       <p className="font-inter text-[6px] text-center mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>
-                        {row.nameData.consonants.join(' ')} = {row.nameData.adjustedValue}
+                        Original extraction order: {row.nameData.consonants.join(' ')} = {row.nameData.adjustedValue}
                       </p>
                     </div>
                   )}
