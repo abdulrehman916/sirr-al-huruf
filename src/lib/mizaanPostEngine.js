@@ -174,6 +174,28 @@ export const ELEMENT_BAST_TOTALS = {
   water: 3342,
 };
 
+// ═══════════════════════════════════════════════════════════════
+// GALIB ANASIR VALUES FOR REMAINDER COMPLETION
+// ═══════════════════════════════════════════════════════════════
+export const GALIB_ANASIR_VALUES = {
+  fire: 3550,   // Ateş / Nar (النار)
+  earth: 4015,  // Toprak / Turab (التراب)
+  air: 3757,    // Hava (الهواء)
+  water: 3342,  // Su / Ma (الماء)
+};
+
+// Get Galib Anasir value and its Istintak letters with full breakdown
+export function getGalibAnasirData(element) {
+  const value = GALIB_ANASIR_VALUES[element] || GALIB_ANASIR_VALUES.fire;
+  const letters = istintak(value);
+  return {
+    value,
+    letters,
+    element,
+    istintakBreakdown: extractLettersFromNumber(value),
+  };
+}
+
 // Guardian name letters from element istintak (p.62)
 // fire: 3550 → نثغج = Nesğac
 // earth: 4015 → هيغد = Heyğad
@@ -356,13 +378,16 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
   const lastGroupSize = expandedCount % groupSize;
   const remainder = lastGroupSize > 0 ? expandedLetters.slice(expandedCount - lastGroupSize) : [];
 
-  // Supplement remainder from dominant element if needed (p.56)
+  // MANUSCRIPT RULE: Dynamic remainder completion from Galib Anasir
   let supplementLetters = [];
-  if (remainder.length > 0 && remainder.length < groupSize) {
-    const elemTotal = ELEMENT_BAST_TOTALS[supplementElement] || 3550;
-    const elemLetters = istintak(elemTotal);
+  let galibAnasirData = null;
+  
+  if (remainder.length > 0 && remainder.length < groupSize && supplementElement) {
+    // Get Galib Anasir value and its Istintak letters
+    galibAnasirData = getGalibAnasirData(supplementElement);
+    // Take only the number of letters needed from the Istintak result
     const needed = groupSize - remainder.length;
-    supplementLetters = elemLetters.slice(0, needed);
+    supplementLetters = galibAnasirData.letters.slice(0, needed);
     // Replace last partial name with completed name
     if (names.length > 0) {
       names[names.length - 1] = remainder.concat(supplementLetters).join('');
@@ -386,6 +411,7 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
     names,
     remainder,
     supplementLetters,
+    galibAnasirData,
   };
 }
 

@@ -20,7 +20,8 @@ import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPostResults from "../components/mizaan/MizaanPostResults";
 import ManuscriptBastDerivation from "../components/mizaan/ManuscriptBastDerivation";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
-import { runMizaanPostPipeline } from "../lib/mizaanPostEngine";
+import GalibAnasirIstintak from "../components/mizaan/GalibAnasirIstintak";
+import { runMizaanPostPipeline, GALIB_ANASIR_VALUES } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
 const G = {
@@ -190,6 +191,7 @@ export default function Mizaan9Page() {
   const [degreeSels, setDegreeSels] = useState(initialState.degreeSels);
   const [pipelineData, setPipelineData] = useState(null);
   const [groupingData, setGroupingData] = useState(null);
+  const [selectedGalibElement, setSelectedGalibElement] = useState(null);
   const abortRef = useRef(false);
 
   useEffect(() => {

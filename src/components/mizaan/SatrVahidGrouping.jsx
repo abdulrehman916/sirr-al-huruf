@@ -136,12 +136,12 @@ const GroupBlock = ({ group, groupIndex, totalLetters, groupSize, color }) => {
   );
 };
 
-export default function SatrVahidGrouping({ expandedLetters, isZevc, color = "#F5D060" }) {
+export default function SatrVahidGrouping({ expandedLetters, isZevc, dominant, color = "#F5D060" }) {
   const grouping = useMemo(() => {
     if (!expandedLetters || expandedLetters.length === 0) return null;
     
     const totalLetters = expandedLetters.length;
-    const groupSize = isZevc ? 4 : 5;
+    const groupSize = 5; // Esma-i Kitabet always uses 5-letter groups
     const numGroups = Math.floor(totalLetters / groupSize);
     const remainder = totalLetters % groupSize;
     
@@ -160,6 +160,56 @@ export default function SatrVahidGrouping({ expandedLetters, isZevc, color = "#F
       remainderLetters = expandedLetters.slice(0, remainder);
     }
     
+    // Calculate supplement letters from GALIB ANASIR value
+    let supplementLetters = [];
+    const ELEMENT_BAST_TOTALS = {
+      fire:  3550,
+      earth: 4015,
+      air:   3757,
+      water: 3342,
+    };
+    const istintak = (n) => {
+      const UNITS_MAP    = {1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9:'ط'};
+      const TENS_MAP     = {10:'ي',20:'ك',30:'ل',40:'م',50:'ن',60:'س',70:'ع',80:'ف',90:'ص'};
+      const HUNDREDS_MAP = {100:'ق',200:'ر',300:'ش',400:'ت',500:'ث',600:'خ',700:'ذ',800:'ض',900:'ظ'};
+      const THOUSAND_MARK = 'غ';
+      if (!n || n <= 0) return [];
+      n = Math.floor(n);
+      const digits = [];
+      let tmp = n;
+      while (tmp > 0) { digits.push(tmp % 10); tmp = Math.floor(tmp / 10); }
+      const letters = [];
+      let slot = 0;
+      for (let i = 0; i < digits.length; i++) {
+        const d = digits[i];
+        const isLast = (i === digits.length - 1);
+        if (slot === 0) {
+          if (d !== 0 && UNITS_MAP[d]) letters.push(UNITS_MAP[d]);
+          slot = 1;
+        } else if (slot === 1) {
+          const v = d * 10;
+          if (d !== 0 && TENS_MAP[v]) letters.push(TENS_MAP[v]);
+          slot = 2;
+        } else if (slot === 2) {
+          const v = d * 100;
+          if (d !== 0 && HUNDREDS_MAP[v]) letters.push(HUNDREDS_MAP[v]);
+          slot = 3;
+        } else {
+          letters.push(THOUSAND_MARK);
+          if (d !== 0 && (d !== 1 || !isLast) && UNITS_MAP[d]) letters.push(UNITS_MAP[d]);
+          slot = 1;
+        }
+      }
+      return letters;
+    };
+    
+    if (remainder > 0 && remainder < groupSize && dominant) {
+      const elemTotal = ELEMENT_BAST_TOTALS[dominant] || 3550;
+      const elemLetters = istintak(elemTotal);
+      const needed = groupSize - remainder;
+      supplementLetters = elemLetters.slice(0, needed);
+    }
+    
     return {
       totalLetters,
       groupSize,
@@ -167,8 +217,10 @@ export default function SatrVahidGrouping({ expandedLetters, isZevc, color = "#F
       remainder,
       groups,
       remainderLetters,
+      supplementLetters,
+      galibAnasirValue: dominant ? ELEMENT_BAST_TOTALS[dominant] : null,
     };
-  }, [expandedLetters, isZevc]);
+  }, [expandedLetters, isZevc, dominant]);
   
   if (!grouping) return null;
   
@@ -230,16 +282,71 @@ export default function SatrVahidGrouping({ expandedLetters, isZevc, color = "#F
         </div>
       </div>
       
-      {/* Remainder letters (if any) */}
+      {/* Remainder supplementation from GALIB ANASIR */}
       {grouping.remainder > 0 && (
-        <div style={{ marginBottom: "20px", padding: "12px", border: `2px dashed ${G.red}40`, borderRadius: "8px", background: `${G.red}05` }}>
-          <div style={{ fontSize: "0.75rem", color: G.red, marginBottom: "8px", textTransform: "uppercase", fontWeight: "bold" }}>
-            ⚠ Remainder Letters ({grouping.remainder}) — Not enough for a complete group
+        <div style={{ marginBottom: "20px", padding: "16px", border: `3px solid ${color}40`, borderRadius: "10px", background: `${color}08` }}>
+          <div style={{ fontSize: "0.75rem", color: G.dim, marginBottom: "12px", textTransform: "uppercase", fontWeight: "bold" }}>
+            ⚠ REMAINDER COMPLETION — GALIB ANASIR SUPPLEMENTATION
           </div>
-          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr" }}>
-            {grouping.remainderLetters.map((l, i) => (
-              <LetterChip key={i} letter={l} position={i + 1} color={G.red} />
-            ))}
+          
+          {/* Step 1: Show remainder */}
+          <div style={{ marginBottom: "12px" }}>
+            <div style={{ fontSize: "0.7rem", color: G.dim, marginBottom: "6px" }}>
+              Step 1: Incomplete group ({grouping.remainder} letters)
+            </div>
+            <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr", padding: "8px", background: `${G.red}05`, borderRadius: "6px" }}>
+              {grouping.remainderLetters.map((l, i) => (
+                <LetterChip key={i} letter={l} position={i + 1} color={G.red} />
+              ))}
+            </div>
+          </div>
+          
+          {/* Step 2: Show Galib Anasir value */}
+          <div style={{ marginBottom: "12px" }}>
+            <div style={{ fontSize: "0.7rem", color: G.dim, marginBottom: "6px" }}>
+              Step 2: Galib Anasir Value ({dominant})
+            </div>
+            <div style={{ padding: "8px", background: `${color}10`, borderRadius: "6px", textAlign: "center" }}>
+              <span style={{ fontSize: "1.2rem", fontWeight: "bold", color }}>{grouping.galibAnasirValue?.toLocaleString()}</span>
+              <span style={{ fontSize: "0.65rem", color: G.dim, marginLeft: "8px" }}>
+                ({dominant === 'fire' ? 'نار / Ateş' : dominant === 'earth' ? 'تراب / Toprak' : dominant === 'air' ? 'هواء / Hava' : 'ماء / Su'})
+              </span>
+            </div>
+          </div>
+          
+          {/* Step 3: Istintak of Galib Anasir */}
+          <div style={{ marginBottom: "12px" }}>
+            <div style={{ fontSize: "0.7rem", color: G.dim, marginBottom: "6px" }}>
+              Step 3: Istintak of Galib Anasir → Supplement Letters
+            </div>
+            <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr", padding: "8px", background: `${G.green}05`, borderRadius: "6px" }}>
+              {grouping.supplementLetters.map((l, i) => (
+                <LetterChip key={i} letter={l} position={i + 1} color={G.green} />
+              ))}
+            </div>
+            <div style={{ fontSize: "0.65rem", color: G.dim, marginTop: "4px", textAlign: "center" }}>
+              Taking {grouping.supplementLetters.length} letter{grouping.supplementLetters.length > 1 ? 's' : ''} to complete the group
+            </div>
+          </div>
+          
+          {/* Step 4: Completed name */}
+          <div style={{ padding: "12px", background: `${color}20`, borderRadius: "8px", border: `2px solid ${color}40`, textAlign: "center" }}>
+            <div style={{ fontSize: "0.7rem", color: G.dim, marginBottom: "8px", textTransform: "uppercase" }}>
+              ✓ Completed Name (Remainder + Supplement)
+            </div>
+            <div
+              dir="rtl"
+              lang="ar"
+              style={{
+                fontFamily: AR.fontFamily,
+                fontSize: "2.2rem",
+                color,
+                fontWeight: "bold",
+                letterSpacing: "2px",
+              }}
+            >
+              {grouping.remainderLetters.concat(grouping.supplementLetters).join('')}
+            </div>
           </div>
         </div>
       )}
