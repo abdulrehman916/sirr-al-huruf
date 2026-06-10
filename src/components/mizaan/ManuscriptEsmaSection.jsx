@@ -145,12 +145,20 @@ function NamesList({ names, prefix, color, sectionLabel }) {
   );
 }
 
-function SeedExpansionDetail({ seedBastValues, bastLevelUsed, color, expandedLetters, expandedCount, isExpandedZevc }) {
-  return (
-    <div className="space-y-3">
+function SeedExpansionDetail({ seedBastValues, bastLevelUsed, color, expandedLetters, expandedCount, isExpandedZevc, isBackwards = false }) {
+return (
+  <div className="space-y-3">
+    <div className="flex items-center justify-between">
       <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-        توسيع البذور خطوة بخطوة — باست {bastLevelUsed}
+        التوسيع خطوة بخطوة — باست {bastLevelUsed}
       </p>
+      {isBackwards && (
+        <span className="font-inter text-[7px] px-2 py-0.5 rounded-full border italic"
+          style={{ color: "rgba(255,255,255,0.40)", borderColor: "rgba(255,255,255,0.15)" }}>
+          من الأخير إلى الأول ←
+        </span>
+      )}
+    </div>
 
       {/* Per-seed full manuscript trace */}
       {seedBastValues.map((sv, i) => (
@@ -354,6 +362,7 @@ export default function ManuscriptEsmaSection({
                   expandedLetters={data.expandedLetters}
                   expandedCount={data.expandedCount}
                   isExpandedZevc={data.isExpandedZevc}
+                  isBackwards={tier !== 'kitabet'}
                   color={color}
                 />
               </div>
