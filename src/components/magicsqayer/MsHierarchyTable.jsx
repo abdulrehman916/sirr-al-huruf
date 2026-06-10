@@ -34,7 +34,8 @@ function extractLettersFromValue(value) {
   const letters = [];
   let remaining = value;
   
-  // Greedy decomposition: largest values first (original extraction order)
+  // BAST-2 RULE: Greedy decomposition - largest values first
+  // This produces the IMMUTABLE extraction order (e.g., 337 = ش ل ز)
   for (let i = ARABIC_ABJAD.length - 1; i >= 0 && remaining > 0; i--) {
     const { val, letter } = ARABIC_ABJAD[i];
     while (remaining >= val) {
@@ -43,8 +44,9 @@ function extractLettersFromValue(value) {
     }
   }
   
-  // Return in original extraction order (ش ل ز for 337) - NO REVERSAL
-  // This order is used for final name generation
+  // CRITICAL: Return extraction order AS-IS - NO REVERSAL, NO SUBSTITUTION
+  // These consonants are IMMUTABLE - only harakat may be added during naming
+  // RTL display may visually show ز ل ش, but naming ALWAYS uses ش ل ز
   return letters;
 }
 
