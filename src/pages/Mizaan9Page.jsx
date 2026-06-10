@@ -352,16 +352,30 @@ export default function Mizaan9Page() {
                           <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input?.satirVahidTotal?.toLocaleString() ?? 0}</span>
                         </div>
                         <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
-                          <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Initial Seed Letters</span>
+                          <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Initial Seed Letters (Pipeline Input Order)</span>
                           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
                             {seedLetters.length > 0 ? (
                               seedLetters.map((l, i) => (
                                 <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
-                                  style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.04)" }} dir="rtl">{l}</span>
+                                  style={{ 
+                                    color: G.text, 
+                                    borderColor: G.border, 
+                                    background: "rgba(212,175,55,0.04)",
+                                    borderLeft: i === 0 ? `2px solid ${G.green}` : undefined,
+                                  }} 
+                                  dir="rtl"
+                                >
+                                  {l}
+                                </span>
                               ))
                             ) : (
                               <span className="font-inter text-xs text-white/30">No seed letters</span>
                             )}
+                          </div>
+                          <div className="text-center mt-2">
+                            <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
+                              Order preserved exactly as extracted → no reversal
+                            </span>
                           </div>
                         </div>
                       </div>

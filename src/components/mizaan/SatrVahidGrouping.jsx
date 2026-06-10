@@ -143,14 +143,14 @@ export default function SatrVahidGrouping({
         <div className="h-px w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
       </div>
 
-      {/* Satr-i Vahid Letters - ORIGINAL SEQUENCE */}
+      {/* Satr-i Vahid Letters - ORIGINAL SEQUENCE (PRESERVED ORDER) */}
       <div className="px-4 py-3 rounded-xl border"
         style={{ background: G.bg, borderColor: G.border }}>
         <div className="flex items-center justify-between mb-3">
-          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Original Seed Letters (من اليمين لليسار)</span>
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Original Seed Letters (Pipeline Input Order)</span>
           <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{totalLetters} letters</span>
         </div>
-        <div className="flex flex-wrap gap-1 justify-center" dir="rtl">
+        <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
           {safeSatrVahidLetters.map((l, i) => (
             <motion.span
               key={i}
@@ -161,8 +161,8 @@ export default function SatrVahidGrouping({
               style={{
                 color: G.text,
                 borderColor: G.border,
-                background: i === safeSatrVahidLetters.length - 1 ? `${G.green}15` : "rgba(212,175,55,0.04)",
-                border: i === safeSatrVahidLetters.length - 1 ? `1px solid ${G.green}` : G.border
+                background: i === 0 ? `${G.green}15` : "rgba(212,175,55,0.04)",
+                border: i === 0 ? `1px solid ${G.green}` : G.border
               }}
               dir="rtl"
             >
@@ -172,7 +172,7 @@ export default function SatrVahidGrouping({
         </div>
         <div className="text-center mt-2">
           <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
-            Bast processing starts from LAST letter (highlighted) → proceeds backward to FIRST
+            Order preserved exactly → first extracted letter on left
           </span>
         </div>
       </div>
