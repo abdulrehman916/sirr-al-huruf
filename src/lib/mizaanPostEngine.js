@@ -268,18 +268,22 @@ export function resolveGalipAnasir(dominant) {
 // ── Name generation pipeline ──────────────────────────────────────
 
 /**
- * generateEsmaLevel(inputLetters, alwaysFifth, supplementElement, isFirstStage)
+ * generateEsmaLevel(inputLetters, alwaysFifth, supplementElement)
  *
  * MANUSCRIPT RULE (pp.60–69):
- * - Kitabet (first stage): Satır Vahid sum → istintak → seeds → expand → group
- * - A'van/Kasem (subsequent stages): Process input letters DIRECTLY, backwards,
- *   applying Bast+Istintak to each, concatenate all results, THEN group.
+ * EVERY stage follows the SAME logic:
+ * 1. Satır Vahid sum (First Bast of input letters + letter count)
+ * 2. Istintak that sum → seed letters
+ * 3. Zevc/Ferd of seed count → Bast level (4th if zevc, 5th if ferd)
+ * 4. Apply Bast to each seed → istintak each → expansion letters
+ * 5. Concatenate all expansion letters
+ * 6. Zevc/Ferd of expanded count → group size (4 if zevc, 5 if ferd)
+ * 7. Group into names
  *
  * Parameters:
  * - inputLetters: array of Arabic letters from previous stage
  * - alwaysFifth: true for Kasem (always 5th Bast), false for others
  * - supplementElement: element for remainder supplementation
- * - isFirstStage: true for Kitabet (use seed-based logic), false for A'van/Kasem (direct processing)
  *
  * Returns:
  * {
@@ -295,7 +299,7 @@ export function resolveGalipAnasir(dominant) {
  *   supplementLetters,
  * }
  */
-export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementElement = 'fire', isFirstStage = false) {
+export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementElement = 'fire') {
   let expandedLetters = [];
   let seedBastValues = [];
   let bastLevelUsed = alwaysFifth ? 5 : 4;
@@ -308,68 +312,33 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
   let seedCount = 0;
   let isZevc = false;
 
-  if (isFirstStage) {
-    // ═══════════════════════════════════════════════════════════════
-    // KITABET MODE (first stage): Seed-based logic
-    // ═══════════════════════════════════════════════════════════════
-    // Step 1: Satır Vahid sum
-    bastSum = inputLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
-    letterCount = inputLetters.length;
-    satirTotal = bastSum + letterCount;
+  // ═══════════════════════════════════════════════════════════════
+  // ALL STAGES: Same manuscript logic
+  // ═══════════════════════════════════════════════════════════════
+  // Step 1: Satır Vahid sum (First Bast of input letters + letter count)
+  bastSum = inputLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+  letterCount = inputLetters.length;
+  satirTotal = bastSum + letterCount;
 
-    // Step 2: Istintak
-    seedLetters = istintak(satirTotal);
-    seedCount = seedLetters.length;
+  // Step 2: Istintak the Satır Vahid total → seed letters
+  seedLetters = istintak(satirTotal);
+  seedCount = seedLetters.length;
 
-    // Step 3: Zevc/Ferd
-    isZevc = seedCount % 2 === 0;
+  // Step 3: Zevc/Ferd of seed count
+  isZevc = seedCount % 2 === 0;
 
-    // Step 4: Bast level selection
-    bastLevelUsed = alwaysFifth ? 5 : (isZevc ? 4 : 5);
+  // Step 4: Bast level selection (Kasem always 5th, otherwise zevc=4th, ferd=5th)
+  bastLevelUsed = alwaysFifth ? 5 : (isZevc ? 4 : 5);
 
-    // Step 5: Apply Bast to each seed letter and istintak each result
-    seedBastValues = seedLetters.map(letter => {
-      const bastValue = getBastLevel(letter, bastLevelUsed);
-      const expansionLetters = istintak(bastValue);
-      return { letter, bastValue, expansionLetters };
-    });
+  // Step 5: Apply Bast to each seed letter and istintak each result
+  seedBastValues = seedLetters.map(letter => {
+    const bastValue = getBastLevel(letter, bastLevelUsed);
+    const expansionLetters = istintak(bastValue);
+    return { letter, bastValue, expansionLetters };
+  });
 
-    // Step 6: Concatenate all expansion letters
-    expandedLetters = seedBastValues.flatMap(s => s.expansionLetters);
-
-  } else {
-    // ═══════════════════════════════════════════════════════════════
-    // A'VAN/KASEM MODE (subsequent stages): Direct manuscript processing
-    // ═══════════════════════════════════════════════════════════════
-    // MANUSCRIPT RULE: Process input letters from LAST to FIRST (backwards),
-    // applying Bast+Istintak to each, then concatenate all results.
-
-    // Determine bast level: Kasem always 5th, A'van uses zevc/ferd of input count
-    const inputIsZevc = inputLetters.length % 2 === 0;
-    bastLevelUsed = alwaysFifth ? 5 : (inputIsZevc ? 4 : 5);
-
-    // Process letters backwards (last → first)
-    const reversedInput = [...inputLetters].reverse();
-
-    // For each letter: apply Bast → istintak → append
-    seedBastValues = reversedInput.map(letter => {
-      const bastValue = getBastLevel(letter, bastLevelUsed);
-      const expansionLetters = istintak(bastValue);
-      return { letter, bastValue, expansionLetters };
-    });
-
-    // Concatenate all expansion letters in order
-    expandedLetters = seedBastValues.flatMap(s => s.expansionLetters);
-
-    // For display purposes, compute pseudo satirTotal from input
-    bastSum = inputLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
-    letterCount = inputLetters.length;
-    satirTotal = bastSum + letterCount;
-    seedLetters = inputLetters; // Show original input as "seeds"
-    seedCount = inputLetters.length;
-    isZevc = inputIsZevc;
-  }
-
+  // Step 6: Concatenate all expansion letters
+  expandedLetters = seedBastValues.flatMap(s => s.expansionLetters);
   expandedCount = expandedLetters.length;
 
   // Step 7: Zevc/Ferd of expanded count → group size
@@ -447,14 +416,14 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // The satirVahidTotal is already (bastSum + letterCount), so we istintak it directly
   // and treat the result as the first seed — matching the book's worked examples on p.60.
 
-  // Generate Esma-i Kitabet (first stage: seed-based logic)
-  const kitabet = generateEsmaLevel(initialSeedLetters, false, element, true);
+  // Generate Esma-i Kitabet (first stage)
+  const kitabet = generateEsmaLevel(initialSeedLetters, false, element);
 
-  // Generate Esma-i A'van (subsequent stage: direct manuscript processing backwards)
-  const avan = generateEsmaLevel(kitabet.expandedLetters, false, element, false);
+  // Generate Esma-i A'van (second stage)
+  const avan = generateEsmaLevel(kitabet.expandedLetters, false, element);
 
-  // Generate Esma-i Kasem (subsequent stage: direct manuscript processing backwards, always 5th Bast)
-  const kasem = generateEsmaLevel(avan.expandedLetters, true, element, false);
+  // Generate Esma-i Kasem (third stage, always 5th Bast)
+  const kasem = generateEsmaLevel(avan.expandedLetters, true, element);
 
   // Build Vefk from grandBast (the total of 9 MIZAN First Bast values)
   const vefk = buildVefk(grandBast, element);
