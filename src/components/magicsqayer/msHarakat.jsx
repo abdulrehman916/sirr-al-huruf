@@ -35,7 +35,7 @@
 //  starting with Fatha at index 0.
 //
 //  ANGEL SUFFIX: ئِيل  (attached, no space)
-//  JINN:         no suffix appended here
+//  JINN SUFFIX:  طيش   (with space: "root طيش")
 // ═══════════════════════════════════════════════════════════════
 
 const FATHA = '\u064E'; // َ
@@ -43,6 +43,9 @@ const SUKUN = '\u0652'; // ْ
 
 // The angel suffix with its own fixed tashkeel
 const ANGEL_SUFFIX = 'ئِيل'; // ئ + Kasra + ي + ل  (U+0626 + U+0650 + U+064A + U+0644)
+
+// The jinn suffix: 319 = ش(300) + ي(10) + ط(9) → ordered smallest→largest = طيش
+const JINN_SUFFIX = 'طيش';
 
 /**
  * vocalizeConsonants(consonants)
@@ -72,8 +75,10 @@ export function buildAngelName(consonants) {
 /**
  * buildJinnName(consonants)
  *
- * Vocalizes root consonants only (no suffix for Jinn in this module).
+ * Vocalizes root consonants and appends طيش suffix (319 = ط+ي+ش).
+ * For Magic Square Jinn names only.
  */
 export function buildJinnName(consonants) {
-  return vocalizeConsonants(consonants);
+  if (!consonants || consonants.length === 0) return JINN_SUFFIX;
+  return vocalizeConsonants(consonants) + ' ' + JINN_SUFFIX;
 }
