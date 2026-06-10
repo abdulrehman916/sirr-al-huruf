@@ -12,6 +12,7 @@ const G = {
   border:   "rgba(212,175,55,0.40)",
   green:    "#4ADE80",
   purple:   "#C4B5FD",
+  red:      "#F87171",
 };
 
 /**
@@ -62,13 +63,17 @@ export default function SatrVahidGrouping({
   const finalTotal = safeFinalLetters.length;
   
   // MANUSCRIPT RULE: Calculate 5th Bast for EACH letter individually (Ferd = 5th Bast)
+  // PROCESSING ORDER: Start from LAST letter → work backward to FIRST letter
   const bastLevel = isFerd ? 5 : 4;
   const individualDerivations = useMemo(() => {
-    return safeSatrVahidLetters.map((letter, idx) => {
+    // Reverse the sequence for processing: last letter first
+    const reversedSequence = [...safeSatrVahidLetters].reverse();
+    return reversedSequence.map((letter, idx) => {
       const bastValue = getBastLevel(letter, bastLevel);
       const expansionLetters = istintak(bastValue);
       return {
-        index: idx,
+        processingOrder: idx + 1,  // 1 = first processed (last letter), N = last processed (first letter)
+        originalIndex: safeSatrVahidLetters.length - idx,  // Position in original sequence
         letter,
         bastValue,
         expansionLetters,
@@ -138,13 +143,14 @@ export default function SatrVahidGrouping({
       {/* ═══════════════════════════════════════════════════════════════
           INDIVIDUAL BAST DERIVATIONS (Manuscript pp.60-69)
           Each letter → 5th/4th Bast → Istintak → Expansion letters
+          Processing order: FIRST letter → LAST letter (left to right in array)
           ═══════════════════════════════════════════════════════════════ */}
       <div className="space-y-3">
         <div className="text-center space-y-1">
           <h3 className="font-amiri text-lg font-bold" style={{ color: G.text }}>اشتقاق البسط — Individual Bast Derivations</h3>
           <div className="h-px w-16 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
           <p className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
-            Each seed letter → {bastLevel}th Bast → Istintak expansion
+            Processing: FIRST → LAST | Apply {bastLevel}{bastLevel === 4 ? ' (رابع)' : bastLevel === 5 ? ' (خامس)' : ''} Bast
           </p>
         </div>
         
@@ -157,16 +163,25 @@ export default function SatrVahidGrouping({
             className="flex items-center gap-2 p-3 rounded-xl border"
             style={{ 
               background: "rgba(212,175,55,0.05)",
-              borderColor: G.border 
+              borderColor: G.border,
+              borderLeft: idx === 0 ? `3px solid ${G.green}` : undefined
             }}>
             
-            {/* Letter index */}
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-bold"
-              style={{ 
-                background: G.bg,
-                color: G.text 
-              }}>
-              {idx + 1}
+            {/* Processing order badge */}
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg font-inter text-xs font-bold"
+                style={{ 
+                  background: idx === 0 ? G.green : G.bg,
+                  color: idx === 0 ? '#000' : G.text
+                }}>
+                {idx === 0 ? 'START' : idx + 1}
+              </div>
+              {idx === 0 && (
+                <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.green }}>FIRST</span>
+              )}
+              {idx === individualDerivations.length - 1 && (
+                <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.red }}>LAST</span>
+              )}
             </div>
             
             {/* Original letter */}
