@@ -13,22 +13,21 @@ const G = {
 
 /**
  * MANUSCRIPT GROUPING RULE (pp.60-69):
- * 1. Count the expanded letters from Bast derivation
- * 2. Determine FERD (odd) or ZEVC (even)
- * 3. Group by 5 (FERD) or 4 (ZEVC)
- * 4. If remainder exists, append Galib Anasir Istintak letters to END
- * 5. Group the FINAL corrected sequence into Esma names
- * 6. Start grouping from LAST letter, move backwards
+ * 1. Generate all Bast derivation letters
+ * 2. Assemble complete Satr-i Vahid
+ * 3. Count Satr-i Vahid letters → determine FERD (odd) or ZEVC (even)
+ * 4. Group by 5 (FERD) or 4 (ZEVC)
+ * 5. If remainder exists, append Galib Anasir Istintak letters to END
+ * 6. Group the FINAL corrected sequence into Esma names
  */
 export default function SatrVahidGrouping({ 
   expandedLetters, 
-  isZevc, 
-  initialCountIsZevc,
+  isZevc,
   supplementLetters = [],
   hasSupplement = false,
 }) {
-  // Determine group size from seed count (initialCountIsZevc)
-  const groupSize = initialCountIsZevc !== undefined ? (initialCountIsZevc ? 4 : 5) : (isZevc ? 4 : 5);
+  // Determine group size from EXPANDED letter count (NOT seed letters)
+  const groupSize = isZevc ? 4 : 5;
   
   // MANUSCRIPT RULE: If supplement exists, it's already appended to expandedLetters
   // Just group the final corrected sequence
@@ -86,9 +85,9 @@ export default function SatrVahidGrouping({
           
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl border"
             style={{ background: G.bg, borderColor: G.border }}>
-            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Seed Count Type</span>
-            <span className={`font-inter text-sm font-bold px-2 py-0.5 rounded ${initialCountIsZevc !== undefined ? (initialCountIsZevc ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400') : (isZevc ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400')}`}>
-              {initialCountIsZevc !== undefined ? (initialCountIsZevc ? 'ZEVC (even)' : 'FERD (odd)') : (isZevc ? 'ZEVC (even)' : 'FERD (odd)')}
+            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid Count</span>
+            <span className={`font-inter text-sm font-bold px-2 py-0.5 rounded ${isZevc ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'}`}>
+              {isZevc ? 'ZEVC (even)' : 'FERD (odd)'}
             </span>
           </div>
           
@@ -111,7 +110,7 @@ export default function SatrVahidGrouping({
       {/* Groups display */}
       <div className="space-y-2">
         <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-          Final Corrected Groups ({completeGroups} complete{partialGroup ? ` + 1 partial: ${partialGroup.letters.length}/${groupSize}` : ''})
+          Final Corrected Groups ({groups.length} groups of {groupSize} letters)
         </p>
         
         <div className="space-y-1.5">
@@ -178,8 +177,9 @@ export default function SatrVahidGrouping({
       <div className="mt-3 p-3 rounded-xl border"
         style={{ background: "rgba(212,175,55,0.04)", borderColor: G.border }}>
         <p className="font-inter text-[8px] leading-relaxed" style={{ color: G.dim }}>
-          <span style={{ color: G.text }}>Manuscript Rule:</span> The FINAL corrected Satr-i Vahid sequence (after Galib Anasir supplement) 
-          is divided into equal groups of {groupSize} letters. Each group forms one Esma-i Kitabet name.
+          <span style={{ color: G.text }}>Manuscript Rule:</span> Zevc/Ferd classification is applied ONLY to the assembled Satr-i Vahid 
+          (expanded letters from Bast derivation). If even → groups of 4 | If odd → groups of 5. 
+          Galib Anasir supplement letters are appended to complete the final group.
         </p>
       </div>
 
@@ -192,7 +192,7 @@ export default function SatrVahidGrouping({
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
           <span className="font-inter text-[8px] uppercase tracking-[0.2em]" style={{ color: G.dim }}>
-            Grouping Complete — Ready for Esma Generation
+            Satr-i Vahid Grouping Complete
           </span>
         </motion.div>
       </div>

@@ -18,7 +18,6 @@ import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPostResults from "../components/mizaan/MizaanPostResults";
-import ManuscriptBastDerivation from "../components/mizaan/ManuscriptBastDerivation";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import GalibAnasirIstintak from "../components/mizaan/GalibAnasirIstintak";
 import { runMizaanPostPipeline } from "../lib/mizaanPostEngine";
@@ -144,24 +143,15 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
   return { grandBast, grandLetters };
 }
 
-function PostPipelineSection({ result, selections, degreeSels, inputText, customPurpose, onPipelineData, onGroupingData }) {
+function PostPipelineSection({ result, selections, degreeSels, inputText, customPurpose, onGroupingData }) {
   const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, inputText, customPurpose);
   const dominant = result?.dominant;
   
-  // Extract pipeline data from the actual engine
-  const pipelineData = useMemo(() => {
-    if (!grandBast || grandBast <= 0) return null;
+  // Extract grouping data from the actual engine
+  useMemo(() => {
+    if (!grandBast || grandBast <= 0) return;
     const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
-    if (!pipeline) return null;
-    const data = {
-      seedLetters: pipeline.initialSeedLetters,
-      bastLevel: pipeline.kitabet.bastLevelUsed,
-      isZevc: pipeline.kitabet.isZevc,
-      expandedLetters: pipeline.kitabet.expandedLetters,
-      isExpandedZevc: pipeline.kitabet.isExpandedZevc,
-    };
-    // Pass to parent immediately
-    onPipelineData?.(data);
+    if (!pipeline) return;
     onGroupingData?.({
       expandedLetters: pipeline.kitabet.finalExpandedLetters || pipeline.kitabet.expandedLetters,
       isExpandedZevc: pipeline.kitabet.isExpandedZevc,
@@ -169,8 +159,7 @@ function PostPipelineSection({ result, selections, degreeSels, inputText, custom
       supplementLetters: pipeline.kitabet.supplementLetters || [],
       hasSupplement: !!(pipeline.kitabet.supplementLetters && pipeline.kitabet.supplementLetters.length > 0),
     });
-    return data;
-  }, [grandBast, grandLetters, dominant, onPipelineData, onGroupingData]);
+  }, [grandBast, grandLetters, dominant, onGroupingData]);
   
   return <MizaanPostResults grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />;
 }
@@ -192,9 +181,7 @@ export default function Mizaan9Page() {
   const [selections, setSelections] = useState(initialState.selections);
   const [customPurpose, setCustomPurpose] = useState(initialState.customPurpose);
   const [degreeSels, setDegreeSels] = useState(initialState.degreeSels);
-  const [pipelineData, setPipelineData] = useState(null);
   const [groupingData, setGroupingData] = useState(null);
-  const [selectedGalibElement, setSelectedGalibElement] = useState(null);
   const abortRef = useRef(false);
 
   useEffect(() => {
@@ -347,28 +334,15 @@ export default function Mizaan9Page() {
               <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} />
               <MizaanDivider />
               <PostPipelineSection 
-  result={result} 
-  selections={selections} 
-  degreeSels={degreeSels} 
-  inputText={input} 
-  customPurpose={customPurpose} 
-  onPipelineData={setPipelineData} 
-  onGroupingData={setGroupingData} 
-/>
+                result={result} 
+                selections={selections} 
+                degreeSels={degreeSels} 
+                inputText={input} 
+                customPurpose={customPurpose} 
+                onGroupingData={setGroupingData} 
+              />
               
-              {/* MANUSCRIPT BAST DERIVATION — Visible derivation chain */}
-              {pipelineData && (
-                <ManuscriptBastDerivation
-                  seedLetters={pipelineData.seedLetters}
-                  bastLevel={pipelineData.bastLevel}
-                  isZevc={pipelineData.isZevc}
-                  expandedLetters={pipelineData.expandedLetters}
-                  isExpandedZevc={pipelineData.isExpandedZevc}
-                  color="#F5D060"
-                  title="Manuscript Bast Derivation"
-                  titleAr="اشتقاق البسط المخطوط"
-                />
-              )}
+
 
               {/* DEBUG: Show raw expanded letters for verification */}
               {groupingData && (

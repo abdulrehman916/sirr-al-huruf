@@ -346,29 +346,23 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
   seedLetters = istintak(satirTotal);
   seedCount = seedLetters.length;
 
-  // Step 3: Zevc/Ferd of seed count
-  isZevc = seedCount % 2 === 0;
-
-  // Step 4: Bast level selection (Kasem always 5th, otherwise zevc=4th, ferd=5th)
-  bastLevelUsed = alwaysFifth ? 5 : (isZevc ? 4 : 5);
-
-  // Step 5: Apply Bast to each seed letter and istintak each result
-  // MANUSCRIPT RULE: Process letters in REVERSE order (last-to-first)
-  seedBastValues = seedLetters.reverse().map(letter => {
-    const bastValue = getBastLevel(letter, bastLevelUsed);
+  // Step 3: Apply Bast to each seed letter and istintak each result
+  // Process letters in LINEAR order (first-to-last) - NO Zevc/Ferd classification yet
+  seedBastValues = seedLetters.map(letter => {
+    const bastValue = getBastLevel(letter, 1); // Always use 1st Bast for derivation
     const expansionLetters = istintak(bastValue);
     return { letter, bastValue, expansionLetters };
   });
 
-  // Step 6: Concatenate all expansion letters (preserves reverse processing order)
+  // Step 4: Concatenate all expansion letters (preserves linear processing order)
   expandedLetters = seedBastValues.flatMap(s => s.expansionLetters);
   expandedCount = expandedLetters.length;
 
-  // Step 7: Zevc/Ferd of expanded count → group size
+  // Step 5: Zevc/Ferd of EXPANDED count (NOT seed count) → group size
   isExpandedZevc = expandedCount % 2 === 0;
   const groupSize = isExpandedZevc ? 4 : 5;
 
-  // Step 8: Group into names - NO remainder handling here
+  // Step 6: Group into names - NO remainder handling here
   // Remainder is handled AFTER all stages in the main pipeline
   const names = [];
   for (let i = 0; i < expandedCount; i += groupSize) {
@@ -382,8 +376,8 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
     satirTotal,
     seedLetters,
     seedCount,
-    isZevc,
-    bastLevelUsed,
+    isZevc: false, // Not used - Zevc/Ferd applied to expanded letters only
+    bastLevelUsed: 1, // Always 1st Bast for derivation
     seedBastValues,
     expandedLetters,
     expandedCount,
