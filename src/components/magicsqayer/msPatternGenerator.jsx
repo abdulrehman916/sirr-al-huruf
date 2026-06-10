@@ -18,7 +18,8 @@ const SUFFIXES = {
 
 /**
  * extractLettersFromValue(value)
- * ORIGINAL METHOD: Decompose value into Abjad letters using greedy algorithm
+ * BAST-2 METHOD: Decompose value into Abjad letters using greedy algorithm
+ * CRITICAL: NO REVERSAL - preserve original extraction order
  */
 function extractLettersFromValue(value, letterTable) {
   if (!value || value <= 0) return [];
@@ -26,7 +27,7 @@ function extractLettersFromValue(value, letterTable) {
   const letters = [];
   let remaining = value;
   
-  // Greedy decomposition: largest values first
+  // Greedy decomposition: largest values first (1000 → 1)
   for (let i = letterTable.length - 1; i >= 0 && remaining > 0; i--) {
     const { val, letter } = letterTable[i];
     while (remaining >= val) {
@@ -35,18 +36,24 @@ function extractLettersFromValue(value, letterTable) {
     }
   }
   
-  // Reverse to get proper reading order
-  return letters.reverse();
+  // BAST-2 RULE: Return extraction order AS-IS - NO REVERSAL
+  // Letters are concatenated in exact extraction order (greedy first → last)
+  return letters;
 }
 
 /**
  * generateNameForHierarchyValue(value, suffixType)
  * BAST-2 EXTRACTION RULE:
  * 1. Value is already the final adjusted extraction value (DO NOT subtract suffix again)
- * 2. Extract letters directly from value using Abjad decomposition
+ * 2. Extract letters directly from value using Abjad decomposition (greedy, largest → smallest)
  * 3. For Angel modes: add suffix letters (إيل for Arabic, אל for Hebrew) AFTER extraction
  * 4. For Jinn modes: no suffix letters added
  * 5. Apply tashkeel ONLY (never change letters)
+ * 
+ * CRITICAL: BAST-2 CONSONANT ORDER IS IMMUTABLE
+ * - Extracted consonants are concatenated in EXACT extraction order
+ * - NO reversal, NO reordering, NO letter insertion, NO letter removal
+ * - Example: 337 = 300 + 30 + 7 = ش + ل + ز = شلز (NOT زلش)
  * 
  * CRITICAL: The input value is already the result of Ulvi adjustment.
  * Example: 18 → 18 + 360 - 41 = 337 (adjustment happens BEFORE this function is called)
@@ -66,7 +73,7 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   // DO NOT subtract suffix again - it was already applied during Ulvi adjustment
   const extractionValue = value;
   
-  // ORIGINAL LETTER EXTRACTION: Abjad decomposition from adjusted value
+  // BAST-2 LETTER EXTRACTION: Greedy Abjad decomposition (1000 → 1), NO REVERSAL
   const letterTable = isHebrew ? HEBREW_GEMATRIA : ARABIC_ABJAD;
   const consonants = extractLettersFromValue(extractionValue, letterTable);
   
@@ -74,10 +81,14 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     return { success: false, error: 'Could not extract letters' };
   }
   
-  // Apply phonetic rules for tashkeel ONLY
+  // BAST-2 ASSEMBLY: Direct concatenation of extracted consonants (extraction order preserved)
+  // Example: [ش, ل, ز] → شلز (NOT زلش)
+  const rawConsonantSequence = consonants.join('');
+  
+  // Apply phonetic rules for tashkeel ONLY (does not change consonant order)
   const phoneticResult = applyPhoneticRules(consonants, value);
   
-  // Build vocalized name WITHOUT changing letters
+  // Build vocalized name WITHOUT changing letters or order
   let vocalizedName = '';
   for (let i = 0; i < consonants.length; i++) {
     vocalizedName += consonants[i] + phoneticResult.vowels[i];
@@ -105,7 +116,8 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     value,
     suffixType,
     extractionValue,
-    consonants,
+    consonants, // BAST-2: immutable extraction order
+    rawConsonantSequence, // Direct concatenation (extraction order)
     fullName: vocalizedName,
     isAngel,
     isHebrew,

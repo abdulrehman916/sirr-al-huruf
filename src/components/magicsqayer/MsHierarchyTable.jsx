@@ -34,7 +34,7 @@ function extractLettersFromValue(value) {
   const letters = [];
   let remaining = value;
   
-  // BAST-2 RULE: Greedy decomposition - largest values first
+  // BAST-2 RULE: Greedy decomposition - largest values first (1000 → 1)
   // This produces the IMMUTABLE extraction order (e.g., 337 = ش ل ز)
   for (let i = ARABIC_ABJAD.length - 1; i >= 0 && remaining > 0; i--) {
     const { val, letter } = ARABIC_ABJAD[i];
@@ -44,9 +44,10 @@ function extractLettersFromValue(value) {
     }
   }
   
-  // CRITICAL: Return extraction order AS-IS - NO REVERSAL, NO SUBSTITUTION
+  // CRITICAL: BAST-2 EXTRACTION ORDER IS FINAL - NO REVERSAL
+  // Letters are concatenated in exact extraction order (greedy first → last)
+  // Example: 337 extracts [ش, ل, ز] → final sequence = شلز (NOT زلش)
   // These consonants are IMMUTABLE - only harakat may be added during naming
-  // RTL display may visually show ز ل ش, but naming ALWAYS uses ش ل ز
   return letters;
 }
 
@@ -64,15 +65,19 @@ function generateTraditionalName(value, suffixType) {
   
   if (adjustedValue <= 0) adjustedValue = 1;
   
-  // STEP 2: BAST-2 EXTRACTION - Extract letters via Abjad decomposition
-  // These consonants are IMMUTABLE - they form the base of the final name
+  // STEP 2: BAST-2 EXTRACTION - Greedy Abjad decomposition (1000 → 1)
+  // CRITICAL: Extraction order is IMMUTABLE - NO REVERSAL, NO REORDERING
+  // Example: 337 = 300 + 30 + 7 = [ش, ل, ز] → sequence = شلز
   const consonants = extractLettersFromValue(adjustedValue);
   
-  // STEP 3: Build extracted consonant sequence (no modifications, no reversals)
+  // STEP 3: BAST-2 ASSEMBLY - Direct concatenation in extraction order
+  // CRITICAL: consonants.join('') preserves greedy order (first extracted → last extracted)
+  // Example: [ش, ل, ز].join('') = 'شلز' (NOT 'زلش')
   const extractedSequence = consonants.join('');
   
   // STEP 4: Apply Tashkeel ONLY (Bast-2 harakat rule)
   // First letter = Fatha, Middle letters = Kasra, Last letter = Sukun
+  // Tashkeel does NOT change consonant order or values
   const FATHA = '\u064E';
   const KASRA = '\u0650';
   const SUKUN = '\u0652';
@@ -102,7 +107,8 @@ function generateTraditionalName(value, suffixType) {
   return {
     originalValue: value,
     adjustedValue,
-    consonants, // Raw extracted letters - immutable
+    consonants, // BAST-2: immutable extraction order
+    extractedSequence, // Direct concatenation (extraction order preserved)
     name: displayName
   };
 }
