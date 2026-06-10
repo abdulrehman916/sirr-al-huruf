@@ -243,19 +243,18 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         </motion.div>
       )}
 
-      {/* 8 hierarchy rows — original clean layout */}
+      {/* 8 hierarchy rows — original layout */}
       {hier && (
         <div className="space-y-2">
           {rows.map((row, i) => (
             <motion.div key={row.key}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               transition={{ delay: i * 0.03, duration: 0.15 }}
-              className="rounded-xl overflow-hidden border"
-              style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
+              className="rounded-xl overflow-hidden border p-4"
+              style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)", background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}
             >
-              {/* Tier Label + Hierarchy Value */}
-              <div className="flex items-center justify-between px-4 py-3"
-                style={{ background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}>
+              {/* Top row: Tier Label + Hierarchy Value */}
+              <div className="flex items-center justify-between mb-4">
                 <p className="font-inter text-[10px] uppercase tracking-widest"
                   style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.60)", letterSpacing: "0.8px" }}>
                   {row.label}
@@ -266,7 +265,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                   lang="ar"
                   style={{ 
                     color: row.highlight ? G.text : "rgba(212,175,55,0.85)", 
-                    fontSize: "1.7rem",
+                    fontSize: "1.3rem",
                     textShadow: row.highlight ? `0 0 12px ${G.glow}` : "none",
                     fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
                   }}>
@@ -274,46 +273,40 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 </p>
               </div>
 
-              {/* Angel/Jinn Value + Final Name (no extraction debug) */}
+              {/* Middle + Right: Angel Value label + value centered, Final Name on right */}
               {showNames && row.nameData && (
-                <div className="px-4 py-3 space-y-2" style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
-                  {/* Angel/Jinn Value label + value */}
-                  <div className="flex items-center justify-between">
-                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)", letterSpacing: "0.8px" }}>
-                      {suffix.includes('angel') ? 'Angel Value' : 'Jinn Value'}
+                <div className="flex items-center justify-between">
+                  {/* Angel/Jinn Value centered */}
+                  <div className="flex flex-col items-center flex-1">
+                    <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)", letterSpacing: "0.5px" }}>
+                      {suffix.includes('angel') ? 'Angel (Arabic)' : 'Jinn (Arabic)'}
                     </p>
                     <p 
                       className="font-amiri font-bold" 
                       dir="rtl"
                       lang="ar"
                       style={{ 
-                        color: row.color, 
-                        fontSize: "1.5rem",
-                        textShadow: `0 0 12px ${row.color}66`,
+                        color: "rgba(212,175,55,0.70)", 
+                        fontSize: "1.2rem",
                         fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
                       }}>
                       {lang === "ar" ? toArabicIndic(row.nameData.adjustedValue.toLocaleString()) : row.nameData.adjustedValue.toLocaleString()}
                     </p>
                   </div>
 
-                  {/* Final Name only */}
-                  <div className="flex items-center justify-end pt-1">
-                    <span 
-                      className="font-amiri font-bold px-4 py-2 rounded-lg" 
-                      dir="rtl"
-                      lang="ar"
-                      style={{ 
-                        fontSize: "2.2rem",
-                        color: "#FFFFFF",
-                        background: `linear-gradient(135deg, ${row.color}22, ${row.color}11)`,
-                        border: `1px solid ${row.color}55`,
-                        textShadow: `0 0 16px ${row.color}77`,
-                        letterSpacing: "0.3px",
-                        fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
-                      }}>
-                      {row.nameData.name}
-                    </span>
-                  </div>
+                  {/* Final Name on the right — no container, just text */}
+                  <span 
+                    className="font-amiri font-bold" 
+                    dir="rtl"
+                    lang="ar"
+                    style={{ 
+                      fontSize: "1.8rem",
+                      color: row.color,
+                      textShadow: `0 0 12px ${row.color}66`,
+                      fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
+                    }}>
+                    {row.nameData.name}
+                  </span>
                 </div>
               )}
             </motion.div>
