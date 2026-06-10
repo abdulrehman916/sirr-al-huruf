@@ -4,11 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { ARABIC_ABJAD, HEBREW_GEMATRIA } from './msEngine';
-
-// Bast-2 harakat constants
-const FATHA = '\u064E';
-const KASRA = '\u0650';
-const SUKUN = '\u0652';
+import { vocalizeConsonants } from './msHarakat';
 
 // Book suffix values
 const SUFFIXES = {
@@ -131,15 +127,8 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   const rawConsonantSequence = consonants.join('');
   const reversedConsonants = [...consonants].reverse();
   
-  // Apply Bast-2 harakat: First=Fatha, Middle=Kasra, Last=Sukun
-  let vocalizedRoot = '';
-  for (let i = 0; i < reversedConsonants.length; i++) {
-    let harakat;
-    if (i === 0) harakat = FATHA;
-    else if (i === reversedConsonants.length - 1) harakat = SUKUN;
-    else harakat = KASRA;
-    vocalizedRoot += reversedConsonants[i] + harakat;
-  }
+  // Apply natural Arabic harakat (see msHarakat.js)
+  const vocalizedRoot = vocalizeConsonants(reversedConsonants);
   
   // Angels: root + space + ايل (separated)
   const fullName = isAngel ? vocalizedRoot + ' ' + 'ايل' : vocalizedRoot;

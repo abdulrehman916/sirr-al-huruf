@@ -2,6 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
+import { vocalizeConsonants } from "./msHarakat";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -115,28 +116,8 @@ function generateTraditionalName(value, suffixType) {
   const reversedConsonants = [...consonants].reverse(); // Mirror order for final name
   const mirroredSequence = reversedConsonants.join(''); // Final name uses reversed sequence
   
-  // STEP 4: Apply Tashkeel ONLY (Bast-2 harakat rule)
-  // First letter = Fatha, Middle letters = Kasra, Last letter = Sukun
-  // Tashkeel does NOT change consonant order or values
-  const FATHA = '\u064E';
-  const KASRA = '\u0650';
-  const SUKUN = '\u0652';
-  
-  let vocalizedRoot = '';
-  for (let i = 0; i < reversedConsonants.length; i++) {
-    const letter = reversedConsonants[i];
-    let harakat;
-    
-    if (i === 0) {
-      harakat = FATHA; // First letter
-    } else if (i === reversedConsonants.length - 1) {
-      harakat = SUKUN; // Last letter
-    } else {
-      harakat = KASRA; // Middle letters
-    }
-    
-    vocalizedRoot += letter + harakat;
-  }
+  // STEP 4: Apply natural Arabic harakat (no fixed pattern — see msHarakat.js)
+  const vocalizedRoot = vocalizeConsonants(reversedConsonants);
   
   // STEP 5: For Angels, display root + space + ايل (SEPARATED, not merged)
   let displayName = vocalizedRoot || 'N/A';
