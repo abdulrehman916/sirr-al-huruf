@@ -367,6 +367,12 @@ export default function Mizaan9Page() {
                 />
               )}
 
+              {/* GALIB ANASIR ISTINTAK — Full derivation display */}
+              <GalibAnasirIstintak 
+                selectedElement={result?.dominant} 
+                onElementSelect={setSelectedGalibElement}
+              />
+
               {/* SATR-I VAHID LETTER GROUPING — Groups from LAST→FIRST */}
               {groupingData && (
                 <SatrVahidGrouping
