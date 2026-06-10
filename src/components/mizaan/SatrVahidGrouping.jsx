@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { getBastLevel, istintak } from "../../lib/mizaanPostEngine";
+import { getBastLevel, istintak, generateEsmaLevel } from "../../lib/mizaanPostEngine";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -31,6 +31,7 @@ export default function SatrVahidGrouping({
   finalLetters = [],          // Final corrected sequence (after Bast expansion + supplement if needed)
   supplementLetters = [],     // Galib Anasir supplement letters
   hasSupplement = false,
+  dominant = 'fire',          // Dominant element for Galib Anasir supplementation
 }) {
   // CRITICAL: Ensure all arrays are safe
   const safeSatrVahidLetters = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
@@ -85,15 +86,24 @@ export default function SatrVahidGrouping({
     const result = [];
     for (let i = 0; i < finalSequence.length; i += groupSize) {
       const group = finalSequence.slice(i, i + groupSize);
+      // Generate Esma-i Kitabet name from group letters
+      // MANUSCRIPT RULE: Convert each letter group to a name via Bast + Istintak
+      const nameLetters = group.map(letter => {
+        const bastValue = getBastLevel(letter, 1);
+        const istintakLetters = istintak(bastValue);
+        return istintakLetters.length > 0 ? istintakLetters[0] : letter;
+      });
       result.push({
         letters: group,
+        nameLetters,
+        name: nameLetters.join(''),
         startIndex: i,
         endIndex: Math.min(i + groupSize - 1, finalSequence.length - 1),
         isComplete: group.length === groupSize,
       });
     }
     return result;
-  }, [finalSequence, groupSize]);
+  }, [finalSequence, groupSize, dominant]);
 
   return (
     <motion.div
@@ -345,23 +355,32 @@ export default function SatrVahidGrouping({
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: groupIdx * 0.05 }}
-            className="flex items-center gap-2 p-2 rounded-xl border"
+            className="space-y-2 p-3 rounded-xl border"
             style={{ 
               background: "rgba(212,175,55,0.06)",
               borderColor: G.border 
             }}>
-            
-            {/* Group number */}
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg font-inter text-xs font-bold"
-              style={{ 
-                background: G.bg,
-                color: G.text 
-              }}>
-              {groupIdx + 1}
+            {/* Group header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-bold"
+                  style={{ 
+                    background: G.bg,
+                    color: G.text 
+                  }}>
+                  {groupIdx + 1}
+                </div>
+                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
+                  Group {groupIdx + 1}
+                </span>
+              </div>
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.text, background: `${G.text}15`, padding: "2px 6px", borderRadius: "4px" }}>
+                {group.letters.length} letters
+              </span>
             </div>
             
-            {/* Letters */}
-            <div className="flex-1 flex items-center gap-1 flex-wrap" dir="ltr">
+            {/* Group letters */}
+            <div className="flex items-center gap-1 flex-wrap" dir="ltr">
               {group.letters.map((letter, letterIdx) => (
                 <span
                   key={letterIdx}
@@ -376,6 +395,23 @@ export default function SatrVahidGrouping({
                   {letter}
                 </span>
               ))}
+            </div>
+            
+            {/* Generated Esma-i Kitabet name */}
+            <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: G.border }}>
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
+                Esma-i Kitabet:
+              </span>
+              <span className="font-amiri text-2xl font-bold px-3 py-1.5 rounded-lg border"
+                style={{
+                  color: G.green,
+                  borderColor: G.green,
+                  background: `${G.green}10`
+                }}
+                dir="rtl"
+              >
+                {group.name}
+              </span>
             </div>
           </motion.div>
         ))}
