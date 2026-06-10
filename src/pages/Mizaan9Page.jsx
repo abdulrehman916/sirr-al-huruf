@@ -322,6 +322,8 @@ export default function Mizaan9Page() {
                 if (!grandBast || grandBast <= 0) return null;
                 const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
                 if (!pipeline) return null;
+                
+                // Set grouping data once
                 if (!groupingData) {
                   setGroupingData({
                     expandedLetters: pipeline.kitabet.finalExpandedLetters || pipeline.kitabet.expandedLetters,
@@ -329,13 +331,8 @@ export default function Mizaan9Page() {
                     supplementLetters: pipeline.kitabet.supplementLetters || [],
                     hasSupplement: !!(pipeline.kitabet.supplementLetters && pipeline.kitabet.supplementLetters.length > 0),
                   });
-                  setPipelineValues({
-                    grandBast: pipeline.input.grandBast,
-                    grandLetters: pipeline.input.grandLetters,
-                    satirVahidTotal: pipeline.input.satirVahidTotal,
-                    initialSeedLetters: pipeline.initialSeedLetters,
-                  });
                 }
+                
                 return (
                   <>
                     {/* Pipeline Input */}
@@ -349,22 +346,22 @@ export default function Mizaan9Page() {
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Bast (Σ 9 Mizans)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipelineValues.grandBast.toLocaleString()}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input.grandBast.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Letters (Σ 9 Mizans)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipelineValues.grandLetters}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input.grandLetters}</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satır Vahid Total</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipelineValues.satirVahidTotal.toLocaleString()}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input.satirVahidTotal.toLocaleString()}</span>
                         </div>
                         <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Initial Seed Letters</span>
                           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
-                            {[...pipelineValues.initialSeedLetters].reverse().map((l, i) => (
+                            {[...pipeline.initialSeedLetters].reverse().map((l, i) => (
                               <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
                                 style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.04)" }} dir="rtl">{l}</span>
                             ))}
