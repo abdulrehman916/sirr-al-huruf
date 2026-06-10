@@ -77,7 +77,7 @@ function generateTraditionalName(value, suffixType) {
   const KASRA = '\u0650';
   const SUKUN = '\u0652';
   
-  let vocalizedName = '';
+  let vocalizedRoot = '';
   for (let i = 0; i < consonants.length; i++) {
     const letter = consonants[i];
     let harakat;
@@ -90,20 +90,20 @@ function generateTraditionalName(value, suffixType) {
       harakat = KASRA; // Middle letters
     }
     
-    vocalizedName += letter + harakat;
+    vocalizedRoot += letter + harakat;
   }
   
-  // STEP 5: Add ايل suffix for Angels ONLY
-  // Remove final sukun, add KASRA + ي + FATHA + ل
+  // STEP 5: For Angels, display root + space + ايل (SEPARATED, not merged)
+  let displayName = vocalizedRoot || 'N/A';
   if (isAngel) {
-    vocalizedName = vocalizedName.replace(/\u0652$/, '') + KASRA + 'ي' + FATHA + 'ل';
+    displayName = vocalizedRoot + ' ' + 'ايل';
   }
   
   return {
     originalValue: value,
     adjustedValue,
     consonants, // Raw extracted letters - immutable
-    name: vocalizedName || 'N/A'
+    name: displayName
   };
 }
 
