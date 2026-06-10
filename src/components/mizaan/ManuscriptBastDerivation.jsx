@@ -66,6 +66,8 @@ export default function ManuscriptBastDerivation({
   seedLetters, 
   bastLevel, 
   isZevc,
+  expandedLetters,
+  isExpandedZevc,
   color = "#F5D060",
   title = "Manuscript Bast Derivation",
   titleAr = "اشتقاق البسط المخطوط"
@@ -323,6 +325,41 @@ export default function ManuscriptBastDerivation({
           </div>
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          STEP 7: FINAL EXPANDED LETTERS FROM PIPELINE (if available)
+          ═══════════════════════════════════════════════════════════════ */}
+      {expandedLetters && expandedLetters.length > 0 && (
+        <div className="rounded-xl border p-4" style={{ background: `${color}05`, borderColor: `${color}30` }}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+              ✦ Final Expanded Letters (Post-Bast Pipeline)
+            </span>
+            <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: isExpandedZevc ? G.green : G.red, background: isExpandedZevc ? `${G.green}15` : `${G.red}15`, padding: "2px 8px", borderRadius: "4px" }}>
+              {expandedLetters.length} letters → {isExpandedZevc ? 'ZEVC' : 'FERD'} → Groups of {isExpandedZevc ? 4 : 5}
+            </span>
+          </div>
+
+          <div className="p-4 rounded-lg" style={{ background: `${color}10`, border: `2px solid ${color}40` }}>
+            <div className="flex flex-wrap justify-center gap-2 mb-3" style={{ direction: "ltr" }}>
+              {[...expandedLetters].reverse().map((l, i) => (
+                <LetterChip 
+                  key={i} 
+                  letter={l} 
+                  color={G.green} 
+                  size="1.4rem" 
+                />
+              ))}
+            </div>
+            
+            <div className="text-center pt-3 border-t" style={{ borderColor: `${color}30` }}>
+              <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>
+                These letters are used for Esma-i Kitabet name generation
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
     </motion.div>
   );

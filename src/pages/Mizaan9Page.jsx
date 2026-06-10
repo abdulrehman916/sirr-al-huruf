@@ -19,6 +19,7 @@ import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPostResults from "../components/mizaan/MizaanPostResults";
 import ManuscriptBastDerivation from "../components/mizaan/ManuscriptBastDerivation";
+import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import { runMizaanPostPipeline } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
@@ -142,7 +143,7 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
   return { grandBast, grandLetters };
 }
 
-function PostPipelineSection({ result, selections, degreeSels, inputText, customPurpose, onPipelineData }) {
+function PostPipelineSection({ result, selections, degreeSels, inputText, customPurpose, onPipelineData, onGroupingData }) {
   const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, inputText, customPurpose);
   const dominant = result?.dominant;
   
@@ -155,11 +156,17 @@ function PostPipelineSection({ result, selections, degreeSels, inputText, custom
       seedLetters: pipeline.initialSeedLetters,
       bastLevel: pipeline.kitabet.bastLevelUsed,
       isZevc: pipeline.kitabet.isZevc,
+      expandedLetters: pipeline.kitabet.expandedLetters,
+      isExpandedZevc: pipeline.kitabet.isExpandedZevc,
     };
     // Pass to parent immediately
     onPipelineData?.(data);
+    onGroupingData?.({
+      expandedLetters: pipeline.kitabet.expandedLetters,
+      isExpandedZevc: pipeline.kitabet.isExpandedZevc,
+    });
     return data;
-  }, [grandBast, grandLetters, dominant, onPipelineData]);
+  }, [grandBast, grandLetters, dominant, onPipelineData, onGroupingData]);
   
   return <MizaanPostResults grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />;
 }
@@ -182,6 +189,7 @@ export default function Mizaan9Page() {
   const [customPurpose, setCustomPurpose] = useState(initialState.customPurpose);
   const [degreeSels, setDegreeSels] = useState(initialState.degreeSels);
   const [pipelineData, setPipelineData] = useState(null);
+  const [groupingData, setGroupingData] = useState(null);
   const abortRef = useRef(false);
 
   useEffect(() => {
@@ -340,6 +348,7 @@ export default function Mizaan9Page() {
   inputText={input} 
   customPurpose={customPurpose} 
   onPipelineData={setPipelineData} 
+  onGroupingData={setGroupingData} 
 />
               
               {/* MANUSCRIPT BAST DERIVATION — Visible derivation chain */}
@@ -348,9 +357,20 @@ export default function Mizaan9Page() {
                   seedLetters={pipelineData.seedLetters}
                   bastLevel={pipelineData.bastLevel}
                   isZevc={pipelineData.isZevc}
+                  expandedLetters={pipelineData.expandedLetters}
+                  isExpandedZevc={pipelineData.isExpandedZevc}
                   color="#F5D060"
                   title="Manuscript Bast Derivation"
                   titleAr="اشتقاق البسط المخطوط"
+                />
+              )}
+
+              {/* SATR-I VAHID LETTER GROUPING — Groups from LAST→FIRST */}
+              {groupingData && (
+                <SatrVahidGrouping
+                  expandedLetters={groupingData.expandedLetters}
+                  isZevc={groupingData.isExpandedZevc}
+                  color="#F5D060"
                 />
               )}
 
