@@ -26,6 +26,22 @@ const JINN_SUFFIX = '\u0637\u0650\u064A\u0634\u0652'; // طِيشْ
 const HEB_ANGEL_SUFFIX = 'אל';   // El
 const HEB_JINN_SUFFIX  = 'טכש';  // Takesh
 
+// Hebrew letter → Latin transliteration map
+const HEB_TRANSLIT = {
+  'א':'A', 'ב':'B', 'ג':'G', 'ד':'D', 'ה':'H', 'ו':'V', 'ז':'Z',
+  'ח':'Ch', 'ט':'T', 'י':'Y', 'כ':'K', 'ך':'K', 'ל':'L', 'מ':'M',
+  'ם':'M', 'נ':'N', 'ן':'N', 'ס':'S', 'ע':'A', 'פ':'P', 'ף':'P',
+  'צ':'Tz', 'ץ':'Tz', 'ק':'Q', 'ר':'R', 'ש':'Sh', 'ת':'T',
+};
+
+/**
+ * transliterateHebrew(str) — convert Hebrew consonants to Latin pronunciation guide
+ */
+export function transliterateHebrew(str) {
+  if (!str) return '';
+  return [...str].map(c => HEB_TRANSLIT[c] ?? c).join('');
+}
+
 /**
  * vocalizeConsonants(consonants)
  * Applies alternating Fatha/Sukun (pos 0 → Fatha, pos 1 → Sukun, ...).

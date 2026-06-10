@@ -2,7 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
-import { buildAngelName, buildJinnName, buildHebrewAngelName, buildHebrewJinnName } from "./msHarakat";
+import { buildAngelName, buildJinnName, buildHebrewAngelName, buildHebrewJinnName, transliterateHebrew } from "./msHarakat";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -301,19 +301,28 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     </p>
                   </div>
 
-                  {/* Final Name on the right — no container, just text */}
-                  <span 
-                    className="font-amiri font-bold" 
-                    dir="rtl"
-                    lang="ar"
-                    style={{ 
-                      fontSize: "1.8rem",
-                      color: row.color,
-                      textShadow: `0 0 12px ${row.color}66`,
-                      fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
-                    }}>
-                    {row.nameData.name}
-                  </span>
+                  {/* Final Name on the right */}
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span
+                      className="font-bold"
+                      dir={suffix.startsWith('heb') ? "ltr" : "rtl"}
+                      lang={suffix.startsWith('heb') ? "he" : "ar"}
+                      style={{
+                        fontSize: "1.8rem",
+                        color: row.color,
+                        textShadow: `0 0 12px ${row.color}66`,
+                        fontFamily: suffix.startsWith('heb')
+                          ? "'SBL Hebrew', 'Times New Roman', serif"
+                          : "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
+                      }}>
+                      {row.nameData.name}
+                    </span>
+                    {suffix.startsWith('heb') && (
+                      <span className="font-inter" style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)", letterSpacing: "0.08em" }}>
+                        {transliterateHebrew(row.nameData.name)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </motion.div>
