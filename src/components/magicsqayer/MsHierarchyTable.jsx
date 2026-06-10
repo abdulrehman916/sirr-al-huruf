@@ -2,7 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
-import { vocalizeConsonants } from "./msHarakat";
+import { buildAngelName, buildJinnName } from "./msHarakat";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -116,14 +116,12 @@ function generateTraditionalName(value, suffixType) {
   const reversedConsonants = [...consonants].reverse(); // Mirror order for final name
   const mirroredSequence = reversedConsonants.join(''); // Final name uses reversed sequence
   
-  // STEP 4: Apply natural Arabic harakat (no fixed pattern — see msHarakat.js)
-  const vocalizedRoot = vocalizeConsonants(reversedConsonants);
-  
-  // STEP 5: For Angels, display root + space + ايل (SEPARATED, not merged)
-  let displayName = vocalizedRoot || 'N/A';
-  if (isAngel) {
-    displayName = vocalizedRoot + ' ' + 'ايل';
-  }
+  // STEP 4: Apply harakat and append suffix
+  // Angels → root + ئِيل (attached, no space)
+  // Jinn   → vocalized root only
+  const displayName = isAngel
+    ? buildAngelName(reversedConsonants)
+    : buildJinnName(reversedConsonants);
   
   return {
     originalValue: value,
@@ -210,7 +208,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       {/* Active system badge */}
       {(() => {
         const badgeCfg = {
-          "ar-angel":  { c: "#4FE3FF", b: "rgba(79,227,255,0.35)",   bg: "rgba(79,227,255,0.06)",   label: lang==="ar" ? "ملاك عربي — إيل (−٤١)" : "Arabic Angel — إيل (−41)" },
+          "ar-angel":  { c: "#4FE3FF", b: "rgba(79,227,255,0.35)",   bg: "rgba(79,227,255,0.06)",   label: lang==="ar" ? "ملاك عربي — ئيل (−٤١)" : "Arabic Angel — ئيل (−41)" },
           "ar-jinn":   { c: "#FF9F5A", b: "rgba(255,159,90,0.35)",   bg: "rgba(255,159,90,0.06)",   label: lang==="ar" ? "جن عربي — طيش (−٣١٩)" : "Arabic Jinn — طيش (−319)" },
           "heb-angel": { c: "#C4B5FD", b: "rgba(196,181,253,0.35)",  bg: "rgba(196,181,253,0.06)",  label: lang==="ar" ? "ملاك عبري — אל (−٣١)" : "Hebrew Angel — אל (−31)" },
           "heb-jinn":  { c: "#F9A8D4", b: "rgba(249,168,212,0.35)",  bg: "rgba(249,168,212,0.06)",  label: lang==="ar" ? "جن عبري — תקש (−٣٢٩)" : "Hebrew Jinn — תקש (−329)" },

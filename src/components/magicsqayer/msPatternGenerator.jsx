@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { ARABIC_ABJAD, HEBREW_GEMATRIA } from './msEngine';
-import { vocalizeConsonants } from './msHarakat';
+import { buildAngelName, buildJinnName } from './msHarakat';
 
 // Book suffix values
 const SUFFIXES = {
@@ -127,11 +127,10 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   const rawConsonantSequence = consonants.join('');
   const reversedConsonants = [...consonants].reverse();
   
-  // Apply natural Arabic harakat (see msHarakat.js)
-  const vocalizedRoot = vocalizeConsonants(reversedConsonants);
-  
-  // Angels: root + space + ايل (separated)
-  const fullName = isAngel ? vocalizedRoot + ' ' + 'ايل' : vocalizedRoot;
+  // Apply harakat and append suffix
+  const fullName = isAngel
+    ? buildAngelName(reversedConsonants)
+    : buildJinnName(reversedConsonants);
   
   return {
     success: true,
