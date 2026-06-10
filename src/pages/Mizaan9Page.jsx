@@ -21,7 +21,7 @@ import MizaanPostResults from "../components/mizaan/MizaanPostResults";
 import ManuscriptBastDerivation from "../components/mizaan/ManuscriptBastDerivation";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import GalibAnasirIstintak from "../components/mizaan/GalibAnasirIstintak";
-import { runMizaanPostPipeline, GALIB_ANASIR_VALUES } from "../lib/mizaanPostEngine";
+import { runMizaanPostPipeline } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
 const G = {
@@ -165,6 +165,7 @@ function PostPipelineSection({ result, selections, degreeSels, inputText, custom
     onGroupingData?.({
       expandedLetters: pipeline.kitabet.expandedLetters,
       isExpandedZevc: pipeline.kitabet.isExpandedZevc,
+      isZevc: pipeline.kitabet.isZevc,
     });
     return data;
   }, [grandBast, grandLetters, dominant, onPipelineData, onGroupingData]);
@@ -367,10 +368,30 @@ export default function Mizaan9Page() {
                 />
               )}
 
+              {/* DEBUG: Show raw expanded letters for verification */}
+              {groupingData && (
+                <div className="rounded-xl border p-3" style={{ background: "rgba(212,175,55,0.05)", borderColor: G.border }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                    Expanded Letters Sequence (for verification):
+                  </p>
+                  <div className="flex flex-wrap gap-1" dir="rtl">
+                    {groupingData.expandedLetters.map((l, i) => (
+                      <span key={i} className="font-amiri text-lg px-2 py-1 rounded border"
+                        style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.08)" }}>
+                        {l}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="font-inter text-[8px] mt-2" style={{ color: G.dim }}>
+                    Total: {groupingData.expandedLetters.length} letters | 
+                    Index 0 = first letter | Index {groupingData.expandedLetters.length - 1} = last letter
+                  </p>
+                </div>
+              )}
+
               {/* GALIB ANASIR ISTINTAK — Full derivation display */}
               <GalibAnasirIstintak 
                 selectedElement={result?.dominant} 
-                onElementSelect={setSelectedGalibElement}
               />
 
               {/* SATR-I VAHID LETTER GROUPING — Groups from LAST→FIRST */}
@@ -378,7 +399,7 @@ export default function Mizaan9Page() {
                 <SatrVahidGrouping
                   expandedLetters={groupingData.expandedLetters}
                   isZevc={groupingData.isExpandedZevc}
-                  color="#F5D060"
+                  initialCountIsZevc={groupingData.isZevc}
                 />
               )}
 

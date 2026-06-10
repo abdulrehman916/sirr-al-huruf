@@ -446,10 +446,10 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // Generate Esma-i Kitabet (first stage)
   const kitabet = generateEsmaLevel(initialSeedLetters, false, element);
 
-  // Generate Esma-i A'van (second stage)
+  // Generate Esma-i A'van (second stage) - using kitabet expanded letters
   const avan = generateEsmaLevel(kitabet.expandedLetters, false, element);
 
-  // Generate Esma-i Kasem (third stage, always 5th Bast)
+  // Generate Esma-i Kasem (third stage, always 5th Bast) - using avan expanded letters
   const kasem = generateEsmaLevel(avan.expandedLetters, true, element);
 
   // Build Vefk from grandBast (the total of 9 MIZAN First Bast values)
