@@ -298,7 +298,11 @@ export function resolveGalipAnasir(dominant) {
  * 1. Use input letters directly as Satr-i Vahid (NO expansion)
  * 2. Count letters → FERD (odd) or ZEVC (even)
  * 3. Group by 5 (FERD) or 4 (ZEVC)
- * 4. If remainder exists, append Galib Anasir letters to END
+ * 4. If remainder exists:
+ *    - Get Galib Anasir's 1st Bast value
+ *    - Perform Istintak on that Bast number
+ *    - Take only the needed letters to complete the final group
+ *    - Append those letters to the remainder group
  * 5. Group the FINAL corrected sequence into names
  *
  * Parameters:
@@ -315,6 +319,7 @@ export function resolveGalipAnasir(dominant) {
  *   groupSize,             // 4 (ZEVC) or 5 (FERD)
  *   finalExpandedLetters,  // After supplement (if needed)
  *   supplementLetters,     // Galib Anasir supplement
+ *   remainder,             // Original remainder count
  *   names,                 // Grouped Esma-i Kitabet names
  * }
  */
@@ -353,9 +358,17 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
   
   // Apply remainder correction if needed
   if (remainder > 0) {
-    const galibData = getGalibAnasirData(supplementElement);
     const needed = groupSize - remainder;
-    supplementLetters = galibData.letters.slice(0, needed);
+    
+    // REMAINDER RULE: Get Galib Anasir's 1st Bast value
+    const galibValue = GALIB_ANASIR_VALUES[supplementElement] || GALIB_ANASIR_VALUES.fire;
+    
+    // Perform Istintak on the 1st Bast value
+    const galibIstintakLetters = istintak(galibValue);
+    
+    // Take only the needed letters
+    supplementLetters = galibIstintakLetters.slice(0, needed);
+    
     // APPEND to END (manuscript rule)
     finalExpandedLetters = [...satrVahidLetters, ...supplementLetters];
   }

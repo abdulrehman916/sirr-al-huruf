@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { getBastLevel, istintak, generateEsmaLevel } from "../../lib/mizaanPostEngine";
+import { getBastLevel, istintak, generateEsmaLevel, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -35,7 +35,6 @@ export default function SatrVahidGrouping({
 }) {
   // CRITICAL: Ensure all arrays are safe
   const safeSatrVahidLetters = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
-  const safeSupplementLetters = Array.isArray(supplementLetters) ? supplementLetters : [];
   
   const totalLetters = safeSatrVahidLetters.length;
   const isFerd = !isZevc;
@@ -68,42 +67,30 @@ export default function SatrVahidGrouping({
     return { individualDerivations: derivations, concatenatedSatrVahid: concatenated };
   }, [safeSatrVahidLetters, bastLevel]);
   
-  // Apply remainder correction to concatenated Satr-i Vahid
-  // MANUSCRIPT RULE: FERD (Odd) = 5-letter groups | ZEVC (Even) = 4-letter groups
-  const groupSize = isZevc ? 4 : 5;
-  const remainder = concatenatedSatrVahid.length % groupSize;
-  let finalSequence = concatenatedSatrVahid;
-  let needsSupplement = remainder > 0;
+  // Generate Esma-i Kitabet names using the engine with proper remainder handling
+  const esmaKitabetResult = useMemo(() => {
+    return generateEsmaLevel(concatenatedSatrVahid, false, dominant);
+  }, [concatenatedSatrVahid, dominant]);
   
-  // If remainder exists, append Galib Anasir letters (from pipeline)
-  if (needsSupplement && safeSupplementLetters.length > 0) {
-    finalSequence = [...concatenatedSatrVahid, ...safeSupplementLetters];
-  }
-  
-  // Group the final corrected sequence into Esma-i Kitabet names
+  // Build display groups from the engine result
   const groups = useMemo(() => {
-    if (finalSequence.length === 0) return [];
+    if (esmaKitabetResult.names.length === 0) return [];
     const result = [];
-    for (let i = 0; i < finalSequence.length; i += groupSize) {
-      const group = finalSequence.slice(i, i + groupSize);
-      // Generate Esma-i Kitabet name from group letters
-      // MANUSCRIPT RULE: Convert each letter group to a name via Bast + Istintak
-      const nameLetters = group.map(letter => {
-        const bastValue = getBastLevel(letter, 1);
-        const istintakLetters = istintak(bastValue);
-        return istintakLetters.length > 0 ? istintakLetters[0] : letter;
-      });
+    const finalSeq = esmaKitabetResult.finalExpandedLetters;
+    for (let i = 0; i < finalSeq.length; i += esmaKitabetResult.groupSize) {
+      const group = finalSeq.slice(i, i + esmaKitabetResult.groupSize);
+      const nameIndex = Math.floor(i / esmaKitabetResult.groupSize);
       result.push({
         letters: group,
-        nameLetters,
-        name: nameLetters.join(''),
+        name: esmaKitabetResult.names[nameIndex] || '',
+        groupNumber: nameIndex + 1,
         startIndex: i,
-        endIndex: Math.min(i + groupSize - 1, finalSequence.length - 1),
-        isComplete: group.length === groupSize,
+        endIndex: Math.min(i + esmaKitabetResult.groupSize - 1, finalSeq.length - 1),
+        isComplete: group.length === esmaKitabetResult.groupSize,
       });
     }
     return result;
-  }, [finalSequence, groupSize, dominant]);
+  }, [esmaKitabetResult]);
 
   return (
     <motion.div
@@ -294,18 +281,21 @@ export default function SatrVahidGrouping({
       </div>
 
       {/* Remainder Correction Notice */}
-      {hasSupplement && safeSupplementLetters.length > 0 && (
+      {esmaKitabetResult.remainder > 0 && esmaKitabetResult.supplementLetters.length > 0 && (
         <div className="px-4 py-3 rounded-xl border"
           style={{ background: `${G.green}10`, borderColor: `${G.green}40` }}>
           <div className="flex items-center justify-between mb-2">
             <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Remainder Correction</span>
-            <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{safeSupplementLetters.length} letters appended</span>
+            <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{esmaKitabetResult.supplementLetters.length} letters from Galib Anasir</span>
           </div>
           <div className="text-xs mb-2" style={{ color: G.dim }}>
-            Bast-derived: {individualDerivations.reduce((sum, d) => sum + d.expansionLetters.length, 0)} | Remainder: {individualDerivations.reduce((sum, d) => sum + d.expansionLetters.length, 0) % groupSize} | Needed: {safeSupplementLetters.length}
+            Bast-derived: {concatenatedSatrVahid.length} | Remainder: {esmaKitabetResult.remainder} | Needed: {esmaKitabetResult.supplementLetters.length}
+          </div>
+          <div className="text-xs mb-2" style={{ color: G.dim }}>
+            Source: {dominant} 1st Bast ({GALIB_ANASIR_VALUES[dominant]?.toLocaleString()}) → Istintak
           </div>
           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
-            {safeSupplementLetters.map((l, i) => (
+            {esmaKitabetResult.supplementLetters.map((l, i) => (
               <motion.span
                 key={i}
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -327,11 +317,11 @@ export default function SatrVahidGrouping({
       )}
 
       {/* Final Corrected Sequence Count */}
-      {hasSupplement && (
+      {esmaKitabetResult.remainder > 0 && (
         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
           style={{ background: G.bg, borderColor: G.border }}>
-          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Final Sequence</span>
-          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{finalSequence.length} letters</span>
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Final Sequence (After Remainder Correction)</span>
+          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{esmaKitabetResult.finalExpandedLetters.length} letters</span>
         </div>
       )}
 
@@ -341,10 +331,10 @@ export default function SatrVahidGrouping({
           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>تجميع الأسماء — Esma-i Kitabet Grouping</span>
           <div className="flex items-center gap-2">
             <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: isFerd ? G.red : G.green, background: isFerd ? `${G.red}15` : `${G.green}15`, padding: "2px 8px", borderRadius: "4px" }}>
-              {isFerd ? 'FERD' : 'ZEVC'} → Group by {groupSize}
+              {isFerd ? 'FERD' : 'ZEVC'} → Group by {esmaKitabetResult.groupSize}
             </span>
             <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.text, background: `${G.text}15`, padding: "2px 8px", borderRadius: "4px" }}>
-              {groups.length} names
+              {esmaKitabetResult.names.length} names
             </span>
           </div>
         </div>
@@ -368,10 +358,10 @@ export default function SatrVahidGrouping({
                     background: G.bg,
                     color: G.text 
                   }}>
-                  {groupIdx + 1}
+                  {group.groupNumber}
                 </div>
                 <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
-                  Group {groupIdx + 1}
+                  Group {group.groupNumber}
                 </span>
               </div>
               <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.text, background: `${G.text}15`, padding: "2px 6px", borderRadius: "4px" }}>

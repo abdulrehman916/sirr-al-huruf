@@ -377,6 +377,7 @@ export default function Mizaan9Page() {
                       finalLetters={finalLetters}
                       isZevc={isZevc}
                       supplementLetters={supplementLetters}
+                      dominant={dominant}
                       hasSupplement={hasSupplement}
                       dominant={dominant}
                     />
