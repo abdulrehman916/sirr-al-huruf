@@ -255,10 +255,10 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         </div>
                       )}
                       
-                      {/* Step 3: Extracted Letters — Bast-2 Final Result */}
+                      {/* Step 3: Extracted Letters (Raw Consonants) */}
                       {n.consonants && n.consonants.length > 0 && (
-                        <div className="px-2 py-2 rounded-lg" style={{ background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.30)" }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest mb-2" style={{ color: "rgba(212,175,55,0.60)" }}>Extracted Letters — Bast-2 Final Name</p>
+                        <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.50)" }}>Extracted Letters (Raw Consonants)</p>
                           <div className="flex items-center justify-center gap-2 mt-1" dir="rtl">
                             {n.consonants.map((c, i) => (
                               <span key={i} className="font-amiri text-2xl px-2 py-1 rounded"
@@ -273,10 +273,59 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                             ))}
                           </div>
                           <p className="font-inter text-[7px] mt-2" style={{ color: n.color }}>
-                            Bast-2 Result: {n.consonants.join(' ')}
+                            Raw: {n.consonants.join(' ')}
                           </p>
                         </div>
                       )}
+                      
+                      {/* Step 4: Final Name with Bast-2 Harakat */}
+                      {n.consonants && n.consonants.length > 0 && (() => {
+                        // Bast-2 position-based vowel rule (no phonology engine)
+                        const FATHA = '\u064E';
+                        const KASRA = '\u0650';
+                        const SUKUN = '\u0652';
+                        
+                        const vocalized = n.consonants.map((c, i) => {
+                          const position = i + 1;
+                          const isLast = position === n.consonants.length;
+                          const isFirst = position === 1;
+                          
+                          // Bast-2 rule: First=Fatha, Middle=Kasra, Last=Sukun
+                          let vowel;
+                          if (isFirst) vowel = FATHA;
+                          else if (isLast) vowel = SUKUN;
+                          else vowel = KASRA;
+                          
+                          return c + vowel;
+                        }).join('');
+                        
+                        // Add Angel suffix if applicable (إيل with kasra before ي, fatha on ل)
+                        let finalName = vocalized;
+                        if (n.isAngel) {
+                          // Remove final sukun, add kasra + ي + fatha + ل
+                          finalName = vocalized.replace(/\u0652$/, '') + KASRA + 'ي' + FATHA + 'ل';
+                        }
+                        
+                        return (
+                          <div className="px-2 py-2 rounded-lg" style={{ background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.30)" }}>
+                            <p className="font-inter text-[6px] uppercase tracking-widest mb-2" style={{ color: "rgba(212,175,55,0.60)" }}>Final Name (Bast-2 Harakat Applied)</p>
+                            <div className="flex items-center justify-center gap-2 mt-1" dir="rtl">
+                              <span className="font-amiri text-3xl px-3 py-2 rounded font-bold"
+                                style={{ 
+                                  background: "rgba(212,175,55,0.25)", 
+                                  color: "#FFFFFF",
+                                  border: `2px solid ${n.color}70`,
+                                  textShadow: `0 0 16px ${n.color}80`
+                                }}>
+                                {finalName}
+                              </span>
+                            </div>
+                            <p className="font-inter text-[7px] mt-2 text-center" style={{ color: n.color }}>
+                              {n.isAngel ? 'Angel suffix إيل added' : 'Jinn name (no suffix)'}
+                            </p>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
