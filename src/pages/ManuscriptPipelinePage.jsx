@@ -90,8 +90,7 @@ export default function ManuscriptPipelinePage() {
 
   if (!pipeline) return <PageLayout><p style={{ color: "rgba(212,175,55,0.55)" }}>Loading…</p></PageLayout>;
 
-  const { element, kitabet, avan, kasem, vefk } = pipeline;
-  const guardianName = istintak(ELEMENT_BAST_TOTALS[element] || 3550).join('');
+  const { element, kitabet } = pipeline;
 
   return (
     <PageLayout>
@@ -128,38 +127,6 @@ export default function ManuscriptPipelinePage() {
             color="#F5D060"
           />
         </div>
-
-        {/* ═══════════════════════════════════════════════════════════
-            ESMA-I KITABET (NOW SHOWS FULL DERIVATION ABOVE)
-            ═══════════════════════════════════════════════════════════ */}
-        <ManuscriptEsmaSection
-          tier="kitabet"
-          data={kitabet}
-          element={element}
-          satirTotal={kitabet.satirTotal}
-          color="#C4B5FD"
-          prefix=""
-        />
-
-        {/* ── ESMA-I A'VAN ────────────────────────────────────────── */}
-        <ManuscriptEsmaSection
-          tier="avan"
-          data={avan}
-          element={element}
-          satirTotal={avan.satirTotal}
-          color="#B2EBF2"
-          prefix="يا"
-        />
-
-        {/* ── ESMA-I KASEM ────────────────────────────────────────── */}
-        <ManuscriptEsmaSection
-          tier="kasem"
-          data={kasem}
-          element={element}
-          satirTotal={kasem.satirTotal}
-          color="#F5D060"
-          prefix="بحق"
-        />
 
       </div>
     </PageLayout>
