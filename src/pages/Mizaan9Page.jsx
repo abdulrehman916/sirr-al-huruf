@@ -323,16 +323,13 @@ export default function Mizaan9Page() {
                 const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
                 if (!pipeline) return null;
                 
-                // Set grouping data once
-                if (!groupingData) {
-                  setGroupingData({
-                    satrVahidLetters: pipeline.kitabet.satrVahidLetters,
-                    finalLetters: pipeline.kitabet.finalExpandedLetters,
-                    isExpandedZevc: pipeline.kitabet.isZevc,
-                    supplementLetters: pipeline.kitabet.supplementLetters || [],
-                    hasSupplement: !!(pipeline.kitabet.supplementLetters && pipeline.kitabet.supplementLetters.length > 0),
-                  });
-                }
+                // CRITICAL: Safe array access with defaults
+                const safeKitabet = pipeline?.kitabet || {};
+                const satrVahidLetters = Array.isArray(safeKitabet?.satrVahidLetters) ? safeKitabet.satrVahidLetters : [];
+                const finalLetters = Array.isArray(safeKitabet?.finalExpandedLetters) ? safeKitabet.finalExpandedLetters : [];
+                const supplementLetters = Array.isArray(safeKitabet?.supplementLetters) ? safeKitabet.supplementLetters : [];
+                const isZevc = safeKitabet?.isZevc ?? true;
+                const hasSupplement = supplementLetters.length > 0;
                 
                 return (
                   <>
@@ -347,36 +344,40 @@ export default function Mizaan9Page() {
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Bast (Σ 9 Mizans)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input.grandBast.toLocaleString()}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input?.grandBast?.toLocaleString() ?? 0}</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Letters (Σ 9 Mizans)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input.grandLetters}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input?.grandLetters ?? 0}</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satır Vahid Total</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input.satirVahidTotal.toLocaleString()}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input?.satirVahidTotal?.toLocaleString() ?? 0}</span>
                         </div>
                         <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Initial Seed Letters</span>
                           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
-                            {Array.isArray(pipeline.initialSeedLetters) && [...pipeline.initialSeedLetters].reverse().map((l, i) => (
-                              <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
-                                style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.04)" }} dir="rtl">{l}</span>
-                            ))}
+                            {Array.isArray(pipeline.initialSeedLetters) && pipeline.initialSeedLetters.length > 0 ? (
+                              [...pipeline.initialSeedLetters].reverse().map((l, i) => (
+                                <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
+                                  style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.04)" }} dir="rtl">{l}</span>
+                              ))
+                            ) : (
+                              <span className="font-inter text-xs text-white/30">No seed letters</span>
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
                     {/* Satr-i Vahid Grouping */}
                     <SatrVahidGrouping
-                      satrVahidLetters={groupingData.satrVahidLetters}
-                      finalLetters={groupingData.finalLetters}
-                      isZevc={groupingData.isExpandedZevc}
-                      supplementLetters={groupingData.supplementLetters}
-                      hasSupplement={groupingData.hasSupplement}
+                      satrVahidLetters={satrVahidLetters}
+                      finalLetters={finalLetters}
+                      isZevc={isZevc}
+                      supplementLetters={supplementLetters}
+                      hasSupplement={hasSupplement}
                     />
                   </>
                 );
