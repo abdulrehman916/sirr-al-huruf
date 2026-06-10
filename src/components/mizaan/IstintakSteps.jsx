@@ -102,17 +102,27 @@ export default function IstintakSteps({ n, msMarker = false, compact = false }) 
         </div>
       ))}
 
-      {/* Result */}
-      <div className="flex items-center justify-between rounded-lg border px-3 py-2 mt-1"
+      {/* Result — single RTL string, never split into flex children (flex+dir=rtl reverses visual order) */}
+      <div className="rounded-lg border px-3 py-2 mt-1 space-y-1"
         style={{ borderColor: "rgba(74,222,128,0.40)", background: "rgba(74,222,128,0.06)" }}>
-        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(74,222,128,0.70)" }}>
+        <span className="font-inter text-[8px] uppercase tracking-widest block" style={{ color: "rgba(74,222,128,0.70)" }}>
           النتيجة ({letters.length} حرف)
         </span>
-        <div className="flex gap-1" dir="rtl">
+        {/* Each badge rendered LTR in the container but the Arabic glyph itself is RTL — no flex reversal */}
+        <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr" }}>
           {letters.map((l, i) => (
-            <span key={i} className="font-amiri text-xl px-1.5 py-0.5 rounded border"
+            <span key={i}
               dir="rtl" lang="ar"
-              style={{ fontFamily: "'Noto Naskh Arabic','Amiri','Scheherazade New',serif", color: "#4ADE80", borderColor: "rgba(74,222,128,0.35)", background: "rgba(74,222,128,0.08)" }}>
+              style={{
+                fontFamily: "'Noto Naskh Arabic','Amiri','Scheherazade New',serif",
+                fontSize: "1.3rem",
+                color: "#4ADE80",
+                border: "1px solid rgba(74,222,128,0.35)",
+                background: "rgba(74,222,128,0.08)",
+                borderRadius: "6px",
+                padding: "0 6px",
+                unicodeBidi: "isolate",
+              }}>
               {l}
             </span>
           ))}
