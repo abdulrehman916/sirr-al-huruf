@@ -29,6 +29,7 @@ const EvilJinnPage          = lazy(() => import('./pages/EvilJinnPage.jsx'));
 const MagicalHolyNamesPage  = lazy(() => import('./pages/MagicalHolyNamesPage'));
 const AdminFaalChobUpload   = lazy(() => import('./pages/AdminFaalChobUpload'));
 const HierarchyAuditPage    = lazy(() => import('./pages/HierarchyAuditPage.jsx'));
+const MizaanPipelineTest    = lazy(() => import('./pages/MizaanPipelineTest'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -89,6 +90,7 @@ const AuthenticatedApp = () => {
             <Route path="/holy-names" element={<MagicalHolyNamesPage />} />
             <Route path="/admin/faal-chob-upload" element={<AdminFaalChobUpload />} />
             <Route path="/hierarchy-audit" element={<HierarchyAuditPage />} />
+            <Route path="/pipeline-test" element={<MizaanPipelineTest />} />
 
             <Route path="*" element={<PageNotFound />} />
           </Routes>
