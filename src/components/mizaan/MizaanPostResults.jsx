@@ -280,48 +280,6 @@ export default function MizaanPostResults({ grandBast, grandLetters, dominant })
         )}
       </AnimatePresence>
 
-      {/* Esma-i Kitabet */}
-      <EsmaSection data={kitabet} tierLabel="Esma-i Kitabet" aziметPrefix="" color="#C4B5FD"
-        isOpen={open.kitabet} onToggle={() => toggle('kitabet')} />
-
-      {/* Esma-i Avan */}
-      <EsmaSection data={avan} tierLabel="Esma-i Avan" aziметPrefix="يا" color="#B2EBF2"
-        isOpen={open.avan} onToggle={() => toggle('avan')} />
-
-      {/* Esma-i Kasem */}
-      <EsmaSection data={kasem} tierLabel="Esma-i Kasem" aziметPrefix="بحق" color={G.text}
-        isOpen={open.kasem} onToggle={() => toggle('kasem')} />
-
-      {/* Vefk */}
-      <div className="rounded-2xl border overflow-hidden" style={{ borderColor: meta.border, background: "rgba(4,8,24,0.99)" }}>
-        <SectionHeader label="Vefk — Magic Square" arabic="الوفق" isOpen={open.vefk} onToggle={() => toggle('vefk')} color={meta.color} />
-        <AnimatePresence initial={false}>
-          {open.vefk && (
-            <motion.div key="vefk" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} style={{ overflow: "hidden" }}>
-              <div className="px-4 pb-4 pt-2">
-                <VefkGrid vefk={vefk} element={element} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Azimet */}
-      <div className="rounded-2xl border overflow-hidden" style={{ borderColor: G.borderHi, background: "rgba(4,8,24,0.99)" }}>
-        <SectionHeader label="Azimet Assembly" arabic="العزيمة" isOpen={open.azimet} onToggle={() => toggle('azimet')} color={G.text} />
-        <AnimatePresence initial={false}>
-          {open.azimet && (
-            <motion.div key="azimet" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} style={{ overflow: "hidden" }}>
-              <div className="px-4 pb-4 pt-2">
-                <AziметSection kasem={kasem} avan={avan} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
       {/* Footer seal */}
       <div className="text-center pt-1">
         <motion.div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full border"
@@ -330,7 +288,7 @@ export default function MizaanPostResults({ grandBast, grandLetters, dominant })
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}>
           <span className="font-amiri text-xl" style={{ color: G.text }}>☽</span>
           <span className="font-inter text-[9px] uppercase tracking-[0.3em]" style={{ color: G.dim }}>
-            Kitabet · Avan · Kasem · Vefk
+            Sacred Pipeline — Derivation Complete
           </span>
           <span className="font-amiri text-xl" style={{ color: G.text }}>☽</span>
         </motion.div>
