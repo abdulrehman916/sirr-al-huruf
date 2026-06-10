@@ -17,9 +17,7 @@ import Mizaan7      from "../components/mizaan/Mizaan7";
 import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
-import MizaanPostResults from "../components/mizaan/MizaanPostResults";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
-import GalibAnasirIstintak from "../components/mizaan/GalibAnasirIstintak";
 import { runMizaanPostPipeline } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
@@ -143,26 +141,7 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
   return { grandBast, grandLetters };
 }
 
-function PostPipelineSection({ result, selections, degreeSels, inputText, customPurpose, onGroupingData }) {
-  const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, inputText, customPurpose);
-  const dominant = result?.dominant;
-  
-  // Extract grouping data from the actual engine
-  useMemo(() => {
-    if (!grandBast || grandBast <= 0) return;
-    const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
-    if (!pipeline) return;
-    onGroupingData?.({
-      expandedLetters: pipeline.kitabet.finalExpandedLetters || pipeline.kitabet.expandedLetters,
-      isExpandedZevc: pipeline.kitabet.isExpandedZevc,
-      isZevc: pipeline.kitabet.isZevc,
-      supplementLetters: pipeline.kitabet.supplementLetters || [],
-      hasSupplement: !!(pipeline.kitabet.supplementLetters && pipeline.kitabet.supplementLetters.length > 0),
-    });
-  }, [grandBast, grandLetters, dominant, onGroupingData]);
-  
-  return <MizaanPostResults grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />;
-}
+
 
 export default function Mizaan9Page() {
   const { getPageState, setPageState, clearPageState } = usePageState();
@@ -182,6 +161,7 @@ export default function Mizaan9Page() {
   const [customPurpose, setCustomPurpose] = useState(initialState.customPurpose);
   const [degreeSels, setDegreeSels] = useState(initialState.degreeSels);
   const [groupingData, setGroupingData] = useState(null);
+  const [pipelineValues, setPipelineValues] = useState(null);
   const abortRef = useRef(false);
 
   useEffect(() => {
@@ -195,10 +175,11 @@ export default function Mizaan9Page() {
     setProgress(0);
     setResult(null);
     setSelections(buildDefaultSelections(null));
+    setPipelineValues(null);
+    setGroupingData(null);
     const r = await mizaanAnalyzeAsync(input, (p) => { if (!abortRef.current) setProgress(p); });
     if (!abortRef.current) {
       setResult(r);
-      // Pre-populate selections with system suggestions
       setSelections(buildDefaultSelections(r.dominant));
     }
     setLoading(false);
@@ -333,54 +314,74 @@ export default function Mizaan9Page() {
               <MizaanDivider />
               <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} />
               <MizaanDivider />
-              <PostPipelineSection 
-                result={result} 
-                selections={selections} 
-                degreeSels={degreeSels} 
-                inputText={input} 
-                customPurpose={customPurpose} 
-                onGroupingData={setGroupingData} 
-              />
-              
 
-
-              {/* DEBUG: Show raw expanded letters for verification */}
-              {groupingData && (
-                <div className="rounded-xl border p-3" style={{ background: "rgba(212,175,55,0.05)", borderColor: G.border }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                    Expanded Letters Sequence (for verification):
-                  </p>
-                  <div className="flex flex-wrap gap-1" dir="ltr">
-                    {groupingData.expandedLetters.map((l, i) => (
-                      <span key={i} className="font-amiri text-lg px-2 py-1 rounded border"
-                        style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.08)" }}
-                        dir="rtl">
-                        {l}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="font-inter text-[8px] mt-2" style={{ color: G.dim }}>
-                    Total: {groupingData.expandedLetters.length} letters | 
-                    Index 0 = first letter | Index {groupingData.expandedLetters.length - 1} = last letter
-                  </p>
-                </div>
-              )}
-
-              {/* GALIB ANASIR ISTINTAK — Full derivation display */}
-              <GalibAnasirIstintak 
-                selectedElement={result?.dominant} 
-              />
-
-              {/* SATR-I VAHID LETTER GROUPING — Final Corrected Sequence */}
-              {groupingData && (
-                <SatrVahidGrouping
-                  expandedLetters={groupingData.expandedLetters}
-                  isZevc={groupingData.isExpandedZevc}
-                  initialCountIsZevc={groupingData.isZevc}
-                  supplementLetters={groupingData.supplementLetters}
-                  hasSupplement={groupingData.hasSupplement}
-                />
-              )}
+              {/* Pipeline Input & Grouping */}
+              {(() => {
+                const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
+                const dominant = result?.dominant;
+                if (!grandBast || grandBast <= 0) return null;
+                const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+                if (!pipeline) return null;
+                if (!groupingData) {
+                  setGroupingData({
+                    expandedLetters: pipeline.kitabet.finalExpandedLetters || pipeline.kitabet.expandedLetters,
+                    isExpandedZevc: pipeline.kitabet.isExpandedZevc,
+                    supplementLetters: pipeline.kitabet.supplementLetters || [],
+                    hasSupplement: !!(pipeline.kitabet.supplementLetters && pipeline.kitabet.supplementLetters.length > 0),
+                  });
+                  setPipelineValues({
+                    grandBast: pipeline.input.grandBast,
+                    grandLetters: pipeline.input.grandLetters,
+                    satirVahidTotal: pipeline.input.satirVahidTotal,
+                    initialSeedLetters: pipeline.initialSeedLetters,
+                  });
+                }
+                return (
+                  <>
+                    {/* Pipeline Input */}
+                    <div className="rounded-2xl border p-5 space-y-4"
+                      style={{ background: "rgba(3,6,20,0.99)", borderColor: G.borderHi, boxShadow: `0 0 60px ${G.glow}, 0 0 120px rgba(0,0,0,0.6)` }}>
+                      <div className="text-center space-y-2">
+                        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.text }}>Pipeline Input</h2>
+                        <div className="h-px w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
+                          style={{ background: G.bg, borderColor: G.border }}>
+                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Bast (Σ 9 Mizans)</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipelineValues.grandBast.toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
+                          style={{ background: G.bg, borderColor: G.border }}>
+                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Letters (Σ 9 Mizans)</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipelineValues.grandLetters}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
+                          style={{ background: G.bg, borderColor: G.border }}>
+                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satır Vahid Total</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipelineValues.satirVahidTotal.toLocaleString()}</span>
+                        </div>
+                        <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
+                          <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Initial Seed Letters</span>
+                          <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
+                            {[...pipelineValues.initialSeedLetters].reverse().map((l, i) => (
+                              <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
+                                style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.04)" }} dir="rtl">{l}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Satr-i Vahid Grouping */}
+                    <SatrVahidGrouping
+                      expandedLetters={groupingData.expandedLetters}
+                      isZevc={groupingData.isExpandedZevc}
+                      supplementLetters={groupingData.supplementLetters}
+                      hasSupplement={groupingData.hasSupplement}
+                    />
+                  </>
+                );
+              })()}
 
             </motion.div>
           )}
