@@ -16,14 +16,19 @@ const G = {
 };
 
 /**
- * MANUSCRIPT WORKFLOW (pp.60-69):
+ * SATR-I VAHID GROUPING WORKFLOW:
  * 1. Display seed letters (from Istintak)
  * 2. Count letters → FERD (odd) or ZEVC (even)
  * 3. Apply 5th Bast (Ferd) or 4th Bast (Zevc) to EACH letter individually
- * 4. Display each letter's Bast result and expansion letters
+ * 4. Display each letter's Bast result and expansion letters (original order)
  * 5. Concatenate all expansion letters → Satr-i Vahid
  * 6. Apply remainder correction if needed (append Galib Anasir to END)
  * 7. Group the FINAL corrected sequence into Esma-i Kitabet names
+ * 
+ * NAME GENERATION RULE:
+ * - Names are created by direct concatenation of displayed group letters
+ * - Example: Displayed [ز, غ, ب, ا, ل] → Name: "زغبال"
+ * - No reversal of group letters or names
  */
 export default function SatrVahidGrouping({ 
   satrVahidLetters = [],      // Seed letters from Istintak (before Bast expansion)
@@ -43,26 +48,24 @@ export default function SatrVahidGrouping({
   // PROCESSING ORDER: Start from LAST letter → work backward to FIRST letter
   const bastLevel = isFerd ? 5 : 4;
   
-  // Compute individual derivations with manuscript-order expansion letters
+  // Compute individual derivations with original order expansion letters
   const { individualDerivations, concatenatedSatrVahid } = useMemo(() => {
-    // MANUSCRIPT ORDER: Process from LAST to FIRST
+    // Process from LAST to FIRST (manuscript processing order)
     const derivations = [];
     for (let i = safeSatrVahidLetters.length - 1; i >= 0; i--) {
       const letter = safeSatrVahidLetters[i];
       const bastValue = getBastLevel(letter, bastLevel);
       const expansionLetters = istintak(bastValue);
-      // MANUSCRIPT DISPLAY RULE: Reverse expansion letters for proper reading order
-      // Example: istintak returns [ب, غ, غ, خ, ز] → display as [ز, خ, غ, غ, ب]
-      const reversedExpansionLetters = [...expansionLetters].reverse();
+      // ORIGINAL ORDER: Keep expansion letters as-is (no reversal)
       derivations.push({
         processingOrder: safeSatrVahidLetters.length - i,
         originalIndex: i,
         letter,
         bastValue,
-        expansionLetters: reversedExpansionLetters,
+        expansionLetters: expansionLetters,
       });
     }
-    // Concatenate ALL expansion letters (already reversed)
+    // Concatenate ALL expansion letters in original order
     const concatenated = derivations.flatMap(d => d.expansionLetters);
     return { individualDerivations: derivations, concatenatedSatrVahid: concatenated };
   }, [safeSatrVahidLetters, bastLevel]);
@@ -158,9 +161,9 @@ export default function SatrVahidGrouping({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          INDIVIDUAL BAST DERIVATIONS (Manuscript pp.60-69)
+          INDIVIDUAL BAST DERIVATIONS
           Each letter → 5th/4th Bast → Istintak → Expansion letters
-          Processing order: FIRST letter → LAST letter (left to right in array)
+          Processing order: LAST → FIRST | Display: Original extraction order
           ═══════════════════════════════════════════════════════════════ */}
       <div className="space-y-3">
         <div className="text-center space-y-1">
@@ -246,6 +249,9 @@ export default function SatrVahidGrouping({
                 </span>
               ))}
             </div>
+            <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
+              Extraction order
+            </span>
           </motion.div>
         ))}
       </div>
@@ -264,7 +270,7 @@ export default function SatrVahidGrouping({
           </div>
         </div>
         <div className="text-xs mb-2" style={{ color: G.dim }}>
-          Each Bast result reversed for proper manuscript reading order
+          Satr-i Vahid sequence in original extraction order
         </div>
         <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
           {concatenatedSatrVahid.map((l, i) => (
