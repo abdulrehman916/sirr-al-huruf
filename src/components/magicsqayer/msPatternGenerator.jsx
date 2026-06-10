@@ -16,28 +16,73 @@ const SUFFIXES = {
   'ar-jinn': 319,    // طيش
 };
 
+// Positional digit-cycle letter mappings
+const UNITS =     {1:'ا', 2:'ب', 3:'ج', 4:'د', 5:'ه', 6:'و', 7:'ز', 8:'ح', 9:'ط'};
+const TENS =      {10:'ي', 20:'ك', 30:'ل', 40:'م', 50:'ن', 60:'س', 70:'ع', 80:'ف', 90:'ص'};
+const HUNDREDS =  {100:'ق', 200:'ر', 300:'ش', 400:'ت', 500:'ث', 600:'خ', 700:'ذ', 800:'ض', 900:'ظ'};
+const THOUSAND_MARKER = 'غ';
+
 /**
- * extractLettersFromValue(value)
- * BAST-2 METHOD: Decompose value into Abjad letters using greedy algorithm
- * CRITICAL: NO REVERSAL - preserve original extraction order
+ * extractLettersFromValue(value) - Positional digit-cycle method
+ * RULE: Read number right-to-left, cycling: Unit → Tens → Hundreds → Thousand Marker
+ * 
+ * Thousands rule:
+ * - 1000 = غ (only marker, no unit digit)
+ * - 2000-9000 = غ + unit digit (e.g., 2000 = غ + ب)
+ * 
+ * Zeros rule:
+ * - Zeros do not generate letters
+ * - Zeros do NOT remove their position
+ * - Position cycle is preserved
  */
-function extractLettersFromValue(value, letterTable) {
+function extractLettersFromValue(value) {
   if (!value || value <= 0) return [];
   
   const letters = [];
-  let remaining = value;
+  let n = Math.floor(value);
   
-  // Greedy decomposition: largest values first (1000 → 1)
-  for (let i = letterTable.length - 1; i >= 0 && remaining > 0; i--) {
-    const { val, letter } = letterTable[i];
-    while (remaining >= val) {
-      letters.push(letter);
-      remaining -= val;
+  // Extract digits (LSD first - right to left)
+  const digits = [];
+  while (n > 0) {
+    digits.push(n % 10);
+    n = Math.floor(n / 10);
+  }
+  
+  // Process digits with positional cycle: Unit → Tens → Hundreds → Thousand Marker
+  let slot = 0; // 0=Unit, 1=Tens, 2=Hundreds, 3=Thousand
+  for (let i = 0; i < digits.length; i++) {
+    const d = digits[i];
+    
+    if (slot === 0) {
+      // Unit position (1-9)
+      if (d !== 0 && UNITS[d]) {
+        letters.push(UNITS[d]);
+      }
+      slot = 1;
+    } else if (slot === 1) {
+      // Tens position (10-90)
+      const v = d * 10;
+      if (d !== 0 && TENS[v]) {
+        letters.push(TENS[v]);
+      }
+      slot = 2;
+    } else if (slot === 2) {
+      // Hundreds position (100-900)
+      const v = d * 100;
+      if (d !== 0 && HUNDREDS[v]) {
+        letters.push(HUNDREDS[v]);
+      }
+      slot = 3;
+    } else {
+      // Thousand position: always emit marker + optional unit digit (2-9)
+      letters.push(THOUSAND_MARKER);
+      if (d !== 0 && d !== 1 && UNITS[d]) {
+        letters.push(UNITS[d]);
+      }
+      slot = 1; // Restart cycle from Tens after thousands
     }
   }
   
-  // BAST-2 RULE: Return extraction order AS-IS - NO REVERSAL
-  // Letters are concatenated in exact extraction order (greedy first → last)
   return letters;
 }
 
@@ -73,17 +118,17 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   // DO NOT subtract suffix again - it was already applied during Ulvi adjustment
   const extractionValue = value;
   
-  // BAST-2 LETTER EXTRACTION: Greedy Abjad decomposition (1000 → 1), NO REVERSAL
-  const letterTable = isHebrew ? HEBREW_GEMATRIA : ARABIC_ABJAD;
-  const consonants = extractLettersFromValue(extractionValue, letterTable);
+  // POSITIONAL DIGIT-CYCLE EXTRACTION: Read right-to-left, cycling Unit → Tens → Hundreds → Thousand Marker
+  const consonants = extractLettersFromValue(extractionValue);
   
   if (consonants.length === 0) {
     return { success: false, error: 'Could not extract letters' };
   }
   
-  // BAST-2 ASSEMBLY: Mirror order for final displayed name (reverse of extraction sequence)
-  // Breakdown remains: [ش, ل, ز] → شلز (extraction order - for display/audit)
-  // Final name uses: [ز, ل, ش] → زلش (mirror order - for final displayed name)
+  // FINAL NAME ASSEMBLY: Mirror order (reverse of breakdown sequence)
+  // Breakdown remains unchanged (extraction order for display)
+  // Final displayed name uses REVERSE of breakdown sequence
+  // Example: breakdown [ز, ل, ر, غ] → final name = غرلز
   const rawConsonantSequence = consonants.join(''); // Keep original for breakdown display
   const reversedConsonants = [...consonants].reverse(); // Mirror order for final name
   
