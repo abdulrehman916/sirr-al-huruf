@@ -55,13 +55,16 @@ export default function SatrVahidGrouping({
   const totalLetters = safeSatrVahidLetters.length;
   const isFerd = !isZevc;
   
-  // MANUSCRIPT RULE: Calculate 5th Bast for EACH letter individually (Ferd = 5th Bast)
-  // PROCESSING ORDER: Start from LAST letter → work backward to FIRST letter
+  // MIZAN-9 DISPLAY RULE:
+  // - Pipeline Input displays EXACTLY as entered (e.g., ه ض غ ز ي) - DO NOT reverse
+  // - Bast derivation processes from LAST letter → FIRST letter (ي → ز → غ → ض → ه)
+  // - Only Bast processing order is reversed; Pipeline Input display remains unchanged
   const bastLevel = isFerd ? 5 : 4;
   
-  // Compute individual derivations - STRICT ORDER PRESERVATION
+  // Compute individual derivations - BAST PROCESSING ORDER (LAST → FIRST)
   const { individualDerivations, concatenatedSatrVahid } = useMemo(() => {
-    // Process from LAST to FIRST (manuscript processing order)
+    // BAST DERIVATION ORDER: Start from LAST letter → work backward to FIRST letter
+    // Example: Pipeline Input [ه, ض, غ, ز, ي] → Process: ي, ز, غ, ض, ه
     const derivations = [];
     for (let i = safeSatrVahidLetters.length - 1; i >= 0; i--) {
       const letter = safeSatrVahidLetters[i];
@@ -77,7 +80,7 @@ export default function SatrVahidGrouping({
         expansionLetters: extractedLetters, // PRESERVED EXACT ORDER
       });
     }
-    // Concatenate ALL expansion letters in processing order
+    // Concatenate ALL expansion letters in processing order (LAST→FIRST results)
     const concatenated = derivations.flatMap(d => d.expansionLetters);
     return { individualDerivations: derivations, concatenatedSatrVahid: concatenated };
   }, [safeSatrVahidLetters, bastLevel]);
@@ -179,7 +182,7 @@ export default function SatrVahidGrouping({
         </div>
         <div className="text-center mt-2">
           <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
-            Order preserved exactly → first extracted letter on left
+            Pipeline Input: Displayed exactly as entered (no reversal)
           </span>
         </div>
       </div>
