@@ -45,7 +45,8 @@ const SUKUN = '\u0652'; // ْ
 const ANGEL_SUFFIX = 'ئِيل'; // ئ + Kasra + ي + ل  (U+0626 + U+0650 + U+064A + U+0644)
 
 // The jinn suffix: 319 = ش(300) + ي(10) + ط(9) → ordered smallest→largest = طيش
-const JINN_SUFFIX = 'طيش';
+// Fixed vocalization: طِيشْ  (Kasra on ط, long ī via ي, Sukun on ش)
+const JINN_SUFFIX = '\u0637\u0650\u064A\u0634\u0652'; // طِيشْ
 
 /**
  * vocalizeConsonants(consonants)
