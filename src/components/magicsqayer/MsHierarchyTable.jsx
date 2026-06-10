@@ -10,7 +10,7 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-// ── Traditional Angel/Jinn name generation ───────────────────────
+// ── Letter extraction and name generation ───────────────────────
 const SUFFIXES = {
   'ar-angel': 41,
   'ar-jinn': 319,
@@ -18,18 +18,38 @@ const SUFFIXES = {
   'heb-jinn': 329,
 };
 
-const AR_ANGEL_TEMPLATES = [
-  'ايل', 'شهايل', 'جايل', 'قاهايل', 'قتزايل', 'رقايل', 'شكايل', 'كهايل'
+const ARABIC_ABJAD = [
+  {letter:"ا", val:1}, {letter:"ب", val:2}, {letter:"ج", val:3}, {letter:"د", val:4},
+  {letter:"ه", val:5}, {letter:"و", val:6}, {letter:"ز", val:7}, {letter:"ح", val:8},
+  {letter:"ط", val:9}, {letter:"ي", val:10}, {letter:"ك", val:20}, {letter:"ل", val:30},
+  {letter:"م", val:40}, {letter:"ن", val:50}, {letter:"س", val:60}, {letter:"ع", val:70},
+  {letter:"ف", val:80}, {letter:"ص", val:90}, {letter:"ق", val:100}, {letter:"ر", val:200},
+  {letter:"ش", val:300}, {letter:"ت", val:400}, {letter:"ث", val:500}, {letter:"خ", val:600},
+  {letter:"ذ", val:700}, {letter:"ض", val:800}, {letter:"ظ", val:900}, {letter:"غ", val:1000},
 ];
 
-const AR_JINN_TEMPLATES = [
-  'طيش', 'شهطيش', 'جاطيش', 'قاهطيش', 'قتزطيش', 'رقاطيش', 'شكاطيش', 'كهاطيش'
-];
+function extractLettersFromValue(value) {
+  if (!value || value <= 0) return [];
+  
+  const letters = [];
+  let remaining = value;
+  
+  // Greedy decomposition: largest values first
+  for (let i = ARABIC_ABJAD.length - 1; i >= 0 && remaining > 0; i--) {
+    const { val, letter } = ARABIC_ABJAD[i];
+    while (remaining >= val) {
+      letters.push(letter);
+      remaining -= val;
+    }
+  }
+  
+  // Reverse to get proper reading order (RTL)
+  return letters.reverse();
+}
 
 function generateTraditionalName(value, suffixType) {
   const suffix = SUFFIXES[suffixType];
   const isAngel = suffixType.includes('angel');
-  const isArabic = !suffixType.includes('heb');
   
   // Apply Ulvi adjustment: if value < suffix, add 360 first
   let adjustedValue = value;
@@ -41,19 +61,38 @@ function generateTraditionalName(value, suffixType) {
   
   if (adjustedValue <= 0) adjustedValue = 1;
   
-  // Select template based on adjusted value modulo
-  const templates = isArabic && isAngel ? AR_ANGEL_TEMPLATES : 
-                    isArabic && !isAngel ? AR_JINN_TEMPLATES :
-                    isAngel ? ['אל', 'שהאל', 'גאל', 'קאהאל', 'קתזאל', 'רקאל', 'שקאל', 'כהאל'] :
-                    ['תקש', 'שהתקש', 'גאתקש', 'קאהתקש', 'קתזתקש', 'רקתקש', 'שקתקש', 'כהתקש'];
+  // Extract letters from adjusted value (each value = unique letters)
+  const consonants = extractLettersFromValue(adjustedValue);
   
-  const templateIdx = adjustedValue % templates.length;
-  const name = templates[templateIdx];
+  // Apply Bast-2 harakat rule: First=Fatha, Middle=Kasra, Last=Sukun
+  const FATHA = '\u064E';
+  const KASRA = '\u0650';
+  const SUKUN = '\u0652';
+  
+  let vocalizedName = consonants.map((c, i) => {
+    const position = i + 1;
+    const isLast = position === consonants.length;
+    const isFirst = position === 1;
+    
+    let vowel;
+    if (isFirst) vowel = FATHA;
+    else if (isLast) vowel = SUKUN;
+    else vowel = KASRA;
+    
+    return c + vowel;
+  }).join('');
+  
+  // Add Angel suffix if applicable
+  if (isAngel && vocalizedName) {
+    // Remove final sukun, add kasra + ي + fatha + ل
+    vocalizedName = vocalizedName.replace(/\u0652$/, '') + KASRA + 'ي' + FATHA + 'ل';
+  }
   
   return {
     originalValue: value,
     adjustedValue,
-    name
+    consonants,
+    name: vocalizedName || 'N/A'
   };
 }
 
