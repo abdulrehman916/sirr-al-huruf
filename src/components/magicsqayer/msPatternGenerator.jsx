@@ -1,9 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 //  TRADITIONAL HIERARCHY NAME GENERATOR
-//  Uses book formulas: tier value - suffix → letters → name with tashkeel
+//  Book formula: tier value - suffix → letters → vocalized name
 // ═══════════════════════════════════════════════════════════════
 
 import { applyPhoneticRules, checkPronounceability, VOWELS } from './msPhonologyEngine';
+import { numToArabic, numToHebrew } from './msEngine';
 
 const { FATHA, KASRA, DAMMA, SUKUN } = VOWELS;
 
@@ -14,47 +15,6 @@ const SUFFIXES = {
   'heb-jinn': 329,   // 360 - 31
   'ar-jinn': 319,    // 360 - 41
 };
-
-// Letter-to-number mappings (RULE_NAME_CONSTRUCTION)
-const HEBREW_LETTERS = [
-  { v:1, l:'א' }, { v:2, l:'ב' }, { v:3, l:'ג' }, { v:4, l:'ד' }, { v:5, l:'ה' },
-  { v:6, l:'ו' }, { v:7, l:'ז' }, { v:8, l:'ח' }, { v:9, l:'ט' }, { v:10, l:'י' },
-  { v:20, l:'כ' }, { v:30, l:'ל' }, { v:40, l:'מ' }, { v:50, l:'נ' }, { v:60, l:'ס' },
-  { v:70, l:'ע' }, { v:80, l:'פ' }, { v:90, l:'צ' }, { v:100, l:'ק' }, { v:200, l:'ר' },
-  { v:300, l:'ש' }, { v:400, l:'ת' },
-];
-
-const ARABIC_LETTERS = [
-  { v:1, l:'ا' }, { v:2, l:'ب' }, { v:3, l:'ج' }, { v:4, l:'د' }, { v:5, l:'ه' },
-  { v:6, l:'و' }, { v:7, l:'ز' }, { v:8, l:'ح' }, { v:9, l:'ط' }, { v:10, l:'ي' },
-  { v:20, l:'ك' }, { v:30, l:'ل' }, { v:40, l:'م' }, { v:50, l:'ن' }, { v:60, l:'س' },
-  { v:70, l:'ع' }, { v:80, l:'ف' }, { v:90, l:'ص' }, { v:100, l:'ق' }, { v:200, l:'ر' },
-  { v:300, l:'ش' }, { v:400, l:'ت' }, { v:500, l:'ث' }, { v:600, l:'خ' },
-  { v:700, l:'ذ' }, { v:800, l:'ض' }, { v:900, l:'ظ' }, { v:1000, l:'غ' },
-];
-
-/**
- * numberToLetters(value, lang)
- * Convert number to letters using book's gematria system
- */
-function numberToLetters(value, lang) {
-  if (value <= 0) return [];
-  
-  const letters = lang === 'hebrew' ? HEBREW_LETTERS : ARABIC_LETTERS;
-  const result = [];
-  let remaining = value;
-  
-  // Greedy algorithm: largest letter first
-  for (let i = letters.length - 1; i >= 0 && remaining > 0; i--) {
-    const { v, l } = letters[i];
-    while (remaining >= v) {
-      result.push(l);
-      remaining -= v;
-    }
-  }
-  
-  return result;
-}
 
 /**
  * generateNameForHierarchyValue(value, suffixType)
@@ -68,7 +28,6 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   
   const isAngel = suffixType.includes('angel');
   const isHebrew = suffixType.includes('heb');
-  const lang = isHebrew ? 'hebrew' : 'arabic';
   
   // BOOK FORMULA: subtract suffix from tier value
   let remainder = value - suffix;
@@ -78,8 +37,9 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     remainder = value + 360 - suffix;
   }
   
-  // Convert remainder to letters
-  const consonants = numberToLetters(remainder, lang);
+  // Convert remainder to letters using book's Akram positional system
+  const letterString = isHebrew ? numToHebrew(remainder) : numToArabic(remainder);
+  const consonants = letterString.split('');
   
   if (consonants.length === 0) {
     return { success: false, error: 'Could not convert to letters' };
@@ -94,7 +54,7 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     vocalizedName += consonants[i] + phoneticResult.vowels[i];
   }
   
-  // Add suffix with proper tashkeel
+  // Add suffix with proper tashkeel for Angel names
   if (isAngel) {
     if (isHebrew) {
       // Hebrew: אל (Aleph-Lamed)
@@ -105,10 +65,8 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
       const preVowel = getContextAwareVowel(lastConsonant, value);
       vocalizedName = vocalizedName.replace(/[\u064E\u0650\u064F\u0652]$/, '') + preVowel + 'ي' + FATHA + 'ل';
     }
-  } else {
-    // Jinn suffix already included in the math (value + 41 or +31)
-    // No additional suffix letters needed
   }
+  // Jinn: no additional suffix (already accounted for in the math)
   
   // Validate pronounceability
   const pronounceability = checkPronounceability(vocalizedName);
