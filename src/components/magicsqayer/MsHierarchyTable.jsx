@@ -70,10 +70,12 @@ function generateTraditionalName(value, suffixType) {
   // Example: 337 = 300 + 30 + 7 = [ش, ل, ز] → sequence = شلز
   const consonants = extractLettersFromValue(adjustedValue);
   
-  // STEP 3: BAST-2 ASSEMBLY - Direct concatenation in extraction order
-  // CRITICAL: consonants.join('') preserves greedy order (first extracted → last extracted)
-  // Example: [ش, ل, ز].join('') = 'شلز' (NOT 'زلش')
-  const extractedSequence = consonants.join('');
+  // STEP 3: BAST-2 ASSEMBLY - Mirror order for final name (reverse of extraction sequence)
+  // CRITICAL: Final displayed name is the REVERSE of extraction order
+  // Example: extracted [ش, ل, ز] → reversed = [ز, ل, ش] → final name = زلش
+  const extractedSequence = consonants.join(''); // Keep original for breakdown display
+  const reversedConsonants = [...consonants].reverse(); // Mirror order for final name
+  const mirroredSequence = reversedConsonants.join(''); // Final name uses reversed sequence
   
   // STEP 4: Apply Tashkeel ONLY (Bast-2 harakat rule)
   // First letter = Fatha, Middle letters = Kasra, Last letter = Sukun
@@ -83,13 +85,13 @@ function generateTraditionalName(value, suffixType) {
   const SUKUN = '\u0652';
   
   let vocalizedRoot = '';
-  for (let i = 0; i < consonants.length; i++) {
-    const letter = consonants[i];
+  for (let i = 0; i < reversedConsonants.length; i++) {
+    const letter = reversedConsonants[i];
     let harakat;
     
     if (i === 0) {
       harakat = FATHA; // First letter
-    } else if (i === consonants.length - 1) {
+    } else if (i === reversedConsonants.length - 1) {
       harakat = SUKUN; // Last letter
     } else {
       harakat = KASRA; // Middle letters
@@ -107,8 +109,9 @@ function generateTraditionalName(value, suffixType) {
   return {
     originalValue: value,
     adjustedValue,
-    consonants, // BAST-2: immutable extraction order
-    extractedSequence, // Direct concatenation (extraction order preserved)
+    consonants, // BAST-2: immutable extraction order (for breakdown display)
+    extractedSequence, // Direct concatenation (extraction order - breakdown)
+    mirroredSequence, // Mirror order (final displayed name)
     name: displayName
   };
 }

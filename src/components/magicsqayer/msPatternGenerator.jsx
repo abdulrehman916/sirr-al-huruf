@@ -81,17 +81,19 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     return { success: false, error: 'Could not extract letters' };
   }
   
-  // BAST-2 ASSEMBLY: Direct concatenation of extracted consonants (extraction order preserved)
-  // Example: [ش, ل, ز] → شلز (NOT زلش)
-  const rawConsonantSequence = consonants.join('');
+  // BAST-2 ASSEMBLY: Mirror order for final displayed name (reverse of extraction sequence)
+  // Breakdown remains: [ش, ل, ز] → شلز (extraction order - for display/audit)
+  // Final name uses: [ز, ل, ش] → زلش (mirror order - for final displayed name)
+  const rawConsonantSequence = consonants.join(''); // Keep original for breakdown display
+  const reversedConsonants = [...consonants].reverse(); // Mirror order for final name
   
-  // Apply phonetic rules for tashkeel ONLY (does not change consonant order)
-  const phoneticResult = applyPhoneticRules(consonants, value);
+  // Apply phonetic rules for tashkeel to MIRRORED sequence
+  const phoneticResult = applyPhoneticRules(reversedConsonants, value);
   
-  // Build vocalized name WITHOUT changing letters or order
+  // Build vocalized name using MIRRORED consonant order
   let vocalizedName = '';
-  for (let i = 0; i < consonants.length; i++) {
-    vocalizedName += consonants[i] + phoneticResult.vowels[i];
+  for (let i = 0; i < reversedConsonants.length; i++) {
+    vocalizedName += reversedConsonants[i] + phoneticResult.vowels[i];
   }
   
   // Add Angel suffix letters (إيل or אל) - ONLY for Angel modes
@@ -116,8 +118,9 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     value,
     suffixType,
     extractionValue,
-    consonants, // BAST-2: immutable extraction order
-    rawConsonantSequence, // Direct concatenation (extraction order)
+    consonants, // BAST-2: immutable extraction order (for breakdown display)
+    rawConsonantSequence, // Direct concatenation (extraction order - breakdown)
+    reversedConsonants, // Mirror order (final displayed name)
     fullName: vocalizedName,
     isAngel,
     isHebrew,
