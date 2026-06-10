@@ -43,26 +43,32 @@ const DAMMA = '\u064F';
 const SUKUN = '\u0652';
 
 function extractLettersFromValue(value) {
-  if (!value || value <= 0) return { letters: [], steps: [] };
+  if (!value || value <= 0) return { letters: [], steps: [], totalValue: 0 };
   
   const letters = [];
   const steps = [];
   let remaining = value;
+  let extractedTotal = 0;
+  
+  console.log(`    Extracting letters from ${value}:`);
   
   for (let i = ARABIC_ABJAD.length - 1; i >= 0 && remaining > 0; i--) {
     const { letter, value: abjadValue } = ARABIC_ABJAD[i];
-    let count = 0;
-    while (remaining >= abjadValue) {
-      letters.push(letter);
-      remaining -= abjadValue;
-      count++;
-    }
+    const count = Math.floor(remaining / abjadValue);
     if (count > 0) {
-      steps.push(`${abjadValue} × ${count} = ${letter}${count > 1 ? '×' + count : ''}`);
+      const contribution = abjadValue * count;
+      extractedTotal += contribution;
+      steps.push(`${remaining} → ${abjadValue} × ${count} = ${letter}${count > 1 ? ' (repeated ' + count + ' times)' : ''} [${contribution}]`);
+      for (let j = 0; j < count; j++) {
+        letters.push(letter);
+      }
+      remaining = remaining % abjadValue;
     }
   }
   
-  return { letters, steps };
+  console.log(`    Extracted ${letters.length} letters, total value: ${extractedTotal}, remainder: ${remaining}`);
+  
+  return { letters, steps, totalValue: extractedTotal, remainder: remaining };
 }
 
 function applyPhoneticRules(letters, value) {
@@ -112,9 +118,10 @@ function generateName(value, suffixType) {
   const suffix = SUFFIXES[suffixType];
   const isAngel = suffixType === 'ar-angel';
   
-  // ULVI ANGEL EXTRACTION RULE:
-  // IF value >= 41: value = value - 41
-  // IF value < 41: value = value + 360 - 41
+  // Step 1: Original Hierarchy Value
+  const originalValue = value;
+  
+  // Step 2: Apply Ulvi Adjustment Rule
   let adjustedValue = value;
   let adjustmentRule = '';
   
@@ -126,16 +133,22 @@ function generateName(value, suffixType) {
     adjustmentRule = `${value} < ${suffix}, so ${value} + 360 - ${suffix} = ${adjustedValue}`;
   }
   
-  const { letters, steps } = extractLettersFromValue(adjustedValue);
-  const phoneticResult = applyPhoneticRules(letters, value);
+  // Step 3: Extract Letters from Adjusted Value (NOT original)
+  const { letters, steps, totalValue, remainder: extractionRemainder } = extractLettersFromValue(adjustedValue);
   
+  // Step 4: Build name from extracted letters
   const nameBefore = letters.join('');
   
+  // Step 5: Apply phonetic rules for tashkeel
+  const phoneticResult = applyPhoneticRules(letters, value);
+  
+  // Step 6: Apply tashkeel ONLY (no letter changes)
   let vocalizedName = '';
   for (let i = 0; i < letters.length; i++) {
     vocalizedName += letters[i] + phoneticResult.vowels[i];
   }
   
+  // Step 7: Add Angel suffix if needed
   if (isAngel) {
     vocalizedName = vocalizedName.replace(/[\u064E\u0650\u064F\u0652]$/, '');
     const preVowel = getContextAwareVowel(letters[letters.length - 1], value);
@@ -143,17 +156,19 @@ function generateName(value, suffixType) {
   }
   
   return {
-    value,
     suffixType,
-    originalValue: value,
+    isAngel,
+    originalValue,
     adjustedValue,
     adjustmentRule,
-    remainder: adjustedValue,
     extractionSteps: steps,
-    letters,
+    extractedLetters: letters,
+    extractedTotalValue: totalValue,
+    extractionRemainder,
+    letterCount: letters.length,
     nameBefore,
-    nameAfter: vocalizedName,
-    phoneticRules: phoneticResult.rules
+    phoneticRules: phoneticResult.rules,
+    nameAfter: vocalizedName
   };
 }
 
