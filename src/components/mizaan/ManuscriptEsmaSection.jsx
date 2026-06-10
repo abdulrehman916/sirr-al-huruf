@@ -17,7 +17,6 @@ export default function ManuscriptEsmaSection({
   satirTotal,
   color,
   prefix,
-  number,
 }) {
   const TIER_LABELS = {
     kitabet: { ar: 'أسماء الكتابة' },
@@ -26,7 +25,6 @@ export default function ManuscriptEsmaSection({
   };
   const meta = TIER_LABELS[tier];
 
-  // Build Vefk grid
   const vefk = useMemo(() => buildVefk(satirTotal, element), [satirTotal, element]);
   const guardianName = useMemo(() => 
     istintak(ELEMENT_BAST_TOTALS[element] || 3550).join(''), 
@@ -34,53 +32,36 @@ export default function ManuscriptEsmaSection({
   );
 
   return (
-    <div style={{ fontFamily: AR.fontFamily, direction: "rtl", textAlign: "right" }}>
+    <div style={{ fontFamily: AR.fontFamily, direction: "rtl", textAlign: "right", marginBottom: "24px" }}>
       
       {/* Section title */}
-      <h3 style={{ fontSize: "1.3rem", color, marginBottom: "12px", fontWeight: "bold" }}>
+      <h3 style={{ fontSize: "1.4rem", color, marginBottom: "16px", fontWeight: "bold", borderBottom: `2px solid ${color}40`, paddingBottom: "8px" }}>
         {meta.ar}
       </h3>
 
-      {/* Satr-i Vahid */}
-      <div style={{ marginBottom: "20px", padding: "12px", borderLeft: `3px solid ${color}` }}>
-        <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.50)", marginBottom: "8px" }}>
-          Satr-ı Vahid:
-        </p>
-        <div style={{ display: "flex", flexDirection: "row", gap: "4px", direction: "ltr", flexWrap: "wrap" }}>
-          {[...data.expandedLetters].reverse().map((l, i) => (
-            <span key={i} style={{ fontSize: "1.3rem", color, fontWeight: "500" }}>
-              {l}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Names */}
-      <div style={{ marginBottom: "20px" }}>
+      {/* Final Names only */}
+      <div style={{ marginBottom: "16px" }}>
         {data.names.map((name, i) => (
-          <div key={i} style={{ fontSize: "1.1rem", color, marginBottom: "6px" }}>
-            <span style={{ fontWeight: "500" }}>{i + 1}.</span> {prefix && `${prefix} `}{name}
+          <div key={i} style={{ fontSize: "1.5rem", color, marginBottom: "8px", fontWeight: "500" }}>
+            {prefix && <span style={{ opacity: 0.7 }}>{prefix} </span>}{name}
           </div>
         ))}
       </div>
 
       {/* Vefk */}
-      <div style={{ marginBottom: "20px" }}>
-        <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.50)", marginBottom: "12px" }}>
-          Vefk:
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "2px", marginBottom: "8px", maxWidth: "180px" }}>
+      <div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "3px", maxWidth: "200px", margin: "0 auto" }}>
           {vefk.grid.flat().map((val, i) => (
             <div key={i} style={{
-              padding: "6px", textAlign: "center", border: `1px solid ${color}50`,
-              background: `${color}10`, fontSize: "0.75rem", fontWeight: "bold", color
+              padding: "8px", textAlign: "center", border: `1px solid ${color}50`,
+              background: `${color}10`, fontSize: "0.85rem", fontWeight: "bold", color
             }}>
               {val}
             </div>
           ))}
         </div>
-        <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.30)" }}>
-          Magic Constant: {vefk.mc} | Guardian: {guardianName}
+        <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.30)", textAlign: "center", marginTop: "8px" }}>
+          {guardianName}
         </p>
       </div>
 
