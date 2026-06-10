@@ -3,10 +3,12 @@
 //  Book formula: tier value → subtract suffix → extract letters via Abjad
 // ═══════════════════════════════════════════════════════════════
 
-import { VOWELS, applyPhoneticRules, checkPronounceability } from './msPhonologyEngine';
 import { ARABIC_ABJAD, HEBREW_GEMATRIA } from './msEngine';
 
-const { FATHA, KASRA, DAMMA, SUKUN } = VOWELS;
+// Bast-2 harakat constants
+const FATHA = '\u064E';
+const KASRA = '\u0650';
+const SUKUN = '\u0652';
 
 // Book suffix values
 const SUFFIXES = {
@@ -125,83 +127,35 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     return { success: false, error: 'Could not extract letters' };
   }
   
-  // FINAL NAME ASSEMBLY: Mirror order (reverse of breakdown sequence)
-  // Breakdown remains unchanged (extraction order for display)
-  // Final displayed name uses REVERSE of breakdown sequence
-  // Example: breakdown [ز, ل, ر, غ] → final name = غرلز
-  const rawConsonantSequence = consonants.join(''); // Keep original for breakdown display
-  const reversedConsonants = [...consonants].reverse(); // Mirror order for final name
+  // FINAL NAME: mirror order (reverse of breakdown)
+  const rawConsonantSequence = consonants.join('');
+  const reversedConsonants = [...consonants].reverse();
   
-  // Apply phonetic rules for tashkeel to MIRRORED sequence
-  const phoneticResult = applyPhoneticRules(reversedConsonants, value);
-  
-  // Build vocalized name using MIRRORED consonant order
-  let vocalizedName = '';
+  // Apply Bast-2 harakat: First=Fatha, Middle=Kasra, Last=Sukun
+  let vocalizedRoot = '';
   for (let i = 0; i < reversedConsonants.length; i++) {
-    vocalizedName += reversedConsonants[i] + phoneticResult.vowels[i];
+    let harakat;
+    if (i === 0) harakat = FATHA;
+    else if (i === reversedConsonants.length - 1) harakat = SUKUN;
+    else harakat = KASRA;
+    vocalizedRoot += reversedConsonants[i] + harakat;
   }
   
-  // Add Angel suffix letters (إيل or אל) - ONLY for Angel modes
-  if (isAngel) {
-    if (isHebrew) {
-      // Hebrew: אל (Aleph-Lamed)
-      vocalizedName += FATHA + 'ל';
-    } else {
-      // Arabic: إيل with context-aware pre-vowel
-      const lastConsonant = consonants[consonants.length - 1];
-      const preVowel = getContextAwareVowel(lastConsonant, value);
-      vocalizedName = vocalizedName.replace(/[\u064E\u0650\u064F\u0652]$/, '') + preVowel + 'ي' + FATHA + 'ل';
-    }
-  }
-  // Jinn: no suffix letters added (suffix was already applied during Ulvi adjustment)
-  
-  // Validate pronounceability
-  const pronounceability = checkPronounceability(vocalizedName);
+  // Angels: root + space + ايل (separated)
+  const fullName = isAngel ? vocalizedRoot + ' ' + 'ايل' : vocalizedRoot;
   
   return {
     success: true,
     value,
     suffixType,
     extractionValue,
-    consonants, // BAST-2: immutable extraction order (for breakdown display)
-    rawConsonantSequence, // Direct concatenation (extraction order - breakdown)
-    reversedConsonants, // Mirror order (final displayed name)
-    fullName: vocalizedName,
+    consonants,
+    rawConsonantSequence,
+    reversedConsonants,
+    fullName,
     isAngel,
     isHebrew,
-    phoneticRules: phoneticResult.rules,
-    validation: {
-      morphology: {
-        score: 100,
-        passed: true,
-        reason: 'Bast-2 extraction applied'
-      },
-      phonology: {
-        score: pronounceability.score,
-        passed: pronounceability.pronounceable,
-        reason: pronounceability.reason
-      },
-      overall: {
-        score: pronounceability.score,
-        passed: pronounceability.pronounceable
-      }
-    }
   };
-}
-
-/**
- * getContextAwareVowel(lastConsonant, value)
- * Determine vowel before إيل based on consonant articulation
- */
-function getContextAwareVowel(lastConsonant, value) {
-  const guttural = ['ع', 'ح', 'ه', 'خ', 'غ'];
-  const palatal = ['ج', 'ش', 'ي'];
-  const labial = ['ب', 'م', 'ف'];
-  
-  if (guttural.includes(lastConsonant)) return KASRA;
-  if (palatal.includes(lastConsonant)) return Math.abs(value) % 2 === 0 ? KASRA : FATHA;
-  if (labial.includes(lastConsonant)) return Math.abs(value) % 2 === 0 ? DAMMA : KASRA;
-  return KASRA; // Default
 }
 
 /**
