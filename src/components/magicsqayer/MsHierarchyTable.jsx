@@ -54,7 +54,7 @@ function generateTraditionalName(value, suffixType) {
   const suffix = SUFFIXES[suffixType];
   const isAngel = suffixType.includes('angel');
   
-  // Apply Ulvi adjustment: if value < suffix, add 360 first
+  // STEP 1: Apply Ulvi adjustment (underflow rule: if value < suffix, add 360 first)
   let adjustedValue = value;
   if (value < suffix) {
     adjustedValue = value + 360 - suffix;
@@ -64,40 +64,45 @@ function generateTraditionalName(value, suffixType) {
   
   if (adjustedValue <= 0) adjustedValue = 1;
   
-  // BAST-2: Extract letters from adjusted value - these letters are NEVER changed
+  // STEP 2: BAST-2 EXTRACTION - Extract letters via Abjad decomposition
+  // These consonants are IMMUTABLE - they form the base of the final name
   const consonants = extractLettersFromValue(adjustedValue);
   
-  // BAST-2 TASHKEEL ONLY: First=Fatha, Middle=Kasra, Last=Sukun
-  // NO phonology, NO synthesis, NO letter changes
+  // STEP 3: Build extracted consonant sequence (no modifications, no reversals)
+  const extractedSequence = consonants.join('');
+  
+  // STEP 4: Apply Tashkeel ONLY (Bast-2 harakat rule)
+  // First letter = Fatha, Middle letters = Kasra, Last letter = Sukun
   const FATHA = '\u064E';
   const KASRA = '\u0650';
   const SUKUN = '\u0652';
   
-  // Apply harakat to extracted letters ONLY
-  let vocalizedName = consonants.map((c, i) => {
-    const position = i + 1;
-    const isFirst = position === 1;
-    const isLast = position === consonants.length;
+  let vocalizedName = '';
+  for (let i = 0; i < consonants.length; i++) {
+    const letter = consonants[i];
+    let harakat;
     
-    // Bast-2 rule: First=Fatha, Middle=Kasra, Last=Sukun
-    let vowel;
-    if (isFirst) vowel = FATHA;
-    else if (isLast) vowel = SUKUN;
-    else vowel = KASRA;
+    if (i === 0) {
+      harakat = FATHA; // First letter
+    } else if (i === consonants.length - 1) {
+      harakat = SUKUN; // Last letter
+    } else {
+      harakat = KASRA; // Middle letters
+    }
     
-    return c + vowel; // Letter + harakat ONLY
-  }).join('');
+    vocalizedName += letter + harakat;
+  }
   
-  // Angel suffix (إيل) is added AFTER extracted letters - this is a marker, not replacement
-  if (isAngel && vocalizedName) {
-    // Remove final sukun from last extracted letter, then add إيل
+  // STEP 5: Add ايل suffix for Angels ONLY
+  // Remove final sukun, add KASRA + ي + FATHA + ل
+  if (isAngel) {
     vocalizedName = vocalizedName.replace(/\u0652$/, '') + KASRA + 'ي' + FATHA + 'ل';
   }
   
   return {
     originalValue: value,
     adjustedValue,
-    consonants, // Raw extracted letters for audit
+    consonants, // Raw extracted letters - immutable
     name: vocalizedName || 'N/A'
   };
 }
