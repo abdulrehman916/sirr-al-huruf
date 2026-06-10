@@ -14,14 +14,14 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-// ── Traditional book-formula name generation ─────────────────
-// tier value - suffix → letters → vocalized name with tashkeel
+// ── Book-formula letter extraction ─────────────────
+// tier value - suffix → extract letters via Abjad (no vocalization)
 
 function generateNameForValue(val, suffixType) {
   const result = generateNameForHierarchyValue(val, suffixType);
   
   if (!result || !result.success) {
-    return { remainder: val, fullName: '—', passed: false, score: 0 };
+    return { remainder: val, consonants: [], color: "#F5D060" };
   }
   
   const isAngel = suffixType.includes('angel');
@@ -29,13 +29,7 @@ function generateNameForValue(val, suffixType) {
   
   return {
     remainder: result.remainder,
-    fullName: result.fullName,
     consonants: result.consonants,
-    phoneticRules: result.phoneticRules,
-    score: result.validation.overall.score,
-    passed: result.validation.overall.passed,
-    failureReason: result.validation.phonology.reason,
-    phonology: result.validation.phonology,
     color
   };
 }
@@ -186,19 +180,6 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               className="rounded-xl overflow-hidden border"
               style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
             >
-              {/* Phonetic rules display */}
-              {row[activeNameKey]?.phoneticRules && (
-                <div className="px-3 py-1.5" style={{ background: "rgba(212,175,55,0.04)", borderBottom: "1px solid rgba(212,175,55,0.08)" }}>
-                  <div className="flex flex-wrap gap-1">
-                    {row[activeNameKey].phoneticRules.slice(0, 4).map((rule, idx) => (
-                      <span key={idx} className="font-inter text-[7px] px-1.5 py-0.5 rounded"
-                        style={{ background: "rgba(212,175,55,0.08)", color: "rgba(212,175,55,0.60)", border: "1px solid rgba(212,175,55,0.15)" }}>
-                        {rule}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
               {/* Numeric row */}
               <div className="flex items-center justify-between px-4 py-2.5"
                 style={{ background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}>
@@ -220,28 +201,25 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               {/* Name column with complete extraction chain */}
               {showNames && activeNameKey && row[activeNameKey] && (() => {
                 const n = row[activeNameKey];
-                const isArabic = suffix === "ar-angel" || suffix === "ar-jinn";
-                const displayName = n.fullName || '—';
-                const isValid = n.validation?.overall?.passed !== false;
-                const suffixValue = suffix === "ar-angel" ? 41 : suffix === "ar-jinn" ? 319 : 0;
+                const suffixValue = suffix === "ar-angel" ? 41 : suffix === "ar-jinn" ? 319 : suffix === "heb-angel" ? 31 : 329;
                 const adjustedValue = n.remainder !== undefined ? n.remainder : row.val;
                 
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
                     {/* Complete Calculation Chain */}
-                    <div className="space-y-2 mb-3">
+                    <div className="space-y-2">
                       {/* Step 1: Original Value */}
-                      <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
-                        <p className="font-inter text-[6px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.45)" }}>Original Value</p>
-                        <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.3rem" }}>{toArabicIndic(row.val.toLocaleString())}</p>
+                      <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                        <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)" }}>Original Value</p>
+                        <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.4rem" }}>{toArabicIndic(row.val.toLocaleString())}</p>
                       </div>
                       
                       {/* Step 2: Adjusted Value */}
                       {n.remainder !== undefined && row.val < suffixValue && (
-                        <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(79,227,255,0.08)", border: `1px solid ${n.color}30` }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest" style={{ color: n.color }}>Adjusted Value (Ulvi Rule)</p>
-                          <p className="font-inter text-[6px] mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                        <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(79,227,255,0.08)", border: `1px solid ${n.color}30` }}>
+                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: n.color }}>Adjusted Extraction Value</p>
+                          <p className="font-inter text-[7px]" style={{ color: "rgba(255,255,255,0.55)" }}>
                             {row.val} + 360 - {suffixValue} = {toArabicIndic(n.remainder.toLocaleString())}
                           </p>
                         </div>
@@ -249,9 +227,9 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       
                       {/* Step 3: Abjad Breakdown */}
                       {n.consonants && n.consonants.length > 0 && (
-                        <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>Abjad Breakdown</p>
-                          <p className="font-inter text-[7px] mt-0.5" style={{ color: G.text }}>
+                        <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.50)" }}>Abjad Breakdown</p>
+                          <p className="font-inter text-[7px]" style={{ color: G.text }}>
                             {toArabicIndic(adjustedValue.toLocaleString())} = {n.consonants.map((c, i) => {
                               const letterData = ARABIC_ABJAD.find(l => l.letter === c);
                               return `${letterData?.val || 0}`;
@@ -260,61 +238,27 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         </div>
                       )}
                       
-                      {/* Step 4: Extracted Letters */}
+                      {/* Step 4: Extracted Letters — FINAL RESULT */}
                       {n.consonants && n.consonants.length > 0 && (
-                        <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>Extracted Letters</p>
-                          <div className="flex items-center justify-center gap-1 mt-1" dir="rtl">
+                        <div className="px-2 py-2 rounded-lg" style={{ background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.30)" }}>
+                          <p className="font-inter text-[6px] uppercase tracking-widest mb-2" style={{ color: "rgba(212,175,55,0.60)" }}>Extracted Letters — Final Name</p>
+                          <div className="flex items-center justify-center gap-2 mt-1" dir="rtl">
                             {n.consonants.map((c, i) => (
-                              <span key={i} className="font-amiri text-lg px-1.5 py-0.5 rounded"
+                              <span key={i} className="font-amiri text-2xl px-2 py-1 rounded"
                                 style={{ 
-                                  background: "rgba(212,175,55,0.15)", 
+                                  background: "rgba(212,175,55,0.20)", 
                                   color: n.color,
-                                  border: `1px solid ${n.color}40`,
-                                  textShadow: `0 0 8px ${n.color}44`
+                                  border: `1px solid ${n.color}50`,
+                                  textShadow: `0 0 12px ${n.color}55`
                                 }}>
                                 {c}
                               </span>
                             ))}
                           </div>
+                          <p className="font-inter text-[7px] mt-2" style={{ color: n.color }}>
+                            Final: {n.consonants.join(' ')}
+                          </p>
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* Generated name with full tashkeel */}
-                    <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
-                      <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)" }}>Final Vocalized Name</p>
-                      <p 
-                        dir="rtl" 
-                        lang={isArabic ? "ar" : "he"}
-                        style={{
-                          color: isValid ? n.color : "rgba(255,100,100,0.70)",
-                          fontSize: isArabic ? "44px" : "34px",
-                          fontWeight: isArabic ? 600 : 900,
-                          lineHeight: isArabic ? 1.8 : 1.4,
-                          wordWrap: "break-word",
-                          overflowWrap: "break-word",
-                          textShadow: isValid ? `0 0 16px ${n.color}55, 0 0 32px ${n.color}33` : 'none',
-                          padding: "4px",
-                          fontFamily: isArabic
-                            ? "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif"
-                            : "'Amiri', serif",
-                          fontFeatureSettings: "'liga' 1, 'calt' 1, 'kern' 1",
-                          textRendering: "optimizeLegibility",
-                          WebkitFontSmoothing: "antialiased",
-                          MozOsxFontSmoothing: "grayscale",
-                        }}
-                      >
-                        {n.fullName || '—'}
-                      </p>
-                    </div>
-                    
-                    {/* Validation status */}
-                    <div className="mt-2 flex items-center justify-center gap-1">
-                      {isValid ? (
-                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ {lang === 'ar' ? 'صحيح نطقياً' : 'Pronounceable'}</span>
-                      ) : (
-                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(255,100,100,0.70)" }}>✗ {n.validation?.phonology?.reason || 'Invalid'}</span>
                       )}
                     </div>
                   </div>
