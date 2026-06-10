@@ -331,13 +331,14 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
   bastLevelUsed = alwaysFifth ? 5 : (isZevc ? 4 : 5);
 
   // Step 5: Apply Bast to each seed letter and istintak each result
-  seedBastValues = seedLetters.map(letter => {
+  // MANUSCRIPT RULE: Process letters in REVERSE order (last-to-first)
+  seedBastValues = seedLetters.reverse().map(letter => {
     const bastValue = getBastLevel(letter, bastLevelUsed);
     const expansionLetters = istintak(bastValue);
     return { letter, bastValue, expansionLetters };
   });
 
-  // Step 6: Concatenate all expansion letters
+  // Step 6: Concatenate all expansion letters (preserves reverse processing order)
   expandedLetters = seedBastValues.flatMap(s => s.expansionLetters);
   expandedCount = expandedLetters.length;
 

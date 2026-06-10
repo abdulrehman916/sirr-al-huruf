@@ -27,8 +27,9 @@ export default function ManuscriptDerivationChain({ initialLetters, element, col
     const isZevc = seedLetters.length % 2 === 0;
     const bastLevel = isZevc ? 4 : 5;
 
-    // Step 4: Apply Bast to each seed
-    const seedsWithBast = seedLetters.map(letter => ({
+    // Step 4: Apply Bast to each seed — MANUSCRIPT RULE: REVERSE ORDER
+    const reversedSeedLetters = [...seedLetters].reverse();
+    const seedsWithBast = reversedSeedLetters.map(letter => ({
       letter,
       bastValue: getBastLevel(letter, bastLevel)
     }));
@@ -72,8 +73,9 @@ export default function ManuscriptDerivationChain({ initialLetters, element, col
     const isZevc = seedLetters.length % 2 === 0;
     const bastLevel = isZevc ? 4 : 5;
 
-    // Step 4: Apply Bast
-    const seedsWithBast = seedLetters.map(letter => ({
+    // Step 4: Apply Bast — MANUSCRIPT RULE: REVERSE ORDER
+    const reversedSeedLetters = [...seedLetters].reverse();
+    const seedsWithBast = reversedSeedLetters.map(letter => ({
       letter,
       bastValue: getBastLevel(letter, bastLevel)
     }));
@@ -117,8 +119,9 @@ export default function ManuscriptDerivationChain({ initialLetters, element, col
     const isZevc = seedLetters.length % 2 === 0;
     const bastLevel = 5; // Kasem rule: always 5th Bast
 
-    // Step 4: Apply Bast
-    const seedsWithBast = seedLetters.map(letter => ({
+    // Step 4: Apply Bast — MANUSCRIPT RULE: REVERSE ORDER
+    const reversedSeedLetters = [...seedLetters].reverse();
+    const seedsWithBast = reversedSeedLetters.map(letter => ({
       letter,
       bastValue: getBastLevel(letter, bastLevel)
     }));

@@ -88,12 +88,25 @@ export default function BookDerivationStage({ data, levelName, levelNameAr, colo
       </StageContainer>
 
       {/* STEP 6: INDIVIDUAL BAST */}
-      <StageContainer number="٦" title="Step 6: Individual Bast of Every Letter" titleAr="بسط كل حرف على حدة" color={color}>
-        <div style={{ fontSize: "0.8rem", color: G.dim, marginBottom: "12px" }}>Processing {data.seedLetters.length} letters with {data.bastLevel}{data.bastLevel === 4 ? ' (رابع)' : ' (خامس)'} Bast:</div>
+      <StageContainer number="٦" title="Step 6: Individual Bast of Every Letter (REVERSE ORDER)" titleAr="بسط كل حرف على حدة (الترتيب العكسي)" color={color}>
+        <div style={{ fontSize: "0.8rem", color: G.dim, marginBottom: "12px" }}>
+          <div style={{ padding: "8px", background: `${G.text}10`, borderRadius: "6px", border: `1px solid ${G.text}30`, marginBottom: "8px" }}>
+            <strong style={{ color: G.text }}>⚠ MANUSCRIPT RULE:</strong>
+            <span style={{ color: G.text, marginLeft: "8px" }}>Start from LAST letter → move backwards to first</span>
+          </div>
+          Processing {data.seedLetters.length} letters in reverse order with {data.bastLevel}{data.bastLevel === 4 ? ' (رابع)' : ' (خامس)'} Bast:
+        </div>
         <div style={{ display: "grid", gap: "12px" }}>
           {data.seedsWithBast.map((seed, i) => (
-            <div key={i} style={{ padding: "12px", border: `2px solid ${G.purple}30`, borderRadius: "8px", background: `${G.purple}05` }}>
-              <div style={{ fontSize: "0.75rem", color: G.dim, marginBottom: "8px" }}>Letter {i + 1}:</div>
+            <div key={i} style={{ padding: "12px", border: `2px solid ${G.purple}30`, borderRadius: "8px", background: `${G.purple}05`, position: "relative" }}>
+              <div style={{ fontSize: "0.75rem", color: G.dim, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ background: color, color: "#000", padding: "1px 6px", borderRadius: "3px", fontWeight: "bold", fontSize: "0.65rem" }}>{i + 1}</span>
+                {i === 0 ? (
+                  <span style={{ color: G.green, fontWeight: "bold" }}>START HERE (last letter of seed)</span>
+                ) : i === data.seedsWithBast.length - 1 ? (
+                  <span style={{ color: G.text }}>END HERE (first letter of seed)</span>
+                ) : null}
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span dir="rtl" lang="ar" style={{ fontFamily: AR.fontFamily, fontSize: "1.8rem", color: G.purple, padding: "8px 16px", background: `${G.purple}15`, borderRadius: "6px", border: `1px solid ${G.purple}30` }}>{seed.letter}</span>
                 <span style={{ fontSize: "1.5rem", color: G.text }}>→</span>
