@@ -2,10 +2,6 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, toArabicIndic, isCompatible, ARABIC_ABJAD, HEBREW_GEMATRIA } from "./msEngine";
 import { perfStore } from "./perfStore";
-import { generateNameForHierarchyValue } from "./msPatternGenerator";
-
-// Helper to get display name (pattern-based names are already valid)
-const addTashkeelToArabicName = (name) => name;
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -14,24 +10,47 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-// ── Book-formula letter extraction ─────────────────
-// tier value - suffix → extract letters via Abjad (no vocalization)
+// ── Bast-2 letter extraction ─────────────────
+// Use hierarchy value directly → extract letters via Abjad (no suffix subtraction)
 
 function generateNameForValue(val, suffixType) {
-  const result = generateNameForHierarchyValue(val, suffixType);
+  // Hierarchy value is already adjusted (e.g., 18 + 360 - 41 = 337)
+  // DO NOT subtract suffix again - use val directly for extraction
+  const extractionValue = val;
   
-  if (!result || !result.success) {
-    return { remainder: val, consonants: [], color: "#F5D060" };
-  }
+  // Extract letters from the final adjusted value
+  const consonants = extractLettersFromValue(extractionValue, suffixType);
   
   const isAngel = suffixType.includes('angel');
   const color = isAngel ? "#4FE3FF" : suffixType === 'ar-jinn' ? "#FF9F5A" : "#F9A8D4";
   
   return {
-    remainder: result.remainder,
-    consonants: result.consonants,
+    extractionValue,
+    consonants,
     color
   };
+}
+
+// Extract letters using Abjad decomposition (greedy algorithm)
+function extractLettersFromValue(value, suffixType) {
+  if (!value || value <= 0) return [];
+  
+  const isHebrew = suffixType.includes('heb');
+  const letterTable = isHebrew ? HEBREW_GEMATRIA : ARABIC_ABJAD;
+  const letters = [];
+  let remaining = value;
+  
+  // Greedy decomposition: largest values first
+  for (let i = letterTable.length - 1; i >= 0 && remaining > 0; i--) {
+    const { val, letter } = letterTable[i];
+    while (remaining >= val) {
+      letters.push(letter);
+      remaining -= val;
+    }
+  }
+  
+  // Reverse to get proper reading order (RTL)
+  return letters.reverse();
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -201,36 +220,34 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               {/* Name column with complete extraction chain */}
               {showNames && activeNameKey && row[activeNameKey] && (() => {
                 const n = row[activeNameKey];
-                const suffixValue = suffix === "ar-angel" ? 41 : suffix === "ar-jinn" ? 319 : suffix === "heb-angel" ? 31 : 329;
-                const adjustedValue = n.remainder !== undefined ? n.remainder : row.val;
                 
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
-                    {/* Complete Calculation Chain */}
+                    {/* Complete Extraction Chain */}
                     <div className="space-y-2">
-                      {/* Step 1: Original Value */}
+                      {/* Step 1: Final Extraction Value (Already Adjusted) */}
                       <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
-                        <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)" }}>Original Value</p>
-                        <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.4rem" }}>{toArabicIndic(row.val.toLocaleString())}</p>
+                        <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)" }}>Final Extraction Value</p>
+                        <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.4rem" }}>{toArabicIndic((n.extractionValue || row.val).toLocaleString())}</p>
                       </div>
                       
-                      {/* Step 2: Adjusted Value */}
-                      {n.remainder !== undefined && row.val < suffixValue && (
+                      {/* Step 2: Extraction Value (Already Adjusted) */}
+                      {n.extractionValue !== undefined && (
                         <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(79,227,255,0.08)", border: `1px solid ${n.color}30` }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: n.color }}>Adjusted Extraction Value</p>
+                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: n.color }}>Final Extraction Value</p>
                           <p className="font-inter text-[7px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-                            {row.val} + 360 - {suffixValue} = {toArabicIndic(n.remainder.toLocaleString())}
+                            {toArabicIndic(n.extractionValue.toLocaleString())}
                           </p>
                         </div>
                       )}
                       
-                      {/* Step 3: Abjad Breakdown */}
+                      {/* Step 2: Abjad Decomposition */}
                       {n.consonants && n.consonants.length > 0 && (
                         <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.50)" }}>Abjad Breakdown</p>
+                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.50)" }}>Abjad Decomposition</p>
                           <p className="font-inter text-[7px]" style={{ color: G.text }}>
-                            {toArabicIndic(adjustedValue.toLocaleString())} = {n.consonants.map((c, i) => {
+                            {toArabicIndic((n.extractionValue || row.val).toLocaleString())} = {n.consonants.map((c, i) => {
                               const letterData = ARABIC_ABJAD.find(l => l.letter === c);
                               return `${letterData?.val || 0}`;
                             }).join(' + ')}
@@ -238,10 +255,10 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         </div>
                       )}
                       
-                      {/* Step 4: Extracted Letters — FINAL RESULT */}
+                      {/* Step 3: Extracted Letters — Bast-2 Final Result */}
                       {n.consonants && n.consonants.length > 0 && (
                         <div className="px-2 py-2 rounded-lg" style={{ background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.30)" }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest mb-2" style={{ color: "rgba(212,175,55,0.60)" }}>Extracted Letters — Final Name</p>
+                          <p className="font-inter text-[6px] uppercase tracking-widest mb-2" style={{ color: "rgba(212,175,55,0.60)" }}>Extracted Letters — Bast-2 Final Name</p>
                           <div className="flex items-center justify-center gap-2 mt-1" dir="rtl">
                             {n.consonants.map((c, i) => (
                               <span key={i} className="font-amiri text-2xl px-2 py-1 rounded"
@@ -256,7 +273,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                             ))}
                           </div>
                           <p className="font-inter text-[7px] mt-2" style={{ color: n.color }}>
-                            Final: {n.consonants.join(' ')}
+                            Bast-2 Result: {n.consonants.join(' ')}
                           </p>
                         </div>
                       )}

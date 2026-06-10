@@ -41,11 +41,16 @@ function extractLettersFromValue(value, letterTable) {
 
 /**
  * generateNameForHierarchyValue(value, suffixType)
- * ORIGINAL BOOK FORMULA:
- * 1. Hierarchy value - suffix = remainder
- * 2. Extract letters from remainder using Abjad decomposition
- * 3. Add suffix letters (إيل for Angel, none for Jinn)
- * 4. Apply tashkeel ONLY (never change letters)
+ * BAST-2 EXTRACTION RULE:
+ * 1. Value is already the final adjusted extraction value (DO NOT subtract suffix again)
+ * 2. Extract letters directly from value using Abjad decomposition
+ * 3. For Angel modes: add suffix letters (إيل for Arabic, אל for Hebrew) AFTER extraction
+ * 4. For Jinn modes: no suffix letters added
+ * 5. Apply tashkeel ONLY (never change letters)
+ * 
+ * CRITICAL: The input value is already the result of Ulvi adjustment.
+ * Example: 18 → 18 + 360 - 41 = 337 (adjustment happens BEFORE this function is called)
+ * This function receives 337 and extracts: 337 = 300 + 30 + 7 = ش ل ز
  */
 export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   const suffix = SUFFIXES[suffixType];
@@ -57,17 +62,13 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   const isHebrew = suffixType.includes('heb');
   const isArabic = !isHebrew;
   
-  // BOOK FORMULA: subtract suffix from tier value
-  let remainder = value - suffix;
+  // BAST-2 RULE: value is already adjusted, extract directly
+  // DO NOT subtract suffix again - it was already applied during Ulvi adjustment
+  const extractionValue = value;
   
-  // Underflow rule: if value < suffix, add 360 first
-  if (remainder <= 0) {
-    remainder = value + 360 - suffix;
-  }
-  
-  // ORIGINAL LETTER EXTRACTION: Abjad decomposition
+  // ORIGINAL LETTER EXTRACTION: Abjad decomposition from adjusted value
   const letterTable = isHebrew ? HEBREW_GEMATRIA : ARABIC_ABJAD;
-  const consonants = extractLettersFromValue(remainder, letterTable);
+  const consonants = extractLettersFromValue(extractionValue, letterTable);
   
   if (consonants.length === 0) {
     return { success: false, error: 'Could not extract letters' };
@@ -82,7 +83,7 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     vocalizedName += consonants[i] + phoneticResult.vowels[i];
   }
   
-  // Add Angel suffix letters (إيل or אל)
+  // Add Angel suffix letters (إيل or אל) - ONLY for Angel modes
   if (isAngel) {
     if (isHebrew) {
       // Hebrew: אל (Aleph-Lamed)
@@ -94,7 +95,7 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
       vocalizedName = vocalizedName.replace(/[\u064E\u0650\u064F\u0652]$/, '') + preVowel + 'ي' + FATHA + 'ل';
     }
   }
-  // Jinn: no additional suffix (suffix already subtracted in math)
+  // Jinn: no suffix letters added (suffix was already applied during Ulvi adjustment)
   
   // Validate pronounceability
   const pronounceability = checkPronounceability(vocalizedName);
@@ -103,7 +104,7 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     success: true,
     value,
     suffixType,
-    remainder,
+    extractionValue,
     consonants,
     fullName: vocalizedName,
     isAngel,
@@ -113,7 +114,7 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
       morphology: {
         score: 100,
         passed: true,
-        reason: 'Book formula applied'
+        reason: 'Bast-2 extraction applied'
       },
       phonology: {
         score: pronounceability.score,
