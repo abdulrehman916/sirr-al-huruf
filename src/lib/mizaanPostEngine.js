@@ -153,8 +153,9 @@ export function getBastLevel(letter, level) {
  * Source: "birinci bast adedine göre toplayıp" + "harf adedinide ilave edip"
  */
 export function satirVahidSum(letters) {
-  const bastSum = letters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
-  const count = letters.length;
+  const safeLetters = Array.isArray(letters) ? letters : [];
+  const bastSum = safeLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+  const count = safeLetters.length;
   return { bastSum, count, total: bastSum + count };
 }
 
@@ -202,9 +203,10 @@ export function getGalibAnasirData(element) {
 // air: 3757 → نذغج = Nez̀ğac
 // water: 3342 → ب م غج = Bemğac
 function getGuardianName(element) {
-  const total = ELEMENT_BAST_TOTALS[element];
+  const total = ELEMENT_BAST_TOTALS[element] || ELEMENT_BAST_TOTALS.fire;
   const letters = istintak(total);
-  return letters.join('');
+  const safeLetters = Array.isArray(letters) ? letters : [];
+  return safeLetters.join('');
 }
 
 // ── Vefk elemental position templates (p.68, exact) ──────────────
@@ -318,7 +320,10 @@ export function resolveGalipAnasir(dominant) {
  */
 export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementElement = 'fire') {
   // MANUSCRIPT RULE: Use input letters directly - NO Bast expansion
-  if (!inputLetters || inputLetters.length === 0) {
+  // CRITICAL: Always ensure inputLetters is a safe array
+  const safeInputLetters = Array.isArray(inputLetters) ? inputLetters : [];
+  
+  if (safeInputLetters.length === 0) {
     return {
       inputLetters: [],
       satrVahidLetters: [],
@@ -333,7 +338,7 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
     };
   }
   
-  const satrVahidLetters = inputLetters;
+  const satrVahidLetters = safeInputLetters;
   const satrVahidCount = satrVahidLetters.length;
   
   // Zevc/Ferd classification based on Satr-i Vahid count
@@ -406,11 +411,11 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // Generate Esma-i Kitabet using simplified manuscript workflow
   const kitabet = generateEsmaLevel(initialSeedLetters, false, element);
 
-  // Generate Esma-i A'van (second stage) - using kitabet expanded letters
-  const avan = generateEsmaLevel(kitabet.expandedLetters, false, element);
+  // Generate Esma-i A'van (second stage) - using kitabet finalExpandedLetters
+  const avan = generateEsmaLevel(kitabet.finalExpandedLetters, false, element);
 
-  // Generate Esma-i Kasem (third stage, always 5th Bast) - using avan expanded letters
-  const kasem = generateEsmaLevel(avan.expandedLetters, true, element);
+  // Generate Esma-i Kasem (third stage, always 5th Bast) - using avan finalExpandedLetters
+  const kasem = generateEsmaLevel(avan.finalExpandedLetters, true, element);
 
   // Build Vefk from grandBast (the total of 9 MIZAN First Bast values)
   const vefk = buildVefk(grandBast, element);

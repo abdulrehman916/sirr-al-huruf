@@ -20,36 +20,41 @@ const G = {
  * 4. Group the FINAL corrected sequence into Esma-i Kitabet names
  */
 export default function SatrVahidGrouping({ 
-  satrVahidLetters,      // The exact Satr-i Vahid letters from manuscript (no expansion)
-  isZevc,                // true if even count, false if odd (Ferd)
-  finalLetters,          // Final corrected sequence (satrVahidLetters + supplement if needed)
+  satrVahidLetters = [],      // The exact Satr-i Vahid letters from manuscript (no expansion)
+  isZevc = true,                // true if even count, false if odd (Ferd)
+  finalLetters = [],          // Final corrected sequence (satrVahidLetters + supplement if needed)
   supplementLetters = [], // Galib Anasir supplement letters
   hasSupplement = false,
 }) {
+  // CRITICAL: Ensure all arrays are safe
+  const safeSatrVahidLetters = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
+  const safeFinalLetters = Array.isArray(finalLetters) ? finalLetters : [];
+  const safeSupplementLetters = Array.isArray(supplementLetters) ? supplementLetters : [];
+  
   // Determine group size from Ferd/Zevc
   const groupSize = isZevc ? 4 : 5;
   
   // Group the final corrected sequence into Esma-i Kitabet names
   const groups = useMemo(() => {
-    if (!finalLetters || finalLetters.length === 0) return [];
+    if (safeFinalLetters.length === 0) return [];
     
     const result = [];
-    for (let i = 0; i < finalLetters.length; i += groupSize) {
-      const group = finalLetters.slice(i, i + groupSize);
+    for (let i = 0; i < safeFinalLetters.length; i += groupSize) {
+      const group = safeFinalLetters.slice(i, i + groupSize);
       result.push({
         letters: group,
         startIndex: i,
-        endIndex: Math.min(i + groupSize - 1, finalLetters.length - 1),
+        endIndex: Math.min(i + groupSize - 1, safeFinalLetters.length - 1),
         isComplete: group.length === groupSize,
       });
     }
     
     return result;
-  }, [finalLetters, groupSize]);
+  }, [safeFinalLetters, groupSize]);
 
-  const totalLetters = satrVahidLetters.length;
+  const totalLetters = safeSatrVahidLetters.length;
   const isFerd = !isZevc;
-  const finalTotal = finalLetters.length;
+  const finalTotal = safeFinalLetters.length;
 
   return (
     <motion.div
@@ -77,7 +82,7 @@ export default function SatrVahidGrouping({
           <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{totalLetters} letters</span>
         </div>
         <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
-          {satrVahidLetters.map((l, i) => (
+          {safeSatrVahidLetters.map((l, i) => (
             <motion.span
               key={i}
               initial={{ opacity: 0, scale: 0.8 }}
@@ -111,18 +116,18 @@ export default function SatrVahidGrouping({
       </div>
 
       {/* Remainder Correction Notice */}
-      {hasSupplement && supplementLetters.length > 0 && (
+      {hasSupplement && safeSupplementLetters.length > 0 && (
         <div className="px-4 py-3 rounded-xl border"
           style={{ background: `${G.green}10`, borderColor: `${G.green}40` }}>
           <div className="flex items-center justify-between mb-2">
             <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Remainder Correction</span>
-            <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{supplementLetters.length} letters appended</span>
+            <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{safeSupplementLetters.length} letters appended</span>
           </div>
           <div className="text-xs mb-2" style={{ color: G.dim }}>
-            Original: {totalLetters} | Remainder: {totalLetters % groupSize} | Needed: {supplementLetters.length}
+            Original: {totalLetters} | Remainder: {totalLetters % groupSize} | Needed: {safeSupplementLetters.length}
           </div>
           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
-            {supplementLetters.map((l, i) => (
+            {safeSupplementLetters.map((l, i) => (
               <motion.span
                 key={i}
                 initial={{ opacity: 0, scale: 0.8 }}

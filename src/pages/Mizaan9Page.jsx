@@ -362,7 +362,7 @@ export default function Mizaan9Page() {
                         <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Initial Seed Letters</span>
                           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
-                            {[...pipeline.initialSeedLetters].reverse().map((l, i) => (
+                            {Array.isArray(pipeline.initialSeedLetters) && [...pipeline.initialSeedLetters].reverse().map((l, i) => (
                               <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
                                 style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.04)" }} dir="rtl">{l}</span>
                             ))}
