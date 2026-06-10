@@ -5,11 +5,7 @@
  */
 import { useMemo } from "react";
 import PageLayout from "../components/PageLayout";
-import ManuscriptEsmaSection from "../components/mizaan/ManuscriptEsmaSection";
-import ManuscriptDerivationChain from "../components/mizaan/ManuscriptDerivationChain";
-import { runMizaanPostPipeline, ELEMENT_BAST_TOTALS, istintak } from "../lib/mizaanPostEngine";
 import { mizaanAnalyze } from "../lib/mizaan9Engine";
-import IstintakSteps from "../components/mizaan/IstintakSteps";
 import {
   MIZAAN_KHAYR_SHARR, MIZAAN_HOURS, MIZAAN_DAYS,
   MIZAAN_PLANETS_ALL, MIZAAN_PURPOSES, MIZAAN_ELEMENT_DEGREES,
@@ -32,13 +28,6 @@ const KHAYR_SHARR_8 = {
   khayr: { arabic: 'الخير', bast: 2731 },
   sharr: { arabic: 'الشر',  bast: 2725 },
 };
-
-const AR = { 
-  fontFamily: "'Noto Naskh Arabic','Amiri','Scheherazade New',serif" 
-};
-
-
-
 
 
 // ═══════════════════════════════════════════════════════════════════
@@ -79,26 +68,14 @@ export default function ManuscriptPipelinePage() {
     return { grandBast, grandLetters };
   }, [m1]);
 
-  const pipeline = useMemo(() =>
-    runMizaanPostPipeline({
-      grandBast: grandTotals.grandBast,
-      grandLetters: grandTotals.grandLetters,
-      dominant: m1.dominant,
-    }), [grandTotals.grandBast, grandTotals.grandLetters, m1.dominant]);
-
-
-
-  if (!pipeline) return <PageLayout><p style={{ color: "rgba(212,175,55,0.55)" }}>Loading…</p></PageLayout>;
-
-  const { element, kitabet } = pipeline;
+  if (!grandTotals) return <PageLayout><p style={{ color: "rgba(212,175,55,0.55)" }}>Loading…</p></PageLayout>;
 
   return (
     <PageLayout>
       <div className="space-y-8 pb-10 max-w-5xl mx-auto">
         
         {/* ═══════════════════════════════════════════════════════════
-            COMPLETE MANUSCRIPT DERIVATION CHAIN
-            Shows EVERY intermediate stage BEFORE Esma-i Kitabet
+            PIPELINE INPUT
             ═══════════════════════════════════════════════════════════ */}
         <div style={{ 
           marginTop: "20px", 
@@ -115,17 +92,25 @@ export default function ManuscriptPipelinePage() {
             borderBottom: "2px solid rgba(212,175,55,0.40)",
             paddingBottom: "12px"
           }}>
-            سلسلة الاشتقاق (Complete Derivation Chain)
+            Pipeline Input
           </h2>
-          <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.60)", marginBottom: "20px" }}>
-            Every manuscript stage from initial letters → Esma-i Kitabet. No shortcuts. No hidden stages.
-          </p>
-          
-          <ManuscriptDerivationChain
-            initialLetters={m1.letters}
-            element={element}
-            color="#F5D060"
-          />
+          <div style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.70)" }}>
+            <div style={{ marginBottom: "12px" }}>
+              <strong>Input Text:</strong> {TEST_INPUT}
+            </div>
+            <div style={{ marginBottom: "12px" }}>
+              <strong>Grand Bast:</strong> {grandTotals.grandBast.toLocaleString()}
+            </div>
+            <div style={{ marginBottom: "12px" }}>
+              <strong>Grand Letters:</strong> {grandTotals.grandLetters}
+            </div>
+            <div style={{ marginBottom: "12px" }}>
+              <strong>Dominant Element:</strong> {m1.dominant}
+            </div>
+            <div style={{ marginBottom: "12px" }}>
+              <strong>Satır Vahid Total:</strong> {(grandTotals.grandBast + grandTotals.grandLetters).toLocaleString()}
+            </div>
+          </div>
         </div>
 
       </div>
