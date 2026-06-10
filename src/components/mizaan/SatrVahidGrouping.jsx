@@ -34,55 +34,65 @@ export default function SatrVahidGrouping({
 }) {
   // CRITICAL: Ensure all arrays are safe
   const safeSatrVahidLetters = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
-  const safeFinalLetters = Array.isArray(finalLetters) ? finalLetters : [];
   const safeSupplementLetters = Array.isArray(supplementLetters) ? supplementLetters : [];
   
-  // Determine group size from Ferd/Zevc
-  const groupSize = isZevc ? 4 : 5;
-  
-  // Group the final corrected sequence into Esma-i Kitabet names
-  const groups = useMemo(() => {
-    if (safeFinalLetters.length === 0) return [];
-    
-    const result = [];
-    for (let i = 0; i < safeFinalLetters.length; i += groupSize) {
-      const group = safeFinalLetters.slice(i, i + groupSize);
-      result.push({
-        letters: group,
-        startIndex: i,
-        endIndex: Math.min(i + groupSize - 1, safeFinalLetters.length - 1),
-        isComplete: group.length === groupSize,
-      });
-    }
-    
-    return result;
-  }, [safeFinalLetters, groupSize]);
-
   const totalLetters = safeSatrVahidLetters.length;
   const isFerd = !isZevc;
-  const finalTotal = safeFinalLetters.length;
   
   // MANUSCRIPT RULE: Calculate 5th Bast for EACH letter individually (Ferd = 5th Bast)
   // PROCESSING ORDER: Start from LAST letter → work backward to FIRST letter
   const bastLevel = isFerd ? 5 : 4;
-  const individualDerivations = useMemo(() => {
+  
+  // Compute individual derivations with manuscript-order expansion letters
+  const { individualDerivations, concatenatedSatrVahid } = useMemo(() => {
     // MANUSCRIPT ORDER: Process from LAST to FIRST
-    // Example: Original [د, ث, غ, ز, ي] → Process order: ي (start) → ز → غ → ث → د (end)
     const derivations = [];
     for (let i = safeSatrVahidLetters.length - 1; i >= 0; i--) {
       const letter = safeSatrVahidLetters[i];
       const bastValue = getBastLevel(letter, bastLevel);
       const expansionLetters = istintak(bastValue);
+      // MANUSCRIPT DISPLAY RULE: Reverse expansion letters for proper reading order
+      // Example: istintak returns [ب, غ, غ, خ, ز] → display as [ز, خ, غ, غ, ب]
+      const reversedExpansionLetters = [...expansionLetters].reverse();
       derivations.push({
-        processingOrder: safeSatrVahidLetters.length - i,  // 1 = first processed (last letter)
-        originalIndex: i,  // Position in original sequence
+        processingOrder: safeSatrVahidLetters.length - i,
+        originalIndex: i,
         letter,
         bastValue,
-        expansionLetters,
+        expansionLetters: reversedExpansionLetters,
       });
     }
-    return derivations;
+    // Concatenate ALL expansion letters (already reversed)
+    const concatenated = derivations.flatMap(d => d.expansionLetters);
+    return { individualDerivations: derivations, concatenatedSatrVahid: concatenated };
   }, [safeSatrVahidLetters, bastLevel]);
+  
+  // Apply remainder correction to concatenated Satr-i Vahid
+  const groupSize = isZevc ? 4 : 5;
+  const remainder = concatenatedSatrVahid.length % groupSize;
+  let finalSequence = concatenatedSatrVahid;
+  let needsSupplement = remainder > 0;
+  
+  // If remainder exists, append Galib Anasir letters (from pipeline)
+  if (needsSupplement && safeSupplementLetters.length > 0) {
+    finalSequence = [...concatenatedSatrVahid, ...safeSupplementLetters];
+  }
+  
+  // Group the final corrected sequence into Esma-i Kitabet names
+  const groups = useMemo(() => {
+    if (finalSequence.length === 0) return [];
+    const result = [];
+    for (let i = 0; i < finalSequence.length; i += groupSize) {
+      const group = finalSequence.slice(i, i + groupSize);
+      result.push({
+        letters: group,
+        startIndex: i,
+        endIndex: Math.min(i + groupSize - 1, finalSequence.length - 1),
+        isComplete: group.length === groupSize,
+      });
+    }
+    return result;
+  }, [finalSequence, groupSize]);
 
   return (
     <motion.div
@@ -242,15 +252,18 @@ export default function SatrVahidGrouping({
         ))}
       </div>
 
-      {/* Concatenated Satr-i Vahid sequence */}
+      {/* Concatenated Satr-i Vahid sequence - manuscript order */}
       <div className="px-4 py-3 rounded-xl border"
         style={{ background: G.bg, borderColor: G.border }}>
         <div className="flex items-center justify-between mb-2">
-          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid (Concatenated Sequence)</span>
-          <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{safeFinalLetters.length} letters</span>
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid (Manuscript Order)</span>
+          <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{concatenatedSatrVahid.length} letters</span>
+        </div>
+        <div className="text-xs mb-2" style={{ color: G.dim }}>
+          Each Bast result reversed for proper manuscript reading order
         </div>
         <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
-          {safeFinalLetters.map((l, i) => (
+          {concatenatedSatrVahid.map((l, i) => (
             <motion.span
               key={i}
               initial={{ opacity: 0, scale: 0.8 }}
@@ -278,7 +291,7 @@ export default function SatrVahidGrouping({
             <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{safeSupplementLetters.length} letters appended</span>
           </div>
           <div className="text-xs mb-2" style={{ color: G.dim }}>
-            Original: {totalLetters} | Remainder: {totalLetters % groupSize} | Needed: {safeSupplementLetters.length}
+            Bast-derived: {individualDerivations.reduce((sum, d) => sum + d.expansionLetters.length, 0)} | Remainder: {individualDerivations.reduce((sum, d) => sum + d.expansionLetters.length, 0) % groupSize} | Needed: {safeSupplementLetters.length}
           </div>
           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
             {safeSupplementLetters.map((l, i) => (
@@ -307,7 +320,7 @@ export default function SatrVahidGrouping({
         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
           style={{ background: G.bg, borderColor: G.border }}>
           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Final Sequence</span>
-          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{finalTotal} letters</span>
+          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{finalSequence.length} letters</span>
         </div>
       )}
 
