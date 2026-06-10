@@ -1,6 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// MIZAN POST-PROCESSING ENGINE
+// MIZAN-9 POST-PROCESSING ENGINE
 // Source: Usûlül Bast fi Sirril Evfâk vel Havas — İdris Çelebi
+//
+// MIZAN-9 ONLY - DO NOT USE IN OTHER MODULES:
+// This engine is EXCLUSIVELY for Mizan-9 page calculations.
+// Other modules (Bast, Faal, Hadim, Vefkin, Anasir, Holy Names) have separate engines.
 //
 // INPUT:  grandBast (sum of all 9 MIZAN First Bast values)
 //         grandLetters (sum of all 9 MIZAN letter counts)
@@ -16,6 +20,10 @@
 //   → Repeat → Esma-i A'van
 //   → Repeat (always 5th Bast) → Esma-i Kasem
 //   → Galip Anasır → Vefk
+//
+// MIZAN-9 ORDER PRESERVATION:
+//   - Preserve exact Bast extraction sequence without reversal
+//   - Pass sequence unchanged through all pipeline stages
 // ═══════════════════════════════════════════════════════════════
 
 // ── First Bast lookup table (p.41–42) ──────────────────────────

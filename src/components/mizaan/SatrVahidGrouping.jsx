@@ -16,7 +16,13 @@ const G = {
 };
 
 /**
- * SATR-I VAHID GROUPING WORKFLOW:
+ * MIZAN-9 ONLY: SATR-I VAHID GROUPING WORKFLOW
+ * 
+ * MIZAN-9 SPECIFIC RULE - DO NOT APPLY TO OTHER MODULES:
+ * This component is used EXCLUSIVELY by Mizan-9 page for manuscript-order preservation.
+ * Other modules (Bast, Faal, Hadim, Vefkin, Anasir, Holy Names) have their own rules.
+ * 
+ * WORKFLOW:
  * 1. Display seed letters (from Istintak)
  * 2. Count letters → FERD (odd) or ZEVC (even)
  * 3. Apply 5th Bast (Ferd) or 4th Bast (Zevc) to EACH letter individually
@@ -25,10 +31,14 @@ const G = {
  * 6. Apply remainder correction if needed (append Galib Anasir to END)
  * 7. Group the FINAL corrected sequence into Esma-i Kitabet names
  * 
- * NAME GENERATION RULE:
- * - Names are created by direct concatenation of displayed group letters
+ * MIZAN-9 ORDER PRESERVATION RULE:
+ * - Preserve exact Bast extraction sequence from current calculation
+ * - Do NOT reverse extracted letters
+ * - Do NOT reorder for display
+ * - Do NOT apply RTL correction to sequence
+ * - Pass sequence unchanged to Pipeline Input, Satr-i Vahid, Esma-i Kitabet Grouping, and Names
+ * - Names created by direct concatenation of displayed group letters
  * - Example: Displayed [ز, غ, ب, ا, ل] → Name: "زغبال"
- * - No reversal of group letters or names
  * - Displayed letters are the source of truth
  */
 export default function SatrVahidGrouping({ 
@@ -57,8 +67,8 @@ export default function SatrVahidGrouping({
       const letter = safeSatrVahidLetters[i];
       const bastValue = getBastLevel(letter, bastLevel);
       const extractedLetters = istintak(bastValue);
-      // ORDER LOCK: Use extracted letters EXACTLY as returned - NO reversal
-      // Extraction order IS the canonical order
+      // MIZAN-9 RULE: Use extracted letters EXACTLY as returned - NO reversal
+      // Extraction order IS the sequence for this calculation only
       derivations.push({
         processingOrder: safeSatrVahidLetters.length - i,
         originalIndex: i,
