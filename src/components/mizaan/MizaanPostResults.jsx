@@ -65,7 +65,7 @@ function SeedStep({ data, label }) {
       <div className="flex items-center justify-between py-1">
         <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>Seed Letters</span>
         <div className="flex gap-1 flex-wrap justify-end">
-          {data.seedLetters.map((l, i) => (
+          {[...data.seedLetters].reverse().map((l, i) => (
             <span key={i} className="font-amiri text-lg px-1.5 py-0.5 rounded border"
               style={{ color: G.text, borderColor: G.border, background: G.bg }}>{l}</span>
           ))}
@@ -99,7 +99,7 @@ function EsmaSection({ data, tierLabel, aziметPrefix, color, isOpen, onToggle
                   Expanded Letters ({data.expandedCount}) → {data.isExpandedZevc ? `Groups of 4` : `Groups of 5`}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {data.expandedLetters.map((l, i) => (
+                  {[...data.expandedLetters].reverse().map((l, i) => (
                     <span key={i} className="font-amiri text-base px-1 rounded"
                       style={{ color: "rgba(255,255,255,0.60)", background: "rgba(255,255,255,0.04)" }}>{l}</span>
                   ))}
@@ -269,7 +269,7 @@ export default function MizaanPostResults({ grandBast, grandLetters, dominant })
               <div className="flex items-center justify-between py-1">
                 <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>Initial Seed Letters</span>
                 <div className="flex gap-1 flex-wrap justify-end">
-                  {initialSeedLetters.map((l, i) => (
+                  {[...initialSeedLetters].reverse().map((l, i) => (
                     <span key={i} className="font-amiri text-lg px-1.5 py-0.5 rounded border"
                       style={{ color: G.text, borderColor: G.border, background: G.bg }}>{l}</span>
                   ))}

@@ -108,9 +108,10 @@ export default function IstintakSteps({ n, msMarker = false, compact = false }) 
         <span className="font-inter text-[8px] uppercase tracking-widest block" style={{ color: "rgba(74,222,128,0.70)" }}>
           النتيجة ({letters.length} حرف)
         </span>
-        {/* RTL flex: index 0 appears rightmost — matches manuscript extraction order (1st letter = far right) */}
-        <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "rtl" }}>
-          {letters.map((l, i) => (
+        {/* Reversed array + LTR flex: last extracted is leftmost, first extracted (index 0) is rightmost.
+            Manuscript rule: 1st extracted letter must appear on the far right. */}
+        <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr" }}>
+          {[...letters].reverse().map((l, i) => (
             <span key={i}
               style={{
                 fontFamily: "'Noto Naskh Arabic','Amiri','Scheherazade New',serif",
@@ -120,8 +121,6 @@ export default function IstintakSteps({ n, msMarker = false, compact = false }) 
                 background: "rgba(74,222,128,0.08)",
                 borderRadius: "6px",
                 padding: "0 6px",
-                unicodeBidi: "isolate",
-                direction: "rtl",
               }}>
               {l}
             </span>

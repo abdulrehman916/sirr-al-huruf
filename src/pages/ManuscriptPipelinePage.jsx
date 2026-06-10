@@ -132,9 +132,9 @@ function DivergenceAlert({ input, manuscriptOutput, algorithmOutput }) {
           <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(74,222,128,0.70)" }}>
             MANUSCRIPT RESULT
           </p>
-          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"4px", direction:"rtl" }}>
-            {manuscriptOutput.map((l, i) => (
-              <span key={i} style={{ ...AR, fontSize: "1.4rem", color: "#4ADE80", unicodeBidi: "isolate", direction: "rtl" }}>{l}</span>
+          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"4px", direction:"ltr" }}>
+            {[...manuscriptOutput].reverse().map((l, i) => (
+              <span key={i} style={{ ...AR, fontSize: "1.4rem", color: "#4ADE80" }}>{l}</span>
             ))}
           </div>
         </div>
@@ -142,9 +142,9 @@ function DivergenceAlert({ input, manuscriptOutput, algorithmOutput }) {
           <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(255,68,68,0.70)" }}>
             ALGORITHM RESULT
           </p>
-          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"4px", direction:"rtl" }}>
-            {algorithmOutput.map((l, i) => (
-              <span key={i} style={{ ...AR, fontSize: "1.4rem", color: "#FCA5A5", unicodeBidi: "isolate", direction: "rtl" }}>{l}</span>
+          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"4px", direction:"ltr" }}>
+            {[...algorithmOutput].reverse().map((l, i) => (
+              <span key={i} style={{ ...AR, fontSize: "1.4rem", color: "#FCA5A5" }}>{l}</span>
             ))}
           </div>
         </div>

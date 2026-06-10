@@ -44,13 +44,12 @@ function SatrRow({ letters, label, color }) {
   return (
     <div className="space-y-1.5">
       <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</p>
-      {/* RTL flex: index 0 = rightmost — matches manuscript order (1st extracted letter = far right) */}
-      <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "rtl",
+      {/* Reversed array + LTR flex: first extracted letter ends up on the far right (manuscript order) */}
+      <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr",
         padding: "8px", borderRadius: "12px", border: `1px solid ${color}44`, background: color + "0A" }}>
-        {letters.map((l, i) => (
+        {[...letters].reverse().map((l, i) => (
           <span key={i}
-            style={{ fontFamily: AR.fontFamily, fontSize: "1.5rem", color, lineHeight: 1.4, padding: "0 3px",
-              unicodeBidi: "isolate", direction: "rtl" }}>
+            style={{ fontFamily: AR.fontFamily, fontSize: "1.5rem", color, lineHeight: 1.4, padding: "0 3px" }}>
             {l}
           </span>
         ))}
@@ -160,11 +159,10 @@ function SeedExpansionDetail({ seedBastValues, bastLevelUsed, color }) {
             <span className="font-inter text-[8px]" style={{ color: G.dim }}>
               باست{bastLevelUsed}({sv.letter}) = {sv.bastValue}
             </span>
-            <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "2px", direction: "rtl", marginLeft: "auto" }}>
-              {sv.expansionLetters.map((el, j) => (
+            <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "2px", direction: "ltr", marginLeft: "auto" }}>
+              {[...sv.expansionLetters].reverse().map((el, j) => (
                 <span key={j}
-                  style={{ fontFamily: AR.fontFamily, fontSize: "1.1rem", color: "rgba(255,255,255,0.50)", padding: "0 2px",
-                    unicodeBidi: "isolate", direction: "rtl" }}>
+                  style={{ fontFamily: AR.fontFamily, fontSize: "1.1rem", color: "rgba(255,255,255,0.50)", padding: "0 2px" }}>
                   {el}
                 </span>
               ))}
@@ -267,11 +265,11 @@ export default function ManuscriptEsmaSection({
                   <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
                     حروف المدخل ({data.inputLetters.length})
                   </p>
-                  <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "rtl",
+                  <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr",
                     padding: "8px", borderRadius: "12px", border: `1px solid ${G.border}`, background: G.bg }}>
-                    {data.inputLetters.map((l, i) => (
+                    {[...data.inputLetters].reverse().map((l, i) => (
                       <span key={i}
-                        style={{ fontFamily: AR.fontFamily, fontSize: "1.3rem", color: G.text, unicodeBidi: "isolate", direction: "rtl" }}>
+                        style={{ fontFamily: AR.fontFamily, fontSize: "1.3rem", color: G.text }}>
                         {l}
                       </span>
                     ))}
