@@ -2,7 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, numToArabic, numToHebrew, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
-import { generateNameWithValue } from "./msPatternGenerator";
+import { generateNameForHierarchyValue } from "./msPatternGenerator";
 
 // Helper to get display name (pattern-based names are already valid)
 const addTashkeelToArabicName = (name) => name;
@@ -14,30 +14,29 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-// ── Hurufi name generation ─────────────────────────────────
-// Traditional letter-based system with context-aware إيل endings
+// ── Traditional book-formula name generation ─────────────────
+// tier value - suffix → letters → vocalized name with tashkeel
 
 function generateNameForValue(val, suffixType) {
-  const category = suffixType === 'ar-angel' || suffixType === 'heb-angel' ? 'angel' : 'jinn';
-  const result = generateNameWithValue(val, category);
+  const result = generateNameForHierarchyValue(val, suffixType);
   
   if (!result || !result.success) {
-    return { remainder: val, name: '—', pattern: null, score: 0, passed: false };
+    return { remainder: val, name: '—', passed: false, score: 0 };
   }
   
+  const isAngel = suffixType.includes('angel');
+  const color = isAngel ? "#4FE3FF" : suffixType === 'ar-jinn' ? "#FF9F5A" : "#F9A8D4";
+  
   return {
-    remainder: val,
-    name: result.fullName || result.generatedName,
-    pattern: result.pattern,
-    root: result.root,
-    score: result.validation.score,
-    passed: result.validation.passed,
-    failureReason: result.validation.failureReason,
-    phoneticRules: result.phoneticRules,
+    remainder: result.remainder,
+    name: result.fullName,
     consonants: result.consonants,
-    vowels: result.vowels,
-    morphology: result.validation.morphology,
-    phonology: result.validation.phonology
+    phoneticRules: result.phoneticRules,
+    score: result.validation.overall.score,
+    passed: result.validation.overall.passed,
+    failureReason: result.validation.phonology.reason,
+    phonology: result.validation.phonology,
+    color
   };
 }
 
@@ -83,12 +82,11 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
       const nameData = generateNameForValue(row.val, suffix);
       const isAngel = suffix.includes('angel');
       const color = isAngel ? "#4FE3FF" : suffix === 'ar-jinn' ? "#FF9F5A" : "#F9A8D4";
-      const lbl = isAngel ? (suffix === 'heb-angel' ? L.angelHeb : L.angelAr) : (suffix === 'heb-jinn' ? L.jinnHeb : L.jinnAr);
       
       return {
         ...row,
-        angel: isAngel ? { lbl, ...nameData, color } : null,
-        jinn: !isAngel ? { lbl, ...nameData, color } : null
+        angel: isAngel ? { ...nameData, color } : null,
+        jinn: !isAngel ? { ...nameData, color } : null
       };
     });
 
@@ -229,22 +227,12 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
-                    {/* Hurufi consonant structure */}
-                    {n.consonants && (
+                    {/* Book formula info */}
+                    {n.remainder && (
                       <div className="mb-2 px-2 py-1 rounded-lg inline-block"
                         style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
                         <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
-                          Hurufi Structure: {n.consonants.join(' - ')} → {n.pattern || 'إيل'}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {/* Phonetic rules breakdown */}
-                    {n.phoneticRules && n.phoneticRules.length > 0 && (
-                      <div className="mb-2 px-2 py-1 rounded-lg inline-block"
-                        style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                        <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
-                          Phonetic Rules: {n.phoneticRules.slice(0, 3).join(' · ')}{n.phoneticRules.length > 3 ? '...' : ''}
+                          Book Formula: {toArabicIndic(n.remainder.toLocaleString())} → {n.consonants?.length || 0} letters
                         </p>
                       </div>
                     )}
@@ -283,12 +271,17 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       {displayName}
                     </p>
                     
-                    {/* Consonant structure display */}
-                    {n.consonants && (
-                      <div className="mt-2 flex items-center justify-center gap-1 flex-wrap">
+                    {/* Consonant letters from book formula */}
+                    {n.consonants && n.consonants.length > 0 && (
+                      <div className="mt-2 flex items-center justify-center gap-1 flex-wrap" dir="rtl">
                         {n.consonants.map((c, i) => (
-                          <span key={i} className="font-inter text-[7px] px-1.5 py-0.5 rounded"
-                            style={{ background: "rgba(212,175,55,0.10)", color: "rgba(212,175,55,0.70)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                          <span key={i} className="font-amiri text-lg px-1.5 py-0.5 rounded"
+                            style={{ 
+                              background: "rgba(212,175,55,0.10)", 
+                              color: n.color,
+                              border: `1px solid ${n.color}40`,
+                              textShadow: `0 0 8px ${n.color}44`
+                            }}>
                             {c}
                           </span>
                         ))}
@@ -296,21 +289,9 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     )}
                     
                     {/* Validation status */}
-                    <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
-                      {n.phonology && (
-                        <span className="font-inter text-[7px] uppercase tracking-widest px-2 py-0.5 rounded-full"
-                          style={{ 
-                            background: n.phonology.passed ? "rgba(100,220,100,0.10)" : "rgba(255,100,100,0.10)",
-                            color: n.phonology.passed ? "rgba(100,220,100,0.90)" : "rgba(255,100,100,0.90)",
-                            border: `1px solid ${n.phonology.passed ? "rgba(100,220,100,0.30)" : "rgba(255,100,100,0.30)"}`
-                          }}>
-                          Arabic Phonology: {n.phonology.score}/100
-                        </span>
-                      )}
-                    </div>
                     <div className="mt-1 flex items-center justify-center gap-1">
                       {isValid ? (
-                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ Properly Vocalized</span>
+                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ {lang === 'ar' ? 'صحيح نطقياً' : 'Pronounceable'}</span>
                       ) : (
                         <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(255,100,100,0.70)" }}>✗ {n.failureReason || 'Invalid'}</span>
                       )}

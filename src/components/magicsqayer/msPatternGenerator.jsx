@@ -1,229 +1,176 @@
 // ═══════════════════════════════════════════════════════════════
-//  HURUFI NAME GENERATOR — TRADITIONAL LETTER-BASED SYSTEM
-//  Generates Angel/Jinn names from numerical values with proper Arabic tashkeel
+//  TRADITIONAL HIERARCHY NAME GENERATOR
+//  Uses book formulas: tier value - suffix → letters → name with tashkeel
 // ═══════════════════════════════════════════════════════════════
 
-import {
-  applyPhoneticRules,
-  vocalizeWord,
-  checkPronounceability,
-  VOWELS,
-} from './msPhonologyEngine';
+import { applyPhoneticRules, checkPronounceability, VOWELS } from './msPhonologyEngine';
 
 const { FATHA, KASRA, DAMMA, SUKUN } = VOWELS;
 
-const FORBIDDEN_CLUSTERS = [
-  'غك', 'قغ', 'ظغ', 'غظ', 'كغ', 'غق', 'كش', 'نش', 'سش', 'غش',
-  'طغ', 'ظط', 'غط', 'قك', 'كق', 'صك', 'كص', 'ضك', 'كض'
-];
-
-// Letter-to-number mapping (Abjad-inspired for consonant extraction)
-const DIGIT_CONSONANTS = {
-  0: 'ا', 1: 'ب', 2: 'ج', 3: 'د', 4: 'ر', 
-  5: 'س', 6: 'ع', 7: 'ف', 8: 'ك', 9: 'ل'
+// Book suffix values (RULE_NAME_CONSTRUCTION)
+const SUFFIXES = {
+  'heb-angel': 31,   // אל
+  'ar-angel': 41,    // إيل
+  'heb-jinn': 329,   // 360 - 31
+  'ar-jinn': 319,    // 360 - 41
 };
 
-// Weak letters that need special handling
-const WEAK_LETTERS = ['ا', 'و', 'ي'];
+// Letter-to-number mappings (RULE_NAME_CONSTRUCTION)
+const HEBREW_LETTERS = [
+  { v:1, l:'א' }, { v:2, l:'ב' }, { v:3, l:'ג' }, { v:4, l:'ד' }, { v:5, l:'ה' },
+  { v:6, l:'ו' }, { v:7, l:'ז' }, { v:8, l:'ח' }, { v:9, l:'ט' }, { v:10, l:'י' },
+  { v:20, l:'כ' }, { v:30, l:'ל' }, { v:40, l:'מ' }, { v:50, l:'נ' }, { v:60, l:'ס' },
+  { v:70, l:'ע' }, { v:80, l:'פ' }, { v:90, l:'צ' }, { v:100, l:'ק' }, { v:200, l:'ר' },
+  { v:300, l:'ש' }, { v:400, l:'ת' },
+];
+
+const ARABIC_LETTERS = [
+  { v:1, l:'ا' }, { v:2, l:'ب' }, { v:3, l:'ج' }, { v:4, l:'د' }, { v:5, l:'ه' },
+  { v:6, l:'و' }, { v:7, l:'ز' }, { v:8, l:'ح' }, { v:9, l:'ط' }, { v:10, l:'ي' },
+  { v:20, l:'ك' }, { v:30, l:'ل' }, { v:40, l:'م' }, { v:50, l:'ن' }, { v:60, l:'س' },
+  { v:70, l:'ع' }, { v:80, l:'ف' }, { v:90, l:'ص' }, { v:100, l:'ق' }, { v:200, l:'ر' },
+  { v:300, l:'ش' }, { v:400, l:'ت' }, { v:500, l:'ث' }, { v:600, l:'خ' },
+  { v:700, l:'ذ' }, { v:800, l:'ض' }, { v:900, l:'ظ' }, { v:1000, l:'غ' },
+];
 
 /**
- * extractConsonantsFromNumber(number)
- * Extract consonants from numeric value using digit mapping
+ * numberToLetters(value, lang)
+ * Convert number to letters using book's gematria system
  */
-export function extractConsonantsFromNumber(number) {
-  const n = Math.abs(number);
-  const consonants = [];
-  let temp = n;
+function numberToLetters(value, lang) {
+  if (value <= 0) return [];
   
-  // Extract consonants from digits (reverse order for traditional approach)
-  while (temp > 0 && consonants.length < 4) {
-    const digit = temp % 10;
-    const consonant = DIGIT_CONSONANTS[digit];
-    
-    if (consonant && !WEAK_LETTERS.includes(consonant)) {
-      // Check for forbidden clusters
-      if (consonants.length > 0) {
-        const seq = consonants[consonants.length - 1] + consonant;
-        if (FORBIDDEN_CLUSTERS.includes(seq)) {
-          temp = Math.floor(temp / 10);
-          continue;
-        }
-      }
-      consonants.push(consonant);
-    }
-    temp = Math.floor(temp / 10);
-  }
+  const letters = lang === 'hebrew' ? HEBREW_LETTERS : ARABIC_LETTERS;
+  const result = [];
+  let remaining = value;
   
-  // Ensure minimum 2 consonants
-  if (consonants.length < 2) {
-    const defaults = ['ب', 'ج', 'د', 'ر', 'س', 'ع', 'ف', 'ك', 'ل', 'م'];
-    while (consonants.length < 2) {
-      const c = defaults[n % defaults.length];
-      if (!consonants.includes(c)) consonants.push(c);
-      n = Math.floor(n / 10);
+  // Greedy algorithm: largest letter first
+  for (let i = letters.length - 1; i >= 0 && remaining > 0; i--) {
+    const { v, l } = letters[i];
+    while (remaining >= v) {
+      result.push(l);
+      remaining -= v;
     }
   }
   
-  return consonants.slice(0, 4);
+  return result;
 }
 
 /**
- * getVowelBeforeIle(consonants, value)
- * Determine the vowel before إيل ending based on preceding consonant
- * This is the key rule for context-aware ending variation
+ * generateNameForHierarchyValue(value, suffixType)
+ * BOOK FORMULA: tier value - suffix → letters → vocalized name
  */
-function getVowelBeforeIle(lastConsonant, value) {
-  // Phonetic context rules for vowel before يْل
-  // Based on articulation point (makhraj) of preceding consonant
-  
-  const guttural = ['ع', 'ح', 'ه', 'خ', 'غ'];
-  const palatal = ['ج', 'ش', 'ي'];
-  const dental = ['ت', 'د', 'ط', 'ظ', 'ز', 'س', 'ص', 'ث', 'ذ', 'ض'];
-  const labial = ['ب', 'م', 'ف'];
-  const velar = ['ك', 'ق'];
-  const lateral = ['ل', 'ر', 'ن'];
-  
-  // Guttural letters prefer Kasra (īl) for smooth transition
-  if (guttural.includes(lastConsonant)) {
-    return KASRA;
+export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
+  const suffix = SUFFIXES[suffixType];
+  if (!suffix) {
+    return { success: false, error: 'Invalid suffix type' };
   }
   
-  // Palatal letters prefer Fatha (ayl) or Kasra (īl)
-  if (palatal.includes(lastConsonant)) {
-    return Math.abs(value) % 2 === 0 ? KASRA : FATHA;
+  const isAngel = suffixType.includes('angel');
+  const isHebrew = suffixType.includes('heb');
+  const lang = isHebrew ? 'hebrew' : 'arabic';
+  
+  // BOOK FORMULA: subtract suffix from tier value
+  let remainder = value - suffix;
+  
+  // Negative value fix (RULE_NAME_CONSTRUCTION)
+  if (remainder <= 0) {
+    remainder = value + 360 - suffix;
   }
   
-  // Dental letters: vary based on value hash
-  if (dental.includes(lastConsonant)) {
-    const hash = Math.abs(value) % 3;
-    return hash === 0 ? FATHA : hash === 1 ? KASRA : DAMMA;
+  // Convert remainder to letters
+  const consonants = numberToLetters(remainder, lang);
+  
+  if (consonants.length === 0) {
+    return { success: false, error: 'Could not convert to letters' };
   }
   
-  // Labial letters prefer Damma (ūl) for rounded articulation
-  if (labial.includes(lastConsonant)) {
-    return Math.abs(value) % 2 === 0 ? DAMMA : KASRA;
-  }
-  
-  // Velar letters: Kasra for clarity
-  if (velar.includes(lastConsonant)) {
-    return KASRA;
-  }
-  
-  // Lateral letters: default to Kasra
-  if (lateral.includes(lastConsonant)) {
-    return KASRA;
-  }
-  
-  // Default
-  return KASRA;
-}
-
-/**
- * buildIleEnding(consonants, value)
- * Build the إيل ending with context-aware vowel
- */
-function buildIleEnding(consonants, value) {
-  const lastConsonant = consonants[consonants.length - 1];
-  const preIleVowel = getVowelBeforeIle(lastConsonant, value);
-  
-  // Build: [preIleVowel] + ي + [Fatha] + ل
-  return preIleVowel + 'ي' + FATHA + 'ل';
-}
-
-/**
- * generateNameWithValue(value, category)
- * Generate traditional Hurufi name with proper Arabic vocalization
- */
-export function generateNameWithValue(value, category = 'angel') {
-  // Extract consonants from value
-  const consonants = extractConsonantsFromNumber(value);
-  
-  // Apply phonetic rules for vowel assignment
+  // Apply phonetic rules for tashkeel ONLY (not changing the letters)
   const phoneticResult = applyPhoneticRules(consonants, value);
   
-  // Build base name with tashkeel
-  let baseName = '';
+  // Build vocalized name
+  let vocalizedName = '';
   for (let i = 0; i < consonants.length; i++) {
-    baseName += consonants[i] + phoneticResult.vowels[i];
+    vocalizedName += consonants[i] + phoneticResult.vowels[i];
   }
   
-  // For Angel category: add إيل ending with context-aware vowel
-  let fullName = baseName;
-  let pattern = 'hurufi-derived';
-  
-  if (category === 'angel') {
-    // Remove last vowel from base, then add إيل with proper pre-vowel
-    const baseWithoutLastVowel = baseName.replace(/[\u064E\u0650\u064F\u0652]$/, '');
-    const ileEnding = buildIleEnding(consonants, value);
-    fullName = baseWithoutLastVowel + ileEnding;
-    pattern = 'hurufi-angelic';
+  // Add suffix with proper tashkeel
+  if (isAngel) {
+    if (isHebrew) {
+      // Hebrew: אל (Aleph-Lamed)
+      vocalizedName += FATHA + 'ל';
+    } else {
+      // Arabic: إيل with context-aware pre-vowel
+      const lastConsonant = consonants[consonants.length - 1];
+      const preVowel = getContextAwareVowel(lastConsonant, value);
+      vocalizedName = vocalizedName.replace(/[\u064E\u0650\u064F\u0652]$/, '') + preVowel + 'ي' + FATHA + 'ل';
+    }
+  } else {
+    // Jinn suffix already included in the math (value + 41 or +31)
+    // No additional suffix letters needed
   }
   
   // Validate pronounceability
-  const pronounceability = checkPronounceability(fullName);
-  
-  // Check for consonant clusters
-  const hasClusters = checkConsonantClusters(fullName);
+  const pronounceability = checkPronounceability(vocalizedName);
   
   return {
     success: true,
     value,
-    category,
-    method: 'hurufi-traditional',
-    root: consonants.slice(0, 3).join(''),
-    pattern,
-    fullName,
+    suffixType,
+    remainder,
     consonants,
+    fullName: vocalizedName,
+    isAngel,
+    isHebrew,
     phoneticRules: phoneticResult.rules,
     validation: {
       morphology: {
-        score: 85,
+        score: 100,
         passed: true,
-        reason: 'Valid Hurufi pattern'
+        reason: 'Book formula applied'
       },
       phonology: {
         score: pronounceability.score,
-        passed: pronounceability.pronounceable && !hasClusters,
+        passed: pronounceability.pronounceable,
         reason: pronounceability.reason
       },
       overall: {
-        score: Math.round((85 + pronounceability.score) / 2),
-        passed: pronounceability.pronounceable && !hasClusters
+        score: pronounceability.score,
+        passed: pronounceability.pronounceable
       }
     }
   };
 }
 
 /**
- * checkConsonantClusters(name)
- * Check if name has impossible consonant clusters
+ * getContextAwareVowel(lastConsonant, value)
+ * Determine vowel before إيل based on consonant articulation
  */
-function checkConsonantClusters(name) {
-  const bare = name.replace(/[\u064E\u0650\u064F\u0652]/g, '');
+function getContextAwareVowel(lastConsonant, value) {
+  const guttural = ['ع', 'ح', 'ه', 'خ', 'غ'];
+  const palatal = ['ج', 'ش', 'ي'];
+  const labial = ['ب', 'م', 'ف'];
   
-  // Check for 3+ consecutive consonants (forbidden in Arabic)
-  const clusterPattern = /[^اويآأإئؤ]{3,}/;
-  return clusterPattern.test(bare);
+  if (guttural.includes(lastConsonant)) return KASRA;
+  if (palatal.includes(lastConsonant)) return Math.abs(value) % 2 === 0 ? KASRA : FATHA;
+  if (labial.includes(lastConsonant)) return Math.abs(value) % 2 === 0 ? DAMMA : KASRA;
+  return KASRA; // Default
 }
 
 /**
- * getNameForHierarchyValue(value, suffixType)
+ * Legacy export for compatibility
  */
-export function getNameForHierarchyValue(value, suffixType = 'ar-angel') {
-  const category = suffixType.includes('angel') ? 'angel' : 'jinn';
-  return generateNameWithValue(value, category);
+export function getNameForHierarchyValue(value, suffixType) {
+  return generateNameForHierarchyValue(value, suffixType);
 }
 
-/**
- * getPatternInfo(patternId)
- */
-export function getPatternInfo(patternId) {
+export function getPatternInfo() {
   return {
-    id: patternId || 'morphology-based',
-    template: 'authentic-root-pattern',
-    category: 'derived',
+    id: 'book-formula',
+    template: 'tier-minus-suffix',
+    category: 'traditional',
     syllables: 'variable',
-    difficulty: 2,
-    example: 'جَبْريل'
+    difficulty: 1,
+    example: 'Adjuster(136) - 41 = 95 → letters → vocalized name'
   };
 }
