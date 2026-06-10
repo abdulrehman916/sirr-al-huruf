@@ -79,7 +79,7 @@ function extractLettersFromValue(value) {
       if (d !== 0 && d !== 1 && UNITS[d]) {
         letters.push(UNITS[d]);
       }
-      slot = 1; // Restart cycle from Tens after thousands
+      slot = 0; // Restart full cycle from Unit after thousands
     }
   }
   
