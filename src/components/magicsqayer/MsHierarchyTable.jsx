@@ -210,11 +210,15 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                   style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.60)", letterSpacing: "0.8px" }}>
                   {row.label}
                 </p>
-                <p className="font-amiri font-bold tabular-nums"
+                <p 
+                  className="font-amiri font-bold tabular-nums" 
+                  dir="rtl"
+                  lang="ar"
                   style={{ 
                     color: row.highlight ? G.text : "rgba(212,175,55,0.85)", 
-                    fontSize: "1.6rem",
-                    textShadow: row.highlight ? `0 0 12px ${G.glow}` : "none"
+                    fontSize: "1.7rem",
+                    textShadow: row.highlight ? `0 0 12px ${G.glow}` : "none",
+                    fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
                   }}>
                   {lang === "ar" ? toArabicIndic(row.val.toLocaleString()) : row.val.toLocaleString()}
                 </p>
@@ -224,21 +228,39 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               {showNames && row.nameData && (
                 <div className="px-4 py-3 space-y-2" style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
                   {/* Angel/Jinn Value */}
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-3">
                     <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
                       {suffix.includes('angel') ? 'Angel (Arabic)' : 'Jinn (Arabic)'}
                     </p>
-                    <p className="font-amiri font-bold" style={{ color: row.color, fontSize: "1.3rem" }}>
+                    <p 
+                      className="font-amiri font-bold" 
+                      dir="rtl"
+                      lang="ar"
+                      style={{ 
+                        color: row.color, 
+                        fontSize: "1.5rem",
+                        textShadow: `0 0 12px ${row.color}66`,
+                        fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
+                      }}>
                       {lang === "ar" ? toArabicIndic(row.nameData.adjustedValue.toLocaleString()) : row.nameData.adjustedValue.toLocaleString()}
                     </p>
                   </div>
 
                   {/* Final Name */}
                   <div className="flex items-center justify-center">
-                    <span className="font-amiri text-4xl font-bold px-4 py-2 rounded" dir="rtl"
+                    <span 
+                      className="font-amiri font-bold px-6 py-3 rounded-lg" 
+                      dir="rtl"
+                      lang="ar"
                       style={{ 
-                        color: row.color,
-                        textShadow: `0 0 20px ${row.color}66`
+                        fontSize: "3.2rem",
+                        color: "#FFFFFF",
+                        background: `linear-gradient(135deg, ${row.color}22, ${row.color}11)`,
+                        border: `2px solid ${row.color}66`,
+                        textShadow: `0 0 24px ${row.color}88, 0 2px 8px rgba(0,0,0,0.8)`,
+                        letterSpacing: "0.5px",
+                        lineHeight: "2.2",
+                        fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
                       }}>
                       {row.nameData.name}
                     </span>
