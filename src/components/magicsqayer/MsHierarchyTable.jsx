@@ -243,7 +243,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
         </motion.div>
       )}
 
-      {/* 8 hierarchy rows */}
+      {/* 8 hierarchy rows — original clean layout */}
       {hier && (
         <div className="space-y-2">
           {rows.map((row, i) => (
@@ -253,7 +253,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               className="rounded-xl overflow-hidden border"
               style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
             >
-              {/* Hierarchy Value */}
+              {/* Tier Label + Hierarchy Value */}
               <div className="flex items-center justify-between px-4 py-3"
                 style={{ background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}>
                 <p className="font-inter text-[10px] uppercase tracking-widest"
@@ -274,12 +274,12 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 </p>
               </div>
 
-              {/* Angel/Jinn Value + Final Name */}
+              {/* Angel/Jinn Value + Final Name (no extraction debug) */}
               {showNames && row.nameData && (
-                <div className="px-4 py-3 space-y-3" style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
-                  {/* Angel/Jinn Value */}
-                  <div className="flex items-center justify-center gap-3">
-                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
+                <div className="px-4 py-3 space-y-2" style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
+                  {/* Angel/Jinn Value label + value */}
+                  <div className="flex items-center justify-between">
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)", letterSpacing: "0.8px" }}>
                       {suffix.includes('angel') ? 'Angel Value' : 'Jinn Value'}
                     </p>
                     <p 
@@ -296,56 +296,23 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     </p>
                   </div>
 
-                  {/* Extracted Letters (Raw Consonants) */}
-                  {row.nameData.consonants && row.nameData.consonants.length > 0 && (
-                    <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                      <p className="font-inter text-[7px] uppercase tracking-widest mb-2 text-center" style={{ color: "rgba(212,175,55,0.55)" }}>
-                        Extracted Letters (Bast-2)
-                      </p>
-                      <div className="flex items-center justify-center gap-2" dir="rtl">
-                        {row.nameData.consonants.map((c, i) => (
-                          <span key={i} className="font-amiri text-2xl px-2 py-1 rounded"
-                            style={{ 
-                              background: "rgba(212,175,55,0.15)", 
-                              color: row.color,
-                              border: `1px solid ${row.color}50`
-                            }}>
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                      <p className="font-inter text-[6px] text-center mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>
-                        Original extraction order: {row.nameData.consonants.join(' ')} = {row.nameData.adjustedValue}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Final Name (Tashkeel Applied) */}
-                  <div className="px-3 py-3 rounded-lg" style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.25)" }}>
-                    <p className="font-inter text-[7px] uppercase tracking-widest mb-2 text-center" style={{ color: "rgba(212,175,55,0.55)" }}>
-                      Final Name (Bast-2 Tashkeel Only)
-                    </p>
-                    <div className="flex items-center justify-center" dir="rtl">
-                      <span 
-                        className="font-amiri font-bold px-6 py-3 rounded-lg" 
-                        dir="rtl"
-                        lang="ar"
-                        style={{ 
-                          fontSize: "3.2rem",
-                          color: "#FFFFFF",
-                          background: `linear-gradient(135deg, ${row.color}22, ${row.color}11)`,
-                          border: `2px solid ${row.color}66`,
-                          textShadow: `0 0 24px ${row.color}88, 0 2px 8px rgba(0,0,0,0.8)`,
-                          letterSpacing: "0.5px",
-                          lineHeight: "2.2",
-                          fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
-                        }}>
-                        {row.nameData.name}
-                      </span>
-                    </div>
-                    <p className="font-inter text-[6px] text-center mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>
-                      {suffix.includes('angel') ? 'Angel suffix إيل added' : 'Jinn name (no suffix)'} — Letters unchanged, harakat only
-                    </p>
+                  {/* Final Name only */}
+                  <div className="flex items-center justify-end pt-1">
+                    <span 
+                      className="font-amiri font-bold px-4 py-2 rounded-lg" 
+                      dir="rtl"
+                      lang="ar"
+                      style={{ 
+                        fontSize: "2.2rem",
+                        color: "#FFFFFF",
+                        background: `linear-gradient(135deg, ${row.color}22, ${row.color}11)`,
+                        border: `1px solid ${row.color}55`,
+                        textShadow: `0 0 16px ${row.color}77`,
+                        letterSpacing: "0.3px",
+                        fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
+                      }}>
+                      {row.nameData.name}
+                    </span>
                   </div>
                 </div>
               )}
