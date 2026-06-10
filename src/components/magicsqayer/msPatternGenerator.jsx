@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { ARABIC_ABJAD, HEBREW_GEMATRIA } from './msEngine';
-import { buildAngelName, buildJinnName } from './msHarakat';
+import { buildAngelName, buildJinnName, buildHebrewAngelName, buildHebrewJinnName } from './msHarakat';
 
 // Book suffix values
 const SUFFIXES = {
@@ -127,10 +127,10 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   const rawConsonantSequence = consonants.join('');
   const reversedConsonants = [...consonants].reverse();
   
-  // Apply harakat and append suffix
-  const fullName = isAngel
-    ? buildAngelName(reversedConsonants)
-    : buildJinnName(reversedConsonants);
+  // Apply harakat/suffix — four systems fully separate
+  const fullName = isHebrew
+    ? (isAngel ? buildHebrewAngelName(reversedConsonants) : buildHebrewJinnName(reversedConsonants))
+    : (isAngel ? buildAngelName(reversedConsonants)       : buildJinnName(reversedConsonants));
   
   return {
     success: true,

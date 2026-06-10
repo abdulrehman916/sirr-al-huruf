@@ -2,7 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
-import { buildAngelName, buildJinnName } from "./msHarakat";
+import { buildAngelName, buildJinnName, buildHebrewAngelName, buildHebrewJinnName } from "./msHarakat";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -12,11 +12,12 @@ const G = {
 };
 
 // ── Letter extraction and name generation ───────────────────────
+// Book suffix values — four fully separate systems
 const SUFFIXES = {
-  'ar-angel': 41,
-  'ar-jinn': 319,
-  'heb-angel': 31,
-  'heb-jinn': 329,
+  'ar-angel':  41,   // Arabic: ئيل
+  'ar-jinn':   319,  // Arabic: طيش
+  'heb-angel': 31,   // Hebrew: אל
+  'heb-jinn':  329,  // Hebrew: טכש
 };
 
 // Positional digit-cycle letter mappings
@@ -116,12 +117,15 @@ function generateTraditionalName(value, suffixType) {
   const reversedConsonants = [...consonants].reverse(); // Mirror order for final name
   const mirroredSequence = reversedConsonants.join(''); // Final name uses reversed sequence
   
-  // STEP 4: Apply harakat and append suffix
-  // Angels → root + ئِيل (attached, no space)
-  // Jinn   → vocalized root only
-  const displayName = isAngel
-    ? buildAngelName(reversedConsonants)
-    : buildJinnName(reversedConsonants);
+  // STEP 4: Apply harakat/suffix based on system
+  // ar-angel  → Arabic root (harakat) + ئِيل
+  // ar-jinn   → Arabic root (harakat) + طِيشْ
+  // heb-angel → plain Hebrew root + אל
+  // heb-jinn  → plain Hebrew root + טכש
+  const isHebrew = suffixType.startsWith('heb');
+  const displayName = isHebrew
+    ? (isAngel ? buildHebrewAngelName(reversedConsonants) : buildHebrewJinnName(reversedConsonants))
+    : (isAngel ? buildAngelName(reversedConsonants)       : buildJinnName(reversedConsonants));
   
   return {
     originalValue: value,
