@@ -45,7 +45,7 @@ export default function SatrVahidGrouping({
   
   // Compute individual derivations with manuscript-order expansion letters
   const { individualDerivations, concatenatedSatrVahid } = useMemo(() => {
-    // MANUSCRIPT ORDER: Process from LAST to FIRST for display
+    // MANUSCRIPT ORDER: Process from LAST to FIRST
     const derivations = [];
     for (let i = safeSatrVahidLetters.length - 1; i >= 0; i--) {
       const letter = safeSatrVahidLetters[i];
@@ -62,9 +62,8 @@ export default function SatrVahidGrouping({
         expansionLetters: reversedExpansionLetters,
       });
     }
-    // Concatenate expansion letters in ORIGINAL letter order (first to last) for name generation
-    // Reverse the derivations array before flatMap to maintain correct sequence
-    const concatenated = [...derivations].reverse().flatMap(d => d.expansionLetters);
+    // Concatenate ALL expansion letters (already reversed)
+    const concatenated = derivations.flatMap(d => d.expansionLetters);
     return { individualDerivations: derivations, concatenatedSatrVahid: concatenated };
   }, [safeSatrVahidLetters, bastLevel]);
   
