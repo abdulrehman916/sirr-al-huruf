@@ -137,7 +137,7 @@ export default function SatrVahidGrouping({
                 </div>
                 
                 {/* Letters */}
-                <div className="flex-1 flex items-center gap-1 flex-wrap" dir="rtl">
+                <div className="flex-1 flex items-center gap-1 flex-wrap" dir="ltr">
                   {group.letters.map((letter, letterIdx) => (
                     <motion.span
                       key={letterIdx}
@@ -150,6 +150,7 @@ export default function SatrVahidGrouping({
                         borderColor: isPartial ? "rgba(255,100,100,0.40)" : G.border,
                         background: isPartial ? "rgba(255,100,100,0.10)" : "rgba(212,175,55,0.04)"
                       }}
+                      dir="rtl"
                     >
                       {letter}
                     </motion.span>

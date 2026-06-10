@@ -1,6 +1,6 @@
 /**
  * ManuscriptBastDerivation — Displays the complete bast derivation chain
- * Shows seed letters, ferd/zevc, reverse processing order, and individual bast derivations
+ * Shows seed letters, ferd/zevc, processing order, and individual bast derivations
  */
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,10 +54,10 @@ function LetterChip({ letter, bastValue, color, size = "1.4rem", showBast = fals
 }
 
 // Processing arrow
-function ProcessingArrow({ direction = "left" }) {
+function ProcessingArrow({ direction = "right" }) {
   return (
     <span style={{ fontSize: "1.5rem", color: G.dim, margin: "0 4px" }}>
-      {direction === "left" ? "←" : "→"}
+      {direction === "right" ? "→" : "←"}
     </span>
   );
 }
@@ -74,10 +74,7 @@ export default function ManuscriptBastDerivation({
 }) {
   // Calculate all derivations
   const derivations = useMemo(() => {
-    // MANUSCRIPT RULE: Reverse the seed letters for processing
-    const reversedSeeds = [...seedLetters].reverse();
-    
-    return reversedSeeds.map((letter, idx) => {
+    return seedLetters.map((letter, idx) => {
       const bastValue = getBastLevel(letter, bastLevel);
       const expansionLetters = istintak(bastValue);
       return {
@@ -126,7 +123,7 @@ export default function ManuscriptBastDerivation({
           <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{seedLetters.length}</span>
         </div>
         <div className="flex flex-wrap justify-center gap-1" style={{ direction: "ltr" }}>
-          {[...seedLetters].reverse().map((l, i) => (
+          {seedLetters.map((l, i) => (
             <LetterChip key={i} letter={l} color={color} size="1.2rem" />
           ))}
         </div>
@@ -175,24 +172,20 @@ export default function ManuscriptBastDerivation({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          STEP 4: REVERSE PROCESSING ORDER
+          STEP 4: PROCESSING ORDER
           ═══════════════════════════════════════════════════════════════ */}
       <div className="rounded-xl border p-4" style={{ background: `${color}05`, borderColor: `${color}30` }}>
         <div className="flex items-center justify-between mb-3">
           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-            ⚠ Reverse Processing Order
+            ✓ Processing Order
           </span>
-          <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.text, background: `${color}20`, padding: "2px 8px", borderRadius: "4px" }}>
-            LAST → FIRST
+          <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.green, background: `${G.green}20`, padding: "2px 8px", borderRadius: "4px" }}>
+            FIRST → LAST
           </span>
         </div>
         
-        <div className="text-xs mb-3" style={{ color: G.dim }}>
-          <strong style={{ color: G.text }}>MANUSCRIPT RULE:</strong> Start from LAST letter → move backwards to first
-        </div>
-
         <div className="flex flex-wrap items-center justify-center gap-1 py-3" style={{ direction: "ltr" }}>
-          {[...seedLetters].reverse().map((l, i) => (
+          {seedLetters.map((l, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center" }}>
               {i === 0 && (
                 <span style={{ fontSize: "0.6rem", color: G.green, fontWeight: "bold", marginRight: "6px", background: `${G.green}15`, padding: "2px 6px", borderRadius: "3px" }}>
@@ -200,14 +193,14 @@ export default function ManuscriptBastDerivation({
                 </span>
               )}
               <LetterChip letter={l} color={color} size="1.3rem" />
-              {i < seedLetters.length - 1 && <ProcessingArrow direction="left" />}
+              {i < seedLetters.length - 1 && <ProcessingArrow direction="right" />}
             </div>
           ))}
         </div>
         
         <div className="text-center mt-2">
           <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>
-            Original: {[...seedLetters].join(' ')} → Processing: {[...seedLetters].reverse().join(' ')}
+            Sequence: {seedLetters.join(' ')}
           </span>
         </div>
       </div>
@@ -251,7 +244,7 @@ export default function ManuscriptBastDerivation({
                   {idx + 1}
                 </span>
                 <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
-                  Processing order: {idx === 0 ? 'START (last letter)' : idx === derivations.length - 1 ? 'END (first letter)' : `step ${idx + 1}`}
+                  Processing order: {idx === 0 ? 'START (first letter)' : idx === derivations.length - 1 ? 'END (last letter)' : `step ${idx + 1}`}
                 </span>
               </div>
 
@@ -279,7 +272,7 @@ export default function ManuscriptBastDerivation({
                 
                 {/* Expansion letters */}
                 <div className="flex flex-wrap gap-1" style={{ direction: "ltr" }}>
-                  {[...derivation.expansionLetters].reverse().map((l, i) => (
+                  {derivation.expansionLetters.map((l, i) => (
                     <LetterChip key={i} letter={l} color={G.green} size="1.1rem" />
                   ))}
                 </div>
@@ -308,7 +301,7 @@ export default function ManuscriptBastDerivation({
 
         <div className="p-4 rounded-lg" style={{ background: `${color}10`, border: `2px solid ${color}40` }}>
           <div className="flex flex-wrap justify-center gap-2 mb-3" style={{ direction: "ltr" }}>
-            {[...allExpansionLetters].reverse().map((l, i) => (
+            {allExpansionLetters.map((l, i) => (
               <LetterChip 
                 key={i} 
                 letter={l} 
@@ -320,7 +313,7 @@ export default function ManuscriptBastDerivation({
           
           <div className="text-center pt-3 border-t" style={{ borderColor: `${color}30` }}>
             <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>
-              All expansion letters concatenated in processing order
+              All expansion letters concatenated in sequence order
             </span>
           </div>
         </div>
@@ -342,7 +335,7 @@ export default function ManuscriptBastDerivation({
 
           <div className="p-4 rounded-lg" style={{ background: `${color}10`, border: `2px solid ${color}40` }}>
             <div className="flex flex-wrap justify-center gap-2 mb-3" style={{ direction: "ltr" }}>
-              {[...expandedLetters].reverse().map((l, i) => (
+              {expandedLetters.map((l, i) => (
                 <LetterChip 
                   key={i} 
                   letter={l} 

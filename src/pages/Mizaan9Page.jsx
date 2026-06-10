@@ -376,10 +376,11 @@ export default function Mizaan9Page() {
                   <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                     Expanded Letters Sequence (for verification):
                   </p>
-                  <div className="flex flex-wrap gap-1" dir="rtl">
+                  <div className="flex flex-wrap gap-1" dir="ltr">
                     {groupingData.expandedLetters.map((l, i) => (
                       <span key={i} className="font-amiri text-lg px-2 py-1 rounded border"
-                        style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.08)" }}>
+                        style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.08)" }}
+                        dir="rtl">
                         {l}
                       </span>
                     ))}
