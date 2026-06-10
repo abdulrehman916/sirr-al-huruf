@@ -20,73 +20,56 @@ const SUFFIXES = {
   'heb-jinn':  329,  // Hebrew: טכש
 };
 
-// Positional digit-cycle letter mappings
-const UNITS =     {1:'ا', 2:'ب', 3:'ج', 4:'د', 5:'ه', 6:'و', 7:'ز', 8:'ح', 9:'ط'};
-const TENS =      {10:'ي', 20:'ك', 30:'ل', 40:'م', 50:'ن', 60:'س', 70:'ع', 80:'ف', 90:'ص'};
-const HUNDREDS =  {100:'ق', 200:'ر', 300:'ش', 400:'ت', 500:'ث', 600:'خ', 700:'ذ', 800:'ض', 900:'ظ'};
-const THOUSAND_MARKER = 'غ';
+// ── Arabic positional digit-cycle letter mappings ──
+const AR_UNITS =    {1:'ا', 2:'ب', 3:'ج', 4:'د', 5:'ه', 6:'و', 7:'ز', 8:'ح', 9:'ط'};
+const AR_TENS =     {10:'ي', 20:'ك', 30:'ل', 40:'م', 50:'ن', 60:'س', 70:'ع', 80:'ف', 90:'ص'};
+const AR_HUNDREDS = {100:'ق', 200:'ر', 300:'ش', 400:'ت', 500:'ث', 600:'خ', 700:'ذ', 800:'ض', 900:'ظ'};
+const AR_THOUSAND  = 'غ';
+
+// ── Hebrew positional digit-cycle letter mappings (Gematria order) ──
+const HE_UNITS =    {1:'א', 2:'ב', 3:'ג', 4:'ד', 5:'ה', 6:'ו', 7:'ז', 8:'ח', 9:'ט'};
+const HE_TENS =     {10:'י', 20:'כ', 30:'ל', 40:'מ', 50:'נ', 60:'ס', 70:'ע', 80:'פ', 90:'צ'};
+const HE_HUNDREDS = {100:'ק', 200:'ר', 300:'ש', 400:'ת', 500:'ך', 600:'ם', 700:'ן', 800:'ף', 900:'ץ'};
+const HE_THOUSAND  = 'א'; // Aleph used as thousand marker in Hebrew
 
 /**
- * extractLettersFromValue(value) - Positional digit-cycle method
- * RULE: Read number right-to-left, cycling: Unit → Tens → Hundreds → Thousand Marker
- * 
- * Thousands rule:
- * - 1000 = غ (only marker, no unit digit)
- * - 2000-9000 = غ + unit digit (e.g., 2000 = غ + ب)
- * 
- * Zeros rule:
- * - Zeros do not generate letters
- * - Zeros do NOT remove their position
- * - Position cycle is preserved
+ * extractLettersFromValue(value, isHebrew)
+ * Positional digit-cycle method — same algorithm for both scripts.
+ * Uses Arabic tables by default; Hebrew tables when isHebrew=true.
  */
-function extractLettersFromValue(value) {
+function extractLettersFromValue(value, isHebrew = false) {
   if (!value || value <= 0) return [];
-  
+
+  const UNITS    = isHebrew ? HE_UNITS    : AR_UNITS;
+  const TENS     = isHebrew ? HE_TENS     : AR_TENS;
+  const HUNDREDS = isHebrew ? HE_HUNDREDS : AR_HUNDREDS;
+  const THOUSAND = isHebrew ? HE_THOUSAND : AR_THOUSAND;
+
   const letters = [];
   let n = Math.floor(value);
-  
-  // Extract digits (LSD first - right to left)
   const digits = [];
-  while (n > 0) {
-    digits.push(n % 10);
-    n = Math.floor(n / 10);
-  }
-  
-  // Process digits with positional cycle: Unit → Tens → Hundreds → Thousand Marker
-  let slot = 0; // 0=Unit, 1=Tens, 2=Hundreds, 3=Thousand
+  while (n > 0) { digits.push(n % 10); n = Math.floor(n / 10); }
+
+  let slot = 0;
   for (let i = 0; i < digits.length; i++) {
     const d = digits[i];
-    
     if (slot === 0) {
-      // Unit position (1-9)
-      if (d !== 0 && UNITS[d]) {
-        letters.push(UNITS[d]);
-      }
+      if (d !== 0 && UNITS[d]) letters.push(UNITS[d]);
       slot = 1;
     } else if (slot === 1) {
-      // Tens position (10-90)
       const v = d * 10;
-      if (d !== 0 && TENS[v]) {
-        letters.push(TENS[v]);
-      }
+      if (d !== 0 && TENS[v]) letters.push(TENS[v]);
       slot = 2;
     } else if (slot === 2) {
-      // Hundreds position (100-900)
       const v = d * 100;
-      if (d !== 0 && HUNDREDS[v]) {
-        letters.push(HUNDREDS[v]);
-      }
+      if (d !== 0 && HUNDREDS[v]) letters.push(HUNDREDS[v]);
       slot = 3;
     } else {
-      // Thousand position: always emit marker + optional unit digit (2-9)
-      letters.push(THOUSAND_MARKER);
-      if (d !== 0 && d !== 1 && UNITS[d]) {
-        letters.push(UNITS[d]);
-      }
-      slot = 1; // Restart cycle from Tens after thousands (thousands consumed the Unit slot implicitly)
+      letters.push(THOUSAND);
+      if (d !== 0 && d !== 1 && UNITS[d]) letters.push(UNITS[d]);
+      slot = 1;
     }
   }
-  
   return letters;
 }
 
@@ -105,9 +88,8 @@ function generateTraditionalName(value, suffixType) {
   if (adjustedValue <= 0) adjustedValue = 1;
   
   // STEP 2: POSITIONAL DIGIT-CYCLE EXTRACTION
-  // Rule: Read right-to-left, cycling Unit → Tens → Hundreds → Thousand Marker
-  // Example: 1237 = ز ل ر غ (breakdown) → غرلز (final name, mirror order)
-  const consonants = extractLettersFromValue(adjustedValue);
+  const isHebrew = suffixType.startsWith('heb');
+  const consonants = extractLettersFromValue(adjustedValue, isHebrew);
   
   // STEP 3: FINAL NAME ASSEMBLY - Mirror order (reverse of breakdown sequence)
   // Breakdown remains unchanged (extraction order for display)
@@ -118,11 +100,6 @@ function generateTraditionalName(value, suffixType) {
   const mirroredSequence = reversedConsonants.join(''); // Final name uses reversed sequence
   
   // STEP 4: Apply harakat/suffix based on system
-  // ar-angel  → Arabic root (harakat) + ئِيل
-  // ar-jinn   → Arabic root (harakat) + طِيشْ
-  // heb-angel → plain Hebrew root + אל
-  // heb-jinn  → plain Hebrew root + טכש
-  const isHebrew = suffixType.startsWith('heb');
   const displayName = isHebrew
     ? (isAngel ? buildHebrewAngelName(reversedConsonants) : buildHebrewJinnName(reversedConsonants))
     : (isAngel ? buildAngelName(reversedConsonants)       : buildJinnName(reversedConsonants));
@@ -309,7 +286,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                   {/* Angel/Jinn Value centered */}
                   <div className="flex flex-col items-center flex-1">
                     <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)", letterSpacing: "0.5px" }}>
-                      {suffix.includes('angel') ? 'Angel (Arabic)' : 'Jinn (Arabic)'}
+                      {suffix === 'ar-angel' ? 'Angel (Arabic)' : suffix === 'ar-jinn' ? 'Jinn (Arabic)' : suffix === 'heb-angel' ? 'Angel (Hebrew)' : 'Jinn (Hebrew)'}
                     </p>
                     <p 
                       className="font-amiri font-bold" 
