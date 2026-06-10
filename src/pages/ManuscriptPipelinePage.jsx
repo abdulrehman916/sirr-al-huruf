@@ -1,14 +1,11 @@
 /**
- * ManuscriptPipelinePage — pp.60–69 accurate display
- * Three fully independent sections: Esma-i Kitabet / A'van / Kasem
- * Each has: Satr-ı Vahid, grouped names, independent Vefk, independent guardian name.
- * Shows MANUSCRIPT vs ALGORITHM divergence for Istintak thousands marker.
+ * ManuscriptPipelinePage — Strict manuscript compliance (pp.60–69)
+ * Linear workflow: Bast → Istintak → Satr-i Vahid → Names → Esma levels → Vefk
+ * NO extra UI. MANUSCRIPT ONLY.
  */
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useMemo } from "react";
 import PageLayout from "../components/PageLayout";
 import ManuscriptEsmaSection from "../components/mizaan/ManuscriptEsmaSection";
-import IstintakSteps from "../components/mizaan/IstintakSteps";
 import { runMizaanPostPipeline } from "../lib/mizaanPostEngine";
 import { mizaanAnalyze } from "../lib/mizaan9Engine";
 import {
@@ -34,60 +31,9 @@ const KHAYR_SHARR_8 = {
   sharr: { arabic: 'الشر',  bast: 2725 },
 };
 
-const G = {
-  text:    "#F5D060",
-  dim:     "rgba(212,175,55,0.55)",
-  border:  "rgba(212,175,55,0.35)",
-  borderHi:"rgba(212,175,55,0.65)",
-  bg:      "rgba(212,175,55,0.07)",
-  glow:    "rgba(212,175,55,0.22)",
-};
-
 const AR = { 
   fontFamily: "'Noto Naskh Arabic','Amiri','Scheherazade New',serif" 
 };
-
-const TIER_COLORS = {
-  kitabet: "#C4B5FD",
-  avan:    "#B2EBF2",
-  kasem:   "#F5D060",
-};
-
-function Divider() {
-  return (
-    <div className="h-px my-2"
-      style={{ background: "linear-gradient(90deg,transparent,rgba(212,175,55,0.35),transparent)" }} />
-  );
-}
-
-function CollapsibleSection({ title, number, defaultOpen = false, children, color }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="rounded-2xl border overflow-hidden"
-      style={{ borderColor: (color || G.border), background: "rgba(4,8,24,0.99)" }}>
-      <button onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-3"
-        style={{ background: open ? G.bg : "transparent" }}>
-        <div className="flex items-center gap-2">
-          {number && (
-            <span className="font-inter text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center border"
-              style={{ color: G.text, borderColor: G.borderHi, background: "rgba(212,175,55,0.10)" }}>
-              {number}
-            </span>
-          )}
-          <span className="font-inter text-[10px] uppercase tracking-widest font-semibold" style={{ color: G.text }}>{title}</span>
-        </div>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.15 }}
-          className="font-inter text-xs" style={{ color: G.dim }}>▼</motion.span>
-      </button>
-      {open && (
-        <div className="px-4 pb-4 pt-1 space-y-1.5">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
 
 
 
@@ -140,140 +86,46 @@ export default function ManuscriptPipelinePage() {
 
 
 
-  if (!pipeline) return <PageLayout><p style={{ color: G.dim }}>Loading…</p></PageLayout>;
+  if (!pipeline) return <PageLayout><p style={{ color: "rgba(212,175,55,0.55)" }}>Loading…</p></PageLayout>;
 
   const { element, kitabet, avan, kasem } = pipeline;
 
   return (
     <PageLayout>
-      <div className="space-y-4 pb-10">
-
-        {/* ── HEADER ──────────────────────────────────────────────── */}
-        <div className="rounded-2xl border p-5 text-center space-y-2"
-          style={{ background: "rgba(3,6,20,0.99)", borderColor: G.borderHi, boxShadow: `0 0 60px ${G.glow}` }}>
-          <p className="font-inter text-[8px] uppercase tracking-[0.3em]" style={{ color: G.dim }}>
-            دقيق وفق المخطوط — صفحات ٦٠–٦٩
-          </p>
-          <h1 className="font-inter text-xl font-bold" style={{ color: G.text }}>
-            Manuscript Pipeline — Pages 60–69
-          </h1>
-          <h2 className="font-amiri text-2xl" dir="rtl" lang="ar"
-            style={{ ...AR, color: G.text }}>
-            أسماء الكتابة والأعوان والقسم والوفق
-          </h2>
-          <div className="h-px w-32 mx-auto" style={{ background: `linear-gradient(90deg,transparent,${G.borderHi},transparent)` }} />
-          <div className="rounded-xl border px-4 py-2 inline-block"
-            style={{ borderColor: G.border, background: G.bg }}>
-            <span dir="rtl" lang="ar" style={{ ...AR, fontSize: "1.3rem", color: "#FFE580" }}>
-              {TEST_INPUT}
-            </span>
-          </div>
-          <p className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.25)" }}>
-            نص ثابت للاختبار · عنصر النار · الدرجة: النار المستعمل
-          </p>
-
-
-        </div>
-
-
-
-        {/* ── SECTION 1: ESMA-I KITABET ───────────────────────────── */}
+      <div className="space-y-6 pb-10 max-w-3xl mx-auto">
+        
+        {/* ── ESMA-I KITABET ──────────────────────────────────────── */}
         <ManuscriptEsmaSection
           tier="kitabet"
           data={kitabet}
           element={element}
           satirTotal={kitabet.satirTotal}
-          color={TIER_COLORS.kitabet}
+          color="#C4B5FD"
           prefix=""
           number="١"
         />
 
-        {/* ── SECTION 2: ESMA-I A'VAN ────────────────────────────── */}
+        {/* ── ESMA-I A'VAN ────────────────────────────────────────── */}
         <ManuscriptEsmaSection
           tier="avan"
           data={avan}
           element={element}
           satirTotal={avan.satirTotal}
-          color={TIER_COLORS.avan}
+          color="#B2EBF2"
           prefix="يا"
           number="٢"
         />
 
-        {/* ── SECTION 3: ESMA-I KASEM ────────────────────────────── */}
+        {/* ── ESMA-I KASEM ────────────────────────────────────────── */}
         <ManuscriptEsmaSection
           tier="kasem"
           data={kasem}
           element={element}
           satirTotal={kasem.satirTotal}
-          color={TIER_COLORS.kasem}
+          color="#F5D060"
           prefix="بحق"
           number="٣"
         />
-
-        {/* ── AZIMET ASSEMBLY ─────────────────────────────────────── */}
-        <CollapsibleSection number="IV" title="Azimet Assembly — تركيب العزيمة" color="rgba(212,175,55,0.45)">
-          <p className="font-inter text-[8px] italic" style={{ color: "rgba(255,255,255,0.30)" }}>
-            الكتابة: تُكتب على أضلاع الوفق فقط، ولا تُقرأ في العزيمة.
-          </p>
-          <Divider />
-
-          {/* A'van */}
-          <p className="font-inter text-[8px] uppercase tracking-widest mt-1" style={{ color: TIER_COLORS.avan }}>
-            أسماء الأعوان — مع يا
-          </p>
-          <div className="space-y-1.5">
-            {avan.names.map((name, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl border"
-                style={{ borderColor: TIER_COLORS.avan + "44", background: TIER_COLORS.avan + "0A" }}>
-                <span className="font-inter text-[7px] tabular-nums" style={{ color: G.dim }}>#{i+1}</span>
-                <span dir="rtl" lang="ar"
-                  style={{ ...AR, fontSize: "1.5rem", color: TIER_COLORS.avan }}>
-                  يَا {name}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <Divider />
-
-          {/* Kasem */}
-          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: TIER_COLORS.kasem }}>
-            أسماء القسم — مع بحق
-          </p>
-          <div className="space-y-1.5">
-            {kasem.names.map((name, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl border"
-                style={{ borderColor: TIER_COLORS.kasem + "44", background: TIER_COLORS.kasem + "0A" }}>
-                <span className="font-inter text-[7px] tabular-nums" style={{ color: G.dim }}>#{i+1}</span>
-                <span dir="rtl" lang="ar"
-                  style={{ ...AR, fontSize: "1.5rem", color: TIER_COLORS.kasem }}>
-                  بِحَقِّ {name}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <Divider />
-
-          {/* Kitabet (borders only) */}
-          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: TIER_COLORS.kitabet }}>
-            أسماء الكتابة — أضلاع الوفق فقط (لا تُقرأ)
-          </p>
-          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"8px", direction:"ltr" }}>
-            {kitabet.names.map((name, i) => (
-              <span key={i}
-                style={{ ...AR, fontSize: "1.3rem", color: TIER_COLORS.kitabet + "CC",
-                  border: `1px solid ${TIER_COLORS.kitabet}30`,
-                  background: TIER_COLORS.kitabet + "08",
-                  borderRadius: "12px", padding: "4px 12px",
-                  unicodeBidi: "isolate", direction: "rtl" }}>
-                {name}
-              </span>
-            ))}
-          </div>
-        </CollapsibleSection>
-
-
 
       </div>
     </PageLayout>
