@@ -255,7 +255,13 @@ export default function SatrVahidGrouping({
         style={{ background: G.bg, borderColor: G.border }}>
         <div className="flex items-center justify-between mb-2">
           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid (Manuscript Order)</span>
-          <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{concatenatedSatrVahid.length} letters</span>
+          <div className="flex items-center gap-2">
+            <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{concatenatedSatrVahid.length} letters</span>
+            <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>→</span>
+            <span className={`font-inter text-xs font-bold px-2 py-0.5 rounded ${isFerd ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+              {isFerd ? 'FERD' : 'ZEVC'}
+            </span>
+          </div>
         </div>
         <div className="text-xs mb-2" style={{ color: G.dim }}>
           Each Bast result reversed for proper manuscript reading order
@@ -285,14 +291,56 @@ export default function SatrVahidGrouping({
         <div className="px-4 py-3 rounded-xl border"
           style={{ background: `${G.green}10`, borderColor: `${G.green}40` }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Remainder Correction</span>
-            <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{esmaKitabetResult.supplementLetters.length} letters from Galib Anasir</span>
+            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid Completion Rule</span>
+            <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{esmaKitabetResult.supplementLetters.length} letters appended</span>
           </div>
-          <div className="text-xs mb-2" style={{ color: G.dim }}>
-            Bast-derived: {concatenatedSatrVahid.length} | Remainder: {esmaKitabetResult.remainder} | Needed: {esmaKitabetResult.supplementLetters.length}
+          
+          {/* Classification & Group Size */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`font-inter text-xs font-bold px-2 py-1 rounded ${isFerd ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+              {isFerd ? 'FERD (فرد)' : 'ZEVC (زوج)'}
+            </span>
+            <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>→</span>
+            <span className="font-inter text-xs font-bold" style={{ color: G.text }}>
+              Group by {esmaKitabetResult.groupSize}
+            </span>
           </div>
+          
+          {/* Remainder calculation */}
+          <div className="text-xs mb-2 px-2 py-1.5 rounded" style={{ background: "rgba(212,175,55,0.05)", border: `1px dashed ${G.border}` }}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Total Letters</span>
+              <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.text }}>{concatenatedSatrVahid.length}</span>
+            </div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Remainder</span>
+              <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.red }}>{esmaKitabetResult.remainder}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Needed to Complete Group</span>
+              <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>{esmaKitabetResult.supplementLetters.length}</span>
+            </div>
+          </div>
+          
+          {/* Galib Anasir source */}
+          <div className="text-xs mb-2 px-2 py-1.5 rounded" style={{ background: `${G.green}08`, border: `1px solid ${G.green}30` }}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Dominant Anasir (Galip)</span>
+              <span className="font-inter text-xs font-bold" style={{ color: G.text }}>{dominant}</span>
+            </div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>First Bast Value</span>
+              <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.text }}>{GALIB_ANASIR_VALUES[dominant]?.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Istintak Source</span>
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.green }}>1st Bast → Letters</span>
+            </div>
+          </div>
+          
+          {/* Appended letters */}
           <div className="text-xs mb-2" style={{ color: G.dim }}>
-            Source: {dominant} 1st Bast ({GALIB_ANASIR_VALUES[dominant]?.toLocaleString()}) → Istintak
+            Appended to END of Satr-i Vahid sequence:
           </div>
           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
             {esmaKitabetResult.supplementLetters.map((l, i) => (
@@ -312,6 +360,20 @@ export default function SatrVahidGrouping({
                 {l}
               </motion.span>
             ))}
+          </div>
+        </div>
+      )}
+      
+      {/* No Remainder Notice */}
+      {esmaKitabetResult.remainder === 0 && (
+        <div className="px-4 py-3 rounded-xl border"
+          style={{ background: `${G.text}08`, borderColor: `${G.text}30` }}>
+          <div className="flex items-center justify-between">
+            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>No Remainder Correction Needed</span>
+            <span className="font-inter text-xs font-bold" style={{ color: G.text }}>Sequence complete</span>
+          </div>
+          <div className="text-xs mt-1" style={{ color: G.dim }}>
+            {concatenatedSatrVahid.length} letters ÷ {esmaKitabetResult.groupSize} = exact groups (remainder 0)
           </div>
         </div>
       )}
