@@ -108,11 +108,10 @@ export default function IstintakSteps({ n, msMarker = false, compact = false }) 
         <span className="font-inter text-[8px] uppercase tracking-widest block" style={{ color: "rgba(74,222,128,0.70)" }}>
           النتيجة ({letters.length} حرف)
         </span>
-        {/* Each badge rendered LTR in the container but the Arabic glyph itself is RTL — no flex reversal */}
-        <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr" }}>
+        {/* RTL flex: index 0 appears rightmost — matches manuscript extraction order (1st letter = far right) */}
+        <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "rtl" }}>
           {letters.map((l, i) => (
             <span key={i}
-              dir="rtl" lang="ar"
               style={{
                 fontFamily: "'Noto Naskh Arabic','Amiri','Scheherazade New',serif",
                 fontSize: "1.3rem",
@@ -122,6 +121,7 @@ export default function IstintakSteps({ n, msMarker = false, compact = false }) 
                 borderRadius: "6px",
                 padding: "0 6px",
                 unicodeBidi: "isolate",
+                direction: "rtl",
               }}>
               {l}
             </span>

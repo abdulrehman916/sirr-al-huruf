@@ -132,10 +132,9 @@ function DivergenceAlert({ input, manuscriptOutput, algorithmOutput }) {
           <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(74,222,128,0.70)" }}>
             MANUSCRIPT RESULT
           </p>
-          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"4px", direction:"ltr" }}>
+          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"4px", direction:"rtl" }}>
             {manuscriptOutput.map((l, i) => (
-              <span key={i} dir="rtl" lang="ar"
-                style={{ ...AR, fontSize: "1.4rem", color: "#4ADE80", unicodeBidi: "isolate" }}>{l}</span>
+              <span key={i} style={{ ...AR, fontSize: "1.4rem", color: "#4ADE80", unicodeBidi: "isolate", direction: "rtl" }}>{l}</span>
             ))}
           </div>
         </div>
@@ -143,10 +142,9 @@ function DivergenceAlert({ input, manuscriptOutput, algorithmOutput }) {
           <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(255,68,68,0.70)" }}>
             ALGORITHM RESULT
           </p>
-          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"4px", direction:"ltr" }}>
+          <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"4px", direction:"rtl" }}>
             {algorithmOutput.map((l, i) => (
-              <span key={i} dir="rtl" lang="ar"
-                style={{ ...AR, fontSize: "1.4rem", color: "#FCA5A5", unicodeBidi: "isolate" }}>{l}</span>
+              <span key={i} style={{ ...AR, fontSize: "1.4rem", color: "#FCA5A5", unicodeBidi: "isolate", direction: "rtl" }}>{l}</span>
             ))}
           </div>
         </div>
@@ -474,11 +472,12 @@ export default function ManuscriptPipelinePage() {
           </p>
           <div style={{ display:"flex", flexDirection:"row", flexWrap:"wrap", gap:"8px", direction:"ltr" }}>
             {kitabet.names.map((name, i) => (
-              <span key={i} dir="rtl" lang="ar"
+              <span key={i}
                 style={{ ...AR, fontSize: "1.3rem", color: TIER_COLORS.kitabet + "CC",
-                  borderColor: TIER_COLORS.kitabet + "30", background: TIER_COLORS.kitabet + "08",
                   border: `1px solid ${TIER_COLORS.kitabet}30`,
-                  borderRadius: "12px", padding: "4px 12px", unicodeBidi: "isolate" }}>
+                  background: TIER_COLORS.kitabet + "08",
+                  borderRadius: "12px", padding: "4px 12px",
+                  unicodeBidi: "isolate", direction: "rtl" }}>
                 {name}
               </span>
             ))}
