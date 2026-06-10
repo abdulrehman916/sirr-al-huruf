@@ -112,13 +112,21 @@ function generateName(value, suffixType) {
   const suffix = SUFFIXES[suffixType];
   const isAngel = suffixType === 'ar-angel';
   
-  let remainder = value - suffix;
-  const underflow = remainder <= 0;
-  if (underflow) {
-    remainder = value + 360 - suffix;
+  // ULVI ANGEL EXTRACTION RULE:
+  // IF value >= 41: value = value - 41
+  // IF value < 41: value = value + 360 - 41
+  let adjustedValue = value;
+  let adjustmentRule = '';
+  
+  if (value >= suffix) {
+    adjustedValue = value - suffix;
+    adjustmentRule = `${value} - ${suffix} = ${adjustedValue}`;
+  } else {
+    adjustedValue = value + 360 - suffix;
+    adjustmentRule = `${value} < ${suffix}, so ${value} + 360 - ${suffix} = ${adjustedValue}`;
   }
   
-  const { letters, steps } = extractLettersFromValue(remainder);
+  const { letters, steps } = extractLettersFromValue(adjustedValue);
   const phoneticResult = applyPhoneticRules(letters, value);
   
   const nameBefore = letters.join('');
@@ -137,8 +145,10 @@ function generateName(value, suffixType) {
   return {
     value,
     suffixType,
-    remainder,
-    underflow,
+    originalValue: value,
+    adjustedValue,
+    adjustmentRule,
+    remainder: adjustedValue,
     extractionSteps: steps,
     letters,
     nameBefore,
