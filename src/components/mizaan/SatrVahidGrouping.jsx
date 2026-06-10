@@ -157,7 +157,7 @@ export default function SatrVahidGrouping({
           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Original Seed Letters (Pipeline Input Order)</span>
           <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{totalLetters} letters</span>
         </div>
-        <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
+        <div className="flex flex-wrap gap-1 justify-center" dir="rtl">
           {safeSatrVahidLetters.map((l, i) => (
             <motion.span
               key={i}
@@ -171,7 +171,6 @@ export default function SatrVahidGrouping({
                 background: i === 0 ? `${G.green}15` : "rgba(212,175,55,0.04)",
                 border: i === 0 ? `1px solid ${G.green}` : G.border
               }}
-              dir="rtl"
             >
               {l}
             </motion.span>
@@ -271,7 +270,7 @@ export default function SatrVahidGrouping({
             <span className="font-inter text-sm" style={{ color: G.dim }}>→</span>
             
             {/* Expansion letters - PRESERVED ORDER */}
-            <div className="flex-1 flex items-center gap-1 flex-wrap justify-end" dir="ltr">
+            <div className="flex-1 flex items-center gap-1 flex-wrap justify-end" dir="rtl">
               {derivation.expansionLetters.map((l, i) => (
                 <span
                   key={i}
@@ -281,7 +280,7 @@ export default function SatrVahidGrouping({
                     borderColor: G.green,
                     background: `${G.green}10`
                   }}
-                  dir="rtl">
+                >
                   {l}
                 </span>
               ))}
@@ -309,7 +308,7 @@ export default function SatrVahidGrouping({
         <div className="text-xs mb-2" style={{ color: G.dim }}>
           MIZAN-9 RULE: Exact Bast extraction order preserved
         </div>
-        <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
+        <div className="flex flex-wrap gap-1 justify-center" dir="rtl">
           {concatenatedSatrVahid.map((l, i) => (
             <motion.span
               key={i}
@@ -322,7 +321,7 @@ export default function SatrVahidGrouping({
                 borderColor: G.border,
                 background: "rgba(212,175,55,0.04)"
               }}
-              dir="rtl">
+            >
               {l}
             </motion.span>
           ))}
@@ -385,7 +384,7 @@ export default function SatrVahidGrouping({
           <div className="text-xs mb-2" style={{ color: G.dim }}>
             Appended to END of Satr-i Vahid sequence:
           </div>
-          <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
+          <div className="flex flex-wrap gap-1 justify-center" dir="rtl">
             {esmaKitabetResult.supplementLetters.map((l, i) => (
               <motion.span
                 key={i}
@@ -398,7 +397,6 @@ export default function SatrVahidGrouping({
                   borderColor: G.green,
                   background: `${G.green}15`
                 }}
-                dir="rtl"
               >
                 {l}
               </motion.span>
@@ -475,7 +473,7 @@ export default function SatrVahidGrouping({
             </div>
             
             {/* Group letters */}
-            <div className="flex items-center gap-1 flex-wrap" dir="ltr">
+            <div className="flex items-center gap-1 flex-wrap" dir="rtl">
               {group.letters.map((letter, letterIdx) => (
                 <span
                   key={letterIdx}
@@ -485,7 +483,6 @@ export default function SatrVahidGrouping({
                     borderColor: G.border,
                     background: "rgba(212,175,55,0.04)"
                   }}
-                  dir="rtl"
                 >
                   {letter}
                 </span>
