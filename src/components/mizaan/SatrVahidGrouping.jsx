@@ -13,42 +13,48 @@ const G = {
 
 /**
  * MANUSCRIPT GROUPING RULE (pp.60-69):
- * - Count letters in Satr-i Vahid
- * - FERD (odd) → group by 5
- * - ZEVC (even) → group by 4
- * - Start from LAST letter, move backwards
- * - Show each group visually
+ * 1. Count the expanded letters from Bast derivation
+ * 2. Determine FERD (odd) or ZEVC (even)
+ * 3. Group by 5 (FERD) or 4 (ZEVC)
+ * 4. If remainder exists, append Galib Anasir Istintak letters to END
+ * 5. Group the FINAL corrected sequence into Esma names
+ * 6. Start grouping from LAST letter, move backwards
  */
-export default function SatrVahidGrouping({ expandedLetters, isZevc, initialCountIsZevc }) {
-  // Use initialCountIsZevc for determining group size (this is the seed letter count)
-  // isZevc is for the expanded letter count (after bast expansion)
+export default function SatrVahidGrouping({ 
+  expandedLetters, 
+  isZevc, 
+  initialCountIsZevc,
+  supplementLetters = [],
+  hasSupplement = false,
+}) {
+  // Determine group size from seed count (initialCountIsZevc)
   const groupSize = initialCountIsZevc !== undefined ? (initialCountIsZevc ? 4 : 5) : (isZevc ? 4 : 5);
   
-  // MANUSCRIPT RULE: Start from LAST letter, move backwards
+  // MANUSCRIPT RULE: If supplement exists, it's already appended to expandedLetters
+  // Just group the final corrected sequence
   const groups = useMemo(() => {
     if (!expandedLetters || expandedLetters.length === 0) return [];
     
-    const letters = [...expandedLetters]; // Copy array
+    const letters = expandedLetters;
     const result = [];
     
-    // Start from end, take groupSize letters at a time
-    for (let i = letters.length; i > 0; i -= groupSize) {
-      const start = Math.max(0, i - groupSize);
-      const group = letters.slice(start, i);
+    // Group the final sequence
+    for (let i = 0; i < letters.length; i += groupSize) {
+      const group = letters.slice(i, i + groupSize);
       result.push({
         letters: group,
-        startIndex: start,
-        endIndex: i - 1,
+        startIndex: i,
+        endIndex: Math.min(i + groupSize - 1, letters.length - 1),
+        isComplete: group.length === groupSize,
       });
     }
     
-    // Reverse to show groups in order (first extracted group on top)
-    return result.reverse();
+    return result;
   }, [expandedLetters, groupSize]);
 
   const totalLetters = expandedLetters?.length || 0;
-  const completeGroups = groups.filter(g => g.letters.length === groupSize).length;
-  const partialGroup = groups.find(g => g.letters.length < groupSize);
+  const completeGroups = groups.filter(g => g.isComplete).length;
+  const partialGroup = groups.find(g => !g.isComplete);
 
   return (
     <motion.div
@@ -92,34 +98,25 @@ export default function SatrVahidGrouping({ expandedLetters, isZevc, initialCoun
             <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{groupSize} letters</span>
           </div>
         </div>
-      </div>
-
-      {/* Direction indicator */}
-      <div className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl border"
-        style={{ background: "rgba(212,175,55,0.05)", borderColor: G.border }}>
-        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-          Grouping Direction:
-        </span>
-        <div className="flex items-center gap-1">
-          <span className="font-amiri text-sm" style={{ color: G.dim }}>آخر</span>
-          <motion.span 
-            animate={{ x: [-3, 3, -3, 3, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="font-inter text-xs" 
-            style={{ color: G.text }}>← LAST → FIRST</motion.span>
-          <span className="font-amiri text-sm" style={{ color: G.dim }}>أول</span>
-        </div>
+        
+        {hasSupplement && (
+          <div className="mt-2 flex items-center justify-center gap-2 text-xs" style={{ color: G.text }}>
+            <span className="px-2 py-1 rounded bg-green-500/20 text-green-400">
+              +{supplementLetters.length} Galib Anasir supplement
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Groups display */}
       <div className="space-y-2">
         <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-          Letter Groups ({completeGroups} complete{partialGroup ? ` + 1 partial: ${partialGroup.letters.length}/${groupSize}` : ''})
+          Final Corrected Groups ({completeGroups} complete{partialGroup ? ` + 1 partial: ${partialGroup.letters.length}/${groupSize}` : ''})
         </p>
         
         <div className="space-y-1.5">
           {groups.map((group, groupIdx) => {
-            const isComplete = group.letters.length === groupSize;
+            const isComplete = group.isComplete;
             const isPartial = !isComplete;
             
             return (
@@ -180,9 +177,8 @@ export default function SatrVahidGrouping({ expandedLetters, isZevc, initialCoun
       <div className="mt-3 p-3 rounded-xl border"
         style={{ background: "rgba(212,175,55,0.04)", borderColor: G.border }}>
         <p className="font-inter text-[8px] leading-relaxed" style={{ color: G.dim }}>
-          <span style={{ color: G.text }}>Manuscript Rule:</span> Groups are formed starting from the LAST letter of the expanded sequence, 
-          moving backwards. Each group contains {groupSize} letters (based on {initialCountIsZevc !== undefined ? (initialCountIsZevc ? 'ZEVC/even' : 'FERD/odd') : (isZevc ? 'ZEVC/even' : 'FERD/odd')} seed count). 
-          Partial groups at the beginning require supplementation from Galib Anasir.
+          <span style={{ color: G.text }}>Manuscript Rule:</span> The FINAL corrected Satr-i Vahid sequence (after Galib Anasir supplement) 
+          is divided into equal groups of {groupSize} letters. Each group forms one Esma-i Kitabet name.
         </p>
       </div>
 

@@ -163,9 +163,11 @@ function PostPipelineSection({ result, selections, degreeSels, inputText, custom
     // Pass to parent immediately
     onPipelineData?.(data);
     onGroupingData?.({
-      expandedLetters: pipeline.kitabet.expandedLetters,
+      expandedLetters: pipeline.kitabet.finalExpandedLetters || pipeline.kitabet.expandedLetters,
       isExpandedZevc: pipeline.kitabet.isExpandedZevc,
       isZevc: pipeline.kitabet.isZevc,
+      supplementLetters: pipeline.kitabet.supplementLetters || [],
+      hasSupplement: !!(pipeline.kitabet.supplementLetters && pipeline.kitabet.supplementLetters.length > 0),
     });
     return data;
   }, [grandBast, grandLetters, dominant, onPipelineData, onGroupingData]);
@@ -394,12 +396,14 @@ export default function Mizaan9Page() {
                 selectedElement={result?.dominant} 
               />
 
-              {/* SATR-I VAHID LETTER GROUPING — Groups from LAST→FIRST */}
+              {/* SATR-I VAHID LETTER GROUPING — Final Corrected Sequence */}
               {groupingData && (
                 <SatrVahidGrouping
                   expandedLetters={groupingData.expandedLetters}
                   isZevc={groupingData.isExpandedZevc}
                   initialCountIsZevc={groupingData.isZevc}
+                  supplementLetters={groupingData.supplementLetters}
+                  hasSupplement={groupingData.hasSupplement}
                 />
               )}
 

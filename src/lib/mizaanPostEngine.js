@@ -368,30 +368,11 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
   isExpandedZevc = expandedCount % 2 === 0;
   const groupSize = isExpandedZevc ? 4 : 5;
 
-  // Step 8: Group into names
+  // Step 8: Group into names - NO remainder handling here
+  // Remainder is handled AFTER all stages in the main pipeline
   const names = [];
   for (let i = 0; i < expandedCount; i += groupSize) {
     names.push(expandedLetters.slice(i, i + groupSize).join(''));
-  }
-
-  // Handle remainder: any partial last group
-  const lastGroupSize = expandedCount % groupSize;
-  const remainder = lastGroupSize > 0 ? expandedLetters.slice(expandedCount - lastGroupSize) : [];
-
-  // MANUSCRIPT RULE: Dynamic remainder completion from Galib Anasir
-  let supplementLetters = [];
-  let galibAnasirData = null;
-  
-  if (remainder.length > 0 && remainder.length < groupSize && supplementElement) {
-    // Get Galib Anasir value and its Istintak letters
-    galibAnasirData = getGalibAnasirData(supplementElement);
-    // Take only the number of letters needed from the Istintak result
-    const needed = groupSize - remainder.length;
-    supplementLetters = galibAnasirData.letters.slice(0, needed);
-    // Replace last partial name with completed name
-    if (names.length > 0) {
-      names[names.length - 1] = remainder.concat(supplementLetters).join('');
-    }
   }
 
   return {
@@ -409,9 +390,6 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
     isExpandedZevc,
     groupSize,
     names,
-    remainder,
-    supplementLetters,
-    galibAnasirData,
   };
 }
 
@@ -446,6 +424,35 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // Generate Esma-i Kitabet (first stage)
   const kitabet = generateEsmaLevel(initialSeedLetters, false, element);
 
+  // ═══════════════════════════════════════════════════════════════
+  // MANUSCRIPT REMAINDER RULE (pp.60-69):
+  // After bast expansion, check if expandedCount is divisible by groupSize
+  // If remainder exists, append Galib Anasir Istintak letters to END
+  // Then group the FINAL corrected sequence
+  // ═══════════════════════════════════════════════════════════════
+  const kitabetGroupSize = kitabet.isExpandedZevc ? 4 : 5;
+  const kitabetRemainder = kitabet.expandedCount % kitabetGroupSize;
+  
+  let kitabetFinalExpandedLetters = [...kitabet.expandedLetters];
+  let kitabetSupplementLetters = [];
+  let kitabetGalibAnasirData = null;
+  
+  if (kitabetRemainder > 0) {
+    // Get Galib Anasir value and its Istintak letters
+    kitabetGalibAnasirData = getGalibAnasirData(element);
+    // Take only the number of letters needed
+    const needed = kitabetGroupSize - kitabetRemainder;
+    kitabetSupplementLetters = kitabetGalibAnasirData.letters.slice(0, needed);
+    // APPEND to END of expanded letters (manuscript rule)
+    kitabetFinalExpandedLetters = [...kitabet.expandedLetters, ...kitabetSupplementLetters];
+  }
+
+  // Now group the FINAL corrected sequence
+  const kitabetNames = [];
+  for (let i = 0; i < kitabetFinalExpandedLetters.length; i += kitabetGroupSize) {
+    kitabetNames.push(kitabetFinalExpandedLetters.slice(i, i + kitabetGroupSize).join(''));
+  }
+
   // Generate Esma-i A'van (second stage) - using kitabet expanded letters
   const avan = generateEsmaLevel(kitabet.expandedLetters, false, element);
 
@@ -458,7 +465,13 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   return {
     input: { grandBast, grandLetters, satirVahidTotal },
     initialSeedLetters,
-    kitabet,
+    kitabet: {
+      ...kitabet,
+      finalExpandedLetters: kitabetFinalExpandedLetters,
+      supplementLetters: kitabetSupplementLetters,
+      galibAnasirData: kitabetGalibAnasirData,
+      names: kitabetNames,
+    },
     avan,
     kasem,
     element,

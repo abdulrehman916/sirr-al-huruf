@@ -99,7 +99,7 @@ function EsmaSection({ data, tierLabel, aziметPrefix, color, isOpen, onToggle
                   Expanded Letters ({data.expandedCount}) → {data.isExpandedZevc ? `Groups of 4` : `Groups of 5`}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {[...data.expandedLetters].reverse().map((l, i) => (
+                  {data.expandedLetters.map((l, i) => (
                     <span key={i} className="font-amiri text-base px-1 rounded"
                       style={{ color: "rgba(255,255,255,0.60)", background: "rgba(255,255,255,0.04)" }}>{l}</span>
                   ))}
