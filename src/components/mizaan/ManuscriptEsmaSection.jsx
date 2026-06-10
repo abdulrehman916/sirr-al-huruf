@@ -73,28 +73,8 @@ function VefkBlock({ satirTotal, element, label, color }) {
         {label}
       </p>
 
-      {/* Stats */}
-      <div className="space-y-1">
-        {[
-          { l: "S (سطر الواحد)", v: satirTotal.toLocaleString() },
-          { l: "V = S − 30",     v: (satirTotal - 30).toLocaleString() },
-          { l: "Q = V ÷ 4",     v: vefk.Q.toLocaleString() },
-          { l: "R (باقي)",       v: vefk.R.toString() },
-          { l: "MC (مجموع السطر)", v: vefk.mc.toLocaleString(), hi: true },
-        ].map(({ l, v, hi }) => (
-          <div key={l} className="flex justify-between py-0.5 border-b"
-            style={{ borderColor: "rgba(255,255,255,0.04)" }}>
-            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{l}</span>
-            <span className="font-inter text-xs font-bold tabular-nums" style={{ color: hi ? "#FFE580" : G.text }}>{v}</span>
-          </div>
-        ))}
-      </div>
-
       {/* 4×4 grid */}
       <div>
-        <p className="font-inter text-[7px] uppercase tracking-widest text-center mb-2" style={{ color: G.dim }}>
-          {element} · 4×4
-        </p>
         <div className="grid grid-cols-4 gap-1 max-w-[200px] mx-auto">
           {vefk.grid.flat().map((val, i) => (
             <div key={i} className="aspect-square flex items-center justify-center rounded-lg border font-inter font-bold tabular-nums"
@@ -103,7 +83,7 @@ function VefkBlock({ satirTotal, element, label, color }) {
             </div>
           ))}
         </div>
-        <p className="font-inter text-[7px] text-center mt-1.5" style={{ color: "rgba(255,255,255,0.25)" }}>
+        <p className="font-inter text-[7px] text-center mt-2" style={{ color: "rgba(255,255,255,0.25)" }}>
           كل سطر وعمود وقطر = {vefk.mc.toLocaleString()}
         </p>
       </div>
@@ -112,7 +92,7 @@ function VefkBlock({ satirTotal, element, label, color }) {
       <div className="flex items-center justify-between rounded-xl border px-3 py-2"
         style={{ borderColor: meta.border, background: meta.glow.replace('0.25','0.08') }}>
         <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>
-          اسم الحارس (4 أضلاع)
+          اسم الحارس
         </span>
         <ArabicText color={meta.color} size="1.4rem">{guardianName}</ArabicText>
       </div>
@@ -124,7 +104,7 @@ function NamesList({ names, prefix, color, sectionLabel }) {
   return (
     <div className="space-y-2">
       <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-        {sectionLabel} ({names.length} اسم)
+        {sectionLabel}
       </p>
       <div className="space-y-1.5">
         {names.map((name, i) => (
@@ -135,9 +115,6 @@ function NamesList({ names, prefix, color, sectionLabel }) {
             <ArabicText color={color} size="1.5rem">
               {prefix ? `${prefix} ${name}` : name}
             </ArabicText>
-            <span className="font-inter text-[7px] ml-auto" style={{ color: "rgba(255,255,255,0.20)" }}>
-              {[...name].join(' ')}
-            </span>
           </div>
         ))}
       </div>
@@ -145,84 +122,38 @@ function NamesList({ names, prefix, color, sectionLabel }) {
   );
 }
 
-function SeedExpansionDetail({ seedBastValues, bastLevelUsed, color, expandedLetters, expandedCount, isExpandedZevc, isBackwards = false }) {
-return (
-  <div className="space-y-3">
-    <div className="flex items-center justify-between">
-      <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-        التوسيع خطوة بخطوة — باست {bastLevelUsed}
-      </p>
-      {isBackwards && (
-        <span className="font-inter text-[7px] px-2 py-0.5 rounded-full border italic"
-          style={{ color: "rgba(255,255,255,0.40)", borderColor: "rgba(255,255,255,0.15)" }}>
-          من الأخير إلى الأول ←
-        </span>
-      )}
-    </div>
-
-      {/* Per-seed full manuscript trace */}
+function SeedExpansionDetail({ seedBastValues, color, expandedLetters }) {
+  return (
+    <div className="space-y-3">
+      {/* Compact per-seed trace — manuscript style */}
       {seedBastValues.map((sv, i) => (
-        <div key={i} className="rounded-2xl border overflow-hidden"
-          style={{ borderColor: color + "40", background: "rgba(4,8,22,0.98)" }}>
-
-          {/* Seed header */}
-          <div className="flex items-center gap-3 px-4 py-2.5 border-b"
-            style={{ borderColor: color + "22", background: color + "0E" }}>
-            <span className="font-inter text-[7px] uppercase tracking-widest rounded-full w-5 h-5 flex items-center justify-center border"
-              style={{ color, borderColor: color + "66", background: color + "18", flexShrink: 0 }}>
-              {i + 1}
+        <div key={i} className="rounded-xl border overflow-hidden"
+          style={{ borderColor: color + "30", background: "rgba(4,8,22,0.98)" }}>
+          {/* Seed letter + Bast value */}
+          <div className="flex items-center justify-between px-3 py-2 border-b"
+            style={{ borderColor: color + "20", background: color + "08" }}>
+            <div className="flex items-center gap-2">
+              <span className="font-inter text-[7px] tabular-nums w-4 h-4 rounded-full flex items-center justify-center border"
+                style={{ color, borderColor: color + "50" }}>{i + 1}</span>
+              <span style={{ fontFamily: AR.fontFamily, fontSize: "1.4rem", color, lineHeight: 1 }}>{sv.letter}</span>
+            </div>
+            <span className="font-inter text-[8px] font-bold tabular-nums" style={{ color: "#FFE580" }}>
+              {sv.bastValue.toLocaleString()}
             </span>
-            <div className="flex items-center gap-2 flex-1">
-              <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>حرف البذرة</span>
-              <span style={{ fontFamily: AR.fontFamily, fontSize: "1.7rem", color, lineHeight: 1 }}>{sv.letter}</span>
-            </div>
-            <div className="text-right">
-              <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>
-                باست {bastLevelUsed}
-              </p>
-              <p className="font-inter text-sm font-bold tabular-nums" style={{ color: "#FFE580" }}>
-                {sv.bastValue.toLocaleString()}
-              </p>
-            </div>
           </div>
-
-          {/* Istintak full trace */}
-          <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
-            <p className="font-inter text-[7px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              استنطاق {sv.bastValue.toLocaleString()}
-            </p>
-            <IstintakSteps n={sv.bastValue} msMarker={false} compact={false} />
-          </div>
-
-          {/* Extracted letters for this seed */}
-          <div className="px-4 py-3">
-            <p className="font-inter text-[7px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              الحروف المستخرجة ({sv.expansionLetters.length})
-            </p>
-            <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "6px", direction: "ltr",
-              padding: "8px 10px", borderRadius: "10px", border: `1px solid ${color}33`, background: color + "08" }}>
-              {[...sv.expansionLetters].reverse().map((el, j) => (
-                <span key={j} style={{ fontFamily: AR.fontFamily, fontSize: "1.4rem", color, lineHeight: 1.3 }}>
-                  {el}
-                </span>
-              ))}
-            </div>
+          {/* Istintak steps */}
+          <div className="px-3 py-2">
+            <IstintakSteps n={sv.bastValue} msMarker={false} compact={true} />
           </div>
         </div>
       ))}
 
-      {/* Combined Satr-i Vahid — only after all seeds */}
+      {/* Combined Satr-i Vahid */}
       <div className="rounded-2xl border p-4 space-y-2"
         style={{ borderColor: "rgba(212,175,55,0.60)", background: "rgba(212,175,55,0.06)", boxShadow: "0 0 18px rgba(212,175,55,0.10)" }}>
-        <div className="flex items-center justify-between mb-1">
-          <p className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.text }}>
-            سطر الواحد المجمع
-          </p>
-          <span className="font-inter text-[7px] px-2 py-0.5 rounded-full border"
-            style={{ color: G.dim, borderColor: G.border }}>
-            {expandedCount} حرف — {isExpandedZevc ? "زوج → مجموعات ٤" : "فرد → مجموعات ٥"}
-          </span>
-        </div>
+        <p className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.text }}>
+          سطر الواحد المجمع
+        </p>
         <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "5px", direction: "ltr",
           padding: "10px 12px", borderRadius: "12px", border: `1px solid rgba(212,175,55,0.30)`, background: "rgba(212,175,55,0.04)" }}>
           {[...expandedLetters].reverse().map((l, i) => (
@@ -292,36 +223,24 @@ export default function ManuscriptEsmaSection({
           </span>
         </div>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-4 gap-1 mt-3">
-          {[
-            { l: "باست Σ", v: data.bastSum.toLocaleString() },
-            { l: "عدد الحروف", v: data.letterCount },
-            { l: "سطر الواحد", v: data.satirTotal.toLocaleString() },
-            { l: `مستوى الباست`, v: `${data.bastLevelUsed}${tier === 'kasem' ? ' (دائماً)' : data.isZevc ? ' (زوج)' : ' (فرد)'}` },
-          ].map(({ l, v }) => (
-            <div key={l} className="rounded-lg border p-1.5 text-center"
-              style={{ borderColor: color + "30", background: color + "08" }}>
-              <p className="font-inter text-[6px] uppercase tracking-widest mb-0.5" style={{ color: G.dim }}>{l}</p>
-              <p className="font-inter text-xs font-bold tabular-nums" style={{ color }}>{v}</p>
-            </div>
-          ))}
-        </div>
+  
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-4">
 
-        {/* A) Satr-ı Vahid — seed letters + Istintak steps */}
-        <Toggle label="A) سطر الواحد — الاستنطاق" open={openSatr} onToggle={() => setOpenSatr(v => !v)} />
+        {/* Manuscript flow: Istintak → Bast → Satr-i Vahid → Names → Vefk */}
+        
+        {/* Istintak */}
+        <Toggle label="الاستنطاق" open={openSatr} onToggle={() => setOpenSatr(v => !v)} />
         <AnimatePresence initial={false}>
           {openSatr && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: "hidden" }}>
               <div className="space-y-3 pt-1">
-                {/* Input letters (from previous stage) */}
+                {/* Input letters */}
                 <div>
                   <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                    حروف المدخل ({data.inputLetters.length})
+                    حروف المدخل
                   </p>
                   <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", direction: "ltr",
                     padding: "8px", borderRadius: "12px", border: `1px solid ${G.border}`, background: G.bg }}>
@@ -334,23 +253,20 @@ export default function ManuscriptEsmaSection({
                   </div>
                 </div>
 
-                {/* Istintak of satirTotal */}
+                {/* Istintak steps */}
                 <div>
                   <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
-                    استنطاق سطر الواحد ({data.satirTotal.toLocaleString()})
+                    استنطاق ({data.satirTotal.toLocaleString()})
                   </p>
                   <IstintakSteps n={data.satirTotal} msMarker={false} compact={false} />
                 </div>
-
-                {/* Seed letters */}
-                <SatrRow letters={data.seedLetters} label={`بذور (${data.seedCount}) — ${data.isZevc ? 'زوج → باست ٤' : 'فرد → باست ٥'}`} color={color} />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Per-seed expansion detail */}
-        <Toggle label="توسيع البذور (باست → استنطاق)" open={openDetail} onToggle={() => setOpenDetail(v => !v)} />
+        {/* Bast expansion */}
+        <Toggle label="الباست → الاستنطاق" open={openDetail} onToggle={() => setOpenDetail(v => !v)} />
         <AnimatePresence initial={false}>
           {openDetail && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
@@ -358,11 +274,7 @@ export default function ManuscriptEsmaSection({
               <div className="pt-1">
                 <SeedExpansionDetail
                   seedBastValues={data.seedBastValues}
-                  bastLevelUsed={data.bastLevelUsed}
                   expandedLetters={data.expandedLetters}
-                  expandedCount={data.expandedCount}
-                  isExpandedZevc={data.isExpandedZevc}
-                  isBackwards={tier !== 'kitabet'}
                   color={color}
                 />
               </div>
@@ -370,8 +282,8 @@ export default function ManuscriptEsmaSection({
           )}
         </AnimatePresence>
 
-        {/* B) Grouped names */}
-        <Toggle label="B) الأسماء المجمعة" open={openNames} onToggle={() => setOpenNames(v => !v)} />
+        {/* Generated names */}
+        <Toggle label="الأسماء" open={openNames} onToggle={() => setOpenNames(v => !v)} />
         <AnimatePresence initial={false}>
           {openNames && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
@@ -381,15 +293,15 @@ export default function ManuscriptEsmaSection({
                   names={data.names}
                   prefix={prefix}
                   color={color}
-                  sectionLabel={meta.en}
+                  sectionLabel={meta.ar}
                 />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* C + D) Independent Vefk with guardian name */}
-        <Toggle label="C+D) الوفق المستقل + اسم الحارس" open={openVefk} onToggle={() => setOpenVefk(v => !v)} />
+        {/* Vefk */}
+        <Toggle label="الوفق" open={openVefk} onToggle={() => setOpenVefk(v => !v)} />
         <AnimatePresence initial={false}>
           {openVefk && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
@@ -398,7 +310,7 @@ export default function ManuscriptEsmaSection({
                 <VefkBlock
                   satirTotal={satirTotal}
                   element={element}
-                  label={`${meta.en} Vefki — وفق مستقل`}
+                  label={`${meta.ar} — وفق مستقل`}
                   color={color}
                 />
               </div>
