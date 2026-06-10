@@ -292,97 +292,70 @@ export function resolveGalipAnasir(dominant) {
 /**
  * generateEsmaLevel(inputLetters, alwaysFifth, supplementElement)
  *
- * MANUSCRIPT RULE (pp.60–69):
- * EVERY stage follows the SAME logic:
- * 1. Satır Vahid sum (First Bast of input letters + letter count)
- * 2. Istintak that sum → seed letters
- * 3. Zevc/Ferd of seed count → Bast level (4th if zevc, 5th if ferd)
- * 4. Apply Bast to each seed → istintak each → expansion letters
- * 5. Concatenate all expansion letters
- * 6. Zevc/Ferd of expanded count → group size (4 if zevc, 5 if ferd)
- * 7. Group into names
+ * MANUSCRIPT RULE (pp.60–69) - SIMPLIFIED FOR ESMA-I KITABET:
+ * 1. Use input letters directly as Satr-i Vahid (NO expansion)
+ * 2. Count letters → FERD (odd) or ZEVC (even)
+ * 3. Group by 5 (FERD) or 4 (ZEVC)
+ * 4. If remainder exists, append Galib Anasir letters to END
+ * 5. Group the FINAL corrected sequence into names
  *
  * Parameters:
- * - inputLetters: array of Arabic letters from previous stage
- * - alwaysFifth: true for Kasem (always 5th Bast), false for others
+ * - inputLetters: array of Arabic letters (Satr-i Vahid sequence)
+ * - alwaysFifth: unused for Kitabet (kept for API compatibility)
  * - supplementElement: element for remainder supplementation
  *
  * Returns:
  * {
- *   inputLetters, bastSum, letterCount, satirTotal,
- *   seedLetters, seedCount, isZevc, bastLevelUsed,
- *   seedBastValues,      // [{letter, bastValue, expansionLetters}]
- *   expandedLetters,     // all concatenated expansion letters
- *   expandedCount,
- *   isExpandedZevc,
- *   groupSize,
- *   names,               // array of name strings
- *   remainder,
- *   supplementLetters,
+ *   inputLetters,          // Original Satr-i Vahid letters
+ *   satrVahidLetters,      // Same as inputLetters (no expansion)
+ *   satrVahidCount,        // Count of Satr-i Vahid letters
+ *   isZevc,                // true if even, false if odd (Ferd)
+ *   groupSize,             // 4 (ZEVC) or 5 (FERD)
+ *   finalExpandedLetters,  // After supplement (if needed)
+ *   supplementLetters,     // Galib Anasir supplement
+ *   names,                 // Grouped Esma-i Kitabet names
  * }
  */
 export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementElement = 'fire') {
-  let expandedLetters = [];
-  let seedBastValues = [];
-  let bastLevelUsed = alwaysFifth ? 5 : 4;
-  let isExpandedZevc = false;
-  let expandedCount = 0;
-  let bastSum = 0;
-  let letterCount = 0;
-  let satirTotal = 0;
-  let seedLetters = [];
-  let seedCount = 0;
-  let isZevc = false;
-
-  // ═══════════════════════════════════════════════════════════════
-  // ALL STAGES: Same manuscript logic
-  // ═══════════════════════════════════════════════════════════════
-  // Step 1: Satır Vahid sum (First Bast of input letters + letter count)
-  bastSum = inputLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
-  letterCount = inputLetters.length;
-  satirTotal = bastSum + letterCount;
-
-  // Step 2: Istintak the Satır Vahid total → seed letters
-  seedLetters = istintak(satirTotal);
-  seedCount = seedLetters.length;
-
-  // Step 3: Apply Bast to each seed letter and istintak each result
-  // Process letters in LINEAR order (first-to-last) - NO Zevc/Ferd classification yet
-  seedBastValues = seedLetters.map(letter => {
-    const bastValue = getBastLevel(letter, 1); // Always use 1st Bast for derivation
-    const expansionLetters = istintak(bastValue);
-    return { letter, bastValue, expansionLetters };
-  });
-
-  // Step 4: Concatenate all expansion letters (preserves linear processing order)
-  expandedLetters = seedBastValues.flatMap(s => s.expansionLetters);
-  expandedCount = expandedLetters.length;
-
-  // Step 5: Zevc/Ferd of EXPANDED count (NOT seed count) → group size
-  isExpandedZevc = expandedCount % 2 === 0;
-  const groupSize = isExpandedZevc ? 4 : 5;
-
-  // Step 6: Group into names - NO remainder handling here
-  // Remainder is handled AFTER all stages in the main pipeline
-  const names = [];
-  for (let i = 0; i < expandedCount; i += groupSize) {
-    names.push(expandedLetters.slice(i, i + groupSize).join(''));
+  // MANUSCRIPT RULE: Use input letters directly - NO Bast expansion
+  const satrVahidLetters = inputLetters;
+  const satrVahidCount = satrVahidLetters.length;
+  
+  // Zevc/Ferd classification based on Satr-i Vahid count
+  const isZevc = satrVahidCount % 2 === 0;
+  const isFerd = !isZevc;
+  const groupSize = isZevc ? 4 : 5;
+  
+  // Check for remainder
+  const remainder = satrVahidCount % groupSize;
+  let finalExpandedLetters = [...satrVahidLetters];
+  let supplementLetters = [];
+  
+  // Apply remainder correction if needed
+  if (remainder > 0) {
+    const galibData = getGalibAnasirData(supplementElement);
+    const needed = groupSize - remainder;
+    supplementLetters = galibData.letters.slice(0, needed);
+    // APPEND to END (manuscript rule)
+    finalExpandedLetters = [...satrVahidLetters, ...supplementLetters];
   }
-
+  
+  // Group the final corrected sequence into names
+  const names = [];
+  for (let i = 0; i < finalExpandedLetters.length; i += groupSize) {
+    names.push(finalExpandedLetters.slice(i, i + groupSize).join(''));
+  }
+  
   return {
     inputLetters,
-    bastSum,
-    letterCount,
-    satirTotal,
-    seedLetters,
-    seedCount,
-    isZevc: false, // Not used - Zevc/Ferd applied to expanded letters only
-    bastLevelUsed: 1, // Always 1st Bast for derivation
-    seedBastValues,
-    expandedLetters,
-    expandedCount,
-    isExpandedZevc,
+    satrVahidLetters,
+    satrVahidCount,
+    isZevc,
+    isFerd,
     groupSize,
+    finalExpandedLetters,
+    supplementLetters,
+    remainder,
     names,
   };
 }
@@ -415,37 +388,8 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // The satirVahidTotal is already (bastSum + letterCount), so we istintak it directly
   // and treat the result as the first seed — matching the book's worked examples on p.60.
 
-  // Generate Esma-i Kitabet (first stage)
+  // Generate Esma-i Kitabet using simplified manuscript workflow
   const kitabet = generateEsmaLevel(initialSeedLetters, false, element);
-
-  // ═══════════════════════════════════════════════════════════════
-  // MANUSCRIPT REMAINDER RULE (pp.60-69):
-  // After bast expansion, check if expandedCount is divisible by groupSize
-  // If remainder exists, append Galib Anasir Istintak letters to END
-  // Then group the FINAL corrected sequence
-  // ═══════════════════════════════════════════════════════════════
-  const kitabetGroupSize = kitabet.isExpandedZevc ? 4 : 5;
-  const kitabetRemainder = kitabet.expandedCount % kitabetGroupSize;
-  
-  let kitabetFinalExpandedLetters = [...kitabet.expandedLetters];
-  let kitabetSupplementLetters = [];
-  let kitabetGalibAnasirData = null;
-  
-  if (kitabetRemainder > 0) {
-    // Get Galib Anasir value and its Istintak letters
-    kitabetGalibAnasirData = getGalibAnasirData(element);
-    // Take only the number of letters needed
-    const needed = kitabetGroupSize - kitabetRemainder;
-    kitabetSupplementLetters = kitabetGalibAnasirData.letters.slice(0, needed);
-    // APPEND to END of expanded letters (manuscript rule)
-    kitabetFinalExpandedLetters = [...kitabet.expandedLetters, ...kitabetSupplementLetters];
-  }
-
-  // Now group the FINAL corrected sequence
-  const kitabetNames = [];
-  for (let i = 0; i < kitabetFinalExpandedLetters.length; i += kitabetGroupSize) {
-    kitabetNames.push(kitabetFinalExpandedLetters.slice(i, i + kitabetGroupSize).join(''));
-  }
 
   // Generate Esma-i A'van (second stage) - using kitabet expanded letters
   const avan = generateEsmaLevel(kitabet.expandedLetters, false, element);
@@ -459,15 +403,7 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   return {
     input: { grandBast, grandLetters, satirVahidTotal },
     initialSeedLetters,
-    kitabet: {
-      ...kitabet,
-      finalExpandedLetters: kitabetFinalExpandedLetters,
-      supplementLetters: kitabetSupplementLetters,
-      galibAnasirData: kitabetGalibAnasirData,
-      names: kitabetNames,
-    },
-    avan,
-    kasem,
+    kitabet,
     element,
     vefk,
   };

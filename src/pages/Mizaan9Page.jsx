@@ -326,8 +326,9 @@ export default function Mizaan9Page() {
                 // Set grouping data once
                 if (!groupingData) {
                   setGroupingData({
-                    expandedLetters: pipeline.kitabet.finalExpandedLetters || pipeline.kitabet.expandedLetters,
-                    isExpandedZevc: pipeline.kitabet.isExpandedZevc,
+                    satrVahidLetters: pipeline.kitabet.satrVahidLetters,
+                    finalLetters: pipeline.kitabet.finalExpandedLetters,
+                    isExpandedZevc: pipeline.kitabet.isZevc,
                     supplementLetters: pipeline.kitabet.supplementLetters || [],
                     hasSupplement: !!(pipeline.kitabet.supplementLetters && pipeline.kitabet.supplementLetters.length > 0),
                   });
@@ -371,7 +372,8 @@ export default function Mizaan9Page() {
                     </div>
                     {/* Satr-i Vahid Grouping */}
                     <SatrVahidGrouping
-                      expandedLetters={groupingData.expandedLetters}
+                      satrVahidLetters={groupingData.satrVahidLetters}
+                      finalLetters={groupingData.finalLetters}
                       isZevc={groupingData.isExpandedZevc}
                       supplementLetters={groupingData.supplementLetters}
                       hasSupplement={groupingData.hasSupplement}

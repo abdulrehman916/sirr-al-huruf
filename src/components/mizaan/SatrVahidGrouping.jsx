@@ -10,45 +10,46 @@ const G = {
   bg:       "rgba(212,175,55,0.07)",
   border:   "rgba(212,175,55,0.40)",
   green:    "#4ADE80",
-  red:      "#F87171",
 };
 
 /**
  * MANUSCRIPT WORKFLOW (pp.60-69):
- * 1. Display Satr-i Vahid letters in exact linear order
+ * 1. Display Satr-i Vahid letters in EXACT manuscript order (no reordering, no expansion)
  * 2. Count letters → FERD (odd) or ZEVC (even)
  * 3. Apply remainder correction if needed (append Galib Anasir to END)
- * 4. Group into Esma-i Kitabet names (5 for FERD, 4 for ZEVC)
+ * 4. Group the FINAL corrected sequence into Esma-i Kitabet names
  */
 export default function SatrVahidGrouping({ 
-  expandedLetters, 
-  isZevc,
-  supplementLetters = [],
+  satrVahidLetters,      // The exact Satr-i Vahid letters from manuscript (no expansion)
+  isZevc,                // true if even count, false if odd (Ferd)
+  finalLetters,          // Final corrected sequence (satrVahidLetters + supplement if needed)
+  supplementLetters = [], // Galib Anasir supplement letters
   hasSupplement = false,
 }) {
-  // Determine group size from final letter count
+  // Determine group size from Ferd/Zevc
   const groupSize = isZevc ? 4 : 5;
   
   // Group the final corrected sequence into Esma-i Kitabet names
   const groups = useMemo(() => {
-    if (!expandedLetters || expandedLetters.length === 0) return [];
+    if (!finalLetters || finalLetters.length === 0) return [];
     
     const result = [];
-    for (let i = 0; i < expandedLetters.length; i += groupSize) {
-      const group = expandedLetters.slice(i, i + groupSize);
+    for (let i = 0; i < finalLetters.length; i += groupSize) {
+      const group = finalLetters.slice(i, i + groupSize);
       result.push({
         letters: group,
         startIndex: i,
-        endIndex: Math.min(i + groupSize - 1, expandedLetters.length - 1),
+        endIndex: Math.min(i + groupSize - 1, finalLetters.length - 1),
         isComplete: group.length === groupSize,
       });
     }
     
     return result;
-  }, [expandedLetters, groupSize]);
+  }, [finalLetters, groupSize]);
 
-  const totalLetters = expandedLetters.length;
+  const totalLetters = satrVahidLetters.length;
   const isFerd = !isZevc;
+  const finalTotal = finalLetters.length;
 
   return (
     <motion.div
@@ -68,23 +69,45 @@ export default function SatrVahidGrouping({
         <div className="h-px w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
       </div>
 
-      {/* Letter Count & Classification */}
-      <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
+      {/* Satr-i Vahid Letters - EXACT MANUSCRIPT ORDER */}
+      <div className="px-4 py-3 rounded-xl border"
         style={{ background: G.bg, borderColor: G.border }}>
-        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Total Letters</span>
-        <div className="flex items-center gap-3">
-          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{totalLetters}</span>
-          <span className={`font-inter text-xs font-bold px-2 py-1 rounded ${isFerd ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-            {isFerd ? 'FERD (فرد) — ODD' : 'ZEVC (زوج) — EVEN'}
-          </span>
+        <div className="flex items-center justify-between mb-3">
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid (Manuscript Order)</span>
+          <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{totalLetters} letters</span>
+        </div>
+        <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
+          {satrVahidLetters.map((l, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.02 }}
+              className="font-amiri text-xl px-2 py-1 rounded-lg border"
+              style={{
+                color: G.text,
+                borderColor: G.border,
+                background: "rgba(212,175,55,0.04)"
+              }}
+              dir="rtl"
+            >
+              {l}
+            </motion.span>
+          ))}
         </div>
       </div>
 
-      {/* Group Size */}
+      {/* Classification */}
       <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
         style={{ background: G.bg, borderColor: G.border }}>
-        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Group Size</span>
-        <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{groupSize} letters per name</span>
+        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Classification</span>
+        <div className="flex items-center gap-3">
+          <span className={`font-inter text-xs font-bold px-3 py-1.5 rounded ${isFerd ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+            {isFerd ? 'FERD (فرد) — ODD' : 'ZEVC (زوج) — EVEN'}
+          </span>
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>→</span>
+          <span className="font-inter text-sm font-bold" style={{ color: G.text }}>Group by {groupSize}</span>
+        </div>
       </div>
 
       {/* Remainder Correction Notice */}
@@ -92,8 +115,11 @@ export default function SatrVahidGrouping({
         <div className="px-4 py-3 rounded-xl border"
           style={{ background: `${G.green}10`, borderColor: `${G.green}40` }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Remainder Correction Applied</span>
-            <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{supplementLetters.length} Galib Anasir letters</span>
+            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Remainder Correction</span>
+            <span className="font-inter text-xs font-bold" style={{ color: G.green }}>+{supplementLetters.length} letters appended</span>
+          </div>
+          <div className="text-xs mb-2" style={{ color: G.dim }}>
+            Original: {totalLetters} | Remainder: {totalLetters % groupSize} | Needed: {supplementLetters.length}
           </div>
           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
             {supplementLetters.map((l, i) => (
@@ -117,8 +143,24 @@ export default function SatrVahidGrouping({
         </div>
       )}
 
+      {/* Final Corrected Sequence Count */}
+      {hasSupplement && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
+          style={{ background: G.bg, borderColor: G.border }}>
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Final Sequence</span>
+          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{finalTotal} letters</span>
+        </div>
+      )}
+
       {/* Esma-i Kitabet Groups */}
       <div className="space-y-1.5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Esma-i Kitabet Names</span>
+          <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.text, background: `${G.text}15`, padding: "2px 8px", borderRadius: "4px" }}>
+            {groups.length} names
+          </span>
+        </div>
+        
         {groups.map((group, groupIdx) => (
           <motion.div
             key={groupIdx}
