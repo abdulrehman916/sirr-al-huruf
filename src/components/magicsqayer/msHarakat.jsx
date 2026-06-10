@@ -80,5 +80,5 @@ export function buildAngelName(consonants) {
  */
 export function buildJinnName(consonants) {
   if (!consonants || consonants.length === 0) return JINN_SUFFIX;
-  return vocalizeConsonants(consonants) + ' ' + JINN_SUFFIX;
+  return vocalizeConsonants(consonants) + JINN_SUFFIX;
 }
