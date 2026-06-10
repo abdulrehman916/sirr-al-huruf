@@ -1,6 +1,6 @@
 import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
-import { buildHierarchy, toArabicIndic, isCompatible, ARABIC_ABJAD, HEBREW_GEMATRIA } from "./msEngine";
+import { buildHierarchy, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
 
 const G = {
@@ -10,47 +10,51 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-// ── Bast-2 letter extraction ─────────────────
-// Use hierarchy value directly → extract letters via Abjad (no suffix subtraction)
+// ── Traditional Angel/Jinn name generation ───────────────────────
+const SUFFIXES = {
+  'ar-angel': 41,
+  'ar-jinn': 319,
+  'heb-angel': 31,
+  'heb-jinn': 329,
+};
 
-function generateNameForValue(val, suffixType) {
-  // Hierarchy value is already adjusted (e.g., 18 + 360 - 41 = 337)
-  // DO NOT subtract suffix again - use val directly for extraction
-  const extractionValue = val;
-  
-  // Extract letters from the final adjusted value
-  const consonants = extractLettersFromValue(extractionValue, suffixType);
-  
+const AR_ANGEL_TEMPLATES = [
+  'ايل', 'شهايل', 'جايل', 'قاهايل', 'قتزايل', 'رقايل', 'شكايل', 'كهايل'
+];
+
+const AR_JINN_TEMPLATES = [
+  'طيش', 'شهطيش', 'جاطيش', 'قاهطيش', 'قتزطيش', 'رقاطيش', 'شكاطيش', 'كهاطيش'
+];
+
+function generateTraditionalName(value, suffixType) {
+  const suffix = SUFFIXES[suffixType];
   const isAngel = suffixType.includes('angel');
-  const color = isAngel ? "#4FE3FF" : suffixType === 'ar-jinn' ? "#FF9F5A" : "#F9A8D4";
+  const isArabic = !suffixType.includes('heb');
   
-  return {
-    extractionValue,
-    consonants,
-    color
-  };
-}
-
-// Extract letters using Abjad decomposition (greedy algorithm)
-function extractLettersFromValue(value, suffixType) {
-  if (!value || value <= 0) return [];
-  
-  const isHebrew = suffixType.includes('heb');
-  const letterTable = isHebrew ? HEBREW_GEMATRIA : ARABIC_ABJAD;
-  const letters = [];
-  let remaining = value;
-  
-  // Greedy decomposition: largest values first
-  for (let i = letterTable.length - 1; i >= 0 && remaining > 0; i--) {
-    const { val, letter } = letterTable[i];
-    while (remaining >= val) {
-      letters.push(letter);
-      remaining -= val;
-    }
+  // Apply Ulvi adjustment: if value < suffix, add 360 first
+  let adjustedValue = value;
+  if (value < suffix) {
+    adjustedValue = value + 360 - suffix;
+  } else {
+    adjustedValue = value - suffix;
   }
   
-  // Reverse to get proper reading order (RTL)
-  return letters.reverse();
+  if (adjustedValue <= 0) adjustedValue = 1;
+  
+  // Select template based on adjusted value modulo
+  const templates = isArabic && isAngel ? AR_ANGEL_TEMPLATES : 
+                    isArabic && !isAngel ? AR_JINN_TEMPLATES :
+                    isAngel ? ['אל', 'שהאל', 'גאל', 'קאהאל', 'קתזאל', 'רקאל', 'שקאל', 'כהאל'] :
+                    ['תקש', 'שהתקש', 'גאתקש', 'קאהתקש', 'קתזתקש', 'רקתקש', 'שקתקש', 'כהתקש'];
+  
+  const templateIdx = adjustedValue % templates.length;
+  const name = templates[templateIdx];
+  
+  return {
+    originalValue: value,
+    adjustedValue,
+    name
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -75,7 +79,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     return result;
   }, [mc, gridSize]);
 
-  // Build display rows with pattern-based names
+  // Build display rows with traditional names
   const rows = useMemo(() => {
     if (!hier) return [];
     const t0 = performance.now();
@@ -92,14 +96,14 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     ];
 
     const result = base.map(row => {
-      const nameData = generateNameForValue(row.val, suffix);
+      const nameData = generateTraditionalName(row.val, suffix);
       const isAngel = suffix.includes('angel');
       const color = isAngel ? "#4FE3FF" : suffix === 'ar-jinn' ? "#FF9F5A" : "#F9A8D4";
       
       return {
         ...row,
-        angel: isAngel ? { ...nameData, color } : null,
-        jinn: !isAngel ? { ...nameData, color } : null
+        nameData,
+        color
       };
     });
 
@@ -191,7 +195,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
 
       {/* 8 hierarchy rows */}
       {hier && (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {rows.map((row, i) => (
             <motion.div key={row.key}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -199,8 +203,8 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
               className="rounded-xl overflow-hidden border"
               style={{ borderColor: row.highlight ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.12)" }}
             >
-              {/* Numeric row */}
-              <div className="flex items-center justify-between px-4 py-2.5"
+              {/* Hierarchy Value */}
+              <div className="flex items-center justify-between px-4 py-3"
                 style={{ background: row.highlight ? "rgba(212,175,55,0.12)" : "rgba(212,175,55,0.04)" }}>
                 <p className="font-inter text-[10px] uppercase tracking-widest"
                   style={{ color: row.highlight ? G.text : "rgba(212,175,55,0.60)", letterSpacing: "0.8px" }}>
@@ -209,127 +213,38 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 <p className="font-amiri font-bold tabular-nums"
                   style={{ 
                     color: row.highlight ? G.text : "rgba(212,175,55,0.85)", 
-                    fontSize: row.highlight ? "1.7rem" : "1.45rem",
-                    textShadow: row.highlight ? `0 0 12px ${G.glow}` : "none",
-                    letterSpacing: "0.5px"
+                    fontSize: "1.6rem",
+                    textShadow: row.highlight ? `0 0 12px ${G.glow}` : "none"
                   }}>
                   {lang === "ar" ? toArabicIndic(row.val.toLocaleString()) : row.val.toLocaleString()}
                 </p>
               </div>
 
-              {/* Name column with complete extraction chain */}
-              {showNames && activeNameKey && row[activeNameKey] && (() => {
-                const n = row[activeNameKey];
-                
-                return (
-                  <div className="px-3 text-center"
-                    style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
-                    {/* Complete Extraction Chain */}
-                    <div className="space-y-2">
-                      {/* Step 1: Final Extraction Value (Already Adjusted) */}
-                      <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
-                        <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)" }}>Final Extraction Value</p>
-                        <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.4rem" }}>{toArabicIndic((n.extractionValue || row.val).toLocaleString())}</p>
-                      </div>
-                      
-                      {/* Step 2: Extraction Value (Already Adjusted) */}
-                      {n.extractionValue !== undefined && (
-                        <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(79,227,255,0.08)", border: `1px solid ${n.color}30` }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: n.color }}>Final Extraction Value</p>
-                          <p className="font-inter text-[7px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-                            {toArabicIndic(n.extractionValue.toLocaleString())}
-                          </p>
-                        </div>
-                      )}
-                      
-                      {/* Step 2: Abjad Decomposition */}
-                      {n.consonants && n.consonants.length > 0 && (
-                        <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.50)" }}>Abjad Decomposition</p>
-                          <p className="font-inter text-[7px]" style={{ color: G.text }}>
-                            {toArabicIndic((n.extractionValue || row.val).toLocaleString())} = {n.consonants.map((c, i) => {
-                              const letterData = ARABIC_ABJAD.find(l => l.letter === c);
-                              return `${letterData?.val || 0}`;
-                            }).join(' + ')}
-                          </p>
-                        </div>
-                      )}
-                      
-                      {/* Step 3: Extracted Letters (Raw Consonants) */}
-                      {n.consonants && n.consonants.length > 0 && (
-                        <div className="px-2 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                          <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.50)" }}>Extracted Letters (Raw Consonants)</p>
-                          <div className="flex items-center justify-center gap-2 mt-1" dir="rtl">
-                            {n.consonants.map((c, i) => (
-                              <span key={i} className="font-amiri text-2xl px-2 py-1 rounded"
-                                style={{ 
-                                  background: "rgba(212,175,55,0.20)", 
-                                  color: n.color,
-                                  border: `1px solid ${n.color}50`,
-                                  textShadow: `0 0 12px ${n.color}55`
-                                }}>
-                                {c}
-                              </span>
-                            ))}
-                          </div>
-                          <p className="font-inter text-[7px] mt-2" style={{ color: n.color }}>
-                            Raw: {n.consonants.join(' ')}
-                          </p>
-                        </div>
-                      )}
-                      
-                      {/* Step 4: Final Name with Bast-2 Harakat */}
-                      {n.consonants && n.consonants.length > 0 && (() => {
-                        // Bast-2 position-based vowel rule (no phonology engine)
-                        const FATHA = '\u064E';
-                        const KASRA = '\u0650';
-                        const SUKUN = '\u0652';
-                        
-                        const vocalized = n.consonants.map((c, i) => {
-                          const position = i + 1;
-                          const isLast = position === n.consonants.length;
-                          const isFirst = position === 1;
-                          
-                          // Bast-2 rule: First=Fatha, Middle=Kasra, Last=Sukun
-                          let vowel;
-                          if (isFirst) vowel = FATHA;
-                          else if (isLast) vowel = SUKUN;
-                          else vowel = KASRA;
-                          
-                          return c + vowel;
-                        }).join('');
-                        
-                        // Add Angel suffix if applicable (إيل with kasra before ي, fatha on ل)
-                        let finalName = vocalized;
-                        if (n.isAngel) {
-                          // Remove final sukun, add kasra + ي + fatha + ل
-                          finalName = vocalized.replace(/\u0652$/, '') + KASRA + 'ي' + FATHA + 'ل';
-                        }
-                        
-                        return (
-                          <div className="px-2 py-2 rounded-lg" style={{ background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.30)" }}>
-                            <p className="font-inter text-[6px] uppercase tracking-widest mb-2" style={{ color: "rgba(212,175,55,0.60)" }}>Final Name (Bast-2 Harakat Applied)</p>
-                            <div className="flex items-center justify-center gap-2 mt-1" dir="rtl">
-                              <span className="font-amiri text-3xl px-3 py-2 rounded font-bold"
-                                style={{ 
-                                  background: "rgba(212,175,55,0.25)", 
-                                  color: "#FFFFFF",
-                                  border: `2px solid ${n.color}70`,
-                                  textShadow: `0 0 16px ${n.color}80`
-                                }}>
-                                {finalName}
-                              </span>
-                            </div>
-                            <p className="font-inter text-[7px] mt-2 text-center" style={{ color: n.color }}>
-                              {n.isAngel ? 'Angel suffix إيل added' : 'Jinn name (no suffix)'}
-                            </p>
-                          </div>
-                        );
-                      })()}
-                    </div>
+              {/* Angel/Jinn Value + Final Name */}
+              {showNames && row.nameData && (
+                <div className="px-4 py-3 space-y-2" style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
+                  {/* Angel/Jinn Value */}
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
+                      {suffix.includes('angel') ? 'Angel (Arabic)' : 'Jinn (Arabic)'}
+                    </p>
+                    <p className="font-amiri font-bold" style={{ color: row.color, fontSize: "1.3rem" }}>
+                      {lang === "ar" ? toArabicIndic(row.nameData.adjustedValue.toLocaleString()) : row.nameData.adjustedValue.toLocaleString()}
+                    </p>
                   </div>
-                );
-              })()}
+
+                  {/* Final Name */}
+                  <div className="flex items-center justify-center">
+                    <span className="font-amiri text-4xl font-bold px-4 py-2 rounded" dir="rtl"
+                      style={{ 
+                        color: row.color,
+                        textShadow: `0 0 20px ${row.color}66`
+                      }}>
+                      {row.nameData.name}
+                    </span>
+                  </div>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
