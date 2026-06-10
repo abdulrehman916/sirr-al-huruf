@@ -66,19 +66,22 @@ export default function SatrVahidGrouping({
   // PROCESSING ORDER: Start from LAST letter → work backward to FIRST letter
   const bastLevel = isFerd ? 5 : 4;
   const individualDerivations = useMemo(() => {
-    // Reverse the sequence for processing: last letter first
-    const reversedSequence = [...safeSatrVahidLetters].reverse();
-    return reversedSequence.map((letter, idx) => {
+    // MANUSCRIPT ORDER: Process from LAST to FIRST
+    // Example: Original [د, ث, غ, ز, ي] → Process order: ي (start) → ز → غ → ث → د (end)
+    const derivations = [];
+    for (let i = safeSatrVahidLetters.length - 1; i >= 0; i--) {
+      const letter = safeSatrVahidLetters[i];
       const bastValue = getBastLevel(letter, bastLevel);
       const expansionLetters = istintak(bastValue);
-      return {
-        processingOrder: idx + 1,  // 1 = first processed (last letter), N = last processed (first letter)
-        originalIndex: safeSatrVahidLetters.length - idx,  // Position in original sequence
+      derivations.push({
+        processingOrder: safeSatrVahidLetters.length - i,  // 1 = first processed (last letter)
+        originalIndex: i,  // Position in original sequence
         letter,
         bastValue,
         expansionLetters,
-      };
-    });
+      });
+    }
+    return derivations;
   }, [safeSatrVahidLetters, bastLevel]);
 
   return (
@@ -99,14 +102,14 @@ export default function SatrVahidGrouping({
         <div className="h-px w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
       </div>
 
-      {/* Satr-i Vahid Letters - EXACT MANUSCRIPT ORDER */}
+      {/* Satr-i Vahid Letters - ORIGINAL SEQUENCE */}
       <div className="px-4 py-3 rounded-xl border"
         style={{ background: G.bg, borderColor: G.border }}>
         <div className="flex items-center justify-between mb-3">
-          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid (Manuscript Order)</span>
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Original Seed Letters (من اليمين لليسار)</span>
           <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{totalLetters} letters</span>
         </div>
-        <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
+        <div className="flex flex-wrap gap-1 justify-center" dir="rtl">
           {safeSatrVahidLetters.map((l, i) => (
             <motion.span
               key={i}
@@ -117,13 +120,19 @@ export default function SatrVahidGrouping({
               style={{
                 color: G.text,
                 borderColor: G.border,
-                background: "rgba(212,175,55,0.04)"
+                background: i === safeSatrVahidLetters.length - 1 ? `${G.green}15` : "rgba(212,175,55,0.04)",
+                border: i === safeSatrVahidLetters.length - 1 ? `1px solid ${G.green}` : G.border
               }}
               dir="rtl"
             >
               {l}
             </motion.span>
           ))}
+        </div>
+        <div className="text-center mt-2">
+          <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
+            Bast processing starts from LAST letter (highlighted) → proceeds backward to FIRST
+          </span>
         </div>
       </div>
 
@@ -150,7 +159,7 @@ export default function SatrVahidGrouping({
           <h3 className="font-amiri text-lg font-bold" style={{ color: G.text }}>اشتقاق البسط — Individual Bast Derivations</h3>
           <div className="h-px w-16 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
           <p className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
-            Processing: FIRST → LAST | Apply {bastLevel}{bastLevel === 4 ? ' (رابع)' : bastLevel === 5 ? ' (خامس)' : ''} Bast
+            Bast Order: LAST → FIRST | Apply {bastLevel}{bastLevel === 4 ? ' (رابع)' : bastLevel === 5 ? ' (خامس)' : ''} Bast
           </p>
         </div>
         
@@ -177,10 +186,10 @@ export default function SatrVahidGrouping({
                 {idx === 0 ? 'START' : idx + 1}
               </div>
               {idx === 0 && (
-                <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.green }}>FIRST</span>
+                <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.green }}>LAST (start)</span>
               )}
               {idx === individualDerivations.length - 1 && (
-                <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.red }}>LAST</span>
+                <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.red }}>FIRST (end)</span>
               )}
             </div>
             
