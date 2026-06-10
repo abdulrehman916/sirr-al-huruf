@@ -4,7 +4,9 @@ import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
-import { DAY_PLANET_MAP } from "../lib/mizaan9Data";
+import { DAY_PLANET_MAP, MIZAAN_KHAYR_SHARR, MIZAAN_HOURS, MIZAAN_DAYS, MIZAAN_PLANETS_ALL, MIZAAN_PURPOSES, MIZAAN_ELEMENT_DEGREES } from "../lib/mizaan9Data";
+import { MIZAAN_BAST2 } from "../lib/mizaan9Engine";
+import { calcBast } from "../lib/abjadModes";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
 import Mizaan3      from "../components/mizaan/Mizaan3";
@@ -15,6 +17,7 @@ import Mizaan7      from "../components/mizaan/Mizaan7";
 import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
+import MizaanPostResults  from "../components/mizaan/MizaanPostResults";
 import { usePageState } from "../context/PageStateContext";
 
 const G = {
@@ -60,6 +63,88 @@ function buildDefaultSelections(dominant) {
 }
 
 const PAGE_KEY = 'mizaan9';
+
+// ── Helper: re-derive grand totals using same logic as MizaanFinalSummary ──
+function computeGrandTotals(result, selections, degreeSels, inputText, customPurpose) {
+  if (!result) return { grandBast: 0, grandLetters: 0 };
+
+  function countArabicLetters(str) {
+    if (!str) return 0;
+    return str.replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '').replace(/[^\u0600-\u06FF]/g, '').length;
+  }
+
+  const KHAYR_SHARR_8 = {
+    khayr: { arabic: 'الخير', bast: 2731 },
+    sharr: { arabic: 'الشر',  bast: 2725 },
+  };
+
+  const ELEMENT_META_ARABIC = { fire: "النار", earth: "التراب", air: "الهواء", water: "الماء" };
+
+  let grandBast = 0;
+  let grandLetters = 0;
+
+  // M1 — input text
+  grandBast   += result.bast1Total ?? 0;
+  grandLetters += result.letterCount ?? 0;
+
+  // M2 — element
+  const elKeys = Array.isArray(selections?.elements) ? selections.elements : (selections?.elements ? [selections.elements] : []);
+  elKeys.forEach(k => {
+    grandBast   += MIZAAN_BAST2[k] ?? 0;
+    grandLetters += countArabicLetters(ELEMENT_META_ARABIC[k] || '');
+  });
+
+  // M3 — khayr/sharr
+  const ks3 = selections?.khayrSharr;
+  const ks3d = ks3 ? MIZAAN_KHAYR_SHARR[ks3] : null;
+  if (ks3d) { grandBast += ks3d.bast; grandLetters += countArabicLetters(ks3d.arabic); }
+
+  // M4 — hour
+  const hourEntry = MIZAAN_HOURS.find(h => h.hour === selections?.hour);
+  if (hourEntry) { grandBast += hourEntry.bast; grandLetters += countArabicLetters(hourEntry.arabic); }
+
+  // M5 — day
+  const dayEntry = MIZAAN_DAYS.find(d => d.key === selections?.days);
+  if (dayEntry) { grandBast += dayEntry.bast; grandLetters += countArabicLetters(dayEntry.arabic); }
+
+  // M6 — planet
+  const planetEntry = MIZAAN_PLANETS_ALL.find(p => p.key === selections?.planet);
+  if (planetEntry) { grandBast += planetEntry.bast; grandLetters += countArabicLetters(planetEntry.arabic); }
+
+  // M7 — purposes + custom
+  const purposeArr = Array.isArray(selections?.purposes) ? selections.purposes : (selections?.purposes ? [selections.purposes] : []);
+  purposeArr.forEach(pk => {
+    const pe = MIZAAN_PURPOSES.find(p => p.key === pk);
+    if (pe) { grandBast += pe.bast; grandLetters += countArabicLetters(pe.arabic); }
+  });
+  const trimmedCustom = (customPurpose ?? "").trim();
+  if (trimmedCustom) {
+    const { total: customBastVal } = calcBast(trimmedCustom, 1);
+    grandBast   += customBastVal;
+    grandLetters += countArabicLetters(trimmedCustom);
+  }
+
+  // M8 — khayr/sharr8
+  const ks8 = selections?.khayrSharr8;
+  const ks8d = ks8 ? KHAYR_SHARR_8[ks8] : null;
+  if (ks8d) { grandBast += ks8d.bast; grandLetters += countArabicLetters(ks8d.arabic); }
+
+  // M9 — degrees
+  Object.entries(degreeSels || {}).forEach(([elKey, degKey]) => {
+    if (!degKey) return;
+    const elDegData = MIZAAN_ELEMENT_DEGREES[elKey];
+    const deg = elDegData?.degrees.find(d => d.key === degKey);
+    if (deg) { grandBast += deg.bast; grandLetters += countArabicLetters(deg.arabic); }
+  });
+
+  return { grandBast, grandLetters };
+}
+
+function PostPipelineSection({ result, selections, degreeSels, inputText, customPurpose }) {
+  const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, inputText, customPurpose);
+  const dominant = result?.dominant;
+  return <MizaanPostResults grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />;
+}
 
 export default function Mizaan9Page() {
   const { getPageState, setPageState, clearPageState } = usePageState();
@@ -228,6 +313,8 @@ export default function Mizaan9Page() {
               <Mizaan9Final result={result} selections={selections} degreeSels={degreeSels} onDegreeSels={setDegreeSels} />
               <MizaanDivider />
               <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} />
+              <MizaanDivider />
+              <PostPipelineSection result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} />
 
             </motion.div>
           )}
