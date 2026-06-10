@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+import { getBastLevel, istintak } from "../../lib/mizaanPostEngine";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -10,20 +11,24 @@ const G = {
   bg:       "rgba(212,175,55,0.07)",
   border:   "rgba(212,175,55,0.40)",
   green:    "#4ADE80",
+  purple:   "#C4B5FD",
 };
 
 /**
  * MANUSCRIPT WORKFLOW (pp.60-69):
- * 1. Display Satr-i Vahid letters in EXACT manuscript order (no reordering, no expansion)
+ * 1. Display seed letters (from Istintak)
  * 2. Count letters → FERD (odd) or ZEVC (even)
- * 3. Apply remainder correction if needed (append Galib Anasir to END)
- * 4. Group the FINAL corrected sequence into Esma-i Kitabet names
+ * 3. Apply 5th Bast (Ferd) or 4th Bast (Zevc) to EACH letter individually
+ * 4. Display each letter's Bast result and expansion letters
+ * 5. Concatenate all expansion letters → Satr-i Vahid
+ * 6. Apply remainder correction if needed (append Galib Anasir to END)
+ * 7. Group the FINAL corrected sequence into Esma-i Kitabet names
  */
 export default function SatrVahidGrouping({ 
-  satrVahidLetters = [],      // The exact Satr-i Vahid letters from manuscript (no expansion)
+  satrVahidLetters = [],      // Seed letters from Istintak (before Bast expansion)
   isZevc = true,                // true if even count, false if odd (Ferd)
-  finalLetters = [],          // Final corrected sequence (satrVahidLetters + supplement if needed)
-  supplementLetters = [], // Galib Anasir supplement letters
+  finalLetters = [],          // Final corrected sequence (after Bast expansion + supplement if needed)
+  supplementLetters = [],     // Galib Anasir supplement letters
   hasSupplement = false,
 }) {
   // CRITICAL: Ensure all arrays are safe
@@ -55,6 +60,21 @@ export default function SatrVahidGrouping({
   const totalLetters = safeSatrVahidLetters.length;
   const isFerd = !isZevc;
   const finalTotal = safeFinalLetters.length;
+  
+  // MANUSCRIPT RULE: Calculate 5th Bast for EACH letter individually (Ferd = 5th Bast)
+  const bastLevel = isFerd ? 5 : 4;
+  const individualDerivations = useMemo(() => {
+    return safeSatrVahidLetters.map((letter, idx) => {
+      const bastValue = getBastLevel(letter, bastLevel);
+      const expansionLetters = istintak(bastValue);
+      return {
+        index: idx,
+        letter,
+        bastValue,
+        expansionLetters,
+      };
+    });
+  }, [safeSatrVahidLetters, bastLevel]);
 
   return (
     <motion.div
@@ -111,7 +131,117 @@ export default function SatrVahidGrouping({
             {isFerd ? 'FERD (فرد) — ODD' : 'ZEVC (زوج) — EVEN'}
           </span>
           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>→</span>
-          <span className="font-inter text-sm font-bold" style={{ color: G.text }}>Group by {groupSize}</span>
+          <span className="font-inter text-sm font-bold" style={{ color: G.text }}>Apply {bastLevel}{bastLevel === 4 ? ' (رابع)' : bastLevel === 5 ? ' (خامس)' : ''} Bast</span>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          INDIVIDUAL BAST DERIVATIONS (Manuscript pp.60-69)
+          Each letter → 5th/4th Bast → Istintak → Expansion letters
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="space-y-3">
+        <div className="text-center space-y-1">
+          <h3 className="font-amiri text-lg font-bold" style={{ color: G.text }}>اشتقاق البسط — Individual Bast Derivations</h3>
+          <div className="h-px w-16 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
+          <p className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
+            Each seed letter → {bastLevel}th Bast → Istintak expansion
+          </p>
+        </div>
+        
+        {individualDerivations.map((derivation, idx) => (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.04 }}
+            className="flex items-center gap-2 p-3 rounded-xl border"
+            style={{ 
+              background: "rgba(212,175,55,0.05)",
+              borderColor: G.border 
+            }}>
+            
+            {/* Letter index */}
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-bold"
+              style={{ 
+                background: G.bg,
+                color: G.text 
+              }}>
+              {idx + 1}
+            </div>
+            
+            {/* Original letter */}
+            <div className="flex items-center gap-2">
+              <span className="font-amiri text-2xl px-3 py-1.5 rounded-lg border"
+                style={{
+                  color: G.text,
+                  borderColor: G.borderHi,
+                  background: "rgba(212,175,55,0.08)"
+                }}
+                dir="rtl">
+                {derivation.letter}
+              </span>
+            </div>
+            
+            {/* Arrow */}
+            <span className="font-inter text-sm" style={{ color: G.dim }}>→</span>
+            
+            {/* Bast value */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+              style={{
+                background: `${G.green}10`,
+                border: `1px solid ${G.green}30`
+              }}>
+              <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.green }}>Bast {bastLevel}</span>
+              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.green }}>{derivation.bastValue.toLocaleString()}</span>
+            </div>
+            
+            {/* Arrow */}
+            <span className="font-inter text-sm" style={{ color: G.dim }}>→</span>
+            
+            {/* Expansion letters */}
+            <div className="flex-1 flex items-center gap-1 flex-wrap justify-end" dir="ltr">
+              {derivation.expansionLetters.map((l, i) => (
+                <span
+                  key={i}
+                  className="font-amiri text-lg px-2 py-1 rounded-lg border"
+                  style={{
+                    color: G.green,
+                    borderColor: G.green,
+                    background: `${G.green}10`
+                  }}
+                  dir="rtl">
+                  {l}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Concatenated Satr-i Vahid sequence */}
+      <div className="px-4 py-3 rounded-xl border"
+        style={{ background: G.bg, borderColor: G.border }}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid (Concatenated Sequence)</span>
+          <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{safeFinalLetters.length} letters</span>
+        </div>
+        <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
+          {safeFinalLetters.map((l, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.02 }}
+              className="font-amiri text-xl px-2 py-1 rounded-lg border"
+              style={{
+                color: G.text,
+                borderColor: G.border,
+                background: "rgba(212,175,55,0.04)"
+              }}
+              dir="rtl">
+              {l}
+            </motion.span>
+          ))}
         </div>
       </div>
 
@@ -160,9 +290,9 @@ export default function SatrVahidGrouping({
       {/* Esma-i Kitabet Groups */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between mb-2">
-          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Esma-i Kitabet Names</span>
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>تجميع الأسماء — Esma-i Kitabet Grouping</span>
           <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.text, background: `${G.text}15`, padding: "2px 8px", borderRadius: "4px" }}>
-            {groups.length} names
+            {groups.length} names (after {groupSize}-letter grouping)
           </span>
         </div>
         
