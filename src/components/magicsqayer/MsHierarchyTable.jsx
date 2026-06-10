@@ -2,8 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, numToArabic, numToHebrew, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
-import { getNameForHierarchyValue, getPatternInfo } from "./msPatternGenerator";
-import { validateName } from "./msNameValidator";
+import { generateNameWithValue } from "./msPatternGenerator";
 
 // Helper to get display name (pattern-based names are already valid)
 const addTashkeelToArabicName = (name) => name;
@@ -15,12 +14,12 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-// ── Pattern-based name generation ─────────────────────────────────
-// Uses 200+ authentic morphological patterns instead of mechanical conversion
+// ── Hurufi name generation ─────────────────────────────────
+// Traditional letter-based system with context-aware إيل endings
 
 function generateNameForValue(val, suffixType) {
   const category = suffixType === 'ar-angel' || suffixType === 'heb-angel' ? 'angel' : 'jinn';
-  const result = getNameForHierarchyValue(val, suffixType);
+  const result = generateNameWithValue(val, category);
   
   if (!result || !result.success) {
     return { remainder: val, name: '—', pattern: null, score: 0, passed: false };
@@ -220,23 +219,22 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 </p>
               </div>
 
-              {/* Name column with pattern info and validation */}
+              {/* Name column with Hurufi structure */}
               {showNames && activeNameKey && row[activeNameKey] && (() => {
                 const n = row[activeNameKey];
                 const isArabic = suffix === "ar-angel" || suffix === "ar-jinn";
                 const displayName = n.name || '—';
                 const isValid = n.passed !== false;
-                const patternInfo = n.pattern ? getPatternInfo(n.pattern.id) : null;
                 
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
-                    {/* Root and pattern */}
-                    {n.root && (
+                    {/* Hurufi consonant structure */}
+                    {n.consonants && (
                       <div className="mb-2 px-2 py-1 rounded-lg inline-block"
                         style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
                         <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
-                          Root: {n.root} {n.pattern ? `· Pattern: ${n.pattern}` : ''}
+                          Hurufi Structure: {n.consonants.join(' - ')} → {n.pattern || 'إيل'}
                         </p>
                       </div>
                     )}
@@ -285,30 +283,20 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       {displayName}
                     </p>
                     
-                    {/* Consonant/vowel breakdown */}
-                    {n.consonants && n.vowels && (
+                    {/* Consonant structure display */}
+                    {n.consonants && (
                       <div className="mt-2 flex items-center justify-center gap-1 flex-wrap">
                         {n.consonants.map((c, i) => (
                           <span key={i} className="font-inter text-[7px] px-1.5 py-0.5 rounded"
                             style={{ background: "rgba(212,175,55,0.10)", color: "rgba(212,175,55,0.70)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                            {c}{n.vowels[i] || ''}
+                            {c}
                           </span>
                         ))}
                       </div>
                     )}
                     
-                    {/* Morphology and phonology scores */}
+                    {/* Validation status */}
                     <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
-                      {n.morphology && (
-                        <span className="font-inter text-[7px] uppercase tracking-widest px-2 py-0.5 rounded-full"
-                          style={{ 
-                            background: n.morphology.passed ? "rgba(100,220,100,0.10)" : "rgba(255,100,100,0.10)",
-                            color: n.morphology.passed ? "rgba(100,220,100,0.90)" : "rgba(255,100,100,0.90)",
-                            border: `1px solid ${n.morphology.passed ? "rgba(100,220,100,0.30)" : "rgba(255,100,100,0.30)"}`
-                          }}>
-                          Morphology: {n.morphology.score}/100
-                        </span>
-                      )}
                       {n.phonology && (
                         <span className="font-inter text-[7px] uppercase tracking-widest px-2 py-0.5 rounded-full"
                           style={{ 
@@ -316,13 +304,13 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                             color: n.phonology.passed ? "rgba(100,220,100,0.90)" : "rgba(255,100,100,0.90)",
                             border: `1px solid ${n.phonology.passed ? "rgba(100,220,100,0.30)" : "rgba(255,100,100,0.30)"}`
                           }}>
-                          Phonology: {n.phonology.score}/100
+                          Arabic Phonology: {n.phonology.score}/100
                         </span>
                       )}
                     </div>
                     <div className="mt-1 flex items-center justify-center gap-1">
                       {isValid ? (
-                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ Morphologically & Phonetically Valid</span>
+                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ Properly Vocalized</span>
                       ) : (
                         <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(255,100,100,0.70)" }}>✗ {n.failureReason || 'Invalid'}</span>
                       )}
