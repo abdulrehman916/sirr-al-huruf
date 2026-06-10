@@ -145,35 +145,85 @@ function NamesList({ names, prefix, color, sectionLabel }) {
   );
 }
 
-function SeedExpansionDetail({ seedBastValues, bastLevelUsed, color }) {
+function SeedExpansionDetail({ seedBastValues, bastLevelUsed, color, expandedLetters, expandedCount, isExpandedZevc }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-3">
       <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-        توسيع البذور — المستوى {bastLevelUsed} من الباست
+        توسيع البذور خطوة بخطوة — باست {bastLevelUsed}
       </p>
+
+      {/* Per-seed full manuscript trace */}
       {seedBastValues.map((sv, i) => (
-        <div key={i} className="rounded-xl border overflow-hidden"
-          style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-          <div className="flex items-center gap-2 px-3 py-1.5">
-            <ArabicText color={color} size="1.4rem">{sv.letter}</ArabicText>
-            <span className="font-inter text-[8px]" style={{ color: G.dim }}>
-              باست{bastLevelUsed}({sv.letter}) = {sv.bastValue}
+        <div key={i} className="rounded-2xl border overflow-hidden"
+          style={{ borderColor: color + "40", background: "rgba(4,8,22,0.98)" }}>
+
+          {/* Seed header */}
+          <div className="flex items-center gap-3 px-4 py-2.5 border-b"
+            style={{ borderColor: color + "22", background: color + "0E" }}>
+            <span className="font-inter text-[7px] uppercase tracking-widest rounded-full w-5 h-5 flex items-center justify-center border"
+              style={{ color, borderColor: color + "66", background: color + "18", flexShrink: 0 }}>
+              {i + 1}
             </span>
-            <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "2px", direction: "ltr", marginLeft: "auto" }}>
+            <div className="flex items-center gap-2 flex-1">
+              <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>حرف البذرة</span>
+              <span style={{ fontFamily: AR.fontFamily, fontSize: "1.7rem", color, lineHeight: 1 }}>{sv.letter}</span>
+            </div>
+            <div className="text-right">
+              <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>
+                باست {bastLevelUsed}
+              </p>
+              <p className="font-inter text-sm font-bold tabular-nums" style={{ color: "#FFE580" }}>
+                {sv.bastValue.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Istintak full trace */}
+          <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+            <p className="font-inter text-[7px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+              استنطاق {sv.bastValue.toLocaleString()}
+            </p>
+            <IstintakSteps n={sv.bastValue} msMarker={false} compact={false} />
+          </div>
+
+          {/* Extracted letters for this seed */}
+          <div className="px-4 py-3">
+            <p className="font-inter text-[7px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+              الحروف المستخرجة ({sv.expansionLetters.length})
+            </p>
+            <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "6px", direction: "ltr",
+              padding: "8px 10px", borderRadius: "10px", border: `1px solid ${color}33`, background: color + "08" }}>
               {[...sv.expansionLetters].reverse().map((el, j) => (
-                <span key={j}
-                  style={{ fontFamily: AR.fontFamily, fontSize: "1.1rem", color: "rgba(255,255,255,0.50)", padding: "0 2px" }}>
+                <span key={j} style={{ fontFamily: AR.fontFamily, fontSize: "1.4rem", color, lineHeight: 1.3 }}>
                   {el}
                 </span>
               ))}
             </div>
           </div>
-          {/* Istintak steps for this Bast value — compact */}
-          <div className="px-3 pb-2">
-            <IstintakSteps n={sv.bastValue} msMarker={false} compact={true} />
-          </div>
         </div>
       ))}
+
+      {/* Combined Satr-i Vahid — only after all seeds */}
+      <div className="rounded-2xl border p-4 space-y-2"
+        style={{ borderColor: "rgba(212,175,55,0.60)", background: "rgba(212,175,55,0.06)", boxShadow: "0 0 18px rgba(212,175,55,0.10)" }}>
+        <div className="flex items-center justify-between mb-1">
+          <p className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.text }}>
+            سطر الواحد المجمع
+          </p>
+          <span className="font-inter text-[7px] px-2 py-0.5 rounded-full border"
+            style={{ color: G.dim, borderColor: G.border }}>
+            {expandedCount} حرف — {isExpandedZevc ? "زوج → مجموعات ٤" : "فرد → مجموعات ٥"}
+          </span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "5px", direction: "ltr",
+          padding: "10px 12px", borderRadius: "12px", border: `1px solid rgba(212,175,55,0.30)`, background: "rgba(212,175,55,0.04)" }}>
+          {[...expandedLetters].reverse().map((l, i) => (
+            <span key={i} style={{ fontFamily: AR.fontFamily, fontSize: "1.4rem", color: G.text, lineHeight: 1.3 }}>
+              {l}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -190,7 +240,7 @@ export default function ManuscriptEsmaSection({
   const [openSatr, setOpenSatr] = useState(true);
   const [openNames, setOpenNames] = useState(true);
   const [openVefk, setOpenVefk] = useState(false);
-  const [openDetail, setOpenDetail] = useState(false);
+  const [openDetail, setOpenDetail] = useState(true);
 
   const TIER_LABELS = {
     kitabet: { ar: 'أسماء الكتابة', en: 'Esma-i Kitabet', note: 'مكتوبة على أضلاع الوفق فقط — ليست في العزيمة' },
@@ -301,15 +351,11 @@ export default function ManuscriptEsmaSection({
                 <SeedExpansionDetail
                   seedBastValues={data.seedBastValues}
                   bastLevelUsed={data.bastLevelUsed}
+                  expandedLetters={data.expandedLetters}
+                  expandedCount={data.expandedCount}
+                  isExpandedZevc={data.isExpandedZevc}
                   color={color}
                 />
-                <div className="mt-3">
-                  <SatrRow
-                    letters={data.expandedLetters}
-                    label={`جميع الحروف الموسعة (${data.expandedCount}) — ${data.isExpandedZevc ? 'زوج → مجموعات ٤' : 'فرد → مجموعات ٥'}`}
-                    color="rgba(255,255,255,0.55)"
-                  />
-                </div>
               </div>
             </motion.div>
           )}
