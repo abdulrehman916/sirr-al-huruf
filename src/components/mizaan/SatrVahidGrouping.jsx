@@ -16,29 +16,20 @@ const G = {
 };
 
 /**
- * MIZAN-9 SATR-I VAHID GROUPING WORKFLOW:
- * 
- * CRITICAL ORDER LOCK RULE:
- * - Bast extraction order IS the Satr-i Vahid order
- * - Example: Extraction [ز, ك, خ, غ, ب] → Satr-i Vahid: [ز, ك, خ, غ, ب]
- * - NEVER reverse extracted letters
- * - NEVER apply RTL correction to sequence
- * - NEVER reorder for display
- * 
- * WORKFLOW:
- * 1. Display seed letters (from Istintak) - preserved order
+ * SATR-I VAHID GROUPING WORKFLOW:
+ * 1. Display seed letters (from Istintak)
  * 2. Count letters → FERD (odd) or ZEVC (even)
  * 3. Apply 5th Bast (Ferd) or 4th Bast (Zevc) to EACH letter individually
- * 4. Extract letters via Istintak - PRESERVE EXACT EXTRACTION ORDER
- * 5. Concatenate all expansion letters → Satr-i Vahid (exact order)
+ * 4. Extract letters via Istintak
+ * 5. Concatenate all expansion letters → Satr-i Vahid
  * 6. Apply remainder correction if needed (append Galib Anasir to END)
  * 7. Group the FINAL corrected sequence into Esma-i Kitabet names
  * 
  * NAME GENERATION RULE:
- * - Names created by direct concatenation of group letters in displayed order
- * - Example: Group [ز, ك, خ, غ, ب] → Name: "زكخغب"
- * - No reversal, no reordering, no RTL correction
- * - Extraction order is the source of truth
+ * - Names are created by direct concatenation of displayed group letters
+ * - Example: Displayed [ز, غ, ب, ا, ل] → Name: "زغبال"
+ * - No reversal of group letters or names
+ * - Displayed letters are the source of truth
  */
 export default function SatrVahidGrouping({ 
   satrVahidLetters = [],      // Seed letters from Istintak (before Bast expansion)
@@ -286,7 +277,7 @@ export default function SatrVahidGrouping({
               ))}
             </div>
             <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
-              ← MIZAN-9: Extraction order = Satr-i Vahid order
+              ← Exact extraction order (no reversal)
             </span>
           </motion.div>
         ))}
@@ -306,7 +297,7 @@ export default function SatrVahidGrouping({
           </div>
         </div>
         <div className="text-xs mb-2" style={{ color: G.dim }}>
-          MIZAN-9 RULE: Exact Bast extraction order preserved
+          Satr-i Vahid sequence preserved exactly as extracted
         </div>
         <div className="flex flex-wrap gap-1 justify-center" dir="rtl">
           {concatenatedSatrVahid.map((l, i) => (

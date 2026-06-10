@@ -374,7 +374,7 @@ export default function Mizaan9Page() {
                           </div>
                           <div className="text-center mt-2">
                             <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
-                              ✦ ORDER LOCK: Exact sequence preserved ✦
+                              Order preserved exactly as extracted → no reversal
                             </span>
                           </div>
                         </div>
