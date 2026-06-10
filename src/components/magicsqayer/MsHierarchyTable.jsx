@@ -61,37 +61,40 @@ function generateTraditionalName(value, suffixType) {
   
   if (adjustedValue <= 0) adjustedValue = 1;
   
-  // Extract letters from adjusted value (each value = unique letters)
+  // BAST-2: Extract letters from adjusted value - these letters are NEVER changed
   const consonants = extractLettersFromValue(adjustedValue);
   
-  // Apply Bast-2 harakat rule: First=Fatha, Middle=Kasra, Last=Sukun
+  // BAST-2 TASHKEEL ONLY: First=Fatha, Middle=Kasra, Last=Sukun
+  // NO phonology, NO synthesis, NO letter changes
   const FATHA = '\u064E';
   const KASRA = '\u0650';
   const SUKUN = '\u0652';
   
+  // Apply harakat to extracted letters ONLY
   let vocalizedName = consonants.map((c, i) => {
     const position = i + 1;
-    const isLast = position === consonants.length;
     const isFirst = position === 1;
+    const isLast = position === consonants.length;
     
+    // Bast-2 rule: First=Fatha, Middle=Kasra, Last=Sukun
     let vowel;
     if (isFirst) vowel = FATHA;
     else if (isLast) vowel = SUKUN;
     else vowel = KASRA;
     
-    return c + vowel;
+    return c + vowel; // Letter + harakat ONLY
   }).join('');
   
-  // Add Angel suffix if applicable
+  // Angel suffix (إيل) is added AFTER extracted letters - this is a marker, not replacement
   if (isAngel && vocalizedName) {
-    // Remove final sukun, add kasra + ي + fatha + ل
+    // Remove final sukun from last extracted letter, then add إيل
     vocalizedName = vocalizedName.replace(/\u0652$/, '') + KASRA + 'ي' + FATHA + 'ل';
   }
   
   return {
     originalValue: value,
     adjustedValue,
-    consonants,
+    consonants, // Raw extracted letters for audit
     name: vocalizedName || 'N/A'
   };
 }
@@ -265,11 +268,11 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
 
               {/* Angel/Jinn Value + Final Name */}
               {showNames && row.nameData && (
-                <div className="px-4 py-3 space-y-2" style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
+                <div className="px-4 py-3 space-y-3" style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
                   {/* Angel/Jinn Value */}
                   <div className="flex items-center justify-center gap-3">
                     <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
-                      {suffix.includes('angel') ? 'Angel (Arabic)' : 'Jinn (Arabic)'}
+                      {suffix.includes('angel') ? 'Angel Value' : 'Jinn Value'}
                     </p>
                     <p 
                       className="font-amiri font-bold" 
@@ -285,24 +288,56 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                     </p>
                   </div>
 
-                  {/* Final Name */}
-                  <div className="flex items-center justify-center">
-                    <span 
-                      className="font-amiri font-bold px-6 py-3 rounded-lg" 
-                      dir="rtl"
-                      lang="ar"
-                      style={{ 
-                        fontSize: "3.2rem",
-                        color: "#FFFFFF",
-                        background: `linear-gradient(135deg, ${row.color}22, ${row.color}11)`,
-                        border: `2px solid ${row.color}66`,
-                        textShadow: `0 0 24px ${row.color}88, 0 2px 8px rgba(0,0,0,0.8)`,
-                        letterSpacing: "0.5px",
-                        lineHeight: "2.2",
-                        fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
-                      }}>
-                      {row.nameData.name}
-                    </span>
+                  {/* Extracted Letters (Raw Consonants) */}
+                  {row.nameData.consonants && row.nameData.consonants.length > 0 && (
+                    <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                      <p className="font-inter text-[7px] uppercase tracking-widest mb-2 text-center" style={{ color: "rgba(212,175,55,0.55)" }}>
+                        Extracted Letters (Bast-2)
+                      </p>
+                      <div className="flex items-center justify-center gap-2" dir="rtl">
+                        {row.nameData.consonants.map((c, i) => (
+                          <span key={i} className="font-amiri text-2xl px-2 py-1 rounded"
+                            style={{ 
+                              background: "rgba(212,175,55,0.15)", 
+                              color: row.color,
+                              border: `1px solid ${row.color}50`
+                            }}>
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="font-inter text-[6px] text-center mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>
+                        {row.nameData.consonants.join(' ')} = {row.nameData.adjustedValue}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Final Name (Tashkeel Applied) */}
+                  <div className="px-3 py-3 rounded-lg" style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.25)" }}>
+                    <p className="font-inter text-[7px] uppercase tracking-widest mb-2 text-center" style={{ color: "rgba(212,175,55,0.55)" }}>
+                      Final Name (Bast-2 Tashkeel Only)
+                    </p>
+                    <div className="flex items-center justify-center" dir="rtl">
+                      <span 
+                        className="font-amiri font-bold px-6 py-3 rounded-lg" 
+                        dir="rtl"
+                        lang="ar"
+                        style={{ 
+                          fontSize: "3.2rem",
+                          color: "#FFFFFF",
+                          background: `linear-gradient(135deg, ${row.color}22, ${row.color}11)`,
+                          border: `2px solid ${row.color}66`,
+                          textShadow: `0 0 24px ${row.color}88, 0 2px 8px rgba(0,0,0,0.8)`,
+                          letterSpacing: "0.5px",
+                          lineHeight: "2.2",
+                          fontFamily: "'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif"
+                        }}>
+                        {row.nameData.name}
+                      </span>
+                    </div>
+                    <p className="font-inter text-[6px] text-center mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>
+                      {suffix.includes('angel') ? 'Angel suffix إيل added' : 'Jinn name (no suffix)'} — Letters unchanged, harakat only
+                    </p>
                   </div>
                 </div>
               )}
