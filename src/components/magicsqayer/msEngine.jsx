@@ -264,6 +264,37 @@ export const HEBREW_GEMATRIA = [
   {letter:"ת", name:"Tav",   val:400},
 ];
 
+// English Letter Table — 26 letters (1–26)
+// Used for English mode hierarchy name generation
+export const ENGLISH_LETTERS = [
+  {letter:"A", name:"A", val:1},
+  {letter:"B", name:"B", val:2},
+  {letter:"C", name:"C", val:3},
+  {letter:"D", name:"D", val:4},
+  {letter:"E", name:"E", val:5},
+  {letter:"F", name:"F", val:6},
+  {letter:"G", name:"G", val:7},
+  {letter:"H", name:"H", val:8},
+  {letter:"I", name:"I", val:9},
+  {letter:"J", name:"J", val:10},
+  {letter:"K", name:"K", val:11},
+  {letter:"L", name:"L", val:12},
+  {letter:"M", name:"M", val:13},
+  {letter:"N", name:"N", val:14},
+  {letter:"O", name:"O", val:15},
+  {letter:"P", name:"P", val:16},
+  {letter:"Q", name:"Q", val:17},
+  {letter:"R", name:"R", val:18},
+  {letter:"S", name:"S", val:19},
+  {letter:"T", name:"T", val:20},
+  {letter:"U", name:"U", val:21},
+  {letter:"V", name:"V", val:22},
+  {letter:"W", name:"W", val:23},
+  {letter:"X", name:"X", val:24},
+  {letter:"Y", name:"Y", val:25},
+  {letter:"Z", name:"Z", val:26},
+];
+
 // ════════════════════════════════════════════════════════════════
 //  POSITIONAL AKRAM LETTER TABLES
 //  Arabic and Hebrew share the SAME digit-cycle engine.

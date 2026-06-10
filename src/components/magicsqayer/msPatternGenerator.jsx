@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { VOWELS, applyPhoneticRules, checkPronounceability } from './msPhonologyEngine';
-import { ARABIC_ABJAD, HEBREW_GEMATRIA } from './msEngine';
+import { ARABIC_ABJAD, HEBREW_GEMATRIA, ENGLISH_LETTERS } from './msEngine';
 
 const { FATHA, KASRA, DAMMA, SUKUN } = VOWELS;
 
@@ -14,6 +14,8 @@ const SUFFIXES = {
   'ar-angel': 41,    // إيل
   'heb-jinn': 329,   // תקש
   'ar-jinn': 319,    // طيش
+  'en-angel': 41,    // -iel (English angelic suffix)
+  'en-jinn': 319,    // -ish (English jinn suffix)
 };
 
 /**
@@ -43,9 +45,9 @@ function extractLettersFromValue(value, letterTable) {
  * generateNameForHierarchyValue(value, suffixType)
  * ORIGINAL BOOK FORMULA:
  * 1. Hierarchy value - suffix = remainder
- * 2. Extract letters from remainder using Abjad decomposition
- * 3. Add suffix letters (إيل for Angel, none for Jinn)
- * 4. Apply tashkeel ONLY (never change letters)
+ * 2. Extract letters from remainder using appropriate letter table
+ * 3. Add suffix letters based on language system
+ * 4. Apply vocalization (tashkeel for Arabic, vowels for English)
  */
 export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   const suffix = SUFFIXES[suffixType];
@@ -55,7 +57,8 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   
   const isAngel = suffixType.includes('angel');
   const isHebrew = suffixType.includes('heb');
-  const isArabic = !isHebrew;
+  const isArabic = suffixType.includes('ar');
+  const isEnglish = suffixType.includes('en');
   
   // BOOK FORMULA: subtract suffix from tier value
   let remainder = value - suffix;
@@ -65,39 +68,68 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     remainder = value + 360 - suffix;
   }
   
-  // ORIGINAL LETTER EXTRACTION: Abjad decomposition
-  const letterTable = isHebrew ? HEBREW_GEMATRIA : ARABIC_ABJAD;
+  // LETTER EXTRACTION: Use appropriate letter table for language mode
+  let letterTable;
+  if (isEnglish) {
+    letterTable = ENGLISH_LETTERS;
+  } else if (isHebrew) {
+    letterTable = HEBREW_GEMATRIA;
+  } else {
+    letterTable = ARABIC_ABJAD;
+  }
+  
   const consonants = extractLettersFromValue(remainder, letterTable);
   
   if (consonants.length === 0) {
     return { success: false, error: 'Could not extract letters' };
   }
   
-  // Apply phonetic rules for tashkeel ONLY
-  const phoneticResult = applyPhoneticRules(consonants, value);
+  let vocalizedName;
+  let phoneticRules = [];
   
-  // Build vocalized name WITHOUT changing letters
-  let vocalizedName = '';
-  for (let i = 0; i < consonants.length; i++) {
-    vocalizedName += consonants[i] + phoneticResult.vowels[i];
-  }
-  
-  // Add Angel suffix letters (إيل or אל)
-  if (isAngel) {
-    if (isHebrew) {
-      // Hebrew: אל (Aleph-Lamed)
-      vocalizedName += FATHA + 'ל';
+  // Build name based on language system
+  if (isEnglish) {
+    // ENGLISH MODE: Extract English letters, add English suffix
+    vocalizedName = consonants.join('');
+    
+    if (isAngel) {
+      // Add -iel suffix for English angels
+      vocalizedName += 'iel';
+      phoneticRules = ['English angelic suffix -iel'];
     } else {
+      // Add -ish suffix for English jinn
+      vocalizedName += 'ish';
+      phoneticRules = ['English jinn suffix -ish'];
+    }
+  } else if (isArabic) {
+    // ARABIC MODE: Extract Arabic letters, apply tashkeel
+    const phoneticResult = applyPhoneticRules(consonants, value);
+    
+    vocalizedName = '';
+    for (let i = 0; i < consonants.length; i++) {
+      vocalizedName += consonants[i] + phoneticResult.vowels[i];
+    }
+    phoneticRules = phoneticResult.rules;
+    
+    if (isAngel) {
       // Arabic: إيل with context-aware pre-vowel
       const lastConsonant = consonants[consonants.length - 1];
       const preVowel = getContextAwareVowel(lastConsonant, value);
       vocalizedName = vocalizedName.replace(/[\u064E\u0650\u064F\u0652]$/, '') + preVowel + 'ي' + FATHA + 'ل';
     }
+  } else if (isHebrew) {
+    // HEBREW MODE: Extract Hebrew letters, add Hebrew suffix
+    vocalizedName = consonants.join('');
+    
+    if (isAngel) {
+      // Hebrew: אל (Aleph-Lamed)
+      vocalizedName += FATHA + 'ל';
+      phoneticRules = ['Hebrew angelic suffix אל'];
+    }
   }
-  // Jinn: no additional suffix (suffix already subtracted in math)
   
-  // Validate pronounceability
-  const pronounceability = checkPronounceability(vocalizedName);
+  // Validate pronounceability (skip for English as it uses different rules)
+  const pronounceability = isEnglish ? { score: 100, pronounceable: true, reason: 'English mode' } : checkPronounceability(vocalizedName);
   
   return {
     success: true,
@@ -108,7 +140,9 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
     fullName: vocalizedName,
     isAngel,
     isHebrew,
-    phoneticRules: phoneticResult.rules,
+    isArabic,
+    isEnglish,
+    phoneticRules,
     validation: {
       morphology: {
         score: 100,
