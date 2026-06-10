@@ -217,70 +217,100 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 </p>
               </div>
 
-              {/* Name column with book formula */}
+              {/* Name column with complete extraction chain */}
               {showNames && activeNameKey && row[activeNameKey] && (() => {
                 const n = row[activeNameKey];
                 const isArabic = suffix === "ar-angel" || suffix === "ar-jinn";
                 const displayName = n.fullName || '—';
                 const isValid = n.validation?.overall?.passed !== false;
+                const suffixValue = suffix === "ar-angel" ? 41 : suffix === "ar-jinn" ? 319 : 0;
+                const adjustedValue = n.remainder !== undefined ? n.remainder : row.val;
                 
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
-                    {/* Book formula info */}
-                    {n.remainder !== undefined && (
-                      <div className="mb-2 px-2 py-1 rounded-lg inline-block"
-                        style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                        <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
-                          Book Formula: {toArabicIndic(n.remainder.toLocaleString())} → {n.consonants?.length || 0} letters
-                        </p>
+                    {/* Complete Calculation Chain */}
+                    <div className="space-y-2 mb-3">
+                      {/* Step 1: Original Value */}
+                      <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                        <p className="font-inter text-[6px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.45)" }}>Original Value</p>
+                        <p className="font-amiri font-bold" style={{ color: G.text, fontSize: "1.3rem" }}>{toArabicIndic(row.val.toLocaleString())}</p>
                       </div>
-                    )}
+                      
+                      {/* Step 2: Adjusted Value */}
+                      {n.remainder !== undefined && row.val < suffixValue && (
+                        <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(79,227,255,0.08)", border: `1px solid ${n.color}30` }}>
+                          <p className="font-inter text-[6px] uppercase tracking-widest" style={{ color: n.color }}>Adjusted Value (Ulvi Rule)</p>
+                          <p className="font-inter text-[6px] mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                            {row.val} + 360 - {suffixValue} = {toArabicIndic(n.remainder.toLocaleString())}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Step 3: Abjad Breakdown */}
+                      {n.consonants && n.consonants.length > 0 && (
+                        <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                          <p className="font-inter text-[6px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>Abjad Breakdown</p>
+                          <p className="font-inter text-[7px] mt-0.5" style={{ color: G.text }}>
+                            {toArabicIndic(adjustedValue.toLocaleString())} = {n.consonants.map((c, i) => {
+                              const letterData = ARABIC_ABJAD.find(l => l.letter === c);
+                              return `${letterData?.val || 0}`;
+                            }).join(' + ')}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Step 4: Extracted Letters */}
+                      {n.consonants && n.consonants.length > 0 && (
+                        <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                          <p className="font-inter text-[6px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>Extracted Letters</p>
+                          <div className="flex items-center justify-center gap-1 mt-1" dir="rtl">
+                            {n.consonants.map((c, i) => (
+                              <span key={i} className="font-amiri text-lg px-1.5 py-0.5 rounded"
+                                style={{ 
+                                  background: "rgba(212,175,55,0.15)", 
+                                  color: n.color,
+                                  border: `1px solid ${n.color}40`,
+                                  textShadow: `0 0 8px ${n.color}44`
+                                }}>
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     
                     {/* Generated name with full tashkeel */}
-                    <p 
-                      dir="rtl" 
-                      lang={isArabic ? "ar" : "he"}
-                      style={{
-                        color: isValid ? n.color : "rgba(255,100,100,0.70)",
-                        fontSize: isArabic ? "50px" : "38px",
-                        fontWeight: isArabic ? 600 : 900,
-                        lineHeight: isArabic ? 2.0 : 1.4,
-                        wordWrap: "break-word",
-                        overflowWrap: "break-word",
-                        textShadow: isValid ? `0 0 16px ${n.color}55, 0 0 32px ${n.color}33` : 'none',
-                        padding: "8px 4px 16px",
-                        fontFamily: isArabic
-                          ? "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif"
-                          : "'Amiri', serif",
-                        fontFeatureSettings: "'liga' 1, 'calt' 1, 'kern' 1",
-                        textRendering: "optimizeLegibility",
-                        WebkitFontSmoothing: "antialiased",
-                        MozOsxFontSmoothing: "grayscale",
-                      }}
-                    >
-                      {n.fullName || '—'}
-                    </p>
-                    
-                    {/* Consonant letters from book formula */}
-                    {n.consonants && n.consonants.length > 0 && (
-                      <div className="mt-2 flex items-center justify-center gap-1 flex-wrap" dir="rtl">
-                        {n.consonants.map((c, i) => (
-                          <span key={i} className="font-amiri text-lg px-1.5 py-0.5 rounded"
-                            style={{ 
-                              background: "rgba(212,175,55,0.10)", 
-                              color: n.color,
-                              border: `1px solid ${n.color}40`,
-                              textShadow: `0 0 8px ${n.color}44`
-                            }}>
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <div className="px-2 py-1 rounded-lg" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                      <p className="font-inter text-[6px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)" }}>Final Vocalized Name</p>
+                      <p 
+                        dir="rtl" 
+                        lang={isArabic ? "ar" : "he"}
+                        style={{
+                          color: isValid ? n.color : "rgba(255,100,100,0.70)",
+                          fontSize: isArabic ? "44px" : "34px",
+                          fontWeight: isArabic ? 600 : 900,
+                          lineHeight: isArabic ? 1.8 : 1.4,
+                          wordWrap: "break-word",
+                          overflowWrap: "break-word",
+                          textShadow: isValid ? `0 0 16px ${n.color}55, 0 0 32px ${n.color}33` : 'none',
+                          padding: "4px",
+                          fontFamily: isArabic
+                            ? "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif"
+                            : "'Amiri', serif",
+                          fontFeatureSettings: "'liga' 1, 'calt' 1, 'kern' 1",
+                          textRendering: "optimizeLegibility",
+                          WebkitFontSmoothing: "antialiased",
+                          MozOsxFontSmoothing: "grayscale",
+                        }}
+                      >
+                        {n.fullName || '—'}
+                      </p>
+                    </div>
                     
                     {/* Validation status */}
-                    <div className="mt-1 flex items-center justify-center gap-1">
+                    <div className="mt-2 flex items-center justify-center gap-1">
                       {isValid ? (
                         <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ {lang === 'ar' ? 'صحيح نطقياً' : 'Pronounceable'}</span>
                       ) : (
