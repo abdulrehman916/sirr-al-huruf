@@ -49,26 +49,27 @@ export default function SatrVahidGrouping({
   // PROCESSING ORDER: Start from LAST letter → work backward to FIRST letter
   const bastLevel = isFerd ? 5 : 4;
   
-  // Compute individual derivations with ORIGINAL extraction order
+  // Compute individual derivations with MANUSCRIPT READING ORDER
   const { individualDerivations, concatenatedSatrVahid } = useMemo(() => {
     // Process from LAST to FIRST (manuscript processing order)
     const derivations = [];
     for (let i = safeSatrVahidLetters.length - 1; i >= 0; i--) {
       const letter = safeSatrVahidLetters[i];
       const bastValue = getBastLevel(letter, bastLevel);
-      const expansionLetters = istintak(bastValue);
-      // ORIGINAL ORDER: Use istintak extraction order directly (NO reversal)
-      // Displayed letters are the source of truth for name generation
-      // Example: Displayed [ز, غ, ب, ا, ل] → Name: "زغبال"
+      const extractedLetters = istintak(bastValue);
+      // MANUSCRIPT DISPLAY RULE: Reverse for manuscript reading order (right-to-left)
+      // Extraction order: [ب, غ, خ, ك, ز] → Displayed order: [ز, ك, خ, غ, ب]
+      // The displayed letters become the master source for Satr-i Vahid
+      const manuscriptOrderLetters = [...extractedLetters].reverse();
       derivations.push({
         processingOrder: safeSatrVahidLetters.length - i,
         originalIndex: i,
         letter,
         bastValue,
-        expansionLetters: expansionLetters,
+        expansionLetters: manuscriptOrderLetters, // DISPLAYED in manuscript order
       });
     }
-    // Concatenate ALL expansion letters in original extraction order
+    // Concatenate ALL expansion letters from displayed (manuscript order) sequence
     const concatenated = derivations.flatMap(d => d.expansionLetters);
     return { individualDerivations: derivations, concatenatedSatrVahid: concatenated };
   }, [safeSatrVahidLetters, bastLevel]);
@@ -253,7 +254,7 @@ export default function SatrVahidGrouping({
               ))}
             </div>
             <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
-              Manuscript reading order
+              ← Manuscript order (R to L)
             </span>
           </motion.div>
         ))}
