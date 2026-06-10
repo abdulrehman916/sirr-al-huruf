@@ -1,24 +1,51 @@
 // ═══════════════════════════════════════════════════════════════
-//  TRADITIONAL HIERARCHY NAME GENERATOR
-//  Book formula: tier value - suffix → letters → vocalized name
+//  ORIGINAL HIERARCHY NAME GENERATOR
+//  Book formula: tier value → subtract suffix → extract letters via Abjad
 // ═══════════════════════════════════════════════════════════════
 
-import { applyPhoneticRules, checkPronounceability, VOWELS } from './msPhonologyEngine';
-import { numToArabic, numToHebrew } from './msEngine';
+import { VOWELS, applyPhoneticRules, checkPronounceability } from './msPhonologyEngine';
+import { ARABIC_ABJAD, HEBREW_GEMATRIA } from './msEngine';
 
 const { FATHA, KASRA, DAMMA, SUKUN } = VOWELS;
 
-// Book suffix values (RULE_NAME_CONSTRUCTION)
+// Book suffix values
 const SUFFIXES = {
   'heb-angel': 31,   // אל
   'ar-angel': 41,    // إيل
-  'heb-jinn': 329,   // 360 - 31
-  'ar-jinn': 319,    // 360 - 41
+  'heb-jinn': 329,   // תקש
+  'ar-jinn': 319,    // طيش
 };
 
 /**
+ * extractLettersFromValue(value)
+ * ORIGINAL METHOD: Decompose value into Abjad letters using greedy algorithm
+ */
+function extractLettersFromValue(value, letterTable) {
+  if (!value || value <= 0) return [];
+  
+  const letters = [];
+  let remaining = value;
+  
+  // Greedy decomposition: largest values first
+  for (let i = letterTable.length - 1; i >= 0 && remaining > 0; i--) {
+    const { val, letter } = letterTable[i];
+    while (remaining >= val) {
+      letters.push(letter);
+      remaining -= val;
+    }
+  }
+  
+  // Reverse to get proper reading order
+  return letters.reverse();
+}
+
+/**
  * generateNameForHierarchyValue(value, suffixType)
- * BOOK FORMULA: tier value - suffix → letters → vocalized name
+ * ORIGINAL BOOK FORMULA:
+ * 1. Hierarchy value - suffix = remainder
+ * 2. Extract letters from remainder using Abjad decomposition
+ * 3. Add suffix letters (إيل for Angel, none for Jinn)
+ * 4. Apply tashkeel ONLY (never change letters)
  */
 export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   const suffix = SUFFIXES[suffixType];
@@ -28,33 +55,34 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
   
   const isAngel = suffixType.includes('angel');
   const isHebrew = suffixType.includes('heb');
+  const isArabic = !isHebrew;
   
   // BOOK FORMULA: subtract suffix from tier value
   let remainder = value - suffix;
   
-  // Negative value fix (RULE_NAME_CONSTRUCTION)
+  // Underflow rule: if value < suffix, add 360 first
   if (remainder <= 0) {
     remainder = value + 360 - suffix;
   }
   
-  // Convert remainder to letters using book's Akram positional system
-  const letterString = isHebrew ? numToHebrew(remainder) : numToArabic(remainder);
-  const consonants = letterString.split('');
+  // ORIGINAL LETTER EXTRACTION: Abjad decomposition
+  const letterTable = isHebrew ? HEBREW_GEMATRIA : ARABIC_ABJAD;
+  const consonants = extractLettersFromValue(remainder, letterTable);
   
   if (consonants.length === 0) {
-    return { success: false, error: 'Could not convert to letters' };
+    return { success: false, error: 'Could not extract letters' };
   }
   
-  // Apply phonetic rules for tashkeel ONLY (not changing the letters)
+  // Apply phonetic rules for tashkeel ONLY
   const phoneticResult = applyPhoneticRules(consonants, value);
   
-  // Build vocalized name
+  // Build vocalized name WITHOUT changing letters
   let vocalizedName = '';
   for (let i = 0; i < consonants.length; i++) {
     vocalizedName += consonants[i] + phoneticResult.vowels[i];
   }
   
-  // Add suffix with proper tashkeel for Angel names
+  // Add Angel suffix letters (إيل or אל)
   if (isAngel) {
     if (isHebrew) {
       // Hebrew: אל (Aleph-Lamed)
@@ -66,7 +94,7 @@ export function generateNameForHierarchyValue(value, suffixType = 'ar-angel') {
       vocalizedName = vocalizedName.replace(/[\u064E\u0650\u064F\u0652]$/, '') + preVowel + 'ي' + FATHA + 'ل';
     }
   }
-  // Jinn: no additional suffix (already accounted for in the math)
+  // Jinn: no additional suffix (suffix already subtracted in math)
   
   // Validate pronounceability
   const pronounceability = checkPronounceability(vocalizedName);
@@ -129,6 +157,6 @@ export function getPatternInfo() {
     category: 'traditional',
     syllables: 'variable',
     difficulty: 1,
-    example: 'Adjuster(136) - 41 = 95 → letters → vocalized name'
+    example: 'Adjuster(136) - 41 = 95 → Abjad letters → vocalized name'
   };
 }

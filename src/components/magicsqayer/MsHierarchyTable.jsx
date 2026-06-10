@@ -1,6 +1,6 @@
 import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
-import { buildHierarchy, numToArabic, numToHebrew, toArabicIndic, isCompatible } from "./msEngine";
+import { buildHierarchy, toArabicIndic, isCompatible, ARABIC_ABJAD, HEBREW_GEMATRIA } from "./msEngine";
 import { perfStore } from "./perfStore";
 import { generateNameForHierarchyValue } from "./msPatternGenerator";
 
@@ -21,7 +21,7 @@ function generateNameForValue(val, suffixType) {
   const result = generateNameForHierarchyValue(val, suffixType);
   
   if (!result || !result.success) {
-    return { remainder: val, name: '—', passed: false, score: 0 };
+    return { remainder: val, fullName: '—', passed: false, score: 0 };
   }
   
   const isAngel = suffixType.includes('angel');
@@ -29,7 +29,7 @@ function generateNameForValue(val, suffixType) {
   
   return {
     remainder: result.remainder,
-    name: result.fullName,
+    fullName: result.fullName,
     consonants: result.consonants,
     phoneticRules: result.phoneticRules,
     score: result.validation.overall.score,
@@ -217,18 +217,18 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                 </p>
               </div>
 
-              {/* Name column with Hurufi structure */}
+              {/* Name column with book formula */}
               {showNames && activeNameKey && row[activeNameKey] && (() => {
                 const n = row[activeNameKey];
                 const isArabic = suffix === "ar-angel" || suffix === "ar-jinn";
-                const displayName = n.name || '—';
-                const isValid = n.passed !== false;
+                const displayName = n.fullName || '—';
+                const isValid = n.validation?.overall?.passed !== false;
                 
                 return (
                   <div className="px-3 text-center"
                     style={{ background: "rgba(4,8,24,0.85)", borderTop: "1px solid rgba(212,175,55,0.08)", padding: "12px 16px 20px" }}>
                     {/* Book formula info */}
-                    {n.remainder && (
+                    {n.remainder !== undefined && (
                       <div className="mb-2 px-2 py-1 rounded-lg inline-block"
                         style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.20)" }}>
                         <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>
@@ -236,15 +236,6 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         </p>
                       </div>
                     )}
-                    
-                    {/* Value */}
-                    <p className={`font-amiri font-bold tabular-nums mb-1.5`} style={{ 
-                      color: n.color, 
-                      fontSize: "17px",
-                      textShadow: `0 0 8px ${n.color}44`
-                    }}>
-                      {lang === "ar" ? toArabicIndic(n.remainder.toLocaleString()) : n.remainder.toLocaleString()}
-                    </p>
                     
                     {/* Generated name with full tashkeel */}
                     <p 
@@ -268,7 +259,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                         MozOsxFontSmoothing: "grayscale",
                       }}
                     >
-                      {displayName}
+                      {n.fullName || '—'}
                     </p>
                     
                     {/* Consonant letters from book formula */}
@@ -293,7 +284,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                       {isValid ? (
                         <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(100,220,100,0.70)" }}>✓ {lang === 'ar' ? 'صحيح نطقياً' : 'Pronounceable'}</span>
                       ) : (
-                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(255,100,100,0.70)" }}>✗ {n.failureReason || 'Invalid'}</span>
+                        <span className="font-inter text-[7px] px-1.5 py-0.5 rounded" style={{ color: "rgba(255,100,100,0.70)" }}>✗ {n.validation?.phonology?.reason || 'Invalid'}</span>
                       )}
                     </div>
                   </div>
