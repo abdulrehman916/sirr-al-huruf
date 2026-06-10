@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -18,6 +18,8 @@ import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPostResults from "../components/mizaan/MizaanPostResults";
+import ManuscriptBastDerivation from "../components/mizaan/ManuscriptBastDerivation";
+import { runMizaanPostPipeline } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
 const G = {
@@ -140,9 +142,25 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
   return { grandBast, grandLetters };
 }
 
-function PostPipelineSection({ result, selections, degreeSels, inputText, customPurpose }) {
+function PostPipelineSection({ result, selections, degreeSels, inputText, customPurpose, onPipelineData }) {
   const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, inputText, customPurpose);
   const dominant = result?.dominant;
+  
+  // Extract pipeline data from the actual engine
+  const pipelineData = useMemo(() => {
+    if (!grandBast || grandBast <= 0) return null;
+    const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+    if (!pipeline) return null;
+    const data = {
+      seedLetters: pipeline.initialSeedLetters,
+      bastLevel: pipeline.kitabet.bastLevelUsed,
+      isZevc: pipeline.kitabet.isZevc,
+    };
+    // Pass to parent immediately
+    onPipelineData?.(data);
+    return data;
+  }, [grandBast, grandLetters, dominant, onPipelineData]);
+  
   return <MizaanPostResults grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />;
 }
 
@@ -163,6 +181,7 @@ export default function Mizaan9Page() {
   const [selections, setSelections] = useState(initialState.selections);
   const [customPurpose, setCustomPurpose] = useState(initialState.customPurpose);
   const [degreeSels, setDegreeSels] = useState(initialState.degreeSels);
+  const [pipelineData, setPipelineData] = useState(null);
   const abortRef = useRef(false);
 
   useEffect(() => {
@@ -314,7 +333,26 @@ export default function Mizaan9Page() {
               <MizaanDivider />
               <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} />
               <MizaanDivider />
-              <PostPipelineSection result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} />
+              <PostPipelineSection 
+  result={result} 
+  selections={selections} 
+  degreeSels={degreeSels} 
+  inputText={input} 
+  customPurpose={customPurpose} 
+  onPipelineData={setPipelineData} 
+/>
+              
+              {/* MANUSCRIPT BAST DERIVATION — Visible derivation chain */}
+              {pipelineData && (
+                <ManuscriptBastDerivation
+                  seedLetters={pipelineData.seedLetters}
+                  bastLevel={pipelineData.bastLevel}
+                  isZevc={pipelineData.isZevc}
+                  color="#F5D060"
+                  title="Manuscript Bast Derivation"
+                  titleAr="اشتقاق البسط المخطوط"
+                />
+              )}
 
             </motion.div>
           )}
