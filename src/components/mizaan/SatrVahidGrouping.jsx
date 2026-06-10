@@ -74,30 +74,56 @@ export default function SatrVahidGrouping({
     return { individualDerivations: derivations, concatenatedSatrVahid: concatenated };
   }, [safeSatrVahidLetters, bastLevel]);
   
-  // Generate Esma-i Kitabet names using the engine with proper remainder handling
-  const esmaKitabetResult = useMemo(() => {
-    return generateEsmaLevel(concatenatedSatrVahid, false, dominant);
-  }, [concatenatedSatrVahid, dominant]);
-  
-  // Build display groups from the engine result
-  const groups = useMemo(() => {
-    if (esmaKitabetResult.names.length === 0) return [];
-    const result = [];
-    const finalSeq = esmaKitabetResult.finalExpandedLetters;
-    for (let i = 0; i < finalSeq.length; i += esmaKitabetResult.groupSize) {
-      const group = finalSeq.slice(i, i + esmaKitabetResult.groupSize);
-      const nameIndex = Math.floor(i / esmaKitabetResult.groupSize);
-      result.push({
+  // ESMA-I KITABET GROUPING — DIRECT FROM SATR-I VAHID DISPLAY ORDER
+  // SOURCE OF TRUTH: concatenatedSatrVahid (manuscript reading order)
+  const { esmaKitabetResult, groups } = useMemo(() => {
+    // Step 1: Determine FERD/ZEVC and group size
+    const isFerd = concatenatedSatrVahid.length % 2 !== 0;
+    const groupSize = isFerd ? 5 : 4;
+    
+    // Step 2: Check for remainder
+    const remainder = concatenatedSatrVahid.length % groupSize;
+    let finalSequence = [...concatenatedSatrVahid];
+    let supplementLetters = [];
+    
+    // Step 3: Apply remainder correction if needed (append Galib Anasir to END)
+    if (remainder > 0) {
+      const needed = groupSize - remainder;
+      const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
+      const galibIstintakLetters = istintak(galibValue);
+      supplementLetters = galibIstintakLetters.slice(0, needed);
+      // APPEND to END (manuscript rule)
+      finalSequence = [...concatenatedSatrVahid, ...supplementLetters];
+    }
+    
+    // Step 4: Create groups sequentially from LEFT TO RIGHT (preserve display order)
+    const resultGroups = [];
+    for (let i = 0; i < finalSequence.length; i += groupSize) {
+      const group = finalSequence.slice(i, i + groupSize);
+      // Step 5: Generate name by DIRECT concatenation of displayed group letters (NO reversal)
+      const name = group.join('');
+      resultGroups.push({
         letters: group,
-        name: esmaKitabetResult.names[nameIndex] || '',
-        groupNumber: nameIndex + 1,
+        name: name,
+        groupNumber: Math.floor(i / groupSize) + 1,
         startIndex: i,
-        endIndex: Math.min(i + esmaKitabetResult.groupSize - 1, finalSeq.length - 1),
-        isComplete: group.length === esmaKitabetResult.groupSize,
+        endIndex: Math.min(i + groupSize - 1, finalSequence.length - 1),
+        isComplete: group.length === groupSize,
       });
     }
-    return result;
-  }, [esmaKitabetResult]);
+    
+    return {
+      esmaKitabetResult: {
+        names: resultGroups.map(g => g.name),
+        finalExpandedLetters: finalSequence,
+        supplementLetters,
+        remainder,
+        groupSize,
+        isZevc: !isFerd,
+      },
+      groups: resultGroups,
+    };
+  }, [concatenatedSatrVahid, dominant]);
 
   return (
     <motion.div

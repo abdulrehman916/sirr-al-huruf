@@ -323,13 +323,8 @@ export default function Mizaan9Page() {
                 const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
                 if (!pipeline) return null;
                 
-                // CRITICAL: Safe array access with defaults
-                const safeKitabet = pipeline?.kitabet || {};
-                const satrVahidLetters = Array.isArray(safeKitabet?.satrVahidLetters) ? safeKitabet.satrVahidLetters : [];
-                const finalLetters = Array.isArray(safeKitabet?.finalExpandedLetters) ? safeKitabet.finalExpandedLetters : [];
-                const supplementLetters = Array.isArray(safeKitabet?.supplementLetters) ? safeKitabet.supplementLetters : [];
-                const isZevc = safeKitabet?.isZevc ?? true;
-                const hasSupplement = supplementLetters.length > 0;
+                // SEED LETTERS for Satr-i Vahid Grouping (from Istintak of grandBast+grandLetters)
+                const seedLetters = Array.isArray(pipeline?.initialSeedLetters) ? pipeline.initialSeedLetters : [];
                 
                 return (
                   <>
@@ -359,8 +354,8 @@ export default function Mizaan9Page() {
                         <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Initial Seed Letters</span>
                           <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
-                            {Array.isArray(pipeline.initialSeedLetters) && pipeline.initialSeedLetters.length > 0 ? (
-                              [...pipeline.initialSeedLetters].reverse().map((l, i) => (
+                            {seedLetters.length > 0 ? (
+                              seedLetters.map((l, i) => (
                                 <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
                                   style={{ color: G.text, borderColor: G.border, background: "rgba(212,175,55,0.04)" }} dir="rtl">{l}</span>
                               ))
@@ -371,14 +366,9 @@ export default function Mizaan9Page() {
                         </div>
                       </div>
                     </div>
-                    {/* Satr-i Vahid Grouping */}
+                    {/* Satr-i Vahid Grouping — handles Bast expansion + grouping internally */}
                     <SatrVahidGrouping
-                      satrVahidLetters={satrVahidLetters}
-                      finalLetters={finalLetters}
-                      isZevc={isZevc}
-                      supplementLetters={supplementLetters}
-                      dominant={dominant}
-                      hasSupplement={hasSupplement}
+                      satrVahidLetters={seedLetters}
                       dominant={dominant}
                     />
                   </>
