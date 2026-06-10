@@ -49,7 +49,7 @@ export default function SatrVahidGrouping({
   // PROCESSING ORDER: Start from LAST letter → work backward to FIRST letter
   const bastLevel = isFerd ? 5 : 4;
   
-  // Compute individual derivations with MANUSCRIPT READING ORDER
+  // Compute individual derivations - STRICT ORDER PRESERVATION
   const { individualDerivations, concatenatedSatrVahid } = useMemo(() => {
     // Process from LAST to FIRST (manuscript processing order)
     const derivations = [];
@@ -57,19 +57,17 @@ export default function SatrVahidGrouping({
       const letter = safeSatrVahidLetters[i];
       const bastValue = getBastLevel(letter, bastLevel);
       const extractedLetters = istintak(bastValue);
-      // MANUSCRIPT DISPLAY RULE: Reverse for manuscript reading order (right-to-left)
-      // Extraction order: [ب, غ, خ, ك, ز] → Displayed order: [ز, ك, خ, غ, ب]
-      // The displayed letters become the master source for Satr-i Vahid
-      const manuscriptOrderLetters = [...extractedLetters].reverse();
+      // ORDER LOCK: Use extracted letters EXACTLY as returned - NO reversal
+      // Extraction order IS the canonical order
       derivations.push({
         processingOrder: safeSatrVahidLetters.length - i,
         originalIndex: i,
         letter,
         bastValue,
-        expansionLetters: manuscriptOrderLetters, // DISPLAYED in manuscript order
+        expansionLetters: extractedLetters, // PRESERVED EXACT ORDER
       });
     }
-    // Concatenate ALL expansion letters from displayed (manuscript order) sequence
+    // Concatenate ALL expansion letters in processing order
     const concatenated = derivations.flatMap(d => d.expansionLetters);
     return { individualDerivations: derivations, concatenatedSatrVahid: concatenated };
   }, [safeSatrVahidLetters, bastLevel]);
@@ -263,7 +261,7 @@ export default function SatrVahidGrouping({
             {/* Arrow */}
             <span className="font-inter text-sm" style={{ color: G.dim }}>→</span>
             
-            {/* Expansion letters */}
+            {/* Expansion letters - PRESERVED ORDER */}
             <div className="flex-1 flex items-center gap-1 flex-wrap justify-end" dir="ltr">
               {derivation.expansionLetters.map((l, i) => (
                 <span
@@ -280,17 +278,17 @@ export default function SatrVahidGrouping({
               ))}
             </div>
             <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
-              ← Manuscript order (R to L)
+              ← Exact extraction order (no reversal)
             </span>
           </motion.div>
         ))}
       </div>
 
-      {/* Concatenated Satr-i Vahid sequence - manuscript order */}
+      {/* Concatenated Satr-i Vahid sequence - PRESERVED ORDER */}
       <div className="px-4 py-3 rounded-xl border"
         style={{ background: G.bg, borderColor: G.border }}>
         <div className="flex items-center justify-between mb-2">
-          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid (Manuscript Order)</span>
+          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satr-i Vahid (Exact Extraction Order)</span>
           <div className="flex items-center gap-2">
             <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{concatenatedSatrVahid.length} letters</span>
             <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>→</span>
@@ -300,7 +298,7 @@ export default function SatrVahidGrouping({
           </div>
         </div>
         <div className="text-xs mb-2" style={{ color: G.dim }}>
-          Satr-i Vahid sequence in manuscript reading order
+          Satr-i Vahid sequence preserved exactly as extracted
         </div>
         <div className="flex flex-wrap gap-1 justify-center" dir="ltr">
           {concatenatedSatrVahid.map((l, i) => (
