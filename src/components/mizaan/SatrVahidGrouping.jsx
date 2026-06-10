@@ -68,6 +68,7 @@ export default function SatrVahidGrouping({
   }, [safeSatrVahidLetters, bastLevel]);
   
   // Apply remainder correction to concatenated Satr-i Vahid
+  // MANUSCRIPT RULE: FERD (Odd) = 5-letter groups | ZEVC (Even) = 4-letter groups
   const groupSize = isZevc ? 4 : 5;
   const remainder = concatenatedSatrVahid.length % groupSize;
   let finalSequence = concatenatedSatrVahid;
@@ -328,9 +329,14 @@ export default function SatrVahidGrouping({
       <div className="space-y-1.5">
         <div className="flex items-center justify-between mb-2">
           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>تجميع الأسماء — Esma-i Kitabet Grouping</span>
-          <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.text, background: `${G.text}15`, padding: "2px 8px", borderRadius: "4px" }}>
-            {groups.length} names (after {groupSize}-letter grouping)
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: isFerd ? G.red : G.green, background: isFerd ? `${G.red}15` : `${G.green}15`, padding: "2px 8px", borderRadius: "4px" }}>
+              {isFerd ? 'FERD' : 'ZEVC'} → Group by {groupSize}
+            </span>
+            <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.text, background: `${G.text}15`, padding: "2px 8px", borderRadius: "4px" }}>
+              {groups.length} names
+            </span>
+          </div>
         </div>
         
         {groups.map((group, groupIdx) => (
