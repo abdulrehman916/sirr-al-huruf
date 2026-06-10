@@ -35,7 +35,7 @@ export const FIRST_BAST = {
 // ── Full 5-level Bast table (p.42–43) ──────────────────────────
 // [letter]: [bast1, bast2, bast3, bast4, bast5]
 export const BAST_TABLE = {
-  'ا': [16,    1047, 594,  1941, 991],
+  'ا': [16,    1047, 594,  1641, 991],
   'ب': [616,   1569, 1940, 1046, 921],
   'ج': [1041,  469,  1400, 451,  1118],
   'د': [283,   2215, 2535, 3299, 2806],
@@ -88,6 +88,12 @@ const THOUSAND_MARK = 'غ';
  * LSD-first, cycling Units → Tens → Hundreds → Thousands marker.
  * After thousands marker, cycle restarts from Tens.
  * Source: book worked examples p.38–40 (identical to msEngine akramPositional).
+ *
+ * BOOK RULE (verified against worked example 41487 → م,ا,غ,ت,ف,ز):
+ * When d=1 appears in the thousands slot AND it is NOT the last (highest) digit,
+ * emit γ + ا (include ا for 1×1000).
+ * When d=1 is the highest digit in the thousands slot, emit γ only.
+ * Implementation: check if there are remaining digits after current index.
  */
 function extractLettersFromNumber(n) {
   if (!n || n <= 0) return [];
@@ -100,6 +106,7 @@ function extractLettersFromNumber(n) {
   let slot = 0;
   for (let i = 0; i < digits.length; i++) {
     const d = digits[i];
+    const isLast = (i === digits.length - 1);
     if (slot === 0) {
       if (d !== 0 && UNITS_MAP[d]) letters.push(UNITS_MAP[d]);
       slot = 1;
@@ -113,7 +120,9 @@ function extractLettersFromNumber(n) {
       slot = 3;
     } else {
       letters.push(THOUSAND_MARK);
-      if (d !== 0 && d !== 1 && UNITS_MAP[d]) letters.push(UNITS_MAP[d]);
+      // Include units letter for this digit UNLESS d=1 AND this is the last (highest) digit
+      // Book rule: d=1 as sole thousands digit → γ only; d=1 with higher digits remaining → γ+ا
+      if (d !== 0 && (d !== 1 || !isLast) && UNITS_MAP[d]) letters.push(UNITS_MAP[d]);
       slot = 1;
     }
   }
@@ -225,19 +234,21 @@ export function buildVefk(S, element = 'fire') {
 
   const template = VEFK_TEMPLATES[element] || VEFK_TEMPLATES.fire;
 
-  // Build flat position → value map
-  // Cell at template position p gets value = Q + (p - 1)
-  // Remainder corrections: R=3→pos5+1, R=2→pos9+1, R=1→pos13+1
-  const corrections = new Set();
-  if (R === 3) corrections.add(5);
-  if (R === 2) corrections.add(9);
-  if (R === 1) corrections.add(13);
+  // BOOK-CORRECT REMAINDER RULE (verified against p.68 worked example):
+  // When R > 0, ALL template positions > 4*(4-R) receive +1.
+  // R=0: no correction (threshold=16, nothing >16)
+  // R=1: positions 13,14,15,16 get +1
+  // R=2: positions 9,10,...,16 get +1
+  // R=3: positions 5,6,...,16 get +1
+  // This ensures MC = S exactly (not S±something).
+  // Bug in previous version: only 1 cell was corrected → non-magic square, MC ≠ S.
+  const threshold = 4 * (4 - R); // positions > threshold get +1
 
   const grid = template.map(row =>
-    row.map(pos => Q + (pos - 1) + (corrections.has(pos) ? 1 : 0))
+    row.map(pos => Q + (pos - 1) + (pos > threshold ? 1 : 0))
   );
 
-  // Magic constant = sum of any row (should be consistent)
+  // Magic constant = S exactly
   const mc = grid[0].reduce((s, v) => s + v, 0);
 
   return { grid, mc, Q, R, S, element, guardianName: getGuardianName(element) };

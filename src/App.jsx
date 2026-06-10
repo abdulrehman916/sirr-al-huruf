@@ -30,6 +30,7 @@ const MagicalHolyNamesPage  = lazy(() => import('./pages/MagicalHolyNamesPage'))
 const AdminFaalChobUpload   = lazy(() => import('./pages/AdminFaalChobUpload'));
 const HierarchyAuditPage    = lazy(() => import('./pages/HierarchyAuditPage.jsx'));
 const MizaanPipelineTest    = lazy(() => import('./pages/MizaanPipelineTest'));
+const MizaanAuditReport     = lazy(() => import('./pages/MizaanAuditReport'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -91,6 +92,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/faal-chob-upload" element={<AdminFaalChobUpload />} />
             <Route path="/hierarchy-audit" element={<HierarchyAuditPage />} />
             <Route path="/pipeline-test" element={<MizaanPipelineTest />} />
+            <Route path="/audit-report" element={<MizaanAuditReport />} />
 
             <Route path="*" element={<PageNotFound />} />
           </Routes>

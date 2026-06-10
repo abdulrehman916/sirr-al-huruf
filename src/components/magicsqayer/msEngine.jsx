@@ -315,9 +315,13 @@ function akramPositional(n, units, tens, hundreds, thousandMark) {
       if (d !== 0 && hundreds[v])      pieces.push(hundreds[v]);
       i++; slot = 3;
     } else {
-      // Thousands slot: always emit the marker, then digit as unit if 2–9
+      // Thousands slot: always emit the marker.
+      // Book rule: include units letter for this digit UNLESS d=1 AND it is the last (highest) digit.
+      // When d=1 with higher digits remaining → emit thousandMark + ا (or א for Hebrew).
+      // When d=1 as sole highest digit → emit thousandMark only.
+      const isLast = (i === digits.length - 1);
       pieces.push(thousandMark);
-      if (d !== 0 && d !== 1 && units[d]) pieces.push(units[d]);
+      if (d !== 0 && (d !== 1 || !isLast) && units[d]) pieces.push(units[d]);
       i++; slot = 1;
     }
   }
