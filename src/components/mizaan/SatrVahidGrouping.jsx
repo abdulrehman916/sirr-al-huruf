@@ -272,22 +272,22 @@ export default function SatrVahidGrouping({
             {/* Arrow */}
             <span className="font-inter text-sm" style={{ color: G.dim }}>→</span>
             
-            {/* Expansion letters - PRESERVED ORDER */}
-            <div className="flex-1 flex items-center gap-1 flex-wrap justify-end" dir="rtl">
-              {derivation.expansionLetters.map((l, i) => (
-                <span
-                  key={i}
-                  className="font-amiri text-lg px-2 py-1 rounded-lg border"
-                  style={{
-                    color: G.green,
-                    borderColor: G.green,
-                    background: `${G.green}10`
-                  }}
-                >
-                  {l}
-                </span>
-              ))}
-            </div>
+            {/* Expansion letters - LTR, exact extraction order, matches Satr-i Vahid */}
+             <div className="flex-1 flex items-center gap-1 flex-wrap justify-end" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+               {derivation.expansionLetters.map((l, i) => (
+                 <span
+                   key={i}
+                   className="font-amiri text-lg px-2 py-1 rounded-lg border"
+                   style={{
+                     color: G.green,
+                     borderColor: G.green,
+                     background: `${G.green}10`
+                   }}
+                 >
+                   {l}
+                 </span>
+               ))}
+             </div>
             <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
               ← Exact extraction order (no reversal)
             </span>
