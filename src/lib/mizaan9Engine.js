@@ -15,46 +15,59 @@ const MIZAAN_BAST1 = {
   'ض': 655,  'ظ': 593,  'غ': 114,
 };
 
+// ═══════════════════════════════════════════════════════════════
+// MIZAN PERMANENT ISOLATION LOCK
+// ═══════════════════════════════════════════════════════════════
+// This engine is EXCLUSIVELY for Mizan-9 page calculations.
+// NO cross-page data sharing. NO imports from other engines.
+// All Mizan datasets are frozen and immutable.
+// ═══════════════════════════════════════════════════════════════
+
 // ── Element map — letters in Mertebe rank order ──
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
-// Bast-1 values: ا=16, ب=616, ج=1041, د=283, ه=709, و=468, ز=141, ح=612, ط=539, ي=579, ك=635, ل=1097, م=339, ن=765, س=524, ع=197, ف=657, ص=595, ق=60, ر=517, ش=1095, ت=337, ث=763, خ=522, ذ=195, ض=655, ظ=593, غ=114, ة=709, ء=16
-export const MIZAAN_ELEMENTS = {
+// FROZEN: No modifications allowed
+const MIZAAN_ELEMENTS_RAW = {
   fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 2411 },  // النار: ا(16)+ل(1097)+ن(765)+ا(16)+ر(517) = 2411 ✅
   earth: { key: 'earth', labelTR: 'Toprak', arabic: 'التراب', icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 2599 },  // التراب: ا(16)+ل(1097)+ت(337)+ر(517)+ا(16)+ب(616) = 2599 ✅
   air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 2322 },  // الهواء: ا(16)+ل(1097)+ه(709)+و(468)+ا(16)+ء(16) = 2322 ✅
   water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 1484 },  // الماء: ا(16)+ل(1097)+م(339)+ا(16)+ء(16) = 1484 ✅
 };
+export const MIZAAN_ELEMENTS = Object.freeze(MIZAAN_ELEMENTS_RAW);
 
-export const MIZAAN_RANK_NAMES = ['Mertebe','Derece','Dakika','Saniye','Salise','Rabia','Hamise'];
+export const MIZAAN_RANK_NAMES = Object.freeze(['Mertebe','Derece','Dakika','Saniye','Salise','Rabia','Hamise']);
 
 // ── Second Mizan Bast values ──
-export const MIZAAN_BAST2 = {
+// FROZEN: No modifications allowed
+export const MIZAAN_BAST2 = Object.freeze({
   fire: 3550, earth: 4015, air: 3757, water: 3342,
-};
+});
 
 // ── Planet table ──
-export const MIZAAN_PLANETS = {
+// FROZEN: No modifications allowed
+export const MIZAAN_PLANETS = Object.freeze({
   fire:  { name: 'Merih',   arabic: 'المريخ',  symbol: '♂', bast: 3124, color: '#FF4444' },
   earth: { name: 'Zühal',   arabic: 'زحل',     symbol: '♄', bast: 3886, color: '#9B7FD4' },
   air:   { name: 'Müşteri', arabic: 'المشتري', symbol: '♃', bast: 3757, color: '#74C0FC' },
   water: { name: 'Zühre',   arabic: 'الزهرة',  symbol: '♀', bast: 3342, color: '#F9A8D4' },
-};
+});
 
 // ── Day/Night table ──
-export const MIZAAN_DAYNIGHT = {
+// FROZEN: No modifications allowed
+export const MIZAAN_DAYNIGHT = Object.freeze({
   fire:  { mode: 'Gündüz', arabic: 'النهار', icon: '☀️', bast: 3886, desc: 'Solar radiance — peak daytime energy' },
   earth: { mode: 'Gündüz', arabic: 'النهار', icon: '☀️', bast: 3886, desc: 'Stable daytime grounding force' },
   air:   { mode: 'Gece',   arabic: 'الليل',  icon: '🌙', bast: 3120, desc: 'Nocturnal mental clarity' },
   water: { mode: 'Gece',   arabic: 'الليل',  icon: '🌙', bast: 3120, desc: 'Lunar depths — night reflection' },
-};
+});
 
 // ── Mizan suitability table ──
-export const MIZAAN_SUITABILITY = {
+// FROZEN: No modifications allowed
+export const MIZAAN_SUITABILITY = Object.freeze({
   fire:  { name: 'Celb',   arabic: 'الجلب',  bast: 3124, desc: 'Attraction & drawing force — powerful magnetism' },
   earth: { name: 'Tard',   arabic: 'الطرد',  bast: 4015, desc: 'Repulsion & banishment — removing obstacles' },
   air:   { name: 'Sıhhat', arabic: 'الصحة',  bast: 3757, desc: 'Health & restoration — healing energy' },
   water: { name: 'Sakam',  arabic: 'السقام', bast: 3342, desc: 'Spiritual remedy — transformative depth' },
-};
+});
 
 // ── Mystical interpretation table ──
 const MIZAAN_INTERP = {

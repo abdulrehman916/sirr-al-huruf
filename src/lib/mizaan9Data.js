@@ -3,10 +3,19 @@
 // All occult data for sections 3-9
 // ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
+// MIZAN PERMANENT ISOLATION LOCK
+// ═══════════════════════════════════════════════════════════════
+// This data file is EXCLUSIVELY for Mizan-9 page calculations.
+// NO cross-page data sharing. NO imports from other engines.
+// All Mizan datasets are frozen and immutable.
+// Source: Locked Mizan manuscript data, Verified Bast-1 calculations
+// ═══════════════════════════════════════════════════════════════
+
 // ── MIZAAN 3: Khayr / Sharr ──
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
-// Calculation: ا=16, ل=1097, خ=522, ي=579, ر=517, ش=1095
-export const MIZAAN_KHAYR_SHARR = {
+// FROZEN: No modifications allowed
+const MIZAAN_KHAYR_SHARR_RAW = {
   khayr: {
     label: 'Khayr',
     arabic: 'الخير',
@@ -32,11 +41,12 @@ export const MIZAAN_KHAYR_SHARR = {
     icon: '⚡',
   },
 };
+export const MIZAAN_KHAYR_SHARR = Object.freeze(MIZAAN_KHAYR_SHARR_RAW);
 
 // ── MIZAAN 4: Hours ──
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
-// Bast-1 values: ا=16, ب=616, ج=1041, د=283, ه=709, و=468, ز=141, ح=612, ط=539, ي=579, ك=635, ل=1097, م=339, ن=765, س=524, ع=197, ف=657, ص=595, ق=60, ر=517, ش=1095, ت=337, ث=763, خ=522, ذ=195, ض=655, ظ=593, غ=114, ة=709, ء=16
-export const MIZAAN_HOURS = [
+// FROZEN: No modifications allowed
+const MIZAAN_HOURS_RAW = [
   { hour: 1,  arabic: 'الساعة الأولى',         bast: 4832 },  // ا(16)+ل(1097)+س(524)+ا(16)+ع(197)+ة(709)+ا(16)+ل(1097)+أ(16)+و(468)+ل(1097)+ى(579) = 4832 ✅
   { hour: 2,  arabic: 'الساعة الثانية',        bast: 5604 },  // ا(16)+ل(1097)+س(524)+ا(16)+ع(197)+ة(709)+ا(16)+ل(1097)+ث(763)+ا(16)+ن(765)+ي(579)+ة(709) = 5604 ✅
   { hour: 3,  arabic: 'الساعة الثالثة',        bast: 6132 },  // ا(16)+ل(1097)+س(524)+ا(16)+ع(197)+ة(709)+ا(16)+ل(1097)+ث(763)+ا(16)+ل(1097)+ث(763)+ا(16)+ء(16) = 6132 ✅
@@ -50,10 +60,12 @@ export const MIZAAN_HOURS = [
   { hour: 11, arabic: 'الساعة الحادية عشرة',   bast: 6785 },  // ا(16)+ل(1097)+س(524)+ا(16)+ع(197)+ة(709)+ا(16)+ل(1097)+ح(612)+ا(16)+د(283)+ي(579)+ة(709)+ا(16)+ل(1097)+ع(197)+ش(1095)+ر(517)+ة(709) = 6785 ✅
   { hour: 12, arabic: 'الساعة الثانية عشرة',   bast: 7294 },  // ا(16)+ل(1097)+س(524)+ا(16)+ع(197)+ة(709)+ا(16)+ل(1097)+ث(763)+ا(16)+ن(765)+ي(579)+ة(709)+ا(16)+ل(1097)+ع(197)+ش(1095)+ر(517)+ة(709) = 7294 ✅
 ];
+export const MIZAAN_HOURS = Object.freeze(MIZAAN_HOURS_RAW);
 
 // ── MIZAAN 5: Days ──
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
-export const MIZAAN_DAYS = [
+// FROZEN: No modifications allowed
+const MIZAAN_DAYS_RAW = [
   { key: 'sun', arabic: 'الأحد',     icon: '☀️', bast: 2024, color: '#FBBF24' },  // ا(16)+ل(1097)+أ(16)+ح(612)+د(283) = 2024 ✅
   { key: 'mon', arabic: 'الإثنين',   icon: '🌙', bast: 3001, color: '#818CF8' },  // ا(16)+ل(1097)+إ(16)+ث(763)+ن(765)+ي(579)+ن(765) = 3001 ✅
   { key: 'tue', arabic: 'الثلاثاء',  icon: '🔥', bast: 3784, color: '#F87171' },  // ا(16)+ل(1097)+ث(763)+ل(1097)+ا(16)+ث(763)+ا(16)+ء(16) = 3784 ✅
@@ -62,10 +74,12 @@ export const MIZAAN_DAYS = [
   { key: 'fri', arabic: 'الجمعة',    icon: '🕌', bast: 3399, color: '#F9A8D4' },  // ا(16)+ل(1097)+ج(1041)+م(339)+ع(197)+ة(709) = 3399 ✅
   { key: 'sat', arabic: 'السبت',     icon: '🪐', bast: 2590, color: '#9B7FD4' },  // ا(16)+ل(1097)+س(524)+ب(616)+ت(337) = 2590 ✅
 ];
+export const MIZAAN_DAYS = Object.freeze(MIZAAN_DAYS_RAW);
 
 // ── MIZAAN 6: Planets ──
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
-export const MIZAAN_PLANETS_ALL = [
+// FROZEN: No modifications allowed
+const MIZAAN_PLANETS_ALL_RAW = [
   { key: 'zuhal',   arabic: 'الزحل',    icon: '🪐', color: '#9B7FD4', bast: 2963 },  // ا(16)+ل(1097)+ز(141)+ح(612)+ل(1097) = 2963 ✅
   { key: 'mustari', arabic: 'المشتري',  icon: '✨', color: '#74C0FC', bast: 3980 },  // ا(16)+ل(1097)+م(339)+ش(1095)+ت(337)+ر(517)+ي(579) = 3980 ✅
   { key: 'merih',   arabic: 'المريخ',   icon: '🔥', color: '#FF4444', bast: 2970 },  // ا(16)+ل(1097)+م(339)+ر(517)+ي(579)+خ(522) = 2970 ✅
@@ -74,25 +88,30 @@ export const MIZAAN_PLANETS_ALL = [
   { key: 'utarid',  arabic: 'العطارد',  icon: '🧠', color: '#34D399', bast: 2665 },  // ا(16)+ل(1097)+ع(197)+ط(539)+ا(16)+ر(517)+د(283) = 2665 ✅
   { key: 'kamer',   arabic: 'القمر',    icon: '🌙', color: '#818CF8', bast: 2029 },  // ا(16)+ل(1097)+ق(60)+م(339)+ر(517) = 2029 ✅
 ];
+export const MIZAAN_PLANETS_ALL = Object.freeze(MIZAAN_PLANETS_ALL_RAW);
 
 // Day key → planet key mapping
-export const DAY_PLANET_MAP = {
+// FROZEN: No modifications allowed
+export const DAY_PLANET_MAP = Object.freeze({
   sun: 'sems', mon: 'kamer', tue: 'merih', wed: 'utarid',
   thu: 'mustari', fri: 'zuhre', sat: 'zuhal',
-};
+});
 
 // ── MIZAAN 7: Purposes ──
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
-export const MIZAAN_PURPOSES = [
+// FROZEN: No modifications allowed
+const MIZAAN_PURPOSES_RAW = [
   { key: 'celb',   arabic: 'جلب',          icon: '💖', color: '#FF6B6B', bast: 2754 },  // ج(1041)+ل(1097)+ب(616) = 2754 ✅
   { key: 'tard',   arabic: 'طرد',          icon: '🚫', color: '#A5C880', bast: 1339 },  // ط(539)+ر(517)+د(283) = 1339 ✅
   { key: 'sihhat', arabic: 'الصحة',        icon: '🩺', color: '#4FC3F7', bast: 3029 },  // ا(16)+ل(1097)+ص(595)+ح(612)+ة(709) = 3029 ✅
   { key: 'sekam',  arabic: 'السقم',        icon: '☠️', color: '#9B7FD4', bast: 2036 },  // ا(16)+ل(1097)+س(524)+ق(60)+م(339) = 2036 ✅
   { key: 'tarfet', arabic: 'طرفة العين',   icon: '🧿', color: '#D4AF37', bast: 4070 },  // ط(539)+ر(517)+ف(657)+ة(709)+ا(16)+ل(1097)+ع(197)+ي(579)+ن(765) = 4070 ✅
 ];
+export const MIZAAN_PURPOSES = Object.freeze(MIZAAN_PURPOSES_RAW);
 
 // ── MIZAAN 8: Day / Night (full) ──
-export const MIZAAN_DAYNIGHT_FULL = {
+// FROZEN: No modifications allowed
+const MIZAAN_DAYNIGHT_FULL_RAW = {
   gunduz: {
     label: 'Gündüz',
     arabic: 'النهار',
@@ -118,10 +137,12 @@ export const MIZAAN_DAYNIGHT_FULL = {
     border: 'rgba(129,140,248,0.40)',
   },
 };
+export const MIZAAN_DAYNIGHT_FULL = Object.freeze(MIZAAN_DAYNIGHT_FULL_RAW);
 
 // ── MIZAAN 9: Element Degrees ──
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
-export const MIZAAN_ELEMENT_DEGREES = {
+// FROZEN: No modifications allowed
+const MIZAAN_ELEMENT_DEGREES_RAW = {
   fire: {
     key: 'fire',
     arabic: 'درجات النار',
@@ -184,6 +205,7 @@ export const MIZAAN_ELEMENT_DEGREES = {
     ],
   },
 };
+export const MIZAAN_ELEMENT_DEGREES = Object.freeze(MIZAAN_ELEMENT_DEGREES_RAW);
 
 // ── Helpers ──
 export function getDominantDayNight(dominant) {
