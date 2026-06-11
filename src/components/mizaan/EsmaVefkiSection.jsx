@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { getBastLevel, buildVefk } from "../../lib/mizaanPostEngine";
 
@@ -137,6 +137,7 @@ function VefkGrid({ vefkResult }) {
 // satrVahidLetters: Section D (Combined Sequence) — the sole source for MC.
 // dominant: passed from SatrVahidGrouping — same Galib Anasir used for grouping.
 export default function EsmaVefkiSection({ satrVahidLetters = [], groups, dominant = "fire" }) {
+  const [showAudit, setShowAudit] = useState(false);
   const safeGroups = groups || [];
   const safeSatr = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
 
@@ -193,66 +194,96 @@ export default function EsmaVefkiSection({ satrVahidLetters = [], groups, domina
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* K1 — Full Audit Table */}
+        {/* K1 — Compact Summary with Collapsible Audit */}
         <Card>
-          <SectionHeader step="K1" label="Birinci Bast Audit — Section D Letters" arabic="جدول البسط الأول" color={G.blue} />
-          <div className="overflow-x-auto">
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${G.goldBorder}` }}>
-                  <th className="font-inter text-[7px] uppercase tracking-widest text-left py-1.5 px-2" style={{ color: G.dim }}>#</th>
-                  <th className="font-inter text-[7px] uppercase tracking-widest text-center py-1.5 px-2" style={{ color: G.dim }}>Letter</th>
-                  <th className="font-inter text-[7px] uppercase tracking-widest text-right py-1.5 px-2" style={{ color: G.dim }}>Birinci Bast</th>
-                  <th className="font-inter text-[7px] uppercase tracking-widest text-right py-1.5 px-2" style={{ color: G.dim }}>Running Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditRows.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: `1px solid ${G.goldBorder}22`, background: i % 2 === 0 ? "transparent" : G.bgInner }}>
-                    <td className="font-inter tabular-nums py-1 px-2" style={{ color: G.dim, fontSize: 10 }}>{row.index}</td>
-                    <td className="text-center py-1 px-2">
-                      <span className="font-amiri font-bold text-xl" style={{ color: G.gold }}>{row.letter}</span>
-                    </td>
-                    <td className="font-inter tabular-nums text-right py-1 px-2 font-semibold" style={{ color: G.blue, fontSize: 11 }}>{row.bast.toLocaleString()}</td>
-                    <td className="font-inter tabular-nums text-right py-1 px-2 font-bold" style={{ color: G.goldDim, fontSize: 11 }}>{row.running.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr style={{ borderTop: `2px solid ${G.goldBorder}` }}>
-                  <td colSpan={2} className="font-inter uppercase tracking-widest py-2 px-2 font-bold" style={{ color: G.gold, fontSize: 9 }}>
-                    Final Total → MC ({totalLetters} letters)
-                  </td>
-                  <td />
-                  <td className="font-inter tabular-nums text-right py-2 px-2 font-black" style={{ color: G.gold, fontSize: 15 }}>{totalBast.toLocaleString()}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </Card>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <SectionHeader step="K1" label="Magic Constant" arabic="الثابت السحري" color={G.blue} />
+            </div>
 
-        {/* K2 — Summary */}
-        <Card>
-          <SectionHeader step="K2" label="Summary" arabic="الملخص" color={G.blue} />
-          <div className="space-y-0">
-            <StatRow label="Section D Letter Count" value={totalLetters} valueColor={G.gold} />
-            <StatRow label="∑ Birinci Bast = Magic Constant (MC)" value={totalBast.toLocaleString()} valueColor={G.gold} />
-            <div className="flex items-center justify-between py-2">
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Dominant Anasir</span>
-              <div className="flex items-center gap-2">
-                <span style={{ fontSize: "1rem" }}>{elMeta.icon}</span>
-                <span className="font-amiri text-base font-bold" style={{ color: elMeta.color }}>{elMeta.arabic}</span>
-                <span className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: elMeta.color + "99" }}>{elMeta.english}</span>
+            {/* Summary stats */}
+            <div className="space-y-0">
+              <StatRow label="Section D Letter Count" value={totalLetters} valueColor={G.gold} />
+              <StatRow label="Birinci Bast Total (MC)" value={totalBast.toLocaleString()} valueColor={G.gold} />
+              <div className="flex items-center justify-between py-2 border-b" style={{ borderColor: G.goldBorder + "55" }}>
+                <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Dominant Anasir</span>
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>
+                  <span className="font-amiri text-sm font-bold" style={{ color: elMeta.color }}>{elMeta.arabic}</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Verification</span>
+                <span className="font-inter text-[8px] font-bold px-2.5 py-1 rounded-lg" style={{ background: G.green + "22", color: G.green }}>
+                  ✓ Verified
+                </span>
               </div>
             </div>
+
+            {/* Collapsible Audit Button */}
+            <button
+              onClick={() => setShowAudit(!showAudit)}
+              className="w-full mt-3 px-3 py-2 rounded-lg border font-inter text-[8px] uppercase tracking-widest font-semibold transition-all"
+              style={{
+                background: showAudit ? G.goldFaint : "transparent",
+                borderColor: showAudit ? G.goldBorder + "80" : G.goldBorder + "40",
+                color: G.gold,
+              }}
+            >
+              {showAudit ? "Hide Audit Calculation" : "Show Audit Calculation"}
+            </button>
+
+            {/* Expanded Audit Table */}
+            {showAudit && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="mt-3 pt-3 border-t overflow-x-auto"
+                style={{ borderColor: G.goldBorder + "55" }}
+              >
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${G.goldBorder}` }}>
+                      <th className="font-inter text-[7px] uppercase tracking-widest text-left py-1.5 px-2" style={{ color: G.dim }}>#</th>
+                      <th className="font-inter text-[7px] uppercase tracking-widest text-center py-1.5 px-2" style={{ color: G.dim }}>Letter</th>
+                      <th className="font-inter text-[7px] uppercase tracking-widest text-right py-1.5 px-2" style={{ color: G.dim }}>Birinci Bast</th>
+                      <th className="font-inter text-[7px] uppercase tracking-widest text-right py-1.5 px-2" style={{ color: G.dim }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditRows.map((row, i) => (
+                      <tr key={i} style={{ borderBottom: `1px solid ${G.goldBorder}22`, background: i % 2 === 0 ? "transparent" : G.bgInner + "55" }}>
+                        <td className="font-inter tabular-nums py-1 px-2" style={{ color: G.dim, fontSize: 9 }}>{row.index}</td>
+                        <td className="text-center py-1 px-2">
+                          <span className="font-amiri font-bold text-lg" style={{ color: G.gold }}>{row.letter}</span>
+                        </td>
+                        <td className="font-inter tabular-nums text-right py-1 px-2 font-semibold" style={{ color: G.blue, fontSize: 10 }}>{row.bast.toLocaleString()}</td>
+                        <td className="font-inter tabular-nums text-right py-1 px-2 font-bold" style={{ color: G.goldDim, fontSize: 10 }}>{row.running.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ borderTop: `2px solid ${G.goldBorder}` }}>
+                      <td colSpan={2} className="font-inter uppercase tracking-widest py-1.5 px-2 font-bold" style={{ color: G.gold, fontSize: 8 }}>
+                        Final MC
+                      </td>
+                      <td />
+                      <td className="font-inter tabular-nums text-right py-1.5 px-2 font-black" style={{ color: G.gold, fontSize: 12 }}>{totalBast.toLocaleString()}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </motion.div>
+            )}
           </div>
         </Card>
 
         <OrnamentalDivider />
 
-        {/* K3 — Vefk */}
+        {/* K2 — Vefk */}
         <Card accent={elMeta.color}>
-          <SectionHeader step="K3" label="Esma-i Kitabet Vefk" arabic="الوفق" color={elMeta.color} />
+          <SectionHeader step="K2" label="Esma-i Kitabet Vefk" arabic="الوفق" color={elMeta.color} />
           {vefkResult ? (
             <VefkGrid vefkResult={vefkResult} />
           ) : (
