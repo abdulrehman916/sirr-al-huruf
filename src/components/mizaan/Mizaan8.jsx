@@ -9,7 +9,7 @@ const KHAYR_SHARR = [
     key: 'khayr',
     arabic: 'الخير',
     icon: '✨',
-    bast: 2731,
+    bast: 2731, // ا(16)+ل(1097)+خ(522)+ي(579)+ر(517) = 2731
     color: '#4ADE80',
     glow: 'rgba(74,222,128,0.40)',
     bg: 'rgba(74,222,128,0.10)',
@@ -19,7 +19,7 @@ const KHAYR_SHARR = [
     key: 'sharr',
     arabic: 'الشر',
     icon: '⚡',
-    bast: 2725,
+    bast: 2725, // ا(16)+ل(1097)+ش(1095)+ر(517) = 2725
     color: '#F87171',
     glow: 'rgba(248,113,113,0.40)',
     bg: 'rgba(248,113,113,0.10)',
