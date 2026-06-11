@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import EsmaVefkiSection from "./EsmaVefkiSection";
 
 // ── Design tokens ─────────────────────────────────────────────
 const G = {
@@ -413,6 +414,11 @@ export default function SatrVahidGrouping({
             </div>
           )}
         </Card>
+
+        {/* ══ K: ESMA-I KITABET VEFKI — appended below J, reads groups directly ══ */}
+        {groups.length > 0 && (
+          <EsmaVefkiSection groups={groups} />
+        )}
 
       </div>
 
