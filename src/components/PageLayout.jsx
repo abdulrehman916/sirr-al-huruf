@@ -6,6 +6,7 @@ import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
 import { base44 } from "../api/base44Client";
+import { useScrollPersist } from "../context/PageStateContext";
 
 const TABS = [
   { id: "home",             label: "HOME",   arabic: "الرئيسية", path: "/" },
@@ -157,14 +158,13 @@ const PAGE_TITLES = {
   "/holy-names":        "الأسماء",
 };
 
-const scrollMemory = {};
-
 export default function PageLayout({ children }) {
   const location = useLocation();
   const navigate  = useNavigate();
   const { startNav } = useNavigation();
   const [showAccount, setShowAccount] = useState(false);
   const [user, setUser] = useState(null);
+  useScrollPersist();
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -209,20 +209,7 @@ export default function PageLayout({ children }) {
     return () => clearTimeout(timer);
   }, [activeId, location.pathname]);
 
-  // Save / restore scroll position per route
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
 
-    const saved = scrollMemory[location.pathname] ?? 0;
-    el.scrollTop = saved;
-
-    return () => {
-      if (scrollRef.current) {
-        scrollMemory[location.pathname] = scrollRef.current.scrollTop;
-      }
-    };
-  }, [location.pathname]);
 
   // Native back gesture support
   useEffect(() => {
