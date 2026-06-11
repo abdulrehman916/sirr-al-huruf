@@ -28,9 +28,6 @@ const ELEMENT_META = {
   water: { arabic: "الماء",    english: "Water", color: "#67E8F9", icon: "🜄" },
 };
 
-function calcEsmaLettersBast(letters) {
-  return letters.reduce((sum, l) => sum + (getBastLevel(l, 1) || 0), 0);
-}
 
 // ── Sub-components ───────────────────────────────────────────────
 
@@ -143,14 +140,21 @@ export default function EsmaVefkiSection({ satrVahidLetters = [], groups, domina
   const safeGroups = groups || [];
   const safeSatr = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
 
-  // MC source: every letter in the Combined Sequence (Section D), Bast-1 of each, summed
-  const totalBast = useMemo(() => calcEsmaLettersBast(safeSatr), [safeSatr]);
+  // Build audit rows: each Section D letter + its Birinci Bast + running total
+  const auditRows = useMemo(() => {
+    let running = 0;
+    return safeSatr.map((letter, i) => {
+      const bast = getBastLevel(letter, 1) || 0;
+      running += bast;
+      return { index: i + 1, letter, bast, running };
+    });
+  }, [safeSatr]);
+
+  const totalBast = auditRows.length > 0 ? auditRows[auditRows.length - 1].running : 0;
   const totalLetters = safeSatr.length;
 
-  // Use the dominant passed from the grouping section — same Galib Anasir
   const elMeta = ELEMENT_META[dominant] || ELEMENT_META.fire;
 
-  // Build Vefk using totalBast + the passed dominant
   const vefkResult = useMemo(() => {
     if (!totalBast || totalBast < 30) return null;
     return buildVefk(totalBast, dominant);
@@ -189,12 +193,50 @@ export default function EsmaVefkiSection({ satrVahidLetters = [], groups, domina
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* K1 — Stats */}
+        {/* K1 — Full Audit Table */}
         <Card>
-          <SectionHeader step="K1–K3" label="Calculations" arabic="الحسابات" color={G.blue} />
+          <SectionHeader step="K1" label="Birinci Bast Audit — Section D Letters" arabic="جدول البسط الأول" color={G.blue} />
+          <div className="overflow-x-auto">
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${G.goldBorder}` }}>
+                  <th className="font-inter text-[7px] uppercase tracking-widest text-left py-1.5 px-2" style={{ color: G.dim }}>#</th>
+                  <th className="font-inter text-[7px] uppercase tracking-widest text-center py-1.5 px-2" style={{ color: G.dim }}>Letter</th>
+                  <th className="font-inter text-[7px] uppercase tracking-widest text-right py-1.5 px-2" style={{ color: G.dim }}>Birinci Bast</th>
+                  <th className="font-inter text-[7px] uppercase tracking-widest text-right py-1.5 px-2" style={{ color: G.dim }}>Running Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditRows.map((row, i) => (
+                  <tr key={i} style={{ borderBottom: `1px solid ${G.goldBorder}22`, background: i % 2 === 0 ? "transparent" : G.bgInner }}>
+                    <td className="font-inter tabular-nums py-1 px-2" style={{ color: G.dim, fontSize: 10 }}>{row.index}</td>
+                    <td className="text-center py-1 px-2">
+                      <span className="font-amiri font-bold text-xl" style={{ color: G.gold }}>{row.letter}</span>
+                    </td>
+                    <td className="font-inter tabular-nums text-right py-1 px-2 font-semibold" style={{ color: G.blue, fontSize: 11 }}>{row.bast.toLocaleString()}</td>
+                    <td className="font-inter tabular-nums text-right py-1 px-2 font-bold" style={{ color: G.goldDim, fontSize: 11 }}>{row.running.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{ borderTop: `2px solid ${G.goldBorder}` }}>
+                  <td colSpan={2} className="font-inter uppercase tracking-widest py-2 px-2 font-bold" style={{ color: G.gold, fontSize: 9 }}>
+                    Final Total → MC ({totalLetters} letters)
+                  </td>
+                  <td />
+                  <td className="font-inter tabular-nums text-right py-2 px-2 font-black" style={{ color: G.gold, fontSize: 15 }}>{totalBast.toLocaleString()}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </Card>
+
+        {/* K2 — Summary */}
+        <Card>
+          <SectionHeader step="K2" label="Summary" arabic="الملخص" color={G.blue} />
           <div className="space-y-0">
-            <StatRow label="Satr-i Vahid Letter Count (Section D)" value={totalLetters} valueColor={G.gold} />
-            <StatRow label="∑ Birinci Bast → MC" value={totalBast.toLocaleString()} valueColor={G.gold} />
+            <StatRow label="Section D Letter Count" value={totalLetters} valueColor={G.gold} />
+            <StatRow label="∑ Birinci Bast = Magic Constant (MC)" value={totalBast.toLocaleString()} valueColor={G.gold} />
             <div className="flex items-center justify-between py-2">
               <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Dominant Anasir</span>
               <div className="flex items-center gap-2">
@@ -208,9 +250,9 @@ export default function EsmaVefkiSection({ satrVahidLetters = [], groups, domina
 
         <OrnamentalDivider />
 
-        {/* K5 — Vefk */}
+        {/* K3 — Vefk */}
         <Card accent={elMeta.color}>
-          <SectionHeader step="K5" label="Esma-i Kitabet Vefk" arabic="الوفق" color={elMeta.color} />
+          <SectionHeader step="K3" label="Esma-i Kitabet Vefk" arabic="الوفق" color={elMeta.color} />
           {vefkResult ? (
             <VefkGrid vefkResult={vefkResult} />
           ) : (
