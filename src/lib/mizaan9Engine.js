@@ -19,10 +19,10 @@ const MIZAAN_BAST1 = {
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
 // Bast-1 values: ا=16, ب=616, ج=1041, د=283, ه=709, و=468, ز=141, ح=612, ط=539, ي=579, ك=635, ل=1097, م=339, ن=765, س=524, ع=197, ف=657, ص=595, ق=60, ر=517, ش=1095, ت=337, ث=763, خ=522, ذ=195, ض=655, ظ=593, غ=114, ة=709, ء=16
 export const MIZAAN_ELEMENTS = {
-  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 2411 },  // ا(16)+ل(1097)+ن(765)+ا(16)+ر(517) = 2411
-  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'التراب', icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 2599 },  // ا(16)+ل(1097)+ت(337)+ر(517)+ا(16)+ب(616) = 2599
-  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 2411 },  // ا(16)+ل(1097)+ه(709)+و(468)+ا(16)+ء(16) = 2411
-  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 2184 },  // ا(16)+ل(1097)+م(339)+ا(16)+ء(16) = 2184
+  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 2411 },  // النار: ا(16)+ل(1097)+ن(765)+ا(16)+ر(517) = 2411 ✅
+  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'التراب', icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 2599 },  // التراب: ا(16)+ل(1097)+ت(337)+ر(517)+ا(16)+ب(616) = 2599 ✅
+  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 2322 },  // الهواء: ا(16)+ل(1097)+ه(709)+و(468)+ا(16)+ء(16) = 2322 ✅
+  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 1484 },  // الماء: ا(16)+ل(1097)+م(339)+ا(16)+ء(16) = 1484 ✅
 };
 
 export const MIZAAN_RANK_NAMES = ['Mertebe','Derece','Dakika','Saniye','Salise','Rabia','Hamise'];
