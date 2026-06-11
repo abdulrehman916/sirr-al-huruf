@@ -33,6 +33,7 @@ const MizaanPipelineTest    = lazy(() => import('./pages/MizaanPipelineTest'));
 const MizaanAuditReport        = lazy(() => import('./pages/MizaanAuditReport'));
 const IstintakRuleDiscovery    = lazy(() => import('./pages/IstintakRuleDiscovery'));
 const ManuscriptPipelinePage   = lazy(() => import('./pages/ManuscriptPipelinePage'));
+const AbjadBastAuditPage       = lazy(() => import('./pages/AbjadBastAuditPage'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -97,6 +98,7 @@ const AuthenticatedApp = () => {
             <Route path="/audit-report" element={<MizaanAuditReport />} />
             <Route path="/istintak-discovery" element={<IstintakRuleDiscovery />} />
             <Route path="/manuscript-pipeline" element={<ManuscriptPipelinePage />} />
+            <Route path="/abjad-bast-audit" element={<AbjadBastAuditPage />} />
 
             <Route path="*" element={<PageNotFound />} />
           </Routes>
