@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 
 const STORAGE_KEY = "app_page_state_v1";
@@ -37,15 +37,9 @@ export function PageStateProvider({ children }) {
   const [pageStates, setPageStates] = useState(() => loadFromStorage(STORAGE_KEY, {}));
   const [scrollPositions, setScrollPositions] = useState(() => loadFromStorage(SCROLL_KEY, {}));
 
-  // Persist page states to localStorage whenever they change
-  // Use a ref+debounce to avoid hammering storage on rapid state updates
-  const saveTimer = useRef(null);
+  // Persist page states to localStorage immediately on every change
   useEffect(() => {
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      saveToStorage(STORAGE_KEY, pageStates);
-    }, 300);
-    return () => clearTimeout(saveTimer.current);
+    saveToStorage(STORAGE_KEY, pageStates);
   }, [pageStates]);
 
   useEffect(() => {
