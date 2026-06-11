@@ -212,6 +212,24 @@ export function mizaanAnalyze(text) {
   return mBuildResult(text, letters, counts);
 }
 
+// ── Mizan's own Bast calculation (isolated from Abjad modules) ──
+export function mizaanCalcBast(text, bastLevel = 1) {
+  const clean = mClean(text);
+  const entries = [];
+  let total = 0;
+  
+  for (const ch of clean) {
+    const norm = mNorm(ch);
+    const bastValue = MIZAAN_BAST1[norm] ?? 0;
+    if (norm in MIZAAN_BAST1) {
+      entries.push({ original: ch, normalized: norm, value: bastValue });
+      total += bastValue;
+    }
+  }
+  
+  return { entries, total, bastLevel };
+}
+
 // ── Async chunked analysis (non-blocking for long Quranic texts) ──
 const CHUNK = 500;
 

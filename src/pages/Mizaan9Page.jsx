@@ -3,10 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
-import { mizaanAnalyzeAsync } from "../lib/mizaan9Engine";
+import { mizaanAnalyzeAsync, mizaanCalcBast } from "../lib/mizaan9Engine";
 import { DAY_PLANET_MAP, MIZAAN_KHAYR_SHARR, MIZAAN_HOURS, MIZAAN_DAYS, MIZAAN_PLANETS_ALL, MIZAAN_PURPOSES, MIZAAN_ELEMENT_DEGREES } from "../lib/mizaan9Data";
 import { MIZAAN_BAST2 } from "../lib/mizaan9Engine";
-import { calcBast } from "../lib/abjadModes";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
 import Mizaan3      from "../components/mizaan/Mizaan3";
@@ -120,7 +119,7 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
   });
   const trimmedCustom = (customPurpose ?? "").trim();
   if (trimmedCustom) {
-    const { total: customBastVal } = calcBast(trimmedCustom, 1);
+    const { total: customBastVal } = mizaanCalcBast(trimmedCustom, 1);
     grandBast   += customBastVal;
     grandLetters += countArabicLetters(trimmedCustom);
   }
