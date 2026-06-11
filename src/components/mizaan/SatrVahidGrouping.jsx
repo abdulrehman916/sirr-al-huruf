@@ -211,10 +211,30 @@ export default function SatrVahidGrouping({
           <div className="flex flex-wrap gap-2 justify-center mb-3">
             <LetterRow letters={safeSeed} color={G.gold} size="xl" showIndex rtl />
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            <StatRow label="Total Count" value={totalSeed} />
-            <StatRow label="Classification" value={isSeedFerd ? "FERD فرد" : "ZEVC زوج"} valueColor={isSeedFerd ? G.red : G.green} />
-            <StatRow label="Bast Level" value={`${bastLevel} — ${bastLabelAr}`} />
+          <div className="flex items-center gap-3 mt-3 flex-wrap">
+            <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
+              style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
+              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Count</span>
+              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{totalSeed}</span>
+            </div>
+            {/* Parity badge */}
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border"
+              style={{
+                background: (isSeedFerd ? G.red : G.green) + "18",
+                borderColor: (isSeedFerd ? G.red : G.green) + "60",
+              }}>
+              <span className="font-amiri text-lg font-bold" style={{ color: isSeedFerd ? G.red : G.green }}>
+                {isSeedFerd ? "فرد" : "زوج"}
+              </span>
+              <span className="font-inter text-xs font-bold uppercase tracking-wide" style={{ color: isSeedFerd ? G.red : G.green }}>
+                {isSeedFerd ? "FERD — Odd" : "ZEVC — Even"}
+              </span>
+            </div>
+            <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
+              style={{ background: G.bgInner, borderColor: G.goldBorder }}>
+              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Bast</span>
+              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.goldDim }}>{bastLevel}th — {bastLabelAr}</span>
+            </div>
           </div>
         </Card>
 
@@ -317,17 +337,23 @@ export default function SatrVahidGrouping({
           <div className="mb-3">
             <LetterRow letters={concatenated} color={G.gold} size="lg" showIndex rtl />
           </div>
-          <div className="flex gap-3 flex-wrap mt-3">
+          <div className="flex gap-3 flex-wrap mt-3 items-center">
             <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
               style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total</span>
+              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Letters</span>
               <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{satrCount}</span>
             </div>
-            <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
-              style={{ background: (isSatrFerd ? G.red : G.green) + "15", borderColor: (isSatrFerd ? G.red : G.green) + "40" }}>
-              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Type</span>
-              <span className="font-inter text-sm font-bold" style={{ color: isSatrFerd ? G.red : G.green }}>
-                {isSatrFerd ? "FERD فرد" : "ZEVC زوج"}
+            {/* Parity badge */}
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border"
+              style={{
+                background: (isSatrFerd ? G.red : G.green) + "18",
+                borderColor: (isSatrFerd ? G.red : G.green) + "60",
+              }}>
+              <span className="font-amiri text-lg font-bold" style={{ color: isSatrFerd ? G.red : G.green }}>
+                {isSatrFerd ? "فرد" : "زوج"}
+              </span>
+              <span className="font-inter text-xs font-bold uppercase tracking-wide" style={{ color: isSatrFerd ? G.red : G.green }}>
+                {isSatrFerd ? "FERD — Odd" : "ZEVC — Even"}
               </span>
             </div>
             <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
