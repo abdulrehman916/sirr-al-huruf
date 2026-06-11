@@ -162,7 +162,7 @@ export default function SatrVahidGrouping({
           <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{totalLetters} letters</span>
         </div>
         <div className="flex flex-wrap gap-1 justify-center" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
-           {safeSatrVahidLetters.map((l, i) => (
+           {[...safeSatrVahidLetters].reverse().map((l, i) => (
              <motion.span
                key={i}
                initial={{ opacity: 0, scale: 0.8 }}
@@ -172,8 +172,7 @@ export default function SatrVahidGrouping({
                style={{
                  color: G.text,
                  borderColor: G.border,
-                 background: i === 0 ? `${G.green}15` : "rgba(212,175,55,0.04)",
-                 border: i === 0 ? `1px solid ${G.green}` : G.border
+                 background: "rgba(212,175,55,0.04)",
                }}
              >
                {l}
