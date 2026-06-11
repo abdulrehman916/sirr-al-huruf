@@ -211,64 +211,16 @@ export default function SatrVahidGrouping({
           <div className="flex flex-wrap gap-2 justify-center mb-3">
             <LetterRow letters={safeSeed} color={G.gold} size="xl" showIndex rtl />
           </div>
-          <div className="flex items-center gap-3 mt-3 flex-wrap">
-            <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
-              style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Count</span>
-              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{totalSeed}</span>
-            </div>
-            {/* Parity badge */}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border"
-              style={{
-                background: (isSeedFerd ? G.red : G.green) + "18",
-                borderColor: (isSeedFerd ? G.red : G.green) + "60",
-              }}>
-              <span className="font-amiri text-lg font-bold" style={{ color: isSeedFerd ? G.red : G.green }}>
-                {isSeedFerd ? "فرد" : "زوج"}
-              </span>
-              <span className="font-inter text-xs font-bold uppercase tracking-wide" style={{ color: isSeedFerd ? G.red : G.green }}>
-                {isSeedFerd ? "FERD — Odd" : "ZEVC — Even"}
-              </span>
-            </div>
-            <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
-              style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Bast</span>
-              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.goldDim }}>{bastLevel}th — {bastLabelAr}</span>
-            </div>
-          </div>
-        </Card>
-
-        {/* ══ B: CLASSIFICATION ══ */}
-        <Card accent={isSeedFerd ? G.red : G.green}>
-          <SectionHeader step="B" label="Classification & Method" arabic="التصنيف والمنهج" color={isSeedFerd ? G.red : G.green} />
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex-1 min-w-[120px] rounded-lg px-4 py-3 text-center border"
-              style={{ background: (isSeedFerd ? G.red : G.green) + "15", borderColor: (isSeedFerd ? G.red : G.green) + "40" }}>
-              <div className="font-amiri text-2xl font-bold" style={{ color: isSeedFerd ? G.red : G.green }}>
-                {isSeedFerd ? "فَرْد" : "زَوْج"}
-              </div>
-              <div className="font-inter text-[8px] uppercase tracking-wider mt-1" style={{ color: G.dim }}>
-                {isSeedFerd ? "ODD — Apply 5th Bast" : "EVEN — Apply 4th Bast"}
-              </div>
-            </div>
-            <Arrow label="applies" />
-            <div className="flex-1 min-w-[120px] rounded-lg px-4 py-3 text-center border"
-              style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <div className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>
-                {bastLevel === 5 ? "خَامِس" : "رَابِع"}
-              </div>
-              <div className="font-inter text-[8px] uppercase tracking-wider mt-1" style={{ color: G.dim }}>
-                {bastLevel}th Bast — {bastLabelAr}
-              </div>
-            </div>
-            <Arrow label="rule" />
-            <div className="flex-1 min-w-[120px] rounded-lg px-4 py-3 text-center border"
-              style={{ background: G.blueDim, borderColor: G.blue + "40" }}>
-              <div className="font-inter text-lg font-bold tabular-nums" style={{ color: G.blue }}>
-                LAST → FIRST
-              </div>
-              <div className="font-inter text-[8px] uppercase tracking-wider mt-1" style={{ color: G.dim }}>Processing Order</div>
-            </div>
+          <div className="text-sm font-inter" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{totalSeed}</span>
+            <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
+            <span style={{
+              color: isSeedFerd ? G.red : G.green,
+              fontWeight: "bold",
+              fontSize: "0.95rem"
+            }}>
+              {isSeedFerd ? "FERD (فرد)" : "ZEVC (زوج)"}
+            </span>
           </div>
         </Card>
 
@@ -337,30 +289,20 @@ export default function SatrVahidGrouping({
           <div className="mb-3">
             <LetterRow letters={concatenated} color={G.gold} size="lg" showIndex rtl />
           </div>
-          <div className="flex gap-3 flex-wrap mt-3 items-center">
-            <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
-              style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Letters</span>
-              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{satrCount}</span>
-            </div>
-            {/* Parity badge */}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border"
-              style={{
-                background: (isSatrFerd ? G.red : G.green) + "18",
-                borderColor: (isSatrFerd ? G.red : G.green) + "60",
-              }}>
-              <span className="font-amiri text-lg font-bold" style={{ color: isSatrFerd ? G.red : G.green }}>
-                {isSatrFerd ? "فرد" : "زوج"}
-              </span>
-              <span className="font-inter text-xs font-bold uppercase tracking-wide" style={{ color: isSatrFerd ? G.red : G.green }}>
-                {isSatrFerd ? "FERD — Odd" : "ZEVC — Even"}
-              </span>
-            </div>
-            <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
-              style={{ background: G.blueDim, borderColor: G.blue + "40" }}>
-              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Group Size</span>
-              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.blue }}>{groupSize}</span>
-            </div>
+          <div className="text-sm font-inter" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{satrCount}</span>
+            <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
+            <span style={{
+              color: isSatrFerd ? G.red : G.green,
+              fontWeight: "bold",
+              fontSize: "0.95rem"
+            }}>
+              {isSatrFerd ? "FERD (فرد)" : "ZEVC (زوج)"}
+            </span>
+            <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>
+              Group Size: <span style={{ color: G.gold }}>{groupSize}</span>
+            </span>
           </div>
         </Card>
 
