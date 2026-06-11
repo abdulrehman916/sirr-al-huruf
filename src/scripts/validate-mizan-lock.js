@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-undef */
 // ═══════════════════════════════════════════════════════════════
 // MIZAN PERMANENT LOCK VALIDATOR
 // ═══════════════════════════════════════════════════════════════
@@ -14,8 +15,6 @@
 // - REPORT FILE NAME & LINE NUMBER
 // - REQUIRE MANUAL APPROVAL
 // ═══════════════════════════════════════════════════════════════
-
-/* global process */
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, relative } from 'path';
 
