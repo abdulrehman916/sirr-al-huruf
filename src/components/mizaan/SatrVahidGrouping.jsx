@@ -153,16 +153,6 @@ export default function SatrVahidGrouping({
   const isSatrFerd = satrCount % 2 !== 0;
   const groupSize = isSatrFerd ? 5 : 4;
 
-  // ── E/F: Odd and Even position letters ──
-  const oddLetters  = concatenated.filter((_, i) => (i + 1) % 2 !== 0); // positions 1,3,5…
-  const evenLetters = concatenated.filter((_, i) => (i + 1) % 2 === 0); // positions 2,4,6…
-
-  // ── G: Reconstructed sequence (odd first, then even) ──
-  const reconstructed = [...oddLetters, ...evenLetters];
-
-  // ── H: Final result letter (last letter of reconstructed) ──
-  const finalLetter = reconstructed.length > 0 ? reconstructed[reconstructed.length - 1] : null;
-
   // ── Grouping with remainder supplement ──
   const { finalSequence, supplement, remainder, groups } = useMemo(() => {
     const rem = concatenated.length % groupSize;
@@ -347,90 +337,6 @@ export default function SatrVahidGrouping({
             </div>
           </div>
         </Card>
-
-        {/* ══ E, F, G: ZEVC-ONLY sections ══ */}
-        {!isSatrFerd && (
-          <>
-            {/* ══ E: ODD POSITION LETTERS ══ */}
-            <Card accent={G.red}>
-              <SectionHeader step="E" label="Odd Position Letters" arabic="حروف الفرد" color={G.red} />
-              <div className="flex items-start gap-3 flex-wrap">
-                <div className="flex-shrink-0">
-                  <div className="font-inter text-[8px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>
-                    Positions 1, 3, 5… ({oddLetters.length} letters)
-                  </div>
-                  <LetterRow letters={oddLetters} color={G.red} size="lg" rtl />
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-1" style={{ direction: "rtl" }}>
-                {concatenated.map((l, i) => (
-                  <div key={i} className="flex flex-col items-center gap-0.5">
-                    <span className="font-amiri text-lg px-2 py-1 rounded border"
-                      style={{
-                        color: (i + 1) % 2 !== 0 ? G.red : G.dim,
-                        borderColor: (i + 1) % 2 !== 0 ? G.red + "55" : "transparent",
-                        background: (i + 1) % 2 !== 0 ? G.redDim : "transparent",
-                        opacity: (i + 1) % 2 !== 0 ? 1 : 0.3,
-                        display: "inline-block",
-                      }}>
-                      {l}
-                    </span>
-                    <span className="font-inter text-[7px] tabular-nums" style={{ color: G.dim }}>{i + 1}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* ══ F: EVEN POSITION LETTERS ══ */}
-            <Card accent={G.green}>
-              <SectionHeader step="F" label="Even Position Letters" arabic="حروف الزوج" color={G.green} />
-              <div className="flex-shrink-0">
-                <div className="font-inter text-[8px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>
-                  Positions 2, 4, 6… ({evenLetters.length} letters)
-                </div>
-                <LetterRow letters={evenLetters} color={G.green} size="lg" rtl />
-              </div>
-              <div className="mt-3 flex flex-wrap gap-1" style={{ direction: "rtl" }}>
-                {concatenated.map((l, i) => (
-                  <div key={i} className="flex flex-col items-center gap-0.5">
-                    <span className="font-amiri text-lg px-2 py-1 rounded border"
-                      style={{
-                        color: (i + 1) % 2 === 0 ? G.green : G.dim,
-                        borderColor: (i + 1) % 2 === 0 ? G.green + "55" : "transparent",
-                        background: (i + 1) % 2 === 0 ? G.greenDim : "transparent",
-                        opacity: (i + 1) % 2 === 0 ? 1 : 0.3,
-                        display: "inline-block",
-                      }}>
-                      {l}
-                    </span>
-                    <span className="font-inter text-[7px] tabular-nums" style={{ color: G.dim }}>{i + 1}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* ══ G: RECONSTRUCTED SEQUENCE ══ */}
-            <Card accent={G.purple}>
-              <SectionHeader step="G" label="Reconstructed Sequence" arabic="التركيب المُعاد" color={G.purple} />
-              <div className="flex items-center gap-3 flex-wrap mb-3">
-                <div>
-                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.red }}>Odd ({oddLetters.length})</div>
-                  <LetterRow letters={oddLetters} color={G.red} size="sm" rtl />
-                </div>
-                <div className="font-inter text-xl font-bold" style={{ color: G.goldDim }}>+</div>
-                <div>
-                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.green }}>Even ({evenLetters.length})</div>
-                  <LetterRow letters={evenLetters} color={G.green} size="sm" rtl />
-                </div>
-                <Arrow label="combine" />
-                <div>
-                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.purple }}>Result ({reconstructed.length})</div>
-                  <LetterRow letters={reconstructed} color={G.purple} size="sm" rtl />
-                </div>
-              </div>
-            </Card>
-          </>
-        )}
 
         <OrnamentalDivider />
 
