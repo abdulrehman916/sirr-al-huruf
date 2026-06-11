@@ -353,7 +353,7 @@ export default function Mizaan9Page() {
                         </div>
                         <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Initial Seed Letters (Pipeline Input Order)</span>
-                          <div className="flex flex-wrap gap-1 justify-center" style={{ direction: 'ltr', unicodeBidi: 'isolate' }}>
+                          <div className="flex flex-wrap gap-1 justify-center" style={{ direction: 'rtl' }}>
                             {seedLetters.length > 0 ? (
                               seedLetters.map((l, i) => (
                                 <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
@@ -361,6 +361,7 @@ export default function Mizaan9Page() {
                                     color: G.text, 
                                     borderColor: G.border, 
                                     background: "rgba(212,175,55,0.04)",
+                                    display: "inline-block",
                                   }}
                                 >
                                   {l}
