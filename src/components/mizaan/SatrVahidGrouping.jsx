@@ -307,7 +307,7 @@ export default function SatrVahidGrouping({
                   <Arrow label="Istintak" />
 
                   {/* Extracted letters */}
-                  <div className="flex items-center gap-1 flex-wrap" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
+                  <div className="flex items-center gap-1 flex-wrap" style={{ direction: "rtl" }}>
                     {d.extracted.map((l, i) => (
                       <LetterCell key={i} letter={l} color={G.green} size="sm" />
                     ))}
@@ -325,7 +325,7 @@ export default function SatrVahidGrouping({
         <Card accent={G.gold}>
           <SectionHeader step="D" label="Combined Sequence — Satr-i Vahid" arabic="السطر الواحد" color={G.gold} />
           <div className="mb-3">
-            <LetterRow letters={concatenated} color={G.gold} size="lg" showIndex />
+            <LetterRow letters={concatenated} color={G.gold} size="lg" showIndex rtl />
           </div>
           <div className="flex gap-3 flex-wrap mt-3">
             <div className="px-3 py-1.5 rounded-lg border flex items-center gap-2"
@@ -356,11 +356,11 @@ export default function SatrVahidGrouping({
               <div className="font-inter text-[8px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>
                 Positions 1, 3, 5… ({oddLetters.length} letters)
               </div>
-              <LetterRow letters={oddLetters} color={G.red} size="lg" />
+              <LetterRow letters={oddLetters} color={G.red} size="lg" rtl />
             </div>
           </div>
           {/* Show which positions */}
-          <div className="mt-3 flex flex-wrap gap-1" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
+          <div className="mt-3 flex flex-wrap gap-1" style={{ direction: "rtl" }}>
             {concatenated.map((l, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
                 <span className="font-amiri text-lg px-2 py-1 rounded border"
@@ -369,6 +369,7 @@ export default function SatrVahidGrouping({
                     borderColor: (i + 1) % 2 !== 0 ? G.red + "55" : "transparent",
                     background: (i + 1) % 2 !== 0 ? G.redDim : "transparent",
                     opacity: (i + 1) % 2 !== 0 ? 1 : 0.3,
+                    display: "inline-block",
                   }}>
                   {l}
                 </span>
@@ -385,10 +386,10 @@ export default function SatrVahidGrouping({
             <div className="font-inter text-[8px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>
               Positions 2, 4, 6… ({evenLetters.length} letters)
             </div>
-            <LetterRow letters={evenLetters} color={G.green} size="lg" />
+            <LetterRow letters={evenLetters} color={G.green} size="lg" rtl />
           </div>
           {/* Show which positions */}
-          <div className="mt-3 flex flex-wrap gap-1" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
+          <div className="mt-3 flex flex-wrap gap-1" style={{ direction: "rtl" }}>
             {concatenated.map((l, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
                 <span className="font-amiri text-lg px-2 py-1 rounded border"
@@ -397,6 +398,7 @@ export default function SatrVahidGrouping({
                     borderColor: (i + 1) % 2 === 0 ? G.green + "55" : "transparent",
                     background: (i + 1) % 2 === 0 ? G.greenDim : "transparent",
                     opacity: (i + 1) % 2 === 0 ? 1 : 0.3,
+                    display: "inline-block",
                   }}>
                   {l}
                 </span>
@@ -412,17 +414,17 @@ export default function SatrVahidGrouping({
           <div className="flex items-center gap-3 flex-wrap mb-3">
             <div>
               <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.red }}>Odd ({oddLetters.length})</div>
-              <LetterRow letters={oddLetters} color={G.red} size="sm" />
+              <LetterRow letters={oddLetters} color={G.red} size="sm" rtl />
             </div>
             <div className="font-inter text-xl font-bold" style={{ color: G.goldDim }}>+</div>
             <div>
               <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.green }}>Even ({evenLetters.length})</div>
-              <LetterRow letters={evenLetters} color={G.green} size="sm" />
+              <LetterRow letters={evenLetters} color={G.green} size="sm" rtl />
             </div>
             <Arrow label="combine" />
             <div>
               <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.purple }}>Result ({reconstructed.length})</div>
-              <LetterRow letters={reconstructed} color={G.purple} size="sm" />
+              <LetterRow letters={reconstructed} color={G.purple} size="sm" rtl />
             </div>
           </div>
         </Card>
@@ -485,7 +487,7 @@ export default function SatrVahidGrouping({
                 </div>
               </div>
               <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>Appended letters:</div>
-              <LetterRow letters={supplement} color={G.green} size="sm" />
+              <LetterRow letters={supplement} color={G.green} size="sm" rtl />
             </div>
           )}
 
@@ -512,7 +514,7 @@ export default function SatrVahidGrouping({
 
                 {/* Letters in group */}
                 <div className="flex items-center gap-3 flex-wrap">
-                  <LetterRow letters={group.letters} color={G.gold} size="lg" showIndex />
+                  <LetterRow letters={group.letters} color={G.gold} size="lg" showIndex rtl />
                   <Arrow label="name" />
                   {/* Name */}
                   <span className="font-amiri text-2xl font-bold px-4 py-2 rounded-xl border"
