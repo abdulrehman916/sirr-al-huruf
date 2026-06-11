@@ -28,29 +28,8 @@ const ELEMENT_META = {
   water: { arabic: "الماء",    english: "Water", color: "#67E8F9", icon: "🜄" },
 };
 
-// Abjad Kabir values for Bast-1 of each Arabic letter
-// (using FIRST_BAST from mizaanPostEngine via getBastLevel level=1)
 function calcEsmaLettersBast(letters) {
   return letters.reduce((sum, l) => sum + (getBastLevel(l, 1) || 0), 0);
-}
-
-// Dominant element from raw Abjad letter counts
-// Same rule as Anasir: count each letter's element membership, dominant = highest
-const ELEMENT_LETTERS = {
-  fire:  new Set(['ا','ه','ط','م','ف','ش','ذ','هـ','أ','إ','آ','ء','ة']),
-  earth: new Set(['ب','و','ي','ن','ص','ت','ض','ى','ؤ','ئ']),
-  air:   new Set(['ج','ز','ك','س','ق','ث','ظ']),
-  water: new Set(['د','ح','ل','ع','ر','خ','غ']),
-};
-
-function dominantFromLetters(letters) {
-  const counts = { fire: 0, earth: 0, air: 0, water: 0 };
-  for (const l of letters) {
-    for (const [el, set] of Object.entries(ELEMENT_LETTERS)) {
-      if (set.has(l)) { counts[el]++; break; }
-    }
-  }
-  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
 
 // ── Sub-components ───────────────────────────────────────────────
@@ -158,21 +137,22 @@ function VefkGrid({ vefkResult }) {
 }
 
 // ── Main exported component ──────────────────────────────────────
-export default function EsmaVefkiSection({ groups }) {
+// dominant: passed from SatrVahidGrouping — the same Galib Anasir already
+// used for the Esma-i Kitabet Grouping section. Never recalculated here.
+export default function EsmaVefkiSection({ groups, dominant = "fire" }) {
   const safeGroups = groups || [];
 
-  // Step 1: Concatenate all letters from all generated names (Section J source)
+  // Concatenate all letters from all generated names (Section J source)
   const allLetters = useMemo(() => safeGroups.flatMap(g => g.letters), [safeGroups]);
   const totalLetters = allLetters.length;
 
-  // Step 2: Total Bast value of the full letter sequence
+  // Total Bast-1 value of the complete Esma-i Kitabet letter sequence
   const totalBast = useMemo(() => calcEsmaLettersBast(allLetters), [allLetters]);
 
-  // Step 3: Dominant Anasir from the letter sequence
-  const dominant = useMemo(() => dominantFromLetters(allLetters), [allLetters]);
+  // Use the dominant passed from the grouping section — same Galib Anasir
   const elMeta = ELEMENT_META[dominant] || ELEMENT_META.fire;
 
-  // Step 4: Build Vefk using totalBast + dominant
+  // Build Vefk using totalBast + the passed dominant
   const vefkResult = useMemo(() => {
     if (!totalBast || totalBast < 30) return null;
     return buildVefk(totalBast, dominant);
@@ -211,26 +191,9 @@ export default function EsmaVefkiSection({ groups }) {
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* K1 — Complete Letter Sequence */}
-        <Card accent={G.gold}>
-          <SectionHeader step="K1" label="Esma-i Kitabet Letters" arabic="حروف الأسماء" color={G.gold} />
-          <div className="flex flex-wrap gap-1.5 mb-3" style={{ direction: "rtl" }}>
-            {allLetters.map((l, i) => (
-              <span key={i}
-                className="font-amiri font-bold text-2xl px-3 py-2 rounded-lg border"
-                style={{ color: G.gold, borderColor: G.goldBorder, background: G.bgInner, lineHeight: 1.2 }}>
-                {l}
-              </span>
-            ))}
-          </div>
-          <div className="text-sm font-inter" style={{ color: G.dim }}>
-            Total Letters: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{totalLetters}</span>
-          </div>
-        </Card>
-
-        {/* K2 + K3 + K4 — Stats */}
+        {/* K1 — Stats */}
         <Card>
-          <SectionHeader step="K2–K4" label="Calculations" arabic="الحسابات" color={G.blue} />
+          <SectionHeader step="K1–K3" label="Calculations" arabic="الحسابات" color={G.blue} />
           <div className="space-y-0">
             <StatRow label="Total Bast Value" value={totalBast.toLocaleString()} valueColor={G.gold} />
             <StatRow label="Total Letter Count" value={totalLetters} valueColor={G.gold} />

@@ -415,9 +415,9 @@ export default function SatrVahidGrouping({
           )}
         </Card>
 
-        {/* ══ K: ESMA-I KITABET VEFKI — appended below J, reads groups directly ══ */}
+        {/* ══ K: ESMA-I KITABET VEFKI — uses same dominant as the Grouping section ══ */}
         {groups.length > 0 && (
-          <EsmaVefkiSection groups={groups} />
+          <EsmaVefkiSection groups={groups} dominant={dominant} />
         )}
 
       </div>
