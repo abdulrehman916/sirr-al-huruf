@@ -26,8 +26,10 @@
 //   - Pass sequence unchanged through all pipeline stages
 // ═══════════════════════════════════════════════════════════════
 
-// ── First Bast lookup table (p.41–42) ──────────────────────────
-// Keys are Arabic letters. Values are First Bast values from the book.
+// ── First Bast lookup table (p.42–43) ──────────────────────────
+// MANUSCRIPT-LOCKED: Pages 42-43 (HARFLERİN BASTI CETVELİ)
+// Keys are Arabic letters. Values are First Bast values from the Mizan manuscript.
+// These values are the exclusive authority for Mizan letter-to-number conversion.
 export const FIRST_BAST = {
   'ا': 16,   'ب': 616,  'ج': 1041, 'د': 283,  'هـ': 709,
   'و': 468,  'ز': 141,  'ح': 612,  'ط': 539,  'ى': 579,
@@ -35,15 +37,17 @@ export const FIRST_BAST = {
   'ع': 197,  'ف': 657,  'ص': 595,  'ق': 60,   'ر': 517,
   'ش': 1095, 'ت': 337,  'ث': 763,  'خ': 522,  'ذ': 195,
   'ض': 655,  'ظ': 593,  'غ': 114,
-  // Additional normalizations for variants
+  // Additional normalizations for variants (inherit from base letters)
   'ه': 709,  'ي': 579,  'ء': 16,   'أ': 16,   'إ': 16,
   'آ': 16,   'ة': 709,  'ى': 579,  'ؤ': 468,  'ئ': 579,
 };
 
 // ── Full 5-level Bast table (p.42–43) ──────────────────────────
+// MANUSCRIPT-LOCKED: Pages 42-43 (HARFLERİN BASTI CETVELİ)
 // [letter]: [bast1, bast2, bast3, bast4, bast5]
+// These values are the exclusive authority for Mizan letter-to-number conversion.
 export const BAST_TABLE = {
-  'ا': [16,    1047, 594,  1641, 991],
+  'ا': [16,    1047, 594,  1941, 991],
   'ب': [616,   1569, 1940, 1046, 921],
   'ج': [1041,  469,  1400, 451,  1118],
   'د': [283,   2215, 2535, 3299, 2806],
@@ -73,7 +77,7 @@ export const BAST_TABLE = {
   'ض': [655,   1996, 1770, 506,  1231],
   'ظ': [593,   2399, 2959, 2627, 2028],
   'غ': [114,   822,  1906, 1175, 1080],
-  // Variants
+  // Variants (inherit from base letters)
   'أ': [16,    1047, 594,  1941, 991],
   'إ': [16,    1047, 594,  1941, 991],
   'آ': [16,    1047, 594,  1941, 991],
