@@ -383,19 +383,22 @@ export default function SatrVahidGrouping({
           </div>
         </Card>
 
-        {/* ══ J: FINAL SUMMARY SEAL ══ */}
+        {/* ══ J: ESMA-I KITABET NAMES — manuscript generation order ══ */}
         <Card accent={G.gold}>
-          <SectionHeader step="J" label="Summary — All Generated Names" arabic="الخلاصة والأسماء" color={G.gold} />
-          <div className="flex flex-wrap gap-2 justify-center py-2">
+          <SectionHeader step="J" label="Esma-i Kitabet Names" arabic="أسماء الكتابة" color={G.gold} />
+          <div className="flex flex-col gap-2 py-2">
             {groups.map((group, gi) => (
               <motion.div key={gi}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: gi * 0.05 }}
-                className="flex flex-col items-center gap-1 px-4 py-3 rounded-xl border"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl border"
                 style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
-                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Name {gi + 1}</span>
-                <span className="font-amiri text-2xl font-bold" style={{ color: G.gold }} dir="rtl">
+                <div className="flex items-center justify-center w-6 h-6 rounded-lg font-inter text-[9px] font-black flex-shrink-0"
+                  style={{ background: G.bgInner, color: G.goldDim, border: `1px solid ${G.goldBorder}` }}>
+                  {gi + 1}
+                </div>
+                <span className="font-amiri text-2xl font-bold flex-1" style={{ color: G.gold }} dir="rtl">
                   {group.name}
                 </span>
                 <span className="font-inter text-[7px] tabular-nums" style={{ color: G.dim }}>
@@ -408,7 +411,7 @@ export default function SatrVahidGrouping({
             <div className="text-center mt-3">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border"
                 style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-                <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Names Generated</span>
+                <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Esma-i Kitabet Names</span>
                 <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{groups.length}</span>
               </div>
             </div>
