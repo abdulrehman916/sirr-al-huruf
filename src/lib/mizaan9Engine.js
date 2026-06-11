@@ -3,24 +3,34 @@
 // Used ONLY by Mizaan9Page. Zero shared code with any other module.
 // ═══════════════════════════════════════════════════════════════
 
+// ── MIZAN PERMANENT LOCK IMPORT ──
+// This import activates immutable protection for all MIZAN datasets
+// Validation runs on module load — failures block execution
+import { MIZAN_LOCK_STATUS, validateMizanDatasets } from './mizanCanonicalLock.js';
+
 // ── Own Bast-ul Aval (Birinci Bast) table ──
 // MANUSCRIPT-LOCKED: Pages 42-43 (HARFLERİN BASTI CETVELİ)
 // These values are the exclusive authority for Mizan letter-to-number conversion.
-const MIZAAN_BAST1 = {
+// FROZEN: Immutable — modification attempts will fail validation
+const MIZAAN_BAST1 = Object.freeze({
   'ا': 16,   'ب': 616,  'ج': 1041, 'د': 283,  'ه': 709,
   'و': 468,  'ز': 141,  'ح': 612,  'ط': 539,  'ي': 579,
   'ك': 635,  'ل': 1097, 'م': 339,  'ن': 765,  'س': 524,
   'ع': 197,  'ف': 657,  'ص': 595,  'ق': 60,   'ر': 517,
   'ش': 1095, 'ت': 337,  'ث': 763,  'خ': 522,  'ذ': 195,
   'ض': 655,  'ظ': 593,  'غ': 114,
-};
+});
 
 // ═══════════════════════════════════════════════════════════════
-// MIZAN PERMANENT ISOLATION LOCK
+// MIZAN PERMANENT ISOLATION LOCK — ENFORCED
 // ═══════════════════════════════════════════════════════════════
 // This engine is EXCLUSIVELY for Mizan-9 page calculations.
 // NO cross-page data sharing. NO imports from other engines.
 // All Mizan datasets are frozen and immutable.
+// 
+// AUTHORITY: MIZAN MANUSCRIPT (Verified & Validated)
+// STATUS: PERMANENTLY LOCKED
+// ENFORCEMENT: MANDATORY
 // ═══════════════════════════════════════════════════════════════
 
 // ── Element map — letters in Mertebe rank order ──
