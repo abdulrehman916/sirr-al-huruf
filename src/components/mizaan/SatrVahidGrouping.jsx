@@ -68,12 +68,12 @@ function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = fa
   );
 }
 
-function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false }) {
+function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false, rtl = false }) {
   if (!letters || letters.length === 0) return (
     <span className="font-inter text-xs italic" style={{ color: G.dim }}>—</span>
   );
   return (
-    <div className="flex flex-wrap gap-1.5 items-center" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
+    <div className="flex flex-wrap gap-1.5 items-center" style={{ direction: rtl ? "rtl" : "ltr", unicodeBidi: rtl ? "normal" : "isolate" }}>
       {letters.map((l, i) => (
         <LetterCell key={i} letter={l} index={i} color={color} size={size} showIndex={showIndex} />
       ))}
@@ -219,7 +219,7 @@ export default function SatrVahidGrouping({
         <Card accent={G.gold}>
           <SectionHeader step="A" label="Original Seed Letters" arabic="الحروف الأصلية" color={G.gold} />
           <div className="flex flex-wrap gap-2 justify-center mb-3">
-            <LetterRow letters={safeSeed} color={G.gold} size="xl" showIndex />
+            <LetterRow letters={safeSeed} color={G.gold} size="xl" showIndex rtl />
           </div>
           <div className="grid grid-cols-3 gap-2 mt-3">
             <StatRow label="Total Count" value={totalSeed} />
