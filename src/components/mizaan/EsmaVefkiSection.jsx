@@ -137,17 +137,15 @@ function VefkGrid({ vefkResult }) {
 }
 
 // ── Main exported component ──────────────────────────────────────
-// dominant: passed from SatrVahidGrouping — the same Galib Anasir already
-// used for the Esma-i Kitabet Grouping section. Never recalculated here.
-export default function EsmaVefkiSection({ groups, dominant = "fire" }) {
+// satrVahidLetters: Section D (Combined Sequence) — the sole source for MC.
+// dominant: passed from SatrVahidGrouping — same Galib Anasir used for grouping.
+export default function EsmaVefkiSection({ satrVahidLetters = [], groups, dominant = "fire" }) {
   const safeGroups = groups || [];
+  const safeSatr = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
 
-  // Concatenate all letters from all generated names (Section J source)
-  const allLetters = useMemo(() => safeGroups.flatMap(g => g.letters), [safeGroups]);
-  const totalLetters = allLetters.length;
-
-  // Total Bast-1 value of the complete Esma-i Kitabet letter sequence
-  const totalBast = useMemo(() => calcEsmaLettersBast(allLetters), [allLetters]);
+  // MC source: every letter in the Combined Sequence (Section D), Bast-1 of each, summed
+  const totalBast = useMemo(() => calcEsmaLettersBast(safeSatr), [safeSatr]);
+  const totalLetters = safeSatr.length;
 
   // Use the dominant passed from the grouping section — same Galib Anasir
   const elMeta = ELEMENT_META[dominant] || ELEMENT_META.fire;
@@ -195,8 +193,8 @@ export default function EsmaVefkiSection({ groups, dominant = "fire" }) {
         <Card>
           <SectionHeader step="K1–K3" label="Calculations" arabic="الحسابات" color={G.blue} />
           <div className="space-y-0">
-            <StatRow label="Total Bast Value" value={totalBast.toLocaleString()} valueColor={G.gold} />
-            <StatRow label="Total Letter Count" value={totalLetters} valueColor={G.gold} />
+            <StatRow label="Satr-i Vahid Letter Count (Section D)" value={totalLetters} valueColor={G.gold} />
+            <StatRow label="∑ Birinci Bast → MC" value={totalBast.toLocaleString()} valueColor={G.gold} />
             <div className="flex items-center justify-between py-2">
               <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Dominant Anasir</span>
               <div className="flex items-center gap-2">
