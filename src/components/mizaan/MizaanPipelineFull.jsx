@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -68,6 +68,48 @@ function OrnamentalDivider() {
   );
 }
 
+function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const safeLetters = Array.isArray(allExpandedLetters) ? allExpandedLetters : [];
+  
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}
+      >
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        Expanded Letter Values
+      </button>
+      {isOpen && (
+        <div className="mt-2 space-y-1">
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[6px] font-inter" style={{ color: G.dim }}>
+            {safeLetters.map((letter, idx) => {
+              const bastVal = getBastLevel(letter, 1) || 0;
+              return (
+                <div key={idx} className="contents">
+                  <span className="text-right font-amiri" style={{ color: elementColor }}>{letter}</span>
+                  <span className="tabular-nums" style={{ color: G.dim }}>{bastVal.toLocaleString()}</span>
+                </div>
+              );
+            })}
+          </div>
+          {safeLetters.length > 0 && (
+            <div className="mt-1.5 pt-1.5 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
+              <span className="text-[6px]" style={{ color: G.dim }}>Total: </span>
+              <span className="text-[8px] font-bold tabular-nums" style={{ color: elementColor }}>
+                {safeLetters.reduce((sum, l) => sum + (getBastLevel(l, 1) || 0), 0).toLocaleString()}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SourceSection({ grandBast, elementColor }) {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -104,7 +146,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
 
   if (!pipeline) return null;
 
-  const { initialSeedLetters, vefk, vefkSourceNumber } = pipeline;
+  const { initialSeedLetters, vefk, vefkSourceNumber, allExpandedLetters } = pipeline;
   const element = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
@@ -183,6 +225,9 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                 <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Magic Constant</span>
                 <span className="font-inter text-sm font-bold tabular-nums" style={{ color: elementMeta.color }}>{vefk.mc?.toLocaleString() || 0}</span>
               </div>
+              
+              {/* Expanded Letter Values */}
+              <ExpandedLetterValues allExpandedLetters={allExpandedLetters} elementColor={elementMeta.color} />
               
               {/* Source Explanation */}
               <SourceSection grandBast={grandBast} elementColor={elementMeta.color} />
