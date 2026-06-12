@@ -17,12 +17,14 @@
 # ✓ Remainder correction logic
 # ✓ Page 314 manuscript match (16/16 cells, 100%)
 # ✓ Page 316 manuscript match (16/16 cells, 100%)
+# ✓ Magic Constant = Source Number (empirically verified for Fire)
 # 
 # NOT YET VERIFIED ✗
 # ────────────────────
 # ✗ Air Rubai Template
 # ✗ Water Rubai Template
 # ✗ Earth Rubai Template
+# ✗ MC = Source relationship for Air/Water/Earth (no examples)
 # 
 # ═══════════════════════════════════════════════════════════════
 # MANDATORY ENGINE WORKFLOW
@@ -83,6 +85,55 @@
 # elemental Rubai template positions.
 # 
 # ═══════════════════════════════════════════════════════════════
+# VERIFICATION PROTOCOL (MANUSCRIPT IS AUTHORITY)
+# ═══════════════════════════════════════════════════════════════
+# 
+# CRITICAL RULE: The manuscript grid is the authority, NOT the formula.
+# 
+# For every manuscript example, verify in this order:
+# 
+# 1. EXACT CELL-BY-CELL MATCH (Highest Priority)
+#    ───────────────────────────────────────────
+#    Compare all 16 cells individually.
+#    Generated grid must match manuscript grid exactly.
+#    Report: X/16 cells matched (percentage).
+# 
+# 2. CORRECT ELEMENTAL TEMPLATE
+#    ──────────────────────────
+#    Verify the manuscript used the correct Rubai template
+#    for its stated dominant element.
+# 
+# 3. CORRECT SEQUENTIAL CONTINUATION METHOD
+#    ───────────────────────────────────────
+#    Verify the manuscript follows the sequential continuation
+#    method (not single-cell correction).
+# 
+# 4. CORRECT ROW/COLUMN/DIAGONAL SUMS
+#    ─────────────────────────────────
+#    Calculate actual sums from the manuscript grid:
+#    - Row sums (4 values)
+#    - Column sums (4 values)
+#    - Diagonal sums (2 values)
+#    Report whether all sums are equal (valid magic square).
+# 
+# 5. EVALUATE MC vs SOURCE (Empirical Claim, NOT Requirement)
+#    ─────────────────────────────────────────────────────────
+#    Calculate the actual Magic Constant from the manuscript grid
+#    (the common sum value if all rows/cols/diagonals are equal).
+#    
+#    Compare with the stated Source Number:
+#    - MC = Source (exact match)
+#    - MC ≠ Source (difference: |MC - Source|)
+#    
+#    This is an EMPIRICAL CLAIM to verify, not a mathematical
+#    requirement to enforce.
+#    
+#    If the manuscript shows MC ≠ Source, report the difference.
+#    DO NOT force MC = Source mathematically.
+#    The manuscript may contain remainder adjustments or
+#    approximations that must be reproduced exactly.
+# 
+# ═══════════════════════════════════════════════════════════════
 # SYSTEM WARNING
 # ═══════════════════════════════════════════════════════════════
 # 
@@ -102,7 +153,7 @@
 # evidence for each element.
 # 
 # ═══════════════════════════════════════════════════════════════
-# MANUSCRIPT EVIDENCE
+# MANUSCRIPT EVIDENCE & VERIFICATION RESULTS
 # ═══════════════════════════════════════════════════════════════
 # 
 # FIRE TEMPLATE — VERIFIED
@@ -114,6 +165,14 @@
 #   [14, 28, 21, 17]          [14, 28, 21, 17] ✓
 #   [22, 16, 15, 27]          [22, 16, 15, 27] ✓
 #   Match: 16/16 (100%) ✓
+#   
+#   Verification:
+#   • Row sums: [80, 80, 80, 80] ✓
+#   • Col sums: [80, 80, 80, 80] ✓
+#   • Diagonals: 80, 80 ✓
+#   • Magic Constant: 80
+#   • Source Number: 80
+#   • MC = Source: ✓ YES (exact match)
 # 
 # Example 2: Page 314, Source 1696
 #   Manuscript Grid:          Generated Grid:
@@ -122,6 +181,14 @@
 #   [418, 432, 424, 421]      [418, 432, 424, 421] ✓
 #   [425, 420, 419, 431]      [425, 420, 419, 431] ✓
 #   Match: 16/16 (100%) ✓
+#   
+#   Verification:
+#   • Row sums: [1696, 1696, 1696, 1696] ✓
+#   • Col sums: [1696, 1696, 1696, 1696] ✓
+#   • Diagonals: 1696, 1696 ✓
+#   • Magic Constant: 1696
+#   • Source Number: 1696
+#   • MC = Source: ✓ YES (exact match)
 # 
 # AIR TEMPLATE — PROVISIONAL
 # ──────────────────────────

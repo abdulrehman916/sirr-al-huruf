@@ -218,6 +218,35 @@ export default function MizanRubaiVerification() {
           icon="🔬"
         />
 
+        {/* SYSTEM WARNING */}
+        <div className="p-4 rounded-xl border-2 border-yellow-500/60 bg-yellow-500/10">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div className="space-y-2">
+              <div className="font-bold text-yellow-500 text-sm">
+                ⚠️ VERIFICATION STATUS WARNING
+              </div>
+              <div className="text-[7px]" style={{ color: G.dim }}>
+                <div className="mb-2">
+                  <span className="text-green-500 font-bold">✓ Fire template</span> is manuscript-proven (Pages 314 & 316, 100% match).
+                </div>
+                <div className="text-yellow-500 font-bold">
+                  ⚠ Air, Water, and Earth templates remain provisional
+                </div>
+                <div className="mt-1">
+                  These templates await manuscript examples and independent verification.
+                  The Sequential Continuation Method is validated for Fire and provisionally
+                  applied to Air/Water/Earth based on consistent construction principles.
+                </div>
+                <div className="mt-2 p-2 rounded bg-red-500/10 border border-red-500/40" style={{ color: G.red }}>
+                  <strong>DO NOT</strong> claim full manuscript validation for Air, Water, or Earth
+                  until documentary proof exists.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Algorithm Rules */}
         <Card title="Locked Rubai Algorithm Rules" icon={FileText}>
           <div className="space-y-3 text-[7px]" style={{ color: G.dim }}>
@@ -312,22 +341,29 @@ export default function MizanRubaiVerification() {
               <div className={`mt-4 p-3 rounded-lg border text-center ${
                 validation.isValid && result.mc === example.sourceNumber
                   ? "bg-green-500/10 border-green-500/40" 
-                  : "bg-red-500/10 border-red-500/40"
+                  : "bg-yellow-500/10 border-yellow-500/40"
               }`}>
                 <div className="flex items-center justify-center gap-2">
                   {validation.isValid && result.mc === example.sourceNumber ? (
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-red-500" />
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
                   )}
                   <span className={`font-inter text-sm font-bold ${
-                    validation.isValid && result.mc === example.sourceNumber ? "text-green-500" : "text-red-500"
+                    validation.isValid && result.mc === example.sourceNumber ? "text-green-500" : "text-yellow-500"
                   }`}>
-                    {validation.isValid && result.mc === example.sourceNumber 
-                      ? "✓ MANUSCRIPT-LOCKED VERIFIED" 
-                      : "✗ VERIFICATION FAILED"}
+                    {validation.isValid 
+                      ? result.mc === example.sourceNumber
+                        ? "✓ MANUSCRIPT-VERIFIED (MC = Source)"
+                        : `⚠ MC ≠ Source (diff: ${Math.abs(result.mc - example.sourceNumber)})`
+                      : "✗ INVALID MAGIC SQUARE"}
                   </span>
                 </div>
+                {example.isManuscriptVerified !== true && (
+                  <div className="mt-2 text-[6px]" style={{ color: G.dim }}>
+                    ⚠ Algorithm-generated — awaiting manuscript proof
+                  </div>
+                )}
               </div>
             </Card>
           );
@@ -358,63 +394,28 @@ export default function MizanRubaiVerification() {
             {/* Detailed Status */}
             <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
               <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
-                Element-by-Element Status
+                Verification Status
               </div>
               <div className="space-y-3">
-                {/* Fire */}
+                {/* Verified Components */}
                 <div className="p-3 rounded-lg border border-green-500/40 bg-green-500/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <div className="font-bold text-green-500">Fire (Nari) — النار</div>
-                  </div>
+                  <div className="font-bold mb-2 text-green-500 text-[8px]">✓ VERIFIED COMPONENTS</div>
                   <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
-                    <div>✓ Page 316, Source 80: 16/16 cells (100% match)</div>
-                    <div>✓ Page 314, Source 1696: 16/16 cells (100% match)</div>
-                    <div>✓ Magic Constant verified: S = MC for both examples</div>
-                    <div>✓ Row/Column/Diagonal sums: All valid</div>
-                    <div style={{ color: G.green }}>Status: MANUSCRIPT-PROVEN</div>
+                    <div>✓ Fire Rubai Template (Pages 314 & 316)</div>
+                    <div>✓ Sequential Continuation Method</div>
+                    <div>✓ Remainder correction logic</div>
+                    <div>✓ Page 314 manuscript match (16/16 cells, 100%)</div>
+                    <div>✓ Page 316 manuscript match (16/16 cells, 100%)</div>
                   </div>
                 </div>
 
-                {/* Air */}
+                {/* Not Yet Verified */}
                 <div className="p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="w-4 h-4 text-yellow-500" />
-                    <div className="font-bold text-yellow-500">Air (Havai) — الهواء</div>
-                  </div>
+                  <div className="font-bold mb-2 text-yellow-500 text-[8px]">✗ NOT YET VERIFIED</div>
                   <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
-                    <div>⚠ Algorithm implemented (sequential continuation)</div>
-                    <div>⚠ Rubai template defined</div>
-                    <div style={{ color: G.red }}>✗ NO MANUSCRIPT EXAMPLES FOUND</div>
-                    <div style={{ color: G.yellow }}>Status: AWAITING MANUSCRIPT PROOF</div>
-                  </div>
-                </div>
-
-                {/* Water */}
-                <div className="p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="w-4 h-4 text-yellow-500" />
-                    <div className="font-bold text-yellow-500">Water (Mai) — الماء</div>
-                  </div>
-                  <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
-                    <div>⚠ Algorithm implemented (sequential continuation)</div>
-                    <div>⚠ Rubai template defined</div>
-                    <div style={{ color: G.red }}>✗ NO MANUSCRIPT EXAMPLES FOUND</div>
-                    <div style={{ color: G.yellow }}>Status: AWAITING MANUSCRIPT PROOF</div>
-                  </div>
-                </div>
-
-                {/* Earth */}
-                <div className="p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="w-4 h-4 text-yellow-500" />
-                    <div className="font-bold text-yellow-500">Earth (Turabi) — التراب</div>
-                  </div>
-                  <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
-                    <div>⚠ Algorithm implemented (sequential continuation)</div>
-                    <div>⚠ Rubai template defined</div>
-                    <div style={{ color: G.red }}>✗ NO MANUSCRIPT EXAMPLES FOUND</div>
-                    <div style={{ color: G.yellow }}>Status: AWAITING MANUSCRIPT PROOF</div>
+                    <div>✗ Air Rubai Template — No manuscript examples</div>
+                    <div>✗ Water Rubai Template — No manuscript examples</div>
+                    <div>✗ Earth Rubai Template — No manuscript examples</div>
                   </div>
                 </div>
               </div>
@@ -423,19 +424,27 @@ export default function MizanRubaiVerification() {
             {/* Next Steps */}
             <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
               <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
-                Required for Full Validation
+                Verification Protocol (Manuscript is Authority)
               </div>
               <div className="text-[7px] space-y-2" style={{ color: G.dim }}>
-                <div>For each remaining element (Air, Water, Earth):</div>
-                <div className="ml-3">1. Find manuscript example with page number</div>
-                <div className="ml-3">2. Extract Source Number and complete 4x4 grid</div>
-                <div className="ml-3">3. Verify dominant element matches template used</div>
-                <div className="ml-3">4. Apply sequential continuation method</div>
-                <div className="ml-3">5. Compare all 16 cells individually</div>
-                <div className="ml-3">6. Verify row/column/diagonal sums</div>
-                <div className="ml-3">7. Confirm match percentage = 100%</div>
-                <div className="mt-2 p-2 rounded bg-red-500/10 border border-red-500/40" style={{ color: G.red }}>
-                  ⚠ DO NOT claim full validation until ALL elements have manuscript proof
+                <div className="font-bold" style={{ color: G.gold }}>Priority Order:</div>
+                <div className="ml-3">1. Exact cell-by-cell match (highest priority)</div>
+                <div className="ml-3">2. Correct elemental template</div>
+                <div className="ml-3">3. Correct sequential continuation method</div>
+                <div className="ml-3">4. Correct row/column/diagonal sums</div>
+                <div className="ml-3">5. Evaluate MC vs Source (empirical claim)</div>
+                
+                <div className="mt-3 font-bold" style={{ color: G.gold }}>For Air/Water/Earth:</div>
+                <div className="ml-3">• Find manuscript example with page number</div>
+                <div className="ml-3">• Extract Source Number and complete 4x4 grid</div>
+                <div className="ml-3">• Calculate actual MC from manuscript grid</div>
+                <div className="ml-3">• Compare MC with Source (may differ)</div>
+                <div className="ml-3">• Report difference if MC ≠ Source</div>
+                
+                <div className="mt-2 p-2 rounded bg-yellow-500/10 border border-yellow-500/40" style={{ color: G.yellow }}>
+                  ⚠ CRITICAL: Manuscript is authority, not formula.<br/>
+                  DO NOT force MC = Source. Reproduce manuscript exactly.<br/>
+                  Fire template proven; Air/Water/Earth require independent proof.
                 </div>
               </div>
             </div>

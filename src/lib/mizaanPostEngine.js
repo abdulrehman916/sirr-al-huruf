@@ -339,42 +339,50 @@ export function validateVefk(grid, magicConstant) {
 }
 
 /**
- * buildVefk(S, element) — MANUSCRIPT-LOCKED RUBAI ENGINE
+ * buildVefk(S, element) — RUBAI ENGINE (PARTIALLY VERIFIED)
  * Source p.68: "Vefk olunacak adetten otuz (30) çıkarılıp, kalan adet
  * dörde (4) bölünür. Harici kısmet vefkin birinci hanesine yazılır ve
  * birer zamla vefkin son hanesine kadar gidilerek vefk tamamlanır.
  * Şayet kesirde üç (3) kalırsa beşinci haneye bir (1) kesirde iki (2)
  * kalırsa dokuzuncu (9) haneye bir (1) ve kesirde bir (1) kalırsa
- * onüçüncü (13) haneye bir (1) fazla ilave etmek sureti ile vefki tamamlarız."
+ * onüçüncüncü (13) haneye bir (1) fazla ilave etmek sureti ile vefki tamamlarız."
  *
  * ═══════════════════════════════════════════════════════════════
- * MANUSCRIPT-LOCKED RULES (VERIFIED 100% MATCH)
+ * VERIFICATION STATUS
  * ═══════════════════════════════════════════════════════════════
  * 
- * 1. ELEMENTAL TEMPLATE SELECTION:
- *    - Use the Rubai positional template for the dominant element
- *    - Fire → Fire Rubai template
- *    - Air → Air Rubai template
- *    - Water → Water Rubai template
- *    - Earth → Earth Rubai template
+ * ✓ VERIFIED:
+ *   - Fire Rubai Template (Pages 314 & 316, 100% match)
+ *   - Sequential Continuation Method
+ *   - Remainder correction logic
+ *   - Page 314 manuscript match (16/16 cells)
+ *   - Page 316 manuscript match (16/16 cells)
  * 
- * 2. CONSTRUCTION METHOD:
+ * ✗ NOT YET VERIFIED:
+ *   - Air Rubai Template
+ *   - Water Rubai Template
+ *   - Earth Rubai Template
+ * 
+ * ⚠️  WARNING:
+ *   Fire template is manuscript-proven.
+ *   Air, Water, and Earth templates remain provisional until
+ *   manuscript examples are found and independently verified.
+ * 
+ * ═══════════════════════════════════════════════════════════════
+ * MANDATORY WORKFLOW
+ * ═══════════════════════════════════════════════════════════════
+ * 
+ * 1. DETERMINE DOMINANT ELEMENT (Fire/Air/Water/Earth)
+ * 2. SELECT CORRESPONDING ELEMENTAL RUBAI TEMPLATE
+ * 3. APPLY SEQUENTIAL CONTINUATION METHOD:
  *    - V = S - 30
  *    - Q = floor(V / 4)
  *    - R = V % 4
- * 
- * 3. SEQUENTIAL VALUE GENERATION:
- *    - Generate values sequentially starting from Q
- *    - Position 1 → Q, Position 2 → Q+1, ..., Position 16 → Q+15
- * 
- * 4. REMAINDER CORRECTION (SEQUENTIAL CONTINUATION):
- *    - R=1: Add +1 at Position 13, continue sequential numbering from corrected value
- *    - R=2: Add +1 at Position 9, continue sequential numbering from corrected value
- *    - R=3: Add +1 at Position 5, continue sequential numbering from corrected value
- *    - CRITICAL: Use sequential continuation, NOT single-cell correction
- * 
- * 5. TEMPLATE PLACEMENT:
- *    - Place the corrected value sequence into the elemental Rubai template positions
+ * 4. APPLY REMAINDER CORRECTIONS:
+ *    - R=1 → position 13 +1 and continue sequence
+ *    - R=2 → positions 9, 13 +1 and continue sequence
+ *    - R=3 → positions 5, 9, 13 +1 and continue sequence
+ * 5. MAP CORRECTED SEQUENCE TO SELECTED ELEMENTAL TEMPLATE
  * 
  * ═══════════════════════════════════════════════════════════════
  */
