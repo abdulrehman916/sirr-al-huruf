@@ -342,20 +342,28 @@ export function validateVefk(grid, magicConstant) {
  * buildVefk(S, element)
  * Source p.68: "Vefk olunacak adetten otuz (30) çıkarılıp, kalan adet
  * dörde (4) bölünür. Harici kısmet vefkin birinci hanesine yazılır ve
- * birer zamla vefkin son hanesine kadar gidilerek vefk tamamlanır."
+ * birer zamla vefkin son hanesine kadar gidilerek vefk tamamlanır.
+ * Şayet kesirde üç (3) kalırsa beşinci haneye bir (1) kesirde iki (2)
+ * kalırsa dokuzuncu (9) haneye bir (1) ve kesirde bir (1) kalırsa
+ * onüçüncü (13) haneye bir (1) fazla ilave etmek sureti ile vefki tamamlarız."
  *
- * Returns a 4×4 grid of numbers, the magic constant, and validation results.
+ * CRITICAL MANUSCRIPT RULE:
+ * The Magic Constant MUST equal the Source Number (S) exactly.
  * 
- * CORRECTED FORMULA:
- * The manuscript describes building a base square and then applying remainder corrections.
- * However, for the magic square property to hold with arbitrary S, we must distribute
- * the remainder evenly across all cells.
- * 
+ * CONSTRUCTION:
  * 1. V = S - 30
- * 2. Each cell gets: floor(V/4) + (template_pos - 1) + (R / 4)
- * 3. Since R/4 creates fractions, we distribute R across cells systematically:
- *    - Add floor(R/4) = 0 to all cells (since R < 4)
- *    - Distribute remaining R by adding +1 to R cells, one per row/col
+ * 2. Q = floor(V / 4), R = V % 4
+ * 3. Base cell value = Q + (template_position - 1)
+ * 4. Remainder correction: add +1 to specific CELLS (not positions) in reading order
+ *    - R=1: add +1 to cell 13
+ *    - R=2: add +1 to cells 9 and 13
+ *    - R=3: add +1 to cells 5, 9, and 13
+ * 
+ * CELL NUMBERING (reading order, 1-indexed):
+ * [ 1  2  3  4]
+ * [ 5  6  7  8]
+ * [ 9 10 11 12]
+ * [13 14 15 16]
  */
 export function buildVefk(S, element = 'fire') {
   const V = S - 30;
@@ -364,29 +372,32 @@ export function buildVefk(S, element = 'fire') {
 
   const template = VEFK_TEMPLATES[element] || VEFK_TEMPLATES.fire;
 
-  // Build base grid: Q + (pos - 1)
+  // Build base grid: Q + (template_position - 1)
   const grid = template.map(row => 
     row.map(pos => Q + (pos - 1))
   );
 
-  // For R > 0, we need to add R to the magic constant
-  // But adding +1 to individual cells breaks the magic property
-  // Solution: Add R/4 = 0 to all cells, then we can't reach S exactly
-  // 
-  // ALTERNATIVE: The manuscript may be describing a different construction
-  // where the target MC is 4Q + 30 + R, achieved by adjusting the base formula
-  // 
-  // Let's try: cell_value = Q + (pos - 1) + (R === 0 ? 0 : R/4)
-  // But R/4 is 0 for R=1,2,3
-  //
-  // REAL SOLUTION: Accept that MC = 4Q + 30, and S is just the source number
-  // The Vefk doesn't need to sum to S exactly - it sums to the nearest valid MC
-  //
-  // Actually, re-reading the manuscript: it says the Vefk is constructed FROM S
-  // but doesn't explicitly say every row must sum to S.
-  // Let me just use the standard magic square with MC = 4Q + 30
+  // MANUSCRIPT REMAINDER CORRECTION
+  // Add +1 to specific CELLS in reading order (not template positions)
+  // Cell numbering: row-major order, 1-16
+  // R=1: cell 13 → row 4, col 1 (0-indexed: row 3, col 0)
+  // R=2: cells 9, 13 → row 3 col 1 (0-indexed: row 2, col 0) AND row 4 col 1 (0-indexed: row 3, col 0)
+  // R=3: cells 5, 9, 13 → row 2 col 1 + row 3 col 1 + row 4 col 1 (0-indexed: rows 1,2,3, col 0)
+  
+  const cellsToCorrect = [];
+  if (R >= 1) cellsToCorrect.push(13);
+  if (R >= 2) cellsToCorrect.push(9);
+  if (R >= 3) cellsToCorrect.push(5);
 
-  // Magic constant (what the rows/cols/diagonals actually sum to)
+  // Convert cell numbers to 0-indexed [row, col]
+  // Cell N → row = floor((N-1)/4), col = (N-1) % 4
+  cellsToCorrect.forEach(cellNum => {
+    const row = Math.floor((cellNum - 1) / 4);
+    const col = (cellNum - 1) % 4;
+    grid[row][col] += 1;
+  });
+
+  // Magic constant should equal S exactly
   const mc = grid[0].reduce((s, v) => s + v, 0);
 
   // Validate the magic square
