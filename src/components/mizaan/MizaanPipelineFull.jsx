@@ -113,7 +113,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
 
   if (!pipeline) return null;
 
-  const { input, initialSeedLetters, kitabet, avan, kasem, vefk } = pipeline;
+  const { input, initialSeedLetters, vefk } = pipeline;
   const element = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
@@ -188,124 +188,6 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
           seedLetters={initialSeedLetters}
           dominant={dominant}
         />
-
-        {/* ESMA-I KITABET */}
-        {kitabet && kitabet.names && kitabet.names.length > 0 && (
-          <Card accent={G.green}>
-            <SectionHeader step="2" label="Esma-i Kitabet Names" arabic="أسماء الكتابة" color={G.green} />
-            
-            {kitabet.remainder > 0 && (
-              <div className="mb-3 rounded-lg border p-3"
-                style={{ background: G.greenDim, borderColor: G.green + "40" }}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
-                    Remainder Correction
-                  </span>
-                  <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>+{(kitabet.supplementLetters?.length || 0)} letters</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-[8px]">
-                  <div className="flex justify-between">
-                    <span style={{ color: G.dim }}>Group Size</span>
-                    <span style={{ color: G.gold }}>{kitabet.groupSize}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span style={{ color: G.dim }}>Remainder</span>
-                    <span style={{ color: G.red }}>{kitabet.remainder}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {kitabet.names.map((name, idx) => (
-                <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-lg border"
-                  style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-                  <div className="w-5 h-5 rounded flex items-center justify-center font-inter text-[9px] font-black"
-                    style={{ background: G.goldFaint, color: G.goldDim, border: `1px solid ${G.goldBorder}` }}>
-                    {idx + 1}
-                  </div>
-                  <span className="font-amiri text-xl font-bold flex-1" style={{ color: G.gold }} dir="rtl">
-                    {name}
-                  </span>
-                  <span className="font-inter text-[7px] tabular-nums" style={{ color: G.dim }}>
-                    {name.length} letters
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="text-center mt-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border"
-                style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Total Names</span>
-                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{kitabet.names?.length || 0}</span>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* ESMA-I A'VAN */}
-        {avan && avan.names && avan.names.length > 0 && (
-          <Card accent={G.green}>
-            <SectionHeader step="3" label="Esma-i A'van Names" arabic="أسماء الأعوان" color={G.green} />
-            {avan.remainder > 0 && (
-              <div className="mb-3 rounded-lg border p-2"
-                style={{ background: G.greenDim, borderColor: G.green + "40" }}>
-                <span className="font-inter text-[7px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
-                  Remainder: +{(avan.supplementLetters?.length || 0)} letters
-                </span>
-              </div>
-            )}
-            <div className="space-y-2">
-              {avan.names.map((name, idx) => (
-                <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-lg border"
-                  style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-                  <div className="w-5 h-5 rounded flex items-center justify-center font-inter text-[9px] font-black"
-                    style={{ background: G.goldFaint, color: G.goldDim, border: `1px solid ${G.goldBorder}` }}>
-                    {idx + 1}
-                  </div>
-                  <span className="font-amiri text-xl font-bold flex-1" style={{ color: G.gold }} dir="rtl">
-                    {name}
-                  </span>
-                  <span className="font-inter text-[7px] tabular-nums" style={{ color: G.dim }}>
-                    {name.length} letters
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        {/* ESMA-I KASEM */}
-        {kasem && kasem.names && kasem.names.length > 0 && (
-          <Card accent={G.green}>
-            <SectionHeader step="4" label="Esma-i Kasem Names" arabic="أسماء القاسم" color={G.green} />
-            {kasem.remainder > 0 && (
-              <div className="mb-3 rounded-lg border p-2"
-                style={{ background: G.greenDim, borderColor: G.green + "40" }}>
-                <span className="font-inter text-[7px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
-                  Remainder: +{(kasem.supplementLetters?.length || 0)} letters
-                </span>
-              </div>
-            )}
-            <div className="space-y-2">
-              {kasem.names.map((name, idx) => (
-                <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-lg border"
-                  style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-                  <div className="w-5 h-5 rounded flex items-center justify-center font-inter text-[9px] font-black"
-                    style={{ background: G.goldFaint, color: G.goldDim, border: `1px solid ${G.goldBorder}` }}>
-                    {idx + 1}
-                  </div>
-                  <span className="font-amiri text-xl font-bold flex-1" style={{ color: G.gold }} dir="rtl">
-                    {name}
-                  </span>
-                  <span className="font-inter text-[7px] tabular-nums" style={{ color: G.dim }}>
-                    {name.length} letters
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
 
         {/* VEFK MAGIC SQUARE */}
         {vefk && (
