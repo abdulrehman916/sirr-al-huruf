@@ -83,7 +83,11 @@ function Arrow({ label }) {
 export default function Option1DerivationChain({ seedLetters, dominant }) {
   const safeSeed = Array.isArray(seedLetters) ? seedLetters : [];
   const totalSeed = safeSeed.length;
+  
+  // MANUSCRIPT RULE: Determine Bast level from Ferd/Zevc
   const isFerd = totalSeed % 2 !== 0;
+  const bastLevel = isFerd ? 5 : 4;
+  const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
   const groupSize = isFerd ? 5 : 4;
 
   // ══ STEP 1: BAST EXPANSION FOR EACH SEED LETTER ═══════════════
@@ -94,7 +98,7 @@ export default function Option1DerivationChain({ seedLetters, dominant }) {
 
     for (let i = 0; i < safeSeed.length; i++) {
       const letter = safeSeed[i];
-      const bastValue = getBastLevel(letter, 1);
+      const bastValue = getBastLevel(letter, bastLevel);
       const expanded = istintak(bastValue);
       
       runningBastSum += bastValue;
@@ -107,6 +111,7 @@ export default function Option1DerivationChain({ seedLetters, dominant }) {
         expandedLetters: expanded,
         expandedCount: expanded.length,
         runningBastSum,
+        bastLevel,
       });
     }
 
@@ -115,7 +120,7 @@ export default function Option1DerivationChain({ seedLetters, dominant }) {
       totalBastSum: runningBastSum,
       allExpandedLetters: allExpanded,
     };
-  }, [safeSeed]);
+  }, [safeSeed, bastLevel]);
 
   // ══ STEP 2: COMBINED EXPANDED SEQUENCE ════════════════════════
   const combinedCount = allExpandedLetters.length;
@@ -156,26 +161,7 @@ export default function Option1DerivationChain({ seedLetters, dominant }) {
 
   return (
     <Card accent={G.gold}>
-      <SectionHeader step="1" label="Complete Derivation Chain — Esma-i Kitabet" arabic="سلسلة الاشتقاق" color={G.gold} />
-
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="px-3 py-2 rounded-lg border text-center"
-          style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-          <div className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>Seed Letters</div>
-          <div className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{totalSeed}</div>
-        </div>
-        <div className="px-3 py-2 rounded-lg border text-center"
-          style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-          <div className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>Total Bast (Σ)</div>
-          <div className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{totalBastSum.toLocaleString()}</div>
-        </div>
-        <div className="px-3 py-2 rounded-lg border text-center"
-          style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-          <div className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>Expanded Letters</div>
-          <div className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{combinedCount}</div>
-        </div>
-      </div>
+      <SectionHeader step="C" label="Individual Bast Derivations" arabic="اشتقاق البسط" color={G.green} />
 
       {/* Individual Derivation Steps */}
       <div className="space-y-3 mb-4">
@@ -202,7 +188,7 @@ export default function Option1DerivationChain({ seedLetters, dominant }) {
                 {deriv.stepNumber}
               </div>
               <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
-                {idx === 0 ? "FIRST letter" : idx === derivations.length - 1 ? "LAST letter" : `Step ${deriv.stepNumber}`}
+                {idx === 0 ? "LAST letter (start)" : idx === derivations.length - 1 ? "FIRST letter (end)" : `Step ${deriv.stepNumber}`}
               </span>
             </div>
 
@@ -211,7 +197,7 @@ export default function Option1DerivationChain({ seedLetters, dominant }) {
               {/* Original Letter */}
               <LetterCell letter={deriv.originalLetter} color={G.gold} size="lg" />
               
-              <Arrow label="Bast-1" />
+              <Arrow label={`Bast ${deriv.bastLevel}`} />
               
               {/* Bast Value */}
               <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
@@ -232,19 +218,23 @@ export default function Option1DerivationChain({ seedLetters, dominant }) {
                   ({deriv.expandedCount})
                 </span>
               </div>
-              
-              <Arrow label="Σ" />
-              
-              {/* Running Total */}
-              <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
-                style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-                <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.gold }}>
-                  {deriv.runningBastSum.toLocaleString()}
-                </span>
-              </div>
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="px-3 py-2 rounded-lg border text-center"
+          style={{ background: G.bgInner, borderColor: G.goldBorder }}>
+          <div className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>Total Bast (Σ)</div>
+          <div className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{totalBastSum.toLocaleString()}</div>
+        </div>
+        <div className="px-3 py-2 rounded-lg border text-center"
+          style={{ background: G.bgInner, borderColor: G.goldBorder }}>
+          <div className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>Expanded Letters</div>
+          <div className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{combinedCount}</div>
+        </div>
       </div>
 
       {/* Combined Expanded Sequence */}
