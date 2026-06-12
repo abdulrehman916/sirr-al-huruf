@@ -20,6 +20,7 @@ import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
+import FinalVefkSummary from "../components/mizaan/FinalVefkSummary";
 
 
 import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
@@ -166,6 +167,9 @@ export default function Mizaan9Page() {
   const [degreeSels, setDegreeSels] = useState(initialState.degreeSels);
   // OPTION 2 intermediate storage for OPTION 3
   const [option2State, setOption2State] = useState(null);
+  // Final Summary vefk data — populated by child callbacks (display only)
+  const [s2VefkData, setS2VefkData] = useState(null);
+  const [s3VefkData, setS3VefkData] = useState(null);
   const abortRef = useRef(false);
 
   useEffect(() => {
@@ -186,6 +190,8 @@ export default function Mizaan9Page() {
     setResult(null);
     setSelections(buildDefaultSelections(null));
     setOption2State(null);
+    setS2VefkData(null);
+    setS3VefkData(null);
     const r = await mizaanAnalyzeAsync(input, (p) => { if (!abortRef.current) setProgress(p); });
     if (!abortRef.current) {
       setResult(r);
@@ -203,6 +209,8 @@ export default function Mizaan9Page() {
     setSelections(buildDefaultSelections(null));
     setCustomPurpose("");
     setDegreeSels({});
+    setS2VefkData(null);
+    setS3VefkData(null);
     clearPageState(PAGE_KEY);
   };
 
@@ -345,6 +353,10 @@ export default function Mizaan9Page() {
                   return s2Pipeline?.allExpandedLetters || [];
                 })();
 
+                // Section 1 vefk (directly available from pipeline)
+                const s1Vefk   = section1?.vefk || null;
+                const s1Source = section1?.vefkSourceNumber || null;
+
                 return (
                   <>
                     {/* ═══ SECTION 1: LOCKED ═══ */}
@@ -355,6 +367,7 @@ export default function Mizaan9Page() {
                       <EsmaAvanSection
                         allExpandedLetters={section1.allExpandedLetters}
                         dominant={dominant}
+                        onVefkReady={setS2VefkData}
                       />
                     )}
 
@@ -363,8 +376,21 @@ export default function Mizaan9Page() {
                       <EsmaKasemSection
                         section2ExpandedLetters={section2ExpandedLetters}
                         dominant={dominant}
+                        onVefkReady={setS3VefkData}
                       />
                     )}
+
+                    {/* ═══ FINAL SUMMARY: THREE VEFKS (display only) ═══ */}
+                    <FinalVefkSummary
+                      s1Vefk={s1Vefk}
+                      s1Source={s1Source}
+                      s2Vefk={s2VefkData?.vefk || null}
+                      s2Source={s2VefkData?.source || null}
+                      s3Vefk={s3VefkData?.vefk || null}
+                      s3Source={s3VefkData?.source || null}
+                      s3BorderLetters={s3VefkData?.borderLetters || ""}
+                      dominant={dominant}
+                    />
                   </>
                 );
               })()}

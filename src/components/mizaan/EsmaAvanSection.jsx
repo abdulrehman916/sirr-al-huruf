@@ -14,7 +14,7 @@
 // ISOLATION: Nothing feeds back into Section 1.
 // ═══════════════════════════════════════════════════════════════
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { runMizaanPostPipeline, getBastLevel, istintak } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
@@ -272,7 +272,7 @@ function AvanSourceDerivation({ section1Letters, bastTotal, letterCount, sourceT
 // Props:
 //   allExpandedLetters — Section 1 output (read-only, never modified)
 //   dominant           — Galib Anasir key from Section 1
-export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
+export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkReady }) {
   const pipeline = useMemo(() => {
     if (!allExpandedLetters || allExpandedLetters.length === 0) return null;
     const grandBast    = allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
@@ -288,6 +288,13 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
       avanSourceTotal: grandBast + grandLetters,
     };
   }, [allExpandedLetters, dominant]);
+
+  // Notify parent of vefk data for the Final Summary
+  useEffect(() => {
+    if (onVefkReady && pipeline?.vefk) {
+      onVefkReady({ vefk: pipeline.vefk, source: pipeline.vefkSourceNumber });
+    }
+  }, [pipeline, onVefkReady]);
 
   if (!pipeline) return null;
 

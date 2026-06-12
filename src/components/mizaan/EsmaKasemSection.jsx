@@ -18,7 +18,7 @@
 //   - Nothing writes back to Section 1 or Section 2.
 // ═══════════════════════════════════════════════════════════════
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { getBastLevel, istintak, GALIB_ANASIR_VALUES, buildVefk } from "../../lib/mizaanPostEngine";
 
@@ -228,7 +228,7 @@ function KasemSourceDerivation({ section2Letters, bastTotal, letterCount, source
 // Props:
 //   section2ExpandedLetters — Section 2's allExpandedLetters (read-only)
 //   dominant                — Galib Anasir key
-export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) {
+export default function EsmaKasemSection({ section2ExpandedLetters, dominant, onVefkReady }) {
   const safe2 = Array.isArray(section2ExpandedLetters) ? section2ExpandedLetters : [];
 
   // ── STEP 0: Derive Section 3 source from Section 2 expanded letters ──
@@ -331,6 +331,13 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
     if (!total) return "";
     return istintak(total).join("");
   }, [postDerivations]);
+
+  // Notify parent of the computed vefk data (display-only, no recalc)
+  useEffect(() => {
+    if (onVefkReady && s3Vefk) {
+      onVefkReady({ vefk: s3Vefk, source: s3VefkSourceNumber, borderLetters: s3BorderLetters });
+    }
+  }, [s3Vefk, s3VefkSourceNumber, s3BorderLetters, onVefkReady]);
 
   if (safe2.length === 0) return null;
 
