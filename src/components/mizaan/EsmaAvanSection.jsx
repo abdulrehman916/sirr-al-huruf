@@ -317,8 +317,9 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     const rem = allExpanded.length % gSize;
     let seq = [...allExpanded];
     if (rem > 0) {
-      const supp = istintak(GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire).slice(0, gSize - rem);
-      seq = [...seq, ...supp];
+      const needed = gSize - rem;
+      const section2Supplement = allExpanded.slice(0, needed);
+      seq = [...seq, ...section2Supplement];
     }
     const groups = [];
     for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
