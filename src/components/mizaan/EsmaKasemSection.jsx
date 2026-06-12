@@ -301,9 +301,10 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
   const postIstintakLetters = useMemo(() => istintak(postExpandedTotal), [postExpandedTotal]);
 
   // ── POST STEP: Individual Bast derivations on each postIstintakLetter ──
+  // RULE: Always use Fifth Bast (B5) for this block only — no Zevc/Ferd determination.
   const postDerivations = useMemo(() => {
     return postIstintakLetters.map((letter) => {
-      const bastValue      = getBastLevel(letter, 1);
+      const bastValue       = getBastLevel(letter, 5);
       const expandedLetters = istintak(bastValue);
       return { letter, bastValue, expandedLetters };
     });
@@ -520,7 +521,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
                 style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <LetterCell letter={d.letter} color={elementColor} size="lg" />
-                  <Arrow label="B1" />
+                  <Arrow label="B5" />
                   <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
                     style={{ background: G.greenDim, borderColor: G.green + "40" }}>
                     <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
