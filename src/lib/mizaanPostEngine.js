@@ -517,13 +517,10 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // Generate Esma-i Kasem (third stage, always 5th Bast) - using avan finalExpandedLetters
   const kasem = generateEsmaLevel(avan.finalExpandedLetters, true, element);
 
-  // MIZAN OPTION 1 RULE: Vefk uses SUM OF ALL EXPANDED LETTER VALUES (from ALL EXPANDED LETTERS section)
-  // Source: Sum of First Bast values of every letter in the final expanded sequence
-  const expandedLettersSum = kitabet.finalExpandedLetters.reduce(
-    (sum, letter) => sum + (getBastLevel(letter, 1) || 0),
-    0
-  );
-  const vefk = buildVefk(expandedLettersSum, element);
+  // MIZAN OPTION 1 RULE: Vefk Source Number = grandBast (the sacred total from 9 Mizans)
+  // This ensures the magic constant equals the Vefk Source Number exactly (p.68)
+  const vefkSourceNumber = grandBast;
+  const vefk = buildVefk(vefkSourceNumber, element);
 
   return {
     input: { grandBast, grandLetters, satirVahidTotal },
@@ -533,6 +530,6 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
     kasem,
     element,
     vefk,
-    expandedLettersSum,
+    vefkSourceNumber,
   };
 }

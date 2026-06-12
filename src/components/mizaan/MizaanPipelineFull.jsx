@@ -75,7 +75,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
 
   if (!pipeline) return null;
 
-  const { initialSeedLetters, vefk } = pipeline;
+  const { initialSeedLetters, vefk, vefkSourceNumber } = pipeline;
   const element = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
