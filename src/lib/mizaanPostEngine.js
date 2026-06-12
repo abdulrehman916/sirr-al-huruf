@@ -483,9 +483,11 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
 /**
  * expandAllSeedLetters(seedLetters, bastLevel)
  * 
- * This function performs the Step 2-3 expansion from SatrVahidGrouping:
- * For each seed letter, get its Bast value at the given level, then istintak it.
- * Returns ALL expanded letters concatenated (the complete "ALL EXPANDED LETTERS" set).
+ * MANUSCRIPT ORDER LAW: Process seed letters in EXACT order received.
+ * NO reversal, NO sorting, NO reordering of any kind.
+ * 
+ * For each seed letter (in order): get Bast value → istintak expansion → concatenate.
+ * Returns ALL expanded letters concatenated in strict derivation order.
  * 
  * This is the TRUE source for Vefk calculation per manuscript rules.
  */
@@ -493,6 +495,7 @@ export function expandAllSeedLetters(seedLetters, bastLevel) {
   const safeSeed = Array.isArray(seedLetters) ? seedLetters : [];
   const allExpanded = [];
   
+  // CRITICAL: Process in strict forward order - preserve manuscript sequence
   for (let i = 0; i < safeSeed.length; i++) {
     const letter = safeSeed[i];
     const bastValue = getBastLevel(letter, bastLevel);
@@ -532,6 +535,7 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // and treat the result as the first seed — matching the book's worked examples on p.60.
 
   // MANUSCRIPT RULE: Expand ALL seed letters through Bast → Istintak
+  // CRITICAL: expandAllSeedLetters preserves EXACT seed letter order - NO reversal
   // This gives us the TRUE "ALL EXPANDED LETTERS" set shown in Step 3
   const bastLevel = initialSeedLetters.length % 2 !== 0 ? 5 : 4;
   const allExpandedLetters = expandAllSeedLetters(initialSeedLetters, bastLevel);
