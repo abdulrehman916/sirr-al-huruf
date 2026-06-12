@@ -18,9 +18,8 @@ import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
-import AllahCalculationAudit from "../components/mizaan/AllahCalculationAudit";
 
-import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel } from "../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, istintak, FIRST_BAST } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
 const G = {
@@ -333,171 +332,13 @@ export default function Mizaan9Page() {
                   <>
                     <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />
                     <MizaanDivider />
-                    <AllahCalculationAudit inputText={input} />
-                    <MizaanDivider />
                   </>
                 );
               })()}
 
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* VALUE 1 AUDIT FOR CURRENT EXPANDED LETTERS */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {(() => {
-                const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
-                const dominant = result?.dominant;
-                if (!grandBast || grandBast <= 0) return null;
-                
-                const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
-                if (!pipeline?.kitabet?.finalExpandedLetters) return null;
-                
-                const expandedLetters = pipeline.kitabet.finalExpandedLetters;
-                const letterDetails = expandedLetters.map((l, i) => ({
-                  letter: l,
-                  index: i + 1,
-                  value1: getBastLevel(l, 1),
-                }));
-                const totalValue1 = letterDetails.reduce((s, ld) => s + ld.value1, 0);
-                
-                return (
-                  <div className="rounded-2xl border overflow-hidden mb-4"
-                    style={{
-                      background: "rgba(3,6,20,0.99)",
-                      borderColor: "rgba(212,175,55,0.65)",
-                      boxShadow: "0 0 80px rgba(212,175,55,0.18), inset 0 1px 0 rgba(212,175,55,0.08)",
-                    }}>
-                    <div className="text-center px-6 py-4 border-b" style={{ borderColor: "rgba(212,175,55,0.40)" }}>
-                      <h3 className="font-amiri text-xl font-bold" style={{ color: "#F5D060" }}>
-                        تدقيق Value 1 — الحروف الموسعة
-                      </h3>
-                      <p className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "rgba(212,175,55,0.55)" }}>
-                        Value 1 Audit — All Expanded Letters
-                      </p>
-                    </div>
-                    
-                    <div className="p-6 space-y-4">
-                      {/* Letter grid */}
-                      <div>
-                        <div className="font-inter text-[8px] uppercase tracking-wider mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>
-                          All Expanded Letters ({expandedLetters.length} letters)
-                        </div>
-                        <div className="grid grid-cols-6 gap-2">
-                          {letterDetails.map((ld, idx) => (
-                            <div key={idx} className="rounded-lg border p-2 text-center"
-                              style={{
-                                background: "rgba(212,175,55,0.08)",
-                                borderColor: "rgba(212,175,55,0.40)",
-                              }}>
-                              <div className="font-amiri text-2xl font-bold" style={{ color: "#F5D060" }}>{ld.letter}</div>
-                              <div className="font-inter text-[7px]" style={{ color: "rgba(255,255,255,0.35)" }}>#{ld.index}</div>
-                              <div className="font-inter text-sm font-bold tabular-nums" style={{ color: "#4ADE80" }}>{ld.value1.toLocaleString()}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      {/* Total calculation */}
-                      <div className="rounded-xl border p-4"
-                        style={{ background: "rgba(74,222,128,0.08)", borderColor: "rgba(74,222,128,0.40)" }}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>
-                            Sum of All Value 1 Values
-                          </span>
-                          <span className="font-inter text-xs" style={{ color: "#4ADE80" }}>
-                            {letterDetails.map(ld => ld.value1.toLocaleString()).join(" + ")}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>
-                            Total Value 1 ({expandedLetters.length} letters)
-                          </span>
-                          <span className="font-inter text-2xl font-bold tabular-nums" style={{ color: "#4ADE80" }}>
-                            {totalValue1.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Vefk confirmation */}
-                      <div className="rounded-xl border p-4"
-                        style={{ background: "rgba(212,175,55,0.08)", borderColor: "rgba(212,175,55,0.40)" }}>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>
-                              Vefk Source Number
-                            </span>
-                            <span className="font-inter text-xl font-bold tabular-nums" style={{ color: "#F5D060" }}>
-                              {pipeline.vefk?.S?.toLocaleString() || 0}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>
-                              Value 1 Total (Above)
-                            </span>
-                            <span className="font-inter text-xl font-bold tabular-nums" style={{ color: "#4ADE80" }}>
-                              {totalValue1.toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="pt-3 border-t" style={{ borderColor: "rgba(212,175,55,0.30)" }}>
-                            <div className="flex items-center justify-center gap-2">
-                              <span className="font-inter text-[8px] uppercase tracking-wider font-bold" 
-                                style={{ 
-                                  color: pipeline.vefk?.S === totalValue1 ? "#4ADE80" : "#F87171" 
-                                }}>
-                                {pipeline.vefk?.S === totalValue1 ? "✓ EXACT MATCH" : "✗ MISMATCH"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
 
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* SECTION 2: OPTION 2 — EMPTY WORK AREA */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              <div className="rounded-2xl border overflow-hidden"
-                style={{
-                  background: "rgba(3,6,20,0.99)",
-                  borderColor: "rgba(212,175,55,0.40)",
-                  boxShadow: "0 0 40px rgba(212,175,55,0.10), 0 4px 28px rgba(0,0,0,0.40)",
-                }}>
-                {/* Top accent line */}
-                <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.50) 40%, rgba(212,175,55,0.70) 50%, rgba(212,175,55,0.50) 60%, transparent 95%)" }} />
-                
-                {/* Title Banner */}
-                <div className="text-center px-6 py-4">
-                  <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-2"
-                    style={{ 
-                      background: "rgba(212,175,55,0.07)", 
-                      borderColor: "rgba(212,175,55,0.50)" 
-                    }}>
-                    <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: "rgba(212,175,55,0.55)" }}>OPTION 2</span>
-                  </div>
-                  <p className="font-inter text-[8px] uppercase tracking-[0.2em]" style={{ color: "rgba(212,175,55,0.40)" }}>Empty Work Area — Awaiting Instructions</p>
-                </div>
-                
-                {/* Empty Container */}
-                <div className="px-6 pb-6">
-                  <div className="rounded-xl border border-dashed p-8 text-center"
-                    style={{
-                      background: "rgba(212,175,55,0.03)",
-                      borderColor: "rgba(212,175,55,0.20)",
-                    }}>
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center"
-                      style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)" }}>
-                      <span className="text-2xl">📦</span>
-                    </div>
-                    <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: "rgba(212,175,55,0.35)" }}>
-                      No calculations • No logic • No workflow
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Bottom accent line */}
-                <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.50) 40%, rgba(212,175,55,0.70) 50%, rgba(212,175,55,0.50) 60%, transparent 95%)" }} />
-              </div>
-              <MizaanDivider />
+
+
 
             </motion.div>
           )}
