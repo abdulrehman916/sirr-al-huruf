@@ -321,7 +321,7 @@ export default function Mizaan9Page() {
               <MizaanDivider />
 
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* SECTION 1: OPTION 1 — POST-PIPELINE RESULTS */}
+              {/* SECTION 1: OPTION 1 — POST-PIPELINE RESULTS (LOCKED) */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               {(() => {
                 const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
@@ -336,10 +336,50 @@ export default function Mizaan9Page() {
               })()}
 
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* SECTION 2: OPTION 2 — DISABLED (PENDING RESTORATION) */}
+              {/* SECTION 2: OPTION 2 — EMPTY WORK AREA */}
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* OPTION 2 IS CURRENTLY DISABLED TO PRIORITIZE OPTION 1 VERIFICATION */}
-              {/* {option2State && (() => { ... })()} */}
+              <div className="rounded-2xl border overflow-hidden"
+                style={{
+                  background: "rgba(3,6,20,0.99)",
+                  borderColor: "rgba(212,175,55,0.40)",
+                  boxShadow: "0 0 40px rgba(212,175,55,0.10), 0 4px 28px rgba(0,0,0,0.40)",
+                }}>
+                {/* Top accent line */}
+                <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.50) 40%, rgba(212,175,55,0.70) 50%, rgba(212,175,55,0.50) 60%, transparent 95%)" }} />
+                
+                {/* Title Banner */}
+                <div className="text-center px-6 py-4">
+                  <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-2"
+                    style={{ 
+                      background: "rgba(212,175,55,0.07)", 
+                      borderColor: "rgba(212,175,55,0.50)" 
+                    }}>
+                    <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: "rgba(212,175,55,0.55)" }}>OPTION 2</span>
+                  </div>
+                  <p className="font-inter text-[8px] uppercase tracking-[0.2em]" style={{ color: "rgba(212,175,55,0.40)" }}>Empty Work Area — Awaiting Instructions</p>
+                </div>
+                
+                {/* Empty Container */}
+                <div className="px-6 pb-6">
+                  <div className="rounded-xl border border-dashed p-8 text-center"
+                    style={{
+                      background: "rgba(212,175,55,0.03)",
+                      borderColor: "rgba(212,175,55,0.20)",
+                    }}>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center"
+                      style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)" }}>
+                      <span className="text-2xl">📦</span>
+                    </div>
+                    <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: "rgba(212,175,55,0.35)" }}>
+                      No calculations • No logic • No workflow
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Bottom accent line */}
+                <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.50) 40%, rgba(212,175,55,0.70) 50%, rgba(212,175,55,0.50) 60%, transparent 95%)" }} />
+              </div>
+              <MizaanDivider />
 
             </motion.div>
           )}
