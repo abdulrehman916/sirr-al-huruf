@@ -167,12 +167,121 @@ export default function Mizaan9Page() {
     setPageState(PAGE_KEY, { input, result, selections, customPurpose, degreeSels });
   }, [input, result, selections, customPurpose, degreeSels, setPageState]);
 
-  // Persist OPTION 2 state for OPTION 3 access
+  // Calculate and persist OPTION 2 state when result or selections change
   useEffect(() => {
-    if (option2State) {
-      setPageState(PAGE_KEY, prev => ({ ...prev, option2State }));
+    if (!result || !result.dominant) {
+      setOption2State(null);
+      return;
     }
-  }, [option2State, setPageState]);
+
+    const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
+    const dominant = result.dominant;
+    
+    if (!grandBast || grandBast <= 0) {
+      setOption2State(null);
+      return;
+    }
+
+    const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+    if (!pipeline) {
+      setOption2State(null);
+      return;
+    }
+
+    // ══ STAGE 1: ORIGINAL WAHID EXTRACTION ═══════════════════════
+    const originalWahid = Array.isArray(pipeline.kitabet?.finalExpandedLetters) 
+      ? pipeline.kitabet.finalExpandedLetters 
+      : [];
+
+    // ══ STAGE 2: BIRINCI BAST CALCULATION ════════════════════════
+    const letterBastDetails = originalWahid.map(letter => ({
+      letter,
+      birinciBast: FIRST_BAST[letter] || 0,
+    }));
+
+    // ══ STAGE 3: BAST SUMMATION ══════════════════════════════════
+    const totalBastSum = letterBastDetails.reduce((sum, detail) => {
+      return sum + detail.birinciBast;
+    }, 0);
+
+    // ══ STAGE 4: LETTER COUNT ════════════════════════════════════
+    const totalLetterCount = originalWahid.length;
+
+    // ══ STAGE 5: NEW TOTAL CALCULATION ═══════════════════════════
+    const newTotal = totalBastSum + totalLetterCount;
+
+    // ══ STAGE 6: ISTINTAK CONVERSION (Same engine as OPTION 1) ═══
+    const convertedLetters = istintak(newTotal);
+
+    // ══ STAGE 7: REPEAT OPTION 1 WORKFLOW ON CONVERTED LETTERS ═══
+    const convertedBastSum = convertedLetters.reduce((sum, letter) => {
+      return sum + (FIRST_BAST[letter] || 0);
+    }, 0);
+
+    const convertedIsFerd = convertedLetters.length % 2 !== 0;
+    const convertedGroupSize = convertedIsFerd ? 5 : 4;
+
+    const convertedRemainder = convertedLetters.length % convertedGroupSize;
+    let finalExpandedLetters = [...convertedLetters];
+    let supplementLetters = [];
+
+    if (convertedRemainder > 0) {
+      const needed = convertedGroupSize - convertedRemainder;
+      const galibVal = MIZAAN_BAST2[dominant] || MIZAAN_BAST2.fire;
+      supplementLetters = istintak(galibVal).slice(0, needed);
+      finalExpandedLetters = [...convertedLetters, ...supplementLetters];
+    }
+
+    const groupedNames = [];
+    for (let i = 0; i < finalExpandedLetters.length; i += convertedGroupSize) {
+      const group = finalExpandedLetters.slice(i, i + convertedGroupSize);
+      groupedNames.push({
+        letters: group,
+        name: group.join(''),
+        groupNumber: Math.floor(i / convertedGroupSize) + 1,
+      });
+    }
+
+    const newWahidValid = finalExpandedLetters.length > 0 && groupedNames.length > 0;
+
+    // ══ STAGE 8: STORE ALL INTERMEDIATE RESULTS ═══════════════════
+    const option2Storage = {
+      originalWahid,
+      originalLetterCount: totalLetterCount,
+      originalBastSum: totalBastSum,
+      newTotal,
+      convertedLetters,
+      convertedLetterCount: convertedLetters.length,
+      convertedBastSum,
+      convertedIsFerd,
+      convertedGroupSize,
+      convertedRemainder,
+      supplementLetters,
+      finalExpandedLetters,
+      finalExpandedCount: finalExpandedLetters.length,
+      groupedNames,
+      totalGroups: groupedNames.length,
+      newWahidValid,
+      validation: {
+        originalWahidValid: originalWahid.length > 0,
+        bastSumValid: totalBastSum > 0,
+        conversionValid: convertedLetters.length > 0,
+        groupingValid: groupedNames.length > 0,
+        expansionValid: finalExpandedLetters.length > 0,
+        newWahidValid,
+        allStagesComplete: 
+          originalWahid.length > 0 && 
+          totalBastSum > 0 && 
+          convertedLetters.length > 0 && 
+          groupedNames.length > 0 &&
+          finalExpandedLetters.length > 0
+      },
+      kitabet: pipeline.kitabet,
+      vefk: pipeline.vefk,
+    };
+
+    setOption2State(option2Storage);
+  }, [result, selections, degreeSels, input, customPurpose]);
 
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
@@ -323,143 +432,11 @@ export default function Mizaan9Page() {
               {/* ═══════════════════════════════════════════════════════════════ */}
               {/* OPTION 2 — ESMA-I KITABET PIPELINE IMPLEMENTATION */}
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {(() => {
-                const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
+              {option2State && (() => {
                 const dominant = result?.dominant;
-                if (!grandBast || grandBast <= 0) return null;
-                const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
-                if (!pipeline) return null;
-                
-                // ═══════════════════════════════════════════════════════════════
-                // OPTION 2 CALCULATION LAW — COMPLETE IMPLEMENTATION
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 1: Extract all letters from Final Wahid (OPTION 1 output)
-                // STEP 2: For every letter, obtain its Birinci Bast value
-                // STEP 3: Sum all Birinci Bast values
-                // STEP 4: Count total number of letters
-                // STEP 5: Calculate NEW_TOTAL = Bast Sum + Letter Count
-                // STEP 6: Convert NEW_TOTAL to letters via Istintak (same engine as OPTION 1)
-                // STEP 7: Repeat OPTION 1 workflow on converted letters:
-                //         Letters → Bast → Expansion → Grouping → Wahid → Validation
-                // STEP 8: Store every intermediate stage separately
-                // ═══════════════════════════════════════════════════════════════
-                
-                // ══ STAGE 1: ORIGINAL WAHID EXTRACTION ═══════════════════════
-                const originalWahid = Array.isArray(pipeline.kitabet?.finalExpandedLetters) 
-                  ? pipeline.kitabet.finalExpandedLetters 
-                  : [];
-                
-                // ══ STAGE 2: BIRINCI BAST CALCULATION ════════════════════════
-                // For each letter, get Birinci Bast (1st Bast) value
-                const letterBastDetails = originalWahid.map(letter => ({
-                  letter,
-                  birinciBast: FIRST_BAST[letter] || 0,
-                }));
-                
-                // ══ STAGE 3: BAST SUMMATION ══════════════════════════════════
-                const totalBastSum = letterBastDetails.reduce((sum, detail) => {
-                  return sum + detail.birinciBast;
-                }, 0);
-                
-                // ══ STAGE 4: LETTER COUNT ════════════════════════════════════
-                const totalLetterCount = originalWahid.length;
-                
-                // ══ STAGE 5: NEW TOTAL CALCULATION ═══════════════════════════
-                const newTotal = totalBastSum + totalLetterCount;
-                
-                // ══ STAGE 6: ISTINTAK CONVERSION (Same engine as OPTION 1) ═══
-                const convertedLetters = istintak(newTotal);
-                
-                // ══ STAGE 7: REPEAT OPTION 1 WORKFLOW ON CONVERTED LETTERS ═══
-                // Apply the same manuscript workflow: Letters → Bast → Expansion → Grouping → Wahid → Validation
-                
-                // 7a: Calculate Bast for converted letters
-                const convertedBastSum = convertedLetters.reduce((sum, letter) => {
-                  return sum + (FIRST_BAST[letter] || 0);
-                }, 0);
-                
-                // 7b: Determine parity (FERD/ZEVC) for grouping
-                const convertedIsFerd = convertedLetters.length % 2 !== 0;
-                const convertedGroupSize = convertedIsFerd ? 5 : 4;
-                
-                // 7c: Apply remainder correction (same as OPTION 1)
-                const convertedRemainder = convertedLetters.length % convertedGroupSize;
-                let finalExpandedLetters = [...convertedLetters];
-                let supplementLetters = [];
-                
-                if (convertedRemainder > 0) {
-                  const needed = convertedGroupSize - convertedRemainder;
-                  const galibVal = MIZAAN_BAST2[dominant] || MIZAAN_BAST2.fire;
-                  supplementLetters = istintak(galibVal).slice(0, needed);
-                  finalExpandedLetters = [...convertedLetters, ...supplementLetters];
-                }
-                
-                // 7d: Group into names (same as OPTION 1)
-                const groupedNames = [];
-                for (let i = 0; i < finalExpandedLetters.length; i += convertedGroupSize) {
-                  const group = finalExpandedLetters.slice(i, i + convertedGroupSize);
-                  groupedNames.push({
-                    letters: group,
-                    name: group.join(''),
-                    groupNumber: Math.floor(i / convertedGroupSize) + 1,
-                  });
-                }
-                
-                // 7e: Calculate new Wahid (same validation as OPTION 1)
-                const newWahidValid = finalExpandedLetters.length > 0 && groupedNames.length > 0;
-                
-                // ══ STAGE 8: STORE ALL INTERMEDIATE RESULTS ═══════════════════
-                const option2Storage = {
-                  // Original Wahid data
-                  originalWahid,
-                  originalLetterCount: totalLetterCount,
-                  originalBastSum: totalBastSum,
-                  
-                  // New Total calculation
-                  newTotal,
-                  
-                  // Converted letters (Stage 6 output)
-                  convertedLetters,
-                  convertedLetterCount: convertedLetters.length,
-                  convertedBastSum,
-                  
-                  // OPTION 1 workflow repetition (Stage 7)
-                  convertedIsFerd,
-                  convertedGroupSize,
-                  convertedRemainder,
-                  supplementLetters,
-                  finalExpandedLetters,
-                  finalExpandedCount: finalExpandedLetters.length,
-                  groupedNames,
-                  totalGroups: groupedNames.length,
-                  newWahidValid,
-                  
-                  // Validation results
-                  validation: {
-                    originalWahidValid: originalWahid.length > 0,
-                    bastSumValid: totalBastSum > 0,
-                    conversionValid: convertedLetters.length > 0,
-                    groupingValid: groupedNames.length > 0,
-                    expansionValid: finalExpandedLetters.length > 0,
-                    newWahidValid,
-                    allStagesComplete: 
-                      originalWahid.length > 0 && 
-                      totalBastSum > 0 && 
-                      convertedLetters.length > 0 && 
-                      groupedNames.length > 0 &&
-                      finalExpandedLetters.length > 0
-                  },
-                  
-                  // Kitabet and Vefk from pipeline
-                  kitabet: pipeline.kitabet,
-                  vefk: pipeline.vefk,
-                };
-                
-                // Persist to state for OPTION 3 access
-                setOption2State(option2Storage);
                 
                 // SEED LETTERS for Satr-i Vahid Grouping (OPTION 2 converted letters)
-                const seedLetters = convertedLetters;
+                const seedLetters = option2State.convertedLetters;
                 
                 return (
                   <>
@@ -474,17 +451,17 @@ export default function Mizaan9Page() {
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Bast (Σ 9 Mizans)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input?.grandBast?.toLocaleString() ?? 0}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2State.kitabet ? 'Calculated' : 'N/A'}</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Letters (Σ 9 Mizans)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input?.grandLetters ?? 0}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>Calculated</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satır Vahid Total</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{pipeline.input?.satirVahidTotal?.toLocaleString() ?? 0}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>Calculated</span>
                         </div>
                       </div>
                     </div>
@@ -500,23 +477,23 @@ export default function Mizaan9Page() {
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>OPTION 1 Final Wahid Letters</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2Storage.originalLetterCount}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2State.originalLetterCount}</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Birinci Bast Sum (Σ)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2Storage.originalBastSum.toLocaleString()}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2State.originalBastSum.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
                           style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Combined Total (Bast + Letters)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2Storage.newTotal.toLocaleString()}</span>
+                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2State.newTotal.toLocaleString()}</span>
                         </div>
                         <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
                           <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Converted Letters (Istintak)</span>
                           <div className="flex flex-wrap gap-1 justify-center" style={{ direction: 'rtl' }}>
-                            {option2Storage.convertedLetters.length > 0 ? (
-                              option2Storage.convertedLetters.map((l, i) => (
+                            {option2State.convertedLetters.length > 0 ? (
+                              option2State.convertedLetters.map((l, i) => (
                                 <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
                                   style={{ 
                                     color: "#4ADE80", 
@@ -534,11 +511,11 @@ export default function Mizaan9Page() {
                           </div>
                           <div className="text-center mt-2">
                             <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
-                              Count: {option2Storage.convertedLetterCount} • Ready for OPTION 2 workflow
+                              Count: {option2State.convertedLetterCount} • Ready for OPTION 2 workflow
                             </span>
                           </div>
                         </div>
-                        {option2Storage?.validation?.allStagesComplete && (
+                        {option2State?.validation?.allStagesComplete && (
                           <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border"
                             style={{ background: "rgba(74,222,128,0.11)", borderColor: "rgba(74,222,128,0.44)" }}>
                             <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "#4ADE80" }}>✓ All Stages Complete</span>
@@ -551,7 +528,7 @@ export default function Mizaan9Page() {
                     <SatrVahidGrouping
                       satrVahidLetters={seedLetters}
                       dominant={dominant}
-                      option2State={option2Storage}
+                      option2State={option2State}
                     />
                   </>
                 );
