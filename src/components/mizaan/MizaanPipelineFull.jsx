@@ -157,7 +157,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   <span className="font-inter" style={{ color: G.dim }}>Magic Constant: <span style={{ color: G.gold, fontWeight: "bold" }}>{vefk.mc.toLocaleString()}</span></span>
                   <span className="font-inter" style={{ color: G.dim }}>Guardian: <span style={{ color: G.gold }}>{vefk.guardianName}</span></span>
                 </div>
-                {/* MIZAN OPTION 1 RULE: Vefk source from Sum of Expanded Letter Values */}
+                {/* MIZAN OPTION 1 RULE: Vefk Source = Sum of First Bast Values (Level 1) of ALL EXPANDED LETTERS */}
                 <div className="px-3 py-2 rounded-lg border"
                   style={{ 
                     background: "rgba(74,222,128,0.08)", 
@@ -165,7 +165,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   }}>
                   <div className="flex items-center justify-between">
                     <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: "rgba(74,222,128,0.70)" }}>
-                      Vefk Source: Sum of All Expanded Letter Values
+                      Expanded Letters First Value Total (Σ Level 1)
                     </span>
                     <span className="font-inter text-sm font-bold tabular-nums" style={{ color: "#4ADE80" }}>
                       {expandedLettersSum?.toLocaleString() || 0}
