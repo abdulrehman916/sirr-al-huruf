@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { getBastLevel, istintak, GALIB_ANASIR_VALUES, GALIB_ANASIR_SUPPLEMENTS } from "../../lib/mizaanPostEngine";
-import { ChevronDown, ChevronRight } from "lucide-react";
 
 // ── Design tokens ─────────────────────────────────────────────
 const G = {
@@ -122,22 +121,6 @@ function OrnamentalDivider() {
       <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
       <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
       <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
-    </div>
-  );
-}
-
-function CollapsibleSection({ title, children, defaultOpen = false }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  return (
-    <div className="rounded-lg border overflow-hidden" style={{ borderColor: G.goldBorder + "60", background: G.bgInner }}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-white/5 transition-colors"
-      >
-        <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.goldDim }}>{title}</span>
-        {isOpen ? <ChevronDown className="w-3.5 h-3.5" style={{ color: G.goldDim }} /> : <ChevronRight className="w-3.5 h-3.5" style={{ color: G.goldDim }} />}
-      </button>
-      {isOpen && <div className="px-4 pb-4 border-t" style={{ borderColor: G.goldBorder + "60" }}>{children}</div>}
     </div>
   );
 }
@@ -317,25 +300,6 @@ export default function SatrVahidGrouping({
                 </div>
               </motion.div>
             ))}
-          </div>
-          
-          <div className="mt-4">
-            <CollapsibleSection title="▶ Expanded Letter Values">
-              <div className="space-y-2">
-                {derivations.map((d, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-[8px] py-1.5 border-b" style={{ borderColor: G.goldBorder + "40" }}>
-                    <div className="flex items-center gap-2">
-                      <span className="font-inter text-[7px] uppercase" style={{ color: G.dim }}>Letter {idx + 1}</span>
-                      <LetterCell letter={d.originalLetter} color={G.gold} size="sm" />
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-inter text-[7px]" style={{ color: G.dim }}>Bast-{bastLevel}:</span>
-                      <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{d.bastValue.toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CollapsibleSection>
           </div>
         </Card>
 
