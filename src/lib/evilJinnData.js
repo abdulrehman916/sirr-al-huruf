@@ -537,9 +537,9 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 39, serialNo: 39, arabicName: "هموري", arabicHarakat: "هَمُودِي",
+    id: 39, serialNo: 39, arabicName: "همودي", arabicHarakat: "هَمُودِي",
     englishName: "Hamudi", abjadValue: 65, letterCount: 4,
-    breakdown: [],
+    breakdown: [{ letter: "ه", value: 5 }, { letter: "م", value: 40 }, { letter: "و", value: 6 }, { letter: "د", value: 4 }, { letter: "ي", value: 10 }],
     malayalamName: "ഹമൂദി",
     profile: {
       appearance: "ഒരു സ്ത്രീ — രണ്ട് ചിറക്, ഒരു കാൽ, കൈകളിൽ രണ്ട് കറുത്ത പാമ്പ്.",
