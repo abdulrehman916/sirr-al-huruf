@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { runMizaanPostPipeline, getBastLevel } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 const G = {
   gold:     "#F5D060",
@@ -67,6 +68,22 @@ function OrnamentalDivider() {
   );
 }
 
+function CollapsibleSection({ title, children, defaultOpen = false }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-lg border overflow-hidden" style={{ borderColor: G.goldBorder + "60", background: G.bgInner }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-white/5 transition-colors"
+      >
+        <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.goldDim }}>{title}</span>
+        {isOpen ? <ChevronDown className="w-3.5 h-3.5" style={{ color: G.goldDim }} /> : <ChevronRight className="w-3.5 h-3.5" style={{ color: G.goldDim }} />}
+      </button>
+      {isOpen && <div className="px-4 pb-4 border-t" style={{ borderColor: G.goldBorder + "60" }}>{children}</div>}
+    </div>
+  );
+}
+
 export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }) {
   const pipeline = useMemo(() => {
     if (!grandBast || grandBast <= 0) return null;
@@ -121,34 +138,8 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
           <Card accent={elementMeta.color}>
             <SectionHeader step="5" label="Vefk Magic Square" arabic="الوفق" color={elementMeta.color} />
             
-            {/* Vefk Source Number Verification */}
-            <div className="mb-4 rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Vefk Source — Sacred Total from 9 Mizans</div>
-              <div className="space-y-2 text-[8px]">
-                <div className="px-3 py-2 rounded bg-black/30 mb-2 border" style={{ borderColor: G.goldBorder + "60" }}>
-                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>Manuscript Rule</div>
-                  <div className="text-[7px]" style={{ color: G.goldDim }}>
-                    The Vefk Source Number is the grand total from the 9 Mizans (12,165 for "الله"). This sacred total becomes the Magic Constant directly.
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
-                  <span style={{ color: G.dim }}>Vefk Source Number (S):</span>
-                  <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.S?.toLocaleString() || 0}</span>
-                </div>
-                <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
-                  <span style={{ color: G.dim }}>Magic Constant (mc):</span>
-                  <span className="font-bold tabular-nums" style={{ color: vefk.mc === vefk.S ? "#4ADE80" : "#F87171" }}>{vefk.mc?.toLocaleString() || 0}</span>
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: G.goldBorder + "60" }}>
-                  <span style={{ color: G.dim }}>Verification:</span>
-                  <span className="font-bold" style={{ color: vefk.mc === vefk.S ? "#4ADE80" : "#F87171" }}>
-                    {vefk.mc === vefk.S ? "✓ PERFECT MAGIC SQUARE" : "✗ MISMATCH"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 mb-3">
+            {/* Element Info */}
+            <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl">{elementMeta.icon}</span>
               <div>
                 <div className="flex items-center gap-2">
@@ -158,63 +149,6 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               </div>
             </div>
 
-            {/* Letters Used for Vefk */}
-            <div className="mb-4 rounded-lg border p-3" style={{ background: G.bgInner, borderColor: elementMeta.color + "40" }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>ALL EXPANDED LETTERS (Step 3)</div>
-              <div className="flex flex-wrap gap-1 mb-2" style={{ direction: "rtl" }}>
-                {pipeline.allExpandedLetters?.map((l, i) => (
-                  <span key={i} className="font-amiri text-lg font-bold px-2 py-1 rounded"
-                    style={{ background: elementMeta.color + "15", color: elementMeta.color, border: `1px solid ${elementMeta.color}40` }}>
-                    {l}
-                  </span>
-                )) || <span style={{ color: G.dim }}>—</span>}
-              </div>
-              <div className="text-[7px]" style={{ color: G.dim }}>
-                Total: {pipeline.expandedLettersCount || 0} letters from Bast expansions
-              </div>
-            </div>
-
-            {/* Expanded Letters Value Breakdown */}
-            <div className="mb-4 rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>ALL EXPANDED LETTERS — Step 3 Derivation</div>
-              <div className="mb-2 px-2 py-1.5 rounded text-[7px]" style={{ background: G.bgInner, borderColor: G.goldBorder + "60", border: "1px solid" }}>
-                <span style={{ color: G.dim }}>These {pipeline.allExpandedLetters?.length || 0} letters derived from Vefk Source ({vefk.S?.toLocaleString()})</span>
-              </div>
-              <div className="space-y-1.5">
-                {pipeline.allExpandedLetters?.map((letter, idx) => {
-                  const bastValue = getBastLevel(letter, 1);
-                  return (
-                    <div key={idx} className="flex items-center justify-between text-[8px]">
-                      <div className="flex items-center gap-2">
-                        <span className="font-inter text-[7px] uppercase" style={{ color: G.dim }}>Letter {idx + 1}</span>
-                        <span className="font-amiri text-lg font-bold px-2 py-0.5 rounded"
-                          style={{ background: elementMeta.color + "15", color: elementMeta.color, border: `1px solid ${elementMeta.color}40` }}>
-                          {letter}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-inter text-[7px]" style={{ color: G.dim }}>First Bast:</span>
-                        <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{bastValue.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  );
-                }) || <span style={{ color: G.dim }}>—</span>}
-              </div>
-              
-              {/* Sum of Expanded Letters */}
-              <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "60" }}>
-                <div className="flex items-center justify-between">
-                  <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Sum of Expanded Letters:</span>
-                  <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>
-                    {pipeline.expandedLettersTotal?.toLocaleString() || 0}
-                  </span>
-                </div>
-                <div className="text-[7px] mt-1" style={{ color: G.dim }}>
-                  Note: Vefk Source = {vefk.S?.toLocaleString()} (from 9 Mizans). Expanded letters sum = {pipeline.expandedLettersTotal?.toLocaleString()}.
-                </div>
-              </div>
-            </div>
-            
             {/* Vefk Grid */}
             <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto mb-4">
               {vefk.grid.flat().map((val, idx) => (
@@ -230,37 +164,94 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               ))}
             </div>
 
-            {/* Vefk Summary */}
-            <div className="rounded-lg border p-3" style={{ background: G.bgInner, borderColor: elementMeta.color + "40" }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Vefk Verification</div>
-              <div className="grid grid-cols-2 gap-2 text-[8px]">
-                <div className="flex justify-between">
-                  <span style={{ color: G.dim }}>Source Number:</span>
-                  <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.S?.toLocaleString() || 0}</span>
+            {/* Collapsible Technical Details */}
+            <div className="space-y-3">
+              <CollapsibleSection title="▶ Vefk Source Calculation">
+                <div className="space-y-2 text-[8px]">
+                  <div className="px-3 py-2 rounded bg-black/30 mb-2 border" style={{ borderColor: G.goldBorder + "60" }}>
+                    <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>Manuscript Rule</div>
+                    <div className="text-[7px]" style={{ color: G.goldDim }}>
+                      The Vefk Source Number is the grand total from the 9 Mizans. This sacred total becomes the Magic Constant directly.
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                    <span style={{ color: G.dim }}>Vefk Source Number (S):</span>
+                    <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.S?.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                    <span style={{ color: G.dim }}>Magic Constant (mc):</span>
+                    <span className="font-bold tabular-nums" style={{ color: vefk.mc === vefk.S ? "#4ADE80" : "#F87171" }}>{vefk.mc?.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                    <span style={{ color: G.dim }}>Verification:</span>
+                    <span className="font-bold" style={{ color: vefk.mc === vefk.S ? "#4ADE80" : "#F87171" }}>
+                      {vefk.mc === vefk.S ? "✓ PERFECT MAGIC SQUARE" : "✗ MISMATCH"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span style={{ color: G.dim }}>Magic Constant:</span>
-                  <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.mc?.toLocaleString() || 0}</span>
+              </CollapsibleSection>
+
+              <CollapsibleSection title="▶ Expanded Letter Values">
+                <div className="space-y-1.5">
+                  {pipeline.allExpandedLetters?.map((letter, idx) => {
+                    const bastValue = getBastLevel(letter, 1);
+                    return (
+                      <div key={idx} className="flex items-center justify-between text-[8px]">
+                        <div className="flex items-center gap-2">
+                          <span className="font-inter text-[7px] uppercase" style={{ color: G.dim }}>Letter {idx + 1}</span>
+                          <span className="font-amiri text-lg font-bold px-2 py-0.5 rounded"
+                            style={{ background: elementMeta.color + "15", color: elementMeta.color, border: `1px solid ${elementMeta.color}40` }}>
+                            {letter}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-inter text-[7px]" style={{ color: G.dim }}>First Bast:</span>
+                          <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{bastValue.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  }) || <span style={{ color: G.dim }}>—</span>}
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Sum of Expanded Letters:</span>
+                      <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>
+                        {pipeline.expandedLettersTotal?.toLocaleString() || 0}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                {vefk.validation?.details?.rows.map((row, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span style={{ color: G.dim }}>Row {idx + 1}:</span>
-                    <span className="font-bold tabular-nums" style={{ color: row.valid ? "#4ADE80" : "#F87171" }}>{row.sum.toLocaleString()}</span>
+              </CollapsibleSection>
+
+              <CollapsibleSection title="▶ Row / Column / Diagonal Validation">
+                <div className="grid grid-cols-2 gap-2 text-[8px]">
+                  <div className="flex justify-between">
+                    <span style={{ color: G.dim }}>Source Number:</span>
+                    <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.S?.toLocaleString() || 0}</span>
                   </div>
-                ))}
-                {vefk.validation?.details?.cols.map((col, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span style={{ color: G.dim }}>Column {idx + 1}:</span>
-                    <span className="font-bold tabular-nums" style={{ color: col.valid ? "#4ADE80" : "#F87171" }}>{col.sum.toLocaleString()}</span>
+                  <div className="flex justify-between">
+                    <span style={{ color: G.dim }}>Magic Constant:</span>
+                    <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.mc?.toLocaleString() || 0}</span>
                   </div>
-                ))}
-                {vefk.validation?.details?.diagonals.map((diag, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span style={{ color: G.dim }}>Diagonal {diag.name === 'main' ? 'A' : 'B'}:</span>
-                    <span className="font-bold tabular-nums" style={{ color: diag.valid ? "#4ADE80" : "#F87171" }}>{diag.sum.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
+                  {vefk.validation?.details?.rows.map((row, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span style={{ color: G.dim }}>Row {idx + 1}:</span>
+                      <span className="font-bold tabular-nums" style={{ color: row.valid ? "#4ADE80" : "#F87171" }}>{row.sum.toLocaleString()}</span>
+                    </div>
+                  ))}
+                  {vefk.validation?.details?.cols.map((col, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span style={{ color: G.dim }}>Column {idx + 1}:</span>
+                      <span className="font-bold tabular-nums" style={{ color: col.valid ? "#4ADE80" : "#F87171" }}>{col.sum.toLocaleString()}</span>
+                    </div>
+                  ))}
+                  {vefk.validation?.details?.diagonals.map((diag, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span style={{ color: G.dim }}>Diagonal {diag.name === 'main' ? 'A' : 'B'}:</span>
+                      <span className="font-bold tabular-nums" style={{ color: diag.valid ? "#4ADE80" : "#F87171" }}>{diag.sum.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleSection>
             </div>
           </Card>
         )}

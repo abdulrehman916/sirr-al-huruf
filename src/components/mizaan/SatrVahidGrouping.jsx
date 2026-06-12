@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { getBastLevel, istintak, GALIB_ANASIR_VALUES, GALIB_ANASIR_SUPPLEMENTS } from "../../lib/mizaanPostEngine";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 // ── Design tokens ─────────────────────────────────────────────
 const G = {
@@ -121,6 +122,22 @@ function OrnamentalDivider() {
       <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
       <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
       <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
+    </div>
+  );
+}
+
+function CollapsibleSection({ title, children, defaultOpen = false }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-lg border overflow-hidden" style={{ borderColor: G.goldBorder + "60", background: G.bgInner }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-white/5 transition-colors"
+      >
+        <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.goldDim }}>{title}</span>
+        {isOpen ? <ChevronDown className="w-3.5 h-3.5" style={{ color: G.goldDim }} /> : <ChevronRight className="w-3.5 h-3.5" style={{ color: G.goldDim }} />}
+      </button>
+      {isOpen && <div className="px-4 pb-4 border-t" style={{ borderColor: G.goldBorder + "60" }}>{children}</div>}
     </div>
   );
 }
@@ -278,45 +295,47 @@ export default function SatrVahidGrouping({
                 transition={{ delay: idx * 0.05 }}
                 className="rounded-xl border p-3"
                 style={{
-                  background: idx === 0 ? G.green + "08" : G.bgInner,
-                  borderColor: idx === 0 ? G.green + "40" : G.goldBorder + "60",
+                  background: G.bgInner,
+                  borderColor: G.goldBorder + "60",
                 }}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center justify-center w-5 h-5 rounded font-inter text-[9px] font-black flex-shrink-0"
-                    style={{
-                      background: idx === 0 ? G.green : G.goldFaint,
-                      color: idx === 0 ? "#000" : G.goldDim,
-                      border: `1px solid ${idx === 0 ? G.green : G.goldBorder}`,
-                    }}>
-                    {d.stepNumber}
-                  </div>
-                  <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
-                    Letter {d.stepNumber} {d.seedIndex === 0 ? '(First Seed)' : d.seedIndex === safeSeed.length - 1 ? '(Last Seed)' : ''}
-                  </span>
-                </div>
-
                 <div className="flex items-center gap-2 flex-wrap">
                   <LetterCell letter={d.originalLetter} color={G.gold} size="lg" />
-                  <Arrow label={`Bast ${bastLevel}`} />
+                  <Arrow label={`B${bastLevel}`} />
                   <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
                     style={{ background: G.greenDim, borderColor: G.green + "40" }}>
                     <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
                       {d.bastValue.toLocaleString()}
                     </span>
                   </div>
-                  <Arrow label="Istintak" />
+                  <Arrow label="→" />
                   <div className="flex items-center gap-1 flex-wrap" style={{ direction: "rtl" }}>
                     {d.expandedLetters.map((l, i) => (
                       <LetterCell key={i} letter={l} color={G.green} size="sm" />
                     ))}
-                    <span className="font-inter text-[8px] ml-1" style={{ color: G.dim }}>
-                      ({d.expandedCount})
-                    </span>
                   </div>
                 </div>
               </motion.div>
             ))}
+          </div>
+          
+          <div className="mt-4">
+            <CollapsibleSection title="▶ Expanded Letter Values">
+              <div className="space-y-2">
+                {derivations.map((d, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-[8px] py-1.5 border-b" style={{ borderColor: G.goldBorder + "40" }}>
+                    <div className="flex items-center gap-2">
+                      <span className="font-inter text-[7px] uppercase" style={{ color: G.dim }}>Letter {idx + 1}</span>
+                      <LetterCell letter={d.originalLetter} color={G.gold} size="sm" />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-inter text-[7px]" style={{ color: G.dim }}>Bast-{bastLevel}:</span>
+                      <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{d.bastValue.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
           </div>
         </Card>
 
