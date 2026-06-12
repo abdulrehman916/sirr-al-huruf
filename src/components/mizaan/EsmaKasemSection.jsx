@@ -293,6 +293,22 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
   const elementColors = { fire: "#FF6B35", earth: "#A5C880", air: "#B2EBF2", water: "#4FC3F7" };
   const elementColor  = elementColors[dominant] || elementColors.fire;
 
+  // ── POST STEP: Total Bast of Section 3 All Expanded Letters → Istintak → new letters ──
+  const postExpandedTotal = useMemo(
+    () => allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0),
+    [allExpandedLetters]
+  );
+  const postIstintakLetters = useMemo(() => istintak(postExpandedTotal), [postExpandedTotal]);
+
+  // ── POST STEP: Individual Bast derivations on each postIstintakLetter ──
+  const postDerivations = useMemo(() => {
+    return postIstintakLetters.map((letter) => {
+      const bastValue      = getBastLevel(letter, 1);
+      const expandedLetters = istintak(bastValue);
+      return { letter, bastValue, expandedLetters };
+    });
+  }, [postIstintakLetters]);
+
   if (safe2.length === 0) return null;
 
   return (
@@ -461,6 +477,66 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
               </div>
             </div>
           )}
+        </Card>
+
+        {/* ── POST: Total Bast → Istintak Letters ── */}
+        <OrnamentalDivider />
+
+        <Card accent={elementColor}>
+          <SectionHeader step="P1" label="Post Expanded Total → Istintak" arabic="مجموع البسط → استنطاق" color={elementColor} />
+          <div className="mb-3 space-y-2">
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
+              style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                Section 3 Expanded Letters — Total Bast
+              </span>
+              <span className="font-inter text-base font-bold tabular-nums" style={{ color: elementColor }}>
+                {postExpandedTotal.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5 py-1">
+              <span className="font-inter text-base" style={{ color: G.goldDim }}>↓</span>
+              <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Istintak</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <LetterRow letters={postIstintakLetters} color={elementColor} size="xl" showIndex rtl />
+          </div>
+          <div className="mt-3 text-sm font-inter text-center" style={{ color: G.dim }}>
+            Count: <span style={{ color: elementColor, fontWeight: "bold", fontSize: "1rem" }}>{postIstintakLetters.length}</span>
+          </div>
+        </Card>
+
+        {/* ── POST: Individual Bast Derivations on Istintak Letters ── */}
+        <Card accent={G.green}>
+          <SectionHeader step="P2" label="Individual Bast Derivations" arabic="اشتقاق البسط الفردي" color={G.green} />
+          <div className="space-y-3">
+            {postDerivations.map((d, idx) => (
+              <motion.div key={idx}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="rounded-xl border p-3"
+                style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <LetterCell letter={d.letter} color={elementColor} size="lg" />
+                  <Arrow label="B1" />
+                  <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
+                    style={{ background: G.greenDim, borderColor: G.green + "40" }}>
+                    <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
+                      {d.bastValue.toLocaleString()}
+                    </span>
+                  </div>
+                  <Arrow label="→" />
+                  <div className="flex items-center gap-1 flex-wrap" style={{ direction: "rtl" }}>
+                    {d.expandedLetters.map((l, i) => (
+                      <LetterCell key={i} letter={l} color={G.green} size="sm" />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </Card>
 
       </div>
