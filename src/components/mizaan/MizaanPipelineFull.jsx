@@ -99,11 +99,11 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-3"
           style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
-          <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Manuscript Pipeline</span>
+          <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Option 1 — Esma-i Kitabet</span>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
         <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>أسماء الكتابة</h2>
-        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Complete Derivation → Vefk</p>
+        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Manuscript Derivation → Vefk</p>
       </div>
 
       <OrnamentalDivider />
@@ -123,28 +123,44 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
             
             {/* Vefk Source Number Verification */}
             <div className="mb-4 rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Vefk Source Number — Expanded Letters Only</div>
+              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Vefk Source Calculation — Expanded Letters Only</div>
               <div className="space-y-2 text-[8px]">
+                <div className="px-3 py-2 rounded bg-black/30 mb-2 border" style={{ borderColor: G.goldBorder + "60" }}>
+                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>Calculation Path</div>
+                  <div className="flex items-center gap-2 text-[7px]" style={{ color: G.goldDim }}>
+                    <span>9 Mizan Total (12,165)</span>
+                    <span>→</span>
+                    <span>Istintak</span>
+                    <span>→</span>
+                    <span>Seed Letters</span>
+                    <span>→</span>
+                    <span>Bast Expansion</span>
+                    <span>→</span>
+                    <span style={{ color: G.gold, fontWeight: "bold" }}>Expanded Letters Sum (4,953)</span>
+                    <span>→</span>
+                    <span style={{ color: G.gold, fontWeight: "bold" }}>Vefk Source</span>
+                  </div>
+                </div>
                 <div className="flex justify-between items-center">
                   <span style={{ color: G.dim }}>Expanded Letters Count:</span>
                   <span className="font-bold tabular-nums" style={{ color: G.gold }}>{pipeline.expandedLettersCount || 0}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span style={{ color: G.dim }}>Expanded Letters Total (First Bast):</span>
+                <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                  <span style={{ color: G.dim }}>Sum of First Bast Values (Vefk Source):</span>
                   <span className="font-bold tabular-nums" style={{ color: G.gold }}>{pipeline.expandedLettersTotal?.toLocaleString() || 0}</span>
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
                   <span style={{ color: G.dim }}>Vefk Source Number (S):</span>
                   <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.S?.toLocaleString() || 0}</span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
                   <span style={{ color: G.dim }}>Magic Constant (mc):</span>
                   <span className="font-bold tabular-nums" style={{ color: vefk.mc === vefk.S ? "#4ADE80" : "#F87171" }}>{vefk.mc?.toLocaleString() || 0}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: G.goldBorder + "60" }}>
-                  <span style={{ color: G.dim }}>Match:</span>
+                  <span style={{ color: G.dim }}>Verification:</span>
                   <span className="font-bold" style={{ color: vefk.mc === vefk.S ? "#4ADE80" : "#F87171" }}>
-                    {vefk.mc === vefk.S ? "✓ IDENTICAL" : "✗ MISMATCH"}
+                    {vefk.mc === vefk.S ? "✓ PERFECT MAGIC SQUARE" : "✗ MISMATCH"}
                   </span>
                 </div>
               </div>
