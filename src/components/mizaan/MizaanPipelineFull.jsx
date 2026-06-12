@@ -112,7 +112,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
 
   if (!pipeline) return null;
 
-  const { input, kitabet, avan, kasem, vefk } = pipeline;
+  const { input, initialSeedLetters, kitabet, avan, kasem, vefk } = pipeline;
   const element = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
@@ -159,7 +159,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
             <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
               style={{ background: G.bgInner, borderColor: G.goldBorder }}>
               <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Letters (Σ 9 Mizans)</span>
-              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{input.grandLetters}</span>
+              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{input.grandLetters || 0}</span>
             </div>
             <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
               style={{ background: G.bgInner, borderColor: G.goldBorder }}>
@@ -173,11 +173,11 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
         <Card accent={G.gold}>
           <SectionHeader step="1" label="Initial Seed Letters (Istintak)" arabic="الحروف البذرية" color={G.gold} />
           <div className="flex flex-wrap gap-2 justify-center mb-2">
-            <LetterRow letters={input.initialSeedLetters} color={G.gold} size="xl" showIndex rtl />
+            <LetterRow letters={initialSeedLetters} color={G.gold} size="xl" showIndex rtl />
           </div>
           <div className="text-center">
             <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
-              Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{input.initialSeedLetters.length}</span>
+              Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{initialSeedLetters?.length || 0}</span>
             </span>
           </div>
         </Card>
@@ -194,7 +194,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
                     Remainder Correction
                   </span>
-                  <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>+{kitabet.supplementLetters.length} letters</span>
+                  <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>+{(kitabet.supplementLetters?.length || 0)} letters</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[8px]">
                   <div className="flex justify-between">
@@ -230,7 +230,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border"
                 style={{ background: G.bgInner, borderColor: G.goldBorder }}>
                 <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Total Names</span>
-                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{kitabet.names.length}</span>
+                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{kitabet.names?.length || 0}</span>
               </div>
             </div>
           </Card>
@@ -244,7 +244,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               <div className="mb-3 rounded-lg border p-2"
                 style={{ background: G.greenDim, borderColor: G.green + "40" }}>
                 <span className="font-inter text-[7px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
-                  Remainder: +{avan.supplementLetters.length} letters
+                  Remainder: +{(avan.supplementLetters?.length || 0)} letters
                 </span>
               </div>
             )}
@@ -276,7 +276,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               <div className="mb-3 rounded-lg border p-2"
                 style={{ background: G.greenDim, borderColor: G.green + "40" }}>
                 <span className="font-inter text-[7px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
-                  Remainder: +{kasem.supplementLetters.length} letters
+                  Remainder: +{(kasem.supplementLetters?.length || 0)} letters
                 </span>
               </div>
             )}
