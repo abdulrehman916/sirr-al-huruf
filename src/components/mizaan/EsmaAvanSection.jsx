@@ -16,7 +16,7 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, getBastLevel } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel, istintak } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -163,6 +163,111 @@ function SourceSection({ avanBastTotal, avanLetterCount, avanSourceTotal, vefkSo
   );
 }
 
+// ── Section 1 Source Derivation block — display only, no calc changes ──
+function AvanSourceDerivation({ section1Letters, bastTotal, letterCount, sourceTotal, seedLetters, elementColor }) {
+  const safe = Array.isArray(section1Letters) ? section1Letters : [];
+
+  return (
+    <div className="rounded-xl border p-4 space-y-4"
+      style={{
+        background: "rgba(6,14,36,0.98)",
+        borderColor: elementColor + "55",
+        borderLeft: `3px solid ${elementColor}`,
+        boxShadow: `0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)`,
+      }}>
+
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
+          style={{ background: elementColor + "22", border: `1px solid ${elementColor}55`, color: elementColor }}>
+          S
+        </div>
+        <span className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color: elementColor }}>
+          Section 1 Source — A'van Input Derivation
+        </span>
+      </div>
+
+      {/* Step 1: Section 1 All Expanded Letters */}
+      <div className="space-y-2">
+        <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
+          Section 1 — All Expanded Letters
+        </div>
+        <div className="flex flex-wrap gap-1.5" style={{ direction: "rtl" }}>
+          {safe.map((l, i) => (
+            <span key={i}
+              className="font-amiri font-bold rounded-lg border px-2 py-1 text-xl leading-tight"
+              style={{ color: elementColor, borderColor: elementColor + "40", background: elementColor + "12" }}>
+              {l}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 2: Letter Count */}
+      <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
+        style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+          Section 1 Expanded Letters Count
+        </span>
+        <span className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>
+          {letterCount}
+        </span>
+      </div>
+
+      {/* Step 3 & 4: Formula + Result */}
+      <div className="rounded-xl border p-3 space-y-2"
+        style={{ background: G.bgInner, borderColor: G.goldBorder + "40" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest font-bold text-center" style={{ color: G.dim }}>
+          Formula
+        </div>
+        <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center">
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Bast Total</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: elementColor }}>{bastTotal.toLocaleString()}</div>
+          </div>
+          <span className="font-inter text-base font-bold" style={{ color: G.goldDim }}>+</span>
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Letter Count</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{letterCount}</div>
+          </div>
+          <span className="font-inter text-base font-bold" style={{ color: G.goldDim }}>=</span>
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Result</div>
+            <div className="font-inter text-lg font-black tabular-nums" style={{ color: G.gold }}>{sourceTotal.toLocaleString()}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Arrow */}
+      <div className="flex flex-col items-center gap-0.5">
+        <div className="h-4 w-px" style={{ background: G.goldBorder }} />
+        <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Istintak</span>
+        <span className="font-inter text-base" style={{ color: G.goldDim }}>↓</span>
+      </div>
+
+      {/* Step 5: Istintak Result = Seed Letters */}
+      <div className="space-y-2">
+        <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
+          Istintak Result → Seed Letters for Section 2
+        </div>
+        <div className="flex flex-wrap gap-1.5 justify-center" style={{ direction: "rtl" }}>
+          {(Array.isArray(seedLetters) ? seedLetters : []).map((l, i) => (
+            <span key={i}
+              className="font-amiri font-bold rounded-lg border px-3 py-2 text-2xl leading-tight"
+              style={{ color: G.gold, borderColor: G.goldBorderHi, background: G.goldFaint }}>
+              {l}
+            </span>
+          ))}
+        </div>
+        <div className="text-center font-inter text-[8px]" style={{ color: G.dim }}>
+          Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{seedLetters?.length || 0}</span>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
 // ── Main exported component ──────────────────────────────────────
 // Props:
 //   allExpandedLetters — Section 1 output (read-only, never modified)
@@ -230,6 +335,16 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
       <OrnamentalDivider />
 
       <div className="px-4 pb-6 space-y-5 pt-4">
+
+        {/* ── STEP 0: A'VAN SOURCE DERIVATION from Section 1 ── */}
+        <AvanSourceDerivation
+          section1Letters={allExpandedLetters}
+          bastTotal={avanBastTotal}
+          letterCount={avanLetterCount}
+          sourceTotal={avanSourceTotal}
+          seedLetters={initialSeedLetters}
+          elementColor={elementMeta.color}
+        />
 
         {/* ── COMPLETE DERIVATION CHAIN (Steps 1–4 + Names) ── */}
         {/* SatrVahidGrouping contains:                         */}
