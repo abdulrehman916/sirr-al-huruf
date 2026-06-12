@@ -323,6 +323,15 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
     return buildVefk(s3VefkSourceNumber, dominant || "fire");
   }, [s3VefkSourceNumber, dominant]);
 
+  // ── SECTION 3 VEFK BORDER: derived from Final Fifth Bast Expanded Total ──
+  // Total of all B5-expanded letters → istintak → border letters
+  const s3BorderLetters = useMemo(() => {
+    const allPostExpanded = postDerivations.flatMap(d => d.expandedLetters);
+    const total = allPostExpanded.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+    if (!total) return "";
+    return istintak(total).join("");
+  }, [postDerivations]);
+
   if (safe2.length === 0) return null;
 
   return (
@@ -585,9 +594,6 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
           const d1 = g.reduce((s, r, i) => s + r[i], 0);
           const d2 = g.reduce((s, r, i) => s + r[3 - i], 0);
           const allOk = rowSums.every(x => x === mc) && colSums.every(x => x === mc) && d1 === mc && d2 === mc;
-          const guardianName    = s3Vefk.guardianName || "";
-          const guardianLetters = [...guardianName];
-
           return (
             <>
               <OrnamentalDivider />
@@ -606,48 +612,53 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
                 </div>
 
                 {/* Manuscript-style framed grid */}
-                <div className="flex flex-col items-center gap-1 mb-4">
-                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
-                    style={{ color: elementColor, textShadow: `0 0 12px ${elementColor}55` }}>
-                    {guardianName}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-col items-center justify-center gap-0.5">
-                      {guardianLetters.map((l, i) => (
-                        <span key={i} className="font-amiri font-bold leading-tight"
-                          style={{ color: elementColor, fontSize: "1rem", textShadow: `0 0 8px ${elementColor}55` }}>
-                          {l}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {g.flat().map((val, idx) => (
-                        <div key={idx}
-                          className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
-                          style={{
-                            background: idx % 2 === 0 ? G.goldFaint : G.bgInner,
-                            borderColor: elementColor + "55",
-                            color: elementColor,
-                            minWidth: "2.5rem",
-                          }}>
-                          {val.toLocaleString()}
+                {(() => {
+                  const borderLetters = [...s3BorderLetters];
+                  return (
+                    <div className="flex flex-col items-center gap-1 mb-4">
+                      <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+                        style={{ color: elementColor, textShadow: `0 0 12px ${elementColor}55` }}>
+                        {s3BorderLetters}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-center justify-center gap-0.5">
+                          {borderLetters.map((l, i) => (
+                            <span key={i} className="font-amiri font-bold leading-tight"
+                              style={{ color: elementColor, fontSize: "1rem", textShadow: `0 0 8px ${elementColor}55` }}>
+                              {l}
+                            </span>
+                          ))}
                         </div>
-                      ))}
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {g.flat().map((val, idx) => (
+                            <div key={idx}
+                              className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
+                              style={{
+                                background: idx % 2 === 0 ? G.goldFaint : G.bgInner,
+                                borderColor: elementColor + "55",
+                                color: elementColor,
+                                minWidth: "2.5rem",
+                              }}>
+                              {val.toLocaleString()}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex flex-col items-center justify-center gap-0.5">
+                          {borderLetters.map((l, i) => (
+                            <span key={i} className="font-amiri font-bold leading-tight"
+                              style={{ color: elementColor, fontSize: "1rem", textShadow: `0 0 8px ${elementColor}55` }}>
+                              {l}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+                        style={{ color: elementColor, textShadow: `0 0 12px ${elementColor}55` }}>
+                        {s3BorderLetters}
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center justify-center gap-0.5">
-                      {guardianLetters.map((l, i) => (
-                        <span key={i} className="font-amiri font-bold leading-tight"
-                          style={{ color: elementColor, fontSize: "1rem", textShadow: `0 0 8px ${elementColor}55` }}>
-                          {l}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
-                    style={{ color: elementColor, textShadow: `0 0 12px ${elementColor}55` }}>
-                    {guardianName}
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* MC + Validation */}
                 <div className="text-center space-y-3">
