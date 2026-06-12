@@ -416,6 +416,38 @@ export default function SatrVahidGrouping({
           </div>
         </Card>
 
+        {/* ══ FINAL ESMA-I KITABET NAMES SUMMARY ══ */}
+        <Card accent={G.gold}>
+          <SectionHeader step="F" label="Final Esma-i Kitabet Names" arabic="أسماء الكتابة النهائية" color={G.gold} />
+          <div className="flex flex-col gap-2 py-2">
+            {groupFormation.groups.map((group, idx) => (
+              <motion.div key={idx}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border"
+                style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-sm font-black flex-shrink-0"
+                  style={{ background: G.bgInner, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
+                  {idx + 1}
+                </div>
+                <span className="font-amiri text-2xl font-bold flex-1" style={{ color: G.gold }} dir="rtl">
+                  {group.name}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+          {groupFormation.groups.length > 0 && (
+            <div className="text-center mt-4">
+              <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-xl border"
+                style={{ background: G.bgInner, borderColor: G.goldBorder }}>
+                <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Names</span>
+                <span className="font-inter text-xl font-bold tabular-nums" style={{ color: G.gold }}>{groupFormation.groups.length}</span>
+              </div>
+            </div>
+          )}
+        </Card>
+
       </div>
 
       {/* ══ Bottom accent line ══ */}
