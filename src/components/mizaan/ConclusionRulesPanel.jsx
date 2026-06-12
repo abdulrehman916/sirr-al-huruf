@@ -126,7 +126,7 @@ export default function ConclusionRulesPanel() {
             <span className="font-inter text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: G.gold }}>
               Conclusion & Rules
             </span>
-            <span className="font-amiri text-xl font-bold leading-relaxed" style={{ color: G.goldDim, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }} dir="rtl">
+            <span className="font-amiri text-lg font-bold leading-relaxed" style={{ color: G.goldDim, lineHeight: 1.7, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }} dir="rtl">
               النتيجة والقواعد
             </span>
           </div>
@@ -195,7 +195,7 @@ export default function ConclusionRulesPanel() {
                     <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
                       Malayalam
                     </span>
-                    <p className="font-amiri text-base leading-relaxed" style={{ color: G.goldDim, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }} dir="rtl">
+                    <p className="font-amiri text-[15px] leading-relaxed" style={{ color: G.goldDim, lineHeight: 1.7, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }} dir="rtl">
                       {rule.malayalam}
                     </p>
                   </div>

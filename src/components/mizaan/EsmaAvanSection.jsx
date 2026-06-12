@@ -46,14 +46,14 @@ const ELEMENT_META = {
 function SectionHeader({ step, label, arabic, color = G.gold }) {
   return (
     <div className="flex items-center gap-3 mb-3">
-      <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
+      <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-sm font-black flex-shrink-0"
         style={{ background: color + "22", border: `1px solid ${color}55`, color }}>
         {step}
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color }}>{label}</span>
-          {arabic && <span className="font-amiri text-sm" style={{ color: G.goldDim }}>{arabic}</span>}
+          <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color }}>{label}</span>
+          {arabic && <span className="font-amiri text-base" style={{ color: G.goldDim, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>{arabic}</span>}
         </div>
       </div>
       <div className="h-px flex-1 max-w-[60px]" style={{ background: `linear-gradient(to right, ${color}40, transparent)` }} />
@@ -371,8 +371,8 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
           <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Section 2 — Esma-i A'van</span>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
-        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>أسماء الأعوان</h2>
-        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Manuscript Derivation → Vefk</p>
+        <h2 className="font-amiri text-xl font-bold" style={{ color: G.gold, lineHeight: 1.7, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>أسماء الأعوان</h2>
+        <p className="font-inter text-[10px] uppercase tracking-[0.2em] mt-1.5" style={{ color: G.goldDim }}>Manuscript Derivation → Vefk</p>
       </div>
 
       <OrnamentalDivider />
@@ -425,11 +425,11 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
               return (
                 <div className="flex flex-col items-center gap-1 mb-4">
                   {/* TOP */}
-                  <div className="font-amiri text-2xl font-bold tracking-widest text-center" dir="rtl"
+                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
                     style={{
                       color: elementMeta.color,
                       textShadow: `0 0 12px ${elementMeta.color}55`,
-                      lineHeight: 1.8,
+                      lineHeight: 1.7,
                       textRendering: "optimizeLegibility",
                       WebkitFontSmoothing: "antialiased",
                     }}>
@@ -442,8 +442,8 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
                         <span key={i} className="font-amiri font-bold"
                           style={{
                             color: elementMeta.color,
-                            fontSize: "1.25rem",
-                            lineHeight: 2,
+                            fontSize: "1.1rem",
+                            lineHeight: 1.9,
                             textShadow: `0 0 8px ${elementMeta.color}55`,
                             textRendering: "optimizeLegibility",
                             WebkitFontSmoothing: "antialiased",
@@ -471,8 +471,8 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
                         <span key={i} className="font-amiri font-bold"
                           style={{
                             color: elementMeta.color,
-                            fontSize: "1.25rem",
-                            lineHeight: 2,
+                            fontSize: "1.1rem",
+                            lineHeight: 1.9,
                             textShadow: `0 0 8px ${elementMeta.color}55`,
                             textRendering: "optimizeLegibility",
                             WebkitFontSmoothing: "antialiased",
@@ -483,11 +483,11 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
                     </div>
                   </div>
                   {/* BOTTOM */}
-                  <div className="font-amiri text-2xl font-bold tracking-widest text-center" dir="rtl"
+                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
                     style={{
                       color: elementMeta.color,
                       textShadow: `0 0 12px ${elementMeta.color}55`,
-                      lineHeight: 1.8,
+                      lineHeight: 1.7,
                       textRendering: "optimizeLegibility",
                       WebkitFontSmoothing: "antialiased",
                     }}>

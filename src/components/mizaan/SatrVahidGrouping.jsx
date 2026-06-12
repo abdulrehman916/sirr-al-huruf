@@ -37,7 +37,7 @@ function SectionHeader({ label, arabic, step, color = G.gold }) {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color }}>{label}</span>
-          {arabic && <span className="font-amiri text-base" style={{ color: G.goldDim, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>{arabic}</span>}
+          {arabic && <span className="font-amiri text-sm" style={{ color: G.goldDim, lineHeight: 1.7, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>{arabic}</span>}
         </div>
       </div>
       <div className="h-px flex-1 max-w-[60px]" style={{ background: `linear-gradient(to right, ${color}40, transparent)` }} />
@@ -46,7 +46,7 @@ function SectionHeader({ label, arabic, step, color = G.gold }) {
 }
 
 function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = false, bgColor }) {
-  const sizes = { sm: "text-xl px-2.5 py-1.5", lg: "text-3xl px-4 py-2.5", xl: "text-4xl px-5 py-3" };
+  const sizes = { sm: "text-lg px-2.5 py-1.5", lg: "text-2xl px-4 py-2.5", xl: "text-3xl px-5 py-3" };
   return (
     <div className="flex flex-col items-center gap-1">
       <span
@@ -240,7 +240,7 @@ export default function SatrVahidGrouping({
           <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>{sectionLabel}</span>
           <span className="font-amiri text-lg" style={{ color: G.goldDim }}>✦</span>
         </div>
-        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>{sectionArabic}</h2>
+        <h2 className="font-amiri text-xl font-bold" style={{ color: G.gold, lineHeight: 1.7, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>{sectionArabic}</h2>
         <p className="font-inter text-[10px] uppercase tracking-[0.2em] mt-1.5" style={{ color: G.goldDim }}>{sectionSubtitle}</p>
       </div>
 
@@ -345,12 +345,12 @@ export default function SatrVahidGrouping({
                 <div className="flex items-center gap-3 flex-wrap">
                   <LetterRow letters={group.letters} color={G.gold} size="lg" rtl />
                   <Arrow label="→" />
-                  <span className="font-amiri text-3xl font-bold px-5 py-3 rounded-xl border"
+                  <span className="font-amiri text-2xl font-bold px-5 py-3 rounded-xl border"
                     style={{
                       color: G.gold,
                       borderColor: G.goldBorder + "55",
                       background: G.goldFaint,
-                      lineHeight: 1.8,
+                      lineHeight: 1.7,
                       textRendering: "optimizeLegibility",
                       WebkitFontSmoothing: "antialiased",
                     }}
@@ -378,9 +378,9 @@ export default function SatrVahidGrouping({
                   style={{ background: G.bgInner, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
                   {idx + 1}
                 </div>
-                <span className="font-amiri text-3xl font-bold flex-1" style={{
+                <span className="font-amiri text-2xl font-bold flex-1" style={{
                   color: G.gold,
-                  lineHeight: 1.8,
+                  lineHeight: 1.7,
                   textRendering: "optimizeLegibility",
                   WebkitFontSmoothing: "antialiased",
                 }} dir="rtl">
