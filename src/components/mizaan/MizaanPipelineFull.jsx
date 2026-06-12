@@ -222,14 +222,58 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               ))}
             </div>
 
-            {/* Magic Constant Summary */}
-            <div className="text-center">
+            {/* Magic Constant — derived directly from the completed grid */}
+            <div className="text-center space-y-3">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border"
                 style={{ background: G.goldFaint, borderColor: elementMeta.color + "40" }}>
-                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Magic Constant</span>
-                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: elementMeta.color }}>{vefk.mc?.toLocaleString() || 0}</span>
+                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Magic Constant (MC)</span>
+                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: elementMeta.color }}>
+                  {vefk.grid[0].reduce((s, v) => s + v, 0).toLocaleString()}
+                </span>
               </div>
-              
+
+              {/* Row / Col / Diagonal validation */}
+              {(() => {
+                const g = vefk.grid;
+                const mc = g[0].reduce((s, v) => s + v, 0);
+                const rowSums = g.map(r => r.reduce((a, b) => a + b, 0));
+                const colSums = g[0].map((_, j) => g.reduce((s, r) => s + r[j], 0));
+                const d1 = g.reduce((s, r, i) => s + r[i], 0);
+                const d2 = g.reduce((s, r, i) => s + r[3 - i], 0);
+                const allOk = rowSums.every(x => x === mc) && colSums.every(x => x === mc) && d1 === mc && d2 === mc;
+                return (
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-1 text-[6px]">
+                      {rowSums.map((s, i) => (
+                        <div key={i} className="flex justify-between px-2 py-1 rounded"
+                          style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                          <span style={{ color: G.dim }}>Row {i + 1}</span>
+                          <span style={{ color: s === mc ? "#4ADE80" : "#F87171", fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                        </div>
+                      ))}
+                      {colSums.map((s, i) => (
+                        <div key={i} className="flex justify-between px-2 py-1 rounded"
+                          style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                          <span style={{ color: G.dim }}>Col {i + 1}</span>
+                          <span style={{ color: s === mc ? "#4ADE80" : "#F87171", fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                        </div>
+                      ))}
+                      {[["Diag ↘", d1], ["Diag ↙", d2]].map(([lbl, s]) => (
+                        <div key={lbl} className="flex justify-between px-2 py-1 rounded"
+                          style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                          <span style={{ color: G.dim }}>{lbl}</span>
+                          <span style={{ color: s === mc ? "#4ADE80" : "#F87171", fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[6px] font-bold text-center px-2 py-1 rounded"
+                      style={{ background: allOk ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", color: allOk ? "#4ADE80" : "#F87171" }}>
+                      {allOk ? "✓ Valid Magic Square — all lines equal MC" : "✗ Invalid Magic Square"}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Expanded Letter Values */}
               <ExpandedLetterValues allExpandedLetters={allExpandedLetters} elementColor={elementMeta.color} />
               

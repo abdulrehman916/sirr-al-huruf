@@ -85,7 +85,9 @@ function OrnamentalDivider() {
 // ── Vefk Grid display ────────────────────────────────────────────
 function VefkGrid({ vefkResult }) {
   if (!vefkResult) return null;
-  const { grid, mc, element } = vefkResult;
+  const { grid, element } = vefkResult;
+  // MC derived directly from the completed grid — never from a separate label or source value
+  const mc = grid[0].reduce((s, v) => s + v, 0);
   const elMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
   return (
@@ -115,20 +117,38 @@ function VefkGrid({ vefkResult }) {
         </div>
       </div>
 
-      {/* Row/Col verification */}
-      <div className="grid grid-cols-2 gap-1.5 text-[7px]">
-        {grid.map((row, ri) => {
-          const rowSum = row.reduce((s, v) => s + v, 0);
-          const ok = rowSum === mc;
-          return (
-            <div key={ri} className="flex justify-between px-2 py-1 rounded"
-              style={{ background: ok ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${ok ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
-              <span style={{ color: G.dim }}>Row {ri + 1}</span>
-              <span style={{ color: ok ? G.green : "#F87171", fontWeight: "bold" }}>{rowSum} {ok ? "✓" : "✗"}</span>
+      {/* Row / Col / Diagonal verification */}
+      {(() => {
+        const actualMC = grid[0].reduce((s, v) => s + v, 0);
+        const rowSums = grid.map(r => r.reduce((a, b) => a + b, 0));
+        const colSums = grid[0].map((_, j) => grid.reduce((s, r) => s + r[j], 0));
+        const d1 = grid.reduce((s, r, i) => s + r[i], 0);
+        const d2 = grid.reduce((s, r, i) => s + r[3 - i], 0);
+        const allOk = rowSums.every(x => x === actualMC) && colSums.every(x => x === actualMC) && d1 === actualMC && d2 === actualMC;
+        const lines = [
+          ...rowSums.map((s, i) => ({ label: `Row ${i + 1}`, sum: s })),
+          ...colSums.map((s, i) => ({ label: `Col ${i + 1}`, sum: s })),
+          { label: "Diag ↘", sum: d1 },
+          { label: "Diag ↙", sum: d2 },
+        ];
+        return (
+          <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-1 text-[6px]">
+              {lines.map(({ label, sum }) => (
+                <div key={label} className="flex justify-between px-2 py-1 rounded"
+                  style={{ background: sum === actualMC ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${sum === actualMC ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                  <span style={{ color: G.dim }}>{label}</span>
+                  <span style={{ color: sum === actualMC ? G.green : "#F87171", fontWeight: "bold" }}>{sum.toLocaleString()} {sum === actualMC ? "✓" : "✗"}</span>
+                </div>
+              ))}
             </div>
-          );
-        })}
-      </div>
+            <div className="text-[6px] font-bold text-center px-2 py-1 rounded"
+              style={{ background: allOk ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", color: allOk ? G.green : "#F87171" }}>
+              {allOk ? "✓ Valid Magic Square — all 10 lines equal MC" : "✗ Invalid Magic Square"}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -202,23 +222,39 @@ export default function EsmaVefkiSection({ satrVahidLetters = [], groups, domina
             </div>
 
             {/* Summary stats */}
-            <div className="space-y-0">
-              <StatRow label="Section D Letter Count" value={totalLetters} valueColor={G.gold} />
-              <StatRow label="Birinci Bast Total (MC)" value={totalBast.toLocaleString()} valueColor={G.gold} />
-              <div className="flex items-center justify-between py-2 border-b" style={{ borderColor: G.goldBorder + "55" }}>
-                <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Dominant Anasir</span>
-                <div className="flex items-center gap-2">
-                  <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>
-                  <span className="font-amiri text-sm font-bold" style={{ color: elMeta.color }}>{elMeta.arabic}</span>
+            {(() => {
+              const mc = vefkResult ? vefkResult.grid[0].reduce((s, v) => s + v, 0) : null;
+              const isValid = vefkResult ? (() => {
+                const g = vefkResult.grid;
+                const m = g[0].reduce((s, v) => s + v, 0);
+                const rs = g.map(r => r.reduce((a, b) => a + b, 0));
+                const cs = g[0].map((_, j) => g.reduce((s, r) => s + r[j], 0));
+                const d1 = g.reduce((s, r, i) => s + r[i], 0);
+                const d2 = g.reduce((s, r, i) => s + r[3 - i], 0);
+                return rs.every(x => x === m) && cs.every(x => x === m) && d1 === m && d2 === m;
+              })() : false;
+              return (
+                <div className="space-y-0">
+                  <StatRow label="Section D Letter Count" value={totalLetters} valueColor={G.gold} />
+                  <StatRow label="Vefk Source (Birinci Bast Total)" value={totalBast.toLocaleString()} valueColor={G.goldDim} />
+                  {mc !== null && <StatRow label="Magic Constant (from grid)" value={mc.toLocaleString()} valueColor={G.gold} />}
+                  <div className="flex items-center justify-between py-2 border-b" style={{ borderColor: G.goldBorder + "55" }}>
+                    <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Dominant Anasir</span>
+                    <div className="flex items-center gap-2">
+                      <span style={{ fontSize: "0.9rem" }}>{elMeta.icon}</span>
+                      <span className="font-amiri text-sm font-bold" style={{ color: elMeta.color }}>{elMeta.arabic}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Validation</span>
+                    <span className="font-inter text-[8px] font-bold px-2.5 py-1 rounded-lg"
+                      style={{ background: isValid ? G.green + "22" : "#F87171" + "22", color: isValid ? G.green : "#F87171" }}>
+                      {isValid ? "✓ Valid Magic Square" : "✗ Invalid"}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Verification</span>
-                <span className="font-inter text-[8px] font-bold px-2.5 py-1 rounded-lg" style={{ background: G.green + "22", color: G.green }}>
-                  ✓ Verified
-                </span>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Collapsible Audit Button */}
             <button
