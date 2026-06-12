@@ -26,6 +26,20 @@
 //   - Pass sequence unchanged through all pipeline stages
 // ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
+// MIZAN VEFK ENGINE — LOCKED 2026-06-12
+// See docs/MIZAN_VEFK_ENGINE_LOCK.md
+//
+// DO NOT MODIFY: buildVefk, validateVefk, VEFK_TEMPLATES
+//
+// INVARIANTS (enforced by self-test below):
+//   MC = Source Total (S)
+//   All 4 rows = MC
+//   All 4 columns = MC
+//   Both diagonals = MC
+//   Kesr distributed via balanced transversal
+// ═══════════════════════════════════════════════════════════════
+
 // ── First Bast lookup table (p.42–43) ──────────────────────────
 // MANUSCRIPT-LOCKED: Pages 42-43 (HARFLERİN BASTI CETVELİ)
 // Keys are Arabic letters. Values are First Bast values from the Mizan manuscript.
@@ -568,6 +582,41 @@ export function expandAllSeedLetters(seedLetters, bastLevel) {
   
   return allExpanded;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// VEFK ENGINE SELF-TEST — runs once at module load
+// If any invariant fails the engine throws immediately so the
+// bug is caught during development, never silently shipped.
+// ═══════════════════════════════════════════════════════════════
+const _VEFK_SELF_TEST_CASES = [
+  { S: 80,   element: 'fire'  },
+  { S: 1696, element: 'fire'  },
+  { S: 81,   element: 'fire'  },  // remainder = 1
+  { S: 82,   element: 'fire'  },  // remainder = 2
+  { S: 83,   element: 'fire'  },  // remainder = 3
+  { S: 100,  element: 'earth' },
+  { S: 200,  element: 'air'   },
+  { S: 300,  element: 'water' },
+];
+
+function _runVefkSelfTest() {
+  for (const { S, element } of _VEFK_SELF_TEST_CASES) {
+    const { grid } = buildVefk(S, element);
+    const mc = grid[0].reduce((s, v) => s + v, 0);
+    if (mc !== S) throw new Error(`[VEFK LOCK] MC(${mc}) ≠ S(${S}) for ${element}`);
+    for (let i = 0; i < 4; i++) {
+      const rowSum = grid[i].reduce((s, v) => s + v, 0);
+      if (rowSum !== S) throw new Error(`[VEFK LOCK] Row ${i} sum(${rowSum}) ≠ S(${S}) for ${element}`);
+      const colSum = grid.reduce((s, r) => s + r[i], 0);
+      if (colSum !== S) throw new Error(`[VEFK LOCK] Col ${i} sum(${colSum}) ≠ S(${S}) for ${element}`);
+    }
+    const d1 = grid.reduce((s, r, i) => s + r[i], 0);
+    const d2 = grid.reduce((s, r, i) => s + r[3 - i], 0);
+    if (d1 !== S) throw new Error(`[VEFK LOCK] Main diag(${d1}) ≠ S(${S}) for ${element}`);
+    if (d2 !== S) throw new Error(`[VEFK LOCK] Anti diag(${d2}) ≠ S(${S}) for ${element}`);
+  }
+}
+_runVefkSelfTest();
 
 // ── Main entry point ──────────────────────────────────────────────
 /**
