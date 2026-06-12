@@ -137,6 +137,24 @@ export default function SatrVahidGrouping({
   const bastLevel = isSeedFerd ? 5 : 4;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
+  // ── B: Bast Summation (running totals) ──
+  const { totalBastSum, letterBastDetails } = useMemo(() => {
+    let runningSum = 0;
+    const details = [];
+    for (let i = safeSeed.length - 1; i >= 0; i--) {
+      const letter = safeSeed[i];
+      const bastValue = getBastLevel(letter, bastLevel);
+      runningSum += bastValue;
+      details.push({
+        letter,
+        bastValue,
+        runningTotal: runningSum,
+        originalIndex: i,
+      });
+    }
+    return { totalBastSum: runningSum, letterBastDetails: details };
+  }, [safeSeed, bastLevel]);
+
   // ── C: Individual derivations (LAST → FIRST processing order) ──
   const { derivations, concatenated } = useMemo(() => {
     const d = [];
@@ -149,29 +167,49 @@ export default function SatrVahidGrouping({
     return { derivations: d, concatenated: d.flatMap(x => x.extracted) };
   }, [safeSeed, bastLevel]);
 
-  // ── D: Concatenated Satr-i Vahid ──
-  const satrCount = concatenated.length;
-  const isSatrFerd = satrCount % 2 !== 0;
-  const groupSize = isSatrFerd ? 5 : 4;
+  // ── E: Combined Total (Bast Sum + Letter Count) ──
+  const combinedTotal = totalBastSum + totalSeed;
 
-  // ── Grouping with remainder supplement ──
-  const { finalSequence, supplement, remainder, groups } = useMemo(() => {
-    const rem = concatenated.length % groupSize;
-    let seq = [...concatenated];
+  // ── F: Converted Letters (Istintak of Combined Total) ──
+  const convertedLetters = useMemo(() => {
+    return istintak(combinedTotal);
+  }, [combinedTotal]);
+
+  // ── G: Group Formation Process ──
+  const groupFormation = useMemo(() => {
+    const isFerd = convertedLetters.length % 2 !== 0;
+    const gSize = isFerd ? 5 : 4;
+    const rem = convertedLetters.length % gSize;
+    let seq = [...convertedLetters];
     let supp = [];
     if (rem > 0) {
-      const needed = groupSize - rem;
+      const needed = gSize - rem;
       const galibVal = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
       supp = istintak(galibVal).slice(0, needed);
-      seq = [...concatenated, ...supp];
+      seq = [...convertedLetters, ...supp];
     }
     const grps = [];
-    for (let i = 0; i < seq.length; i += groupSize) {
-      const g = seq.slice(i, i + groupSize);
-      grps.push({ letters: g, name: g.join(""), groupNumber: Math.floor(i / groupSize) + 1 });
+    for (let i = 0; i < seq.length; i += gSize) {
+      const g = seq.slice(i, i + gSize);
+      grps.push({
+        letters: g,
+        name: g.join(""),
+        groupNumber: Math.floor(i / gSize) + 1,
+        stepNumber: i + 1,
+      });
     }
-    return { finalSequence: seq, supplement: supp, remainder: rem, groups: grps };
-  }, [concatenated, groupSize, dominant]);
+    return {
+      finalSequence: seq,
+      supplement: supp,
+      remainder: rem,
+      groups: grps,
+      groupSize: gSize,
+      isFerd,
+    };
+  }, [convertedLetters, dominant]);
+
+  // ── D parity (for display only) ──
+  const isSatrFerd = concatenated.length % 2 !== 0;
 
   const dominantLabel = { fire: "النار", earth: "التراب", air: "الهواء", water: "الماء" }[dominant] || dominant;
 
@@ -222,10 +260,67 @@ export default function SatrVahidGrouping({
             }}>
               {isSeedFerd ? "FERD (فرد)" : "ZEVC (زوج)"}
             </span>
+            <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>
+              Bast Level: <span style={{ color: G.gold }}>{bastLabelAr}</span>
+            </span>
           </div>
         </Card>
 
-        {/* ══ C: INDIVIDUAL DERIVATIONS ══ */}
+        {/* ══ B: BAST SUMMATION (Running Totals) ══ */}
+        <Card accent={G.green}>
+          <SectionHeader step="B" label="Bast Summation — Running Totals" arabic="مجموع البسط" color={G.green} />
+          <div className="space-y-2 mb-3">
+            {letterBastDetails.map((detail, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg border"
+                style={{
+                  background: idx === 0 ? G.green + "08" : G.bgInner,
+                  borderColor: idx === 0 ? G.green + "40" : G.goldBorder + "60",
+                }}
+              >
+                <div className="flex items-center justify-center w-6 h-6 rounded font-inter text-[9px] font-black flex-shrink-0"
+                  style={{
+                    background: idx === 0 ? G.green : G.goldFaint,
+                    color: idx === 0 ? "#000" : G.goldDim,
+                    border: `1px solid ${idx === 0 ? G.green : G.goldBorder}`,
+                  }}>
+                  {idx + 1}
+                </div>
+                <LetterCell letter={detail.letter} color={G.gold} size="sm" />
+                <Arrow label="Bast" />
+                <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
+                  style={{ background: G.greenDim, borderColor: G.green + "40" }}>
+                  <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
+                    {detail.bastValue.toLocaleString()}
+                  </span>
+                </div>
+                <Arrow label="Σ" />
+                <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
+                  style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
+                  <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.gold }}>
+                    {detail.runningTotal.toLocaleString()}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
+            style={{ background: G.greenDim, borderColor: G.green + "55" }}>
+            <span className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.green }}>
+              Total Bast Sum (Σ)
+            </span>
+            <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.green }}>
+              {totalBastSum.toLocaleString()}
+            </span>
+          </div>
+        </Card>
+
+        {/* ══ C: INDIVIDUAL BAST DERIVATIONS ══ */}
         <Card>
           <SectionHeader step="C" label="Individual Bast Derivations" arabic="اشتقاق البسط" color={G.green} />
           <div className="space-y-3">
@@ -241,10 +336,13 @@ export default function SatrVahidGrouping({
                   borderColor: idx === 0 ? G.green + "40" : G.goldBorder + "60",
                 }}
               >
-                {/* Row header */}
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex items-center justify-center w-5 h-5 rounded font-inter text-[9px] font-black flex-shrink-0"
-                    style={{ background: idx === 0 ? G.green : G.goldFaint, color: idx === 0 ? "#000" : G.goldDim }}>
+                    style={{
+                      background: idx === 0 ? G.green : G.goldFaint,
+                      color: idx === 0 ? "#000" : G.goldDim,
+                      border: `1px solid ${idx === 0 ? G.green : G.goldBorder}`,
+                    }}>
                     {idx + 1}
                   </div>
                   <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
@@ -252,24 +350,16 @@ export default function SatrVahidGrouping({
                   </span>
                 </div>
 
-                {/* Derivation chain */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* Source letter */}
                   <LetterCell letter={d.letter} color={G.gold} size="lg" />
-
                   <Arrow label={`Bast ${bastLevel}`} />
-
-                  {/* Bast value */}
                   <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
                     style={{ background: G.greenDim, borderColor: G.green + "40" }}>
                     <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
                       {d.bastValue.toLocaleString()}
                     </span>
                   </div>
-
                   <Arrow label="Istintak" />
-
-                  {/* Extracted letters */}
                   <div className="flex items-center gap-1 flex-wrap" style={{ direction: "rtl" }}>
                     {d.extracted.map((l, i) => (
                       <LetterCell key={i} letter={l} color={G.green} size="sm" />
@@ -284,14 +374,14 @@ export default function SatrVahidGrouping({
           </div>
         </Card>
 
-        {/* ══ D: COMBINED SEQUENCE ══ */}
+        {/* ══ D: COMBINED SEQUENCE (Satr-i Vahid) ══ */}
         <Card accent={G.gold}>
           <SectionHeader step="D" label="Combined Sequence — Satr-i Vahid" arabic="السطر الواحد" color={G.gold} />
           <div className="mb-3">
             <LetterRow letters={concatenated} color={G.gold} size="lg" showIndex rtl />
           </div>
           <div className="text-sm font-inter" style={{ color: G.dim }}>
-            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{satrCount}</span>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{concatenated.length}</span>
             <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
             <span style={{
               color: isSatrFerd ? G.red : G.green,
@@ -302,26 +392,62 @@ export default function SatrVahidGrouping({
             </span>
             <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
             <span style={{ color: G.goldDim }}>
-              Group Size: <span style={{ color: G.gold }}>{groupSize}</span>
+              Group Size: <span style={{ color: G.gold }}>{groupFormation.groupSize}</span>
             </span>
           </div>
         </Card>
 
-        <OrnamentalDivider />
+        {/* ══ E: COMBINED TOTAL CALCULATION ══ */}
+        <Card accent={G.gold}>
+          <SectionHeader step="E" label="Combined Total Calculation" arabic="الحساب المجمع" color={G.gold} />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-4 py-2.5 rounded-lg border"
+              style={{ background: G.bgInner, borderColor: G.goldBorder }}>
+              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Bast Sum (from Step B)</span>
+              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{totalBastSum.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-2.5 rounded-lg border"
+              style={{ background: G.bgInner, borderColor: G.goldBorder }}>
+              <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Letter Count (from Step A)</span>
+              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{totalSeed}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border"
+              style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+              <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.goldDim }}>Combined Total</span>
+              <span className="font-inter text-lg font-bold" style={{ color: G.gold }}>+</span>
+              <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{combinedTotal.toLocaleString()}</span>
+            </div>
+          </div>
+        </Card>
 
-        {/* ══ I: ESMA-I KITABET GROUPING (with remainder) ══ */}
-        <Card>
-          <SectionHeader step="I" label="Esma-i Kitabet Grouping" arabic="تجميع الأسماء" color={G.gold} />
+        {/* ══ F: CONVERTED LETTERS (Istintak of Combined Total) ══ */}
+        <Card accent={G.green}>
+          <SectionHeader step="F" label="Converted Letters — Istintak" arabic="الحروف المحولة" color={G.green} />
+          <div className="mb-3">
+            <LetterRow letters={convertedLetters} color={G.green} size="lg" showIndex rtl />
+          </div>
+          <div className="text-sm font-inter" style={{ color: G.dim }}>
+            Source: <span style={{ color: G.gold, fontWeight: "bold" }}>Istintak({combinedTotal.toLocaleString()})</span>
+            <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>
+              Count: <span style={{ color: G.green, fontWeight: "bold" }}>{convertedLetters.length}</span>
+            </span>
+          </div>
+        </Card>
 
-          {/* Remainder supplement notice */}
-          {remainder > 0 && (
+        {/* ══ G: GROUP FORMATION PROCESS ══ */}
+        <Card accent={G.gold}>
+          <SectionHeader step="G" label="Group Formation Process" arabic="تكوين المجموعات" color={G.gold} />
+          
+          {/* Remainder correction notice */}
+          {groupFormation.remainder > 0 && (
             <div className="mb-3 rounded-lg border p-3"
               style={{ background: G.greenDim, borderColor: G.green + "40" }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
                   Remainder Correction Applied
                 </span>
-                <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>+{supplement.length} letters</span>
+                <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>+{groupFormation.supplement.length} letters</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-[8px] mb-2">
                 <div className="flex justify-between">
@@ -334,21 +460,20 @@ export default function SatrVahidGrouping({
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: G.dim }}>Group Size</span>
-                  <span style={{ color: G.gold }}>{groupSize}</span>
+                  <span style={{ color: G.gold }}>{groupFormation.groupSize}</span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: G.dim }}>Remainder</span>
-                  <span style={{ color: G.red }}>{remainder} → need {supplement.length}</span>
+                  <span style={{ color: G.red }}>{groupFormation.remainder} → need {groupFormation.supplement.length}</span>
                 </div>
               </div>
               <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>Appended letters:</div>
-              <LetterRow letters={supplement} color={G.green} size="sm" rtl />
+              <LetterRow letters={groupFormation.supplement} color={G.green} size="sm" rtl />
             </div>
           )}
 
-          {/* Groups */}
           <div className="space-y-3">
-            {groups.map((group, gi) => (
+            {groupFormation.groups.map((group, gi) => (
               <motion.div key={gi}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -357,21 +482,19 @@ export default function SatrVahidGrouping({
                 style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded flex items-center justify-center font-inter text-[9px] font-black"
+                    <div className="w-6 h-6 rounded flex items-center justify-center font-inter text-[9px] font-black"
                       style={{ background: G.goldFaint, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
                       {group.groupNumber}
                     </div>
                     <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
-                      Group {group.groupNumber} — {group.letters.length} letters
+                      Group {group.groupNumber} — {group.letters.length} letters (positions {group.stepNumber}-{group.stepNumber + group.letters.length - 1})
                     </span>
                   </div>
                 </div>
 
-                {/* Letters in group */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <LetterRow letters={group.letters} color={G.gold} size="lg" showIndex rtl />
                   <Arrow label="name" />
-                  {/* Name */}
                   <span className="font-amiri text-2xl font-bold px-4 py-2 rounded-xl border"
                     style={{ color: G.green, borderColor: G.green + "55", background: G.greenDim }}
                     dir="rtl">
@@ -383,11 +506,13 @@ export default function SatrVahidGrouping({
           </div>
         </Card>
 
-        {/* ══ J: ESMA-I KITABET NAMES — manuscript generation order ══ */}
+        <OrnamentalDivider />
+
+        {/* ══ H: ESMA-I KITABET NAMES (Final) ══ */}
         <Card accent={G.gold}>
-          <SectionHeader step="J" label="Esma-i Kitabet Names" arabic="أسماء الكتابة" color={G.gold} />
+          <SectionHeader step="H" label="Esma-i Kitabet Names — Final" arabic="أسماء الكتابة النهائية" color={G.gold} />
           <div className="flex flex-col gap-2 py-2">
-            {groups.map((group, gi) => (
+            {groupFormation.groups.map((group, gi) => (
               <motion.div key={gi}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -407,20 +532,20 @@ export default function SatrVahidGrouping({
               </motion.div>
             ))}
           </div>
-          {groups.length > 0 && (
+          {groupFormation.groups.length > 0 && (
             <div className="text-center mt-3">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border"
                 style={{ background: G.bgInner, borderColor: G.goldBorder }}>
                 <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Esma-i Kitabet Names</span>
-                <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{groups.length}</span>
+                <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{groupFormation.groups.length}</span>
               </div>
             </div>
           )}
         </Card>
 
-        {/* ══ K: ESMA-I KITABET VEFKI — MC derived from Section D (Satr-i Vahid) letters ══ */}
-        {groups.length > 0 && (
-          <EsmaVefkiSection satrVahidLetters={concatenated} groups={groups} dominant={dominant} />
+        {/* ══ I: ESMA-I KITABET VEFKI — MC derived from Section D (Satr-i Vahid) letters ══ */}
+        {groupFormation.groups.length > 0 && (
+          <EsmaVefkiSection satrVahidLetters={concatenated} groups={groupFormation.groups} dominant={dominant} />
         )}
 
       </div>
