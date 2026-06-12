@@ -85,10 +85,13 @@ function OrnamentalDivider() {
 // ── Vefk Grid display ────────────────────────────────────────────
 function VefkGrid({ vefkResult }) {
   if (!vefkResult) return null;
-  const { grid, element } = vefkResult;
+  const { grid, element, guardianName } = vefkResult;
   // MC derived directly from the completed grid — never from a separate label or source value
   const mc = grid[0].reduce((s, v) => s + v, 0);
   const elMeta = ELEMENT_META[element] || ELEMENT_META.fire;
+
+  // Split guardian name into individual letters for side display
+  const guardianLetters = guardianName ? [...guardianName] : [];
 
   return (
     <div className="space-y-3">
@@ -98,23 +101,67 @@ function VefkGrid({ vefkResult }) {
         <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{mc.toLocaleString()}</span>
       </div>
 
-      <div className="rounded-xl border overflow-hidden"
-        style={{ borderColor: elMeta.color + "44" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 2, padding: 6, background: "rgba(4,8,24,0.98)" }}>
-          {grid.flat().map((num, idx) => (
-            <div key={idx}
-              className="flex items-center justify-center font-amiri font-bold rounded"
-              style={{
-                aspectRatio: "1/1",
-                background: `linear-gradient(145deg, ${elMeta.color}18 0%, ${elMeta.color}08 100%)`,
-                border: `1px solid ${elMeta.color}35`,
-                color: G.gold,
-                fontSize: "1rem",
-              }}>
-              {num}
-            </div>
-          ))}
+      {/* Manuscript-style framed Vefk */}
+      <div className="flex flex-col items-center gap-1">
+
+        {/* TOP — full guardian name */}
+        <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+          style={{ color: elMeta.color, textShadow: `0 0 12px ${elMeta.color}55` }}>
+          {guardianName}
         </div>
+
+        {/* MIDDLE ROW: Left letters | Grid | Right letters */}
+        <div className="flex items-center gap-2">
+
+          {/* LEFT — letters stacked vertically (top→bottom) */}
+          <div className="flex flex-col items-center justify-center gap-0.5">
+            {guardianLetters.map((l, i) => (
+              <span key={i} className="font-amiri font-bold leading-tight"
+                style={{ color: elMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elMeta.color}55` }}>
+                {l}
+              </span>
+            ))}
+          </div>
+
+          {/* GRID */}
+          <div className="rounded-xl border overflow-hidden"
+            style={{ borderColor: elMeta.color + "44" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 2, padding: 6, background: "rgba(4,8,24,0.98)" }}>
+              {grid.flat().map((num, idx) => (
+                <div key={idx}
+                  className="flex items-center justify-center font-amiri font-bold rounded"
+                  style={{
+                    aspectRatio: "1/1",
+                    background: `linear-gradient(145deg, ${elMeta.color}18 0%, ${elMeta.color}08 100%)`,
+                    border: `1px solid ${elMeta.color}35`,
+                    color: G.gold,
+                    fontSize: "1rem",
+                    minWidth: "2.5rem",
+                  }}>
+                  {num}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT — letters stacked vertically (top→bottom) */}
+          <div className="flex flex-col items-center justify-center gap-0.5">
+            {guardianLetters.map((l, i) => (
+              <span key={i} className="font-amiri font-bold leading-tight"
+                style={{ color: elMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elMeta.color}55` }}>
+                {l}
+              </span>
+            ))}
+          </div>
+
+        </div>
+
+        {/* BOTTOM — full guardian name */}
+        <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+          style={{ color: elMeta.color, textShadow: `0 0 12px ${elMeta.color}55` }}>
+          {guardianName}
+        </div>
+
       </div>
 
       {/* Row / Col / Diagonal verification */}

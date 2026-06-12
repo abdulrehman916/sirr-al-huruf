@@ -207,20 +207,61 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               </div>
             </div>
 
-            {/* Vefk Grid */}
-            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto mb-4">
-              {vefk.grid.flat().map((val, idx) => (
-                <div key={idx}
-                  className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
-                  style={{
-                    background: idx % 2 === 0 ? G.goldFaint : G.bgInner,
-                    borderColor: elementMeta.color + "55",
-                    color: elementMeta.color,
-                  }}>
-                  {val.toLocaleString()}
+            {/* Manuscript-style framed Vefk */}
+            {(() => {
+              const guardianName = vefk.guardianName || "";
+              const guardianLetters = [...guardianName];
+              return (
+                <div className="flex flex-col items-center gap-1 mb-4">
+                  {/* TOP */}
+                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+                    style={{ color: elementMeta.color, textShadow: `0 0 12px ${elementMeta.color}55` }}>
+                    {guardianName}
+                  </div>
+                  {/* MIDDLE: Left | Grid | Right */}
+                  <div className="flex items-center gap-2">
+                    {/* LEFT */}
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      {guardianLetters.map((l, i) => (
+                        <span key={i} className="font-amiri font-bold leading-tight"
+                          style={{ color: elementMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elementMeta.color}55` }}>
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                    {/* GRID */}
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {vefk.grid.flat().map((val, idx) => (
+                        <div key={idx}
+                          className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
+                          style={{
+                            background: idx % 2 === 0 ? G.goldFaint : G.bgInner,
+                            borderColor: elementMeta.color + "55",
+                            color: elementMeta.color,
+                            minWidth: "2.5rem",
+                          }}>
+                          {val.toLocaleString()}
+                        </div>
+                      ))}
+                    </div>
+                    {/* RIGHT */}
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      {guardianLetters.map((l, i) => (
+                        <span key={i} className="font-amiri font-bold leading-tight"
+                          style={{ color: elementMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elementMeta.color}55` }}>
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {/* BOTTOM */}
+                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+                    style={{ color: elementMeta.color, textShadow: `0 0 12px ${elementMeta.color}55` }}>
+                    {guardianName}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })()}
 
             {/* Magic Constant — derived directly from the completed grid */}
             <div className="text-center space-y-3">
