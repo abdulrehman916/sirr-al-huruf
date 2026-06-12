@@ -197,6 +197,18 @@ export const GALIB_ANASIR_VALUES = {
   water: 3342,  // Su / Ma (الماء)
 };
 
+// ═══════════════════════════════════════════════════════════════
+// GALIB ANASIR SUPPLEMENT LETTERS FOR REMAINDER CORRECTION
+// Source: Manuscript tradition for element-specific completion
+// These are the canonical letters used when remainder correction is needed.
+// ═══════════════════════════════════════════════════════════════
+export const GALIB_ANASIR_SUPPLEMENTS = {
+  fire:  ['ا', 'ه', 'ط', 'م', 'ف', 'ش', 'ذ'],
+  earth: ['ب', 'و', 'ي', 'ن', 'ص', 'ت', 'ض'],
+  air:   ['ج', 'ز', 'ك', 'س', 'ق', 'ث', 'ظ'],
+  water: ['د', 'ح', 'ل', 'ع', 'ر', 'خ', 'غ'],
+};
+
 // Get Galib Anasir value and its Istintak letters with full breakdown
 export function getGalibAnasirData(element) {
   const value = GALIB_ANASIR_VALUES[element] || GALIB_ANASIR_VALUES.fire;

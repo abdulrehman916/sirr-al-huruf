@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import { getBastLevel, istintak, GALIB_ANASIR_VALUES, GALIB_ANASIR_SUPPLEMENTS } from "../../lib/mizaanPostEngine";
 
 // ── Design tokens ─────────────────────────────────────────────
 const G = {
@@ -174,10 +174,13 @@ export default function SatrVahidGrouping({
     let seq = [...allExpandedLetters];
     let supp = [];
     
+    // MANUSCRIPT RULE: Use element-specific supplement letters from Ghalib Anasir table
     if (rem > 0) {
       const needed = gSize - rem;
-      const galibVal = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
-      supp = istintak(galibVal).slice(0, needed);
+      // Get supplement letters from the active element's canonical table
+      const elementSupplements = GALIB_ANASIR_SUPPLEMENTS[dominant] || GALIB_ANASIR_SUPPLEMENTS.fire;
+      // Take only the exact number of letters needed, in order
+      supp = elementSupplements.slice(0, needed);
       seq = [...allExpandedLetters, ...supp];
     }
     
@@ -346,18 +349,14 @@ export default function SatrVahidGrouping({
               style={{ background: G.greenDim, borderColor: G.green + "40" }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
-                  Remainder Correction Applied
+                  Remainder Correction from Ghalib Anasir
                 </span>
                 <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>+{groupFormation.supplement.length} letters</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-[8px] mb-2">
                 <div className="flex justify-between">
-                  <span style={{ color: G.dim }}>Dominant Element</span>
+                  <span style={{ color: G.dim }}>Source Anasir</span>
                   <span style={{ color: G.gold }}>{dominantLabel}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: G.dim }}>Galib Anasir Value</span>
-                  <span style={{ color: G.gold }}>{(GALIB_ANASIR_VALUES[dominant] || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: G.dim }}>Group Size</span>
@@ -365,10 +364,16 @@ export default function SatrVahidGrouping({
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: G.dim }}>Remainder</span>
-                  <span style={{ color: G.red }}>{groupFormation.remainder} → need {groupFormation.supplement.length}</span>
+                  <span style={{ color: G.red }}>{groupFormation.remainder}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: G.dim }}>Letters Needed</span>
+                  <span style={{ color: G.green }}>{groupFormation.supplement.length}</span>
                 </div>
               </div>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>Appended letters:</div>
+              <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>
+                Supplement letters from Ghalib Anasir ({dominantLabel}):
+              </div>
               <LetterRow letters={groupFormation.supplement} color={G.green} size="sm" rtl />
             </div>
           )}
