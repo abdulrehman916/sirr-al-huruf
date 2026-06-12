@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 
 const G = {
@@ -189,6 +189,62 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               </div>
               <div className="text-[7px]" style={{ color: G.dim }}>
                 These {pipeline.expandedLettersCount || 0} letters → First Bast sum = {pipeline.expandedLettersTotal?.toLocaleString() || 0} → Vefk Source Number
+              </div>
+            </div>
+
+            {/* Expanded Letters Value Breakdown */}
+            <div className="mb-4 rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
+              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Expanded Letters — First Bast Values</div>
+              <div className="space-y-1.5">
+                {pipeline.kitabet?.finalExpandedLetters?.map((letter, idx) => {
+                  const bastValue = getBastLevel(letter, 1);
+                  return (
+                    <div key={idx} className="flex items-center justify-between text-[8px]">
+                      <div className="flex items-center gap-2">
+                        <span className="font-inter text-[7px] uppercase" style={{ color: G.dim }}>Letter {idx + 1}</span>
+                        <span className="font-amiri text-lg font-bold px-2 py-0.5 rounded"
+                          style={{ background: elementMeta.color + "15", color: elementMeta.color, border: `1px solid ${elementMeta.color}40` }}>
+                          {letter}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-inter text-[7px]" style={{ color: G.dim }}>First Bast:</span>
+                        <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{bastValue.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  );
+                }) || <span style={{ color: G.dim }}>—</span>}
+              </div>
+              
+              {/* Step-by-step addition */}
+              <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Step-by-Step Addition</div>
+                <div className="space-y-1 text-[8px]">
+                  {pipeline.kitabet?.finalExpandedLetters?.reduce((acc, letter, idx) => {
+                    const bastValue = getBastLevel(letter, 1);
+                    const runningTotal = acc + bastValue;
+                    return (
+                      <div key={idx} className="flex items-center justify-between">
+                        <span style={{ color: G.dim }}>
+                          {idx === 0 ? 'Start' : `After letter ${idx}`}: 
+                        </span>
+                        <span className="font-inter tabular-nums" style={{ color: G.gold }}>
+                          {idx === 0 ? bastValue.toLocaleString() : `${acc.toLocaleString()} + ${bastValue.toLocaleString()} = ${runningTotal.toLocaleString()}`}
+                        </span>
+                      </div>
+                    );
+                  }, 0)}
+                </div>
+              </div>
+
+              {/* Final Total */}
+              <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center justify-between">
+                  <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total (8 letters):</span>
+                  <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>
+                    {pipeline.expandedLettersTotal?.toLocaleString() || 0}
+                  </span>
+                </div>
               </div>
             </div>
             
