@@ -716,21 +716,42 @@ export const EVIL_JINN_NAMES = [
     englishName: "Qudsa", abjadValue: 165, letterCount: 4,
     breakdown: [],
     malayalamName: "ഖുദ്‌സാ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു പക്ഷിയുടെ രൂപം — മനുഷ്യ ശിരസ്സ് ഉള്ളവൻ, പുറത്ത് ഒരു മനുഷ്യ ശിരസ്സ് ഉണ്ട്. പക്ഷിയുടെ വശങ്ങൾ, തലയ്ക്ക് മുകളിലും ഇടതുവശത്തും ഒരു പട്ട ഉണ്ട്.",
+      nature: "അറുപത്തൊൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'ഖുദ്‌സ' (قدسا) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "തീ കത്തുന്ന ഇടങ്ങളിലെല്ലാം (في أي مكان توجد فيه النيران) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ അവന്റെ കണ്ണ് പറിച്ചെടുത്ത് കാഴ്ച നശിപ്പിക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Nine Recto (PDF Page 182)"
+    }
   },
   {
     id: 70, serialNo: 70, arabicName: "شرهي", arabicHarakat: "شَرَهِي",
     englishName: "Shrahi", abjadValue: 515, letterCount: 4,
     breakdown: [],
     malayalamName: "ഷറഹി",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഇണക്കമുള്ള വസ്ത്രം ഉള്ള ഒരു മനുഷ്യ രൂപം. വസ്ത്രത്തിന്റെ താഴ്ഭാഗം ഒരു സ്വർണ്ണ പ്രതിമ പോലെ. കാൽ വരെ രണ്ട് ചിറക് ഉണ്ട്. വലതുകൈയ്യിൽ ഒരു വലിയ തടി ഉണ്ട്.",
+      nature: "എഴുപതാമത്തെ ത്വൈലഖ് (Tayleq). 'ഷറഹി' (شرهي) — 'മൂബി' (الموبي) എന്നും അറിയപ്പെടുന്നു.",
+      habitat: "സിറിയ (شام) പർവ്വതങ്ങളിൽ വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ, ഒരു സ്ത്രീയുടെ ഹൃദയത്തിൽ കടക്കുന്നു, വസ്ത്രം ഊരി ഇടുന്ന വരെ ചെവിയിൽ ആഗ്രഹം ഉണ്ടാക്കി കുശുകുശുക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Nine Recto (PDF Page 182)"
+    }
   },
   {
     id: 71, serialNo: 71, arabicName: "مغشغاس", arabicHarakat: "مَغْشَغَاس",
     englishName: "Maghshaghas", abjadValue: 2400, letterCount: 5,
     breakdown: [],
     malayalamName: "മഗ്ഷഗാസ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "സ്ത്രീ മുഖം ഉള്ള സിംഹ രൂപം. ഒരു മഹത്തായ രൂപത്തിൽ പ്രത്യക്ഷപ്പെട്ടു.",
+      nature: "എഴുപത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'മഗ്ഷഗാസ്' (مغشغاس) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "നശിച്ച സ്ഥലങ്ങളിലും പർവ്വതങ്ങളിലും (في الخرابات وفي الجبال) വസിക്കുന്നു",
+      powers: "അമ്മമാരുടെ ഗർഭങ്ങളിൽ ആൺ കുഞ്ഞുങ്ങളെ കൊല്ലുന്നു. സ്ത്രീകളെ ഭർത്താക്കന്മാരിൽ നിന്ന് വേർപെടുത്തുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Nine Recto (PDF Page 182)"
+    }
   },
   {
     id: 72, serialNo: 72, arabicName: "عشرا", arabicHarakat: "عِشْرَا",
