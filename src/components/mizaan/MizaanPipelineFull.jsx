@@ -120,6 +120,28 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
         {vefk && (
           <Card accent={elementMeta.color}>
             <SectionHeader step="5" label="Vefk Magic Square" arabic="الوفق" color={elementMeta.color} />
+            
+            {/* Vefk Source Number Verification */}
+            <div className="mb-4 rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
+              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Vefk Source Number Verification</div>
+              <div className="grid grid-cols-2 gap-3 text-[8px]">
+                <div className="flex justify-between items-center">
+                  <span style={{ color: G.dim }}>Source Number (S):</span>
+                  <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.S?.toLocaleString() || 0}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span style={{ color: G.dim }}>Magic Constant (mc):</span>
+                  <span className="font-bold tabular-nums" style={{ color: vefk.mc === vefk.S ? "#4ADE80" : "#F87171" }}>{vefk.mc?.toLocaleString() || 0}</span>
+                </div>
+                <div className="col-span-2 flex justify-between items-center pt-2 border-t" style={{ borderColor: G.goldBorder + "60" }}>
+                  <span style={{ color: G.dim }}>Match:</span>
+                  <span className="font-bold" style={{ color: vefk.mc === vefk.S ? "#4ADE80" : "#F87171" }}>
+                    {vefk.mc === vefk.S ? "✓ IDENTICAL" : "✗ MISMATCH"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">{elementMeta.icon}</span>
               <div>
@@ -128,7 +150,6 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>({element})</span>
                 </div>
                 <div className="flex items-center gap-4 text-[8px]">
-                  <span className="font-inter" style={{ color: G.dim }}>Magic Constant: <span style={{ color: G.gold, fontWeight: "bold" }}>{vefk.mc.toLocaleString()}</span></span>
                   <span className="font-inter" style={{ color: G.dim }}>Guardian: <span style={{ color: G.gold }}>{vefk.guardianName}</span></span>
                 </div>
               </div>
