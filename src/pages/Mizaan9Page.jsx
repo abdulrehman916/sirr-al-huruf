@@ -21,6 +21,7 @@ import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
 import FinalVefkSummary from "../components/mizaan/FinalVefkSummary";
+import ConclusionRulesPanel from "../components/mizaan/ConclusionRulesPanel";
 
 
 import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
@@ -397,11 +398,11 @@ export default function Mizaan9Page() {
                       s3BorderLetters={s3VefkData?.borderLetters || ""}
                       dominant={dominant}
                     />
+                    <MizaanDivider />
+                    <ConclusionRulesPanel />
                   </>
                 );
               })()}
-
-
 
 
 
