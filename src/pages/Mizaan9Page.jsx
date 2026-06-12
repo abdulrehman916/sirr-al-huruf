@@ -19,6 +19,7 @@ import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
+import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
 
 
 import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
@@ -334,6 +335,16 @@ export default function Mizaan9Page() {
                 // Section 1 pipeline result — read-only source for Section 2
                 const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
 
+                // Section 2 expanded letters — derived independently for Section 3 input
+                // Pure function call: no state, no mutation of Section 1 or Section 2
+                const section2ExpandedLetters = (() => {
+                  if (!section1?.allExpandedLetters?.length) return [];
+                  const s2GrandBast    = section1.allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+                  const s2GrandLetters = section1.allExpandedLetters.length;
+                  const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant });
+                  return s2Pipeline?.allExpandedLetters || [];
+                })();
+
                 return (
                   <>
                     {/* ═══ SECTION 1: LOCKED ═══ */}
@@ -343,6 +354,14 @@ export default function Mizaan9Page() {
                     {section1?.allExpandedLetters?.length > 0 && (
                       <EsmaAvanSection
                         allExpandedLetters={section1.allExpandedLetters}
+                        dominant={dominant}
+                      />
+                    )}
+
+                    {/* ═══ SECTION 3: ESMA-I KASEM ═══ */}
+                    {section2ExpandedLetters.length > 0 && (
+                      <EsmaKasemSection
+                        section2ExpandedLetters={section2ExpandedLetters}
                         dominant={dominant}
                       />
                     )}
