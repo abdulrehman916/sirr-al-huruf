@@ -480,6 +480,29 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
   };
 }
 
+/**
+ * expandAllSeedLetters(seedLetters, bastLevel)
+ * 
+ * This function performs the Step 2-3 expansion from SatrVahidGrouping:
+ * For each seed letter, get its Bast value at the given level, then istintak it.
+ * Returns ALL expanded letters concatenated (the complete "ALL EXPANDED LETTERS" set).
+ * 
+ * This is the TRUE source for Vefk calculation per manuscript rules.
+ */
+export function expandAllSeedLetters(seedLetters, bastLevel) {
+  const safeSeed = Array.isArray(seedLetters) ? seedLetters : [];
+  const allExpanded = [];
+  
+  for (let i = 0; i < safeSeed.length; i++) {
+    const letter = safeSeed[i];
+    const bastValue = getBastLevel(letter, bastLevel);
+    const expanded = istintak(bastValue);
+    allExpanded.push(...expanded);
+  }
+  
+  return allExpanded;
+}
+
 // ── Main entry point ──────────────────────────────────────────────
 /**
  * runMizaanPostPipeline({ grandBast, grandLetters, dominant })
@@ -508,6 +531,11 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // The satirVahidTotal is already (bastSum + letterCount), so we istintak it directly
   // and treat the result as the first seed — matching the book's worked examples on p.60.
 
+  // MANUSCRIPT RULE: Expand ALL seed letters through Bast → Istintak
+  // This gives us the TRUE "ALL EXPANDED LETTERS" set shown in Step 3
+  const bastLevel = initialSeedLetters.length % 2 !== 0 ? 5 : 4;
+  const allExpandedLetters = expandAllSeedLetters(initialSeedLetters, bastLevel);
+
   // Generate Esma-i Kitabet using simplified manuscript workflow
   const kitabet = generateEsmaLevel(initialSeedLetters, false, element);
 
@@ -517,26 +545,24 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // Generate Esma-i Kasem (third stage, always 5th Bast) - using avan finalExpandedLetters
   const kasem = generateEsmaLevel(avan.finalExpandedLetters, true, element);
 
-  // MIZAN OPTION 1 RULE: Vefk Source Number = Sum of First Bast values of ALL EXPANDED LETTERS
-  // Source: Only the letters shown in "ALL EXPANDED LETTERS" section (kitabet.finalExpandedLetters)
-  // NO extra letters from Group Formation, Esma names, Guardian, Element, or any intermediate calculations
-  const expandedLettersForVefk = kitabet.finalExpandedLetters;
-  const vefkSourceNumber = expandedLettersForVefk.reduce(
-    (sum, letter) => sum + (getBastLevel(letter, 1) || 0),
-    0
-  );
+  // MIZAN OPTION 1 RULE: Vefk Source Number = grandBast (the sacred total from 9 Mizans)
+  // This is the value shown in MizaanFinalSummary as "Total Bast-ul Aval"
+  // The ALL EXPANDED LETTERS derive from this sacred number through Istintak and Bast expansion
+  const vefkSourceNumber = grandBast;
   const vefk = buildVefk(vefkSourceNumber, element);
 
   return {
     input: { grandBast, grandLetters, satirVahidTotal },
     initialSeedLetters,
+    allExpandedLetters,
+    bastLevel,
     kitabet,
     avan,
     kasem,
     element,
     vefk,
     vefkSourceNumber,
-    expandedLettersCount: kitabet.finalExpandedLetters.length,
-    expandedLettersTotal: vefkSourceNumber,
+    expandedLettersCount: allExpandedLetters.length,
+    expandedLettersTotal: allExpandedLetters.reduce((sum, letter) => sum + (getBastLevel(letter, 1) || 0), 0),
   };
 }

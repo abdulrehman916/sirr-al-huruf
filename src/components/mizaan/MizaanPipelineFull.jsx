@@ -123,31 +123,13 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
             
             {/* Vefk Source Number Verification */}
             <div className="mb-4 rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Vefk Source Calculation — Expanded Letters Only</div>
+              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Vefk Source — Sacred Total from 9 Mizans</div>
               <div className="space-y-2 text-[8px]">
                 <div className="px-3 py-2 rounded bg-black/30 mb-2 border" style={{ borderColor: G.goldBorder + "60" }}>
-                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>Calculation Path</div>
-                  <div className="flex items-center gap-2 text-[7px]" style={{ color: G.goldDim }}>
-                    <span>9 Mizan Total (12,165)</span>
-                    <span>→</span>
-                    <span>Istintak</span>
-                    <span>→</span>
-                    <span>Seed Letters</span>
-                    <span>→</span>
-                    <span>Bast Expansion</span>
-                    <span>→</span>
-                    <span style={{ color: G.gold, fontWeight: "bold" }}>Expanded Letters Sum (4,953)</span>
-                    <span>→</span>
-                    <span style={{ color: G.gold, fontWeight: "bold" }}>Vefk Source</span>
+                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>Manuscript Rule</div>
+                  <div className="text-[7px]" style={{ color: G.goldDim }}>
+                    The Vefk Source Number is the grand total from the 9 Mizans (12,165 for "الله"). This sacred total becomes the Magic Constant directly.
                   </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span style={{ color: G.dim }}>Expanded Letters Count:</span>
-                  <span className="font-bold tabular-nums" style={{ color: G.gold }}>{pipeline.expandedLettersCount || 0}</span>
-                </div>
-                <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
-                  <span style={{ color: G.dim }}>Sum of First Bast Values (Vefk Source):</span>
-                  <span className="font-bold tabular-nums" style={{ color: G.gold }}>{pipeline.expandedLettersTotal?.toLocaleString() || 0}</span>
                 </div>
                 <div className="flex justify-between items-center pt-1 border-t" style={{ borderColor: G.goldBorder + "60" }}>
                   <span style={{ color: G.dim }}>Vefk Source Number (S):</span>
@@ -178,9 +160,9 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
 
             {/* Letters Used for Vefk */}
             <div className="mb-4 rounded-lg border p-3" style={{ background: G.bgInner, borderColor: elementMeta.color + "40" }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Letters Used for Vefk Calculation</div>
+              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>ALL EXPANDED LETTERS (Step 3)</div>
               <div className="flex flex-wrap gap-1 mb-2" style={{ direction: "rtl" }}>
-                {pipeline.kitabet?.finalExpandedLetters?.map((l, i) => (
+                {pipeline.allExpandedLetters?.map((l, i) => (
                   <span key={i} className="font-amiri text-lg font-bold px-2 py-1 rounded"
                     style={{ background: elementMeta.color + "15", color: elementMeta.color, border: `1px solid ${elementMeta.color}40` }}>
                     {l}
@@ -188,15 +170,18 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                 )) || <span style={{ color: G.dim }}>—</span>}
               </div>
               <div className="text-[7px]" style={{ color: G.dim }}>
-                These {pipeline.expandedLettersCount || 0} letters → First Bast sum = {pipeline.expandedLettersTotal?.toLocaleString() || 0} → Vefk Source Number
+                Total: {pipeline.expandedLettersCount || 0} letters from Bast expansions
               </div>
             </div>
 
             {/* Expanded Letters Value Breakdown */}
             <div className="mb-4 rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Expanded Letters — First Bast Values</div>
+              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>ALL EXPANDED LETTERS — Step 3 Derivation</div>
+              <div className="mb-2 px-2 py-1.5 rounded text-[7px]" style={{ background: G.bgInner, borderColor: G.goldBorder + "60", border: "1px solid" }}>
+                <span style={{ color: G.dim }}>These {pipeline.allExpandedLetters?.length || 0} letters derived from Vefk Source ({vefk.S?.toLocaleString()})</span>
+              </div>
               <div className="space-y-1.5">
-                {pipeline.kitabet?.finalExpandedLetters?.map((letter, idx) => {
+                {pipeline.allExpandedLetters?.map((letter, idx) => {
                   const bastValue = getBastLevel(letter, 1);
                   return (
                     <div key={idx} className="flex items-center justify-between text-[8px]">
@@ -216,34 +201,16 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                 }) || <span style={{ color: G.dim }}>—</span>}
               </div>
               
-              {/* Step-by-step addition */}
-              <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "60" }}>
-                <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Step-by-Step Addition</div>
-                <div className="space-y-1 text-[8px]">
-                  {pipeline.kitabet?.finalExpandedLetters?.reduce((acc, letter, idx) => {
-                    const bastValue = getBastLevel(letter, 1);
-                    const runningTotal = acc + bastValue;
-                    return (
-                      <div key={idx} className="flex items-center justify-between">
-                        <span style={{ color: G.dim }}>
-                          {idx === 0 ? 'Start' : `After letter ${idx}`}: 
-                        </span>
-                        <span className="font-inter tabular-nums" style={{ color: G.gold }}>
-                          {idx === 0 ? bastValue.toLocaleString() : `${acc.toLocaleString()} + ${bastValue.toLocaleString()} = ${runningTotal.toLocaleString()}`}
-                        </span>
-                      </div>
-                    );
-                  }, 0)}
-                </div>
-              </div>
-
-              {/* Final Total */}
+              {/* Sum of Expanded Letters */}
               <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "60" }}>
                 <div className="flex items-center justify-between">
-                  <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total (8 letters):</span>
+                  <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Sum of Expanded Letters:</span>
                   <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>
                     {pipeline.expandedLettersTotal?.toLocaleString() || 0}
                   </span>
+                </div>
+                <div className="text-[7px] mt-1" style={{ color: G.dim }}>
+                  Note: Vefk Source = {vefk.S?.toLocaleString()} (from 9 Mizans). Expanded letters sum = {pipeline.expandedLettersTotal?.toLocaleString()}.
                 </div>
               </div>
             </div>

@@ -136,13 +136,13 @@ export default function SatrVahidGrouping({
   const bastLevel = isSeedFerd ? 5 : 4;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
-  // ── STEP 1: Individual Bast Derivations (REVERSED ORDER: last → first) ──
+  // ── STEP 1: Individual Bast Derivations (FORWARD ORDER: first → last) ──
+  // Note: Pipeline uses forward order for consistency with manuscript examples
   const { derivations, allExpandedLetters } = useMemo(() => {
     const derivs = [];
     let allExpanded = [];
     
-    // MANUSCRIPT RULE: Start from LAST seed letter, move backwards to first
-    for (let i = safeSeed.length - 1; i >= 0; i--) {
+    for (let i = 0; i < safeSeed.length; i++) {
       const letter = safeSeed[i];
       const bastValue = getBastLevel(letter, bastLevel);
       const expanded = istintak(bastValue);
