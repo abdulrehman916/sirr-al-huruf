@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { getBastLevel, istintak, GALIB_ANASIR_VALUES, GALIB_ANASIR_SUPPLEMENTS } from "../../lib/mizaanPostEngine";
+import { getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 
 // ── Design tokens ─────────────────────────────────────────────
 const G = {
@@ -181,13 +181,13 @@ export default function SatrVahidGrouping({
     let seq = [...allExpandedLetters];
     let supp = [];
     
-    // MANUSCRIPT RULE: Use element-specific supplement letters from Ghalib Anasir table
+    // MANUSCRIPT RULE: Istintak of the Galib Anasir's 1st Bast value → take only needed letters
+    // This is the same method used in generateEsmaLevel (mizaanPostEngine.js)
     if (rem > 0) {
       const needed = gSize - rem;
-      // Get supplement letters from the active element's canonical table
-      const elementSupplements = GALIB_ANASIR_SUPPLEMENTS[dominant] || GALIB_ANASIR_SUPPLEMENTS.fire;
-      // Take only the exact number of letters needed, in order
-      supp = elementSupplements.slice(0, needed);
+      const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
+      const galibIstintakLetters = istintak(galibValue);
+      supp = galibIstintakLetters.slice(0, needed);
       seq = [...allExpandedLetters, ...supp];
     }
     
