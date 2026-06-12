@@ -21,7 +21,7 @@ import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
 import FinalVefkSummary from "../components/mizaan/FinalVefkSummary";
-import ConclusionRulesPanel from "../components/mizaan/ConclusionRulesPanel";
+import ConclusionRulesPanel from "../components/mizaan/ConclusionRulesPanel.jsx";
 
 
 import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";

@@ -60,11 +60,19 @@ function SectionHeader({ step, label, arabic, color = G.gold }) {
 }
 
 function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = false }) {
-  const sizes = { sm: "text-lg px-2 py-1", lg: "text-2xl px-3 py-2", xl: "text-3xl px-4 py-2.5" };
+  const sizes = { sm: "text-xl px-2.5 py-1.5", lg: "text-3xl px-4 py-2.5", xl: "text-4xl px-5 py-3" };
   return (
-    <div className="flex flex-col items-center gap-0.5">
+    <div className="flex flex-col items-center gap-1">
       <span className={`font-amiri font-bold rounded-lg border ${sizes[size]}`}
-        style={{ color, borderColor: color + "55", background: color + "12", lineHeight: 1.2, display: "inline-block" }}>
+        style={{
+          color,
+          borderColor: color + "55",
+          background: color + "12",
+          lineHeight: 1.8,
+          display: "inline-block",
+          textRendering: "optimizeLegibility",
+          WebkitFontSmoothing: "antialiased",
+        }}>
         {letter}
       </span>
       {showIndex && (
@@ -79,7 +87,7 @@ function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false, rt
     <span className="font-inter text-xs italic" style={{ color: G.dim }}>—</span>
   );
   return (
-    <div className="flex flex-wrap gap-1.5 items-center" style={{ direction: rtl ? "rtl" : "ltr" }}>
+    <div className="flex flex-wrap gap-2.5 items-center" style={{ direction: rtl ? "rtl" : "ltr" }}>
       {letters.map((l, i) => (
         <LetterCell key={i} letter={l} index={i} color={color} size={size} showIndex={showIndex} />
       ))}
@@ -149,11 +157,18 @@ function KasemSourceDerivation({ section2Letters, bastTotal, letterCount, source
         <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
           Section 2 — All Expanded Letters
         </div>
-        <div className="flex flex-wrap gap-1.5" style={{ direction: "rtl" }}>
+        <div className="flex flex-wrap gap-2.5" style={{ direction: "rtl" }}>
           {safe.map((l, i) => (
             <span key={i}
-              className="font-amiri font-bold rounded-lg border px-2 py-1 text-xl leading-tight"
-              style={{ color: elementColor, borderColor: elementColor + "40", background: elementColor + "12" }}>
+              className="font-amiri font-bold rounded-lg border px-3 py-2 text-2xl leading-relaxed"
+              style={{
+                color: elementColor,
+                borderColor: elementColor + "40",
+                background: elementColor + "12",
+                lineHeight: 1.8,
+                textRendering: "optimizeLegibility",
+                WebkitFontSmoothing: "antialiased",
+              }}>
               {l}
             </span>
           ))}
@@ -207,11 +222,18 @@ function KasemSourceDerivation({ section2Letters, bastTotal, letterCount, source
         <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
           Istintak Result → Seed Letters for Section 3
         </div>
-        <div className="flex flex-wrap gap-1.5 justify-center" style={{ direction: "rtl" }}>
+        <div className="flex flex-wrap gap-3 justify-center" style={{ direction: "rtl" }}>
           {(Array.isArray(seedLetters) ? seedLetters : []).map((l, i) => (
             <span key={i}
-              className="font-amiri font-bold rounded-lg border px-3 py-2 text-2xl leading-tight"
-              style={{ color: G.gold, borderColor: G.goldBorderHi, background: G.goldFaint }}>
+              className="font-amiri font-bold rounded-lg border px-4 py-3 text-3xl leading-relaxed"
+              style={{
+                color: G.gold,
+                borderColor: G.goldBorderHi,
+                background: G.goldFaint,
+                lineHeight: 1.8,
+                textRendering: "optimizeLegibility",
+                WebkitFontSmoothing: "antialiased",
+              }}>
               {l}
             </span>
           ))}
@@ -469,8 +491,15 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
                 <div className="flex items-center gap-3 flex-wrap">
                   <LetterRow letters={group.letters} color={G.gold} size="lg" rtl />
                   <Arrow label="→" />
-                  <span className="font-amiri text-2xl font-bold px-4 py-2 rounded-xl border"
-                    style={{ color: G.gold, borderColor: G.goldBorder + "55", background: G.goldFaint }}
+                  <span className="font-amiri text-3xl font-bold px-5 py-3 rounded-xl border"
+                    style={{
+                      color: G.gold,
+                      borderColor: G.goldBorder + "55",
+                      background: G.goldFaint,
+                      lineHeight: 1.8,
+                      textRendering: "optimizeLegibility",
+                      WebkitFontSmoothing: "antialiased",
+                    }}
                     dir="rtl">
                     {group.name}
                   </span>
@@ -495,7 +524,12 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
                   style={{ background: G.bgInner, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
                   {idx + 1}
                 </div>
-                <span className="font-amiri text-2xl font-bold flex-1" style={{ color: G.gold }} dir="rtl">
+                <span className="font-amiri text-3xl font-bold flex-1" style={{
+                  color: G.gold,
+                  lineHeight: 1.8,
+                  textRendering: "optimizeLegibility",
+                  WebkitFontSmoothing: "antialiased",
+                }} dir="rtl">
                   {group.name}
                 </span>
               </motion.div>

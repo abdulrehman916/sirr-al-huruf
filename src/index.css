@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap&font-display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap&font-display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -157,11 +157,16 @@
   /* Prevent horizontal overflow globally — only on media, not layout containers */
   img, svg, video { max-width: 100%; height: auto; }
 
-  /* Arabic & Malayalam text: allow safe line-breaking */
+  /* Arabic text: optimal rendering with proper shaping and spacing */
   .font-amiri {
     overflow-wrap: break-word;
     word-break: break-word;
     hyphens: auto;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
   }
 
   /* Non-selectable interactive elements — Arabic text remains selectable */

@@ -46,17 +46,19 @@ function SectionHeader({ label, arabic, step, color = G.gold }) {
 }
 
 function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = false, bgColor }) {
-  const sizes = { sm: "text-lg px-2 py-1", lg: "text-2xl px-3 py-2", xl: "text-3xl px-4 py-2.5" };
+  const sizes = { sm: "text-xl px-2.5 py-1.5", lg: "text-3xl px-4 py-2.5", xl: "text-4xl px-5 py-3" };
   return (
-    <div className="flex flex-col items-center gap-0.5">
+    <div className="flex flex-col items-center gap-1">
       <span
         className={`font-amiri font-bold rounded-lg border ${sizes[size]}`}
         style={{
           color,
           borderColor: color + "55",
           background: bgColor || color + "12",
-          lineHeight: 1.2,
+          lineHeight: 1.8,
           display: "inline-block",
+          textRendering: "optimizeLegibility",
+          WebkitFontSmoothing: "antialiased",
         }}
       >
         {letter}
@@ -73,7 +75,7 @@ function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false, rt
     <span className="font-inter text-xs italic" style={{ color: G.dim }}>—</span>
   );
   return (
-    <div className="flex flex-wrap gap-1.5 items-center" style={{ direction: rtl ? "rtl" : "ltr", unicodeBidi: rtl ? "normal" : "isolate" }}>
+    <div className="flex flex-wrap gap-2.5 items-center" style={{ direction: rtl ? "rtl" : "ltr", unicodeBidi: rtl ? "normal" : "isolate" }}>
       {letters.map((l, i) => (
         <LetterCell key={i} letter={l} index={i} color={color} size={size} showIndex={showIndex} />
       ))}
@@ -343,8 +345,15 @@ export default function SatrVahidGrouping({
                 <div className="flex items-center gap-3 flex-wrap">
                   <LetterRow letters={group.letters} color={G.gold} size="lg" rtl />
                   <Arrow label="→" />
-                  <span className="font-amiri text-2xl font-bold px-4 py-2 rounded-xl border"
-                    style={{ color: G.gold, borderColor: G.goldBorder + "55", background: G.goldFaint }}
+                  <span className="font-amiri text-3xl font-bold px-5 py-3 rounded-xl border"
+                    style={{
+                      color: G.gold,
+                      borderColor: G.goldBorder + "55",
+                      background: G.goldFaint,
+                      lineHeight: 1.8,
+                      textRendering: "optimizeLegibility",
+                      WebkitFontSmoothing: "antialiased",
+                    }}
                     dir="rtl">
                     {group.name}
                   </span>
@@ -369,7 +378,12 @@ export default function SatrVahidGrouping({
                   style={{ background: G.bgInner, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
                   {idx + 1}
                 </div>
-                <span className="font-amiri text-2xl font-bold flex-1" style={{ color: G.gold }} dir="rtl">
+                <span className="font-amiri text-3xl font-bold flex-1" style={{
+                  color: G.gold,
+                  lineHeight: 1.8,
+                  textRendering: "optimizeLegibility",
+                  WebkitFontSmoothing: "antialiased",
+                }} dir="rtl">
                   {group.name}
                 </span>
               </motion.div>

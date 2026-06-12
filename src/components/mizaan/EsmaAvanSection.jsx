@@ -192,11 +192,18 @@ function AvanSourceDerivation({ section1Letters, bastTotal, letterCount, sourceT
         <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
           Section 1 — All Expanded Letters
         </div>
-        <div className="flex flex-wrap gap-1.5" style={{ direction: "rtl" }}>
+        <div className="flex flex-wrap gap-2.5" style={{ direction: "rtl" }}>
           {safe.map((l, i) => (
             <span key={i}
-              className="font-amiri font-bold rounded-lg border px-2 py-1 text-xl leading-tight"
-              style={{ color: elementColor, borderColor: elementColor + "40", background: elementColor + "12" }}>
+              className="font-amiri font-bold rounded-lg border px-3 py-2 text-2xl leading-relaxed"
+              style={{
+                color: elementColor,
+                borderColor: elementColor + "40",
+                background: elementColor + "12",
+                lineHeight: 1.8,
+                textRendering: "optimizeLegibility",
+                WebkitFontSmoothing: "antialiased",
+              }}>
               {l}
             </span>
           ))}
@@ -250,11 +257,18 @@ function AvanSourceDerivation({ section1Letters, bastTotal, letterCount, sourceT
         <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
           Istintak Result → Seed Letters for Section 2
         </div>
-        <div className="flex flex-wrap gap-1.5 justify-center" style={{ direction: "rtl" }}>
+        <div className="flex flex-wrap gap-3 justify-center" style={{ direction: "rtl" }}>
           {(Array.isArray(seedLetters) ? seedLetters : []).map((l, i) => (
             <span key={i}
-              className="font-amiri font-bold rounded-lg border px-3 py-2 text-2xl leading-tight"
-              style={{ color: G.gold, borderColor: G.goldBorderHi, background: G.goldFaint }}>
+              className="font-amiri font-bold rounded-lg border px-4 py-3 text-3xl leading-relaxed"
+              style={{
+                color: G.gold,
+                borderColor: G.goldBorderHi,
+                background: G.goldFaint,
+                lineHeight: 1.8,
+                textRendering: "optimizeLegibility",
+                WebkitFontSmoothing: "antialiased",
+              }}>
               {l}
             </span>
           ))}
@@ -411,16 +425,29 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
               return (
                 <div className="flex flex-col items-center gap-1 mb-4">
                   {/* TOP */}
-                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
-                    style={{ color: elementMeta.color, textShadow: `0 0 12px ${elementMeta.color}55` }}>
+                  <div className="font-amiri text-2xl font-bold tracking-widest text-center" dir="rtl"
+                    style={{
+                      color: elementMeta.color,
+                      textShadow: `0 0 12px ${elementMeta.color}55`,
+                      lineHeight: 1.8,
+                      textRendering: "optimizeLegibility",
+                      WebkitFontSmoothing: "antialiased",
+                    }}>
                     {guardianName}
                   </div>
                   {/* MIDDLE: Left | Grid | Right */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-col items-center justify-center gap-0.5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center justify-center gap-1">
                       {guardianLetters.map((l, i) => (
-                        <span key={i} className="font-amiri font-bold leading-tight"
-                          style={{ color: elementMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elementMeta.color}55` }}>
+                        <span key={i} className="font-amiri font-bold"
+                          style={{
+                            color: elementMeta.color,
+                            fontSize: "1.25rem",
+                            lineHeight: 2,
+                            textShadow: `0 0 8px ${elementMeta.color}55`,
+                            textRendering: "optimizeLegibility",
+                            WebkitFontSmoothing: "antialiased",
+                          }}>
                           {l}
                         </span>
                       ))}
@@ -439,18 +466,31 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
                         </div>
                       ))}
                     </div>
-                    <div className="flex flex-col items-center justify-center gap-0.5">
+                    <div className="flex flex-col items-center justify-center gap-1">
                       {guardianLetters.map((l, i) => (
-                        <span key={i} className="font-amiri font-bold leading-tight"
-                          style={{ color: elementMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elementMeta.color}55` }}>
+                        <span key={i} className="font-amiri font-bold"
+                          style={{
+                            color: elementMeta.color,
+                            fontSize: "1.25rem",
+                            lineHeight: 2,
+                            textShadow: `0 0 8px ${elementMeta.color}55`,
+                            textRendering: "optimizeLegibility",
+                            WebkitFontSmoothing: "antialiased",
+                          }}>
                           {l}
                         </span>
                       ))}
                     </div>
                   </div>
                   {/* BOTTOM */}
-                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
-                    style={{ color: elementMeta.color, textShadow: `0 0 12px ${elementMeta.color}55` }}>
+                  <div className="font-amiri text-2xl font-bold tracking-widest text-center" dir="rtl"
+                    style={{
+                      color: elementMeta.color,
+                      textShadow: `0 0 12px ${elementMeta.color}55`,
+                      lineHeight: 1.8,
+                      textRendering: "optimizeLegibility",
+                      WebkitFontSmoothing: "antialiased",
+                    }}>
                     {guardianName}
                   </div>
                 </div>

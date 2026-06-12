@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, BookOpen } from "lucide-react";
+import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 
 const G = {
   gold:         "#F5D060",
@@ -67,73 +67,29 @@ const RULES = [
   {
     number: 8,
     title: "Section 3 Special Rules",
-    english: "Section 3 (Esma-i Kasem) always uses a mandatory post-processing block exclusively with Fifth Bast (B5), regardless of the Zevc/Ferd determination of the seed letters. This Fifth Bast post-processing is unique to Section 3 and must not be applied to Section 1 or Section 2.",
-    malayalam: "സെക്ഷൻ 3 (Esma-i Kasem) എപ്പോഴും Seed Letters-ന്റെ Zevc/Ferd നിർണ്ണയം പരിഗണിക്കാതെ, Fifth Bast (B5) ഉപയോഗിച്ചുള്ള നിർബന്ധിത Post-Processing Block ഉൾക്കൊള്ളുന്നു. ഈ Fifth Bast Post-Processing സെക്ഷൻ 3-ന് മാത്രം അനന്യമാണ്. ഇത് സെക്ഷൻ 1 അല്ലെങ്കിൽ സെക്ഷൻ 2-ൽ പ്രയോഗിക്കരുത്.",
+    english: "Section 3 (Esma-i Kasem) always uses Fifth Bast (B5) for its final derivation block, regardless of Zevc/Ferd determination. The border letters of Section 3 Vefk are derived from the Istintak of the total value of all Fifth Bast expanded letters.",
+    malayalam: "സെക്ഷൻ 3 (Esma-i Kasem) അതിന്റെ അന്തിമ ഡെറിവേഷൻ ബ്ലോക്കിനായി Zevc/Ferd നിർണ്ണയം പരിഗണിക്കാതെ എപ്പോഴും Fifth Bast (B5) ഉപയോഗിക്കുന്നു. സെക്ഷൻ 3 Vefk-ന്റെ അതിർത്തി അക്ഷരങ്ങൾ എല്ലാ Fifth Bast വിപുലീകരിച്ച അക്ഷരങ്ങളുടെ ആകെ മൂല്യത്തിന്റെ Istintak-ൽ നിന്ന് ഉരുത്തിരിക്കുന്നു.",
   },
   {
     number: 9,
     title: "Section 3 Vefk Rules",
-    english: "The Vefk source number for Section 3 is derived from the total sum of all First Bast values of the expanded letters produced by the Final Fifth Bast block. The border letters of the Section 3 Vefk grid are derived from the Istintak of the total of all B5-expanded letters' First Bast values.",
-    malayalam: "സെക്ഷൻ 3-ന്റെ Vefk Source Number, Final Fifth Bast Block-ൽ ഉൽപ്പാദിപ്പിക്കപ്പെടുന്ന Expanded Letters-ന്റെ എല്ലാ First Bast മൂല്യങ്ങളുടെ ആകെ തുകയിൽ നിന്ന് ഉരുത്തിരിക്കണം. സെക്ഷൻ 3 Vefk Grid-ന്റെ Border Letters, B5-Expanded Letters-ന്റെ First Bast മൂല്യങ്ങളുടെ ആകെ തുകയുടെ Istintak-ൽ നിന്ന് ഉരുത്തിരിക്കണം.",
+    english: "The Section 3 Vefk source number is the total sum of all expanded letters from the final Fifth Bast block. The magic square is built directly from this source without an intermediate Istintak stage. Border letters frame all four sides of the grid.",
+    malayalam: "സെക്ഷൻ 3 Vefk സോഴ്സ് നമ്പർ എന്നത് അന്തിമ Fifth Bast ബ്ലോക്കിലെ എല്ലാ വിപുലീകരിച്ച അക്ഷരങ്ങളുടെ ആകെ തുകയാണ്. ഇടനില Istintak ഘട്ടമില്ലാതെ ഈ സോഴ്സിൽ നിന്ന് നേരിട്ട് മാജിക് സ്ക്വയർ നിർമ്മിക്കുന്നു. അതിർത്തി അക്ഷരങ്ങൾ ഗ്രിഡിന്റെ നാല് വശങ്ങളെയും ചുറ്റി നിൽക്കുന്നു.",
   },
   {
     number: 10,
     title: "Final Principle",
-    english: "The entire system — from 9-Mizan analysis through all three sections — is a sealed, read-only manuscript engine. No user action, UI interaction, or external parameter may alter the calculation logic, intermediate values, or final outputs once a pipeline has been executed. All results are derived strictly and solely from the manuscript formulas.",
-    malayalam: "9-Mizan Analysis മുതൽ മൂന്ന് സെക്ഷനുകൾ വരെ ഉള്ള ഈ മുഴുവൻ സിസ്റ്റവും ഒരു Sealed, Read-Only Manuscript Engine ആണ്. ഒരു Pipeline Execute ആയിക്കഴിഞ്ഞാൽ ഒരു User Action-ഉം, UI Interaction-ഉം, External Parameter-ഉം Calculation Logic-നെ, Intermediate Values-നെ, അല്ലെങ്കിൽ Final Outputs-നെ മാറ്റരുത്. എല്ലാ ഫലങ്ങളും കർശനമായും ഏക്ലത്തും Manuscript Formulas-ൽ നിന്ന് ഉരുത്തിരിക്കണം.",
+    english: "All calculations strictly follow the manuscript formulas. The book is the sole authority. No mathematical assumptions or external systems override the manuscript evidence. Every cell in every Vefk grid must match the manuscript examples exactly.",
+    malayalam: "എല്ലാ കണക്കുകൂട്ടലുകളും കൈയെഴുത്തുപ്രമാണ സൂത്രവാക്യങ്ങൾ കർശനമായി പിന്തുടരുന്നു. പുസ്തകമാണ് ഏക അധികാരം. കൈയെഴുത്തുപ്രമാണ തെളിവുകളെ മറികടക്കുന്ന ഗണിതശാസ്ത്ര അനുമാനങ്ങളോ ബാഹ്യ സംവിധാനങ്ങളോ പാടില്ല. ഓരോ Vefk ഗ്രിഡിലെയും ഓരോ സെല്ലും കൈയെഴുത്തുപ്രമാണ ഉദാഹരണങ്ങളുമായി കൃത്യമായി യോജിക്കണം.",
   },
 ];
 
 function OrnamentalDivider() {
   return (
-    <div className="flex items-center justify-center gap-2 py-1">
+    <div className="flex items-center justify-center gap-2 py-1.5">
       <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
-      <span style={{ color: G.goldDim, fontSize: 9 }}>✦</span>
+      <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
       <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
-    </div>
-  );
-}
-
-function RuleCard({ rule }) {
-  return (
-    <div className="rounded-xl border overflow-hidden"
-      style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-
-      {/* Rule Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: G.goldBorder + "55" }}>
-        <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
-          style={{ background: G.goldFaint, border: `1px solid ${G.goldBorder}`, color: G.gold }}>
-          {rule.number}
-        </div>
-        <span className="font-inter text-[9px] uppercase tracking-[0.22em] font-bold" style={{ color: G.gold }}>
-          Rule {rule.number} — {rule.title}
-        </span>
-      </div>
-
-      <div className="px-4 py-3 space-y-3">
-        {/* English */}
-        <div className="space-y-1">
-          <div className="font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: G.dimLo }}>
-            English
-          </div>
-          <p className="font-inter text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
-            {rule.english}
-          </p>
-        </div>
-
-        {/* Divider between languages */}
-        <div className="h-px w-full" style={{ background: G.goldBorder + "44" }} />
-
-        {/* Malayalam */}
-        <div className="space-y-1">
-          <div className="font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: G.dimLo }}>
-            Malayalam
-          </div>
-          <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.72)", fontFamily: "'Noto Sans Malayalam', sans-serif" }}>
-            {rule.malayalam}
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
@@ -142,82 +98,132 @@ export default function ConclusionRulesPanel() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-2xl border overflow-hidden"
+    <motion.div
+      initial={{ opacity: 0, y: 32 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.5 }}
+      className="rounded-2xl border overflow-hidden"
       style={{
         background:  G.bg,
         borderColor: G.goldBorderHi,
-        boxShadow:   `0 0 60px ${G.glow}, 0 4px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(212,175,55,0.07)`,
-      }}>
-
-      {/* Top accent line */}
+        boxShadow:   `0 0 80px ${G.glow}, 0 0 160px rgba(0,0,0,0.7), inset 0 1px 0 rgba(212,175,55,0.08)`,
+      }}
+    >
+      {/* Top accent */}
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
 
-      {/* Collapsible Header */}
+      {/* Header */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-5 hover:opacity-80 transition-opacity"
+        className="w-full flex items-center justify-between px-6 py-5 hover:opacity-80 transition-opacity"
       >
         <div className="flex items-center gap-4 text-left">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0"
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl"
             style={{ background: G.goldFaint, border: `1px solid ${G.goldBorder}` }}>
             <BookOpen className="w-5 h-5" style={{ color: G.gold }} />
           </div>
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className="font-inter text-[9px] uppercase tracking-[0.28em] font-bold" style={{ color: G.goldDim }}>
-                Conclusion & Rules
-              </span>
-              <span className="font-inter text-[8px]" style={{ color: G.dim }}>📖</span>
-            </div>
-            <span className="font-amiri text-xl font-bold" style={{ color: G.gold }}>
-              സംഗ്രഹവും നിയമങ്ങളും
+          <div className="flex flex-col">
+            <span className="font-inter text-[9px] uppercase tracking-[0.25em] font-bold" style={{ color: G.gold }}>
+              Conclusion & Rules
             </span>
-            <span className="font-inter text-[8px]" style={{ color: G.dim }}>
-              {open ? "Tap to collapse" : "Tap to expand — 10 rules"}
+            <span className="font-amiri text-lg font-bold leading-tight" style={{ color: G.goldDim }} dir="rtl">
+              സംഗ്രഹവും നിയമങ്ങളും
             </span>
           </div>
         </div>
-
-        <div className="flex items-center justify-center w-8 h-8 rounded-xl flex-shrink-0"
-          style={{ background: G.goldFaint, border: `1px solid ${G.goldBorder}` }}>
-          {open
-            ? <ChevronUp className="w-4 h-4" style={{ color: G.gold }} />
-            : <ChevronDown className="w-4 h-4" style={{ color: G.gold }} />}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dimLo }}>
+            {open ? "Collapse" : "Expand"}
+          </span>
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg"
+            style={{ background: G.gold + "22", border: `1px solid ${G.gold}44` }}>
+            {open
+              ? <ChevronUp className="w-4 h-4" style={{ color: G.gold }} />
+              : <ChevronDown className="w-4 h-4" style={{ color: G.gold }} />}
+          </div>
         </div>
       </button>
 
-      {/* Expandable Content */}
+      {/* Content */}
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
-            key="rules-content"
+            key="content"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.32, ease: "easeInOut" }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             style={{ overflow: "hidden" }}
           >
             <OrnamentalDivider />
 
-            {/* Read-only notice */}
-            <div className="mx-4 mb-4 mt-1 px-4 py-2.5 rounded-xl border text-center"
-              style={{ background: "rgba(245,208,96,0.05)", borderColor: G.goldBorder + "55" }}>
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dimLo }}>
-                📖 Documentation Only — No calculations, no state changes, no pipeline execution
-              </span>
-            </div>
+            <div className="px-6 pb-6 space-y-4">
 
-            <div className="px-4 pb-6 space-y-3">
-              {RULES.map((rule) => (
-                <RuleCard key={rule.number} rule={rule} />
+              {/* Rules List */}
+              {RULES.map((rule, idx) => (
+                <div key={idx}
+                  className="rounded-xl border p-4 space-y-3"
+                  style={{
+                    background: G.bgCard,
+                    borderColor: G.goldBorder + "40",
+                    boxShadow: `0 1px 8px rgba(0,0,0,0.3)`,
+                  }}>
+
+                  {/* Rule Header */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-md font-inter text-[9px] font-black"
+                      style={{ background: G.gold + "22", color: G.gold, border: `1px solid ${G.gold}44` }}>
+                      {rule.number}
+                    </div>
+                    <span className="font-inter text-[8px] uppercase tracking-[0.2em] font-bold" style={{ color: G.gold }}>
+                      {rule.title}
+                    </span>
+                  </div>
+
+                  {/* English */}
+                  <div className="space-y-1">
+                    <span className="font-inter text-[7px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
+                      English
+                    </span>
+                    <p className="font-inter text-xs leading-relaxed" style={{ color: G.gold }}>
+                      {rule.english}
+                    </p>
+                  </div>
+
+                  {/* Malayalam */}
+                  <div className="space-y-1 pt-2 border-t" style={{ borderColor: G.goldBorder + "30" }}>
+                    <span className="font-inter text-[7px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
+                      Malayalam
+                    </span>
+                    <p className="font-amiri text-sm leading-relaxed" style={{ color: G.goldDim }} dir="rtl">
+                      {rule.malayalam}
+                    </p>
+                  </div>
+
+                </div>
               ))}
+
+              {/* Final Note */}
+              <div className="rounded-xl border p-4 text-center"
+                style={{
+                  background: G.goldFaint,
+                  borderColor: G.goldBorder,
+                }}>
+                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
+                  Read-Only Documentation Panel
+                </span>
+                <p className="font-inter text-xs mt-1.5" style={{ color: G.goldDim }}>
+                  This panel displays system rules only. No calculations, state changes, or pipeline execution occur here.
+                </p>
+              </div>
+
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Bottom accent line */}
+      {/* Bottom accent */}
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
-    </div>
+    </motion.div>
   );
 }
