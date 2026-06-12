@@ -16,6 +16,7 @@ import Mizaan7      from "../components/mizaan/Mizaan7";
 import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
+import MizaanPostResults from "../components/mizaan/MizaanPostResults";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import { runMizaanPostPipeline, istintak, FIRST_BAST } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
@@ -430,7 +431,22 @@ export default function Mizaan9Page() {
               <MizaanDivider />
 
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* OPTION 2 — ESMA-I KITABET PIPELINE IMPLEMENTATION */}
+              {/* SECTION 1: OPTION 1 — POST-PIPELINE RESULTS */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {(() => {
+                const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
+                const dominant = result?.dominant;
+                if (!grandBast || grandBast <= 0) return null;
+                return (
+                  <>
+                    <MizaanPostResults grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />
+                    <MizaanDivider />
+                  </>
+                );
+              })()}
+
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* SECTION 2: OPTION 2 — SECOND ITERATION */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               {option2State && (() => {
                 const dominant = result?.dominant;
@@ -440,11 +456,12 @@ export default function Mizaan9Page() {
                 
                 return (
                   <>
-                    {/* Pipeline Input — OPTION 1 Summary */}
+                    {/* OPTION 1 Summary — Values passed to OPTION 2 */}
                     <div className="rounded-2xl border p-5 space-y-4"
                       style={{ background: "rgba(3,6,20,0.99)", borderColor: G.borderHi, boxShadow: `0 0 60px ${G.glow}, 0 0 120px rgba(0,0,0,0.6)` }}>
                       <div className="text-center space-y-2">
-                        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.text }}>Pipeline Input</h2>
+                        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.text }}>OPTION 1 Summary</h2>
+                        <p className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Values passed to OPTION 2</p>
                         <div className="h-px w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
                       </div>
                       <div className="space-y-3">
