@@ -553,6 +553,29 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
           </div>
         </Card>
 
+        {/* ── POST: Final Fifth Bast Expanded Letters + Total (display only) ── */}
+        {(() => {
+          const allPostExpanded = postDerivations.flatMap(d => d.expandedLetters);
+          const allPostTotal    = allPostExpanded.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+          return (
+            <Card accent={elementColor}>
+              <SectionHeader step="P3" label="Final Fifth Bast Expanded Letters" arabic="حروف البسط الخامس الموسعة" color={elementColor} />
+              <div className="mb-4">
+                <LetterRow letters={allPostExpanded} color={elementColor} size="lg" showIndex rtl />
+              </div>
+              <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
+                style={{ background: G.bgInner, borderColor: elementColor + "55" }}>
+                <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  Final Fifth Bast Expanded Total
+                </span>
+                <span className="font-inter text-base font-bold tabular-nums" style={{ color: elementColor }}>
+                  {allPostTotal.toLocaleString()}
+                </span>
+              </div>
+            </Card>
+          );
+        })()}
+
         {/* ── SECTION 3 VEFK MAGIC SQUARE ── */}
         {s3Vefk && (() => {
           const g  = s3Vefk.grid;
