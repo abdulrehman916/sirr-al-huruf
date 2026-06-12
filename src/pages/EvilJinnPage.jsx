@@ -128,7 +128,13 @@ function ProfileField({ icon: Icon, label, value }) {
         {Icon && <Icon className="w-3 h-3 flex-shrink-0" style={{ color: P.dim }} />}
         <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>{label}</span>
       </div>
-      <p className="font-inter text-[12px] leading-relaxed" style={{ color: P.text }}>{value}</p>
+      <div className="font-inter text-[12px] leading-relaxed" style={{ color: P.text }}>
+        {value.split('\n').map((line, i) => (
+          <p key={i} className={line.trim() === '' ? 'h-2' : ''}>
+            {line}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }

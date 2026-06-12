@@ -782,7 +782,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "ജലത്തിൽ (في الماء) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ദൃഷ്ടിയിൽ നിന്ന് ഒളിഞ്ഞ് ആക്രമിക്കുന്നു. കണ്ടുപിടിക്കാൻ ബുദ്ധിമുട്ടാണ്, ദൃഷ്ടി നഷ്ടം, ദിശ നഷ്ടം, ബോധ നഷ്ടം ഉണ്ടാക്കുന്നു.",
       notes: "",
-      remedy: "⚠️ PDF SOURCE INCOMPLETE — Remedy text continues on next page but not available in uploaded source material. Original entry ends at PDF p.144-145 with remedy description cut off. (Translation Page Twenty Three Vetro)",
+      remedy: "PDF SOURCE INCOMPLETE – Available remedy information shown below.\n\n⚠️ No partial remedy text was preserved in the uploaded PDF source (pages 144-145 incomplete). Original manuscript entry continues on missing page.\n\nSource Reference: Translation Page Twenty Three Vetro (PDF p.144-145)",
       source: "Book of Deadly Names, Translation Page Twenty Three Vetro (PDF/4 Page 12) — REMEDY INCOMPLETE"
     }
   },
@@ -1022,7 +1022,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "നശിച്ച സ്ഥലങ്ങളിലും പർവ്വതങ്ങളിലും (الخرابات وفي الجبال) വസിക്കുന്നു",
       powers: "ഗർഭപാത്രത്തിലെ ആൺകുട്ടികളെ കൊല്ലുന്നു. സ്ത്രീകളെ ഭർത്താക്കന്മാരിൽ നിന്ന് അകറ്റുന്നു.",
       notes: "",
-      remedy: "⚠️ PDF SOURCE INCOMPLETE — Partial remedy only: opium, euphorbia, castor. Complete formulation continues on next page (PDF p.183+) but not available in uploaded source material. (Translation Page Twenty Nine Recto/Vetro)",
+      remedy: "PDF SOURCE INCOMPLETE – Available remedy information shown below.\n\n✅ Partial Remedy Ingredients (from PDF p.182):\n- Opium (അഫ്‌യൂൺ)\n- Euphorbia (ഫർബിയൂൻ)\n- Castor (ഖർവ)\n\n⚠️ Complete formulation continues on missing page (PDF p.183+ not in uploaded source).\n\nSource Reference: Translation Page Twenty Nine Recto/Vetro (PDF p.182-183)",
       source: "Book of Deadly Names, Translation Page Thirty One Recto (PDF/4 Page 38) — REMEDY INCOMPLETE"
     }
   },
