@@ -168,121 +168,11 @@ export default function Mizaan9Page() {
     setPageState(PAGE_KEY, { input, result, selections, customPurpose, degreeSels });
   }, [input, result, selections, customPurpose, degreeSels, setPageState]);
 
-  // Calculate and persist OPTION 2 state when result or selections change
+  // ══ OPTION 2 — DISABLED FOR NOW ═══════════════════════════════════
+  // Option 2 calculation is temporarily disabled to prioritize Option 1 restoration
   useEffect(() => {
-    if (!result || !result.dominant) {
-      setOption2State(null);
-      return;
-    }
-
-    const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
-    const dominant = result.dominant;
-    
-    if (!grandBast || grandBast <= 0) {
-      setOption2State(null);
-      return;
-    }
-
-    const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
-    if (!pipeline) {
-      setOption2State(null);
-      return;
-    }
-
-    // ══ STAGE 1: ORIGINAL WAHID EXTRACTION ═══════════════════════
-    const originalWahid = Array.isArray(pipeline.kitabet?.finalExpandedLetters) 
-      ? pipeline.kitabet.finalExpandedLetters 
-      : [];
-
-    // ══ STAGE 2: BIRINCI BAST CALCULATION ════════════════════════
-    const letterBastDetails = originalWahid.map(letter => ({
-      letter,
-      birinciBast: FIRST_BAST[letter] || 0,
-    }));
-
-    // ══ STAGE 3: BAST SUMMATION ══════════════════════════════════
-    const totalBastSum = letterBastDetails.reduce((sum, detail) => {
-      return sum + detail.birinciBast;
-    }, 0);
-
-    // ══ STAGE 4: LETTER COUNT ════════════════════════════════════
-    const totalLetterCount = originalWahid.length;
-
-    // ══ STAGE 5: NEW TOTAL CALCULATION ═══════════════════════════
-    const newTotal = totalBastSum + totalLetterCount;
-
-    // ══ STAGE 6: ISTINTAK CONVERSION (Same engine as OPTION 1) ═══
-    const convertedLetters = istintak(newTotal);
-
-    // ══ STAGE 7: REPEAT OPTION 1 WORKFLOW ON CONVERTED LETTERS ═══
-    const convertedBastSum = convertedLetters.reduce((sum, letter) => {
-      return sum + (FIRST_BAST[letter] || 0);
-    }, 0);
-
-    const convertedIsFerd = convertedLetters.length % 2 !== 0;
-    const convertedGroupSize = convertedIsFerd ? 5 : 4;
-
-    const convertedRemainder = convertedLetters.length % convertedGroupSize;
-    let finalExpandedLetters = [...convertedLetters];
-    let supplementLetters = [];
-
-    if (convertedRemainder > 0) {
-      const needed = convertedGroupSize - convertedRemainder;
-      const galibVal = MIZAAN_BAST2[dominant] || MIZAAN_BAST2.fire;
-      supplementLetters = istintak(galibVal).slice(0, needed);
-      finalExpandedLetters = [...convertedLetters, ...supplementLetters];
-    }
-
-    const groupedNames = [];
-    for (let i = 0; i < finalExpandedLetters.length; i += convertedGroupSize) {
-      const group = finalExpandedLetters.slice(i, i + convertedGroupSize);
-      groupedNames.push({
-        letters: group,
-        name: group.join(''),
-        groupNumber: Math.floor(i / convertedGroupSize) + 1,
-      });
-    }
-
-    const newWahidValid = finalExpandedLetters.length > 0 && groupedNames.length > 0;
-
-    // ══ STAGE 8: STORE ALL INTERMEDIATE RESULTS ═══════════════════
-    const option2Storage = {
-      originalWahid,
-      originalLetterCount: totalLetterCount,
-      originalBastSum: totalBastSum,
-      newTotal,
-      convertedLetters,
-      convertedLetterCount: convertedLetters.length,
-      convertedBastSum,
-      convertedIsFerd,
-      convertedGroupSize,
-      convertedRemainder,
-      supplementLetters,
-      finalExpandedLetters,
-      finalExpandedCount: finalExpandedLetters.length,
-      groupedNames,
-      totalGroups: groupedNames.length,
-      newWahidValid,
-      validation: {
-        originalWahidValid: originalWahid.length > 0,
-        bastSumValid: totalBastSum > 0,
-        conversionValid: convertedLetters.length > 0,
-        groupingValid: groupedNames.length > 0,
-        expansionValid: finalExpandedLetters.length > 0,
-        newWahidValid,
-        allStagesComplete: 
-          originalWahid.length > 0 && 
-          totalBastSum > 0 && 
-          convertedLetters.length > 0 && 
-          groupedNames.length > 0 &&
-          finalExpandedLetters.length > 0
-      },
-      kitabet: pipeline.kitabet,
-      vefk: pipeline.vefk,
-    };
-
-    setOption2State(option2Storage);
-  }, [result, selections, degreeSels, input, customPurpose]);
+    setOption2State(null);
+  }, []);
 
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
@@ -446,83 +336,10 @@ export default function Mizaan9Page() {
               })()}
 
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* SECTION 2: OPTION 2 — SECOND ITERATION */}
+              {/* SECTION 2: OPTION 2 — DISABLED (PENDING RESTORATION) */}
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {option2State && (() => {
-                const dominant = result?.dominant;
-                
-                // SEED LETTERS for Satr-i Vahid Grouping (OPTION 2 converted letters)
-                const seedLetters = option2State.convertedLetters;
-                
-                return (
-                  <>
-                    {/* OPTION 2 Calculation Law Results */}
-                    <div className="rounded-2xl border p-5 space-y-4"
-                      style={{ background: "rgba(3,6,20,0.99)", borderColor: G.borderHi, boxShadow: `0 0 60px ${G.glow}, 0 0 120px rgba(0,0,0,0.6)` }}>
-                      <div className="text-center space-y-2">
-                        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.text }}>OPTION 2 — Calculation Law</h2>
-                        <div className="h-px w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
-                          style={{ background: G.bg, borderColor: G.border }}>
-                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>OPTION 1 Final Wahid Letters</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2State.originalLetterCount}</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
-                          style={{ background: G.bg, borderColor: G.border }}>
-                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Birinci Bast Sum (Σ)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2State.originalBastSum.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
-                          style={{ background: G.bg, borderColor: G.border }}>
-                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Combined Total (Bast + Letters)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2State.newTotal.toLocaleString()}</span>
-                        </div>
-                        <div className="px-4 py-3 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
-                          <span className="font-inter text-[8px] uppercase tracking-widest block mb-2" style={{ color: G.dim }}>Converted Letters (Istintak)</span>
-                          <div className="flex flex-wrap gap-1 justify-center" style={{ direction: 'rtl' }}>
-                            {option2State.convertedLetters.length > 0 ? (
-                              option2State.convertedLetters.map((l, i) => (
-                                <span key={i} className="font-amiri text-xl px-3 py-1.5 rounded-lg border"
-                                  style={{ 
-                                    color: "#4ADE80", 
-                                    borderColor: "#4ADE80" + "55", 
-                                    background: "rgba(74,222,128,0.15)",
-                                    display: "inline-block",
-                                  }}
-                                >
-                                  {l}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="font-inter text-xs text-white/30">No converted letters</span>
-                            )}
-                          </div>
-                          <div className="text-center mt-2">
-                            <span className="font-inter text-[6px] uppercase tracking-wider" style={{ color: G.dim }}>
-                              Count: {option2State.convertedLetterCount} • Ready for OPTION 2 workflow
-                            </span>
-                          </div>
-                        </div>
-                        {option2State?.validation?.allStagesComplete && (
-                          <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border"
-                            style={{ background: "rgba(74,222,128,0.11)", borderColor: "rgba(74,222,128,0.44)" }}>
-                            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "#4ADE80" }}>✓ All Stages Complete</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Satr-i Vahid Grouping — applies OPTION 1 workflow to OPTION 2 converted letters */}
-                    <SatrVahidGrouping
-                      satrVahidLetters={seedLetters}
-                      dominant={dominant}
-                      option2State={option2State}
-                    />
-                  </>
-                );
-              })()}
+              {/* OPTION 2 IS CURRENTLY DISABLED TO PRIORITIZE OPTION 1 VERIFICATION */}
+              {/* {option2State && (() => { ... })()} */}
 
             </motion.div>
           )}
