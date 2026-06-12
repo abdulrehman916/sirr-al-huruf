@@ -240,6 +240,7 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
               <ProfileField icon={MapPin} label="താമസസ്ഥലം / Habitat" value={profile.habitat} />
               <ProfileField icon={Zap} label="ശക്തികൾ / Powers" value={profile.powers} />
               <ProfileField icon={Info} label="കുറിപ്പുകൾ / Notes" value={profile.notes} />
+              <ProfileField icon={Zap} label="പരിഹാരം / ചികിത്സ" value={profile.remedy} />
 
               {/* Source Reference */}
               {profile.source && (
