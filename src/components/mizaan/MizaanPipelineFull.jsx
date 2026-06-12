@@ -79,7 +79,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
 
   if (!pipeline) return null;
 
-  const { input, initialSeedLetters, vefk } = pipeline;
+  const { input, initialSeedLetters, vefk, kitabet, expandedLettersCount } = pipeline;
   const element = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
@@ -153,9 +153,24 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   <span className="font-amiri text-lg" style={{ color: elementMeta.color }}>{elementMeta.arabic}</span>
                   <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>({element})</span>
                 </div>
-                <div className="flex items-center gap-4 text-[8px]">
+                <div className="flex items-center gap-4 text-[8px] mb-2">
                   <span className="font-inter" style={{ color: G.dim }}>Magic Constant: <span style={{ color: G.gold, fontWeight: "bold" }}>{vefk.mc.toLocaleString()}</span></span>
                   <span className="font-inter" style={{ color: G.dim }}>Guardian: <span style={{ color: G.gold }}>{vefk.guardianName}</span></span>
+                </div>
+                {/* MIZAN OPTION 1 RULE: Vefk source from Expanded Letters Count */}
+                <div className="px-3 py-2 rounded-lg border"
+                  style={{ 
+                    background: "rgba(74,222,128,0.08)", 
+                    borderColor: "rgba(74,222,128,0.40)" 
+                  }}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: "rgba(74,222,128,0.70)" }}>
+                      Vefk Source: Expanded Letters Count (All Expanded Letters)
+                    </span>
+                    <span className="font-inter text-sm font-bold tabular-nums" style={{ color: "#4ADE80" }}>
+                      {expandedLettersCount || kitabet.finalExpandedLetters.length}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

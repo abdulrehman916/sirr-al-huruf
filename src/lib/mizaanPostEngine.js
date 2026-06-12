@@ -517,14 +517,19 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // Generate Esma-i Kasem (third stage, always 5th Bast) - using avan finalExpandedLetters
   const kasem = generateEsmaLevel(avan.finalExpandedLetters, true, element);
 
-  // Build Vefk from grandBast (the total of 9 MIZAN First Bast values)
-  const vefk = buildVefk(grandBast, element);
+  // MIZAN OPTION 1 RULE: Vefk uses Expanded Letters Count ONLY (from ALL EXPANDED LETTERS section)
+  // Source: Total count of finalExpandedLetters after remainder correction
+  const expandedLettersCount = kitabet.finalExpandedLetters.length;
+  const vefk = buildVefk(expandedLettersCount, element);
 
   return {
     input: { grandBast, grandLetters, satirVahidTotal },
     initialSeedLetters,
     kitabet,
+    avan,
+    kasem,
     element,
     vefk,
+    expandedLettersCount,
   };
 }
