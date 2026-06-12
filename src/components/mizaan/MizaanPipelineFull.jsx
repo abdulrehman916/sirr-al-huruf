@@ -110,7 +110,7 @@ function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
   );
 }
 
-function SourceSection({ grandBast, elementColor }) {
+function SourceSection({ grandBast, expandedLettersTotal, elementColor }) {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
@@ -125,12 +125,16 @@ function SourceSection({ grandBast, elementColor }) {
       </button>
       {isOpen && (
         <div className="mt-2 text-center space-y-1.5">
-          <div className="text-[7px]" style={{ color: G.dim }}>Derived From</div>
-          <div className="text-[7px] px-2 py-1.5 rounded" style={{ background: G.bgInner, color: elementColor }}>
+          <div className="text-[7px]" style={{ color: G.dim }}>Pipeline</div>
+          <div className="text-[6px] px-2" style={{ color: G.dim }}>
             9 Mizan Grand Total = {grandBast?.toLocaleString() || 0}
           </div>
+          <div className="text-[6px]" style={{ color: G.dim }}>↓</div>
+          <div className="text-[7px] px-2 py-1.5 rounded font-bold" style={{ background: G.bgInner, color: elementColor }}>
+            Vefk Source (Expanded Letters Total) = {expandedLettersTotal?.toLocaleString() || 0}
+          </div>
           <div className="text-[6px] px-2" style={{ color: G.dim }}>
-            Original Name → Bast Derivations → All Expanded Letters → Group Formation → Esma-i Kitabet → 9 Mizan Total → Vefk Magic Constant
+            Sum of all expanded letters' First Bast values
           </div>
         </div>
       )}
@@ -230,7 +234,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
               <ExpandedLetterValues allExpandedLetters={allExpandedLetters} elementColor={elementMeta.color} />
               
               {/* Source Explanation */}
-              <SourceSection grandBast={grandBast} elementColor={elementMeta.color} />
+              <SourceSection grandBast={grandBast} expandedLettersTotal={allExpandedLetters.reduce((sum, letter) => sum + (getBastLevel(letter, 1) || 0), 0)} elementColor={elementMeta.color} />
             </div>
           </Card>
         )}

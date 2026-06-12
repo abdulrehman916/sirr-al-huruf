@@ -209,6 +209,29 @@ export const GALIB_ANASIR_SUPPLEMENTS = {
   water: ['د', 'ح', 'ل', 'ع', 'ر', 'خ', 'غ'],
 };
 
+// ═══════════════════════════════════════════════════════════════
+// VEFK SOURCE NUMBER RULE (MIZAN OPTION 1)
+// ═══════════════════════════════════════════════════════════════
+// The Vefk Source Number is NOT the 9 Mizan Grand Total directly.
+// 
+// CORRECT MANUSCRIPT WORKFLOW:
+// 1. Original Seed Letters (from 9 Mizan Grand Total via Istintak)
+// 2. Individual Bast Derivations (4th or 5th Bast per letter)
+// 3. All Expanded Letters (via Istintak of each Bast value)
+// 4. Sum the First Bast values of ALL Expanded Letters
+// 5. THIS SUM becomes the Vefk Source Number
+// 6. Vefk Magic Square is constructed from this source
+//
+// Example:
+// 9 Mizan Grand Total = 19,189
+// → Seed Letters via Istintak
+// → Bast Derivations (each seed letter)
+// → All Expanded Letters (e.g., 45 letters)
+// → Sum of all expanded letters' First Bast values = 10,468
+// → Vefk Source Number = 10,468
+// → Magic Constant = 10,468 (every row/col/diag sums to this)
+// ═══════════════════════════════════════════════════════════════
+
 // Get Galib Anasir value and its Istintak letters with full breakdown
 export function getGalibAnasirData(element) {
   const value = GALIB_ANASIR_VALUES[element] || GALIB_ANASIR_VALUES.fire;
@@ -549,10 +572,11 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // Generate Esma-i Kasem (third stage, always 5th Bast) - using avan finalExpandedLetters
   const kasem = generateEsmaLevel(avan.finalExpandedLetters, true, element);
 
-  // MIZAN OPTION 1 RULE: Vefk Source Number = grandBast (the sacred total from 9 Mizans)
-  // This is the value shown in MizaanFinalSummary as "Total Bast-ul Aval"
-  // The ALL EXPANDED LETTERS derive from this sacred number through Istintak and Bast expansion
-  const vefkSourceNumber = grandBast;
+  // MIZAN OPTION 1 RULE: Vefk Source Number = Sum of ALL Expanded Letters' First Bast values
+  // This is the TRUE sacred source per manuscript workflow:
+  // Original Seed Letters → Bast Derivations → All Expanded Letters → Sum their Bast values → Vefk
+  const expandedLettersTotal = allExpandedLetters.reduce((sum, letter) => sum + (getBastLevel(letter, 1) || 0), 0);
+  const vefkSourceNumber = expandedLettersTotal;
   const vefk = buildVefk(vefkSourceNumber, element);
 
   return {
@@ -567,6 +591,6 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
     vefk,
     vefkSourceNumber,
     expandedLettersCount: allExpandedLetters.length,
-    expandedLettersTotal: allExpandedLetters.reduce((sum, letter) => sum + (getBastLevel(letter, 1) || 0), 0),
+    expandedLettersTotal,
   };
 }
