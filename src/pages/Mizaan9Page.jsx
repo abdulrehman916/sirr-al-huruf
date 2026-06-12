@@ -168,6 +168,7 @@ export default function Mizaan9Page() {
   // OPTION 2 intermediate storage for OPTION 3
   const [option2State, setOption2State] = useState(null);
   // Final Summary vefk data — populated by child callbacks (display only)
+  const [s1VefkData, setS1VefkData] = useState(null);
   const [s2VefkData, setS2VefkData] = useState(null);
   const [s3VefkData, setS3VefkData] = useState(null);
   const abortRef = useRef(false);
@@ -190,6 +191,7 @@ export default function Mizaan9Page() {
     setResult(null);
     setSelections(buildDefaultSelections(null));
     setOption2State(null);
+    setS1VefkData(null);
     setS2VefkData(null);
     setS3VefkData(null);
     const r = await mizaanAnalyzeAsync(input, (p) => { if (!abortRef.current) setProgress(p); });
@@ -209,6 +211,7 @@ export default function Mizaan9Page() {
     setSelections(buildDefaultSelections(null));
     setCustomPurpose("");
     setDegreeSels({});
+    setS1VefkData(null);
     setS2VefkData(null);
     setS3VefkData(null);
     clearPageState(PAGE_KEY);
@@ -360,7 +363,7 @@ export default function Mizaan9Page() {
                 return (
                   <>
                     {/* ═══ SECTION 1: LOCKED ═══ */}
-                    <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />
+                    <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} onVefkReady={setS1VefkData} />
 
                     {/* ═══ SECTION 2: ESMA-I A'VAN ═══ */}
                     {section1?.allExpandedLetters?.length > 0 && (
@@ -382,12 +385,15 @@ export default function Mizaan9Page() {
 
                     {/* ═══ FINAL SUMMARY: THREE VEFKS (display only) ═══ */}
                     <FinalVefkSummary
-                      s1Vefk={s1Vefk}
-                      s1Source={s1Source}
+                      s1Vefk={s1VefkData?.vefk || s1Vefk}
+                      s1Source={s1VefkData?.source || s1Source}
+                      s1Names={s1VefkData?.names || []}
                       s2Vefk={s2VefkData?.vefk || null}
                       s2Source={s2VefkData?.source || null}
+                      s2Names={s2VefkData?.names || []}
                       s3Vefk={s3VefkData?.vefk || null}
                       s3Source={s3VefkData?.source || null}
+                      s3Names={s3VefkData?.names || []}
                       s3BorderLetters={s3VefkData?.borderLetters || ""}
                       dominant={dominant}
                     />

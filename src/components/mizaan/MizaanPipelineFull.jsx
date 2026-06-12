@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, getBastLevel } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -142,11 +142,39 @@ function SourceSection({ grandBast, expandedLettersTotal, elementColor }) {
   );
 }
 
-export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }) {
+export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, onVefkReady }) {
   const pipeline = useMemo(() => {
     if (!grandBast || grandBast <= 0) return null;
     return runMizaanPostPipeline({ grandBast, grandLetters, dominant });
   }, [grandBast, grandLetters, dominant]);
+
+  // Derive names from the same group-formation logic as SatrVahidGrouping
+  const names = useMemo(() => {
+    if (!pipeline?.initialSeedLetters?.length) return [];
+    const seed = pipeline.initialSeedLetters;
+    const isFerd = seed.length % 2 !== 0;
+    const bastLevel = isFerd ? 5 : 4;
+    let allExpanded = [];
+    for (let i = seed.length - 1; i >= 0; i--) {
+      allExpanded = [...allExpanded, ...istintak(getBastLevel(seed[i], bastLevel))];
+    }
+    const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
+    const rem = allExpanded.length % gSize;
+    let seq = [...allExpanded];
+    if (rem > 0) {
+      const supp = istintak(GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire).slice(0, gSize - rem);
+      seq = [...seq, ...supp];
+    }
+    const groups = [];
+    for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
+    return groups;
+  }, [pipeline, dominant]);
+
+  useEffect(() => {
+    if (onVefkReady && pipeline?.vefk) {
+      onVefkReady({ vefk: pipeline.vefk, source: pipeline.vefkSourceNumber, names });
+    }
+  }, [pipeline, names, onVefkReady]);
 
   if (!pipeline) return null;
 

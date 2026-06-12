@@ -332,12 +332,15 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     return istintak(total).join("");
   }, [postDerivations]);
 
+  // Derive names from groupFormation groups
+  const names = useMemo(() => groupFormation.groups.map(g => g.name), [groupFormation]);
+
   // Notify parent of the computed vefk data (display-only, no recalc)
   useEffect(() => {
     if (onVefkReady && s3Vefk) {
-      onVefkReady({ vefk: s3Vefk, source: s3VefkSourceNumber, borderLetters: s3BorderLetters });
+      onVefkReady({ vefk: s3Vefk, source: s3VefkSourceNumber, borderLetters: s3BorderLetters, names });
     }
-  }, [s3Vefk, s3VefkSourceNumber, s3BorderLetters, onVefkReady]);
+  }, [s3Vefk, s3VefkSourceNumber, s3BorderLetters, names, onVefkReady]);
 
   if (safe2.length === 0) return null;
 
