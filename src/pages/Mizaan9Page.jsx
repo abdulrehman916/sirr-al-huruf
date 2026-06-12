@@ -19,6 +19,7 @@ import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import MizanOption1Diagnostic from "../components/mizaan/MizanOption1Diagnostic";
+import MizanOption1Value1Audit from "../components/mizaan/MizanOption1Value1Audit";
 import { runMizaanPostPipeline, istintak, FIRST_BAST } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
@@ -338,6 +339,14 @@ export default function Mizaan9Page() {
                       grandLetters={grandLetters}
                       dominant={dominant}
                       inputText={input}
+                    />
+                    <MizaanDivider />
+                    
+                    {/* OPTION 1 VALUE 1 AUDIT — Letter-by-letter breakdown */}
+                    <MizanOption1Value1Audit
+                      grandBast={grandBast}
+                      grandLetters={grandLetters}
+                      dominant={dominant}
                     />
                     <MizaanDivider />
                   </>
