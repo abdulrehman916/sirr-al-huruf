@@ -133,7 +133,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
             </div>
 
             {/* Vefk Grid */}
-            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto">
+            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto mb-4">
               {vefk.grid.flat().map((val, idx) => (
                 <div key={idx}
                   className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
@@ -145,6 +145,15 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   {val.toLocaleString()}
                 </div>
               ))}
+            </div>
+
+            {/* Magic Constant Summary */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border"
+                style={{ background: G.goldFaint, borderColor: elementMeta.color + "40" }}>
+                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Magic Constant</span>
+                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: elementMeta.color }}>{vefk.mc?.toLocaleString() || 0}</span>
+              </div>
             </div>
           </Card>
         )}
