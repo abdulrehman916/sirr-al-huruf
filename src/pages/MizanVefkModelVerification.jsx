@@ -102,13 +102,13 @@ function buildVefkModelB(S) {
       else if (R === 2 && (cellNumber === 9 || cellNumber === 13)) needsCorrection = true;
       else if (R === 3 && (cellNumber === 5 || cellNumber === 9 || cellNumber === 13)) needsCorrection = true;
 
-      // Apply correction if needed
+      // Apply correction BEFORE setting the cell value
       if (needsCorrection) {
         currentValue += 1;
       }
 
       grid[row][col] = currentValue;
-      currentValue += 1; // Always increment for next cell
+      currentValue += 1; // Increment for next cell
       cellNumber += 1;
     }
   }
@@ -167,7 +167,7 @@ function compareGrids(modelGrid, manuscriptGrid) {
   };
 }
 
-function Card({ children, title, icon: Icon, accent }) {
+function Card({ children, title, accent }) {
   return (
     <div
       className="rounded-xl border p-5"
@@ -178,12 +178,6 @@ function Card({ children, title, icon: Icon, accent }) {
         boxShadow: `0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)`,
       }}
     >
-      {title && (
-        <div className="flex items-center gap-2 mb-3 pb-3 border-b" style={{ borderColor: G.goldBorder + "40" }}>
-          {Icon && <Icon className="w-5 h-5" style={{ color: accent || G.gold }} />}
-          <span className="font-inter text-sm font-bold" style={{ color: accent || G.gold }}>{title}</span>
-        </div>
-      )}
       {children}
     </div>
   );
@@ -219,22 +213,170 @@ function GridDisplay({ grid, highlightCells = [], title }) {
   );
 }
 
+function CellByCellComparison({ manuscript, modelA, modelB }) {
+  const flatManuscript = manuscript.grid.flat();
+  const flatModelA = modelA.grid.flat();
+  const flatModelB = modelB.grid.flat();
+
+  let matchCountA = 0;
+  let matchCountB = 0;
+
+  return (
+    <div className="space-y-2">
+      <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.goldDim }}>
+        Cell-by-Cell Verification (16 cells)
+      </div>
+      <div className="space-y-1">
+        {flatManuscript.map((manuscriptVal, idx) => {
+          const cellNum = idx + 1;
+          const row = Math.floor(idx / 4) + 1;
+          const col = (idx % 4) + 1;
+          const modelAVal = flatModelA[idx];
+          const modelBVal = flatModelB[idx];
+          const matchA = modelAVal === manuscriptVal;
+          const matchB = modelBVal === manuscriptVal;
+          
+          if (matchA) matchCountA++;
+          if (matchB) matchCountB++;
+
+          return (
+            <div key={idx} className="flex items-center justify-between text-[7px] py-1.5 px-2 rounded border" style={{ borderColor: G.goldBorder + "30", background: G.bgInner }}>
+              <div className="flex items-center gap-3 w-[180px]">
+                <span className="font-inter text-[6px] font-bold" style={{ color: G.dim }}>Cell {cellNum}</span>
+                <span className="font-mono" style={{ color: G.gold }}>R{row}C{col}</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[6px]" style={{ color: G.dim }}>Manuscript:</span>
+                  <span className="font-mono font-bold" style={{ color: G.gold }}>{manuscriptVal}</span>
+                </div>
+                <div className="flex items-center gap-2 w-[140px]">
+                  <span className="text-[6px]" style={{ color: G.blue }}>Model A:</span>
+                  <span className={`font-mono ${matchA ? "text-green-500 font-bold" : "text-red-500"}`}>
+                    {modelAVal}
+                  </span>
+                  {matchA ? (
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <XCircle className="w-3 h-3 text-red-500" />
+                  )}
+                </div>
+                <div className="flex items-center gap-2 w-[140px]">
+                  <span className="text-[6px]" style={{ color: G.green }}>Model B:</span>
+                  <span className={`font-mono ${matchB ? "text-green-500 font-bold" : "text-red-500"}`}>
+                    {modelBVal}
+                  </span>
+                  {matchB ? (
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <XCircle className="w-3 h-3 text-red-500" />
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Match Summary */}
+      <div className="grid grid-cols-2 gap-3 mt-3">
+        <div className={`p-3 rounded-lg border text-center ${
+          matchCountA === 16 ? "bg-green-500/10 border-green-500/40" : "bg-red-500/10 border-red-500/40"
+        }`}>
+          <div className="text-[7px]" style={{ color: G.dim }}>Model A Matches</div>
+          <div className={`font-inter text-xl font-bold ${matchCountA === 16 ? "text-green-500" : "text-red-500"}`}>
+            {matchCountA}/16 ({((matchCountA / 16) * 100).toFixed(1)}%)
+          </div>
+        </div>
+        <div className={`p-3 rounded-lg border text-center ${
+          matchCountB === 16 ? "bg-green-500/10 border-green-500/40" : "bg-red-500/10 border-red-500/40"
+        }`}>
+          <div className="text-[7px]" style={{ color: G.dim }}>Model B Matches</div>
+          <div className={`font-inter text-xl font-bold ${matchCountB === 16 ? "text-green-500" : "text-red-500"}`}>
+            {matchCountB}/16 ({((matchCountB / 16) * 100).toFixed(1)}%)
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SumVerification({ grid, label }) {
+  const verification = verifyMagicSquare(grid, label);
+  
+  return (
+    <div className="p-3 rounded-lg border" style={{ borderColor: G.goldBorder + "40" }}>
+      <div className="flex items-center gap-2 mb-2">
+        <Calculator className="w-4 h-4" style={{ color: G.goldDim }} />
+        <span className="font-inter text-xs font-bold" style={{ color: G.goldDim }}>
+          Sum Verification — {label}
+        </span>
+      </div>
+      <div className={`text-center text-[8px] font-bold p-2 rounded mb-3 ${
+        verification.isValidMagicSquare ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+      }`}>
+        {verification.isValidMagicSquare ? "✓ Valid Magic Square" : "✗ Not a Valid Magic Square"}
+      </div>
+      <div className="space-y-1">
+        <div className="text-[7px] uppercase tracking-wider font-bold" style={{ color: G.gold }}>Row Sums (4)</div>
+        {verification.rowSums.map((sum, i) => (
+          <div key={`row-${i}`} className="flex justify-between text-[7px] py-0.5">
+            <span style={{ color: G.dim }}>Row {i + 1}:</span>
+            <span className={`font-mono ${verification.rowSums.every(s => s === sum) ? "text-green-500 font-bold" : "text-red-500"}`}>
+              {sum.toLocaleString()}
+            </span>
+          </div>
+        ))}
+        
+        <div className="text-[7px] uppercase tracking-wider font-bold mt-2" style={{ color: G.gold }}>Column Sums (4)</div>
+        {verification.colSums.map((sum, i) => (
+          <div key={`col-${i}`} className="flex justify-between text-[7px] py-0.5">
+            <span style={{ color: G.dim }}>Col {i + 1}:</span>
+            <span className={`font-mono ${verification.colSums.every(s => s === sum) ? "text-green-500 font-bold" : "text-red-500"}`}>
+              {sum.toLocaleString()}
+            </span>
+          </div>
+        ))}
+        
+        <div className="text-[7px] uppercase tracking-wider font-bold mt-2" style={{ color: G.gold }}>Diagonals (2)</div>
+        <div className="flex justify-between text-[7px] py-0.5">
+          <span style={{ color: G.dim }}>Diagonal 1 (↘):</span>
+          <span className={`font-mono ${verification.diag1 === verification.magicConstant ? "text-green-500 font-bold" : "text-red-500"}`}>
+            {verification.diag1.toLocaleString()}
+          </span>
+        </div>
+        <div className="flex justify-between text-[7px] py-0.5">
+          <span style={{ color: G.dim }}>Diagonal 2 (↙):</span>
+          <span className={`font-mono ${verification.diag2 === verification.magicConstant ? "text-green-500 font-bold" : "text-red-500"}`}>
+            {verification.diag2.toLocaleString()}
+          </span>
+        </div>
+        
+        <div className="mt-2 pt-2 border-t" style={{ borderColor: G.goldBorder + "30" }}>
+          <div className="flex justify-between text-[7px]">
+            <span style={{ color: G.dim }}>Magic Constant:</span>
+            <span className="font-mono font-bold" style={{ color: G.gold }}>
+              {verification.magicConstant.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex justify-between text-[7px]">
+            <span style={{ color: G.dim }}>Total Sum (all 16 cells):</span>
+            <span className="font-mono font-bold" style={{ color: G.gold }}>
+              {verification.totalSum.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function VerificationReport({ modelResult, manuscript, exampleId }) {
   const comparison = compareGrids(modelResult.grid, manuscript.grid);
   const verification = verifyMagicSquare(modelResult.grid, `Model ${modelResult.model}`);
 
   return (
     <div className="space-y-4">
-      {/* Grid Comparison */}
-      <div className="grid grid-cols-2 gap-4">
-        <GridDisplay grid={modelResult.grid} title={`Model ${modelResult.model} Output`} />
-        <GridDisplay 
-          grid={manuscript.grid} 
-          highlightCells={comparison.mismatches.map(m => m.cell)}
-          title="Manuscript Grid" 
-        />
-      </div>
-
       {/* Match Status */}
       <div className={`text-center p-3 rounded-lg border ${
         comparison.isExactMatch 
@@ -255,80 +397,16 @@ function VerificationReport({ modelResult, manuscript, exampleId }) {
         </div>
         {!comparison.isExactMatch && (
           <div className="text-[7px]" style={{ color: G.dim }}>
-            Cells: {comparison.mismatches.map(m => m.cell).join(", ")}
+            Mismatched cells: {comparison.mismatches.map(m => m.cell).join(", ")}
           </div>
         )}
       </div>
 
-      {/* Magic Square Verification */}
-      <div className="p-3 rounded-lg border" style={{ borderColor: G.goldBorder + "40" }}>
-        <div className="flex items-center gap-2 mb-2">
-          <Calculator className="w-4 h-4" style={{ color: G.goldDim }} />
-          <span className="font-inter text-xs font-bold" style={{ color: G.goldDim }}>
-            Magic Square Verification
-          </span>
-        </div>
-        <div className={`text-center text-[8px] font-bold p-2 rounded ${
-          verification.isValidMagicSquare ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
-        }`}>
-          {verification.isValidMagicSquare ? "✓ Valid Magic Square" : "✗ Not a Valid Magic Square"}
-        </div>
-        <div className="mt-2 grid grid-cols-2 gap-2 text-[7px]">
-          <div>
-            <span style={{ color: G.dim }}>Row Sums:</span>{" "}
-            <span className="font-mono" style={{ color: G.gold}}>
-              {verification.rowSums.join(", ")}
-            </span>
-          </div>
-          <div>
-            <span style={{ color: G.dim }}>Col Sums:</span>{" "}
-            <span className="font-mono" style={{ color: G.gold}}>
-              {verification.colSums.join(", ")}
-            </span>
-          </div>
-          <div>
-            <span style={{ color: G.dim }}>Diagonal 1:</span>{" "}
-            <span className="font-mono" style={{ color: G.gold}}>
-              {verification.diag1.toLocaleString()}
-            </span>
-          </div>
-          <div>
-            <span style={{ color: G.dim }}>Diagonal 2:</span>{" "}
-            <span className="font-mono" style={{ color: G.gold}}>
-              {verification.diag2.toLocaleString()}
-            </span>
-          </div>
-        </div>
-      </div>
+      {/* Cell-by-Cell Comparison */}
+      <CellByCellComparison manuscript={manuscript} modelA={modelResult} modelB={compareGrids(modelResult.grid, manuscript.grid).isExactMatch ? modelResult : {grid: modelResult.grid}} />
 
-      {/* Detailed Mismatches */}
-      {!comparison.isExactMatch && (
-        <div className="p-3 rounded-lg border" style={{ borderColor: G.red + "40" }}>
-          <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.red }}>
-            Cell-by-Cell Mismatches
-          </div>
-          <div className="space-y-1">
-            {comparison.mismatches.map((m, idx) => (
-              <div key={idx} className="flex justify-between items-center text-[7px] py-1 border-b" style={{ borderColor: G.goldBorder + "30" }}>
-                <span style={{ color: G.dim }}>
-                  Cell {m.cell} (R{m.row + 1}, C{m.col + 1})
-                </span>
-                <div className="flex items-center gap-3">
-                  <span className="font-mono" style={{ color: G.goldDim }}>
-                    Model: {m.modelValue}
-                  </span>
-                  <span className="font-mono" style={{ color: G.gold }}>
-                    Manuscript: {m.manuscriptValue}
-                  </span>
-                  <span className={`font-mono font-bold ${m.difference > 0 ? "text-red-500" : "text-blue-500"}`}>
-                    {m.difference > 0 ? "+" : ""}{m.difference}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Sum Verification */}
+      <SumVerification grid={modelResult.grid} label={`Model ${modelResult.model}`} />
     </div>
   );
 }
@@ -406,53 +484,171 @@ export default function MizanVefkModelVerification() {
                 )}
               </div>
 
-              {/* Model Comparison */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <VerificationReport modelResult={modelA} manuscript={example} exampleId={example.id} />
-                <VerificationReport modelResult={modelB} manuscript={example} exampleId={example.id} />
+              {/* Cell-by-Cell Comparison for Both Models */}
+              <CellByCellComparison manuscript={example} modelA={modelA} modelB={modelB} />
+              
+              {/* Sum Verification for Both Models */}
+              <div className="grid md:grid-cols-2 gap-4 mt-4">
+                <SumVerification grid={modelA.grid} label="Model A — Single Cell Correction" />
+                <SumVerification grid={modelB.grid} label="Model B — Sequential Continuation" />
               </div>
             </Card>
           );
         })}
 
         {/* Final Summary */}
-        <Card title="Mathematical Proof Summary" icon={Calculator}>
-          <div className="space-y-3">
-            {MANUSCRIPT_EXAMPLES.map((example) => {
-              const modelA = buildVefkModelA(example.sourceNumber);
-              const modelB = buildVefkModelB(example.sourceNumber);
-              const comparisonA = compareGrids(modelA.grid, example.grid);
-              const comparisonB = compareGrids(modelB.grid, example.grid);
-
-              return (
-                <div key={example.id} className="p-3 rounded-lg border" style={{ borderColor: G.goldBorder + "40" }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-inter text-sm font-bold" style={{ color: G.gold }}>
-                      Page {example.page} — Example {example.id}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <div className={`text-[8px] font-bold px-2 py-1 rounded ${
-                        comparisonA.isExactMatch ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
-                      }`}>
-                        Model A: {comparisonA.isExactMatch ? "✓ MATCH" : "✗ MISMATCH"}
-                      </div>
-                      <div className={`text-[8px] font-bold px-2 py-1 rounded ${
-                        comparisonB.isExactMatch ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
-                      }`}>
-                        Model B: {comparisonB.isExactMatch ? "✓ MATCH" : "✗ MISMATCH"}
-                      </div>
-                    </div>
+        <Card title="Final Mathematical Proof" icon={Calculator}>
+          <div className="space-y-4">
+            {/* Aggregate Results */}
+            <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder, background: G.bgInner }}>
+              <div className="text-[8px] uppercase tracking-wider font-bold mb-3" style={{ color: G.goldDim }}>
+                Aggregate Results (All 32 Cells Across 2 Examples)
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg border text-center" style={{ borderColor: G.blue + "40", background: G.blue + "11" }}>
+                  <div className="text-[7px] mb-1" style={{ color: G.blue }}>Model A Total</div>
+                  <div className="text-2xl font-bold" style={{ color: G.blue }}>
+                    {MANUSCRIPT_EXAMPLES.reduce((sum, ex) => {
+                      const modelA = buildVefkModelA(ex.sourceNumber);
+                      const compA = compareGrids(modelA.grid, ex.grid);
+                      return sum + (16 - compA.mismatchCount);
+                    }, 0)}/32
+                  </div>
+                  <div className="text-[7px]" style={{ color: G.dim }}>
+                    {MANUSCRIPT_EXAMPLES.reduce((sum, ex) => {
+                      const modelA = buildVefkModelA(ex.sourceNumber);
+                      const compA = compareGrids(modelA.grid, ex.grid);
+                      return sum + ((16 - compA.mismatchCount) / 16) * 100;
+                    }, 0) / 2}% match rate
                   </div>
                 </div>
-              );
-            })}
-
-            <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder, background: G.bgInner }}>
-              <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.goldDim }}>
-                CRITICAL QUESTION
+                <div className="p-3 rounded-lg border text-center" style={{ borderColor: G.green + "40", background: G.green + "11" }}>
+                  <div className="text-[7px] mb-1" style={{ color: G.green }}>Model B Total</div>
+                  <div className="text-2xl font-bold" style={{ color: G.green }}>
+                    {MANUSCRIPT_EXAMPLES.reduce((sum, ex) => {
+                      const modelB = buildVefkModelB(ex.sourceNumber);
+                      const compB = compareGrids(modelB.grid, ex.grid);
+                      return sum + (16 - compB.mismatchCount);
+                    }, 0)}/32
+                  </div>
+                  <div className="text-[7px]" style={{ color: G.dim }}>
+                    {MANUSCRIPT_EXAMPLES.reduce((sum, ex) => {
+                      const modelB = buildVefkModelB(ex.sourceNumber);
+                      const compB = compareGrids(modelB.grid, ex.grid);
+                      return sum + ((16 - compB.mismatchCount) / 16) * 100;
+                    }, 0) / 2}% match rate
+                  </div>
+                </div>
               </div>
-              <div className="text-[7px]" style={{ color: G.dim }}>
-                Does the manuscript Arabic text on pages 313-316 explicitly state whether the correction is applied to a single cell only, or whether sequential numbering continues from the corrected value? The mathematical proof above will determine which model matches the historical examples exactly.
+            </div>
+
+            {/* Final Answers */}
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
+                <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
+                  1. Which model produces the highest exact cell-by-cell match?
+                </div>
+                {(() => {
+                  const totalA = MANUSCRIPT_EXAMPLES.reduce((sum, ex) => {
+                    const modelA = buildVefkModelA(ex.sourceNumber);
+                    const compA = compareGrids(modelA.grid, ex.grid);
+                    return sum + (16 - compA.mismatchCount);
+                  }, 0);
+                  const totalB = MANUSCRIPT_EXAMPLES.reduce((sum, ex) => {
+                    const modelB = buildVefkModelB(ex.sourceNumber);
+                    const compB = compareGrids(modelB.grid, ex.grid);
+                    return sum + (16 - compB.mismatchCount);
+                  }, 0);
+                  
+                  const winner = totalA > totalB ? "Model A" : totalB > totalA ? "Model B" : "TIE";
+                  const color = totalA > totalB ? G.blue : totalB > totalA ? G.green : G.gold;
+                  
+                  return (
+                    <div className="text-center p-3 rounded-lg" style={{ background: color + "11", borderColor: color + "40", border: "1px solid" }}>
+                      <div className="text-lg font-bold" style={{ color }}>
+                        {winner} {totalA > totalB || totalB > totalA ? `(${Math.max(totalA, totalB)}/32 cells)` : `(${totalA}/32 cells each)`}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
+                <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
+                  2. Does either model achieve 100% match?
+                </div>
+                {(() => {
+                  const allAExact = MANUSCRIPT_EXAMPLES.every(ex => {
+                    const modelA = buildVefkModelA(ex.sourceNumber);
+                    const compA = compareGrids(modelA.grid, ex.grid);
+                    return compA.isExactMatch;
+                  });
+                  const allBExact = MANUSCRIPT_EXAMPLES.every(ex => {
+                    const modelB = buildVefkModelB(ex.sourceNumber);
+                    const compB = compareGrids(modelB.grid, ex.grid);
+                    return compB.isExactMatch;
+                  });
+                  
+                  const result = allAExact && allBExact ? "BOTH" : allAExact ? "Model A ONLY" : allBExact ? "Model B ONLY" : "NEITHER";
+                  const color = allAExact || allBExact ? G.green : G.red;
+                  
+                  return (
+                    <div className="text-center p-3 rounded-lg" style={{ background: color + "11", borderColor: color + "40", border: "1px solid" }}>
+                      <div className="text-lg font-bold" style={{ color }}>
+                        {result}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
+                <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
+                  3. Exact mismatched cells (if neither model matches 100%)
+                </div>
+                <div className="space-y-2">
+                  {MANUSCRIPT_EXAMPLES.map((example) => {
+                    const modelA = buildVefkModelA(example.sourceNumber);
+                    const modelB = buildVefkModelB(example.sourceNumber);
+                    const compA = compareGrids(modelA.grid, example.grid);
+                    const compB = compareGrids(modelB.grid, example.grid);
+                    
+                    if (compA.isExactMatch || compB.isExactMatch) return null;
+                    
+                    return (
+                      <div key={example.id} className="p-3 rounded-lg border" style={{ borderColor: G.red + "40", background: G.red + "11" }}>
+                        <div className="text-[8px] font-bold mb-2" style={{ color: G.red }}>
+                          Page {example.page} — Example {example.id} — {compA.mismatches.length} mismatches
+                        </div>
+                        <div className="space-y-1">
+                          {compA.mismatches.map((m, idx) => (
+                            <div key={idx} className="flex justify-between items-center text-[7px] py-1">
+                              <span style={{ color: G.dim }}>Cell {m.cell} (R{m.row + 1}C{m.col + 1}):</span>
+                              <div className="flex items-center gap-3">
+                                <span className="font-mono" style={{ color: G.gold }}>Manuscript: {m.manuscriptValue}</span>
+                                <span className="font-mono" style={{ color: G.blue }}>Model A: {m.modelValue}</span>
+                                <span className="font-mono" style={{ color: G.green }}>Model B: {modelB.grid.flat()[idx]}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {MANUSCRIPT_EXAMPLES.every(ex => {
+                    const modelA = buildVefkModelA(ex.sourceNumber);
+                    const compA = compareGrids(modelA.grid, ex.grid);
+                    const modelB = buildVefkModelB(ex.sourceNumber);
+                    const compB = compareGrids(modelB.grid, ex.grid);
+                    return compA.isExactMatch || compB.isExactMatch;
+                  }) && (
+                    <div className="text-center p-3 rounded-lg" style={{ background: G.green + "11", borderColor: G.green + "40", border: "1px solid" }}>
+                      <div className="text-sm font-bold" style={{ color: G.green }}>
+                        ✓ At least one model matches 100% — no mismatches to report
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
