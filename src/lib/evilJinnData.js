@@ -20,7 +20,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 2, serialNo: 2, arabicName: "مونس", arabicHarakat: "مُونِس",
-    englishName: "Munis", abjadValue: 352, letterCount: 4,
+    englishName: "Munis", abjadValue: 156, letterCount: 4,
     breakdown: [{ letter: "م", value: 40 }, { letter: "و", value: 6 }, { letter: "ن", value: 50 }, { letter: "س", value: 60 }],
     malayalamName: "മുനിസ്",
     profile: {
@@ -34,7 +34,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 3, serialNo: 3, arabicName: "نقيق", arabicHarakat: "نَقِيق",
-    englishName: "Naqiq", abjadValue: 651, letterCount: 5,
+    englishName: "Naqiq", abjadValue: 260, letterCount: 5,
     breakdown: [{ letter: "ن", value: 50 }, { letter: "ق", value: 100 }, { letter: "ي", value: 10 }, { letter: "ق", value: 100 }, { letter: "ي", value: 10 }],
     malayalamName: "നഖീഖ്",
     profile: {
@@ -48,7 +48,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 4, serialNo: 4, arabicName: "مجد", arabicHarakat: "مَجْد",
-    englishName: "Majid", abjadValue: 255, letterCount: 5,
+    englishName: "Majid", abjadValue: 47, letterCount: 5,
     breakdown: [{ letter: "م", value: 40 }, { letter: "ج", value: 3 }, { letter: "د", value: 4 }, { letter: "ي", value: 10 }, { letter: "د", value: 4 }],
     malayalamName: "മജീദ്",
     profile: {
@@ -62,7 +62,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 5, serialNo: 5, arabicName: "جذبه", arabicHarakat: "جَذْبَة",
-    englishName: "Jadhbah", abjadValue: 246, letterCount: 3,
+    englishName: "Jadhbah", abjadValue: 710, letterCount: 3,
     breakdown: [{ letter: "ج", value: 3 }, { letter: "ذ", value: 700 }, { letter: "ب", value: 2 }, { letter: "ة", value: 5 }],
     malayalamName: "ജദ്ബ",
     profile: {
@@ -76,7 +76,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 6, serialNo: 6, arabicName: "عقل", arabicHarakat: "عَقْل",
-    englishName: "'Qel", abjadValue: 930, letterCount: 5,
+    englishName: "'Qel", abjadValue: 200, letterCount: 5,
     breakdown: [{ letter: "ع", value: 70 }, { letter: "ق", value: 100 }, { letter: "ل", value: 30 }],
     malayalamName: "അഖ്ൽ",
     profile: {
@@ -90,7 +90,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 7, serialNo: 7, arabicName: "الغول", arabicHarakat: "الْغُول",
-    englishName: "Alghul", abjadValue: 296, letterCount: 5,
+    englishName: "Alghul", abjadValue: 1067, letterCount: 5,
     breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "غ", value: 1000 }, { letter: "و", value: 6 }, { letter: "ل", value: 30 }],
     malayalamName: "അൽ-ഗൂൽ",
     profile: {
@@ -104,7 +104,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 8, serialNo: 8, arabicName: "صاجز", arabicHarakat: "صَاجِز",
-    englishName: "Sajiz", abjadValue: 110, letterCount: 5,
+    englishName: "Sajiz", abjadValue: 101, letterCount: 5,
     breakdown: [{ letter: "ص", value: 90 }, { letter: "ا", value: 1 }, { letter: "ج", value: 3 }, { letter: "ز", value: 7 }],
     malayalamName: "സാജിസ്",
     profile: {
@@ -118,7 +118,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 9, serialNo: 9, arabicName: "الروعة", arabicHarakat: "الرَّوْعَة",
-    englishName: "Alru'h", abjadValue: 364, letterCount: 4,
+    englishName: "Alru'h", abjadValue: 312, letterCount: 4,
     breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "ر", value: 200 }, { letter: "و", value: 6 }, { letter: "ة", value: 5 }],
     malayalamName: "അൽ-റൗഅ",
     profile: {
@@ -132,7 +132,7 @@ export const EVIL_JINN_NAMES = [
   },
   {
     id: 10, serialNo: 10, arabicName: "عمديان", arabicHarakat: "عَمْدِيَان",
-    englishName: "'Mdyan", abjadValue: 253, letterCount: 5,
+    englishName: "'Mdyan", abjadValue: 175, letterCount: 5,
     breakdown: [{ letter: "ع", value: 70 }, { letter: "م", value: 40 }, { letter: "د", value: 4 }, { letter: "ي", value: 10 }, { letter: "ا", value: 1 }, { letter: "ن", value: 50 }],
     malayalamName: "അംദിയാൻ",
     profile: {
