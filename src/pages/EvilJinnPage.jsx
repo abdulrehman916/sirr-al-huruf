@@ -1,4 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, X, ArrowUpDown, ChevronDown, BookOpen, MapPin, Zap, AlertTriangle, Info } from "lucide-react";
+import PageLayout from "../components/PageLayout";
+import PageTitle from "../components/PageTitle";
+import PullToRefresh from "../components/PullToRefresh";
+import { usePageState } from "../context/PageStateContext";
+import { EVIL_JINN_NAMES } from "../lib/evilJinnData";
 
 // Scoped Arabic font for Evil Jinn page only
 const ARABIC_FONT_STYLE = `
@@ -9,7 +16,7 @@ const ARABIC_FONT_STYLE = `
     direction: rtl;
     unicode-bidi: embed;
     letter-spacing: 0.03em;
-    line-height: 1.5;
+    line-height: 1.6;
     word-break: break-word;
     overflow-wrap: break-word;
   }
@@ -18,13 +25,6 @@ const ARABIC_FONT_STYLE = `
 function EvilJinnArabicFont() {
   return <style>{ARABIC_FONT_STYLE}</style>;
 }
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, ArrowUpDown, ChevronDown } from "lucide-react";
-import PageLayout from "../components/PageLayout";
-import PageTitle from "../components/PageTitle";
-import PullToRefresh from "../components/PullToRefresh";
-import { usePageState } from "../context/PageStateContext";
-import { EVIL_JINN_NAMES } from "../lib/evilJinnData";
 
 const P = {
   border: "rgba(212,175,55,0.30)",
@@ -78,8 +78,53 @@ function CategoryFilter({ active, onSelect }) {
   );
 }
 
+function DetailRow({ icon: Icon, label, value, valueClass = "" }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-start gap-2 py-1.5">
+      {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: P.dim }} />}
+      <div className="flex-1">
+        <div className="font-inter text-[8px] uppercase tracking-wider mb-0.5" style={{ color: P.dim }}>{label}</div>
+        <div className={`font-inter text-[11px] leading-relaxed ${valueClass}`} style={{ color: P.text }}>{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function BilingualSection({ enTitle, mlTitle, enContent, mlContent, icon: Icon }) {
+  if (!enContent && !mlContent) return null;
+  return (
+    <div className="rounded-xl border p-3 space-y-2" style={{ background: P.bg, borderColor: P.border }}>
+      {enContent && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
+            {Icon && <Icon className="w-3 h-3" style={{ color: P.dim }} />}
+            <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>{enTitle}</span>
+          </div>
+          <p className="font-inter text-[11px] leading-relaxed pl-4" style={{ color: P.text }}>{enContent}</p>
+        </div>
+      )}
+      {mlContent && enContent && (
+        <div className="h-px" style={{ background: P.faint }} />
+      )}
+      {mlContent && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
+            {Icon && <Icon className="w-3 h-3" style={{ color: P.dim }} />}
+            <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>{mlTitle}</span>
+          </div>
+          <p className="ej-arabic text-[13px] leading-relaxed pl-4" style={{ color: P.text }}>{mlContent}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function JinnCard({ jinn, index, isOpen, onToggle }) {
   const valueCategory = jinn.abjadValue <= 200 ? "Low" : jinn.abjadValue <= 400 ? "Medium" : "High";
+  const details = jinn.details || {};
+  const en = details.en || {};
+  const ml = details.ml || {};
 
   return (
     <motion.div
@@ -141,38 +186,159 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
             transition={{ duration: 0.22, ease: "easeInOut" }}
             style={{ overflow: "hidden" }}
           >
-            <div
-              className="px-4 pb-4 pt-1 grid grid-cols-2 gap-3"
-              style={{ borderTop: "1px solid " + P.faint }}
-            >
-              {/* Arabic Name */}
-              <div className="col-span-2 rounded-xl p-3 text-center" style={{ background: P.bgHi, border: "1px solid " + P.borderHi }}>
-                <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Arabic Name</p>
-                <p
-                  className="ej-arabic"
-                  style={{ fontSize: "2.2rem", lineHeight: 1.6, color: P.text, textShadow: "0 0 20px rgba(212,175,55,0.30)" }}
-                >
-                  {jinn.arabicHarakat}
-                </p>
+            <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: "1px solid " + P.faint }}>
+              
+              {/* Basic Info Grid */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                {/* Arabic Name */}
+                <div className="col-span-2 rounded-xl p-3 text-center" style={{ background: P.bgHi, border: "1px solid " + P.borderHi }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Arabic Name</p>
+                  <p className="ej-arabic" style={{ fontSize: "2.2rem", lineHeight: 1.6, color: P.text, textShadow: "0 0 20px rgba(212,175,55,0.30)" }}>
+                    {jinn.arabicHarakat || jinn.arabicName}
+                  </p>
+                </div>
+
+                {/* English Name */}
+                <div className="col-span-2 rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>English Name</p>
+                  <p className="font-inter font-bold text-base" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.englishName}</p>
+                </div>
+
+                {/* Abjad Value */}
+                <div className="rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Abjad Value</p>
+                  <p className="ej-arabic" style={{ fontSize: "1.8rem", color: P.text }}>{jinn.abjadValue}</p>
+                </div>
+
+                {/* Letter Count */}
+                <div className="rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Letter Count</p>
+                  <p style={{ fontFamily: "'Amiri', serif", fontWeight: 700, fontSize: "1.6rem", color: P.text }}>{jinn.letterCount}</p>
+                </div>
               </div>
 
-              {/* English Name */}
-              <div className="col-span-2 rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
-                <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>English Name</p>
-                <p className="font-inter font-bold text-base" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.englishName}</p>
-              </div>
+              {/* Bilingual Details */}
+              {(en.description || ml.description) && (
+                <BilingualSection
+                  enTitle="Description"
+                  mlTitle="വിവരണം"
+                  enContent={en.description}
+                  mlContent={ml.description}
+                  icon={Info}
+                />
+              )}
 
-              {/* Abjad Value */}
-              <div className="rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
-                <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Abjad Value</p>
-                <p className="ej-arabic" style={{ fontSize: "1.8rem", color: P.text }}>{jinn.abjadValue}</p>
-              </div>
+              {(en.temperament || ml.temperament) && (
+                <BilingualSection
+                  enTitle="Temperament"
+                  mlTitle="സ്വഭാവം"
+                  enContent={en.temperament}
+                  mlContent={ml.temperament}
+                  icon={Info}
+                />
+              )}
 
-              {/* Letter Count */}
-              <div className="rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
-                <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Letter Count</p>
-                <p style={{ fontFamily: "'Amiri', serif", fontWeight: 700, fontSize: "1.6rem", color: P.text }}>{jinn.letterCount}</p>
-              </div>
+              {(en.attributes || ml.attributes) && (
+                <div className="rounded-xl border p-3 space-y-2" style={{ background: P.bg, borderColor: P.border }}>
+                  {(en.attributes && en.attributes.length > 0) && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="w-3 h-3" style={{ color: P.dim }} />
+                        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>Attributes</span>
+                      </div>
+                      <ul className="pl-4 space-y-0.5">
+                        {en.attributes.map((attr, i) => (
+                          <li key={i} className="font-inter text-[11px] leading-relaxed" style={{ color: P.text }}>• {attr}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {(ml.attributes && ml.attributes.length > 0) && en.attributes && (
+                    <div className="h-px" style={{ background: P.faint }} />
+                  )}
+                  {(ml.attributes && ml.attributes.length > 0) && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="w-3 h-3" style={{ color: P.dim }} />
+                        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>വിശേഷണങ്ങൾ</span>
+                      </div>
+                      <ul className="pl-4 space-y-0.5">
+                        {ml.attributes.map((attr, i) => (
+                          <li key={i} className="ej-arabic text-[13px] leading-relaxed" style={{ color: P.text }}>• {attr}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(en.element || ml.element) && (
+                <BilingualSection
+                  enTitle="Element"
+                  mlTitle="മൂലകം"
+                  enContent={en.element}
+                  mlContent={ml.element}
+                  icon={Info}
+                />
+              )}
+
+              {(en.habitat || ml.habitat) && (
+                <BilingualSection
+                  enTitle="Habitat"
+                  mlTitle="വാസസ്ഥലം"
+                  enContent={en.habitat}
+                  mlContent={ml.habitat}
+                  icon={MapPin}
+                />
+              )}
+
+              {(en.powers || ml.powers) && (
+                <BilingualSection
+                  enTitle="Powers & Abilities"
+                  mlTitle="ശക്തികൾ"
+                  enContent={en.powers}
+                  mlContent={ml.powers}
+                  icon={Zap}
+                />
+              )}
+
+              {(en.warnings || ml.warnings) && (
+                <div className="rounded-xl border p-3" style={{ background: "rgba(248,113,113,0.08)", borderColor: "rgba(248,113,113,0.30)" }}>
+                  {(en.warnings) && (
+                    <div className="space-y-1 mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <AlertTriangle className="w-3 h-3" style={{ color: "#F87171" }} />
+                        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: "#F87171" }}>Warnings</span>
+                      </div>
+                      <p className="font-inter text-[11px] leading-relaxed" style={{ color: "#FCA5A5" }}>{en.warnings}</p>
+                    </div>
+                  )}
+                  {(ml.warnings) && en.warnings && (
+                    <div className="h-px" style={{ background: "rgba(248,113,113,0.20)" }} />
+                  )}
+                  {(ml.warnings) && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <AlertTriangle className="w-3 h-3" style={{ color: "#F87171" }} />
+                        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: "#F87171" }}>മുന്നറിയിപ്പ്</span>
+                      </div>
+                      <p className="ej-arabic text-[13px] leading-relaxed" style={{ color: "#FCA5A5" }}>{ml.warnings}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Source Reference */}
+              {(details.source || jinn.source) && (
+                <div className="rounded-xl border p-3 flex items-center gap-2" style={{ background: P.bg, borderColor: P.border }}>
+                  <BookOpen className="w-3.5 h-3.5" style={{ color: P.dim }} />
+                  <div className="flex-1">
+                    <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>Source Reference</div>
+                    <div className="font-inter text-[10px]" style={{ color: P.text }}>{details.source || jinn.source}</div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </motion.div>
         )}
@@ -225,6 +391,7 @@ export default function EvilJinnPage() {
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="space-y-4">
           <PageTitle arabic="أسماء الجن الشريرة" latin="Evil Jinn Names" subtitle="Reference Database" icon="👁" />
+          
           <div className="flex items-center gap-2 rounded-2xl border px-3 py-2.5" style={{ background: P.bg, borderColor: P.border }}>
             <Search className="w-4 h-4" style={{ color: P.dim }} />
             <input
@@ -234,7 +401,9 @@ export default function EvilJinnPage() {
             />
             {query && <button onClick={() => setQuery("")} style={{ color: P.dim }}><X className="w-4 h-4" /></button>}
           </div>
+          
           <CategoryFilter active={category} onSelect={setCategory} />
+          
           <div className="flex items-center justify-between">
             <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
               {filtered.length} of {EVIL_JINN_NAMES.length}
@@ -254,6 +423,7 @@ export default function EvilJinnPage() {
               </button>
             </div>
           </div>
+          
           <div className="space-y-2">
             <AnimatePresence mode="popLayout">
               {filtered.length === 0
