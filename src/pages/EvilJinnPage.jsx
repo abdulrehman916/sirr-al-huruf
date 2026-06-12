@@ -122,9 +122,9 @@ function BilingualSection({ enTitle, mlTitle, enContent, mlContent, icon: Icon }
 
 function JinnCard({ jinn, index, isOpen, onToggle }) {
   const valueCategory = jinn.abjadValue <= 200 ? "Low" : jinn.abjadValue <= 400 ? "Medium" : "High";
-  const details = jinn.details || {};
-  const en = details.en || {};
-  const ml = details.ml || {};
+  const profile = jinn.profile || {};
+  const en = profile.en || {};
+  const ml = profile.ml || {};
 
   return (
     <motion.div
@@ -199,9 +199,15 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
                 </div>
 
                 {/* English Name */}
-                <div className="col-span-2 rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
+                <div className="rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
                   <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>English Name</p>
-                  <p className="font-inter font-bold text-base" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.englishName}</p>
+                  <p className="font-inter font-bold text-sm" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.englishName}</p>
+                </div>
+
+                {/* Malayalam Name */}
+                <div className="rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>Malayalam Name</p>
+                  <p className="font-amiri font-bold text-base" style={{ color: "rgba(255,255,255,0.90)" }}>{jinn.malayalamName || "Awaiting Source Data"}</p>
                 </div>
 
                 {/* Abjad Value */}
@@ -217,23 +223,13 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
                 </div>
               </div>
 
-              {/* Bilingual Details */}
-              {(en.description || ml.description) && (
+              {/* Bilingual Profile Sections */}
+              {(en.nature || ml.nature) && (
                 <BilingualSection
-                  enTitle="Description"
-                  mlTitle="വിവരണം"
-                  enContent={en.description}
-                  mlContent={ml.description}
-                  icon={Info}
-                />
-              )}
-
-              {(en.temperament || ml.temperament) && (
-                <BilingualSection
-                  enTitle="Temperament"
-                  mlTitle="സ്വഭാവം"
-                  enContent={en.temperament}
-                  mlContent={ml.temperament}
+                  enTitle="Nature / Character"
+                  mlTitle="സ്വഭാവം / പ്രകൃതി"
+                  enContent={en.nature}
+                  mlContent={ml.nature}
                   icon={Info}
                 />
               )}
@@ -284,7 +280,7 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
 
               {(en.habitat || ml.habitat) && (
                 <BilingualSection
-                  enTitle="Habitat"
+                  enTitle="Residence / Habitat"
                   mlTitle="വാസസ്ഥലം"
                   enContent={en.habitat}
                   mlContent={ml.habitat}
@@ -294,8 +290,8 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
 
               {(en.powers || ml.powers) && (
                 <BilingualSection
-                  enTitle="Powers & Abilities"
-                  mlTitle="ശക്തികൾ"
+                  enTitle="Powers / Abilities"
+                  mlTitle="ശക്തികൾ / കഴിവുകൾ"
                   enContent={en.powers}
                   mlContent={ml.powers}
                   icon={Zap}
@@ -328,13 +324,24 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
                 </div>
               )}
 
+              {/* Notes */}
+              {(en.notes || ml.notes) && (
+                <BilingualSection
+                  enTitle="Notes"
+                  mlTitle="കുറിപ്പുകൾ"
+                  enContent={en.notes}
+                  mlContent={ml.notes}
+                  icon={Info}
+                />
+              )}
+
               {/* Source Reference */}
-              {(details.source || jinn.source) && (
+              {(profile.source || jinn.source) && (
                 <div className="rounded-xl border p-3 flex items-center gap-2" style={{ background: P.bg, borderColor: P.border }}>
                   <BookOpen className="w-3.5 h-3.5" style={{ color: P.dim }} />
                   <div className="flex-1">
                     <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>Source Reference</div>
-                    <div className="font-inter text-[10px]" style={{ color: P.text }}>{details.source || jinn.source}</div>
+                    <div className="font-inter text-[10px]" style={{ color: P.text }}>{profile.source || jinn.source}</div>
                   </div>
                 </div>
               )}
