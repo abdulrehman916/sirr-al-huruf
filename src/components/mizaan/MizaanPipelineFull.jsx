@@ -135,7 +135,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
             </div>
             
             {/* Vefk Grid */}
-            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto">
+            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto mb-4">
               {vefk.grid.flat().map((val, idx) => (
                 <div key={idx}
                   className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
@@ -147,6 +147,39 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   {val.toLocaleString()}
                 </div>
               ))}
+            </div>
+
+            {/* Vefk Summary */}
+            <div className="rounded-lg border p-3" style={{ background: G.bgInner, borderColor: elementMeta.color + "40" }}>
+              <div className="font-inter text-[7px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Vefk Verification</div>
+              <div className="grid grid-cols-2 gap-2 text-[8px]">
+                <div className="flex justify-between">
+                  <span style={{ color: G.dim }}>Source Number:</span>
+                  <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.S?.toLocaleString() || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: G.dim }}>Magic Constant:</span>
+                  <span className="font-bold tabular-nums" style={{ color: G.gold }}>{vefk.mc?.toLocaleString() || 0}</span>
+                </div>
+                {vefk.validation?.details?.rows.map((row, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span style={{ color: G.dim }}>Row {idx + 1}:</span>
+                    <span className="font-bold tabular-nums" style={{ color: row.valid ? "#4ADE80" : "#F87171" }}>{row.sum.toLocaleString()}</span>
+                  </div>
+                ))}
+                {vefk.validation?.details?.cols.map((col, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span style={{ color: G.dim }}>Column {idx + 1}:</span>
+                    <span className="font-bold tabular-nums" style={{ color: col.valid ? "#4ADE80" : "#F87171" }}>{col.sum.toLocaleString()}</span>
+                  </div>
+                ))}
+                {vefk.validation?.details?.diagonals.map((diag, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span style={{ color: G.dim }}>Diagonal {diag.name === 'main' ? 'A' : 'B'}:</span>
+                    <span className="font-bold tabular-nums" style={{ color: diag.valid ? "#4ADE80" : "#F87171" }}>{diag.sum.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </Card>
         )}
