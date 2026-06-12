@@ -18,9 +18,10 @@ import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
+import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 
 
-import { runMizaanPostPipeline, istintak, FIRST_BAST } from "../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
 const G = {
@@ -329,9 +330,22 @@ export default function Mizaan9Page() {
                 const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
                 const dominant = result?.dominant;
                 if (!grandBast || grandBast <= 0) return null;
+
+                // Section 1 pipeline result — read-only source for Section 2
+                const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+
                 return (
                   <>
+                    {/* ═══ SECTION 1: LOCKED ═══ */}
                     <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />
+
+                    {/* ═══ SECTION 2: ESMA-I A'VAN ═══ */}
+                    {section1?.allExpandedLetters?.length > 0 && (
+                      <EsmaAvanSection
+                        allExpandedLetters={section1.allExpandedLetters}
+                        dominant={dominant}
+                      />
+                    )}
                   </>
                 );
               })()}
