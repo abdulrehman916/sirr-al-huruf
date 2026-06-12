@@ -1,72 +1,55 @@
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  getBastLevel,
-  istintak,
-  buildVefk,
-  expandAllSeedLetters,
-  generateEsmaLevel,
-  VEFK_TEMPLATES,
-} from "../../lib/mizaanPostEngine";
+// ═══════════════════════════════════════════════════════════════
+// SECTION 2: ESMA-I A'VAN
+// ─────────────────────────────────────────────────────────────
+// INPUT:  Section 1's allExpandedLetters (read-only, never modified)
+//
+// FORMULA:
+//   avanBastTotal  = sum of FirstBast(letter) for each letter in allExpandedLetters
+//   avanLetterCount = allExpandedLetters.length
+//   avanSourceTotal = avanBastTotal + avanLetterCount
+//   seedLetters    = istintak(avanSourceTotal)
+//
+// AFTER THAT: exact same Option 1 pipeline as Section 1
+//   SatrVahidGrouping (derivation chain + group formation)
+//   + Vefk Magic Square
+//
+// ISOLATION: Section 1 is never modified. No value flows back into Section 1.
+// ═══════════════════════════════════════════════════════════════
 
-// ── Design tokens ─────────────────────────────────────────────
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { runMizaanPostPipeline, getBastLevel, istintak } from "../../lib/mizaanPostEngine";
+import SatrVahidGrouping from "./SatrVahidGrouping";
+import { ChevronDown, ChevronRight } from "lucide-react";
+
+// ── Exact same design tokens as MizaanPipelineFull (Section 1) ──
 const G = {
   gold:        "#F5D060",
   goldDim:     "rgba(245,208,96,0.55)",
-  goldFaint:   "rgba(245,208,96,0.12)",
+  goldFaint:   "rgba(212,175,55,0.07)",
   goldBorder:  "rgba(212,175,55,0.40)",
   goldBorderHi:"rgba(212,175,55,0.65)",
   glow:        "rgba(212,175,55,0.18)",
   bg:          "rgba(3,6,20,0.99)",
   bgCard:      "rgba(8,16,40,0.98)",
   bgInner:     "rgba(212,175,55,0.06)",
-  green:       "#4ADE80",
-  blue:        "#93C5FD",
   dim:         "rgba(255,255,255,0.35)",
 };
 
 const ELEMENT_META = {
-  fire:  { arabic: "النار",   english: "Fire",  color: "#F87171", icon: "🜂" },
-  earth: { arabic: "التراب",  english: "Earth", color: "#86EFAC", icon: "🜃" },
-  air:   { arabic: "الهواء",  english: "Air",   color: "#93C5FD", icon: "🜁" },
-  water: { arabic: "الماء",   english: "Water", color: "#67E8F9", icon: "🜄" },
+  fire:  { arabic: "النار",  icon: "🔥", color: "#FF6B35" },
+  earth: { arabic: "التراب", icon: "🌍", color: "#A5C880" },
+  air:   { arabic: "الهواء", icon: "🌪",  color: "#B2EBF2" },
+  water: { arabic: "الماء",  icon: "💧", color: "#4FC3F7" },
 };
 
-// ── Sub-components ─────────────────────────────────────────────
-
-function OrnamentalDivider() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-1">
-      <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
-      <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
-      <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
-    </div>
-  );
-}
-
-function Card({ children, accent, className = "" }) {
-  return (
-    <div
-      className={`rounded-xl border p-4 ${className}`}
-      style={{
-        background: G.bgCard,
-        borderColor: accent ? accent + "55" : G.goldBorder,
-        borderLeft: accent ? `3px solid ${accent}` : undefined,
-        boxShadow: "0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+// ── Exact same sub-components as MizaanPipelineFull ─────────────
 
 function SectionHeader({ step, label, arabic, color = G.gold }) {
   return (
     <div className="flex items-center gap-3 mb-3">
-      <div
-        className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
-        style={{ background: color + "22", border: `1px solid ${color}55`, color }}
-      >
+      <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
+        style={{ background: color + "22", border: `1px solid ${color}55`, color }}>
         {step}
       </div>
       <div className="flex-1">
@@ -80,182 +63,144 @@ function SectionHeader({ step, label, arabic, color = G.gold }) {
   );
 }
 
-function StatRow({ label, value, valueColor = G.gold }) {
+function Card({ children, accent }) {
   return (
-    <div className="flex items-center justify-between py-1.5 border-b" style={{ borderColor: G.goldBorder + "55" }}>
-      <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</span>
-      <span className="font-inter text-sm font-bold tabular-nums" style={{ color: valueColor }}>{value}</span>
+    <div className="rounded-xl border p-4"
+      style={{
+        background: G.bgCard,
+        borderColor: accent ? accent + "55" : G.goldBorder,
+        borderLeft: accent ? `3px solid ${accent}` : undefined,
+        boxShadow: `0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)`,
+      }}>
+      {children}
     </div>
   );
 }
 
-function LetterPill({ letter, color = G.gold }) {
+function OrnamentalDivider() {
   return (
-    <span
-      className="font-amiri font-bold rounded-lg border px-2.5 py-1.5 text-xl"
-      style={{ color, borderColor: color + "55", background: color + "12", lineHeight: 1.2, display: "inline-block" }}
-    >
-      {letter}
-    </span>
-  );
-}
-
-function LetterRow({ letters, color = G.gold }) {
-  if (!letters || letters.length === 0)
-    return <span className="font-inter text-xs italic" style={{ color: G.dim }}>—</span>;
-  return (
-    <div className="flex flex-wrap gap-1.5 items-center" dir="rtl">
-      {letters.map((l, i) => <LetterPill key={i} letter={l} color={color} />)}
+    <div className="flex items-center justify-center gap-2 py-1">
+      <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
+      <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
+      <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
     </div>
   );
 }
 
-function VefkGrid({ grid, element, guardianName }) {
-  const elMeta = ELEMENT_META[element] || ELEMENT_META.fire;
-  const mc = grid[0].reduce((s, v) => s + v, 0);
-  const rowSums = grid.map(r => r.reduce((a, b) => a + b, 0));
-  const colSums = grid[0].map((_, j) => grid.reduce((s, r) => s + r[j], 0));
-  const d1 = grid.reduce((s, r, i) => s + r[i], 0);
-  const d2 = grid.reduce((s, r, i) => s + r[3 - i], 0);
-  const allOk = rowSums.every(x => x === mc) && colSums.every(x => x === mc) && d1 === mc && d2 === mc;
-  const guardianLetters = guardianName ? [...guardianName] : [];
-
+// Collapsible expanded letter values — identical to Section 1
+function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const safeLetters = Array.isArray(allExpandedLetters) ? allExpandedLetters : [];
   return (
-    <div className="space-y-3">
-      <div
-        className="flex items-center justify-between px-3 py-2 rounded-lg"
-        style={{ background: G.bgInner, border: `1px solid ${G.goldBorder}` }}
-      >
-        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Magic Constant (MC)</span>
-        <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.gold }}>{mc.toLocaleString()}</span>
-      </div>
-
-      <div className="flex flex-col items-center gap-1">
-        <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
-          style={{ color: elMeta.color, textShadow: `0 0 12px ${elMeta.color}55` }}>
-          {guardianName}
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex flex-col items-center justify-center gap-0.5">
-            {guardianLetters.map((l, i) => (
-              <span key={i} className="font-amiri font-bold leading-tight"
-                style={{ color: elMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elMeta.color}55` }}>
-                {l}
-              </span>
-            ))}
-          </div>
-          <div className="rounded-xl border overflow-hidden" style={{ borderColor: elMeta.color + "44" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 2, padding: 6, background: "rgba(4,8,24,0.98)" }}>
-              {grid.flat().map((num, idx) => (
-                <div key={idx}
-                  className="flex items-center justify-center font-amiri font-bold rounded"
-                  style={{
-                    aspectRatio: "1/1", minWidth: "2.5rem",
-                    background: `linear-gradient(145deg, ${elMeta.color}18 0%, ${elMeta.color}08 100%)`,
-                    border: `1px solid ${elMeta.color}35`,
-                    color: G.gold, fontSize: "1rem",
-                  }}>
-                  {num}
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}>
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        Expanded Letter Values
+      </button>
+      {isOpen && (
+        <div className="mt-2 space-y-1">
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[6px] font-inter" style={{ color: G.dim }}>
+            {safeLetters.map((letter, idx) => {
+              const bastVal = getBastLevel(letter, 1) || 0;
+              return (
+                <div key={idx} className="contents">
+                  <span className="text-right font-amiri" style={{ color: elementColor }}>{letter}</span>
+                  <span className="tabular-nums" style={{ color: G.dim }}>{bastVal.toLocaleString()}</span>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-          <div className="flex flex-col items-center justify-center gap-0.5">
-            {guardianLetters.map((l, i) => (
-              <span key={i} className="font-amiri font-bold leading-tight"
-                style={{ color: elMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elMeta.color}55` }}>
-                {l}
+          {safeLetters.length > 0 && (
+            <div className="mt-1.5 pt-1.5 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
+              <span className="text-[6px]" style={{ color: G.dim }}>Total: </span>
+              <span className="text-[8px] font-bold tabular-nums" style={{ color: elementColor }}>
+                {safeLetters.reduce((sum, l) => sum + (getBastLevel(l, 1) || 0), 0).toLocaleString()}
               </span>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
-        <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
-          style={{ color: elMeta.color, textShadow: `0 0 12px ${elMeta.color}55` }}>
-          {guardianName}
-        </div>
-      </div>
-
-      {/* Validation */}
-      <div className="grid grid-cols-2 gap-1 text-[6px]">
-        {[...rowSums.map((s, i) => ({ label: `Row ${i + 1}`, sum: s })),
-          ...colSums.map((s, i) => ({ label: `Col ${i + 1}`, sum: s })),
-          { label: "Diag ↘", sum: d1 }, { label: "Diag ↙", sum: d2 }
-        ].map(({ label, sum }) => (
-          <div key={label} className="flex justify-between px-2 py-1 rounded"
-            style={{ background: sum === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${sum === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
-            <span style={{ color: G.dim }}>{label}</span>
-            <span style={{ color: sum === mc ? G.green : "#F87171", fontWeight: "bold" }}>{sum.toLocaleString()} {sum === mc ? "✓" : "✗"}</span>
-          </div>
-        ))}
-      </div>
-      <div className="text-[6px] font-bold text-center px-2 py-1 rounded"
-        style={{ background: allOk ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", color: allOk ? G.green : "#F87171" }}>
-        {allOk ? "✓ Valid Magic Square — all 10 lines equal MC" : "✗ Invalid Magic Square"}
-      </div>
+      )}
     </div>
   );
 }
 
-// ── Section 2 Pipeline ─────────────────────────────────────────
-// Input: allExpandedLetters from Section 1 (read-only)
-// Rule:
-//   avanSourceTotal = sum(FirstBast of each letter) + letterCount
-//   → istintak(avanSourceTotal) → seed letters
-//   → same Option 1 pipeline from that point
+// Collapsible source section — mirrors Section 1 but shows A'van derivation
+function SourceSection({ avanBastTotal, avanLetterCount, avanSourceTotal, expandedLettersTotal, elementColor }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}>
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        Source
+      </button>
+      {isOpen && (
+        <div className="mt-2 text-center space-y-1.5">
+          <div className="text-[7px]" style={{ color: G.dim }}>A'van Pipeline</div>
+          <div className="text-[6px] px-2" style={{ color: G.dim }}>
+            Section 1 Expanded Letters Bast Total = {avanBastTotal?.toLocaleString() || 0}
+          </div>
+          <div className="text-[6px]" style={{ color: G.dim }}>+</div>
+          <div className="text-[6px] px-2" style={{ color: G.dim }}>
+            Section 1 Expanded Letters Count = {avanLetterCount || 0}
+          </div>
+          <div className="text-[6px]" style={{ color: G.dim }}>↓</div>
+          <div className="text-[7px] px-2 py-1.5 rounded font-bold" style={{ background: G.bgInner, color: elementColor }}>
+            A'van Source Total = {avanSourceTotal?.toLocaleString() || 0}
+          </div>
+          <div className="text-[6px]" style={{ color: G.dim }}>→ Istintak → Seed Letters → Pipeline</div>
+          <div className="text-[6px]" style={{ color: G.dim }}>↓</div>
+          <div className="text-[7px] px-2 py-1.5 rounded font-bold" style={{ background: G.bgInner, color: elementColor }}>
+            Vefk Source (Expanded Letters Total) = {expandedLettersTotal?.toLocaleString() || 0}
+          </div>
+          <div className="text-[6px] px-2" style={{ color: G.dim }}>
+            Sum of all A'van expanded letters' First Bast values
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Section 2 pipeline — fully isolated from Section 1 ──────────
+//
+// Takes Section 1's allExpandedLetters as read-only input.
+// Builds a fresh runMizaanPostPipeline call using:
+//   grandBast    = sum of FirstBast of allExpandedLetters
+//   grandLetters = count of allExpandedLetters
+//
+// runMizaanPostPipeline internally computes:
+//   satirVahidTotal = grandBast + grandLetters    (= avanSourceTotal)
+//   initialSeedLetters = istintak(satirVahidTotal)
+//   ... then the full Option 1 pipeline
+//
+// This is exactly the same entry point Section 1 uses, so behaviour
+// is guaranteed to be identical — only the source numbers differ.
 function runAvanPipeline(allExpandedLetters, dominant) {
   if (!allExpandedLetters || allExpandedLetters.length === 0) return null;
 
-  const element = dominant || "fire";
+  const grandBast    = allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+  const grandLetters = allExpandedLetters.length;
 
-  // Step 1: Sum First Bast values of Section 1 expanded letters
-  const expandedBastTotal = allExpandedLetters.reduce(
-    (sum, l) => sum + (getBastLevel(l, 1) || 0), 0
-  );
-  const letterCount = allExpandedLetters.length;
+  if (grandBast <= 0) return null;
 
-  // Step 2: A'van source total = Bast total + letter count
-  const avanSourceTotal = expandedBastTotal + letterCount;
-
-  // Step 3: Istintak → seed letters
-  const seedLetters = istintak(avanSourceTotal);
-
-  // Step 4: Bast level based on seed count (odd → 5th, even → 4th)
-  const bastLevel = seedLetters.length % 2 !== 0 ? 5 : 4;
-
-  // Step 5: Expand all seed letters (last → first, same as Option 1)
-  const avanExpandedLetters = expandAllSeedLetters(seedLetters, bastLevel);
-
-  // Step 6: Group formation (Esma-i A'van names)
-  const kitabet = generateEsmaLevel(seedLetters, false, element);
-
-  // Step 7: Vefk source = sum of expanded letters' First Bast values
-  const vefkSourceNumber = avanExpandedLetters.reduce(
-    (sum, l) => sum + (getBastLevel(l, 1) || 0), 0
-  );
-  const vefk = buildVefk(vefkSourceNumber, element);
+  // Reuse exactly the same engine as Section 1
+  const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+  if (!pipeline) return null;
 
   return {
-    // Inputs from Section 1
-    allExpandedLetters,
-    expandedBastTotal,
-    letterCount,
-    // A'van pipeline
-    avanSourceTotal,
-    seedLetters,
-    bastLevel,
-    avanExpandedLetters,
-    avanExpandedTotal: vefkSourceNumber,
-    kitabet,
-    element,
-    vefk,
-    vefkSourceNumber,
+    ...pipeline,
+    // Expose source derivation for the Source section display
+    avanBastTotal:    grandBast,
+    avanLetterCount:  grandLetters,
+    avanSourceTotal:  grandBast + grandLetters,
   };
 }
 
-// ── Main exported component ────────────────────────────────────
-// Props:
-//   allExpandedLetters — Section 1 output (read-only, never modified)
-//   dominant           — Galib Anasir from Section 1
+// ── Main exported component ──────────────────────────────────────
 export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
   const pipeline = useMemo(
     () => runAvanPipeline(allExpandedLetters, dominant),
@@ -265,19 +210,18 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
   if (!pipeline) return null;
 
   const {
-    expandedBastTotal, letterCount, avanSourceTotal,
-    seedLetters, bastLevel,
-    avanExpandedLetters, avanExpandedTotal,
-    kitabet, element, vefk, vefkSourceNumber,
+    initialSeedLetters, vefk, allExpandedLetters: avanExpandedLetters,
+    avanBastTotal, avanLetterCount, avanSourceTotal, expandedLettersTotal,
   } = pipeline;
 
-  const elMeta = ELEMENT_META[element] || ELEMENT_META.fire;
+  const element      = dominant || "fire";
+  const elementMeta  = ELEMENT_META[element] || ELEMENT_META.fire;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ delay: 0.15, duration: 0.5 }}
       className="rounded-2xl border overflow-hidden"
       style={{
         background: G.bg,
@@ -285,10 +229,10 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
         boxShadow: `0 0 80px ${G.glow}, 0 0 160px rgba(0,0,0,0.7), inset 0 1px 0 rgba(212,175,55,0.08)`,
       }}
     >
-      {/* Top accent */}
+      {/* Top accent line */}
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
 
-      {/* Title */}
+      {/* Title Banner */}
       <div className="text-center px-6 pt-6 pb-4">
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-3"
           style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
@@ -297,125 +241,164 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
         <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>أسماء الأعوان</h2>
-        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>A'van Source Total Pipeline</p>
+        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Manuscript Derivation → Vefk</p>
       </div>
 
       <OrnamentalDivider />
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* ── STEP 1: Section 1 Expanded Letters Input ── */}
-        <Card accent={G.blue}>
-          <SectionHeader step="1" label="Section 1 Expanded Letters (Input)" arabic="الحروف الموسعة" color={G.blue} />
-          <div className="mb-3">
-            <LetterRow letters={allExpandedLetters} color={G.blue} />
-          </div>
-          <div className="space-y-0">
-            <StatRow label="Expanded Letter Count" value={letterCount} valueColor={G.blue} />
-            <StatRow label="Sum of First Bast Values" value={expandedBastTotal.toLocaleString()} valueColor={G.blue} />
-          </div>
-        </Card>
+        {/* COMPLETE MANUSCRIPT DERIVATION CHAIN — identical to Section 1 */}
+        <SatrVahidGrouping
+          satrVahidLetters={initialSeedLetters}
+          dominant={dominant}
+        />
 
-        {/* ── STEP 2: A'van Source Total ── */}
-        <Card accent={G.gold}>
-          <SectionHeader step="2" label="A'van Source Total" arabic="مجموع مصدر الأعوان" color={G.gold} />
-          <div className="space-y-0">
-            <StatRow label="Expanded Bast Total" value={expandedBastTotal.toLocaleString()} valueColor={G.goldDim} />
-            <StatRow label="+ Letter Count" value={letterCount} valueColor={G.goldDim} />
-            <StatRow label="= A'van Source Total" value={avanSourceTotal.toLocaleString()} valueColor={G.gold} />
-          </div>
-          <div className="mt-3 px-3 py-2 rounded-lg text-center font-inter text-[8px] uppercase tracking-widest"
-            style={{ background: G.goldFaint, color: G.goldDim }}>
-            {expandedBastTotal.toLocaleString()} + {letterCount} = {avanSourceTotal.toLocaleString()}
-          </div>
-        </Card>
+        {/* VEFK MAGIC SQUARE — identical structure to Section 1 */}
+        {vefk && (
+          <Card accent={elementMeta.color}>
+            <SectionHeader step="5" label="Vefk Magic Square" arabic="الوفق" color={elementMeta.color} />
 
-        {/* ── STEP 3: Istintak → Seed Letters ── */}
-        <Card accent={G.gold}>
-          <SectionHeader step="3" label="Istintak → Seed Letters" arabic="الاستنطاق" color={G.gold} />
-          <div className="mb-3">
-            <LetterRow letters={seedLetters} color={G.gold} />
-          </div>
-          <div className="space-y-0">
-            <StatRow label="Seed Letter Count" value={seedLetters.length} valueColor={G.gold} />
-            <StatRow label="Bast Level" value={`${bastLevel === 5 ? "5th — البسط الخامس" : "4th — البسط الرابع"}`} valueColor={G.goldDim} />
-          </div>
-        </Card>
-
-        {/* ── STEP 4: Bast Derivations → Expanded Letters ── */}
-        <Card accent={G.green}>
-          <SectionHeader step="4" label="Expanded Letters (Bast → Istintak)" arabic="الحروف الموسعة" color={G.green} />
-          <div className="mb-3">
-            <LetterRow letters={avanExpandedLetters} color={G.green} />
-          </div>
-          <div className="space-y-0">
-            <StatRow label="Expanded Count" value={avanExpandedLetters.length} valueColor={G.green} />
-            <StatRow label="Sum First Bast (Vefk Source)" value={avanExpandedTotal.toLocaleString()} valueColor={G.green} />
-          </div>
-        </Card>
-
-        {/* ── STEP 5: Group Formation (Esma-i A'van Names) ── */}
-        <Card accent={G.gold}>
-          <SectionHeader step="5" label="Group Formation — Esma-i A'van" arabic="أسماء الأعوان" color={G.gold} />
-          <div className="space-y-2 mb-3">
-            {kitabet.names.map((name, idx) => (
-              <motion.div key={idx}
-                initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.04 }}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border"
-                style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
-                <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-sm font-black flex-shrink-0"
-                  style={{ background: G.bgInner, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
-                  {idx + 1}
+            {/* Element Info */}
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">{elementMeta.icon}</span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-amiri text-lg" style={{ color: elementMeta.color }}>{elementMeta.arabic}</span>
+                  <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>({element})</span>
                 </div>
-                <span className="font-amiri text-2xl font-bold flex-1" style={{ color: G.gold }} dir="rtl">
-                  {name}
-                </span>
-              </motion.div>
-            ))}
-          </div>
-          <div className="space-y-0">
-            <StatRow label="Group Size" value={`${kitabet.groupSize} (${kitabet.isZevc ? "Zevc / زوج" : "Ferd / فرد"})`} valueColor={G.goldDim} />
-            <StatRow label="Total Names" value={kitabet.names.length} valueColor={G.gold} />
-            {kitabet.supplementLetters.length > 0 && (
-              <div className="pt-2">
-                <div className="font-inter text-[8px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
-                  Remainder Supplement ({kitabet.supplementLetters.length} letter{kitabet.supplementLetters.length > 1 ? "s" : ""})
-                </div>
-                <LetterRow letters={kitabet.supplementLetters} color={G.goldDim} />
               </div>
-            )}
-          </div>
-        </Card>
-
-        {/* ── STEP 6: Dominant Element ── */}
-        <Card accent={elMeta.color}>
-          <SectionHeader step="6" label="Dominant Element" arabic="الغالب العنصر" color={elMeta.color} />
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{elMeta.icon}</span>
-            <div>
-              <span className="font-amiri text-xl font-bold" style={{ color: elMeta.color }}>{elMeta.arabic}</span>
-              <span className="font-inter text-[8px] uppercase tracking-wider ml-2" style={{ color: G.dim }}>({element})</span>
             </div>
-          </div>
-          <div className="mt-3 space-y-0">
-            <StatRow label="Vefk Source Number" value={vefkSourceNumber.toLocaleString()} valueColor={elMeta.color} />
-          </div>
-        </Card>
 
-        {/* ── STEP 7: Vefk ── */}
-        <Card accent={elMeta.color}>
-          <SectionHeader step="7" label="A'van Vefk Magic Square" arabic="وفق الأعوان" color={elMeta.color} />
-          <VefkGrid
-            grid={vefk.grid}
-            element={element}
-            guardianName={vefk.guardianName}
-          />
-        </Card>
+            {/* Manuscript-style framed Vefk */}
+            {(() => {
+              const guardianName    = vefk.guardianName || "";
+              const guardianLetters = [...guardianName];
+              return (
+                <div className="flex flex-col items-center gap-1 mb-4">
+                  {/* TOP */}
+                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+                    style={{ color: elementMeta.color, textShadow: `0 0 12px ${elementMeta.color}55` }}>
+                    {guardianName}
+                  </div>
+                  {/* MIDDLE: Left | Grid | Right */}
+                  <div className="flex items-center gap-2">
+                    {/* LEFT */}
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      {guardianLetters.map((l, i) => (
+                        <span key={i} className="font-amiri font-bold leading-tight"
+                          style={{ color: elementMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elementMeta.color}55` }}>
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                    {/* GRID */}
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {vefk.grid.flat().map((val, idx) => (
+                        <div key={idx}
+                          className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
+                          style={{
+                            background: idx % 2 === 0 ? G.goldFaint : G.bgInner,
+                            borderColor: elementMeta.color + "55",
+                            color: elementMeta.color,
+                            minWidth: "2.5rem",
+                          }}>
+                          {val.toLocaleString()}
+                        </div>
+                      ))}
+                    </div>
+                    {/* RIGHT */}
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      {guardianLetters.map((l, i) => (
+                        <span key={i} className="font-amiri font-bold leading-tight"
+                          style={{ color: elementMeta.color, fontSize: "1rem", textShadow: `0 0 8px ${elementMeta.color}55` }}>
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {/* BOTTOM */}
+                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+                    style={{ color: elementMeta.color, textShadow: `0 0 12px ${elementMeta.color}55` }}>
+                    {guardianName}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Magic Constant — derived directly from completed grid */}
+            <div className="text-center space-y-3">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border"
+                style={{ background: G.goldFaint, borderColor: elementMeta.color + "40" }}>
+                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Magic Constant (MC)</span>
+                <span className="font-inter text-sm font-bold tabular-nums" style={{ color: elementMeta.color }}>
+                  {vefk.grid[0].reduce((s, v) => s + v, 0).toLocaleString()}
+                </span>
+              </div>
+
+              {/* Row / Col / Diagonal validation */}
+              {(() => {
+                const g       = vefk.grid;
+                const mc      = g[0].reduce((s, v) => s + v, 0);
+                const rowSums = g.map(r => r.reduce((a, b) => a + b, 0));
+                const colSums = g[0].map((_, j) => g.reduce((s, r) => s + r[j], 0));
+                const d1      = g.reduce((s, r, i) => s + r[i], 0);
+                const d2      = g.reduce((s, r, i) => s + r[3 - i], 0);
+                const allOk   = rowSums.every(x => x === mc) && colSums.every(x => x === mc) && d1 === mc && d2 === mc;
+                return (
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-1 text-[6px]">
+                      {rowSums.map((s, i) => (
+                        <div key={i} className="flex justify-between px-2 py-1 rounded"
+                          style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                          <span style={{ color: G.dim }}>Row {i + 1}</span>
+                          <span style={{ color: s === mc ? "#4ADE80" : "#F87171", fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                        </div>
+                      ))}
+                      {colSums.map((s, i) => (
+                        <div key={i} className="flex justify-between px-2 py-1 rounded"
+                          style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                          <span style={{ color: G.dim }}>Col {i + 1}</span>
+                          <span style={{ color: s === mc ? "#4ADE80" : "#F87171", fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                        </div>
+                      ))}
+                      {[["Diag ↘", d1], ["Diag ↙", d2]].map(([lbl, s]) => (
+                        <div key={lbl} className="flex justify-between px-2 py-1 rounded"
+                          style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                          <span style={{ color: G.dim }}>{lbl}</span>
+                          <span style={{ color: s === mc ? "#4ADE80" : "#F87171", fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[6px] font-bold text-center px-2 py-1 rounded"
+                      style={{ background: allOk ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", color: allOk ? "#4ADE80" : "#F87171" }}>
+                      {allOk ? "✓ Valid Magic Square — all lines equal MC" : "✗ Invalid Magic Square"}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Collapsible Expanded Letter Values */}
+              <ExpandedLetterValues
+                allExpandedLetters={avanExpandedLetters}
+                elementColor={elementMeta.color}
+              />
+
+              {/* Collapsible Source Section */}
+              <SourceSection
+                avanBastTotal={avanBastTotal}
+                avanLetterCount={avanLetterCount}
+                avanSourceTotal={avanSourceTotal}
+                expandedLettersTotal={avanExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0)}
+                elementColor={elementMeta.color}
+              />
+            </div>
+          </Card>
+        )}
 
       </div>
 
-      {/* Bottom accent */}
+      {/* Bottom accent line */}
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
     </motion.div>
   );
