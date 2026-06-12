@@ -30,14 +30,14 @@ const G = {
 function SectionHeader({ label, arabic, step, color = G.gold }) {
   return (
     <div className="flex items-center gap-3 mb-3">
-      <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
+      <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-sm font-black flex-shrink-0"
         style={{ background: color + "22", border: `1px solid ${color}55`, color }}>
         {step}
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color }}>{label}</span>
-          {arabic && <span className="font-amiri text-sm" style={{ color: G.goldDim }}>{arabic}</span>}
+          <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color }}>{label}</span>
+          {arabic && <span className="font-amiri text-base" style={{ color: G.goldDim, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>{arabic}</span>}
         </div>
       </div>
       <div className="h-px flex-1 max-w-[60px]" style={{ background: `linear-gradient(to right, ${color}40, transparent)` }} />
@@ -64,7 +64,7 @@ function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = fa
         {letter}
       </span>
       {showIndex && (
-        <span className="font-inter text-[8px] tabular-nums" style={{ color: G.dim }}>{index + 1}</span>
+        <span className="font-inter text-[9px] tabular-nums" style={{ color: G.dim, lineHeight: 1.5 }}>{index + 1}</span>
       )}
     </div>
   );
@@ -72,7 +72,7 @@ function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = fa
 
 function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false, rtl = false }) {
   if (!letters || letters.length === 0) return (
-    <span className="font-inter text-xs italic" style={{ color: G.dim }}>—</span>
+    <span className="font-inter text-sm italic" style={{ color: G.dim }}>—</span>
   );
   return (
     <div className="flex flex-wrap gap-2.5 items-center" style={{ direction: rtl ? "rtl" : "ltr", unicodeBidi: rtl ? "normal" : "isolate" }}>
@@ -85,9 +85,9 @@ function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false, rt
 
 function Arrow({ label }) {
   return (
-    <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-      <span className="font-inter text-base" style={{ color: G.goldDim }}>→</span>
-      {label && <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>{label}</span>}
+    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+      <span className="font-inter text-lg" style={{ color: G.goldDim }}>→</span>
+      {label && <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim, lineHeight: 1.5 }}>{label}</span>}
     </div>
   );
 }
@@ -95,12 +95,12 @@ function Arrow({ label }) {
 function Card({ children, accent, className = "" }) {
   return (
     <div
-      className={`rounded-xl border p-4 ${className}`}
+      className={`rounded-xl border p-5 ${className}`}
       style={{
         background: G.bgCard,
         borderColor: accent ? accent + "55" : G.goldBorder,
         borderLeft: accent ? `3px solid ${accent}` : undefined,
-        boxShadow: `0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)`,
+        boxShadow: `0 2px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(212,175,55,0.05)`,
       }}
     >
       {children}
@@ -110,9 +110,9 @@ function Card({ children, accent, className = "" }) {
 
 function StatRow({ label, value, valueColor = G.gold }) {
   return (
-    <div className="flex items-center justify-between py-1.5 border-b" style={{ borderColor: G.goldBorder + "55" }}>
-      <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</span>
-      <span className="font-inter text-sm font-bold tabular-nums" style={{ color: valueColor }}>{value}</span>
+    <div className="flex items-center justify-between py-2 border-b" style={{ borderColor: G.goldBorder + "55" }}>
+      <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</span>
+      <span className="font-inter text-lg font-bold tabular-nums" style={{ color: valueColor, lineHeight: 1.5 }}>{value}</span>
     </div>
   );
 }
@@ -237,11 +237,11 @@ export default function SatrVahidGrouping({
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-3"
           style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
-          <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>{sectionLabel}</span>
-          <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
+          <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>{sectionLabel}</span>
+          <span className="font-amiri text-lg" style={{ color: G.goldDim }}>✦</span>
         </div>
-        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>{sectionArabic}</h2>
-        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>{sectionSubtitle}</p>
+        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>{sectionArabic}</h2>
+        <p className="font-inter text-[10px] uppercase tracking-[0.2em] mt-1.5" style={{ color: G.goldDim }}>{sectionSubtitle}</p>
       </div>
 
       <OrnamentalDivider />
@@ -254,8 +254,8 @@ export default function SatrVahidGrouping({
           <div className="flex flex-wrap gap-2 justify-center mb-3">
             <LetterRow letters={safeSeed} color={G.gold} size="xl" showIndex rtl />
           </div>
-          <div className="text-sm font-inter" style={{ color: G.dim }}>
-            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{totalSeed}</span>
+          <div className="text-[15px] font-inter" style={{ color: G.dim, lineHeight: 1.6 }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1.1rem" }}>{totalSeed}</span>
             <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
             <span style={{
               color: isSeedFerd ? G.red : G.green,

@@ -123,16 +123,16 @@ export default function ConclusionRulesPanel() {
             <BookOpen className="w-5 h-5" style={{ color: G.gold }} />
           </div>
           <div className="flex flex-col">
-            <span className="font-inter text-[9px] uppercase tracking-[0.25em] font-bold" style={{ color: G.gold }}>
+            <span className="font-inter text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: G.gold }}>
               Conclusion & Rules
             </span>
-            <span className="font-amiri text-lg font-bold leading-tight" style={{ color: G.goldDim }} dir="rtl">
-              സംഗ്രഹവും നിയമങ്ങളും
+            <span className="font-amiri text-xl font-bold leading-relaxed" style={{ color: G.goldDim, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }} dir="rtl">
+              النتيجة والقواعد
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dimLo }}>
+          <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dimLo }}>
             {open ? "Collapse" : "Expand"}
           </span>
           <div className="flex items-center justify-center w-7 h-7 rounded-lg"
@@ -171,31 +171,31 @@ export default function ConclusionRulesPanel() {
 
                   {/* Rule Header */}
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-md font-inter text-[9px] font-black"
+                    <div className="flex items-center justify-center w-6 h-6 rounded-md font-inter text-[10px] font-black"
                       style={{ background: G.gold + "22", color: G.gold, border: `1px solid ${G.gold}44` }}>
                       {rule.number}
                     </div>
-                    <span className="font-inter text-[8px] uppercase tracking-[0.2em] font-bold" style={{ color: G.gold }}>
+                    <span className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color: G.gold }}>
                       {rule.title}
                     </span>
                   </div>
 
                   {/* English */}
-                  <div className="space-y-1">
-                    <span className="font-inter text-[7px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
+                  <div className="space-y-1.5">
+                    <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
                       English
                     </span>
-                    <p className="font-inter text-xs leading-relaxed" style={{ color: G.gold }}>
+                    <p className="font-inter text-[11px] leading-relaxed" style={{ color: G.gold, lineHeight: 1.7 }}>
                       {rule.english}
                     </p>
                   </div>
 
                   {/* Malayalam */}
-                  <div className="space-y-1 pt-2 border-t" style={{ borderColor: G.goldBorder + "30" }}>
-                    <span className="font-inter text-[7px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
+                  <div className="space-y-1.5 pt-2 border-t" style={{ borderColor: G.goldBorder + "30" }}>
+                    <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
                       Malayalam
                     </span>
-                    <p className="font-amiri text-sm leading-relaxed" style={{ color: G.goldDim }} dir="rtl">
+                    <p className="font-amiri text-base leading-relaxed" style={{ color: G.goldDim, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }} dir="rtl">
                       {rule.malayalam}
                     </p>
                   </div>
@@ -209,10 +209,10 @@ export default function ConclusionRulesPanel() {
                   background: G.goldFaint,
                   borderColor: G.goldBorder,
                 }}>
-                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
+                <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
                   Read-Only Documentation Panel
                 </span>
-                <p className="font-inter text-xs mt-1.5" style={{ color: G.goldDim }}>
+                <p className="font-inter text-[11px] mt-1.5" style={{ color: G.goldDim, lineHeight: 1.6 }}>
                   This panel displays system rules only. No calculations, state changes, or pipeline execution occur here.
                 </p>
               </div>
