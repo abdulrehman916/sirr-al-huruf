@@ -18,6 +18,7 @@ import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
+import MizanOption1Diagnostic from "../components/mizaan/MizanOption1Diagnostic";
 import { runMizaanPostPipeline, istintak, FIRST_BAST } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
@@ -330,6 +331,14 @@ export default function Mizaan9Page() {
                 return (
                   <>
                     <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />
+                    <MizaanDivider />
+                    {/* OPTION 1 DIAGNOSTIC — For cross-device consistency audit */}
+                    <MizanOption1Diagnostic
+                      grandBast={grandBast}
+                      grandLetters={grandLetters}
+                      dominant={dominant}
+                      inputText={input}
+                    />
                     <MizaanDivider />
                   </>
                 );
