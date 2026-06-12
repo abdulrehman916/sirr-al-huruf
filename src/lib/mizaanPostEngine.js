@@ -265,6 +265,57 @@ export const VEFK_TEMPLATES = {
 };
 
 /**
+ * validateVefk(grid, magicConstant)
+ * Validates that a 4×4 grid is a true magic square.
+ * Checks all rows, columns, and both diagonals.
+ * Returns { isValid, details: { rows, cols, diagonals } }
+ */
+export function validateVefk(grid, magicConstant) {
+  if (!grid || grid.length !== 4 || !grid.every(row => row.length === 4)) {
+    return { isValid: false, details: null };
+  }
+
+  const result = {
+    isValid: true,
+    details: {
+      rows: [],
+      cols: [],
+      diagonals: [],
+    },
+  };
+
+  // Check all 4 rows
+  for (let i = 0; i < 4; i++) {
+    const rowSum = grid[i].reduce((s, v) => s + v, 0);
+    const valid = rowSum === magicConstant;
+    result.details.rows.push({ index: i, sum: rowSum, valid });
+    if (!valid) result.isValid = false;
+  }
+
+  // Check all 4 columns
+  for (let j = 0; j < 4; j++) {
+    const colSum = grid.reduce((s, row) => s + row[j], 0);
+    const valid = colSum === magicConstant;
+    result.details.cols.push({ index: j, sum: colSum, valid });
+    if (!valid) result.isValid = false;
+  }
+
+  // Check main diagonal (top-left to bottom-right)
+  const diag1Sum = grid.reduce((s, row, i) => s + row[i], 0);
+  const diag1Valid = diag1Sum === magicConstant;
+  result.details.diagonals.push({ name: 'main', sum: diag1Sum, valid: diag1Valid });
+  if (!diag1Valid) result.isValid = false;
+
+  // Check anti-diagonal (top-right to bottom-left)
+  const diag2Sum = grid.reduce((s, row, i) => s + row[3 - i], 0);
+  const diag2Valid = diag2Sum === magicConstant;
+  result.details.diagonals.push({ name: 'anti', sum: diag2Sum, valid: diag2Valid });
+  if (!diag2Valid) result.isValid = false;
+
+  return result;
+}
+
+/**
  * buildVefk(S, element)
  * Source p.68: "Vefk olunacak adetten otuz (30) çıkarılıp, kalan adet
  * dörde (4) bölünür. Harici kısmet vefkin birinci hanesine yazılır ve
@@ -273,7 +324,7 @@ export const VEFK_TEMPLATES = {
  * kalırsa dokuzuncu (9) haneye bir (1) ve kesirde bir (1) kalırsa
  * onüçüncü (13) haneye bir (1) fazla ilave etmek sureti ile vefki tamamlarız."
  *
- * Returns a 4×4 grid of numbers and the magic constant.
+ * Returns a 4×4 grid of numbers, the magic constant, and validation results.
  */
 export function buildVefk(S, element = 'fire') {
   const V = S - 30;
@@ -299,7 +350,19 @@ export function buildVefk(S, element = 'fire') {
   // Magic constant = S exactly
   const mc = grid[0].reduce((s, v) => s + v, 0);
 
-  return { grid, mc, Q, R, S, element, guardianName: getGuardianName(element) };
+  // Validate the magic square
+  const validation = validateVefk(grid, mc);
+
+  return { 
+    grid, 
+    mc, 
+    Q, 
+    R, 
+    S, 
+    element, 
+    guardianName: getGuardianName(element),
+    validation,
+  };
 }
 
 // ── Galip Anasır determination (p.43–44) ─────────────────────────

@@ -159,7 +159,9 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto">
+            
+            {/* Vefk Grid */}
+            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto mb-4">
               {vefk.grid.flat().map((val, idx) => (
                 <div key={idx}
                   className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
@@ -172,6 +174,84 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                 </div>
               ))}
             </div>
+            
+            {/* Mathematical Validation */}
+            {vefk.validation && (
+              <div className="mt-4 px-4 py-3 rounded-xl border"
+                style={{ 
+                  background: vefk.validation.isValid ? G.greenDim : G.redDim, 
+                  borderColor: vefk.validation.isValid ? G.green + "55" : G.red + "55" 
+                }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="font-inter text-[8px] uppercase tracking-wider font-bold" 
+                    style={{ color: vefk.validation.isValid ? G.green : G.red }}>
+                    {vefk.validation.isValid ? "✓ VALID MAGIC SQUARE" : "✗ INVALID - REGENERATION REQUIRED"}
+                  </span>
+                </div>
+                
+                {/* Rows */}
+                <div className="mb-3">
+                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>Row Sums</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {vefk.validation.details.rows.map((row, idx) => (
+                      <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded border text-xs"
+                        style={{ 
+                          background: row.valid ? G.bgInner : G.redDim,
+                          borderColor: row.valid ? elementMeta.color + "40" : G.red + "55"
+                        }}>
+                        <span className="font-inter text-[8px]" style={{ color: G.dim }}>Row {idx + 1}</span>
+                        <span className="font-inter text-xs font-bold tabular-nums" 
+                          style={{ color: row.valid ? G.green : G.red }}>
+                          {row.sum.toLocaleString()} {row.valid ? "✓" : "✗"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Columns */}
+                <div className="mb-3">
+                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>Column Sums</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {vefk.validation.details.cols.map((col, idx) => (
+                      <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded border text-xs"
+                        style={{ 
+                          background: col.valid ? G.bgInner : G.redDim,
+                          borderColor: col.valid ? elementMeta.color + "40" : G.red + "55"
+                        }}>
+                        <span className="font-inter text-[8px]" style={{ color: G.dim }}>Column {idx + 1}</span>
+                        <span className="font-inter text-xs font-bold tabular-nums" 
+                          style={{ color: col.valid ? G.green : G.red }}>
+                          {col.sum.toLocaleString()} {col.valid ? "✓" : "✗"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Diagonals */}
+                <div>
+                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>Diagonal Sums</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {vefk.validation.details.diagonals.map((diag, idx) => (
+                      <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded border text-xs"
+                        style={{ 
+                          background: diag.valid ? G.bgInner : G.redDim,
+                          borderColor: diag.valid ? elementMeta.color + "40" : G.red + "55"
+                        }}>
+                        <span className="font-inter text-[8px]" style={{ color: G.dim }}>
+                          {diag.name === 'main' ? 'Diagonal A' : 'Diagonal B'}
+                        </span>
+                        <span className="font-inter text-xs font-bold tabular-nums" 
+                          style={{ color: diag.valid ? G.green : G.red }}>
+                          {diag.sum.toLocaleString()} {diag.valid ? "✓" : "✗"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </Card>
         )}
 
