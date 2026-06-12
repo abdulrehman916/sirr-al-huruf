@@ -1,28 +1,26 @@
 // ═══════════════════════════════════════════════════════════════
-// SECTION 2: ESMA-I A'VAN
+// SECTION 2: ESMA-I A'VAN — FULLY ISOLATED PIPELINE
 // ─────────────────────────────────────────────────────────────
-// INPUT:  Section 1's allExpandedLetters (read-only, never modified)
+// INPUT (read-only): Section 1's allExpandedLetters
 //
 // FORMULA:
-//   avanBastTotal  = sum of FirstBast(letter) for each letter in allExpandedLetters
+//   avanBastTotal   = sum of FirstBast(letter) for each letter
 //   avanLetterCount = allExpandedLetters.length
 //   avanSourceTotal = avanBastTotal + avanLetterCount
-//   seedLetters    = istintak(avanSourceTotal)
+//   seedLetters     = istintak(avanSourceTotal)
 //
-// AFTER THAT: exact same Option 1 pipeline as Section 1
-//   SatrVahidGrouping (derivation chain + group formation)
-//   + Vefk Magic Square
+// THEN: exact same Option 1 pipeline (SatrVahidGrouping + Vefk)
 //
-// ISOLATION: Section 1 is never modified. No value flows back into Section 1.
+// ISOLATION: Nothing feeds back into Section 1.
 // ═══════════════════════════════════════════════════════════════
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, getBastLevel, istintak } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
-// ── Exact same design tokens as MizaanPipelineFull (Section 1) ──
+// ── Same design tokens as MizaanPipelineFull ────────────────────
 const G = {
   gold:        "#F5D060",
   goldDim:     "rgba(245,208,96,0.55)",
@@ -43,7 +41,7 @@ const ELEMENT_META = {
   water: { arabic: "الماء",  icon: "💧", color: "#4FC3F7" },
 };
 
-// ── Exact same sub-components as MizaanPipelineFull ─────────────
+// ── Sub-components (identical to MizaanPipelineFull) ────────────
 
 function SectionHeader({ step, label, arabic, color = G.gold }) {
   return (
@@ -88,9 +86,9 @@ function OrnamentalDivider() {
 }
 
 // Collapsible expanded letter values — identical to Section 1
-function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
+function ExpandedLetterValues({ letters, elementColor }) {
   const [isOpen, setIsOpen] = useState(false);
-  const safeLetters = Array.isArray(allExpandedLetters) ? allExpandedLetters : [];
+  const safe = Array.isArray(letters) ? letters : [];
   return (
     <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
       <button onClick={() => setIsOpen(!isOpen)}
@@ -101,22 +99,22 @@ function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
       </button>
       {isOpen && (
         <div className="mt-2 space-y-1">
-          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[6px] font-inter" style={{ color: G.dim }}>
-            {safeLetters.map((letter, idx) => {
-              const bastVal = getBastLevel(letter, 1) || 0;
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[6px] font-inter">
+            {safe.map((letter, idx) => {
+              const bast = getBastLevel(letter, 1) || 0;
               return (
                 <div key={idx} className="contents">
                   <span className="text-right font-amiri" style={{ color: elementColor }}>{letter}</span>
-                  <span className="tabular-nums" style={{ color: G.dim }}>{bastVal.toLocaleString()}</span>
+                  <span className="tabular-nums" style={{ color: G.dim }}>{bast.toLocaleString()}</span>
                 </div>
               );
             })}
           </div>
-          {safeLetters.length > 0 && (
+          {safe.length > 0 && (
             <div className="mt-1.5 pt-1.5 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
               <span className="text-[6px]" style={{ color: G.dim }}>Total: </span>
               <span className="text-[8px] font-bold tabular-nums" style={{ color: elementColor }}>
-                {safeLetters.reduce((sum, l) => sum + (getBastLevel(l, 1) || 0), 0).toLocaleString()}
+                {safe.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0).toLocaleString()}
               </span>
             </div>
           )}
@@ -126,8 +124,8 @@ function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
   );
 }
 
-// Collapsible source section — mirrors Section 1 but shows A'van derivation
-function SourceSection({ avanBastTotal, avanLetterCount, avanSourceTotal, expandedLettersTotal, elementColor }) {
+// Collapsible source section showing the A'van derivation
+function SourceSection({ avanBastTotal, avanLetterCount, avanSourceTotal, vefkSourceTotal, elementColor }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
@@ -151,10 +149,10 @@ function SourceSection({ avanBastTotal, avanLetterCount, avanSourceTotal, expand
           <div className="text-[7px] px-2 py-1.5 rounded font-bold" style={{ background: G.bgInner, color: elementColor }}>
             A'van Source Total = {avanSourceTotal?.toLocaleString() || 0}
           </div>
-          <div className="text-[6px]" style={{ color: G.dim }}>→ Istintak → Seed Letters → Pipeline</div>
+          <div className="text-[6px]" style={{ color: G.dim }}>→ Istintak → Seed Letters → Full Pipeline</div>
           <div className="text-[6px]" style={{ color: G.dim }}>↓</div>
           <div className="text-[7px] px-2 py-1.5 rounded font-bold" style={{ background: G.bgInner, color: elementColor }}>
-            Vefk Source (Expanded Letters Total) = {expandedLettersTotal?.toLocaleString() || 0}
+            Vefk Source (Expanded Letters Total) = {vefkSourceTotal?.toLocaleString() || 0}
           </div>
           <div className="text-[6px] px-2" style={{ color: G.dim }}>
             Sum of all A'van expanded letters' First Bast values
@@ -165,57 +163,42 @@ function SourceSection({ avanBastTotal, avanLetterCount, avanSourceTotal, expand
   );
 }
 
-// ── Section 2 pipeline — fully isolated from Section 1 ──────────
-//
-// Takes Section 1's allExpandedLetters as read-only input.
-// Builds a fresh runMizaanPostPipeline call using:
-//   grandBast    = sum of FirstBast of allExpandedLetters
-//   grandLetters = count of allExpandedLetters
-//
-// runMizaanPostPipeline internally computes:
-//   satirVahidTotal = grandBast + grandLetters    (= avanSourceTotal)
-//   initialSeedLetters = istintak(satirVahidTotal)
-//   ... then the full Option 1 pipeline
-//
-// This is exactly the same entry point Section 1 uses, so behaviour
-// is guaranteed to be identical — only the source numbers differ.
-function runAvanPipeline(allExpandedLetters, dominant) {
-  if (!allExpandedLetters || allExpandedLetters.length === 0) return null;
-
-  const grandBast    = allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
-  const grandLetters = allExpandedLetters.length;
-
-  if (grandBast <= 0) return null;
-
-  // Reuse exactly the same engine as Section 1
-  const pipeline = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
-  if (!pipeline) return null;
-
-  return {
-    ...pipeline,
-    // Expose source derivation for the Source section display
-    avanBastTotal:    grandBast,
-    avanLetterCount:  grandLetters,
-    avanSourceTotal:  grandBast + grandLetters,
-  };
-}
-
 // ── Main exported component ──────────────────────────────────────
+// Props:
+//   allExpandedLetters — Section 1 output (read-only, never modified)
+//   dominant           — Galib Anasir key from Section 1
 export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
-  const pipeline = useMemo(
-    () => runAvanPipeline(allExpandedLetters, dominant),
-    [allExpandedLetters, dominant]
-  );
+  const pipeline = useMemo(() => {
+    if (!allExpandedLetters || allExpandedLetters.length === 0) return null;
+    const grandBast    = allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+    const grandLetters = allExpandedLetters.length;
+    if (grandBast <= 0) return null;
+    // Re-use EXACTLY the same engine as Section 1 — only the input numbers differ
+    const result = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+    if (!result) return null;
+    return {
+      ...result,
+      avanBastTotal:   grandBast,
+      avanLetterCount: grandLetters,
+      avanSourceTotal: grandBast + grandLetters,
+    };
+  }, [allExpandedLetters, dominant]);
 
   if (!pipeline) return null;
 
   const {
-    initialSeedLetters, vefk, allExpandedLetters: avanExpandedLetters,
-    avanBastTotal, avanLetterCount, avanSourceTotal, expandedLettersTotal,
+    initialSeedLetters,
+    vefk,
+    allExpandedLetters: avanExpanded,
+    avanBastTotal,
+    avanLetterCount,
+    avanSourceTotal,
+    expandedLettersTotal,
   } = pipeline;
 
-  const element      = dominant || "fire";
-  const elementMeta  = ELEMENT_META[element] || ELEMENT_META.fire;
+  const element     = dominant || "fire";
+  const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
+  const vefkSource  = avanExpanded.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
 
   return (
     <motion.div
@@ -248,13 +231,22 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* COMPLETE MANUSCRIPT DERIVATION CHAIN — identical to Section 1 */}
+        {/* ── COMPLETE DERIVATION CHAIN (Steps 1–4 + Names) ── */}
+        {/* SatrVahidGrouping contains:                         */}
+        {/* Step 1: Original Seed Letters                       */}
+        {/* Step 2: Individual Bast Derivations                 */}
+        {/* Step 3: All Expanded Letters                        */}
+        {/* Step 4: Group Formation                             */}
+        {/* Step F: Final Names Array                           */}
         <SatrVahidGrouping
           satrVahidLetters={initialSeedLetters}
           dominant={dominant}
+          sectionLabel="SECTION 2 — Esma-i A'van"
+          sectionArabic="أسماء الأعوان"
+          sectionSubtitle="A'van Derivation Workflow"
         />
 
-        {/* VEFK MAGIC SQUARE — identical structure to Section 1 */}
+        {/* ── VEFK MAGIC SQUARE (Step 5) ── */}
         {vefk && (
           <Card accent={elementMeta.color}>
             <SectionHeader step="5" label="Vefk Magic Square" arabic="الوفق" color={elementMeta.color} />
@@ -262,15 +254,13 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
             {/* Element Info */}
             <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl">{elementMeta.icon}</span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-amiri text-lg" style={{ color: elementMeta.color }}>{elementMeta.arabic}</span>
-                  <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>({element})</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="font-amiri text-lg" style={{ color: elementMeta.color }}>{elementMeta.arabic}</span>
+                <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>({element})</span>
               </div>
             </div>
 
-            {/* Manuscript-style framed Vefk */}
+            {/* Manuscript-style framed Vefk — guardian letters on all 4 sides */}
             {(() => {
               const guardianName    = vefk.guardianName || "";
               const guardianLetters = [...guardianName];
@@ -283,7 +273,6 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
                   </div>
                   {/* MIDDLE: Left | Grid | Right */}
                   <div className="flex items-center gap-2">
-                    {/* LEFT */}
                     <div className="flex flex-col items-center justify-center gap-0.5">
                       {guardianLetters.map((l, i) => (
                         <span key={i} className="font-amiri font-bold leading-tight"
@@ -292,7 +281,6 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
                         </span>
                       ))}
                     </div>
-                    {/* GRID */}
                     <div className="grid grid-cols-4 gap-1.5">
                       {vefk.grid.flat().map((val, idx) => (
                         <div key={idx}
@@ -307,7 +295,6 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
                         </div>
                       ))}
                     </div>
-                    {/* RIGHT */}
                     <div className="flex flex-col items-center justify-center gap-0.5">
                       {guardianLetters.map((l, i) => (
                         <span key={i} className="font-amiri font-bold leading-tight"
@@ -326,7 +313,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
               );
             })()}
 
-            {/* Magic Constant — derived directly from completed grid */}
+            {/* Magic Constant + Row/Col/Diag validation */}
             <div className="text-center space-y-3">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border"
                 style={{ background: G.goldFaint, borderColor: elementMeta.color + "40" }}>
@@ -336,7 +323,6 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
                 </span>
               </div>
 
-              {/* Row / Col / Diagonal validation */}
               {(() => {
                 const g       = vefk.grid;
                 const mc      = g[0].reduce((s, v) => s + v, 0);
@@ -378,18 +364,15 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant }) {
                 );
               })()}
 
-              {/* Collapsible Expanded Letter Values */}
-              <ExpandedLetterValues
-                allExpandedLetters={avanExpandedLetters}
-                elementColor={elementMeta.color}
-              />
+              {/* Collapsible: Expanded Letter Values */}
+              <ExpandedLetterValues letters={avanExpanded} elementColor={elementMeta.color} />
 
-              {/* Collapsible Source Section */}
+              {/* Collapsible: Source derivation */}
               <SourceSection
                 avanBastTotal={avanBastTotal}
                 avanLetterCount={avanLetterCount}
                 avanSourceTotal={avanSourceTotal}
-                expandedLettersTotal={avanExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0)}
+                vefkSourceTotal={vefkSource}
                 elementColor={elementMeta.color}
               />
             </div>

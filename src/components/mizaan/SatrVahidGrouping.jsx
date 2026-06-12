@@ -129,6 +129,9 @@ function OrnamentalDivider() {
 export default function SatrVahidGrouping({
   satrVahidLetters = [],
   dominant = "fire",
+  sectionLabel = "OPTION 1 — Esma-i Kitabet",
+  sectionArabic = "أسماء الكتابة",
+  sectionSubtitle = "Complete Manuscript Workflow",
 }) {
   const safeSeed = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
   const totalSeed = safeSeed.length;
@@ -232,11 +235,11 @@ export default function SatrVahidGrouping({
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-3"
           style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
-          <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>OPTION 1 — Esma-i Kitabet</span>
+          <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>{sectionLabel}</span>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
-        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>أسماء الكتابة</h2>
-        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Complete Manuscript Workflow</p>
+        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>{sectionArabic}</h2>
+        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>{sectionSubtitle}</p>
       </div>
 
       <OrnamentalDivider />
@@ -353,7 +356,7 @@ export default function SatrVahidGrouping({
 
         {/* ══ FINAL ESMA-I KITABET NAMES SUMMARY ══ */}
         <Card accent={G.gold}>
-          <SectionHeader step="F" label="Final Esma-i Kitabet Names" arabic="أسماء الكتابة النهائية" color={G.gold} />
+          <SectionHeader step="F" label={`Final ${sectionArabic} Names`} arabic="الأسماء النهائية" color={G.gold} />
           <div className="flex flex-col gap-2 py-2">
             {groupFormation.groups.map((group, idx) => (
               <motion.div key={idx}
