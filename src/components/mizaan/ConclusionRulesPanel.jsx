@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// CONCLUSION & RULES PANEL — READ-ONLY DOCUMENTATION
+// CONCLUSION & RULES PANEL — MANUSCRIPT USAGE INSTRUCTIONS ONLY
 // No calculations. No state changes. No pipeline. Display only.
 // ═══════════════════════════════════════════════════════════════
 
@@ -24,63 +24,45 @@ const G = {
 const RULES = [
   {
     number: 1,
-    title: "Section Independence",
-    english: "Each section is completely independent and must not modify or overwrite the data of any other section. Section 1, Section 2, and Section 3 each run their own isolated pipelines from start to finish.",
-    malayalam: "ഓരോ സെക്ഷനും പൂർണ്ണമായും സ്വതന്ത്രമാണ്. ഒരു സെക്ഷനും മറ്റൊരു സെക്ഷന്റെ ഡേറ്റ മാറ്റുകയോ തിരുത്തുകയോ ചെയ്യരുത്. സെക്ഷൻ 1, 2, 3 — ഓരോന്നും ആദ്യം മുതൽ അവസാനം വരെ സ്വന്തം ഐസൊലേറ്റഡ് പൈപ്പ്‌ലൈൻ പ്രവർത്തിപ്പിക്കും.",
+    title: "Order of Use — ترتیب استعمال",
+    english: "The three sections must be used in strict sequential order: First, Esma-i Kitabet (Section 1) for the primary Vefk. Second, Esma-i A'van (Section 2) for assistance and support. Third, Esma-i Kasem (Section 3) for division and allocation. Each section serves a distinct spiritual purpose and must not be skipped or reordered.",
+    malayalam: "മൂന്ന് സെക്ഷനുകളും കർശനമായ ക്രമത്തിൽ ഉപയോഗിക്കണം: ആദ്യം Esma-i Kitabet (സെക്ഷൻ 1) പ്രാഥമിക Vefk-നായി. രണ്ടാമത് Esma-i A'van (സെക്ഷൻ 2) സഹായത്തിനും പിന്തുണയ്ക്കും. മൂന്നാമത് Esma-i Kasem (സെക്ഷൻ 3) വിഭജനത്തിനും വിതരണത്തിനും. ഓരോ സെക്ഷനും വ്യത്യസ്തമായ ആത്മീക ഉദ്ദേശ്യമുണ്ട്, ഒഴിവാക്കാനോ ക്രമം മാറ്റാനോ പാടില്ല.",
   },
   {
     number: 2,
-    title: "Data Flow",
-    english: "Section 2 reads only the final Expanded Letters of Section 1 as a read-only input. Section 3 reads only the final Expanded Letters of Section 2 as a read-only input. No section writes back to a previous section.",
-    malayalam: "സെക്ഷൻ 2, സെക്ഷൻ 1-ന്റെ അന്തിമ Expanded Letters മാത്രം Read-Only ആയി വായിക്കണം. സെക്ഷൻ 3, സെക്ഷൻ 2-ന്റെ അന്തിമ Expanded Letters മാത്രം Read-Only ആയി വായിക്കണം. ഒരു സെക്ഷനും മുൻ സെക്ഷനിലേക്ക് ഡേറ്റ തിരിച്ചെഴുതരുത്.",
+    title: "Writing Method — طریقہ لکھنا",
+    english: "Write the Vefk with pure ink on clean paper. Hold the pen in your right hand. Begin with Bismillah. Write each cell with full concentration and presence of heart. Do not speak during writing. Complete the entire grid in one sitting if possible. After writing, recite the guardian name of the Vefk 3 times over the completed grid.",
+    malayalam: "ശുദ്ധമായ മഷി ഉപയോഗിച്ച് വൃത്തിയുള്ള കടലാസിൽ Vefk എഴുതുക. പേന വലതുകയ്യിൽ പിടിക്കുക. ബിസ്മില്ലാഹ് ചൊല്ലി ആരംഭിക്കുക. ഓരോ സെല്ലും പൂർണ്ണ ശ്രദ്ധയോടെയും ഹൃദയ സാന്നിധ്യത്തോടെയും എഴുതുക. എഴുതുമ്പോൾ സംസാരിക്കരുത്. സാധ്യമെങ്കിൽ മുഴുവൻ ഗ്രിഡും ഒരൊറ്റ ഇരിപ്പിൽ പൂർത്തിയാക്കുക. എഴുതി ശേഷം, പൂർത്തിയാക്കിയ ഗ്രിഡിന് മേൽ Vefk-ന്റെ ഗാർഡിയൻ നാമം 3 പ്രാവശ്യം ചൊല്ലുക.",
   },
   {
     number: 3,
-    title: "Remainder Letter Rules",
-    english: "When the total expanded letters count is not perfectly divisible by the group size (4 or 5), the shortfall letters are derived from the Istintak of the Ghalib Anasir (dominant element) value. Only the exact number of letters needed to complete the final group are taken.",
-    malayalam: "ആകെ Expanded Letters, ഗ്രൂപ്പ് സൈസ് (4 അല്ലെങ്കിൽ 5) കൊണ്ട് കൃത്യമായി ഹരിക്കാൻ കഴിയാത്ത സ്ഥിതിയിൽ, ബാക്കി ആവശ്യമുള്ള അക്ഷരങ്ങൾ Ghalib Anasir (Dominant Element) -ന്റെ മൂല്യത്തിന്റെ Istintak-ൽ നിന്ന് ഉരുത്തിരിക്കണം. അവസാന ഗ്രൂപ്പ് പൂർത്തിയാക്കാൻ ആവശ്യമായ കൃത്യ എണ്ണം അക്ഷരങ്ങൾ മാത്രം എടുക്കണം.",
+    title: "Dominant Element (Galib Anasir) — غالب عناصر",
+    english: "The dominant element determined from the 9-Mizan analysis governs all three sections and cannot be changed. Fire dominant: use for leadership, energy, transformation, authority. Earth dominant: use for stability, material gains, grounding, permanence. Air dominant: use for communication, travel, intellectual pursuits, change. Water dominant: use for emotions, healing, purification, relationships. The dominant element determines placement direction and wrapping cloth color.",
+    malayalam: "9-Mizan വിശകലനത്തിൽ നിന്ന് നിർണ്ണയിക്കുന്ന പ്രബല മൂലകം മൂന്ന് സെക്ഷനുകളെയും നിയന്ത്രിക്കുന്നു, മാറ്റാൻ കഴിയില്ല. അഗ്നി പ്രബലം: നേതൃത്വത്തിനും ഊർജ്ജത്തിനും പരിവർത്തനത്തിനും അധികാരത്തിനും ഉപയോഗിക്കുക. ഭൂമി പ്രബലം: സ്ഥിരതയ്ക്കും ഭൗതിക നേട്ടങ്ങൾക്കും ദൃഢതയ്ക്കും നിലനിൽപ്പിനും ഉപയോഗിക്കുക. വായു പ്രബലം: ആശയവിനിമയത്തിനും യാത്രയ്ക്കും ബൗദ്ധിക പ്രവർത്തനങ്ങൾക്കും മാറ്റത്തിനും ഉപയോഗിക്കുക. ജലം പ്രബലം: വികാരങ്ങൾക്കും ചികിത്സയ്ക്കും ശുദ്ധീകരണത്തിനും ബന്ധങ്ങൾക്കും ഉപയോഗിക്കുക. പ്രബല മൂലകം സ്ഥാപന ദിശയും തുണിയുടെ നിറവും നിർണ്ണയിക്കുന്നു.",
   },
   {
     number: 4,
-    title: "Istintak Rules",
-    english: "Istintak converts a number into its constituent Arabic letters by extracting each positional digit and mapping it to the corresponding letter. The output letters become the seed or expanded sequence for the next pipeline step.",
-    malayalam: "Istintak എന്നത് ഒരു സംഖ്യയെ അതിന്റെ ഘടകഭാഗമായ അറബി അക്ഷരങ്ങളിലേക്ക് പരിവർത്തനം ചെയ്യുന്ന പ്രക്രിയയാണ്. ഓരോ ഡിജിറ്റ് സ്ഥാനത്തെ അക്ഷരമാക്കി മാറ്റുന്നു. ഔട്ട്‌പുട്ട് അക്ഷരങ്ങൾ അടുത്ത പൈപ്പ്‌ലൈൻ ഘട്ടത്തിന്റെ Seed അല്ലെങ്കിൽ Expanded ശ്രേണിയാകും.",
+    title: "Placement Method According To Element — رکھنے کا طریقہ",
+    english: "Fire: Place in elevated positions — high shelves, upper walls, mountain tops. Wrap in red or golden cloth. Face East or South. Earth: Place in stable grounded locations — buried in clean soil, on stone slabs, in wooden boxes. Wrap in green or brown cloth. Face North or center. Air: Place in open ventilated areas — near windows, balconies, hanging from ceilings. Wrap in light blue or white cloth. Face East or West. Water: Place near water sources — rivers, wells, fountains, containers with clean water. Wrap in dark blue or silver cloth. Face North.",
+    malayalam: "അഗ്നി: ഉയർന്ന സ്ഥലങ്ങളിൽ വയ്ക്കുക — ഉയർന്ന അലമാരകൾ, മതിലുകളുടെ മുകൾഭാഗം, മലമുകളിൽ. ചുവപ്പ് അല്ലെങ്കിൽ സ്വർണ്ണ തുണിയിൽ പൊതിയുക. കിഴക്ക് അല്ലെങ്കിൽ തെക്ക് അഭിമുഖം. ഭൂമി: ദൃഢമായ സ്ഥലങ്ങളിൽ വയ്ക്കുക — ശുദ്ധമായ മണ്ണിൽ കുഴിച്ചിടുക, കല്ല് പലകകളിൽ, മരപ്പെട്ടികളിൽ. പച്ച അല്ലെങ്കിൽ തവിട്ട് തുണിയിൽ പൊതിയുക. വടക്ക് അല്ലെങ്കിൽ മധ്യഭാഗം അഭിമുഖം. വായു: തുറന്ന കാറ്റുള്ള സ്ഥലങ്ങളിൽ — ജനലുകൾക്ക് സമീപം, ബാൽക്കണികളിൽ, മേൽക്കൂരയിൽ തൂക്കിയിടുക. ഇളം നീല അല്ലെങ്കിൽ വെള്ള തുണിയിൽ പൊതിയുക. കിഴക്ക് അല്ലെങ്കിൽ പടിഞ്ഞാറ് അഭിമുഖം. ജലം: ജല സ്രോതസ്സുകൾക്ക് സമീപം — നദികൾ, കിണറുകൾ, ഉറവകൾ, ശുദ്ധജലമുള്ള പാത്രങ്ങൾ. ഇരുണ്ട നീല അല്ലെങ്കിൽ വെള്ളി തുണിയിൽ പൊതിയുക. വടക്ക് അഭിമുഖം.",
   },
   {
     number: 5,
-    title: "Vefk Order",
-    english: "The three Vefk squares are always produced in the following strict order: Section 1 (Esma-i Kitabet / Esma-i Vefk) → Section 2 (Esma-i A'van) → Section 3 (Esma-i Kasem). Each Vefk is derived only from its own section's pipeline and is never shared or reused across sections.",
-    malayalam: "മൂന്ന് Vefk സ്ക്വയറുകൾ എപ്പോഴും ഈ കർശനമായ ക്രമത്തിൽ ഉൽപ്പാദിപ്പിക്കണം: സെക്ഷൻ 1 (Esma-i Kitabet / Esma-i Vefk) → സെക്ഷൻ 2 (Esma-i A'van) → സെക്ഷൻ 3 (Esma-i Kasem). ഓരോ Vefk-ഉം അതിന്റെ സ്വന്തം സെക്ഷന്റെ പൈപ്പ്‌ലൈനിൽ നിന്ന് മാത്രം ഉരുത്തിരിക്കണം. ഒരിക്കലും സെക്ഷനുകൾക്കിടയിൽ പങ്കിടുകയോ പുനരുപയോഗിക്കുകയോ ചെയ്യരുത്.",
+    title: "Day Selection Rules — انتخاب روز",
+    english: "Sunday: Solar works, authority, success, leadership. Monday: Lunar works, emotions, relationships, dreams. Tuesday: Martial works, courage, protection, urgent matters only. Wednesday: Mercurial works, knowledge, communication, business. Thursday: Jovian works, wisdom, prosperity, spiritual growth, most auspicious. Friday: Venusian works, love, harmony, spiritual blessings. Saturday: Saturnine works, binding, restriction, discipline. Avoid Tuesday for general works. Thursday and Sunday are most favorable for beginning Vefk operations.",
+    malayalam: "ഞായർ: സൗര പ്രവർത്തനങ്ങൾ, അധികാരം, വിജയം, നേതൃത്വം. തിങ്കൾ: ചാന്ദ്ര പ്രവർത്തനങ്ങൾ, വികാരങ്ങൾ, ബന്ധങ്ങൾ, സ്വപ്നങ്ങൾ. ചൊവ്വ: കുജ പ്രവർത്തനങ്ങൾ, ധൈര്യം, സംരക്ഷണം, അടിയന്തര കാര്യങ്ങൾ മാത്രം. ബുധൻ: ബുധ പ്രവർത്തനങ്ങൾ, ജ്ഞാനം, ആശയവിനിമയം, വ്യാപാരം. വ്യാഴം: വ്യാഴ പ്രവർത്തനങ്ങൾ, വിജ്ഞാനം, സമൃദ്ധി, ആത്മീക വളർച്ച, ഏറ്റവും ശുഭകരം. വെള്ളി: ശുക്ര പ്രവർത്തനങ്ങൾ, സ്നേഹം, സാമരസ്യം, ആത്മീക അനുഗ്രഹങ്ങൾ. ശനി: ശനി പ്രവർത്തനങ്ങൾ, ബന്ധനം, നിയന്ത്രണം, ശിക്ഷണം. പൊതുവായ പ്രവർത്തനങ്ങൾക്ക് ചൊവ്വ ഒഴിവാക്കുക. Vefk പ്രവർത്തനങ്ങൾ ആരംഭിക്കാൻ വ്യാഴാഴ്ചയും ഞായറാഴ്ചയും ഏറ്റവും അനുയോജ്യം.",
   },
   {
     number: 6,
-    title: "Element Rules",
-    english: "The dominant element (Ghalib Anasir) is determined once from the 9-Mizan grand analysis. This single dominant element value is then shared as a read-only parameter to all three sections. No section may change or re-derive the dominant element independently.",
-    malayalam: "Dominant Element (Ghalib Anasir) 9-Mizan Grand Analysis-ൽ നിന്ന് ഒരു തവണ മാത്രം നിർണ്ണയിക്കും. ഈ ഒറ്റ Dominant Element മൂല്യം Read-Only Parameter ആയി മൂന്ന് സെക്ഷനുകളിലേക്കും നൽകും. ഒരു സെക്ഷനും Dominant Element സ്വതന്ത്രമായി മാറ്റുകയോ പുനർ-ഉരുത്തിരിക്കുകയോ ചെയ്യരുത്.",
+    title: "Hour Selection Rules — انتخاب ساعت",
+    english: "The first hour after sunrise is most powerful for all operations. Planetary hours must align with purpose: Sun hours for authority and success. Moon hours for emotions and relationships. Mars hours for courage and protection. Mercury hours for knowledge and communication. Jupiter hours for wisdom and prosperity. Venus hours for love and harmony. Saturn hours for binding and restriction. Avoid the last hour before sunset for important works. The selected hour from 9-Mizan is fixed and locked once analysis begins.",
+    malayalam: "സൂര്യോദയത്തിന് ശേഷമുള്ള ആദ്യ മണിക്കൂർ എല്ലാ പ്രവർത്തനങ്ങൾക്കും ഏറ്റവും ശക്തമാണ്. ഗ്രഹ മണിക്കൂറുകൾ ഉദ്ദേശ്യത്തിനനുസരിച്ച് യോജിപ്പിക്കണം: സൂര്യൻ - അധികാരത്തിനും വിജയത്തിനും. ചന്ദ്രൻ - വികാരങ്ങൾക്കും ബന്ധങ്ങൾക്കും. ചൊവ്വ - ധൈര്യത്തിനും സംരക്ഷണയ്ക്കും. ബുധൻ - ജ്ഞാനത്തിനും ആശയവിനിമയത്തിനും. വ്യാഴം - വിജ്ഞാനത്തിനും സമൃദ്ധിക്കും. ശുക്രൻ - സ്നേഹത്തിനും സാമരസ്യത്തിനും. ശനി - ബന്ധനത്തിനും നിയന്ത്രണത്തിനും. പ്രധാനപ്പെട്ട ജോലികൾക്ക് സൂര്യാസ്തമയത്തിന് മുൻപുള്ള അവസാന മണിക്കൂർ ഒഴിവാക്കുക. 9-Mizan-ൽ നിന്ന് തിരഞ്ഞെടുത്ത മണിക്കൂർ Analysis ആരംഭിച്ചാൽ സ്ഥിരമാണ്, ലോക്ക് ചെയ്യപ്പെടും.",
   },
   {
     number: 7,
-    title: "Day and Hour Rules",
-    english: "The selected Day and Hour values from the 9-Mizan input stage are fixed inputs to the grand total calculation only. They do not independently affect the Bast derivations within Section 1, 2, or 3 pipelines. The day and hour selections are locked once the analysis begins.",
-    malayalam: "9-Mizan ഇൻപുട്ട് ഘട്ടത്തിൽ തിരഞ്ഞെടുത്ത Day, Hour മൂല്യങ്ങൾ Grand Total കണക്കുകൂട്ടലിൽ മാത്രം Fixed Input ആണ്. അവ സ്വതന്ത്രമായി സെക്ഷൻ 1, 2, 3 പൈപ്പ്‌ലൈനുകളിലെ Bast Derivation-നെ ബാധിക്കരുത്. Analysis ആരംഭിച്ചതിനു ശേഷം Day, Hour തിരഞ്ഞെടുപ്പുകൾ ലോക്ക് ചെയ്യപ്പെടും.",
-  },
-  {
-    number: 8,
-    title: "Section 3 Special Rules",
-    english: "Section 3 (Esma-i Kasem) always uses Fifth Bast (B5) for its final derivation block, regardless of Zevc/Ferd determination. The border letters of Section 3 Vefk are derived from the Istintak of the total value of all Fifth Bast expanded letters.",
-    malayalam: "സെക്ഷൻ 3 (Esma-i Kasem) അതിന്റെ അന്തിമ ഡെറിവേഷൻ ബ്ലോക്കിനായി Zevc/Ferd നിർണ്ണയം പരിഗണിക്കാതെ എപ്പോഴും Fifth Bast (B5) ഉപയോഗിക്കുന്നു. സെക്ഷൻ 3 Vefk-ന്റെ അതിർത്തി അക്ഷരങ്ങൾ എല്ലാ Fifth Bast വിപുലീകരിച്ച അക്ഷരങ്ങളുടെ ആകെ മൂല്യത്തിന്റെ Istintak-ൽ നിന്ന് ഉരുത്തിരിക്കുന്നു.",
-  },
-  {
-    number: 9,
-    title: "Section 3 Vefk Rules",
-    english: "The Section 3 Vefk source number is the total sum of all expanded letters from the final Fifth Bast block. The magic square is built directly from this source without an intermediate Istintak stage. Border letters frame all four sides of the grid.",
-    malayalam: "സെക്ഷൻ 3 Vefk സോഴ്സ് നമ്പർ എന്നത് അന്തിമ Fifth Bast ബ്ലോക്കിലെ എല്ലാ വിപുലീകരിച്ച അക്ഷരങ്ങളുടെ ആകെ തുകയാണ്. ഇടനില Istintak ഘട്ടമില്ലാതെ ഈ സോഴ്സിൽ നിന്ന് നേരിട്ട് മാജിക് സ്ക്വയർ നിർമ്മിക്കുന്നു. അതിർത്തി അക്ഷരങ്ങൾ ഗ്രിഡിന്റെ നാല് വശങ്ങളെയും ചുറ്റി നിൽക്കുന്നു.",
-  },
-  {
-    number: 10,
-    title: "Final Principle",
-    english: "All calculations strictly follow the manuscript formulas. The book is the sole authority. No mathematical assumptions or external systems override the manuscript evidence. Every cell in every Vefk grid must match the manuscript examples exactly.",
-    malayalam: "എല്ലാ കണക്കുകൂട്ടലുകളും കൈയെഴുത്തുപ്രമാണ സൂത്രവാക്യങ്ങൾ കർശനമായി പിന്തുടരുന്നു. പുസ്തകമാണ് ഏക അധികാരം. കൈയെഴുത്തുപ്രമാണ തെളിവുകളെ മറികടക്കുന്ന ഗണിതശാസ്ത്ര അനുമാനങ്ങളോ ബാഹ്യ സംവിധാനങ്ങളോ പാടില്ല. ഓരോ Vefk ഗ്രിഡിലെയും ഓരോ സെല്ലും കൈയെഴുത്തുപ്രമാണ ഉദാഹരണങ്ങളുമായി കൃത്യമായി യോജിക്കണം.",
+    title: "Practical Usage Instructions — عملی ہدایات",
+    english: "Before using any Vefk: Perform ablution (wudu) and face Qibla. Recite Bismillah three times. Hold Vefk in right hand and state intention clearly. Keep Vefk with you or in designated location for prescribed period. After purpose is fulfilled: Respectfully dispose by burying in clean soil or immersing in flowing water. Maintain purity of body, clothing, and location during all operations. Do not place Vefk on floor or in impure locations. Keep away from negative influences and impure persons.",
+    malayalam: "ഏതൊരു Vefk ഉപയോഗിക്കുന്നതിന് മുൻപ്: വുളു ചെയ്ത് ഖിബ്ലയ്ക്ക് നേരെ തിരിയുക. മൂന്ന് പ്രാവശ്യം ബിസ്മില്ലാഹ് ചൊല്ലുക. Vefk വലതുകയ്യിൽ പിടിച്ച് ഉദ്ദേശ്യം വ്യക്തമായി പ്രസ്താവിക്കുക. നിശ്ചിത കാലയളവ് Vefk നിങ്ങളോടൊപ്പം സൂക്ഷിക്കുക അല്ലെങ്കിൽ നിയുക്ത സ്ഥലത്ത് വയ്ക്കുക. ഉദ്ദേശ്യം പൂർത്തിയായ ശേഷം: ബഹുമാനപൂർവ്വം ശുദ്ധമായ മണ്ണിൽ കുഴിച്ചിടുകയോ ഒഴുകുന്ന വെള്ളത്തിൽ മുക്കുകയോ ചെയ്ത് നിർമ്മാർജ്ജനം ചെയ്യുക. എല്ലാ പ്രവർത്തനങ്ങളിലും ശരീരത്തിന്റെയും വസ്ത്രത്തിന്റെയും സ്ഥലത്തിന്റെയും ശുദ്ധി പാലിക്കുക. Vefk നിലത്തോ അശുദ്ധമായ സ്ഥലങ്ങളിലോ വയ്ക്കരുത്. നെഗറ്റീവ് പ്രഭാവങ്ങളിൽ നിന്നും അശുദ്ധ വ്യക്തികളിൽ നിന്നും അകറ്റി സൂക്ഷിക്കുക.",
   },
 ];
 
@@ -210,10 +192,10 @@ export default function ConclusionRulesPanel() {
                   borderColor: G.goldBorder,
                 }}>
                 <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
-                  Read-Only Documentation Panel
+                  Manuscript Usage Guide
                 </span>
                 <p className="font-inter text-[11px] mt-1.5" style={{ color: G.goldDim, lineHeight: 1.6 }}>
-                  This panel displays system rules only. No calculations, state changes, or pipeline execution occur here.
+                  Traditional instructions for practical application of the Vefk squares.
                 </p>
               </div>
 
