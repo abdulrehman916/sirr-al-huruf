@@ -20,7 +20,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import { getBastLevel, istintak, GALIB_ANASIR_VALUES, buildVefk } from "../../lib/mizaanPostEngine";
 
 // ── Design tokens ────────────────────────────────────────────────
 const G = {
@@ -310,6 +310,19 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
     });
   }, [postIstintakLetters]);
 
+  // ── SECTION 3 VEFK: Sum of all expanded letters from the Final B5 block → Vefk source ──
+  // RULE: Total Bast of ALL expanded letters from postDerivations → buildVefk directly (no Istintak stage)
+  const s3VefkSourceNumber = useMemo(() => {
+    return postDerivations.reduce((sum, d) => {
+      return sum + d.expandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+    }, 0);
+  }, [postDerivations]);
+
+  const s3Vefk = useMemo(() => {
+    if (!s3VefkSourceNumber || s3VefkSourceNumber <= 0) return null;
+    return buildVefk(s3VefkSourceNumber, dominant || "fire");
+  }, [s3VefkSourceNumber, dominant]);
+
   if (safe2.length === 0) return null;
 
   return (
@@ -539,6 +552,119 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant }) 
             ))}
           </div>
         </Card>
+
+        {/* ── SECTION 3 VEFK MAGIC SQUARE ── */}
+        {s3Vefk && (() => {
+          const g  = s3Vefk.grid;
+          const mc = g[0].reduce((s, v) => s + v, 0);
+          const rowSums = g.map(r => r.reduce((a, b) => a + b, 0));
+          const colSums = g[0].map((_, j) => g.reduce((s, r) => s + r[j], 0));
+          const d1 = g.reduce((s, r, i) => s + r[i], 0);
+          const d2 = g.reduce((s, r, i) => s + r[3 - i], 0);
+          const allOk = rowSums.every(x => x === mc) && colSums.every(x => x === mc) && d1 === mc && d2 === mc;
+          const guardianName    = s3Vefk.guardianName || "";
+          const guardianLetters = [...guardianName];
+
+          return (
+            <>
+              <OrnamentalDivider />
+              <Card accent={elementColor}>
+                <SectionHeader step="V" label="Section 3 Vefk Magic Square" arabic="وفق القسم" color={elementColor} />
+
+                {/* Source value */}
+                <div className="flex items-center justify-between px-3 py-2 rounded-lg border mb-4"
+                  style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+                  <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                    Square Source (B5 Expanded Total)
+                  </span>
+                  <span className="font-inter text-base font-bold tabular-nums" style={{ color: elementColor }}>
+                    {s3VefkSourceNumber.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Manuscript-style framed grid */}
+                <div className="flex flex-col items-center gap-1 mb-4">
+                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+                    style={{ color: elementColor, textShadow: `0 0 12px ${elementColor}55` }}>
+                    {guardianName}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      {guardianLetters.map((l, i) => (
+                        <span key={i} className="font-amiri font-bold leading-tight"
+                          style={{ color: elementColor, fontSize: "1rem", textShadow: `0 0 8px ${elementColor}55` }}>
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {g.flat().map((val, idx) => (
+                        <div key={idx}
+                          className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
+                          style={{
+                            background: idx % 2 === 0 ? G.goldFaint : G.bgInner,
+                            borderColor: elementColor + "55",
+                            color: elementColor,
+                            minWidth: "2.5rem",
+                          }}>
+                          {val.toLocaleString()}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      {guardianLetters.map((l, i) => (
+                        <span key={i} className="font-amiri font-bold leading-tight"
+                          style={{ color: elementColor, fontSize: "1rem", textShadow: `0 0 8px ${elementColor}55` }}>
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="font-amiri text-xl font-bold tracking-widest text-center" dir="rtl"
+                    style={{ color: elementColor, textShadow: `0 0 12px ${elementColor}55` }}>
+                    {guardianName}
+                  </div>
+                </div>
+
+                {/* MC + Validation */}
+                <div className="text-center space-y-3">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border"
+                    style={{ background: G.goldFaint, borderColor: elementColor + "40" }}>
+                    <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Magic Constant (MC)</span>
+                    <span className="font-inter text-sm font-bold tabular-nums" style={{ color: elementColor }}>{mc.toLocaleString()}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 text-[6px]">
+                    {rowSums.map((s, i) => (
+                      <div key={i} className="flex justify-between px-2 py-1 rounded"
+                        style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                        <span style={{ color: G.dim }}>Row {i + 1}</span>
+                        <span style={{ color: s === mc ? G.green : G.red, fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                      </div>
+                    ))}
+                    {colSums.map((s, i) => (
+                      <div key={i} className="flex justify-between px-2 py-1 rounded"
+                        style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                        <span style={{ color: G.dim }}>Col {i + 1}</span>
+                        <span style={{ color: s === mc ? G.green : G.red, fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                      </div>
+                    ))}
+                    {[["Diag ↘", d1], ["Diag ↙", d2]].map(([lbl, s]) => (
+                      <div key={lbl} className="flex justify-between px-2 py-1 rounded"
+                        style={{ background: s === mc ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${s === mc ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}` }}>
+                        <span style={{ color: G.dim }}>{lbl}</span>
+                        <span style={{ color: s === mc ? G.green : G.red, fontWeight: "bold" }}>{s.toLocaleString()} {s === mc ? "✓" : "✗"}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-[6px] font-bold text-center px-2 py-1 rounded"
+                    style={{ background: allOk ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", color: allOk ? G.green : G.red }}>
+                    {allOk ? "✓ Valid Magic Square — all lines equal MC" : "✗ Invalid Magic Square"}
+                  </div>
+                </div>
+              </Card>
+            </>
+          );
+        })()}
 
       </div>
 
