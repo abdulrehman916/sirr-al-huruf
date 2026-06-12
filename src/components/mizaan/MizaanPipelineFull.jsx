@@ -79,7 +79,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
 
   if (!pipeline) return null;
 
-  const { input, initialSeedLetters, vefk, kitabet, expandedLettersCount } = pipeline;
+  const { input, initialSeedLetters, vefk, kitabet, expandedLettersSum } = pipeline;
   const element = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
@@ -157,7 +157,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   <span className="font-inter" style={{ color: G.dim }}>Magic Constant: <span style={{ color: G.gold, fontWeight: "bold" }}>{vefk.mc.toLocaleString()}</span></span>
                   <span className="font-inter" style={{ color: G.dim }}>Guardian: <span style={{ color: G.gold }}>{vefk.guardianName}</span></span>
                 </div>
-                {/* MIZAN OPTION 1 RULE: Vefk source from Expanded Letters Count */}
+                {/* MIZAN OPTION 1 RULE: Vefk source from Sum of Expanded Letter Values */}
                 <div className="px-3 py-2 rounded-lg border"
                   style={{ 
                     background: "rgba(74,222,128,0.08)", 
@@ -165,10 +165,10 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   }}>
                   <div className="flex items-center justify-between">
                     <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: "rgba(74,222,128,0.70)" }}>
-                      Vefk Source: Expanded Letters Count (All Expanded Letters)
+                      Vefk Source: Sum of All Expanded Letter Values
                     </span>
                     <span className="font-inter text-sm font-bold tabular-nums" style={{ color: "#4ADE80" }}>
-                      {expandedLettersCount || kitabet.finalExpandedLetters.length}
+                      {expandedLettersSum?.toLocaleString() || 0}
                     </span>
                   </div>
                 </div>
