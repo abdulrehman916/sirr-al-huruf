@@ -782,8 +782,8 @@ export const EVIL_JINN_NAMES = [
       habitat: "ജലത്തിൽ (في الماء) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ദൃഷ്ടിയിൽ നിന്ന് ഒളിഞ്ഞ് ആക്രമിക്കുന്നു. കണ്ടുപിടിക്കാൻ ബുദ്ധിമുട്ടാണ്, ദൃഷ്ടി നഷ്ടം, ദിശ നഷ്ടം, ബോധ നഷ്ടം ഉണ്ടാക്കുന്നു.",
       notes: "",
-      remedy: "PDF-ൽ ഈ ജിന്നിന്റെ ചികിത്സ വിവരണം അടുത്ത പേജിൽ തുടരുന്നു — ദൃശ്യമായ ഭാഗം മുറിഞ്ഞ് നിൽക്കുന്നു. (PDF p.144-145 — Translation Page Twenty Three Vetro)",
-      source: "Book of Deadly Names, Translation Page Twenty Three Vetro (PDF/4 Page 12)"
+      remedy: "⚠️ PDF SOURCE INCOMPLETE — Remedy text continues on next page but not available in uploaded source material. Original entry ends at PDF p.144-145 with remedy description cut off. (Translation Page Twenty Three Vetro)",
+      source: "Book of Deadly Names, Translation Page Twenty Three Vetro (PDF/4 Page 12) — REMEDY INCOMPLETE"
     }
   },
   {
@@ -1022,8 +1022,8 @@ export const EVIL_JINN_NAMES = [
       habitat: "നശിച്ച സ്ഥലങ്ങളിലും പർവ്വതങ്ങളിലും (الخرابات وفي الجبال) വസിക്കുന്നു",
       powers: "ഗർഭപാത്രത്തിലെ ആൺകുട്ടികളെ കൊല്ലുന്നു. സ്ത്രീകളെ ഭർത്താക്കന്മാരിൽ നിന്ന് അകറ്റുന്നു.",
       notes: "",
-      remedy: "ഈ ചികിത്സ, opium (അഫ്‌യൂൺ), euphorbia (ഫർബിയൂൻ), castor (ഖർവ) — ഇവ ചേർക്കണം. (PDF p.182 — Translation Page Twenty Nine Recto; ചികിത്സ ഭാഗം അടുത്ത പേജിൽ തുടരുന്നു)",
-      source: "Book of Deadly Names, Translation Page Thirty One Recto (PDF/4 Page 38)"
+      remedy: "⚠️ PDF SOURCE INCOMPLETE — Partial remedy only: opium, euphorbia, castor. Complete formulation continues on next page (PDF p.183+) but not available in uploaded source material. (Translation Page Twenty Nine Recto/Vetro)",
+      source: "Book of Deadly Names, Translation Page Thirty One Recto (PDF/4 Page 38) — REMEDY INCOMPLETE"
     }
   },
   {
