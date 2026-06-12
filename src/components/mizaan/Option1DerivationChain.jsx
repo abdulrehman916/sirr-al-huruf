@@ -80,8 +80,8 @@ function Arrow({ label }) {
   );
 }
 
-export default function Option1DerivationChain({ initialSeedLetters, dominant }) {
-  const safeSeed = Array.isArray(initialSeedLetters) ? initialSeedLetters : [];
+export default function Option1DerivationChain({ seedLetters, dominant }) {
+  const safeSeed = Array.isArray(seedLetters) ? seedLetters : [];
   const totalSeed = safeSeed.length;
   const isFerd = totalSeed % 2 !== 0;
   const groupSize = isFerd ? 5 : 4;
