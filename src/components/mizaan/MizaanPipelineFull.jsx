@@ -13,10 +13,6 @@ const G = {
   bg:       "rgba(3,6,20,0.99)",
   bgCard:   "rgba(8,16,40,0.98)",
   bgInner:  "rgba(212,175,55,0.06)",
-  green:    "#4ADE80",
-  greenDim: "rgba(74,222,128,0.15)",
-  red:      "#F87171",
-  redDim:   "rgba(248,113,113,0.15)",
   dim:      "rgba(255,255,255,0.35)",
 };
 
@@ -79,7 +75,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
 
   if (!pipeline) return null;
 
-  const { input, initialSeedLetters, vefk, kitabet, expandedLettersSum } = pipeline;
+  const { initialSeedLetters, vefk } = pipeline;
   const element = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
@@ -103,38 +99,16 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-3"
           style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
-          <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>OPTION 1 — Complete Pipeline</span>
+          <span className="font-inter text-[9px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Manuscript Pipeline</span>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
-        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>الحاصل النهائي</h2>
-        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Final Sacred Calculation → Pipeline Stages</p>
+        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.gold }}>أسماء الكتابة</h2>
+        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Complete Derivation → Vefk</p>
       </div>
 
       <OrnamentalDivider />
 
       <div className="px-4 pb-6 space-y-5 pt-4">
-
-        {/* PIPELINE INPUT */}
-        <Card accent={G.gold}>
-          <SectionHeader step="0" label="Pipeline Input" arabic="مدخلات" color={G.gold} />
-          <div className="space-y-2">
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
-              style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Bast (Σ 9 Mizans)</span>
-              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{input.grandBast.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
-              style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Letters (Σ 9 Mizans)</span>
-              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{input.grandLetters || 0}</span>
-            </div>
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
-              style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Combined Total</span>
-              <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{input.satirVahidTotal.toLocaleString()}</span>
-            </div>
-          </div>
-        </Card>
 
         {/* COMPLETE MANUSCRIPT DERIVATION CHAIN */}
         <SatrVahidGrouping
@@ -153,30 +127,15 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                   <span className="font-amiri text-lg" style={{ color: elementMeta.color }}>{elementMeta.arabic}</span>
                   <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>({element})</span>
                 </div>
-                <div className="flex items-center gap-4 text-[8px] mb-2">
+                <div className="flex items-center gap-4 text-[8px]">
                   <span className="font-inter" style={{ color: G.dim }}>Magic Constant: <span style={{ color: G.gold, fontWeight: "bold" }}>{vefk.mc.toLocaleString()}</span></span>
                   <span className="font-inter" style={{ color: G.dim }}>Guardian: <span style={{ color: G.gold }}>{vefk.guardianName}</span></span>
-                </div>
-                {/* MIZAN OPTION 1 RULE: Vefk Source = Sum of First Bast Values (Level 1) of ALL EXPANDED LETTERS */}
-                <div className="px-3 py-2 rounded-lg border"
-                  style={{ 
-                    background: "rgba(74,222,128,0.08)", 
-                    borderColor: "rgba(74,222,128,0.40)" 
-                  }}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: "rgba(74,222,128,0.70)" }}>
-                      Expanded Letters First Value Total (Σ Level 1)
-                    </span>
-                    <span className="font-inter text-sm font-bold tabular-nums" style={{ color: "#4ADE80" }}>
-                      {expandedLettersSum?.toLocaleString() || 0}
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
             
             {/* Vefk Grid */}
-            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto mb-4">
+            <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto">
               {vefk.grid.flat().map((val, idx) => (
                 <div key={idx}
                   className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums"
@@ -189,84 +148,6 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                 </div>
               ))}
             </div>
-            
-            {/* Mathematical Validation */}
-            {vefk.validation && (
-              <div className="mt-4 px-4 py-3 rounded-xl border"
-                style={{ 
-                  background: vefk.validation.isValid ? G.greenDim : G.redDim, 
-                  borderColor: vefk.validation.isValid ? G.green + "55" : G.red + "55" 
-                }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="font-inter text-[8px] uppercase tracking-wider font-bold" 
-                    style={{ color: vefk.validation.isValid ? G.green : G.red }}>
-                    {vefk.validation.isValid ? "✓ VALID MAGIC SQUARE" : "✗ INVALID - REGENERATION REQUIRED"}
-                  </span>
-                </div>
-                
-                {/* Rows */}
-                <div className="mb-3">
-                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>Row Sums</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {vefk.validation.details.rows.map((row, idx) => (
-                      <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded border text-xs"
-                        style={{ 
-                          background: row.valid ? G.bgInner : G.redDim,
-                          borderColor: row.valid ? elementMeta.color + "40" : G.red + "55"
-                        }}>
-                        <span className="font-inter text-[8px]" style={{ color: G.dim }}>Row {idx + 1}</span>
-                        <span className="font-inter text-xs font-bold tabular-nums" 
-                          style={{ color: row.valid ? G.green : G.red }}>
-                          {row.sum.toLocaleString()} {row.valid ? "✓" : "✗"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Columns */}
-                <div className="mb-3">
-                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>Column Sums</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {vefk.validation.details.cols.map((col, idx) => (
-                      <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded border text-xs"
-                        style={{ 
-                          background: col.valid ? G.bgInner : G.redDim,
-                          borderColor: col.valid ? elementMeta.color + "40" : G.red + "55"
-                        }}>
-                        <span className="font-inter text-[8px]" style={{ color: G.dim }}>Column {idx + 1}</span>
-                        <span className="font-inter text-xs font-bold tabular-nums" 
-                          style={{ color: col.valid ? G.green : G.red }}>
-                          {col.sum.toLocaleString()} {col.valid ? "✓" : "✗"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Diagonals */}
-                <div>
-                  <div className="font-inter text-[7px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>Diagonal Sums</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {vefk.validation.details.diagonals.map((diag, idx) => (
-                      <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded border text-xs"
-                        style={{ 
-                          background: diag.valid ? G.bgInner : G.redDim,
-                          borderColor: diag.valid ? elementMeta.color + "40" : G.red + "55"
-                        }}>
-                        <span className="font-inter text-[8px]" style={{ color: G.dim }}>
-                          {diag.name === 'main' ? 'Diagonal A' : 'Diagonal B'}
-                        </span>
-                        <span className="font-inter text-xs font-bold tabular-nums" 
-                          style={{ color: diag.valid ? G.green : G.red }}>
-                          {diag.sum.toLocaleString()} {diag.valid ? "✓" : "✗"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
           </Card>
         )}
 
