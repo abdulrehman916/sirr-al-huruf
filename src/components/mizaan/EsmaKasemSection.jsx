@@ -286,7 +286,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     return { derivations: derivs, allExpandedLetters: allExpanded };
   }, [seedLetters, bastLevel]);
 
-  // ── STEP 4: Group Formation with Istintak-based remainder ──
+  // ── STEP 4: Group Formation with self-referential remainder ──
   const groupFormation = useMemo(() => {
     const totalExpanded = allExpandedLetters.length;
     const isFerd        = totalExpanded % 2 !== 0;
@@ -296,10 +296,8 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     let supp = [];
 
     if (rem > 0) {
-      const needed            = gSize - rem;
-      const galibValue        = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
-      const galibIstintak     = istintak(galibValue);
-      supp = galibIstintak.slice(0, needed);
+      const needed = gSize - rem;
+      supp = allExpandedLetters.slice(0, needed);
       seq  = [...allExpandedLetters, ...supp];
     }
 
@@ -310,7 +308,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     }
 
     return { groups: grps, supplement: supp, remainder: rem, groupSize: gSize, isFerd, totalExpanded };
-  }, [allExpandedLetters, dominant]);
+  }, [allExpandedLetters]);
 
   const elementColors = { fire: "#FF6B35", earth: "#A5C880", air: "#B2EBF2", water: "#4FC3F7" };
   const elementColor  = elementColors[dominant] || elementColors.fire;
