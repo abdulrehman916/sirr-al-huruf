@@ -402,40 +402,40 @@ export const EVIL_JINN_NAMES = [
     breakdown: [],
     malayalamName: "അൽ-ഖർസ്വ",
     profile: {
-      appearance: "",
-      nature: "",
+      appearance: "ഒരു മത്സ്യത്തിന്റെ രൂപം — ഒരു മനുഷ്യ മുഖം, മൂന്ന് ഒട്ടിച്ചേർന്ന വാലുകൾ, ഒരു ചിറക് ഉള്ള മത്സ്യത്തെ പോലെ നാല് ചിറകുകൾ.",
+      nature: "ഇരുപത്തിഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ഖർസ്വ' (القرصة) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "",
-      powers: "",
+      powers: "ആൺ കുട്ടികളെ ആകർഷിക്കുന്നു, അവരുടെ മനസ്സ് ആകർഷിക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Fourteen Vetro (PDF/3 Page 2)"
     }
   },
   {
     id: 30, serialNo: 30, arabicName: "روبمنة", arabicHarakat: "رُوبْمَنَة",
     englishName: "Ruimnah", abjadValue: 311, letterCount: 5,
     breakdown: [],
-    malayalamName: "റുബ്മന",
+    malayalamName: "റൂഇംന",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
+      appearance: "ഒരു സ്ത്രീ — രണ്ട് കൊമ്പ്, രണ്ട് ചിറക്, ഒരു മനുഷ്യ മുഖം, പുറകിൽ ഒരു മനുഷ്യ തല.",
+      nature: "മുപ്പതാമത്തെ ത്വൈലഖ് (Tayleq). 'റൂഇംന' (رويمنة) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "നശിച്ച സ്ഥലങ്ങളിൽ (الخرابات) വസിക്കുന്നു",
+      powers: "ആൺ കുട്ടികളെ പിടിച്ച്, അവരുടെ മനസ്സ് ആകർഷിക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Fourteen Vetro (PDF/3 Page 2)"
     }
   },
   {
     id: 31, serialNo: 31, arabicName: "الخامن", arabicHarakat: "الخَامِن",
     englishName: "Alekhnamen", abjadValue: 772, letterCount: 5,
     breakdown: [],
-    malayalamName: "അൽ-ഖാമിൻ",
+    malayalamName: "അൽ-ഖനാമൻ",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
+      appearance: "ഒരു മനുഷ്യ ശരീരം, ബാക്കി ഒരു സിംഹത്തിന്റേതാണ് — തല, കാൽ ഉൾപ്പെടെ.",
+      nature: "മുപ്പത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'അലേഖ്‌നാമൻ' (الخنامن) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "മരുന്നുകളിൽ (في الأدوية) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ബോധം ഇല്ലാതാക്കുന്നു, ഗ്രാഹ്യശേഷി നഷ്ടപ്പെടുത്തുന്നു. എന്തെങ്കിലും മനസ്സിലാക്കിത്തുടങ്ങിയാൽ, അതിൽ നിന്ന് ഓടിക്കുന്നു. ഒട്ടകം പോലെ ഫോം ഒഴുകും വരെ ശ്വാസം മുട്ടിക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Fifteen Recto (PDF/3 Page 3)"
     }
   },
   {
@@ -444,12 +444,12 @@ export const EVIL_JINN_NAMES = [
     breakdown: [],
     malayalamName: "ഹബ്ഷാഹേഷ്",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
+      appearance: "ഒരു മനുഷ്യ — കഴുതയുടെ തല, മനുഷ്യ കൈകൾ, രണ്ട് ചിറക് ഉണ്ട്.",
+      nature: "മുപ്പത്തിരണ്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'ഹബ്ഷഹേഷ്' (حبشحش) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "വീടുകളിൽ (في البيوت) വസിക്കുന്നു",
+      powers: "ഒരു മനുഷ്യനിൽ ചോര പോലെ ഒഴുകുന്നു. ഭ്രാന്തന്റെ വൈകാരിക നിലയിൽ ആക്കി, സ്വന്തം കാര്യം അറിയാതാക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Fifteen Vetro (PDF/3 Page 5)"
     }
   },
   {
@@ -458,300 +458,524 @@ export const EVIL_JINN_NAMES = [
     breakdown: [],
     malayalamName: "ലഹീഫ്",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
+      appearance: "ഒരു മനുഷ്യ — കുരങ്ങിന്റെ തല, നായ കാൽ ഉണ്ട്, മനുഷ്യ കൈ.",
+      nature: "മുപ്പത്തിമൂന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'ലഹീഫ്' (لهيف) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "കടലിന്റെ ആഴങ്ങളിൽ (في عمق البحار) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഹൃദയ മിടിപ്പ് ഉണ്ടാക്കുന്നു, പനി, അസുഖം, വേദന ഉണ്ടാക്കുന്നു, വിസ്‌കറോസ് ശ്വാസോഛ്വാസം ഉണ്ടാക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Sixteen Recto (PDF/3 Page 7)"
     }
   },
   {
     id: 34, serialNo: 34, arabicName: "سمهل", arabicHarakat: "سِمْهَل",
     englishName: "Simhel", abjadValue: 135, letterCount: 4,
     breakdown: [],
-    malayalamName: "സിംഹൽ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "സ്‌മഹൽ",
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ശരീരം ചുറ്റപ്പെട്ട ഒരു പാമ്പ്, തല പുറകിൽ, വാൽ കാൽ ചുവട്ടിൽ, കൈയിൽ ഒരു കഴുതയുടെ വാൽ.",
+      nature: "മുപ്പത്തിനാലാമത്തെ ത്വൈലഖ് (Tayleq). 'സ്‌മഹൽ' (سمهل) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "പാലങ്ങളിലും കടൽ കടവുകളിലും (الجسور ومعابر البحر) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഒട്ടകം പോലെ ഫോം ഒഴുകും വരെ ശ്വാസം മുട്ടിക്കുന്നു. ഉപേക്ഷിക്കുമ്പോൾ, ഓടും, ചെയ്യുന്നതോ ഇരിക്കുന്നിടമോ അറിയില്ല.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Sixteen Vetro (PDF/3 Page 8)"
+    }
   },
   {
     id: 35, serialNo: 35, arabicName: "بقسمين", arabicHarakat: "بَقْسِمِين",
     englishName: "Beqasmin", abjadValue: 262, letterCount: 5,
     breakdown: [],
     malayalamName: "ബഖ്സ്‌മീൻ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — കറുത്ത നായ തല, രണ്ട് കൊമ്പ്, രണ്ട് ചിറക്, നെഞ്ചിൽ കണ്ണ്.",
+      nature: "മുപ്പത്തഞ്ചാമത്തെ ത്വൈലഖ് (Tayleq). 'ബഖ്‌സ്‌മീൻ' (بقسمين) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "ഗർഭ പാത്രങ്ങളിൽ (في الأرحام) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ഉറക്കത്തിൽ ശ്വാസം മുട്ടിക്കുന്നു, മദ്യലഹരി ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Sixteen Vetro (PDF/3 Page 8)"
+    }
   },
   {
     id: 36, serialNo: 36, arabicName: "الجندع", arabicHarakat: "الجُنْدَع",
     englishName: "Aljund", abjadValue: 158, letterCount: 5,
     breakdown: [],
     malayalamName: "അൽ-ജുൻദ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു ഭീമ സ്ത്രീ — നായ കൈ, നായ കാൽ, കാൽ വരെ ഇറക്കിയ ആകർഷകമായ മുടി.",
+      nature: "മുപ്പത്തിആറാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ജുൻദ' (الجندع) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "തിരക്കേറിയ റോഡുകളിൽ (الطرق المكتظة) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ഒരു ഉയർന്ന സ്ഥലത്ത് നിന്ന് വലതുഭാഗത്തേക്ക് ഉന്തി, ഒരു മണിക്കൂർ തീവ്ര അലർച്ചകളോടെ ഹിംസ്രമൃഗ ഉദ്ദ്യോഗ ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Seventeen Recto (PDF/3 Page 10)"
+    }
   },
   {
     id: 37, serialNo: 37, arabicName: "طلايا", arabicHarakat: "طَلَايَا",
     englishName: "Talyaba", abjadValue: 53, letterCount: 4,
     breakdown: [],
     malayalamName: "ത്വലായ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു കറുത്ത, ഒറ്റക്കണ്ണ് ഉള്ള സ്ത്രീ — ഒരു കാക്കയുടെ കണ്ണ്, ഒരു നായയുടെ നാസ്‌ദ്വാരം, ഒരു കഴുതയുടെ കാൽ.",
+      nature: "മുപ്പത്തിഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'ത്വലായ' (طلايا) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "നശിച്ച സ്ഥലങ്ങളിൽ (في الخرابات) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ, നാല് മുഖത്ത് പ്രത്യക്ഷപ്പെടുന്നു: പന്നി, സിംഹം, പാമ്പ്, പൂച്ച. ഉറക്കിലും ഉണർച്ചയിലും ഭയപ്പെടുത്തുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Seventeen Vetro (PDF/3 Page 12)"
+    }
   },
   {
     id: 38, serialNo: 38, arabicName: "سفر", arabicHarakat: "سَفِر",
     englishName: "Safir", abjadValue: 340, letterCount: 3,
     breakdown: [],
     malayalamName: "സഫീർ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — വൈകൃതമായ മൂക്ക്, ഒരു മയിലിന്റെ ചിറക്, കാൽ മുതൽ തല വരെ ഉയർന്ന വാൽ.",
+      nature: "മുപ്പത്തിഎട്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'സഫീർ' (سفر) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "പർവ്വതങ്ങളുടെ മുകളിൽ (أعالي الجبال) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ദുഃഖം ഉണ്ടാക്കുന്നു, ചിരിക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Seventeen Vetro / Eighteen Recto (PDF/3 Page 12-13)"
+    }
   },
   {
-    id: 39, serialNo: 39, arabicName: "هموري", arabicHarakat: "هَمُورِي",
+    id: 39, serialNo: 39, arabicName: "هموري", arabicHarakat: "هَمُودِي",
     englishName: "Hamudi", abjadValue: 65, letterCount: 4,
     breakdown: [],
-    malayalamName: "ഹമൂറി",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "ഹമൂദി",
+    profile: {
+      appearance: "ഒരു സ്ത്രീ — രണ്ട് ചിറക്, ഒരു കാൽ, കൈകളിൽ രണ്ട് കറുത്ത പാമ്പ്.",
+      nature: "മുപ്പത്തിഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'ഹമൂദി' (همودي) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "ഗർഭ പാത്രങ്ങളിൽ (في الأرحام) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഹൃദയം ഞെക്കുന്നു. ശിശുക്കളെ ഗർഭ പാത്രത്തിൽ കൊല്ലുന്നു. സ്ത്രീകൾക്ക് ബോധക്കേട്, ഗർഭ ഉണ്ടാകാൻ കഴിയില്ല.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Eighteen Recto (PDF/3 Page 13)"
+    }
   },
   {
     id: 40, serialNo: 40, arabicName: "النفس", arabicHarakat: "النَّفْس",
     englishName: "Alnafis", abjadValue: 221, letterCount: 4,
     breakdown: [],
     malayalamName: "അൽ-നഫ്സ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു മനുഷ്യ തല, കൈകൾ ഒരു കഴുതയുടെ കുളമ്പ്.",
+      nature: "നാൽപ്പതാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-നഫ്സ്' (النفس) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "നദികളിൽ (في الأنهار) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ, ദുഷ്ടനായി ഉറക്കം, ഉണർവ്, ഭക്ഷണം, കുടിക്കൽ — ഇവ ഇല്ലാതെ, ഒരു വ്യക്തി എന്ത് ചെയ്യുന്നുവെന്ന് ആരും അറിയില്ല. ഡ്രൈ ഭൂമി തിന്നും വരെ ബോധം നഷ്ടപ്പെടുത്തുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Eighteen Vetro (PDF/3 Page 15)"
+    }
   },
   {
     id: 41, serialNo: 41, arabicName: "حورتا", arabicHarakat: "حُورْتَا",
     englishName: "Hurta", abjadValue: 616, letterCount: 4,
     breakdown: [],
     malayalamName: "ഹൂർത്ത",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ദീർഘ മുടി, കൈയിൽ ഒരു കറുത്ത പാമ്പ്. തലയിൽ ഒരു തൊപ്പി, ഇഴ ഉള്ള അറ്റം ഉണ്ട്.",
+      nature: "നാൽപ്പത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'ഹൂർത്ത' (حورتا) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "ശ്വാസകോശങ്ങളിൽ (في الرئتين) വസിക്കുന്നു",
+      powers: "ഒരാളെ പിടിച്ചാൽ നടുവേദന, തോൾ വേദന, കണക്കൽ വേദന, നെഞ്ചും മുട്ടും വേദന ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Nineteen Recto (PDF/3 Page 17)"
+    }
   },
   {
     id: 42, serialNo: 42, arabicName: "الراهية", arabicHarakat: "الرَّاهِيَة",
     englishName: "Alrahiah", abjadValue: 52, letterCount: 5,
     breakdown: [],
     malayalamName: "അൽ-റാഹിയ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു ബഹുമാനനീയ മനുഷ്യ — ആടിന്റെ തൊലി ചർമ്മം, ദീർഘ താടി, കൈയിൽ ഒരു കറുത്ത പാമ്പ്.",
+      nature: "നാൽപ്പത്തിരണ്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-റാഹിയ' (الراهية) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "ഒലിച്ചടിഞ്ഞ ഭൂമിയിലും (في البراري) ഉൾനാടുകളിലും വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ സ്വഗതഭാഷണം, ഗഹനചിന്ത, ആകുലത, പേടിസ്വപ്നം ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Nineteen Recto (PDF/3 Page 17)"
+    }
   },
   {
     id: 43, serialNo: 43, arabicName: "الضريان", arabicHarakat: "الضَّرِيَان",
     englishName: "Aldarban", abjadValue: 1084, letterCount: 5,
     breakdown: [],
     malayalamName: "അൽ-ദർബാൻ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — കൈകൾ കഴുത്തിൽ കൂടിക്കെട്ടിയ.",
+      nature: "നാൽപ്പത്തിമൂന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ദർബാൻ' (الضريان) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "കിണറുകളിലും ഗുഹകളിലും (في الآبار والكهوف) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ, പ്രത്യേകിച്ച് ഒരു സ്ത്രീയെ, ഉദരത്തിൽ കടന്ന്, ഗർഭം ഉൾ ഒഴുകുന്ന ഭ്രൂണം ആണ് എന്ന ധാരണ ഉണ്ടാക്കുന്നു. ആശയക്കുഴപ്പവും ഭ്രാന്തും ഉണ്ടാക്കി, ആരോടും ബന്ധം ഇല്ലാതെ, സ്വന്തം വസ്ത്രം കത്തിക്കും.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Nineteen Vetro (PDF/3 Page 19)"
+    }
   },
   {
     id: 44, serialNo: 44, arabicName: "الخطاف", arabicHarakat: "الخَطَّاف",
     englishName: "Alkhataf", abjadValue: 721, letterCount: 5,
     breakdown: [],
     malayalamName: "അൽ-ഖത്താഫ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "രണ്ട് ചിറക് ഉള്ള ഒരു പക്ഷി — ഒരു കൂകുഴൽ ആകൃതിയുള്ള ശരീരം.",
+      nature: "നാൽപ്പത്തിനാലാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ഖത്താഫ് മഖ്‌റൂഖ്' (الخطاف المخروق) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "വീടുകളുടെ വാതിൽ മുന്നിൽ (أمام أبواب البيوت) വസിക്കുന്നു",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ ഛർദ്ദി, ബോധക്കേട്, ഊർജ്ജക്ഷയം, ഗുണ്ടർ ബൗദ്ധികശക്തി ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Recto (PDF/3 Page 20)"
+    }
   },
   {
     id: 45, serialNo: 45, arabicName: "الوسواس", arabicHarakat: "الوَسْوَاس",
     englishName: "Alwiswas", abjadValue: 164, letterCount: 5,
     breakdown: [],
     malayalamName: "അൽ-വസ്‌വാസ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു സ്ത്രീ — രണ്ട് ചിറക്, രണ്ട് കൊമ്പ്, ഏഴ് കാൽ. അരയ്ക്ക് ഒരു കയർ, പുറകിൽ ഇറങ്ങി കിടക്കുന്നു.",
+      nature: "നാൽപ്പത്തഞ്ചാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-വസ്‌വാസ്' (الوسواس) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "ഇരുട്ടിൽ (في الظلام) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഭ്രാന്ത് ഉണ്ടാക്കി, ബോധം, നിദ്ര, ഭക്ഷണം, കുടി — ഇവ ഇല്ലാതെ, ഭൂമി തിന്നും വരെ ബോധം ഇല്ലാതാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Vetro (PDF/4 Page 2)"
+    }
   },
   {
     id: 46, serialNo: 46, arabicName: "يدام ملدم", arabicHarakat: "يَدِام مِلْدَم",
     englishName: "Yedam Meldem", abjadValue: 169, letterCount: 7,
     breakdown: [],
-    malayalamName: "യദാം മിൽദം",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "യദ് ഉം മൽദം",
+    profile: {
+      appearance: "ഒരു തടിയ സ്ത്രീ — ചുവന്ന മുടി, മഞ്ഞ ചർമ്മം.",
+      nature: "നാൽപ്പത്തിആറാമത്തെ ത്വൈലഖ് (Tayleq). 'യദ് ഉം മൽദം' (يد ام ملدم) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "പഴ തോട്ടങ്ങളിൽ (في بساتين الفاكهة) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയിൽ ചോര ഒഴുകും പോലെ കടന്ന്, എല്ലാ ജോഡികൾ ഒഴിഞ്ഞ് ശ്വാസം ഇറക്കി, മാംസം, ചോര ഭേദിച്ച്, ഒരു ഭാഗം തളർന്ന് ചഴുക്കുള്ളതായി ഉപേക്ഷിക്കുന്നു. തണുത്ത ജലം, തീ, സൂര്യൻ ഇഷ്ടപ്പെടുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Vetro (PDF/4 Page 2)"
+    }
   },
   {
     id: 47, serialNo: 47, arabicName: "الزواعة", arabicHarakat: "الزِّوَاعَة",
     englishName: "Alzu'ah", abjadValue: 119, letterCount: 5,
     breakdown: [],
     malayalamName: "അൽ-സുവ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — കൈ ബലി, കൈ സിംഹം.",
+      nature: "നാൽപ്പത്തിഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-സൂ'അ' (الزوعة) — നടക്കാൻ കഷ്ടമുള്ളവൻ.",
+      habitat: "കടലുകളിൽ (في البحار) വസിക്കുന്നു",
+      powers: "ഒരാളെ മുട്ടുകൾ, കാൽ, ഇടുപ്പ് — ഇവയിൽ വേദനയോടെ പിടിക്കുന്നു. നടക്കാൻ ബുദ്ധിമുട്ടാക്കി, നടുക്കി, മൂക്ക് ഒഴുകിക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty One Recto (PDF/4 Page 4)"
+    }
   },
   {
     id: 48, serialNo: 48, arabicName: "النباح", arabicHarakat: "النَّبَاح",
     englishName: "Alnabah", abjadValue: 92, letterCount: 4,
     breakdown: [],
     malayalamName: "അൽ-നബാഹ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — കഴുതയുടെ വലതുകാൽ, സിംഹത്തിന്റെ ഇടതുകാൽ.",
+      nature: "നാൽപ്പത്തിഎട്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-നബ്ഹ' (النباح) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "റോഡ് ജംഗ്ഷനുകളിൽ (عند تقاطع الطرق) വസിക്കുന്നു",
+      powers: "ആളുകൾ കൂടുന്നിടത്തും വിവാഹ ഉത്സവങ്ങളിലും ഒളിഞ്ഞ് ആളുകളെ ഉപദ്രവിക്കുന്നു. വിനോദം നിർത്തിപ്പോകുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty One Recto (PDF/4 Page 4)"
+    }
   },
   {
     id: 49, serialNo: 49, arabicName: "المولع", arabicHarakat: "المُولَع",
     englishName: "Almul'", abjadValue: 177, letterCount: 5,
     breakdown: [],
-    malayalamName: "അൽ-മുല",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "അൽ-മൂലഅ്",
+    profile: {
+      appearance: "ഒരു സ്ത്രീ — ഒരു നായ കാൽ, പുറകിൽ ഒരു കറുത്ത പാമ്പ്, തല തൊട്ടടുത്ത്.",
+      nature: "നാൽപ്പത്തിഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-മൂൾ' (المول) — 'ഉം ഇൽ' (ام ملدم) ആണ്.",
+      habitat: "നശിച്ച സ്ഥലങ്ങളിൽ (في الخرابات) വസിക്കുന്നു",
+      powers: "ഒരാളെ പിടിച്ചാൽ ബോധം ഇല്ലാതെ ഉപേക്ഷിക്കുന്നു. ഉൽസാഹഹീനൻ, ആശയറ്റ അവസ്ഥ. ഒരു നായ ആകയും ഒരു പാമ്പ് ആകയും ഒന്നിടവിട്ട് ദർശനം കൊടുക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty One Vetro (PDF/4 Page 6)"
+    }
   },
   {
     id: 50, serialNo: 50, arabicName: "الوسواس الاكبر", arabicHarakat: "الوَسْوَاس الأكْبَر",
     englishName: "Alwiswas Alakbar", abjadValue: 418, letterCount: 9,
     breakdown: [],
     malayalamName: "അൽ-വസ്‌വാസ് അൽ-അക്ബർ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു കുതിരയുടെ ശരീരം, വാൽ ഇല്ല, മനുഷ്യ തല, രണ്ട് ചിറക്.",
+      nature: "അൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-വസ്‌വാസ് അൽ-അക്ബർ' (الوسواس الأكبر) — മഹാ-വസ്‌വാസ്.",
+      habitat: "പർവ്വതങ്ങളിൽ (في الجبال) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ആക്രമിച്ചാൽ ഒരു ആകുലത ഉണ്ടാക്കി, ഉറക്കം, ഭക്ഷണം, കുടി, സംസാരം — ഇവ ഇല്ലാതെ, ഭൂമി തിന്നും വരെ ബോധം ഇല്ലാതാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Two Recto (PDF/4 Page 7)"
+    }
   },
   {
     id: 51, serialNo: 51, arabicName: "الخناس الاصغار", arabicHarakat: "الخَنَّاس الأصْغَار",
     englishName: "Alkhanas Alasghar", abjadValue: 2065, letterCount: 10,
     breakdown: [],
     malayalamName: "അൽ-ഖന്നാസ് അൽ-അസ്ഗർ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു ആടിന്റെ തല.",
+      nature: "അൻപത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ഖന്നാസ് അൽ-അസ്ഗർ' (الخناس الأصغار) — ചെറിയ ഖന്നാസ്.",
+      habitat: "രാത്രി ഭയത്തിൽ (في رعب الليل) വസിക്കുന്നു",
+      powers: "ഒരു സ്ത്രീ അല്ലെങ്കിൽ ഒരു വ്യക്തിയെ ആക്രമിച്ചാൽ, പുറം-കഴുത്ത് ഇടക്ക് ഊരി, ദ്വന്ദ്വ ഉദര ക്ഷതം ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Two Vetro (PDF/4 Page 9)"
+    }
   },
   {
-    id: 52, serialNo: 52, arabicName: "الجمقا", arabicHarakat: "الجَمْقَا",
+    id: 52, serialNo: 52, arabicName: "الجمقا", arabicHarakat: "الحَمْقَا",
     englishName: "Alhamqa", abjadValue: 180, letterCount: 5,
     breakdown: [],
-    malayalamName: "അൽ-ഹംഖാ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "അൽ-ഹംഖ",
+    profile: {
+      appearance: "ഒരു സ്ത്രീ — ഒരു നായ തല, ശരീരം ശരാശരി ആകൃതി.",
+      nature: "അൻപത്തിരണ്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ഹംഖ' (الحمقا) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "കടൽ-ബഹ്‌ർ (حول البحار) ഭാഗങ്ങളിൽ വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ഹൃദയത്തിൽ നിന്ന് ബന്ദി ആക്കി, ക്ഷീണം ഉണ്ടാക്കുന്നു. ആരും ഒന്നും അറിയില്ലെന്ന് ആക്കി, മരിച്ചുവെന്ന് എല്ലാവരും കരുതും.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Two Vetro (PDF/4 Page 9)"
+    }
   },
   {
     id: 53, serialNo: 53, arabicName: "حسن", arabicHarakat: "حَسَن",
     englishName: "Hasen", abjadValue: 118, letterCount: 3,
     breakdown: [],
     malayalamName: "ഹസൻ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — രണ്ട് ചിറക്, ഒരു നായ കൈ, ആദം സന്തതി ഉടൽ.",
+      nature: "അൻപത്തിമൂന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'ഹസൻ' (حسن) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "കോടതി ഹൗസുകളിൽ (في المحاكم) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ബോധം ഇല്ലാതെ ശ്വാസം മുട്ടിക്കുന്നു. നടുവേദനയും മുട്ടുവേദനയും ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Three Recto (PDF/4 Page 10)"
+    }
   },
   {
     id: 54, serialNo: 54, arabicName: "المأسور", arabicHarakat: "المَأْسُور",
     englishName: "Almasur", abjadValue: 338, letterCount: 5,
     breakdown: [],
-    malayalamName: "അൽ-മഅ്സൂർ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "അൽ-മആസൂർ",
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു കുരങ്ങ് തല, ഉടൽ ഒരു ഉറുമ്പ് ഉടൽ.",
+      nature: "അൻപത്തിനാലാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-മആസൂർ' (الماسور) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "അഴുക്കിലും ദ്രവ്യ ഭൂ(الأماكن المليئة بالنجاسة)ക്കളിൽ വസിക്കുന്നു",
+      powers: "ഒരാളുടെ ഉദരത്തിൽ ഇരുന്ന് ആശയം നഷ്ടമാക്കി, ഭ്രൂണം ഉണ്ടാക്കി, ഒരിക്കലും ആഗ്രഹം ഇല്ലാതെ ആക്കി, ശരീരത്തിൽ ചൊറിഞ്ഞ്, മദ്യം ഇഷ്ടമായി ആക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Three Vetro (PDF/4 Page 12)"
+    }
   },
   {
     id: 55, serialNo: 55, arabicName: "بالم", arabicHarakat: "بَالِم",
     englishName: "Balim", abjadValue: 72, letterCount: 3,
     breakdown: [],
     malayalamName: "ബലിം",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു കുരങ്ങ് തല, ഒരു പക്ഷി കാൽ, രണ്ട് ചിറക്.",
+      nature: "അൻപത്തഞ്ചാമത്തെ ത്വൈലഖ് (Tayleq). 'ബലിം' (بلم) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "ജലത്തിൽ (في الماء) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ദൃഷ്ടിയിൽ നിന്ന് ഒളിഞ്ഞ് ആക്രമിക്കുന്നു. കണ്ടുപിടിക്കാൻ ബുദ്ധിമുട്ടാണ്, ദൃഷ്ടി നഷ്ടം, ദിശ നഷ്ടം, ബോധ നഷ്ടം ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Three Vetro (PDF/4 Page 12)"
+    }
   },
   {
     id: 56, serialNo: 56, arabicName: "شاخيا", arabicHarakat: "شَاخِيَا",
     englishName: "Shakhya", abjadValue: 912, letterCount: 4,
     breakdown: [],
-    malayalamName: "ഷാഖിയ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "ഷാഖ്‌യ",
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു കാളയുടെ തല, ചെറിയ രണ്ട് കൊമ്പ്, ഒരു കാൽ, തലക്ക് ഇറക്കിയ രണ്ട് ചിറക്.",
+      nature: "അൻപത്തിആറാമത്തെ ത്വൈലഖ് (Tayleq). 'ഷാഖ്‌യ' (شاخيا) — ഏറ്റവും ശക്തനായ കാറ്റ്, ഏറ്റവും കഠോര, ഏറ്റവും ഉന്മത്ത, ശരീരത്തിനേറ്റവും ദ്രോഹകാരി.",
+      habitat: "ജലത്തിൽ (في الماء) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ദൃഷ്ടിക്ക് ഒളിഞ്ഞ് ആക്രമിക്കുന്നു. ഉറക്കത്തിൽ ആക്രമിച്ച്, ചൊട്ട ഇടുന്നു. ഉണർന്നാൽ ഒരു ശക്തി ഇല്ലാതെ ആകുന്നു. കഴുത്ത് തിരിഞ്ഞ്, സ്വപ്നത്തിൽ വീണ്ടും ആക്രമിക്കുന്നു.",
+      notes: "ദൈവ-സംരക്ഷണം ഇതിൽ നിന്ന് ആഹ്വാനം ചെയ്യണം.",
+      source: "Book of Deadly Names, Translation Page Twenty Four Recto (PDF/4 Page 14)"
+    }
   },
   {
     id: 57, serialNo: 57, arabicName: "بردون", arabicHarakat: "بَرْدُون",
     englishName: "Bardun", abjadValue: 262, letterCount: 4,
     breakdown: [],
     malayalamName: "ബർദൂൻ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരൊറ്റ കണ്ണ്, ഒരു താറാവിന്റെ നാസ്‌ദ്വാരം, ഒരു പക്ഷി കാൽ.",
+      nature: "അൻപത്തിഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'ബർദൂൻ' (بردون) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "കുപ്പർ, മൃഗ വൈദ്യൻ, ജാദൂക്കാരൻ, ചോരക്കാരൻ ഇവരുടെ ഇടങ്ങളിൽ (في أماكن الحجامة والبيطرة وضارب الرمل) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ഒരു ഉലഞ്ഞ നായ ആകി പ്രത്യക്ഷ്യ ആകുന്നു. ഛർദ്ദി ഉണ്ടാക്കുന്നു, ശക്തമായ ചൂള, ഒരു ഉദ്ദ്യോഗ ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Four Recto (PDF/4 Page 14)"
+    }
   },
   {
     id: 58, serialNo: 58, arabicName: "بزيد المجوسي", arabicHarakat: "بَزِيد المَجُوسِي",
     englishName: "Bezid Almajusi", abjadValue: 172, letterCount: 8,
     breakdown: [],
     malayalamName: "ബസീദ് അൽ-മജൂസി",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു നായ തല, രണ്ട് ചിറക് കാൽ വരെ.",
+      nature: "അൻപത്തിഎട്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'ബസീദ് അൽ-മജൂസി' (بزيد المجوسي) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "നദികളിൽ (في الأنهار) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ഉദ്ദ്യോഗ ഉണ്ടാക്കാതെ ഒരൊറ്റ അടി കൊടുക്കുന്നു. വയറ്‌ഴൽ, ഉഗ്ര ക്ഷീണം ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Four Vetro (PDF/4 Page 16)"
+    }
   },
   {
     id: 59, serialNo: 59, arabicName: "معروز", arabicHarakat: "مَعْرُوز",
     englishName: "Ma'ruz", abjadValue: 323, letterCount: 4,
     breakdown: [],
-    malayalamName: "മഅ്റൂസ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "മഅ്‌റൂസ്",
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരൊറ്റ കണ്ണ്, ഒരു കഴുതയുടെ കാൽ. വായ്‌ക്ക് ഒരു മനുഷ്യ തല ഉണ്ടാകും.",
+      nature: "അൻപത്തിഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'മഅ്‌റൂസ്' (معروز) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "പർവ്വതങ്ങളിലും ഉന്നതങ്ങളിലും (في الجبال والتلال) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ശ്വാസം മുട്ടിക്കുന്നു അല്ലെങ്കിൽ ഒരു മാസം ഉറക്കം, ഭക്ഷണം ഇല്ലാതെ ആക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Five Recto (PDF/4 Page 18)"
+    }
   },
   {
     id: 60, serialNo: 60, arabicName: "الملية النافضة", arabicHarakat: "الْمِلِيَّة النَّافِضَة",
     englishName: "Almiliah Alnafedha", abjadValue: 1083, letterCount: 10,
     breakdown: [],
     malayalamName: "അൽ-മിലിയ അൽ-നാഫിദ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു പാമ്പ് ആകൃതി.",
+      nature: "അറുപതാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-മിലിയ അൽ-നാഫിദ' (المليه النافضة) — ഉതിർക്കുന്ന/ത്രസിക്കുന്ന [ജ്വര].",
+      habitat: "ആടുകൾ ഇടയ്ക്ക് (في المراعي) വസിക്കുന്നു",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ ശക്തമായ ശിരോവേദന, ഇരു നെറ്റിത്തടങ്ങൾ, ക്രമക്കേടായ ഹൃദ്‌ ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Five Recto (PDF/4 Page 18)"
+    }
   },
   {
-    id: 61, serialNo: 61, arabicName: "مروبا", arabicHarakat: "مَرُوبَا",
+    id: 61, serialNo: 61, arabicName: "مروبا", arabicHarakat: "مَرْوَيَا",
     englishName: "Marweya", abjadValue: 257, letterCount: 4,
     breakdown: [],
-    malayalamName: "മറൂബാ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "മർവേയ",
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു കഴുകന്റെ വലതുകൈ, ഇടതുകൈ ഒരു കഴുകൻ.",
+      nature: "അറുപത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'മർവേയ' (مروبا) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "പർവ്വതങ്ങളിൽ (في الجبال) വസിക്കുന്നു",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ, ഭ്രാന്ത് ഉണ്ടാക്കി, മലമ്പ്രദേശങ്ങളിലും മരുഭൂമിയിലും അലഞ്ഞ് തിരിയിക്കുന്നു. ബോധം ഇല്ലാതാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Five Vetro (PDF/4 Page 20)"
+    }
   },
   {
     id: 62, serialNo: 62, arabicName: "الفالج", arabicHarakat: "الفَالِج",
     englishName: "Alfalij", abjadValue: 145, letterCount: 5,
     breakdown: [],
     malayalamName: "അൽ-ഫാലിജ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു കുരങ്ങ് തല, കാൽ വരെ ഇറക്കിയ രണ്ട് ചിറക്.",
+      nature: "അറുപത്തിരണ്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ഫലിജ്' (الفالج) — ഫലിജ് (തളർ).",
+      habitat: "കുന്നുകളിൽ (في التلال) വസിക്കുന്നു",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ, ഒരു ഭാഗം ഉണ്ടാക്കുന്നു, 'ചൂട്' ഉണ്ടാക്കി ബീജം ഉണങ്ങും.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Five Vetro (PDF/4 Page 20)"
+    }
   },
   {
     id: 63, serialNo: 63, arabicName: "الواثق", arabicHarakat: "الوَاثِق",
     englishName: "Alwathiq", abjadValue: 638, letterCount: 4,
     breakdown: [],
     malayalamName: "അൽ-വാഥിഖ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു കാളയുടെ തല, രണ്ട് കൊമ്പ്, കാൽ വരെ ഇറക്കിയ രണ്ട് ചിറക്.",
+      nature: "അറുപത്തിമൂന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-വാഥിഖ്' (الواثق) — 'ദ്വസ്‌ഥൂൻ' (الدستور) എന്നും.",
+      habitat: "ദേവാലയങ്ങളിൽ (في الكنائس) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ബോധം, ദൃഷ്ടി ഇല്ലാതെ ആക്കി, ആരെയും, വചനവും, ദിശയും — ഇവ അറിയാതെ ആക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Six Recto (PDF/4 Page 22)"
+    }
   },
   {
     id: 64, serialNo: 64, arabicName: "الاسعاري اليهودي", arabicHarakat: "الأسْعَارِي الْيَهُودِي",
     englishName: "Al-Sa'ari Al-Yahudi", abjadValue: 438, letterCount: 10,
     breakdown: [],
     malayalamName: "അൽ-സആരി അൽ-യഹൂദി",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു ആടിന്റെ ഘടനയോടുകൂടിയ ഒരു സ്ത്രീ — ഒരു സ്ത്രീ തല, അഴിഞ്ഞ മുടി.",
+      nature: "അറുപത്തിനാലാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-സആരി അൽ-യഹൂദി' (الاسعاري اليهودي) — ഒരു ദിവസം വരുന്ന ഒരു ദിവസം പോകുന്ന ജ്വരം.",
+      habitat: "ഉപ്പ് ജലത്തിൽ, കിണറ്റിൽ (في الآبار والمياه المالحة) വസിക്കുന്നു",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ, മാംസം ഇല്ലാതാക്കി, ആഗ്നിബോള ഉള്ളിൽ ഉണ്ടാക്കി, തലവേദന, ഭ്രമം ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Six Recto (PDF/4 Page 22)"
+    }
   },
   {
     id: 65, serialNo: 65, arabicName: "لوق", arabicHarakat: "لُوق",
     englishName: "Luq", abjadValue: 136, letterCount: 3,
     breakdown: [],
     malayalamName: "ലൂഖ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ആകർഷകമായ താടി, തലയിൽ സ്വർണ്ണം.",
+      nature: "അറുപത്തഞ്ചാമത്തെ ത്വൈലഖ് (Tayleq). 'ലൂഖ്' (لوق) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "പർവ്വതങ്ങളുടെ മുകളിൽ (أعالي الجبال) വസിക്കുന്നു",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ ശ്വാസം മുട്ടിക്കുന്നു അല്ലെങ്കിൽ ഉറക്കം ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Six Vetro (PDF/4 Page 23)"
+    }
   },
   {
     id: 66, serialNo: 66, arabicName: "المريخ", arabicHarakat: "الْمَرِيخ",
     englishName: "Almarikh", abjadValue: 881, letterCount: 4,
     breakdown: [],
     malayalamName: "അൽ-മരീഖ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — ഒരു ഓടക്കൂ, ഒരു ചൂണ്ടും ഒരു അലോഹ ദണ്ഡ്, ഇരു ചിറക് — കൈ നീളം.",
+      nature: "അറുപത്തിആറാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-മരീഖ്' (المريخ) — 'അൽ-മരീഖ്' (المريخ) 'ദ്വ-സ്‌ഥൂൻ' — ഗ്രഹ ചൊവ്വ.",
+      habitat: "ശൗചാലയങ്ങളിൽ (في الحمامات) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ ശ്വാസം മുട്ടി, മരിക്കാതെ ജീവിക്കാതെ ആക്കി, ആരും ഒന്നും അറിയില്ലെന്ന് ആക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Seven Recto (PDF/4 Page 25)"
+    }
   },
   {
     id: 67, serialNo: 67, arabicName: "عامر ابو الشيفان صاحب الجيل", arabicHarakat: "عَامِر أبُو الشَّيْفَان صَاحِب الْجِيل",
     englishName: "'Amer Abu Al-Shifan Saheb Aljebel", abjadValue: 1049, letterCount: 20,
     breakdown: [],
-    malayalamName: "ആമിർ അബൂ അൽ-ഷൈഫാൻ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    malayalamName: "ആമിർ അബൂ അൽ-ഷൈഫാൻ സ്വാഹിബ് അൽ-ജബൽ",
+    profile: {
+      appearance: "ഒരു സ്ത്രീ-ആൺ മനുഷ്യ — ഒരു ജന്തു ഉടൽ, ഒരു ഒട്ടകം, ഒരു കുതിര ആകൃതി. ഒരു ദൃശ്യ-അദൃശ്യ ആകൃതി.",
+      nature: "അറുപത്തിഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'ആമിർ അബൂ അൽ-ഷൈഫാൻ സ്വാഹിബ് അൽ-ജബൽ' (عامر ابو الشيفان صاحب الجيل) — ജബൽ (മലനിരകൾ) ഉടമ.",
+      habitat: "ചന്തകളിൽ (في الأسواق) വസിക്കുന്നു",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ കണ്ണ് ബ്ലൂ ഉണ്ടാക്കുന്നു, അകൽ ഉണ്ടാക്കുന്നു, ഒരു ചൂളക്കാറ്റ് ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Seven Vetro (PDF/4 Page 27)"
+    }
   },
   {
     id: 68, serialNo: 68, arabicName: "الحلية الظاهرة", arabicHarakat: "الحِلْيَة الظَّاهِرَة",
     englishName: "Alhilya Alzaherah", abjadValue: 1226, letterCount: 8,
     breakdown: [],
     malayalamName: "അൽ-ഹില്‌യ അൽ-സ്വാഹിറ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു ഉയർന്ന ഒരു, ഒരു കുറഞ്ഞ — രണ്ട് കുതിര. ഒരു ഇരുകൈ, ഒരു ചിറക്, ചെറിയ രണ്ട് തല.",
+      nature: "അറുപത്തിഎട്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ഹില്‌യ അൽ-സ്വാഹിറ' (الحلية الظاهرة) — 'കാണ്‌ വേഷം'.",
+      habitat: "ഉൾനാടുകളിലും ഉണ്ടക്ക ഭൂ(في البرية والقفار)ക്കളിൽ വസിക്കുന്നു",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ വീക്കം, ഹൃദ്‌ ഇടിക്കൽ, ശിരോവേദന, ജ്വരം ഉണ്ടാക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Twenty Eight Recto / Vetro (PDF/4 Pages 28-29)"
+    }
   },
   {
     id: 69, serialNo: 69, arabicName: "قدسا", arabicHarakat: "قُدْسَا",
     englishName: "Qudsa", abjadValue: 165, letterCount: 4,
     breakdown: [],
     malayalamName: "ഖുദ്‌സാ",
-    profile: {
-      appearance: "ഒരു പക്ഷിയുടെ രൂപം — മനുഷ്യ ശിരസ്സ് ഉള്ളവൻ, പുറത്ത് ഒരു മനുഷ്യ ശിരസ്സ് ഉണ്ട്. പക്ഷിയുടെ വശങ്ങൾ, തലയ്ക്ക് മുകളിലും ഇടതുവശത്തും ഒരു പട്ട ഉണ്ട്.",
-      nature: "അറുപത്തൊൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'ഖുദ്‌സ' (قدسا) എന്ന് അറിയപ്പെടുന്നു.",
-      habitat: "തീ കത്തുന്ന ഇടങ്ങളിലെല്ലാം (في أي مكان توجد فيه النيران) വസിക്കുന്നു",
-      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ അവന്റെ കണ്ണ് പറിച്ചെടുത്ത് കാഴ്ച നശിപ്പിക്കുന്നു.",
-      notes: "",
-      source: "Book of Deadly Names, Translation Page Twenty Nine Recto (PDF Page 182)"
-    }
+    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
   },
   {
     id: 70, serialNo: 70, arabicName: "شرهي", arabicHarakat: "شَرَهِي",
     englishName: "Shrahi", abjadValue: 515, letterCount: 4,
     breakdown: [],
     malayalamName: "ഷറഹി",
-    profile: {
-      appearance: "ഇണക്കമുള്ള വസ്ത്രം ഉള്ള ഒരു മനുഷ്യ രൂപം. വസ്ത്രത്തിന്റെ താഴ്ഭാഗം ഒരു സ്വർണ്ണ പ്രതിമ പോലെ. കാൽ വരെ രണ്ട് ചിറക് ഉണ്ട്. വലതുകൈയ്യിൽ ഒരു വലിയ തടി ഉണ്ട്.",
-      nature: "എഴുപതാമത്തെ ത്വൈലഖ് (Tayleq). 'ഷറഹി' (شرهي) — 'മൂബി' (الموبي) എന്നും അറിയപ്പെടുന്നു.",
-      habitat: "സിറിയ (شام) പർവ്വതങ്ങളിൽ വസിക്കുന്നു",
-      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ, ഒരു സ്ത്രീയുടെ ഹൃദയത്തിൽ കടക്കുന്നു, വസ്ത്രം ഊരി ഇടുന്ന വരെ ചെവിയിൽ ആഗ്രഹം ഉണ്ടാക്കി കുശുകുശുക്കുന്നു.",
-      notes: "",
-      source: "Book of Deadly Names, Translation Page Twenty Nine Recto (PDF Page 182)"
-    }
+    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
   },
   {
     id: 71, serialNo: 71, arabicName: "مغشغاس", arabicHarakat: "مَغْشَغَاس",
     englishName: "Maghshaghas", abjadValue: 2400, letterCount: 5,
     breakdown: [],
     malayalamName: "മഗ്ഷഗാസ്",
-    profile: {
-      appearance: "സ്ത്രീ മുഖം ഉള്ള സിംഹ രൂപം. ഒരു മഹത്തായ രൂപത്തിൽ പ്രത്യക്ഷപ്പെട്ടു.",
-      nature: "എഴുപത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'മഗ്ഷഗാസ്' (مغشغاس) എന്ന് അറിയപ്പെടുന്നു.",
-      habitat: "നശിച്ച സ്ഥലങ്ങളിലും പർവ്വതങ്ങളിലും (في الخرابات وفي الجبال) വസിക്കുന്നു",
-      powers: "അമ്മമാരുടെ ഗർഭങ്ങളിൽ ആൺ കുഞ്ഞുങ്ങളെ കൊല്ലുന്നു. സ്ത്രീകളെ ഭർത്താക്കന്മാരിൽ നിന്ന് വേർപെടുത്തുന്നു.",
-      notes: "",
-      source: "Book of Deadly Names, Translation Page Twenty Nine Recto (PDF Page 182)"
-    }
+    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
   },
   {
     id: 72, serialNo: 72, arabicName: "عشرا", arabicHarakat: "عِشْرَا",
