@@ -19,69 +19,69 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 2, serialNo: 2, arabicName: "برقن", arabicHarakat: "بَرْقَن",
-    englishName: "Barqan", abjadValue: 352, letterCount: 4,
-    breakdown: [{ letter: "ب", value: 2 }, { letter: "ر", value: 200 }, { letter: "ق", value: 100 }, { letter: "ن", value: 50 }],
-    malayalamName: "ബർഖാൻ",
+    id: 2, serialNo: 2, arabicName: "مونس", arabicHarakat: "مُونِس",
+    englishName: "Munis", abjadValue: 352, letterCount: 4,
+    breakdown: [{ letter: "م", value: 40 }, { letter: "و", value: 6 }, { letter: "ن", value: 50 }, { letter: "س", value: 60 }],
+    malayalamName: "മുനിസ്",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
+      appearance: "ഒരൊറ്റ കണ്ണ് ഉള്ള മനുഷ്യ രൂപം, കോവർകഴുതയുടെ കാലുകൾ, ചുറ്റും ഒരു പാമ്പ് പൊതിഞ്ഞിരിക്കുന്നു.",
+      nature: "രണ്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'മുനിസ്' (مونس) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "പാറപ്പുറങ്ങളിലും നശിച്ച സ്ഥലങ്ങളിലും (الصخور والخرابات) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഭ്രാന്ത് ഉണ്ടാക്കുന്നു. കാട്ടിൽ അലഞ്ഞുതിരിയാൻ പ്രേരിപ്പിക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Three Recto (PDF Page 10-11)"
     }
   },
   {
-    id: 3, serialNo: 3, arabicName: "شمهوش", arabicHarakat: "شَمْهُوش",
-    englishName: "Shamhush", abjadValue: 651, letterCount: 5,
-    breakdown: [{ letter: "ش", value: 300 }, { letter: "م", value: 40 }, { letter: "ه", value: 5 }, { letter: "و", value: 6 }, { letter: "ش", value: 300 }],
-    malayalamName: "ഷംഹൂഷ്",
+    id: 3, serialNo: 3, arabicName: "نقيق", arabicHarakat: "نَقِيق",
+    englishName: "Naqiq", abjadValue: 651, letterCount: 5,
+    breakdown: [{ letter: "ن", value: 50 }, { letter: "ق", value: 100 }, { letter: "ي", value: 10 }, { letter: "ق", value: 100 }, { letter: "ي", value: 10 }],
+    malayalamName: "നഖീഖ്",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
+      appearance: "സിംഹ ശരീരമുള്ള ഒരു സ്ത്രീ, മനുഷ്യ മുഖം, രണ്ട് ചിറക്.",
+      nature: "മൂന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'നഖീഖ്' (نقيق) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "കടൽത്തീരങ്ങളിലും നദീതീരങ്ങളിലും (سواحل البحار والأنهار) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഭ്രാന്ത് ഉണ്ടാക്കുന്നു. കാട്ടിലേക്ക് ഓടിപ്പോകാൻ പ്രേരിപ്പിക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Three Vetro (PDF Page 14-15)"
     }
   },
   {
-    id: 4, serialNo: 4, arabicName: "فقطوس", arabicHarakat: "فَقْطُوس",
-    englishName: "Faqthus", abjadValue: 255, letterCount: 5,
-    breakdown: [{ letter: "ف", value: 80 }, { letter: "ق", value: 100 }, { letter: "ط", value: 9 }, { letter: "و", value: 6 }, { letter: "س", value: 60 }],
-    malayalamName: "ഫഖ്തൂസ്",
+    id: 4, serialNo: 4, arabicName: "مجد", arabicHarakat: "مَجْد",
+    englishName: "Majid", abjadValue: 255, letterCount: 5,
+    breakdown: [{ letter: "م", value: 40 }, { letter: "ج", value: 3 }, { letter: "د", value: 4 }, { letter: "ي", value: 10 }, { letter: "د", value: 4 }],
+    malayalamName: "മജീദ്",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
-      notes: "ഈ ജിന്ന് രാജാവ് ഫിഖിതൂഷ് ആണ് — ജിന്നുകളിൽ നിന്ന് ആദ്യം സോളമൻ രാജാവിന്റെ അടുക്കൽ വന്ന് അനുസരിച്ചത്. ജിന്നുകളുടെ നേതാക്കളിൽ ഒരാളും ഒരു ഭിഷഗ്വരനും ആയിരുന്നു.",
-      source: "Book of Deadly Names, Translation Page One Recto (PDF Page 11)"
+      appearance: "നായ തലയുള്ള മനുഷ്യ രൂപം, കാളയുടെ ഘടന, പൂച്ചയുടെ കൈകൾ.",
+      nature: "നാലാമത്തെ ത്വൈലഖ് (Tayleq). 'മജീദ്' (مجد) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "ഇരുണ്ട സ്ഥലങ്ങളിലും ഗുഹകളിലും (الأماكن المظلمة والكهوف) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഭ്രാന്ത് ഉണ്ടാക്കുന്നു. കാട്ടിലേക്ക് ഓടിപ്പോകാൻ പ്രേരിപ്പിക്കുന്നു.",
+      notes: "ഫിഖിതൂഷ് (Faqthus) എന്ന ജിന്ന് രാജാവ് പുസ്തകത്തിന്റെ ആമുഖത്തിൽ പരാമർശിച്ചിരിക്കുന്നു, ഇത് നാലാമത്തെ ത്വൈലഖ് അല്ല.",
+      source: "Book of Deadly Names, Translation Page Four Recto (PDF Page 16-17)"
     }
   },
   {
-    id: 5, serialNo: 5, arabicName: "مرو", arabicHarakat: "مَرُّو",
-    englishName: "Marroo", abjadValue: 246, letterCount: 3,
-    breakdown: [{ letter: "م", value: 40 }, { letter: "ر", value: 200 }, { letter: "و", value: 6 }],
-    malayalamName: "മറൂ",
+    id: 5, serialNo: 5, arabicName: "جذبه", arabicHarakat: "جَذْبَة",
+    englishName: "Jadhbah", abjadValue: 246, letterCount: 3,
+    breakdown: [{ letter: "ج", value: 3 }, { letter: "ذ", value: 700 }, { letter: "ب", value: 2 }, { letter: "ة", value: 5 }],
+    malayalamName: "ജദ്ബ",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
+      appearance: "ഒരൊറ്റ കണ്ണ് ഉള്ള മനുഷ്യ രൂപം, സിംഹത്തിന്റെ കാലുകൾ, മനുഷ്യ കൈകൾ.",
+      nature: "അഞ്ചാമത്തെ ത്വൈലഖ് (Tayleq). 'ജദ്ബ' (جذبه) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "പർവ്വതങ്ങളിലും കുന്നുകളിലും (في الجبال والتلال) വസിക്കുന്നു",
+      powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഭ്രാന്ത് ഉണ്ടാക്കുന്നു. കാട്ടിലേക്ക് ഓടിപ്പോകാൻ പ്രേരിപ്പിക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Four Vetro (PDF Page 20-21)"
     }
   },
   {
-    id: 6, serialNo: 6, arabicName: "شكرتي", arabicHarakat: "شَكَرْتِي",
-    englishName: "Shakarti", abjadValue: 930, letterCount: 5,
-    breakdown: [{ letter: "ش", value: 300 }, { letter: "ك", value: 20 }, { letter: "ر", value: 200 }, { letter: "ت", value: 400 }, { letter: "ي", value: 10 }],
-    malayalamName: "ഷകർത്തി",
+    id: 6, serialNo: 6, arabicName: "عقل", arabicHarakat: "عَقْل",
+    englishName: "'Qel", abjadValue: 930, letterCount: 5,
+    breakdown: [{ letter: "ع", value: 70 }, { letter: "ق", value: 100 }, { letter: "ل", value: 30 }],
+    malayalamName: "അഖ്ൽ",
     profile: {
-      appearance: "ഒരു കൺ കൊണ്ടുള്ള മനുഷ്യ രൂപം, മനുഷ്യ കൈകൾ ഉള്ളവൻ, കൈയിൽ ഒരു കൊമ്പ് ഉണ്ട്. ശരീരത്തിന്റെ ബാക്കി ഭാഗം മനുഷ്യനാണ്.",
-      nature: "ആറാമത്തെ ത്വൈലഖ് (Tayleq). 'ഇഖ്‌ൽ' എന്ന് അറിയപ്പെടുന്നു.",
+      appearance: "ഒരൊറ്റ കണ്ണ് ഉള്ള മനുഷ്യ രൂപം, മനുഷ്യ കൈകൾ, കൈയിൽ ഒരു കൊമ്പ്.",
+      nature: "ആറാമത്തെ ത്വൈലഖ് (Tayleq). 'ഇഖ്‌ൽ' (عقل) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "എല്ലാ റോഡുകളിലും വസിക്കുന്നു",
       powers: "ഒരു പർവ്വതം പോലെ ഒരു വ്യക്തിയിൽ വീഴുന്നു, ചലിക്കാനോ സംസാരിക്കാനോ കഴിയാതെ ആക്കുന്നു.",
       notes: "",
@@ -89,10 +89,10 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 7, serialNo: 7, arabicName: "ميمور", arabicHarakat: "مَيْمُور",
-    englishName: "Maymoor", abjadValue: 296, letterCount: 5,
-    breakdown: [{ letter: "م", value: 40 }, { letter: "ي", value: 10 }, { letter: "م", value: 40 }, { letter: "و", value: 6 }, { letter: "ر", value: 200 }],
-    malayalamName: "മയ്മൂർ",
+    id: 7, serialNo: 7, arabicName: "الغول", arabicHarakat: "الْغُول",
+    englishName: "Alghul", abjadValue: 296, letterCount: 5,
+    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "غ", value: 1000 }, { letter: "و", value: 6 }, { letter: "ل", value: 30 }],
+    malayalamName: "അൽ-ഗൂൽ",
     profile: {
       appearance: "ഒരു പക്ഷിയുടെ രൂപം — മനുഷ്യ കൈകൾ, കഴുതയുടെ തല, കഴുതയുടെ രണ്ട് കാലുകൾ, കാൽ വരെ ഇറക്കിയ മുടി ഉണ്ട്.",
       nature: "ഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽഘൂൽ' (الغول) എന്ന് അറിയപ്പെടുന്നു.",
@@ -103,13 +103,13 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 8, serialNo: 8, arabicName: "ساموج", arabicHarakat: "سَامُوج",
-    englishName: "Samooj", abjadValue: 110, letterCount: 5,
-    breakdown: [{ letter: "س", value: 60 }, { letter: "ا", value: 1 }, { letter: "م", value: 40 }, { letter: "و", value: 6 }, { letter: "ج", value: 3 }],
-    malayalamName: "സമൂജ്",
+    id: 8, serialNo: 8, arabicName: "صاجز", arabicHarakat: "صَاجِز",
+    englishName: "Sajiz", abjadValue: 110, letterCount: 5,
+    breakdown: [{ letter: "ص", value: 90 }, { letter: "ا", value: 1 }, { letter: "ج", value: 3 }, { letter: "ز", value: 7 }],
+    malayalamName: "സാജിസ്",
     profile: {
       appearance: "രണ്ട് ചിറക് ഉള്ള ഒരു പക്ഷിയുടെ രൂപം, മനുഷ്യ വലതുകൈ, കഴുതയുടെ ചെവി, ഒരു പക്ഷിയുടെ വാൽ ഉണ്ട്.",
-      nature: "എട്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'സ്വജിസ്' (صاجز) എന്ന് അറിയപ്പെടുന്നു.",
+      nature: "എട്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'സാജിസ്' (صاجز) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "പർവ്വതങ്ങളുടെ ഉയർന്ന ഭാഗങ്ങളിൽ (أعالي الجبال) വസിക്കുന്നു",
       powers: "ഒരാളിൽ വീണ് കുഷ്ഠം പോലെ കാണുന്ന എന്തോ പരത്തുന്നു.",
       notes: "",
@@ -117,13 +117,13 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 9, serialNo: 9, arabicName: "نحوش", arabicHarakat: "نَحُوش",
-    englishName: "Nahush", abjadValue: 364, letterCount: 4,
-    breakdown: [{ letter: "ن", value: 50 }, { letter: "ح", value: 8 }, { letter: "و", value: 6 }, { letter: "ش", value: 300 }],
-    malayalamName: "നഹൂഷ്",
+    id: 9, serialNo: 9, arabicName: "الروعة", arabicHarakat: "الرَّوْعَة",
+    englishName: "Alru'h", abjadValue: 364, letterCount: 4,
+    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "ر", value: 200 }, { letter: "و", value: 6 }, { letter: "ة", value: 5 }],
+    malayalamName: "അൽ-റൗഅ",
     profile: {
       appearance: "ഒരു മയിലിന്റെ രൂപം, കിരീടം വിരിഞ്ഞ്, കൈയിൽ ഒരു ഇടയന്റെ വടി, വാൽ വിരിഞ്ഞ്.",
-      nature: "ഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-റൂഹ്' (الروعة) എന്ന് അറിയപ്പെടുന്നു.",
+      nature: "ഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-റൗഅ' (الروعة) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "ഗുഹകളിൽ (الكهوف) വസിക്കുന്നു",
       powers: "ഒരു ബാലൻറെ അടുത്ത് പ്രത്യക്ഷപ്പെട്ട് ഭയപ്പെടുത്തുന്നു. വിക്കൽ ഉണ്ടാക്കുന്നു, കണ്ണുകൾ മറിക്കുന്നു, വിളക്ക് ഭയം കൂടാതെ നോക്കാൻ കഴിയാതെ ആക്കുന്നു. മൂന്ന് ദിവസം ഈ അവസ്ഥ തുടർന്നാൽ കണ്ണ് ചരിഞ്ഞ് പോകും.",
       notes: "",
@@ -131,13 +131,13 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 10, serialNo: 10, arabicName: "بهمور", arabicHarakat: "بَهْمُور",
-    englishName: "Bahmoor", abjadValue: 253, letterCount: 5,
-    breakdown: [{ letter: "ب", value: 2 }, { letter: "ه", value: 5 }, { letter: "م", value: 40 }, { letter: "و", value: 6 }, { letter: "ر", value: 200 }],
-    malayalamName: "ബഹ്മൂർ",
+    id: 10, serialNo: 10, arabicName: "عمديان", arabicHarakat: "عَمْدِيَان",
+    englishName: "'Mdyan", abjadValue: 253, letterCount: 5,
+    breakdown: [{ letter: "ع", value: 70 }, { letter: "م", value: 40 }, { letter: "د", value: 4 }, { letter: "ي", value: 10 }, { letter: "ا", value: 1 }, { letter: "ن", value: 50 }],
+    malayalamName: "അംദിയാൻ",
     profile: {
       appearance: "ഒരു ഏകനേത്ര മനുഷ്യ രൂപം, കൈയിൽ ഒരു ഞാണ് കെട്ടിയ അമ്പ് ഉള്ള വില്ല്, ശരീരം ഒരു പാമ്പിന്റേതാണ്.",
-      nature: "പത്താമത്തെ ത്വൈലഖ് (Tayleq). 'ഇംദ്‌യാൻ' (عمديان) എന്ന് അറിയപ്പെടുന്നു.",
+      nature: "പത്താമത്തെ ത്വൈലഖ് (Tayleq). 'അംദിയാൻ' (عمديان) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "മാലിന്യ കൂമ്പാരങ്ങളിൽ (المزابل) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ മൂത്രം ഒഴിക്കുന്ന വരെ ബോധഹീനനാക്കുന്നു. പിന്നെ ഒരു പാമ്പിന്റെ രൂപത്തിൽ ഒരുമിച്ച് മൂന്ന് വർഷം വസിക്കുന്നു, പിന്നെ വിട്ടുപോകുന്നു.",
       notes: "",
@@ -201,16 +201,16 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 15, serialNo: 15, arabicName: "ترجوش", arabicHarakat: "تَرْجُوش",
-    englishName: "Tarjush", abjadValue: 366, letterCount: 5,
-    breakdown: [{ letter: "ت", value: 400 }, { letter: "ر", value: 200 }, { letter: "ج", value: 3 }, { letter: "و", value: 6 }, { letter: "ش", value: 300 }],
-    malayalamName: "തർജൂഷ്",
+    id: 15, serialNo: 15, arabicName: "نرجوش", arabicHarakat: "نَرْجُوش",
+    englishName: "Narjush", abjadValue: 366, letterCount: 5,
+    breakdown: [{ letter: "ن", value: 50 }, { letter: "ر", value: 200 }, { letter: "ج", value: 3 }, { letter: "و", value: 6 }, { letter: "ش", value: 300 }],
+    malayalamName: "നർജൂഷ്",
     profile: {
-      appearance: "ഒരൊറ്റ കൈ, നാല് കൈ ഉള്ള ഒരു സ്ത്രീ — രണ്ട് കൈകളിൽ കത്തികൾ ഉണ്ട്.",
+      appearance: "ഒരൊറ്റ കാൽ, നാല് കൈ ഉള്ള ഒരു സ്ത്രീ — രണ്ട് കൈകളിൽ കത്തികൾ ഉണ്ട്.",
       nature: "പതിനഞ്ചാമത്തെ ത്വൈലഖ് (Tayleq). 'നർജൂഷ് ബിൻ ദൻഹഷ്' (نرجوش بنت دنهش) — ദൻഹഷിന്റെ മകൾ.",
       habitat: "തകർന്ന കുളിമുറികളിൽ (المراحيض المنكسرة) വസിക്കുന്നു",
-      powers: "",
-      notes: "",
+      powers: "തകർന്ന കുളിമുറികളിൽ വസിക്കുന്നു. ദൻഹഷിന്റെ മകൾ.",
+      notes: "PDF-ൽ 'നർജൂഷ്' (نرجوش) എന്നാണ് പേര്, 'തർജൂഷ്' (ترجوش) അല്ല.",
       source: "Book of Deadly Names, Translation Page Eight Recto (PDF/2 Page 1)"
     }
   },
@@ -369,17 +369,17 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 27, serialNo: 27, arabicName: "صعبة", arabicHarakat: "صَعْبَة",
-    englishName: "Sa'bah", abjadValue: 175, letterCount: 4,
-    breakdown: [],
-    malayalamName: "സ്വഅ്ബ",
+    id: 27, serialNo: 27, arabicName: "صعيه", arabicHarakat: "صَعِيه",
+    englishName: "S'ih", abjadValue: 175, letterCount: 4,
+    breakdown: [{ letter: "ص", value: 90 }, { letter: "ع", value: 70 }, { letter: "ي", value: 10 }, { letter: "ه", value: 5 }],
+    malayalamName: "സ്വഇഹ",
     profile: {
-      appearance: "",
-      nature: "",
-      habitat: "",
-      powers: "",
+      appearance: "ഒരു സ്ത്രീ — രണ്ട് കൊമ്പ്, കുരങ്ങിന്റെ വാൽ. ഒരു പാമ്പ് അവളെ സവാരി ചെയ്യുന്നു, വാൽ കാലുകൾക്കിടയിലൂടെ, തല തലയ്ക്കരികിൽ.",
+      nature: "ഇരുപത്തിഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'സ്വഇഹ' (صعيه) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "ഭൂമിയുടെ വിജനതകളിലും ശൂന്യതകളിലും (في برية الأرض وخلوها) വസിക്കുന്നു",
+      powers: "ആദം സന്തതികളുടെ ഞരമ്പുകളിൽ സഞ്ചരിക്കുന്നു. പണം, പാനീയം, അലങ്കാരം, ചെലവഴിക്കൽ, ആഗ്രഹങ്ങൾ, കാമം, അറപ്പുകൾ എന്നിവയുടെ സ്നേഹം വഹിക്കുന്നു.",
       notes: "",
-      source: ""
+      source: "Book of Deadly Names, Translation Page Thirteen Vetro (PDF/2 Page 19)"
     }
   },
   {
