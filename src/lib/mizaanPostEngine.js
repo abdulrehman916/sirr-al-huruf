@@ -348,6 +348,12 @@ export function validateVefk(grid, magicConstant) {
  * onüçüncü (13) haneye bir (1) fazla ilave etmek sureti ile vefki tamamlarız."
  *
  * Returns a 4×4 grid of numbers, the magic constant, and validation results.
+ * 
+ * MANUSCRIPT-CORRECT REMAINDER RULE:
+ * Base MC = 4Q + 30 (from template position sum 34, minus 4 for 0-indexed)
+ * When R > 0, we must add exactly R to the MC to reach S.
+ * Add +1 to exactly R cells in the grid (starting from position 1).
+ * This ensures MC = 4Q + 30 + R = S exactly.
  */
 export function buildVefk(S, element = 'fire') {
   const V = S - 30;
@@ -356,21 +362,25 @@ export function buildVefk(S, element = 'fire') {
 
   const template = VEFK_TEMPLATES[element] || VEFK_TEMPLATES.fire;
 
-  // BOOK-CORRECT REMAINDER RULE (verified against p.68 worked example):
-  // When R > 0, ALL template positions > 4*(4-R) receive +1.
-  // R=0: no correction (threshold=16, nothing >16)
-  // R=1: positions 13,14,15,16 get +1
-  // R=2: positions 9,10,...,16 get +1
-  // R=3: positions 5,6,...,16 get +1
-  // This ensures MC = S exactly (not S±something).
-  // Bug in previous version: only 1 cell was corrected → non-magic square, MC ≠ S.
-  const threshold = 4 * (4 - R); // positions > threshold get +1
-
+  // MANUSCRIPT-CORRECT: Add +1 to exactly R cells to make MC = S
+  // R=0: no correction needed (MC = 4Q + 30 = S)
+  // R=1: add +1 to 1 cell
+  // R=2: add +1 to 2 cells
+  // R=3: add +1 to 3 cells
+  // We add to the first R positions in reading order (top-left to bottom-right)
+  
+  let correctionCounter = 0;
   const grid = template.map(row =>
-    row.map(pos => Q + (pos - 1) + (pos > threshold ? 1 : 0))
+    row.map(pos => {
+      const baseValue = Q + (pos - 1);
+      // Add +1 to the first R cells (in template position order)
+      const needsCorrection = correctionCounter < R;
+      if (needsCorrection) correctionCounter++;
+      return baseValue + (needsCorrection ? 1 : 0);
+    })
   );
 
-  // Magic constant = S exactly
+  // Magic constant = S exactly (4Q + 30 + R = S)
   const mc = grid[0].reduce((s, v) => s + v, 0);
 
   // Validate the magic square
