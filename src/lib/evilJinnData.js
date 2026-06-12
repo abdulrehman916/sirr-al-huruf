@@ -404,7 +404,7 @@ export const EVIL_JINN_NAMES = [
     profile: {
       appearance: "ഒരു മത്സ്യത്തിന്റെ രൂപം — ഒരു മനുഷ്യ മുഖം, മൂന്ന് ഒട്ടിച്ചേർന്ന വാലുകൾ, ഒരു ചിറക് ഉള്ള മത്സ്യത്തെ പോലെ നാല് ചിറകുകൾ.",
       nature: "ഇരുപത്തിഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-ഖർസ്വ' (القرصة) എന്ന് അറിയപ്പെടുന്നു.",
-      habitat: "",
+      habitat: "PDF സ്രോതസ്സ് വാസസ്ഥലം വ്യക്തമാക്കുന്നില്ല (PDF source does not specify habitat)",
       powers: "ആൺ കുട്ടികളെ ആകർഷിക്കുന്നു, അവരുടെ മനസ്സ് ആകർഷിക്കുന്നു.",
       notes: "",
       source: "Book of Deadly Names, Translation Page Fourteen Vetro (PDF/3 Page 2)"
