@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { runMizaanPostPipeline } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 const G = {
   gold:     "#F5D060",
@@ -63,6 +64,34 @@ function OrnamentalDivider() {
       <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
       <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
       <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
+    </div>
+  );
+}
+
+function SourceSection({ grandBast, elementColor }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}
+      >
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        Source
+      </button>
+      {isOpen && (
+        <div className="mt-2 text-center space-y-1.5">
+          <div className="text-[7px]" style={{ color: G.dim }}>Derived From</div>
+          <div className="text-[7px] px-2 py-1.5 rounded" style={{ background: G.bgInner, color: elementColor }}>
+            9 Mizan Grand Total = {grandBast?.toLocaleString() || 0}
+          </div>
+          <div className="text-[6px] px-2" style={{ color: G.dim }}>
+            Original Name → Bast Derivations → All Expanded Letters → Group Formation → Esma-i Kitabet → 9 Mizan Total → Vefk Magic Constant
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -154,6 +183,9 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
                 <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Magic Constant</span>
                 <span className="font-inter text-sm font-bold tabular-nums" style={{ color: elementMeta.color }}>{vefk.mc?.toLocaleString() || 0}</span>
               </div>
+              
+              {/* Source Explanation */}
+              <SourceSection grandBast={grandBast} elementColor={elementMeta.color} />
             </div>
           </Card>
         )}
