@@ -440,18 +440,26 @@ function VerificationReport({ modelResult, manuscript, exampleId }) {
 }
 
 export default function MizanVefkModelVerification() {
+  // Comprehensive verification for all 4 Anasir templates
+  const ELEMENTS = [
+    { key: 'fire', name: 'Fire (Nari)', arabic: 'النار' },
+    { key: 'earth', name: 'Earth (Turabi)', arabic: 'التراب' },
+    { key: 'air', name: 'Air (Havai)', arabic: 'الهواء' },
+    { key: 'water', name: 'Water (Mai)', arabic: 'الماء' },
+  ];
+
   return (
     <PageLayout>
       <div className="space-y-4">
         <PageTitle
-          arabic="التحقق من النموذج"
-          latin="Vefk Model Verification"
-          subtitle="Manuscript Model A vs Model B — Cell-by-Cell Analysis"
+          arabic="التحقق الشامل"
+          latin="Complete Anasir Verification"
+          subtitle="Four Elements × Two Models — Mathematical Proof"
           icon="🔬"
         />
 
-        {/* Model Definitions */}
-        <Card title="Two Competing Models" icon={AlertCircle}>
+        {/* Test Parameters */}
+        <Card title="Verification Protocol" icon={AlertCircle}>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="p-4 rounded-lg border" style={{ borderColor: G.blue + "40", background: G.blue + "11" }}>
               <div className="flex items-center gap-2 mb-2">
@@ -459,9 +467,9 @@ export default function MizanVefkModelVerification() {
                 <span className="font-inter text-sm font-bold" style={{ color: G.blue }}>Single Cell Correction</span>
               </div>
               <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
-                <div>• Add +1 <strong>only</strong> to the specified cell</div>
-                <div>• All other cells remain unchanged</div>
-                <div>• Example: R=1 → Cell 13 gets +1, Cells 14-16 unchanged</div>
+                <div>• Add +1 <strong>only</strong> to specified positions</div>
+                <div>• All other positions remain unchanged</div>
+                <div>• R=1 → pos 13 | R=2 → pos 9,13 | R=3 → pos 5,9,13</div>
               </div>
             </div>
             <div className="p-4 rounded-lg border" style={{ borderColor: G.green + "40", background: G.green + "11" }}>
@@ -470,56 +478,87 @@ export default function MizanVefkModelVerification() {
                 <span className="font-inter text-sm font-bold" style={{ color: G.green }}>Sequential Continuation</span>
               </div>
               <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
-                <div>• Add +1 to specified cell</div>
+                <div>• Add +1 to specified positions</div>
                 <div>• Continue sequential numbering from corrected value</div>
-                <div>• Example: R=1 → Cell 13=51, Cell 14=52, Cell 15=53, Cell 16=54</div>
+                <div>• Each correction shifts all subsequent values</div>
               </div>
             </div>
           </div>
         </Card>
 
-        {/* Test Results for Each Example */}
+        {/* Complete Verification for Each Example × Each Element */}
         {MANUSCRIPT_EXAMPLES.map((example) => {
-          const modelA = buildVefkModelA(example.sourceNumber);
-          const modelB = buildVefkModelB(example.sourceNumber);
+          const V = example.sourceNumber - 30;
+          const Q = Math.floor(V / 4);
+          const R = V % 4;
 
           return (
-            <Card key={example.id} title={`Page ${example.page} — Example ${example.id} (Source: ${example.sourceNumber.toLocaleString()})`} icon={FileText}>
+            <Card key={example.id} title={`Page ${example.page} — Example ${example.id} (Source: ${example.sourceNumber.toLocaleString()}, V=${V}, Q=${Q}, R=${R})`} icon={FileText}>
               
-              {/* Construction Parameters */}
-              <div className="mb-4 p-3 rounded-lg border" style={{ borderColor: G.goldBorder + "40" }}>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-[7px]" style={{ color: G.dim }}>V = S - 30</div>
-                    <div className="font-inter text-lg font-bold" style={{ color: G.gold }}>{modelA.V.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-[7px]" style={{ color: G.dim }}>Q = ⌊V/4⌋</div>
-                    <div className="font-inter text-lg font-bold" style={{ color: G.gold }}>{modelA.Q.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-[7px]" style={{ color: G.dim }}>R = V % 4</div>
-                    <div className="font-inter text-lg font-bold" style={{ color: modelA.R > 0 ? G.red : G.green }}>{modelA.R}</div>
-                  </div>
-                </div>
-                {modelA.R > 0 && (
-                  <div className="mt-2 text-center text-[7px]" style={{ color: G.dim }}>
-                    Remainder correction needed at cell(s):{" "}
-                    <span className="font-bold" style={{ color: G.gold }}>
-                      {modelA.R === 1 ? "13" : modelA.R === 2 ? "9, 13" : "5, 9, 13"}
-                    </span>
-                  </div>
-                )}
-              </div>
+              {/* Test all 4 elements */}
+              {ELEMENTS.map((el) => {
+                const modelA = buildVefkModelA(example.sourceNumber, el.key);
+                const modelB = buildVefkModelB(example.sourceNumber, el.key);
+                const compA = compareGrids(modelA.grid, example.grid);
+                const compB = compareGrids(modelB.grid, example.grid);
+                const verifyA = verifyMagicSquare(modelA.grid, `Model A - ${el.key}`);
+                const verifyB = verifyMagicSquare(modelB.grid, `Model B - ${el.key}`);
 
-              {/* Cell-by-Cell Comparison for Both Models */}
-              <CellByCellComparison manuscript={example} modelA={modelA} modelB={modelB} />
-              
-              {/* Sum Verification for Both Models */}
-              <div className="grid md:grid-cols-2 gap-4 mt-4">
-                <SumVerification grid={modelA.grid} label="Model A — Single Cell Correction" />
-                <SumVerification grid={modelB.grid} label="Model B — Sequential Continuation" />
-              </div>
+                return (
+                  <div key={el.key} className="mb-6 p-4 rounded-lg border" style={{ borderColor: G.goldBorder + "40" }}>
+                    <div className="text-[9px] uppercase tracking-wider font-bold mb-3" style={{ color: G.gold }}>
+                      {el.name} — {el.arabic}
+                    </div>
+
+                    {/* Generated Grids Side-by-Side */}
+                    <div className="grid md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <div className="text-[7px] mb-2" style={{ color: G.blue }}>Model A Grid</div>
+                        <GridDisplay grid={modelA.grid} highlightCells={compA.mismatches.map(m => m.cell)} />
+                        <div className={`mt-2 text-center text-[8px] font-bold ${compA.isExactMatch ? "text-green-500" : "text-red-500"}`}>
+                          {compA.isExactMatch ? "✓ 100% MATCH" : `✗ ${compA.mismatchCount} MISMATCHES`}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[7px] mb-2" style={{ color: G.green }}>Model B Grid</div>
+                        <GridDisplay grid={modelB.grid} highlightCells={compB.mismatches.map(m => m.cell)} />
+                        <div className={`mt-2 text-center text-[8px] font-bold ${compB.isExactMatch ? "text-green-500" : "text-red-500"}`}>
+                          {compB.isExactMatch ? "✓ 100% MATCH" : `✗ ${compB.mismatchCount} MISMATCHES`}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sum Verification */}
+                    <div className="grid md:grid-cols-2 gap-3 mb-3">
+                      <div className="p-3 rounded-lg border" style={{ borderColor: G.blue + "40" }}>
+                        <div className="text-[7px] font-bold mb-2" style={{ color: G.blue }}>Model A — Row/Col/Diag Sums</div>
+                        <div className="text-[6px] space-y-0.5">
+                          <div>Rows: {verifyA.rowSums.join(', ')}</div>
+                          <div>Cols: {verifyA.colSums.join(', ')}</div>
+                          <div>Diag: {verifyA.diag1}, {verifyA.diag2}</div>
+                          <div className={verifyA.isValidMagicSquare ? "text-green-500 font-bold" : "text-red-500"}>
+                            {verifyA.isValidMagicSquare ? "✓ Valid Magic Square" : "✗ Invalid"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg border" style={{ borderColor: G.green + "40" }}>
+                        <div className="text-[7px] font-bold mb-2" style={{ color: G.green }}>Model B — Row/Col/Diag Sums</div>
+                        <div className="text-[6px] space-y-0.5">
+                          <div>Rows: {verifyB.rowSums.join(', ')}</div>
+                          <div>Cols: {verifyB.colSums.join(', ')}</div>
+                          <div>Diag: {verifyB.diag1}, {verifyB.diag2}</div>
+                          <div className={verifyB.isValidMagicSquare ? "text-green-500 font-bold" : "text-red-500"}>
+                            {verifyB.isValidMagicSquare ? "✓ Valid Magic Square" : "✗ Invalid"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cell-by-Cell Detail */}
+                    <CellByCellComparison manuscript={example} modelA={modelA} modelB={modelB} />
+                  </div>
+                );
+              })}
             </Card>
           );
         })}
