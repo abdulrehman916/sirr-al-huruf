@@ -5,6 +5,29 @@
 
 ---
 
+## ⚠ CRITICAL SCOPE LIMITATION
+
+**MIZAN METHOD APPLIES TO 4×4 RUBAI ONLY**
+
+The following construction rules are **exclusively** validated for 4×4 Rubai Vefks:
+
+✓ Elemental Rubai templates (Fire, Earth, Air, Water) — Page 68  
+✓ Sequential Continuation Method — Pages 314, 316  
+✓ Remainder Correction Rules (R=1,2,3) — Pages 314, 316  
+✓ Construction formula: V = S - 30, Q = ⌊V/4⌋, R = V % 4
+
+**DO NOT APPLY** these rules to:
+- Musallas (3×3)
+- Humasi (5×5)
+- Sudasi (6×6)
+- Suba'i (7×7)
+- Sumani (8×8)
+
+Each grid size **must be validated independently** from manuscript evidence.
+No cross-application of Rubai rules to other grid sizes is permitted without explicit manuscript authority.
+
+---
+
 ## VERIFICATION STATUS OVERVIEW
 
 | Grid Size | Name | Status | Manuscript Evidence |
@@ -108,17 +131,24 @@ The manuscript explicitly provides ALL FOUR elemental Rubai templates (Anasır-�
 All algorithms must reproduce manuscript examples **exactly, cell-by-cell**.  
 Mathematical theory is secondary to empirical manuscript evidence.
 
-### 2. Magic Constant ≠ Source Number (Empirical Claim)
+### 2. Rubai Method Scope (4×4 ONLY)
+**Mizan construction rules apply EXCLUSIVELY to 4×4 Rubai Vefks.**
+
+The following are **only** validated for 4×4 grids:
+- Elemental template selection (Fire/Earth/Air/Water)
+- Sequential continuation method
+- Remainder correction rules (R=1,2,3 → positions 5,9,13)
+- Construction formula (V = S - 30, Q = ⌊V/4⌋, R = V % 4)
+
+**PROHIBITED:** Applying Rubai rules to 3×3, 5×5, 6×6, 7×7, or 8×8 grids without explicit manuscript evidence.
+
+### 3. Magic Constant ≠ Source Number (Empirical Claim)
 For Rubai (4×4), MC = Source Number is an **empirical observation** (verified for Fire examples).  
 This may or may not hold for other grid sizes — manuscript evidence required.
 
-### 3. Elemental Template Selection (Rubai Only)
-For 4×4 grids, template selection by dominant element is **MANDATORY**.  
-Do NOT default to Fire template for all operations.
-
-### 4. Sequential Continuation Method (Rubai Only)
-Remainder corrections use **sequential continuation**, not single-cell correction.  
-This is manuscript-proven for 4×4 grids.
+### 4. Independent Validation Required
+Each grid size (3×3 through 8×8) must be validated **independently** from manuscript sources.
+No assumptions, extrapolations, or cross-application of Rubai rules to other sizes.
 
 ---
 
@@ -138,24 +168,28 @@ For any future grid size verification:
 
 ## NEXT STEPS
 
-### Priority 1: Manuscript Research
-- Search for 3×3 (Musallas) examples
-- Search for 5×5 (Humasi) examples
-- Search for 6×6 (Sudasi) examples
-- Search for 7×7 (Suba'i) examples
-- Search for 8×8 (Sumani) examples
+### Priority 1: Manuscript Research (Independent Validation)
+**Each grid size requires SEPARATE manuscript evidence:**
+- Search for 3×3 (Musallas) examples — need page number + grid
+- Search for 5×5 (Humasi) examples — need page number + grid
+- Search for 6×6 (Sudasi) examples — need page number + grid
+- Search for 7×7 (Suba'i) examples — need page number + grid
+- Search for 8×8 (Sumani) examples — need page number + grid
 
-### Priority 2: Algorithm Development
-- Only after manuscript examples are found
+**CRITICAL:** Do NOT assume Rubai rules apply to other sizes.
+
+### Priority 2: Algorithm Development (Manuscript-First)
+**Only after manuscript examples are found:**
 - Reproduce manuscript exactly, cell-by-cell
-- Validate against all found examples
-- Document verification status
+- Validate against ALL found examples for that size
+- Document verification status per grid size
+- Derive construction rules FROM manuscript, not from Rubai
 
 ### Priority 3: UI Integration
 - Add grid size selector to Mizan page
-- Implement element selection for applicable sizes
-- Add verification badges to UI
-- Display manuscript page references
+- Display "4×4 Rubai Only" badge on current implementation
+- Add verification status per grid size
+- Show manuscript page references for each verified size
 
 ---
 
@@ -172,3 +206,25 @@ For any future grid size verification:
 
 All implementations must be validated against direct manuscript evidence.
 No mathematical extrapolation without manuscript support.
+No cross-application of Rubai (4×4) rules to other grid sizes.
+
+---
+
+## SCOPE DECLARATION
+
+**CURRENT IMPLEMENTATION:** 4×4 Rubai Vefks ONLY
+
+**VERIFIED FEATURES:**
+✓ Elemental template selection (Fire/Earth/Air/Water)
+✓ Sequential continuation method
+✓ Remainder correction rules
+✓ Construction formula (V = S - 30, Q = ⌊V/4⌋, R = V % 4)
+
+**OUT OF SCOPE (Require Independent Manuscript Evidence):**
+✗ Musallas (3×3)
+✗ Humasi (5×5)
+✗ Sudasi (6×6)
+✗ Suba'i (7×7)
+✗ Sumani (8×8)
+
+**MANUSCRIPT AUTHORITY REQUIRED** before extending to any other grid size.
