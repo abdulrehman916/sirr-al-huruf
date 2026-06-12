@@ -345,43 +345,7 @@ export default function SatrVahidGrouping({
 
         {/* ══ STEP 4: GROUP FORMATION ══ */}
         <Card accent={G.gold}>
-          <SectionHeader step="G" label="Group Formation Process" arabic="تكوين المجموعات" color={G.gold} />
-          
-          {/* Remainder correction notice */}
-          {groupFormation.remainder > 0 && (
-            <div className="mb-3 rounded-lg border p-3"
-              style={{ background: G.greenDim, borderColor: G.green + "40" }}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: G.green }}>
-                  Remainder Correction from Ghalib Anasir
-                </span>
-                <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>+{groupFormation.supplement.length} letters</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[8px] mb-2">
-                <div className="flex justify-between">
-                  <span style={{ color: G.dim }}>Source Anasir</span>
-                  <span style={{ color: G.gold }}>{dominantLabel}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: G.dim }}>Group Size</span>
-                  <span style={{ color: G.gold }}>{groupFormation.groupSize}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: G.dim }}>Remainder</span>
-                  <span style={{ color: G.red }}>{groupFormation.remainder}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: G.dim }}>Letters Needed</span>
-                  <span style={{ color: G.green }}>{groupFormation.supplement.length}</span>
-                </div>
-              </div>
-              <div className="font-inter text-[7px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>
-                Supplement letters from Ghalib Anasir ({dominantLabel}):
-              </div>
-              <LetterRow letters={groupFormation.supplement} color={G.green} size="sm" rtl />
-            </div>
-          )}
-
+          <SectionHeader step="4" label="Group Formation" arabic="تكوين المجموعات" color={G.gold} />
           <div className="space-y-3">
             {groupFormation.groups.map((group, gi) => (
               <motion.div key={gi}
@@ -390,40 +354,17 @@ export default function SatrVahidGrouping({
                 transition={{ delay: gi * 0.06 }}
                 className="rounded-xl border p-3"
                 style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded flex items-center justify-center font-inter text-[9px] font-black"
-                      style={{ background: G.goldFaint, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
-                      {group.groupNumber}
-                    </div>
-                    <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
-                      Group {group.groupNumber} — {group.letters.length} letters
-                    </span>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-3 flex-wrap">
-                  <LetterRow letters={group.letters} color={G.gold} size="lg" showIndex rtl />
-                  <Arrow label="name" />
+                  <LetterRow letters={group.letters} color={G.gold} size="lg" rtl />
+                  <Arrow label="→" />
                   <span className="font-amiri text-2xl font-bold px-4 py-2 rounded-xl border"
-                    style={{ color: G.green, borderColor: G.green + "55", background: G.greenDim }}
+                    style={{ color: G.gold, borderColor: G.goldBorder + "55", background: G.goldFaint }}
                     dir="rtl">
                     {group.name}
                   </span>
                 </div>
               </motion.div>
             ))}
-          </div>
-
-          {/* Final Names Summary */}
-          <div className="mt-4 px-4 py-3 rounded-xl border text-center"
-            style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
-            <div className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.goldDim }}>
-              Total Esma-i Kitabet Names Generated
-            </div>
-            <div className="font-inter text-2xl font-bold tabular-nums" style={{ color: G.gold }}>
-              {groupFormation.groups.length}
-            </div>
           </div>
         </Card>
 
