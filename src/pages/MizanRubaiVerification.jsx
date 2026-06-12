@@ -333,12 +333,87 @@ export default function MizanRubaiVerification() {
         })}
 
         {/* Final Summary */}
-        <Card title="Verification Status Report" icon={CheckCircle}>
+        <Card title="System-Wide Verification Status" icon={CheckCircle}>
           <div className="space-y-4">
-            {/* Overall Status */}
+            {/* Grid Size Overview */}
+            <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
+              <div className="text-[8px] uppercase tracking-wider font-bold mb-3" style={{ color: G.gold }}>
+                All Vefk Grid Sizes — Manuscript Verification Status
+              </div>
+              <div className="space-y-2">
+                {/* 3×3 */}
+                <div className="flex items-center justify-between p-2 rounded-lg border" style={{ borderColor: G.goldBorder + "30" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="text-[7px] font-bold" style={{ color: G.dim }}>3×3</div>
+                    <div className="text-[6px]" style={{ color: G.dim }}>Musallas</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-3 h-3 text-yellow-500" />
+                    <span className="text-[6px] text-yellow-500 font-bold">NOT VERIFIED — No manuscript evidence</span>
+                  </div>
+                </div>
+                {/* 4×4 */}
+                <div className="flex items-center justify-between p-2 rounded-lg border border-green-500/40 bg-green-500/10">
+                  <div className="flex items-center gap-3">
+                    <div className="text-[7px] font-bold text-green-500">4×4</div>
+                    <div className="text-[6px] text-green-500">Rubai</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                    <span className="text-[6px] text-green-500 font-bold">✓ FULLY VERIFIED — Pages 68, 314, 316</span>
+                  </div>
+                </div>
+                {/* 5×5 */}
+                <div className="flex items-center justify-between p-2 rounded-lg border" style={{ borderColor: G.goldBorder + "30" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="text-[7px] font-bold" style={{ color: G.dim }}>5×5</div>
+                    <div className="text-[6px]" style={{ color: G.dim }}>Humasi</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-3 h-3 text-yellow-500" />
+                    <span className="text-[6px] text-yellow-500 font-bold">NOT VERIFIED — No manuscript evidence</span>
+                  </div>
+                </div>
+                {/* 6×6 */}
+                <div className="flex items-center justify-between p-2 rounded-lg border" style={{ borderColor: G.goldBorder + "30" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="text-[7px] font-bold" style={{ color: G.dim }}>6×6</div>
+                    <div className="text-[6px]" style={{ color: G.dim }}>Sudasi</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-3 h-3 text-yellow-500" />
+                    <span className="text-[6px] text-yellow-500 font-bold">NOT VERIFIED — No manuscript evidence</span>
+                  </div>
+                </div>
+                {/* 7×7 */}
+                <div className="flex items-center justify-between p-2 rounded-lg border" style={{ borderColor: G.goldBorder + "30" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="text-[7px] font-bold" style={{ color: G.dim }}>7×7</div>
+                    <div className="text-[6px]" style={{ color: G.dim }}>Suba'i</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-3 h-3 text-yellow-500" />
+                    <span className="text-[6px] text-yellow-500 font-bold">NOT VERIFIED — No manuscript evidence</span>
+                  </div>
+                </div>
+                {/* 8×8 */}
+                <div className="flex items-center justify-between p-2 rounded-lg border" style={{ borderColor: G.goldBorder + "30" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="text-[7px] font-bold" style={{ color: G.dim }}>8×8</div>
+                    <div className="text-[6px]" style={{ color: G.dim }}>Sumani</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-3 h-3 text-yellow-500" />
+                    <span className="text-[6px] text-yellow-500 font-bold">NOT VERIFIED — No manuscript evidence</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rubai Element Status */}
             <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
               <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
-                Overall Validation Status — All Elements Verified
+                Rubai (4×4) — All Elements Verified
               </div>
               <div className="grid md:grid-cols-4 gap-3">
                 <div className="p-3 rounded-lg bg-green-500/10 border-green-500/40 border">
@@ -427,27 +502,37 @@ export default function MizanRubaiVerification() {
             {/* Next Steps */}
             <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
               <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
-                Verification Protocol (Manuscript is Authority)
+                System Development Priorities
               </div>
-              <div className="text-[7px] space-y-2" style={{ color: G.dim }}>
-                <div className="font-bold" style={{ color: G.gold }}>Priority Order:</div>
-                <div className="ml-3">1. Exact cell-by-cell match (highest priority)</div>
-                <div className="ml-3">2. Correct elemental template</div>
-                <div className="ml-3">3. Correct sequential continuation method</div>
-                <div className="ml-3">4. Correct row/column/diagonal sums</div>
-                <div className="ml-3">5. Evaluate MC vs Source (empirical claim)</div>
+              <div className="text-[7px] space-y-3" style={{ color: G.dim }}>
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/40">
+                  <div className="font-bold mb-1 text-green-500">✓ Rubai (4×4) — COMPLETE</div>
+                  <div>All four elemental templates manuscript-proven (Page 68)</div>
+                  <div>Sequential continuation method verified (Pages 314, 316)</div>
+                </div>
                 
-                <div className="mt-3 font-bold" style={{ color: G.gold }}>For Air/Water/Earth:</div>
-                <div className="ml-3">• Find manuscript example with page number</div>
-                <div className="ml-3">• Extract Source Number and complete 4x4 grid</div>
-                <div className="ml-3">• Calculate actual MC from manuscript grid</div>
-                <div className="ml-3">• Compare MC with Source (may differ)</div>
-                <div className="ml-3">• Report difference if MC ≠ Source</div>
+                <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/40">
+                  <div className="font-bold mb-1 text-yellow-500">⚠ PRIORITY 1: Manuscript Research</div>
+                  <div className="ml-3">• Search for 3×3 (Musallas) examples</div>
+                  <div className="ml-3">• Search for 5×5 (Humasi) examples</div>
+                  <div className="ml-3">• Search for 6×6 (Sudasi) examples</div>
+                  <div className="ml-3">• Search for 7×7 (Suba'i) examples</div>
+                  <div className="ml-3">• Search for 8×8 (Sumani) examples</div>
+                </div>
                 
-                <div className="mt-2 p-2 rounded bg-yellow-500/10 border border-yellow-500/40" style={{ color: G.yellow }}>
-                  ⚠ CRITICAL: Manuscript is authority, not formula.<br/>
-                  DO NOT force MC = Source. Reproduce manuscript exactly.<br/>
-                  Fire template proven; Air/Water/Earth require independent proof.
+                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/40">
+                  <div className="font-bold mb-1 text-blue-500">⚠ PRIORITY 2: Algorithm Development</div>
+                  <div>Only after manuscript examples are found:</div>
+                  <div className="ml-3">• Reproduce manuscript exactly, cell-by-cell</div>
+                  <div className="ml-3">• Validate against all found examples</div>
+                  <div className="ml-3">• Document verification status</div>
+                </div>
+                
+                <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/40" style={{ color: G.yellow }}>
+                  <strong>⚠ CRITICAL LAW:</strong> Manuscript is authority, not formula.<br/>
+                  DO NOT implement grid sizes without manuscript evidence.<br/>
+                  DO NOT force MC = Source — treat as empirical observation.<br/>
+                  Rubai (4×4) is the ONLY verified grid size.
                 </div>
               </div>
             </div>
