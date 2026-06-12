@@ -120,11 +120,22 @@ function BilingualSection({ enTitle, mlTitle, enContent, mlContent, icon: Icon }
   );
 }
 
+function ProfileField({ icon: Icon, label, value }) {
+  if (!value) return null;
+  return (
+    <div className="rounded-xl border p-3 space-y-1.5" style={{ background: P.bg, borderColor: P.border }}>
+      <div className="flex items-center gap-1.5">
+        {Icon && <Icon className="w-3 h-3 flex-shrink-0" style={{ color: P.dim }} />}
+        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>{label}</span>
+      </div>
+      <p className="font-inter text-[12px] leading-relaxed" style={{ color: P.text }}>{value}</p>
+    </div>
+  );
+}
+
 function JinnCard({ jinn, index, isOpen, onToggle }) {
   const valueCategory = jinn.abjadValue <= 200 ? "Low" : jinn.abjadValue <= 400 ? "Medium" : "High";
   const profile = jinn.profile || {};
-  const en = profile.en || {};
-  const ml = profile.ml || {};
 
   return (
     <motion.div
@@ -223,125 +234,20 @@ function JinnCard({ jinn, index, isOpen, onToggle }) {
                 </div>
               </div>
 
-              {/* Bilingual Profile Sections */}
-              {(en.nature || ml.nature) && (
-                <BilingualSection
-                  enTitle="Nature / Character"
-                  mlTitle="സ്വഭാവം / പ്രകൃതി"
-                  enContent={en.nature}
-                  mlContent={ml.nature}
-                  icon={Info}
-                />
-              )}
-
-              {(en.attributes || ml.attributes) && (
-                <div className="rounded-xl border p-3 space-y-2" style={{ background: P.bg, borderColor: P.border }}>
-                  {(en.attributes && en.attributes.length > 0) && (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <Zap className="w-3 h-3" style={{ color: P.dim }} />
-                        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>Attributes</span>
-                      </div>
-                      <ul className="pl-4 space-y-0.5">
-                        {en.attributes.map((attr, i) => (
-                          <li key={i} className="font-inter text-[11px] leading-relaxed" style={{ color: P.text }}>• {attr}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {(ml.attributes && ml.attributes.length > 0) && en.attributes && (
-                    <div className="h-px" style={{ background: P.faint }} />
-                  )}
-                  {(ml.attributes && ml.attributes.length > 0) && (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <Zap className="w-3 h-3" style={{ color: P.dim }} />
-                        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>വിശേഷണങ്ങൾ</span>
-                      </div>
-                      <ul className="pl-4 space-y-0.5">
-                        {ml.attributes.map((attr, i) => (
-                          <li key={i} className="ej-arabic text-[13px] leading-relaxed" style={{ color: P.text }}>• {attr}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {(en.element || ml.element) && (
-                <BilingualSection
-                  enTitle="Element"
-                  mlTitle="മൂലകം"
-                  enContent={en.element}
-                  mlContent={ml.element}
-                  icon={Info}
-                />
-              )}
-
-              {(en.habitat || ml.habitat) && (
-                <BilingualSection
-                  enTitle="Residence / Habitat"
-                  mlTitle="വാസസ്ഥലം"
-                  enContent={en.habitat}
-                  mlContent={ml.habitat}
-                  icon={MapPin}
-                />
-              )}
-
-              {(en.powers || ml.powers) && (
-                <BilingualSection
-                  enTitle="Powers / Abilities"
-                  mlTitle="ശക്തികൾ / കഴിവുകൾ"
-                  enContent={en.powers}
-                  mlContent={ml.powers}
-                  icon={Zap}
-                />
-              )}
-
-              {(en.warnings || ml.warnings) && (
-                <div className="rounded-xl border p-3" style={{ background: "rgba(248,113,113,0.08)", borderColor: "rgba(248,113,113,0.30)" }}>
-                  {(en.warnings) && (
-                    <div className="space-y-1 mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <AlertTriangle className="w-3 h-3" style={{ color: "#F87171" }} />
-                        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: "#F87171" }}>Warnings</span>
-                      </div>
-                      <p className="font-inter text-[11px] leading-relaxed" style={{ color: "#FCA5A5" }}>{en.warnings}</p>
-                    </div>
-                  )}
-                  {(ml.warnings) && en.warnings && (
-                    <div className="h-px" style={{ background: "rgba(248,113,113,0.20)" }} />
-                  )}
-                  {(ml.warnings) && (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <AlertTriangle className="w-3 h-3" style={{ color: "#F87171" }} />
-                        <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: "#F87171" }}>മുന്നറിയിപ്പ്</span>
-                      </div>
-                      <p className="ej-arabic text-[13px] leading-relaxed" style={{ color: "#FCA5A5" }}>{ml.warnings}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Notes */}
-              {(en.notes || ml.notes) && (
-                <BilingualSection
-                  enTitle="Notes"
-                  mlTitle="കുറിപ്പുകൾ"
-                  enContent={en.notes}
-                  mlContent={ml.notes}
-                  icon={Info}
-                />
-              )}
+              {/* Profile Fields from PDF */}
+              <ProfileField icon={Info} label="രൂപം / Appearance" value={profile.appearance} />
+              <ProfileField icon={Info} label="സ്വഭാവം / Nature" value={profile.nature} />
+              <ProfileField icon={MapPin} label="താമസസ്ഥലം / Habitat" value={profile.habitat} />
+              <ProfileField icon={Zap} label="ശക്തികൾ / Powers" value={profile.powers} />
+              <ProfileField icon={Info} label="കുറിപ്പുകൾ / Notes" value={profile.notes} />
 
               {/* Source Reference */}
-              {(profile.source || jinn.source) && (
+              {profile.source && (
                 <div className="rounded-xl border p-3 flex items-center gap-2" style={{ background: P.bg, borderColor: P.border }}>
-                  <BookOpen className="w-3.5 h-3.5" style={{ color: P.dim }} />
+                  <BookOpen className="w-3.5 h-3.5 flex-shrink-0" style={{ color: P.dim }} />
                   <div className="flex-1">
-                    <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: P.dim }}>Source Reference</div>
-                    <div className="font-inter text-[10px]" style={{ color: P.text }}>{profile.source || jinn.source}</div>
+                    <div className="font-inter text-[7px] uppercase tracking-wider mb-0.5" style={{ color: P.dim }}>ഉറവിടം / Source</div>
+                    <div className="font-inter text-[10px] leading-relaxed" style={{ color: P.text }}>{profile.source}</div>
                   </div>
                 </div>
               )}
