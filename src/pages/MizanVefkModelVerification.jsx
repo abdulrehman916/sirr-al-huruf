@@ -41,79 +41,107 @@ const MANUSCRIPT_EXAMPLES = [
   },
 ];
 
-// MODEL A: Single Cell Correction
-// Add +1 only to the specified cell, all others unchanged
-function buildVefkModelA(S) {
+// RUBAI POSITIONAL TEMPLATES (Element-specific)
+// Source: Manuscript tradition for 4x4 Vefk construction
+const RUBAI_TEMPLATES = {
+  fire: [
+    [8, 11, 14, 1],
+    [13, 2, 7, 12],
+    [3, 16, 9, 6],
+    [10, 5, 4, 15],
+  ],
+  earth: [
+    [15, 4, 5, 10],
+    [6, 9, 16, 3],
+    [12, 7, 2, 13],
+    [1, 14, 11, 8],
+  ],
+  air: [
+    [1, 14, 11, 8],
+    [12, 7, 2, 13],
+    [6, 9, 16, 3],
+    [15, 4, 5, 10],
+  ],
+  water: [
+    [10, 5, 4, 15],
+    [3, 16, 9, 6],
+    [13, 2, 7, 12],
+    [8, 11, 14, 1],
+  ],
+};
+
+// MODEL A: Single Cell Correction with Rubai Template
+// Add +1 only to specified positions, all others unchanged
+function buildVefkModelA(S, element = 'fire') {
   const V = S - 30;
   const Q = Math.floor(V / 4);
   const R = V % 4;
 
-  // Base template (standard positions 1-16)
-  const template = [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8],
-    [9, 10, 11, 12],
-    [13, 14, 15, 16],
-  ];
+  // Get Rubai template for element
+  const template = RUBAI_TEMPLATES[element] || RUBAI_TEMPLATES.fire;
 
-  // Build base grid: Q + (position - 1)
+  // Build value sequence (positions 1-16)
+  const values = [];
+  for (let pos = 1; pos <= 16; pos++) {
+    values.push(Q + (pos - 1));
+  }
+
+  // Apply remainder correction to SINGLE POSITION only
+  if (R === 1) {
+    values[12] += 1; // Position 13
+  } else if (R === 2) {
+    values[8] += 1;  // Position 9
+    values[12] += 1; // Position 13
+  } else if (R === 3) {
+    values[4] += 1;  // Position 5
+    values[8] += 1;  // Position 9
+    values[12] += 1; // Position 13
+  }
+
+  // Place values into Rubai template positions
   const grid = template.map(row =>
-    row.map(pos => Q + (pos - 1))
+    row.map(pos => values[pos - 1])
   );
 
-  // Apply remainder correction to SINGLE CELL only
-  if (R === 1) {
-    grid[3][0] += 1; // Cell 13 (0-indexed: row 3, col 0)
-  } else if (R === 2) {
-    grid[2][0] += 1; // Cell 9
-    grid[3][0] += 1; // Cell 13
-  } else if (R === 3) {
-    grid[1][0] += 1; // Cell 5
-    grid[2][0] += 1; // Cell 9
-    grid[3][0] += 1; // Cell 13
-  }
-
-  return { grid, Q, R, V, model: "A" };
+  return { grid, Q, R, V, model: "A", element };
 }
 
-// MODEL B: Sequential Continuation Correction
-// Add +1 to specified cell, then continue sequential numbering from corrected value
-function buildVefkModelB(S) {
+// MODEL B: Sequential Continuation with Rubai Template
+// Add +1 to specified positions, then continue sequential numbering from corrected value
+function buildVefkModelB(S, element = 'fire') {
   const V = S - 30;
   const Q = Math.floor(V / 4);
   const R = V % 4;
 
-  // Build grid sequentially, cell by cell (reading order)
-  const grid = [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-  ];
+  // Get Rubai template for element
+  const template = RUBAI_TEMPLATES[element] || RUBAI_TEMPLATES.fire;
 
+  // Build value sequence with sequential continuation
+  const values = [];
   let currentValue = Q;
-  let cellNumber = 1;
 
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 4; col++) {
-      // Check if this cell needs correction
-      let needsCorrection = false;
-      if (R === 1 && cellNumber === 13) needsCorrection = true;
-      else if (R === 2 && (cellNumber === 9 || cellNumber === 13)) needsCorrection = true;
-      else if (R === 3 && (cellNumber === 5 || cellNumber === 9 || cellNumber === 13)) needsCorrection = true;
+  for (let pos = 1; pos <= 16; pos++) {
+    // Check if this position needs correction
+    let needsCorrection = false;
+    if (R === 1 && pos === 13) needsCorrection = true;
+    else if (R === 2 && (pos === 9 || pos === 13)) needsCorrection = true;
+    else if (R === 3 && (pos === 5 || pos === 9 || pos === 13)) needsCorrection = true;
 
-      // Apply correction BEFORE setting the cell value
-      if (needsCorrection) {
-        currentValue += 1;
-      }
-
-      grid[row][col] = currentValue;
-      currentValue += 1; // Increment for next cell
-      cellNumber += 1;
+    // Apply correction BEFORE adding value
+    if (needsCorrection) {
+      currentValue += 1;
     }
+
+    values.push(currentValue);
+    currentValue += 1; // Continue sequential numbering
   }
 
-  return { grid, Q, R, V, model: "B" };
+  // Place values into Rubai template positions
+  const grid = template.map(row =>
+    row.map(pos => values[pos - 1])
+  );
+
+  return { grid, Q, R, V, model: "B", element };
 }
 
 function verifyMagicSquare(grid, label) {
