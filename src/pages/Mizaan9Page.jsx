@@ -456,33 +456,6 @@ export default function Mizaan9Page() {
                 
                 return (
                   <>
-                    {/* OPTION 1 Summary — Values passed to OPTION 2 */}
-                    <div className="rounded-2xl border p-5 space-y-4"
-                      style={{ background: "rgba(3,6,20,0.99)", borderColor: G.borderHi, boxShadow: `0 0 60px ${G.glow}, 0 0 120px rgba(0,0,0,0.6)` }}>
-                      <div className="text-center space-y-2">
-                        <h2 className="font-amiri text-2xl font-bold" style={{ color: G.text }}>OPTION 1 Summary</h2>
-                        <p className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Values passed to OPTION 2</p>
-                        <div className="h-px w-24 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G.borderHi}, transparent)` }} />
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
-                          style={{ background: G.bg, borderColor: G.border }}>
-                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Bast (Σ 9 Mizans)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>{option2State.kitabet ? 'Calculated' : 'N/A'}</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
-                          style={{ background: G.bg, borderColor: G.border }}>
-                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Grand Letters (Σ 9 Mizans)</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>Calculated</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl border"
-                          style={{ background: G.bg, borderColor: G.border }}>
-                          <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Satır Vahid Total</span>
-                          <span className="font-inter text-lg font-bold tabular-nums" style={{ color: G.text }}>Calculated</span>
-                        </div>
-                      </div>
-                    </div>
-                    
                     {/* OPTION 2 Calculation Law Results */}
                     <div className="rounded-2xl border p-5 space-y-4"
                       style={{ background: "rgba(3,6,20,0.99)", borderColor: G.borderHi, boxShadow: `0 0 60px ${G.glow}, 0 0 120px rgba(0,0,0,0.6)` }}>
