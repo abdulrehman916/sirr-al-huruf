@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, istintak, FIRST_BAST, GALIB_ANASIR_VALUES, getBastLevel } from "../../lib/mizaanPostEngine";
-import Option1DerivationChain from "./Option1DerivationChain";
+import { runMizaanPostPipeline } from "../../lib/mizaanPostEngine";
+import SatrVahidGrouping from "./SatrVahidGrouping";
 
 const G = {
   gold:     "#F5D060",
@@ -41,40 +41,6 @@ function SectionHeader({ step, label, arabic, color = G.gold }) {
         </div>
       </div>
       <div className="h-px flex-1 max-w-[60px]" style={{ background: `linear-gradient(to right, ${color}40, transparent)` }} />
-    </div>
-  );
-}
-
-function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = false }) {
-  const sizes = { sm: "text-lg px-2 py-1", lg: "text-2xl px-3 py-2", xl: "text-3xl px-4 py-2.5" };
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span
-        className={`font-amiri font-bold rounded-lg border ${sizes[size]}`}
-        style={{
-          color,
-          borderColor: color + "55",
-          background: color + "12",
-          lineHeight: 1.2,
-          display: "inline-block",
-        }}
-      >
-        {letter}
-      </span>
-      {showIndex && (
-        <span className="font-inter text-[8px] tabular-nums" style={{ color: G.dim }}>{index + 1}</span>
-      )}
-    </div>
-  );
-}
-
-function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false, rtl = false }) {
-  if (!letters || letters.length === 0) return null;
-  return (
-    <div className="flex flex-wrap gap-1.5 items-center" style={{ direction: rtl ? "rtl" : "ltr" }}>
-      {letters.map((l, i) => (
-        <LetterCell key={i} letter={l} index={i} color={color} size={size} showIndex={showIndex} />
-      ))}
     </div>
   );
 }
@@ -170,22 +136,9 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
           </div>
         </Card>
 
-        {/* INITIAL SEED LETTERS */}
-        <Card accent={G.gold}>
-          <SectionHeader step="1" label="Initial Seed Letters (Istintak)" arabic="الحروف البذرية" color={G.gold} />
-          <div className="flex flex-wrap gap-2 justify-center mb-2">
-            <LetterRow letters={initialSeedLetters} color={G.gold} size="xl" showIndex rtl />
-          </div>
-          <div className="text-center">
-            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
-              Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{initialSeedLetters?.length || 0}</span>
-            </span>
-          </div>
-        </Card>
-
-        {/* COMPLETE DERIVATION CHAIN */}
-        <Option1DerivationChain
-          seedLetters={initialSeedLetters}
+        {/* COMPLETE MANUSCRIPT DERIVATION CHAIN */}
+        <SatrVahidGrouping
+          satrVahidLetters={initialSeedLetters}
           dominant={dominant}
         />
 
