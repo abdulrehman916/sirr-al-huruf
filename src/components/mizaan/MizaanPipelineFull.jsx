@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, istintak, FIRST_BAST, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, istintak, FIRST_BAST, GALIB_ANASIR_VALUES, getBastLevel } from "../../lib/mizaanPostEngine";
+import Option1DerivationChain from "./Option1DerivationChain";
 
 const G = {
   gold:     "#F5D060",
@@ -181,6 +182,12 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant }
             </span>
           </div>
         </Card>
+
+        {/* COMPLETE DERIVATION CHAIN */}
+        <Option1DerivationChain
+          seedLetters={initialSeedLetters}
+          dominant={dominant}
+        />
 
         {/* ESMA-I KITABET */}
         {kitabet && kitabet.names && kitabet.names.length > 0 && (
