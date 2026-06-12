@@ -18,8 +18,7 @@ import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
-import MizanLetterReference from "../components/mizaan/MizanLetterReference";
-import MizanVefkManuscriptAudit from "../components/mizaan/MizanVefkManuscriptAudit";
+
 
 import { runMizaanPostPipeline, istintak, FIRST_BAST } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
@@ -333,11 +332,6 @@ export default function Mizaan9Page() {
                 return (
                   <>
                     <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} />
-                    <MizaanDivider />
-                    <MizanLetterReference />
-                    <MizaanDivider />
-                    <MizanVefkManuscriptAudit />
-                    <MizaanDivider />
                   </>
                 );
               })()}
