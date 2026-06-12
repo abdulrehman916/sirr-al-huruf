@@ -1,6 +1,6 @@
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
-import { Calculator, CheckCircle, XCircle, FileText } from "lucide-react";
+import { Calculator, CheckCircle, XCircle, FileText, AlertCircle } from "lucide-react";
 import { buildVefk, validateVefk, VEFK_TEMPLATES } from "../lib/mizaanPostEngine";
 
 const G = {
@@ -15,9 +15,13 @@ const G = {
   dim: "rgba(255,255,255,0.35)",
 };
 
-// MANUSCRIPT EXAMPLES FOR ALL 4 ELEMENTS
-// These are the canonical examples used for verification
+// MANUSCRIPT EXAMPLES WITH ACTUAL GRID VALUES
+// Only Fire examples have verified manuscript sources
+// Air, Water, Earth need manuscript examples for validation
 const MANUSCRIPT_EXAMPLES = [
+  // ═══════════════════════════════════════════════════════════════
+  // FIRE TEMPLATE — MANUSCRIPT VERIFIED (100% MATCH)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: "fire-1",
     element: "fire",
@@ -31,6 +35,8 @@ const MANUSCRIPT_EXAMPLES = [
       [14, 28, 21, 17],
       [22, 16, 15, 27],
     ],
+    status: "verified",
+    matchPercentage: 100,
   },
   {
     id: "fire-2",
@@ -45,64 +51,53 @@ const MANUSCRIPT_EXAMPLES = [
       [418, 432, 424, 421],
       [425, 420, 419, 431],
     ],
+    status: "verified",
+    matchPercentage: 100,
   },
-  // AIR EXAMPLES (constructed using same Rubai method)
-  {
-    id: "air-1",
-    element: "air",
-    elementName: "Air (Havai)",
-    arabic: "الهواء",
-    page: "Test",
-    sourceNumber: 100,
-    grid: null, // Will be generated and verified
-  },
-  {
-    id: "air-2",
-    element: "air",
-    elementName: "Air (Havai)",
-    arabic: "الهواء",
-    page: "Test",
-    sourceNumber: 200,
-    grid: null,
-  },
-  // WATER EXAMPLES
-  {
-    id: "water-1",
-    element: "water",
-    elementName: "Water (Mai)",
-    arabic: "الماء",
-    page: "Test",
-    sourceNumber: 120,
-    grid: null,
-  },
-  {
-    id: "water-2",
-    element: "water",
-    elementName: "Water (Mai)",
-    arabic: "الماء",
-    page: "Test",
-    sourceNumber: 240,
-    grid: null,
-  },
-  // EARTH EXAMPLES
-  {
-    id: "earth-1",
-    element: "earth",
-    elementName: "Earth (Turabi)",
-    arabic: "التراب",
-    page: "Test",
-    sourceNumber: 150,
-    grid: null,
-  },
-  {
-    id: "earth-2",
-    element: "earth",
-    elementName: "Earth (Turabi)",
-    arabic: "التراب",
-    page: "Test",
-    sourceNumber: 300,
-    grid: null,
-  },
+  // ═══════════════════════════════════════════════════════════════
+  // AIR TEMPLATE — NEEDS MANUSCRIPT EXAMPLES
+  // ═══════════════════════════════════════════════════════════════
+  // Status: Algorithm implemented, awaiting manuscript verification
+  // {
+  //   id: "air-1",
+  //   element: "air",
+  //   elementName: "Air (Havai)",
+  //   arabic: "الهواء",
+  //   page: ???,
+  //   sourceNumber: ???,
+  //   grid: ???, // Need actual manuscript grid
+  //   status: "pending",
+  // },
+  
+  // ═══════════════════════════════════════════════════════════════
+  // WATER TEMPLATE — NEEDS MANUSCRIPT EXAMPLES
+  // ═══════════════════════════════════════════════════════════════
+  // Status: Algorithm implemented, awaiting manuscript verification
+  // {
+  //   id: "water-1",
+  //   element: "water",
+  //   elementName: "Water (Mai)",
+  //   arabic: "الماء",
+  //   page: ???,
+  //   sourceNumber: ???,
+  //   grid: ???, // Need actual manuscript grid
+  //   status: "pending",
+  // },
+  
+  // ═══════════════════════════════════════════════════════════════
+  // EARTH TEMPLATE — NEEDS MANUSCRIPT EXAMPLES
+  // ═══════════════════════════════════════════════════════════════
+  // Status: Algorithm implemented, awaiting manuscript verification
+  // {
+  //   id: "earth-1",
+  //   element: "earth",
+  //   elementName: "Earth (Turabi)",
+  //   arabic: "التراب",
+  //   page: ???,
+  //   sourceNumber: ???,
+  //   grid: ???, // Need actual manuscript grid
+  //   status: "pending",
+  // },
 ];
 
 function Card({ children, title, accent }) {
@@ -209,14 +204,18 @@ function SumVerification({ grid, sourceNumber }) {
 }
 
 export default function MizanRubaiVerification() {
+  // Count verification status
+  const verifiedCount = MANUSCRIPT_EXAMPLES.filter(ex => ex.status === "verified" && ex.matchPercentage === 100).length;
+  const pendingCount = 3; // Air, Water, Earth need manuscript examples
+  
   return (
     <PageLayout>
       <div className="space-y-4">
         <PageTitle
-          arabic="التحقق منRubai"
+          arabic="التحقق من Rubai"
           latin="Rubai Engine Verification"
-          subtitle="Manuscript-Locked Algorithm — All 4 Anasir"
-          icon="✓"
+          subtitle="Manuscript Validation Status — Fire Verified, Air/Water/Earth Pending"
+          icon="🔬"
         />
 
         {/* Algorithm Rules */}
@@ -335,32 +334,109 @@ export default function MizanRubaiVerification() {
         })}
 
         {/* Final Summary */}
-        <Card title="Final Verification Report" icon={CheckCircle}>
+        <Card title="Verification Status Report" icon={CheckCircle}>
           <div className="space-y-4">
+            {/* Overall Status */}
             <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
               <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
-                Algorithm Status
+                Overall Validation Status
               </div>
-              <div className="text-center p-3 rounded-lg bg-green-500/10 border-green-500/40 border">
-                <div className="text-lg font-bold text-green-500">
-                  ✓ RUBAI ENGINE MANUSCRIPT-LOCKED
+              <div className="grid md:grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-green-500/10 border-green-500/40 border">
+                  <div className="text-[7px] mb-1" style={{ color: G.dim }}>Fire Template</div>
+                  <div className="text-lg font-bold text-green-500">✓ VERIFIED (100%)</div>
+                  <div className="text-[6px]" style={{ color: G.dim }}>2 manuscript examples</div>
                 </div>
-                <div className="text-[7px] mt-1" style={{ color: G.dim }}>
-                  Sequential continuation method verified for all 4 Anasir templates
+                <div className="p-3 rounded-lg bg-yellow-500/10 border-yellow-500/40 border">
+                  <div className="text-[7px] mb-1" style={{ color: G.dim }}>Air/Water/Earth</div>
+                  <div className="text-lg font-bold text-yellow-500">⚠ PENDING</div>
+                  <div className="text-[6px]" style={{ color: G.dim }}>Need manuscript examples</div>
                 </div>
               </div>
             </div>
 
+            {/* Detailed Status */}
             <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
               <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
-                Verification Summary
+                Element-by-Element Status
               </div>
-              <div className="space-y-2 text-[7px]" style={{ color: G.dim }}>
-                <div>• Fire template: ✓ Verified (Page 316, Source 80 — 100% match)</div>
-                <div>• Fire template: ✓ Verified (Page 314, Source 1696 — 100% match)</div>
-                <div>• Air template: ✓ Algorithm locked (sequential continuation)</div>
-                <div>• Water template: ✓ Algorithm locked (sequential continuation)</div>
-                <div>• Earth template: ✓ Algorithm locked (sequential continuation)</div>
+              <div className="space-y-3">
+                {/* Fire */}
+                <div className="p-3 rounded-lg border border-green-500/40 bg-green-500/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <div className="font-bold text-green-500">Fire (Nari) — النار</div>
+                  </div>
+                  <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
+                    <div>✓ Page 316, Source 80: 16/16 cells (100% match)</div>
+                    <div>✓ Page 314, Source 1696: 16/16 cells (100% match)</div>
+                    <div>✓ Magic Constant verified: S = MC for both examples</div>
+                    <div>✓ Row/Column/Diagonal sums: All valid</div>
+                    <div style={{ color: G.green }}>Status: MANUSCRIPT-PROVEN</div>
+                  </div>
+                </div>
+
+                {/* Air */}
+                <div className="p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-4 h-4 text-yellow-500" />
+                    <div className="font-bold text-yellow-500">Air (Havai) — الهواء</div>
+                  </div>
+                  <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
+                    <div>⚠ Algorithm implemented (sequential continuation)</div>
+                    <div>⚠ Rubai template defined</div>
+                    <div style={{ color: G.red }}>✗ NO MANUSCRIPT EXAMPLES FOUND</div>
+                    <div style={{ color: G.yellow }}>Status: AWAITING MANUSCRIPT PROOF</div>
+                  </div>
+                </div>
+
+                {/* Water */}
+                <div className="p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-4 h-4 text-yellow-500" />
+                    <div className="font-bold text-yellow-500">Water (Mai) — الماء</div>
+                  </div>
+                  <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
+                    <div>⚠ Algorithm implemented (sequential continuation)</div>
+                    <div>⚠ Rubai template defined</div>
+                    <div style={{ color: G.red }}>✗ NO MANUSCRIPT EXAMPLES FOUND</div>
+                    <div style={{ color: G.yellow }}>Status: AWAITING MANUSCRIPT PROOF</div>
+                  </div>
+                </div>
+
+                {/* Earth */}
+                <div className="p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-4 h-4 text-yellow-500" />
+                    <div className="font-bold text-yellow-500">Earth (Turabi) — التراب</div>
+                  </div>
+                  <div className="text-[7px] space-y-1" style={{ color: G.dim }}>
+                    <div>⚠ Algorithm implemented (sequential continuation)</div>
+                    <div>⚠ Rubai template defined</div>
+                    <div style={{ color: G.red }}>✗ NO MANUSCRIPT EXAMPLES FOUND</div>
+                    <div style={{ color: G.yellow }}>Status: AWAITING MANUSCRIPT PROOF</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Steps */}
+            <div className="p-4 rounded-xl border" style={{ borderColor: G.goldBorder }}>
+              <div className="text-[8px] uppercase tracking-wider font-bold mb-2" style={{ color: G.gold }}>
+                Required for Full Validation
+              </div>
+              <div className="text-[7px] space-y-2" style={{ color: G.dim }}>
+                <div>For each remaining element (Air, Water, Earth):</div>
+                <div className="ml-3">1. Find manuscript example with page number</div>
+                <div className="ml-3">2. Extract Source Number and complete 4x4 grid</div>
+                <div className="ml-3">3. Verify dominant element matches template used</div>
+                <div className="ml-3">4. Apply sequential continuation method</div>
+                <div className="ml-3">5. Compare all 16 cells individually</div>
+                <div className="ml-3">6. Verify row/column/diagonal sums</div>
+                <div className="ml-3">7. Confirm match percentage = 100%</div>
+                <div className="mt-2 p-2 rounded bg-red-500/10 border border-red-500/40" style={{ color: G.red }}>
+                  ⚠ DO NOT claim full validation until ALL elements have manuscript proof
+                </div>
               </div>
             </div>
           </div>
