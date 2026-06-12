@@ -39,6 +39,7 @@ const MizanVefkAuditPage       = lazy(() => import('./pages/MizanVefkAuditPage')
 const MizanMethodClassification = lazy(() => import('./pages/MizanMethodClassification'));
 const MizanManuscriptAnalysis = lazy(() => import('./pages/MizanManuscriptAnalysis'));
 const MizanVefkModelVerification = lazy(() => import('./pages/MizanVefkModelVerification'));
+const MizanRubaiVerification = lazy(() => import('./pages/MizanRubaiVerification'));
 const MizanManuscriptVerification = lazy(() => import('./pages/MizanManuscriptVerification'));
 
 
@@ -111,6 +112,7 @@ const AuthenticatedApp = () => {
             <Route path="/manuscript-verification" element={<MizanManuscriptVerification />} />
             <Route path="/manuscript-analysis" element={<MizanManuscriptAnalysis />} />
             <Route path="/vefk-model-verification" element={<MizanVefkModelVerification />} />
+            <Route path="/rubai-verification" element={<MizanRubaiVerification />} />
 
             <Route path="*" element={<PageNotFound />} />
           </Routes>

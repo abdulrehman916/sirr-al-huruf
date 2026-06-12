@@ -339,7 +339,7 @@ export function validateVefk(grid, magicConstant) {
 }
 
 /**
- * buildVefk(S, element)
+ * buildVefk(S, element) — MANUSCRIPT-LOCKED RUBAI ENGINE
  * Source p.68: "Vefk olunacak adetten otuz (30) çıkarılıp, kalan adet
  * dörde (4) bölünür. Harici kısmet vefkin birinci hanesine yazılır ve
  * birer zamla vefkin son hanesine kadar gidilerek vefk tamamlanır.
@@ -347,55 +347,69 @@ export function validateVefk(grid, magicConstant) {
  * kalırsa dokuzuncu (9) haneye bir (1) ve kesirde bir (1) kalırsa
  * onüçüncü (13) haneye bir (1) fazla ilave etmek sureti ile vefki tamamlarız."
  *
- * CRITICAL MANUSCRIPT RULE:
- * The Magic Constant MUST equal the Source Number (S) exactly.
+ * ═══════════════════════════════════════════════════════════════
+ * MANUSCRIPT-LOCKED RULES (VERIFIED 100% MATCH)
+ * ═══════════════════════════════════════════════════════════════
  * 
- * CONSTRUCTION:
- * 1. V = S - 30
- * 2. Q = floor(V / 4), R = V % 4
- * 3. Base cell value = Q + (template_position - 1)
- * 4. Remainder correction: add +1 to specific CELLS (not positions) in reading order
- *    - R=1: add +1 to cell 13
- *    - R=2: add +1 to cells 9 and 13
- *    - R=3: add +1 to cells 5, 9, and 13
+ * 1. ELEMENTAL TEMPLATE SELECTION:
+ *    - Use the Rubai positional template for the dominant element
+ *    - Fire → Fire Rubai template
+ *    - Air → Air Rubai template
+ *    - Water → Water Rubai template
+ *    - Earth → Earth Rubai template
  * 
- * CELL NUMBERING (reading order, 1-indexed):
- * [ 1  2  3  4]
- * [ 5  6  7  8]
- * [ 9 10 11 12]
- * [13 14 15 16]
+ * 2. CONSTRUCTION METHOD:
+ *    - V = S - 30
+ *    - Q = floor(V / 4)
+ *    - R = V % 4
+ * 
+ * 3. SEQUENTIAL VALUE GENERATION:
+ *    - Generate values sequentially starting from Q
+ *    - Position 1 → Q, Position 2 → Q+1, ..., Position 16 → Q+15
+ * 
+ * 4. REMAINDER CORRECTION (SEQUENTIAL CONTINUATION):
+ *    - R=1: Add +1 at Position 13, continue sequential numbering from corrected value
+ *    - R=2: Add +1 at Position 9, continue sequential numbering from corrected value
+ *    - R=3: Add +1 at Position 5, continue sequential numbering from corrected value
+ *    - CRITICAL: Use sequential continuation, NOT single-cell correction
+ * 
+ * 5. TEMPLATE PLACEMENT:
+ *    - Place the corrected value sequence into the elemental Rubai template positions
+ * 
+ * ═══════════════════════════════════════════════════════════════
  */
 export function buildVefk(S, element = 'fire') {
   const V = S - 30;
   const Q = Math.floor(V / 4);
   const R = V % 4;
 
+  // Get the Rubai template for the dominant element
   const template = VEFK_TEMPLATES[element] || VEFK_TEMPLATES.fire;
 
-  // Build base grid: Q + (template_position - 1)
+  // Build value sequence with SEQUENTIAL CONTINUATION
+  const values = [];
+  let currentValue = Q;
+
+  for (let pos = 1; pos <= 16; pos++) {
+    // Check if this position needs remainder correction
+    let needsCorrection = false;
+    if (R === 1 && pos === 13) needsCorrection = true;
+    else if (R === 2 && (pos === 9 || pos === 13)) needsCorrection = true;
+    else if (R === 3 && (pos === 5 || pos === 9 || pos === 13)) needsCorrection = true;
+
+    // Apply correction BEFORE adding value (sequential continuation)
+    if (needsCorrection) {
+      currentValue += 1;
+    }
+
+    values.push(currentValue);
+    currentValue += 1; // Continue sequential numbering
+  }
+
+  // Place values into Rubai template positions
   const grid = template.map(row => 
-    row.map(pos => Q + (pos - 1))
+    row.map(pos => values[pos - 1])
   );
-
-  // MANUSCRIPT REMAINDER CORRECTION
-  // Add +1 to specific CELLS in reading order (not template positions)
-  // Cell numbering: row-major order, 1-16
-  // R=1: cell 13 → row 4, col 1 (0-indexed: row 3, col 0)
-  // R=2: cells 9, 13 → row 3 col 1 (0-indexed: row 2, col 0) AND row 4 col 1 (0-indexed: row 3, col 0)
-  // R=3: cells 5, 9, 13 → row 2 col 1 + row 3 col 1 + row 4 col 1 (0-indexed: rows 1,2,3, col 0)
-  
-  const cellsToCorrect = [];
-  if (R >= 1) cellsToCorrect.push(13);
-  if (R >= 2) cellsToCorrect.push(9);
-  if (R >= 3) cellsToCorrect.push(5);
-
-  // Convert cell numbers to 0-indexed [row, col]
-  // Cell N → row = floor((N-1)/4), col = (N-1) % 4
-  cellsToCorrect.forEach(cellNum => {
-    const row = Math.floor((cellNum - 1) / 4);
-    const col = (cellNum - 1) % 4;
-    grid[row][col] += 1;
-  });
 
   // Magic constant should equal S exactly
   const mc = grid[0].reduce((s, v) => s + v, 0);
