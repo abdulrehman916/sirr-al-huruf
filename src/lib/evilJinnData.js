@@ -411,13 +411,13 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 30, serialNo: 30, arabicName: "روبمنة", arabicHarakat: "رُوبْمَنَة",
+    id: 30, serialNo: 30, arabicName: "رويمنه", arabicHarakat: "رُوَيْمِنَة",
     englishName: "Ruimnah", abjadValue: 311, letterCount: 5,
-    breakdown: [],
+    breakdown: [{ letter: "ر", value: 200 }, { letter: "و", value: 6 }, { letter: "ي", value: 10 }, { letter: "م", value: 40 }, { letter: "ن", value: 50 }, { letter: "ة", value: 5 }],
     malayalamName: "റൂഇംന",
     profile: {
       appearance: "ഒരു സ്ത്രീ — രണ്ട് കൊമ്പ്, രണ്ട് ചിറക്, ഒരു മനുഷ്യ മുഖം, പുറകിൽ ഒരു മനുഷ്യ തല.",
-      nature: "മുപ്പതാമത്തെ ത്വൈലഖ് (Tayleq). 'റൂഇംന' (رويمنة) എന്ന് അറിയപ്പെടുന്നു.",
+      nature: "മുപ്പതാമത്തെ ത്വൈലഖ് (Tayleq). 'റൂഇംന' (رويمنه) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "നശിച്ച സ്ഥലങ്ങളിൽ (الخرابات) വസിക്കുന്നു",
       powers: "ആൺ കുട്ടികളെ പിടിച്ച്, അവരുടെ മനസ്സ് ആകർഷിക്കുന്നു.",
       notes: "",
@@ -425,9 +425,9 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 31, serialNo: 31, arabicName: "الخامن", arabicHarakat: "الخَامِن",
+    id: 31, serialNo: 31, arabicName: "الخنامن", arabicHarakat: "الخَنَامِن",
     englishName: "Alekhnamen", abjadValue: 772, letterCount: 5,
-    breakdown: [],
+    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "خ", value: 600 }, { letter: "ن", value: 50 }, { letter: "ا", value: 1 }, { letter: "م", value: 40 }, { letter: "ن", value: 50 }],
     malayalamName: "അൽ-ഖനാമൻ",
     profile: {
       appearance: "ഒരു മനുഷ്യ ശരീരം, ബാക്കി ഒരു സിംഹത്തിന്റേതാണ് — തല, കാൽ ഉൾപ്പെടെ.",
@@ -439,9 +439,9 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 32, serialNo: 32, arabicName: "حبشاشش", arabicHarakat: "حَبْشَاشِش",
-    englishName: "Habshahesh", abjadValue: 618, letterCount: 6,
-    breakdown: [],
+    id: 32, serialNo: 32, arabicName: "حبشحش", arabicHarakat: "حَبْشَحِش",
+    englishName: "Habshahesh", abjadValue: 618, letterCount: 5,
+    breakdown: [{ letter: "ح", value: 8 }, { letter: "ب", value: 2 }, { letter: "ش", value: 300 }, { letter: "ح", value: 8 }, { letter: "ش", value: 300 }],
     malayalamName: "ഹബ്ഷാഹേഷ്",
     profile: {
       appearance: "ഒരു മനുഷ്യ — കഴുതയുടെ തല, മനുഷ്യ കൈകൾ, രണ്ട് ചിറക് ഉണ്ട്.",
@@ -649,12 +649,12 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 47, serialNo: 47, arabicName: "الزواعة", arabicHarakat: "الزِّوَاعَة",
+    id: 47, serialNo: 47, arabicName: "الزوعة", arabicHarakat: "الزُّوعَة",
     englishName: "Alzu'ah", abjadValue: 119, letterCount: 5,
-    breakdown: [],
+    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "ز", value: 7 }, { letter: "و", value: 6 }, { letter: "ع", value: 70 }, { letter: "ة", value: 5 }],
     malayalamName: "അൽ-സുവ",
     profile: {
-      appearance: "ഒരു മനുഷ്യ — കൈ ബലി, കൈ സിംഹം.",
+      appearance: "ഒരു മുടന്തൻ മനുഷ്യൻ — തന്റെ കാൽ കൈയിൽ പിടിച്ചിരിക്കുന്നു.",
       nature: "നാൽപ്പത്തിഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-സൂ'അ' (الزوعة) — നടക്കാൻ കഷ്ടമുള്ളവൻ.",
       habitat: "കടലുകളിൽ (في البحار) വസിക്കുന്നു",
       powers: "ഒരാളെ മുട്ടുകൾ, കാൽ, ഇടുപ്പ് — ഇവയിൽ വേദനയോടെ പിടിക്കുന്നു. നടക്കാൻ ബുദ്ധിമുട്ടാക്കി, നടുക്കി, മൂക്ക് ഒഴുകിക്കുന്നു.",
@@ -719,9 +719,9 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 52, serialNo: 52, arabicName: "الجمقا", arabicHarakat: "الحَمْقَا",
+    id: 52, serialNo: 52, arabicName: "الحمقا", arabicHarakat: "الحَمْقَاء",
     englishName: "Alhamqa", abjadValue: 180, letterCount: 5,
-    breakdown: [],
+    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "ح", value: 8 }, { letter: "م", value: 40 }, { letter: "ق", value: 100 }, { letter: "ا", value: 1 }, { letter: "ء", value: 1 }],
     malayalamName: "അൽ-ഹംഖ",
     profile: {
       appearance: "ഒരു സ്ത്രീ — ഒരു നായ തല, ശരീരം ശരാശരി ആകൃതി.",
@@ -747,13 +747,13 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 54, serialNo: 54, arabicName: "المأسور", arabicHarakat: "المَأْسُور",
+    id: 54, serialNo: 54, arabicName: "الماسور", arabicHarakat: "الْمَاسُور",
     englishName: "Almasur", abjadValue: 338, letterCount: 5,
-    breakdown: [],
-    malayalamName: "അൽ-മആസൂർ",
+    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "م", value: 40 }, { letter: "ا", value: 1 }, { letter: "س", value: 60 }, { letter: "و", value: 6 }, { letter: "ر", value: 200 }],
+    malayalamName: "അൽ-മാസൂർ",
     profile: {
       appearance: "ഒരു മനുഷ്യ — ഒരു കുരങ്ങ് തല, ഉടൽ ഒരു ഉറുമ്പ് ഉടൽ.",
-      nature: "അൻപത്തിനാലാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-മആസൂർ' (الماسور) എന്ന് അറിയപ്പെടുന്നു.",
+      nature: "അൻപത്തിനാലാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-മാസൂർ' (الماسور) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "അഴുക്കിലും ദ്രവ്യ ഭൂ(الأماكن المليئة بالنجاسة)ക്കളിൽ വസിക്കുന്നു",
       powers: "ഒരാളുടെ ഉദരത്തിൽ ഇരുന്ന് ആശയം നഷ്ടമാക്കി, ഭ്രൂണം ഉണ്ടാക്കി, ഒരിക്കലും ആഗ്രഹം ഇല്ലാതെ ആക്കി, ശരീരത്തിൽ ചൊറിഞ്ഞ്, മദ്യം ഇഷ്ടമായി ആക്കുന്നു.",
       notes: "",
@@ -761,13 +761,13 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 55, serialNo: 55, arabicName: "بالم", arabicHarakat: "بَالِم",
-    englishName: "Balim", abjadValue: 72, letterCount: 3,
-    breakdown: [],
-    malayalamName: "ബലിം",
+    id: 55, serialNo: 55, arabicName: "بلم", arabicHarakat: "بَلَم",
+    englishName: "Balem", abjadValue: 72, letterCount: 3,
+    breakdown: [{ letter: "ب", value: 2 }, { letter: "ل", value: 30 }, { letter: "م", value: 40 }],
+    malayalamName: "ബലം",
     profile: {
       appearance: "ഒരു മനുഷ്യ — ഒരു കുരങ്ങ് തല, ഒരു പക്ഷി കാൽ, രണ്ട് ചിറക്.",
-      nature: "അൻപത്തഞ്ചാമത്തെ ത്വൈലഖ് (Tayleq). 'ബലിം' (بلم) എന്ന് അറിയപ്പെടുന്നു.",
+      nature: "അൻപത്തഞ്ചാമത്തെ ത്വൈലഖ് (Tayleq). 'ബലം' (بلم) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "ജലത്തിൽ (في الماء) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ദൃഷ്ടിയിൽ നിന്ന് ഒളിഞ്ഞ് ആക്രമിക്കുന്നു. കണ്ടുപിടിക്കാൻ ബുദ്ധിമുട്ടാണ്, ദൃഷ്ടി നഷ്ടം, ദിശ നഷ്ടം, ബോധ നഷ്ടം ഉണ്ടാക്കുന്നു.",
       notes: "",
@@ -819,10 +819,10 @@ export const EVIL_JINN_NAMES = [
   {
     id: 59, serialNo: 59, arabicName: "معروز", arabicHarakat: "مَعْرُوز",
     englishName: "Ma'ruz", abjadValue: 323, letterCount: 4,
-    breakdown: [],
+    breakdown: [{ letter: "م", value: 40 }, { letter: "ع", value: 70 }, { letter: "ر", value: 200 }, { letter: "ز", value: 7 }, { letter: "و", value: 6 }],
     malayalamName: "മഅ്‌റൂസ്",
     profile: {
-      appearance: "ഒരു മനുഷ്യ — ഒരൊറ്റ കണ്ണ്, ഒരു കഴുതയുടെ കാൽ. വായ്‌ക്ക് ഒരു മനുഷ്യ തല ഉണ്ടാകും.",
+      appearance: "ഒരു മനുഷ്യ — ഒരൊറ്റ കണ്ണ്, ഒരു നായയുടെ കാൽ. വായ്‌ക്ക് ഒരു മനുഷ്യ തല ഉണ്ടാകും.",
       nature: "അൻപത്തിഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'മഅ്‌റൂസ്' (معروز) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "പർവ്വതങ്ങളിലും ഉന്നതങ്ങളിലും (في الجبال والتلال) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ശ്വാസം മുട്ടിക്കുന്നു അല്ലെങ്കിൽ ഒരു മാസം ഉറക്കം, ഭക്ഷണം ഇല്ലാതെ ആക്കുന്നു.",
@@ -845,13 +845,13 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 61, serialNo: 61, arabicName: "مروبا", arabicHarakat: "مَرْوَيَا",
+    id: 61, serialNo: 61, arabicName: "مرويا", arabicHarakat: "مَرْوِيَا",
     englishName: "Marweya", abjadValue: 257, letterCount: 4,
-    breakdown: [],
+    breakdown: [{ letter: "م", value: 40 }, { letter: "ر", value: 200 }, { letter: "و", value: 6 }, { letter: "ي", value: 10 }, { letter: "ا", value: 1 }],
     malayalamName: "മർവേയ",
     profile: {
       appearance: "ഒരു മനുഷ്യ — ഒരു കഴുകന്റെ വലതുകൈ, ഇടതുകൈ ഒരു കഴുകൻ.",
-      nature: "അറുപത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'മർവേയ' (مروبا) എന്ന് അറിയപ്പെടുന്നു.",
+      nature: "അറുപത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'മർവേയ' (مرويا) എന്ന് അറിയപ്പെടുന്നു.",
       habitat: "പർവ്വതങ്ങളിൽ (في الجبال) വസിക്കുന്നു",
       powers: "ഒരാളെ ആക്രമിച്ചാൽ, ഭ്രാന്ത് ഉണ്ടാക്കി, മലമ്പ്രദേശങ്ങളിലും മരുഭൂമിയിലും അലഞ്ഞ് തിരിയിക്കുന്നു. ബോധം ഇല്ലാതാക്കുന്നു.",
       notes: "",
@@ -917,10 +917,10 @@ export const EVIL_JINN_NAMES = [
   {
     id: 66, serialNo: 66, arabicName: "المريخ", arabicHarakat: "الْمَرِيخ",
     englishName: "Almarikh", abjadValue: 881, letterCount: 4,
-    breakdown: [],
+    breakdown: [{ letter: "ا", value: 1 }, { letter: "ل", value: 30 }, { letter: "م", value: 40 }, { letter: "ر", value: 200 }, { letter: "ي", value: 10 }, { letter: "خ", value: 600 }],
     malayalamName: "അൽ-മരീഖ്",
     profile: {
-      appearance: "ഒരു മനുഷ്യ — ഒരു ഓടക്കൂ, ഒരു ചൂണ്ടും ഒരു അലോഹ ദണ്ഡ്, ഇരു ചിറക് — കൈ നീളം.",
+      appearance: "ഒരു മനുഷ്യ — കവചം ധരിച്ചിരിക്കുന്നു, ഒരു പരിചയും തലയിൽ ഒരു ഹെൽമെറ്റും ഉണ്ട്. രണ്ട് ചിറക് തലയുടെ ഉയരം വരെ നീണ്ടിരിക്കുന്നു.",
       nature: "അറുപത്തിആറാമത്തെ ത്വൈലഖ് (Tayleq). 'അൽ-മരീഖ്' (المريخ) — 'അൽ-മരീഖ്' (المريخ) 'ദ്വ-സ്‌ഥൂൻ' — ഗ്രഹ ചൊവ്വ.",
       habitat: "ശൗചാലയങ്ങളിൽ (في الحمامات) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ശ്വാസം മുട്ടി, മരിക്കാതെ ജീവിക്കാതെ ആക്കി, ആരും ഒന്നും അറിയില്ലെന്ന് ആക്കുന്നു.",
@@ -929,15 +929,15 @@ export const EVIL_JINN_NAMES = [
     }
   },
   {
-    id: 67, serialNo: 67, arabicName: "عامر ابو الشيفان صاحب الجيل", arabicHarakat: "عَامِر أبُو الشَّيْفَان صَاحِب الْجِيل",
-    englishName: "'Amer Abu Al-Shifan Saheb Aljebel", abjadValue: 1049, letterCount: 20,
+    id: 67, serialNo: 67, arabicName: "عامر ابو الشيصفان صاحب الجبل", arabicHarakat: "عَامِر أبُو الشَّيْصَفَان صَاحِب الْجَبَل",
+    englishName: "'Amer Abu Al-Shisfan Saheb Aljabal", abjadValue: 1049, letterCount: 20,
     breakdown: [],
-    malayalamName: "ആമിർ അബൂ അൽ-ഷൈഫാൻ സ്വാഹിബ് അൽ-ജബൽ",
+    malayalamName: "ആമിർ അബൂ അൽ-ഷിസ്ഫാൻ സ്വാഹിബ് അൽ-ജബൽ",
     profile: {
       appearance: "ഒരു സ്ത്രീ-ആൺ മനുഷ്യ — ഒരു ജന്തു ഉടൽ, ഒരു ഒട്ടകം, ഒരു കുതിര ആകൃതി. ഒരു ദൃശ്യ-അദൃശ്യ ആകൃതി.",
-      nature: "അറുപത്തിഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'ആമിർ അബൂ അൽ-ഷൈഫാൻ സ്വാഹിബ് അൽ-ജബൽ' (عامر ابو الشيفان صاحب الجيل) — ജബൽ (മലനിരകൾ) ഉടമ.",
+      nature: "അറുപത്തിഏഴാമത്തെ ത്വൈലഖ് (Tayleq). 'ആമിർ അബൂ അൽ-ഷിസ്ഫാൻ സ്വാഹിബ് അൽ-ജബൽ' (عامر ابو الشيصفان صاحب الجبل) — ജബൽ (മലനിരകൾ) ഉടമ.",
       habitat: "ചന്തകളിൽ (في الأسواق) വസിക്കുന്നു",
-      powers: "ഒരാളെ ആക്രമിച്ചാൽ കണ്ണ് ബ്ലൂ ഉണ്ടാക്കുന്നു, അകൽ ഉണ്ടാക്കുന്നു, ഒരു ചൂളക്കാറ്റ് ഉണ്ടാക്കുന്നു.",
+      powers: "ഒരാളെ ആക്രമിച്ചാൽ കൺജങ്ക്റ്റിവൈറ്റിസ് (കണ്ണ് വീക്കം), വിഷാദം, രൂപഭേദത്തിന്റെ കാറ്റ് ഉണ്ടാക്കുന്നു.",
       notes: "",
       source: "Book of Deadly Names, Translation Page Twenty Seven Vetro (PDF/4 Page 27)"
     }
@@ -959,30 +959,58 @@ export const EVIL_JINN_NAMES = [
   {
     id: 69, serialNo: 69, arabicName: "قدسا", arabicHarakat: "قُدْسَا",
     englishName: "Qudsa", abjadValue: 165, letterCount: 4,
-    breakdown: [],
+    breakdown: [{ letter: "ق", value: 100 }, { letter: "د", value: 4 }, { letter: "س", value: 60 }, { letter: "ا", value: 1 }],
     malayalamName: "ഖുദ്‌സാ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു പക്ഷി — മനുഷ്യ തല, പുറകിൽ ഒരു മനുഷ്യ തല. പക്ഷിയുടെ വശങ്ങൾ, തലയ്ക്ക് മുകളിലും ഇടതുവശത്തും ഒരു കയർ.",
+      nature: "അറുപത്തിഒൻപതാമത്തെ ത്വൈലഖ് (Tayleq). 'ഖുദ്‌സാ' (قدسا) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "തീ കൊളുത്തുന്നിടങ്ങളിൽ (حيث تُشعل النيران) വസിക്കുന്നു",
+      powers: "ഒരാളെ പിടിച്ചാൽ കണ്ണുകൾ മുറിച്ചുമാറ്റുകയും ദർശനം കവർന്നെടുക്കുകയും ചെയ്യുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Thirty Recto (PDF/4 Page 34)"
+    }
   },
   {
     id: 70, serialNo: 70, arabicName: "شرهي", arabicHarakat: "شَرَهِي",
     englishName: "Shrahi", abjadValue: 515, letterCount: 4,
-    breakdown: [],
+    breakdown: [{ letter: "ش", value: 300 }, { letter: "ر", value: 200 }, { letter: "ه", value: 5 }, { letter: "ي", value: 10 }],
     malayalamName: "ഷറഹി",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു മനുഷ്യ — സുന്ദരമായ വസ്ത്രങ്ങൾ. വസ്ത്രത്തിന്റെ അടിഭാഗം സ്വർണ്ണ പ്രതിമ പോലെ. രണ്ട് ചിറക് കാൽ വരെ. വലതുകൈയിൽ ഒരു വലിയ പലക.",
+      nature: "എഴുപതാമത്തെ ത്വൈലഖ് (Tayleq). 'ഷറഹി' (شرهي) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "സിറിയയിലെ പർവ്വതങ്ങളിൽ (جبال سوريا) വസിക്കുന്നു",
+      powers: "ഒരു സ്ത്രീയുടെ ഹൃദയത്തിൽ പ്രവേശിച്ച് അവൾ വസ്ത്രങ്ങൾ ഉപേക്ഷിക്കും വരെ മന്ത്രിക്കുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Thirty Recto (PDF/4 Page 34)"
+    }
   },
   {
-    id: 71, serialNo: 71, arabicName: "مغشغاس", arabicHarakat: "مَغْشَغَاس",
+    id: 71, serialNo: 71, arabicName: "مغشغس", arabicHarakat: "مَغْشَغَس",
     englishName: "Maghshaghas", abjadValue: 2400, letterCount: 5,
-    breakdown: [],
-    malayalamName: "മഗ്ഷഗാസ്",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    breakdown: [{ letter: "م", value: 40 }, { letter: "غ", value: 1000 }, { letter: "ش", value: 300 }, { letter: "غ", value: 1000 }, { letter: "س", value: 60 }],
+    malayalamName: "മഗ്ഷഗസ്",
+    profile: {
+      appearance: "ഒരു സിംഹം — ഒരു സ്ത്രീയുടെ മുഖം.",
+      nature: "എഴുപത്തൊന്നാമത്തെ ത്വൈലഖ് (Tayleq). 'മഗ്ഷഗസ്' (مغشغس) എന്ന് അറിയപ്പെടുന്നു.",
+      habitat: "നശിച്ച സ്ഥലങ്ങളിലും പർവ്വതങ്ങളിലും (الخرابات وفي الجبال) വസിക്കുന്നു",
+      powers: "ഗർഭപാത്രത്തിലെ ആൺകുട്ടികളെ കൊല്ലുന്നു. സ്ത്രീകളെ ഭർത്താക്കന്മാരിൽ നിന്ന് അകറ്റുന്നു.",
+      notes: "",
+      source: "Book of Deadly Names, Translation Page Thirty One Recto (PDF/4 Page 38)"
+    }
   },
   {
     id: 72, serialNo: 72, arabicName: "عشرا", arabicHarakat: "عِشْرَا",
     englishName: "'Shara", abjadValue: 571, letterCount: 4,
-    breakdown: [],
+    breakdown: [{ letter: "ع", value: 70 }, { letter: "ش", value: 300 }, { letter: "ر", value: 200 }, { letter: "ا", value: 1 }],
     malayalamName: "ഇഷ്‌റാ",
-    profile: { appearance: "", nature: "", habitat: "", powers: "", notes: "", source: "" }
+    profile: {
+      appearance: "ഒരു സ്ത്രീ — ഒരു പക്ഷിയുടെ തല, രണ്ട് കൊമ്പ്.",
+      nature: "എഴുപത്തിരണ്ടാമത്തെ ത്വൈലഖ് (Tayleq). 'ഇഷ്‌റാ' (عشرا) — ഇബ്‌ലീസിന്റെ മകൾ.",
+      habitat: "വായുവിൽ വസിക്കുന്നു (في الهواء)",
+      powers: "ഹൃദയത്തിലെ പ്രവർത്തനങ്ങൾ, ആശയക്കുഴപ്പം, മനുഷ്യരിൽ ഏറ്റവും മികച്ചതാണെന്ന് തോന്നിപ്പിക്കുന്നു. പിന്നെ ഭ്രാന്തും ഹൃദയമിടിപ്പും ഉണ്ടാക്കി ഭൂമിയിൽ വീഴ്ത്തുന്നു.",
+      notes: "ഇബ്‌ലീസിന്റെ മകൾ. അവസാനത്തെ ത്വൈലഖ്.",
+      source: "Book of Deadly Names, Translation Page Thirty One Vetro (PDF/4 Page 39)"
+    }
   }
 ];
 
