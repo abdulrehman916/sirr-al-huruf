@@ -136,12 +136,13 @@ export default function SatrVahidGrouping({
   const bastLevel = isSeedFerd ? 5 : 4;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
-  // ── STEP 1: Individual Bast Derivations (each seed letter) ──
+  // ── STEP 1: Individual Bast Derivations (REVERSED ORDER: last → first) ──
   const { derivations, allExpandedLetters } = useMemo(() => {
     const derivs = [];
     let allExpanded = [];
     
-    for (let i = 0; i < safeSeed.length; i++) {
+    // MANUSCRIPT RULE: Start from LAST seed letter, move backwards to first
+    for (let i = safeSeed.length - 1; i >= 0; i--) {
       const letter = safeSeed[i];
       const bastValue = getBastLevel(letter, bastLevel);
       const expanded = istintak(bastValue);
@@ -149,11 +150,12 @@ export default function SatrVahidGrouping({
       allExpanded = [...allExpanded, ...expanded];
       
       derivs.push({
-        stepNumber: i + 1,
+        stepNumber: derivs.length + 1,
         originalLetter: letter,
         bastValue,
         expandedLetters: expanded,
         expandedCount: expanded.length,
+        seedIndex: i,
       });
     }
     
@@ -283,7 +285,7 @@ export default function SatrVahidGrouping({
                     {d.stepNumber}
                   </div>
                   <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>
-                    Letter {d.stepNumber}
+                    Letter {d.stepNumber} {d.seedIndex === 0 ? '(First Seed)' : d.seedIndex === safeSeed.length - 1 ? '(Last Seed)' : ''}
                   </span>
                 </div>
 
