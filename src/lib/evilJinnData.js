@@ -617,6 +617,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "വീടുകളുടെ വാതിൽ മുന്നിൽ (أمام أبواب البيوت) വസിക്കുന്നു",
       powers: "ഒരാളെ ആക്രമിച്ചാൽ ഛർദ്ദി, ബോധക്കേട്, ഊർജ്ജക്ഷയം, ഗുണ്ടർ ബൗദ്ധികശക്തി ഉണ്ടാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ രോഗിയെ ഉണരുന്നതുവരെ നടത്തണം. ശേഷം മഞ്ഞ പവിഴം (yellow coral) മണപ്പിക്കണം. കൂടാതെ, നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതി ധരിപ്പിക്കണം — ഇവ അല്ലാഹുവിന്റെ അനുവാദത്തോടെ ചികിത്സ ആകും. (PDF p.120 — Translation Page Twenty Recto)",
       source: "Book of Deadly Names, Translation Page Twenty Recto (PDF/3 Page 20)"
     }
   },
@@ -631,6 +632,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "ഇരുട്ടിൽ (في الظلام) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ പിടിച്ചാൽ ഭ്രാന്ത് ഉണ്ടാക്കി, ബോധം, നിദ്ര, ഭക്ഷണം, കുടി — ഇവ ഇല്ലാതെ, ഭൂമി തിന്നും വരെ ബോധം ഇല്ലാതാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, അഫിയൂൻ (opium), ഫർബിയൂൻ (euphorbia), സഫ്‌റാൻ (saffron) എന്നിവ മണപ്പിക്കണം. കറുത്ത പാമ്പിന്റെ പുകയിൽ ധൂപം ഇടണം. അറിയപ്പെടുന്ന ഒരു കവചം (amulet) എഴുതി ധരിപ്പിക്കണം. (PDF p.124 — Translation Page Twenty Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty Vetro (PDF/4 Page 2)"
     }
   },
@@ -645,6 +647,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "പഴ തോട്ടങ്ങളിൽ (في بساتين الفاكهة) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയിൽ ചോര ഒഴുകും പോലെ കടന്ന്, എല്ലാ ജോഡികൾ ഒഴിഞ്ഞ് ശ്വാസം ഇറക്കി, മാംസം, ചോര ഭേദിച്ച്, ഒരു ഭാഗം തളർന്ന് ചഴുക്കുള്ളതായി ഉപേക്ഷിക്കുന്നു. തണുത്ത ജലം, തീ, സൂര്യൻ ഇഷ്ടപ്പെടുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, സകബൻജ് (sagapenum), ഒട്ടക കുമിൻ (royal cumin), മസ്ത്ക (mastic), പഞ്ചസാര (sugar) എന്നിവ തണുത്ത വെള്ളത്തോടൊപ്പം മണപ്പിക്കണം. നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതി രോഗിക്ക് കുടിക്കാൻ കൊടുക്കണം — അല്ലാഹുവിന്റെ അനുവാദത്തോടെ ചികിത്സ ആകും. (PDF p.124 — Translation Page Twenty Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty Vetro (PDF/4 Page 2)"
     }
   },
@@ -659,6 +662,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "കടലുകളിൽ (في البحار) വസിക്കുന്നു",
       powers: "ഒരാളെ മുട്ടുകൾ, കാൽ, ഇടുപ്പ് — ഇവയിൽ വേദനയോടെ പിടിക്കുന്നു. നടക്കാൻ ബുദ്ധിമുട്ടാക്കി, നടുക്കി, മൂക്ക് ഒഴുകിക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, rue വെള്ളത്തിൽ കഴുകി, fleawort seed കുടിക്കാൻ കൊടുക്കുകയും asafetida മണപ്പിക്കുകയും വേണം. ഉപ്പോ ആസിഡോ അടങ്ങിയ ഒന്നും കഴിക്കരുത്. അറിയപ്പെടുന്ന കവചങ്ങളിൽ ഒന്ന് ധരിപ്പിക്കണം — അല്ലാഹുവിന്റെ അനുവാദത്തോടെ ശുദ്ധനാകും. (PDF p.128 — Translation Page Twenty One Recto)",
       source: "Book of Deadly Names, Translation Page Twenty One Recto (PDF/4 Page 4)"
     }
   },
@@ -673,6 +677,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "റോഡ് ജംഗ്ഷനുകളിൽ (عند تقاطع الطرق) വസിക്കുന്നു",
       powers: "ആളുകൾ കൂടുന്നിടത്തും വിവാഹ ഉത്സവങ്ങളിലും ഒളിഞ്ഞ് ആളുകളെ ഉപദ്രവിക്കുന്നു. വിനോദം നിർത്തിപ്പോകുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, ഒപ്പോപ്പൊണാക്‌സ് (opoponax), rue extract എന്നിവ മണപ്പിക്കണം. Maymun Ben Kalkasun-ന്റെ ഉടമ്പടിയോടൊപ്പം നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതി ധരിപ്പിക്കണം. (PDF p.128-129 — Translation Page Twenty One Recto/Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty One Recto (PDF/4 Page 4)"
     }
   },
@@ -687,6 +692,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "നശിച്ച സ്ഥലങ്ങളിൽ (في الخرابات) വസിക്കുന്നു",
       powers: "ഒരാളെ പിടിച്ചാൽ ബോധം ഇല്ലാതെ ഉപേക്ഷിക്കുന്നു. ഉൽസാഹഹീനൻ, ആശയറ്റ അവസ്ഥ. ഒരു നായ ആകയും ഒരു പാമ്പ് ആകയും ഒന്നിടവിട്ട് ദർശനം കൊടുക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, rue-ന്റെ എണ്ണ (oil of rue), Swiss chard juice, ഒരു ഖീറാത്ത് ഉദരശോധക (purgative), ഒരു ഖീറാത്ത് ശുദ്ധ ജൻഷ്യൻ (pure gentian) എന്നിവ കുടിക്കാൻ നൽകണം, മണപ്പിക്കണം. നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതി കൊടുത്ത് ധരിപ്പിക്കണം. (PDF p.132 — Translation Page Twenty One Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty One Vetro (PDF/4 Page 6)"
     }
   },
@@ -701,6 +707,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "പർവ്വതങ്ങളിൽ (في الجبال) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ആക്രമിച്ചാൽ ഒരു ആകുലത ഉണ്ടാക്കി, ഉറക്കം, ഭക്ഷണം, കുടി, സംസാരം — ഇവ ഇല്ലാതെ, ഭൂമി തിന്നും വരെ ബോധം ഇല്ലാതാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, ആദ്യം ഉദരശോധനം (purge) ചെയ്ത് സൗമ്യ തീയ്‌ക്ക് അരികിൽ ഇരിക്കണം. പശുവിന്റെ കൊഴുപ്പും (tallow of a cow) കണങ്കാൽ എല്ലിന്റെ മജ്ജയും (marrow of its shinbone) ഉച്ചഭക്ഷണ-അത്താഴ സമയങ്ങളിൽ മണപ്പിക്കണം. ഭേദം വരുന്നതുവരെ ആവർത്തിക്കണം. നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതി കുടിക്കാൻ കൊടുക്കണം. (PDF p.134 — Translation Page Twenty Two Recto)",
       source: "Book of Deadly Names, Translation Page Twenty Two Recto (PDF/4 Page 7)"
     }
   },
@@ -715,6 +722,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "രാത്രി ഭയത്തിൽ (في رعب الليل) വസിക്കുന്നു",
       powers: "ഒരു സ്ത്രീ അല്ലെങ്കിൽ ഒരു വ്യക്തിയെ ആക്രമിച്ചാൽ, പുറം-കഴുത്ത് ഇടക്ക് ഊരി, ദ്വന്ദ്വ ഉദര ക്ഷതം ഉണ്ടാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, ശ്രബ്ബി ജൂനിപ്പർ (shrubby juniper), asafetida എന്നിവ — അവൾക്ക് കുടിക്കാൻ മദ്യം നൽകണം. കമ്പിളി കൊണ്ട് മൂടണം, തലക്ക് മഞ്ഞ പവിഴം (yellow coral) ബ്രഷ് ചെയ്യണം. നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതിക്കൊടുക്കണം. (PDF p.138 — Translation Page Twenty Two Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty Two Vetro (PDF/4 Page 9)"
     }
   },
@@ -729,6 +737,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "കടൽ-ബഹ്‌ർ (حول البحار) ഭാഗങ്ങളിൽ വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ഹൃദയത്തിൽ നിന്ന് ബന്ദി ആക്കി, ക്ഷീണം ഉണ്ടാക്കുന്നു. ആരും ഒന്നും അറിയില്ലെന്ന് ആക്കി, മരിച്ചുവെന്ന് എല്ലാവരും കരുതും.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, cerussite (വെള്ള ലോഹ ലവണം), zedoary (ഇഞ്ചി ഇനം), arnica (ഡ്രോൻജ്), camphor seed (ഹബ്ബ കാഫൂർ), acacia (അൽ-അഖ്ഖ) — ഓരോന്നും ഒരു മിഥ്ഖൽ വീതം. മദ്യമോ ചൂടുവെള്ളമോ ചേർത്ത് കുടിക്കാൻ നൽകണം. നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതിക്കൊടുക്കണം. (PDF p.138-140 — Translation Page Twenty Two Vetro / Twenty Three Recto)",
       source: "Book of Deadly Names, Translation Page Twenty Two Vetro (PDF/4 Page 9)"
     }
   },
@@ -743,6 +752,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "കോടതി ഹൗസുകളിൽ (في المحاكم) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ബോധം ഇല്ലാതെ ശ്വാസം മുട്ടിക്കുന്നു. നടുവേദനയും മുട്ടുവേദനയും ഉണ്ടാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, mummy water (മാ മൂമിയ), capers (ലകബർ) — ഓരോന്നും നാല് ഖീറാത്ത്; gentian (ജൻഷ്യൻ), opium (അഫ്‌യൂൺ) — ഓരോന്നും ഒരു ഖീറാത്ത്. ഇവ ചേർത്ത് കലക്കി കാള മൂത്രത്തിൽ (bull urine) മുക്കണം. കുടിക്കാൻ കൊടുക്കുകയും മണപ്പിക്കുകയും ചെയ്യണം. നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതിക്കൊടുക്കണം. (PDF p.140 — Translation Page Twenty Three Recto)",
       source: "Book of Deadly Names, Translation Page Twenty Three Recto (PDF/4 Page 10)"
     }
   },
@@ -757,6 +767,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "അഴുക്കിലും ദ്രവ്യ ഭൂ(الأماكن المليئة بالنجاسة)ക്കളിൽ വസിക്കുന്നു",
       powers: "ഒരാളുടെ ഉദരത്തിൽ ഇരുന്ന് ആശയം നഷ്ടമാക്കി, ഭ്രൂണം ഉണ്ടാക്കി, ഒരിക്കലും ആഗ്രഹം ഇല്ലാതെ ആക്കി, ശരീരത്തിൽ ചൊറിഞ്ഞ്, മദ്യം ഇഷ്ടമായി ആക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, കുരുമുളക് (pepper), കറുത്ത ജീരകം (black cumin), long pepper (ദാർ ഫൽഫൽ), വെള്ള ഹൽഹൂർ (white hellebore), ഉണങ്ങിയ rue (dried rue), ഇഞ്ചി (ginger) — ഇവ ഒരുമിച്ച് പൊടിക്കണം. നാരങ്ങ, ഉപ്പ്, endive ചേർത്ത് കുതിർത്ത starchy water-ൽ കൊടുക്കണം. രാത്രിയും ഉച്ചയ്ക്കും മീൻ അസ്ഥി കൊണ്ടും tamarisk wood കൊണ്ടും ധൂപം ഇടണം. (PDF p.144 — Translation Page Twenty Three Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty Three Vetro (PDF/4 Page 12)"
     }
   },
@@ -771,6 +782,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "ജലത്തിൽ (في الماء) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ദൃഷ്ടിയിൽ നിന്ന് ഒളിഞ്ഞ് ആക്രമിക്കുന്നു. കണ്ടുപിടിക്കാൻ ബുദ്ധിമുട്ടാണ്, ദൃഷ്ടി നഷ്ടം, ദിശ നഷ്ടം, ബോധ നഷ്ടം ഉണ്ടാക്കുന്നു.",
       notes: "",
+      remedy: "PDF-ൽ ഈ ജിന്നിന്റെ ചികിത്സ വിവരണം അടുത്ത പേജിൽ തുടരുന്നു — ദൃശ്യമായ ഭാഗം മുറിഞ്ഞ് നിൽക്കുന്നു. (PDF p.144-145 — Translation Page Twenty Three Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty Three Vetro (PDF/4 Page 12)"
     }
   },
@@ -785,6 +797,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "ജലത്തിൽ (في الماء) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ദൃഷ്ടിക്ക് ഒളിഞ്ഞ് ആക്രമിക്കുന്നു. ഉറക്കത്തിൽ ആക്രമിച്ച്, ചൊട്ട ഇടുന്നു. ഉണർന്നാൽ ഒരു ശക്തി ഇല്ലാതെ ആകുന്നു. കഴുത്ത് തിരിഞ്ഞ്, സ്വപ്നത്തിൽ വീണ്ടും ആക്രമിക്കുന്നു.",
       notes: "ദൈവ-സംരക്ഷണം ഇതിൽ നിന്ന് ആഹ്വാനം ചെയ്യണം.",
+      remedy: "ഈ ചികിത്സ, ജൻഷ്യൻ (gentian), കേപ്പർ ശാഖ (branch of capers) എന്നിവ — ആത്മ (soul) ഉള്ള ഒന്നും ഭക്ഷിക്കരുത്. Storax (مِيعَة) ointment ൽ അഭിഷേകം ചെയ്ത് ശരീരത്തിൽ പൂശണം — അല്ലാഹുവിന്റെ അനുവാദത്തോടെ ഭേദം ആകും. ഈ ജിന്ന് ഏറ്റവും ശക്തമായ കാറ്റ് ആണ്; ദൈവ സംരക്ഷണം ആഹ്വാനം ചെയ്യണം. (PDF p.148 — Translation Page Twenty Four Recto)",
       source: "Book of Deadly Names, Translation Page Twenty Four Recto (PDF/4 Page 14)"
     }
   },
@@ -799,6 +812,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "കുപ്പർ, മൃഗ വൈദ്യൻ, ജാദൂക്കാരൻ, ചോരക്കാരൻ ഇവരുടെ ഇടങ്ങളിൽ (في أماكن الحجامة والبيطرة وضارب الرمل) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ഒരു ഉലഞ്ഞ നായ ആകി പ്രത്യക്ഷ്യ ആകുന്നു. ഛർദ്ദി ഉണ്ടാക്കുന്നു, ശക്തമായ ചൂള, ഒരു ഉദ്ദ്യോഗ ഉണ്ടാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, ഒരു ഇര-ജന്തുവിന്റെ (predatory animal) പിത്തം (bile), നാല് തവളകൾ (four frogs) — ഇവ ഒരുമിച്ച് വേവിക്കണം. ആ മിശ്രിതം ദേഹത്ത് പൂശണം, മണപ്പിക്കണം. കൂടാതെ, നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതിക്കൊടുക്കണം. (PDF p.148-149 — Translation Page Twenty Four Recto)",
       source: "Book of Deadly Names, Translation Page Twenty Four Recto (PDF/4 Page 14)"
     }
   },
@@ -813,6 +827,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "നദികളിൽ (في الأنهار) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ഉദ്ദ്യോഗ ഉണ്ടാക്കാതെ ഒരൊറ്റ അടി കൊടുക്കുന്നു. വയറ്‌ഴൽ, ഉഗ്ര ക്ഷീണം ഉണ്ടാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, പവിഴ ലേഹ്യം (electuary of coral) മണപ്പിക്കണം, ഏഴ് ദിവസം ചുരുൾ (scrolls) ശ്വസിക്കണം. നിർദ്ദിഷ്ട കവചം (amulet) എഴുതി ധരിപ്പിക്കണം — അല്ലാഹുവിന്റെ അനുവാദത്തോടെ ഭേദം ആകും. (PDF p.152 — Translation Page Twenty Four Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty Four Vetro (PDF/4 Page 16)"
     }
   },
@@ -827,6 +842,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "പർവ്വതങ്ങളിലും ഉന്നതങ്ങളിലും (في الجبال والتلال) വസിക്കുന്നു",
       powers: "ഒരു വ്യക്തിയെ ശ്വാസം മുട്ടിക്കുന്നു അല്ലെങ്കിൽ ഒരു മാസം ഉറക്കം, ഭക്ഷണം ഇല്ലാതെ ആക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, ഏഴ് കട്ടിക്കുള്ള ഈന്തപ്പഴം (seven thick dates), തത്തുല്യ ഉണങ്ങിയ പഴം, മരക്കൊമ്പ് അഗ്രങ്ങൾ (pieces of extremities of trees) — ഇവ ദേഹത്ത് വയ്ക്കണം. പാലത്തിന്റെ അടിയിൽ നിന്നും ആഴക്കടലിൽ നിന്നുമുള്ള മുപ്പത് ഥമാന (thamana) വെള്ളം ഒഴിക്കണം. ശേഷം റോസ് (roses) മണപ്പിക്കണം. കവചം (amulet) എഴുതി ധരിപ്പിക്കണം. (PDF p.156 — Translation Page Twenty Five Recto)",
       source: "Book of Deadly Names, Translation Page Twenty Five Recto (PDF/4 Page 18)"
     }
   },
@@ -841,6 +857,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "ആടുകൾ ഇടയ്ക്ക് (في المراعي) വസിക്കുന്നു",
       powers: "ഒരാളെ ആക്രമിച്ചാൽ ശക്തമായ ശിരോവേദന, ഇരു നെറ്റിത്തടങ്ങൾ, ക്രമക്കേടായ ഹൃദ്‌ ഉണ്ടാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, ക്രോട്ടൻ (croton), ബേതൽ നട്ട് പാം (betal nut palm) — ഇവ മൂന്ന് തയ്യാറെടുപ്പുകളായി മണപ്പിക്കണം. ആസിഡ് ഉള്ള ഒന്നും ഭക്ഷിക്കരുത്. നിർദ്ദിഷ്ട നാമങ്ങൾ എഴുതി ധരിപ്പിക്കണം. (PDF p.156 — Translation Page Twenty Five Recto)",
       source: "Book of Deadly Names, Translation Page Twenty Five Recto (PDF/4 Page 18)"
     }
   },
@@ -855,6 +872,7 @@ export const EVIL_JINN_NAMES = [
       habitat: "പർവ്വതങ്ങളിൽ (في الجبال) വസിക്കുന്നു",
       powers: "ഒരാളെ ആക്രമിച്ചാൽ, ഭ്രാന്ത് ഉണ്ടാക്കി, മലമ്പ്രദേശങ്ങളിലും മരുഭൂമിയിലും അലഞ്ഞ് തിരിയിക്കുന്നു. ബോധം ഇല്ലാതാക്കുന്നു.",
       notes: "",
+      remedy: "ഈ ചികിത്സ, mandrake root (عروق يبروح), ആണ്‍ ഈന്തപ്പന പൂമ്പൊടി (pollen of a male tree), കരിമ്പ് ചെടി (cane plant), തവളയുടെ തലച്ചോറ് (brain of a frog), ആടിന്റെ കൊഴുപ്പ് (tallow from a lamb) — ഇവ ഒരുമിച്ച് വേവിക്കണം. കുടിക്കാൻ കൊടുക്കുകയും മണപ്പിക്കുകയും ചെയ്യണം. കവചം (amulet) എഴുതി ധരിപ്പിക്കണം. (PDF p.160 — Translation Page Twenty Five Vetro)",
       source: "Book of Deadly Names, Translation Page Twenty Five Vetro (PDF/4 Page 20)"
     }
   },
