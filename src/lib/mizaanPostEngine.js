@@ -483,11 +483,11 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
 /**
  * expandAllSeedLetters(seedLetters, bastLevel)
  * 
- * MANUSCRIPT ORDER LAW: Process seed letters in EXACT order received.
- * NO reversal, NO sorting, NO reordering of any kind.
+ * MANUSCRIPT ORDER LAW: Process seed letters from LAST to FIRST.
+ * Bast derivation starts from the last seed letter and moves backwards.
  * 
- * For each seed letter (in order): get Bast value → istintak expansion → concatenate.
- * Returns ALL expanded letters concatenated in strict derivation order.
+ * For each seed letter (reverse order): get Bast value → istintak expansion → concatenate.
+ * Returns ALL expanded letters concatenated in reverse derivation order.
  * 
  * This is the TRUE source for Vefk calculation per manuscript rules.
  */
@@ -495,8 +495,8 @@ export function expandAllSeedLetters(seedLetters, bastLevel) {
   const safeSeed = Array.isArray(seedLetters) ? seedLetters : [];
   const allExpanded = [];
   
-  // CRITICAL: Process in strict forward order - preserve manuscript sequence
-  for (let i = 0; i < safeSeed.length; i++) {
+  // CRITICAL: Process in REVERSE order - last seed → first seed
+  for (let i = safeSeed.length - 1; i >= 0; i--) {
     const letter = safeSeed[i];
     const bastValue = getBastLevel(letter, bastLevel);
     const expanded = istintak(bastValue);

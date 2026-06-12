@@ -136,20 +136,21 @@ export default function SatrVahidGrouping({
   const bastLevel = isSeedFerd ? 5 : 4;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
-  // ── STEP 1: Individual Bast Derivations (MANUSCRIPT ORDER PRESERVED) ──
-  // CRITICAL: Process seed letters in EXACT order received - NO reversal, NO sorting
-  // Each seed letter → Bast value → Istintak expansion → concatenate to allExpandedLetters
+  // ── STEP 1: Individual Bast Derivations (REVERSE ORDER: last → first) ──
+  // CRITICAL: Process Bast derivations from LAST seed letter to FIRST
+  // Original Seed Letters display remains unchanged (forward order)
+  // But Bast processing: last seed → first seed
   const { derivations, allExpandedLetters } = useMemo(() => {
     const derivs = [];
     let allExpanded = [];
     
-    // Process in strict forward order: index 0 → 1 → 2 → ... → length-1
-    for (let i = 0; i < safeSeed.length; i++) {
+    // Process in REVERSE order: last index → first index
+    for (let i = safeSeed.length - 1; i >= 0; i--) {
       const letter = safeSeed[i];
       const bastValue = getBastLevel(letter, bastLevel);
       const expanded = istintak(bastValue);
       
-      // Concatenate expanded letters in exact derivation order
+      // Concatenate expanded letters in reverse derivation order
       allExpanded = [...allExpanded, ...expanded];
       
       derivs.push({
