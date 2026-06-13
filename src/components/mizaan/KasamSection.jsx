@@ -29,6 +29,27 @@ const G = {
   greenBorder:  "rgba(74,222,128,0.25)",
 };
 
+// ── Shared Arabic text style for Section 4 Kasam ─────────────────────────────
+// Naskh-style: Scheherazade New → Noto Naskh Arabic → Amiri fallback
+// Prioritises harakat clarity, connected letters, and comfortable line height
+const ARABIC_TEXT_STYLE = {
+  fontFamily: "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', serif",
+  fontSize:   "1.35rem",
+  lineHeight: 2.6,
+  letterSpacing: "0.03em",
+  wordSpacing:   "0.12em",
+  textRendering: "optimizeLegibility",
+  WebkitFontSmoothing: "antialiased",
+  MozOsxFontSmoothing: "grayscale",
+  fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
+};
+
+const ARABIC_NAME_STYLE = {
+  ...ARABIC_TEXT_STYLE,
+  fontSize:   "1.15rem",
+  lineHeight: 2.4,
+};
+
 // ── Token substitution engine ─────────────────────────────────────────────────
 // Tokens: {maleTargetName}, {femaleTargetName}, {requesterName}, {requesterMotherName}
 function substituteNames(text, names) {
@@ -178,9 +199,8 @@ function CommonKasamBlock({ avanNames, kasemNames }) {
                   </p>
                 </div>
                 <div className="px-4 py-4">
-                  <p className="font-amiri text-xl font-bold text-right leading-loose"
-                    dir="rtl"
-                    style={{ color: G.gold, lineHeight: 2.2, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>
+                  <p className="font-bold text-right" dir="rtl"
+                    style={{ ...ARABIC_TEXT_STYLE, color: G.gold }}>
                     {injectedArabic}
                   </p>
                   {/* Show A'van and Kasem name lists as reference */}
@@ -191,8 +211,8 @@ function CommonKasamBlock({ avanNames, kasemNames }) {
                           <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.goldDim }}>
                             Esma-i A'van — أسماء الأعوان
                           </p>
-                          <p className="font-amiri text-lg font-bold text-right leading-loose" dir="rtl"
-                            style={{ color: G.gold, lineHeight: 2 }}>
+                          <p className="font-bold text-right" dir="rtl"
+                            style={{ ...ARABIC_NAME_STYLE, color: G.gold }}>
                             {formatAvanNames(avanNames)}
                           </p>
                           </div>
@@ -202,8 +222,8 @@ function CommonKasamBlock({ avanNames, kasemNames }) {
                           <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.blue }}>
                             Esma-i Kasem — أسماء القسم
                           </p>
-                          <p className="font-amiri text-lg font-bold text-right leading-loose" dir="rtl"
-                            style={{ color: "rgba(147,197,253,0.90)", lineHeight: 2 }}>
+                          <p className="font-bold text-right" dir="rtl"
+                            style={{ ...ARABIC_NAME_STYLE, color: "rgba(147,197,253,0.90)" }}>
                             {formatKasemNames(kasemNames)}
                           </p>
                         </div>
@@ -271,8 +291,8 @@ function PurposeSelector({ selected, onSelect }) {
               style={{ color: isSelected ? G.gold : "rgba(255,255,255,0.70)" }}>
               {cat.label}
             </p>
-            <p className="font-amiri text-sm mt-0.5 leading-tight" dir="rtl"
-              style={{ color: isSelected ? G.goldDim : "rgba(255,255,255,0.30)" }}>
+            <p className="font-bold mt-0.5" dir="rtl"
+              style={{ fontFamily: "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', serif", fontSize: "1rem", lineHeight: 1.9, color: isSelected ? G.goldDim : "rgba(255,255,255,0.30)" }}>
               {cat.arabic}
             </p>
             {!hasVerified && (
@@ -367,12 +387,7 @@ function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
     );
   }
 
-  const arabicStyle = {
-    color: G.gold,
-    lineHeight: 2.2,
-    textRendering: "optimizeLegibility",
-    WebkitFontSmoothing: "antialiased",
-  };
+  const arabicStyle = { ...ARABIC_TEXT_STYLE, color: G.gold };
 
   return (
     <div className="space-y-3">
@@ -392,13 +407,13 @@ function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
               {avanNames?.length > 0 && (
                 <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.22)" }}>
                   <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.55)" }}>Esma-i A'van</p>
-                  <p className="font-amiri text-base font-bold text-right leading-loose" dir="rtl" style={{ color: G.gold, lineHeight: 2 }}>{formatAvanNames(avanNames)}</p>
+                  <p className="font-bold text-right" dir="rtl" style={{ ...ARABIC_NAME_STYLE, color: G.gold }}>{formatAvanNames(avanNames)}</p>
                 </div>
               )}
               {kasemNames?.length > 0 && (
                 <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: "rgba(147,197,253,0.22)" }}>
                   <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.85)" }}>Esma-i Kasem</p>
-                  <p className="font-amiri text-base font-bold text-right leading-loose" dir="rtl" style={{ color: "rgba(147,197,253,0.90)", lineHeight: 2 }}>{formatKasemNames(kasemNames)}</p>
+                  <p className="font-bold text-right" dir="rtl" style={{ ...ARABIC_NAME_STYLE, color: "rgba(147,197,253,0.90)" }}>{formatKasemNames(kasemNames)}</p>
                 </div>
               )}
             </div>
