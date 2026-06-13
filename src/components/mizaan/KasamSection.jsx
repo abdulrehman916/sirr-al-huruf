@@ -396,6 +396,42 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
             <div className="mx-5 h-px" style={{ background: "rgba(147,197,253,0.15)" }} />
 
+            <div className="px-5 py-5">
+              <p className="font-inter text-[8px] uppercase tracking-[0.25em] font-bold mb-3"
+                style={{ color: "rgba(147,197,253,0.50)" }}>
+                Malayalam Meaning — അർഥം
+              </p>
+              <div className="space-y-3 font-amiri text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.75)", lineHeight: 2.1 }}>
+                <p>
+                  {COMMON_KASAM.openingMalayalam}
+                </p>
+                <div className="pl-4 border-l-2" style={{ borderColor: "rgba(245,208,96,0.30)" }}>
+                  <p className="text-sm" style={{ color: "rgba(245,208,96,0.70)" }}>
+                    {hasAvan 
+                      ? `Esma-i A'van: ${avanNames.map(n => `يَا ${n}`).join(", ")}`
+                      : "Esma-i A'van: [Section 2-ൽ നിന്നുള്ള പേരുകൾ]"}
+                  </p>
+                </div>
+                <div className="pl-4 border-l-2" style={{ borderColor: "rgba(134,239,172,0.30)" }}>
+                  <p className="text-sm" style={{ color: "rgba(134,239,172,0.60)" }}>
+                    Purpose Azimet: [താഴെ നിന്ന് ഗ്രന്ഥം തിരഞ്ഞെടുക്കുക]
+                  </p>
+                </div>
+                <div className="pl-4 border-l-2" style={{ borderColor: "rgba(196,181,253,0.30)" }}>
+                  <p className="text-sm" style={{ color: "rgba(196,181,253,0.70)" }}>
+                    {hasKasem 
+                      ? `Esma-i Kasem: ${kasemNames.map(n => `بِحَقِّ ${n}`).join(", ")}`
+                      : "Esma-i Kasem: [Section 3-ൽ നിന്നുള്ള പേരുകൾ]"}
+                  </p>
+                </div>
+                <p className="pt-2 border-t" style={{ borderColor: "rgba(147,197,253,0.15)" }}>
+                  {COMMON_KASAM.closingMalayalam}
+                </p>
+              </div>
+            </div>
+
+            <div className="mx-5 h-px" style={{ background: "rgba(147,197,253,0.15)" }} />
+
             <div className="px-5 py-4">
               <p className="font-inter text-[8px] uppercase tracking-[0.25em] font-bold mb-2"
                 style={{ color: "rgba(147,197,253,0.50)" }}>
