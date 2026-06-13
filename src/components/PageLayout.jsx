@@ -21,7 +21,6 @@ const TABS = [
   { id: "plants",           label: "PLANTS", arabic: "نباتات",    path: "/plants" },
   { id: "evil-jinn",        label: "EVIL JINN", arabic: "الجن",      path: "/evil-jinn" },
   { id: "holy-names",       label: "HOLY NAMES",arabic: "الأسماء",   path: "/holy-names" },
-  { id: "kasam-library",    label: "KASAM LIBRARY",arabic: "المكتبة", path: "/kasam-library" },
 ];
 
 const pageVariants = {
@@ -157,7 +156,6 @@ const PAGE_TITLES = {
   "/plants":            "نباتات",
   "/evil-jinn":         "الجن",
   "/holy-names":        "الأسماء",
-  "/kasam-library":     "المكتبة",
 };
 
 export default function PageLayout({ children }) {

@@ -15,7 +15,7 @@ import OfflineNotice from './components/OfflineNotice';
 import ErrorBoundary from './components/ErrorBoundary';
 // Add page imports here — lazy loaded for performance
 import Home from './pages/Home';
-const KasamLibrary      = lazy(() => import('./pages/KasamLibrary'));
+
 const AnasirPage        = lazy(() => import('./pages/AnasirPage'));
 const HadimPage         = lazy(() => import('./pages/HadimPage'));
 const Mizaan9Page       = lazy(() => import('./pages/Mizaan9Page'));
@@ -116,7 +116,7 @@ const AuthenticatedApp = () => {
             <Route path="/vefk-model-verification" element={<MizanVefkModelVerification />} />
             <Route path="/rubai-verification" element={<MizanRubaiVerification />} />
             <Route path="/manuscript-audit" element={<MizanManuscriptAudit />} />
-            <Route path="/kasam-library" element={<KasamLibrary />} />
+
 
             <Route path="*" element={<PageNotFound />} />
           </Routes>
