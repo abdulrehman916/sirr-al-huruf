@@ -249,14 +249,13 @@ export default function BastHuroofPage() {
     setNumberInput("");
     setAllResults(null);
     setNumberResult(null);
-    setLevel(1);
     clearPageState(PAGE_KEY);
   };
 
   const handleNumberCalculate = useCallback(() => {
     const num = parseInt(numberInput);
     if (!num || num <= 0) return;
-    // Pass the number directly - AkramCard will handle the conversion
+    // Pass the number directly - AkramCard will handle the conversion (uses fixed level for label only)
     setNumberResult({ total: num, isValid: true });
   }, [numberInput]);
 
@@ -387,7 +386,7 @@ export default function BastHuroofPage() {
               style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
 
             <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
-              Enter Bast Number — Level {level}
+              Enter Numeric Value — Direct Akram Conversion
             </label>
 
             <input
@@ -408,33 +407,6 @@ export default function BastHuroofPage() {
               className="w-full rounded-xl px-4 py-3 font-inter text-xl text-white leading-relaxed focus:outline-none caret-white mb-3 placeholder:text-white/30"
               style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
             />
-
-            {/* Level selector for number mode */}
-            <div className="mb-4">
-              <label className="block font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                Select Bast Level (uses this level's manuscript column only)
-              </label>
-              <div className="grid grid-cols-5 gap-1.5">
-                {BAST_LEVELS.map((lvl) => (
-                  <motion.button
-                    key={lvl.key}
-                    onClick={() => {
-                      setLevel(lvl.key);
-                      setNumberResult(null);
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                    className="py-2 rounded-lg font-inter font-bold text-xs border"
-                    style={{
-                      background: level === lvl.key ? G.bgHi : "rgba(255,255,255,0.02)",
-                      borderColor: level === lvl.key ? G.borderHi : G.faint,
-                      color: level === lvl.key ? G.text : "rgba(255,255,255,0.40)",
-                    }}
-                  >
-                    {lvl.key}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
 
             <div className="flex gap-2">
               <motion.button
@@ -535,7 +507,7 @@ export default function BastHuroofPage() {
             </motion.div>
           )}
 
-          {/* NUMBER MODE RESULTS - Uses EXACT SAME AkramCard workflow as TEXT MODE */}
+          {/* NUMBER MODE RESULTS - Direct Akram conversion (independent from text mode levels) */}
           {inputMode === 'number' && numberResult && (
             <motion.div
               key="number-results"
@@ -544,11 +516,11 @@ export default function BastHuroofPage() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
-              {/* AkramCard - EXACT same component as text mode, passing entered number as total */}
+              {/* AkramCard - Direct number to letters conversion */}
               <AkramCard
                 total={parseInt(numberInput)}
-                levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
-                levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                levelLabel="Number Mode"
+                levelArabic="الرقم"
               />
             </motion.div>
           )}
