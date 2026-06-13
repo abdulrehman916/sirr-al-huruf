@@ -544,7 +544,7 @@ export default function BastHuroofPage() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
-              {/* Decomposition Result Card */}
+              {/* Decomposition Result Card - Arabic Letters as Primary */}
               <div className="rounded-2xl border p-6 text-center space-y-3 relative overflow-hidden"
                 style={{
                   background: "linear-gradient(145deg, rgba(8,18,48,0.99) 0%, rgba(4,10,28,0.99) 100%)",
@@ -555,7 +555,7 @@ export default function BastHuroofPage() {
                   style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />
                 
                 <p className="font-inter text-[9px] uppercase tracking-[0.25em]" style={{ color: G.dim }}>
-                  Decomposition Result — Level {level} ({BAST_LEVELS.find(l => l.key === level)?.label})
+                  Final Akram Letters — Level {level} ({BAST_LEVELS.find(l => l.key === level)?.label})
                 </p>
 
                 {numberResult.mode === 'none' ? (
@@ -571,16 +571,21 @@ export default function BastHuroofPage() {
                   </div>
                 ) : (
                   <>
-                    <motion.p
-                      className="font-inter font-bold tabular-nums"
-                      style={{ fontSize: "clamp(2.5rem,10vw,3.5rem)", color: G.text, lineHeight: 1 }}
+                    {/* Primary: Arabic Letter Sequence */}
+                    <motion.div
+                      className="font-amiri font-bold leading-none"
+                      style={{ fontSize: "clamp(2.5rem,10vw,4rem)", color: G.text }}
                       animate={{ textShadow: [`0 0 20px ${G.glow}`, `0 0 60px ${G.glowHi}`, `0 0 20px ${G.glow}`] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      dir="rtl"
                     >
-                      {numberResult.total.toLocaleString()}
-                    </motion.p>
+                      {numberResult.letters.map((l, i) => (
+                        <span key={i} className="inline-block mx-1">{l.letter}</span>
+                      ))}
+                    </motion.div>
+                    {/* Secondary: Number breakdown info */}
                     <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.40)" }}>
-                      {numberResult.mode === 'exact' ? 'Single Letter' : `${numberResult.letters.length} Letters`}
+                      {numberResult.letters.length} letters from {numberResult.total.toLocaleString()}
                     </p>
                   </>
                 )}
