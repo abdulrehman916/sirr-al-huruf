@@ -313,44 +313,23 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
   const elementColors = { fire: "#FF6B35", earth: "#A5C880", air: "#B2EBF2", water: "#4FC3F7" };
   const elementColor  = elementColors[dominant] || elementColors.fire;
 
-  // ── POST STEP: Total Bast of Section 3 All Expanded Letters → Istintak → new letters ──
-  const postExpandedTotal = useMemo(
-    () => allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0),
+  // ── SECTION 3 VEFK SOURCE: Sum of B5 values for every letter in allExpandedLetters ──
+  // RULE: getBastLevel(letter, 5) for each allExpandedLetter → sum → Vefk source
+  const s3VefkSourceNumber = useMemo(
+    () => allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 5) || 0), 0),
     [allExpandedLetters]
   );
-  const postIstintakLetters = useMemo(() => istintak(postExpandedTotal), [postExpandedTotal]);
-
-  // ── POST STEP: Individual Bast derivations on each postIstintakLetter ──
-  // RULE: Always use Fifth Bast (B5) for this block only — no Zevc/Ferd determination.
-  const postDerivations = useMemo(() => {
-    return postIstintakLetters.map((letter) => {
-      const bastValue       = getBastLevel(letter, 5);
-      const expandedLetters = istintak(bastValue);
-      return { letter, bastValue, expandedLetters };
-    });
-  }, [postIstintakLetters]);
-
-  // ── SECTION 3 VEFK: Sum of all expanded letters from the Final B5 block → Vefk source ──
-  // RULE: Total Bast of ALL expanded letters from postDerivations → buildVefk directly (no Istintak stage)
-  const s3VefkSourceNumber = useMemo(() => {
-    return postDerivations.reduce((sum, d) => {
-      return sum + d.expandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
-    }, 0);
-  }, [postDerivations]);
 
   const s3Vefk = useMemo(() => {
     if (!s3VefkSourceNumber || s3VefkSourceNumber <= 0) return null;
     return buildVefk(s3VefkSourceNumber, dominant || "fire");
   }, [s3VefkSourceNumber, dominant]);
 
-  // ── SECTION 3 VEFK BORDER: derived from Final Fifth Bast Expanded Total ──
-  // Total of all B5-expanded letters → istintak → border letters
+  // ── SECTION 3 VEFK BORDER: derived from B5 sum of allExpandedLetters → istintak ──
   const s3BorderLetters = useMemo(() => {
-    const allPostExpanded = postDerivations.flatMap(d => d.expandedLetters);
-    const total = allPostExpanded.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
-    if (!total) return "";
-    return istintak(total).join("");
-  }, [postDerivations]);
+    if (!s3VefkSourceNumber) return "";
+    return istintak(s3VefkSourceNumber).join("");
+  }, [s3VefkSourceNumber]);
 
   // Derive names from groupFormation groups
   const names = useMemo(() => groupFormation.groups.map(g => g.name), [groupFormation]);
@@ -543,89 +522,6 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
             </div>
           )}
         </Card>
-
-        {/* ── POST: Total Bast → Istintak Letters ── */}
-        <OrnamentalDivider />
-
-        <Card accent={elementColor}>
-          <SectionHeader step="P1" label="Post Expanded Total → Istintak" arabic="مجموع البسط → استنطاق" color={elementColor} />
-          <div className="mb-3 space-y-2">
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
-              style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
-              <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-                Section 3 Expanded Letters — Total Bast
-              </span>
-              <span className="font-inter text-base font-bold tabular-nums" style={{ color: elementColor }}>
-                {postExpandedTotal.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5 py-1">
-              <span className="font-inter text-base" style={{ color: G.goldDim }}>↓</span>
-              <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Istintak</span>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2 justify-center">
-            <LetterRow letters={postIstintakLetters} color={elementColor} size="xl" showIndex rtl />
-          </div>
-          <div className="mt-3 text-sm font-inter text-center" style={{ color: G.dim }}>
-            Count: <span style={{ color: elementColor, fontWeight: "bold", fontSize: "1rem" }}>{postIstintakLetters.length}</span>
-          </div>
-        </Card>
-
-        {/* ── POST: Individual Bast Derivations on Istintak Letters ── */}
-        <Card accent={G.green}>
-          <SectionHeader step="P2" label="Individual Bast Derivations" arabic="اشتقاق البسط الفردي" color={G.green} />
-          <div className="space-y-3">
-            {postDerivations.map((d, idx) => (
-              <motion.div key={idx}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="rounded-xl border p-3"
-                style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <LetterCell letter={d.letter} color={elementColor} size="lg" />
-                  <Arrow label="B5" />
-                  <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
-                    style={{ background: G.greenDim, borderColor: G.green + "40" }}>
-                    <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
-                      {d.bastValue.toLocaleString()}
-                    </span>
-                  </div>
-                  <Arrow label="→" />
-                  <div className="flex items-center gap-1 flex-wrap" style={{ direction: "rtl" }}>
-                    {d.expandedLetters.map((l, i) => (
-                      <LetterCell key={i} letter={l} color={G.green} size="sm" />
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </Card>
-
-        {/* ── POST: Final Fifth Bast Expanded Letters + Total (display only) ── */}
-        {(() => {
-          const allPostExpanded = postDerivations.flatMap(d => d.expandedLetters);
-          const allPostTotal    = allPostExpanded.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
-          return (
-            <Card accent={elementColor}>
-              <SectionHeader step="P3" label="Final Fifth Bast Expanded Letters" arabic="حروف البسط الخامس الموسعة" color={elementColor} />
-              <div className="mb-4">
-                <LetterRow letters={allPostExpanded} color={elementColor} size="lg" showIndex rtl />
-              </div>
-              <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
-                style={{ background: G.bgInner, borderColor: elementColor + "55" }}>
-                <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-                  Final Fifth Bast Expanded Total
-                </span>
-                <span className="font-inter text-base font-bold tabular-nums" style={{ color: elementColor }}>
-                  {allPostTotal.toLocaleString()}
-                </span>
-              </div>
-            </Card>
-          );
-        })()}
 
         {/* ── SECTION 3 VEFK MAGIC SQUARE ── */}
         {s3Vefk && (() => {
