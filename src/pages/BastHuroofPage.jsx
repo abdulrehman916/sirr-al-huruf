@@ -519,9 +519,9 @@ export default function BastHuroofPage() {
                             levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
                           />
                           
-                          {/* Secondary Akram — Letter-by-letter transformation */}
+                          {/* Secondary Akram — Letter-by-letter transformation (reverse order) */}
                           <SecondaryAkram
-                            akramLetters={akramPiecesForSecondary?.map(p => p.letter).join('') || ''}
+                            akramLetters={akramPiecesForSecondary?.map(p => p.letter).join('').split('').reverse().join('') || ''}
                             bastLevel={level}
                             levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
                             levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
