@@ -596,17 +596,6 @@ export default function BastHuroofPage() {
                 <>
                   <GoldDivider />
 
-                  {/* Akram / Harf — Bast-ul-Huruf 2 exclusive (same as text mode) */}
-                  {!numberResult.isPending && numberResult.total > 0 && (
-                    <AkramCard
-                      total={numberResult.total}
-                      levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
-                      levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
-                    />
-                  )}
-
-                  <GoldDivider />
-
                   {/* Breakdown table - same as text mode */}
                   <SectionCard title={`Letter Breakdown — Bast Level ${level}`}>
                     <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
