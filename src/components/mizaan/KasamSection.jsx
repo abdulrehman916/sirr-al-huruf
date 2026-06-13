@@ -360,67 +360,77 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── 1. COMMON KASAM STRUCTURE — static PDF frame (PDF Pages 76–79) ── */}
+        {/* ── 1. COMMON KASAM — ONE CONTINUOUS TEXT (PDF Pages 78–79) ── */}
         <div>
-          <StepBadge number="1" label="Common Kasam Structure — PDF Pages 76–79" color={G.blue} active />
-          <div className="rounded-xl border px-5 py-5 space-y-3"
-            style={{ background: G.bgInner, borderColor: "rgba(147,197,253,0.25)" }}>
+          <StepBadge number="1" label="Common Kasam — Complete Manuscript Text" color={G.blue} active />
+          <div className="rounded-2xl border overflow-hidden"
+            style={{
+              borderColor: "rgba(147,197,253,0.35)",
+              background: G.bgDeep,
+              boxShadow: "0 0 40px rgba(147,197,253,0.08), inset 0 1px 0 rgba(147,197,253,0.06)",
+            }}>
 
-            {/* Opening */}
-            <div>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.45)" }}>
-                Opening — ALWAYS first
-              </p>
-              <p className="text-right" dir="rtl"
-                style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.90)", fontSize: "1.1rem", lineHeight: 2.6 }}>
-                {COMMON_KASAM.opening}
-              </p>
+            <div className="px-5 py-4 border-b flex items-center gap-3"
+              style={{ borderColor: "rgba(147,197,253,0.18)", background: "rgba(147,197,253,0.04)" }}>
+              <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(147,197,253,0.70)" }} />
+              <div>
+                <p className="font-inter text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: "rgba(147,197,253,0.80)" }}>
+                  Common Kasam Framework — PDF Pages 78–79
+                </p>
+                <p className="font-inter text-[7px] uppercase tracking-widest mt-0.5" style={{ color: "rgba(147,197,253,0.40)" }}>
+                  Complete structure with injection points for A'van, Purpose, and Kasem
+                </p>
+              </div>
             </div>
 
-            {/* يَا A'van placeholder */}
-            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(245,208,96,0.20)", background: "rgba(245,208,96,0.04)" }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(245,208,96,0.45)" }}>يَا + Esma-i A'van (injected from Section 2)</p>
-              {hasAvan
-                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: G.goldBright, fontSize: "1rem", lineHeight: 2.4 }}>
-                    {avanNames.map(n => `يَا ${n}`).join(" ")}
-                  </p>
-                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(245,208,96,0.30)" }}>يَا [ أسماء العوان — تُحسب في القسم ٢ ]</p>
-              }
-            </div>
-
-            {/* Purpose placeholder */}
-            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(134,239,172,0.20)", background: "rgba(134,239,172,0.04)" }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(134,239,172,0.45)" }}>Purpose Azimet (select below)</p>
-              {selectedCat?.purposeArabic
-                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: "rgba(134,239,172,0.85)", fontSize: "1rem", lineHeight: 2.4 }}>
-                    {resolveNames(selectedCat.purposeArabic, names)}
-                  </p>
-                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(134,239,172,0.30)" }}>[ اختر الغرض أدناه ]</p>
-              }
-            </div>
-
-            {/* بِحَقِّ Kasem placeholder */}
-            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(196,181,253,0.20)", background: "rgba(196,181,253,0.04)" }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(196,181,253,0.45)" }}>بِحَقِّ + Esma-i Kasem (injected from Section 3)</p>
-              {hasKasem
-                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: "rgba(196,181,253,0.90)", fontSize: "1rem", lineHeight: 2.4 }}>
-                    {kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")}
-                  </p>
-                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(196,181,253,0.30)" }}>بِحَقِّ [ أسماء القسم — تُحسب في القسم ٣ ]</p>
-              }
-            </div>
-
-            {/* Closing */}
-            <div>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.45)" }}>
-                Closing — ALWAYS last
-              </p>
-              <p className="text-right" dir="rtl"
-                style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.80)", fontSize: "1rem", lineHeight: 2.6 }}>
+            <div className="px-5 py-6">
+              {/* Build continuous Common Kasam with injection points */}
+              <p className="text-right leading-relaxed" dir="rtl" style={ARABIC_FINAL_STYLE}>
+                {COMMON_KASAM.opening}{" "}
+                {hasAvan ? <span style={{ color: G.goldBright }}>{avanNames.map(n => `يَا ${n}`).join(" ")}</span> : <span style={{ color: "rgba(245,208,96,0.35)" }}>[ يَا أسماء العوان ]</span>}{" "}
+                <span style={{ color: "rgba(134,239,172,0.70)", textDecoration: "underline", textDecorationStyle: "dashed" }}>[ الغرض المختار أدناه ]</span>{" "}
+                {hasKasem ? <span style={{ color: "rgba(196,181,253,0.90)" }}>{kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")}</span> : <span style={{ color: "rgba(196,181,253,0.35)" }}>[ بِحَقِّ أسماء القسم ]</span>}{" "}
                 {COMMON_KASAM.closing}
               </p>
             </div>
 
+            <div className="mx-5 h-px" style={{ background: "rgba(147,197,253,0.15)" }} />
+
+            <div className="px-5 py-4">
+              <p className="font-inter text-[8px] uppercase tracking-[0.25em] font-bold mb-2"
+                style={{ color: "rgba(147,197,253,0.50)" }}>
+                Structure Guide — PDF Order
+              </p>
+              <div className="grid grid-cols-1 gap-1.5 text-[7px] font-inter" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(147,197,253,0.60)" }} />
+                  <span>Opening: <span style={{ color: "rgba(147,197,253,0.80)" }}>أقسمت عليكم أيها الأرواح الروحانية المشرفة</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: G.gold }} />
+                  <span>Esma-i A'van: <span style={{ color: G.goldBright }}>يا [Names from Section 2]</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(134,239,172,0.60)" }} />
+                  <span>Purpose: <span style={{ color: "rgba(134,239,172,0.70)" }}>[Select category below → injected here]</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(196,181,253,0.60)" }} />
+                  <span>Esma-i Kasem: <span style={{ color: "rgba(196,181,253,0.90)" }}>بحق [Names from Section 3]</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(147,197,253,0.60)" }} />
+                  <span>Closing: <span style={{ color: "rgba(147,197,253,0.80)" }}>بالواحد الأحد الفرد الصمد...</span></span>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-5 pb-4 flex items-center gap-2">
+              <BookOpen className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(147,197,253,0.30)" }} />
+              <p className="font-inter text-[7px]" style={{ color: "rgba(255,255,255,0.20)" }}>
+                {COMMON_KASAM.source}
+              </p>
+            </div>
           </div>
         </div>
 
