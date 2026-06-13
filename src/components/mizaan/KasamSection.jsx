@@ -70,37 +70,46 @@ function resolveNames(text, names) {
     .replace(/\{requesterMotherName\}/g, names.requesterMother || "فلانة");
 }
 
+// ASSEMBLY ORDER (PDF Pages 76–79):
+//   1. COMMON_KASAM.opening
+//   2. يَا + Esma-i A'van names
+//   3. Purpose Azimet (with resolved names)
+//   4. بِحَقِّ + Esma-i Kasem names
+//   5. COMMON_KASAM.closing
 function assembleFinalKasam(cat, names, avanNames, kasemNames) {
   const avanStr  = Array.isArray(avanNames)  && avanNames.length
     ? avanNames.map(n => `يَا ${n}`).join(" ")      : "";
   const kasemStr = Array.isArray(kasemNames) && kasemNames.length
     ? kasemNames.map(n => `بِحَقِّ ${n}`).join(" ") : "";
 
-  // Step 1: inject A'van and Kasem tokens into the Azimet
-  let azimet = (cat.purposeArabic || "")
-    .replace(/\[ESMAİ-AVAN\]/g,  avanStr)
-    .replace(/\[ESMAİ-KASEM\]/g, kasemStr);
+  // Resolve name tokens in the azimet text
+  const azimet = resolveNames(cat.purposeArabic || "", names);
 
-  // Step 2: resolve name tokens
-  azimet = resolveNames(azimet, names);
+  // Build full Kasam in exact PDF order
+  const parts = [COMMON_KASAM.opening];
+  if (avanStr)  parts.push(avanStr);
+  if (azimet)   parts.push(azimet);
+  if (kasemStr) parts.push(kasemStr);
+  parts.push(COMMON_KASAM.closing);
 
-  // Step 3: append Common Kasam closure
-  return (azimet + " " + COMMON_KASAM.closure).trim();
+  return parts.join(" ").replace(/\s{2,}/g, " ").trim();
 }
 
 function assembleFinalMalayalam(cat, names, avanNames, kasemNames) {
   const avanStr  = Array.isArray(avanNames)  && avanNames.length
-    ? avanNames.map(n => `يَا ${n}`).join(" ")       : "(Esma-i A'van)";
+    ? avanNames.map(n => `يَا ${n}`).join(" ") : "(Esma-i A'van)";
   const kasemStr = Array.isArray(kasemNames) && kasemNames.length
-    ? kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")  : "(Esma-i Kasem)";
+    ? kasemNames.map(n => `بِحَقِّ ${n}`).join(" ") : "(Esma-i Kasem)";
 
-  let mlText = (cat.purposeMalayalam || "")
-    .replace(/\[Esma-i A'van\]/g,  avanStr)
-    .replace(/\[Esma-i Kasem\]/g,  kasemStr);
+  const mlText = resolveNames(cat.purposeMalayalam || "", names);
 
-  mlText = resolveNames(mlText, names);
+  const parts = [COMMON_KASAM.openingMalayalam];
+  if (avanStr !== "(Esma-i A'van)" || Array.isArray(avanNames) && avanNames.length) parts.push(avanStr);
+  if (mlText)  parts.push(mlText);
+  if (kasemStr !== "(Esma-i Kasem)" || Array.isArray(kasemNames) && kasemNames.length) parts.push(kasemStr);
+  parts.push(COMMON_KASAM.closingMalayalam);
 
-  return mlText + " — " + COMMON_KASAM.closureMalayalam;
+  return parts.join(" — ");
 }
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
@@ -287,9 +296,9 @@ function KasamPipeline({ cat, names, avanNames, kasemNames }) {
     );
   }
 
-  const avanStr  = Array.isArray(avanNames)  && avanNames.length  ? avanNames.map(n  => `يَا ${n}`).join("  ·  ")       : null;
-  const kasemStr = Array.isArray(kasemNames) && kasemNames.length ? kasemNames.map(n => `بِحَقِّ ${n}`).join("  ·  ")  : null;
-  const purposeResolved = resolveNames(cat.purposeArabic, names);
+  const avanStr  = Array.isArray(avanNames)  && avanNames.length  ? avanNames.map(n  => `يَا ${n}`).join("  ·  ")      : null;
+  const kasemStr = Array.isArray(kasemNames) && kasemNames.length ? kasemNames.map(n => `بِحَقِّ ${n}`).join("  ·  ") : null;
+  const purposeResolved = resolveNames(cat.purposeArabic || "", names);
 
   const finalArabic    = assembleFinalKasam(cat, names, avanNames, kasemNames);
   const finalMalayalam = assembleFinalMalayalam(cat, names, avanNames, kasemNames);
@@ -546,42 +555,67 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── 1. COMMON KASAM — PDF Page 78 exact order, one continuous text ── */}
+        {/* ── 1. COMMON KASAM STRUCTURE — static PDF frame (PDF Pages 76–79) ── */}
         <div>
-          <StepBadge number="1" label="Common Kasam — PDF Page 78" color={G.blue} active />
-          <div className="rounded-xl border px-5 py-5"
+          <StepBadge number="1" label="Common Kasam Structure — PDF Pages 76–79" color={G.blue} active />
+          <div className="rounded-xl border px-5 py-5 space-y-3"
             style={{ background: G.bgInner, borderColor: "rgba(147,197,253,0.25)" }}>
-            <p className="text-right" dir="rtl"
-              style={{ ...ARABIC_STYLE, color: "rgba(220,220,255,0.92)", fontSize: "1.25rem", lineHeight: 3.1 }}>
 
-              {/* 1. PDF opening — ALWAYS first */}
-              <span>{COMMON_KASAM.opening} </span>
+            {/* Opening */}
+            <div>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.45)" }}>
+                Opening — ALWAYS first
+              </p>
+              <p className="text-right" dir="rtl"
+                style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.90)", fontSize: "1.1rem", lineHeight: 2.6 }}>
+                {COMMON_KASAM.opening}
+              </p>
+            </div>
 
-              {/* 2. يَا + Esma-i A'van names */}
+            {/* يَا A'van placeholder */}
+            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(245,208,96,0.20)", background: "rgba(245,208,96,0.04)" }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(245,208,96,0.45)" }}>يَا + Esma-i A'van (injected from Section 2)</p>
               {hasAvan
-                ? <span style={{ color: G.goldBright }}>{avanNames.map(n => `يَا ${n}`).join(" ")} </span>
-                : null}
+                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: G.goldBright, fontSize: "1rem", lineHeight: 2.4 }}>
+                    {avanNames.map(n => `يَا ${n}`).join(" ")}
+                  </p>
+                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(245,208,96,0.30)" }}>يَا [ أسماء العوان — تُحسب في القسم ٢ ]</p>
+              }
+            </div>
 
-              {/* 3. Purpose Azimet text */}
+            {/* Purpose placeholder */}
+            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(134,239,172,0.20)", background: "rgba(134,239,172,0.04)" }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(134,239,172,0.45)" }}>Purpose Azimet (select below)</p>
               {selectedCat?.purposeArabic
-                ? <span>{resolveNames(
-                    selectedCat.purposeArabic
-                      .replace(/\[ESMAİ-AVAN\]/g, "")
-                      .replace(/\[ESMAİ-KASEM\]/g, "")
-                      .replace(/\s{2,}/g, " ")
-                      .trim(),
-                    names
-                  )} </span>
-                : null}
+                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: "rgba(134,239,172,0.85)", fontSize: "1rem", lineHeight: 2.4 }}>
+                    {resolveNames(selectedCat.purposeArabic, names)}
+                  </p>
+                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(134,239,172,0.30)" }}>[ اختر الغرض أدناه ]</p>
+              }
+            </div>
 
-              {/* 4. بِحَقِّ + Esma-i Kasem names */}
+            {/* بِحَقِّ Kasem placeholder */}
+            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(196,181,253,0.20)", background: "rgba(196,181,253,0.04)" }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(196,181,253,0.45)" }}>بِحَقِّ + Esma-i Kasem (injected from Section 3)</p>
               {hasKasem
-                ? <span style={{ color: "rgba(196,181,253,0.95)" }}>{kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")} </span>
-                : null}
+                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: "rgba(196,181,253,0.90)", fontSize: "1rem", lineHeight: 2.4 }}>
+                    {kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")}
+                  </p>
+                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(196,181,253,0.30)" }}>بِحَقِّ [ أسماء القسم — تُحسب في القسم ٣ ]</p>
+              }
+            </div>
 
-              {/* 5. PDF closing — ALWAYS last */}
-              <span style={{ color: "rgba(220,220,255,0.92)" }}>{COMMON_KASAM.closing}</span>
-            </p>
+            {/* Closing */}
+            <div>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.45)" }}>
+                Closing — ALWAYS last
+              </p>
+              <p className="text-right" dir="rtl"
+                style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.80)", fontSize: "1rem", lineHeight: 2.6 }}>
+                {COMMON_KASAM.closing}
+              </p>
+            </div>
+
           </div>
         </div>
 
