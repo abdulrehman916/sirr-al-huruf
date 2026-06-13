@@ -92,3 +92,22 @@ export const BAST_FIELD_MAP = {
 export const BAST_LOOKUP = Object.fromEntries(
   BAST_DATA.map(row => [row.letter, row])
 );
+
+// ── Reverse lookup maps: Bast value → letter (for number → letter conversion) ───────
+// Each level uses its own manuscript column exclusively
+export const BAST_REVERSE = {
+  1: Object.fromEntries(BAST_DATA.map(row => [row.bastEvvel, row.letter])),
+  2: Object.fromEntries(BAST_DATA.map(row => [row.bastSani, row.letter])),
+  3: Object.fromEntries(BAST_DATA.map(row => [row.bastSalis, row.letter])),
+  4: Object.fromEntries(BAST_DATA.map(row => [row.bastRabi, row.letter])),
+  5: Object.fromEntries(BAST_DATA.map(row => [row.bastHamis, row.letter])),
+};
+
+// ── Reverse lookup with full row data (for decomposition display) ───────
+export const BAST_REVERSE_FULL = {
+  1: Object.fromEntries(BAST_DATA.map(row => [row.bastEvvel, row])),
+  2: Object.fromEntries(BAST_DATA.map(row => [row.bastSani, row])),
+  3: Object.fromEntries(BAST_DATA.map(row => [row.bastSalis, row])),
+  4: Object.fromEntries(BAST_DATA.map(row => [row.bastRabi, row])),
+  5: Object.fromEntries(BAST_DATA.map(row => [row.bastHamis, row])),
+};

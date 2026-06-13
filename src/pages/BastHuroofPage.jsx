@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
-import { calcBastHuroof, BAST_LEVELS } from "../lib/bastHuroofEngine";
+import { calcBastHuroof, calcBastFromNumber, BAST_LEVELS } from "../lib/bastHuroofEngine";
 import AkramCard from "../components/AkramCard";
 import { usePageState } from "../context/PageStateContext";
 
@@ -222,15 +222,18 @@ const PAGE_KEY = 'bastHuroof';
 
 export default function BastHuroofPage() {
   const { getPageState, setPageState, clearPageState } = usePageState();
-  const initialState = getPageState(PAGE_KEY, { input: "", level: 1, allResults: null });
+  const initialState = getPageState(PAGE_KEY, { input: "", numberInput: "", level: 1, allResults: null, numberResult: null, inputMode: 'text' });
   
   const [input, setInput] = useState(initialState.input);
+  const [numberInput, setNumberInput] = useState(initialState.numberInput);
   const [level, setLevel] = useState(initialState.level);
   const [allResults, setAllResults] = useState(initialState.allResults);
+  const [numberResult, setNumberResult] = useState(initialState.numberResult);
+  const [inputMode, setInputMode] = useState(initialState.inputMode);
 
   useEffect(() => {
-    setPageState(PAGE_KEY, { input, level, allResults });
-  }, [input, level, allResults, setPageState]);
+    setPageState(PAGE_KEY, { input, numberInput, level, allResults, numberResult, inputMode });
+  }, [input, numberInput, level, allResults, numberResult, inputMode, setPageState]);
 
   const handleCalculate = useCallback(() => {
     if (!input.trim()) return;
@@ -243,10 +246,19 @@ export default function BastHuroofPage() {
 
   const handleClear = () => {
     setInput("");
+    setNumberInput("");
     setAllResults(null);
+    setNumberResult(null);
     setLevel(1);
     clearPageState(PAGE_KEY);
   };
+
+  const handleNumberCalculate = useCallback(() => {
+    const num = parseInt(numberInput);
+    if (!num || num <= 0) return;
+    const result = calcBastFromNumber(num, level);
+    setNumberResult(result);
+  }, [numberInput, level]);
 
   const handleLevelChange = (newLevel) => {
     setLevel(newLevel);
@@ -266,72 +278,199 @@ export default function BastHuroofPage() {
           icon="٢"
         />
 
-        {/* ── Input ── */}
-        <div className="rounded-2xl border p-5 relative overflow-hidden"
+        {/* ── Input Mode Selector ── */}
+        <div className="rounded-2xl border p-2 flex gap-2"
           style={{
-            background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)",
-            borderColor: G.borderHi,
-            boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)`,
+            background: "rgba(4,12,34,0.97)",
+            borderColor: G.border,
           }}>
-          <div className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
-
-          <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
-            Arabic Text Input — All 5 Bast Levels
-          </label>
-
-          <textarea
-            dir="rtl"
-            value={input}
-            onChange={e => {
-              setInput(e.target.value);
-              setAllResults(null);
+          <motion.button
+            onClick={() => setInputMode('text')}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 py-2.5 rounded-xl font-inter font-bold text-sm"
+            style={{
+              background: inputMode === 'text' ? G.bgHi : "transparent",
+              borderColor: inputMode === 'text' ? G.borderHi : "transparent",
+              border: `1px solid ${inputMode === 'text' ? G.borderHi : "transparent"}`,
+              color: inputMode === 'text' ? G.text : "rgba(255,255,255,0.40)",
             }}
-            onKeyDown={e => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleCalculate();
-              }
+          >
+            TEXT INPUT — نص
+          </motion.button>
+          <motion.button
+            onClick={() => setInputMode('number')}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 py-2.5 rounded-xl font-inter font-bold text-sm"
+            style={{
+              background: inputMode === 'number' ? G.bgHi : "transparent",
+              borderColor: inputMode === 'number' ? G.borderHi : "transparent",
+              border: `1px solid ${inputMode === 'number' ? G.borderHi : "transparent"}`,
+              color: inputMode === 'number' ? G.text : "rgba(255,255,255,0.40)",
             }}
-            placeholder="أدخل النص العربي هنا..."
-            rows={4}
-            className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
-            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
-          />
-
-          <div className="flex gap-2">
-            <motion.button
-              onClick={handleCalculate}
-              disabled={!input.trim()}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
-              style={{
-                background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)",
-                boxShadow: `0 0 32px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)`,
-              }}
-            >
-              <span className="font-amiri text-base">احسب</span> Calculate All Levels
-            </motion.button>
-
-            <motion.button
-              onClick={handleClear}
-              disabled={!input && !allResults}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}
-            >
-              <Trash2 className="w-3.5 h-3.5" /> Clear
-            </motion.button>
-          </div>
+          >
+            NUMBER INPUT — رقم
+          </motion.button>
         </div>
+
+        {/* ── TEXT INPUT MODE ── */}
+        {inputMode === 'text' && (
+          <div className="rounded-2xl border p-5 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)",
+              borderColor: G.borderHi,
+              boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)`,
+            }}>
+            <div className="absolute top-0 left-0 right-0 h-px"
+              style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
+
+            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
+              Arabic Text Input — All 5 Bast Levels
+            </label>
+
+            <textarea
+              dir="rtl"
+              value={input}
+              onChange={e => {
+                setInput(e.target.value);
+                setAllResults(null);
+              }}
+              onKeyDown={e => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleCalculate();
+                }
+              }}
+              placeholder="أدخل النص العربي هنا..."
+              rows={4}
+              className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
+              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
+            />
+
+            <div className="flex gap-2">
+              <motion.button
+                onClick={handleCalculate}
+                disabled={!input.trim()}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
+                style={{
+                  background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)",
+                  boxShadow: `0 0 32px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)`,
+                }}
+              >
+                <span className="font-amiri text-base">احسب</span> Calculate All Levels
+              </motion.button>
+
+              <motion.button
+                onClick={handleClear}
+                disabled={!input && !allResults}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Clear
+              </motion.button>
+            </div>
+          </div>
+        )}
+
+        {/* ── NUMBER INPUT MODE ── */}
+        {inputMode === 'number' && (
+          <div className="rounded-2xl border p-5 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)",
+              borderColor: G.borderHi,
+              boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)`,
+            }}>
+            <div className="absolute top-0 left-0 right-0 h-px"
+              style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
+
+            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
+              Enter Bast Number — Level {level}
+            </label>
+
+            <input
+              type="number"
+              dir="ltr"
+              value={numberInput}
+              onChange={e => {
+                setNumberInput(e.target.value);
+                setNumberResult(null);
+              }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleNumberCalculate();
+                }
+              }}
+              placeholder="e.g., 4282, 1095, 991"
+              className="w-full rounded-xl px-4 py-3 font-inter text-xl text-white leading-relaxed focus:outline-none caret-white mb-3 placeholder:text-white/30"
+              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
+            />
+
+            {/* Level selector for number mode */}
+            <div className="mb-4">
+              <label className="block font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                Select Bast Level (uses this level's manuscript column only)
+              </label>
+              <div className="grid grid-cols-5 gap-1.5">
+                {BAST_LEVELS.map((lvl) => (
+                  <motion.button
+                    key={lvl.key}
+                    onClick={() => {
+                      setLevel(lvl.key);
+                      setNumberResult(null);
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    className="py-2 rounded-lg font-inter font-bold text-xs border"
+                    style={{
+                      background: level === lvl.key ? G.bgHi : "rgba(255,255,255,0.02)",
+                      borderColor: level === lvl.key ? G.borderHi : G.faint,
+                      color: level === lvl.key ? G.text : "rgba(255,255,255,0.40)",
+                    }}
+                  >
+                    {lvl.key}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <motion.button
+                onClick={handleNumberCalculate}
+                disabled={!numberInput || parseInt(numberInput) <= 0}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
+                style={{
+                  background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)",
+                  boxShadow: `0 0 32px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)`,
+                }}
+              >
+                <span className="font-amiri text-base">فك</span> Decompose
+              </motion.button>
+
+              <motion.button
+                onClick={handleClear}
+                disabled={!numberInput && !numberResult}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Clear
+              </motion.button>
+            </div>
+          </div>
+        )}
 
         {/* ── Results ── */}
         <AnimatePresence mode="wait">
-          {allResults && (
+          {/* TEXT MODE RESULTS */}
+          {inputMode === 'text' && allResults && (
             <motion.div
-              key="all-results"
+              key="text-results"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -389,6 +528,95 @@ export default function BastHuroofPage() {
                           </p>
                         </motion.div>
                       )}
+                    </>
+                  )}
+                </>
+              )}
+            </motion.div>
+          )}
+
+          {/* NUMBER MODE RESULTS */}
+          {inputMode === 'number' && numberResult && (
+            <motion.div
+              key="number-results"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="space-y-4"
+            >
+              {/* Decomposition Result Card */}
+              <div className="rounded-2xl border p-6 text-center space-y-3 relative overflow-hidden"
+                style={{
+                  background: "linear-gradient(145deg, rgba(8,18,48,0.99) 0%, rgba(4,10,28,0.99) 100%)",
+                  borderColor: G.borderHi,
+                  boxShadow: `0 0 60px ${G.glow}, 0 4px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.12)`,
+                }}>
+                <div className="absolute top-0 left-0 right-0 h-px"
+                  style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />
+                
+                <p className="font-inter text-[9px] uppercase tracking-[0.25em]" style={{ color: G.dim }}>
+                  Decomposition Result — Level {level} ({BAST_LEVELS.find(l => l.key === level)?.label})
+                </p>
+
+                {numberResult.mode === 'none' ? (
+                  <div className="py-6">
+                    <p className="font-inter text-sm text-white/40 mb-2">
+                      No valid decomposition found
+                    </p>
+                    {numberResult.remainder > 0 && (
+                      <p className="font-inter text-xs text-white/25">
+                        Remainder: {numberResult.remainder} (too small for any letter value)
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <motion.p
+                      className="font-inter font-bold tabular-nums"
+                      style={{ fontSize: "clamp(2.5rem,10vw,3.5rem)", color: G.text, lineHeight: 1 }}
+                      animate={{ textShadow: [`0 0 20px ${G.glow}`, `0 0 60px ${G.glowHi}`, `0 0 20px ${G.glow}`] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      {numberResult.total.toLocaleString()}
+                    </motion.p>
+                    <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.40)" }}>
+                      {numberResult.mode === 'exact' ? 'Single Letter' : `${numberResult.letters.length} Letters`}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Letter Breakdown */}
+              {numberResult.mode !== 'none' && numberResult.letters.length > 0 && (
+                <>
+                  <SectionCard title="Letter Decomposition">
+                    <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
+                      {numberResult.letters.map((l, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.7 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: Math.min(i * 0.03, 0.6), duration: 0.22 }}
+                          className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[56px]"
+                          style={{ background: G.bg, borderColor: G.faint }}
+                        >
+                          <span className="font-amiri text-3xl text-white leading-none mb-1">{l.letter}</span>
+                          <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{l.name}</span>
+                          <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{l.value.toLocaleString()}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </SectionCard>
+
+                  {/* Akram/Nutku Display */}
+                  {!numberResult.isPending && numberResult.total > 0 && (
+                    <>
+                      <GoldDivider />
+                      <AkramCard
+                        total={numberResult.total}
+                        levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                        levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                      />
                     </>
                   )}
                 </>

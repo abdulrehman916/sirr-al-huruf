@@ -4,7 +4,7 @@
 // Does NOT import from any other engine in this project.
 // ═══════════════════════════════════════════════════════════════
 
-import { BAST_LOOKUP, BAST_FIELD_MAP } from './bastHuroofData';
+import { BAST_LOOKUP, BAST_FIELD_MAP, BAST_REVERSE_FULL } from './bastHuroofData';
 
 // ── Arabic letter extraction ──────────────────────────────────
 function extractArabicLetters(text) {
@@ -62,4 +62,57 @@ export function calcBastHuroof(text, level = 1) {
     : entries.reduce((s, e) => s + e.value, 0);
 
   return { entries, total, letterCount: entries.length, isPending };
+}
+
+// ── Number → Letter conversion (reverse lookup) ─────────────────────────────────
+/**
+ * Decomposes a number into Bast letters using greedy algorithm.
+ * Uses ONLY the selected Bast level's manuscript column.
+ * @param {number} targetNumber — number to decompose (e.g., 4282)
+ * @param {number} level — 1 | 2 | 3 | 4 | 5
+ * @returns {{ mode: 'exact'|'composite'|'none', letters: [{letter, value, name}], total: number, isPending: boolean }}
+ */
+export function calcBastFromNumber(targetNumber, level = 1) {
+  if (!targetNumber || targetNumber <= 0 || !Number.isInteger(targetNumber)) {
+    return { mode: 'none', letters: [], total: 0, isPending: false };
+  }
+
+  // Get all values for this level (sorted descending for greedy decomposition)
+  const levelData = Object.entries(BAST_REVERSE_FULL[level])
+    .map(([value, row]) => ({ value: parseInt(value), letter: row.letter, name: row.name }))
+    .sort((a, b) => b.value - a.value);
+
+  const letters = [];
+  let remaining = targetNumber;
+
+  // Greedy decomposition: use largest values first
+  while (remaining > 0) {
+    let found = false;
+    for (const item of levelData) {
+      if (item.value <= remaining) {
+        letters.push({ letter: item.letter, value: item.value, name: item.name });
+        remaining -= item.value;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      // Cannot decompose further - remainder too small
+      break;
+    }
+  }
+
+  const total = letters.reduce((s, l) => s + l.value, 0);
+  const mode = remaining === 0 
+    ? (letters.length === 1 ? 'exact' : 'composite') 
+    : 'none';
+
+  return { 
+    mode, 
+    letters, 
+    total, 
+    isPending: false,
+    remainder: remaining,
+    originalTarget: targetNumber
+  };
 }
