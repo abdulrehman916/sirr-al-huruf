@@ -578,21 +578,14 @@ export default function BastHuroofPage() {
 
                   <GoldDivider />
 
-                  {/* Bast Calculation Result */}
+                  {/* Secondary Akram from Bast Total */}
                   {!activeResult.isPending && activeResult.total > 0 && (
-                    <>
-                      <TotalCard result={activeResult} level={level} />
-
-                      <GoldDivider />
-
-                      {/* Secondary Akram from Bast Total */}
-                      <SecondaryAkram
-                        akramLetters={akramPiecesForSecondary?.map(p => p.letter).join('') || ''}
-                        bastLevel={level}
-                        levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
-                        levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
-                      />
-                    </>
+                    <SecondaryAkram
+                      akramLetters={akramPiecesForSecondary?.map(p => p.letter).join('') || ''}
+                      bastLevel={level}
+                      levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                      levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                    />
                   )}
 
                   <GoldDivider />
