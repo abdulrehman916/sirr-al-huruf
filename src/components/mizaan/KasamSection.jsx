@@ -420,6 +420,86 @@ function KasamPipeline({ cat, names, avanNames, kasemNames }) {
   );
 }
 
+// ── Final Kasam output block — always rendered at bottom ─────────────────────
+function FinalKasamOutput({ cat, names, avanNames, kasemNames }) {
+  const hasCat    = !!cat && cat.status !== "pending" && !!cat.purposeArabic;
+  const finalArabic    = hasCat ? assembleFinalKasam(cat, names, avanNames, kasemNames)    : null;
+  const finalMalayalam = hasCat ? assembleFinalMalayalam(cat, names, avanNames, kasemNames) : null;
+
+  return (
+    <div className="rounded-2xl border overflow-hidden"
+      style={{
+        borderColor: hasCat ? "rgba(212,175,55,0.65)" : "rgba(212,175,55,0.22)",
+        background:  G.bgDeep,
+        boxShadow:   hasCat
+          ? "0 0 80px rgba(212,175,55,0.18), inset 0 1px 0 rgba(212,175,55,0.12)"
+          : "none",
+        transition:  "border-color 0.3s, box-shadow 0.3s",
+      }}>
+
+      {/* Header */}
+      <div className="px-5 py-4 border-b flex items-center gap-3"
+        style={{
+          borderColor: hasCat ? "rgba(212,175,55,0.30)" : "rgba(212,175,55,0.12)",
+          background:  hasCat ? "rgba(212,175,55,0.10)" : "rgba(212,175,55,0.04)",
+        }}>
+        <Eye className="w-4 h-4 flex-shrink-0" style={{ color: hasCat ? G.gold : "rgba(212,175,55,0.30)" }} />
+        <div>
+          <p className="font-inter text-[11px] font-black uppercase tracking-[0.3em]"
+            style={{ color: hasCat ? G.gold : "rgba(212,175,55,0.30)" }}>
+            ✦ Final Kasam — القسم الكامل
+          </p>
+          <p className="font-inter text-[8px] uppercase tracking-widest mt-0.5"
+            style={{ color: "rgba(212,175,55,0.35)" }}>
+            {hasCat ? `${cat.label} · PDF order: Common Kasam + A'van + Purpose + Kasem + Closing` : "Select a purpose above to generate the Final Kasam"}
+          </p>
+        </div>
+      </div>
+
+      {/* Arabic text */}
+      <div className="px-5 py-6 min-h-[80px] flex items-center justify-center">
+        {hasCat ? (
+          <p className="text-right w-full leading-relaxed" dir="rtl" style={ARABIC_FINAL_STYLE}>
+            {finalArabic}
+          </p>
+        ) : (
+          <p className="font-inter text-[9px] uppercase tracking-widest text-center"
+            style={{ color: "rgba(255,255,255,0.15)" }}>
+            القسم سيظهر هنا بعد اختيار الغرض
+          </p>
+        )}
+      </div>
+
+      {/* Malayalam meaning */}
+      {hasCat && finalMalayalam && (
+        <>
+          <div className="mx-5 h-px" style={{ background: "rgba(212,175,55,0.18)" }} />
+          <div className="px-5 py-5">
+            <p className="font-inter text-[8px] uppercase tracking-[0.25em] font-bold mb-3"
+              style={{ color: "rgba(212,175,55,0.50)" }}>
+              Final Malayalam Meaning — അർഥം
+            </p>
+            <p className="font-amiri text-base leading-relaxed"
+              style={{ color: "rgba(255,255,255,0.75)", lineHeight: 2.1 }}>
+              {finalMalayalam}
+            </p>
+          </div>
+        </>
+      )}
+
+      {/* Source footnote */}
+      {hasCat && (
+        <div className="px-5 pb-4 flex items-center gap-2">
+          <BookOpen className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(212,175,55,0.30)" }} />
+          <p className="font-inter text-[7px]" style={{ color: "rgba(255,255,255,0.20)" }}>
+            {COMMON_KASAM.source} · {cat.source}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 export default function KasamSection({ avanNames = [], kasemNames = [] }) {
   const [selectedCat, setSelectedCat] = useState(null);
@@ -443,6 +523,7 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
         background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)`
       }} />
 
+      {/* Section title */}
       <div className="text-center px-6 pt-6 pb-4">
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-2"
           style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
@@ -453,25 +534,45 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
         <p className="font-inter text-[9px] uppercase tracking-[0.2em]" style={{ color: G.goldDim }}>
-          Common Kasam · Purpose · Esma · Names · Closing — PDF Order
+          Common Kasam · Purpose · Esma-i A'van · Esma-i Kasem · Names · Closing
         </p>
       </div>
 
-      <div className="px-4 pb-6 space-y-4">
+      <div className="px-4 pb-6 space-y-5">
 
-        {/* Select Purpose */}
+        {/* ── 1. COMMON KASAM — always visible ── */}
         <div>
-          <StepBadge number="A" label="Select Purpose Category" color={G.gold} active />
+          <StepBadge number="1" label="Common Kasam — PDF Page 78" color={G.blue} active />
+          <div className="rounded-xl border px-4 py-4"
+            style={{ background: G.bgInner, borderColor: "rgba(147,197,253,0.25)" }}>
+            <p className="text-right" dir="rtl"
+              style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.85)", fontSize: "1.15rem", lineHeight: 2.7 }}>
+              {COMMON_KASAM.fullFrame
+                .replace("[ESMAİ-AVAN]",  "[ أسماء العوان ]")
+                .replace("[PURPOSE]",     "[ غرض القسم ]")
+                .replace("[ESMAİ-KASEM]", "[ أسماء القسم ]")}
+            </p>
+            <p className="font-amiri text-sm mt-3" style={{ color: "rgba(255,255,255,0.40)", lineHeight: 1.9 }}>
+              {COMMON_KASAM.openingMalayalam} ... {COMMON_KASAM.closingMalayalam}
+            </p>
+          </div>
+        </div>
+
+        <OrnamentalDivider />
+
+        {/* ── 2. PURPOSE SELECTION ── */}
+        <div>
+          <StepBadge number="2" label="Select Purpose Category" color={G.gold} active />
           <PurposeSelector selected={selectedCat} onSelect={setSelectedCat} />
         </div>
 
-        {/* Name Input */}
+        {/* ── 3. NAME INPUTS ── */}
         <AnimatePresence>
           {selectedCat && selectedCat.nameFields?.length > 0 && (
             <motion.div key="names"
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <StepBadge number="B" label="Enter Names" color={G.green} active />
+              <StepBadge number="3" label="Enter Names" color={G.green} active />
               <div className="rounded-xl border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder }}>
                 <NameInputBlock cat={selectedCat} names={names} onChange={setNames} />
               </div>
@@ -481,29 +582,16 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
         <OrnamentalDivider />
 
-        {/* Pipeline */}
-        <AnimatePresence>
-          {selectedCat && (
-            <motion.div key={selectedCat.id}
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
-              <StepBadge number="C" label="Kasam Assembly — PDF Order" color={G.gold} active />
-              <KasamPipeline
-                cat={selectedCat}
-                names={names}
-                avanNames={avanNames}
-                kasemNames={kasemNames}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {!selectedCat && (
-          <p className="font-inter text-[9px] text-center uppercase tracking-widest py-4"
-            style={{ color: "rgba(255,255,255,0.18)" }}>
-            Select a purpose above to begin
-          </p>
-        )}
+        {/* ── 4. FINAL KASAM — always rendered, populated when ready ── */}
+        <div>
+          <StepBadge number="4" label="Final Kasam — Complete Arabic Text" color={G.gold} active />
+          <FinalKasamOutput
+            cat={selectedCat}
+            names={names}
+            avanNames={avanNames}
+            kasemNames={kasemNames}
+          />
+        </div>
 
       </div>
 
