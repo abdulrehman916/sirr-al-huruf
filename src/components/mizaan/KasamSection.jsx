@@ -170,7 +170,7 @@ function CommonKasamBlock({ avanNames, kasemNames }) {
               </p>
               <span className="font-inter text-[7px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border"
                 style={{ color: G.blue, borderColor: G.blueBorder, background: G.blueBg }}>
-                BASE LAYER · READ FIRST
+                ESMA REFERENCE · NOT PREPENDED TO FINAL
               </span>
             </div>
             <p className="font-inter text-[9px] mt-0.5" style={{ color: "rgba(255,255,255,0.28)" }}>
@@ -399,7 +399,11 @@ function fullyResolve(text, names, avanNames, kasemNames) {
 }
 
 // ── STEP 4: Final Kasam — Ready to Read ──────────────────────────────────────
-// One continuous resolved Arabic text + full Malayalam meaning.
+// The Final Kasam is ONLY the category's own complete Azimet text — exactly as in the PDF.
+// Each category entry already contains its own full invocation (بالواحد الأحد...فسبحان...).
+// The Common Kasam block is a reference tool only — it is NOT prepended here.
+// Esma-i A'van and Esma-i Kasem are injected at the exact [ESMAİ-AVAN]/[ESMAİ-KASEM] positions
+// within each category entry's Arabic text.
 function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
   const hasPending = cat.entries.every(e => e.status === "pending" || !e.arabic);
 
@@ -420,25 +424,19 @@ function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
     );
   }
 
-  // Build one continuous Arabic text:
-  //   Common Kasam (with Esma injected) + each category entry (names resolved)
-  const commonResolved = fullyResolve(COMMON_KASAM.arabicText, names, avanNames, kasemNames);
+  // Build the Final Kasam: ONLY the category entries, fully resolved.
+  // Each entry's arabic text already contains its complete invocation structure per PDF.
+  // NO Common Kasam prepended — that would duplicate the closing invocation.
   const verifiedEntries = cat.entries.filter(e => e.status !== "pending" && e.arabic);
-  const categoryArabic = verifiedEntries
+  const fullArabic = verifiedEntries
     .map(e => fullyResolve(e.arabic, names, avanNames, kasemNames))
     .join(" ");
-  const fullArabic = [commonResolved, categoryArabic].filter(Boolean).join(" ");
 
-  // Build combined Malayalam meaning
-  const commonMalayalam = COMMON_KASAM.arabicTextMalayalam || "";
-  const categoryMalayalam = verifiedEntries
-    .map(e => {
-      if (!e.malayalam) return "";
-      return fullyResolve(e.malayalam, names, [], []);
-    })
+  // Malayalam: category entries only
+  const fullMalayalam = verifiedEntries
+    .map(e => e.malayalam ? fullyResolve(e.malayalam, names, [], []) : "")
     .filter(Boolean)
     .join(" ");
-  const fullMalayalam = [commonMalayalam, categoryMalayalam].filter(Boolean).join(" ");
 
   const FINAL_ARABIC_STYLE = {
     fontFamily: "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', serif",
@@ -560,9 +558,9 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── STEP 1: Common Kasam ── */}
+        {/* ── STEP 1: Common Kasam — Reference display only, NOT prepended to Final output ── */}
         <div>
-          <StepBadge number="1" label="Common Kasam — Base Layer" color={G.blue} active />
+          <StepBadge number="1" label="Common Kasam — Reading Guide (Esma Reference)" color={G.blue} active />
           <CommonKasamBlock avanNames={avanNames} kasemNames={kasemNames} />
         </div>
 
