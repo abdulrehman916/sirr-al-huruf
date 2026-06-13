@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
-import { calcBastHuroof, calcBastFromNumber, BAST_LEVELS } from "../lib/bastHuroofEngine";
+import { calcBastHuroof, BAST_LEVELS } from "../lib/bastHuroofEngine";
 import AkramCard from "../components/AkramCard";
 import { usePageState } from "../context/PageStateContext";
 
@@ -256,9 +256,9 @@ export default function BastHuroofPage() {
   const handleNumberCalculate = useCallback(() => {
     const num = parseInt(numberInput);
     if (!num || num <= 0) return;
-    const result = calcBastFromNumber(num, level);
-    setNumberResult(result);
-  }, [numberInput, level]);
+    // Pass the number directly - AkramCard will handle the conversion
+    setNumberResult({ total: num, isValid: true });
+  }, [numberInput]);
 
   const handleLevelChange = (newLevel) => {
     setLevel(newLevel);
@@ -535,7 +535,7 @@ export default function BastHuroofPage() {
             </motion.div>
           )}
 
-          {/* NUMBER MODE RESULTS - Uses SAME workflow as TEXT MODE */}
+          {/* NUMBER MODE RESULTS - Uses EXACT SAME AkramCard workflow as TEXT MODE */}
           {inputMode === 'number' && numberResult && (
             <motion.div
               key="number-results"
@@ -544,42 +544,12 @@ export default function BastHuroofPage() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
-              {numberResult.mode === 'none' ? (
-                <div className="rounded-xl border px-4 py-6 text-center"
-                  style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)" }}>
-                  <p className="font-inter text-sm text-white/30">No valid decomposition found.</p>
-                  {numberResult.remainder > 0 && (
-                    <p className="font-inter text-xs text-white/25 mt-2">
-                      Remainder: {numberResult.remainder} (too small for any letter value)
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <>
-                  {/* Total Card - EXACT same component as text mode */}
-                  <TotalCard 
-                    result={{ 
-                      total: numberResult.total, 
-                      letterCount: numberResult.letters.length, 
-                      isPending: numberResult.isPending 
-                    }} 
-                    level={level} 
-                  />
-
-                  <GoldDivider />
-
-                  {/* BreakdownTable - EXACT same component as text mode */}
-                  <BreakdownTable 
-                    entries={numberResult.letters.map(l => ({
-                      original: l.letter,
-                      normalized: l.letter,
-                      name: l.name,
-                      value: l.value
-                    }))} 
-                    level={level} 
-                  />
-                </>
-              )}
+              {/* AkramCard - EXACT same component as text mode, passing entered number as total */}
+              <AkramCard
+                total={parseInt(numberInput)}
+                levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+              />
             </motion.div>
           )}
         </AnimatePresence>
