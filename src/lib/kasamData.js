@@ -6,6 +6,40 @@
 // Arabic text is the primary source. Malayalam never alters it.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── COMMON KASAM — Universal base layer (Azimet Bağlamak) ────────────────────
+// Source: Page 78 — "Azimet Bağlamak" section.
+// This is the universal binding structure that must be read BEFORE every
+// purpose-specific Kasam. It contains placeholders for:
+//   [ESMAİ-AVAN]   → Esma-i A'van names from 9 Mizaan
+//   [ESMAİ-KASEM]  → Esma-i Kasem names from 9 Mizaan
+//   [FALAN İBN FALANE] → Male target: name + mother's name
+//   [FALANE BİNT FALANE] → Female target: name + mother's name
+// Do NOT merge with purpose Kasams — display as a separate base layer.
+// ─────────────────────────────────────────────────────────────────────────────
+export const COMMON_KASAM = {
+  id: "common",
+  label: "Common Kasam — Azimet Bağlamak",
+  arabic: "القسم المشترك — كيفية ربط العزيمة",
+  malayalamLabel: "പൊതു ഖസം — അസീമത്ത് ബന്ധന ക്രമം",
+  icon: "◉",
+  source: "Bastların Usulü Vefklerin Sırrı ve Havassı — Page 78 (Azimet Bağlamak)",
+  description:
+    "Şeyh Tamtam Samur Hindi (Rahmetullahi aleyh) nin sözüne göre: Bu esas Azimet yapısı, Esma-i A'vanın önüne Yâ nidası, Esma-i Kasem'in önüne Bi hakki kelimesi eklenerek okunur. Esma-i Kitabet Azimete dahil edilmez.",
+  descriptionMalayalam:
+    "ശൈഖ് തംതം സമൂർ ഹിന്ദി (റഹ്) യുടെ വചനപ്രകാരം: ഈ അടിസ്ഥാന അസീമത്ത്‌ ഘടന — Esma-i A'van-ന്റെ മുൻപ് 'യാ' (Yâ) നിദ ചേർത്തും, Esma-i Kasem-ന്റെ മുൻപ് 'ബി ഹഖ്ഖി' (Bi hakki) ചേർത്തും ഓതണം. Esma-i Kitabet ഉൾപ്പെടുത്തരുത്.",
+  placeholders: [
+    { key: "[ESMAİ-AVAN]",         label: "Esma-i A'van",           arabic: "أسماء الأعوان",     note: "ഒൻപത് മിസാനിൽ നിന്ന് ലഭിക്കുന്ന A'van നാമങ്ങൾ — ഓരോന്നിന്റെ മുൻപ് 'Yâ' (يا) ചേർക്കണം" },
+    { key: "[ESMAİ-KASEM]",        label: "Esma-i Kasem",           arabic: "أسماء القسم",       note: "ഒൻപത് മിസാനിൽ നിന്ന് ലഭിക്കുന്ന Kasem നാമങ്ങൾ — ഓരോന്നിന്റെ മുൻപ് 'Bi hakki' (بحق) ചേർക്കണം" },
+    { key: "[FALAN İBN FALANE]",   label: "Male target name",       arabic: "فلان ابن فلانة",   note: "ഉദ്ദേശ്യ പുരുഷൻ്റെ നാമം + മാതൃ നാമം" },
+    { key: "[FALANE BİNT FALANE]", label: "Female target name",     arabic: "فلانة بنت فلانة", note: "ഉദ്ദേശ്യ സ്ത്രീയുടെ നാമം + മാതൃ നാമം" },
+  ],
+  instructions: [
+    "ഒൻപത് മിസാൻ്റെ toplamı (ആകെ) അല്ലെങ്കിൽ അതിന്റെ dörtlü (4-fold) അല്ലെങ്കിൽ üçlü (3-fold) Vefk — ആവശ്യ സമയത്ത് എഴുതി ധരിക്കണം അല്ലെങ്കിൽ Azimet ഓതുമ്പോൾ Vefk-ൽ ദൃഷ്ടി നിലനിർത്തണം.",
+    "Vefk ഉൾപ്പെടുത്തണമെങ്കിൽ — Azimet-ൽ Vefk ഉണ്ടായിരിക്കരുത്. Okuyacağın Azimetin adedi (ആവർത്തന എണ്ണം) — മത്‍ലൂബിന്റെ Ebced kebir (വലിയ Abjad) മൂല്യ ആകെ തുകക്ക് തുല്യം ആകണം.",
+    "ആമൽ ആരംഭിക്കുമ്പോഴും Azimet ഓതുമ്പോഴും — ഉദ്ദേശ്യ ഇനത്തിന് അനുയോജ്യമായ ഖൈർ അല്ലെങ്കിൽ ശർ ബൂഹൂർ (ധൂപം) കത്തിക്കണം.",
+  ],
+};
+
 export const KASAM_CATEGORIES = [
   // ═══════════════════════════════════════════════════════════════════════════
   // 1. MUHABBET (LOVE) AZIMETI
