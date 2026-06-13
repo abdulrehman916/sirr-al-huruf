@@ -260,10 +260,12 @@ export default function SecondaryAkram({ akramLetters, bastLevel }) {
             <p className="font-inter text-[9px] uppercase tracking-widest text-center mb-2" style={{ color: G.dim }}>
               Combined Secondary Akram Letters
             </p>
+            
+            {/* Spaced letters display */}
             <motion.p
-              className="font-amiri text-center leading-none"
+              className="font-amiri text-center leading-none mb-3"
               dir="rtl"
-              style={{ fontSize: "clamp(1.8rem, 7vw, 2.5rem)", fontWeight: 700, color: G.text, letterSpacing: 0 }}
+              style={{ fontSize: "clamp(1.8rem, 7vw, 2.5rem)", fontWeight: 700, color: G.text, letterSpacing: "0.15em" }}
               animate={{
                 textShadow: [
                   "0 0 14px rgba(212,175,55,0.28)",
@@ -273,8 +275,29 @@ export default function SecondaryAkram({ akramLetters, bastLevel }) {
               }}
               transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              {transformed.map(t => t.secondaryLetters).join('')}
+              {transformed.map(t => t.secondaryLetters).join('').split('').join(' ')}
             </motion.p>
+            
+            {/* Stats */}
+            <div className="flex items-center justify-center gap-6">
+              <div className="text-center">
+                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  Total Letters
+                </p>
+                <p className="font-inter font-bold tabular-nums text-lg" style={{ color: G.text }}>
+                  {transformed.reduce((sum, t) => sum + t.pieces.length, 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="h-8 w-px" style={{ background: G.faint }} />
+              <div className="text-center">
+                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  Total Value
+                </p>
+                <p className="font-inter font-bold tabular-nums text-lg" style={{ color: G.text }}>
+                  {transformed.reduce((sum, t) => sum + (t.bastValue || 0), 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
