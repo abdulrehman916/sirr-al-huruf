@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Copy, Check, Download } from "lucide-react";
-import { calcKebir, calcSaghir, calcCumeli, calcBast } from "../lib/abjadModes";
+import { calcKebir, calcSaghir, calcCumeli, calcBast, calcBast2 } from "../lib/abjadModes";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { usePageState } from "../context/PageStateContext";
@@ -23,7 +23,7 @@ export default function AbjadKabirPage() {
     bastLevel: 1,
     history: [],
     input: "",
-    results: { kebir: null, saghir: null, cumeli: null, bast: null },
+    results: { kebir: null, saghir: null, cumeli: null, bast: null, bast2: null },
   });
   
   const [mode, setMode] = useState(initialState.mode);
@@ -42,7 +42,7 @@ export default function AbjadKabirPage() {
 
   const handleClear = () => {
     setInput("");
-    setResults({ kebir: null, saghir: null, cumeli: null, bast: null });
+    setResults({ kebir: null, saghir: null, cumeli: null, bast: null, bast2: null });
     setHistory([]);
     setBastLevel(1);
     setMode('kebir');
@@ -51,14 +51,15 @@ export default function AbjadKabirPage() {
 
   const calculateResults = useCallback((text, level = bastLevel) => {
     if (!text.trim()) {
-      setResults({ kebir: null, saghir: null, cumeli: null, bast: null });
+      setResults({ kebir: null, saghir: null, cumeli: null, bast: null, bast2: null });
       return;
     }
     const kebir = calcKebir(text);
     const saghir = calcSaghir(text);
     const cumeli = calcCumeli(text);
     const bast = calcBast(text, level);
-    setResults({ kebir, saghir, cumeli, bast });
+    const bast2 = calcBast2(text);
+    setResults({ kebir, saghir, cumeli, bast, bast2 });
   }, [bastLevel]);
 
   const handleInputChange = (e) => {
@@ -123,6 +124,7 @@ export default function AbjadKabirPage() {
       saghir: { en: 'EBCEDI SAGHIR', ar: 'الصغير الأبجد' },
       cumeli: { en: 'CUMELI KEBIR', ar: 'الكبير الجمالي' },
       bast: { en: 'BAST-I HURUF', ar: 'الحروف البسط' },
+      bast2: { en: 'BASTUL HURUF 2', ar: 'البسط الثاني الحروف' },
     };
     return labels[id];
   };
@@ -156,8 +158,8 @@ export default function AbjadKabirPage() {
         <SectionCard>
           <SectionLabel>SELECT CALCULATION MODE</SectionLabel>
           
-          <div className="grid grid-cols-2 gap-1.5 mt-2">
-            {['kebir', 'saghir', 'cumeli', 'bast'].map((modeId) => {
+          <div className="grid grid-cols-3 gap-1.5 mt-2">
+            {['kebir', 'saghir', 'cumeli', 'bast', 'bast2'].map((modeId) => {
               const labels = getModeLabel(modeId);
               const isActive = mode === modeId;
               
@@ -195,7 +197,7 @@ export default function AbjadKabirPage() {
         </SectionCard>
 
         {/* Bast Level Selection */}
-        {mode === 'bast' && (
+        {(mode === 'bast' || mode === 'bast2') && (
           <SectionCard>
             <SectionLabel>BAST LEVEL</SectionLabel>
             <div className="grid grid-cols-5 gap-1 mt-1.5">

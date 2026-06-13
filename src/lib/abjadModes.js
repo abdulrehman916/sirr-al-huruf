@@ -170,3 +170,12 @@ export function calcBast(text, bastLevel = 1) {
   const total = entries.reduce((s, e) => s + e.value, 0);
   return { entries, total, bastLevel };
 }
+
+// ══════════════════════════════════════
+// 5 — BASTUL HURUF 2 (IKINCI BAST ONLY)
+// MANUSCRIPT-LOCKED: Harflerin Bastı Cetveli — İkinci Bast Column
+// Independent calculation mode using Level 2 values only
+// ══════════════════════════════════════
+export function calcBast2(text) {
+  return calcBast(text, 2);
+}
