@@ -4,6 +4,7 @@
 // value in the selected BAST level, and converts back to Akram letters.
 // ═══════════════════════════════════════════════════════════════
 
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { toAkramPieces } from "./AkramCard";
 import { BAST_LOOKUP, BAST_FIELD_MAP } from "../lib/bastHuroofData";
@@ -64,10 +65,19 @@ export function transformAkramLetters(akramLetters, bastLevel) {
 }
 
 // ── Component ─────────────────────────────────────────────────
-export default function SecondaryAkram({ akramLetters, bastLevel, levelLabel, levelArabic }) {
-  if (!akramLetters || !bastLevel) return null;
+export default function SecondaryAkram({ akramLetters, bastLevel }) {
+  const [selectedLevel, setSelectedLevel] = useState(bastLevel || 1);
   
-  const transformed = transformAkramLetters(akramLetters, bastLevel);
+  // Sync with parent level when it changes
+  useEffect(() => {
+    if (bastLevel && bastLevel !== selectedLevel) {
+      setSelectedLevel(bastLevel);
+    }
+  }, [bastLevel]);
+  
+  if (!akramLetters) return null;
+  
+  const transformed = useMemo(() => transformAkramLetters(akramLetters, selectedLevel), [akramLetters, selectedLevel]);
   const hasData = transformed.some(t => t.bastValue !== null);
   
   return (
@@ -86,16 +96,47 @@ export default function SecondaryAkram({ akramLetters, bastLevel, levelLabel, le
       <div className="absolute top-0 left-0 right-0 h-px"
         style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.50), transparent)" }} />
       
-      {/* Title */}
-      <p className="font-inter text-[9px] uppercase tracking-[0.26em] text-center" style={{ color: G.dim }}>
-        ✦ Secondary Akram — {levelLabel} — {levelArabic}
-      </p>
+      {/* Title and Level Selector */}
+      <div className="space-y-3">
+        <p className="font-inter text-[9px] uppercase tracking-[0.26em] text-center" style={{ color: G.dim }}>
+          ✦ Secondary Akram — Level Selector
+        </p>
+        
+        {/* Level buttons */}
+        <div className="flex items-center justify-center gap-2">
+          {[1, 2, 3, 4, 5].map((lvl) => {
+            const isActive = selectedLevel === lvl;
+            const lvlInfo = { 1: 'Evvel', 2: 'Sani', 3: 'Salis', 4: 'Rabi', 5: 'Hamis' };
+            return (
+              <motion.button
+                key={lvl}
+                onClick={() => setSelectedLevel(lvl)}
+                whileTap={{ scale: 0.92 }}
+                className="w-10 h-10 rounded-xl border font-inter text-sm font-bold flex items-center justify-center"
+                style={{
+                  background: isActive ? G.bgHi : "rgba(255,255,255,0.02)",
+                  borderColor: isActive ? G.borderHi : G.faint,
+                  color: isActive ? G.text : "rgba(255,255,255,0.35)",
+                  boxShadow: isActive ? `0 0 16px ${G.glow}` : "none",
+                }}
+              >
+                {lvl}
+              </motion.button>
+            );
+          })}
+        </div>
+        
+        <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
+          Using Bast-{['I Evvel','I Sani','I Salis','I Rabi','I Hamis'][selectedLevel-1]}
+        </p>
+      </div>
+      
       <div className="h-px w-full"
         style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.18), transparent)" }} />
       
       {/* Description */}
       <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
-        Each Akram letter → Bast value → New Akram letters
+        Each primary Akram letter → Bast value → Secondary Akram letters
       </p>
       
       {!hasData ? (
