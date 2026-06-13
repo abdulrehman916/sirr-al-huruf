@@ -260,14 +260,11 @@ export default function BastHuroofPage() {
     const akramPieces = toAkramPieces(num);
     const akramLetters = akramPieces.map(p => p.letter).join('');
     
-    // Step 2: Use those Akram letters as input for all 5 Bast levels (same as text mode)
-    const results = {};
-    BAST_LEVELS.forEach(lvl => {
-      results[lvl.key] = calcBastHuroof(akramLetters, lvl.key);
-    });
+    // Step 2: Calculate ONLY the selected BAST level (same as text mode single-level workflow)
+    const result = calcBastHuroof(akramLetters, level);
     
-    setAllResults(results);
-  }, [numberInput]);
+    setAllResults({ [level]: result });
+  }, [numberInput, level]);
 
   const handleLevelChange = (newLevel) => {
     setLevel(newLevel);
@@ -550,8 +547,8 @@ export default function BastHuroofPage() {
             </motion.div>
           )}
 
-          {/* NUMBER MODE RESULTS - Same pipeline as Text Mode */}
-          {inputMode === 'number' && allResults && (
+          {/* NUMBER MODE RESULTS - Selected Level Only Pipeline */}
+          {inputMode === 'number' && allResults && activeResult && (
             <motion.div
               key="number-results"
               initial={{ opacity: 0, y: 16 }}
@@ -559,17 +556,8 @@ export default function BastHuroofPage() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
-              {/* All 5 levels summary — click to select active */}
-              <AllLevelsSummary
-                allResults={allResults}
-                onSelectLevel={handleLevelChange}
-                selectedLevel={level}
-              />
-
-              <GoldDivider />
-
-              {/* Active level detail */}
-              {activeResult && activeResult.letterCount > 0 && (
+              {/* Selected level detail - no All Levels Summary for Number Mode */}
+              {activeResult.letterCount > 0 && (
                 <>
                   <TotalCard result={activeResult} level={level} />
 
