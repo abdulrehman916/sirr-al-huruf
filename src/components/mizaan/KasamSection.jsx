@@ -291,6 +291,10 @@ function PurposeSelector({ selected, onSelect }) {
               style={{ color: isSelected ? G.gold : "rgba(255,255,255,0.70)" }}>
               {cat.label}
             </p>
+            <p className="font-amiri text-sm mt-0.5 leading-snug"
+              style={{ color: isSelected ? "#86efac" : "rgba(134,239,172,0.55)" }}>
+              {cat.malayalamLabel}
+            </p>
             <p className="font-bold mt-0.5" dir="rtl"
               style={{ fontFamily: "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', serif", fontSize: "1rem", lineHeight: 1.9, color: isSelected ? G.goldDim : "rgba(255,255,255,0.30)" }}>
               {cat.arabic}

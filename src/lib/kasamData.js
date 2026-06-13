@@ -30,8 +30,10 @@ export const COMMON_KASAM = {
   //   2. بِحَقِّ [ESMAİ-KASEM] — Esma-i Kasem names, each prefixed with بحق
   //   3. Purpose-specific body (appended from selected category)
   //   NOTE: Esma-i Kitabet is NOT included here.
+  // NOTE: [ESMAİ-AVAN] is replaced by formatAvanNames() which already prepends "يَا" to each name.
+  // Therefore NO leading "يَا" appears before the placeholder here — that would duplicate the prefix.
   arabicText:
-    "أَقْسَمْتُ عَلَيْكُمْ أَيُّهَا الأَرْوَاحُ الرُّوحَانِيَّةُ الْمُشَرَّفَةُ يَا [ESMAİ-AVAN] بِحَقِّ [ESMAİ-KASEM] بِالْوَاحِدِ الأَحَدِ الْفَرْدِ الصَّمَدِ الَّذِي لَمْ يَتَّخِذْ صَاحِبَةً وَلاَ وَلَدًا لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ إِلاَّ مَا أَسْرَعْتُمْ فِي قَضَاءِ حَاجَتِي وَإِجَابَةِ دَعْوَتِي بِعَوْنِ اللهِ الْعَزِيزِ الْحَكِيمِ الَّذِي يُسَبِّحُ لَهُ مَا فِي السَّمَوَاتِ وَالأَرْضِ أَجْمَعِينَ فَسُبْحَانَ الَّذِي بِيَدِهِ مَلَكُوتُ كُلِّ شَيْءٍ وَإِلَيْهِ تُرْجَعُونَ",
+    "أَقْسَمْتُ عَلَيْكُمْ أَيُّهَا الأَرْوَاحُ الرُّوحَانِيَّةُ الْمُشَرَّفَةُ [ESMAİ-AVAN] [ESMAİ-KASEM] بِالْوَاحِدِ الأَحَدِ الْفَرْدِ الصَّمَدِ الَّذِي لَمْ يَتَّخِذْ صَاحِبَةً وَلاَ وَلَدًا لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ إِلاَّ مَا أَسْرَعْتُمْ فِي قَضَاءِ حَاجَتِي وَإِجَابَةِ دَعْوَتِي بِعَوْنِ اللهِ الْعَزِيزِ الْحَكِيمِ الَّذِي يُسَبِّحُ لَهُ مَا فِي السَّمَوَاتِ وَالأَرْضِ أَجْمَعِينَ فَسُبْحَانَ الَّذِي بِيَدِهِ مَلَكُوتُ كُلِّ شَيْءٍ وَإِلَيْهِ تُرْجَعُونَ",
 
   arabicTextMalayalam:
     "ഹേ ആദരണീയ ആത്മീയ ആത്മാക്കളേ, ഞാൻ നിങ്ങളോട് ആജ്ഞാപിക്കുന്നു — 'യാ [Esma-i A\'van]', 'ബി ഹഖ്ഖി [Esma-i Kasem]' — ഏകനും, ആരാലും ആശ്രയിക്കപ്പെടുന്നവനും, ഭർത്താവോ മക്കളോ ഇല്ലാത്തവനും, ജനിക്കാത്തവനും, ജനിപ്പിക്കപ്പെടാത്തവനും, ആർക്കും തുല്യനില്ലാത്തവനുമായ (അല്ലാഹുവിന്റെ) പേരിൽ — എന്റെ ആവശ്യം നടപ്പാക്കൂ, എന്റെ പ്രാർത്ഥന ഉത്തരം ചെയ്യൂ. ആകാശ-ഭൂമിയിലുള്ളതെല്ലാം അവന് തസ്ബീഹ് ചൊല്ലുന്ന, അസീസ്-ഹകീം ആയ അല്ലാഹുവിന്റെ സഹായത്തോടെ. സകല കാര്യങ്ങളുടെ ആധിപത്യം അവൻ്റെ കൈകളിൽ — അവങ്കലേക്ക് നിങ്ങൾ മടക്കിഅയക്കപ്പെടും.",
@@ -51,7 +53,7 @@ export const KASAM_CATEGORIES = [
     id: "muhabbet",
     label: "Muhabbet Kasam",
     arabic: "قسم المحبة",
-    malayalamLabel: "മുഹബ്ബത്ത് ഖസം",
+    malayalamLabel: "സ്നേഹം / പ്രണയം",
     icon: "❤",
     description: "Love & Affection",
     nameFields: ["targetMale", "targetFemale"],
@@ -88,7 +90,7 @@ export const KASAM_CATEGORIES = [
     id: "herkessevilme",
     label: "Herkes Tarafından Sevilme Kasam",
     arabic: "قسم المحبة العامة",
-    malayalamLabel: "എല്ലാവരുടെയും സ്നേഹം",
+    malayalamLabel: "എല്ലാവരുടെയും സ്നേഹവും സ്വീകാര്യതയും",
     icon: "☀",
     description: "Loved by All Creation",
     nameFields: ["requesterName"],
@@ -113,7 +115,7 @@ export const KASAM_CATEGORIES = [
     id: "adavet",
     label: "Adavet Kasam",
     arabic: "قسم العداوة",
-    malayalamLabel: "അദാവത്ത് ഖസം",
+    malayalamLabel: "ശത്രുത / വേർപാട്",
     icon: "⚔",
     description: "Separation & Enmity",
     nameFields: ["targetMale", "targetFemale"],
@@ -150,7 +152,7 @@ export const KASAM_CATEGORIES = [
     id: "celb",
     label: "Celb Kasam",
     arabic: "قسم الجلب",
-    malayalamLabel: "ജൽബ് ഖസം",
+    malayalamLabel: "ആകർഷണം / വരുത്തൽ",
     icon: "✦",
     description: "Attraction",
     nameFields: ["targetMale"],
@@ -173,7 +175,7 @@ export const KASAM_CATEGORIES = [
     id: "sihir",
     label: "Sihir Bozma Kasam",
     arabic: "قسم كسر السحر",
-    malayalamLabel: "സിഹിർ ബോസ്മ ഖസം",
+    malayalamLabel: "സിഹിർ നീക്കം",
     icon: "🔒",
     description: "Breaking Magic",
     nameFields: ["targetMale"],
@@ -196,9 +198,9 @@ export const KASAM_CATEGORIES = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: "bagli",
-    label: "Bagli Cozme Kasam",
+    label: "Bağlı Çözme Kasam",
     arabic: "قسم حل الربط",
-    malayalamLabel: "ബാഗ്‌ലി ചോസ്‌മ ഖസം",
+    malayalamLabel: "ബന്ധന മോചനം",
     icon: "🔗",
     description: "Removing Bindings",
     nameFields: ["targetMale"],
@@ -223,7 +225,7 @@ export const KASAM_CATEGORIES = [
     id: "uyku",
     label: "Uyku Kasam",
     arabic: "قسم النوم",
-    malayalamLabel: "ഉയ്‌കു ഖസം",
+    malayalamLabel: "ഉറക്കം",
     icon: "☽",
     description: "Sleep Binding",
     nameFields: ["targetMale"],
@@ -247,9 +249,9 @@ export const KASAM_CATEGORIES = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: "hastalandirma",
-    label: "Hastalandirma Kasam",
+    label: "Hastalandırma Kasam",
     arabic: "قسم التمريض",
-    malayalamLabel: "ഹസ്‌ത്തലൻദ്‌ദർമ ഖസം",
+    malayalamLabel: "രോഗാവസ്ഥ വരുത്തൽ",
     icon: "⚕",
     description: "Illness",
     nameFields: ["targetMale"],
@@ -272,9 +274,9 @@ export const KASAM_CATEGORIES = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: "erkeklik",
-    label: "Erkeklik Baglama Kasam",
+    label: "Erkeklik Bağlama Kasam",
     arabic: "قسم ربط الرجولة",
-    malayalamLabel: "എർകെക്‌ലിക്ക് ബാഗ്‌ലമ ഖസം",
+    malayalamLabel: "പുരുഷശക്തി തടയൽ",
     icon: "⚡",
     description: "Male Binding",
     nameFields: ["targetMale", "targetFemale"],
@@ -300,7 +302,7 @@ export const KASAM_CATEGORIES = [
     id: "general",
     label: "General Purpose Kasam",
     arabic: "قسم عام",
-    malayalamLabel: "പൊതു ഖസം",
+    malayalamLabel: "പൊതുവായ ആവശ്യങ്ങൾ",
     icon: "◎",
     description: "General Purpose",
     nameFields: ["requesterName", "targetMale"],
