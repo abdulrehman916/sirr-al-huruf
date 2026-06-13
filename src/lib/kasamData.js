@@ -23,21 +23,24 @@ export const COMMON_KASAM = {
   malayalamLabel: "പൊതു ഖസം — അസീമത്ത് ബന്ധന ക്രമം",
   icon: "◉",
   source: "Bastların Usulü Vefklerin Sırrı ve Havassı — Page 78 (Azimet Bağlamak)",
-  description:
-    "Şeyh Tamtam Samur Hindi (Rahmetullahi aleyh) nin sözüne göre: Bu esas Azimet yapısı, Esma-i A'vanın önüne Yâ nidası, Esma-i Kasem'in önüne Bi hakki kelimesi eklenerek okunur. Esma-i Kitabet Azimete dahil edilmez.",
-  descriptionMalayalam:
-    "ശൈഖ് തംതം സമൂർ ഹിന്ദി (റഹ്) യുടെ വചനപ്രകാരം: ഈ അടിസ്ഥാന അസീമത്ത്‌ ഘടന — Esma-i A'van-ന്റെ മുൻപ് 'യാ' (Yâ) നിദ ചേർത്തും, Esma-i Kasem-ന്റെ മുൻപ് 'ബി ഹഖ്ഖി' (Bi hakki) ചേർത്തും ഓതണം. Esma-i Kitabet ഉൾപ്പെടുത്തരുത്.",
-  placeholders: [
-    { key: "[ESMAİ-AVAN]",         label: "Esma-i A'van",           arabic: "أسماء الأعوان",     note: "ഒൻപത് മിസാനിൽ നിന്ന് ലഭിക്കുന്ന A'van നാമങ്ങൾ — ഓരോന്നിന്റെ മുൻപ് 'Yâ' (يا) ചേർക്കണം" },
-    { key: "[ESMAİ-KASEM]",        label: "Esma-i Kasem",           arabic: "أسماء القسم",       note: "ഒൻപത് മിസാനിൽ നിന്ന് ലഭിക്കുന്ന Kasem നാമങ്ങൾ — ഓരോന്നിന്റെ മുൻപ് 'Bi hakki' (بحق) ചേർക്കണം" },
-    { key: "[FALAN İBN FALANE]",   label: "Male target name",       arabic: "فلان ابن فلانة",   note: "ഉദ്ദേശ്യ പുരുഷൻ്റെ നാമം + മാതൃ നാമം" },
-    { key: "[FALANE BİNT FALANE]", label: "Female target name",     arabic: "فلانة بنت فلانة", note: "ഉദ്ദേശ്യ സ്ത്രീയുടെ നാമം + മാതൃ നാമം" },
-  ],
-  instructions: [
-    "ഒൻപത് മിസാൻ്റെ toplamı (ആകെ) അല്ലെങ്കിൽ അതിന്റെ dörtlü (4-fold) അല്ലെങ്കിൽ üçlü (3-fold) Vefk — ആവശ്യ സമയത്ത് എഴുതി ധരിക്കണം അല്ലെങ്കിൽ Azimet ഓതുമ്പോൾ Vefk-ൽ ദൃഷ്ടി നിലനിർത്തണം.",
-    "Vefk ഉൾപ്പെടുത്തണമെങ്കിൽ — Azimet-ൽ Vefk ഉണ്ടായിരിക്കരുത്. Okuyacağın Azimetin adedi (ആവർത്തന എണ്ണം) — മത്‍ലൂബിന്റെ Ebced kebir (വലിയ Abjad) മൂല്യ ആകെ തുകക്ക് തുല്യം ആകണം.",
-    "ആമൽ ആരംഭിക്കുമ്പോഴും Azimet ഓതുമ്പോഴും — ഉദ്ദേശ്യ ഇനത്തിന് അനുയോജ്യമായ ഖൈർ അല്ലെങ്കിൽ ശർ ബൂഹൂർ (ധൂപം) കത്തിക്കണം.",
-  ],
+
+  // ── ACTUAL ARABIC AZIMET TEXT (PDF Page 78 — base layer, read before every category Kasam) ──
+  // Structure:
+  //   1. يَا [ESMAİ-AVAN] — Esma-i A'van names, each prefixed with يا
+  //   2. بِحَقِّ [ESMAİ-KASEM] — Esma-i Kasem names, each prefixed with بحق
+  //   3. Purpose-specific body (appended from selected category)
+  //   NOTE: Esma-i Kitabet is NOT included here.
+  arabicText:
+    "أَقْسَمْتُ عَلَيْكُمْ أَيُّهَا الأَرْوَاحُ الرُّوحَانِيَّةُ الْمُشَرَّفَةُ يَا [ESMAİ-AVAN] بِحَقِّ [ESMAİ-KASEM] بِالْوَاحِدِ الأَحَدِ الْفَرْدِ الصَّمَدِ الَّذِي لَمْ يَتَّخِذْ صَاحِبَةً وَلاَ وَلَدًا لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ إِلاَّ مَا أَسْرَعْتُمْ فِي قَضَاءِ حَاجَتِي وَإِجَابَةِ دَعْوَتِي بِعَوْنِ اللهِ الْعَزِيزِ الْحَكِيمِ الَّذِي يُسَبِّحُ لَهُ مَا فِي السَّمَوَاتِ وَالأَرْضِ أَجْمَعِينَ فَسُبْحَانَ الَّذِي بِيَدِهِ مَلَكُوتُ كُلِّ شَيْءٍ وَإِلَيْهِ تُرْجَعُونَ",
+
+  arabicTextMalayalam:
+    "ഹേ ആദരണീയ ആത്മീയ ആത്മാക്കളേ, ഞാൻ നിങ്ങളോട് ആജ്ഞാപിക്കുന്നു — 'യാ [Esma-i A\'van]', 'ബി ഹഖ്ഖി [Esma-i Kasem]' — ഏകനും, ആരാലും ആശ്രയിക്കപ്പെടുന്നവനും, ഭർത്താവോ മക്കളോ ഇല്ലാത്തവനും, ജനിക്കാത്തവനും, ജനിപ്പിക്കപ്പെടാത്തവനും, ആർക്കും തുല്യനില്ലാത്തവനുമായ (അല്ലാഹുവിന്റെ) പേരിൽ — എന്റെ ആവശ്യം നടപ്പാക്കൂ, എന്റെ പ്രാർത്ഥന ഉത്തരം ചെയ്യൂ. ആകാശ-ഭൂമിയിലുള്ളതെല്ലാം അവന് തസ്ബീഹ് ചൊല്ലുന്ന, അസീസ്-ഹകീം ആയ അല്ലാഹുവിന്റെ സഹായത്തോടെ. സകല കാര്യങ്ങളുടെ ആധിപത്യം അവൻ്റെ കൈകളിൽ — അവങ്കലേക്ക് നിങ്ങൾ മടക്കിഅയക്കപ്പെടും.",
+
+  // ── Usage note ──
+  usageNote:
+    "ശൈഖ് തംതം സമൂർ ഹിന്ദി (റഹ്) വചനപ്രകാരം: Esma-i A\'van-ന്റെ മുൻപ് 'يا' (Yâ), Esma-i Kasem-ന്റെ മുൻപ് 'بحق' (Bi hakki) ചേർത്ത് ഓതണം. Esma-i Kitabet ഉൾപ്പെടുത്തരുത്.",
+
+  source: "Bastların Usulü Vefklerin Sırrı ve Havassı — Page 78 (Azimet Bağlamak)",
 };
 
 export const KASAM_CATEGORIES = [

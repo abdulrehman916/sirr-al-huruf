@@ -289,68 +289,45 @@ function CommonKasamPanel() {
             style={{ overflow: "hidden" }}>
             <div className="px-4 pb-4 space-y-3">
 
-              {/* Description */}
+              {/* Arabic Azimet Text — PRIMARY */}
+              <div className="rounded-xl border overflow-hidden" style={{ borderColor: G.blueBorder }}>
+                <div className="px-4 py-2.5 border-b" style={{ borderColor: G.blueBorder, background: G.blueBg }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: G.blue }}>
+                    Arabic — Common Azimet Base Text (PDF Page 78)
+                  </p>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="font-amiri text-xl font-bold leading-loose text-right"
+                    dir="rtl"
+                    style={{
+                      color: G.gold,
+                      textRendering: "optimizeLegibility",
+                      WebkitFontSmoothing: "antialiased",
+                      lineHeight: 2.2,
+                    }}>
+                    {COMMON_KASAM.arabicText}
+                  </p>
+                </div>
+                {/* Malayalam meaning BELOW Arabic */}
+                <div className="px-4 pb-4 pt-0 border-t" style={{ borderColor: G.blueBorder }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest mb-2 mt-3" style={{ color: G.goldDim }}>
+                    Malayalam — Meaning
+                  </p>
+                  <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>
+                    {COMMON_KASAM.arabicTextMalayalam}
+                  </p>
+                </div>
+              </div>
+
+              {/* Usage note */}
               <div className="rounded-xl border px-4 py-3"
                 style={{ background: G.blueBg, borderColor: G.blueBorder }}>
-                <p className="font-inter text-[7px] uppercase tracking-widest mb-2" style={{ color: G.blue }}>
-                  Şeyh Tamtam Samur Hindi (Rahmetullahi aleyh) — Instructions
+                <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.blue }}>
+                  Reading Instructions
                 </p>
-                <p className="font-inter text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-                  {COMMON_KASAM.description}
+                <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
+                  {COMMON_KASAM.usageNote}
                 </p>
-                <div className="mt-2 pt-2 border-t" style={{ borderColor: G.blueBorder }}>
-                  <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
-                    {COMMON_KASAM.descriptionMalayalam}
-                  </p>
-                </div>
-              </div>
-
-              {/* Placeholders */}
-              <div className="rounded-xl border overflow-hidden" style={{ borderColor: G.goldBorder }}>
-                <div className="px-4 py-2.5 border-b" style={{ borderColor: G.goldBorder, background: G.goldFaint }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.goldDim }}>
-                    Variable Placeholders
-                  </p>
-                </div>
-                <div className="divide-y" style={{ borderColor: G.goldBorder }}>
-                  {COMMON_KASAM.placeholders.map((p) => (
-                    <div key={p.key} className="px-4 py-2.5 flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-0.5">
-                        <span className="font-inter text-[8px] font-bold px-2 py-0.5 rounded-md"
-                          style={{ background: G.goldFaint, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
-                          {p.key}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-inter text-[9px] font-bold" style={{ color: "rgba(255,255,255,0.70)" }}>
-                            {p.label}
-                          </p>
-                          <p className="font-amiri text-sm" dir="rtl" style={{ color: G.goldDim }}>{p.arabic}</p>
-                        </div>
-                        <p className="font-inter text-[8px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-                          {p.note}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Instructions */}
-              <div className="rounded-xl border px-4 py-3 space-y-2"
-                style={{ borderColor: G.goldBorder, background: G.bgInner }}>
-                <p className="font-inter text-[7px] uppercase tracking-widest font-bold mb-2" style={{ color: G.goldDim }}>
-                  Usage Instructions (Malayalam)
-                </p>
-                {COMMON_KASAM.instructions.map((inst, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <span className="font-inter text-[8px] font-bold flex-shrink-0 mt-0.5" style={{ color: G.goldDim }}>{i + 1}.</span>
-                    <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-                      {inst}
-                    </p>
-                  </div>
-                ))}
               </div>
 
               {/* Source */}
@@ -397,32 +374,42 @@ function SelectedKasamView({ cat, onClose, names, onNamesChange }) {
 
       <div className="px-4 py-4 space-y-4">
 
-        {/* Layer 1: Common Kasam */}
+        {/* Layer 1: Common Kasam — actual Arabic text */}
         <div>
           <LayerLabel number="1" label="Common Kasam — Azimet Base (Read First)" color={G.blue} />
-          <div className="rounded-xl border px-4 py-3"
-            style={{ background: G.blueBg, borderColor: G.blueBorder }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.blue }}>
-              Instructions
-            </p>
-            <p className="font-inter text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-              {COMMON_KASAM.description}
-            </p>
-            <p className="font-amiri text-sm mt-2 leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-              {COMMON_KASAM.descriptionMalayalam}
-            </p>
-            <div className="mt-2 pt-2 border-t" style={{ borderColor: G.blueBorder }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.blue }}>
-                Placeholders to fill
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: G.blueBorder }}>
+            <div className="px-4 py-2.5 border-b" style={{ borderColor: G.blueBorder, background: G.blueBg }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: G.blue }}>
+                Arabic — Common Azimet Base Text (PDF Page 78)
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                {COMMON_KASAM.placeholders.map((p) => (
-                  <span key={p.key} className="font-inter text-[8px] font-bold px-2 py-0.5 rounded-md"
-                    style={{ background: G.goldFaint, color: G.gold, border: `1px solid ${G.goldBorder}` }}>
-                    {p.key}
-                  </span>
-                ))}
-              </div>
+            </div>
+            <div className="px-4 py-4">
+              <p className="font-amiri text-xl font-bold leading-loose text-right"
+                dir="rtl"
+                style={{
+                  color: G.gold,
+                  textRendering: "optimizeLegibility",
+                  WebkitFontSmoothing: "antialiased",
+                  lineHeight: 2.2,
+                }}>
+                {COMMON_KASAM.arabicText}
+              </p>
+            </div>
+            <div className="px-4 pb-4 border-t" style={{ borderColor: G.blueBorder }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-2 mt-3" style={{ color: G.goldDim }}>
+                Malayalam — Meaning
+              </p>
+              <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>
+                {COMMON_KASAM.arabicTextMalayalam}
+              </p>
+            </div>
+            <div className="px-4 pb-3 border-t" style={{ borderColor: G.blueBorder }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5 mt-3" style={{ color: G.blue }}>
+                Reading Instructions
+              </p>
+              <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {COMMON_KASAM.usageNote}
+              </p>
             </div>
           </div>
         </div>
