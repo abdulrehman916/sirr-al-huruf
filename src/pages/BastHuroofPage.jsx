@@ -547,7 +547,7 @@ export default function BastHuroofPage() {
             </motion.div>
           )}
 
-          {/* NUMBER MODE RESULTS - Selected Level Only Pipeline */}
+          {/* NUMBER MODE RESULTS - Number → Arabic Letters → Akram Pipeline */}
           {inputMode === 'number' && allResults && activeResult && (
             <motion.div
               key="number-results"
@@ -556,10 +556,43 @@ export default function BastHuroofPage() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
-              {/* Selected level detail - no All Levels Summary for Number Mode */}
+              {/* Number → Arabic Letters Conversion Display */}
               {activeResult.letterCount > 0 && (
                 <>
-                  <TotalCard result={activeResult} level={level} />
+                  {/* Initial Number to Letters Conversion */}
+                  <SectionCard title="Number → Arabic Letters">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between px-3 py-2 rounded-xl"
+                        style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${G.faint}` }}>
+                        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                          Input Number
+                        </span>
+                        <span className="font-inter font-bold tabular-nums text-lg" style={{ color: G.text }}>
+                          {parseInt(numberInput).toLocaleString()}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-center">
+                        <span className="font-amiri text-2xl" style={{ color: G.dim }}>↓</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between px-3 py-2 rounded-xl"
+                        style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
+                        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                          Converted Letters
+                        </span>
+                        <span className="font-amiri text-xl font-bold" style={{ color: G.text, letterSpacing: 0 }}>
+                          {toAkramPieces(parseInt(numberInput)).map(p => p.letter).join('')}
+                        </span>
+                      </div>
+                      
+                      <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
+                        {toAkramPieces(parseInt(numberInput)).length} letters → Processing through Bast-{['I Evvel','I Sani','I Salis','I Rabi','I Hamis'][level-1]}
+                      </p>
+                    </div>
+                  </SectionCard>
+
+                  <GoldDivider />
 
                   {/* Akram / Harf — Bast-ul-Huruf 2 exclusive */}
                   {!activeResult.isPending && activeResult.total > 0 && (
