@@ -1,7 +1,49 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, BookOpen, AlertTriangle, FileText, Layers, Info } from "lucide-react";
+import { ChevronDown, BookOpen, AlertTriangle, FileText, Layers, Info, User, Users } from "lucide-react";
 import { COMMON_KASAM, KASAM_CATEGORIES } from "../../lib/kasamData";
+
+// ── Token substitution ───────────────────────────────────────────────────────
+// Replaces {maleTargetName} and {femaleTargetName} in text with user-entered values.
+// Returns array of segments: { text, isToken } for highlighted rendering.
+function tokenize(text, names) {
+  if (!text) return [];
+  const regex = /(\{maleTargetName\}|\{femaleTargetName\})/g;
+  const parts = [];
+  let last = 0;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) parts.push({ text: text.slice(last, match.index), isToken: false });
+    const key = match[1] === "{maleTargetName}" ? "male" : "female";
+    const filled = key === "male" ? names.male : names.female;
+    parts.push({ text: filled || match[1], isToken: true, filled: !!filled, key });
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push({ text: text.slice(last), isToken: false });
+  return parts;
+}
+
+function TokenText({ text, names, className, style, dir }) {
+  const parts = tokenize(text, names);
+  return (
+    <span className={className} style={style} dir={dir}>
+      {parts.map((p, i) =>
+        p.isToken ? (
+          <span key={i} style={{
+            color: p.filled ? "#86efac" : "#fbbf24",
+            background: p.filled ? "rgba(74,222,128,0.10)" : "rgba(251,191,36,0.10)",
+            border: `1px solid ${p.filled ? "rgba(74,222,128,0.25)" : "rgba(251,191,36,0.25)"}`,
+            borderRadius: "0.25rem",
+            padding: "0 0.25rem",
+            fontStyle: p.filled ? "normal" : "italic",
+          }}>{p.text}</span>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
+      )}
+    </span>
+  );
+}
 
 // ── Section 4: KASAM (القسم) ──────────────────────────────────────────────────
 // COMPLETELY ISOLATED from Sections 1, 2, 3.
@@ -58,8 +100,73 @@ function LayerLabel({ number, label, color = G.gold }) {
   );
 }
 
+// ── Name input form ──────────────────────────────────────────────────────────
+function NameInputForm({ names, onChange }) {
+  return (
+    <div className="rounded-xl border overflow-hidden" style={{ borderColor: G.goldBorder, background: G.bgInner }}>
+      <div className="px-4 py-2.5 border-b flex items-center gap-2" style={{ borderColor: G.goldBorder, background: G.goldFaint }}>
+        <Users className="w-3.5 h-3.5 flex-shrink-0" style={{ color: G.gold }} />
+        <p className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.goldDim }}>
+          Target Names — injected into Kasam text
+        </p>
+      </div>
+      <div className="px-4 py-3 grid grid-cols-1 gap-3">
+        <div className="space-y-1">
+          <label className="font-inter text-[8px] uppercase tracking-wider font-bold flex items-center gap-1.5"
+            style={{ color: "rgba(134,239,172,0.85)" }}>
+            <User className="w-3 h-3" />
+            Male Target — فلان ابن فلانة
+          </label>
+          <input
+            type="text"
+            dir="rtl"
+            value={names.male}
+            onChange={e => onChange({ ...names, male: e.target.value })}
+            placeholder="e.g. أحمد ابن فاطمة"
+            className="w-full rounded-lg px-3 py-2 font-amiri text-base focus:outline-none"
+            style={{
+              background: "rgba(4,12,34,0.97)",
+              border: `1px solid ${names.male ? "rgba(74,222,128,0.40)" : G.goldBorder}`,
+              color: "#fff",
+              fontSize: "1rem",
+            }}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="font-inter text-[8px] uppercase tracking-wider font-bold flex items-center gap-1.5"
+            style={{ color: "rgba(251,191,36,0.85)" }}>
+            <User className="w-3 h-3" />
+            Female Target — فلانة بنت فلانة
+          </label>
+          <input
+            type="text"
+            dir="rtl"
+            value={names.female}
+            onChange={e => onChange({ ...names, female: e.target.value })}
+            placeholder="e.g. مريم بنت عائشة"
+            className="w-full rounded-lg px-3 py-2 font-amiri text-base focus:outline-none"
+            style={{
+              background: "rgba(4,12,34,0.97)",
+              border: `1px solid ${names.female ? "rgba(251,191,36,0.40)" : G.goldBorder}`,
+              color: "#fff",
+              fontSize: "1rem",
+            }}
+          />
+        </div>
+        {(names.male || names.female) && (
+          <button onClick={() => onChange({ male: "", female: "" })}
+            className="font-inter text-[8px] uppercase tracking-wider self-start px-2.5 py-1 rounded-lg border"
+            style={{ color: "rgba(255,255,255,0.35)", borderColor: "rgba(255,255,255,0.12)" }}>
+            Clear names
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Single Kasam entry card ──────────────────────────────────────────────────
-function KasamEntry({ entry }) {
+function KasamEntry({ entry, names }) {
   const isPending = entry.status === "pending" || !entry.arabic;
   const isIncomplete = entry.status === "pdf_incomplete";
 
@@ -82,17 +189,23 @@ function KasamEntry({ entry }) {
     <div className="rounded-xl border overflow-hidden" style={{ borderColor: G.goldBorder, background: G.bgInner }}>
       <div className="px-4 pt-4 pb-3 border-b" style={{ borderColor: G.goldBorder }}>
         <p className="font-inter text-[7px] uppercase tracking-widest mb-2" style={{ color: G.goldDim }}>Arabic — Original Text</p>
-        <p className="font-amiri text-xl font-bold leading-loose text-right" dir="rtl"
-          style={{ color: G.gold, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>
-          {entry.arabic}
-        </p>
+        <TokenText
+          text={entry.arabic}
+          names={names}
+          className="font-amiri text-xl font-bold leading-loose text-right block"
+          style={{ textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}
+          dir="rtl"
+        />
       </div>
       {entry.malayalam && (
         <div className="px-4 py-3 border-b" style={{ borderColor: G.goldBorder }}>
           <p className="font-inter text-[7px] uppercase tracking-widest mb-2" style={{ color: G.goldDim }}>Malayalam — Meaning</p>
-          <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.78)" }}>
-            {entry.malayalam}
-          </p>
+          <TokenText
+            text={entry.malayalam}
+            names={names}
+            className="font-amiri text-sm leading-relaxed block"
+            style={{ color: "rgba(255,255,255,0.78)" }}
+          />
         </div>
       )}
       <div className="px-4 py-3 flex flex-col gap-1.5">
@@ -256,7 +369,7 @@ function CommonKasamPanel() {
 }
 
 // ── Selected category expanded view (Common + Category) ──────────────────────
-function SelectedKasamView({ cat, onClose }) {
+function SelectedKasamView({ cat, onClose, names, onNamesChange }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -324,12 +437,15 @@ function SelectedKasamView({ cat, onClose }) {
           <div className="h-px flex-1" style={{ background: G.goldBorder }} />
         </div>
 
+        {/* Name inputs */}
+        <NameInputForm names={names} onChange={onNamesChange} />
+
         {/* Layer 2: Category-specific Kasam */}
         <div>
           <LayerLabel number="2" label={`${cat.label} — Category Kasam`} color={G.gold} />
           <div className="space-y-3">
             {cat.entries.map((entry) => (
-              <KasamEntry key={entry.id} entry={entry} />
+              <KasamEntry key={entry.id} entry={entry} names={names} />
             ))}
           </div>
         </div>
@@ -387,6 +503,7 @@ function KasamCategory({ cat, index, onSelect }) {
 // ── Main Section 4 component ─────────────────────────────────────────────────
 export default function KasamSection() {
   const [selectedCat, setSelectedCat] = useState(null);
+  const [names, setNames] = useState({ male: "", female: "" });
 
   return (
     <motion.div
@@ -465,6 +582,8 @@ export default function KasamSection() {
               key={selectedCat.id}
               cat={selectedCat}
               onClose={() => setSelectedCat(null)}
+              names={names}
+              onNamesChange={setNames}
             />
           )}
         </AnimatePresence>
