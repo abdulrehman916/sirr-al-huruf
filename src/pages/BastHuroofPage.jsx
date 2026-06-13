@@ -588,9 +588,51 @@ export default function BastHuroofPage() {
                     />
                   )}
 
-                  <GoldDivider />
-
-                  <BreakdownTable entries={activeResult.entries} level={level} />
+                  {/* Original Number Decomposition Breakdown */}
+                  {activeResult.originalAkramPieces && activeResult.originalAkramPieces.length > 0 && (
+                    <SectionCard title="Direct Decomposition Breakdown">
+                      <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
+                        {activeResult.originalAkramPieces.map((p, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, scale: 0.7 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: Math.min(i * 0.015, 0.8), duration: 0.22 }}
+                            className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[48px]"
+                            style={{ background: G.bg, borderColor: G.faint }}
+                          >
+                            <span className="font-amiri text-2xl text-white leading-none mb-0.5">{p.letter}</span>
+                            <span className="font-inter text-[11px] font-bold tabular-nums" style={{ color: G.text }}>
+                              {p.value.toLocaleString()}
+                            </span>
+                          </motion.div>
+                        ))}
+                      </div>
+                      
+                      <div className="h-px w-full mt-2"
+                        style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.15), transparent)` }} />
+                      
+                      <div className="flex items-center justify-between px-3 py-2 rounded-xl"
+                        style={{ background: G.bgHi, border: `1px solid ${G.borderHi}` }}>
+                        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                          Total Letters
+                        </span>
+                        <span className="font-inter font-bold tabular-nums text-lg" style={{ color: G.text }}>
+                          {activeResult.originalAkramPieces.length}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between px-3 py-2 rounded-xl"
+                        style={{ background: G.bgHi, border: `1px solid ${G.borderHi}` }}>
+                        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                          Total Value
+                        </span>
+                        <span className="font-inter font-bold tabular-nums text-lg" style={{ color: G.text }}>
+                          {activeResult.originalNumber.toLocaleString()}
+                        </span>
+                      </div>
+                    </SectionCard>
+                  )}
 
                   {activeResult.isPending && (
                     <motion.div
