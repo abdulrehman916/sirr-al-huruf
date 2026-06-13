@@ -151,10 +151,10 @@ function StepBadge({ number, label, color = G.gold, active }) {
   );
 }
 
-// ── STEP 1: Common Kasam panel ────────────────────────────────────────────────
-function CommonKasamBlock({ avanNames, kasemNames }) {
-  const [open, setOpen] = useState(true);
-  const injectedArabic = injectEsmaNames(COMMON_KASAM.arabicText, avanNames, kasemNames);
+// ── STEP 1: Esma reference panel — shows computed A'van & Kasem names ─────────
+function EsmaReferenceBlock({ avanNames, kasemNames }) {
+  const [open, setOpen] = useState(false);
+  const hasEsma = avanNames?.length > 0 || kasemNames?.length > 0;
   return (
     <div className="rounded-2xl border overflow-hidden"
       style={{ borderColor: G.blueBorder, background: G.bgInner }}>
@@ -164,17 +164,11 @@ function CommonKasamBlock({ avanNames, kasemNames }) {
         <div className="flex items-center gap-3 min-w-0">
           <Layers className="w-4 h-4 flex-shrink-0" style={{ color: G.blue }} />
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-inter text-[11px] font-bold uppercase tracking-widest" style={{ color: G.blue }}>
-                Common Kasam — القسم المشترك
-              </p>
-              <span className="font-inter text-[7px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border"
-                style={{ color: G.blue, borderColor: G.blueBorder, background: G.blueBg }}>
-                ESMA REFERENCE · NOT PREPENDED TO FINAL
-              </span>
-            </div>
+            <p className="font-inter text-[11px] font-bold uppercase tracking-widest" style={{ color: G.blue }}>
+              Esma-i A'van & Esma-i Kasem — Reference
+            </p>
             <p className="font-inter text-[9px] mt-0.5" style={{ color: "rgba(255,255,255,0.28)" }}>
-              {COMMON_KASAM.malayalamLabel} — PDF Page 78
+              {hasEsma ? `${avanNames?.length || 0} A'van · ${kasemNames?.length || 0} Kasem names — injected into Final Kasam` : "No Esma computed yet — run analysis first"}
             </p>
           </div>
         </div>
@@ -186,72 +180,37 @@ function CommonKasamBlock({ avanNames, kasemNames }) {
 
       <AnimatePresence initial={false}>
         {open && (
-          <motion.div key="common-body"
+          <motion.div key="esma-body"
             initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }}
             style={{ overflow: "hidden" }}>
             <div className="px-4 pb-4 space-y-3">
-              {/* Arabic text */}
-              <div className="rounded-xl border overflow-hidden" style={{ borderColor: G.blueBorder }}>
-                <div className="px-4 py-2 border-b" style={{ borderColor: G.blueBorder, background: G.blueBg }}>
-                  <p className="font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: G.blue }}>
-                    Arabic — Azimet Base Text (PDF Page 78)
+              {avanNames?.length > 0 && (
+                <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(212,175,55,0.05)", borderColor: G.goldBorder }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.goldDim }}>
+                    Esma-i A'van — أسماء الأعوان (يَا prefix)
                   </p>
-                </div>
-                <div className="px-4 py-4">
                   <p className="font-bold text-right" dir="rtl"
-                    style={{ ...ARABIC_TEXT_STYLE, color: G.gold }}>
-                    {injectedArabic}
-                  </p>
-                  {/* Show A'van and Kasem name lists as reference */}
-                  {(avanNames?.length > 0 || kasemNames?.length > 0) && (
-                    <div className="mt-4 space-y-2 border-t pt-3" style={{ borderColor: G.goldBorder }}>
-                      {avanNames?.length > 0 && (
-                        <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(212,175,55,0.05)", borderColor: G.goldBorder }}>
-                          <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.goldDim }}>
-                            Esma-i A'van — أسماء الأعوان
-                          </p>
-                          <p className="font-bold text-right" dir="rtl"
-                            style={{ ...ARABIC_NAME_STYLE, color: G.gold }}>
-                            {formatAvanNames(avanNames)}
-                          </p>
-                          </div>
-                          )}
-                          {kasemNames?.length > 0 && (
-                          <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: G.blueBorder }}>
-                          <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.blue }}>
-                            Esma-i Kasem — أسماء القسم
-                          </p>
-                          <p className="font-bold text-right" dir="rtl"
-                            style={{ ...ARABIC_NAME_STYLE, color: "rgba(147,197,253,0.90)" }}>
-                            {formatKasemNames(kasemNames)}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="px-4 pb-4 border-t" style={{ borderColor: G.blueBorder }}>
-                  <p className="font-inter text-[7px] uppercase tracking-widest mb-2 mt-3" style={{ color: G.goldDim }}>
-                    Malayalam — Meaning
-                  </p>
-                  <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>
-                    {COMMON_KASAM.arabicTextMalayalam}
+                    style={{ ...ARABIC_NAME_STYLE, color: G.gold }}>
+                    {formatAvanNames(avanNames)}
                   </p>
                 </div>
-              </div>
-              {/* Usage note */}
+              )}
+              {kasemNames?.length > 0 && (
+                <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: G.blueBorder }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.blue }}>
+                    Esma-i Kasem — أسماء القسم (بِحَقِّ prefix)
+                  </p>
+                  <p className="font-bold text-right" dir="rtl"
+                    style={{ ...ARABIC_NAME_STYLE, color: "rgba(147,197,253,0.90)" }}>
+                    {formatKasemNames(kasemNames)}
+                  </p>
+                </div>
+              )}
               <div className="rounded-xl border px-4 py-2.5" style={{ background: G.blueBg, borderColor: G.blueBorder }}>
-                <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: G.blue }}>
-                  Reading Instructions
-                </p>
                 <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
                   {COMMON_KASAM.usageNote}
                 </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-3 h-3 flex-shrink-0" style={{ color: G.goldDim }} />
-                <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.30)" }}>{COMMON_KASAM.source}</p>
               </div>
             </div>
           </motion.div>
@@ -267,7 +226,7 @@ function PurposeSelector({ selected, onSelect }) {
     <div className="grid grid-cols-2 gap-2">
       {KASAM_CATEGORIES.map((cat, i) => {
         const isSelected = selected?.id === cat.id;
-        const hasVerified = cat.entries.some(e => e.status === "verified" && e.arabic);
+        const hasVerified = cat.status !== "pending" && !!cat.fullArabic;
         return (
           <motion.button key={cat.id}
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
@@ -399,15 +358,12 @@ function fullyResolve(text, names, avanNames, kasemNames) {
 }
 
 // ── STEP 4: Final Kasam — Ready to Read ──────────────────────────────────────
-// The Final Kasam is ONLY the category's own complete Azimet text — exactly as in the PDF.
-// Each category entry already contains its own full invocation (بالواحد الأحد...فسبحان...).
-// The Common Kasam block is a reference tool only — it is NOT prepended here.
-// Esma-i A'van and Esma-i Kasem are injected at the exact [ESMAİ-AVAN]/[ESMAİ-KASEM] positions
-// within each category entry's Arabic text.
+// Each category has a single fullArabic field — one continuous integrated Kasam per PDF.
+// Tokens [ESMAİ-AVAN], [ESMAİ-KASEM], {names} are resolved here at render time.
 function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
-  const hasPending = cat.entries.every(e => e.status === "pending" || !e.arabic);
+  const isPending = cat.status === "pending" || !cat.fullArabic;
 
-  if (hasPending) {
+  if (isPending) {
     return (
       <div className="rounded-xl border px-4 py-4 flex items-start gap-3"
         style={{ background: G.warnBg, borderColor: G.warnBorder, borderStyle: "dashed" }}>
@@ -417,26 +373,15 @@ function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
             PDF SOURCE INCOMPLETE
           </p>
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.30)" }}>
-            {cat.entries[0]?.source}
+            {cat.source}
           </p>
         </div>
       </div>
     );
   }
 
-  // Build the Final Kasam: ONLY the category entries, fully resolved.
-  // Each entry's arabic text already contains its complete invocation structure per PDF.
-  // NO Common Kasam prepended — that would duplicate the closing invocation.
-  const verifiedEntries = cat.entries.filter(e => e.status !== "pending" && e.arabic);
-  const fullArabic = verifiedEntries
-    .map(e => fullyResolve(e.arabic, names, avanNames, kasemNames))
-    .join(" ");
-
-  // Malayalam: category entries only
-  const fullMalayalam = verifiedEntries
-    .map(e => e.malayalam ? fullyResolve(e.malayalam, names, [], []) : "")
-    .filter(Boolean)
-    .join(" ");
+  const fullArabic  = fullyResolve(cat.fullArabic,   names, avanNames, kasemNames);
+  const fullMalayalam = fullyResolve(cat.fullMalayalam || "", names, [], []);
 
   const FINAL_ARABIC_STYLE = {
     fontFamily: "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', serif",
@@ -505,7 +450,7 @@ function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
       <div className="px-5 pb-4 flex items-center gap-2">
         <BookOpen className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(212,175,55,0.35)" }} />
         <p className="font-inter text-[7px]" style={{ color: "rgba(255,255,255,0.22)" }}>
-          {cat.entries[0]?.source}
+          {cat.source}
         </p>
       </div>
     </div>
@@ -558,10 +503,10 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── STEP 1: Common Kasam — Reference display only, NOT prepended to Final output ── */}
+        {/* ── STEP 1: Esma reference — shows computed names injected into Final Kasam ── */}
         <div>
-          <StepBadge number="1" label="Common Kasam — Reading Guide (Esma Reference)" color={G.blue} active />
-          <CommonKasamBlock avanNames={avanNames} kasemNames={kasemNames} />
+          <StepBadge number="1" label="Esma-i A'van & Kasem Reference" color={G.blue} active />
+          <EsmaReferenceBlock avanNames={avanNames} kasemNames={kasemNames} />
         </div>
 
         <OrnamentalDivider />
