@@ -40,6 +40,18 @@ function substituteNames(text, names) {
     .replace(/\{requesterMotherName\}/g,  names.requesterMother || "{أم الطالب}");
 }
 
+// ── Inject Esma-i A'van and Esma-i Kasem into the common kasam text ──────────
+// Replaces [ESMAİ-AVAN] and [ESMAİ-KASEM] with actual generated name strings
+function injectEsmaNames(text, avanNames, kasemNames) {
+  if (!text) return text;
+  const avanStr  = Array.isArray(avanNames)  && avanNames.length  ? avanNames.join("  ·  ")  : null;
+  const kasemStr = Array.isArray(kasemNames) && kasemNames.length ? kasemNames.join("  ·  ") : null;
+  let result = text;
+  if (avanStr)  result = result.replace(/\[ESMAİ-AVAN\]/g,  avanStr);
+  if (kasemStr) result = result.replace(/\[ESMAİ-KASEM\]/g, kasemStr);
+  return result;
+}
+
 // Renders text with name tokens highlighted (filled=green, unfilled=amber)
 function TokenText({ text, names, className, style, dir }) {
   const TOKEN_RE = /(\{maleTargetName\}|\{femaleTargetName\}|\{requesterName\}|\{requesterMotherName\})/g;
@@ -107,8 +119,9 @@ function StepBadge({ number, label, color = G.gold, active }) {
 }
 
 // ── STEP 1: Common Kasam panel ────────────────────────────────────────────────
-function CommonKasamBlock() {
+function CommonKasamBlock({ avanNames, kasemNames }) {
   const [open, setOpen] = useState(true);
+  const injectedArabic = injectEsmaNames(COMMON_KASAM.arabicText, avanNames, kasemNames);
   return (
     <div className="rounded-2xl border overflow-hidden"
       style={{ borderColor: G.blueBorder, background: G.bgInner }}>
@@ -156,8 +169,35 @@ function CommonKasamBlock() {
                   <p className="font-amiri text-xl font-bold text-right leading-loose"
                     dir="rtl"
                     style={{ color: G.gold, lineHeight: 2.2, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>
-                    {COMMON_KASAM.arabicText}
+                    {injectedArabic}
                   </p>
+                  {/* Show A'van and Kasem name lists as reference */}
+                  {(avanNames?.length > 0 || kasemNames?.length > 0) && (
+                    <div className="mt-4 space-y-2 border-t pt-3" style={{ borderColor: G.goldBorder }}>
+                      {avanNames?.length > 0 && (
+                        <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(212,175,55,0.05)", borderColor: G.goldBorder }}>
+                          <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.goldDim }}>
+                            Esma-i A'van — أسماء الأعوان
+                          </p>
+                          <p className="font-amiri text-lg font-bold text-right leading-loose" dir="rtl"
+                            style={{ color: G.gold, lineHeight: 2 }}>
+                            {avanNames.join("  ·  ")}
+                          </p>
+                        </div>
+                      )}
+                      {kasemNames?.length > 0 && (
+                        <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: G.blueBorder }}>
+                          <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.blue }}>
+                            Esma-i Kasem — أسماء القسم
+                          </p>
+                          <p className="font-amiri text-lg font-bold text-right leading-loose" dir="rtl"
+                            style={{ color: "rgba(147,197,253,0.90)", lineHeight: 2 }}>
+                            {kasemNames.join("  ·  ")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="px-4 pb-4 border-t" style={{ borderColor: G.blueBorder }}>
                   <p className="font-inter text-[7px] uppercase tracking-widest mb-2 mt-3" style={{ color: G.goldDim }}>
@@ -294,7 +334,8 @@ function NameInputBlock({ cat, names, onChange }) {
 }
 
 // ── STEP 4: Final Assembled Kasam ─────────────────────────────────────────────
-function FinalKasamBlock({ cat, names }) {
+function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
+  const injectedCommonArabic = injectEsmaNames(COMMON_KASAM.arabicText, avanNames, kasemNames);
   const hasPending = cat.entries.every(e => e.status === "pending" || !e.arabic);
 
   if (hasPending) {
@@ -332,8 +373,24 @@ function FinalKasamBlock({ cat, names }) {
         </div>
         <div className="px-4 py-4">
           <p className="font-amiri text-xl font-bold text-right leading-loose" dir="rtl" style={arabicStyle}>
-            {COMMON_KASAM.arabicText}
+            {injectedCommonArabic}
           </p>
+          {(avanNames?.length > 0 || kasemNames?.length > 0) && (
+            <div className="mt-3 space-y-2 border-t pt-3" style={{ borderColor: "rgba(147,197,253,0.22)" }}>
+              {avanNames?.length > 0 && (
+                <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.22)" }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.55)" }}>Esma-i A'van</p>
+                  <p className="font-amiri text-base font-bold text-right leading-loose" dir="rtl" style={{ color: G.gold, lineHeight: 2 }}>{avanNames.join("  ·  ")}</p>
+                </div>
+              )}
+              {kasemNames?.length > 0 && (
+                <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: "rgba(147,197,253,0.22)" }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.85)" }}>Esma-i Kasem</p>
+                  <p className="font-amiri text-base font-bold text-right leading-loose" dir="rtl" style={{ color: "rgba(147,197,253,0.90)", lineHeight: 2 }}>{kasemNames.join("  ·  ")}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div className="px-4 pb-3 border-t" style={{ borderColor: G.blueBorder }}>
           <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5 mt-3" style={{ color: G.goldDim }}>
@@ -399,7 +456,7 @@ function FinalKasamBlock({ cat, names }) {
 }
 
 // ── Main Section 4 component ──────────────────────────────────────────────────
-export default function KasamSection() {
+export default function KasamSection({ avanNames = [], kasemNames = [] }) {
   const [selectedCat, setSelectedCat]   = useState(null);
   const [names, setNames]               = useState({
     requesterName:   "",
@@ -447,7 +504,7 @@ export default function KasamSection() {
         {/* ── STEP 1: Common Kasam ── */}
         <div>
           <StepBadge number="1" label="Common Kasam — Base Layer" color={G.blue} active />
-          <CommonKasamBlock />
+          <CommonKasamBlock avanNames={avanNames} kasemNames={kasemNames} />
         </div>
 
         <OrnamentalDivider />
@@ -477,7 +534,7 @@ export default function KasamSection() {
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
               <StepBadge number="4" label={`Final Kasam — ${selectedCat.label}`} color={G.gold} active />
-              <FinalKasamBlock cat={selectedCat} names={names} />
+              <FinalKasamBlock cat={selectedCat} names={names} avanNames={avanNames} kasemNames={kasemNames} />
             </motion.div>
           )}
         </AnimatePresence>

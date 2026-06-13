@@ -401,7 +401,10 @@ export default function Mizaan9Page() {
                     />
                     {/* ═══ SECTION 4: KASAM (ISOLATED PLACEHOLDER) ═══ */}
                     <MizaanDivider />
-                    <KasamSection />
+                    <KasamSection
+                      avanNames={s2VefkData?.names || []}
+                      kasemNames={s3VefkData?.names || []}
+                    />
 
                     <MizaanDivider />
                     <ConclusionRulesPanel />
