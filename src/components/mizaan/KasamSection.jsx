@@ -360,19 +360,83 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── 1. PURPOSE SELECTION ── */}
+        {/* ── 1. COMMON KASAM STRUCTURE — static PDF frame (PDF Pages 76–79) ── */}
         <div>
-          <StepBadge number="1" label="Select Purpose Category" color={G.gold} active />
+          <StepBadge number="1" label="Common Kasam Structure — PDF Pages 76–79" color={G.blue} active />
+          <div className="rounded-xl border px-5 py-5 space-y-3"
+            style={{ background: G.bgInner, borderColor: "rgba(147,197,253,0.25)" }}>
+
+            {/* Opening */}
+            <div>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.45)" }}>
+                Opening — ALWAYS first
+              </p>
+              <p className="text-right" dir="rtl"
+                style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.90)", fontSize: "1.1rem", lineHeight: 2.6 }}>
+                {COMMON_KASAM.opening}
+              </p>
+            </div>
+
+            {/* يَا A'van placeholder */}
+            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(245,208,96,0.20)", background: "rgba(245,208,96,0.04)" }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(245,208,96,0.45)" }}>يَا + Esma-i A'van (injected from Section 2)</p>
+              {hasAvan
+                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: G.goldBright, fontSize: "1rem", lineHeight: 2.4 }}>
+                    {avanNames.map(n => `يَا ${n}`).join(" ")}
+                  </p>
+                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(245,208,96,0.30)" }}>يَا [ أسماء العوان — تُحسب في القسم ٢ ]</p>
+              }
+            </div>
+
+            {/* Purpose placeholder */}
+            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(134,239,172,0.20)", background: "rgba(134,239,172,0.04)" }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(134,239,172,0.45)" }}>Purpose Azimet (select below)</p>
+              {selectedCat?.purposeArabic
+                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: "rgba(134,239,172,0.85)", fontSize: "1rem", lineHeight: 2.4 }}>
+                    {resolveNames(selectedCat.purposeArabic, names)}
+                  </p>
+                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(134,239,172,0.30)" }}>[ اختر الغرض أدناه ]</p>
+              }
+            </div>
+
+            {/* بِحَقِّ Kasem placeholder */}
+            <div className="rounded-lg px-3 py-2 border" style={{ borderColor: "rgba(196,181,253,0.20)", background: "rgba(196,181,253,0.04)" }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(196,181,253,0.45)" }}>بِحَقِّ + Esma-i Kasem (injected from Section 3)</p>
+              {hasKasem
+                ? <p className="text-right" dir="rtl" style={{ ...ARABIC_STYLE, color: "rgba(196,181,253,0.90)", fontSize: "1rem", lineHeight: 2.4 }}>
+                    {kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")}
+                  </p>
+                : <p className="font-inter text-[8px] italic" style={{ color: "rgba(196,181,253,0.30)" }}>بِحَقِّ [ أسماء القسم — تُحسب في القسم ٣ ]</p>
+              }
+            </div>
+
+            {/* Closing */}
+            <div>
+              <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.45)" }}>
+                Closing — ALWAYS last
+              </p>
+              <p className="text-right" dir="rtl"
+                style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.80)", fontSize: "1rem", lineHeight: 2.6 }}>
+                {COMMON_KASAM.closing}
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── 2. PURPOSE SELECTION ── */}
+        <div>
+          <StepBadge number="2" label="Select Purpose Category" color={G.gold} active />
           <PurposeSelector selected={selectedCat} onSelect={setSelectedCat} />
         </div>
 
-        {/* ── 2. NAME INPUTS ── */}
+        {/* ── 3. NAME INPUTS ── */}
         <AnimatePresence>
           {selectedCat && selectedCat.nameFields?.length > 0 && (
             <motion.div key="names"
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <StepBadge number="2" label="Enter Names" color={G.green} active />
+              <StepBadge number="3" label="Enter Names" color={G.green} active />
               <div className="rounded-xl border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder }}>
                 <NameInputBlock cat={selectedCat} names={names} onChange={setNames} />
               </div>
@@ -382,9 +446,9 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
         <OrnamentalDivider />
 
-        {/* ── 3. FINAL KASAM — ONE CONTINUOUS TEXT (PDF Pages 78–79) ── */}
+        {/* ── 4. FINAL KASAM — ONE CONTINUOUS TEXT (PDF Pages 78–79) ── */}
         <div>
-          <StepBadge number="3" label="Final Kasam — Complete Manuscript Text" color={G.gold} active />
+          <StepBadge number="4" label="Final Kasam — Complete Manuscript Text" color={G.gold} active />
           <FinalKasamOutput
             cat={selectedCat}
             names={names}
