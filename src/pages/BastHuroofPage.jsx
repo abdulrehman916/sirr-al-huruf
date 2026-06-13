@@ -586,69 +586,42 @@ export default function BastHuroofPage() {
                 )}
               </div>
 
-              {/* Letter Breakdown */}
+              {/* Letter Breakdown - same as text mode */}
               {numberResult.mode !== 'none' && numberResult.letters.length > 0 && (
                 <>
-                  {/* Final Letter Sequence Display */}
-                  <SectionCard title="Final Letter Sequence">
-                    <div className="flex flex-wrap gap-3 justify-center" dir="rtl">
-                      {numberResult.letters.map((l, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: Math.min(i * 0.04, 0.6), duration: 0.25 }}
-                          className="flex flex-col items-center rounded-2xl border px-4 py-3 min-w-[64px]"
-                          style={{ 
-                            background: G.bgHi, 
-                            borderColor: G.borderHi,
-                            boxShadow: `0 0 20px ${G.glow}`,
-                          }}
-                        >
-                          <span className="font-amiri text-4xl text-white leading-none mb-1">{l.letter}</span>
-                          <span className="font-inter text-[10px] uppercase tracking-wider" style={{ color: G.dim }}>{l.name}</span>
-                          <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.text }}>{l.value.toLocaleString()}</span>
-                        </motion.div>
-                      ))}
-                    </div>
-                    <div className="mt-4 pt-3 border-t" style={{ borderColor: G.faint }}>
-                      <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
-                        Sequence: {numberResult.letters.map(l => l.letter).join(' ← ')}
-                      </p>
-                    </div>
-                  </SectionCard>
+                  <GoldDivider />
 
-                  {/* Detailed Breakdown */}
-                  <SectionCard title="Letter Decomposition Details">
+                  {/* Akram / Harf — Bast-ul-Huruf 2 exclusive (same as text mode) */}
+                  {!numberResult.isPending && numberResult.total > 0 && (
+                    <AkramCard
+                      total={numberResult.total}
+                      levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                      levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                    />
+                  )}
+
+                  <GoldDivider />
+
+                  {/* Breakdown table - same as text mode */}
+                  <SectionCard title={`Letter Breakdown — Bast Level ${level}`}>
                     <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
                       {numberResult.letters.map((l, i) => (
                         <motion.div
                           key={i}
                           initial={{ opacity: 0, scale: 0.7 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: Math.min(i * 0.03, 0.6), duration: 0.22 }}
-                          className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[56px]"
+                          transition={{ delay: Math.min(i * 0.015, 0.8), duration: 0.22 }}
+                          className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[48px]"
                           style={{ background: G.bg, borderColor: G.faint }}
                         >
-                          <span className="font-amiri text-3xl text-white leading-none mb-1">{l.letter}</span>
-                          <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{l.name}</span>
-                          <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.text }}>{l.value.toLocaleString()}</span>
+                          <span className="font-amiri text-2xl text-white leading-none mb-0.5">{l.letter}</span>
+                          <span className="font-inter text-[11px] font-bold tabular-nums" style={{ color: G.text }}>
+                            {l.value.toLocaleString()}
+                          </span>
                         </motion.div>
                       ))}
                     </div>
                   </SectionCard>
-
-                  {/* Akram/Nutku Display */}
-                  {!numberResult.isPending && numberResult.total > 0 && (
-                    <>
-                      <GoldDivider />
-                      <AkramCard
-                        total={numberResult.total}
-                        levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
-                        levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
-                      />
-                    </>
-                  )}
                 </>
               )}
             </motion.div>
