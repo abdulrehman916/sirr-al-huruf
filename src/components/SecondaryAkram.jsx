@@ -75,10 +75,14 @@ export default function SecondaryAkram({ akramLetters, bastLevel }) {
     }
   }, [bastLevel]);
   
-  if (!akramLetters) return null;
+  const transformed = useMemo(() => {
+    if (!akramLetters) return [];
+    return transformAkramLetters(akramLetters, selectedLevel);
+  }, [akramLetters, selectedLevel]);
   
-  const transformed = useMemo(() => transformAkramLetters(akramLetters, selectedLevel), [akramLetters, selectedLevel]);
   const hasData = transformed.some(t => t.bastValue !== null);
+  
+  if (!akramLetters) return null;
   
   return (
     <motion.div
@@ -224,24 +228,27 @@ export default function SecondaryAkram({ akramLetters, bastLevel }) {
                   style={{ borderColor: G.faint }}
                 >
                   <div className="flex flex-wrap gap-1 justify-center">
-                    {t.pieces.map((p, pIdx) => (
-                      <div
-                        key={pIdx}
-                        className="flex flex-col items-center rounded-lg px-2 py-1"
-                        style={{
-                          background: G.bg,
-                          borderColor: G.faint,
-                          border: "1px solid",
-                        }}
-                      >
-                        <span className="font-amiri text-base font-bold" style={{ color: G.text }}>
-                          {p.letter}
-                        </span>
-                        <span className="font-inter text-[8px] tabular-nums" style={{ color: G.dim }}>
-                          {p.value.toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
+                    {[...t.pieces].reverse().map((p, pIdx) => {
+                      const originalIndex = t.pieces.length - 1 - pIdx;
+                      return (
+                        <div
+                          key={originalIndex}
+                          className="flex flex-col items-center rounded-lg px-2 py-1"
+                          style={{
+                            background: G.bg,
+                            borderColor: G.faint,
+                            border: "1px solid",
+                          }}
+                        >
+                          <span className="font-amiri text-base font-bold" style={{ color: G.text }}>
+                            {p.letter}
+                          </span>
+                          <span className="font-inter text-[8px] tabular-nums" style={{ color: G.dim }}>
+                            {p.value.toLocaleString()}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}
