@@ -57,50 +57,50 @@ const ARABIC_FINAL_STYLE = {
 };
 
 // ── Assembly logic ────────────────────────────────────────────────────────────
-// Resolves name tokens in text
+// Resolves name and Esma tokens into the Azimet text, then appends Common Kasam closure.
+//
+// FINAL = [Azimet with A'van + Kasem + Names injected] + [Common Kasam closure]
+//
 function resolveNames(text, names) {
   if (!text) return "";
   return text
-    .replace(/\{maleTargetName\}/g,      names.targetMale      || "")
-    .replace(/\{femaleTargetName\}/g,    names.targetFemale    || "")
-    .replace(/\{requesterName\}/g,       names.requesterName   || "")
-    .replace(/\{requesterMotherName\}/g, names.requesterMother || "");
+    .replace(/\{maleTargetName\}/g,      names.targetMale      || "فلان")
+    .replace(/\{femaleTargetName\}/g,    names.targetFemale    || "فلانة")
+    .replace(/\{requesterName\}/g,       names.requesterName   || "فلان")
+    .replace(/\{requesterMotherName\}/g, names.requesterMother || "فلانة");
 }
 
-// Builds the fully assembled Final Kasam Arabic text.
-// ALWAYS starts from COMMON_KASAM.fullFrame.
-// Injects: [ESMAİ-AVAN], [PURPOSE] (with names resolved), [ESMAİ-KASEM].
 function assembleFinalKasam(cat, names, avanNames, kasemNames) {
   const avanStr  = Array.isArray(avanNames)  && avanNames.length
-    ? avanNames.map(n => `يَا ${n}`).join(" ")       : "";
+    ? avanNames.map(n => `يَا ${n}`).join(" ")      : "";
   const kasemStr = Array.isArray(kasemNames) && kasemNames.length
-    ? kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")  : "";
+    ? kasemNames.map(n => `بِحَقِّ ${n}`).join(" ") : "";
 
-  const purposeResolved = resolveNames(cat.purposeArabic || "", names);
-
-  return COMMON_KASAM.fullFrame
+  // Step 1: inject A'van and Kasem tokens into the Azimet
+  let azimet = (cat.purposeArabic || "")
     .replace(/\[ESMAİ-AVAN\]/g,  avanStr)
-    .replace(/\[PURPOSE\]/g,     purposeResolved)
-    .replace(/\[ESMAİ-KASEM\]/g, kasemStr)
-    .trim();
+    .replace(/\[ESMAİ-KASEM\]/g, kasemStr);
+
+  // Step 2: resolve name tokens
+  azimet = resolveNames(azimet, names);
+
+  // Step 3: append Common Kasam closure
+  return (azimet + " " + COMMON_KASAM.closure).trim();
 }
 
-// Builds the Final Kasam Malayalam meaning.
 function assembleFinalMalayalam(cat, names, avanNames, kasemNames) {
   const avanStr  = Array.isArray(avanNames)  && avanNames.length
-    ? avanNames.map(n => `يَا ${n}`).join(" ")  : "(Esma-i A'van)";
+    ? avanNames.map(n => `يَا ${n}`).join(" ")       : "(Esma-i A'van)";
   const kasemStr = Array.isArray(kasemNames) && kasemNames.length
-    ? kasemNames.map(n => `بِحَقِّ ${n}`).join(" ") : "(Esma-i Kasem)";
+    ? kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")  : "(Esma-i Kasem)";
 
-  const purposeML = resolveNames(cat.purposeMalayalam || "", names);
+  let mlText = (cat.purposeMalayalam || "")
+    .replace(/\[Esma-i A'van\]/g,  avanStr)
+    .replace(/\[Esma-i Kasem\]/g,  kasemStr);
 
-  return (
-    COMMON_KASAM.openingMalayalam + " " +
-    avanStr + " — " +
-    purposeML + " — " +
-    kasemStr + " — " +
-    COMMON_KASAM.closingMalayalam
-  );
+  mlText = resolveNames(mlText, names);
+
+  return mlText + " — " + COMMON_KASAM.closureMalayalam;
 }
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
@@ -451,7 +451,7 @@ function FinalKasamOutput({ cat, names, avanNames, kasemNames }) {
           </p>
           <p className="font-inter text-[8px] uppercase tracking-widest mt-0.5"
             style={{ color: "rgba(212,175,55,0.35)" }}>
-            {hasCat ? `${cat.label} · PDF order: Common Kasam + A'van + Purpose + Kasem + Closing` : "Select a purpose above to generate the Final Kasam"}
+            {hasCat ? `${cat.label} · PDF order: Azimet (A'van + Purpose + Kasem) + Common Kasam Closure` : "Select a purpose above to generate the Final Kasam"}
           </p>
         </div>
       </div>
@@ -540,20 +540,20 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── 1. COMMON KASAM — always visible ── */}
+        {/* ── 1. COMMON KASAM CLOSURE — always visible (PDF Page 78) ── */}
         <div>
-          <StepBadge number="1" label="Common Kasam — PDF Page 78" color={G.blue} active />
+          <StepBadge number="1" label="Common Kasam Closure — PDF Page 78" color={G.blue} active />
           <div className="rounded-xl border px-4 py-4"
             style={{ background: G.bgInner, borderColor: "rgba(147,197,253,0.25)" }}>
+            <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: "rgba(147,197,253,0.50)" }}>
+              Appended at the end of every Azimet
+            </p>
             <p className="text-right" dir="rtl"
               style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.85)", fontSize: "1.15rem", lineHeight: 2.7 }}>
-              {COMMON_KASAM.fullFrame
-                .replace("[ESMAİ-AVAN]",  "[ أسماء العوان ]")
-                .replace("[PURPOSE]",     "[ غرض القسم ]")
-                .replace("[ESMAİ-KASEM]", "[ أسماء القسم ]")}
+              {COMMON_KASAM.closure}
             </p>
             <p className="font-amiri text-sm mt-3" style={{ color: "rgba(255,255,255,0.40)", lineHeight: 1.9 }}>
-              {COMMON_KASAM.openingMalayalam} ... {COMMON_KASAM.closingMalayalam}
+              {COMMON_KASAM.closureMalayalam}
             </p>
           </div>
         </div>
