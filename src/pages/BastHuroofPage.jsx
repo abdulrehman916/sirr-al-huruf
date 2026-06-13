@@ -5,6 +5,7 @@ import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { calcBastHuroof, BAST_LEVELS } from "../lib/bastHuroofEngine";
 import AkramCard from "../components/AkramCard";
+import SecondaryAkram from "../components/SecondaryAkram";
 import { usePageState } from "../context/PageStateContext";
 
 // ── Palette ───────────────────────────────────────────────────
@@ -264,6 +265,29 @@ export default function BastHuroofPage() {
   };
 
   const activeResult = allResults?.[level] ?? null;
+  
+  // Extract Akram pieces for secondary transformation (only when result is ready)
+  const akramPiecesForSecondary = activeResult && !activeResult.isPending && activeResult.total > 0
+    ? (() => {
+        const pieces = [];
+        let n = activeResult.total;
+        const UNITS = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9:'ط' };
+        const TENS = { 10:'ي',20:'ك',30:'ل',40:'م',50:'ن',60:'س',70:'ع',80:'ف',90:'ص' };
+        const HUNDREDS = { 100:'ق',200:'ر',300:'ش',400:'ت',500:'ث',600:'خ',700:'ذ',800:'ض',900:'ظ' };
+        const digits = [];
+        let tmp = n;
+        while (tmp > 0) { digits.push(tmp % 10); tmp = Math.floor(tmp / 10); }
+        let i = 0, slot = 0;
+        while (i < digits.length) {
+          const d = digits[i];
+          if (slot === 0) { if (d !== 0 && UNITS[d]) pieces.push({ value: d, letter: UNITS[d] }); i++; slot = 1; }
+          else if (slot === 1) { const v = d * 10; if (d !== 0 && TENS[v]) pieces.push({ value: v, letter: TENS[v] }); i++; slot = 2; }
+          else if (slot === 2) { const v = d * 100; if (d !== 0 && HUNDREDS[v]) pieces.push({ value: v, letter: HUNDREDS[v] }); i++; slot = 3; }
+          else { pieces.push({ value: 1000, letter: 'غ' }); if (d === 0) { i++; slot = 1; } else if (d === 1) { i++; slot = 1; } else { pieces.push({ value: d, letter: UNITS[d] }); i++; slot = 1; } }
+        }
+        return pieces;
+      })()
+    : null;
 
   return (
     <PageLayout>
@@ -474,11 +498,21 @@ export default function BastHuroofPage() {
 
                       {/* Akram / Harf — Bast-ul-Huruf 2 exclusive */}
                       {!activeResult.isPending && activeResult.total > 0 && (
-                        <AkramCard
-                          total={activeResult.total}
-                          levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
-                          levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
-                        />
+                        <>
+                          <AkramCard
+                            total={activeResult.total}
+                            levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                            levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                          />
+                          
+                          {/* Secondary Akram — Letter-by-letter transformation */}
+                          <SecondaryAkram
+                            akramLetters={akramPiecesForSecondary?.map(p => p.letter).join('') || ''}
+                            bastLevel={level}
+                            levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                            levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                          />
+                        </>
                       )}
 
                       <GoldDivider />
