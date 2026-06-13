@@ -304,7 +304,7 @@ function KasamPipeline({ cat, names, avanNames, kasemNames }) {
           أَقْسَمْتُ عَلَيْكُمُ أَيُّهَا الأَرْوَاحُ الرُّوحَانِيَّةُ الْمُشَرَّفَةُ
         </p>
         <p className="font-amiri text-sm mt-2" style={{ color: "rgba(255,255,255,0.50)", lineHeight: 1.9 }}>
-          {COMMON_KASAM.openingMalayalam}
+          {COMMON_KASAM.openingMalayalam || "ഹേ ആദരണീയ ആത്മാക്കളേ — നിങ്ങളോട് ആണ ചെയ്യുന്നു:"}
         </p>
       </StepCard>
 
@@ -363,6 +363,9 @@ function KasamPipeline({ cat, names, avanNames, kasemNames }) {
         </p>
         <p className="font-amiri text-sm mt-2" style={{ color: "rgba(255,255,255,0.50)", lineHeight: 1.9 }}>
           {COMMON_KASAM.closingMalayalam}
+        </p>
+        <p className="font-amiri text-sm mt-1" style={{ color: "rgba(255,255,255,0.30)", lineHeight: 1.9 }}>
+          {COMMON_KASAM.closing}
         </p>
       </StepCard>
 
