@@ -21,6 +21,7 @@ export default function AbjadKabirPage() {
   const initialState = getPageState(PAGE_KEY, {
     mode: "kebir",
     bastLevel: 1,
+    bastulLevel: 1,
     history: [],
     input: "",
     results: { kebir: null, saghir: null, cumeli: null, bast: null, bast2: null },
@@ -28,6 +29,7 @@ export default function AbjadKabirPage() {
   
   const [mode, setMode] = useState(initialState.mode);
   const [bastLevel, setBastLevel] = useState(initialState.bastLevel);
+  const [bastulLevel, setBastulLevel] = useState(initialState.bastulLevel);
   const [copied, setCopied] = useState(false);
   const [history, setHistory] = useState(initialState.history);
   const debounceTimerRef = useRef(null);
@@ -37,19 +39,20 @@ export default function AbjadKabirPage() {
   const [selectedResult, setSelectedResult] = useState(null);
 
   useEffect(() => {
-    setPageState(PAGE_KEY, { mode, bastLevel, history, input, results });
-  }, [mode, bastLevel, history, input, results, setPageState]);
+    setPageState(PAGE_KEY, { mode, bastLevel, bastulLevel, history, input, results });
+  }, [mode, bastLevel, bastulLevel, history, input, results, setPageState]);
 
   const handleClear = () => {
     setInput("");
     setResults({ kebir: null, saghir: null, cumeli: null, bast: null, bast2: null });
     setHistory([]);
     setBastLevel(1);
+    setBastulLevel(1);
     setMode('kebir');
     clearPageState(PAGE_KEY);
   };
 
-  const calculateResults = useCallback((text, level = bastLevel) => {
+  const calculateResults = useCallback((text, bastLvl = bastLevel, bastulLvl = bastulLevel) => {
     if (!text.trim()) {
       setResults({ kebir: null, saghir: null, cumeli: null, bast: null, bast2: null });
       return;
@@ -57,10 +60,10 @@ export default function AbjadKabirPage() {
     const kebir = calcKebir(text);
     const saghir = calcSaghir(text);
     const cumeli = calcCumeli(text);
-    const bast = calcBast(text, level);
-    const bast2 = calcBast2(text);
+    const bast = calcBast(text, bastLvl);
+    const bast2 = calcBast2(text, bastulLvl);
     setResults({ kebir, saghir, cumeli, bast, bast2 });
-  }, [bastLevel]);
+  }, [bastLevel, bastulLevel]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -81,7 +84,14 @@ export default function AbjadKabirPage() {
   const handleBastLevelChange = (level) => {
     setBastLevel(level);
     if (input.trim()) {
-      calculateResults(input, level);
+      calculateResults(input, level, bastulLevel);
+    }
+  };
+
+  const handleBastulLevelChange = (level) => {
+    setBastulLevel(level);
+    if (input.trim()) {
+      calculateResults(input, bastLevel, level);
     }
   };
 
@@ -196,10 +206,10 @@ export default function AbjadKabirPage() {
           </div>
         </SectionCard>
 
-        {/* Bast Level Selection */}
-        {(mode === 'bast' || mode === 'bast2') && (
+        {/* Bast Level Selection - BAST-I HURUF */}
+        {mode === 'bast' && (
           <SectionCard>
-            <SectionLabel>BAST LEVEL</SectionLabel>
+            <SectionLabel>BAST-I HURUF LEVEL</SectionLabel>
             <div className="grid grid-cols-5 gap-1 mt-1.5">
               {[1, 2, 3, 4, 5].map((level) => (
                 <motion.button
@@ -215,6 +225,34 @@ export default function AbjadKabirPage() {
                     borderColor: bastLevel === level ? "rgba(212,175,55,0.35)" : "rgba(255,255,255,0.06)",
                     color: bastLevel === level ? G.text : "rgba(255,255,255,0.35)",
                     boxShadow: bastLevel === level ? `0 0 12px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.10)` : "none",
+                  }}
+                >
+                  {level}
+                </motion.button>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* Bastul Level Selection - BASTUL HURUF 2 */}
+        {mode === 'bast2' && (
+          <SectionCard>
+            <SectionLabel>BASTUL HURUF 2 LEVEL</SectionLabel>
+            <div className="grid grid-cols-5 gap-1 mt-1.5">
+              {[1, 2, 3, 4, 5].map((level) => (
+                <motion.button
+                  key={level}
+                  onClick={() => handleBastulLevelChange(level)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="rounded-md py-1.5 text-[11px] font-bold font-inter border transition-all"
+                  style={{
+                    background: bastulLevel === level
+                      ? "linear-gradient(145deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)"
+                      : "rgba(4,12,34,0.95)",
+                    borderColor: bastulLevel === level ? "rgba(212,175,55,0.35)" : "rgba(255,255,255,0.06)",
+                    color: bastulLevel === level ? G.text : "rgba(255,255,255,0.35)",
+                    boxShadow: bastulLevel === level ? `0 0 12px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.10)` : "none",
                   }}
                 >
                   {level}
@@ -309,6 +347,26 @@ export default function AbjadKabirPage() {
                     <p className="font-inter text-[9px] uppercase tracking-wider mb-2" style={{ color: G.dim }}>Letter Breakdown</p>
                     <div className="flex flex-wrap gap-1.5" dir="rtl">
                       {results[mode].letters.map((letter, idx) => (
+                        <span key={idx} className="px-2 py-1 rounded-lg text-xs font-amiri" style={{
+                          background: "rgba(212,175,55,0.08)",
+                          borderColor: "rgba(212,175,55,0.25)",
+                          border: "1px solid rgba(212,175,55,0.25)",
+                          color: G.text,
+                        }}>
+                          {letter.original} = {letter.value}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {results[mode].entries && mode === 'bast2' && (
+                  <div>
+                    <p className="font-inter text-[9px] uppercase tracking-wider mb-2 mt-3" style={{ color: G.dim }}>
+                      BASTUL HURUF 2 — Level {results[mode].bastulLevel}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5" dir="rtl">
+                      {results[mode].entries.map((letter, idx) => (
                         <span key={idx} className="px-2 py-1 rounded-lg text-xs font-amiri" style={{
                           background: "rgba(212,175,55,0.08)",
                           borderColor: "rgba(212,175,55,0.25)",

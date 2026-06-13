@@ -172,10 +172,52 @@ export function calcBast(text, bastLevel = 1) {
 }
 
 // ══════════════════════════════════════
-// 5 — BASTUL HURUF 2 (IKINCI BAST ONLY)
-// MANUSCRIPT-LOCKED: Harflerin Bastı Cetveli — İkinci Bast Column
-// Independent calculation mode using Level 2 values only
+// 5 — BASTUL HURUF 2 (INDEPENDENT 5-LEVEL SYSTEM)
+// MANUSCRIPT-LOCKED: Harflerin Bastı Cetveli — All 5 Bast Columns
+// Source: Manuscript "HARFLERIN BASTI CETVELI" (Pages 41-43)
+// Independent from BAST-I HURUF — uses separate manuscript values
 // ══════════════════════════════════════
-export function calcBast2(text) {
-  return calcBast(text, 2);
+export const BASTUL_HURUF_2_TABLE = {
+  'ا': { 1: 16,    2: 991,   3: 6137,   4: 31296,   5: 156119 },
+  'ب': { 1: 616,   2: 2888,  3: 11915,  4: 58713,   5: 292178 },
+  'ج': { 1: 1041,  2: 3348,  3: 13044,  4: 63051,   5: 316523 },
+  'د': { 1: 283,   2: 2055,  3: 11189,  4: 54921,   5: 271164 },
+  'ه': { 1: 709,   2: 2094,  3: 9493,   4: 47683,   5: 238889 },
+  'و': { 1: 468,   2: 1570,  3: 7288,   4: 37242,   5: 186822 },
+  'ز': { 1: 141,   2: 2046,  3: 9868,   4: 44870,   5: 218158 },
+  'ح': { 1: 612,   2: 3171,  3: 13970,  4: 69902,   5: 347099 },
+  'ط': { 1: 539,   2: 1767,  3: 9969,   4: 50263,   5: 246517 },
+  'ي': { 1: 579,   2: 2518,  3: 11672,  4: 56032,   5: 276357 },
+  'ك': { 1: 635,   2: 3153,  3: 14825,  4: 70857,   5: 347214 },
+  'ل': { 1: 1097,  2: 3983,  3: 16197,  4: 77876,   5: 387380 },
+  'م': { 1: 339,   2: 2690,  3: 14342,  4: 69746,   5: 342021 },
+  'ن': { 1: 765,   2: 2729,  3: 12646,  4: 62508,   5: 309746 },
+  'س': { 1: 524,   2: 2205,  3: 10441,  4: 52067,   5: 257679 },
+  'ع': { 1: 197,   2: 2681,  3: 13021,  4: 59695,   5: 289015 },
+  'ف': { 1: 657,   2: 3227,  3: 14605,  4: 73055,   5: 361924 },
+  'ص': { 1: 594,   2: 2402,  3: 13122,  4: 65088,   5: 317374 },
+  'ق': { 1: 60,    2: 1643,  3: 8213,   4: 41644,   5: 204757 },
+  'ر': { 1: 517,   2: 2615,  3: 14355,  4: 73777,   5: 362686 },
+  'ش': { 1: 1095,  2: 4282,  3: 19163,  4: 95202,   5: 473597 },
+  'ت': { 1: 337,   2: 2989,  3: 17308,  4: 87072,   5: 428238 },
+  'ث': { 1: 763,   2: 3028,  3: 15612,  4: 79834,   5: 395963 },
+  'خ': { 1: 522,   2: 2504,  3: 13407,  4: 63993,   5: 343896 },
+  'ذ': { 1: 195,   2: 2980,  3: 15987,  4: 77021,   5: 375232 },
+  'ض': { 1: 655,   2: 3526,  3: 17521,  4: 90381,   5: 448141 },
+  'ظ': { 1: 593,   2: 2701,  3: 16088,  4: 82414,   5: 403591 },
+  'غ': { 1: 114,   2: 1770,  3: 8121,   4: 36939,   5: 182227 },
+};
+
+export function calcBast2(text, bastulLevel = 1) {
+  const src = extractLetters(text);
+  const entries = src.map(l => {
+    const bastulValue = BASTUL_HURUF_2_TABLE[l.normalized]?.[bastulLevel] ?? 0;
+    return {
+      original: l.original,
+      normalized: l.normalized,
+      value: bastulValue,
+    };
+  });
+  const total = entries.reduce((s, e) => s + e.value, 0);
+  return { entries, total, bastulLevel };
 }
