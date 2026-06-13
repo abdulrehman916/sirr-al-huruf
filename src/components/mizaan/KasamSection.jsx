@@ -369,9 +369,38 @@ function NameInputBlock({ cat, names, onChange }) {
   );
 }
 
-// ── STEP 4: Final Assembled Kasam ─────────────────────────────────────────────
+// ── Fully resolve all tokens/placeholders in a text string ──────────────────
+// Replaces [ESMAİ-AVAN], [ESMAİ-KASEM], and name tokens with real values.
+// Returns a plain string with NO placeholders remaining.
+function fullyResolve(text, names, avanNames, kasemNames) {
+  if (!text) return "";
+  let result = text;
+
+  // 1. Inject Esma-i A'van
+  const avanStr = Array.isArray(avanNames) && avanNames.length
+    ? avanNames.map(n => `يَا ${n}`).join(" ") : "";
+  if (avanStr) result = result.replace(/\[ESMAİ-AVAN\]/g, avanStr);
+  else result = result.replace(/\[ESMAİ-AVAN\]/g, "");
+
+  // 2. Inject Esma-i Kasem
+  const kasemStr = Array.isArray(kasemNames) && kasemNames.length
+    ? kasemNames.map(n => `بِحَقِّ ${n}`).join(" ") : "";
+  if (kasemStr) result = result.replace(/\[ESMAİ-KASEM\]/g, kasemStr);
+  else result = result.replace(/\[ESMAİ-KASEM\]/g, "");
+
+  // 3. Name tokens
+  result = result
+    .replace(/\{maleTargetName\}/g,      names.targetMale      || "")
+    .replace(/\{femaleTargetName\}/g,    names.targetFemale    || "")
+    .replace(/\{requesterName\}/g,       names.requesterName   || "")
+    .replace(/\{requesterMotherName\}/g, names.requesterMother || "");
+
+  return result.trim();
+}
+
+// ── STEP 4: Final Kasam — Ready to Read ──────────────────────────────────────
+// One continuous resolved Arabic text + full Malayalam meaning.
 function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
-  const injectedCommonArabic = injectEsmaNames(COMMON_KASAM.arabicText, avanNames, kasemNames);
   const hasPending = cat.entries.every(e => e.status === "pending" || !e.arabic);
 
   if (hasPending) {
@@ -391,97 +420,96 @@ function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
     );
   }
 
-  const arabicStyle = { ...ARABIC_TEXT_STYLE, color: G.gold };
+  // Build one continuous Arabic text:
+  //   Common Kasam (with Esma injected) + each category entry (names resolved)
+  const commonResolved = fullyResolve(COMMON_KASAM.arabicText, names, avanNames, kasemNames);
+  const verifiedEntries = cat.entries.filter(e => e.status !== "pending" && e.arabic);
+  const categoryArabic = verifiedEntries
+    .map(e => fullyResolve(e.arabic, names, avanNames, kasemNames))
+    .join(" ");
+  const fullArabic = [commonResolved, categoryArabic].filter(Boolean).join(" ");
+
+  // Build combined Malayalam meaning
+  const commonMalayalam = COMMON_KASAM.arabicTextMalayalam || "";
+  const categoryMalayalam = verifiedEntries
+    .map(e => {
+      if (!e.malayalam) return "";
+      return fullyResolve(e.malayalam, names, [], []);
+    })
+    .filter(Boolean)
+    .join(" ");
+  const fullMalayalam = [commonMalayalam, categoryMalayalam].filter(Boolean).join(" ");
+
+  const FINAL_ARABIC_STYLE = {
+    fontFamily: "'Scheherazade New', 'Noto Naskh Arabic', 'Amiri', serif",
+    fontSize:   "1.4rem",
+    lineHeight: 3,
+    letterSpacing: "0.04em",
+    wordSpacing:   "0.18em",
+    textRendering: "optimizeLegibility",
+    WebkitFontSmoothing: "antialiased",
+    MozOsxFontSmoothing: "grayscale",
+    fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
+    color: "#F5D060",
+  };
 
   return (
-    <div className="space-y-3">
-      {/* PART 1: Common Kasam */}
-      <div className="rounded-xl border overflow-hidden" style={{ borderColor: G.blueBorder, background: G.bgInner }}>
-        <div className="px-4 py-2 border-b flex items-center gap-2" style={{ borderColor: G.blueBorder, background: G.blueBg }}>
-          <span className="font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: G.blue }}>
-            ① Common Kasam — القسم المشترك (PDF Page 78)
-          </span>
-        </div>
-        <div className="px-4 py-4">
-          <p className="font-amiri text-xl font-bold text-right leading-loose" dir="rtl" style={arabicStyle}>
-            {injectedCommonArabic}
-          </p>
-          {(avanNames?.length > 0 || kasemNames?.length > 0) && (
-            <div className="mt-3 space-y-2 border-t pt-3" style={{ borderColor: "rgba(147,197,253,0.22)" }}>
-              {avanNames?.length > 0 && (
-                <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.22)" }}>
-                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.55)" }}>Esma-i A'van</p>
-                  <p className="font-bold text-right" dir="rtl" style={{ ...ARABIC_NAME_STYLE, color: G.gold }}>{formatAvanNames(avanNames)}</p>
-                </div>
-              )}
-              {kasemNames?.length > 0 && (
-                <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: "rgba(147,197,253,0.22)" }}>
-                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.85)" }}>Esma-i Kasem</p>
-                  <p className="font-bold text-right" dir="rtl" style={{ ...ARABIC_NAME_STYLE, color: "rgba(147,197,253,0.90)" }}>{formatKasemNames(kasemNames)}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="px-4 pb-3 border-t" style={{ borderColor: G.blueBorder }}>
-          <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5 mt-3" style={{ color: G.goldDim }}>
-            Malayalam — Meaning
-          </p>
-          <p className="font-amiri text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-            {COMMON_KASAM.arabicTextMalayalam}
-          </p>
+    <div className="rounded-2xl border overflow-hidden"
+      style={{
+        borderColor: "rgba(212,175,55,0.55)",
+        background: "rgba(4, 10, 28, 0.99)",
+        boxShadow: "0 0 60px rgba(212,175,55,0.12), inset 0 1px 0 rgba(212,175,55,0.10)",
+      }}>
+
+      {/* Header banner */}
+      <div className="px-5 py-4 border-b"
+        style={{ borderColor: "rgba(212,175,55,0.30)", background: "rgba(212,175,55,0.08)" }}>
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-0.5">
+            <p className="font-inter text-[11px] font-black uppercase tracking-[0.3em]"
+              style={{ color: "#D4AF37" }}>
+              ✦ Final Kasam — Ready to Read
+            </p>
+            <p className="font-inter text-[8px] uppercase tracking-widest"
+              style={{ color: "rgba(212,175,55,0.55)" }}>
+              القسم الكامل — {cat.arabic}
+            </p>
+            <p className="font-amiri text-xs mt-0.5" style={{ color: "rgba(134,239,172,0.70)" }}>
+              {cat.malayalamLabel} — PDF Authority Only
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Arrow */}
-      <div className="flex items-center justify-center gap-2 py-1">
-        <div className="h-px w-12" style={{ background: G.goldBorder }} />
-        <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.goldDim }}>then</span>
-        <span style={{ color: G.goldDim, fontSize: 18, lineHeight: 1 }}>↓</span>
-        <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.goldDim }}>continue</span>
-        <div className="h-px w-12" style={{ background: G.goldBorder }} />
+      {/* Full Arabic text — one continuous block */}
+      <div className="px-5 py-6">
+        <p className="text-right leading-relaxed" dir="rtl" style={FINAL_ARABIC_STYLE}>
+          {fullArabic}
+        </p>
       </div>
 
-      {/* PART 2: Category Kasam entries */}
-      {cat.entries.filter(e => e.status !== "pending" && e.arabic).map((entry, idx) => (
-        <div key={entry.id} className="rounded-xl border overflow-hidden"
-          style={{ borderColor: G.goldBorder, background: G.bgInner }}>
-          <div className="px-4 py-2 border-b flex items-center gap-2" style={{ borderColor: G.goldBorder, background: G.goldFaint }}>
-            <span className="font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: G.goldDim }}>
-              {idx === 0 ? `② ${cat.label}` : `② cont'd`} — {entry.source?.split("—")[1]?.trim() || cat.arabic}
-            </span>
-          </div>
-          <div className="px-4 py-4">
-            <TokenText
-              text={entry.arabic}
-              names={names}
-              className="font-amiri text-xl font-bold text-right leading-loose block"
-              style={arabicStyle}
-              dir="rtl"
-            />
-          </div>
-          {entry.malayalam && (
-            <div className="px-4 pb-3 border-t" style={{ borderColor: G.goldBorder }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5 mt-3" style={{ color: G.goldDim }}>
-                Malayalam — Meaning
-              </p>
-              <TokenText
-                text={entry.malayalam}
-                names={names}
-                className="font-amiri text-sm leading-relaxed block"
-                style={{ color: "rgba(255,255,255,0.70)" }}
-              />
-            </div>
-          )}
-          {entry.notes && (
-            <div className="px-4 pb-3 border-t" style={{ borderColor: G.goldBorder }}>
-              <p className="font-inter text-[9px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
-                {entry.notes}
-              </p>
-            </div>
-          )}
-        </div>
-      ))}
+      {/* Divider */}
+      <div className="mx-5 h-px" style={{ background: "rgba(212,175,55,0.20)" }} />
+
+      {/* Final Malayalam Meaning */}
+      <div className="px-5 py-5">
+        <p className="font-inter text-[8px] uppercase tracking-[0.25em] font-bold mb-3"
+          style={{ color: "rgba(212,175,55,0.55)" }}>
+          Final Malayalam Meaning — അർഥം
+        </p>
+        <p className="font-amiri text-base leading-relaxed"
+          style={{ color: "rgba(255,255,255,0.78)", lineHeight: 2 }}>
+          {fullMalayalam || "—"}
+        </p>
+      </div>
+
+      {/* Source note */}
+      <div className="px-5 pb-4 flex items-center gap-2">
+        <BookOpen className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(212,175,55,0.35)" }} />
+        <p className="font-inter text-[7px]" style={{ color: "rgba(255,255,255,0.22)" }}>
+          {cat.entries[0]?.source}
+        </p>
+      </div>
     </div>
   );
 }
@@ -564,7 +592,7 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
             <motion.div key={selectedCat.id}
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
-              <StepBadge number="4" label={`Final Kasam — ${selectedCat.label}`} color={G.gold} active />
+              <StepBadge number="4" label="Final Kasam — Ready to Read" color={G.gold} active />
               <FinalKasamBlock cat={selectedCat} names={names} avanNames={avanNames} kasemNames={kasemNames} />
             </motion.div>
           )}
