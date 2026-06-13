@@ -546,80 +546,43 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── 1. COMMON KASAM — full live structure (PDF Page 78) ── */}
+        {/* ── 1. COMMON KASAM — one continuous Arabic text (PDF Page 78) ── */}
         <div>
           <StepBadge number="1" label="Common Kasam — PDF Page 78" color={G.blue} active />
-          <div className="rounded-xl border overflow-hidden"
+          <div className="rounded-xl border px-5 py-5"
             style={{ background: G.bgInner, borderColor: "rgba(147,197,253,0.25)" }}>
-
-            {/* يا + Esma-i A'van */}
-            <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(147,197,253,0.15)" }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(212,175,55,0.50)" }}>
-                Esma-i A'van — يَا prefix · Section 2
-              </p>
-              {hasAvan ? (
-                <p className="text-right" dir="rtl"
-                  style={{ ...ARABIC_STYLE, color: G.goldBright, fontSize: "1.1rem", lineHeight: 2.6 }}>
-                  {avanNames.map(n => `يَا ${n}`).join(" ")}
-                </p>
-              ) : (
-                <p className="font-inter text-[8px] italic text-right" style={{ color: "rgba(212,175,55,0.30)" }}>
-                  يَا [ أسماء العوان — تُحسب في القسم ٢ ]
-                </p>
+            <p className="text-right" dir="rtl"
+              style={{ ...ARABIC_STYLE, color: "rgba(220,220,255,0.90)", fontSize: "1.2rem", lineHeight: 3.0 }}>
+              {/* A'van names with يَا prefix */}
+              {hasAvan && (
+                <span style={{ color: G.goldBright }}>
+                  {avanNames.map(n => `يَا ${n}`).join(" ")}{" "}
+                </span>
               )}
-            </div>
-
-            {/* Purpose position indicator */}
-            <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(147,197,253,0.15)", background: "rgba(74,222,128,0.04)" }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(74,222,128,0.50)" }}>
-                Purpose — Azimet text (inserted here per category)
-              </p>
-              {selectedCat && selectedCat.purposeArabic ? (
-                <p className="text-right" dir="rtl"
-                  style={{ ...ARABIC_STYLE, color: "rgba(134,239,172,0.75)", fontSize: "1.05rem", lineHeight: 2.5 }}>
+              {/* Purpose azimet text (tokens stripped, names resolved) */}
+              {selectedCat?.purposeArabic && (
+                <span style={{ color: "rgba(220,220,255,0.90)" }}>
                   {resolveNames(
                     selectedCat.purposeArabic
                       .replace(/\[ESMAİ-AVAN\]/g, "")
                       .replace(/\[ESMAİ-KASEM\]/g, "")
+                      .replace(/\s{2,}/g, " ")
                       .trim(),
                     names
-                  )}
-                </p>
-              ) : (
-                <p className="font-inter text-[8px] italic text-right" style={{ color: "rgba(74,222,128,0.25)" }}>
-                  [ غرض القسم — اختر الغرض أدناه ]
-                </p>
+                  )}{" "}
+                </span>
               )}
-            </div>
-
-            {/* بحق + Esma-i Kasem */}
-            <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(147,197,253,0.15)" }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(196,181,253,0.50)" }}>
-                Esma-i Kasem — بِحَقِّ prefix · Section 3
-              </p>
-              {hasKasem ? (
-                <p className="text-right" dir="rtl"
-                  style={{ ...ARABIC_STYLE, color: "rgba(196,181,253,0.90)", fontSize: "1.1rem", lineHeight: 2.6 }}>
-                  {kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")}
-                </p>
-              ) : (
-                <p className="font-inter text-[8px] italic text-right" style={{ color: "rgba(196,181,253,0.25)" }}>
-                  بِحَقِّ [ أسماء القسم — تُحسب في القسم ٣ ]
-                </p>
+              {/* Kasem names with بِحَقِّ prefix */}
+              {hasKasem && (
+                <span style={{ color: "rgba(196,181,253,0.95)" }}>
+                  {kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")}{" "}
+                </span>
               )}
-            </div>
-
-            {/* Common Kasam closure */}
-            <div className="px-4 py-3">
-              <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(147,197,253,0.50)" }}>
-                Common Kasam Closure — always appended last
-              </p>
-              <p className="text-right" dir="rtl"
-                style={{ ...ARABIC_STYLE, color: "rgba(147,197,253,0.85)", fontSize: "1.1rem", lineHeight: 2.7 }}>
+              {/* Common Kasam closure */}
+              <span style={{ color: "rgba(147,197,253,0.88)" }}>
                 {COMMON_KASAM.closure}
-              </p>
-            </div>
-
+              </span>
+            </p>
           </div>
         </div>
 
