@@ -54,6 +54,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "മുഹബ്ബത്ത് ഖസം",
     icon: "❤",
     description: "Love & Affection",
+    nameFields: ["targetMale", "targetFemale"],
     entries: [
       {
         id: "muhabbet_1",
@@ -90,6 +91,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "എല്ലാവരുടെയും സ്നേഹം",
     icon: "☀",
     description: "Loved by All Creation",
+    nameFields: ["requesterName"],
     entries: [
       {
         id: "herkessevilme_1",
@@ -114,6 +116,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "അദാവത്ത് ഖസം",
     icon: "⚔",
     description: "Separation & Enmity",
+    nameFields: ["targetMale", "targetFemale"],
     entries: [
       {
         id: "adavet_1",
@@ -150,6 +153,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "ജൽബ് ഖസം",
     icon: "✦",
     description: "Attraction",
+    nameFields: ["targetMale"],
     entries: [
       {
         id: "celb_1",
@@ -172,6 +176,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "സിഹിർ ബോസ്മ ഖസം",
     icon: "🔒",
     description: "Breaking Magic",
+    nameFields: ["targetMale"],
     entries: [
       {
         id: "sihir_1",
@@ -196,6 +201,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "ബാഗ്‌ലി ചോസ്‌മ ഖസം",
     icon: "🔗",
     description: "Removing Bindings",
+    nameFields: ["targetMale"],
     entries: [
       {
         id: "bagli_1",
@@ -220,6 +226,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "ഉയ്‌കു ഖസം",
     icon: "☽",
     description: "Sleep Binding",
+    nameFields: ["targetMale"],
     entries: [
       {
         id: "uyku_1",
@@ -245,6 +252,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "ഹസ്‌ത്തലൻദ്‌ദർമ ഖസം",
     icon: "⚕",
     description: "Illness",
+    nameFields: ["targetMale"],
     entries: [
       {
         id: "hastalandirma_1",
@@ -269,6 +277,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "എർകെക്‌ലിക്ക് ബാഗ്‌ലമ ഖസം",
     icon: "⚡",
     description: "Male Binding",
+    nameFields: ["targetMale", "targetFemale"],
     entries: [
       {
         id: "erkeklik_1",
@@ -294,6 +303,7 @@ export const KASAM_CATEGORIES = [
     malayalamLabel: "പൊതു ഖസം",
     icon: "◎",
     description: "General Purpose",
+    nameFields: ["requesterName", "targetMale"],
     entries: [
       {
         id: "general_1",
