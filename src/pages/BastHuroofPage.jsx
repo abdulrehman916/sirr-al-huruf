@@ -589,7 +589,37 @@ export default function BastHuroofPage() {
               {/* Letter Breakdown */}
               {numberResult.mode !== 'none' && numberResult.letters.length > 0 && (
                 <>
-                  <SectionCard title="Letter Decomposition">
+                  {/* Final Letter Sequence Display */}
+                  <SectionCard title="Final Letter Sequence">
+                    <div className="flex flex-wrap gap-3 justify-center" dir="rtl">
+                      {numberResult.letters.map((l, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: Math.min(i * 0.04, 0.6), duration: 0.25 }}
+                          className="flex flex-col items-center rounded-2xl border px-4 py-3 min-w-[64px]"
+                          style={{ 
+                            background: G.bgHi, 
+                            borderColor: G.borderHi,
+                            boxShadow: `0 0 20px ${G.glow}`,
+                          }}
+                        >
+                          <span className="font-amiri text-4xl text-white leading-none mb-1">{l.letter}</span>
+                          <span className="font-inter text-[10px] uppercase tracking-wider" style={{ color: G.dim }}>{l.name}</span>
+                          <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.text }}>{l.value.toLocaleString()}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                    <div className="mt-4 pt-3 border-t" style={{ borderColor: G.faint }}>
+                      <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
+                        Sequence: {numberResult.letters.map(l => l.letter).join(' ← ')}
+                      </p>
+                    </div>
+                  </SectionCard>
+
+                  {/* Detailed Breakdown */}
+                  <SectionCard title="Letter Decomposition Details">
                     <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
                       {numberResult.letters.map((l, i) => (
                         <motion.div
