@@ -546,42 +546,41 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── 1. COMMON KASAM — one continuous Arabic text (PDF Page 78) ── */}
+        {/* ── 1. COMMON KASAM — PDF Page 78 exact order, one continuous text ── */}
         <div>
           <StepBadge number="1" label="Common Kasam — PDF Page 78" color={G.blue} active />
           <div className="rounded-xl border px-5 py-5"
             style={{ background: G.bgInner, borderColor: "rgba(147,197,253,0.25)" }}>
             <p className="text-right" dir="rtl"
-              style={{ ...ARABIC_STYLE, color: "rgba(220,220,255,0.90)", fontSize: "1.2rem", lineHeight: 3.0 }}>
-              {/* A'van names with يَا prefix */}
-              {hasAvan && (
-                <span style={{ color: G.goldBright }}>
-                  {avanNames.map(n => `يَا ${n}`).join(" ")}{" "}
-                </span>
-              )}
-              {/* Purpose azimet text (tokens stripped, names resolved) */}
-              {selectedCat?.purposeArabic && (
-                <span style={{ color: "rgba(220,220,255,0.90)" }}>
-                  {resolveNames(
+              style={{ ...ARABIC_STYLE, color: "rgba(220,220,255,0.92)", fontSize: "1.25rem", lineHeight: 3.1 }}>
+
+              {/* 1. PDF opening — ALWAYS first */}
+              <span>{COMMON_KASAM.opening} </span>
+
+              {/* 2. يَا + Esma-i A'van names */}
+              {hasAvan
+                ? <span style={{ color: G.goldBright }}>{avanNames.map(n => `يَا ${n}`).join(" ")} </span>
+                : null}
+
+              {/* 3. Purpose Azimet text */}
+              {selectedCat?.purposeArabic
+                ? <span>{resolveNames(
                     selectedCat.purposeArabic
                       .replace(/\[ESMAİ-AVAN\]/g, "")
                       .replace(/\[ESMAİ-KASEM\]/g, "")
                       .replace(/\s{2,}/g, " ")
                       .trim(),
                     names
-                  )}{" "}
-                </span>
-              )}
-              {/* Kasem names with بِحَقِّ prefix */}
-              {hasKasem && (
-                <span style={{ color: "rgba(196,181,253,0.95)" }}>
-                  {kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")}{" "}
-                </span>
-              )}
-              {/* Common Kasam closure */}
-              <span style={{ color: "rgba(147,197,253,0.88)" }}>
-                {COMMON_KASAM.closure}
-              </span>
+                  )} </span>
+                : null}
+
+              {/* 4. بِحَقِّ + Esma-i Kasem names */}
+              {hasKasem
+                ? <span style={{ color: "rgba(196,181,253,0.95)" }}>{kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")} </span>
+                : null}
+
+              {/* 5. PDF closing — ALWAYS last */}
+              <span style={{ color: "rgba(220,220,255,0.92)" }}>{COMMON_KASAM.closing}</span>
             </p>
           </div>
         </div>
