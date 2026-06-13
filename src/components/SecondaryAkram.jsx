@@ -257,26 +257,40 @@ export default function SecondaryAkram({ akramLetters, bastLevel }) {
           
           {/* Combined secondary letters */}
           <div className="pt-3 border-t" style={{ borderColor: G.border }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest text-center mb-2" style={{ color: G.dim }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest text-center mb-3" style={{ color: G.dim }}>
               Combined Secondary Akram Letters
             </p>
             
-            {/* Spaced letters display */}
-            <motion.p
-              className="font-amiri text-center leading-none mb-3"
+            {/* Letter chips grid */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-wrap justify-center gap-2 mb-4"
               dir="rtl"
-              style={{ fontSize: "clamp(1.8rem, 7vw, 2.5rem)", fontWeight: 700, color: G.text, letterSpacing: "0.15em" }}
-              animate={{
-                textShadow: [
-                  "0 0 14px rgba(212,175,55,0.28)",
-                  "0 0 44px rgba(212,175,55,0.72)",
-                  "0 0 14px rgba(212,175,55,0.28)",
-                ],
-              }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              {transformed.map(t => t.secondaryLetters).join('').split('').join(' ')}
-            </motion.p>
+              {transformed.map(t => t.secondaryLetters).join('').split('').map((letter, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.02, duration: 0.2 }}
+                  className="flex items-center justify-center w-10 h-10 rounded-xl border"
+                  style={{
+                    background: G.bg,
+                    borderColor: G.faint,
+                    boxShadow: `0 2px 8px rgba(0,0,0,0.3)`,
+                  }}
+                >
+                  <span
+                    className="font-amiri font-bold"
+                    style={{ fontSize: "clamp(1.2rem, 4vw, 1.6rem)", color: G.text }}
+                  >
+                    {letter}
+                  </span>
+                </motion.div>
+              ))}
+            </motion.div>
             
             {/* Stats */}
             <div className="flex items-center justify-center gap-6">
