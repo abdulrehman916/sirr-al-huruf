@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -7,6 +7,7 @@ import { calcBastHuroof, BAST_LEVELS } from "../lib/bastHuroofEngine";
 import AkramCard from "../components/AkramCard";
 import SecondaryAkram from "../components/SecondaryAkram";
 import { usePageState } from "../context/PageStateContext";
+import { toAkramPieces } from "../components/AkramCard";
 
 // ── Palette ───────────────────────────────────────────────────
 const G = {
@@ -223,18 +224,17 @@ const PAGE_KEY = 'bastHuroof';
 
 export default function BastHuroofPage() {
   const { getPageState, setPageState, clearPageState } = usePageState();
-  const initialState = getPageState(PAGE_KEY, { input: "", numberInput: "", level: 1, allResults: null, numberResult: null, inputMode: 'text' });
+  const initialState = getPageState(PAGE_KEY, { input: "", numberInput: "", level: 1, allResults: null, inputMode: 'text' });
   
   const [input, setInput] = useState(initialState.input);
   const [numberInput, setNumberInput] = useState(initialState.numberInput);
   const [level, setLevel] = useState(initialState.level);
   const [allResults, setAllResults] = useState(initialState.allResults);
-  const [numberResult, setNumberResult] = useState(initialState.numberResult);
   const [inputMode, setInputMode] = useState(initialState.inputMode);
 
   useEffect(() => {
-    setPageState(PAGE_KEY, { input, numberInput, level, allResults, numberResult, inputMode });
-  }, [input, numberInput, level, allResults, numberResult, inputMode, setPageState]);
+    setPageState(PAGE_KEY, { input, numberInput, level, allResults, inputMode });
+  }, [input, numberInput, level, allResults, inputMode, setPageState]);
 
   const handleCalculate = useCallback(() => {
     if (!input.trim()) return;
@@ -249,15 +249,24 @@ export default function BastHuroofPage() {
     setInput("");
     setNumberInput("");
     setAllResults(null);
-    setNumberResult(null);
     clearPageState(PAGE_KEY);
   };
 
   const handleNumberCalculate = useCallback(() => {
     const num = parseInt(numberInput);
     if (!num || num <= 0) return;
-    // Pass the number directly - AkramCard will handle the conversion (uses fixed level for label only)
-    setNumberResult({ total: num, isValid: true });
+    
+    // Step 1: Convert number to Akram letters
+    const akramPieces = toAkramPieces(num);
+    const akramLetters = akramPieces.map(p => p.letter).join('');
+    
+    // Step 2: Use those Akram letters as input for all 5 Bast levels (same as text mode)
+    const results = {};
+    BAST_LEVELS.forEach(lvl => {
+      results[lvl.key] = calcBastHuroof(akramLetters, lvl.key);
+    });
+    
+    setAllResults(results);
   }, [numberInput]);
 
   const handleLevelChange = (newLevel) => {
@@ -419,7 +428,7 @@ export default function BastHuroofPage() {
               value={numberInput}
               onChange={e => {
                 setNumberInput(e.target.value);
-                setNumberResult(null);
+                setAllResults(null);
               }}
               onKeyDown={e => {
                 if (e.key === "Enter") {
@@ -449,7 +458,7 @@ export default function BastHuroofPage() {
 
               <motion.button
                 onClick={handleClear}
-                disabled={!numberInput && !numberResult}
+                disabled={!numberInput && !allResults}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
@@ -541,8 +550,8 @@ export default function BastHuroofPage() {
             </motion.div>
           )}
 
-          {/* NUMBER MODE RESULTS - Direct Akram conversion (independent from text mode levels) */}
-          {inputMode === 'number' && numberResult && (
+          {/* NUMBER MODE RESULTS - Same pipeline as Text Mode */}
+          {inputMode === 'number' && allResults && (
             <motion.div
               key="number-results"
               initial={{ opacity: 0, y: 16 }}
@@ -550,12 +559,60 @@ export default function BastHuroofPage() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
-              {/* AkramCard - Direct number to letters conversion */}
-              <AkramCard
-                total={parseInt(numberInput)}
-                levelLabel="Number Mode"
-                levelArabic="الرقم"
+              {/* All 5 levels summary — click to select active */}
+              <AllLevelsSummary
+                allResults={allResults}
+                onSelectLevel={handleLevelChange}
+                selectedLevel={level}
               />
+
+              <GoldDivider />
+
+              {/* Active level detail */}
+              {activeResult && activeResult.letterCount > 0 && (
+                <>
+                  <TotalCard result={activeResult} level={level} />
+
+                  {/* Akram / Harf — Bast-ul-Huruf 2 exclusive */}
+                  {!activeResult.isPending && activeResult.total > 0 && (
+                    <>
+                      <AkramCard
+                        total={activeResult.total}
+                        levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                        levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                      />
+                      
+                      {/* Secondary Akram — Letter-by-letter transformation */}
+                      <SecondaryAkram
+                        akramLetters={akramPiecesForSecondary?.map(p => p.letter).join('') || ''}
+                        bastLevel={level}
+                        levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
+                        levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
+                      />
+                    </>
+                  )}
+
+                  <GoldDivider />
+
+                  <BreakdownTable entries={activeResult.entries} level={level} />
+
+                  {activeResult.isPending && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="rounded-xl border px-4 py-3 text-center"
+                      style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.20)" }}
+                    >
+                      <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.45)" }}>
+                        ✦ Bast Table Pending
+                      </p>
+                      <p className="font-inter text-xs text-white/20 mt-1">
+                        {activeResult.letterCount} letters extracted and ready.
+                      </p>
+                    </motion.div>
+                  )}
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
