@@ -578,10 +578,10 @@ export default function BastHuroofPage() {
 
                   <GoldDivider />
 
-                  {/* Secondary Akram from Bast Total */}
-                  {!activeResult.isPending && activeResult.total > 0 && (
+                  {/* Secondary Akram from Direct Decomposition Letters */}
+                  {!activeResult.isPending && activeResult.originalAkramLetters && (
                     <SecondaryAkram
-                      akramLetters={akramPiecesForSecondary?.map(p => p.letter).join('') || ''}
+                      akramLetters={activeResult.originalAkramLetters}
                       bastLevel={level}
                       levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
                       levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
