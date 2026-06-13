@@ -360,9 +360,9 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
 
       <div className="px-4 pb-6 space-y-5">
 
-        {/* ── 1. COMMON KASAM — PERMANENT REFERENCE (PDF Pages 78–79) ── */}
+        {/* ── 1. COMMON KASAM — ONE CONTINUOUS TEXT (PDF Pages 78–79) ── */}
         <div>
-          <StepBadge number="1" label="Common Kasam — Permanent Reference Text" color={G.blue} active />
+          <StepBadge number="1" label="Common Kasam — Complete Manuscript Text" color={G.blue} active />
           <div className="rounded-2xl border overflow-hidden"
             style={{
               borderColor: "rgba(147,197,253,0.35)",
@@ -375,18 +375,22 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
               <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(147,197,253,0.70)" }} />
               <div>
                 <p className="font-inter text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: "rgba(147,197,253,0.80)" }}>
-                  Common Kasam — PDF Pages 78–79
+                  Common Kasam Framework — PDF Pages 78–79
                 </p>
                 <p className="font-inter text-[7px] uppercase tracking-widest mt-0.5" style={{ color: "rgba(147,197,253,0.40)" }}>
-                  Permanent manuscript framework — always visible
+                  Complete structure with injection points for A'van, Purpose, and Kasem
                 </p>
               </div>
             </div>
 
             <div className="px-5 py-6">
-              {/* Complete Common Kasam Arabic text */}
+              {/* Build continuous Common Kasam with injection points */}
               <p className="text-right leading-relaxed" dir="rtl" style={ARABIC_FINAL_STYLE}>
-                {COMMON_KASAM.opening} {COMMON_KASAM.closing}
+                {COMMON_KASAM.opening}{" "}
+                {hasAvan ? <span style={{ color: G.goldBright }}>{avanNames.map(n => `يَا ${n}`).join(" ")}</span> : <span style={{ color: "rgba(245,208,96,0.35)" }}>[ يَا أسماء العوان ]</span>}{" "}
+                <span style={{ color: "rgba(134,239,172,0.70)", textDecoration: "underline", textDecorationStyle: "dashed" }}>[ الغرض المختار أدناه ]</span>{" "}
+                {hasKasem ? <span style={{ color: "rgba(196,181,253,0.90)" }}>{kasemNames.map(n => `بِحَقِّ ${n}`).join(" ")}</span> : <span style={{ color: "rgba(196,181,253,0.35)" }}>[ بِحَقِّ أسماء القسم ]</span>}{" "}
+                {COMMON_KASAM.closing}
               </p>
             </div>
 
@@ -398,10 +402,62 @@ export default function KasamSection({ avanNames = [], kasemNames = [] }) {
                 Malayalam Meaning — അർഥം
               </p>
               <div className="space-y-3 font-amiri text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.75)", lineHeight: 2.1 }}>
-                <p>{COMMON_KASAM.openingMalayalam}</p>
-                <p className="pt-3 border-t" style={{ borderColor: "rgba(147,197,253,0.15)" }}>
+                <p>
+                  {COMMON_KASAM.openingMalayalam}
+                </p>
+                <div className="pl-4 border-l-2" style={{ borderColor: "rgba(245,208,96,0.30)" }}>
+                  <p className="text-sm" style={{ color: "rgba(245,208,96,0.70)" }}>
+                    {hasAvan 
+                      ? `Esma-i A'van: ${avanNames.map(n => `يَا ${n}`).join(", ")}`
+                      : "Esma-i A'van: [Section 2-ൽ നിന്നുള്ള പേരുകൾ]"}
+                  </p>
+                </div>
+                <div className="pl-4 border-l-2" style={{ borderColor: "rgba(134,239,172,0.30)" }}>
+                  <p className="text-sm" style={{ color: "rgba(134,239,172,0.60)" }}>
+                    Purpose Azimet: [താഴെ നിന്ന് ഗ്രന്ഥം തിരഞ്ഞെടുക്കുക]
+                  </p>
+                </div>
+                <div className="pl-4 border-l-2" style={{ borderColor: "rgba(196,181,253,0.30)" }}>
+                  <p className="text-sm" style={{ color: "rgba(196,181,253,0.70)" }}>
+                    {hasKasem 
+                      ? `Esma-i Kasem: ${kasemNames.map(n => `بِحَقِّ ${n}`).join(", ")}`
+                      : "Esma-i Kasem: [Section 3-ൽ നിന്നുള്ള പേരുകൾ]"}
+                  </p>
+                </div>
+                <p className="pt-2 border-t" style={{ borderColor: "rgba(147,197,253,0.15)" }}>
                   {COMMON_KASAM.closingMalayalam}
                 </p>
+              </div>
+            </div>
+
+            <div className="mx-5 h-px" style={{ background: "rgba(147,197,253,0.15)" }} />
+
+            <div className="px-5 py-4">
+              <p className="font-inter text-[8px] uppercase tracking-[0.25em] font-bold mb-2"
+                style={{ color: "rgba(147,197,253,0.50)" }}>
+                Structure Guide — PDF Order
+              </p>
+              <div className="grid grid-cols-1 gap-1.5 text-[7px] font-inter" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(147,197,253,0.60)" }} />
+                  <span>Opening: <span style={{ color: "rgba(147,197,253,0.80)" }}>أقسمت عليكم أيها الأرواح الروحانية المشرفة</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: G.gold }} />
+                  <span>Esma-i A'van: <span style={{ color: G.goldBright }}>يا [Names from Section 2]</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(134,239,172,0.60)" }} />
+                  <span>Purpose: <span style={{ color: "rgba(134,239,172,0.70)" }}>[Select category below → injected here]</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(196,181,253,0.60)" }} />
+                  <span>Esma-i Kasem: <span style={{ color: "rgba(196,181,253,0.90)" }}>بحق [Names from Section 3]</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(147,197,253,0.60)" }} />
+                  <span>Closing: <span style={{ color: "rgba(147,197,253,0.80)" }}>بالواحد الأحد الفرد الصمد...</span></span>
+                </div>
               </div>
             </div>
 
