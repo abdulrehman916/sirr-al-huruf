@@ -40,12 +40,24 @@ function substituteNames(text, names) {
     .replace(/\{requesterMotherName\}/g,  names.requesterMother || "{أم الطالب}");
 }
 
+// ── PDF RULE: prefix formatters ──────────────────────────────────────────────
+// "Esma-i A'van'ın önüne Yâ nidası, Esma-i Kasem'in önüne Bi Hakkı kelimesini ekleriz."
+// Every individual name must carry its own prefix.
+function formatAvanNames(names) {
+  if (!Array.isArray(names) || !names.length) return null;
+  return names.map(n => `يَا ${n}`).join("  ·  ");
+}
+function formatKasemNames(names) {
+  if (!Array.isArray(names) || !names.length) return null;
+  return names.map(n => `بِحَقِّ ${n}`).join("  ·  ");
+}
+
 // ── Inject Esma-i A'van and Esma-i Kasem into the common kasam text ──────────
-// Replaces [ESMAİ-AVAN] and [ESMAİ-KASEM] with actual generated name strings
+// Replaces [ESMAİ-AVAN] and [ESMAİ-KASEM] with prefixed name strings per PDF rule
 function injectEsmaNames(text, avanNames, kasemNames) {
   if (!text) return text;
-  const avanStr  = Array.isArray(avanNames)  && avanNames.length  ? avanNames.join("  ·  ")  : null;
-  const kasemStr = Array.isArray(kasemNames) && kasemNames.length ? kasemNames.join("  ·  ") : null;
+  const avanStr  = formatAvanNames(avanNames);
+  const kasemStr = formatKasemNames(kasemNames);
   let result = text;
   if (avanStr)  result = result.replace(/\[ESMAİ-AVAN\]/g,  avanStr);
   if (kasemStr) result = result.replace(/\[ESMAİ-KASEM\]/g, kasemStr);
@@ -181,18 +193,18 @@ function CommonKasamBlock({ avanNames, kasemNames }) {
                           </p>
                           <p className="font-amiri text-lg font-bold text-right leading-loose" dir="rtl"
                             style={{ color: G.gold, lineHeight: 2 }}>
-                            {avanNames.join("  ·  ")}
+                            {formatAvanNames(avanNames)}
                           </p>
-                        </div>
-                      )}
-                      {kasemNames?.length > 0 && (
-                        <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: G.blueBorder }}>
+                          </div>
+                          )}
+                          {kasemNames?.length > 0 && (
+                          <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: G.blueBorder }}>
                           <p className="font-inter text-[7px] uppercase tracking-widest mb-1.5" style={{ color: G.blue }}>
                             Esma-i Kasem — أسماء القسم
                           </p>
                           <p className="font-amiri text-lg font-bold text-right leading-loose" dir="rtl"
                             style={{ color: "rgba(147,197,253,0.90)", lineHeight: 2 }}>
-                            {kasemNames.join("  ·  ")}
+                            {formatKasemNames(kasemNames)}
                           </p>
                         </div>
                       )}
@@ -380,13 +392,13 @@ function FinalKasamBlock({ cat, names, avanNames, kasemNames }) {
               {avanNames?.length > 0 && (
                 <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.22)" }}>
                   <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.55)" }}>Esma-i A'van</p>
-                  <p className="font-amiri text-base font-bold text-right leading-loose" dir="rtl" style={{ color: G.gold, lineHeight: 2 }}>{avanNames.join("  ·  ")}</p>
+                  <p className="font-amiri text-base font-bold text-right leading-loose" dir="rtl" style={{ color: G.gold, lineHeight: 2 }}>{formatAvanNames(avanNames)}</p>
                 </div>
               )}
               {kasemNames?.length > 0 && (
                 <div className="rounded-lg border px-3 py-2" style={{ background: "rgba(147,197,253,0.05)", borderColor: "rgba(147,197,253,0.22)" }}>
                   <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(147,197,253,0.85)" }}>Esma-i Kasem</p>
-                  <p className="font-amiri text-base font-bold text-right leading-loose" dir="rtl" style={{ color: "rgba(147,197,253,0.90)", lineHeight: 2 }}>{kasemNames.join("  ·  ")}</p>
+                  <p className="font-amiri text-base font-bold text-right leading-loose" dir="rtl" style={{ color: "rgba(147,197,253,0.90)", lineHeight: 2 }}>{formatKasemNames(kasemNames)}</p>
                 </div>
               )}
             </div>
