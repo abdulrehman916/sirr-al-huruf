@@ -256,14 +256,22 @@ export default function BastHuroofPage() {
     const num = parseInt(numberInput);
     if (!num || num <= 0) return;
     
-    // Step 1: Convert number to Akram letters
+    // Step 1: Convert number to Akram letters (PRIMARY decomposition)
     const akramPieces = toAkramPieces(num);
     const akramLetters = akramPieces.map(p => p.letter).join('');
     
     // Step 2: Calculate ONLY the selected BAST level (same as text mode single-level workflow)
     const result = calcBastHuroof(akramLetters, level);
     
-    setAllResults({ [level]: result });
+    // Store both the original number decomposition AND the bast result
+    setAllResults({ 
+      [level]: { 
+        ...result,
+        originalNumber: num,
+        originalAkramPieces: akramPieces,
+        originalAkramLetters: akramLetters,
+      } 
+    });
   }, [numberInput, level]);
 
   const handleLevelChange = (newLevel) => {
@@ -556,54 +564,28 @@ export default function BastHuroofPage() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
-              {/* Number → Arabic Letters Conversion Display */}
+              {/* Number → Arabic Letters → Akram Pipeline */}
               {activeResult.letterCount > 0 && (
                 <>
-                  {/* Initial Number to Letters Conversion */}
-                  <SectionCard title="Number → Arabic Letters">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between px-3 py-2 rounded-xl"
-                        style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${G.faint}` }}>
-                        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                          Input Number
-                        </span>
-                        <span className="font-inter font-bold tabular-nums text-lg" style={{ color: G.text }}>
-                          {parseInt(numberInput).toLocaleString()}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-center">
-                        <span className="font-amiri text-2xl" style={{ color: G.dim }}>↓</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between px-3 py-2 rounded-xl"
-                        style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
-                        <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                          Converted Letters
-                        </span>
-                        <span className="font-amiri text-xl font-bold" style={{ color: G.text, letterSpacing: 0 }}>
-                          {toAkramPieces(parseInt(numberInput)).map(p => p.letter).join('')}
-                        </span>
-                      </div>
-                      
-                      <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
-                        {toAkramPieces(parseInt(numberInput)).length} letters → Processing through Bast-{['I Evvel','I Sani','I Salis','I Rabi','I Hamis'][level-1]}
-                      </p>
-                    </div>
-                  </SectionCard>
+                  {/* Primary Akram: Direct Number Decomposition */}
+                  {!activeResult.isPending && activeResult.originalAkramPieces && activeResult.originalAkramPieces.length > 0 && (
+                    <AkramCard
+                      total={activeResult.originalNumber}
+                      levelLabel="Direct Decomposition"
+                      levelArabic="التفكيك المباشر"
+                    />
+                  )}
 
                   <GoldDivider />
 
-                  {/* Akram / Harf — Bast-ul-Huruf 2 exclusive */}
+                  {/* Bast Calculation Result */}
                   {!activeResult.isPending && activeResult.total > 0 && (
                     <>
-                      <AkramCard
-                        total={activeResult.total}
-                        levelLabel={BAST_LEVELS.find(l => l.key === level)?.label}
-                        levelArabic={BAST_LEVELS.find(l => l.key === level)?.arabic}
-                      />
-                      
-                      {/* Secondary Akram — Letter-by-letter transformation */}
+                      <TotalCard result={activeResult} level={level} />
+
+                      <GoldDivider />
+
+                      {/* Secondary Akram from Bast Total */}
                       <SecondaryAkram
                         akramLetters={akramPiecesForSecondary?.map(p => p.letter).join('') || ''}
                         bastLevel={level}
