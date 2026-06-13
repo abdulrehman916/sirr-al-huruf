@@ -535,7 +535,7 @@ export default function BastHuroofPage() {
             </motion.div>
           )}
 
-          {/* NUMBER MODE RESULTS */}
+          {/* NUMBER MODE RESULTS - Uses SAME workflow as TEXT MODE */}
           {inputMode === 'number' && numberResult && (
             <motion.div
               key="number-results"
@@ -544,78 +544,40 @@ export default function BastHuroofPage() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
-              {/* Decomposition Result Card - Arabic Letters as Primary */}
-              <div className="rounded-2xl border p-6 text-center space-y-3 relative overflow-hidden"
-                style={{
-                  background: "linear-gradient(145deg, rgba(8,18,48,0.99) 0%, rgba(4,10,28,0.99) 100%)",
-                  borderColor: G.borderHi,
-                  boxShadow: `0 0 60px ${G.glow}, 0 4px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.12)`,
-                }}>
-                <div className="absolute top-0 left-0 right-0 h-px"
-                  style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />
-                
-                <p className="font-inter text-[9px] uppercase tracking-[0.25em]" style={{ color: G.dim }}>
-                  Final Akram Letters — Level {level} ({BAST_LEVELS.find(l => l.key === level)?.label})
-                </p>
-
-                {numberResult.mode === 'none' ? (
-                  <div className="py-6">
-                    <p className="font-inter text-sm text-white/40 mb-2">
-                      No valid decomposition found
+              {numberResult.mode === 'none' ? (
+                <div className="rounded-xl border px-4 py-6 text-center"
+                  style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)" }}>
+                  <p className="font-inter text-sm text-white/30">No valid decomposition found.</p>
+                  {numberResult.remainder > 0 && (
+                    <p className="font-inter text-xs text-white/25 mt-2">
+                      Remainder: {numberResult.remainder} (too small for any letter value)
                     </p>
-                    {numberResult.remainder > 0 && (
-                      <p className="font-inter text-xs text-white/25">
-                        Remainder: {numberResult.remainder} (too small for any letter value)
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    {/* Primary: Arabic Letter Sequence */}
-                    <motion.div
-                      className="font-amiri font-bold leading-none"
-                      style={{ fontSize: "clamp(2.5rem,10vw,4rem)", color: G.text }}
-                      animate={{ textShadow: [`0 0 20px ${G.glow}`, `0 0 60px ${G.glowHi}`, `0 0 20px ${G.glow}`] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      dir="rtl"
-                    >
-                      {numberResult.letters.map((l, i) => (
-                        <span key={i} className="inline-block mx-1">{l.letter}</span>
-                      ))}
-                    </motion.div>
-                    {/* Secondary: Number breakdown info */}
-                    <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.40)" }}>
-                      {numberResult.letters.length} letters from {numberResult.total.toLocaleString()}
-                    </p>
-                  </>
-                )}
-              </div>
-
-              {/* Letter Breakdown - same as text mode */}
-              {numberResult.mode !== 'none' && numberResult.letters.length > 0 && (
+                  )}
+                </div>
+              ) : (
                 <>
+                  {/* Total Card - EXACT same component as text mode */}
+                  <TotalCard 
+                    result={{ 
+                      total: numberResult.total, 
+                      letterCount: numberResult.letters.length, 
+                      isPending: numberResult.isPending 
+                    }} 
+                    level={level} 
+                  />
+
                   <GoldDivider />
 
-                  {/* Breakdown table - same as text mode */}
-                  <SectionCard title={`Letter Breakdown — Bast Level ${level}`}>
-                    <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
-                      {numberResult.letters.map((l, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.7 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: Math.min(i * 0.015, 0.8), duration: 0.22 }}
-                          className="flex flex-col items-center rounded-xl border px-3 py-2 min-w-[48px]"
-                          style={{ background: G.bg, borderColor: G.faint }}
-                        >
-                          <span className="font-amiri text-2xl text-white leading-none mb-0.5">{l.letter}</span>
-                          <span className="font-inter text-[11px] font-bold tabular-nums" style={{ color: G.text }}>
-                            {l.value.toLocaleString()}
-                          </span>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </SectionCard>
+                  {/* BreakdownTable - EXACT same component as text mode */}
+                  <BreakdownTable 
+                    entries={numberResult.letters.map(l => ({
+                      original: l.letter,
+                      normalized: l.letter,
+                      name: l.name,
+                      value: l.value
+                    }))} 
+                    level={level} 
+                  />
                 </>
               )}
             </motion.div>
