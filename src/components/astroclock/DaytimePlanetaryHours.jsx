@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sun, Clock, Info, MapPin } from "lucide-react";
 import { getAllPlanetaryHours } from "@/lib/astroClockLiveEngine";
-import { calculateSunriseSunset, getUserLocation, formatDecimalTime, formatDurationDetailed } from "@/lib/astroClockSunriseSunset";
+import { calculateSunriseSunset, formatDecimalTime, formatDurationDetailed } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 
 const G = {
@@ -30,16 +30,52 @@ export default function DaytimePlanetaryHours() {
 
   useEffect(() => {
     const today = new Date();
-    const userLoc = getUserLocation();
-    setLocation(userLoc);
     
-    const sunTimes = calculateSunriseSunset(today, userLoc.lat, userLoc.lng, userLoc.timezone);
-    setSunData(sunTimes);
-    
-    if (sunTimes.sunrise && sunTimes.sunset) {
-      const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-      const dayHours = allHours.filter(h => h.period === "day");
-      setHours(dayHours);
+    // Try browser geolocation first
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const loc = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            timezone: -position.coords.longitude / 15,
+            name: `Lat: ${position.coords.latitude.toFixed(2)}, Lng: ${position.coords.longitude.toFixed(2)}`
+          };
+          setLocation(loc);
+          
+          const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
+          setSunData(sunTimes);
+          
+          if (sunTimes.sunrise && sunTimes.sunset) {
+            const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+            const dayHours = allHours.filter(h => h.period === "day");
+            setHours(dayHours);
+          }
+        },
+        (error) => {
+          // Fallback to Dubai
+          const loc = { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE (Default)" };
+          setLocation(loc);
+          const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
+          setSunData(sunTimes);
+          if (sunTimes.sunrise && sunTimes.sunset) {
+            const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+            const dayHours = allHours.filter(h => h.period === "day");
+            setHours(dayHours);
+          }
+        }
+      );
+    } else {
+      // No geolocation support
+      const loc = { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE (Default)" };
+      setLocation(loc);
+      const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
+      setSunData(sunTimes);
+      if (sunTimes.sunrise && sunTimes.sunset) {
+        const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+        const dayHours = allHours.filter(h => h.period === "day");
+        setHours(dayHours);
+      }
     }
   }, []);
 

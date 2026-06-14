@@ -10,9 +10,10 @@ import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { AstroClockLanguageProvider, useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import LiveDayAnalysis from "../components/astroclock/LiveDayAnalysis";
+import LivePlanetaryHours from "../components/astroclock/LivePlanetaryHours";
 import DaytimePlanetaryHours from "../components/astroclock/DaytimePlanetaryHours";
 import NighttimePlanetaryHours from "../components/astroclock/NighttimePlanetaryHours";
-import LiveMoonStatus from "../components/astroclock/LiveMoonStatus";
+import LiveMoonPosition from "../components/astroclock/LiveMoonPosition";
 import ManazilDatabase from "../components/astroclock/ManazilDatabase";
 import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
 import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
@@ -78,31 +79,34 @@ function AstroClockContent() {
         {/* SECTION 1: Live Day Analysis */}
         <LiveDayAnalysis />
 
-        {/* SECTION 2: Daytime 12 Hours */}
+        {/* SECTION 2: Current Planetary Hour (Live with Countdown) */}
+        <LivePlanetaryHours />
+
+        {/* SECTION 3: Daytime 12 Hours */}
         <DaytimePlanetaryHours />
 
-        {/* SECTION 3: Nighttime 12 Hours */}
+        {/* SECTION 4: Nighttime 12 Hours */}
         <NighttimePlanetaryHours />
 
-        {/* SECTION 4: Live Moon Status */}
-        <LiveMoonStatus />
+        {/* SECTION 5: Live Moon Position */}
+        <LiveMoonPosition />
 
-        {/* SECTION 5: Manazil Database */}
+        {/* SECTION 6: Manazil Database */}
         <ManazilDatabase />
 
-        {/* SECTION 6: Planet Knowledge Panels */}
+        {/* SECTION 7: Planet Knowledge Panels */}
         <PlanetKnowledgePanels />
 
-        {/* SECTION 7: Zodiac Knowledge Panel */}
+        {/* SECTION 8: Zodiac Knowledge Panel */}
         <ZodiacKnowledgePanel />
 
-        {/* SECTION 8: Incense Advisor */}
+        {/* SECTION 9: Incense Advisor */}
         <IncenseAdvisor />
 
-        {/* SECTION 9: Action Timing Advisor */}
+        {/* SECTION 10: Action Timing Advisor */}
         <ActionTimingAdvisor />
 
-        {/* SECTION 10: Birth Profile Analyzer */}
+        {/* SECTION 11: Birth Profile Analyzer */}
         <BirthProfileAnalyzer />
 
         {/* Framework Notice */}
@@ -127,8 +131,8 @@ function AstroClockContent() {
           </p>
           <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
             {isMalayalam
-              ? "ഗ്രന്ഥങ്ങളിൽ നിന്നുള്ള കൃത്യമായ കണക്കുകൂട്ടലുകൾ, ഗ്രഹ മണിക്കൂറുകൾ, ചാന്ദ്ര നക്ഷത്ര നിയമങ്ങൾ എന്നിവ ചേർക്കും"
-              : "PDF-based calculations, planetary hours, and lunar mansion rules will be added from manuscript sources"}
+              ? "തത്സമയ സൂര്യോദയം/സൂര്യാസ്തമയം, ഗ്രഹ മണിക്കൂറുകൾ, ചന്ദ്ര സ്ഥാനം — ബ്രൗസർ ജിയോലൊക്കേഷൻ ഉപയോഗിച്ച് കണക്കാക്കുന്നു"
+              : "Live sunrise/sunset, planetary hours, moon position — calculated using browser geolocation"}
           </p>
         </motion.div>
 
