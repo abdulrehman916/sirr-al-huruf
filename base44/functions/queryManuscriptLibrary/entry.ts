@@ -21,38 +21,8 @@ Deno.serve(async (req) => {
 
     // Entity-based cross-reference queries
     if (entity_type && entity_value) {
-      // Build data_json queries based on entity type
-      const dataQueries = [];
-      
-      switch (entity_type) {
-        case 'LUNAR_MANSION':
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value });
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value.toLowerCase() });
-          break;
-        case 'PLANET':
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value });
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value.toLowerCase() });
-          break;
-        case 'ZODIAC':
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value });
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value.toLowerCase() });
-          break;
-        case 'ARABIC_LETTER':
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value });
-          break;
-        case 'ELEMENT':
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value });
-          break;
-        case 'METAL':
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value });
-          break;
-        case 'STONE':
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value });
-          break;
-        case 'SAAD_NAHS':
-          dataQueries.push({ field: 'data_json', operator: 'contains', value: entity_value });
-          break;
-      }
+      // Fetch all rules first, then filter by entity in JavaScript
+      // This allows complex matching on parsed JSON data
     }
 
     // Fetch all matching rules

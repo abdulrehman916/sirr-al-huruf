@@ -34,7 +34,8 @@ export default function ZodiacKnowledgePanel() {
   function openExplorer(sign) {
     setSelectedEntity({
       entityType: 'ZODIAC',
-      entityData: sign.name_ar
+      entityData: sign.name_ar,
+      displayName: sign.name_en
     });
     setExplorerOpen(true);
   }

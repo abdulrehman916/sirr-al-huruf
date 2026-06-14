@@ -31,7 +31,8 @@ export default function PlanetKnowledgePanels() {
   function openExplorer(planet) {
     setSelectedEntity({
       entityType: 'PLANET',
-      entityData: planet.name_ar
+      entityData: planet.name_ar,
+      displayName: planet.name_en
     });
     setExplorerOpen(true);
   }

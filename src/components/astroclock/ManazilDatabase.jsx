@@ -40,7 +40,8 @@ export default function ManazilDatabase() {
   function openExplorer(manzil) {
     setSelectedEntity({
       entityType: 'LUNAR_MANSION',
-      entityData: manzil.name_arabic
+      entityData: manzil.name_arabic,
+      displayName: manzil.name_arabic
     });
     setExplorerOpen(true);
   }

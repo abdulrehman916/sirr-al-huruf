@@ -108,6 +108,11 @@ export default function ManuscriptKnowledgeExplorer({ entityType, entityData, on
               <h2 className="font-inter text-xl font-bold uppercase tracking-widest" style={{ color: G.text }}>
                 {isMalayalam ? "ഹസ്തലിഖിത ജ്ഞാനം" : "Manuscript Knowledge"}
               </h2>
+              {entityData && (
+                <p className="font-amiri text-2xl font-bold mt-1" style={{ color: G.text }} dir="rtl">
+                  {entityData}
+                </p>
+              )}
               <p className="font-inter text-xs" style={{ color: G.dim }}>
                 {relatedRecords.length} {isMalayalam ? "രേഖകൾ കണ്ടെത്തി" : "records found"}
               </p>
