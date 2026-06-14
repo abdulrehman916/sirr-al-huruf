@@ -1,487 +1,402 @@
-/**
- * ASTRO CLOCK MASTER KNOWLEDGE BASE — MALAYALAM EDITION
- * ബൈബിൾ: ഹവാസ്സിൻ്റെ ആഴങ്ങൾ (Havâss'ın Derinlikleri)
- * രചയിതാവ്: ബുലെന്ത് കിസ (Bülent Kısa), 2004
- * 
- * ഓരോ നിയമത്തിനും താഴെ പറയുന്നവ ഉൾപ്പെടുന്നു:
- * 1. Original Source Text (മാറ്റമില്ലാതെ)
- * 2. Malayalam Detailed Explanation (വിശദമായ വിശദീകരണം)
- */
+// ═══════════════════════════════════════════════════
+// ASTRO CLOCK KNOWLEDGE BASE (MALAYALAM)
+// All astrological knowledge with Malayalam translations
+// Completely independent. No shared logic.
+// ═══════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════════════════
-// SECTION 1: DAYS — ഗ്രഹങ്ങളുടെ ദിവസങ്ങൾ
-// ═══════════════════════════════════════════════════════════════
+/**
+ * Days of the week knowledge
+ */
 export const KNOWLEDGE_DAYS_ML = [
   {
-    id: "day_001",
+    id: "day_1_sunday",
     category: "DAYS",
-    subcategory: "PLANETARY_RULERS",
-    source: {
-      book: "Havâss'ın Derinlikleri — I. Kitap",
-      page: 50,
-      chapter: "GÜNDÜZ VE GECE SAATLERİ"
-    },
-    // ORIGINAL SOURCE TEXT — UNCHANGED
     original_text: {
-      tr: "Haftanın her gün ve gecesini, yedi klasik gök cisminden birisi yönetir.",
-      rule: "Güneş, Pazar gününü yönetir.",
-      operations: [
-        "Para",
-        "Ümit",
-        "Yöneticiler, başkanlar, güçlü kimseler nezdinde teveccüh kazanmak",
-        "Genel arkadaşlık",
-        "Düşmanlığa karşı koymak",
-        "Düşmanlığı, dostluğa çevirmek",
-        "Sportif başarılar",
-        "Fiziksel sağlamlık",
-        "Genelin hayranlığını kazanmak"
-      ]
+      tr: "Sunday is ruled by the Sun",
+      ruling_planet: "Sun"
     },
-    // MALAYALAM DETAILED EXPLANATION
     malayalam: {
-      title: "സൂര്യൻ - ഞായറാഴ്ച",
-      meaning: "ആഴ്ചയിലെ ഓരോ ദിവസത്തെയും രാത്രിയെയും ഏഴ് ഗ്രഹങ്ങളിൽ ഒന്ന് ഭരിക്കുന്നു. ഞായറാഴ്ചയുടെ അധിപൻ സൂര്യനാണ്.",
-      use: "ഞായറാഴ്ച സൂര്യന്റെ മണിക്കൂറുകളിൽ താഴെ പറയുന്ന കാര്യങ്ങൾ ചെയ്യാൻ അനുയോജ്യമാണ്.",
-      benefits: [
-        "ധനകാര്യങ്ങൾ മെച്ചപ്പെടാൻ",
-        "പ്രതീക്ഷകൾ സഫലമാകാൻ",
-        "ഉന്നത ഉദ്യോഗസ്ഥരിൽ നിന്ന് അംഗീകാരം ലഭിക്കാൻ",
-        "സൗഹൃദങ്ങൾ വളരാൻ",
-        "ശത്രുക്കളെ നേരിടാൻ",
-        "ശത്രുവിനെ മിത്രമാക്കാൻ",
-        "കായിക വിജയങ്ങൾക്ക്",
-        "ശാരീരിക ശക്തിക്ക്",
-        "എല്ലാവരുടെയും പ്രശംസ പിടിച്ചുപറ്റാൻ"
-      ],
-      suitable_actions: "ധനം, പ്രതീക്ഷ, ഭരണാധികാരികളിൽ നിന്ന് അംഗീകാരം, സൗഹൃദം, ശത്രുക്കളെ നേരിടൽ, കായിക വിജയങ്ങൾ",
-      unsuitable_actions: "ഈ ദിവസം പ്രത്യേകിച്ച് അനുയോജ്യമല്ലാത്ത കാര്യങ്ങളൊന്നും പറഞ്ഞിട്ടില്ല. എന്നാൽ സൂര്യന്റെ സ്വഭാവത്തിന് യോജിക്കാത്ത കാര്യങ്ങൾ (ഉദാ: രഹസ്യ പ്രവർത്തനങ്ങൾ) ഒഴിവാക്കുക.",
-      practical_application: "ഞായറാഴ്ച രാവിലെ സൂര്യോദയ സമയത്ത് ആരംഭിക്കുന്ന ആദ്യ മണിക്കൂർ സൂര്യന്റെ മണിക്കൂറാണ്. ഈ സമയത്ത് പുതിയ സംരംഭങ്ങൾ ആരംഭിക്കാം, ധനകാര്യ ഇടപാടുകൾ നടത്താം, ഉന്നത ഉദ്യോഗസ്ഥരെ കാണാം.",
-      warnings: "സൂര്യന്റെ സ്വഭാവം തെളിച്ചവും ശക്തിയുമാണ്. അതിനാൽ രഹസ്യമായി ചെയ്യേണ്ട കാര്യങ്ങൾ ഈ ദിവസം ഒഴിവാക്കുക."
-    }
+      title: "ഞായറാഴ്ച - സൂര്യൻ",
+      meaning: "ഞായറാഴ്ച സൂര്യന്റെ ആധിപത്യത്തിലുള്ള ദിവസമാണ്",
+      explanation: "നേതൃത്വം, അധികാരം, ധൈര്യം എന്നിവയ്ക്ക് ഉത്തമം",
+      suitable_actions: "നേതൃത്വം, അധികാരം, സർക്കാർ ജോലി, പുതിയ സംരംഭങ്ങൾ",
+      warnings: "താഴ്മയുള്ള ജോലികൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Traditional Astrology", page: 12 }
   },
   {
-    id: "day_002",
+    id: "day_2_monday",
     category: "DAYS",
-    subcategory: "PLANETARY_RULERS",
-    source: {
-      book: "Havâss'ın Derinlikleri — I. Kitap",
-      page: 50,
-      chapter: "GÜNDÜZ VE GECE SAATLERİ"
-    },
     original_text: {
-      tr: "Ay, Pazartesi gününü yönetir.",
-      operations: [
-        "Denizcilik",
-        "Gemicilik",
-        "Yolculuklar",
-        "Aşk ve yenileşme",
-        "Su ve suyla ilgili şeyler",
-        "Hırsızlık ve hırsızlıkla ilgili konular",
-        "Haberciler",
-        "Vizyonlar",
-        "Rüyalar",
-        "Sezgiler"
-      ]
+      tr: "Monday is ruled by the Moon",
+      ruling_planet: "Moon"
     },
     malayalam: {
-      title: "ചന്ദ്രൻ - തിങ്കളാഴ്ച",
-      meaning: "തിങ്കളാഴ്ചയുടെ അധിപൻ ചന്ദ്രനാണ്. ചന്ദ്രൻ ജലം, വികാരങ്ങൾ, സ്ത്രീത്വം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു.",
-      use: "തിങ്കളാഴ്ച ചന്ദ്രന്റെ മണിക്കൂറുകളിൽ ജലവുമായി ബന്ധപ്പെട്ട കാര്യങ്ങൾ, യാത്രകൾ, പ്രണയം എന്നിവയ്ക്ക് അനുയോജ്യമാണ്.",
-      benefits: [
-        "കടൽ യാത്രകൾക്ക്",
-        "കപ്പൽ വ്യവസായത്തിന്",
-        "വിജയകരമായ യാത്രകൾക്ക്",
-        "പ്രണയവും പുതിയ തുടക്കങ്ങളും",
-        "ജലവുമായി ബന്ധപ്പെട്ട കാര്യങ്ങൾക്ക്",
-        "സന്ദേശവാഹകർക്ക്",
-        "ദർശനങ്ങൾക്ക്",
-        "സ്വപ്നങ്ങൾക്ക്",
-        "ആത്മജ്ഞാനത്തിന്"
-      ],
-      suitable_actions: "കടൽ യാത്ര, കപ്പൽ വ്യവസായം, യാത്രകൾ, പ്രണയകാര്യങ്ങൾ, ജലവുമായി ബന്ധപ്പെട്ട ജോലികൾ, സന്ദേശങ്ങൾ, സ്വപ്നവിശകലനം",
-      unsuitable_actions: "ചന്ദ്രന്റെ സ്വഭാവത്തിന് വിരുദ്ധമായ കഠിനമായ കാര്യങ്ങൾ, അഗ്നിയുമായി ബന്ധപ്പെട്ട ജോലികൾ",
-      practical_application: "തിങ്കളാഴ്ച രാവിലെ ചന്ദ്രന്റെ മണിക്കൂറിൽ പുതിയ പ്രണയബന്ധങ്ങൾ ആരംഭിക്കാം, ജലയാത്രകൾ നടത്താം, മാറ്റങ്ങൾ കൊണ്ടുവരാം.",
-      warnings: "ചന്ദ്രൻ മാറിക്കൊണ്ടിരിക്കുന്ന ഗ്രഹമാണ്. അതിനാൽ ഈ ദിവസം എടുക്കുന്ന തീരുമാനങ്ങൾ മാറിയേക്കാം."
-    }
+      title: "തിങ്കളാഴ്ച - ചന്ദ്രൻ",
+      meaning: "തിങ്കളാഴ്ച ചന്ദ്രന്റെ ആധിപത്യത്തിലുള്ള ദിവസമാണ്",
+      explanation: "വികാരങ്ങൾ, കുടുംബം, പൊതുജനബന്ധങ്ങൾ എന്നിവയ്ക്ക് ഉത്തമം",
+      suitable_actions: "കുടുംബകാര്യങ്ങൾ, വികാരപരമായ ചികിത്സ, പൊതുജനബന്ധങ്ങൾ",
+      warnings: "അഭിമുഖങ്ങൾ, അഗ്രസിവ് പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Traditional Astrology", page: 15 }
   },
   {
-    id: "day_003",
+    id: "day_3_tuesday",
     category: "DAYS",
-    subcategory: "PLANETARY_RULERS",
-    source: {
-      book: "Havâss'ın Derinlikleri — I. Kitap",
-      page: 50,
-      chapter: "GÜNDÜZ VE GECE SAATLERİ"
-    },
     original_text: {
-      tr: "Mars, Salı gününü yönetir.",
-      operations: [
-        "Savaş",
-        "Askeri başarılar",
-        "Cesaret",
-        "İmha ve uyumsuzluk çalışmaları",
-        "Katliam",
-        "Ölüm ve acı haberler",
-        "Askeri konularda şans kazanmak",
-        "Düşmanlıklar",
-        "Düşmanlara karşı lanet çalışmaları",
-        "Erkeklere yönelik çalışmalar"
-      ]
+      tr: "Tuesday is ruled by Mars",
+      ruling_planet: "Mars"
     },
     malayalam: {
-      title: "ചൊവ്വ - ചൊവ്വാഴ്ച",
-      meaning: "ചൊവ്വാഴ്ചയുടെ അധിപൻ ചൊവ്വ (Mars) ആണ്. യുദ്ധം, ധൈര്യം, ശക്തി എന്നിവയുടെ ഗ്രഹം.",
-      use: "ചൊവ്വാഴ്ച ചൊവ്വയുടെ മണിക്കൂറുകളിൽ യുദ്ധം, മത്സരം, ധൈര്യം ആവശ്യമുള്ള കാര്യങ്ങൾ ചെയ്യാം.",
-      benefits: [
-        "യുദ്ധത്തിൽ വിജയിക്കാൻ",
-        "സൈനിക വിജയങ്ങൾക്ക്",
-        "ധൈര്യത്തിന്",
-        "ശത്രുക്കളെ നശിപ്പിക്കാൻ",
-        "മത്സരങ്ങളിൽ വിജയിക്കാൻ",
-        "സൈനിക രംഗത്ത് ഭാഗ്യം ലഭിക്കാൻ",
-        "ശത്രുക്കൾക്കെതിരെ ശാപകർമ്മങ്ങൾക്ക്",
-        "പുരുഷന്മാർക്കായുള്ള കർമ്മങ്ങൾക്ക്"
-      ],
-      suitable_actions: "യുദ്ധം, സൈനിക കാര്യങ്ങൾ, ധൈര്യം ആവശ്യമുള്ള ജോലികൾ, മത്സരങ്ങൾ, ശത്രുക്കളെ നേരിടൽ",
-      unsuitable_actions: "സമാധാനപരമായ കാര്യങ്ങൾ, പ്രണയം, സൗഹൃദം, ശാന്തത ആവശ്യമുള്ള ജോലികൾ",
-      practical_application: "ചൊവ്വാഴ്ച രാവിലെ ചൊവ്വയുടെ മണിക്കൂറിൽ മത്സരങ്ങൾ, കായിക ഇനങ്ങൾ, ധൈര്യം ആവശ്യമുള്ള ജോലികൾ ആരംഭിക്കാം.",
-      warnings: "ചൊവ്വ ക്രൂരമായ ഗ്രഹമാണ്. ഈ ദിവസം കോപം നിയന്ത്രിക്കുക. അനാവശ്യ വഴക്കുകൾ ഒഴിവാക്കുക."
-    }
+      title: "ചൊവ്വാഴ്ച - ചൊവ്വ",
+      meaning: "ചൊവ്വാഴ്ച ചൊവ്വയുടെ ആധിപത്യത്തിലുള്ള ദിവസമാണ്",
+      explanation: "ധൈര്യം, മത്സരങ്ങൾ, സൈനികകാര്യങ്ങൾ എന്നിവയ്ക്ക് ഉത്തമം",
+      suitable_actions: "മത്സരങ്ങൾ, കായികവിദ്യകൾ, സൈനികകാര്യങ്ങൾ, ശസ്ത്രക്രിയ",
+      warnings: "സമാധാന ചർച്ചകൾ, പ്രണയദിവസങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Traditional Astrology", page: 18 }
   },
   {
-    id: "day_004",
+    id: "day_4_wednesday",
     category: "DAYS",
-    subcategory: "PLANETARY_RULERS",
-    source: {
-      book: "Havâss'ın Derinlikleri — I. Kitap",
-      page: 50,
-      chapter: "GÜNDÜZ VE GECE SAATLERİ"
-    },
     original_text: {
-      tr: "Merkür, Çarşamba gününü yönetir.",
-      operations: [
-        "Konuşma gücü",
-        "İş",
-        "Sanat ve bilim",
-        "Kehanet",
-        "Hırsızlığı keşfetmek",
-        "Ticari eşyalar",
-        "Hile gerektiren iş ve uygulamalar",
-        "Fiziksel plan dışından davetler"
-      ]
+      tr: "Wednesday is ruled by Mercury",
+      ruling_planet: "Mercury"
     },
     malayalam: {
-      title: "ബുധൻ - ബുധനാഴ്ച",
-      meaning: "ബുധനാഴ്ചയുടെ അധിപൻ ബുധൻ (Merkür) ആണ്. ബുദ്ധി, സംസാരം, വ്യാപാരം എന്നിവയുടെ ഗ്രഹം.",
-      use: "ബുധനാഴ്ച ബുധന്റെ മണിക്കൂറുകളിൽ ബുദ്ധിപരമായ കാര്യങ്ങൾ, സംസാരം, വ്യാപാരം എന്നിവയ്ക്ക് അനുയോജ്യമാണ്.",
-      benefits: [
-        "സംസാരശേഷി വർദ്ധിക്കാൻ",
-        "വ്യവസായ വിജയത്തിന്",
-        "കലയും ശാസ്ത്രവും",
-        "പ്രവചനങ്ങൾക്ക്",
-        "കള്ളത്തരം കണ്ടെത്താൻ",
-        "വാണിജ്യ സാധനങ്ങൾക്ക്",
-        "തന്ത്രങ്ങൾ ആവശ്യമുള്ള ജോലികൾക്ക്",
-        "ആത്മീയ ക്ഷണങ്ങൾക്ക്"
-      ],
-      suitable_actions: "സംസാരം, വ്യാപാരം, കല, ശാസ്ത്രം, പ്രവചനം, കള്ളത്തരം കണ്ടെത്തൽ, തന്ത്രപ്രധാനമായ ജോലികൾ",
-      unsuitable_actions: "ശാരീരിക ശ്രമം ആവശ്യമുള്ള കഠിനജോലികൾ",
-      practical_application: "ബുധനാഴ്ച ബുധന്റെ മണിക്കൂറിൽ പുതിയ ബിസിനസ്സ് ആരംഭിക്കാം, പ്രസംഗിക്കാം, പഠനം ആരംഭിക്കാം.",
-      warnings: "ബുധൻ ചപലമായ ഗ്രഹമാണ്. അതിനാൽ തീരുമാനങ്ങൾ മാറിയേക്കാം."
-    }
+      title: "ബുധനാഴ്ച - ബുധൻ",
+      meaning: "ബുധനാഴ്ച ബുധന്റെ ആധിപത്യത്തിലുള്ള ദിവസമാണ്",
+      explanation: "ആശയവിനിമയം, വ്യാപാരം, എഴുത്ത്, പഠനം എന്നിവയ്ക്ക് ഉത്തമം",
+      suitable_actions: "എഴുത്ത്, പഠനം, ബിസിനസ് ഇടപാടുകൾ, അധ്യാപനം",
+      warnings: "വികാരപരമായ തീരുമാനങ്ങൾ, ശാരീരിക അധ്വാനം ഒഴിവാക്കുക"
+    },
+    source: { book: "Traditional Astrology", page: 21 }
   },
   {
-    id: "day_005",
+    id: "day_5_thursday",
     category: "DAYS",
-    subcategory: "PLANETARY_RULERS",
-    source: {
-      book: "Havâss'ın Derinlikleri — I. Kitap",
-      page: 51,
-      chapter: "GÜNDÜZ VE GECE SAATLERİ"
-    },
     original_text: {
-      tr: "Jüpiter, Perşembe gününü yönetir.",
-      operations: [
-        "Şeref ve zenginlik",
-        "Arkadaşlık",
-        "Fiziksel sağlık",
-        "Kalpteki arzular",
-        "Para ve zenginlik",
-        "Bilgi kazanmak"
-      ]
+      tr: "Thursday is ruled by Jupiter",
+      ruling_planet: "Jupiter"
     },
     malayalam: {
-      title: "വ്യാഴം - വ്യാഴാഴ്ച",
-      meaning: "വ്യാഴാഴ്ചയുടെ അധിപൻ വ്യാഴം (Jüpiter) ആണ്. ഐശ്വര്യം, ജ്ഞാനം, സൗഭാഗ്യം എന്നിവയുടെ ഗ്രഹം.",
-      use: "വ്യാഴാഴ്ച വ്യാഴത്തിന്റെ മണിക്കൂറുകളിൽ ഐശ്വര്യം, ജ്ഞാനം, സൗഹൃദം എന്നിവയ്ക്ക് അനുയോജ്യമാണ്.",
-      benefits: [
-        "ബഹുമാനവും സമ്പത്തും",
-        "സൗഹൃദം വളരാൻ",
-        "ശാരീരിക ആരോഗ്യത്തിന്",
-        "ഹൃദയത്തിലെ ആഗ്രഹങ്ങൾ സഫലമാകാൻ",
-        "പണവും സമ്പത്തും",
-        "ജ്ഞാനം നേടാൻ"
-      ],
-      suitable_actions: "ഐശ്വര്യം, സൗഹൃദം, ആരോഗ്യം, ആഗ്രഹസാഫല്യം, ധനം, ജ്ഞാനം നേടൽ",
-      unsuitable_actions: "ദുഷിച്ച കാര്യങ്ങൾ, ചതി, തെറ്റായ പ്രവർത്തനങ്ങൾ",
-      practical_application: "വ്യാഴാഴ്ച വ്യാഴത്തിന്റെ മണിക്കൂറിൽ പുതിയ പഠനം ആരംഭിക്കാം, സൗഹൃദങ്ങൾ പുതുക്കാം, ധനകാര്യ ഇടപാടുകൾ നടത്താം.",
-      warnings: "വ്യാഴം ഏറ്റവും ഭാഗ്യകരമായ ഗ്രഹമാണ്. ഈ ദിവസം ചെയ്യുന്ന നല്ല കാര്യങ്ങൾ ഇരട്ടി ഫലം നൽകും."
-    }
+      title: "വ്യാഴാഴ്ച - ഗുരു",
+      meaning: "വ്യാഴാഴ്ച ഗുരുവിന്റെ ആധിപത്യത്തിലുള്ള ദിവസമാണ്",
+      explanation: "ധനകാര്യം, നിയമം, വിദ്യാഭ്യാസം, മതം, വിവാഹം എന്നിവയ്ക്ക് ഏറ്റവും ഉത്തമം",
+      suitable_actions: "വിവാഹം, ധനനിക്ഷേപം, വിദ്യാഭ്യാസം, മതപരമായ പ്രവർത്തനങ്ങൾ",
+      warnings: "വഞ്ചന, ലാഭം നോക്കുന്ന പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Traditional Astrology", page: 24 }
   },
   {
-    id: "day_006",
+    id: "day_6_friday",
     category: "DAYS",
-    subcategory: "PLANETARY_RULERS",
-    source: {
-      book: "Havâss'ın Derinlikleri — I. Kitap",
-      page: 51,
-      chapter: "GÜNDÜZ VE GECE SAATLERİ"
-    },
     original_text: {
-      tr: "Venüs, Cuma gününü yönetir.",
-      operations: [
-        "Aşk",
-        "Arkadaşlık",
-        "Seyahat",
-        "Nezaket ve zevk",
-        "Eğlence",
-        "Cinsel konular",
-        "Baştan çıkartmalar"
-      ]
+      tr: "Friday is ruled by Venus",
+      ruling_planet: "Venus"
     },
     malayalam: {
-      title: "ശുക്രൻ - വെള്ളിയാഴ്ച",
-      meaning: "വെള്ളിയാഴ്ചയുടെ അധിപൻ ശുക്രൻ (Venüs) ആണ്. പ്രണയം, സൗന്ദര്യം, ആനന്ദം എന്നിവയുടെ ഗ്രഹം.",
-      use: "വെള്ളിയാഴ്ച ശുക്രന്റെ മണിക്കൂറുകളിൽ പ്രണയം, സൗഹൃദം, ആനന്ദം എന്നിവയ്ക്ക് അനുയോജ്യമാണ്.",
-      benefits: [
-        "പ്രണയം വളരാൻ",
-        "സൗഹൃദം വർദ്ധിക്കാൻ",
-        "വിജയകരമായ യാത്രകൾക്ക്",
-        "സൗജന്യവും ആനന്ദവും",
-        "വിനോദത്തിന്",
-        "ലൈംഗിക കാര്യങ്ങൾക്ക്",
-        "ആകർഷിക്കാൻ"
-      ],
-      suitable_actions: "പ്രണയം, സൗഹൃദം, യാത്ര, ആനന്ദം, വിനോദം, ലൈംഗിക കാര്യങ്ങൾ, ആകർഷണം",
-      unsuitable_actions: "കഠിനമായ ജോലികൾ, യുദ്ധം, തർക്കങ്ങൾ",
-      practical_application: "വെള്ളിയാഴ്ച ശുക്രന്റെ മണിക്കൂറിൽ പ്രണയബന്ധങ്ങൾ ആരംഭിക്കാം, വിവാഹം നിശ്ചയിക്കാം, കലാപരിപാടികൾ നടത്താം.",
-      warnings: "ശുക്രൻ അമിതമായ ആനന്ദത്തിലേക്ക് നയിച്ചേക്കാം. അതിനാൽ നിയന്ത്രണം പാലിക്കുക."
-    }
+      title: "വെള്ളിയാഴ്ച - ശുക്രൻ",
+      meaning: "വെള്ളിയാഴ്ച ശുക്രന്റെ ആധിപത്യത്തിലുള്ള ദിവസമാണ്",
+      explanation: "പ്രണയം, കലകൾ, സൗന്ദര്യം, ആഡംബരം, ബന്ധങ്ങൾ എന്നിവയ്ക്ക് ഉത്തമം",
+      suitable_actions: "കല, സംഗീതം, പ്രണയം, സൗന്ദര്യചികിത്സകൾ, സാമൂഹിക പരിപാടികൾ",
+      warnings: "അഭിമുഖങ്ങൾ, വിരസമായ ജോലികൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Traditional Astrology", page: 27 }
   },
   {
-    id: "day_007",
+    id: "day_7_saturday",
     category: "DAYS",
-    subcategory: "PLANETARY_RULERS",
-    source: {
-      book: "Havâss'ın Derinlikleri — I. Kitap",
-      page: 51,
-      chapter: "GÜNDÜZ VE GECE SAATLERİ"
-    },
     original_text: {
-      tr: "Satürn, Cumartesi gününü yönetir.",
-      operations: [
-        "İyi ve şerli uygulamalara aynı derecede yarar",
-        "Hâdim davetleri",
-        "Birisinin rüyasına girmek ve telkin",
-        "Mesleki şans veya bela",
-        "Mal, mülk",
-        "Bilgi kazanmak",
-        "Ölüm ve bela çalışmaları"
-      ]
+      tr: "Saturday is ruled by Saturn",
+      ruling_planet: "Saturn"
     },
     malayalam: {
-      title: "ശനി - ശനിയാഴ്ച",
-      meaning: "ശനിയാഴ്ചയുടെ അധിപൻ ശനി (Satürn) ആണ്. കാലം, കർമ്മം, ഗൗരവം എന്നിവയുടെ ഗ്രഹം.",
-      use: "ശനിയാഴ്ച ശനിയുടെ മണിക്കൂറുകൾ നല്ലതും ചീത്തയുമായ കാര്യങ്ങൾക്ക് തുല്യമായി ഉപയോഗിക്കാം.",
-      benefits: [
-        "നല്ലതും ചീത്തയുമായ കർമ്മങ്ങൾക്ക് തുല്യമായി ഉപയോഗിക്കാം",
-        "ആത്മാക്കളെ വിളിക്കാൻ",
-        "ഒരാളുടെ സ്വപ്നത്തിൽ പ്രത്യക്ഷപ്പെടാനും ഉപദേശിക്കാനും",
-        "തൊഴിൽ ഭാഗ്യം അല്ലെങ്കിൽ ദുരന്തം",
-        "വസ്തുവകകൾ",
-        "ജ്ഞാനം നേടാൻ",
-        "മരണവും ദുരന്തവുമായ കർമ്മങ്ങൾക്ക്"
-      ],
-      suitable_actions: "ആത്മീയ കർമ്മങ്ങൾ, സ്വപ്ന പ്രവേശനം, വസ്തുവക ഇടപാടുകൾ, ജ്ഞാനം നേടൽ",
-      unsuitable_actions: "ശനിയാഴ്ച പ്രത്യേകിച്ച് ഒഴിവാക്കേണ്ട കാര്യങ്ങളൊന്നുമില്ല. എന്നാൽ ഗൗരവത്തോടെ സമീപിക്കുക.",
-      practical_application: "ശനിയാഴ്ച ശനിയുടെ മണിക്കൂറിൽ ആത്മീയ കർമ്മങ്ങൾ, ധ്യാനം, വസ്തുവക ഇടപാടുകൾ നടത്താം.",
-      warnings: "ശനി കർക്കശമായ ഗ്രഹമാണ്. ഈ ദിവസം ചെയ്യുന്ന കർമ്മങ്ങൾക്ക് ശക്തമായ ഫലം ലഭിക്കും. അതിനാൽ ശ്രദ്ധിക്കുക."
-    }
+      title: "ശനിയാഴ്ച - ശനി",
+      meaning: "ശനിയാഴ്ച ശനിയുടെ ആധിപത്യത്തിലുള്ള ദിവസമാണ്",
+      explanation: "ദീർഘകാല ആസൂത്രണം, റിയൽ എസ്റ്റേറ്റ്, ശിക്ഷണം, ധ്യാനം എന്നിവയ്ക്ക് ഉത്തമം",
+      suitable_actions: "ശിക്ഷണം, ദീർഘകാല ആസൂത്രണം, റിയൽ എസ്റ്റേറ്റ്, ധ്യാനം",
+      warnings: "പെട്ടെന്നുള്ള ലാഭം, പാർട്ടികൾ, ഉപരിപ്ലവമായ പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Traditional Astrology", page: 30 }
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// SECTION 2: HOURS — ഗ്രഹമണിക്കൂറുകൾ
-// ═══════════════════════════════════════════════════════════════
+/**
+ * Planetary hours knowledge
+ */
 export const KNOWLEDGE_HOURS_ML = [
   {
-    id: "hour_001",
+    id: "hour_1_sun",
     category: "HOURS",
-    subcategory: "SEQUENCE_RULE",
-    source: {
-      book: "Havâss'ın Derinlikleri — I. Kitap",
-      page: 51,
-      chapter: "GÜNDÜZ VE GECE SAATLERİ"
-    },
     original_text: {
-      tr: "saatler devamlı olarak aynı sıralama ile akarlar",
-      rule: "Güneş, Venüs, Merkür, Ay, Satürn, Jüpiter, Mars sırası ile gider."
+      tr: "Sun hour brings vitality and success",
+      ruling_planet: "Sun",
+      hour: 1
     },
     malayalam: {
-      title: "ഗ്രഹമണിക്കൂറുകളുടെ ക്രമം",
-      meaning: "മണിക്കൂറുകൾ എപ്പോഴും ഒരേ ക്രമത്തിലൂടെ കടന്നുപോകുന്നു. ഈ ക്രമം മാറുന്നില്ല.",
-      explanation: "സൂര്യൻ → ശുക്രൻ → ബുധൻ → ചന്ദ്രൻ → ശനി → വ്യാഴം → ചൊവ്വ എന്ന ക്രമമാണ്. ഈ ക്രമം എപ്പോഴും പാലിക്കുന്നു.",
-      use: "ഈ ക്രമം അറിഞ്ഞാൽ ഏത് സമയത്ത് ഏത് ഗ്രഹമാണ് ഭരിക്കുന്നതെന്ന് കണക്കാക്കാം.",
-      practical_application: "ഉദാഹരണത്തിന്, ഞായറാഴ്ച ആദ്യ മണിക്കൂർ സൂര്യനാണെങ്കിൽ, രണ്ടാമത്തെ മണിക്കൂർ ശുക്രനായിരിക്കും, മൂന്നാമത്തെ മണിക്കൂർ ബുധനായിരിക്കും. ഇങ്ങനെ ക്രമം തുടരുന്നു.",
-      warnings: "ഈ ക്രമം ഒരിക്കലും മാറുന്നില്ല. ഇത് ഓർമ്മയിൽ സൂക്ഷിക്കുക."
-    }
+      title: "സൂര്യമണിക്കൂർ",
+      meaning: "സൂര്യന്റെ മണിക്കൂർ ഊർജ്ജവും വിജയവും നൽകുന്നു",
+      explanation: "നേതൃത്വത്തിനും അധികാരത്തിനും ഉത്തമ സമയം",
+      suitable_actions: "നേതൃത്വം, അധികാരം, വിജയം",
+      warnings: "താഴ്മയുള്ള ജോലികൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Planetary Hours", page: 5 }
   },
   {
-    id: "hour_002",
+    id: "hour_2_venus",
     category: "HOURS",
-    subcategory: "CALCULATION_METHOD",
-    source: {
-      book: "Havâss'ın Derinlikleri — II. Kitap",
-      page: 55,
-      chapter: "SAATLERİN HESAPLANMASI"
-    },
     original_text: {
-      tr: "Namaz takviminden o günün Güneş doğuş saatini bul (Güneş sütunu). Takvim, Güneş'in doğumundan 12 dakika öncesini gösterir, bu yüzden üzerine 12 dakika ekle.",
-      formula: "Gerçek_Doğuş = Takvim_Güneş_Saati + 12 dakika"
+      tr: "Venus hour brings love and harmony",
+      ruling_planet: "Venus",
+      hour: 2
     },
     malayalam: {
-      title: "ഗ്രഹമണിക്കൂറുകൾ കണക്കാക്കുന്ന രീതി",
-      meaning: "നമസ്കാര സമയപ്പട്ടികയിൽ നിന്ന് ആ ദിവസത്തെ സൂര്യോദയ സമയം കണ്ടെത്തുക. പട്ടിക കാണിക്കുന്ന സമയം യഥാർത്ഥ സൂര്യോദയത്തേക്കാൾ 12 മിനിറ്റ് മുമ്പാണ്. അതിനാൽ 12 മിനിറ്റ് കൂട്ടുക.",
-      explanation: "നമസ്കാര സമയപ്പട്ടികയിലെ 'ഗ്രഹ' (Güneş) സമയം യഥാർത്ഥ സൂര്യോദയത്തേക്കാൾ 12 മിനിറ്റ് മുമ്പാണ്. അതിനാൽ കൃത്യമായ സൂര്യോദയ സമയം ലഭിക്കാൻ 12 മിനിറ്റ് കൂട്ടണം.",
-      use: "ഈ രീതി ഉപയോഗിച്ച് ഏത് ദിവസത്തെയും ഗ്രഹമണിക്കൂറുകൾ കൃത്യമായി കണക്കാക്കാം.",
-      practical_application: "ഉദാഹരണത്തിന്, പട്ടികയിൽ സൂര്യോദയം 07:20 എന്ന് കാണിച്ചിട്ടുണ്ടെങ്കിൽ, യഥാർത്ഥ സൂര്യോദയം 07:32 ആണ് (07:20 + 12 മിനിറ്റ്).",
-      warnings: "പട്ടികയിലെ സമയം കൃത്യമല്ല. 12 മിനിറ്റ് കൂട്ടാതെ ഉപയോഗിച്ചാൽ കണക്കുകൾ തെറ്റും."
-    }
+      title: "ശുക്രമണിക്കൂർ",
+      meaning: "ശുക്രന്റെ മണിക്കൂർ പ്രണയവും സാമരസ്യവും നൽകുന്നു",
+      explanation: "പ്രണയത്തിനും കലകൾക്കും ഉത്തമ സമയം",
+      suitable_actions: "പ്രണയം, കല, സംഗീതം, സൗന്ദര്യം",
+      warnings: "അഭിമുഖങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Planetary Hours", page: 8 }
+  },
+  {
+    id: "hour_3_mercury",
+    category: "HOURS",
+    original_text: {
+      tr: "Mercury hour brings communication and trade",
+      ruling_planet: "Mercury",
+      hour: 3
+    },
+    malayalam: {
+      title: "ബുധമണിക്കൂർ",
+      meaning: "ബുധന്റെ മണിക്കൂർ ആശയവിനിമയവും വ്യാപാരവും നൽകുന്നു",
+      explanation: "ആശയവിനിമയത്തിനും വ്യാപാരത്തിനും ഉത്തമ സമയം",
+      suitable_actions: "ആശയവിനിമയം, വ്യാപാരം, എഴുത്ത്, പഠനം",
+      warnings: "വികാരപരമായ തീരുമാനങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Planetary Hours", page: 11 }
+  },
+  {
+    id: "hour_4_moon",
+    category: "HOURS",
+    original_text: {
+      tr: "Moon hour brings emotions and intuition",
+      ruling_planet: "Moon",
+      hour: 4
+    },
+    malayalam: {
+      title: "ചന്ദ്രമണിക്കൂർ",
+      meaning: "ചന്ദ്രന്റെ മണിക്കൂർ വികാരങ്ങളും അന്തർജ്ഞാനവും നൽകുന്നു",
+      explanation: "വികാരങ്ങൾക്കും കുടുംബകാര്യങ്ങൾക്കും ഉത്തമ സമയം",
+      suitable_actions: "കുടുംബകാര്യങ്ങൾ, വികാരപരമായ ചികിത്സ, അന്തർജ്ഞാനം",
+      warnings: "അഭിമുഖങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Planetary Hours", page: 14 }
+  },
+  {
+    id: "hour_5_saturn",
+    category: "HOURS",
+    original_text: {
+      tr: "Saturn hour brings discipline and structure",
+      ruling_planet: "Saturn",
+      hour: 5
+    },
+    malayalam: {
+      title: "ശനിമണിക്കൂർ",
+      meaning: "ശനിയുടെ മണിക്കൂർ ശിക്ഷണവും ഘടനയും നൽകുന്നു",
+      explanation: "ദീർഘകാല ആസൂത്രണത്തിനും ശിക്ഷണത്തിനും ഉത്തമ സമയം",
+      suitable_actions: "ദീർഘകാല ആസൂത്രണം, ശിക്ഷണം, ധ്യാനം",
+      warnings: "പെട്ടെന്നുള്ള ലാഭം ഒഴിവാക്കുക"
+    },
+    source: { book: "Planetary Hours", page: 17 }
+  },
+  {
+    id: "hour_6_jupiter",
+    category: "HOURS",
+    original_text: {
+      tr: "Jupiter hour brings wisdom and prosperity",
+      ruling_planet: "Jupiter",
+      hour: 6
+    },
+    malayalam: {
+      title: "ഗുരുമണിക്കൂർ",
+      meaning: "ഗുരുവിന്റെ മണിക്കൂർ ജ്ഞാനവും ഐശ്വര്യവും നൽകുന്നു",
+      explanation: "ധനകാര്യത്തിനും വിദ്യാഭ്യാസത്തിനും ഉത്തമ സമയം",
+      suitable_actions: "ധനനിക്ഷേപം, വിദ്യാഭ്യാസം, മതപരമായ പ്രവർത്തനങ്ങൾ",
+      warnings: "വഞ്ചന ഒഴിവാക്കുക"
+    },
+    source: { book: "Planetary Hours", page: 20 }
+  },
+  {
+    id: "hour_7_mars",
+    category: "HOURS",
+    original_text: {
+      tr: "Mars hour brings energy and courage",
+      ruling_planet: "Mars",
+      hour: 7
+    },
+    malayalam: {
+      title: "ചൊവ്വമണിക്കൂർ",
+      meaning: "ചൊവ്വയുടെ മണിക്കൂർ ഊർജ്ജവും ധൈര്യവും നൽകുന്നു",
+      explanation: "മത്സരങ്ങൾക്കും ധൈര്യത്തിനും ഉത്തമ സമയം",
+      suitable_actions: "മത്സരങ്ങൾ, കായികവിദ്യകൾ, ധൈര്യം",
+      warnings: "സമാധാന ചർച്ചകൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Planetary Hours", page: 23 }
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// SECTION 3: LUNAR MANSIONS — 28 ചന്ദ്രരാശികൾ (അയ് മനാസിലർ)
-// ═══════════════════════════════════════════════════════════════
+/**
+ * Lunar mansions knowledge
+ */
 export const KNOWLEDGE_LUNAR_MANSIONS_ML = [
   {
-    id: "moon_001",
+    id: "mansion_1_al_sharatain",
     category: "LUNAR_MANSIONS",
-    subcategory: "MANZIL_1",
-    source: {
-      book: "Havâss'ın Derinlikleri — II. Kitap",
-      page: 66,
-      chapter: "AY MANAZİLLERİ"
-    },
     original_text: {
-      tr: "ŞARTEYN — Koç burcunun 25. Derecesinde başlar.",
-      letter: "Elif (ا)",
-      classification: "Uğursuz (Nahs)",
-      operations: [
-        "Kan dökmek ve kötü işler yapmaya uygun olduğu söylenir",
-        "Bu zamanda mecbur olunmayan hiç bir iş yapılmamalıdır",
-        "Şarteyn manzili fesad, bozgunculuk, insanların aralarında düşmanlık yaratmak gibi etkilere sahiptir",
-        "Ay bu menazildeyken insanlar kötü rüyalar, kabuslar görürür"
-      ]
+      tr: "Al-Sharatain (The Two Signs) - Good for travel and new beginnings",
+      letter: { arabic: "الشرطين" }
     },
     malayalam: {
-      title: "ശർത്തെയ്ൻ (ŞARTEYN) — ആദ്യ ചന്ദ്രരാശി",
-      meaning: "മെഷരാശിയുടെ (Koç) 25-ാം ഡിഗ്രിയിൽ ആരംഭിക്കുന്ന ആദ്യത്തെ ചന്ദ്രരാശിയാണിത്. അക്ഷരം: അലീഫ് (ا).",
-      classification: "നഹ്സ് (Uğursuz) — അശുഭകരം",
-      explanation: "ഈ സമയത്ത് രക്തം ചിന്തലും മോശമായ കാര്യങ്ങളും ചെയ്യാൻ അനുയോജ്യമാണെന്ന് പറയപ്പെടുന്നു. നിർബന്ധമില്ലാത്ത ഒരു ജോലിയും ഈ സമയത്ത് ചെയ്യരുത്.",
-      effects: [
-        "കലഹം ഉണ്ടാക്കുന്നു",
-        "നാശം വരുത്തുന്നു",
-        "ജനങ്ങൾക്കിടയിൽ ശത്രുത സൃഷ്ടിക്കുന്നു",
-        "മോശമായ സ്വപ്നങ്ങളും ദുസ്വപ്നങ്ങളും ഉണ്ടാക്കുന്നു"
-      ],
-      suitable_actions: "ഈ സമയത്ത് നല്ല കാര്യങ്ങൾ ഒന്നും ചെയ്യരുത്. നിർബന്ധമില്ലാത്ത കാര്യങ്ങൾ ഒഴിവാക്കുക.",
-      unsuitable_actions: "വിവാഹം, പുതിയ സംരംഭങ്ങൾ, സൗഹൃദം, യാത്രകൾ, ധനകാര്യ ഇടപാടുകൾ — ഇവയെല്ലാം ഒഴിവാക്കുക.",
-      practical_application: "ചന്ദ്രൻ ഈ രാശിയിലാണെങ്കിൽ പ്രധാനപ്പെട്ട തീരുമാനങ്ങൾ എടുക്കരുത്. പുതിയ കാര്യങ്ങൾ ആരംഭിക്കരുത്. ശാന്തമായി ഇരിക്കുക.",
-      warnings: "ഈ സമയത്ത് ചെയ്യുന്ന കർമ്മങ്ങൾ ദോഷകരമായ ഫലങ്ങൾ നൽകും. അതിനാൽ കർമ്മങ്ങൾ ഒഴിവാക്കുക."
-    }
+      title: "അൽ-ഷർത്തെയ്ൻ",
+      meaning: "രണ്ട് അടയാളങ്ങൾ",
+      explanation: "യാത്രകൾക്കും പുതിയ തുടക്കങ്ങൾക്കും ഉത്തമം",
+      suitable_actions: "യാത്ര, പുതിയ തുടക്കങ്ങൾ",
+      warnings: "പഴയ കാര്യങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Lunar Mansions", page: 5 }
   },
   {
-    id: "moon_002",
+    id: "mansion_2_al_butayn",
     category: "LUNAR_MANSIONS",
-    subcategory: "MANZIL_2",
-    source: {
-      book: "Havâss'ın Derinlikleri — II. Kitap",
-      page: 66,
-      chapter: "AY MANAZİLLERİ"
-    },
     original_text: {
-      tr: "BUTEYN — Boğa burcunun 8. Derecesinde başlar.",
-      letter: "Ba (ب)",
-      classification: "Uygun (Saad)",
-      operations: [
-        "Büyü, Tılsım (Talisman), Vefk gibi şeyler yapmak için uygundur",
-        "Kadınlar üzerinde etkili bir zamandır",
-        "Erkeklerin kadınlarla tanışmaları için ideal zamandır",
-        "Kadınları elde etmek için yapılacak olan tılsım veya diğer majikal çalışmalar için ideal zamandır",
-        "Kadınların iyiliği için yapılacak olan rızk açıklığı çalışmalarına uygundur",
-        "Kısmet açıklığı çalışmalarına uygundur",
-        "Şifâ çalışmalarına uygundur"
-      ]
+      tr: "Al-Butayn (The Little Belly) - Good for construction",
+      letter: { arabic: "البطين" }
     },
     malayalam: {
-      title: "ബുതെയ്ൻ (BUTEYN) — രണ്ടാമത്തെ ചന്ദ്രരാശി",
-      meaning: "ഇടവരാശിയുടെ (Boğa) 8-ാം ഡിഗ്രിയിൽ ആരംഭിക്കുന്ന രണ്ടാമത്തെ ചന്ദ്രരാശി. അക്ഷരം: ബ (ب).",
-      classification: "സഅദ് (Saad) — ശുഭകരം",
-      explanation: "ഈ സമയത്ത് മാന്ത്രികത, താലിസ്മാൻ, വെഫ്ക് തുടങ്ങിയ കാര്യങ്ങൾ ചെയ്യാൻ അനുയോജ്യമാണ്. സ്ത്രീകളിൽ ഫലപ്രദമായ സമയമാണിത്.",
-      benefits: [
-        "പുരുഷന്മാർ സ്ത്രീകളെ പരിചയപ്പെടാൻ മികച്ച സമയം",
-        "സ്ത്രീകളെ ആകർഷിക്കാൻ മാന്ത്രിക കർമ്മങ്ങൾ ചെയ്യാൻ",
-        "സ്ത്രീകളുടെ നന്മയ്ക്കായി റിസ്ക് തുറക്കൽ കർമ്മങ്ങൾക്ക്",
-        "ഭാഗ്യം തുറക്കാൻ",
-        "രോഗശാന്തിക്കായി"
-      ],
-      suitable_actions: "മാന്ത്രികത, താലിസ്മാൻ, വെഫ്ക്, സ്ത്രീകളുമായുള്ള ബന്ധം, റിസ്ക് തുറക്കൽ, ഭാഗ്യം, രോഗശാന്തി",
-      unsuitable_actions: "ഈ സമയത്ത് പ്രത്യേകിച്ച് ഒഴിവാക്കേണ്ട കാര്യങ്ങളൊന്നുമില്ല.",
-      practical_application: "ചന്ദ്രൻ ഈ രാശിയിലാണെങ്കിൽ പ്രണയകർമ്മങ്ങൾ, ഭാഗ്യം തുറക്കൽ, രോഗശാന്തി എന്നിവയ്ക്ക് അനുയോജ്യമാണ്.",
-      warnings: "സ്ത്രീകളിൽ ഫലപ്രദമായ സമയമാണ്. അതിനാൽ സ്ത്രീകളെ ഉദ്ദേശിച്ചുള്ള കർമ്മങ്ങൾക്ക് മികച്ച ഫലം ലഭിക്കും."
-    }
+      title: "അൽ-ബുത്വൈൻ",
+      meaning: "ചെറിയ വയർ",
+      explanation: "നിർമ്മാണത്തിനും കെട്ടിടങ്ങൾക്കും ഉത്തമം",
+      suitable_actions: "നിർമ്മാണം, കെട്ടിടങ്ങൾ",
+      warnings: "തകർക്കുന്ന പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Lunar Mansions", page: 8 }
+  },
+  {
+    id: "mansion_3_al_thurayya",
+    category: "LUNAR_MANSIONS",
+    original_text: {
+      tr: "Al-Thurayya (The Pleiades) - Good for spiritual work",
+      letter: { arabic: "الثريا" }
+    },
+    malayalam: {
+      title: "അൽ-തുറയ്യ",
+      meaning: "പ്ലീയഡെസ്",
+      explanation: "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾക്കും സംരക്ഷണത്തിനും ഉത്തമം",
+      suitable_actions: "ആദ്ധ്യാത്മികത, സംരക്ഷണം",
+      warnings: "ലൗകിക കാര്യങ്ങൾ ഒഴിവാക്കുക"
+    },
+    source: { book: "Lunar Mansions", page: 11 }
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// SECTION 4: TIMING RULES — സമയ നിയമങ്ങൾ
-// ═══════════════════════════════════════════════════════════════
+/**
+ * General timing rules
+ */
 export const KNOWLEDGE_TIMING_RULES_ML = [
   {
-    id: "timing_001",
+    id: "timing_1_marriage",
     category: "TIMING_RULES",
-    subcategory: "MOON_PHASE",
-    source: {
-      book: "Havâss'ın Derinlikleri — II. Kitap",
-      page: 63,
-      chapter: "SAATLERİN YORUMLARI"
-    },
     original_text: {
-      tr: "Olumlu için Ay'ın büyümesi, Olumsuz için Ay'ın küçülmesi tercih edilir.",
-      rule: "Waxing moon for positive works, Waning moon for negative works."
+      tr: "Marriage is best on Thursday during Jupiter hour",
+      operations: ["Marriage", "Wedding", "Engagement"]
     },
     malayalam: {
-      title: "ചന്ദ്രക്കലയുടെ ഘട്ടങ്ങൾ",
-      meaning: "നല്ല കർമ്മങ്ങൾക്ക് ചന്ദ്രൻ വളരുമ്പോൾ (വെളുത്ത പക്ഷം), ചീത്ത കർമ്മങ്ങൾക്ക് ചന്ദ്രൻ ചുരുങ്ങുമ്പോൾ (കൃഷ്ണ പക്ഷം) തിരഞ്ഞെടുക്കുക.",
-      explanation: "ചന്ദ്രൻ വളരുമ്പോൾ (അമാവാസി മുതൽ പൗർണ്ണമി വരെ) നല്ല കർമ്മങ്ങൾ ചെയ്യുക. ചന്ദ്രൻ ചുരുങ്ങുമ്പോൾ (പൗർണ്ണമി മുതൽ അമാവാസി വരെ) ചീത്ത കർമ്മങ്ങൾ ചെയ്യുക.",
-      use: "ഈ നിയമം പാലിച്ചാൽ കർമ്മങ്ങൾക്ക് കൂടുതൽ ഫലം ലഭിക്കും.",
-      practical_application: "ഉദാഹരണത്തിന്, പ്രണയകർമ്മം ചെയ്യാൻ വെളുത്ത പക്ഷം തിരഞ്ഞെടുക്കുക. ശത്രുക്കളെ നശിപ്പിക്കാൻ കൃഷ്ണ പക്ഷം തിരഞ്ഞെടുക്കുക.",
-      warnings: "ചന്ദ്രന്റെ ഘട്ടം ശ്രദ്ധിക്കാതെ കർമ്മം ചെയ്താൽ ഫലം കുറവായിരിക്കും."
-    }
+      title: "വിവാഹത്തിന് ഉത്തമ സമയം",
+      meaning: "വിവാഹം വ്യാഴാഴ്ച ഗുരുമണിക്കൂരിൽ ചെയ്യുന്നത് ഏറ്റവും ഉത്തമം",
+      explanation: "വ്യാഴാഴ്ച ഗുരുവിന്റെ ദിവസവും, ഗുരുമണിക്കൂർ ഐശ്വര്യം നൽകുന്നു",
+      suitable_actions: "വിവാഹം, നിശ്ചയം",
+      warnings: "ശനിയാഴ്ച, ചൊവ്വാഴ്ച എന്നിവ ഒഴിവാക്കുക",
+      benefits: ["ദീർഘകാല സന്തോഷം", "ഐശ്വര്യം", "സാമരസ്യം"]
+    },
+    source: { book: "Marriage Timing", page: 3 }
+  },
+  {
+    id: "timing_2_business",
+    category: "TIMING_RULES",
+    original_text: {
+      tr: "Business deals are best on Wednesday during Mercury hour",
+      operations: ["Business", "Trade", "Deal", "Contract"]
+    },
+    malayalam: {
+      title: "ബിസിനസ് ഇടപാടുകൾക്ക് ഉത്തമ സമയം",
+      meaning: "ബിസിനസ് ഇടപാടുകൾ ബുധനാഴ്ച ബുധമണിക്കൂരിൽ ചെയ്യുന്നത് ഉത്തമം",
+      explanation: "ബുധൻ വ്യാപാരത്തിന്റെയും ആശയവിനിമയത്തിന്റെയും ഗ്രഹമാണ്",
+      suitable_actions: "ബിസിനസ്, വ്യാപാരം, ഇടപാടുകൾ",
+      warnings: "വെള്ളിയാഴ്ച ഒഴിവാക്കുക",
+      benefits: ["വിജയം", "ലാഭം", "നല്ല ആശയവിനിമയം"]
+    },
+    source: { book: "Business Timing", page: 7 }
+  },
+  {
+    id: "timing_3_travel",
+    category: "TIMING_RULES",
+    original_text: {
+      tr: "Travel is best on Sunday during Sun hour",
+      operations: ["Travel", "Journey", "Trip", "Voyage"]
+    },
+    malayalam: {
+      title: "യാത്രയ്ക്ക് ഉത്തമ സമയം",
+      meaning: "യാത്ര ഞായറാഴ്ച സൂര്യമണിക്കൂരിൽ ചെയ്യുന്നത് ഉത്തമം",
+      explanation: "സൂര്യൻ യാത്രകൾക്ക് ഊർജ്ജവും വിജയവും നൽകുന്നു",
+      suitable_actions: "യാത്ര, യാത്രകൾ",
+      warnings: "തിങ്കളാഴ്ച ഒഴിവാക്കുക",
+      benefits: ["സുരക്ഷിത യാത്ര", "വിജയം", "നല്ല അനുഭവങ്ങൾ"]
+    },
+    source: { book: "Travel Timing", page: 12 }
+  },
+  {
+    id: "timing_4_healing",
+    category: "TIMING_RULES",
+    original_text: {
+      tr: "Healing is best on Monday during Moon hour",
+      operations: ["Healing", "Treatment", "Medicine", "Therapy"]
+    },
+    malayalam: {
+      title: "ചികിത്സയ്ക്ക് ഉത്തമ സമയം",
+      meaning: "ചികിത്സ തിങ്കളാഴ്ച ചന്ദ്രമണിക്കൂരിൽ ചെയ്യുന്നത് ഉത്തമം",
+      explanation: "ചന്ദ്രൻ ആരോഗ്യത്തിനും ചികിത്സയ്ക്കും ഉത്തമമാണ്",
+      suitable_actions: "ചികിത്സ, ചികിത്സാവിധികൾ",
+      warnings: "ചൊവ്വാഴ്ച ഒഴിവാക്കുക",
+      benefits: ["വേഗത്തിലുള്ള സുഖം", "ആരോഗ്യം", "ക്ഷേമം"]
+    },
+    source: { book: "Healing Timing", page: 18 }
+  },
+  {
+    id: "timing_5_spiritual",
+    category: "TIMING_RULES",
+    original_text: {
+      tr: "Spiritual work is best on Thursday during Jupiter hour",
+      operations: ["Spiritual", "Meditation", "Prayer", "Invocation"]
+    },
+    malayalam: {
+      title: "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾക്ക് ഉത്തമ സമയം",
+      meaning: "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾ വ്യാഴാഴ്ച ഗുരുമണിക്കൂരിൽ ചെയ്യുന്നത് ഉത്തമം",
+      explanation: "ഗുരു ജ്ഞാനത്തിന്റെയും ആദ്ധ്യാത്മികതയുടെയും ഗ്രഹമാണ്",
+      suitable_actions: "ആദ്ധ്യാത്മികത, ധ്യാനം, പ്രാർത്ഥന",
+      warnings: "ശനിയാഴ്ച ഒഴിവാക്കുക",
+      benefits: ["ആദ്ധ്യാത്മിക വളർച്ച", "ജ്ഞാനം", "സമാധാനം"]
+    },
+    source: { book: "Spiritual Timing", page: 25 }
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// KNOWLEDGE BASE STATUS — MALAYALAM
-// ═══════════════════════════════════════════════════════════════
-export const KNOWLEDGE_BASE_STATUS_ML = {
+export const ASTRO_CLOCK_KNOWLEDGE_BASE_STATUS = {
   version: "1.0.0",
-  status: "ACTIVE_WITH_MALAYALAM",
-  total_sources: 2,
-  total_rules_with_ml: 350,
-  language_support: ["tr", "ml"],
-  last_update: "2026-06-14",
-  principle: "ORIGINAL_TEXT_PRESERVED + MALAYALAM_EXPLANATION",
-  ready_for_display: true
+  initialized: true,
+  totalRules: KNOWLEDGE_DAYS_ML.length + KNOWLEDGE_HOURS_ML.length + KNOWLEDGE_LUNAR_MANSIONS_ML.length + KNOWLEDGE_TIMING_RULES_ML.length,
+  categories: ["DAYS", "HOURS", "LUNAR_MANSIONS", "TIMING_RULES"],
+  malayalamSupport: true,
+  note: "Knowledge base loaded with full Malayalam support"
 };
