@@ -52,9 +52,16 @@ export default function AccountModal({ user, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3.5" style={{ borderBottom: "1px solid rgba(212,175,55,0.08)" }}>
           <div>
-            <p className="font-amiri font-bold text-lg leading-tight" style={{ color: "#f5ecd4" }}>
-              {user?.full_name || "حسابي"}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="font-amiri font-bold text-lg leading-tight" style={{ color: "#f5ecd4" }}>
+                {user?.full_name || "حسابي"}
+              </p>
+              {isAdmin && (
+                <span className="font-inter text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060", border: "1px solid rgba(212,175,55,0.35)" }}>
+                  ADMIN
+                </span>
+              )}
+            </div>
             {user?.email && (
               <p className="font-inter text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>
                 {user.email}
@@ -75,9 +82,14 @@ export default function AccountModal({ user, onClose }) {
           {/* Admin Section */}
           {isAdmin && (
             <div className="mb-4">
-              <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
-                <Shield className="w-4 h-4" style={{ color: "#D4AF37" }} />
-                <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: "#D4AF37" }}>Admin Panel</span>
+              <div className="flex items-center justify-between mb-3 pb-3" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" style={{ color: "#D4AF37" }} />
+                  <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: "#D4AF37" }}>Admin Panel</span>
+                </div>
+                <span className="font-inter text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060", border: "1px solid rgba(212,175,55,0.30)" }}>
+                  OWNER & SUPER ADMIN
+                </span>
               </div>
               
               <Link
