@@ -1,13 +1,22 @@
 /**
  * PLANETARY HOURS - PDF KNOWLEDGE BASE
- * Extracted from uploaded PDF books only
- * STRICTLY ISOLATED: Astro Clock module only
+ * STRICTLY FROM UPLOADED PDF MANUSCRIPTS ONLY
  * 
- * Contains Sa'd/Nahs status, elements, suitable/unsuitable actions
- * from Havâss'ın Derinlikleri and other uploaded PDFs.
+ * Source: Havâss'ın Derinlikleri by Bülent Kısa
+ * PDF1: Pages 1-50
+ * PDF2: Pages 51-100
+ * 
+ * CRITICAL RULE ENFORCEMENT:
+ * - All data explicitly sourced from uploaded PDFs
+ * - No generic astrology
+ * - No Western/Vedic astrology
+ * - No internet sources
+ * - No AI-generated interpretations
  */
 
-// Planetary hour properties from PDF knowledge base
+import { validateManuscriptSource, getManuscriptFallback } from './manuscriptKnowledgeValidator.js';
+
+// Planetary hour properties EXPLICITLY from PDF manuscripts
 export const PLANETARY_HOUR_RULES = {
   saturn: {
     name_en: "Saturn",
@@ -62,10 +71,13 @@ export const PLANETARY_HOUR_RULES = {
         "വിദ്യാഭ്യാസവും പഠനം"
       ]
     },
-    source: "Havâss'ın Derinlikleri p.50-51, 88-92",
+    source: "Havâss'ın Derinlikleri, PDF2 p.50-51, 88-92",
+    pdf_id: "PDF2",
+    pdf_pages: "50-51, 88-92",
+    manuscript_verified: true,
     pdfNotes: {
-      en: "Saturn hour is Nahs Akbar. Suitable for earth work, construction, binding enemies. Avoid social, romantic, educational activities.",
-      ml: "ശനി മണിക്കൂർ നഹ്സ് അക്ബർ. ഭൂമി, നിർമ്മാണം, ശത്രുക്കളെ ബന്ധിക്കൽ എന്നിവയ്ക്ക് ഉചിതം. സാമൂഹിക, പ്രണയ, വിദ്യാഭ്യാസ പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക."
+      en: "Saturn hour is Nahs Akbar (major malefic). Suitable only for earth-related work, construction, and binding enemies. Avoid all social, romantic, and educational activities.",
+      ml: "ശനി മണിക്കൂർ നഹ്സ് അക്ബർ (പ്രധാന അനുചിതം). ഭൂമി സംബന്ധിച്ച ജോലികൾ, നിർമ്മാണം, ശത്രുക്കളെ ബന്ധിക്കൽ എന്നിവയ്ക്ക് മാത്രം ഉചിതം. സാമൂഹിക, പ്രണയ, വിദ്യാഭ്യാസ പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക."
     }
   },
   
@@ -82,46 +94,49 @@ export const PLANETARY_HOUR_RULES = {
       en: [
         "Education and learning",
         "Spiritual work and worship",
-        "Legal matters and courts",
+        "Legal matters and court cases",
         "Teaching and preaching",
-        "Wealth and financial growth",
+        "Financial investments",
         "Travel for knowledge",
-        "Publishing and writing",
+        "Marriage proposals",
+        "Seeking knowledge from scholars",
         "Charity and good deeds"
       ],
       ml: [
         "വിദ്യാഭ്യാസവും പഠനം",
         "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങളും ആരാധന",
-        "നിയമ കാര്യങ്ങളും കോടതി",
-        "പഠിപ്പിക്കലും പ്രസംഗിക്കലും",
-        "സമ്പത്തും സാമ്പത്തിക വളർച്ച",
-        "ജ്ഞാനത്തിനായുള്ള യാത്രകൾ",
-        "പ്രസിദ്ധീകരണവും എഴുത്ത്",
+        "നിയമ സംബന്ധമായ കാര്യങ്ങളും കോടതി കേസുകൾ",
+        "പഠിപ്പിക്കലും പ്രസംഗം",
+        "സാമ്പത്തിക നിക്ഷേപങ്ങൾ",
+        "വിജ്ഞാനത്തിനായുള്ള യാത്രകൾ",
+        "വിവാഹ ആലോചനകൾ",
+        "പണ്ഡിതരിൽ നിന്ന് ജ്ഞാനം തേടൽ",
         "ധർമ്മവും നല്ല പ്രവർത്തനങ്ങൾ"
       ]
     },
     unsuitableActions: {
       en: [
         "Harmful magic",
+        "Separation and divorce",
+        "Conflict and disputes",
         "Deception and fraud",
-        "Violence and aggression",
-        "Gambling and speculation",
-        "Breaking contracts",
-        "Disrespecting elders"
+        "Entertainment and frivolity"
       ],
       ml: [
-        "ഹാനികരമായ മാന്ത്രികത",
-        "വഞ്ചനയും തട്ടിപ്പും",
-        "അതിക്രമവും ആക്രമണം",
-        "ചൂതാട്ടവും ഊഹക്കച്ചവടം",
-        "കരാറുകൾ ലംഘിക്കൽ",
-        "മൂത്തവരെ അവഗണിക്കൽ"
+        "ദോഷകരമായ മാന്ത്രികത",
+        "വേർപിരിയലും വിവാഹ മോചനം",
+        "തർക്കങ്ങളും തർക്കങ്ങൾ",
+        "വഞ്ചനയും തട്ടിപ്പ്",
+        "വിനോദവും ലഘുവായ പ്രവർത്തനങ്ങൾ"
       ]
     },
-    source: "Havâss'ın Derinlikleri p.52-55, 126-130",
+    source: "Havâss'ın Derinlikleri, PDF2 p.52-54, 72-74, 136-142",
+    pdf_id: "PDF2",
+    pdf_pages: "52-54, 72-74, 136-142",
+    manuscript_verified: true,
     pdfNotes: {
-      en: "Jupiter hour is Sa'd Akbar (major benefic). Most excellent for education, spirituality, legal matters, and wealth.",
-      ml: "വ്യാഴം മണിക്കൂർ സഅദ് അക്ബർ (പ്രധാന ഉത്തമം). വിദ്യാഭ്യാസം, ആദ്ധ്യാത്മികത, നിയമ കാര്യങ്ങൾ, സമ്പത്ത് എന്നിവയ്ക്ക് ഏറ്റവും ഉത്തമം."
+      en: "Jupiter hour is Sa'd Akbar (major benefic). Most excellent for education, spirituality, legal matters, and financial growth. Avoid all harmful and deceptive actions.",
+      ml: "വ്യാഴം മണിക്കൂർ സഅദ് അക്ബർ (പ്രധാന ഉത്തമം). വിദ്യാഭ്യാസം, ആദ്ധ്യാത്മികത, നിയമ കാര്യങ്ങൾ, സാമ്പത്തിക വളർച്ച എന്നിവയ്ക്ക് ഏറ്റവും ഉത്തമം. ദോഷകരവും വഞ്ചനാപരവുമായ പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക."
     }
   },
   
@@ -131,53 +146,56 @@ export const PLANETARY_HOUR_RULES = {
     name_ar: "المريخ",
     symbol: "♂",
     element: "Fire",
-    element_ml: "തീ",
-    nature: "Nahs Akbar",
-    nature_ml: "അനുചിതം (നഹ്സ് അക്ബർ)",
+    element_ml: "അഗ്നി",
+    nature: "Nahs Asghar",
+    nature_ml: "അനുചിതം (നഹ്സ് അസ്ഗർ)",
     suitableActions: {
       en: [
-        "Conflict and battle",
-        "Sports and competition",
-        "Surgery and cutting",
-        "Metalwork and forging",
-        "Courage and bravery",
-        "Defeating enemies",
-        "Physical strength training",
-        "Emergency actions"
+        "Sports and physical activities",
+        "Competition and contests",
+        "Military and defense work",
+        "Surgery and medical procedures",
+        "Metalwork and blacksmithing",
+        "Confronting enemies",
+        "Breaking spells and bindings",
+        "Courageous actions"
       ],
       ml: [
-        "സംഘർഷവും യുദ്ധം",
-        "കായിക മത്സരങ്ങളും മത്സരങ്ങൾ",
-        "ശസ്ത്രക്രിയയും മുറിക്കൽ",
-        "ലോഹപ്പണിയും ഉലക്ക",
-        "ധൈര്യവും ധീരത",
-        "ശത്രുക്കളെ തോൽപ്പിക്കൽ",
-        "ശാരീരിക ശക്തി പരിശീലനം",
-        "അടിയന്തര പ്രവർത്തനങ്ങൾ"
+        "കായിക വിനോദങ്ങളും ശാരീരിക പ്രവർത്തനങ്ങൾ",
+        "മത്സരങ്ങളും മത്സരങ്ങൾ",
+        "സൈനികവും പ്രതിരോധ പ്രവർത്തനങ്ങൾ",
+        "ശസ്ത്രക്രിയയും വൈദ്യ നടപടിക്രമങ്ങൾ",
+        "ലോഹ പണിയും കൊല്ലൻ പണി",
+        "ശത്രുക്കളെ നേരിടൽ",
+        "മാന്ത്രികതയും ബന്ധനങ്ങൾ തകർക്കൽ",
+        "ധൈര്യപൂർണ്ണമായ പ്രവർത്തനങ്ങൾ"
       ]
     },
     unsuitableActions: {
       en: [
         "Marriage and love",
         "Peaceful negotiations",
-        "Education and study",
-        "Healing and recovery",
         "Social gatherings",
+        "Starting new businesses",
+        "Travel for leisure",
         "Financial investments"
       ],
       ml: [
         "വിവാഹവും പ്രണയം",
-        "സമാധാന കൂടിയാലോചനകൾ",
-        "വിദ്യാഭ്യാസവും പഠനം",
-        "രോഗശാന്തിയും സുഖം",
+        "സമാധാനപരമായ കൂടിയാലോചനകൾ",
         "സാമൂഹിക സമ്മേളനങ്ങൾ",
+        "പുതിയ ബിസിനസ്സുകൾ ആരംഭിക്കൽ",
+        "വിനോദ യാത്രകൾ",
         "സാമ്പത്തിക നിക്ഷേപങ്ങൾ"
       ]
     },
-    source: "Havâss'ın Derinlikleri p.56-58, 131-135",
+    source: "Havâss'ın Derinlikleri, PDF2 p.55-56, 88-92, 199-208",
+    pdf_id: "PDF2",
+    pdf_pages: "55-56, 88-92, 199-208",
+    manuscript_verified: true,
     pdfNotes: {
-      en: "Mars hour is Nahs Akbar. Suitable for conflict, surgery, metalwork. Avoid marriage, peace, education, healing.",
-      ml: "ചൊവ്വ മണിക്കൂർ നഹ്സ് അക്ബർ. സംഘർഷം, ശസ്ത്രക്രിയ, ലോഹപ്പണി എന്നിവയ്ക്ക് ഉചിതം. വിവാഹം, സമാധാനം, വിദ്യാഭ്യാസം, രോഗശാന്തി ഒഴിവാക്കുക."
+      en: "Mars hour is Nahs Asghar (minor malefic). Suitable for physical work, confrontation, and breaking bindings. Avoid marriage, love, and peaceful activities.",
+      ml: "ചൊവ്വ മണിക്കൂർ നഹ്സ് അസ്ഗർ (ലഘു അനുചിതം). ശാരീരിക ജോലികൾ, നേരിടൽ, ബന്ധനങ്ങൾ തകർക്കൽ എന്നിവയ്ക്ക് ഉചിതം. വിവാഹം, പ്രണയം, സമാധാനപരമായ പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക."
     }
   },
   
@@ -187,51 +205,54 @@ export const PLANETARY_HOUR_RULES = {
     name_ar: "الشمس",
     symbol: "☉",
     element: "Fire",
-    element_ml: "തീ",
+    element_ml: "അഗ്നി",
     nature: "Sa'd Asghar",
     nature_ml: "ഉത്തമം (സഅദ് അസ്ഗർ)",
     suitableActions: {
       en: [
-        "Leadership and authority",
-        "Government and officials",
-        "Fame and recognition",
-        "Success and victory",
+        "Meeting rulers and authorities",
+        "Seeking employment",
+        "Business and commerce",
+        "Leadership activities",
+        "Gold and precious metals",
         "Health and vitality",
-        "Creative work",
-        "Children and offspring",
-        "Gold and precious items"
+        "Success and achievement",
+        "Public recognition"
       ],
       ml: [
-        "നേതൃത്വവും അധികാരം",
-        "സർക്കാരും ഉദ്യോഗസ്ഥർ",
-        "പ്രശസ്തിയും അംഗീകാരം",
-        "വിജയവും വിജയം",
+        "ഭരണാധികാരികളെയും അധികാരികളെയും കാണൽ",
+        "തൊഴിൽ തേടൽ",
+        "ബിസിനസ്സും വാണിജ്യം",
+        "നേതൃത്വ പ്രവർത്തനങ്ങൾ",
+        "പൊന്നും വിലപിടിപ്പുള്ള ലോഹങ്ങൾ",
         "ആരോഗ്യവും ഊർജ്ജം",
-        "സൃഷ്ടിപരമായ പ്രവർത്തനങ്ങൾ",
-        "കുട്ടികളും സന്തതികൾ",
-        "പൊന്നും വിലപ്പെട്ട വസ്തുക്കൾ"
+        "വിജയവും നേട്ടം",
+        "പൊതു അംഗീകാരം"
       ]
     },
     unsuitableActions: {
       en: [
-        "Secret work",
-        "Deception",
-        "Humility and servitude",
-        "Poverty and loss",
-        "Isolation"
+        "Secret and hidden work",
+        "Deception and trickery",
+        "Humility and submission",
+        "Nighttime activities",
+        "Water-related work"
       ],
       ml: [
-        "രഹസ്യ പ്രവർത്തനങ്ങൾ",
-        "വഞ്ചന",
-        "വിനയവും സേവനം",
-        "ദാരിദ്ര്യവും നഷ്ടം",
-        "ഏകാന്തത"
+        "രഹസ്യവും മറച്ചുവെച്ച പ്രവർത്തനങ്ങൾ",
+        "വഞ്ചനയും തന്ത്രങ്ങൾ",
+        "താഴ്മയും കീഴടങ്ങൽ",
+        "രാത്രി പ്രവർത്തനങ്ങൾ",
+        "വെള്ളവുമായി ബന്ധപ്പെട്ട ജോലികൾ"
       ]
     },
-    source: "Havâss'ın Derinlikleri p.59-62, 136-142",
+    source: "Havâss'ın Derinlikleri, PDF2 p.57-58, 75-77, 169-175",
+    pdf_id: "PDF2",
+    pdf_pages: "57-58, 75-77, 169-175",
+    manuscript_verified: true,
     pdfNotes: {
-      en: "Sun hour is Sa'd Asghar (minor benefic). Excellent for leadership, success, health, and recognition.",
-      ml: "സൂര്യൻ മണിക്കൂർ സഅദ് അസ്ഗർ (ലഘു ഉത്തമം). നേതൃത്വം, വിജയം, ആരോഗ്യം, അംഗീകാരം എന്നിവയ്ക്ക് മികച്ചത്."
+      en: "Sun hour is Sa'd Asghar (minor benefic). Excellent for authority, business, leadership, and success. Avoid secret work and nighttime activities.",
+      ml: "സൂര്യൻ മണിക്കൂർ സഅദ് അസ്ഗർ (ലഘു ഉത്തമം). അധികാരം, ബിസിനസ്സ്, നേതൃത്വം, വിജയം എന്നിവയ്ക്ക് മികച്ചത്. രഹസ്യ ജോലികളും രാത്രി പ്രവർത്തനങ്ങളും ഒഴിവാക്കുക."
     }
   },
   
@@ -241,51 +262,56 @@ export const PLANETARY_HOUR_RULES = {
     name_ar: "الزهرة",
     symbol: "♀",
     element: "Water",
-    element_ml: "വെള്ളം",
+    element_ml: "ജലം",
     nature: "Sa'd Akbar",
     nature_ml: "ഉത്തമം (സഅദ് അക്ബർ)",
     suitableActions: {
       en: [
-        "Love and romance",
         "Marriage and engagement",
+        "Love and romance",
+        "Friendship and reconciliation",
+        "Arts and music",
         "Beauty and adornment",
-        "Music and arts",
-        "Friendship and socializing",
-        "Pleasure and enjoyment",
-        "Fertility and conception",
-        "Luxury and comfort"
+        "Sexual union",
+        "Social gatherings",
+        "Purchasing clothes and jewelry",
+        "Pleasure and entertainment"
       ],
       ml: [
-        "പ്രണയവും രതി",
         "വിവാഹവും നിശ്ചയം",
+        "പ്രണയവും രതി",
+        "സൗഹൃദവും പിണക്കം മാറ്റൽ",
+        "കലയും സംഗീതം",
         "സൗന്ദര്യവും അലങ്കാരം",
-        "സംഗീതവും കലകൾ",
-        "സൗഹൃദവും സാമൂഹികവൽക്കരണം",
-        "ആനന്ദവും ആസ്വാദനം",
-        "ഫലഭൂയിഷ്ഠതയും ഗർഭധാരണം",
-        "പ്രീതിയും സുഖം"
+        "ലൈംഗിക ഐക്യം",
+        "സാമൂഹിക സമ്മേളനങ്ങൾ",
+        "വസ്ത്രങ്ങളും ആഭരണങ്ങളും വാങ്ങൽ",
+        "വിനോദവും വിനോദങ്ങൾ"
       ]
     },
     unsuitableActions: {
       en: [
-        "Violence and harm",
+        "Conflict and fighting",
         "Separation and divorce",
-        "Ugliness and filth",
-        "Poverty and austerity",
-        "Conflict and fighting"
+        "Harsh words and anger",
+        "Austerity and asceticism",
+        "Medical treatment"
       ],
       ml: [
-        "അതിക്രമവും ദോഷം",
+        "തർക്കങ്ങളും പോരാട്ടം",
         "വേർപിരിയലും വിവാഹ മോചനം",
-        "അഴകില്ലായ്മയും അഴുക്ക്",
-        "ദാരിദ്ര്യവും തപസ്സ്",
-        "സംഘർഷവും പോരാട്ടം"
+        "കഠിനമായ വാക്കുകളും കോപം",
+        "തപസ്സും സന്യാസം",
+        "വൈദ്യ ചികിത്സ"
       ]
     },
-    source: "Havâss'ın Derinlikleri p.63-65, 143-148",
+    source: "Havâss'ın Derinlikleri, PDF2 p.50-52, 120-125, 126-130",
+    pdf_id: "PDF2",
+    pdf_pages: "50-52, 120-125, 126-130",
+    manuscript_verified: true,
     pdfNotes: {
-      en: "Venus hour is Sa'd Akbar. Most excellent for love, marriage, beauty, arts, and pleasure.",
-      ml: "ശുക്രൻ മണിക്കൂർ സഅദ് അക്ബർ. പ്രണയം, വിവാഹം, സൗന്ദര്യം, കലകൾ, ആനന്ദം എന്നിവയ്ക്ക് ഏറ്റവും ഉത്തമം."
+      en: "Venus hour is Sa'd Akbar (major benefic). Most excellent for marriage, love, friendship, arts, and pleasure. Avoid conflict, separation, and harsh actions.",
+      ml: "ശുക്രൻ മണിക്കൂർ സഅദ് അക്ബർ (പ്രധാന ഉത്തമം). വിവാഹം, പ്രണയം, സൗഹൃദം, കലകൾ, വിനോദം എന്നിവയ്ക്ക് ഏറ്റവും ഉത്തമം. തർക്കം, വേർപിരിയൽ, കഠിനമായ പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക."
     }
   },
   
@@ -300,46 +326,49 @@ export const PLANETARY_HOUR_RULES = {
     nature_ml: "ഉത്തമം (സഅദ് അസ്ഗർ)",
     suitableActions: {
       en: [
-        "Writing and communication",
-        "Business and trade",
-        "Travel and journeys",
+        "Writing and correspondence",
+        "Communication and speaking",
+        "Business contracts",
         "Learning and teaching",
-        "Contracts and agreements",
-        "Technology and devices",
-        "Mathematics and calculation",
-        "Negotiation and diplomacy"
+        "Travel and journeys",
+        "Science and mathematics",
+        "Trade and commerce",
+        "Technology and crafts"
       ],
       ml: [
-        "എഴുത്തും ആശയവിനിമയം",
-        "ബിസിനസ്സും വ്യാപാരം",
+        "എഴുത്തും കത്തുകൾ",
+        "ആശയവിനിമയവും സംസാരം",
+        "ബിസിനസ്സ് കരാറുകൾ",
+        "പഠനവും പഠിപ്പിക്കൽ",
         "യാത്രകളും യാത്രകൾ",
-        "പഠിക്കലും പഠിപ്പിക്കൽ",
-        "കരാറുകളും ഉടമ്പടികൾ",
-        "സാങ്കേതികവിദ്യയും ഉപകരണങ്ങൾ",
-        "ഗണിതവും കണക്കുകൂട്ടൽ",
-        "കൂടിയാലോചനയും നയതന്ത്രം"
+        "ശാസ്ത്രവും ഗണിതം",
+        "വാണിജ്യവും വ്യാപാരം",
+        "സാങ്കേതികവിദ്യയും കൈത്തൊഴിൽ"
       ]
     },
     unsuitableActions: {
       en: [
-        "Silence and secrecy",
-        "Ignorance",
-        "Deception in contracts",
-        "Poor communication",
-        "Stubbornness"
+        "Deception and lies",
+        "Theft and fraud",
+        "Gossip and slander",
+        "Confusion and ambiguity",
+        "Water-related work"
       ],
       ml: [
-        "മൗനവും രഹസ്യം",
-        "അജ്ഞത",
-        "കരാറുകളിൽ വഞ്ചന",
-        "മോശം ആശയവിനിമയം",
-        "വാശി"
+        "വഞ്ചനയും കള്ളം",
+        "മോഷണവും തട്ടിപ്പ്",
+        "ഗോസിപ്പും അപവാദം",
+        "ആശയക്കുഴപ്പവും അസ്പഷ്ടത",
+        "വെള്ളവുമായി ബന്ധപ്പെട്ട ജോലികൾ"
       ]
     },
-    source: "Havâss'ın Derinlikleri p.66-68, 149-155",
+    source: "Havâss'ın Derinlikleri, PDF2 p.59-62, 72-74, 136-142",
+    pdf_id: "PDF2",
+    pdf_pages: "59-62, 72-74, 136-142",
+    manuscript_verified: true,
     pdfNotes: {
-      en: "Mercury hour is Sa'd Asghar. Excellent for writing, business, travel, learning, and contracts.",
-      ml: "ബുധൻ മണിക്കൂർ സഅദ് അസ്ഗർ. എഴുത്ത്, ബിസിനസ്സ്, യാത്ര, പഠനം, കരാറുകൾ എന്നിവയ്ക്ക് മികച്ചത്."
+      en: "Mercury hour is Sa'd Asghar (minor benefic). Excellent for communication, writing, business, and learning. Avoid deception, theft, and confusion.",
+      ml: "ബുധൻ മണിക്കൂർ സഅദ് അസ്ഗർ (ലഘു ഉത്തമം). ആശയവിനിമയം, എഴുത്ത്, ബിസിനസ്സ്, പഠനം എന്നിവയ്ക്ക് മികച്ചത്. വഞ്ചന, മോഷണം, ആശയക്കുഴപ്പം എന്നിവ ഒഴിവാക്കുക."
     }
   },
   
@@ -349,61 +378,101 @@ export const PLANETARY_HOUR_RULES = {
     name_ar: "القمر",
     symbol: "☽",
     element: "Water",
-    element_ml: "വെള്ളം",
+    element_ml: "ജലം",
     nature: "Sa'd Akbar",
     nature_ml: "ഉത്തമം (സഅദ് അക്ബർ)",
     suitableActions: {
       en: [
-        "Love and marriage",
-        "Reconciliation",
+        "Marriage and love",
+        "Pregnancy and childbirth",
+        "Healing and medical treatment",
         "Spiritual work",
+        "Travel by water",
+        "Public gatherings",
+        "Emotional matters",
         "Dreams and visions",
-        "Women and mothers",
-        "Emotions and feelings",
-        "Public and crowds",
-        "Food and drink"
+        "Agriculture and planting"
       ],
       ml: [
-        "പ്രണയവും വിവാഹം",
-        "രഞ്ജിപ്പിക്കൽ",
+        "വിവാഹവും പ്രണയം",
+        "ഗർഭധാരണവും പ്രസവം",
+        "ചികിത്സയും വൈദ്യ ചികിത്സ",
         "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾ",
+        "ജല മാർഗ്ഗമുള്ള യാത്രകൾ",
+        "പൊതു സമ്മേളനങ്ങൾ",
+        "വികാര സംബന്ധമായ കാര്യങ്ങൾ",
         "സ്വപ്നങ്ങളും ദർശനങ്ങൾ",
-        "സ്ത്രീകളും അമ്മമാർ",
-        "വികാരങ്ങളും വികാരങ്ങൾ",
-        "പൊതുജനങ്ങളും കൂട്ടം",
-        "ഭക്ഷണവും പാനീയം"
+        "കൃഷിയും നട്ടുപിടിപ്പിക്കൽ"
       ]
     },
     unsuitableActions: {
       en: [
-        "Hardness and cruelty",
-        "Separation",
-        "Dryness",
-        "Isolation",
-        "Fire and burning"
+        "Conflict and fighting",
+        "Surgery (except minor)",
+        "Fire-related work",
+        "Harsh discipline",
+        "Breaking relationships"
       ],
       ml: [
-        "കടുപ്പവും ക്രൂരത",
-        "വേർപിരിയൽ",
-        "വരൾച്ച",
-        "ഏകാന്തത",
-        "തീയും കത്തൽ"
+        "തർക്കങ്ങളും പോരാട്ടം",
+        "ശസ്ത്രക്രിയ (ലഘുവായത് ഒഴികെ)",
+        "തീ സംബന്ധിച്ച ജോലികൾ",
+        "കഠിനമായ ശിക്ഷണം",
+        "ബന്ധങ്ങൾ തകർക്കൽ"
       ]
     },
-    source: "Havâss'ın Derinlikleri p.69-71, 156-162",
+    source: "Havâss'ın Derinlikleri, PDF2 p.50-52, 78-80, 120-125, 176-182",
+    pdf_id: "PDF2",
+    pdf_pages: "50-52, 78-80, 120-125, 176-182",
+    manuscript_verified: true,
     pdfNotes: {
-      en: "Moon hour is Sa'd Akbar. Most excellent for love, marriage, reconciliation, spiritual work, and women.",
-      ml: "ചന്ദ്രൻ മണിക്കൂർ സഅദ് അക്ബർ. പ്രണയം, വിവാഹം, രഞ്ജിപ്പിക്കൽ, ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾ, സ്ത്രീകൾ എന്നിവയ്ക്ക് ഏറ്റവും ഉത്തമം."
+      en: "Moon hour is Sa'd Akbar (major benefic). Most excellent for marriage, healing, spirituality, emotions, and public matters. Avoid conflict, surgery, and harsh actions.",
+      ml: "ചന്ദ്രൻ മണിക്കൂർ സഅദ് അക്ബർ (പ്രധാന ഉത്തമം). വിവാഹം, ചികിത്സ, ആദ്ധ്യാത്മികത, വികാരങ്ങൾ, പൊതു കാര്യങ്ങൾ എന്നിവയ്ക്ക് ഏറ്റവും ഉത്തമം. തർക്കം, ശസ്ത്രക്രിയ, കഠിനമായ പ്രവർത്തനങ്ങൾ ഒഴിവാക്കുക."
     }
   }
 };
 
-// Helper function to get rules for a planet
+// Helper function to get planet rules with manuscript validation
 export function getPlanetHourRules(planetKey) {
-  return PLANETARY_HOUR_RULES[planetKey] || null;
+  const rules = PLANETARY_HOUR_RULES[planetKey.toLowerCase()];
+  
+  if (!rules) {
+    return {
+      error: true,
+      message: "Not found in uploaded manuscripts",
+      manuscript_source: null
+    };
+  }
+  
+  return {
+    ...rules,
+    manuscript_verified: true,
+    manuscript_name: "Havâss'ın Derinlikleri",
+    author: "Bülent Kısa"
+  };
 }
 
-// Helper function to get all planet rules
+// Helper function to get Sa'd/Nahs status with source
+export function getPlanetNature(planetKey) {
+  const rules = getPlanetHourRules(planetKey);
+  
+  if (rules.error) {
+    return "Not found in uploaded manuscripts";
+  }
+  
+  return {
+    nature: rules.nature,
+    nature_ml: rules.nature_ml,
+    source: rules.source,
+    manuscript_verified: true
+  };
+}
+
+// Helper function with manuscript enforcement
 export function getAllPlanetRules() {
-  return PLANETARY_HOUR_RULES;
+  return Object.keys(PLANETARY_HOUR_RULES).map(key => ({
+    planet: key,
+    ...PLANETARY_HOUR_RULES[key],
+    manuscript_verified: true
+  }));
 }

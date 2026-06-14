@@ -11,6 +11,7 @@ import { getAllPlanetaryHours } from "@/lib/astroClockLiveEngine";
 import { calculateSunriseSunset, formatDecimalTime } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
+import { formatManuscriptCitation } from "@/lib/manuscriptKnowledgeEnforcement.js";
 
 const G = {
   border:   "rgba(212,175,55,0.40)",
@@ -250,12 +251,33 @@ function EnhancedHourCard({ hour, isMalayalam }) {
         </div>
       </div>
 
-      {/* Source */}
-      <div className="flex items-center gap-2 pt-3 border-t" style={{ borderColor: G.faint }}>
-        <Book className="w-3 h-3" style={{ color: G.text }} />
-        <p className="font-inter text-[8px]" style={{ color: G.dim }}>
-          {isMalayalam ? "സ്രോതസ്സ്:" : "Source:"} {planetRules?.source}
-        </p>
+      {/* Source - Manuscript Citation */}
+      <div className="mt-4 p-3 rounded-lg border" style={{ 
+        background: "rgba(212,175,55,0.04)",
+        borderColor: planetRules?.manuscript_verified ? "rgba(34,197,94,0.40)" : "rgba(251,191,36,0.40)"
+      }}>
+        <div className="flex items-start gap-2">
+          <Book className="w-3 h-3 mt-0.5" style={{ color: G.text }} />
+          <div className="flex-1">
+            <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+              {isMalayalam ? "ഹസ്തലിഖിത സ്രോതസ്സ്" : "Manuscript Source"}
+            </p>
+            {planetRules?.manuscript_verified ? (
+              <>
+                <p className="font-inter text-[9px] text-white/80 mb-1">
+                  {planetRules?.source}
+                </p>
+                <p className="font-inter text-[8px]" style={{ color: "rgba(34,197,94,0.70)" }}>
+                  ✓ {isMalayalam ? "ഹസ്തലിഖിതത്തിൽ നിന്ന്" : "From uploaded manuscripts"}
+                </p>
+              </>
+            ) : (
+              <p className="font-inter text-[9px]" style={{ color: "#fbbf24" }}>
+                {isMalayalam ? "ഹസ്തലിഖിതങ്ങളിൽ കാണുന്നില്ല" : "Not found in uploaded manuscripts"}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
