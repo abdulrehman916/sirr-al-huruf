@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Book, Filter, CheckCircle, XCircle, AlertTriangle, Layers, FileText, Hash, Database, TrendingUp, ShieldOff } from "lucide-react";
+import { Book, Filter, CheckCircle, XCircle, AlertTriangle, Layers, FileText, Hash, Database, TrendingUp, ShieldOff, Link } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -20,60 +21,71 @@ const G = {
 
 export default function AstrologyOnlyAudit() {
   const [approved, setApproved] = useState(false);
+  const [audit, setAudit] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Pre-calculated audit based on PDF analysis
-  const audit = {
-    manuscript: {
-      book_name: "Sems'ul-Maarif'ul-Kubra (Vol. 3)",
-      author: "Imam Ahmed Elbuni",
-      translator: "Selahaddin Alpay",
-      publisher: "Sedef Yayinevi, Istanbul 1979",
-      total_pages: 100,
-      proposed_id: "elbuni_semsul_maarif_astrology_only"
-    },
-    included_categories: {
-      PLANETARY_HOURS: { estimated: 35, description: "Planetary hour sequences, Chaldean order" },
-      LUNAR_MANSIONS: { estimated: 28, description: "28 mansions with stars, elements, timing" },
-      ZODIAC: { estimated: 45, description: "12 signs: rulers, exaltations, aspects" },
-      PLANETS: { estimated: 50, description: "Planetary properties, nature, temperament" },
-      FRIENDSHIP_RULES: { estimated: 15, description: "Planetary friendships/enmities" },
-      DAY_RULERS: { estimated: 14, description: "Day and night rulers per weekday" },
-      SAAD_NAHS: { estimated: 20, description: "Benefic/malefic classifications" },
-      COSMOLOGY: { estimated: 30, description: "Geocentric model, ecliptic, nodes" },
-      ASTRONOMICAL_DATA: { estimated: 25, description: "Planetary positions, conjunctions" },
-      ELECTION_RULES: { estimated: 18, description: "Astrological timing rules" },
-      HOUSES: { estimated: 12, description: "Astrological house meanings" },
-      ASPECTS: { estimated: 15, description: "Trine, square, opposition aspects" }
-    },
-    excluded_categories: [
-      "VEFK / Magic Squares",
-      "Talismans",
-      "Love Works (Muhabbat)",
-      "Wealth Works (Rizk)",
-      "Protection Works (Havas)",
-      "Spiritual Operations",
-      "Invocations / Du'as",
-      "Divine Names Properties",
-      "Angel Hierarchies",
-      "Zikir Protocols",
-      "Healing Operations"
-    ],
-    estimates: {
-      total_astrology_rules: 307,
-      excluded_spiritual_content: 180,
-      new_categories: 2, // ASTRONOMICAL_DATA, ASPECTS
-      potential_overlaps: 45,
-      alternate_source_entries: 45,
-      manuscript_disagreements: 25
-    },
-    database_current: {
-      total_manuscripts: 3,
-      total_rules: 928,
-      total_categories: 21
+  useEffect(() => {
+    runAudit();
+  }, []);
+
+  async function runAudit() {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Call the backend audit function with PDF URLs
+      const result = await base44.functions.invoke('auditAstrologyIngestion', {
+        pdf_urls: [
+          "https://media.base44.com/files/public/69f3dea51ce92ee2fde20be6/77e45391d_E95C54E0AD505E43-1-50.pdf",
+          "https://media.base44.com/files/public/69f3dea51ce92ee2fde20be6/2af646637_E95C54E0AD505E43-51-100.pdf"
+        ]
+      });
+      
+      setAudit(result.data.broad_astrology_audit);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
-  const totalIncluded = Object.values(audit.included_categories).reduce((sum, cat) => sum + cat.estimated, 0);
+  if (loading) {
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="font-malayalam-md text-gold">Running Broad Astrology Audit...</p>
+          <p className="font-inter text-sm text-white/60 mt-2">Detecting all astrological correspondences</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-8">
+        <div className="max-w-4xl mx-auto p-6 rounded-xl border" style={{ background: G.exclude, borderColor: G.excludeBorder }}>
+          <h2 className="font-malayalam-lg text-red-400 mb-2">Audit Failed</h2>
+          <p className="font-inter text-white/80 mb-4">{error}</p>
+          <button
+            onClick={runAudit}
+            className="px-6 py-3 rounded-lg font-malayalam-sm text-white"
+            style={{ background: G.border }}
+          >
+            Retry Audit
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!audit) {
+    return null;
+  }
+
+  const totalRules = audit.estimated_operations.records_to_create;
+  const uniquePages = audit.estimated_operations.expected_page_coverage;
 
   if (approved) {
     return (
@@ -87,7 +99,7 @@ export default function AstrologyOnlyAudit() {
           <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: '#22c55e' }} />
           <h2 className="font-malayalam-lg text-white mb-2">Audit Approved</h2>
           <p className="font-inter text-white/80 mb-4">
-            Ready for astrology-only ingestion. {totalIncluded} rules will be created.
+            Ready for broad astrology ingestion. {totalRules} rules will be created.
           </p>
           <button
             onClick={() => setApproved(false)}
@@ -111,10 +123,10 @@ export default function AstrologyOnlyAudit() {
           className="mb-8"
         >
           <h1 className="font-malayalam-lg uppercase tracking-widest mb-2" style={{ color: G.text }}>
-            Astrology-Only Ingestion Audit
+            Broad Astrology Correspondences Audit
           </h1>
           <p className="font-inter text-sm" style={{ color: G.dim }}>
-            Sems'ul-Maarif'ul-Kubra Vol. 3 — Filtering spiritual/magical content
+            Detecting ALL content with astrological dependencies and celestial correspondences
           </p>
         </motion.div>
 
@@ -133,10 +145,10 @@ export default function AstrologyOnlyAudit() {
             </h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <InfoStat label="Book" value={audit.manuscript.book_name} />
-            <InfoStat label="Author" value={audit.manuscript.author} />
-            <InfoStat label="Pages" value={audit.manuscript.total_pages.toString()} />
-            <InfoStat label="Proposed ID" value={audit.manuscript.proposed_id} />
+            <InfoStat label="Book" value={audit.manuscript_info.book_name} />
+            <InfoStat label="Author" value={audit.manuscript_info.author} />
+            <InfoStat label="PDFs" value={audit.extraction_results.pdfs_processed.toString()} />
+            <InfoStat label="Proposed ID" value={audit.manuscript_info.proposed_id} />
           </div>
         </motion.div>
 
@@ -144,35 +156,35 @@ export default function AstrologyOnlyAudit() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <SummaryCard
             icon={FileText}
-            label="Astrology Rules"
-            value={totalIncluded}
+            label="Estimated Rules"
+            value={totalRules}
             color="#22c55e"
             subtitle="To be created"
           />
           <SummaryCard
-            icon={ShieldOff}
-            label="Excluded Content"
-            value={audit.estimates.excluded_spiritual_content}
-            color="#ef4444"
-            subtitle="Spiritual/magical"
+            icon={Hash}
+            label="Pages with Astro Content"
+            value={uniquePages}
+            color={G.text}
+            subtitle={`${audit.estimated_operations.coverage_percentage}% coverage`}
           />
           <SummaryCard
             icon={Layers}
-            label="Categories"
-            value={Object.keys(audit.included_categories).length}
+            label="Categories Detected"
+            value={audit.extraction_results.detected_categories.length}
             color={G.text}
-            subtitle={`${audit.estimates.new_categories} new`}
+            subtitle={`${audit.database_comparison.new_categories_to_add.length} new`}
           />
           <SummaryCard
             icon={Database}
             label="Current Database"
-            value={audit.database_current.total_rules}
+            value={audit.database_comparison.existing_rules}
             color={G.text}
-            subtitle={`${audit.database_current.total_manuscripts} manuscripts`}
+            subtitle={`${audit.database_comparison.existing_manuscripts} manuscripts`}
           />
         </div>
 
-        {/* Included Categories */}
+        {/* Detection Scope */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -181,27 +193,62 @@ export default function AstrologyOnlyAudit() {
           style={{ background: G.bg, borderColor: G.border }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <CheckCircle className="w-6 h-6" style={{ color: '#22c55e' }} />
-            <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: '#22c55e' }}>
-              INCLUDED — Astrology Content Only
+            <Filter className="w-6 h-6" style={{ color: G.text }} />
+            <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: G.text }}>
+              Detection Scope — ALL Astrological Dependencies
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(audit.included_categories).map(([cat, data]) => (
-              <div key={cat} className="p-4 rounded-lg" style={{ background: G.success, border: `1px solid ${G.successBorder}` }}>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: '#22c55e' }}>{cat}</p>
-                  <Hash className="w-4 h-4" style={{ color: '#22c55e' }} />
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <p className="font-inter text-[8px] uppercase tracking-widest mb-3" style={{ color: '#22c55e' }}>
+                INCLUDED — Celestial Correspondences
+              </p>
+              <ul className="space-y-2 font-inter text-sm text-white/80">
+                {audit.detection_scope.includes.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 mt-0.5" style={{ color: '#22c55e' }} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="p-4 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+              <p className="font-inter text-[8px] uppercase tracking-widest mb-3" style={{ color: G.text }}>
+                Extraction Results
+              </p>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="font-inter text-xs" style={{ color: G.dim }}>Total Pages Scanned</span>
+                  <span className="font-malayalam-sm text-white">{audit.extraction_results.total_pages_scanned}</span>
                 </div>
-                <p className="font-malayalam-lg font-bold text-white mb-1">{data.estimated}</p>
-                <p className="font-inter text-[9px] text-white/70">{data.description}</p>
+                <div className="flex justify-between">
+                  <span className="font-inter text-xs" style={{ color: G.dim }}>High Astro Dependency</span>
+                  <span className="font-malayalam-sm text-white">{audit.extraction_results.high_astro_dependency_pages} pages</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-inter text-xs" style={{ color: G.dim }}>Medium Astro Dependency</span>
+                  <span className="font-malayalam-sm text-white">{audit.extraction_results.medium_astro_dependency_pages} pages</span>
+                </div>
+                <div className="pt-2 border-t" style={{ borderColor: G.faint }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                    Detected Categories
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {audit.extraction_results.detected_categories.map((cat, idx) => (
+                      <span key={idx} className="px-2 py-1 rounded text-[7px] uppercase" style={{ background: G.border, color: G.text }}>
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </motion.div>
 
-        {/* Excluded Categories */}
+        {/* Correspondence Links */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -210,18 +257,23 @@ export default function AstrologyOnlyAudit() {
           style={{ background: G.bg, borderColor: G.border }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <XCircle className="w-6 h-6" style={{ color: '#ef4444' }} />
-            <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: '#ef4444' }}>
-              EXCLUDED — Spiritual/Magical Content
+            <Link className="w-6 h-6" style={{ color: G.text }} />
+            <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: G.text }}>
+              Correspondence Links to Create
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {audit.excluded_categories.map((cat, idx) => (
-              <div key={idx} className="p-3 rounded-lg" style={{ background: G.exclude, border: `1px solid ${G.excludeBorder}` }}>
-                <p className="font-inter text-[9px] text-white/80">{cat}</p>
-              </div>
-            ))}
+          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {Object.entries(audit.correspondence_links_to_create)
+              .sort((a, b) => b[1] - a[1])
+              .map(([link, count], idx) => (
+                <div key={link} className="p-3 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+                  <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                    {link.replace(/_/g, ' ')}
+                  </p>
+                  <p className="font-malayalam-md font-bold text-white">{count}</p>
+                </div>
+              ))}
           </div>
         </motion.div>
 
@@ -243,19 +295,19 @@ export default function AstrologyOnlyAudit() {
           <div className="grid md:grid-cols-3 gap-6">
             <OperationStat
               label="Records to Create"
-              value={totalIncluded}
+              value={audit.estimated_operations.records_to_create}
               color="#22c55e"
               description="New astrology rules"
             />
             <OperationStat
               label="Records to Update"
-              value={0}
+              value={audit.estimated_operations.records_to_update}
               color={G.dim}
               description="No updates (additive only)"
             />
             <OperationStat
               label="Records to Delete"
-              value={0}
+              value={audit.estimated_operations.records_to_delete}
               color={G.dim}
               description="Never delete"
             />
@@ -264,20 +316,20 @@ export default function AstrologyOnlyAudit() {
           <div className="grid md:grid-cols-2 gap-6 mt-6 pt-6 border-t" style={{ borderColor: G.faint }}>
             <OperationStat
               label="Alternate Source Entries"
-              value={audit.estimates.alternate_source_entries}
+              value={audit.estimated_operations.alternate_source_entries}
               color="#fbbf24"
               description="Overlaps with existing manuscripts"
             />
             <OperationStat
               label="Manuscript Disagreements"
-              value={audit.estimates.manuscript_disagreements}
+              value={audit.estimated_operations.manuscript_disagreement_entries}
               color="#fbbf24"
               description="Conflicting astrological opinions"
             />
           </div>
         </motion.div>
 
-        {/* Overlap Analysis */}
+        {/* Database Comparison */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -286,64 +338,120 @@ export default function AstrologyOnlyAudit() {
           style={{ background: G.bg, borderColor: G.border }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <AlertTriangle className="w-6 h-6" style={{ color: '#fbbf24' }} />
-            <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: '#fbbf24' }}>
-              Potential Overlaps with Existing Manuscripts
+            <Database className="w-6 h-6" style={{ color: G.text }} />
+            <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: G.text }}>
+              Database Comparison
             </h2>
           </div>
 
-          <div className="p-4 rounded-lg" style={{ background: G.warning, border: `1px solid ${G.warningBorder}` }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: '#fbbf24' }}>
-              Overlap Analysis
-            </p>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div>
-                <p className="font-malayalam-sm text-white/70 mb-1">Estimated Overlaps</p>
-                <p className="font-malayalam-lg font-bold text-white">{audit.estimates.potential_overlaps}</p>
-              </div>
-              <div>
-                <p className="font-malayalam-sm text-white/70 mb-1">Existing Manuscripts</p>
-                <p className="font-malayalam-lg font-bold text-white">{audit.database_current.total_manuscripts}</p>
-                <p className="font-inter text-[9px] text-white/60">Havass Vol.1-2, Taha</p>
-              </div>
-              <div>
-                <p className="font-malayalam-sm text-white/70 mb-1">New Categories</p>
-                <p className="font-malayalam-lg font-bold text-white">{audit.estimates.new_categories}</p>
-                <p className="font-inter text-[9px] text-white/60">ASTRONOMICAL_DATA, ASPECTS</p>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="p-4 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+              <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                Existing Categories
+              </p>
+              <p className="font-malayalam-lg font-bold text-white mb-2">
+                {audit.database_comparison.existing_categories.length}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {audit.database_comparison.existing_categories.slice(0, 8).map((cat, idx) => (
+                  <span key={idx} className="px-2 py-1 rounded text-[7px] uppercase" style={{ background: G.border, color: G.text }}>
+                    {cat.replace(/_/g, ' ')}
+                  </span>
+                ))}
               </div>
             </div>
-          </div>
 
-          <div className="mt-4 p-4 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.text }}>
-              Overlap Handling Policy
-            </p>
-            <ul className="space-y-2 font-inter text-sm text-white/80">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 mt-0.5" style={{ color: '#22c55e' }} />
-                <span>All existing records preserved — ZERO deletions</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 mt-0.5" style={{ color: '#22c55e' }} />
-                <span>Overlapping content stored as alternate_source with page reference</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 mt-0.5" style={{ color: '#22c55e' }} />
-                <span>Conflicting opinions preserved as MANUSCRIPT DISAGREEMENT entries</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 mt-0.5" style={{ color: '#22c55e' }} />
-                <span>Both versions remain queryable separately by manuscript_id</span>
-              </li>
-            </ul>
+            {audit.database_comparison.new_categories_to_add.length > 0 && (
+              <div className="p-4 rounded-lg" style={{ background: G.success, border: `1px solid ${G.successBorder}` }}>
+                <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: '#22c55e' }}>
+                  New Categories to Add
+                </p>
+                <p className="font-malayalam-lg font-bold text-white mb-2">
+                  {audit.database_comparison.new_categories_to_add.length}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {audit.database_comparison.new_categories_to_add.map((cat, idx) => (
+                    <span key={idx} className="px-2 py-1 rounded text-[7px] uppercase" style={{ background: '#22c55e', color: '#fff' }}>
+                      {cat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="p-4 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+              <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                Categories Expanded
+              </p>
+              <p className="font-malayalam-lg font-bold text-white mb-2">
+                {audit.database_comparison.categories_expanded.length}
+              </p>
+              <p className="font-inter text-[9px]" style={{ color: G.dim }}>
+                Existing categories receiving new rules
+              </p>
+            </div>
           </div>
         </motion.div>
+
+        {/* Sample Content */}
+        {audit.extraction_results.sample_content && audit.extraction_results.sample_content.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="mb-8 p-6 rounded-xl border"
+            style={{ background: G.bg, borderColor: G.border }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <FileText className="w-6 h-6" style={{ color: G.text }} />
+              <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: G.text }}>
+                Sample Detected Content (First 10)
+              </h2>
+            </div>
+
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {audit.extraction_results.sample_content.slice(0, 10).map((sample, idx) => (
+                <div key={idx} className="p-3 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.text }}>
+                      Page {sample.page}
+                    </p>
+                    {sample.astro_dependency && (
+                      <span className={`px-2 py-0.5 rounded text-[7px] uppercase ${
+                        sample.astro_dependency === 'HIGH' ? 'bg-green-900 text-green-300' :
+                        sample.astro_dependency === 'MEDIUM' ? 'bg-yellow-900 text-yellow-300' :
+                        'bg-gray-700 text-gray-300'
+                      }`}>
+                        {sample.astro_dependency}
+                      </span>
+                    )}
+                  </div>
+                  {sample.celestial_bodies && sample.celestial_bodies.length > 0 && (
+                    <p className="font-inter text-xs text-white/70 mb-1">
+                      <span style={{ color: G.dim }}>Celestial:</span> {sample.celestial_bodies.join(', ')}
+                    </p>
+                  )}
+                  {sample.timing_refs && sample.timing_refs.length > 0 && (
+                    <p className="font-inter text-xs text-white/70 mb-1">
+                      <span style={{ color: G.dim }}>Timing:</span> {sample.timing_refs.join(', ')}
+                    </p>
+                  )}
+                  {sample.raw_text && (
+                    <p className="font-inter text-xs text-white/60 mt-2 italic">
+                      "{sample.raw_text.substring(0, 150)}..."
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Approval Section */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
+          transition={{ delay: 0.4 }}
           className="p-8 rounded-xl border text-center"
           style={{ background: G.bg, borderColor: G.border }}
         >
@@ -353,15 +461,15 @@ export default function AstrologyOnlyAudit() {
           <div className="grid md:grid-cols-3 gap-4 mb-6 max-w-3xl mx-auto">
             <div className="p-4 rounded-lg" style={{ background: G.success, border: `1px solid ${G.successBorder}` }}>
               <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: '#22c55e' }}>Total Rules</p>
-              <p className="font-malayalam-lg font-bold text-white">{totalIncluded}</p>
-            </div>
-            <div className="p-4 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
-              <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>Categories</p>
-              <p className="font-malayalam-lg font-bold text-white">{Object.keys(audit.included_categories).length}</p>
+              <p className="font-malayalam-lg font-bold text-white">{totalRules}</p>
             </div>
             <div className="p-4 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
               <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>Pages</p>
-              <p className="font-malayalam-lg font-bold text-white">{audit.manuscript.total_pages}</p>
+              <p className="font-malayalam-lg font-bold text-white">{uniquePages}</p>
+            </div>
+            <div className="p-4 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+              <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>Coverage</p>
+              <p className="font-malayalam-lg font-bold text-white">{audit.estimated_operations.coverage_percentage}%</p>
             </div>
           </div>
           <button
@@ -375,7 +483,7 @@ export default function AstrologyOnlyAudit() {
             Approve & Proceed to Ingestion
           </button>
           <p className="font-inter text-[9px] uppercase tracking-widest mt-4" style={{ color: G.dim }}>
-            This will create {totalIncluded} astrology rules. No deletions. No overwrites.
+            This will create {totalRules} astrology rules with extensive correspondence links. No deletions. No overwrites.
           </p>
         </motion.div>
       </div>
