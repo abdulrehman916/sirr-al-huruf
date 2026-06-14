@@ -1,15 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
-// NIGHTTIME PLANETARY HOURS — MOBILE-OPTIMIZED CARDS
-// 12 hours from sunset to sunrise with card layout
+// NIGHTTIME PLANETARY HOURS — ENHANCED WITH PDF RULES
+// Real sunrise/sunset based calculations with detailed PDF-sourced info
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Moon, Clock, Info } from "lucide-react";
+import { Moon, Clock, MapPin, Book, CheckCircle, XCircle } from "lucide-react";
 import { getAllPlanetaryHours } from "@/lib/astroClockLiveEngine";
 import { calculateSunriseSunset, formatDecimalTime } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
+import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 
 const G = {
   border:   "rgba(212,175,55,0.40)",
@@ -19,14 +20,18 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
   faint:    "rgba(212,175,55,0.22)",
   bg:       "rgba(212,175,55,0.07)",
-  bgHi:     "rgba(212,175,55,0.14)"
+  bgHi:     "rgba(212,175,55,0.14)",
+  excellent: "rgba(34,197,94,0.15)",
+  excellentBorder: "rgba(34,197,94,0.60)",
+  avoid: "rgba(239,68,68,0.15)",
+  avoidBorder: "rgba(239,68,68,0.60)"
 };
 
 export default function NighttimePlanetaryHours() {
   const { isMalayalam } = useAstroClockLanguage();
   const [hours, setHours] = useState([]);
-  const [sunData, setSunData] = useState(null);
   const [location, setLocation] = useState(null);
+  const [sunData, setSunData] = useState(null);
 
   useEffect(() => {
     const today = new Date();
@@ -82,7 +87,7 @@ export default function NighttimePlanetaryHours() {
       animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl border p-5 relative overflow-hidden"
       style={{
-        background: "linear-gradient(145deg, rgba(2,8,24,0.99) 0%, rgba(1,4,16,0.99) 100%)",
+        background: "linear-gradient(145deg, rgba(10,22,56,0.99) 0%, rgba(5,12,36,0.99) 100%)",
         borderColor: G.borderHi,
         boxShadow: `0 0 50px ${G.glow}, 0 4px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(212,175,55,0.10)`,
       }}
@@ -106,9 +111,10 @@ export default function NighttimePlanetaryHours() {
         
         {location && sunData && (
           <div className="text-right hidden md:block">
-            <p className="font-malayalam-sm uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              {location.name}
-            </p>
+            <div className="flex items-center gap-2 justify-end mb-1">
+              <MapPin className="w-4 h-4" style={{ color: G.dim }} />
+              <p className="font-malayalam-sm text-white/70">{location.name}</p>
+            </div>
             <div className="flex items-center gap-4">
               <span className="font-malayalam-sm" style={{ color: G.dim }}>
                 {isMalayalam ? "സൂര്യാസ്തമയം:" : "Sunset:"} <span className="text-white font-bold">{formatDecimalTime(sunData.sunset)}</span>
@@ -121,28 +127,25 @@ export default function NighttimePlanetaryHours() {
         )}
       </div>
 
-      {/* Cards Grid - Mobile Optimized */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 gap-4">
         {(hours || []).map((hour) => (
-          <HourCard key={hour.hourNumber} hour={hour} isMalayalam={isMalayalam} />
+          <EnhancedHourCard key={hour.hourNumber} hour={hour} isMalayalam={isMalayalam} />
         ))}
       </div>
 
       {/* Notes */}
       <div className="mt-6 p-4 rounded-xl" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
         <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 mt-0.5" style={{ color: G.dim }} />
+          <Book className="w-5 h-5 mt-0.5" style={{ color: G.text }} />
           <div>
             <p className="font-malayalam-sm uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              {isMalayalam ? "കുറിപ്പ്" : "Note"}
+              {isMalayalam ? "സ്രോതസ്സ്" : "Source"}
             </p>
             <p className="font-malayalam-md text-white/70">
               {isMalayalam 
-                ? "രാത്രി മണിക്കൂറുകൾ സൂര്യാസ്തമയം മുതൽ സൂര്യോദയം വരെ 12 തുല്യ ഭാഗങ്ങളായി വിഭജിക്കുന്നു. ശീതകാലത്ത് രാത്രി മണിക്കൂറുകൾ ദൈർഘ്യമേറിയതായിരിക്കും."
-                : "Night hours divide sunset to sunrise into 12 equal parts. Winter nights have longer hours."}
-            </p>
-            <p className="font-malayalam-sm text-white/50 mt-2">
-              {isMalayalam ? "സ്രോതസ്സ്:" : "Source:"} Havâss'ın Derinlikleri, Taha
+                ? "ഗ്രഹ മണിക്കൂറുകളുടെ സവിശേഷതകൾ ഹവാസ്സിൻ്റെ ഡെപ്ത്ലിക്ലറിൽ നിന്നും മറ്റ് അപ്‌ലോഡ് ചെയ്ത PDF പുസ്തകങ്ങളിൽ നിന്നും മാത്രം."
+                : "Planetary hour properties from Havâss'ın Derinlikleri and other uploaded PDF books only."}
             </p>
           </div>
         </div>
@@ -151,66 +154,108 @@ export default function NighttimePlanetaryHours() {
   );
 }
 
-function HourCard({ hour, isMalayalam }) {
+function EnhancedHourCard({ hour, isMalayalam }) {
+  const planetRules = getPlanetHourRules(hour.planet);
+  const isSaad = planetRules?.nature.includes("Sa'd");
+  
   return (
-    <div className="p-5 rounded-xl border hover:border-opacity-60 transition-all duration-200"
+    <div className="rounded-xl border p-5"
       style={{
         background: G.bg,
         borderColor: G.border,
         boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
       }}>
-      {/* Hour Number & Time */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="font-malayalam-lg font-bold text-white">#{hour.hourNumber}</span>
-        <Clock className="w-4 h-4" style={{ color: G.dim }} />
-      </div>
-      
-      <div className="mb-4 pb-3 border-b" style={{ borderColor: G.faint }}>
-        <div className="font-malayalam-md text-white/90">
-          <div className="font-bold">{hour.startTime}</div>
-          <div className="font-malayalam-sm" style={{ color: G.dim }}>→ {hour.endTime}</div>
+      {/* Header: Planet & Time */}
+      <div className="flex items-center justify-between mb-4 pb-3 border-b" style={{ borderColor: G.faint }}>
+        <div className="flex items-center gap-3">
+          <span className="text-4xl">{hour.planetInfo?.symbol}</span>
+          <div>
+            <p className="font-amiri text-3xl font-bold" style={{ color: G.text }}>
+              {hour.planetInfo?.name_ar}
+            </p>
+            <p className="font-malayalam-md font-bold text-white">
+              {isMalayalam ? hour.planetInfo?.name_ml_equivalent : hour.planetInfo?.name_en}
+            </p>
+          </div>
         </div>
-      </div>
-
-      {/* Planet Info */}
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-3xl">{hour.planetInfo?.symbol}</span>
-        <div className="flex-1">
-          <p className="font-malayalam-md font-bold text-white">
-            {isMalayalam ? hour.planetInfo?.name_ml_equivalent : hour.planetInfo?.name_en}
+        
+        <div className="text-right">
+          <p className="font-malayalam-sm text-white/90 font-bold">
+            {hour.startTime} → {hour.endTime}
           </p>
           <p className="font-malayalam-sm" style={{ color: G.dim }}>
-            {isMalayalam ? hour.planetInfo?.nature_ml : hour.planetInfo?.nature_en}
+            {hour.duration}
           </p>
         </div>
       </div>
 
-      {/* Duration */}
-      <div className="mb-3">
-        <p className="font-malayalam-sm uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-          {isMalayalam ? "ദൈർഘ്യം" : "Duration"}
-        </p>
-        <p className="font-malayalam-md text-white/80 font-bold">
-          {hour.duration}
-          <span className="font-malayalam-sm text-white/50 ml-2">
-            ({hour.durationMinutes}m {hour.durationSeconds}s)
-          </span>
-        </p>
+      {/* Status & Element */}
+      <div className="grid md:grid-cols-2 gap-4 mb-4">
+        <div className="p-3 rounded-lg" style={{ 
+          background: isSaad ? G.excellent : G.avoid,
+          borderColor: isSaad ? G.excellentBorder : G.avoidBorder,
+          border: "1px solid"
+        }}>
+          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: isSaad ? "#22c55e" : "#ef4444" }}>
+            {isMalayalam ? "സ്ഥിതി" : "Status"}
+          </p>
+          <p className="font-malayalam-md font-bold text-white">
+            {isMalayalam ? planetRules?.nature_ml : planetRules?.nature}
+          </p>
+        </div>
+        
+        <div className="p-3 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+            {isMalayalam ? "മൂലകം" : "Element"}
+          </p>
+          <p className="font-malayalam-md font-bold text-white">
+            {isMalayalam ? planetRules?.element_ml : planetRules?.element}
+          </p>
+        </div>
       </div>
 
-      {/* Good Actions */}
-      <div>
-        <p className="font-malayalam-sm uppercase tracking-widest mb-2" style={{ color: "#22c55e" }}>
-          {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Good Actions"}
-        </p>
+      {/* Suitable Actions */}
+      <div className="mb-4 p-4 rounded-lg" style={{ background: "rgba(34,197,94,0.05)", border: `1px solid rgba(34,197,94,0.30)` }}>
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle className="w-4 h-4" style={{ color: "#22c55e" }} />
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
+            {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Suitable Actions"}
+          </p>
+        </div>
         <div className="space-y-1">
-          {(hour.goodActions || []).slice(0, 3).map((action, idx) => (
-            <div key={idx} className="font-malayalam-sm text-white/70 flex items-start gap-2">
+          {(isMalayalam ? planetRules?.suitableActions?.ml : planetRules?.suitableActions?.en || []).slice(0, 4).map((action, idx) => (
+            <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#22c55e" }} />
-              <span>{action}</span>
-            </div>
+              {action}
+            </p>
           ))}
         </div>
+      </div>
+
+      {/* Unsuitable Actions */}
+      <div className="mb-4 p-4 rounded-lg" style={{ background: "rgba(239,68,68,0.05)", border: `1px solid rgba(239,68,68,0.30)` }}>
+        <div className="flex items-center gap-2 mb-3">
+          <XCircle className="w-4 h-4" style={{ color: "#ef4444" }} />
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
+            {isMalayalam ? "അനുചിത പ്രവർത്തനങ്ങൾ" : "Avoid These"}
+          </p>
+        </div>
+        <div className="space-y-1">
+          {(isMalayalam ? planetRules?.unsuitableActions?.ml : planetRules?.unsuitableActions?.en || []).slice(0, 4).map((action, idx) => (
+            <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
+              {action}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      {/* Source */}
+      <div className="flex items-center gap-2 pt-3 border-t" style={{ borderColor: G.faint }}>
+        <Book className="w-3 h-3" style={{ color: G.text }} />
+        <p className="font-inter text-[8px]" style={{ color: G.dim }}>
+          {isMalayalam ? "സ്രോതസ്സ്:" : "Source:"} {planetRules?.source}
+        </p>
       </div>
     </div>
   );
