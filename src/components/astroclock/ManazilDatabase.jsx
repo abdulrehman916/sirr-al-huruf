@@ -101,7 +101,6 @@ export default function ManazilDatabase() {
                             </div>
                             <div className="flex flex-col">
                                 <p className="font-amiri font-bold text-5xl md:text-6xl leading-relaxed" style={{color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)"}} dir="rtl">{manzil.name_arabic}</p>
-                                <p className="font-malayalam-md font-semibold text-white/90 mt-1">{isMalayalam ? manzil.name_ml : manzil.name_en}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -127,28 +126,62 @@ export default function ManazilDatabase() {
                             exit={{height: 0, opacity: 0}}
                             className="overflow-hidden"
                         >
-                            <div className="p-4 border-t space-y-3" style={{borderColor: G.faint}}>
-                                <p className="font-inter text-xs font-bold uppercase tracking-wider" style={{color: getClassificationColor(manzil.nature)}}>
-                                    {isMalayalam ? manzil.nature_ml : manzil.nature}
-                                </p>
+                            <div className="p-4 border-t space-y-4" style={{borderColor: G.faint}}>
+                                {/* Nature Badge */}
+                                <div className="flex items-center gap-2">
+                                    <div style={{width: '4px', height: '16px', borderRadius: '2px', background: getClassificationColor(manzil.nature)}}></div>
+                                    <p className="font-inter text-xs font-bold uppercase tracking-wider" style={{color: getClassificationColor(manzil.nature)}}>
+                                        {isMalayalam ? manzil.nature_ml : manzil.nature}
+                                    </p>
+                                </div>
+
+                                {/* Arabic Name Display */}
+                                <div className="p-4 rounded-lg text-center" style={{background: G.bgHi, border: `1px solid ${G.border}`}}>
+                                    <p className="font-inter text-[8px] uppercase tracking-widest mb-3" style={{color: G.dim}}>
+                                        {isMalayalam ? "ചന്ദ്ര നക്ഷത്രം" : "Lunar Mansion"}
+                                    </p>
+                                    <p className="font-amiri text-7xl font-bold" style={{color: G.text, textShadow: "0 0 35px rgba(212,175,55,0.35)"}} dir="rtl">{manzil.name_arabic}</p>
+                                    {manzil.name_ml && (
+                                        <p className="font-malayalam-md text-white/80 mt-3">{manzil.name_ml}</p>
+                                    )}
+                                    {!manzil.name_ml && manzil.name_en && (
+                                        <p className="font-inter text-sm text-white/70 mt-3">{manzil.name_en}</p>
+                                    )}
+                                </div>
                                 
-                                {/* Letter Info with Arabic Primary */}
-                                <div className="mt-3 p-3 rounded-lg" style={{background: G.bg, border: `1px solid ${G.border}`}}>
+                                {/* Letter Info */}
+                                <div className="p-3 rounded-lg" style={{background: G.bg, border: `1px solid ${G.border}`}}>
                                     <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{color: G.dim}}>
                                         {isMalayalam ? "അറബിക് അക്ഷരം" : "Arabic Letter"}
                                     </p>
                                     <div className="flex flex-col items-center gap-2">
-                                        <p className="font-amiri text-7xl font-bold" style={{color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)"}} dir="rtl">{manzil.name_arabic}</p>
+                                        <p className="font-amiri text-6xl font-bold" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}} dir="rtl">{manzil.name_arabic}</p>
                                         {manzil.letter_malayalam && (
-                                            <p className="font-malayalam-md text-white/80">{manzil.letter_malayalam}</p>
+                                            <p className="font-malayalam-sm text-white/70">{manzil.letter_malayalam}</p>
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Zodiac Sign */}
+                                <div className="p-3 rounded-lg" style={{background: G.bg, border: `1px solid ${G.border}`}}>
+                                    <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{color: G.dim}}>
+                                        {isMalayalam ? "രാശി" : "Zodiac Sign"}
+                                    </p>
+                                    <p className="font-malayalam-sm text-center text-white/70">{manzil.zodiac_sign_ml || manzil.zodiac_sign}</p>
+                                </div>
                                 
-                                <div className="space-y-1">
-                                    {(isMalayalam ? manzil.operations_ml : manzil.operations).map((op, idx) => (
-                                        <p key={idx} className="font-inter text-sm text-white/80">• {op}</p>
-                                    ))}
+                                {/* Operations */}
+                                <div className="p-4 rounded-lg" style={{background: "rgba(34,197,94,0.08)", border: `1px solid rgba(34,197,94,0.40)`}}>
+                                    <p className="font-inter text-[8px] uppercase tracking-widest mb-3 font-bold" style={{color: "#22c55e"}}>
+                                        {isMalayalam ? "ഉചിതമായ പ്രവർത്തനങ്ങൾ" : "Suitable Operations"}
+                                    </p>
+                                    <div className="space-y-2">
+                                        {(isMalayalam ? manzil.operations_ml : manzil.operations).map((op, idx) => (
+                                            <p key={idx} className="font-inter text-sm text-white/85 leading-relaxed">
+                                                <span className="text-green-400 mr-2">✦</span>{op}
+                                            </p>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 {/* Manuscript Correspondences from Database */}
