@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Star, Heart, Briefcase, Plane, Shield, BookOpen, Info } from "lucide-react";
-import { WEEKDAY_ANALYSIS } from "@/lib/astroClockLiveEngine";
+import { DAY_INFO, PLANET_INFO } from "@/lib/astroClockLiveEngine";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -29,7 +29,7 @@ const WEEKDAYS = [
 export default function DayAnalysisPanel() {
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
 
-  const dayData = WEEKDAY_ANALYSIS[selectedDay];
+  const dayData = DAY_INFO[selectedDay];
   const dayInfo = WEEKDAYS.find(d => d.id === selectedDay);
 
   return (
@@ -211,7 +211,7 @@ function ActivityCard({ icon: Icon, title, content, color }) {
           {title}
         </p>
       </div>
-      <p className="font-inter text-xs text-white/80">{content}</p>
+      <p className="font-inter text-xs text-white/80">{content || "No specific guidance"}</p>
     </div>
   );
 }

@@ -15,6 +15,8 @@ import DayAnalysisPanel from "../components/astroclock/DayAnalysisPanel";
 import LunarMansionsPanel from "../components/astroclock/LunarMansionsPanel";
 import AdvancedTimingAdvisor from "../components/astroclock/AdvancedTimingAdvisor";
 import AsteroidKnowledgeSummary from "../components/astroclock/AsteroidKnowledgeSummary";
+import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
+import { AstroClockLanguageProvider } from "@/lib/astroClockLanguageContext.jsx";
 import { ASTRO_CLOCK_ENGINE_STATUS } from "../lib/astroClockEngine";
 import { usePageState } from "../context/PageStateContext";
 
@@ -81,6 +83,11 @@ export default function AstroClockPage() {
 
         {/* SECTION 8: Advanced Timing Advisor */}
         <AdvancedTimingAdvisor />
+
+        {/* SECTION 9: Action Timing Advisor */}
+        <AstroClockLanguageProvider>
+          <ActionTimingAdvisor />
+        </AstroClockLanguageProvider>
 
         {/* Asteroid Knowledge Summary */}
         <AsteroidKnowledgeSummary />
