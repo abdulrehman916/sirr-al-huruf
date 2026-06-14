@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
-import { FileText, CheckCircle, AlertCircle, Database, TrendingUp } from "lucide-react";
+import { FileText, CheckCircle, AlertCircle, Database, TrendingUp, Wand2 } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
 
 const G = {
@@ -19,6 +19,8 @@ export default function ManuscriptRuleAudit() {
   const [audit, setAudit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [enriching, setEnriching] = useState(false);
+  const [enrichmentDone, setEnrichmentDone] = useState(false);
 
   useEffect(() => {
     runAudit();
@@ -34,6 +36,19 @@ export default function ManuscriptRuleAudit() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function runEnrichment() {
+    try {
+      setEnriching(true);
+      await base44.functions.invoke('enrichManuscriptRules', { batch_size: 10, delay_ms: 2000 });
+      setEnrichmentDone(true);
+      await runAudit();
+    } catch (err) {
+      setError('Enrichment failed: ' + err.message);
+    } finally {
+      setEnriching(false);
     }
   }
 
@@ -82,6 +97,26 @@ export default function ManuscriptRuleAudit() {
             <p className="font-inter text-sm mt-2" style={{ color: G.dim }}>
               Completeness Report - {new Date().toLocaleDateString()}
             </p>
+            {!enrichmentDone && (
+              <button
+                onClick={runEnrichment}
+                disabled={enriching}
+                className="mt-4 px-6 py-3 rounded-lg flex items-center gap-2 mx-auto font-bold"
+                style={{ 
+                  background: enriching ? G.dim : G.text, 
+                  color: '#0d1b2a',
+                  opacity: enriching ? 0.7 : 1
+                }}
+              >
+                <Wand2 className="w-5 h-5" />
+                {enriching ? 'Enriching...' : 'Auto-Enrich Associations'}
+              </button>
+            )}
+            {enrichmentDone && (
+              <div className="mt-4 px-6 py-3 rounded-lg" style={{ background: "rgba(34,197,94,0.2)", color: "#86efac" }}>
+                ✓ Enrichment complete! Run audit again to see updated scores.
+              </div>
+            )}
           </motion.div>
 
           {/* Summary Cards */}
@@ -130,6 +165,10 @@ export default function ManuscriptRuleAudit() {
               <FieldBar label="Planetary Associations" count={audit.with_planet} total={audit.total_records} color={G.text} />
               <FieldBar label="Zodiac Associations" count={audit.with_zodiac} total={audit.total_records} color={G.text} />
               <FieldBar label="Lunar Mansion Associations" count={audit.with_lunar_mansion} total={audit.total_records} color={G.text} />
+              <FieldBar label="Element Associations" count={audit.with_element} total={audit.total_records} color={G.text} />
+              <FieldBar label="Saad/Nahs Classifications" count={audit.with_saad_nahs} total={audit.total_records} color={G.text} />
+              <FieldBar label="Metal Associations" count={audit.with_metal} total={audit.total_records} color={G.text} />
+              <FieldBar label="Color Associations" count={audit.with_color} total={audit.total_records} color={G.text} />
             </div>
           </motion.div>
 
