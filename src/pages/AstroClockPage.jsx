@@ -28,6 +28,7 @@ import TraditionalMoonTransitForecast from "../components/astroclock/Traditional
 import BuhurReference from "../components/astroclock/BuhurReference.jsx";
 import PlanetaryHourVerification from "../components/astroclock/PlanetaryHourVerification.jsx";
 import PlanetaryHourBookView from "../components/astroclock/PlanetaryHourBookView.jsx";
+import Full24HourPlanetaryChart from "../components/astroclock/Full24HourPlanetaryChart.jsx";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 import { Link } from "react-router-dom";
 
@@ -164,6 +165,9 @@ function AstroClockContent() {
 
         {/* SECTION 17: Planetary Hour Book View — Complete 24-Hour Sequence */}
         <PlanetaryHourBookView />
+
+        {/* SECTION 18: Full 24-Hour Manuscript Planetary Chart */}
+        <Full24HourPlanetaryChart />
 
         {/* Framework Notice */}
         <motion.div
