@@ -1,173 +1,233 @@
 /**
- * ASTRO CLOCK ACTION TIMING ADVISOR
- * Searches knowledge base for action-specific timing rules
+ * ASTRO CLOCK ACTION TIMING ADVISOR — ENHANCED
+ * Comprehensive action-to-rule mappings from ingested PDF knowledge base
  * Astro Clock module only — completely isolated
  */
 
-import { KNOWLEDGE_DAYS, KNOWLEDGE_HOURS, KNOWLEDGE_LUNAR_MANSIONS, KNOWLEDGE_TIMING_RULES } from './astroClockKnowledgeBase.js';
-import { TAHA_ZODIAC_SIGNS, TAHA_PLANETS, TAHA_HOUSES, TAHA_PRACTICAL_TIMING } from './astroClockTahaData.js';
+import { KNOWLEDGE_DAYS, KNOWLEDGE_LUNAR_MANSIONS, LUNAR_MANSION_DATA } from './astroClockKnowledgeBase.js';
+import { PLANET_DATA } from './astroClockData.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ACTION KEYWORDS MAPPING — Maps user actions to knowledge base categories
+// ACTION CATEGORIES WITH COMPLETE RULES
+// Maps each action to specific timing rules from ingested knowledge
 // ─────────────────────────────────────────────────────────────────────────────
-export const ACTION_KEYWORDS = {
-  marriage: ['marriage', 'wedding', 'engagement', 'proposal', 'നിശ്ചയം', 'വിവാഹം'],
-  love: ['love', 'romance', 'attraction', 'relationship', 'പ്രണയം', 'ആകർഷണം'],
-  travel: ['travel', 'journey', 'trip', 'voyage', 'യാത്ര', 'യാത്രകൾ'],
-  business: ['business', 'trade', 'commerce', 'buying', 'selling', 'വ്യാപാരം', 'കച്ചവടം'],
-  healing: ['healing', 'health', 'treatment', 'cure', 'ആരോഗ്യം', 'ചികിത്സ'],
-  property: ['property', 'real estate', 'land', 'house', 'ഭൂമി', 'വീട്'],
-  job: ['job', 'career', 'employment', 'work', 'ഉദ്യോഗം', 'ജോലി'],
-  meeting: ['meeting', 'negotiation', 'agreement', 'കൂടിക്കാഴ്ച', 'ചർച്ച'],
-  spiritual: ['spiritual', 'prayer', 'meditation', 'worship', 'ആദ്ധ്യാത്മിക', 'പ്രാർത്ഥന'],
-  vefk: ['vefk', 'talisman', 'amulet', 'വെഫ്ക്', 'തയിലം'],
-  study: ['study', 'learning', 'education', 'പഠനം', 'വിദ്യാഭ്യാസം'],
-  examination: ['examination', 'test', 'exam', 'പരീക്ഷ', 'ടെസ്റ്റ്'],
-  money: ['money', 'wealth', 'wealth', 'ധനം', 'സമ്പത്ത്'],
-  friendship: ['friendship', 'social', 'friends', 'സൗഹൃദം', 'സുഹൃത്തുക്കൾ'],
-  leadership: ['leadership', 'authority', 'power', 'നേതൃത്വം', 'അധികാരം']
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PLANET DATA WITH MALAYALAM
-// ─────────────────────────────────────────────────────────────────────────────
-export const PLANET_DATA = {
-  sun: {
-    name_en: "Sun",
-    name_ml: "സൂര്യൻ",
-    symbol: "☉",
-    nature_en: "King of Planets",
-    nature_ml: "ഗ്രഹങ്ങളുടെ രാജാവ്",
-    day_en: "Sunday",
-    day_ml: "ഞായർ",
-    benefits_en: ["Leadership", "Wealth", "Career Success", "Government Favor"],
-    benefits_ml: ["നേതൃത്വം", "ഐശ്വര്യം", "ഉദ്യോഗ ഉന്നതി", "സർക്കാർ അനുകൂല്യം"],
-    warnings_en: ["Weak in Libra", "Avoid arrogance"],
-    warnings_ml: ["തുലാം രാശിയിൽ ദുർബലൻ", "അഹങ്കാരം ഒഴിവാക്കുക"]
+export const ACTION_RULES = {
+  marriage: {
+    category: "Marriage & Relationships",
+    category_ml: "വിവാഹവും ബന്ധങ്ങളും",
+    bestDays: [
+      { day: "Friday", day_ml: "വെള്ളി", planet: "Venus", planet_ml: "ശുക്രൻ", symbol: "♀", reason: "Day of love and harmony" },
+      { day: "Thursday", day_ml: "വ്യാഴം", planet: "Jupiter", planet_ml: "ഗുരു", symbol: "♃", reason: "Most benefic for marriage" }
+    ],
+    worstDays: [
+      { day: "Tuesday", day_ml: "ചൊവ്വ", planet: "Mars", planet_ml: "ചൊവ്വ", symbol: "♂", reason: "Malefic planet causes discord" },
+      { day: "Saturday", day_ml: "ശനി", planet: "Saturn", planet_ml: "ശനി", symbol: "♄", reason: "Delays and obstacles" }
+    ],
+    bestHours: ["Venus", "Jupiter", "Moon"],
+    bestHours_ml: ["ശുക്രൻ", "ഗുരു", "ചന്ദ്രൻ"],
+    worstHours: ["Mars", "Saturn"],
+    worstHours_ml: ["ചൊവ്വ", "ശനി"],
+    suitableMansions: [6, 7, 11, 15, 16, 20, 24, 28], // Hana, Zira, Zebra, Gufur, Zibana, Neaim, Saadüssuud, Erreşa
+    worstMansions: [1, 4, 5, 8, 9, 12, 13, 14, 21], // Sharateyn, Dübran, Hak'a, Nesre, Tarfa, Surfa, Ava, Semmak, Belde
+    suitablePlanets: ["Venus", "Jupiter", "Moon"],
+    enemyPlanets: ["Mars", "Saturn"],
+    benefits: ["Harmonious marriage", "Long-lasting relationship", "Family happiness", "Prosperity"],
+    benefits_ml: ["സുഖകരമായ വിവാഹം", "ദീർഘകാല ബന്ധം", "കുടുംബ ഐശ്വര്യം", "ഐശ്വര്യം"],
+    warnings: ["Avoid Mars hours", "Avoid Saturn days", "Check Moon not in Scorpio"],
+    warnings_ml: ["ചൊവ്വ മണിക്കൂർ ഒഴിവാക്കുക", "ശനി ദിവസം ഒഴിവാക്കുക", "ചന്ദ്രൻ വൃശ്ചികത്തിൽ ആകരുത്"],
+    sources: [
+      { book: "Havâss'ın Derinlikleri", page: "51", author: "Bülent Kısa" },
+      { book: "تدریس نجوم احکامی", page: "33", author: "Ustad Taha" }
+    ]
   },
-  moon: {
-    name_en: "Moon",
-    name_ml: "ചന്ദ്രൻ",
-    symbol: "☽",
-    nature_en: "Most Influential",
-    nature_ml: "ഏറ്റവും ശക്തമായ ഗ്രഹം",
-    day_en: "Monday",
-    day_ml: "തിങ്കൾ",
-    benefits_en: ["Mental Peace", "Health", "Domestic Harmony", "Intuition"],
-    benefits_ml: ["മാനസിക ശാന്തത", "ആരോഗ്യം", "ഗൃഹ ഐശ്വര്യം", "സഹജാവബോധം"],
-    warnings_en: ["Weak in Scorpio (3°)"],
-    warnings_ml: ["വൃശ്ചികത്തിൽ നീചം (3°)"]
+  business: {
+    category: "Business & Trade",
+    category_ml: "വ്യാപാരം",
+    bestDays: [
+      { day: "Wednesday", day_ml: "ബുധൻ", planet: "Mercury", planet_ml: "ബുധൻ", symbol: "☿", reason: "Planet of commerce and wealth" },
+      { day: "Thursday", day_ml: "വ്യാഴം", planet: "Jupiter", planet_ml: "ഗുരു", symbol: "♃", reason: "Expansion and prosperity" }
+    ],
+    worstDays: [
+      { day: "Tuesday", day_ml: "ചൊവ്വ", planet: "Mars", planet_ml: "ചൊവ്വ", symbol: "♂", reason: "Losses and conflicts" }
+    ],
+    bestHours: ["Mercury", "Jupiter", "Venus"],
+    bestHours_ml: ["ബുധൻ", "ഗുരു", "ശുക്രൻ"],
+    worstHours: ["Mars", "Saturn"],
+    worstHours_ml: ["ചൊവ്വ", "ശനി"],
+    suitableMansions: [2, 6, 7, 11, 15, 20, 24], // Buteyn, Hana, Zira, Zebra, Gufur, Neaim, Saadüssuud
+    worstMansions: [1, 5, 8, 9, 13, 21],
+    suitablePlanets: ["Mercury", "Jupiter", "Venus"],
+    enemyPlanets: ["Mars", "Saturn"],
+    benefits: ["Profitable trade", "Business growth", "Good negotiations", "Wealth increase"],
+    benefits_ml: ["ലാഭകരമായ വ്യാപാരം", "ബിസിനസ് വളർച്ച", "നല്ല ചർച്ചകൾ", "സമ്പത്ത് വർദ്ധന"],
+    warnings: ["Avoid Mars hours for signing contracts", "Check Mercury not retrograde"],
+    warnings_ml: ["കരാർ ഒപ്പിടാൻ ചൊവ്വ മണിക്കൂർ ഒഴിവാക്കുക", "ബുധൻ വക്രഗതിയിൽ ആകരുത്"],
+    sources: [
+      { book: "Havâss'ın Derinlikleri", page: "50-51", author: "Bülent Kısa" }
+    ]
   },
-  mars: {
-    name_en: "Mars",
-    name_ml: "ചൊവ്വ",
-    symbol: "♂",
-    nature_en: "Malefic",
-    nature_ml: "ദ്രോഹ ഗ്രഹം",
-    day_en: "Tuesday",
-    day_ml: "ചൊവ്വ",
-    benefits_en: ["Courage", "Strength", "Victory", "Overcoming Enemies"],
-    benefits_ml: ["ധൈര്യം", "ശക്തി", "വിജയം", "ശത്രുക്കളെ നേരിടൽ"],
-    warnings_en: ["Marital discord possible"],
-    warnings_ml: ["ദാമ്പത്യ ക്ലേശം സാധ്യത"]
+  travel: {
+    category: "Travel & Journeys",
+    category_ml: "യാത്ര",
+    bestDays: [
+      { day: "Monday", day_ml: "തിങ്കൾ", planet: "Moon", planet_ml: "ചന്ദ്രൻ", symbol: "☽", reason: "Day of travel and movement" },
+      { day: "Friday", day_ml: "വെള്ളി", planet: "Venus", planet_ml: "ശുക്രൻ", symbol: "♀", reason: "Pleasant journeys" }
+    ],
+    worstDays: [
+      { day: "Tuesday", day_ml: "ചൊവ്വ", planet: "Mars", planet_ml: "ചൊവ്വ", symbol: "♂", reason: "Accidents and delays" },
+      { day: "Saturday", day_ml: "ശനി", planet: "Saturn", planet_ml: "ശനി", symbol: "♄", reason: "Obstacles" }
+    ],
+    bestHours: ["Moon", "Venus", "Mercury"],
+    bestHours_ml: ["ചന്ദ്രൻ", "ശുക്രൻ", "ബുധൻ"],
+    worstHours: ["Mars", "Saturn"],
+    worstHours_ml: ["ചൊവ്വ", "ശനി"],
+    suitableMansions: [2, 6, 7, 11, 15, 20], // Buteyn, Hana, Zira, Zebra, Gufur, Neaim
+    worstMansions: [1, 4, 8, 9, 13, 21],
+    suitablePlanets: ["Moon", "Venus", "Mercury"],
+    enemyPlanets: ["Mars", "Saturn"],
+    benefits: ["Safe journey", "Pleasant travel", "Good experiences"],
+    benefits_ml: ["സുരക്ഷിത യാത്ര", "സുഖപ്രദ യാത്ര", "നല്ല അനുഭവങ്ങൾ"],
+    warnings: ["Never travel when Moon in Scorpio", "Avoid Mars hours"],
+    warnings_ml: ["ചന്ദ്രൻ വൃശ്ചികത്തിൽ ആകുമ്പോൾ യാത്ര പാടില്ല", "ചൊവ്വ മണിക്കൂർ ഒഴിവാക്കുക"],
+    sources: [
+      { book: "Havâss'ın Derinlikleri", page: "50", author: "Bülent Kısa" }
+    ]
   },
-  mercury: {
-    name_en: "Mercury",
-    name_ml: "ബുധൻ",
-    symbol: "☿",
-    nature_en: "Planet of Wealth",
-    nature_ml: "ഐശ്വര്യ ഗ്രഹം",
-    day_en: "Wednesday",
-    day_ml: "ബുധൻ",
-    benefits_en: ["Knowledge", "Business", "Communication", "Arts"],
-    benefits_ml: ["ജ്ഞാനം", "വ്യാപാരം", "ആശയ വിനിമയം", "കലകൾ"],
-    warnings_en: ["Malefic with malefic planets"],
-    warnings_ml: ["ദ്രോഹ ഗ്രഹത്തോടൊപ്പം ദ്രോഹ ഫലം"]
+  healing: {
+    category: "Healing & Health",
+    category_ml: "ചികിത്സ",
+    bestDays: [
+      { day: "Monday", day_ml: "തിങ്കൾ", planet: "Moon", planet_ml: "ചന്ദ്രൻ", symbol: "☽", reason: "Health and wellness" },
+      { day: "Thursday", day_ml: "വ്യാഴം", planet: "Jupiter", planet_ml: "ഗുരു", symbol: "♃", reason: "Healing and recovery" }
+    ],
+    worstDays: [
+      { day: "Tuesday", day_ml: "ചൊവ്വ", planet: "Mars", planet_ml: "ചൊവ്വ", symbol: "♂", reason: "Surgery only, not healing" },
+      { day: "Saturday", day_ml: "ശനി", planet: "Saturn", planet_ml: "ശനി", symbol: "♄", reason: "Chronic issues" }
+    ],
+    bestHours: ["Moon", "Jupiter", "Sun"],
+    bestHours_ml: ["ചന്ദ്രൻ", "ഗുരു", "സൂര്യൻ"],
+    worstHours: ["Mars", "Saturn"],
+    worstHours_ml: ["ചൊവ്വ", "ശനി"],
+    suitableMansions: [2, 6, 11, 15, 20, 24], // Buteyn, Hana, Zebra, Gufur, Neaim, Saadüssuud
+    worstMansions: [1, 4, 5, 8, 9, 13, 21],
+    suitablePlanets: ["Moon", "Jupiter", "Sun"],
+    enemyPlanets: ["Mars", "Saturn"],
+    benefits: ["Quick recovery", "Effective treatment", "Good health"],
+    benefits_ml: ["പെട്ടെന്ന് സുഖം പ്രാപിക്കൽ", "ഫലപ്രദമായ ചികിത്സ", "നല്ല ആരോഗ്യം"],
+    warnings: ["Avoid Mars for non-emergency surgery", "Check Moon phase"],
+    warnings_ml: ["അടിയന്തരമല്ലാത്ത ശസ്ത്രക്രിയക്ക് ചൊവ്വ ഒഴിവാക്കുക", "ചന്ദ്ര കല പരിശോധിക്കുക"],
+    sources: [
+      { book: "Havâss'ın Derinlikleri", page: "50-51", author: "Bülent Kısa" }
+    ]
   },
-  jupiter: {
-    name_en: "Jupiter",
-    name_ml: "ഗുരു",
-    symbol: "♃",
-    nature_en: "Most Benefic",
-    nature_ml: "ഏറ്റവും ശുഭ ഗ്രഹം",
-    day_en: "Thursday",
-    day_ml: "വ്യാഴം",
-    benefits_en: ["Spiritual Growth", "Wealth", "Wisdom", "Marriage"],
-    benefits_ml: ["ആദ്ധ്യാത്മിക ഉന്നതി", "ഐശ്വര്യം", "ജ്ഞാനം", "വിവാഹം"],
-    warnings_en: [],
-    warnings_ml: []
+  job: {
+    category: "Career & Employment",
+    category_ml: "ജോലി",
+    bestDays: [
+      { day: "Sunday", day_ml: "ഞായർ", planet: "Sun", planet_ml: "സൂര്യൻ", symbol: "☉", reason: "Leadership and success" },
+      { day: "Thursday", day_ml: "വ്യാഴം", planet: "Jupiter", planet_ml: "ഗുരു", symbol: "♃", reason: "Career growth" }
+    ],
+    worstDays: [
+      { day: "Saturday", day_ml: "ശനി", planet: "Saturn", planet_ml: "ശനി", symbol: "♄", reason: "Delays and rejections" }
+    ],
+    bestHours: ["Sun", "Jupiter", "Venus"],
+    bestHours_ml: ["സൂര്യൻ", "ഗുരു", "ശുക്രൻ"],
+    worstHours: ["Saturn", "Mars"],
+    worstHours_ml: ["ശനി", "ചൊവ്വ"],
+    suitableMansions: [6, 7, 11, 15, 20, 24],
+    worstMansions: [1, 4, 8, 9, 13, 21],
+    suitablePlanets: ["Sun", "Jupiter", "Venus"],
+    enemyPlanets: ["Saturn", "Mars"],
+    benefits: ["Job success", "Career advancement", "Good interviews"],
+    benefits_ml: ["ജോലിയിൽ വിജയം", "ഉദ്യോഗ ഉന്നതി", "നല്ല ഇന്റർവ്യൂ"],
+    warnings: ["Avoid Saturn days for interviews", "Check Sun strong"],
+    warnings_ml: ["ഇന്റർവ്യൂവിന് ശനി ദിവസം ഒഴിവാക്കുക", "സൂര്യൻ ശക്തനാകണം"],
+    sources: [
+      { book: "Havâss'ın Derinlikleri", page: "50", author: "Bülent Kısa" }
+    ]
   },
-  venus: {
-    name_en: "Venus",
-    name_ml: "ശുക്രൻ",
-    symbol: "♀",
-    nature_en: "Planet of Love",
-    nature_ml: "പ്രേമ-ഭക്തി ഗ്രഹം",
-    day_en: "Friday",
-    day_ml: "വെള്ളി",
-    benefits_en: ["Love", "Attraction", "Arts", "Luxury"],
-    benefits_ml: ["പ്രണയം", "ആകർഷണം", "കലകൾ", "ആഡംബരം"],
-    warnings_en: ["Weak in Virgo"],
-    warnings_ml: ["കന്നിയിൽ ദുർബലൻ"]
+  love: {
+    category: "Love & Romance",
+    category_ml: "പ്രണയം",
+    bestDays: [
+      { day: "Friday", day_ml: "വെള്ളി", planet: "Venus", planet_ml: "ശുക്രൻ", symbol: "♀", reason: "Day of love" },
+      { day: "Monday", day_ml: "തിങ്കൾ", planet: "Moon", planet_ml: "ചന്ദ്രൻ", symbol: "☽", reason: "Emotional connection" }
+    ],
+    worstDays: [
+      { day: "Tuesday", day_ml: "ചൊവ്വ", planet: "Mars", planet_ml: "ചൊവ്വ", symbol: "♂", reason: "Conflicts" },
+      { day: "Saturday", day_ml: "ശനി", planet: "Saturn", planet_ml: "ശനി", symbol: "♄", reason: "Coldness" }
+    ],
+    bestHours: ["Venus", "Moon"],
+    bestHours_ml: ["ശുക്രൻ", "ചന്ദ്രൻ"],
+    worstHours: ["Mars", "Saturn"],
+    worstHours_ml: ["ചൊവ്വ", "ശനി"],
+    suitableMansions: [6, 7, 11, 15, 20, 24, 28],
+    worstMansions: [1, 4, 5, 8, 9, 13, 21],
+    suitablePlanets: ["Venus", "Moon"],
+    enemyPlanets: ["Mars", "Saturn"],
+    benefits: ["Romantic success", "Emotional bonding", "Attraction"],
+    benefits_ml: ["പ്രണയ വിജയം", "ഭാവപൂർണ്ണ ബന്ധം", "ആകർഷണം"],
+    warnings: ["Avoid Mars hours", "Moon in good mansion"],
+    warnings_ml: ["ചൊവ്വ മണിക്കൂർ ഒഴിവാക്കുക", "ചന്ദ്രൻ നല്ല നക്ഷത്രത്തിൽ"],
+    sources: [
+      { book: "Havâss'ın Derinlikleri", page: "51", author: "Bülent Kısa" }
+    ]
   },
-  saturn: {
-    name_en: "Saturn",
-    name_ml: "ശനി",
-    symbol: "♄",
-    nature_en: "Greater Malefic",
-    nature_ml: "മഹാ ദ്രോഹ ഗ്രഹം",
-    day_en: "Saturday",
-    day_ml: "ശനി",
-    benefits_en: ["Stability", "Long-term Planning", "Discipline"],
-    benefits_ml: ["സ്ഥിരത", "ദീർഘകാല ആസൂത്രണം", "ശൃംഖല"],
-    warnings_en: ["Obstacles in 1st, 4th, 7th, 10th houses"],
-    warnings_ml: ["ഒന്നാം, 4, 7, 10 ഭവനത്തിൽ ദ്രോഹ ഫലം"]
+  spiritual: {
+    category: "Spiritual Work",
+    category_ml: "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾ",
+    bestDays: [
+      { day: "Thursday", day_ml: "വ്യാഴം", planet: "Jupiter", planet_ml: "ഗുരു", symbol: "♃", reason: "Spiritual growth" },
+      { day: "Saturday", day_ml: "ശനി", planet: "Saturn", planet_ml: "ശനി", symbol: "♄", reason: "Deep practices" }
+    ],
+    worstDays: [],
+    bestHours: ["Jupiter", "Moon", "Saturn"],
+    bestHours_ml: ["ഗുരു", "ചന്ദ്രൻ", "ശനി"],
+    worstHours: [],
+    suitableMansions: [2, 6, 11, 15, 20, 24, 28],
+    worstMansions: [1, 4, 5, 8, 9],
+    suitablePlanets: ["Jupiter", "Moon", "Saturn"],
+    enemyPlanets: [],
+    benefits: ["Spiritual advancement", "Deep meditation", "Divine connection"],
+    benefits_ml: ["ആദ്ധ്യാത്മിക പുരോഗതി", "ആഴത്തിലുള്ള ധ്യാനം", "ദൈവിക ബന്ധം"],
+    warnings: ["Check Moon phase", "Avoid eclipse periods"],
+    warnings_ml: ["ചന്ദ്ര കല പരിശോധിക്കുക", "ഗ്രഹണ സമയം ഒഴിവാക്കുക"],
+    sources: [
+      { book: "Havâss'ın Derinlikleri", page: "51", author: "Bülent Kısa" }
+    ]
+  },
+  study: {
+    category: "Education & Learning",
+    category_ml: "വിദ്യാഭ്യാസം",
+    bestDays: [
+      { day: "Wednesday", day_ml: "ബുധൻ", planet: "Mercury", planet_ml: "ബുധൻ", symbol: "☿", reason: "Knowledge and learning" },
+      { day: "Thursday", day_ml: "വ്യാഴം", planet: "Jupiter", planet_ml: "ഗുരു", symbol: "♃", reason: "Wisdom" }
+    ],
+    worstDays: [
+      { day: "Tuesday", day_ml: "ചൊവ്വ", planet: "Mars", planet_ml: "ചൊവ്വ", symbol: "♂", reason: "Distraction" }
+    ],
+    bestHours: ["Mercury", "Jupiter"],
+    bestHours_ml: ["ബുധൻ", "ഗുരു"],
+    worstHours: ["Venus", "Mars"],
+    worstHours_ml: ["ശുക്രൻ", "ചൊവ്വ"],
+    suitableMansions: [2, 6, 7, 11, 15, 20],
+    worstMansions: [1, 4, 5, 8, 9, 13],
+    suitablePlanets: ["Mercury", "Jupiter"],
+    enemyPlanets: ["Venus", "Mars"],
+    benefits: ["Better learning", "Knowledge retention", "Academic success"],
+    benefits_ml: ["മികച്ച പഠനം", "അറിവ് നിലനിർത്തൽ", "വിദ്യാഭ്യാസ വിജയം"],
+    warnings: ["Avoid Venus hours (distraction)", "Mercury strong"],
+    warnings_ml: ["ശുക്ര മണിക്കൂർ ഒഴിവാക്കുക", "ബുധൻ ശക്തനാകണം"],
+    sources: [
+      { book: "Havâss'ın Derinlikleri", page: "50-51", author: "Bülent Kısa" }
+    ]
   }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LUNAR MANSION DATA
+// GET ACTION TIMING ADVICE — ENHANCED
+// Now uses comprehensive ACTION_RULES mappings
 // ─────────────────────────────────────────────────────────────────────────────
-export const LUNAR_MANSION_DATA = [
-  { number: 1, name_en: "Sharateyn", name_ml: "ശർതെയ്ൻ", name_arabic: "شَرطَین", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 2, name_en: "Buteyn", name_ml: "ബുതെയ്ൻ", name_arabic: "بُطَین", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 3, name_en: "Süreyya", name_ml: "സുരയ്യ", name_arabic: "سُرَیّا", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 4, name_en: "Dübran", name_ml: "ദുബ്രാൻ", name_arabic: "دُبران", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 5, name_en: "Hak'a", name_ml: "ഹഖ", name_arabic: "هَقعَة", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 6, name_en: "Hena", name_ml: "ഹന", name_arabic: "هَنعَة", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 7, name_en: "Zira", name_ml: "സിറ", name_arabic: "ذِراع", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 8, name_en: "Nesre", name_ml: "നെസ്രെ", name_arabic: "نَسرَة", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 9, name_en: "Tarfa", name_ml: "തർഫ", name_arabic: "طَرف", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 10, name_en: "Cephe", name_ml: "ജബ്ഹ", name_arabic: "جَبهَة", nature: "mixed", nature_ml: "മിശ്രം" },
-  { number: 11, name_en: "Zebra", name_ml: "സബ്ര", name_arabic: "زُبرَة", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 12, name_en: "Surfa", name_ml: "സർഫ", name_arabic: "صَرفَة", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 13, name_en: "Ava", name_ml: "അവ", name_arabic: "عَوّاء", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 14, name_en: "Semmak", name_ml: "സെമ്മാക്", name_arabic: "سِماک", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 15, name_en: "Gufur", name_ml: "ഗുഫൂർ", name_arabic: "غُفر", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 16, name_en: "Zibana", name_ml: "സിബാന", name_arabic: "زُبانَة", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 17, name_en: "İklil", name_ml: "ഇക്ലീൽ", name_arabic: "إِكلِيل", nature: "mixed", nature_ml: "മിശ്രം" },
-  { number: 18, name_en: "Kâlp", name_ml: "ഖൽബ്", name_arabic: "قَلب", nature: "mixed", nature_ml: "മിശ്രം" },
-  { number: 19, name_en: "Şevle", name_ml: "ഷവ്ല", name_arabic: "شَولَة", nature: "mixed", nature_ml: "മിശ്രം" },
-  { number: 20, name_en: "Neaim", name_ml: "നയീം", name_arabic: "نَعائِم", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 21, name_en: "Belde", name_ml: "ബൽദ", name_arabic: "بَلدَة", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 22, name_en: "Saadüzzabih", name_ml: "സഅദുസ്സാബിഹ്", name_arabic: "سَعدُالذّابِح", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 23, name_en: "Saubela", name_ml: "സൗബേല", name_arabic: "سَعدُبُلَع", nature: "mixed", nature_ml: "മിശ്രം" },
-  { number: 24, name_en: "Saadüssuud", name_ml: "സഅദുസ്സുഊദ്", name_arabic: "سَعدُالسُّعُود", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 25, name_en: "Saadulahbiyye", name_ml: "സഅദുൽഅഖ്ബിയ്യ", name_arabic: "سَعدُالأخبیَة", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 26, name_en: "Ferül Mukaddem", name_ml: "ഫറുൽ മുഖദ്ദം", name_arabic: "فَغرُالمُقَدَّم", nature: "lucky", nature_ml: "ശുഭ" },
-  { number: 27, name_en: "Ferül Müahhir", name_ml: "ഫറുൽ മുഅഖ്ഖർ", name_arabic: "فَغرُالمُؤَخَّر", nature: "unlucky", nature_ml: "ഉഗ്രസ" },
-  { number: 28, name_en: "Erreşa", name_ml: "റേഷ", name_arabic: "الرِّشَاء", nature: "lucky", nature_ml: "ശുഭ" }
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GET ACTION TIMING ADVICE
-// ─────────────────────────────────────────────────────────────────────────────
-/**
- * Get comprehensive timing advice for a specific action
- * @param {string} action - User's action query
- * @param {string} language - 'ml' or 'en'
- * @returns {Object} Complete timing advice
- */
 export function getActionTimingAdvice(action, language = 'en') {
   if (!action || !action.trim()) {
     return {
@@ -181,13 +241,21 @@ export function getActionTimingAdvice(action, language = 'en') {
   const actionLower = action.toLowerCase().trim();
   const isMalayalam = language === 'ml';
 
-  // Find matching action category
+  // Find matching action category with better keyword matching
   let matchedCategory = null;
-  for (const [category, keywords] of Object.entries(ACTION_KEYWORDS)) {
-    if (keywords.some(kw => actionLower.includes(kw.toLowerCase()))) {
+  
+  // Direct match first
+  for (const [category, rules] of Object.entries(ACTION_RULES)) {
+    if (actionLower.includes(category.toLowerCase()) || 
+        (isMalayalam && actionLower.includes(rules.category_ml.toLowerCase()))) {
       matchedCategory = category;
       break;
     }
+  }
+  
+  // If no direct match, try keyword search
+  if (!matchedCategory) {
+    matchedCategory = findMatchingCategory(actionLower, isMalayalam);
   }
 
   if (!matchedCategory) {
@@ -200,198 +268,95 @@ export function getActionTimingAdvice(action, language = 'en') {
     };
   }
 
-  // Search knowledge base
-  const results = searchKnowledgeBase(matchedCategory, actionLower);
+  // Get rules for this category
+  const rules = ACTION_RULES[matchedCategory];
   
-  if (!results || results.length === 0) {
-    return {
-      found: false,
-      message: isMalayalam 
-        ? `"${action}" എന്ന പ്രവൃത്തിക്കായി സമയ നിയമങ്ങൾ കണ്ടെത്താനായില്ല` 
-        : `No specific timing rules found for "${action}"`,
-      suggestions: getGeneralSuggestions(isMalayalam)
-    };
+  // Build comprehensive result
+  const result = {
+    found: true,
+    action: isMalayalam ? rules.category_ml : rules.category,
+    category: matchedCategory,
+    bestDays: rules.bestDays,
+    worstDays: rules.worstDays,
+    bestHours: isMalayalam ? rules.bestHours_ml.map((h, i) => ({
+      planet: h,
+      symbol: rules.bestHours[i] === "Sun" ? "☉" : 
+               rules.bestHours[i] === "Moon" ? "☽" :
+               rules.bestHours[i] === "Mars" ? "♂" :
+               rules.bestHours[i] === "Mercury" ? "☿" :
+               rules.bestHours[i] === "Jupiter" ? "♃" :
+               rules.bestHours[i] === "Venus" ? "♀" : "♄",
+      day: isMalayalam ? "ഇന്ന്" : "Today"
+    })) : rules.bestHours.map(h => ({
+      planet: h,
+      symbol: h === "Sun" ? "☉" : h === "Moon" ? "☽" : h === "Mars" ? "♂" : h === "Mercury" ? "☿" : h === "Jupiter" ? "♃" : h === "Venus" ? "♀" : "♄",
+      day: "Today"
+    })),
+    worstHours: isMalayalam ? rules.worstHours_ml.map(h => ({ planet: h, symbol: "♂", day: "Today" })) : rules.worstHours.map(h => ({ planet: h, symbol: "♂", day: "Today" })),
+    suitableMansions: (rules.suitableMansions || []).map(num => {
+      const mansion = LUNAR_MANSION_DATA.find(m => m.number === num);
+      return mansion ? {
+        number: mansion.number,
+        name: isMalayalam ? mansion.name_ml : mansion.name_en,
+        arabic: mansion.name_arabic,
+        nature: isMalayalam ? mansion.nature_ml : mansion.nature
+      } : null;
+    }).filter(Boolean),
+    worstMansions: (rules.worstMansions || []).map(num => {
+      const mansion = LUNAR_MANSION_DATA.find(m => m.number === num);
+      return mansion ? {
+        number: mansion.number,
+        name: isMalayalam ? mansion.name_ml : mansion.name_en,
+        arabic: mansion.name_arabic,
+        nature: isMalayalam ? mansion.nature_ml : mansion.nature
+      } : null;
+    }).filter(Boolean),
+    suitablePlanets: rules.suitablePlanets.map(p => {
+      const planet = Object.entries(PLANET_DATA).find(([k]) => k === p.toLowerCase());
+      return planet ? {
+        name: isMalayalam ? planet[1].name_ml : planet[1].name_en,
+        symbol: planet[1].symbol
+      } : null;
+    }).filter(Boolean),
+    enemyPlanets: rules.enemyPlanets.map(p => {
+      const planet = Object.entries(PLANET_DATA).find(([k]) => k === p.toLowerCase());
+      return planet ? {
+        name: isMalayalam ? planet[1].name_ml : planet[1].name_en,
+        symbol: planet[1].symbol
+      } : null;
+    }).filter(Boolean),
+    benefits: isMalayalam ? rules.benefits_ml : rules.benefits,
+    warnings: isMalayalam ? rules.warnings_ml : rules.warnings,
+    sources: rules.sources,
+    totalRulesFound: rules.sources.length
+  };
+
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIND MATCHING CATEGORY — Keyword search
+// ─────────────────────────────────────────────────────────────────────────────
+function findMatchingCategory(action, isMalayalam) {
+  const keywords = {
+    marriage: ['marriage', 'wedding', 'engagement', 'proposal', 'വിവാഹം', 'നിശ്ചയം'],
+    business: ['business', 'trade', 'commerce', 'buying', 'selling', 'വ്യാപാരം', 'കച്ചവടം'],
+    travel: ['travel', 'journey', 'trip', 'voyage', 'യാത്ര'],
+    healing: ['healing', 'health', 'treatment', 'cure', 'ആരോഗ്യം', 'ചികിത്സ'],
+    job: ['job', 'career', 'employment', 'work', 'ഉദ്യോഗം', 'ജോലി'],
+    love: ['love', 'romance', 'attraction', 'relationship', 'പ്രണയം', 'ആകർഷണം'],
+    spiritual: ['spiritual', 'prayer', 'meditation', 'worship', 'ആദ്ധ്യാത്മിക', 'പ്രാർത്ഥന'],
+    study: ['study', 'learning', 'education', 'പഠനം', 'വിദ്യാഭ്യാസം'],
+    government: ['government', 'official', 'സർക്കാർ', 'സർക്കാർ കാര്യങ്ങൾ']
+  };
+
+  for (const [category, words] of Object.entries(keywords)) {
+    if (words.some(word => action.includes(word.toLowerCase()))) {
+      return category;
+    }
   }
 
-  // Analyze and compile results
-  const analysis = analyzeTimingResults(results, matchedCategory, isMalayalam);
-
-  return {
-    found: true,
-    action: action,
-    category: matchedCategory,
-    ...analysis
-  };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SEARCH KNOWLEDGE BASE
-// ─────────────────────────────────────────────────────────────────────────────
-function searchKnowledgeBase(category, actionQuery) {
-  const results = [];
-
-  // Search days
-  KNOWLEDGE_DAYS.forEach(day => {
-    const searchText = JSON.stringify(day.data.suitable_operations || []).toLowerCase();
-    if (searchText.includes(actionQuery)) {
-      results.push({ type: 'day', data: day });
-    }
-  });
-
-  // Search lunar mansions
-  KNOWLEDGE_LUNAR_MANSIONS.forEach(mansion => {
-    const operations = JSON.stringify(mansion.data.operations || []).toLowerCase();
-    if (operations.includes(actionQuery)) {
-      results.push({ type: 'mansion', data: mansion });
-    }
-  });
-
-  // Search timing rules
-  KNOWLEDGE_TIMING_RULES.forEach(rule => {
-    const text = JSON.stringify(rule.data || {}).toLowerCase();
-    if (text.includes(actionQuery)) {
-      results.push({ type: 'rule', data: rule });
-    }
-  });
-
-  // Search Taha practical timing
-  TAHA_PRACTICAL_TIMING.forEach(timing => {
-    const text = JSON.stringify(timing.malayalam || {}).toLowerCase();
-    if (text.includes(actionQuery) || timing.original_text.toLowerCase().includes(actionQuery)) {
-      results.push({ type: 'taha', data: timing });
-    }
-  });
-
-  return results;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ANALYZE TIMING RESULTS
-// ─────────────────────────────────────────────────────────────────────────────
-function analyzeTimingResults(results, category, isMalayalam) {
-  const bestDays = [];
-  const worstDays = [];
-  const bestHours = [];
-  const worstHours = [];
-  const suitableMansions = [];
-  const unsuitableMansions = [];
-  const benefits = [];
-  const harms = [];
-  const warnings = [];
-  const sources = [];
-
-  results.forEach(result => {
-    if (result.type === 'day') {
-      const day = result.data;
-      const dayName = isMalayalam ? day.data.day : day.data.day_en;
-      const ruler = PLANET_DATA[day.data.ruler.toLowerCase()];
-      
-      if (ruler) {
-        bestDays.push({
-          day: dayName,
-          planet: isMalayalam ? ruler.name_ml : ruler.name_en,
-          symbol: ruler.symbol,
-          benefits: isMalayalam ? ruler.benefits_ml : ruler.benefits_en
-        });
-      }
-
-      // Add source
-      if (day.source) {
-        sources.push({
-          book: day.source.book,
-          page: day.source.page,
-          type: 'day'
-        });
-      }
-    }
-
-    if (result.type === 'mansion') {
-      const mansion = result.data;
-      const mansionData = LUNAR_MANSION_DATA.find(m => m.number === mansion.data.number);
-      
-      if (mansionData) {
-        const mansionEntry = {
-          number: mansionData.number,
-          name: isMalayalam ? mansionData.name_ml : mansionData.name_en,
-          arabic: mansionData.name_arabic,
-          nature: isMalayalam ? mansionData.nature_ml : mansionData.nature
-        };
-
-        if (mansionData.nature === 'lucky') {
-          suitableMansions.push(mansionEntry);
-        } else if (mansionData.nature === 'unlucky') {
-          unsuitableMansions.push(mansionEntry);
-        }
-      }
-
-      if (mansion.source) {
-        sources.push({
-          book: mansion.source.book,
-          page: mansion.source.page,
-          type: 'mansion'
-        });
-      }
-    }
-
-    if (result.type === 'taha') {
-      const taha = result.data;
-      if (taha.malayalam) {
-        if (taha.malayalam.benefits) {
-          benefits.push(...taha.malayalam.benefits);
-        }
-        if (taha.malayalam.warnings) {
-          warnings.push(...taha.malayalam.warnings);
-        }
-      }
-    }
-  });
-
-  // Determine worst days (opposite of best)
-  const bestDayNames = bestDays.map(d => d.day.toLowerCase());
-  KNOWLEDGE_DAYS.forEach(day => {
-    const dayName = isMalayalam ? day.data.day : day.data.day_en;
-    if (!bestDayNames.includes(dayName.toLowerCase())) {
-      const ruler = PLANET_DATA[day.data.ruler.toLowerCase()];
-      if (ruler && ruler.nature_ml?.includes('ദ്രോഹ')) {
-        worstDays.push({
-          day: dayName,
-          planet: isMalayalam ? ruler.name_ml : ruler.name_en,
-          symbol: ruler.symbol,
-          reason: isMalayalam ? ruler.nature_ml : ruler.nature_en
-        });
-      }
-    }
-  });
-
-  // Determine best/worst hours based on planet nature
-  Object.entries(PLANET_DATA).forEach(([key, planet]) => {
-    const isBenefic = planet.nature_ml?.includes('ശുഭ') || planet.nature_en?.includes('Benefic');
-    const hourInfo = {
-      planet: isMalayalam ? planet.name_ml : planet.name_en,
-      symbol: planet.symbol,
-      day: isMalayalam ? planet.day_ml : planet.day_en
-    };
-
-    if (isBenefic) {
-      bestHours.push(hourInfo);
-    } else {
-      worstHours.push(hourInfo);
-    }
-  });
-
-  return {
-    bestDays,
-    worstDays,
-    bestHours,
-    worstHours,
-    suitableMansions,
-    unsuitableMansions,
-    benefits: [...new Set(benefits)],
-    harms: [],
-    warnings: [...new Set(warnings)],
-    sources: [...new Set(sources.map(s => JSON.stringify(s)))].map(s => JSON.parse(s)),
-    totalRulesFound: results.length
-  };
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -401,25 +366,31 @@ function getGeneralSuggestions(isMalayalam) {
   return {
     suggestions: [
       {
-        category: isMalayalam ? "പൊതു ഉപദേശം" : "General Advice",
-        advice: isMalayalam 
-          ? "ജ്യോതിഷ ഗ്രന്ഥങ്ങളിൽ നിന്ന് നിർദ്ദിഷ്ട സമയ മാർഗ്ഗനിർദ്ദേശങ്ങൾ തേടുക" 
-          : "Consult traditional astrological manuscripts for specific timing guidance",
-        source: isMalayalam ? "പാരമ്പര്യ ജ്ഞാനം" : "Traditional Wisdom"
+        category: isMalayalam ? "വിവാഹം" : "Marriage",
+        advice: isMalayalam ? "വിവാഹത്തിന് വെള്ളി, വ്യാഴം ദിവസങ്ങൾ ഉത്തമം" : "Friday and Thursday are best for marriage",
+        match: true
       },
       {
-        category: isMalayalam ? "മറ്റ് സമീപനം" : "Alternative Approach",
-        advice: isMalayalam 
-          ? "ബന്ധപ്പെട്ട പ്രവൃത്തികൾ അല്ലെങ്കിൽ വിശാലമായ വിഭാഗങ്ങൾ തിരയുക" 
-          : "Try searching for related actions or broader categories",
-        source: "Astro Clock Framework"
+        category: isMalayalam ? "വ്യാപാരം" : "Business",
+        advice: isMalayalam ? "വ്യാപാരത്തിന് ബുധൻ, വ്യാഴം ദിവസങ്ങൾ ഉത്തമം" : "Wednesday and Thursday for business",
+        match: true
+      },
+      {
+        category: isMalayalam ? "യാത്ര" : "Travel",
+        advice: isMalayalam ? "യാത്രക്ക് തിങ്കൾ, വെള്ളി ദിവസങ്ങൾ ഉത്തമം" : "Monday and Friday for travel",
+        match: true
+      },
+      {
+        category: isMalayalam ? "ചികിത്സ" : "Healing",
+        advice: isMalayalam ? "ചികിത്സക്ക് തിങ്കൾ, വ്യാഴം ദിവസങ്ങൾ ഉത്തമം" : "Monday and Thursday for healing",
+        match: true
       }
     ]
   };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FIND SIMILAR ACTIONS (Autocomplete)
+// FIND SIMILAR ACTIONS
 // ─────────────────────────────────────────────────────────────────────────────
 export function findSimilarActions(partialAction, isMalayalam = false) {
   if (!partialAction || partialAction.length < 2) return [];
@@ -427,11 +398,12 @@ export function findSimilarActions(partialAction, isMalayalam = false) {
   const actionLower = partialAction.toLowerCase();
   const suggestions = [];
 
-  Object.entries(ACTION_KEYWORDS).forEach(([category, keywords]) => {
-    if (keywords.some(kw => kw.toLowerCase().includes(actionLower))) {
+  Object.entries(ACTION_RULES).forEach(([category, rules]) => {
+    const categoryName = isMalayalam ? rules.category_ml : rules.category;
+    if (categoryName.toLowerCase().includes(actionLower)) {
       suggestions.push({
-        category,
-        keywords: keywords.slice(0, 3),
+        category: categoryName,
+        keywords: [categoryName],
         match: true
       });
     }
@@ -439,23 +411,3 @@ export function findSimilarActions(partialAction, isMalayalam = false) {
 
   return suggestions.slice(0, 8);
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ENGINE STATUS
-// ─────────────────────────────────────────────────────────────────────────────
-export const ACTION_TIMING_ADVISOR_STATUS = {
-  version: "1.0.0",
-  initialized: true,
-  features: [
-    "Action-based timing search",
-    "Malayalam & English support",
-    "Best/Worst days analysis",
-    "Best/Worst planetary hours",
-    "Lunar mansion recommendations",
-    "Source citation tracking",
-    "Benefits & warnings display"
-  ],
-  knowledge_sources: 3,
-  total_rules_searchable: 409,
-  note: "Action Timing Advisor ready — searches across all Astro Clock knowledge"
-};
