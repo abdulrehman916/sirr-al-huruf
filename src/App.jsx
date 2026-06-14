@@ -48,6 +48,7 @@ const ManuscriptAuditPage = lazy(() => import('./pages/ManuscriptAuditPage'));
 const ManuscriptActionFinder = lazy(() => import('./pages/ManuscriptActionFinder'));
 const ManuscriptLibraryPage = lazy(() => import('./pages/ManuscriptLibraryPage'));
 const ManuscriptFinalAudit = lazy(() => import('./pages/ManuscriptFinalAudit'));
+const AstrologyOnlyAudit = lazy(() => import('./pages/AstrologyOnlyAudit'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -126,6 +127,7 @@ const AuthenticatedApp = () => {
             <Route path="/manuscript-action-finder" element={<ManuscriptActionFinder />} />
             <Route path="/manuscript-library" element={<ManuscriptLibraryPage />} />
             <Route path="/manuscript-final-audit" element={<ManuscriptFinalAudit />} />
+            <Route path="/astrology-only-audit" element={<AstrologyOnlyAudit />} />
 
 
             <Route path="*" element={<PageNotFound />} />
