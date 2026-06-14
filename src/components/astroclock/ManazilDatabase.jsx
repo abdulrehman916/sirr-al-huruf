@@ -72,8 +72,11 @@ export default function ManazilDatabase() {
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="text-right">
-                                <p className="font-amiri text-4xl md:text-5xl text-white/95 leading-relaxed" style={{ textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{manzil.letter_malayalam}</p>
-                                <p className="font-inter text-[8px] text-white/50 mt-0.5">Arabic: {manzil.name_arabic}</p>
+                                <p className="font-amiri text-5xl md:text-6xl font-bold text-white/95 leading-relaxed" style={{ textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{manzil.name_arabic}</p>
+                                <p className="font-inter text-[8px] text-white/50 mt-0.5">Arabic Letter</p>
+                                {manzil.letter_malayalam && (
+                                    <p className="font-malayalam-sm text-white/60 mt-1">{manzil.letter_malayalam}</p>
+                                )}
                             </div>
                             <ChevronDown 
                                 className="w-6 h-6 text-gold transition-transform"
@@ -95,20 +98,16 @@ export default function ManazilDatabase() {
                                     {isMalayalam ? manzil.nature_ml : manzil.nature}
                                 </p>
                                 
-                                {/* Letter Info with Malayalam Name */}
+                                {/* Letter Info with Arabic Primary */}
                                 <div className="mt-3 p-3 rounded-lg" style={{background: G.bg, border: `1px solid ${G.border}`}}>
                                     <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{color: G.dim}}>
-                                        {isMalayalam ? "അക്ഷരം" : "Letter"}
+                                        {isMalayalam ? "അറബിക് അക്ഷരം" : "Arabic Letter"}
                                     </p>
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-center">
-                                            <p className="font-amiri text-5xl font-bold mb-1" style={{color: G.text}}>{manzil.name_arabic}</p>
-                                            <p className="font-inter text-[8px] uppercase tracking-wider" style={{color: G.dim}}>Arabic Letter</p>
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="font-malayalam-md font-bold text-white text-lg">{manzil.letter_malayalam}</p>
-                                            <p className="font-inter text-[8px] uppercase tracking-wider" style={{color: G.dim}}>Malayalam Name</p>
-                                        </div>
+                                    <div className="flex flex-col items-center gap-2">
+                                        <p className="font-amiri text-6xl font-bold" style={{color: G.text}}>{manzil.name_arabic}</p>
+                                        {manzil.letter_malayalam && (
+                                            <p className="font-malayalam-sm text-white/70">{manzil.letter_malayalam}</p>
+                                        )}
                                     </div>
                                 </div>
                                 
