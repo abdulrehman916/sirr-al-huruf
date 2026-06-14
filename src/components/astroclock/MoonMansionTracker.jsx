@@ -46,43 +46,11 @@ export default function MoonMansionTracker() {
     const moonPos = calculateMoonPosition(now);
     setCurrentMansion(moonPos.mansion);
 
-    // Calculate next mansion (approximate - 2.35 days per mansion)
-    const nextMansionNum = ((moonPos.mansion?.number || 1) % 28) + 1;
-    const nextMansionData = AY_MANAZILLERI.find(m => m.number === nextMansionNum);
-    
-    // Estimate entry time (approximate)
-    const hoursRemaining = 24 - (now.getHours() + now.getMinutes() / 60);
-    const entryTime = new Date(now.getTime() + hoursRemaining * 3600000);
-    
-    setNextMansion({
-      mansion: nextMansionData,
-      entryTime: entryTime,
-      exitTime: new Date(entryTime.getTime() + 56 * 3600000) // ~2.35 days
-    });
-    
-    const diff = entryTime - now;
-    const hrs = Math.floor(diff / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    setCountdown(`${hrs}h ${mins}m`);
-
-    // Generate monthly transits (28 mansions)
-    const monthly = [];
-    let currentDate = new Date(now);
-    for (let i = 0; i < 28; i++) {
-      const mansionNum = ((moonPos.mansion?.number - 1 + i) % 28) + 1;
-      const mansion = AY_MANAZILLERI.find(m => m.number === mansionNum);
-      const entryTime = new Date(currentDate);
-      const exitTime = new Date(currentDate.getTime() + 56 * 3600000);
-      
-      monthly.push({
-        mansion,
-        entryTime,
-        exitTime
-      });
-      
-      currentDate = exitTime;
-    }
-    setMonthlyTransits(monthly);
+    // DO NOT estimate next mansion timing - manuscript data only
+    // If not in manuscripts, show "NOT FOUND IN UPLOADED MANUSCRIPTS"
+    setNextMansion(null);
+    setCountdown("");
+    setMonthlyTransits([]);
   }
 
   return (
@@ -128,22 +96,8 @@ export default function MoonMansionTracker() {
         isMalayalam={isMalayalam}
       />
 
-      {/* Next Mansion */}
-      {nextMansion && (
-        <NextMansionDisplay 
-          mansion={nextMansion}
-          countdown={countdown}
-          isMalayalam={isMalayalam}
-        />
-      )}
-
-      {/* Monthly Calendar */}
-      <MonthlyMansionCalendar 
-        transits={monthlyTransits}
-        expandedMansion={expandedMansion}
-        setExpandedMansion={setExpandedMansion}
-        isMalayalam={isMalayalam}
-      />
+      {/* Next Mansion - Manuscript Data Only */}
+      <ManuscriptOnlyNotice isMalayalam={isMalayalam} />
 
       {/* Manuscript Source */}
       <ManuscriptSourceSection isMalayalam={isMalayalam} />
@@ -233,35 +187,7 @@ function CurrentMansionDisplay({ mansion, nextMansion, countdown, isMalayalam })
 
 function NextMansionDisplay({ mansion, countdown, isMalayalam }) {
   return (
-    <div className="mb-6 p-5 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
-      <div className="flex items-center gap-3 mb-4">
-        <Clock className="w-6 h-6" style={{ color: G.text }} />
-        <h3 className="font-malayalam-md uppercase tracking-widest" style={{ color: G.text }}>
-          {isMalayalam ? "അടുത്ത നക്ഷത്രം" : "Next Mansion"}
-        </h3>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-4">
-        <div>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-            {isMalayalam ? "നക്ഷത്രം" : "Mansion"}
-          </p>
-          <p className="font-malayalam-sm font-bold text-white">#{mansion.mansion.number} {mansion.mansion.name_ml}</p>
-        </div>
-        <div>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-            {isMalayalam ? "പ്രവേശന സമയം" : "Entry Time"}
-          </p>
-          <p className="font-malayalam-sm text-white">{mansion.entryTime.toLocaleString()}</p>
-        </div>
-        <div>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.text }}>
-            {isMalayalam ? "കൗണ്ട്ഡൗൺ" : "Countdown"}
-          </p>
-          <p className="font-malayalam-md font-bold" style={{ color: G.text }}>{countdown}</p>
-        </div>
-      </div>
-    </div>
+    <ManuscriptOnlyNotice isMalayalam={isMalayalam} />
   );
 }
 
@@ -271,41 +197,7 @@ function NextMansionDisplay({ mansion, countdown, isMalayalam }) {
 
 function MonthlyMansionCalendar({ transits, expandedMansion, setExpandedMansion, isMalayalam }) {
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-3 mb-4">
-        <Calendar className="w-6 h-6" style={{ color: G.text }} />
-        <h3 className="font-malayalam-md uppercase tracking-widest" style={{ color: G.text }}>
-          {isMalayalam ? "മാസിക ചന്ദ്ര നക്ഷത്ര കലണ്ടർ" : "Monthly Moon Mansion Calendar"}
-        </h3>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b" style={{ borderColor: G.border }}>
-              <th className="text-left py-3 px-3 font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>#</th>
-              <th className="text-left py-3 px-3 font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "നക്ഷത്രം" : "Mansion"}</th>
-              <th className="text-left py-3 px-3 font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "പ്രവേശനം" : "Entry"}</th>
-              <th className="text-left py-3 px-3 font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "നിർഗ്ഗമനം" : "Exit"}</th>
-              <th className="text-left py-3 px-3 font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "ദൈർഘ്യം" : "Duration"}</th>
-              <th className="text-left py-3 px-3 font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "വിവരങ്ങൾ" : "Details"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transits.map((transit, idx) => (
-              <MansionRow
-                key={idx}
-                transit={transit}
-                index={idx}
-                expanded={expandedMansion === idx}
-                onToggle={() => setExpandedMansion(expandedMansion === idx ? null : idx)}
-                isMalayalam={isMalayalam}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <ManuscriptOnlyNotice isMalayalam={isMalayalam} />
   );
 }
 
@@ -484,6 +376,42 @@ function MansionDetails({ transit, mansionData, isMalayalam }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MANUSCRIPT ONLY NOTICE
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ManuscriptOnlyNotice({ isMalayalam }) {
+  return (
+    <div className="mb-6 p-8 rounded-xl border text-center" style={{ background: G.warning, borderColor: G.warningBorder }}>
+      <AlertCircle className="w-12 h-12 mx-auto mb-4" style={{ color: "#fbbf24" }} />
+      <h3 className="font-malayalam-lg font-bold text-white mb-2">
+        {isMalayalam ? "ഹസ്തലിഖിതങ്ങളിൽ ലഭ്യമല്ല" : "NOT FOUND IN UPLOADED MANUSCRIPTS"}
+      </h3>
+      <p className="font-malayalam-sm text-white/80 mb-4">
+        {isMalayalam 
+          ? "ചന്ദ്രന്റെ കൃത്യമായ സഞ്ചാര സമയം അപ്‌ലോഡ് ചെയ്ത PDF കളിൽ നിന്നും ലഭ്യമല്ല" 
+          : "Exact Moon transit timing not available in uploaded PDF manuscripts"}
+      </p>
+      <div className="text-left p-4 rounded-lg max-w-2xl mx-auto" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+        <p className="font-inter text-[8px] uppercase tracking-widest mb-3" style={{ color: G.text }}>
+          {isMalayalam ? "ആവശ്യമായ സ്രോതസ്സ് വിവരങ്ങൾ" : "Required Source Information (Not Found)"}
+        </p>
+        <div className="space-y-2 text-sm text-white/70">
+          <p>✗ {isMalayalam ? "കൃത്യമായ പ്രവേശന സമയം" : "Exact entry time"} — NOT FOUND IN MANUSCRIPTS</p>
+          <p>✗ {isMalayalam ? "കൃത്യമായ പുറപ്പെടൽ സമയം" : "Exact exit time"} — NOT FOUND IN MANUSCRIPTS</p>
+          <p>✗ {isMalayalam ? "കൗണ്ട്ഡൗൺ" : "Countdown timer"} — NOT FOUND IN MANUSCRIPTS</p>
+          <p>✗ {isMalayalam ? "മാസിക കലണ്ടർ" : "Monthly calendar"} — NOT FOUND IN MANUSCRIPTS</p>
+        </div>
+      </div>
+      <p className="mt-4 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+        {isMalayalam 
+          ? "ഏകദേശക്കണക്കുകളോ AI കണക്കുകൂട്ടലുകളോ ഉപയോഗിക്കുന്നില്ല" 
+          : "No approximations, AI calculations, or estimates used"}
+      </p>
     </div>
   );
 }
