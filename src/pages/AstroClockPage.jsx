@@ -112,7 +112,7 @@ function AstroClockContent() {
         {/* SECTION 11: Professional Timing Decision Engine */}
         <ProfessionalTimingDecisionEngine />
 
-        {/* SECTION 12: Karma Timing Advisor */}
+        {/* SECTION 12: Karma Timing Advisor — PDF Knowledge Base */}
         <KarmaTimingAdvisor />
 
         {/* SECTION 13: Birth Profile Analyzer */}

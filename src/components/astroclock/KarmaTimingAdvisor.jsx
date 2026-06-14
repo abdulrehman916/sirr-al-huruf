@@ -6,10 +6,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, CheckCircle, XCircle, AlertCircle, Calendar, Book, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, CheckCircle, XCircle, AlertCircle, Book, ChevronDown, ChevronUp } from "lucide-react";
 import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
-import { getCurrentPlanetaryHour, PLANET_INFO, DAY_INFO } from "@/lib/astroClockLiveEngine.js";
+import { getCurrentPlanetaryHour, DAY_INFO } from "@/lib/astroClockLiveEngine.js";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
+import { getRulesForTopic, getAllTopics } from "@/lib/astroClockKnowledgeBaseFramework.js";
 
 const ACTION_CATEGORIES = [
   { id: "marriage", name: "Marriage", arabic: "النكاح", icon: "💍" },
@@ -69,7 +70,7 @@ export default function KarmaTimingAdvisor() {
     const dayIndex = now.getDay();
     const dayInfo = DAY_INFO[dayIndex];
 
-    const rules = getPDFRulesForCategory(categoryId);
+    const rules = getRulesForTopic(categoryId);
     const result = evaluateRules(rules, moonPos, planetHour, dayInfo);
 
     setEvaluation({
@@ -104,7 +105,7 @@ export default function KarmaTimingAdvisor() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`p-3 rounded-lg border transition-all text-left ${selectedCategory === cat.id ? 'selected' : ''}`}
+              className="p-3 rounded-lg border transition-all text-left"
               style={{
                 background: selectedCategory === cat.id ? G.bgHi : G.bg,
                 borderColor: selectedCategory === cat.id ? G.text : G.faint
@@ -112,7 +113,7 @@ export default function KarmaTimingAdvisor() {
             >
               <span className="text-xl mb-1 block">{cat.icon}</span>
               <p className="font-amiri text-sm font-bold" style={{ color: G.text }}>{cat.arabic}</p>
-              <p className="font-malayalam-sm text-white/70 truncate">{isMalayalam ? cat.name : cat.name}</p>
+              <p className="font-malayalam-sm text-white/70 truncate">{cat.name}</p>
             </button>
           ))}
         </div>
@@ -198,14 +199,14 @@ function FactorCard({ label, value, arabic, symbol, icon }) {
 }
 
 function PDFRuleDisplay({ evaluation, expanded, onToggle, isMalayalam }) {
-  const { rules, result } = evaluation;
+  const { rules } = evaluation;
 
   return (
     <div className="mb-6 border rounded-xl" style={{ borderColor: G.faint }}>
       <button onClick={onToggle} className="w-full p-4 flex items-center justify-between gap-3" style={{ color: G.dim }}>
         <div className="flex items-center gap-3">
           <Book className="w-5 h-5" />
-          <span className="font-inter text-[9px] uppercase tracking-widest">{isMalayalam ? "PDF നിയമം" : "PDF Rule Applied"}</span>
+          <span className="font-inter text-[9px] uppercase tracking-widest">{isMalayalam ? "PDF നിയമങ്ങൾ" : "PDF Rules Applied"}</span>
         </div>
         {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
@@ -214,29 +215,16 @@ function PDFRuleDisplay({ evaluation, expanded, onToggle, isMalayalam }) {
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <div className="p-4 border-t space-y-3" style={{ borderColor: G.faint }}>
-              <RuleItem label={isMalayalam ? "ഉചിത ദിവസങ്ങൾ" : "Suitable Days"} value={rules.bestDays?.join(", ") || isMalayalam ? "ഒന്നുമില്ല" : "None"} />
-              <RuleItem label={isMalayalam ? "ഉചിത ഗ്രഹങ്ങൾ" : "Suitable Planets"} value={rules.suitablePlanets?.join(", ") || isMalayalam ? "ഒന്നുമില്ല" : "None"} />
-              <RuleItem label={isMalayalam ? "ഉചിത നക്ഷത്രങ്ങൾ" : "Suitable Mansions"} value={rules.suitableMansions?.join(", ") || isMalayalam ? "ഒന്നുമില്ല" : "None"} />
-              <RuleItem label={isMalayalam ? "ഉചിത രാശികൾ" : "Suitable Signs"} value={rules.suitableSigns?.join(", ") || isMalayalam ? "ഒന്നുമില്ല" : "None"} />
-              <RuleItem label={isMalayalam ? "ഉചിത മൂലകം" : "Suitable Element"} value={rules.suitableElement || isMalayalam ? "ഒന്നുമില്ല" : "None"} />
-              <RuleItem label={isMalayalam ? "ഒഴിവാക്കേണ്ടവ" : "Avoid"} value={rules.avoid?.join(", ") || isMalayalam ? "ഒന്നുമില്ല" : "None"} />
-              <div className="p-3 rounded-lg mt-3" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.text }}>{isMalayalam ? "സ്രോതസ്സ്" : "Source"}</p>
-                <p className="font-malayalam-sm text-white/70">{rules.source}</p>
-              </div>
+              {rules.map((rule, idx) => (
+                <div key={idx} className="p-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+                  <p className="font-malayalam-sm text-white/80 mb-2">{rule.ruleText}</p>
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.text }}>Source: {rule.book} - {rule.chapter}</p>
+                </div>
+              ))}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-function RuleItem({ label, value }) {
-  return (
-    <div className="flex items-start gap-3">
-      <p className="font-inter text-[8px] uppercase tracking-widest w-32 flex-shrink-0" style={{ color: G.dim }}>{label}</p>
-      <p className="font-malayalam-sm text-white/80 flex-1">{value}</p>
     </div>
   );
 }
@@ -272,205 +260,54 @@ function NextSuitableTime({ evaluation, isMalayalam }) {
   );
 }
 
-function getPDFRulesForCategory(categoryId) {
-  const rules = {
-    marriage: {
-      action: "Marriage / Wedding",
-      bestDays: ["Monday", "Wednesday", "Thursday", "Friday"],
-      suitablePlanets: ["venus", "jupiter", "moon"],
-      suitableMansions: [2, 3, 6, 7, 11, 15, 16, 20, 24, 26],
-      suitableSigns: ["Taurus", "Cancer", "Pisces", "Sagittarius"],
-      suitableElement: "Water",
-      avoid: ["Saturday", "Tuesday", "Mansions 1, 4, 5, 8, 9, 12, 13, 14, 21, 22, 25, 27"],
-      source: "PDF2 p.64-74, Havâss'ın Derinlikleri p.50-51"
-    },
-    love: {
-      action: "Love / Muhabbah",
-      bestDays: ["Friday", "Monday"],
-      suitablePlanets: ["venus", "moon"],
-      suitableMansions: [2, 6, 7, 11, 15, 20, 24],
-      suitableSigns: ["Taurus", "Cancer", "Pisces", "Libra"],
-      suitableElement: "Water",
-      avoid: ["Saturday", "Mars hours", "Mansions 4, 5, 8, 9, 12, 13"],
-      source: "PDF2 p.64-74, Taha Manuscript"
-    },
-    separation: {
-      action: "Separation / Tafriq",
-      bestDays: ["Tuesday", "Saturday"],
-      suitablePlanets: ["mars", "saturn"],
-      suitableMansions: [4, 5, 8, 9, 12, 13, 21, 22, 25, 27],
-      suitableSigns: ["Scorpio", "Capricorn", "Aquarius"],
-      suitableElement: "Earth",
-      avoid: ["Friday", "Venus hours", "Mansions 2, 3, 6, 7, 11"],
-      source: "PDF2 p.64-74, Havâss'ın Derinlikleri"
-    },
-    rizq: {
-      action: "Rizq / Provision",
-      bestDays: ["Thursday", "Wednesday"],
-      suitablePlanets: ["jupiter", "mercury"],
-      suitableMansions: [3, 6, 10, 11, 15, 16, 20, 24],
-      suitableSigns: ["Sagittarius", "Pisces", "Gemini", "Virgo"],
-      suitableElement: "Fire",
-      avoid: ["Saturday", "Saturn hours"],
-      source: "PDF2 p.64-74, Taha p.120-125"
-    },
-    healing: {
-      action: "Healing / Cure",
-      bestDays: ["Wednesday", "Thursday", "Sunday"],
-      suitablePlanets: ["mercury", "jupiter", "sun"],
-      suitableMansions: [3, 6, 7, 11, 15, 16, 20],
-      suitableSigns: ["Gemini", "Virgo", "Sagittarius", "Pisces"],
-      suitableElement: "Air",
-      avoid: ["Tuesday", "Mars hours", "Mansions 4, 5, 8, 9"],
-      source: "PDF2 p.64-74, Havâss'ın Derinlikleri p.88-92"
-    },
-    spiritual: {
-      action: "Spiritual Work",
-      bestDays: ["Friday", "Monday", "Thursday"],
-      suitablePlanets: ["jupiter", "moon", "venus"],
-      suitableMansions: [2, 3, 6, 7, 11, 15, 16, 20, 24, 26, 28],
-      suitableSigns: ["Cancer", "Pisces", "Sagittarius", "Taurus"],
-      suitableElement: "Water",
-      avoid: ["Saturday", "Tuesday", "Mansions 1, 4, 5, 8, 9, 12, 13, 14"],
-      source: "PDF2 p.64-74, Taha Manuscript p.200-210"
-    },
-    vefk: {
-      action: "Vefk Creation",
-      bestDays: ["Sunday", "Thursday", "Wednesday"],
-      suitablePlanets: ["sun", "jupiter", "mercury"],
-      suitableMansions: [1, 3, 6, 10, 11, 15, 16, 20, 24, 28],
-      suitableSigns: ["Leo", "Sagittarius", "Pisces", "Gemini", "Virgo"],
-      suitableElement: "Fire",
-      avoid: ["Saturday", "Tuesday", "Mansions 4, 5, 8, 9, 12, 13, 14, 21, 22"],
-      source: "PDF2 p.64-74, Havâss'ın Derinlikleri p.150-160"
-    },
-    talisman: {
-      action: "Talisman Creation",
-      bestDays: ["Saturday", "Tuesday", "Thursday"],
-      suitablePlanets: ["saturn", "mars", "jupiter"],
-      suitableMansions: [4, 5, 8, 9, 12, 13, 21, 22, 25, 27],
-      suitableSigns: ["Capricorn", "Aquarius", "Scorpio"],
-      suitableElement: "Earth",
-      avoid: ["Friday", "Venus hours", "Mansions 2, 3, 6, 7, 11"],
-      source: "PDF2 p.64-74, Taha p.180-190"
-    },
-    hadim: {
-      action: "Hadim Work",
-      bestDays: ["Tuesday", "Saturday", "Thursday"],
-      suitablePlanets: ["mars", "saturn", "jupiter"],
-      suitableMansions: [4, 5, 8, 9, 12, 13, 21, 22, 25, 27],
-      suitableSigns: ["Scorpio", "Capricorn", "Aquarius"],
-      suitableElement: "Earth",
-      avoid: ["Friday", "Monday", "Venus/Moon hours"],
-      source: "PDF2 p.64-74, Havâss'ın Derinlikleri p.200-210"
-    },
-    ism: {
-      action: "Ism Work (Divine Names)",
-      bestDays: ["Friday", "Thursday", "Sunday"],
-      suitablePlanets: ["jupiter", "sun", "venus"],
-      suitableMansions: [2, 3, 6, 7, 11, 15, 16, 20, 24, 26, 28],
-      suitableSigns: ["Sagittarius", "Pisces", "Leo", "Taurus"],
-      suitableElement: "Fire",
-      avoid: ["Saturday", "Tuesday", "Mansions 1, 4, 5, 8, 9, 12, 13, 14"],
-      source: "PDF2 p.64-74, Taha p.220-230"
-    },
-    travel: {
-      action: "Travel",
-      bestDays: ["Wednesday", "Thursday", "Monday"],
-      suitablePlanets: ["mercury", "jupiter", "moon"],
-      suitableMansions: [3, 6, 11, 15, 16, 20, 24],
-      suitableSigns: ["Gemini", "Virgo", "Sagittarius", "Pisces"],
-      suitableElement: "Air",
-      avoid: ["Saturday", "Tuesday", "Mansions 4, 5, 8, 9, 12, 13"],
-      source: "PDF2 p.64-74, Havâss'ın Derinlikleri p.100-105"
-    },
-    business: {
-      action: "Business / Trade",
-      bestDays: ["Wednesday", "Thursday", "Friday"],
-      suitablePlanets: ["mercury", "jupiter", "venus"],
-      suitableMansions: [3, 6, 10, 11, 15, 16, 20, 24],
-      suitableSigns: ["Gemini", "Virgo", "Sagittarius", "Pisces", "Taurus"],
-      suitableElement: "Air",
-      avoid: ["Saturday", "Tuesday", "Mansions 4, 5, 8, 9, 12, 13"],
-      source: "PDF2 p.64-74, Taha p.140-150"
-    },
-    construction: {
-      action: "Construction / Building",
-      bestDays: ["Thursday", "Tuesday", "Sunday"],
-      suitablePlanets: ["jupiter", "mars", "sun"],
-      suitableMansions: [3, 6, 10, 11, 15, 16, 20],
-      suitableSigns: ["Sagittarius", "Pisces", "Leo", "Aries"],
-      suitableElement: "Fire",
-      avoid: ["Saturday", "Mansions 4, 5, 8, 9, 12, 13, 14"],
-      source: "PDF2 p.64-74, Havâss'ın Derinlikleri p.170-180"
-    },
-    purchase: {
-      action: "Purchase / Buying",
-      bestDays: ["Wednesday", "Thursday", "Friday"],
-      suitablePlanets: ["mercury", "jupiter", "venus"],
-      suitableMansions: [3, 6, 11, 15, 16, 20, 24],
-      suitableSigns: ["Gemini", "Virgo", "Sagittarius", "Pisces", "Taurus"],
-      suitableElement: "Air",
-      avoid: ["Saturday", "Tuesday", "Mansions 4, 5, 8, 9, 12, 13"],
-      source: "PDF2 p.64-74, Taha p.140-150"
-    },
-    conflict: {
-      action: "Conflict / Confrontation",
-      bestDays: ["Tuesday", "Saturday"],
-      suitablePlanets: ["mars", "saturn"],
-      suitableMansions: [4, 5, 8, 9, 12, 13, 21, 22, 25, 27],
-      suitableSigns: ["Scorpio", "Capricorn", "Aquarius", "Aries"],
-      suitableElement: "Earth",
-      avoid: ["Friday", "Monday", "Venus/Moon hours"],
-      source: "PDF2 p.64-74, Havâss'ın Derinlikleri p.190-200"
-    }
-  };
-
-  return rules[categoryId] || rules.spiritual;
-}
-
 function evaluateRules(rules, moonPos, planetHour, dayInfo) {
   let score = 0;
   let totalChecks = 0;
 
+  // Extract rules from PDF knowledge base
+  const bestDays = [];
+  const suitableMansions = [];
+
+  rules.forEach(rule => {
+    if (rule.ruleType === "day_ruler") {
+      // Extract days from rule text
+      const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      days.forEach(day => {
+        if (rule.ruleText.includes(day) && !bestDays.includes(day)) {
+          bestDays.push(day);
+        }
+      });
+    }
+    if (rule.ruleType === "lunar_mansion") {
+      // Extract mansion numbers from rule text
+      const numbers = rule.ruleText.match(/\d+/g);
+      if (numbers) {
+        numbers.forEach(n => {
+          const num = parseInt(n);
+          if (num >= 1 && num <= 28 && !suitableMansions.includes(num)) {
+            suitableMansions.push(num);
+          }
+        });
+      }
+    }
+  });
+
   // Check day ruler
   totalChecks++;
-  if (rules.bestDays?.includes(dayInfo.ruler_en)) score++;
-
-  // Check planetary hour
-  totalChecks++;
-  if (rules.suitablePlanets?.includes(planetHour.planet)) score++;
+  if (bestDays.length > 0 && bestDays.includes(dayInfo.ruler_en)) score++;
 
   // Check lunar mansion
   totalChecks++;
-  if (rules.suitableMansions?.includes(moonPos.mansion?.number)) score++;
+  if (suitableMansions.length > 0 && suitableMansions.includes(moonPos.mansion?.number)) score++;
 
-  // Check zodiac sign
-  totalChecks++;
-  if (rules.suitableSigns?.includes(moonPos.zodiacSign?.name_en)) score++;
-
-  // Check element
-  totalChecks++;
-  if (rules.suitableElement === moonPos.zodiacSign?.element) score++;
-
-  // Check avoid rules
-  let shouldAvoid = false;
-  if (rules.avoid) {
-    if (rules.avoid.some(a => a.includes(dayInfo.ruler_en))) shouldAvoid = true;
-    if (rules.avoid.some(a => a.includes(planetHour.planetInfo?.name_en))) shouldAvoid = true;
-    if (rules.avoid.some(a => a.includes(moonPos.mansion?.number.toString()))) shouldAvoid = true;
-  }
-
-  const ratio = score / totalChecks;
+  // Calculate ratio
+  const ratio = totalChecks > 0 ? score / totalChecks : 0;
   let suitable = false;
   let wait = false;
 
-  if (shouldAvoid) {
-    suitable = false;
-    wait = false;
-  } else if (ratio >= 0.6) {
+  if (ratio >= 0.5) {
     suitable = true;
-  } else if (ratio >= 0.4) {
+  } else if (ratio >= 0.25) {
     wait = true;
   }
 
@@ -480,11 +317,11 @@ function evaluateRules(rules, moonPos, planetHour, dayInfo) {
     score,
     totalChecks,
     ratio,
-    nextSuitable: calculateNextSuitable(rules)
+    nextSuitable: calculateNextSuitable(rules, moonPos, planetHour, dayInfo)
   };
 }
 
-function calculateNextSuitable(rules) {
+function calculateNextSuitable(rules, currentMoonPos, currentPlanetHour, currentDayInfo) {
   const now = new Date();
   for (let h = now.getHours() + 1; h < 24; h++) {
     const future = new Date(now);
@@ -495,8 +332,38 @@ function calculateNextSuitable(rules) {
     const dayIndex = future.getDay();
     const dayInfo = DAY_INFO[dayIndex];
     
-    const result = evaluateRules(rules, moonPos, planetHour, dayInfo);
-    if (result.suitable) {
+    // Re-evaluate for future time
+    const bestDays = [];
+    const suitableMansions = [];
+    
+    rules.forEach(rule => {
+      if (rule.ruleType === "day_ruler") {
+        if (rule.ruleText.includes("Monday")) bestDays.push("Monday");
+        if (rule.ruleText.includes("Tuesday")) bestDays.push("Tuesday");
+        if (rule.ruleText.includes("Wednesday")) bestDays.push("Wednesday");
+        if (rule.ruleText.includes("Thursday")) bestDays.push("Thursday");
+        if (rule.ruleText.includes("Friday")) bestDays.push("Friday");
+        if (rule.ruleText.includes("Saturday")) bestDays.push("Saturday");
+        if (rule.ruleText.includes("Sunday")) bestDays.push("Sunday");
+      }
+      if (rule.ruleType === "lunar_mansion") {
+        const numbers = rule.ruleText.match(/\d+/g);
+        if (numbers) numbers.forEach(n => suitableMansions.push(parseInt(n)));
+      }
+    });
+    
+    let score = 0;
+    let totalChecks = 0;
+    
+    if (bestDays.length > 0 && bestDays.includes(dayInfo.ruler_en)) score++;
+    totalChecks++;
+    
+    if (suitableMansions.length > 0 && suitableMansions.includes(moonPos.mansion?.number)) score++;
+    totalChecks++;
+    
+    const ratio = totalChecks > 0 ? score / totalChecks : 0;
+    
+    if (ratio >= 0.5) {
       return {
         time: formatTime(future),
         countdown: formatCountdown(future, now)
@@ -515,7 +382,8 @@ function formatTime(date) {
 }
 
 function formatCountdown(future, now) {
-  const minutes = Math.floor((future.getTime() - now.getTime()) / 60000);
+  const diff = future.getTime() - now.getTime();
+  const minutes = Math.floor(diff / 60000);
   const hrs = Math.floor(minutes / 60);
   const mins = minutes % 60;
   if (hrs > 0) return `${hrs}h ${mins}m`;
