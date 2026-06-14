@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // NIGHTTIME PLANETARY HOURS — SECTION 3
-// 12 hours from sunset to sunrise
+// 12 hours from sunset to sunrise with real calculations
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Moon, Clock, Info } from "lucide-react";
 import { getAllPlanetaryHours } from "@/lib/astroClockLiveEngine";
+import { calculateSunriseSunset, getUserLocation, formatDecimalTime } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 
 const G = {
@@ -21,18 +22,25 @@ const G = {
   bgHi:     "rgba(212,175,55,0.14)"
 };
 
-const DEFAULT_SUNRISE = 5.5;
-const DEFAULT_SUNSET = 19.0;
-
 export default function NighttimePlanetaryHours() {
   const { isMalayalam } = useAstroClockLanguage();
   const [hours, setHours] = useState([]);
+  const [sunData, setSunData] = useState(null);
+  const [location, setLocation] = useState(null);
 
   useEffect(() => {
     const today = new Date();
-    const allHours = getAllPlanetaryHours(today, DEFAULT_SUNRISE, DEFAULT_SUNSET);
-    const nightHours = allHours.filter(h => h.period === "night");
-    setHours(nightHours);
+    const userLoc = getUserLocation();
+    setLocation(userLoc);
+    
+    const sunTimes = calculateSunriseSunset(today, userLoc.lat, userLoc.lng, userLoc.timezone);
+    setSunData(sunTimes);
+    
+    if (sunTimes.sunrise && sunTimes.sunset) {
+      const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+      const nightHours = allHours.filter(h => h.period === "night");
+      setHours(nightHours);
+    }
   }, []);
 
   return (
@@ -50,16 +58,31 @@ export default function NighttimePlanetaryHours() {
         style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.50), transparent)` }} />
 
       {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
-        <Moon className="w-6 h-6" style={{ color: G.text }} />
-        <div>
-          <h2 className="font-inter text-lg font-bold uppercase tracking-widest" style={{ color: G.text }}>
-            {isMalayalam ? "രാത്രി 12 ഗ്രഹ മണിക്കൂറുകൾ" : "Nighttime 12 Planetary Hours"}
-          </h2>
-          <p className="font-inter text-[9px]" style={{ color: G.dim }}>
-            {isMalayalam ? "സൂര്യാസ്തമയം മുതൽ സൂര്യോദയം വരെ" : "From Sunset to Sunrise"}
-          </p>
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <Moon className="w-6 h-6" style={{ color: G.text }} />
+          <div>
+            <h2 className="font-inter text-lg font-bold uppercase tracking-widest" style={{ color: G.text }}>
+              {isMalayalam ? "രാത്രി 12 ഗ്രഹ മണിക്കൂറുകൾ" : "Nighttime 12 Planetary Hours"}
+            </h2>
+            <p className="font-inter text-[9px]" style={{ color: G.dim }}>
+              {isMalayalam ? "സൂര്യാസ്തമയം മുതൽ സൂര്യോദയം വരെ" : "From Sunset to Sunrise"}
+            </p>
+          </div>
         </div>
+        
+        {/* Location & Sun Times */}
+        {location && sunData && (
+          <div className="text-right">
+            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+              {location.name}
+            </p>
+            <p className="font-inter text-xs text-white/70">
+              {isMalayalam ? "സൂര്യാസ്തമയം:" : "Sunset:"} {formatDecimalTime(sunData.sunset)} • 
+              {isMalayalam ? " സൂര്യോദയം:" : " Sunrise:"} {formatDecimalTime(sunData.sunrise)}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Hours Table */}
@@ -79,10 +102,13 @@ export default function NighttimePlanetaryHours() {
               <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
                 {isMalayalam ? "ദൈർഘ്യം" : "Duration"}
               </th>
+              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Good Actions"}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {hours.map((hour) => (
+            {(hours || []).map((hour) => (
               <tr key={hour.hourNumber} className="border-b" style={{ borderColor: G.faint }}>
                 <td className="py-3 px-3">
                   <span className="font-inter text-sm font-bold text-white">#{hour.hourNumber}</span>
@@ -107,7 +133,19 @@ export default function NighttimePlanetaryHours() {
                   </div>
                 </td>
                 <td className="py-3 px-3">
-                  <span className="font-inter text-xs text-white/70">{hour.duration}</span>
+                  <div className="font-inter text-xs">
+                    <div className="text-white/80">{hour.duration}</div>
+                    <div className="text-[9px]" style={{ color: G.dim }}>
+                      {hour.durationMinutes}m {hour.durationSeconds}s
+                    </div>
+                  </div>
+                </td>
+                <td className="py-3 px-3">
+                  <div className="max-w-[180px]">
+                    {(hour.goodActions || []).slice(0, 2).map((action, idx) => (
+                      <div key={idx} className="font-inter text-[10px] text-white/70">• {action}</div>
+                    ))}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -127,6 +165,9 @@ export default function NighttimePlanetaryHours() {
               {isMalayalam 
                 ? "രാത്രി മണിക്കൂറുകൾ സൂര്യാസ്തമയം മുതൽ സൂര്യോദയം വരെ 12 തുല്യ ഭാഗങ്ങളായി വിഭജിക്കുന്നു. ശീതകാലത്ത് രാത്രി മണിക്കൂറുകൾ ദൈർഘ്യമേറിയതായിരിക്കും."
                 : "Night hours divide sunset to sunrise into 12 equal parts. Winter nights have longer hours."}
+            </p>
+            <p className="font-inter text-[10px] text-white/40 mt-1">
+              {isMalayalam ? "സ്രോതസ്സ്:" : "Source:"} Havâss'ın Derinlikleri, Taha
             </p>
           </div>
         </div>

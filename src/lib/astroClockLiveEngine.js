@@ -8,7 +8,7 @@ import { TAHA_HOUR_TABLE_DAY, TAHA_WEEKDAY_RULERS } from './astroClockTahaData.j
 import { PLANETARY_DAY_RULERS } from './astroClockData.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PLANET DATA — Combined from all sources
+// PLANET DATA — Combined from all sources with detailed actions
 // ─────────────────────────────────────────────────────────────────────────────
 export const PLANET_INFO = {
   sun: { 
@@ -20,7 +20,14 @@ export const PLANET_INFO = {
     benefits_ml: ["നേതൃത്വം", "ഐശ്വര്യം", "ഉദ്യോഗ ഉന്നതി"],
     benefits_en: ["Leadership", "Wealth", "Career Success"],
     warnings_ml: ["തുലാം രാശിയിൽ ദുർബലൻ"],
-    warnings_en: ["Weak in Libra"]
+    warnings_en: ["Weak in Libra"],
+    goodActions_ml: ["സർക്കാർ ജോലി", "സ്വർണ്ണ വ്യാപാരം", "നേതൃത്വ പദവികൾ", "ആരോഗ്യ മെച്ചപ്പെടുത്തൽ"],
+    goodActions_en: ["Government work", "Gold trading", "Leadership roles", "Health improvement"],
+    badActions_ml: ["രഹസ്യ പ്രവർത്തനങ്ങൾ", "താഴ്മ കാണിക്കൽ"],
+    badActions_en: ["Secret operations", "Showing humility"],
+    spiritualOperations_ml: ["സൂര്യ ദേവതകളെ വിളിക്കുക", "ശക്തിക്കും വിജയത്തിനും പ്രാർത്ഥന"],
+    spiritualOperations_en: ["Invoke Solar deities", "Prayers for power and success"],
+    source: "Havâss'ın Derinlikleri, p.50"
   },
   moon: { 
     name_ml: "ചന്ദ്രൻ", 
@@ -30,7 +37,15 @@ export const PLANET_INFO = {
     nature_en: "Most Influential Planet",
     benefits_ml: ["മാനസിക ശാന്തത", "ആരോഗ്യം", "ഗൃഹ ഐശ്വര്യം"],
     benefits_en: ["Mental Peace", "Health", "Domestic Harmony"],
-    warnings_ml: ["വൃശ്ചികത്തിൽ നീചം (3°)"]
+    warnings_ml: ["വൃശ്ചികത്തിൽ നീചം (3°)"],
+    warnings_en: ["Debilitated in Scorpio (3°)"],
+    goodActions_ml: ["യാത്രകൾ", "ജല സംബന്ധിത കാര്യങ്ങൾ", "പ്രണയം", "മാനസിക ശാന്തത"],
+    goodActions_en: ["Travel", "Water-related matters", "Romance", "Mental peace"],
+    badActions_ml: ["യുദ്ധം", "കലഹം"],
+    badActions_en: ["Warfare", "Conflict"],
+    spiritualOperations_ml: ["ചന്ദ്ര ധ്യാനം", "മാനസിക സന്തുലിതാവസ്ഥയ്ക്ക്"],
+    spiritualOperations_en: ["Moon meditation", "For emotional balance"],
+    source: "Havâss'ın Derinlikleri, p.50"
   },
   mars: { 
     name_ml: "ചൊവ്വ", 
@@ -40,7 +55,15 @@ export const PLANET_INFO = {
     nature_en: "Malefic Planet",
     benefits_ml: ["ധൈര്യം", "ശക്തി", "വിജയം"],
     benefits_en: ["Courage", "Strength", "Victory"],
-    warnings_ml: ["ദാമ്പത്യ ക്ലേശം സാധ്യത"]
+    warnings_ml: ["ദാമ്പത്യ ക്ലേശം സാധ്യത"],
+    warnings_en: ["May cause marital discord"],
+    goodActions_ml: ["സൈനിക വിജയം", "ശത്രുക്കളെ നേരിടൽ", "ധൈര്യ പ്രവർത്തനങ്ങൾ"],
+    goodActions_en: ["Military success", "Confronting enemies", "Courageous acts"],
+    badActions_ml: ["വിവാഹം", "സമാധാന ചർച്ചകൾ"],
+    badActions_en: ["Marriage", "Peaceful negotiations"],
+    spiritualOperations_ml: ["ചൊവ്വ മന്ത്രങ്ങൾ", "ശക്തിക്കും സംരക്ഷണത്തിനും"],
+    spiritualOperations_en: ["Mars mantras", "For strength and protection"],
+    source: "Havâss'ın Derinlikleri, p.50"
   },
   mercury: { 
     name_ml: "ബുധൻ", 
@@ -50,7 +73,15 @@ export const PLANET_INFO = {
     nature_en: "Planet of Wealth",
     benefits_ml: ["ജ്ഞാനം", "വ്യാപാരം", "ആശയ വ്യക്തത"],
     benefits_en: ["Knowledge", "Business", "Clear Communication"],
-    warnings_ml: ["ദ്രോഹ ഗ്രഹത്തോടൊപ്പം ദ്രോഹ ഫലം"]
+    warnings_ml: ["ദ്രോഹ ഗ്രഹത്തോടൊപ്പം ദ്രോഹ ഫലം"],
+    warnings_en: ["Malefic when with malefic planets"],
+    goodActions_ml: ["വ്യാപാരം", "എഴുത്ത്", "ആശയ വിനിമയം", "പഠനം"],
+    goodActions_en: ["Business", "Writing", "Communication", "Learning"],
+    badActions_ml: ["വഞ്ചന", "ചൂതാട്ടം"],
+    badActions_en: ["Deception", "Gambling"],
+    spiritualOperations_ml: ["ബുധ മന്ത്രങ്ങൾ", "ജ്ഞാനത്തിനും ബുദ്ധിക്കും"],
+    spiritualOperations_en: ["Mercury mantras", "For knowledge and wisdom"],
+    source: "Havâss'ın Derinlikleri, p.50"
   },
   jupiter: { 
     name_ml: "ഗുരു", 
@@ -60,7 +91,15 @@ export const PLANET_INFO = {
     nature_en: "Most Benefic Planet",
     benefits_ml: ["ആദ്ധ്യാത്മിക ഉന്നതി", "ഐശ്വര്യം", "ജ്ഞാനം"],
     benefits_en: ["Spiritual Growth", "Wealth", "Wisdom"],
-    warnings_ml: []
+    warnings_ml: [],
+    warnings_en: [],
+    goodActions_ml: ["വിദ്യാഭ്യാസം", "സാമ്പത്തിക ഇടപാടുകൾ", "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾ", "വിവാഹം"],
+    goodActions_en: ["Education", "Finance", "Spiritual work", "Marriage"],
+    badActions_ml: ["അനീതി", "ദ്രോഹ പ്രവർത്തനങ്ങൾ"],
+    badActions_en: ["Dishonesty", "Harmful activities"],
+    spiritualOperations_ml: ["ഗുരു പ്രാർത്ഥനകൾ", "ജ്ഞാനത്തിനും ഐശ്വര്യത്തിനും"],
+    spiritualOperations_en: ["Jupiter prayers", "For wisdom and prosperity"],
+    source: "Havâss'ın Derinlikleri, p.51"
   },
   venus: { 
     name_ml: "ശുക്രൻ", 
@@ -70,7 +109,15 @@ export const PLANET_INFO = {
     nature_en: "Planet of Love",
     benefits_ml: ["പ്രണയം", "ആകർഷണം", "കലകൾ"],
     benefits_en: ["Love", "Attraction", "Arts"],
-    warnings_ml: ["കന്നിയിൽ ദുർബലൻ"]
+    warnings_ml: ["കന്നിയിൽ ദുർബലൻ"],
+    warnings_en: ["Weak in Virgo"],
+    goodActions_ml: ["പ്രണയം", "കലകൾ", "സൗന്ദര്യം", "വിനോദം", "വിവാഹം"],
+    goodActions_en: ["Love", "Arts", "Beauty", "Entertainment", "Marriage"],
+    badActions_ml: ["കലഹം", "കഠിനമായ സംസാരം"],
+    badActions_en: ["Conflict", "Harsh speech"],
+    spiritualOperations_ml: ["ശുക്ര മന്ത്രങ്ങൾ", "പ്രണയത്തിനും ആകർഷണത്തിനും"],
+    spiritualOperations_en: ["Venus mantras", "For love and attraction"],
+    source: "Havâss'ın Derinlikleri, p.51"
   },
   saturn: { 
     name_ml: "ശനി", 
@@ -80,7 +127,15 @@ export const PLANET_INFO = {
     nature_en: "Greater Malefic",
     benefits_ml: ["ദ്രോഹ ദൂരീകരണം"],
     benefits_en: ["Obstacle Removal"],
-    warnings_ml: ["ഒന്നാം, 4, 7, 10 ഭവനത്തിൽ ദ്രോഹ ഫലം"]
+    warnings_ml: ["ഒന്നാം, 4, 7, 10 ഭവനത്തിൽ ദ്രോഹ ഫലം"],
+    warnings_en: ["Malefic in 1st, 4th, 7th, 10th houses"],
+    goodActions_ml: ["ശിക്ഷണം", "ദീർഘകാല ആസൂത്രണം", "റിൽ എസ്റ്റേറ്റ്"],
+    goodActions_en: ["Discipline", "Long-term planning", "Real estate"],
+    badActions_ml: ["പുതിയ സംരംഭങ്ങൾ", "പ്രണയം", "വിനോദം"],
+    badActions_en: ["New ventures", "Romance", "Entertainment"],
+    spiritualOperations_ml: ["ശനി മന്ത്രങ്ങൾ", "കർമ്മ ശുദ്ധീകരണത്തിന്"],
+    spiritualOperations_en: ["Saturn mantras", "For karmic cleansing"],
+    source: "Havâss'ın Derinlikleri, p.51"
   }
 };
 
@@ -303,7 +358,15 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
       planetInfo: PLANET_INFO[planet],
       startTime: formatTime(start),
       endTime: formatTime(end),
-      duration: formatDuration(dayHourDuration)
+      startTimeDecimal: start,
+      endTimeDecimal: end,
+      duration: formatDuration(dayHourDuration),
+      durationMinutes: Math.round(dayHourDuration * 60),
+      durationSeconds: Math.round((dayHourDuration * 60 - Math.floor(dayHourDuration * 60)) * 60),
+      goodActions: PLANET_INFO[planet]?.goodActions_en || [],
+      badActions: PLANET_INFO[planet]?.badActions_en || [],
+      spiritualOperations: PLANET_INFO[planet]?.spiritualOperations_en || [],
+      source: PLANET_INFO[planet]?.source || "Traditional sources"
     });
   }
   
@@ -321,7 +384,15 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
       planetInfo: PLANET_INFO[planet],
       startTime: formatTime(start >= 24 ? start - 24 : start),
       endTime: formatTime(end >= 24 ? end - 24 : end),
-      duration: formatDuration(nightHourDuration)
+      startTimeDecimal: start >= 24 ? start - 24 : start,
+      endTimeDecimal: end >= 24 ? end - 24 : end,
+      duration: formatDuration(nightHourDuration),
+      durationMinutes: Math.round(nightHourDuration * 60),
+      durationSeconds: Math.round((nightHourDuration * 60 - Math.floor(nightHourDuration * 60)) * 60),
+      goodActions: PLANET_INFO[planet]?.goodActions_en || [],
+      badActions: PLANET_INFO[planet]?.badActions_en || [],
+      spiritualOperations: PLANET_INFO[planet]?.spiritualOperations_en || [],
+      source: PLANET_INFO[planet]?.source || "Traditional sources"
     });
   }
   

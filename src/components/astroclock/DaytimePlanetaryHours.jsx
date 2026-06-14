@@ -1,13 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
 // DAYTIME PLANETARY HOURS — SECTION 2
-// 12 hours from sunrise to sunset
+// Real sunrise/sunset based calculations with detailed actions
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sun, Clock, Info } from "lucide-react";
+import { Sun, Clock, Info, MapPin } from "lucide-react";
 import { getAllPlanetaryHours } from "@/lib/astroClockLiveEngine";
+import { calculateSunriseSunset, getUserLocation, formatDecimalTime, formatDurationDetailed } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 
 const G = {
@@ -21,19 +22,25 @@ const G = {
   bgHi:     "rgba(212,175,55,0.14)"
 };
 
-// Dubai default sunrise/sunset (should be calculated from location)
-const DEFAULT_SUNRISE = 5.5; // 5:30 AM
-const DEFAULT_SUNSET = 19.0; // 7:00 PM
-
 export default function DaytimePlanetaryHours() {
   const { isMalayalam } = useAstroClockLanguage();
   const [hours, setHours] = useState([]);
+  const [location, setLocation] = useState(null);
+  const [sunData, setSunData] = useState(null);
 
   useEffect(() => {
     const today = new Date();
-    const allHours = getAllPlanetaryHours(today, DEFAULT_SUNRISE, DEFAULT_SUNSET);
-    const dayHours = allHours.filter(h => h.period === "day");
-    setHours(dayHours);
+    const userLoc = getUserLocation();
+    setLocation(userLoc);
+    
+    const sunTimes = calculateSunriseSunset(today, userLoc.lat, userLoc.lng, userLoc.timezone);
+    setSunData(sunTimes);
+    
+    if (sunTimes.sunrise && sunTimes.sunset) {
+      const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+      const dayHours = allHours.filter(h => h.period === "day");
+      setHours(dayHours);
+    }
   }, []);
 
   return (
@@ -51,16 +58,36 @@ export default function DaytimePlanetaryHours() {
         style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.50), transparent)` }} />
 
       {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
-        <Sun className="w-6 h-6" style={{ color: G.text }} />
-        <div>
-          <h2 className="font-inter text-lg font-bold uppercase tracking-widest" style={{ color: G.text }}>
-            {isMalayalam ? "പകൽ 12 ഗ്രഹ മണിക്കൂറുകൾ" : "Daytime 12 Planetary Hours"}
-          </h2>
-          <p className="font-inter text-[9px]" style={{ color: G.dim }}>
-            {isMalayalam ? "സൂര്യോദയം മുതൽ സൂര്യാസ്തമയം വരെ" : "From Sunrise to Sunset"}
-          </p>
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <Sun className="w-6 h-6" style={{ color: G.text }} />
+          <div>
+            <h2 className="font-inter text-lg font-bold uppercase tracking-widest" style={{ color: G.text }}>
+              {isMalayalam ? "പകൽ 12 ഗ്രഹ മണിക്കൂറുകൾ" : "Daytime 12 Planetary Hours"}
+            </h2>
+            <p className="font-inter text-[9px]" style={{ color: G.dim }}>
+              {isMalayalam ? "സൂര്യോദയം മുതൽ സൂര്യാസ്തമയം വരെ" : "From Sunrise to Sunset"}
+            </p>
+          </div>
         </div>
+        
+        {/* Location & Sun Times */}
+        {location && sunData && (
+          <div className="text-right">
+            <div className="flex items-center gap-1 justify-end mb-1">
+              <MapPin className="w-3 h-3" style={{ color: G.dim }} />
+              <p className="font-inter text-[9px] text-white/60">{location.name}</p>
+            </div>
+            <div className="flex items-center gap-3 text-[10px]">
+              <span style={{ color: G.dim }}>
+                {isMalayalam ? "സൂര്യോദയം:" : "Sunrise:"} {formatDecimalTime(sunData.sunrise)}
+              </span>
+              <span style={{ color: G.dim }}>
+                {isMalayalam ? "സൂര്യാസ്തമയം:" : "Sunset:"} {formatDecimalTime(sunData.sunset)}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Hours Table */}
@@ -80,10 +107,13 @@ export default function DaytimePlanetaryHours() {
               <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
                 {isMalayalam ? "ദൈർഘ്യം" : "Duration"}
               </th>
+              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                {isMalayalam ? "ഉചിതം" : "Good Actions"}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {hours.map((hour) => (
+            {(hours || []).map((hour) => (
               <tr key={hour.hourNumber} className="border-b" style={{ borderColor: G.faint }}>
                 <td className="py-3 px-3">
                   <span className="font-inter text-sm font-bold text-white">#{hour.hourNumber}</span>
@@ -108,7 +138,19 @@ export default function DaytimePlanetaryHours() {
                   </div>
                 </td>
                 <td className="py-3 px-3">
-                  <span className="font-inter text-xs text-white/70">{hour.duration}</span>
+                  <div className="font-inter text-xs">
+                    <div className="text-white/80">{hour.duration}</div>
+                    <div className="text-[9px]" style={{ color: G.dim }}>
+                      {hour.durationMinutes}m {hour.durationSeconds}s
+                    </div>
+                  </div>
+                </td>
+                <td className="py-3 px-3">
+                  <div className="max-w-[180px]">
+                    {(hour.goodActions || []).slice(0, 2).map((action, idx) => (
+                      <div key={idx} className="font-inter text-[10px] text-white/70">• {action}</div>
+                    ))}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -128,6 +170,9 @@ export default function DaytimePlanetaryHours() {
               {isMalayalam 
                 ? "ഗ്രഹ മണിക്കൂറുകൾ സൂര്യോദയം മുതൽ സൂര്യാസ്തമയം വരെ 12 തുല്യ ഭാഗങ്ങളായി വിഭജിക്കുന്നു. കാലഘട്ടം അനുസരിച്ച് ദൈർഘ്യം മാറുന്നു."
                 : "Planetary hours divide sunrise to sunset into 12 equal parts. Duration varies by season."}
+            </p>
+            <p className="font-inter text-[10px] text-white/40 mt-1">
+              {isMalayalam ? "സ്രോതസ്സ്:" : "Source:"} Havâss'ın Derinlikleri, Taha
             </p>
           </div>
         </div>
