@@ -11,6 +11,11 @@ import { calculateBirthProfile, analyzeCompatibility, BIRTH_PROFILE_STATUS } fro
 import { getCurrentPlanetaryHour, getAllPlanetaryHours, PLANET_INFO } from "@/lib/astroClockLiveEngine.js";
 import { calculateSunriseSunset, getUserLocation } from "@/lib/astroClockSunriseSunset.js";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
+import ZodiacTab from "./BirthProfileTabs/ZodiacTab.jsx";
+import PlanetTab from "./BirthProfileTabs/PlanetTab.jsx";
+import ElementTab from "./BirthProfileTabs/ElementTab.jsx";
+import RelationsTab from "./BirthProfileTabs/RelationsTab.jsx";
+import IncenseTab from "./BirthProfileTabs/IncenseTab.jsx";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -27,7 +32,7 @@ const G = {
 };
 
 export default function BirthProfileAnalyzer() {
-  const { isMalayalam } = useAstroClockLanguage();
+  const { isMalayalam, t } = useAstroClockLanguage();
   const [birthDate, setBirthDate] = useState("");
   const [birthTime, setBirthTime] = useState("");
   const [birthPlace, setBirthPlace] = useState("");
@@ -343,233 +348,6 @@ export default function BirthProfileAnalyzer() {
         </div>
       </div>
     </motion.div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB COMPONENTS
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ZodiacTab({ profile, isMalayalam }) {
-  return (
-    <div className="space-y-4">
-      <div className="text-center mb-4">
-        <p className="text-6xl mb-2">{profile.zodiacSign.symbol}</p>
-        <p className="font-inter text-xl font-bold text-white">
-          {isMalayalam ? profile.zodiacSign.name_ml : profile.zodiacSign.name_en}
-        </p>
-        <p className="font-inter text-xs text-white/60">
-          {isMalayalam ? profile.zodiacSign.dateRangeMl : profile.zodiacSign.dateRange}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <InfoCard
-          label_en="Gender"
-          label_ml="ലിംഗം"
-          value={isMalayalam ? profile.gender.ml : profile.gender.en}
-          isMalayalam={isMalayalam}
-        />
-        <InfoCard
-          label_en="Metal"
-          label_ml="ലോഹം"
-          value={isMalayalam ? profile.metal.ml : profile.metal.en}
-          isMalayalam={isMalayalam}
-        />
-      </div>
-
-      <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-          {isMalayalam ? "ആത്മിക അർത്ഥം" : "Spiritual Meaning"}
-        </p>
-        <p className="font-inter text-sm text-white/80">
-          {isMalayalam ? profile.spiritualMeaning.ml : profile.spiritualMeaning.en}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function PlanetTab({ profile, isMalayalam }) {
-  if (!profile.rulingPlanet) return null;
-
-  return (
-    <div className="space-y-4">
-      <div className="text-center mb-4">
-        <p className="text-5xl mb-2">{profile.rulingPlanet.symbol}</p>
-        <p className="font-inter text-lg font-bold text-white">
-          {isMalayalam ? profile.rulingPlanet.name_ml : profile.rulingPlanet.name_en}
-        </p>
-        <p className="font-inter text-xs text-white/60">
-          {isMalayalam ? profile.rulingPlanet.nature_ml : profile.rulingPlanet.nature_en}
-        </p>
-      </div>
-
-      <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.success }}>
-          {isMalayalam ? "ഗുണങ്ങൾ" : "Benefits"}
-        </p>
-        <div className="space-y-1">
-          {(isMalayalam ? profile.rulingPlanet.benefits_ml : profile.rulingPlanet.benefits_en || []).map((benefit, idx) => (
-            <p key={idx} className="font-inter text-xs text-white/80">• {benefit}</p>
-          ))}
-        </div>
-      </div>
-
-      <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-          {isMalayalam ? "ആത്മിക പ്രവർത്തനങ്ങൾ" : "Spiritual Operations"}
-        </p>
-        <p className="font-inter text-sm text-white/80">
-          {isMalayalam ? profile.rulingPlanet.spiritualOperations_ml : profile.rulingPlanet.spiritualOperations_en}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ElementTab({ profile, isMalayalam }) {
-  if (!profile.element) return null;
-
-  return (
-    <div className="space-y-4">
-      <div className="text-center mb-4">
-        <p className="font-inter text-2xl font-bold text-white mb-1">
-          {isMalayalam ? profile.element.name_ml : profile.element.name_en}
-        </p>
-        <p className="font-inter text-xs text-white/60">
-          {isMalayalam ? profile.element.direction_ml : profile.element.direction_en} {isMalayalam ? "ദിശ" : "Direction"}
-        </p>
-      </div>
-
-      <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-          {isMalayalam ? "ഗുണങ്ങൾ" : "Qualities"}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {(isMalayalam ? profile.element.qualities_ml : profile.element.qualities_en || []).map((quality, idx) => (
-            <span key={idx} className="px-2 py-1 rounded text-[10px]" style={{ background: G.bg, color: G.text }}>
-              {quality}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.success }}>
-            {isMalayalam ? "അനുയോജ്യ മൂലകങ്ങൾ" : "Compatible"}
-          </p>
-          <div className="space-y-1">
-            {(isMalayalam ? profile.element.compatible_ml : profile.element.compatible_en || []).map((elem, idx) => (
-              <p key={idx} className="font-inter text-xs text-white/80">• {elem}</p>
-            ))}
-          </div>
-        </div>
-        
-        <div className="p-3 rounded-lg" style={{ background: "rgba(239,68,68,0.05)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.danger }}>
-            {isMalayalam ? "അനുയോജ്യമല്ലാത്ത മൂലകങ്ങൾ" : "Incompatible"}
-          </p>
-          <div className="space-y-1">
-            {(isMalayalam ? profile.element.incompatible_ml : profile.element.incompatible_en || []).map((elem, idx) => (
-              <p key={idx} className="font-inter text-xs text-white/80">• {elem}</p>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RelationsTab({ profile, isMalayalam }) {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.success }}>
-            {isMalayalam ? "സൌഹൃദ രാശികൾ" : "Friendly Signs"}
-          </p>
-          <div className="space-y-1">
-            {(isMalayalam ? profile.relationships.friendlySigns_ml : profile.relationships.friendlySigns_en || []).map((sign, idx) => (
-              <p key={idx} className="font-inter text-xs text-white/80">• {sign}</p>
-            ))}
-          </div>
-        </div>
-        
-        <div className="p-3 rounded-lg" style={{ background: "rgba(239,68,68,0.05)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.danger }}>
-            {isMalayalam ? "ശത്രു രാശികൾ" : "Enemy Signs"}
-          </p>
-          <div className="space-y-1">
-            {(isMalayalam ? profile.relationships.enemySigns_ml : profile.relationships.enemySigns_en || []).map((sign, idx) => (
-              <p key={idx} className="font-inter text-xs text-white/80">• {sign}</p>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.success }}>
-            {isMalayalam ? "സൌഹൃദ ഗ്രഹങ്ങൾ" : "Friendly Planets"}
-          </p>
-          <div className="space-y-1">
-            {(isMalayalam ? profile.relationships.friendlyPlanets_ml : profile.relationships.friendlyPlanets_en || []).map((planet, idx) => (
-              <p key={idx} className="font-inter text-xs text-white/80">• {planet}</p>
-            ))}
-          </div>
-        </div>
-        
-        <div className="p-3 rounded-lg" style={{ background: "rgba(239,68,68,0.05)" }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.danger }}>
-            {isMalayalam ? "ശത്രു ഗ്രഹങ്ങൾ" : "Enemy Planets"}
-          </p>
-          <div className="space-y-1">
-            {(isMalayalam ? profile.relationships.enemyPlanets_ml : profile.relationships.enemyPlanets_en || []).map((planet, idx) => (
-              <p key={idx} className="font-inter text-xs text-white/80">• {planet}</p>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function IncenseTab({ profile, isMalayalam }) {
-  return (
-    <div className="space-y-4">
-      <div className="text-center mb-4">
-        <p className="font-amiri text-2xl font-bold mb-2" style={{ color: G.text }}>
-          {profile.incense.ar}
-        </p>
-        <p className="font-inter text-sm text-white/80">
-          {isMalayalam ? profile.incense.ml : profile.incense.en}
-        </p>
-      </div>
-
-      <div className="p-4 rounded-lg" style={{ background: "rgba(212,175,55,0.04)" }}>
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-          {isMalayalam ? "ഉപയോഗം" : "How to Use"}
-        </p>
-        <p className="font-inter text-xs text-white/70">
-          {isMalayalam 
-            ? "ഈ സുഗന്ധം നിങ്ങളുടെ ജന്മനക്ഷത്രത്തിന്റെ ഭരണ ഗ്രഹത്തിന് അനുയോജ്യമാണ്. പ്രത്യേക ആവശ്യങ്ങൾക്കായി ഉപയോഗിക്കുക."
-            : "This incense is aligned with your zodiac sign's ruling planet. Use during planetary hours for enhanced effects."}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function InfoCard({ label_en, label_ml, value, isMalayalam }) {
-  return (
-    <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-      <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-        {isMalayalam ? label_ml : label_en}
-      </p>
-      <p className="font-inter text-sm font-bold text-white">{value}</p>
-    </div>
   );
 }
 
