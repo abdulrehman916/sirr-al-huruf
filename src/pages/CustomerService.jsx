@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Send, Upload, FileText, Image, Monitor } from "lucide-react";
+import { Send, Upload, FileText, Image, Monitor, Mic, MicOff, Play, StopCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
@@ -39,6 +39,14 @@ export default function CustomerService() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const timerRef = useRef(null);
+
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
@@ -56,12 +64,12 @@ export default function CustomerService() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    // Validate file type (images, PDFs, audio)
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm'];
     if (!validTypes.includes(file.type)) {
       toast({
         title: "Invalid File Type",
-        description: "Please upload JPG, PNG, GIF, or PDF files only.",
+        description: "Please upload JPG, PNG, GIF, PDF, MP3, M4A, or WAV files only.",
         variant: "destructive"
       });
       return;
@@ -96,8 +104,113 @@ export default function CustomerService() {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      chunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        
+        // Calculate duration
+        const audio = new Audio(URL.createObjectURL(blob));
+        audio.onloadedmetadata = () => {
+          setAudioDuration(Math.floor(audio.duration));
+        };
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Start timer
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+
+      toast({
+        title: "Recording Started",
+        description: "Speak your message. Click stop when finished."
+      });
+    } catch (error) {
+      toast({
+        title: "Microphone Access Denied",
+        description: "Please allow microphone access to record voice messages.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      // Stop all tracks
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      
+      // Clear timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      toast({
+        title: "Recording Complete",
+        description: `Recorded ${recordingTime} seconds of audio.`
+      });
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    setIsRecording(false);
+    setAudioBlob(null);
+    setAudioDuration(0);
+    setRecordingTime(0);
+  };
+
+  const uploadAudio = async () => {
+    if (!audioBlob) return null;
+
+    setUploading(true);
+    try {
+      const file = new File([audioBlob], `voice-message-${Date.now()}.webm`, { type: 'audio/webm' });
+      const result = await base44.integrations.Core.UploadFile({ file });
+      return { url: result.file_url, duration: audioDuration };
+    } catch (error) {
+      toast({
+        title: "Audio Upload Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const generateTicketId = async () => {
-    // Get existing tickets to find next number
     const existingTickets = await base44.entities.SupportTickets.list();
     const maxNum = existingTickets.reduce((max, ticket) => {
       const num = parseInt(ticket.ticket_id.split('-')[1]);
@@ -109,7 +222,6 @@ export default function CustomerService() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.name || !formData.mobile || !formData.email || !formData.category || !formData.subject || !formData.message) {
       toast({
         title: "Missing Information",
@@ -124,6 +236,12 @@ export default function CustomerService() {
       const ticketId = await generateTicketId();
       const now = new Date().toISOString();
 
+      // Upload audio if exists
+      let audioData = null;
+      if (audioBlob) {
+        audioData = await uploadAudio();
+      }
+
       await base44.entities.SupportTickets.create({
         ticket_id: ticketId,
         name: formData.name,
@@ -133,6 +251,8 @@ export default function CustomerService() {
         subject: formData.subject,
         message: formData.message,
         attachment_url: uploadedFile?.url || null,
+        audio_url: audioData?.url || null,
+        audio_duration: audioData?.duration || null,
         status: "OPEN",
         created_at: now
       });
@@ -153,6 +273,9 @@ export default function CustomerService() {
         message: ""
       });
       setUploadedFile(null);
+      setAudioBlob(null);
+      setAudioDuration(0);
+      setRecordingTime(0);
     } catch (error) {
       toast({
         title: "Submission Failed",
@@ -251,6 +374,87 @@ export default function CustomerService() {
                   placeholder="Please describe your issue in detail..."
                   className="bg-white/5 border-white/10 text-white min-h-[150px]"
                 />
+              </div>
+
+              {/* Voice Message */}
+              <div className="space-y-2">
+                <Label className="text-white/80">Voice Message (Optional)</Label>
+                <div className="border-2 border-dashed rounded-lg p-6 text-center" style={{ borderColor: G.border }}>
+                  {audioBlob ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center gap-3">
+                        <Mic className="w-6 h-6" style={{ color: G.success }} />
+                        <span className="text-white font-semibold">Voice Message Recorded</span>
+                        <span className="text-white/70 text-sm">({formatDuration(audioDuration)})</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={cancelRecording}
+                          className="border-red-400 text-red-400 hover:bg-red-400/10"
+                        >
+                          <MicOff className="w-4 h-4 mr-1" />
+                          Discard
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={startRecording}
+                          className="border-gold text-gold hover:bg-gold/10"
+                        >
+                          <Mic className="w-4 h-4 mr-1" />
+                          Re-record
+                        </Button>
+                      </div>
+                    </div>
+                  ) : isRecording ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                        <span className="text-white font-semibold">Recording... {formatDuration(recordingTime)}</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={stopRecording}
+                          className="border-red-400 text-red-400 hover:bg-red-400/10"
+                        >
+                          <StopCircle className="w-4 h-4 mr-1" />
+                          Stop
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={cancelRecording}
+                          className="border-white/40 text-white/70 hover:bg-white/10"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <Mic className="w-8 h-8 mx-auto mb-2" style={{ color: G.dim }} />
+                      <p className="text-white/60 text-sm mb-3">
+                        Record a voice message (MP3, M4A, WAV supported)
+                      </p>
+                      <Button
+                        type="button"
+                        onClick={startRecording}
+                        className="btn-gold px-6 py-2"
+                      >
+                        <Mic className="w-4 h-4 mr-2" />
+                        Start Recording
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* File Upload */}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
-import { Search, Filter, Mail, Phone, User, Calendar, CheckCircle, Clock, AlertCircle, XCircle, ShieldAlert } from "lucide-react";
+import { Search, Filter, Mail, Phone, User, Calendar, CheckCircle, Clock, AlertCircle, XCircle, ShieldAlert, Mic, Play } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
@@ -129,6 +129,12 @@ export default function AdminSupport() {
     } finally {
       setUpdatingStatus(false);
     }
+  };
+
+  const formatAudioDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleReplySubmit = async () => {
@@ -374,6 +380,32 @@ export default function AdminSupport() {
                                 >
                                   View Attachment
                                 </a>
+                              </div>
+                            </div>
+                          )}
+
+                          {ticket.audio_url && (
+                            <div>
+                              <Label className="text-white/70">Voice Message</Label>
+                              <div className="mt-2 p-3 rounded-lg bg-white/5 border border-gold/30">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(212,175,55,0.15)" }}>
+                                    <Mic className="w-5 h-5" style={{ color: G.text }} />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-white font-semibold">Customer Voice Message</p>
+                                    <p className="text-white/60 text-sm">
+                                      Duration: {ticket.audio_duration ? formatAudioDuration(ticket.audio_duration) : 'N/A'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <audio controls className="w-full mt-3" style={{ filter: "invert(1)" }}>
+                                  <source src={ticket.audio_url} type="audio/webm" />
+                                  <source src={ticket.audio_url} type="audio/mp4" />
+                                  <source src={ticket.audio_url} type="audio/mpeg" />
+                                  <source src={ticket.audio_url} type="audio/wav" />
+                                  Your browser does not support audio playback.
+                                </audio>
                               </div>
                             </div>
                           )}

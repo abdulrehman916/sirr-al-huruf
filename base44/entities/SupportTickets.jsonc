@@ -41,6 +41,14 @@
       "type": "string",
       "description": "Uploaded file URL (image/screenshot/PDF)"
     },
+    "audio_url": {
+      "type": "string",
+      "description": "Voice message audio URL (MP3/M4A/WAV)"
+    },
+    "audio_duration": {
+      "type": "integer",
+      "description": "Audio duration in seconds"
+    },
     "status": {
       "type": "string",
       "enum": [
