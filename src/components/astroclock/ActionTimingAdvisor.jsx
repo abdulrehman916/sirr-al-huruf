@@ -73,53 +73,100 @@ export default function ActionTimingAdvisor() {
     
     let score = 0;
     const reasons = [];
+    const matchingRules = [];
     
-    // Check mansion
+    // Check mansion - must match manuscript rule exactly
     if (rules.suitableMansions.includes(moonPos.mansion?.number)) {
       score += 3;
-      reasons.push({ type: "positive", text: `Mansion ${moonPos.mansion.number} is suitable` });
+      matchingRules.push({
+        type: "mansion_match",
+        book_name: "Havâss'ın Derinlikleri",
+        page_number: rules.pdf_pages,
+        original_text: rules.original_text?.mansion || null,
+        malayalam_translation: rules.malayalam_translation?.mansion || null,
+        why_applies: `Current mansion ${moonPos.mansion.number} matches manuscript rule`
+      });
+      reasons.push({ type: "positive", text: `Mansion ${moonPos.mansion.number} matches manuscript rule` });
     } else if (rules.unsuitableMansions.includes(moonPos.mansion?.number)) {
       score -= 3;
-      reasons.push({ type: "negative", text: `Mansion ${moonPos.mansion.number} is unsuitable` });
+      reasons.push({ type: "negative", text: `Mansion ${moonPos.mansion.number} forbidden by manuscript` });
     }
     
-    // Check planet
+    // Check planet - must match manuscript rule exactly
     if (rules.suitablePlanets.includes(planetHour.planet)) {
       score += 2;
-      reasons.push({ type: "positive", text: `${planetHour.planetInfo?.name_en} hour is suitable` });
+      matchingRules.push({
+        type: "planet_match",
+        book_name: "Havâss'ın Derinlikleri",
+        page_number: rules.pdf_pages,
+        original_text: rules.original_text?.planet || null,
+        malayalam_translation: rules.malayalam_translation?.planet || null,
+        why_applies: `Current ${planetHour.planetInfo?.name_en} hour matches manuscript rule`
+      });
+      reasons.push({ type: "positive", text: `${planetHour.planetInfo?.name_en} hour matches manuscript rule` });
     } else if (rules.unsuitablePlanets.includes(planetHour.planet)) {
       score -= 2;
-      reasons.push({ type: "negative", text: `${planetHour.planetInfo?.name_en} hour is unsuitable` });
+      reasons.push({ type: "negative", text: `${planetHour.planetInfo?.name_en} hour forbidden by manuscript` });
     }
     
-    // Check day
+    // Check day - must match manuscript rule exactly
     if (rules.suitableDays.includes(dayKey)) {
       score += 2;
-      reasons.push({ type: "positive", text: `${dayKey} is suitable` });
+      matchingRules.push({
+        type: "day_match",
+        book_name: "Havâss'ın Derinlikleri",
+        page_number: rules.pdf_pages,
+        original_text: rules.original_text?.day || null,
+        malayalam_translation: rules.malayalam_translation?.day || null,
+        why_applies: `${dayKey} matches manuscript rule`
+      });
+      reasons.push({ type: "positive", text: `${dayKey} matches manuscript rule` });
     } else if (rules.unsuitableDays.includes(dayKey)) {
       score -= 2;
-      reasons.push({ type: "negative", text: `${dayKey} is unsuitable` });
+      reasons.push({ type: "negative", text: `${dayKey} forbidden by manuscript` });
     }
     
     // Check day/night
     if (rules.dayOrNight === "night" && !isDaytime) {
       score += 1;
+      matchingRules.push({
+        type: "time_match",
+        book_name: "Havâss'ın Derinlikleri",
+        page_number: rules.pdf_pages,
+        original_text: rules.original_text?.time || null,
+        malayalam_translation: rules.malayalam_translation?.time || null,
+        why_applies: `Nighttime matches manuscript requirement`
+      });
     } else if (rules.dayOrNight === "night" && isDaytime) {
       score -= 1;
+      reasons.push({ type: "negative", text: `Manuscript requires nighttime` });
     } else if (rules.dayOrNight === "day" && isDaytime) {
       score += 1;
+      matchingRules.push({
+        type: "time_match",
+        book_name: "Havâss'ın Derinlikleri",
+        page_number: rules.pdf_pages,
+        original_text: rules.original_text?.time || null,
+        malayalam_translation: rules.malayalam_translation?.time || null,
+        why_applies: `Daytime matches manuscript requirement`
+      });
     } else if (rules.dayOrNight === "day" && !isDaytime) {
       score -= 1;
+      reasons.push({ type: "negative", text: `Manuscript requires daytime` });
     }
     
-    const isSuitable = score >= 2;
+    // FINAL MANUSCRIPT RULE: No recommendation without matching rules
+    const isSuitable = score >= 2 && matchingRules.length > 0;
     
     setTimingResult({
       isSuitable,
       score,
       reasons,
+      matchingRules,
       source: rules.source,
-      notes: rules.notes
+      pdf_pages: rules.pdf_pages,
+      notes: rules.notes,
+      no_manuscript_match: !isSuitable && matchingRules.length === 0
     });
     setLoading(false);
   }
@@ -288,13 +335,30 @@ function CurrentStatus({ status, isMalayalam }) {
         </p>
         <span className="text-2xl">{config.icon}</span>
       </div>
-      <p className="font-malayalam-lg font-bold text-white">
-        {status.isSuitable
-          ? (isMalayalam ? "ഉചിത സമയം ✓" : "Suitable Time ✓")
-          : (isMalayalam ? "ഉചിതമല്ല ✗" : "Not Suitable ✗")}
-      </p>
-      <p className="font-malayalam-sm text-white/70 mt-1">{status.reason}</p>
-      {status.source && (
+      
+      {status.no_manuscript_match ? (
+        <>
+          <p className="font-malayalam-lg font-bold text-white mb-2">
+            {isMalayalam ? "ഹസ്തലിഖിതത്തിൽ യോജിക്കുന്ന നിയമമില്ല" : "No matching manuscript rule found"}
+          </p>
+          <p className="font-malayalam-sm text-white/70">
+            {isMalayalam 
+              ? "നിലവിലെ സമയത്തിന് PDF നിയമങ്ങളിൽ യോജിക്കുന്ന വിധി കണ്ടെത്തിയില്ല" 
+              : "No manuscript rule matches the current astrological configuration"}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="font-malayalam-lg font-bold text-white">
+            {status.isSuitable
+              ? (isMalayalam ? "ഉചിത സമയം ✓" : "Suitable Time ✓")
+              : (isMalayalam ? "ഉചിതമല്ല ✗" : "Not Suitable ✗")}
+          </p>
+          <p className="font-malayalam-sm text-white/70 mt-1">{status.reasons?.[0]?.text}</p>
+        </>
+      )}
+      
+      {status.source && !status.no_manuscript_match && (
         <div className="mt-3 flex items-center gap-2">
           <Book className="w-3 h-3" style={{ color: config.text }} />
           <p className="font-inter text-[8px]" style={{ color: config.text }}>Source: {status.source}</p>
@@ -308,67 +372,102 @@ function TimingRules({ action, result, isMalayalam }) {
   const rules = ACTION_TIMING_RULES[action.key];
   if (!rules) return null;
 
-  return (
-    <div className="grid md:grid-cols-2 gap-4">
-      {/* Suitable */}
-      <div className="p-5 rounded-xl border" style={{ background: G.excellent, borderColor: G.excellentBorder }}>
-        <div className="flex items-center gap-2 mb-3">
-          <CheckCircle className="w-5 h-5" style={{ color: "#22c55e" }} />
-          <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
-            {isMalayalam ? "ഉചിതം" : "Suitable"}
+  // If no manuscript match, show warning
+  if (result.no_manuscript_match) {
+    return (
+      <div className="mt-6 p-6 rounded-xl border text-center" style={{ background: G.wait, borderColor: G.waitBorder }}>
+        <Book className="w-8 h-8 mx-auto mb-3" style={{ color: G.text }} />
+        <p className="font-malayalam-lg font-bold text-white mb-2">
+          {isMalayalam ? "ഹസ്തലിഖിത നിയമങ്ങൾ പാലിക്കുന്നു" : "Manuscript Rules Enforcement"}
+        </p>
+        <p className="font-malayalam-sm text-white/70 mb-4">
+          {isMalayalam 
+            ? "നിലവിലെ ഗ്രഹനിലകൾക്ക് അനുയോജ്യമായ PDF നിയമങ്ങൾ കണ്ടെത്തിയില്ല" 
+            : "No PDF manuscript rules match the current planetary configuration"}
+        </p>
+        <div className="text-left p-4 rounded-lg" style={{ background: G.bg, borderColor: G.faint, border: "1px solid" }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.text }}>
+            {isMalayalam ? "ആവശ്യമായ ഉറവിട വിവരങ്ങൾ" : "Required Source Information"}
           </p>
-        </div>
-        <div className="space-y-2">
-          <p className="font-malayalam-sm text-white/80">
-            <span className="font-bold">Mansions:</span> {rules.suitableMansions.join(", ")}
-          </p>
-          <p className="font-malayalam-sm text-white/80">
-            <span className="font-bold">Planets:</span> {rules.suitablePlanets.join(", ")}
-          </p>
-          <p className="font-malayalam-sm text-white/80">
-            <span className="font-bold">Days:</span> {rules.suitableDays.join(", ")}
-          </p>
-          {rules.dayOrNight === "night" && (
-            <p className="font-malayalam-sm font-bold" style={{ color: "#22c55e" }}>
-              ✓ {isMalayalam ? "രാത്രി മാത്രം" : "Night only"}
-            </p>
-          )}
-          {rules.saadRequired && (
-            <p className="font-malayalam-sm font-bold" style={{ color: "#22c55e" }}>
-              ✓ Sa'd mansion required
-            </p>
-          )}
-          {result.notes && (
-            <p className="font-malayalam-sm text-white/60 mt-2 italic">
-              {isMalayalam ? result.notes.ml : result.notes.en}
-            </p>
-          )}
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-white/60">{isMalayalam ? "പുസ്തകം:" : "Book:"}</span>
+              <span className="text-white font-bold">Havâss'ın Derinlikleri</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-white/60">{isMalayalam ? "പേജ്:" : "Page:"}</span>
+              <span className="text-white font-bold">{rules.pdf_pages}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-white/60">{isMalayalam ? "മൂലകം:" : "Element:"}</span>
+              <span className="text-white font-bold">{isMalayalam ? "ലഭ്യമല്ല" : "Not found"}</span>
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Unsuitable */}
-      <div className="p-5 rounded-xl border" style={{ background: G.avoid, borderColor: G.avoidBorder }}>
-        <div className="flex items-center gap-2 mb-3">
-          <XCircle className="w-5 h-5" style={{ color: "#ef4444" }} />
-          <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
-            {isMalayalam ? "അനുചിതം" : "Unsuitable"}
+  // Show matching manuscript rules with full citation
+  return (
+    <div className="mt-6 space-y-4">
+      {/* Matching Rules Display */}
+      <div className="p-5 rounded-xl border" style={{ background: G.bg, borderColor: G.border }}>
+        <div className="flex items-center gap-2 mb-4">
+          <Book className="w-5 h-5" style={{ color: G.text }} />
+          <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.text }}>
+            {isMalayalam ? "യോജിക്കുന്ന ഹസ്തലിഖിത നിയമങ്ങൾ" : "Matching Manuscript Rules"}
           </p>
         </div>
-        <div className="space-y-2">
-          <p className="font-malayalam-sm text-white/80">
-            <span className="font-bold">Mansions:</span> {rules.unsuitableMansions.join(", ")}
-          </p>
-          <p className="font-malayalam-sm text-white/80">
-            <span className="font-bold">Planets:</span> {rules.unsuitablePlanets.join(", ")}
-          </p>
-          <p className="font-malayalam-sm text-white/80">
-            <span className="font-bold">Days:</span> {rules.unsuitableDays.join(", ")}
-          </p>
-          {rules.nahsRequired && (
-            <p className="font-malayalam-sm font-bold" style={{ color: "#ef4444" }}>
-              ✓ Nahs mansion required
-            </p>
-          )}
+        
+        <div className="space-y-4">
+          {(result.matchingRules || []).map((rule, idx) => (
+            <div key={idx} className="p-4 rounded-lg border" style={{ background: G.bgHi, borderColor: G.borderHi }}>
+              {/* 1. Book Name */}
+              <div className="mb-2">
+                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  {isMalayalam ? "പുസ്തകം" : "Book Name"}
+                </p>
+                <p className="font-malayalam-md font-bold text-white">{rule.book_name}</p>
+              </div>
+              
+              {/* 2. Page Number */}
+              <div className="mb-2">
+                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                  {isMalayalam ? "പേജ് നമ്പർ" : "Page Number"}
+                </p>
+                <p className="font-malayalam-sm font-bold text-white">p. {rule.page_number}</p>
+              </div>
+              
+              {/* 3. Original Manuscript Text */}
+              {rule.original_text && (
+                <div className="mb-2 p-2 rounded" style={{ background: "rgba(212,175,55,0.05)" }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                    {isMalayalam ? "യഥാർത്ഥ ഹസ്തലിഖിത വാചകം" : "Original Manuscript Text"}
+                  </p>
+                  <p className="font-amiri text-xl font-bold text-right" style={{ color: G.text }}>{rule.original_text}</p>
+                </div>
+              )}
+              
+              {/* 4. Malayalam Translation */}
+              {rule.malayalam_translation && (
+                <div className="mb-2 p-2 rounded" style={{ background: "rgba(34,197,94,0.05)" }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: "#22c55e" }}>
+                    {isMalayalam ? "മലയാളം തർജ്ജമ" : "Malayalam Translation"}
+                  </p>
+                  <p className="font-malayalam-sm text-white/80">{rule.malayalam_translation}</p>
+                </div>
+              )}
+              
+              {/* 5. Why This Rule Applies */}
+              <div className="p-2 rounded" style={{ background: "rgba(34,197,94,0.10)", border: `1px solid rgba(34,197,94,0.30)` }}>
+                <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: "#22c55e" }}>
+                  {isMalayalam ? "ഈ നിയമം ബാധകമാകാൻ കാരണം" : "Why This Rule Applies Now"}
+                </p>
+                <p className="font-malayalam-sm text-white/90">{rule.why_applies}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

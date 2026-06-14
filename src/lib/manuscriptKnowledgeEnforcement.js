@@ -120,45 +120,69 @@ export function formatManuscriptCitation(data, language = 'en') {
 
 /**
  * Validate timing recommendation against manuscripts
- * @param {string} actionType - Type of action (marriage, business, travel, etc.)
+ * FINAL MANUSCRIPT RULE: Every result must show 5 elements
+ * 1. Book name
+ * 2. Page number
+ * 3. Original manuscript text
+ * 4. Malayalam translation
+ * 5. Why this rule applies now
+ * @param {string} actionType - Type of action
  * @param {object} timingData - Current timing data
  * @param {string} language - 'en' or 'ml'
- * @returns {object} Validated recommendation
+ * @returns {object} Validated recommendation with full citation
  */
 export function validateTimingRecommendation(actionType, timingData, language = 'en') {
   const validation = validateManuscriptSource(`timing_${actionType}`);
   
   if (!validation.exists) {
     return {
-      recommendation: getManuscriptFallback(language),
+      recommendation: "No matching manuscript rule found",
+      recommendation_ml: "ഹസ്തലിഖിതത്തിൽ യോജിക്കുന്ന നിയമമില്ല",
       manuscript_verified: false,
-      reason: validation.reason,
-      source: null
+      reason: "No matching manuscript rule found for current time",
+      source: null,
+      book_name: null,
+      page_number: null,
+      original_text: null,
+      malayalam_translation: null,
+      why_applies: null
     };
   }
   
-  // Return timing data with manuscript verification
+  // Return timing data with full 5-part manuscript citation
   return {
     ...timingData,
     manuscript_verified: true,
     manuscript_source: validation.source,
-    action_type: actionType
+    action_type: actionType,
+    book_name: "Havâss'ın Derinlikleri",
+    page_number: timingData.pdf_pages || "PDF2 p.52-55",
+    original_text: timingData.original_text || null,
+    malayalam_translation: timingData.malayalam_translation || null,
+    why_applies: timingData.why_applies || null
   };
 }
 
 /**
  * Display multiple manuscript opinions separately
  * CRITICAL: Never merge opinions from different sources
+ * Each opinion must show 5 elements: book, page, original, translation, why
  * @param {array} opinions - Array of manuscript opinions
  * @param {string} language - 'en' or 'ml'
- * @returns {array} Separately displayed opinions
+ * @returns {array} Separately displayed opinions with full citations
  */
 export function displaySeparateManuscriptOpinions(opinions, language = 'en') {
   if (!opinions || opinions.length === 0) {
     return [{
-      content: getManuscriptFallback(language),
+      content: "No matching manuscript rule found",
+      content_ml: "ഹസ്തലിഖിതത്തിൽ യോജിക്കുന്ന നിയമമില്ല",
       source: null,
-      is_verified: false
+      is_verified: false,
+      book_name: null,
+      page_number: null,
+      original_text: null,
+      malayalam_translation: null,
+      why_applies: null
     }];
   }
   
@@ -170,6 +194,11 @@ export function displaySeparateManuscriptOpinions(opinions, language = 'en') {
     pdf_reference: opinion.pdf_id ? `PDF${opinion.pdf_id}` : null,
     pages: opinion.pdf_pages || null,
     is_verified: opinion.manuscript_verified || false,
+    book_name: opinion.book_name || "Havâss'ın Derinlikleri",
+    page_number: opinion.pdf_pages || null,
+    original_text: opinion.original_text || null,
+    malayalam_translation: opinion.malayalam_translation || null,
+    why_applies: opinion.why_applies || null,
     display_note: language === 'ml' 
       ? "മറ്റ് അഭിപ്രായങ്ങളുമായി ചേർക്കുന്നില്ല"
       : "Displayed separately - not merged with other opinions"

@@ -141,6 +141,26 @@ export default function KarmaTimingAdvisor() {
 function StatusDisplay({ evaluation, isMalayalam }) {
   const { result } = evaluation;
   
+  // FINAL MANUSCRIPT RULE: Check if any rules match
+  if (result.no_manuscript_match) {
+    return (
+      <div className="mb-6 p-6 rounded-xl border text-center" style={{ background: G.notSuitable, borderColor: G.notSuitableBorder }}>
+        <XCircle className="w-12 h-12 mx-auto mb-3" style={{ color: "#ef4444" }} />
+        <p className="font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: "#ef4444" }}>
+          {isMalayalam ? "ഹസ്തലിഖിത നിയമമില്ല" : "No Manuscript Rule"}
+        </p>
+        <p className="font-malayalam-lg font-bold text-white mb-2">
+          {isMalayalam ? "ഹസ്തലിഖിതത്തിൽ യോജിക്കുന്ന നിയമമില്ല" : "No matching manuscript rule found"}
+        </p>
+        <p className="font-malayalam-sm text-white/70">
+          {isMalayalam 
+            ? "നിലവിലെ സമയത്തിന് PDF നിയമങ്ങളിൽ യോജിക്കുന്ന വിധി കണ്ടെത്തിയില്ല" 
+            : "No manuscript rule matches the current astrological configuration"}
+        </p>
+      </div>
+    );
+  }
+  
   let statusConfig;
   if (result.suitable) {
     statusConfig = { bg: G.suitable, border: G.suitableBorder, icon: CheckCircle, text: "#22c55e", label: isMalayalam ? "ഇപ്പോൾ അനുയോജ്യം" : "Suitable Now" };
@@ -199,8 +219,38 @@ function FactorCard({ label, value, arabic, symbol, icon }) {
 }
 
 function PDFRuleDisplay({ evaluation, expanded, onToggle, isMalayalam }) {
-  const { rules } = evaluation;
+  const { rules, result } = evaluation;
 
+  // If no manuscript match, show enforcement notice
+  if (result.no_manuscript_match) {
+    return (
+      <div className="mb-6 p-5 rounded-xl border text-center" style={{ background: G.bg, borderColor: G.border }}>
+        <Book className="w-6 h-6 mx-auto mb-3" style={{ color: G.text }} />
+        <p className="font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: G.text }}>
+          {isMalayalam ? "ഹസ്തലിഖിത നിയമങ്ങൾ" : "Manuscript Rules Enforcement"}
+        </p>
+        <p className="font-malayalam-sm text-white/70 mb-4">
+          {isMalayalam 
+            ? "നിലവിലെ ഗ്രഹനിലകൾക്ക് അനുയോജ്യമായ PDF നിയമങ്ങൾ കണ്ടെത്തിയില്ല" 
+            : "No PDF manuscript rules match the current planetary configuration"}
+        </p>
+        <div className="text-left p-4 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+          <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+            {isMalayalam ? "ആവശ്യമായ ഉറവിട വിവരങ്ങൾ" : "Required Source Information (Not Found)"}
+          </p>
+          <div className="space-y-1 text-xs text-white/60">
+            <p>✗ {isMalayalam ? "പുസ്തക പേര്" : "Book name"} — Not found in manuscripts</p>
+            <p>✗ {isMalayalam ? "പേജ് നമ്പർ" : "Page number"} — Not found in manuscripts</p>
+            <p>✗ {isMalayalam ? "യഥാർത്ഥ വാചകം" : "Original text"} — Not found in manuscripts</p>
+            <p>✗ {isMalayalam ? "മലയാളം തർജ്ജമ" : "Malayalam translation"} — Not found in manuscripts</p>
+            <p>✗ {isMalayalam ? "ബാധകമാകാൻ കാരണം" : "Why applies"} — Not found in manuscripts</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show matching rules with full 5-part citation
   return (
     <div className="mb-6 border rounded-xl" style={{ borderColor: G.faint }}>
       <button onClick={onToggle} className="w-full p-4 flex items-center justify-between gap-3" style={{ color: G.dim }}>
@@ -215,10 +265,35 @@ function PDFRuleDisplay({ evaluation, expanded, onToggle, isMalayalam }) {
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <div className="p-4 border-t space-y-3" style={{ borderColor: G.faint }}>
-              {rules.map((rule, idx) => (
+              {(result.matchingRules || []).map((rule, idx) => (
                 <div key={idx} className="p-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                  <p className="font-malayalam-sm text-white/80 mb-2">{rule.ruleText}</p>
-                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.text }}>Source: {rule.book} - {rule.chapter}</p>
+                  {/* 1. Book Name */}
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "പുസ്തകം" : "Book"}</p>
+                  <p className="font-malayalam-sm font-bold text-white mb-2">{rule.book_name}</p>
+                  
+                  {/* 2. Page Number */}
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "പേജ്" : "Page"}</p>
+                  <p className="font-malayalam-sm font-bold text-white mb-2">{rule.page_number}</p>
+                  
+                  {/* 3. Original Text */}
+                  {rule.original_text && (
+                    <>
+                      <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "യഥാർത്ഥ വാചകം" : "Original Text"}</p>
+                      <p className="font-amiri text-lg font-bold text-right mb-2" style={{ color: G.text }}>{rule.original_text}</p>
+                    </>
+                  )}
+                  
+                  {/* 4. Malayalam Translation */}
+                  {rule.malayalam_translation && (
+                    <>
+                      <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#22c55e" }}>{isMalayalam ? "മലയാളം" : "Malayalam"}</p>
+                      <p className="font-malayalam-sm text-white/80 mb-2">{rule.malayalam_translation}</p>
+                    </>
+                  )}
+                  
+                  {/* 5. Why Applies */}
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#22c55e" }}>{isMalayalam ? "കാരണം" : "Why Applies"}</p>
+                  <p className="font-malayalam-sm text-white/90">{rule.why_applies}</p>
                 </div>
               ))}
             </div>
@@ -263,29 +338,48 @@ function NextSuitableTime({ evaluation, isMalayalam }) {
 function evaluateRules(rules, moonPos, planetHour, dayInfo) {
   let score = 0;
   let totalChecks = 0;
+  const matchingRules = [];
 
-  // Extract rules from PDF knowledge base
+  // Extract rules from PDF knowledge base - FINAL MANUSCRIPT RULE
   const bestDays = [];
   const suitableMansions = [];
 
   rules.forEach(rule => {
     if (rule.ruleType === "day_ruler") {
-      // Extract days from rule text
       const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
       days.forEach(day => {
         if (rule.ruleText.includes(day) && !bestDays.includes(day)) {
           bestDays.push(day);
+          if (dayInfo.ruler_en === day) {
+            matchingRules.push({
+              type: "day_match",
+              book_name: rule.book || "Havâss'ın Derinlikleri",
+              page_number: rule.pages || "PDF2",
+              original_text: rule.ruleText,
+              malayalam_translation: rule.malayalamTranslation || null,
+              why_applies: `Current day (${dayInfo.ruler_en}) matches manuscript rule`
+            });
+          }
         }
       });
     }
     if (rule.ruleType === "lunar_mansion") {
-      // Extract mansion numbers from rule text
       const numbers = rule.ruleText.match(/\d+/g);
       if (numbers) {
         numbers.forEach(n => {
           const num = parseInt(n);
           if (num >= 1 && num <= 28 && !suitableMansions.includes(num)) {
             suitableMansions.push(num);
+            if (moonPos.mansion?.number === num) {
+              matchingRules.push({
+                type: "mansion_match",
+                book_name: rule.book || "Havâss'ın Derinlikleri",
+                page_number: rule.pages || "PDF2",
+                original_text: rule.ruleText,
+                malayalam_translation: rule.malayalamTranslation || null,
+                why_applies: `Current mansion (${moonPos.mansion?.number}) matches manuscript rule`
+              });
+            }
           }
         });
       }
@@ -305,9 +399,10 @@ function evaluateRules(rules, moonPos, planetHour, dayInfo) {
   let suitable = false;
   let wait = false;
 
-  if (ratio >= 0.5) {
+  // FINAL MANUSCRIPT RULE: No recommendation without matching rules
+  if (ratio >= 0.5 && matchingRules.length > 0) {
     suitable = true;
-  } else if (ratio >= 0.25) {
+  } else if (ratio >= 0.25 && matchingRules.length > 0) {
     wait = true;
   }
 
@@ -317,6 +412,8 @@ function evaluateRules(rules, moonPos, planetHour, dayInfo) {
     score,
     totalChecks,
     ratio,
+    matchingRules,
+    no_manuscript_match: matchingRules.length === 0,
     nextSuitable: calculateNextSuitable(rules, moonPos, planetHour, dayInfo)
   };
 }
