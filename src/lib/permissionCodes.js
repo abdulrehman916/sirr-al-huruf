@@ -69,7 +69,7 @@ export const ROUTE_PERMISSION_MAP = {
   '/plants/:id': { code: PERMISSION_CODES.PLANTS, name: 'Plant Detail', requiresPermission: true },
   '/evil-jinn': { code: PERMISSION_CODES.EVIL_JINN, name: 'Evil Jinn', requiresPermission: true },
   '/holy-names': { code: PERMISSION_CODES.HOLY_NAMES, name: 'Holy Names', requiresPermission: true },
-  '/astro-clock': { code: PERMISSION_CODES.ASTRO_CLOCK, name: 'Astro Clock', requiresPermission: true },
+  '/astro-clock': { code: PERMISSION_CODES.ASTRO_CLOCK, name: 'Astro Clock', requiresPermission: false },
   '/customer-service': { code: PERMISSION_CODES.CUSTOMER_SERVICE, name: 'Customer Service', requiresPermission: false },
   
   // Admin Pages
