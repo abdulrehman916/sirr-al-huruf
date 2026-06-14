@@ -19,6 +19,7 @@ import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanel
 
 import ProfessionalTimingDecisionEngine from "../components/astroclock/ProfessionalTimingDecisionEngine";
 import KarmaTimingAdvisor from "../components/astroclock/KarmaTimingAdvisor";
+import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
 import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel.jsx";
 import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
 import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.jsx";
@@ -114,6 +115,9 @@ function AstroClockContent() {
 
         {/* SECTION 12: Karma Timing Advisor — PDF Knowledge Base */}
         <KarmaTimingAdvisor />
+
+        {/* SECTION 13: Action Timing Advisor — PDF Knowledge Base Only */}
+        {/* <ActionTimingAdvisor /> */}
 
         {/* SECTION 13: Birth Profile Analyzer */}
         <BirthProfileAnalyzer />

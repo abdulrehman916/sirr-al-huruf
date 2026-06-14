@@ -1,404 +1,376 @@
 // ═══════════════════════════════════════════════════════════════
-// ACTION TIMING ADVISOR — SECTION 7
-// User enters action, gets timing recommendations
+// ACTION TIMING ADVISOR — PDF KNOWLEDGE BASE ONLY
+// Live timing recommendations from uploaded PDF books only
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Calendar, Clock, Star, AlertTriangle, CheckCircle, XCircle, BookOpen, Info, ChevronDown, ChevronUp } from "lucide-react";
-import { getActionTimingAdvice, findSimilarActions } from "@/lib/astroClockActionTimingAdvisor";
+import { Search, Clock, CheckCircle, XCircle, Book } from "lucide-react";
+import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
+import { getCurrentPlanetaryHour } from "@/lib/astroClockLiveEngine.js";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
+import { ACTION_CATEGORIES, ACTION_TIMING_RULES, findActionCategory } from "@/lib/astroClockActionTimingRules.js";
 
 const G = {
-  border:   "rgba(212,175,55,0.40)",
+  border: "rgba(212,175,55,0.40)",
   borderHi: "rgba(212,175,55,0.65)",
-  glow:     "rgba(212,175,55,0.22)",
-  text:     "#F5D060",
-  dim:      "rgba(212,175,55,0.55)",
-  faint:    "rgba(212,175,55,0.22)",
-  bg:       "rgba(212,175,55,0.07)",
-  bgHi:     "rgba(212,175,55,0.14)",
-  success:  "rgba(34,197,94,0.60)",
-  danger:   "rgba(239,68,68,0.60)"
+  glow: "rgba(212,175,55,0.22)",
+  text: "#F5D060",
+  dim: "rgba(212,175,55,0.55)",
+  faint: "rgba(212,175,55,0.22)",
+  bg: "rgba(212,175,55,0.07)",
+  bgHi: "rgba(212,175,55,0.14)",
+  excellent: "rgba(34,197,94,0.15)",
+  excellentBorder: "rgba(34,197,94,0.60)",
+  avoid: "rgba(239,68,68,0.15)",
+  avoidBorder: "rgba(239,68,68,0.60)"
 };
 
-const QUICK_ACTIONS = [
-  { en: "Business", ml: "വ്യാപാരം" },
-  { en: "Marriage", ml: "വിവാഹം" },
-  { en: "Travel", ml: "യാത്ര" },
-  { en: "Healing", ml: "ചികിത്സ" },
-  { en: "Study", ml: "പഠനം" },
-  { en: "Love", ml: "പ്രണയം" }
+const EXAMPLE_ACTIONS = [
+  { ml: "വിവാഹം", en: "marriage", key: "MARRIAGE" },
+  { ml: "പ്രണയം", en: "love", key: "LOVE" },
+  { ml: "വ്യാപാരം", en: "business", key: "BUSINESS" },
+  { ml: "യാത്ര", en: "travel", key: "TRAVEL" },
+  { ml: "പഠനം", en: "education", key: "EDUCATION" },
+  { ml: "ജോലി", en: "job", key: "JOB" },
+  { ml: "ചികിത്സ", en: "healing", key: "HEALING" },
+  { ml: "വീട് നിർമ്മാണം", en: "construction", key: "CONSTRUCTION" }
 ];
 
 export default function ActionTimingAdvisor() {
   const { isMalayalam } = useAstroClockLanguage();
-  const [action, setAction] = useState("");
-  const [results, setResults] = useState(null);
-  const [suggestions, setSuggestions] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [timingResult, setTimingResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
-    if (!action.trim()) return;
-    
-    setLoading(true);
-    setTimeout(() => {
-      const advice = getActionTimingAdvice(action, isMalayalam ? 'ml' : 'en');
-      setResults(advice);
-      setLoading(false);
-    }, 300);
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setAction(suggestion.category);
-    const advice = getActionTimingAdvice(suggestion.category, isMalayalam ? 'ml' : 'en');
-    setResults(advice);
-  };
-
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setAction(value);
-    if (value.length >= 2) {
-      const sims = findSimilarActions(value, isMalayalam);
-      setSuggestions(sims);
-    } else {
-      setSuggestions([]);
+  useEffect(() => {
+    if (selectedAction) {
+      calculateTiming();
+      const interval = setInterval(calculateTiming, 60000);
+      return () => clearInterval(interval);
     }
-  };
+  }, [selectedAction]);
+
+  function calculateTiming() {
+    setLoading(true);
+    
+    const now = new Date();
+    const dayIndex = now.getDay();
+    const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const dayKey = dayKeys[dayIndex];
+    
+    const moonPos = calculateMoonPosition(now);
+    const planetHour = getCurrentPlanetaryHour(now, 6.5, 18.25);
+    const isDaytime = now.getHours() >= 6 && now.getHours() < 18;
+    
+    const rules = ACTION_TIMING_RULES[selectedAction.key];
+    if (!rules) {
+      setLoading(false);
+      return;
+    }
+    
+    let score = 0;
+    const reasons = [];
+    
+    // Check mansion
+    if (rules.suitableMansions.includes(moonPos.mansion?.number)) {
+      score += 3;
+      reasons.push({ type: "positive", text: `Mansion ${moonPos.mansion.number} is suitable` });
+    } else if (rules.unsuitableMansions.includes(moonPos.mansion?.number)) {
+      score -= 3;
+      reasons.push({ type: "negative", text: `Mansion ${moonPos.mansion.number} is unsuitable` });
+    }
+    
+    // Check planet
+    if (rules.suitablePlanets.includes(planetHour.planet)) {
+      score += 2;
+      reasons.push({ type: "positive", text: `${planetHour.planetInfo?.name_en} hour is suitable` });
+    } else if (rules.unsuitablePlanets.includes(planetHour.planet)) {
+      score -= 2;
+      reasons.push({ type: "negative", text: `${planetHour.planetInfo?.name_en} hour is unsuitable` });
+    }
+    
+    // Check day
+    if (rules.suitableDays.includes(dayKey)) {
+      score += 2;
+      reasons.push({ type: "positive", text: `${dayKey} is suitable` });
+    } else if (rules.unsuitableDays.includes(dayKey)) {
+      score -= 2;
+      reasons.push({ type: "negative", text: `${dayKey} is unsuitable` });
+    }
+    
+    // Check day/night
+    if (rules.dayOrNight === "night" && !isDaytime) {
+      score += 1;
+    } else if (rules.dayOrNight === "night" && isDaytime) {
+      score -= 1;
+    } else if (rules.dayOrNight === "day" && isDaytime) {
+      score += 1;
+    } else if (rules.dayOrNight === "day" && !isDaytime) {
+      score -= 1;
+    }
+    
+    const isSuitable = score >= 2;
+    
+    setTimingResult({
+      isSuitable,
+      score,
+      reasons,
+      source: rules.source,
+      notes: rules.notes
+    });
+    setLoading(false);
+  }
+
+  function handleActionSelect(actionKey) {
+    const actionData = ACTION_CATEGORIES[actionKey];
+    setSelectedAction({ key: actionKey, ...actionData });
+    setSearchInput("");
+  }
+
+  function handleSearch(input) {
+    setSearchInput(input);
+    const matchedKey = findActionCategory(input);
+    if (matchedKey) {
+      handleActionSelect(matchedKey);
+    }
+  }
 
   return (
-    <div className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl border p-6 relative overflow-hidden"
+      style={{
+        background: "linear-gradient(145deg, rgba(10,22,56,0.99) 0%, rgba(5,12,36,0.99) 100%)",
+        borderColor: G.borderHi,
+        boxShadow: `0 0 50px ${G.glow}, 0 4px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(212,175,55,0.10)`
+      }}
+    >
+      <div className="absolute top-0 left-0 right-0 h-px"
+        style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.50), transparent)` }} />
+
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border p-5"
-        style={{
-          background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)",
-          borderColor: G.borderHi,
-          boxShadow: `0 0 40px ${G.glow}`
-        }}
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <Search className="w-6 h-6" style={{ color: G.text }} />
-          <h2 className="font-inter text-xl font-bold uppercase tracking-widest" style={{ color: G.text }}>
-            {isMalayalam ? "പ്രവൃത്തി സമയ ഉപദേശം" : "Action Timing Advisor"}
+      <div className="flex items-center gap-3 mb-6">
+        <Clock className="w-7 h-7" style={{ color: G.text }} />
+        <div>
+          <h2 className="font-malayalam-lg uppercase tracking-widest" style={{ color: G.text }}>
+            {isMalayalam ? "ആക്ഷൻ ടൈമിംഗ് അഡ്വൈസർ" : "Action Timing Advisor"}
           </h2>
+          <p className="font-malayalam-sm" style={{ color: G.dim }}>
+            {isMalayalam ? "PDF നോളജ് ബേസ് മാത്രം" : "PDF Knowledge Base Only"}
+          </p>
         </div>
+      </div>
 
-        {/* Search Input */}
-        <div className="mb-4">
-          <div className="relative">
-            <input
-              type="text"
-              value={action}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder={isMalayalam 
-                ? "പ്രവൃത്തി നൽകുക (വിവാഹം, യാത്ര, വ്യാപാരം...)" 
-                : "Enter action (Marriage, Travel, Business...)"}
-              className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                borderColor: G.border,
-                color: "#fff",
-                fontSize: "14px"
-              }}
-            />
-            <button
-              onClick={handleSearch}
-              disabled={loading || !action.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50"
-              style={{
-                background: G.bgHi,
-                color: G.text,
-                border: `1px solid ${G.border}`
-              }}
-            >
-              {loading ? (isMalayalam ? "ലോഡ്..." : "Loading...") : (isMalayalam ? "തിരയുക" : "Search")}
-            </button>
-          </div>
-
-          {/* Suggestions Dropdown */}
-          {suggestions.length > 0 && (
-            <div className="mt-2 p-3 rounded-xl border" style={{ background: G.bg, borderColor: G.faint }}>
-              <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                {isMalayalam ? "നിർദ്ദേശങ്ങൾ" : "Suggestions"}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {suggestions.map((suggestion, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider transition-all hover:opacity-80"
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      color: G.text,
-                      border: `1px solid ${G.faint}`
-                    }}
-                  >
-                    {suggestion.category}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+      {/* Search Input */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: G.dim }} />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder={isMalayalam ? "പ്രവർത്തനം ടൈപ്പ് ചെയ്യുക..." : "Type action..."}
+            className="w-full pl-12 pr-4 py-4 rounded-xl border outline-none transition-all"
+            style={{
+              background: G.bg,
+              borderColor: G.border,
+              color: "#fff",
+              fontSize: "16px"
+            }}
+          />
         </div>
+      </div>
 
-        {/* Quick Actions */}
+      {/* Example Actions */}
+      <div className="mb-6">
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>
+          {isMalayalam ? "ഉദാഹരണങ്ങൾ" : "Examples"}
+        </p>
         <div className="flex flex-wrap gap-2">
-          {QUICK_ACTIONS.map((qa, idx) => (
+          {EXAMPLE_ACTIONS.map((action, idx) => (
             <button
               key={idx}
-              onClick={() => {
-                setAction(isMalayalam ? qa.ml : qa.en);
-                const advice = getActionTimingAdvice(isMalayalam ? qa.ml : qa.en, isMalayalam ? 'ml' : 'en');
-                setResults(advice);
-              }}
-              className="px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider transition-all hover:opacity-80"
+              onClick={() => handleActionSelect(action.key)}
+              className="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all hover:border-opacity-60"
               style={{
-                background: "rgba(255,255,255,0.05)",
-                color: "rgba(255,255,255,0.60)",
-                border: `1px solid rgba(255,255,255,0.15)`
+                background: selectedAction?.key === action.key ? G.bgHi : G.bg,
+                borderColor: selectedAction?.key === action.key ? G.borderHi : G.faint,
+                color: selectedAction?.key === action.key ? G.text : "#fff"
               }}
             >
-              {isMalayalam ? qa.ml : qa.en}
+              {isMalayalam ? action.ml : action.en}
             </button>
           ))}
         </div>
-      </motion.div>
+      </div>
 
-      {/* Results */}
-      {results && (
+      {/* Selected Action */}
+      {selectedAction && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
+          className="mb-6 p-4 rounded-xl border"
+          style={{ background: G.bg, borderColor: G.border }}
         >
-          {results.found ? (
-            <>
-              {/* Action Header */}
-              <div className="p-4 rounded-xl border" style={{ background: G.bgHi, borderColor: G.border }}>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                    {results.action}
-                  </h3>
-                  <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.40)" }}>
-                    {results.totalRulesFound} {isMalayalam ? "നിയമങ്ങൾ" : "Rules"} Found
-                  </span>
-                </div>
-                <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.60)" }}>
-                  {isMalayalam ? "വിഭാഗം" : "Category"}: {results.category}
-                </p>
-              </div>
-
-              {/* Best Days */}
-              {results.bestDays && results.bestDays.length > 0 && (
-                <TimingSection
-                  icon={Calendar}
-                  title={isMalayalam ? "ഉത്തമ ദിവസങ്ങൾ" : "Best Days"}
-                  color={G.success}
-                >
-                  <div className="grid grid-cols-1 gap-2">
-                    {results.bestDays.map((day, idx) => (
-                      <DayCard key={idx} day={day} isMalayalam={isMalayalam} />
-                    ))}
-                  </div>
-                </TimingSection>
-              )}
-
-              {/* Worst Days */}
-              {results.worstDays && results.worstDays.length > 0 && (
-                <TimingSection
-                  icon={AlertTriangle}
-                  title={isMalayalam ? "അനുചിത ദിവസങ്ങൾ" : "Worst Days"}
-                  color={G.danger}
-                >
-                  <div className="grid grid-cols-1 gap-2">
-                    {results.worstDays.map((day, idx) => (
-                      <DayCard key={idx} day={day} isMalayalam={isMalayalam} isWarning />
-                    ))}
-                  </div>
-                </TimingSection>
-              )}
-
-              {/* Best Hours */}
-              {results.bestHours && results.bestHours.length > 0 && (
-                <TimingSection
-                  icon={Clock}
-                  title={isMalayalam ? "ഉത്തമ ഗ്രഹ മണിക്കൂറുകൾ" : "Best Planetary Hours"}
-                  color={G.success}
-                >
-                  <div className="grid grid-cols-2 gap-2">
-                    {results.bestHours.map((hour, idx) => (
-                      <HourCard key={idx} hour={hour} isMalayalam={isMalayalam} />
-                    ))}
-                  </div>
-                </TimingSection>
-              )}
-
-              {/* Suitable Mansions */}
-              {results.suitableMansions && results.suitableMansions.length > 0 && (
-                <TimingSection
-                  icon={Star}
-                  title={isMalayalam ? "ഉചിത നക്ഷത്രങ്ങൾ" : "Suitable Lunar Mansions"}
-                  color={G.text}
-                >
-                  <div className="grid grid-cols-2 gap-2">
-                    {results.suitableMansions.map((mansion, idx) => (
-                      <MansionCard key={idx} mansion={mansion} isMalayalam={isMalayalam} />
-                    ))}
-                  </div>
-                </TimingSection>
-              )}
-
-              {/* Benefits */}
-              {results.benefits && results.benefits.length > 0 && (
-                <TimingSection
-                  icon={CheckCircle}
-                  title={isMalayalam ? "ഗുണങ്ങൾ" : "Benefits"}
-                  color={G.success}
-                >
-                  <ul className="space-y-1">
-                    {results.benefits.map((benefit, idx) => (
-                      <li key={idx} className="font-inter text-xs text-white/70 flex items-start gap-2">
-                        <span className="w-1 h-1 rounded-full mt-1.5" style={{ background: G.success }} />
-                        {benefit}
-                      </li>
-                    ))}
-                  </ul>
-                </TimingSection>
-              )}
-
-              {/* Warnings */}
-              {results.warnings && results.warnings.length > 0 && (
-                <TimingSection
-                  icon={AlertTriangle}
-                  title={isMalayalam ? "മുന്നറിയിപ്പുകൾ" : "Warnings"}
-                  color={G.danger}
-                >
-                  <ul className="space-y-1">
-                    {results.warnings.map((warning, idx) => (
-                      <li key={idx} className="font-inter text-xs text-white/70 flex items-start gap-2">
-                        <span className="w-1 h-1 rounded-full mt-1.5" style={{ background: G.danger }} />
-                        {warning}
-                      </li>
-                    ))}
-                  </ul>
-                </TimingSection>
-              )}
-
-              {/* Sources */}
-              {results.sources && results.sources.length > 0 && (
-                <div className="p-4 rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: G.faint }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <BookOpen className="w-4 h-4" style={{ color: G.dim }} />
-                    <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                      {isMalayalam ? "ഗ്രന്ഥങ്ങൾ" : "Sources"}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    {results.sources.map((source, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 rounded-lg" style={{ background: G.bg }}>
-                        <span className="font-inter text-xs text-white/70">{source.book}</span>
-                        <span className="font-inter text-[10px] font-bold" style={{ color: G.text }}>
-                          {isMalayalam ? "പുറം" : "Page"} {source.page}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <NoResults message={results.message} suggestions={results.suggestions} isMalayalam={isMalayalam} onSuggestionClick={handleSuggestionClick} />
-          )}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-amiri text-3xl font-bold" style={{ color: G.text }}>{selectedAction.arabic}</p>
+              <p className="font-malayalam-md font-bold text-white">
+                {isMalayalam ? selectedAction.ml[0] : selectedAction.en[0]}
+              </p>
+            </div>
+            <button
+              onClick={() => setSelectedAction(null)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider"
+              style={{
+                background: "rgba(239,68,68,0.20)",
+                color: "#ef4444"
+              }}
+            >
+              {isMalayalam ? "മാറ്റുക" : "Change"}
+            </button>
+          </div>
         </motion.div>
       )}
-    </div>
-  );
-}
 
-// Helper Components
-function TimingSection({ icon: Icon, title, color, children }) {
-  return (
-    <div className="p-4 rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: color }}>
-      <div className="flex items-center gap-2 mb-3">
-        <Icon className="w-4 h-4" style={{ color }} />
-        <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color }}>
-          {title}
-        </p>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function DayCard({ day, isMalayalam, isWarning = false }) {
-  return (
-    <div className="p-3 rounded-lg border flex items-center justify-between" style={{ background: isWarning ? "rgba(239,68,68,0.05)" : "rgba(34,197,94,0.05)", borderColor: isWarning ? "rgba(239,68,68,0.30)" : "rgba(34,197,94,0.30)" }}>
-      <div className="flex items-center gap-3">
-        <span className="text-xl">{day.symbol}</span>
-        <div>
-          <p className="font-inter text-sm font-bold" style={{ color: isWarning ? "#ef4444" : "#22c55e" }}>
-            {day.day}
+      {/* Loading State */}
+      {loading && (
+        <div className="py-8 text-center">
+          <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mx-auto"
+            style={{ borderColor: G.text, borderTopColor: "transparent" }} />
+          <p className="mt-4 font-inter text-sm" style={{ color: G.dim }}>
+            {isMalayalam ? "കണക്കാക്കുന്നു..." : "Calculating..."}
           </p>
-          <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-            {isMalayalam ? "ഗ്രഹ നാഥൻ" : "Planet Ruler"}: {day.planet}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HourCard({ hour, isMalayalam }) {
-  return (
-    <div className="p-2 rounded-lg border text-center" style={{ background: G.bg, borderColor: G.faint }}>
-      <p className="text-lg mb-1">{hour.symbol}</p>
-      <p className="font-inter text-xs font-bold" style={{ color: G.text }}>{hour.planet}</p>
-      <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>{hour.day}</p>
-    </div>
-  );
-}
-
-function MansionCard({ mansion, isMalayalam }) {
-  return (
-    <div className="p-2 rounded-lg border" style={{ background: G.bg, borderColor: G.faint }}>
-      <p className="font-amiri text-sm font-bold mb-1" style={{ color: G.text }} dir="rtl">{mansion.arabic}</p>
-      <p className="font-inter text-xs font-bold" style={{ color: G.text }}>{mansion.name}</p>
-      <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-        {isMalayalam ? "സ്വഭാവം" : "Nature"}: {mansion.nature}
-      </p>
-    </div>
-  );
-}
-
-function NoResults({ message, suggestions, isMalayalam, onSuggestionClick }) {
-  return (
-    <div className="p-6 rounded-xl border text-center" style={{ background: "rgba(255,255,255,0.02)", borderColor: G.faint }}>
-      <Info className="w-8 h-8 mx-auto mb-3" style={{ color: G.dim }} />
-      <p className="font-inter text-sm mb-4" style={{ color: "rgba(255,255,255,0.70)" }}>{message}</p>
-      {suggestions && suggestions.suggestions && (
-        <div>
-          <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-            {isMalayalam ? "നിർദ്ദേശങ്ങൾ" : "Suggestions"}
-          </p>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {suggestions.suggestions.map((suggestion, idx) => (
-              <button
-                key={idx}
-                onClick={() => onSuggestionClick(suggestion)}
-                className="px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider transition-all hover:opacity-80"
-                style={{ background: G.bg, color: G.text, border: `1px solid ${G.faint}` }}
-              >
-                {suggestion.category}
-              </button>
-            ))}
-          </div>
         </div>
       )}
+
+      {/* Results */}
+      {timingResult && !loading && (
+        <>
+          <CurrentStatus status={timingResult} isMalayalam={isMalayalam} />
+          <TimingRules action={selectedAction} result={timingResult} isMalayalam={isMalayalam} />
+        </>
+      )}
+
+      {!selectedAction && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="rounded-xl border p-5 text-center"
+          style={{ background: G.bg, borderColor: G.faint }}
+        >
+          <Book className="w-6 h-6 mx-auto mb-3" style={{ color: G.dim }} />
+          <p className="font-inter text-sm" style={{ color: G.dim }}>
+            {isMalayalam
+              ? "ഒരു പ്രവർത്തനം തിരഞ്ഞെടുക്കുക. PDF നിയമങ്ങൾ പ്രകാരം ഉചിത സമയം നിർദ്ദേശിക്കുന്നു."
+              : "Select an action. Timing from PDF knowledge base rules only."}
+          </p>
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
+
+function CurrentStatus({ status, isMalayalam }) {
+  const config = status.isSuitable
+    ? { color: G.excellent, border: G.excellentBorder, text: "#22c55e", icon: "🟢" }
+    : { color: G.avoid, border: G.avoidBorder, text: "#ef4444", icon: "🔴" };
+
+  return (
+    <div className="mb-6 p-5 rounded-xl border" style={{ background: config.color, borderColor: config.border }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: config.text }}>
+          {isMalayalam ? "നിലവിലെ സ്ഥിതി" : "Current Status"}
+        </p>
+        <span className="text-2xl">{config.icon}</span>
+      </div>
+      <p className="font-malayalam-lg font-bold text-white">
+        {status.isSuitable
+          ? (isMalayalam ? "ഉചിത സമയം ✓" : "Suitable Time ✓")
+          : (isMalayalam ? "ഉചിതമല്ല ✗" : "Not Suitable ✗")}
+      </p>
+      <p className="font-malayalam-sm text-white/70 mt-1">{status.reason}</p>
+      {status.source && (
+        <div className="mt-3 flex items-center gap-2">
+          <Book className="w-3 h-3" style={{ color: config.text }} />
+          <p className="font-inter text-[8px]" style={{ color: config.text }}>Source: {status.source}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TimingRules({ action, result, isMalayalam }) {
+  const rules = ACTION_TIMING_RULES[action.key];
+  if (!rules) return null;
+
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      {/* Suitable */}
+      <div className="p-5 rounded-xl border" style={{ background: G.excellent, borderColor: G.excellentBorder }}>
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle className="w-5 h-5" style={{ color: "#22c55e" }} />
+          <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
+            {isMalayalam ? "ഉചിതം" : "Suitable"}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <p className="font-malayalam-sm text-white/80">
+            <span className="font-bold">Mansions:</span> {rules.suitableMansions.join(", ")}
+          </p>
+          <p className="font-malayalam-sm text-white/80">
+            <span className="font-bold">Planets:</span> {rules.suitablePlanets.join(", ")}
+          </p>
+          <p className="font-malayalam-sm text-white/80">
+            <span className="font-bold">Days:</span> {rules.suitableDays.join(", ")}
+          </p>
+          {rules.dayOrNight === "night" && (
+            <p className="font-malayalam-sm font-bold" style={{ color: "#22c55e" }}>
+              ✓ {isMalayalam ? "രാത്രി മാത്രം" : "Night only"}
+            </p>
+          )}
+          {rules.saadRequired && (
+            <p className="font-malayalam-sm font-bold" style={{ color: "#22c55e" }}>
+              ✓ Sa'd mansion required
+            </p>
+          )}
+          {result.notes && (
+            <p className="font-malayalam-sm text-white/60 mt-2 italic">
+              {isMalayalam ? result.notes.ml : result.notes.en}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Unsuitable */}
+      <div className="p-5 rounded-xl border" style={{ background: G.avoid, borderColor: G.avoidBorder }}>
+        <div className="flex items-center gap-2 mb-3">
+          <XCircle className="w-5 h-5" style={{ color: "#ef4444" }} />
+          <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
+            {isMalayalam ? "അനുചിതം" : "Unsuitable"}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <p className="font-malayalam-sm text-white/80">
+            <span className="font-bold">Mansions:</span> {rules.unsuitableMansions.join(", ")}
+          </p>
+          <p className="font-malayalam-sm text-white/80">
+            <span className="font-bold">Planets:</span> {rules.unsuitablePlanets.join(", ")}
+          </p>
+          <p className="font-malayalam-sm text-white/80">
+            <span className="font-bold">Days:</span> {rules.unsuitableDays.join(", ")}
+          </p>
+          {rules.nahsRequired && (
+            <p className="font-malayalam-sm font-bold" style={{ color: "#ef4444" }}>
+              ✓ Nahs mansion required
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
