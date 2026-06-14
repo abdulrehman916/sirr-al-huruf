@@ -7,11 +7,13 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
-import AstroClockDisplay from "../components/astroclock/AstroClockDisplay";
+import LiveAstroClock from "../components/astroclock/LiveAstroClock";
 import PlanetaryHourTable from "../components/astroclock/PlanetaryHourTable";
-import CelestialInfo from "../components/astroclock/CelestialInfo";
-import AstroClockSearch from "../components/astroclock/AstroClockSearch";
-import AstroClockTimingAdvisor from "../components/astroclock/AstroClockTimingAdvisor";
+import LiveMoonCenter from "../components/astroclock/LiveMoonCenter";
+import LivePlanetCenter from "../components/astroclock/LivePlanetCenter";
+import DayAnalysisPanel from "../components/astroclock/DayAnalysisPanel";
+import LunarMansionsPanel from "../components/astroclock/LunarMansionsPanel";
+import AdvancedTimingAdvisor from "../components/astroclock/AdvancedTimingAdvisor";
 import AsteroidKnowledgeSummary from "../components/astroclock/AsteroidKnowledgeSummary";
 import { ASTRO_CLOCK_ENGINE_STATUS } from "../lib/astroClockEngine";
 import { usePageState } from "../context/PageStateContext";
@@ -59,20 +61,26 @@ export default function AstroClockPage() {
           </motion.div>
         )}
 
-        {/* Main Display */}
-        <AstroClockDisplay />
+        {/* SECTION 1: Live Astro Clock */}
+        <LiveAstroClock />
 
-        {/* Planetary Hours Table Placeholder */}
+        {/* SECTION 2 & 3: Planetary Hours (Day + Night) */}
         <PlanetaryHourTable />
 
-        {/* Celestial Info Placeholder */}
-        <CelestialInfo />
+        {/* SECTION 4: Live Moon Center */}
+        <LiveMoonCenter />
 
-        {/* Knowledge Search */}
-        <AstroClockSearch />
+        {/* SECTION 5: Live Planet Center */}
+        <LivePlanetCenter />
 
-        {/* Timing Advisor */}
-        <AstroClockTimingAdvisor />
+        {/* SECTION 6: Day Analysis */}
+        <DayAnalysisPanel />
+
+        {/* SECTION 7: Lunar Mansions */}
+        <LunarMansionsPanel />
+
+        {/* SECTION 8: Advanced Timing Advisor */}
+        <AdvancedTimingAdvisor />
 
         {/* Asteroid Knowledge Summary */}
         <AsteroidKnowledgeSummary />
