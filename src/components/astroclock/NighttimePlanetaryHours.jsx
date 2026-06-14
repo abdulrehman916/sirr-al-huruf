@@ -6,12 +6,11 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Moon, Clock, MapPin, Book, CheckCircle, XCircle } from "lucide-react";
+import { Moon, Clock, MapPin, Book } from "lucide-react";
 import { getAllPlanetaryHours } from "@/lib/astroClockLiveEngine";
 import { calculateSunriseSunset, formatDecimalTime } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
-import { formatManuscriptCitation } from "@/lib/manuscriptKnowledgeEnforcement.js";
+import ExpandedPlanetaryHourCard from "./ExpandedPlanetaryHourCard";
 
 const G = {
   border:   "rgba(212,175,55,0.40)",
@@ -129,9 +128,9 @@ export default function NighttimePlanetaryHours() {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-4">
         {(hours || []).map((hour) => (
-          <EnhancedHourCard key={hour.hourNumber} hour={hour} isMalayalam={isMalayalam} />
+          <ExpandedPlanetaryHourCard key={hour.hourNumber} hour={hour} isMalayalam={isMalayalam} />
         ))}
       </div>
 
@@ -152,133 +151,5 @@ export default function NighttimePlanetaryHours() {
         </div>
       </div>
     </motion.div>
-  );
-}
-
-function EnhancedHourCard({ hour, isMalayalam }) {
-  const planetRules = getPlanetHourRules(hour.planet);
-  const isSaad = planetRules?.nature.includes("Sa'd");
-  
-  return (
-    <div className="rounded-xl border p-5"
-      style={{
-        background: G.bg,
-        borderColor: G.border,
-        boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
-      }}>
-      {/* Header: Planet & Time */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b" style={{ borderColor: G.faint }}>
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">{hour.planetInfo?.symbol}</span>
-          <div>
-            <p className="font-amiri text-3xl font-bold" style={{ color: G.text }}>
-              {hour.planetInfo?.name_ar}
-            </p>
-            <p className="font-malayalam-md font-bold text-white">
-              {isMalayalam ? hour.planetInfo?.name_ml_equivalent : hour.planetInfo?.name_en}
-            </p>
-          </div>
-        </div>
-        
-        <div className="text-right">
-          <p className="font-malayalam-sm text-white/90 font-bold">
-            {hour.startTime} → {hour.endTime}
-          </p>
-          <p className="font-malayalam-sm" style={{ color: G.dim }}>
-            {hour.duration}
-          </p>
-        </div>
-      </div>
-
-      {/* Status & Element */}
-      <div className="grid md:grid-cols-2 gap-4 mb-4">
-        <div className="p-3 rounded-lg" style={{ 
-          background: isSaad ? G.excellent : G.avoid,
-          borderColor: isSaad ? G.excellentBorder : G.avoidBorder,
-          border: "1px solid"
-        }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: isSaad ? "#22c55e" : "#ef4444" }}>
-            {isMalayalam ? "സ്ഥിതി" : "Status"}
-          </p>
-          <p className="font-malayalam-md font-bold text-white">
-            {isMalayalam ? planetRules?.nature_ml : planetRules?.nature}
-          </p>
-        </div>
-        
-        <div className="p-3 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-            {isMalayalam ? "മൂലകം" : "Element"}
-          </p>
-          <p className="font-malayalam-md font-bold text-white">
-            {isMalayalam ? planetRules?.element_ml : planetRules?.element}
-          </p>
-        </div>
-      </div>
-
-      {/* Suitable Actions */}
-      <div className="mb-4 p-4 rounded-lg" style={{ background: "rgba(34,197,94,0.05)", border: `1px solid rgba(34,197,94,0.30)` }}>
-        <div className="flex items-center gap-2 mb-3">
-          <CheckCircle className="w-4 h-4" style={{ color: "#22c55e" }} />
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
-            {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Suitable Actions"}
-          </p>
-        </div>
-        <div className="space-y-1">
-          {(isMalayalam ? planetRules?.suitableActions?.ml : planetRules?.suitableActions?.en || []).slice(0, 4).map((action, idx) => (
-            <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#22c55e" }} />
-              {action}
-            </p>
-          ))}
-        </div>
-      </div>
-
-      {/* Unsuitable Actions */}
-      <div className="mb-4 p-4 rounded-lg" style={{ background: "rgba(239,68,68,0.05)", border: `1px solid rgba(239,68,68,0.30)` }}>
-        <div className="flex items-center gap-2 mb-3">
-          <XCircle className="w-4 h-4" style={{ color: "#ef4444" }} />
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
-            {isMalayalam ? "അനുചിത പ്രവർത്തനങ്ങൾ" : "Avoid These"}
-          </p>
-        </div>
-        <div className="space-y-1">
-          {(isMalayalam ? planetRules?.unsuitableActions?.ml : planetRules?.unsuitableActions?.en || []).slice(0, 4).map((action, idx) => (
-            <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
-              {action}
-            </p>
-          ))}
-        </div>
-      </div>
-
-      {/* Source - Manuscript Citation */}
-      <div className="mt-4 p-3 rounded-lg border" style={{ 
-        background: "rgba(212,175,55,0.04)",
-        borderColor: planetRules?.manuscript_verified ? "rgba(34,197,94,0.40)" : "rgba(251,191,36,0.40)"
-      }}>
-        <div className="flex items-start gap-2">
-          <Book className="w-3 h-3 mt-0.5" style={{ color: G.text }} />
-          <div className="flex-1">
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-              {isMalayalam ? "ഹസ്തലിഖിത സ്രോതസ്സ്" : "Manuscript Source"}
-            </p>
-            {planetRules?.manuscript_verified ? (
-              <>
-                <p className="font-inter text-[9px] text-white/80 mb-1">
-                  {planetRules?.source}
-                </p>
-                <p className="font-inter text-[8px]" style={{ color: "rgba(34,197,94,0.70)" }}>
-                  ✓ {isMalayalam ? "ഹസ്തലിഖിതത്തിൽ നിന്ന്" : "From uploaded manuscripts"}
-                </p>
-              </>
-            ) : (
-              <p className="font-inter text-[9px]" style={{ color: "#fbbf24" }}>
-                {isMalayalam ? "ഹസ്തലിഖിതങ്ങളിൽ കാണുന്നില്ല" : "Not found in uploaded manuscripts"}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

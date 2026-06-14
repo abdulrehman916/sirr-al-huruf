@@ -1,0 +1,351 @@
+/**
+ * EXPANDED PLANETARY HOUR CARD
+ * Displays comprehensive planetary hour data including:
+ * - Hour number, start/end times, ruling planet
+ * - Element, status (Sa'd/Nahs)
+ * - Planet friends (Mithram), enemies (Shathru), neutral
+ * - Actions strengthened/weakened
+ * - Suitable/unsuitable operations from manuscripts
+ * - Full manuscript source citation
+ */
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, ChevronUp, Users, Sword, Shield, CheckCircle, XCircle, Book } from "lucide-react";
+import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
+import { getPlanetFriendships } from "@/lib/astroClockPlanetFriendships.js";
+
+const G = {
+  border: "rgba(212,175,55,0.40)",
+  borderHi: "rgba(212,175,55,0.65)",
+  glow: "rgba(212,175,55,0.22)",
+  text: "#F5D060",
+  dim: "rgba(212,175,55,0.55)",
+  faint: "rgba(212,175,55,0.22)",
+  bg: "rgba(212,175,55,0.07)",
+  bgHi: "rgba(212,175,55,0.14)",
+  excellent: "rgba(34,197,94,0.15)",
+  excellentBorder: "rgba(34,197,94,0.60)",
+  avoid: "rgba(239,68,68,0.15)",
+  avoidBorder: "rgba(239,68,68,0.60)"
+};
+
+export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
+  const [expanded, setExpanded] = useState(false);
+  const planetRules = getPlanetHourRules(hour.planet);
+  const friendships = getPlanetFriendships(hour.planet);
+  const isSaad = planetRules?.nature?.includes("Sa'd");
+
+  return (
+    <div className="rounded-xl border p-5 mb-4"
+      style={{
+        background: G.bg,
+        borderColor: G.border,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
+      }}>
+      {/* Header: Basic Info */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{hour.planetInfo?.symbol}</span>
+          <div>
+            <p className="font-amiri text-2xl font-bold" style={{ color: G.text }}>
+              {hour.planetInfo?.name_ar}
+            </p>
+            <p className="font-malayalam-md font-bold text-white">
+              {isMalayalam ? hour.planetInfo?.name_ml_equivalent : hour.planetInfo?.name_en}
+            </p>
+            <p className="font-inter text-[9px]" style={{ color: G.dim }}>
+              {isMalayalam ? `മണിക്കൂർ ${hour.hourNumber}` : `Hour ${hour.hourNumber}`}
+            </p>
+          </div>
+        </div>
+        
+        <div className="text-right">
+          <p className="font-malayalam-sm text-white/90 font-bold">
+            {hour.startTime} → {hour.endTime}
+          </p>
+          <p className="font-malayalam-sm" style={{ color: G.dim }}>
+            {hour.duration}
+          </p>
+        </div>
+      </div>
+
+      {/* Quick Info: Status & Element */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <InfoCard
+          label={isMalayalam ? "സ്ഥിതി" : "Status"}
+          value={isMalayalam ? planetRules?.nature_ml : planetRules?.nature}
+          color={isSaad ? "#22c55e" : "#ef4444"}
+          bg={isSaad ? G.excellent : G.avoid}
+          border={isSaad ? G.excellentBorder : G.avoidBorder}
+        />
+        <InfoCard
+          label={isMalayalam ? "മൂലകം" : "Element"}
+          value={isMalayalam ? planetRules?.element_ml : planetRules?.element}
+          color={G.text}
+          bg={G.bgHi}
+          border={G.border}
+        />
+      </div>
+
+      {/* Expand Button */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full py-3 rounded-lg border flex items-center justify-center gap-2 transition-all"
+        style={{
+          background: expanded ? G.bgHi : G.bg,
+          borderColor: G.border,
+          color: G.text
+        }}>
+        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        <span className="font-inter text-[9px] uppercase tracking-widest">
+          {expanded 
+            ? (isMalayalam ? "കുറയ്ക്കുക" : "Show Less") 
+            : (isMalayalam ? "വിപുലീകരിക്കുക" : "Show Details")}
+        </span>
+      </button>
+
+      {/* Expanded Content */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="pt-4 space-y-4">
+              {/* Planet Friendships */}
+              <PlanetFriendshipsSection friendships={friendships} isMalayalam={isMalayalam} />
+              
+              {/* Actions Strengthened/Weakened */}
+              <ActionsSection planetRules={planetRules} isMalayalam={isMalayalam} />
+              
+              {/* Suitable/Unsuitable Operations */}
+              <OperationsSection planetRules={planetRules} isMalayalam={isMalayalam} />
+              
+              {/* Manuscript Source */}
+              <ManuscriptSourceSection planetRules={planetRules} isMalayalam={isMalayalam} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function InfoCard({ label, value, color, bg, border }) {
+  return (
+    <div className="p-3 rounded-lg border text-center" style={{ background: bg, borderColor: border }}>
+      <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: color }}>{label}</p>
+      <p className="font-malayalam-md font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function PlanetFriendshipsSection({ friendships, isMalayalam }) {
+  if (!friendships.found) {
+    return (
+      <div className="p-4 rounded-lg border text-center" style={{ background: G.bg, borderColor: G.faint }}>
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+          {isMalayalam ? "ഗ്രഹ ബന്ധങ്ങൾ" : "Planet Friendships"}
+        </p>
+        <p className="font-malayalam-sm text-white/60">
+          {isMalayalam ? friendships.message : friendships.message}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 rounded-lg border" style={{ background: G.bgHi, borderColor: G.border }}>
+      <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.text }}>
+        {isMalayalam ? "ഗ്രഹ ബന്ധങ്ങൾ" : "Planet Relationships"}
+      </p>
+      
+      <div className="grid md:grid-cols-3 gap-3">
+        {/* Friends */}
+        <div className="p-3 rounded-lg" style={{ background: G.excellent, border: `1px solid ${G.excellentBorder}` }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="w-4 h-4" style={{ color: "#22c55e" }} />
+            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
+              {isMalayalam ? "മിത്രങ്ങൾ" : "Friends (Mithram)"}
+            </p>
+          </div>
+          <p className="font-malayalam-sm text-white/80">
+            {friendships.friends?.join(", ") || "None specified"}
+          </p>
+        </div>
+        
+        {/* Enemies */}
+        <div className="p-3 rounded-lg" style={{ background: G.avoid, border: `1px solid ${G.avoidBorder}` }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Sword className="w-4 h-4" style={{ color: "#ef4444" }} />
+            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
+              {isMalayalam ? "ശത്രുക്കൾ" : "Enemies (Shathru)"}
+            </p>
+          </div>
+          <p className="font-malayalam-sm text-white/80">
+            {friendships.enemies?.join(", ") || "None specified"}
+          </p>
+        </div>
+        
+        {/* Neutral */}
+        <div className="p-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="w-4 h-4" style={{ color: G.text }} />
+            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.text }}>
+              {isMalayalam ? "സമം" : "Neutral"}
+            </p>
+          </div>
+          <p className="font-malayalam-sm text-white/80">
+            {friendships.neutral?.join(", ") || "None specified"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActionsSection({ planetRules, isMalayalam }) {
+  return (
+    <div className="grid md:grid-cols-2 gap-3">
+      <div className="p-4 rounded-lg border" style={{ background: G.excellent, borderColor: G.excellentBorder }}>
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle className="w-4 h-4" style={{ color: "#22c55e" }} />
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
+            {isMalayalam ? "ശക്തിപ്പെടുത്തുന്ന പ്രവർത്തനങ്ങൾ" : "Actions Strengthened"}
+          </p>
+        </div>
+        <div className="space-y-1">
+          {(isMalayalam ? planetRules?.strengthenedActions?.ml : planetRules?.strengthenedActions?.en || []).map((action, idx) => (
+            <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#22c55e" }} />
+              {action}
+            </p>
+          ))}
+          {(!planetRules?.strengthenedActions || (isMalayalam ? !planetRules.strengthenedActions.ml : !planetRules.strengthenedActions.en)) && (
+            <p className="font-malayalam-sm text-white/60">
+              {isMalayalam ? "ഹസ്തലിഖിതങ്ങളിൽ കാണുന്നില്ല" : "Not found in uploaded manuscripts"}
+            </p>
+          )}
+        </div>
+      </div>
+      
+      <div className="p-4 rounded-lg border" style={{ background: G.avoid, borderColor: G.avoidBorder }}>
+        <div className="flex items-center gap-2 mb-3">
+          <XCircle className="w-4 h-4" style={{ color: "#ef4444" }} />
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
+            {isMalayalam ? "ക്ഷീണിപ്പിക്കുന്ന പ്രവർത്തനങ്ങൾ" : "Actions Weakened"}
+          </p>
+        </div>
+        <div className="space-y-1">
+          {(isMalayalam ? planetRules?.weakenedActions?.ml : planetRules?.weakenedActions?.en || []).map((action, idx) => (
+            <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
+              {action}
+            </p>
+          ))}
+          {(!planetRules?.weakenedActions || (isMalayalam ? !planetRules.weakenedActions.ml : !planetRules.weakenedActions.en)) && (
+            <p className="font-malayalam-sm text-white/60">
+              {isMalayalam ? "ഹസ്തലിഖിതങ്ങളിൽ കാണുന്നില്ല" : "Not found in uploaded manuscripts"}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OperationsSection({ planetRules, isMalayalam }) {
+  const suitableActions = isMalayalam ? planetRules?.suitableActions?.ml : planetRules?.suitableActions?.en;
+  const unsuitableActions = isMalayalam ? planetRules?.unsuitableActions?.ml : planetRules?.unsuitableActions?.en;
+
+  return (
+    <div className="grid md:grid-cols-2 gap-3">
+      <div className="p-4 rounded-lg border" style={{ background: "rgba(34,197,94,0.05)", borderColor: "rgba(34,197,94,0.30)" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle className="w-4 h-4" style={{ color: "#22c55e" }} />
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
+            {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Suitable Operations"}
+          </p>
+        </div>
+        <div className="space-y-1">
+          {(suitableActions || []).map((action, idx) => (
+            <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#22c55e" }} />
+              {action}
+            </p>
+          ))}
+          {(!suitableActions || suitableActions.length === 0) && (
+            <p className="font-malayalam-sm text-white/60">
+              {isMalayalam ? "ഹസ്തലിഖിതങ്ങളിൽ കാണുന്നില്ല" : "Not found in uploaded manuscripts"}
+            </p>
+          )}
+        </div>
+      </div>
+      
+      <div className="p-4 rounded-lg border" style={{ background: "rgba(239,68,68,0.05)", borderColor: "rgba(239,68,68,0.30)" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <XCircle className="w-4 h-4" style={{ color: "#ef4444" }} />
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
+            {isMalayalam ? "അനുചിത പ്രവർത്തനങ്ങൾ" : "Unsuitable Operations"}
+          </p>
+        </div>
+        <div className="space-y-1">
+          {(unsuitableActions || []).map((action, idx) => (
+            <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
+              {action}
+            </p>
+          ))}
+          {(!unsuitableActions || unsuitableActions.length === 0) && (
+            <p className="font-malayalam-sm text-white/60">
+              {isMalayalam ? "ഹസ്തലിഖിതങ്ങളിൽ കാണുന്നില്ല" : "Not found in uploaded manuscripts"}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ManuscriptSourceSection({ planetRules, isMalayalam }) {
+  return (
+    <div className="p-4 rounded-lg border" style={{ 
+      background: "rgba(212,175,55,0.04)",
+      borderColor: planetRules?.manuscript_verified ? "rgba(34,197,94,0.40)" : "rgba(251,191,36,0.40)"
+    }}>
+      <div className="flex items-start gap-3">
+        <Book className="w-5 h-5 mt-0.5" style={{ color: G.text }} />
+        <div className="flex-1">
+          <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.text }}>
+            {isMalayalam ? "ഹസ്തലിഖിത സ്രോതസ്സ്" : "Manuscript Source"}
+          </p>
+          {planetRules?.manuscript_verified ? (
+            <>
+              <div className="space-y-1">
+                <p className="font-malayalam-sm text-white/80">
+                  <span className="font-bold">{isMalayalam ? "പുസ്തകം:" : "Book:"}</span> {planetRules.source?.split(',')[0]}
+                </p>
+                <p className="font-malayalam-sm text-white/80">
+                  <span className="font-bold">{isMalayalam ? "പേജുകൾ:" : "Pages:"}</span> {planetRules.pdf_pages}
+                </p>
+                <p className="font-malayalam-sm text-white/80">
+                  <span className="font-bold">{isMalayalam ? "PDF ഐഡി:" : "PDF ID:"}</span> {planetRules.pdf_id}
+                </p>
+              </div>
+              <p className="font-inter text-[8px] mt-3" style={{ color: "rgba(34,197,94,0.70)" }}>
+                ✓ {isMalayalam ? "ഹസ്തലിഖിതത്തിൽ നിന്ന്" : "From uploaded manuscripts"}
+              </p>
+            </>
+          ) : (
+            <p className="font-malayalam-sm text-white/60">
+              {isMalayalam ? "ഹസ്തലിഖിതങ്ങളിൽ കാണുന്നില്ല" : "Not found in uploaded manuscripts"}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
