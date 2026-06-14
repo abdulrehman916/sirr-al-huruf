@@ -95,29 +95,27 @@ export default function IncenseAdvisor() {
                 borderColor: G.faint
               }}
             >
-              {/* Planet Name & Symbol */}
-              <div className="flex items-start justify-between mb-3 pb-2 border-b" style={{ borderColor: G.faint }}>
-                <div>
-                  <p className="font-inter text-sm font-bold text-white">
-                    {planet[isMalayalam ? "name_ml" : "name_en"]}
-                  </p>
-                  <p className="font-amiri text-xs" style={{ color: G.dim }}>
-                    {planet[isMalayalam ? "name_ar" : "name_en"]}
-                  </p>
-                </div>
+              {/* Planet Name & Symbol - Arabic Display Rule */}
+              <div className="text-center mb-4 pb-3 border-b" style={{ borderColor: G.faint }}>
+                <p className="font-amiri text-4xl md:text-5xl font-bold mb-2 leading-relaxed" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>
+                  {planet[isMalayalam ? "name_ar" : "name_ar"]}
+                </p>
+                <p className="font-inter text-lg md:text-xl font-bold text-white/95">
+                  {planet[isMalayalam ? "name_ml" : "name_en"]}
+                </p>
               </div>
 
-              {/* Incense Name */}
-              <div className="mb-4 p-4 rounded-lg bg-black/30" style={{ border: `1px solid ${G.faint}` }}>
+              {/* Incense Name - Arabic Display Rule */}
+              <div className="mb-4 p-4 rounded-lg bg-black/30 border" style={{ borderColor: G.faint }}>
                 <p className="font-inter text-[9px] uppercase tracking-widest mb-2 text-center" style={{ color: G.dim }}>
                   {isMalayalam ? "സുഗന്ധം (Buhur)" : "Incense (Buhur)"}
                 </p>
                 {planet.incense_ar && (
-                  <p className="font-amiri text-4xl md:text-5xl text-center font-bold mb-3 leading-relaxed" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.3)" }}>
+                  <p className="font-amiri text-3xl md:text-4xl text-center font-bold mb-2 leading-relaxed" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>
                     {planet.incense_ar}
                   </p>
                 )}
-                <p className="font-inter text-lg md:text-xl text-center font-bold text-white/95">
+                <p className="font-inter text-base md:text-lg text-center text-white/90">
                   {planet[isMalayalam ? "incense_ml" : "incense_en"]}
                 </p>
               </div>
@@ -164,30 +162,27 @@ export default function IncenseAdvisor() {
                 borderColor: G.faint
               }}
             >
-              {/* Zodiac Name */}
-              <div className="mb-4 p-4 rounded-lg bg-black/30" style={{ border: `1px solid ${G.faint}` }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-2 text-center" style={{ color: G.dim }}>
-                  {isMalayalam ? "രാശി" : "Zodiac Sign"}
-                </p>
-                <p className="font-inter text-xl md:text-2xl text-center font-bold text-white/95">
+              {/* Zodiac Name - Arabic Display Rule */}
+              <div className="text-center mb-4 pb-3 border-b" style={{ borderColor: G.faint }}>
+                <p className="font-inter text-lg md:text-xl font-bold text-white/95">
                   {zodiac[isMalayalam ? "name_ml" : "name_en"]}
                 </p>
-                <p className="font-inter text-sm text-center text-white/60 mt-1">
+                <p className="font-inter text-xs text-white/60 mt-1">
                   ({zodiac.name_tr})
                 </p>
               </div>
 
-              {/* Incense */}
-              <div className="mb-4 p-4 rounded-lg bg-black/30" style={{ border: `1px solid ${G.faint}` }}>
+              {/* Incense - Arabic Display Rule */}
+              <div className="mb-4 p-4 rounded-lg bg-black/30 border" style={{ borderColor: G.faint }}>
                 <p className="font-inter text-[9px] uppercase tracking-widest mb-2 text-center" style={{ color: G.dim }}>
                   {isMalayalam ? "സുഗന്ധം (Buhur)" : "Incense (Buhur)"}
                 </p>
                 {zodiac.incense_ar && (
-                  <p className="font-amiri text-4xl md:text-5xl text-center font-bold mb-3 leading-relaxed" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.3)" }}>
+                  <p className="font-amiri text-3xl md:text-4xl text-center font-bold mb-2 leading-relaxed" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>
                     {zodiac.incense_ar}
                   </p>
                 )}
-                <p className="font-inter text-lg md:text-xl text-center font-bold text-white/95">
+                <p className="font-inter text-base md:text-lg text-center text-white/90">
                   {zodiac[isMalayalam ? "incense_ml" : "incense_en"]}
                 </p>
               </div>
