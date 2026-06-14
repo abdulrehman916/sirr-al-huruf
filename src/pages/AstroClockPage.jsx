@@ -27,6 +27,7 @@ import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.
 import TraditionalMoonTransitForecast from "../components/astroclock/TraditionalMoonTransitForecast.jsx";
 import BuhurReference from "../components/astroclock/BuhurReference.jsx";
 import PlanetaryHourVerification from "../components/astroclock/PlanetaryHourVerification.jsx";
+import PlanetaryHourBookView from "../components/astroclock/PlanetaryHourBookView.jsx";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 
 function LanguageToggle() {
@@ -135,6 +136,9 @@ function AstroClockContent() {
 
         {/* SECTION 16: Planetary Hour Verification */}
         <PlanetaryHourVerification />
+
+        {/* SECTION 17: Planetary Hour Book View — Complete 24-Hour Sequence */}
+        <PlanetaryHourBookView />
 
         {/* Framework Notice */}
         <motion.div
