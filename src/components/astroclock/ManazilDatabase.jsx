@@ -9,7 +9,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, ChevronDown } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import { AY_MANAZILLERI } from "@/lib/astroClockData.js";
+import { LUNAR_MANSION_DATA } from "@/lib/astroClockLunarMansionML.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -22,28 +22,15 @@ const G = {
   mixed: "rgba(255,193,7,0.70)"
 };
 
-const ZODIAC_ML = {
-    "Koç": "മേഷം",
-    "Boğa": "ഇടവം",
-    "İkizler": "മിഥുനം",
-    "Yengeç": "കർക്കിടകം",
-    "Arslan": "ചിങ്ങം",
-    "Başak": "കന്നി",
-    "Terazi": "തുലാം",
-    "Akrep": "വൃശ്ചികം",
-    "Yay": "ധനു",
-    "Oğlak": "മകരം",
-    "Kova": "കുംഭം",
-    "Balık": "മീനം"
-};
+
 
 export default function ManazilDatabase() {
   const { isMalayalam } = useAstroClockLanguage();
   const [expandedManzil, setExpandedManzil] = useState(null);
 
-  const getClassificationColor = (classification) => {
-    if (classification.includes("Saad")) return G.saad;
-    if (classification.includes("Nahs")) return G.nahs;
+  const getClassificationColor = (nature) => {
+    if (nature === "Saad") return G.saad;
+    if (nature === "Nahs") return G.nahs;
     return G.mixed;
   };
 
@@ -67,35 +54,35 @@ export default function ManazilDatabase() {
         </div>
 
         <div className="space-y-2">
-            {(AY_MANAZILLERI || []).map((manzil) => (
-                <div key={manzil.no} className="rounded-lg border" style={{borderColor: G.faint, background: G.bg}}>
+            {(LUNAR_MANSION_DATA || []).map((manzil) => (
+                <div key={manzil.number} className="rounded-lg border" style={{borderColor: G.faint, background: G.bg}}>
                     <button 
-                        onClick={() => setExpandedManzil(expandedManzil === manzil.no ? null : manzil.no)}
+                        onClick={() => setExpandedManzil(expandedManzil === manzil.number ? null : manzil.number)}
                         className="w-full p-4 flex items-center justify-between text-left"
                     >
                         <div className="flex items-center gap-4">
                             <span className="font-inter font-bold text-base text-white/90 w-8 h-8 flex items-center justify-center rounded-full" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
-                              {manzil.no}
+                              {manzil.number}
                             </span>
-                            <div style={{width: '4px', height: '32px', borderRadius: '2px', background: getClassificationColor(manzil.genel_hukum)}}></div>
+                            <div style={{width: '4px', height: '32px', borderRadius: '2px', background: getClassificationColor(manzil.nature)}}></div>
                             <div>
-                                <p className="font-amiri font-bold text-4xl md:text-5xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}}>{manzil.name}</p>
-                                <p className="font-inter text-base font-semibold text-white/90 mt-1">{isMalayalam ? ZODIAC_ML[manzil.zodiac_sign] : manzil.zodiac_sign}</p>
+                                <p className="font-amiri font-bold text-4xl md:text-5xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}}>{manzil.name_en}</p>
+                                <p className="font-inter text-base font-semibold text-white/90 mt-1">{isMalayalam ? manzil.zodiac_sign_ml : manzil.zodiac_sign}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="text-right">
-                                <p className="font-amiri text-4xl md:text-5xl text-white/95 leading-relaxed" style={{ textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{manzil.harf_arabic}</p>
+                                <p className="font-amiri text-4xl md:text-5xl text-white/95 leading-relaxed" style={{ textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{manzil.name_arabic}</p>
                             </div>
                             <ChevronDown 
                                 className="w-6 h-6 text-gold transition-transform"
-                                style={{transform: expandedManzil === manzil.no ? 'rotate(180deg)' : 'rotate(0deg)'}}
+                                style={{transform: expandedManzil === manzil.number ? 'rotate(180deg)' : 'rotate(0deg)'}}
                             />
                         </div>
                     </button>
 
                     <AnimatePresence>
-                    {expandedManzil === manzil.no && (
+                    {expandedManzil === manzil.number && (
                         <motion.div
                             initial={{height: 0, opacity: 0}}
                             animate={{height: 'auto', opacity: 1}}
@@ -103,13 +90,14 @@ export default function ManazilDatabase() {
                             className="overflow-hidden"
                         >
                             <div className="p-4 border-t space-y-3" style={{borderColor: G.faint}}>
-                                <p className="font-inter text-xs font-bold uppercase tracking-wider" style={{color: getClassificationColor(manzil.genel_hukum)}}>
-                                    {isMalayalam ? (manzil.genel_hukum.includes("Saad") ? "ശുഭകരം" : manzil.genel_hukum.includes("Nahs") ? "അശുഭകരം" : "മിശ്രിതം") : manzil.genel_hukum}
+                                <p className="font-inter text-xs font-bold uppercase tracking-wider" style={{color: getClassificationColor(manzil.nature)}}>
+                                    {isMalayalam ? manzil.nature_ml : manzil.nature}
                                 </p>
-                                <p className="font-inter text-sm text-white/80">
-                                    {isMalayalam ? manzil.operations.map(op => `• ${op}`).join('\n').replace(/,/g, ', ') : manzil.operations.map(op => `• ${op}`).join('\n')}
-                                </p>
-                                {manzil.note && <p className="text-xs text-white/50 pt-2 border-t border-white/10"><i>{isMalayalam ? manzil.note.replace("için", "-നു വേണ്ടി") : manzil.note}</i></p>}
+                                <div className="space-y-1">
+                                    {(isMalayalam ? manzil.operations_ml : manzil.operations).map((op, idx) => (
+                                        <p key={idx} className="font-inter text-sm text-white/80">• {op}</p>
+                                    ))}
+                                </div>
                             </div>
                         </motion.div>
                     )}

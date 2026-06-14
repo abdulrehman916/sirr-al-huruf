@@ -1318,13 +1318,15 @@ export const HAVASS_HAZIRLIK_KURALLARI = {
 export const LUNAR_MANSION_DATA = AY_MANAZILLERI.map(mansion => ({
   number: mansion.no,
   name_en: mansion.name,
-  name_ml: mansion.name, // Malayalam uses same name for now
+  name_ml: mansion.name,
   name_arabic: mansion.harfi,
   nature: mansion.genel_hukum === "Uygun (Saad)" ? "Saad" : mansion.genel_hukum === "Uğursuz (Nahs)" ? "Nahs" : "Mixed",
   nature_ml: mansion.genel_hukum === "Uygun (Saad)" ? "ഉത്തമം" : mansion.genel_hukum === "Uğursuz (Nahs)" ? "അനുചിതം" : "മിശ്രം",
   zodiac_sign: mansion.zodiac_sign,
+  zodiac_sign_ml: mansion.zodiac_sign,
   zodiac_degree: mansion.zodiac_degree,
-  operations: mansion.operations
+  operations: mansion.operations,
+  operations_ml: mansion.operations
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────
