@@ -1,56 +1,65 @@
-// ═══════════════════════════════════════════════════
-// ASTRO CLOCK PAGE
-// Completely independent module. No shared logic.
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// ASTRO CLOCK PAGE — COMPREHENSIVE TRADITIONAL SYSTEM
+// 9 Sections: Day Analysis, Planetary Hours, Moon Status, Manazil, Planets, Timing Advisor
+// Astro Clock module only — completely isolated
+// ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
-import LiveAstroClock from "../components/astroclock/LiveAstroClock";
-import PlanetaryHourTable from "../components/astroclock/PlanetaryHourTable";
-import LiveMoonCenter from "../components/astroclock/LiveMoonCenter";
-import LivePlanetCenter from "../components/astroclock/LivePlanetCenter";
-import DayAnalysisPanel from "../components/astroclock/DayAnalysisPanel";
-import LunarMansionsPanel from "../components/astroclock/LunarMansionsPanel";
-import AdvancedTimingAdvisor from "../components/astroclock/AdvancedTimingAdvisor";
-import AsteroidKnowledgeSummary from "../components/astroclock/AsteroidKnowledgeSummary";
+import { AstroClockLanguageProvider, useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
+import LiveDayAnalysis from "../components/astroclock/LiveDayAnalysis";
+import DaytimePlanetaryHours from "../components/astroclock/DaytimePlanetaryHours";
+import NighttimePlanetaryHours from "../components/astroclock/NighttimePlanetaryHours";
+import LiveMoonStatus from "../components/astroclock/LiveMoonStatus";
+import ManazilDatabase from "../components/astroclock/ManazilDatabase";
+import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
 import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
-import { AstroClockLanguageProvider } from "@/lib/astroClockLanguageContext.jsx";
-import { ASTRO_CLOCK_ENGINE_STATUS } from "../lib/astroClockEngine";
-import { usePageState } from "../context/PageStateContext";
+import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 
-const PAGE_KEY = 'astro-clock';
+function LanguageToggle() {
+  const { t, toggleLanguage } = useAstroClockLanguage();
 
-export default function AstroClockPage() {
-  const { getPageState, setPageState } = usePageState();
-  const initialState = getPageState(PAGE_KEY, { initialized: true });
+  return (
+    <button
+      onClick={toggleLanguage}
+      className="px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all"
+      style={{
+        background: "rgba(212,175,55,0.10)",
+        color: "#F5D060",
+        borderColor: "rgba(212,175,55,0.40)"
+      }}
+    >
+      {t.toggle}
+    </button>
+  );
+}
 
-  const [engineStatus, setEngineStatus] = useState(null);
-
-  useEffect(() => {
-    setPageState(PAGE_KEY, { ...initialState, lastVisited: new Date().toISOString() });
-    setEngineStatus(ASTRO_CLOCK_ENGINE_STATUS);
-  }, [setPageState]);
+function AstroClockContent() {
+  const { isMalayalam } = useAstroClockLanguage();
+  const [engineStatus, setEngineStatus] = useState(ASTRO_CLOCK_LIVE_ENGINE_STATUS);
 
   return (
     <PageLayout>
-      <div className="space-y-4">
+      <div className="space-y-6 pb-8">
 
-        {/* Header */}
-        <PageTitle
-          arabic="الساعة الفلكية"
-          latin="Astro Clock"
-          subtitle="Astrological Timing Framework"
-          icon="🕰"
-        />
+        {/* Header with Language Toggle */}
+        <div className="flex items-center justify-between mb-6">
+          <PageTitle
+            arabic="الساعة الفلكية"
+            latin="Astro Clock"
+            subtitle="Traditional Ilm al-Huruf Timing System"
+            icon="🕰"
+          />
+          <LanguageToggle />
+        </div>
 
         {/* Engine Status */}
         {engineStatus && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
             className="rounded-xl border p-3 text-center"
             style={{
               background: "rgba(212,175,55,0.04)",
@@ -63,34 +72,26 @@ export default function AstroClockPage() {
           </motion.div>
         )}
 
-        {/* SECTION 1: Live Astro Clock */}
-        <LiveAstroClock />
+        {/* SECTION 1: Live Day Analysis */}
+        <LiveDayAnalysis />
 
-        {/* SECTION 2 & 3: Planetary Hours (Day + Night) */}
-        <PlanetaryHourTable />
+        {/* SECTION 2: Daytime 12 Hours */}
+        <DaytimePlanetaryHours />
 
-        {/* SECTION 4: Live Moon Center */}
-        <LiveMoonCenter />
+        {/* SECTION 3: Nighttime 12 Hours */}
+        <NighttimePlanetaryHours />
 
-        {/* SECTION 5: Live Planet Center */}
-        <LivePlanetCenter />
+        {/* SECTION 4: Live Moon Status */}
+        <LiveMoonStatus />
 
-        {/* SECTION 6: Day Analysis */}
-        <DayAnalysisPanel />
+        {/* SECTION 5: Manazil Database */}
+        <ManazilDatabase />
 
-        {/* SECTION 7: Lunar Mansions */}
-        <LunarMansionsPanel />
+        {/* SECTION 6: Planet Knowledge Panels */}
+        <PlanetKnowledgePanels />
 
-        {/* SECTION 8: Advanced Timing Advisor */}
-        <AdvancedTimingAdvisor />
-
-        {/* SECTION 9: Action Timing Advisor */}
-        <AstroClockLanguageProvider>
-          <ActionTimingAdvisor />
-        </AstroClockLanguageProvider>
-
-        {/* Asteroid Knowledge Summary */}
-        <AsteroidKnowledgeSummary />
+        {/* SECTION 7: Action Timing Advisor */}
+        <ActionTimingAdvisor />
 
         {/* Framework Notice */}
         <motion.div
@@ -105,17 +106,29 @@ export default function AstroClockPage() {
           }}
         >
           <p className="font-inter text-[9px] uppercase tracking-[0.22em] mb-3" style={{ color: "rgba(212,175,55,0.55)" }}>
-            ✦ Framework Ready
+            ✦ Traditional System Ready
           </p>
           <p className="font-inter text-sm mb-2" style={{ color: "rgba(255,255,255,0.60)" }}>
-            Astro Clock module initialized successfully.
+            {isMalayalam 
+              ? "സമ്പൂർണ്ണ പാരമ്പര്യ ഇൽം അൽ-ഹുറൂഫ് / മൻസിൽ / സഅത്ത് സമയക്രമം സജ്ജമാക്കി" 
+              : "Complete traditional Ilm al-Huruf / Manazil / Sa'at timing system initialized"}
           </p>
           <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
-            PDF-based calculations, planetary hours, and celestial rules will be added from manuscript sources.
+            {isMalayalam
+              ? "ഗ്രന്ഥങ്ങളിൽ നിന്നുള്ള കൃത്യമായ കണക്കുകൂട്ടലുകൾ, ഗ്രഹ മണിക്കൂറുകൾ, ചാന്ദ്ര നക്ഷത്ര നിയമങ്ങൾ എന്നിവ ചേർക്കും"
+              : "PDF-based calculations, planetary hours, and lunar mansion rules will be added from manuscript sources"}
           </p>
         </motion.div>
 
       </div>
     </PageLayout>
+  );
+}
+
+export default function AstroClockPage() {
+  return (
+    <AstroClockLanguageProvider>
+      <AstroClockContent />
+    </AstroClockLanguageProvider>
   );
 }
