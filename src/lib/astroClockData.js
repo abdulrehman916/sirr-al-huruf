@@ -321,6 +321,7 @@ export const AY_MANAZILLERI = [
   {
     no: 1,
     name: "ŞARTEYN",
+    name_arabic: "الشرطان",
     harfi: "അലിഫ്",
     harf_arabic: "ا",
     baslama_siniri: "Koç burcunun 25. Derecesi",
@@ -338,6 +339,7 @@ export const AY_MANAZILLERI = [
   {
     no: 2,
     name: "BUTEYN",
+    name_arabic: "البطين",
     harfi: "ബാ",
     harf_arabic: "ب",
     baslama_siniri: "Boğa burcunun 8. Derecesi",
@@ -360,6 +362,7 @@ export const AY_MANAZILLERI = [
   {
     no: 3,
     name: "SÜREYYA",
+    name_arabic: "الثريا",
     harfi: "ജീം",
     harf_arabic: "ج",
     baslama_siniri: "Boğa burcunun 21. Derecesi",
@@ -379,6 +382,7 @@ export const AY_MANAZILLERI = [
   {
     no: 4,
     name: "DÜBRAN",
+    name_arabic: "الدبران",
     harfi: "ദാൽ",
     harf_arabic: "د",
     baslama_siniri: "İkizler burcunun 3. Derecesi",
@@ -402,6 +406,7 @@ export const AY_MANAZILLERI = [
   {
     no: 5,
     name: "HAK'A",
+    name_arabic: "الهقعة",
     harfi: "ഹാ",
     harf_arabic: "ه",
     baslama_siniri: "İkizler burcunun 16. Derecesi",
@@ -426,6 +431,7 @@ export const AY_MANAZILLERI = [
   {
     no: 6,
     name: "HENA",
+    name_arabic: "الهنعة",
     harfi: "വാവ്",
     harf_arabic: "و",
     baslama_siniri: "İkizler burcunun 29. Derecesi",
@@ -452,6 +458,7 @@ export const AY_MANAZILLERI = [
   {
     no: 7,
     name: "ZİRA",
+    name_arabic: "الذراع",
     harfi: "സായി",
     harf_arabic: "ز",
     baslama_siniri: "Yengeç burcunun 12. Derecesi",
@@ -471,6 +478,7 @@ export const AY_MANAZILLERI = [
   {
     no: 8,
     name: "NESRE",
+    name_arabic: "النثرة",
     harfi: "ഹാ",
     harf_arabic: "ح",
     baslama_siniri: "Yengeç burcunun 25. Derecesi",
@@ -492,6 +500,7 @@ export const AY_MANAZILLERI = [
   {
     no: 9,
     name: "TARFA",
+    name_arabic: "الطرف",
     harfi: "ത്വാ",
     harf_arabic: "ط",
     baslama_siniri: "Arslan burcunun 8. Derecesi",
@@ -511,6 +520,7 @@ export const AY_MANAZILLERI = [
   {
     no: 10,
     name: "CEPHE",
+    name_arabic: "الجبهة",
     harfi: "യാ",
     harf_arabic: "ي",
     baslama_siniri: "Arslan burcunun 21. Derecesi",
@@ -529,6 +539,7 @@ export const AY_MANAZILLERI = [
   {
     no: 11,
     name: "ZEBRA",
+    name_arabic: "الزبرة",
     harfi: "കാഫ്",
     harf_arabic: "ك",
     baslama_siniri: "Başak burcunun 3. Derecesi",
@@ -548,6 +559,7 @@ export const AY_MANAZILLERI = [
   {
     no: 12,
     name: "SURFA",
+    name_arabic: "الصرفة",
     harfi: "ലാം",
     harf_arabic: "ل",
     baslama_siniri: "Başak burcunun 16. Derecesi",
@@ -563,6 +575,7 @@ export const AY_MANAZILLERI = [
   {
     no: 13,
     name: "AVA",
+    name_arabic: "العواء",
     harfi: "മീം",
     harf_arabic: "م",
     baslama_siniri: "Başak burcunun 29. Derecesi",
@@ -584,6 +597,7 @@ export const AY_MANAZILLERI = [
   {
     no: 14,
     name: "SEMMAK",
+    name_arabic: "السماك",
     harfi: "നൂൻ",
     harf_arabic: "ن",
     baslama_siniri: "Terazi burcunun 12. Derecesi",
@@ -607,6 +621,7 @@ export const AY_MANAZILLERI = [
   {
     no: 15,
     name: "GUFUR",
+    name_arabic: "الغفر",
     harfi: "സീൻ",
     harf_arabic: "س",
     baslama_siniri: "Terazi burcunun 25. Derecesi",
@@ -627,6 +642,7 @@ export const AY_MANAZILLERI = [
   {
     no: 16,
     name: "ZİBANA",
+    name_arabic: "الزبانا",
     harfi: "ഐൻ",
     harf_arabic: "ع",
     baslama_siniri: "Akrep burcunun 8. Derecesi",
@@ -645,6 +661,7 @@ export const AY_MANAZILLERI = [
   {
     no: 17,
     name: "İKLİL",
+    name_arabic: "الإكليل",
     harfi: "ഫാ",
     harf_arabic: "ف",
     baslama_siniri: "Akrep burcunun 21. Derecesi",
@@ -664,6 +681,7 @@ export const AY_MANAZILLERI = [
   {
     no: 18,
     name: "KÂLP",
+    name_arabic: "القلب",
     harfi: "സ്വാദ്",
     harf_arabic: "ص",
     baslama_siniri: "Yay burcunun 3. Derecesi",
@@ -684,6 +702,7 @@ export const AY_MANAZILLERI = [
   {
     no: 19,
     name: "ŞEVLE",
+    name_arabic: "الشولة",
     harfi: "ഖാഫ്",
     harf_arabic: "ق",
     baslama_siniri: "Yay burcunun 16. Derecesi",
@@ -700,6 +719,7 @@ export const AY_MANAZILLERI = [
   {
     no: 20,
     name: "NEAİM",
+    name_arabic: "النعائم",
     harfi: "റാ",
     harf_arabic: "ر",
     baslama_siniri: "Yay burcunun 29. Derecesi",
@@ -720,6 +740,7 @@ export const AY_MANAZILLERI = [
   {
     no: 21,
     name: "BELDE",
+    name_arabic: "البلدة",
     harfi: "ഷീൻ",
     harf_arabic: "ش",
     baslama_siniri: "Oğlak burcunun 12. Derecesi",
@@ -741,6 +762,7 @@ export const AY_MANAZILLERI = [
   {
     no: 22,
     name: "SAADÜZZABİH",
+    name_arabic: "سعد الذابح",
     harfi: "ത്വാ",
     harf_arabic: "ت",
     baslama_siniri: "Oğlak burcunun 25. Derecesi",
@@ -760,6 +782,7 @@ export const AY_MANAZILLERI = [
   {
     no: 23,
     name: "SAUDBELA",
+    name_arabic: "سعد البلع",
     harfi: "സാ",
     harf_arabic: "ث",
     baslama_siniri: "Kova burcunun 8. Derecesi",
@@ -776,6 +799,7 @@ export const AY_MANAZILLERI = [
   {
     no: 24,
     name: "SAADÜSSUUD",
+    name_arabic: "سعد السعود",
     harfi: "ഖാ",
     harf_arabic: "خ",
     baslama_siniri: "Kova burcunun 21. Derecesi",
@@ -793,6 +817,7 @@ export const AY_MANAZILLERI = [
   {
     no: 25,
     name: "SAADÜLAHBİYYE",
+    name_arabic: "سعد الأخبية",
     harfi: "സാൽ",
     harf_arabic: "ذ",
     baslama_siniri: "Balık burcunun 3. Derecesi",
@@ -809,6 +834,7 @@ export const AY_MANAZILLERI = [
   {
     no: 26,
     name: "FERÜLMUKADDEM",
+    name_arabic: "فرع المقدم",
     harfi: "ദ്വാദ്",
     harf_arabic: "ض",
     baslama_siniri: "Balık burcunun 16. Derecesi",
@@ -829,6 +855,7 @@ export const AY_MANAZILLERI = [
   {
     no: 27,
     name: "FERÜLMÜAHHİR",
+    name_arabic: "فرع المؤخر",
     harfi: "സ്വാ",
     harf_arabic: "ظ",
     baslama_siniri: "Balık burcunun 29. Derecesi",
@@ -846,6 +873,7 @@ export const AY_MANAZILLERI = [
   {
     no: 28,
     name: "EERREŞA",
+    name_arabic: "الرشا",
     harfi: "ഗൈൻ",
     harf_arabic: "غ",
     baslama_siniri: "Koç burcunun 12. Derecesi",
@@ -1319,7 +1347,8 @@ export const LUNAR_MANSION_DATA = AY_MANAZILLERI.map(mansion => ({
   number: mansion.no,
   name_en: mansion.name,
   name_ml: mansion.name,
-  name_arabic: mansion.harfi,
+  name_arabic: mansion.name_arabic || mansion.harfi,
+  letter_arabic: mansion.harf_arabic,
   nature: mansion.genel_hukum === "Uygun (Saad)" ? "Saad" : mansion.genel_hukum === "Uğursuz (Nahs)" ? "Nahs" : "Mixed",
   nature_ml: mansion.genel_hukum === "Uygun (Saad)" ? "ഉത്തമം" : mansion.genel_hukum === "Uğursuz (Nahs)" ? "അനുചിതം" : "മിശ്രം",
   zodiac_sign: mansion.zodiac_sign,

@@ -99,8 +99,13 @@ export default function ManazilDatabase() {
                                 </span>
                                 <div style={{width: '3px', height: '24px', borderRadius: '2px', marginTop: '4px', background: getClassificationColor(manzil.nature)}}></div>
                             </div>
-                            <div className="flex flex-col">
+                            <div className="flex flex-col items-start">
                                 <p className="font-amiri font-bold text-5xl md:text-6xl leading-relaxed" style={{color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)"}} dir="rtl">{manzil.name_arabic}</p>
+                                {manzil.letter_arabic && (
+                                    <p className="font-amiri text-lg text-white/60 mt-1" dir="rtl">
+                                      ({manzil.letter_arabic})
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -135,31 +140,25 @@ export default function ManazilDatabase() {
                                     </p>
                                 </div>
 
-                                {/* Arabic Name Display */}
-                                <div className="p-4 rounded-lg text-center" style={{background: G.bgHi, border: `1px solid ${G.border}`}}>
+                                {/* Arabic Mansion Name Display */}
+                                <div className="p-5 rounded-lg text-center" style={{background: G.bgHi, border: `1px solid ${G.border}`}}>
                                     <p className="font-inter text-[8px] uppercase tracking-widest mb-3" style={{color: G.dim}}>
                                         {isMalayalam ? "ചന്ദ്ര നക്ഷത്രം" : "Lunar Mansion"}
                                     </p>
                                     <p className="font-amiri text-7xl font-bold" style={{color: G.text, textShadow: "0 0 35px rgba(212,175,55,0.35)"}} dir="rtl">{manzil.name_arabic}</p>
+                                    {manzil.letter_arabic && (
+                                        <div className="mt-3">
+                                            <p className="font-inter text-[9px] uppercase tracking-widest" style={{color: G.dim}}>
+                                                {isMalayalam ? "അക്ഷരം" : "Letter"}
+                                            </p>
+                                            <p className="font-amiri text-4xl font-bold mt-1" style={{color: G.text}} dir="rtl">
+                                                ({manzil.letter_arabic})
+                                            </p>
+                                        </div>
+                                    )}
                                     {manzil.name_ml && (
-                                        <p className="font-malayalam-md text-white/80 mt-3">{manzil.name_ml}</p>
+                                        <p className="font-malayalam-md text-white/80 mt-4">{manzil.name_ml}</p>
                                     )}
-                                    {!manzil.name_ml && manzil.name_en && (
-                                        <p className="font-inter text-sm text-white/70 mt-3">{manzil.name_en}</p>
-                                    )}
-                                </div>
-                                
-                                {/* Letter Info */}
-                                <div className="p-3 rounded-lg" style={{background: G.bg, border: `1px solid ${G.border}`}}>
-                                    <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{color: G.dim}}>
-                                        {isMalayalam ? "അറബിക് അക്ഷരം" : "Arabic Letter"}
-                                    </p>
-                                    <div className="flex flex-col items-center gap-2">
-                                        <p className="font-amiri text-6xl font-bold" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}} dir="rtl">{manzil.name_arabic}</p>
-                                        {manzil.letter_malayalam && (
-                                            <p className="font-malayalam-sm text-white/70">{manzil.letter_malayalam}</p>
-                                        )}
-                                    </div>
                                 </div>
 
                                 {/* Zodiac Sign */}
