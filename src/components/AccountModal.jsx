@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
+import { X, LogOut, Trash2, AlertTriangle, CheckCircle, Shield, Globe } from "lucide-react";
 import { base44 } from "../api/base44Client";
+import { Link } from "react-router-dom";
 
 export default function AccountModal({ user, onClose }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    setIsAdmin(user?.role === 'admin');
+  }, [user]);
 
   const handleLogout = () => {
     base44.auth.logout();
@@ -66,6 +72,38 @@ export default function AccountModal({ user, onClose }) {
 
         {/* Body */}
         <div className="p-5 space-y-3">
+          {/* Admin Section */}
+          {isAdmin && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+                <Shield className="w-4 h-4" style={{ color: "#D4AF37" }} />
+                <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: "#D4AF37" }}>Admin Panel</span>
+              </div>
+              
+              <Link
+                to="/admin/permissions"
+                onClick={onClose}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                style={{
+                  background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
+                  border: "1px solid rgba(212,175,55,0.25)",
+                  WebkitTapHighlightColor: "transparent",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                }}
+              >
+                <Globe className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
+                <div className="flex-1 text-left">
+                  <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>Page Visibility Manager</p>
+                  <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Manage PUBLIC/PRIVATE access</p>
+                </div>
+                <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
+                  OPEN
+                </span>
+              </Link>
+            </div>
+          )}
+
           {deleted ? (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
               <CheckCircle className="w-10 h-10" style={{ color: "rgba(212,175,55,0.70)" }} />
