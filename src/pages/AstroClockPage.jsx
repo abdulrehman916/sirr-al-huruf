@@ -18,6 +18,7 @@ import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanel
 import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
 import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel";
 import IncenseAdvisor from "../components/astroclock/IncenseAdvisor";
+import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 
 function LanguageToggle() {
@@ -100,6 +101,9 @@ function AstroClockContent() {
 
         {/* SECTION 9: Action Timing Advisor */}
         <ActionTimingAdvisor />
+
+        {/* SECTION 10: Birth Profile Analyzer */}
+        <BirthProfileAnalyzer />
 
         {/* Framework Notice */}
         <motion.div
