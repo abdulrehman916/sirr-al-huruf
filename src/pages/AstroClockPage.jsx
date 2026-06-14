@@ -18,6 +18,7 @@ import ManazilDatabase from "../components/astroclock/ManazilDatabase";
 import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
 
 import ProfessionalTimingDecisionEngine from "../components/astroclock/ProfessionalTimingDecisionEngine";
+import KarmaTimingAdvisor from "../components/astroclock/KarmaTimingAdvisor";
 import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel.jsx";
 import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
 import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.jsx";
@@ -111,13 +112,16 @@ function AstroClockContent() {
         {/* SECTION 11: Professional Timing Decision Engine */}
         <ProfessionalTimingDecisionEngine />
 
-        {/* SECTION 11: Birth Profile Analyzer */}
+        {/* SECTION 12: Karma Timing Advisor */}
+        <KarmaTimingAdvisor />
+
+        {/* SECTION 13: Birth Profile Analyzer */}
         <BirthProfileAnalyzer />
 
-        {/* SECTION 12: Traditional Moon Transit Forecast */}
+        {/* SECTION 14: Traditional Moon Transit Forecast */}
         <TraditionalMoonTransitForecast />
 
-        {/* SECTION 13: Buhur Reference */}
+        {/* SECTION 15: Buhur Reference */}
         <BuhurReference />
 
         {/* Framework Notice */}
