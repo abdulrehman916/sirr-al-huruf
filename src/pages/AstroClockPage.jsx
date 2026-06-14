@@ -29,6 +29,7 @@ import BuhurReference from "../components/astroclock/BuhurReference.jsx";
 import PlanetaryHourVerification from "../components/astroclock/PlanetaryHourVerification.jsx";
 import PlanetaryHourBookView from "../components/astroclock/PlanetaryHourBookView.jsx";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
+import { Link } from "react-router-dom";
 
 function LanguageToggle() {
   const { t, toggleLanguage } = useAstroClockLanguage();
@@ -56,7 +57,7 @@ function AstroClockContent() {
     <PageLayout>
       <div className="space-y-6 pb-8">
 
-        {/* Header with Language Toggle */}
+        {/* Header with Language Toggle and Audit Link */}
         <div className="flex items-center justify-between mb-6">
           <PageTitle
             arabic="الساعة الفلكية"
@@ -64,7 +65,20 @@ function AstroClockContent() {
             subtitle="Traditional Ilm al-Huruf Timing System"
             icon="🕰"
           />
-          <LanguageToggle />
+          <div className="flex items-center gap-3">
+            <Link
+              to="/manuscript-audit-full"
+              className="px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
+              style={{
+                background: "rgba(212,175,55,0.10)",
+                color: "#F5D060",
+                borderColor: "rgba(212,175,55,0.40)"
+              }}
+            >
+              📖 {isMalayalam ? "ഹസ്തലിഖിത" : "Audit"}
+            </Link>
+            <LanguageToggle />
+          </div>
         </div>
 
         {/* Engine Status */}

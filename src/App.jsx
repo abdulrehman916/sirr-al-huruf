@@ -44,6 +44,7 @@ const MizanVefkModelVerification = lazy(() => import('./pages/MizanVefkModelVeri
 const MizanRubaiVerification = lazy(() => import('./pages/MizanRubaiVerification'));
 const MizanManuscriptVerification = lazy(() => import('./pages/MizanManuscriptVerification'));
 const MizanManuscriptAudit = lazy(() => import('./pages/MizanManuscriptAudit'));
+const ManuscriptAuditPage = lazy(() => import('./pages/ManuscriptAuditPage'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -118,6 +119,7 @@ const AuthenticatedApp = () => {
             <Route path="/vefk-model-verification" element={<MizanVefkModelVerification />} />
             <Route path="/rubai-verification" element={<MizanRubaiVerification />} />
             <Route path="/manuscript-audit" element={<MizanManuscriptAudit />} />
+            <Route path="/manuscript-audit-full" element={<ManuscriptAuditPage />} />
 
 
             <Route path="*" element={<PageNotFound />} />
