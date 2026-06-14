@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Book, Upload, Search, Database, AlertTriangle, CheckCircle, Clock, FileText, Plus, ChevronDown, ChevronUp, X } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { base44 } from "@/api/base44Client";
+import { ArabicLetterDisplay, LunarMansionDisplay, ZodiacSignDisplay, ArabicTextWithTranslation } from "../components/astroclock/ArabicLetterDisplay";
+import { formatArabicLetter, getLetterInfo } from "@/lib/arabicLetterReference";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -439,6 +441,53 @@ function ManuscriptCard({ manuscript: ms, expanded, onToggle }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ARABIC DATA DISPLAY
+// ─────────────────────────────────────────────────────────────────────────────
+function ArabicDataDisplay({ rule }) {
+  try {
+    const data = typeof rule.data_json === 'string' ? JSON.parse(rule.data_json) : rule.data_json;
+    
+    return (
+      <div className="mb-3 space-y-2">
+        {/* Arabic Letter */}
+        {data.letter && (
+          <div className="flex items-center gap-3">
+            <ArabicLetterDisplay 
+              letter={data.letter}
+              malayalam={data.letter_malayalam}
+              size="md"
+            />
+            <span className="font-inter text-xs" style={{ color: G.dim }}>
+              {data.planet && `Planet: ${data.planet}`}
+            </span>
+          </div>
+        )}
+        
+        {/* Lunar Mansion */}
+        {data.lunar_mansion && (
+          <LunarMansionDisplay
+            arabic={data.lunar_mansion_arabic || data.lunar_mansion}
+            name={data.lunar_mansion}
+            malayalam={data.lunar_mansion_malayalam}
+          />
+        )}
+        
+        {/* Zodiac Sign */}
+        {data.zodiac && (
+          <ZodiacSignDisplay
+            arabic={data.zodiac_arabic || data.zodiac}
+            name={data.zodiac}
+            malayalam={data.zodiac_malayalam}
+          />
+        )}
+      </div>
+    );
+  } catch {
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // QUERY RESULTS
 // ─────────────────────────────────────────────────────────────────────────────
 function QueryResults({ results }) {
@@ -490,12 +539,18 @@ function QueryResults({ results }) {
                       <div key={rule.id} className="p-4" style={{ borderColor: G.border }}>
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <p className="font-inter text-sm text-white mb-1">{rule.rule_summary}</p>
+                            <p className="font-inter text-sm text-white mb-2">{rule.rule_summary}</p>
+                            
+                            {/* Display Arabic letters/glyphs properly */}
+                            <ArabicDataDisplay rule={rule} />
+                            
                             {rule.original_text && (
-                              <p className="font-amiri text-sm text-right mb-2" style={{ color: G.text }}>
-                                {rule.original_text.slice(0, 200)}{rule.original_text.length > 200 ? '...' : ''}
-                              </p>
+                              <ArabicTextWithTranslation 
+                                arabic={rule.original_text}
+                                className="mb-3"
+                              />
                             )}
+                            
                             <div className="flex flex-wrap gap-2 mt-2">
                               <span className="font-inter text-[8px] px-2 py-0.5 rounded" style={{ background: G.bg, color: G.dim }}>
                                 📖 {rule.book_name}
@@ -512,7 +567,7 @@ function QueryResults({ results }) {
                               )}
                               {rule.conflict_with && (
                                 <span className="font-inter text-[8px] px-2 py-0.5 rounded" style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
-                                  ⚠ Conflict with {rule.conflict_with}
+                                  ⚠ Conflict
                                 </span>
                               )}
                             </div>
