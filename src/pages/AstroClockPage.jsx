@@ -12,6 +12,7 @@ import PlanetaryHourTable from "../components/astroclock/PlanetaryHourTable";
 import CelestialInfo from "../components/astroclock/CelestialInfo";
 import AstroClockSearch from "../components/astroclock/AstroClockSearch";
 import AstroClockTimingAdvisor from "../components/astroclock/AstroClockTimingAdvisor";
+import AsteroidKnowledgeSummary from "../components/astroclock/AsteroidKnowledgeSummary";
 import { ASTRO_CLOCK_ENGINE_STATUS } from "../lib/astroClockEngine";
 import { usePageState } from "../context/PageStateContext";
 
@@ -72,6 +73,9 @@ export default function AstroClockPage() {
 
         {/* Timing Advisor */}
         <AstroClockTimingAdvisor />
+
+        {/* Asteroid Knowledge Summary */}
+        <AsteroidKnowledgeSummary />
 
         {/* Framework Notice */}
         <motion.div

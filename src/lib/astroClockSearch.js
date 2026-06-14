@@ -10,13 +10,22 @@ import {
   KNOWLEDGE_LUNAR_MANSIONS_ML,
   KNOWLEDGE_TIMING_RULES_ML
 } from './astroClockKnowledgeBaseML.js';
+import {
+  ASTEROID_TIMING_RULES,
+  ASTEROID_HOUSE_RULES,
+  ASTEROID_ASPECT_RULES
+} from './astroClockAsteroidData.js';
 
 // Combine all knowledge sources
 const ALL_KNOWLEDGE = [
   ...KNOWLEDGE_DAYS_ML,
   ...KNOWLEDGE_HOURS_ML,
   ...KNOWLEDGE_LUNAR_MANSIONS_ML,
-  ...KNOWLEDGE_TIMING_RULES_ML
+  ...KNOWLEDGE_TIMING_RULES_ML,
+  // Asteroid knowledge (additive only)
+  ...ASTEROID_TIMING_RULES,
+  ...ASTEROID_HOUSE_RULES,
+  ...ASTEROID_ASPECT_RULES
 ];
 
 /**
@@ -226,7 +235,13 @@ export function getSearchStats() {
     daysCount: KNOWLEDGE_DAYS_ML.length,
     hoursCount: KNOWLEDGE_HOURS_ML.length,
     mansionsCount: KNOWLEDGE_LUNAR_MANSIONS_ML.length,
-    timingRulesCount: KNOWLEDGE_TIMING_RULES_ML.length
+    timingRulesCount: KNOWLEDGE_TIMING_RULES_ML.length,
+    asteroidRulesCount: ASTEROID_TIMING_RULES.length + ASTEROID_HOUSE_RULES.length + ASTEROID_ASPECT_RULES.length,
+    knowledgeBaseGrowth: {
+      original: KNOWLEDGE_DAYS_ML.length + KNOWLEDGE_HOURS_ML.length + KNOWLEDGE_LUNAR_MANSIONS_ML.length + KNOWLEDGE_TIMING_RULES_ML.length,
+      asteroidAddition: ASTEROID_TIMING_RULES.length + ASTEROID_HOUSE_RULES.length + ASTEROID_ASPECT_RULES.length,
+      total: ALL_KNOWLEDGE.length
+    }
   };
 }
 
