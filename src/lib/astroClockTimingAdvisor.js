@@ -17,15 +17,15 @@ import {
   ASTEROID_ASPECT_RULES
 } from './astroClockAsteroidData.js';
 
-// Combine all knowledge sources
+// Combine all knowledge sources with safe fallbacks
 const ALL_KNOWLEDGE = [
-  ...KNOWLEDGE_DAYS_ML,
-  ...KNOWLEDGE_HOURS_ML,
-  ...KNOWLEDGE_LUNAR_MANSIONS_ML,
-  ...KNOWLEDGE_TIMING_RULES_ML,
-  ...ASTEROID_TIMING_RULES,
-  ...ASTEROID_HOUSE_RULES,
-  ...ASTEROID_ASPECT_RULES
+  ...(Array.isArray(KNOWLEDGE_DAYS_ML) ? KNOWLEDGE_DAYS_ML : []),
+  ...(Array.isArray(KNOWLEDGE_HOURS_ML) ? KNOWLEDGE_HOURS_ML : []),
+  ...(Array.isArray(KNOWLEDGE_LUNAR_MANSIONS_ML) ? KNOWLEDGE_LUNAR_MANSIONS_ML : []),
+  ...(Array.isArray(KNOWLEDGE_TIMING_RULES_ML) ? KNOWLEDGE_TIMING_RULES_ML : []),
+  ...(Array.isArray(ASTEROID_TIMING_RULES) ? ASTEROID_TIMING_RULES : []),
+  ...(Array.isArray(ASTEROID_HOUSE_RULES) ? ASTEROID_HOUSE_RULES : []),
+  ...(Array.isArray(ASTEROID_ASPECT_RULES) ? ASTEROID_ASPECT_RULES : [])
 ];
 
 /**
@@ -94,7 +94,7 @@ function analyzeRules(rules, action) {
   const sources = [];
   const disagreements = [];
 
-  rules.forEach(rule => {
+  (rules || []).forEach(rule => {
     // Extract day information
     if (rule.category === 'DAYS' && rule.malayalam?.suitable_actions?.toLowerCase().includes(action.toLowerCase())) {
       const dayName = rule.malayalam?.title || rule.original_text?.tr;
@@ -215,19 +215,19 @@ export function findSimilarActions(partialAction) {
   const actionLower = partialAction.toLowerCase();
   const allActions = new Set();
   
-  ALL_KNOWLEDGE.forEach(rule => {
-    if (rule.malayalam?.suitable_actions) {
-      rule.malayalam.suitable_actions.split(/[,,]/).forEach(action => {
-        const trimmed = action.trim().toLowerCase();
-        if (trimmed.includes(actionLower)) {
+  (ALL_KNOWLEDGE || []).forEach(rule => {
+    if (rule?.malayalam?.suitable_actions) {
+      (rule.malayalam.suitable_actions || '').split(/[,,]/).forEach(action => {
+        const trimmed = (action || '').trim().toLowerCase();
+        if (trimmed && trimmed.includes(actionLower)) {
           allActions.add(action.trim());
         }
       });
     }
     
-    if (rule.original_text?.operations) {
-      rule.original_text.operations.forEach(op => {
-        if (op.toLowerCase().includes(actionLower)) {
+    if (rule?.original_text?.operations) {
+      (rule.original_text.operations || []).forEach(op => {
+        if (op && op.toLowerCase().includes(actionLower)) {
           allActions.add(op);
         }
       });

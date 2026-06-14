@@ -41,7 +41,7 @@ export default function AsteroidKnowledgeSummary() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 mb-4">
-          {ASTEROIDS.map((asteroid) => (
+          {(ASTEROIDS || []).map((asteroid) => (
             <div
               key={asteroid.name}
               className="p-3 rounded-xl border"

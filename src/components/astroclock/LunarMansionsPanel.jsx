@@ -75,7 +75,7 @@ export default function LunarMansionsPanel() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
-        {LUNAR_MANSIONS.map((mansion) => (
+        {(LUNAR_MANSIONS || []).map((mansion) => (
           <button
             key={mansion.number}
             onClick={() => setSelectedMansion(selectedMansion === mansion.number ? null : mansion.number)}

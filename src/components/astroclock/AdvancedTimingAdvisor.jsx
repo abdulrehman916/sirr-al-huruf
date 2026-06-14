@@ -93,7 +93,7 @@ export default function AdvancedTimingAdvisor() {
                 boxShadow: "0 4px 20px rgba(0,0,0,0.60)"
               }}
             >
-              {similarActions.map((suggestion, idx) => (
+              {(similarActions || []).map((suggestion, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
@@ -114,7 +114,7 @@ export default function AdvancedTimingAdvisor() {
 
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-2">
-          {QUICK_ACTIONS.map((quickAction) => (
+          {(QUICK_ACTIONS || []).map((quickAction) => (
             <button
               key={quickAction}
               onClick={() => {
@@ -147,7 +147,7 @@ export default function AdvancedTimingAdvisor() {
               <p className="font-inter text-sm text-white/50 mb-4">{advice.message}</p>
               {advice.suggestions && (
                 <div className="space-y-3">
-                  {advice.suggestions.suggestions.map((s, idx) => (
+                  {(advice.suggestions?.suggestions || []).map((s, idx) => (
                     <div key={idx} className="p-3 rounded-lg" style={{ background: G.bg }}>
                       <p className="font-inter text-xs font-bold uppercase tracking-widest mb-1" style={{ color: G.dim }}>
                         {s.category}
@@ -252,7 +252,7 @@ export default function AdvancedTimingAdvisor() {
                       </h3>
                     </div>
                     <div className="space-y-2">
-                      {advice.sources.map((source, idx) => (
+                      {(advice.sources || []).map((source, idx) => (
                         <div key={idx} className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
                           <p className="font-inter text-sm text-white/70 mb-1">{source.book}</p>
                           {source.originalText && (

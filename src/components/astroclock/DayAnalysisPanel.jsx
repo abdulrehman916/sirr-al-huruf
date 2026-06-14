@@ -54,7 +54,7 @@ export default function DayAnalysisPanel() {
 
         {/* Day Selector */}
         <div className="grid grid-cols-7 gap-2 mb-4">
-          {WEEKDAYS.map((day) => (
+          {(WEEKDAYS || []).map((day) => (
             <button
               key={day.id}
               onClick={() => setSelectedDay(day.id)}
@@ -102,7 +102,7 @@ export default function DayAnalysisPanel() {
                     Friendly Days
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {dayData.friendlyDays.map((d, idx) => (
+                    {(dayData.friendlyDays || []).map((d, idx) => (
                       <span key={idx} className="px-2 py-1 rounded text-[10px]" style={{ background: G.bg, color: G.text }}>
                         {d}
                       </span>
@@ -114,7 +114,7 @@ export default function DayAnalysisPanel() {
                     Enemy Days
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {dayData.enemyDays.map((d, idx) => (
+                    {(dayData.enemyDays || []).map((d, idx) => (
                       <span key={idx} className="px-2 py-1 rounded text-[10px]" style={{ background: G.bg, color: G.text }}>
                         {d}
                       </span>
@@ -159,7 +159,7 @@ export default function DayAnalysisPanel() {
                   Good Works
                 </p>
                 <ul className="space-y-1">
-                  {dayData.goodWorks.map((work, idx) => (
+                  {(dayData.goodWorks || []).map((work, idx) => (
                     <li key={idx} className="font-inter text-xs text-white/70">• {work}</li>
                   ))}
                 </ul>
@@ -169,7 +169,7 @@ export default function DayAnalysisPanel() {
                   Bad Works
                 </p>
                 <ul className="space-y-1">
-                  {dayData.badWorks.map((work, idx) => (
+                  {(dayData.badWorks || []).map((work, idx) => (
                     <li key={idx} className="font-inter text-xs text-white/70">• {work}</li>
                   ))}
                 </ul>

@@ -114,7 +114,7 @@ export default function ActionTimingAdvisor() {
                 {isMalayalam ? "നിർദ്ദേശങ്ങൾ" : "Suggestions"}
               </p>
               <div className="flex flex-wrap gap-2">
-                {suggestions.map((suggestion, idx) => (
+                {(suggestions || []).map((suggestion, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSuggestionClick(suggestion)}
@@ -161,7 +161,7 @@ export default function ActionTimingAdvisor() {
                     color={G.success}
                   >
                     <div className="grid grid-cols-1 gap-2">
-                      {results.bestDays.map((day, idx) => (
+                      {(results.bestDays || []).map((day, idx) => (
                         <DayCard key={idx} day={day} isMalayalam={isMalayalam} />
                       ))}
                     </div>
@@ -176,7 +176,7 @@ export default function ActionTimingAdvisor() {
                     color={G.danger}
                   >
                     <div className="grid grid-cols-1 gap-2">
-                      {results.worstDays.map((day, idx) => (
+                      {(results.worstDays || []).map((day, idx) => (
                         <DayCard key={idx} day={day} isMalayalam={isMalayalam} isWarning />
                       ))}
                     </div>
@@ -191,7 +191,7 @@ export default function ActionTimingAdvisor() {
                     color={G.success}
                   >
                     <div className="grid grid-cols-2 gap-2">
-                      {results.bestHours.map((hour, idx) => (
+                      {(results.bestHours || []).map((hour, idx) => (
                         <HourCard key={idx} hour={hour} isMalayalam={isMalayalam} />
                       ))}
                     </div>
@@ -206,7 +206,7 @@ export default function ActionTimingAdvisor() {
                     color={G.text}
                   >
                     <div className="grid grid-cols-2 gap-2">
-                      {results.suitableMansions.map((mansion, idx) => (
+                      {(results.suitableMansions || []).map((mansion, idx) => (
                         <MansionCard key={idx} mansion={mansion} isMalayalam={isMalayalam} />
                       ))}
                     </div>
@@ -221,7 +221,7 @@ export default function ActionTimingAdvisor() {
                     color={G.success}
                   >
                     <ul className="space-y-1">
-                      {results.benefits.map((benefit, idx) => (
+                      {(results.benefits || []).map((benefit, idx) => (
                         <li key={idx} className="font-inter text-xs text-white/70 flex items-start gap-2">
                           <span className="w-1 h-1 rounded-full mt-1.5" style={{ background: G.success }} />
                           {benefit}
@@ -239,7 +239,7 @@ export default function ActionTimingAdvisor() {
                     color={G.danger}
                   >
                     <ul className="space-y-1">
-                      {results.warnings.map((warning, idx) => (
+                      {(results.warnings || []).map((warning, idx) => (
                         <li key={idx} className="font-inter text-xs text-white/70 flex items-start gap-2">
                           <span className="w-1 h-1 rounded-full mt-1.5" style={{ background: G.danger }} />
                           {warning}
@@ -259,7 +259,7 @@ export default function ActionTimingAdvisor() {
                       </p>
                     </div>
                     <div className="space-y-2">
-                      {results.sources.map((source, idx) => (
+                      {(results.sources || []).map((source, idx) => (
                         <div key={idx} className="flex items-center justify-between p-2 rounded-lg" style={{ background: G.bg }}>
                           <span className="font-inter text-xs text-white/70">{source.book}</span>
                           <span className="font-inter text-[10px] font-bold" style={{ color: G.text }}>
@@ -363,7 +363,7 @@ function NoResults({ message, suggestions, isMalayalam, onSuggestionClick }) {
             {isMalayalam ? "നിർദ്ദേശങ്ങൾ" : "Suggestions"}
           </p>
           <div className="flex flex-wrap gap-2 justify-center">
-            {suggestions.suggestions.map((suggestion, idx) => (
+            {(suggestions?.suggestions || []).map((suggestion, idx) => (
               <button
                 key={idx}
                 onClick={() => onSuggestionClick(suggestion)}

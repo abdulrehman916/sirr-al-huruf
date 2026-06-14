@@ -87,7 +87,7 @@ export default function LivePlanetCenter() {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        {planetPositions.map((planet) => (
+        {(planetPositions || []).map((planet) => (
           <div
             key={planet.name}
             className="p-3 rounded-xl border flex items-center justify-between"
