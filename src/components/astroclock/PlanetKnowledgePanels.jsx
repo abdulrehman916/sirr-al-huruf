@@ -63,25 +63,22 @@ function PlanetCard({ planet, isMalayalam }) {
     <div className="rounded-xl border" style={{ background: G.bg, borderColor: G.faint }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-5 flex items-center justify-between"
+        className="w-full p-4 flex items-center justify-between"
       >
         <div className="flex items-center gap-4 text-left">
-          <span className="text-4xl">{planet.symbol}</span>
+          <span className="text-4xl flex-shrink-0">{planet.symbol}</span>
           <div className="flex-1">
-            <p className="font-amiri text-5xl font-bold leading-relaxed mb-1" style={{ color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)" }}>
+            <p className="font-amiri text-4xl md:text-5xl font-bold leading-relaxed" style={{ color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)" }}>
               {planet.name_ar}
             </p>
-            <p className="font-inter text-xl font-bold text-white/95">
+            <p className="font-inter text-lg font-bold text-white/95 mt-1">
               {isMalayalam ? planet.name_ml_equivalent : planet.name_en}
             </p>
-            {isMalayalam && planet.name_en && (
-              <p className="font-inter text-xs text-white/50 mt-0.5">{planet.name_en}</p>
-            )}
           </div>
         </div>
         <ChevronDown
-          className="w-6 h-6 transition-transform duration-300 flex-shrink-0"
-          style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", color: G.text }}
+          className="w-5 h-5 transition-transform duration-300"
+          style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", color: G.dim }}
         />
       </button>
 
@@ -96,18 +93,8 @@ function PlanetCard({ planet, isMalayalam }) {
             </p>
           </div>
           
-          {/* Pronunciation (Optional Details Section) */}
-          <div className="p-4 rounded-lg bg-black/20 border" style={{ borderColor: G.faint }}>
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                {isMalayalam ? "ഉച്ചാരണം" : "Pronunciation"}
-            </p>
-            <p className="font-inter text-sm text-white/70">
-                {isMalayalam ? planet.name_ml_reading : planet.name_en_transliteration}
-            </p>
-          </div>
-
           <div className="p-4 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: `1px solid ${G.success}` }}>
-              <p className="font-inter text-[9px] uppercase tracking-widest mb-3 font-bold" style={{ color: G.success }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest mb-2 font-bold" style={{ color: G.success }}>
                   {isMalayalam ? "നല്ല പ്രവർത്തനങ്ങൾ" : "Good Actions"}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -120,7 +107,7 @@ function PlanetCard({ planet, isMalayalam }) {
           </div>
 
           <div className="p-4 rounded-lg" style={{ background: "rgba(239,68,68,0.08)", border: `1px solid ${G.danger}` }}>
-              <p className="font-inter text-[9px] uppercase tracking-widest mb-3 font-bold" style={{ color: G.danger }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest mb-2 font-bold" style={{ color: G.danger }}>
                   {isMalayalam ? "ചീത്ത പ്രവർത്തനങ്ങൾ" : "Bad Actions"}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -133,7 +120,7 @@ function PlanetCard({ planet, isMalayalam }) {
           </div>
 
           <div className="p-4 rounded-lg bg-black/30 border" style={{ borderColor: G.faint }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.text }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.text }}>
                 {isMalayalam ? "ആത്മിക പ്രവർത്തനങ്ങൾ" : "Spiritual Operations"}
             </p>
             <div className="space-y-2">

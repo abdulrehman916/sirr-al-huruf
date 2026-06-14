@@ -71,24 +71,24 @@ export default function ManazilDatabase() {
                 <div key={manzil.no} className="rounded-lg border" style={{borderColor: G.faint, background: G.bg}}>
                     <button 
                         onClick={() => setExpandedManzil(expandedManzil === manzil.no ? null : manzil.no)}
-                        className="w-full p-5 flex items-center justify-between text-left"
+                        className="w-full p-4 flex items-center justify-between text-left"
                     >
-                        <div className="flex items-center gap-5">
-                            <span className="font-inter font-bold text-lg text-white/90 w-10 h-10 flex items-center justify-center rounded-full" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+                        <div className="flex items-center gap-4">
+                            <span className="font-inter font-bold text-base text-white/90 w-8 h-8 flex items-center justify-center rounded-full" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
                               {manzil.no}
                             </span>
-                            <div style={{width: '5px', height: '40px', borderRadius: '3px', background: getClassificationColor(manzil.genel_hukum)}}></div>
+                            <div style={{width: '4px', height: '32px', borderRadius: '2px', background: getClassificationColor(manzil.genel_hukum)}}></div>
                             <div>
-                                <p className="font-amiri font-bold text-5xl md:text-6xl leading-relaxed" style={{color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)"}}>{manzil.name}</p>
-                                <p className="font-inter text-base font-semibold text-white/85 mt-1">{isMalayalam ? ZODIAC_ML[manzil.zodiac_sign] : manzil.zodiac_sign}</p>
+                                <p className="font-amiri font-bold text-4xl md:text-5xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}}>{manzil.name}</p>
+                                <p className="font-inter text-base font-semibold text-white/90 mt-1">{isMalayalam ? ZODIAC_ML[manzil.zodiac_sign] : manzil.zodiac_sign}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-center gap-4">
                             <div className="text-right">
-                                <p className="font-amiri text-4xl md:text-5xl text-white/90 leading-relaxed">{manzil.harf_arabic}</p>
+                                <p className="font-amiri text-4xl md:text-5xl text-white/95 leading-relaxed" style={{ textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{manzil.harf_arabic}</p>
                             </div>
                             <ChevronDown 
-                                className="w-7 h-7 text-gold transition-transform"
+                                className="w-6 h-6 text-gold transition-transform"
                                 style={{transform: expandedManzil === manzil.no ? 'rotate(180deg)' : 'rotate(0deg)'}}
                             />
                         </div>
