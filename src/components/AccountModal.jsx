@@ -92,27 +92,51 @@ export default function AccountModal({ user, onClose }) {
                 </span>
               </div>
               
-              <Link
-                to="/admin/permissions"
-                onClick={onClose}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-                style={{
-                  background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
-                  border: "1px solid rgba(212,175,55,0.25)",
-                  WebkitTapHighlightColor: "transparent",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
-                }}
-              >
-                <Globe className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
-                <div className="flex-1 text-left">
-                  <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>Page Visibility Manager</p>
-                  <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Manage PUBLIC/PRIVATE access</p>
-                </div>
-                <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
-                  OPEN
-                </span>
-              </Link>
+              <div className="space-y-2">
+                <Link
+                  to="/admin/permissions"
+                  onClick={onClose}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
+                    border: "1px solid rgba(212,175,55,0.25)",
+                    WebkitTapHighlightColor: "transparent",
+                    userSelect: "none",
+                    WebkitUserSelect: "none",
+                  }}
+                >
+                  <Globe className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
+                  <div className="flex-1 text-left">
+                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>Page Visibility Manager</p>
+                    <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Manage PUBLIC/PRIVATE access</p>
+                  </div>
+                  <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
+                    OPEN
+                  </span>
+                </Link>
+
+                <Link
+                  to="/admin/permissions"
+                  onClick={onClose}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
+                    border: "1px solid rgba(212,175,55,0.25)",
+                    WebkitTapHighlightColor: "transparent",
+                    userSelect: "none",
+                    WebkitUserSelect: "none",
+                  }}
+                >
+                  <Shield className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
+                  <div className="flex-1 text-left">
+                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>Page Permissions</p>
+                    <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Grant & manage user access</p>
+                  </div>
+                  <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
+                    OPEN
+                  </span>
+                </Link>
+              </div>
             </div>
           )}
 
