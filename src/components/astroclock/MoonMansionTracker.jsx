@@ -5,7 +5,7 @@
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Calendar, Clock, Book, FileText, ChevronDown, ChevronUp, Star, AlertCircle, CheckCircle, Zap } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
@@ -96,13 +96,13 @@ export default function MoonMansionTracker() {
     return transits;
   }
 
-  // Memoized countdown formatter
-  const formatCountdown = useMemo(() => (ms) => {
+  // Countdown formatter (pure function, no memoization needed)
+  const formatCountdown = (ms) => {
     const hours = Math.floor(ms / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((ms % (1000 * 60)) / 1000);
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  }, []);
+  };
 
   return (
     <motion.div
@@ -650,23 +650,23 @@ function ManuscriptSourceSection({ isMalayalam }) {
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function MansionDetail({ label, value, arabic, large }) {
+const MansionDetail = memo(function MansionDetail({ label, value, arabic, large }) {
   return (
     <div>
       <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>{label}</p>
       <p className={`${large ? 'font-amiri text-4xl font-bold text-right' : arabic ? 'font-amiri text-lg text-right' : 'font-malayalam-sm'} text-white`} dir={arabic || large ? 'rtl' : undefined}>{value}</p>
     </div>
   );
-}
+});
 
-function DetailRow({ label, value }) {
+const DetailRow = memo(function DetailRow({ label, value }) {
   return (
     <div className="flex items-center justify-between py-1">
       <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</span>
       <span className="font-malayalam-sm text-white">{value}</span>
     </div>
   );
-}
+});
 
 // Removed - using safeFormatDate and safeFormatTime from astroClockDateUtils
 
