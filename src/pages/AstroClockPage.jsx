@@ -10,6 +10,7 @@ import PageTitle from "../components/PageTitle";
 import AstroClockDisplay from "../components/astroclock/AstroClockDisplay";
 import PlanetaryHourTable from "../components/astroclock/PlanetaryHourTable";
 import CelestialInfo from "../components/astroclock/CelestialInfo";
+import AstroClockSearch from "../components/astroclock/AstroClockSearch";
 import { ASTRO_CLOCK_ENGINE_STATUS } from "../lib/astroClockEngine";
 import { usePageState } from "../context/PageStateContext";
 
@@ -64,6 +65,9 @@ export default function AstroClockPage() {
 
         {/* Celestial Info Placeholder */}
         <CelestialInfo />
+
+        {/* Knowledge Search */}
+        <AstroClockSearch />
 
         {/* Framework Notice */}
         <motion.div
