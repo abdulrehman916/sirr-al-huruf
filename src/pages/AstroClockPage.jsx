@@ -21,7 +21,6 @@ import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel.
 import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
 import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.jsx";
 import TraditionalMoonTransitForecast from "../components/astroclock/TraditionalMoonTransitForecast.jsx";
-import MoonTransitAdvisor from "../components/astroclock/MoonTransitAdvisor.jsx";
 import BuhurReference from "../components/astroclock/BuhurReference.jsx";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 
@@ -115,10 +114,7 @@ function AstroClockContent() {
         {/* SECTION 12: Traditional Moon Transit Forecast */}
         <TraditionalMoonTransitForecast />
 
-        {/* SECTION 13: Moon Transit Advisor */}
-        <MoonTransitAdvisor />
-
-        {/* SECTION 14: Buhur Reference */}
+        {/* SECTION 13: Buhur Reference */}
         <BuhurReference />
 
         {/* Framework Notice */}
@@ -138,8 +134,8 @@ function AstroClockContent() {
           </p>
           <p className="font-inter text-sm mb-2" style={{ color: "rgba(255,255,255,0.60)" }}>
             {isMalayalam 
-              ? "14 വിഭാഗങ്ങളിലായി സമ്പൂർണ്ണ പാരമ്പര്യ ഇൽം അൽ-ഹുറൂഫ് / മൻസിൽ / സഅത്ത് സമയക്രമം സജ്ജമാക്കി" 
-              : "Complete traditional Ilm al-Huruf / Manazil / Sa'at timing system across 14 sections"}
+              ? "സമ്പൂർണ്ണ പാരമ്പര്യ ഇൽം അൽ-ഹുറൂഫ് / മൻസിൽ / സഅത്ത് സമയക്രമം സജ്ജമാക്കി" 
+              : "Complete traditional Ilm al-Huruf / Manazil / Sa'at timing system initialized"}
           </p>
           <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
             {isMalayalam
