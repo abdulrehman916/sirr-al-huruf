@@ -13,6 +13,8 @@ import { LUNAR_MANSION_DATA } from "@/lib/astroClockLunarMansionML.js";
 import { base44 } from "@/api/base44Client";
 import ManuscriptKnowledgeExplorer from "./ManuscriptKnowledgeExplorer";
 import ManuscriptCorrespondences from "./ManuscriptCorrespondences";
+import { LunarMansionDisplay, ArabicLetterDisplay, PlanetDisplay, ZodiacSignDisplay, ElementDisplay, SaadNahsDisplay } from "./ArabicLetterDisplay";
+import { useManuscriptExplorer } from "./useManuscriptExplorer";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -30,9 +32,8 @@ const G = {
 export default function ManazilDatabase() {
   const { isMalayalam } = useAstroClockLanguage();
   const [expandedManzil, setExpandedManzil] = useState(null);
-  const [explorerOpen, setExplorerOpen] = useState(false);
-  const [selectedEntity, setSelectedEntity] = useState(null);
   const [manzilRecords, setManzilRecords] = useState({});
+  const { explorerOpen, selectedEntity, openExplorer, closeExplorer } = useManuscriptExplorer();
 
   const getClassificationColor = (nature) => {
     if (nature === "Saad") return G.saad;
@@ -40,6 +41,7 @@ export default function ManazilDatabase() {
     return G.mixed;
   };
 
+  // Load manuscript records for each mansion
   useEffect(() => {
     (LUNAR_MANSION_DATA || []).forEach(async (manzil) => {
       try {
@@ -57,14 +59,7 @@ export default function ManazilDatabase() {
     });
   }, []);
 
-  function openExplorer(manzil) {
-    setSelectedEntity({
-      entityType: 'LUNAR_MANSION',
-      entityData: manzil.name_arabic,
-      displayName: manzil.name_arabic
-    });
-    setExplorerOpen(true);
-  }
+
 
   return (
     <motion.div
@@ -110,7 +105,7 @@ export default function ManazilDatabase() {
                         </div>
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={(e) => { e.stopPropagation(); openExplorer(manzil); }}
+                                onClick={(e) => { e.stopPropagation(); openExplorer('LUNAR_MANSION', manzil.name_arabic, manzil.name_ml); }}
                                 className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                                 title={isMalayalam ? "ഹസ്തലിഖിതങ്ങൾ കാണുക" : "View Manuscripts"}
                             >
@@ -161,12 +156,49 @@ export default function ManazilDatabase() {
                                     )}
                                 </div>
 
-                                {/* Zodiac Sign */}
-                                <div className="p-3 rounded-lg" style={{background: G.bg, border: `1px solid ${G.border}`}}>
-                                    <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{color: G.dim}}>
-                                        {isMalayalam ? "രാശി" : "Zodiac Sign"}
-                                    </p>
-                                    <p className="font-malayalam-sm text-center text-white/70">{manzil.zodiac_sign_ml || manzil.zodiac_sign}</p>
+                                {/* Interactive Entity Cards - All Clickable */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* Arabic Letter - Clickable */}
+                                    <ArabicLetterDisplay
+                                        letter={manzil.letter_arabic}
+                                        malayalam={manzil.letter_malayalam}
+                                        size="md"
+                                        onClick={() => openExplorer('ARABIC_LETTER', manzil.letter_arabic, manzil.letter_malayalam)}
+                                        showCount
+                                        count={0}
+                                    />
+                                    
+                                    {/* Zodiac Sign - Clickable */}
+                                    <ZodiacSignDisplay
+                                        arabic={manzil.zodiac_sign_arabic}
+                                        name={manzil.zodiac_sign}
+                                        malayalam={manzil.zodiac_sign_ml}
+                                        onClick={() => openExplorer('ZODIAC', manzil.zodiac_sign, manzil.zodiac_sign_ml)}
+                                        showCount
+                                        count={0}
+                                    />
+                                </div>
+
+                                {/* Planet & Nature - Clickable */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* Planet - Clickable */}
+                                    <PlanetDisplay
+                                        arabic={manzil.planet_arabic}
+                                        name={manzil.planet}
+                                        malayalam={manzil.planet_ml}
+                                        symbol={manzil.planet_symbol}
+                                        onClick={() => openExplorer('PLANET', manzil.planet, manzil.planet_ml)}
+                                        showCount
+                                        count={0}
+                                    />
+                                    
+                                    {/* Saad/Nahs - Clickable */}
+                                    <SaadNahsDisplay
+                                        nature={manzil.nature}
+                                        onClick={() => openExplorer('SAAD_NAHS', manzil.nature)}
+                                        showCount
+                                        count={0}
+                                    />
                                 </div>
                                 
                                 {/* Operations */}
@@ -201,7 +233,7 @@ export default function ManazilDatabase() {
             <ManuscriptKnowledgeExplorer
               entityType={selectedEntity.entityType}
               entityData={selectedEntity.entityData}
-              onClose={() => { setExplorerOpen(false); setSelectedEntity(null); }}
+              onClose={closeExplorer}
             />
           )}
         </AnimatePresence>
