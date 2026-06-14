@@ -13,6 +13,7 @@ import SplashScreen from './components/SplashScreen';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import OfflineNotice from './components/OfflineNotice';
 import ErrorBoundary from './components/ErrorBoundary';
+import ProtectedPage from './components/ProtectedPage';
 // Add page imports here — lazy loaded for performance
 import Home from './pages/Home';
 
@@ -101,47 +102,47 @@ const AuthenticatedApp = () => {
       >
         <Suspense fallback={<PageFallback />}>
           <Routes location={location}>
-            <Route path="/" element={<Home />} />
-            <Route path="/abjad" element={<AbjadKabirPage />} />
-            <Route path="/anasir" element={<AnasirPage />} />
-            <Route path="/hadim" element={<HadimPage />} />
-            <Route path="/mizaan9" element={<Mizaan9Page />} />
-            <Route path="/magic-sqayer" element={<MagicSqayerPage />} />
-            <Route path="/vefkin-yapilisi" element={<VefkinYapilisiPage />} />
-            <Route path="/basthul-huroof-2" element={<BastHuroofPage />} />
-            <Route path="/faal-hasrath" element={<FaalHasrathPage />} />
-            <Route path="/plants" element={<PlantsPage />} />
-            <Route path="/plants/:id" element={<PlantDetailPage />} />
-            <Route path="/evil-jinn" element={<EvilJinnPage />} />
-            <Route path="/holy-names" element={<MagicalHolyNamesPage />} />
-            <Route path="/astro-clock" element={<AstroClockPage />} />
-            <Route path="/admin/faal-chob-upload" element={<AdminFaalChobUpload />} />
-            <Route path="/hierarchy-audit" element={<HierarchyAuditPage />} />
-            <Route path="/pipeline-test" element={<MizaanPipelineTest />} />
-            <Route path="/audit-report" element={<MizaanAuditReport />} />
-            <Route path="/istintak-discovery" element={<IstintakRuleDiscovery />} />
-            <Route path="/manuscript-pipeline" element={<ManuscriptPipelinePage />} />
-            <Route path="/abjad-bast-audit" element={<AbjadBastAuditPage />} />
-            <Route path="/mizan-calculation-audit" element={<MizanCalculationAudit />} />
-            <Route path="/vefk-audit" element={<MizanVefkAuditPage />} />
-            <Route path="/method-classification" element={<MizanMethodClassification />} />
-            <Route path="/manuscript-verification" element={<MizanManuscriptVerification />} />
-            <Route path="/manuscript-analysis" element={<MizanManuscriptAnalysis />} />
-            <Route path="/vefk-model-verification" element={<MizanVefkModelVerification />} />
-            <Route path="/rubai-verification" element={<MizanRubaiVerification />} />
-            <Route path="/manuscript-audit" element={<MizanManuscriptAudit />} />
-            <Route path="/manuscript-audit-full" element={<ManuscriptAuditPage />} />
-            <Route path="/manuscript-action-finder" element={<ManuscriptActionFinder />} />
-            <Route path="/manuscript-library" element={<ManuscriptLibraryPage />} />
-            <Route path="/manuscript-final-audit" element={<ManuscriptFinalAudit />} />
-            <Route path="/astrology-only-audit" element={<AstrologyOnlyAudit />} />
-            <Route path="/manuscript-browser" element={<ManuscriptRecordBrowser />} />
-            <Route path="/manuscript-rule-audit" element={<ManuscriptRuleAudit />} />
-            <Route path="/manuscript-search" element={<ManuscriptAdvancedSearch />} />
-            <Route path="/manazil-quality-audit" element={<ManazilQualityAudit />} />
-            <Route path="/manuscript-completion-report" element={<ManuscriptCompletionReport />} />
-            <Route path="/customer-service" element={<CustomerService />} />
-            <Route path="/admin/support" element={<AdminSupport />} />
+            <Route path="/" element={<ProtectedPage routePath="/"><Home /></ProtectedPage>} />
+            <Route path="/abjad" element={<ProtectedPage routePath="/abjad"><AbjadKabirPage /></ProtectedPage>} />
+            <Route path="/anasir" element={<ProtectedPage routePath="/anasir"><AnasirPage /></ProtectedPage>} />
+            <Route path="/hadim" element={<ProtectedPage routePath="/hadim"><HadimPage /></ProtectedPage>} />
+            <Route path="/mizaan9" element={<ProtectedPage routePath="/mizaan9"><Mizaan9Page /></ProtectedPage>} />
+            <Route path="/magic-sqayer" element={<ProtectedPage routePath="/magic-sqayer"><MagicSqayerPage /></ProtectedPage>} />
+            <Route path="/vefkin-yapilisi" element={<ProtectedPage routePath="/vefkin-yapilisi"><VefkinYapilisiPage /></ProtectedPage>} />
+            <Route path="/basthul-huroof-2" element={<ProtectedPage routePath="/basthul-huroof-2"><BastHuroofPage /></ProtectedPage>} />
+            <Route path="/faal-hasrath" element={<ProtectedPage routePath="/faal-hasrath"><FaalHasrathPage /></ProtectedPage>} />
+            <Route path="/plants" element={<ProtectedPage routePath="/plants"><PlantsPage /></ProtectedPage>} />
+            <Route path="/plants/:id" element={<ProtectedPage routePath="/plants/:id"><PlantDetailPage /></ProtectedPage>} />
+            <Route path="/evil-jinn" element={<ProtectedPage routePath="/evil-jinn"><EvilJinnPage /></ProtectedPage>} />
+            <Route path="/holy-names" element={<ProtectedPage routePath="/holy-names"><MagicalHolyNamesPage /></ProtectedPage>} />
+            <Route path="/astro-clock" element={<ProtectedPage routePath="/astro-clock"><AstroClockPage /></ProtectedPage>} />
+            <Route path="/admin/faal-chob-upload" element={<ProtectedPage routePath="/admin/faal-chob-upload"><AdminFaalChobUpload /></ProtectedPage>} />
+            <Route path="/hierarchy-audit" element={<ProtectedPage routePath="/hierarchy-audit"><HierarchyAuditPage /></ProtectedPage>} />
+            <Route path="/pipeline-test" element={<ProtectedPage routePath="/pipeline-test"><MizaanPipelineTest /></ProtectedPage>} />
+            <Route path="/audit-report" element={<ProtectedPage routePath="/audit-report"><MizaanAuditReport /></ProtectedPage>} />
+            <Route path="/istintak-discovery" element={<ProtectedPage routePath="/istintak-discovery"><IstintakRuleDiscovery /></ProtectedPage>} />
+            <Route path="/manuscript-pipeline" element={<ProtectedPage routePath="/manuscript-pipeline"><ManuscriptPipelinePage /></ProtectedPage>} />
+            <Route path="/abjad-bast-audit" element={<ProtectedPage routePath="/abjad-bast-audit"><AbjadBastAuditPage /></ProtectedPage>} />
+            <Route path="/mizan-calculation-audit" element={<ProtectedPage routePath="/mizan-calculation-audit"><MizanCalculationAudit /></ProtectedPage>} />
+            <Route path="/vefk-audit" element={<ProtectedPage routePath="/vefk-audit"><MizanVefkAuditPage /></ProtectedPage>} />
+            <Route path="/method-classification" element={<ProtectedPage routePath="/method-classification"><MizanMethodClassification /></ProtectedPage>} />
+            <Route path="/manuscript-verification" element={<ProtectedPage routePath="/manuscript-verification"><MizanManuscriptVerification /></ProtectedPage>} />
+            <Route path="/manuscript-analysis" element={<ProtectedPage routePath="/manuscript-analysis"><MizanManuscriptAnalysis /></ProtectedPage>} />
+            <Route path="/vefk-model-verification" element={<ProtectedPage routePath="/vefk-model-verification"><MizanVefkModelVerification /></ProtectedPage>} />
+            <Route path="/rubai-verification" element={<ProtectedPage routePath="/rubai-verification"><MizanRubaiVerification /></ProtectedPage>} />
+            <Route path="/manuscript-audit" element={<ProtectedPage routePath="/manuscript-audit"><MizanManuscriptAudit /></ProtectedPage>} />
+            <Route path="/manuscript-audit-full" element={<ProtectedPage routePath="/manuscript-audit-full"><ManuscriptAuditPage /></ProtectedPage>} />
+            <Route path="/manuscript-action-finder" element={<ProtectedPage routePath="/manuscript-action-finder"><ManuscriptActionFinder /></ProtectedPage>} />
+            <Route path="/manuscript-library" element={<ProtectedPage routePath="/manuscript-library"><ManuscriptLibraryPage /></ProtectedPage>} />
+            <Route path="/manuscript-final-audit" element={<ProtectedPage routePath="/manuscript-final-audit"><ManuscriptFinalAudit /></ProtectedPage>} />
+            <Route path="/astrology-only-audit" element={<ProtectedPage routePath="/astrology-only-audit"><AstrologyOnlyAudit /></ProtectedPage>} />
+            <Route path="/manuscript-browser" element={<ProtectedPage routePath="/manuscript-browser"><ManuscriptRecordBrowser /></ProtectedPage>} />
+            <Route path="/manuscript-rule-audit" element={<ProtectedPage routePath="/manuscript-rule-audit"><ManuscriptRuleAudit /></ProtectedPage>} />
+            <Route path="/manuscript-search" element={<ProtectedPage routePath="/manuscript-search"><ManuscriptAdvancedSearch /></ProtectedPage>} />
+            <Route path="/manazil-quality-audit" element={<ProtectedPage routePath="/manazil-quality-audit"><ManazilQualityAudit /></ProtectedPage>} />
+            <Route path="/manuscript-completion-report" element={<ProtectedPage routePath="/manuscript-completion-report"><ManuscriptCompletionReport /></ProtectedPage>} />
+            <Route path="/customer-service" element={<ProtectedPage routePath="/customer-service"><CustomerService /></ProtectedPage>} />
+            <Route path="/admin/support" element={<ProtectedPage routePath="/admin/support"><AdminSupport /></ProtectedPage>} />
 
 
             <Route path="*" element={<PageNotFound />} />
