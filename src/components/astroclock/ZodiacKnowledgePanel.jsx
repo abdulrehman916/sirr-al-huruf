@@ -9,7 +9,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ZODIAC_SIGNS } from "@/lib/astroClockZodiacData.js";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import { Star, ChevronDown } from "lucide-react";
+import { Star, ChevronDown, BookOpen } from "lucide-react";
+import ManuscriptKnowledgeExplorer from "./ManuscriptKnowledgeExplorer";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -25,8 +26,18 @@ const G = {
 export default function ZodiacKnowledgePanel() {
   const { isMalayalam } = useAstroClockLanguage();
   const [selectedSignKey, setSelectedSignKey] = useState(null);
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState(null);
 
   const signs = Object.values(ZODIAC_SIGNS);
+
+  function openExplorer(sign) {
+    setSelectedEntity({
+      entityType: 'ZODIAC',
+      entityData: sign.name_ar
+    });
+    setExplorerOpen(true);
+  }
 
   return (
     <motion.div
@@ -53,21 +64,29 @@ export default function ZodiacKnowledgePanel() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {(signs || []).map((sign) => (
-          <button
-            key={sign.key}
-            onClick={() => setSelectedSignKey(selectedSignKey === sign.key ? null : sign.key)}
-            className="p-3 rounded-lg text-center border transition-all duration-300"
-            style={{
-              background: selectedSignKey === sign.key ? G.bgHi : "rgba(255,255,255,0.02)",
-              borderColor: selectedSignKey === sign.key ? G.border : "rgba(255,255,255,0.08)",
-              boxShadow: selectedSignKey === sign.key ? `0 0 15px ${G.glow}` : 'none',
-            }}
-          >
-            <p className="text-3xl mb-1">{sign.symbol}</p>
-            <p className="font-inter text-xs font-bold text-white/80">
-              {isMalayalam ? sign.name_ml_equivalent : sign.name_en}
-            </p>
-          </button>
+          <div key={sign.key} className="relative">
+            <button
+              onClick={() => setSelectedSignKey(selectedSignKey === sign.key ? null : sign.key)}
+              className="w-full p-3 rounded-lg text-center border transition-all duration-300"
+              style={{
+                background: selectedSignKey === sign.key ? G.bgHi : "rgba(255,255,255,0.02)",
+                borderColor: selectedSignKey === sign.key ? G.border : "rgba(255,255,255,0.08)",
+                boxShadow: selectedSignKey === sign.key ? `0 0 15px ${G.glow}` : 'none',
+              }}
+            >
+              <p className="text-3xl mb-1">{sign.symbol}</p>
+              <p className="font-inter text-xs font-bold text-white/80">
+                {isMalayalam ? sign.name_ml_equivalent : sign.name_en}
+              </p>
+            </button>
+            <button
+              onClick={() => openExplorer(sign)}
+              className="absolute top-1 right-1 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              title={isMalayalam ? "ഹസ്തലിഖിതങ്ങൾ കാണുക" : "View Manuscripts"}
+            >
+              <BookOpen className="w-3.5 h-3.5" style={{ color: G.text }} />
+            </button>
+          </div>
         ))}
       </div>
 
@@ -81,6 +100,17 @@ export default function ZodiacKnowledgePanel() {
           >
             <SignDetails sign={ZODIAC_SIGNS[selectedSignKey]} isMalayalam={isMalayalam} />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Manuscript Knowledge Explorer Modal */}
+      <AnimatePresence>
+        {explorerOpen && selectedEntity && (
+          <ManuscriptKnowledgeExplorer
+            entityType={selectedEntity.entityType}
+            entityData={selectedEntity.entityData}
+            onClose={() => { setExplorerOpen(false); setSelectedEntity(null); }}
+          />
         )}
       </AnimatePresence>
     </motion.div>

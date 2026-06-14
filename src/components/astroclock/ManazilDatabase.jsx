@@ -7,9 +7,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, ChevronDown } from "lucide-react";
+import { Moon, ChevronDown, BookOpen } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import { LUNAR_MANSION_DATA } from "@/lib/astroClockLunarMansionML.js";
+import ManuscriptKnowledgeExplorer from "./ManuscriptKnowledgeExplorer";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -27,12 +28,22 @@ const G = {
 export default function ManazilDatabase() {
   const { isMalayalam } = useAstroClockLanguage();
   const [expandedManzil, setExpandedManzil] = useState(null);
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState(null);
 
   const getClassificationColor = (nature) => {
     if (nature === "Saad") return G.saad;
     if (nature === "Nahs") return G.nahs;
     return G.mixed;
   };
+
+  function openExplorer(manzil) {
+    setSelectedEntity({
+      entityType: 'LUNAR_MANSION',
+      entityData: manzil.name_arabic
+    });
+    setExplorerOpen(true);
+  }
 
   return (
     <motion.div
@@ -66,24 +77,24 @@ export default function ManazilDatabase() {
                             </span>
                             <div style={{width: '4px', height: '32px', borderRadius: '2px', background: getClassificationColor(manzil.nature)}}></div>
                             <div>
-                                <p className="font-amiri font-bold text-3xl md:text-4xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}}>{manzil.name_en}</p>
+                                <p className="font-amiri font-bold text-3xl md:text-4xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}}>{manzil.name_arabic}</p>
                                 <p className="font-malayalam-sm font-semibold text-white/80 mt-0.5">{isMalayalam ? manzil.zodiac_sign_ml : manzil.zodiac_sign}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
-                            <div className="text-right">
-                                <p className="font-amiri text-5xl md:text-6xl font-bold text-white/95 leading-relaxed" style={{ textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{manzil.name_arabic}</p>
-                                <p className="font-inter text-[8px] text-white/50 mt-0.5">Arabic Letter</p>
-                                {manzil.letter_malayalam && (
-                                    <p className="font-malayalam-sm text-white/60 mt-1">{manzil.letter_malayalam}</p>
-                                )}
-                            </div>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); openExplorer(manzil); }}
+                                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                                title={isMalayalam ? "ഹസ്തലിഖിതങ്ങൾ കാണുക" : "View Manuscripts"}
+                            >
+                                <BookOpen className="w-5 h-5" style={{ color: G.text }} />
+                            </button>
                             <ChevronDown 
                                 className="w-6 h-6 text-gold transition-transform"
                                 style={{transform: expandedManzil === manzil.number ? 'rotate(180deg)' : 'rotate(0deg)'}}
                             />
                         </div>
-                    </button>
+
 
                     <AnimatePresence>
                     {expandedManzil === manzil.number && (
@@ -123,6 +134,17 @@ export default function ManazilDatabase() {
                 </div>
             ))}
         </div>
+
+        {/* Manuscript Knowledge Explorer Modal */}
+        <AnimatePresence>
+          {explorerOpen && selectedEntity && (
+            <ManuscriptKnowledgeExplorer
+              entityType={selectedEntity.entityType}
+              entityData={selectedEntity.entityData}
+              onClose={() => { setExplorerOpen(false); setSelectedEntity(null); }}
+            />
+          )}
+        </AnimatePresence>
     </motion.div>
   );
 }

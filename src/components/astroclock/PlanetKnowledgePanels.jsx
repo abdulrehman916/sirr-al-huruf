@@ -6,10 +6,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Sun, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sun, ChevronDown, BookOpen } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import { PLANET_INFO, WEEKDAY_ANALYSIS } from "@/lib/astroClockLiveEngine.js";
+import ManuscriptKnowledgeExplorer from "./ManuscriptKnowledgeExplorer";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -24,6 +25,16 @@ const G = {
 export default function PlanetKnowledgePanels() {
   const { isMalayalam } = useAstroClockLanguage();
   const planets = Object.values(PLANET_INFO);
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState(null);
+
+  function openExplorer(planet) {
+    setSelectedEntity({
+      entityType: 'PLANET',
+      entityData: planet.name_ar
+    });
+    setExplorerOpen(true);
+  }
 
   return (
     <motion.div
@@ -49,38 +60,63 @@ export default function PlanetKnowledgePanels() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(planets || []).map((planet) => (
-          <PlanetCard key={planet.name_en} planet={planet} isMalayalam={isMalayalam} />
+          <PlanetCard 
+            key={planet.name_en} 
+            planet={planet} 
+            isMalayalam={isMalayalam}
+            openExplorer={openExplorer}
+          />
         ))}
       </div>
+
+      {/* Manuscript Knowledge Explorer Modal */}
+      <AnimatePresence>
+        {explorerOpen && selectedEntity && (
+          <ManuscriptKnowledgeExplorer
+            entityType={selectedEntity.entityType}
+            entityData={selectedEntity.entityData}
+            onClose={() => { setExplorerOpen(false); setSelectedEntity(null); }}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
-function PlanetCard({ planet, isMalayalam }) {
+function PlanetCard({ planet, isMalayalam, openExplorer }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="rounded-xl border" style={{ background: G.bg, borderColor: G.faint }}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-4 flex items-center justify-between"
-      >
-        <div className="flex items-center gap-4 text-left">
-          <span className="text-4xl flex-shrink-0">{planet.symbol}</span>
-          <div className="flex-1">
-            <p className="font-amiri text-4xl md:text-5xl font-bold leading-relaxed" style={{ color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)" }}>
-              {planet.name_ar}
-            </p>
-            <p className="font-inter text-lg font-bold text-white/95 mt-1">
-              {isMalayalam ? planet.name_ml_equivalent : planet.name_en}
-            </p>
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex-1 p-4 flex items-center justify-between text-left"
+        >
+          <div className="flex items-center gap-4">
+            <span className="text-4xl flex-shrink-0">{planet.symbol}</span>
+            <div className="flex-1">
+              <p className="font-amiri text-4xl md:text-5xl font-bold leading-relaxed" style={{ color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)" }}>
+                {planet.name_ar}
+              </p>
+              <p className="font-inter text-lg font-bold text-white/95 mt-1">
+                {isMalayalam ? planet.name_ml_equivalent : planet.name_en}
+              </p>
+            </div>
           </div>
-        </div>
-        <ChevronDown
-          className="w-5 h-5 transition-transform duration-300"
-          style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", color: G.dim }}
-        />
-      </button>
+          <ChevronDown
+            className="w-5 h-5 transition-transform duration-300"
+            style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", color: G.dim }}
+          />
+        </button>
+        <button
+          onClick={() => openExplorer(planet)}
+          className="p-3 m-2 rounded-lg hover:bg-white/10 transition-colors"
+          title={isMalayalam ? "ഹസ്തലിഖിതങ്ങൾ കാണുക" : "View Manuscripts"}
+        >
+          <BookOpen className="w-5 h-5" style={{ color: G.text }} />
+        </button>
+      </div>
 
       {isOpen && (
         <div className="p-5 border-t space-y-4" style={{ borderColor: G.faint }}>
@@ -133,7 +169,3 @@ function PlanetCard({ planet, isMalayalam }) {
           </div>
 
         </div>
-      )}
-    </div>
-  );
-}
