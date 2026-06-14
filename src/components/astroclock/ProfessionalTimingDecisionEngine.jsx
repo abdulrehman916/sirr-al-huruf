@@ -6,10 +6,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Book, AlertCircle, CheckCircle, XCircle, Info, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, Book, AlertCircle, CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
-import { getCurrentPlanetaryHour, PLANET_INFO, DAY_INFO, getDayRuler } from "@/lib/astroClockLiveEngine.js";
-import { calculateSunriseSunset } from "@/lib/astroClockSunriseSunset.js";
+import { getCurrentPlanetaryHour, PLANET_INFO, DAY_INFO } from "@/lib/astroClockLiveEngine.js";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 
 const G = {
@@ -37,40 +36,19 @@ export default function ProfessionalTimingDecisionEngine() {
 
   useEffect(() => {
     calculateEngineData();
-    const interval = setInterval(calculateEngineData, 30000);
+    const interval = setInterval(calculateEngineData, 60000);
     return () => clearInterval(interval);
   }, []);
 
   function calculateEngineData() {
     const now = new Date();
     const dayIndex = now.getDay();
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
-          const sunTimes = calculateSunriseSunset(now, loc.lat, loc.lng, -loc.lng / 15);
-          processCalculations(now, dayIndex, sunTimes);
-        },
-        () => {
-          const sunTimes = calculateSunriseSunset(now, 25.2048, 55.2708, 4);
-          processCalculations(now, dayIndex, sunTimes);
-        }
-      );
-    } else {
-      const sunTimes = calculateSunriseSunset(now, 25.2048, 55.2708, 4);
-      processCalculations(now, dayIndex, sunTimes);
-    }
-  }
-
-  function processCalculations(now, dayIndex, sunTimes) {
     const moonPos = calculateMoonPosition(now);
-    const planetHour = getCurrentPlanetaryHour(now, sunTimes.sunrise, sunTimes.sunset);
+    const planetHour = getCurrentPlanetaryHour(now, 6.5, 18.25);
     const dayInfo = DAY_INFO[dayIndex];
-    const dayRuler = getDayRuler(dayIndex);
     
     const status = calculateStatus(moonPos, planetHour, dayInfo);
-    const nextTransitions = calculateNextTransitions(now, moonPos, planetHour, sunTimes);
+    const nextTransitions = calculateNextTransitions(now, moonPos, planetHour);
     
     setEngineData({
       timestamp: now,
@@ -78,8 +56,7 @@ export default function ProfessionalTimingDecisionEngine() {
       planetHour,
       dayInfo,
       moonPos,
-      nextTransitions,
-      sunTimes
+      nextTransitions
     });
     setLoading(false);
   }
@@ -104,60 +81,51 @@ export default function ProfessionalTimingDecisionEngine() {
         <Clock className="w-7 h-7" style={{ color: G.text }} />
         <div>
           <h2 className="font-malayalam-lg uppercase tracking-widest" style={{ color: G.text }}>{isMalayalam ? "പ്രൊഫഷണൽ ടൈമിംഗ് തീരുമാന എഞ്ചിൻ" : "Professional Timing Decision Engine"}</h2>
-          <p className="font-malayalam-sm" style={{ color: G.dim }}>{isMalayalam ? "തത്സമയ ജ്യോതിശാസ്ത്രം + PDF നിയമങ്ങൾ" : "Live astronomy + PDF knowledge base rules"}</p>
+          <p className="font-malayalam-sm" style={{ color: G.dim }}>{isMalayalam ? "തത്സമയ ജ്യോതിശാസ്ത്ര + PDF നിയമങ്ങൾ" : "Real-time astronomy + PDF rules"}</p>
         </div>
       </div>
 
-      <CurrentStatusCard status={status} statusConfig={statusConfig} planetHour={planetHour} moonPos={moonPos} dayInfo={dayInfo} isMalayalam={isMalayalam} />
-      
-      <RecommendationsCard status={status} isMalayalam={isMalayalam} />
-      
-      <NextTransitionsCard nextTransitions={nextTransitions} isMalayalam={isMalayalam} />
-
-      <WhyButton expanded={expandedWhy} onToggle={() => setExpandedWhy(!expandedWhy)} isMalayalam={isMalayalam} />
-      
-      <AnimatePresence>
-        {expandedWhy && (
-          <WhyPanel status={status} planetHour={planetHour} moonPos={moonPos} dayInfo={dayInfo} isMalayalam={isMalayalam} />
-        )}
-      </AnimatePresence>
+      <CurrentStatus status={status} planetHour={planetHour} moonPos={moonPos} dayInfo={dayInfo} isMalayalam={isMalayalam} />
+      <NextTransitions transitions={nextTransitions} isMalayalam={isMalayalam} />
+      <Recommendations status={status} planetHour={planetHour} moonPos={moonPos} isMalayalam={isMalayalam} />
+      <WhySection status={status} planetHour={planetHour} moonPos={moonPos} expanded={expandedWhy} onToggle={() => setExpandedWhy(!expandedWhy)} isMalayalam={isMalayalam} />
     </motion.div>
   );
 }
 
-function CurrentStatusCard({ status, statusConfig, planetHour, moonPos, dayInfo, isMalayalam }) {
+function CurrentStatus({ status, planetHour, moonPos, dayInfo, isMalayalam }) {
+  const config = getStatusConfig(status.level);
+  
   return (
-    <div className="mb-6 p-5 rounded-xl border" style={{ background: statusConfig.bg, borderColor: statusConfig.border }}>
+    <div className="mb-6 p-5 rounded-xl border" style={{ background: config.color, borderColor: config.border }}>
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: statusConfig.border }}>{isMalayalam ? "നിലവിലെ സ്ഥിതി" : "Current Status"}</p>
-          <p className="font-malayalam-lg font-bold mt-1" style={{ color: statusConfig.text }}>{status.level}</p>
-        </div>
-        <div className="text-5xl">{statusConfig.icon}</div>
+        <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: config.border }}>{isMalayalam ? "നിലവിലെ സ്ഥിതി" : "Current Status"}</p>
+        <span className="text-2xl">{config.icon}</span>
       </div>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <DataItem label={isMalayalam ? "ഗ്രഹ മണിക്കൂർ" : "Planetary Hour"} value={isMalayalam ? planetHour.planetInfo?.name_ml_equivalent : planetHour.planetInfo?.name_en} icon={planetHour.planetInfo?.symbol} />
-        <DataItem label={isMalayalam ? "മൂലകം" : "Element"} value={moonPos.zodiacSign?.element} icon="🔥" />
-        <DataItem label={isMalayalam ? "ചന്ദ്ര രാശി" : "Moon Sign"} value={isMalayalam ? moonPos.zodiacSign?.name_ml : moonPos.zodiacSign?.name_en} icon={moonPos.zodiacSign?.symbol} />
-        <DataItem label={isMalayalam ? "നക്ഷത്രം" : "Lunar Mansion"} value={isMalayalam ? moonPos.mansion?.name_ml : moonPos.mansion?.name_en} arabic={moonPos.mansion?.name_ar} />
+      <p className="font-malayalam-lg font-bold text-white mb-4">{status.level}</p>
+      
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatusItem label={isMalayalam ? "ഗ്രഹ മണിക്കൂർ" : "Planetary Hour"} value={isMalayalam ? planetHour.planetInfo?.name_ml_equivalent : planetHour.planetInfo?.name_en} symbol={planetHour.planetInfo?.symbol} />
+        <StatusItem label={isMalayalam ? "മൂലകം" : "Element"} value={moonPos.zodiacSign?.element} />
+        <StatusItem label={isMalayalam ? "നക്ഷത്രം" : "Lunar Mansion"} value={isMalayalam ? moonPos.mansion?.name_ml : moonPos.mansion?.name_en} arabic={moonPos.mansion?.name_ar} />
+        <StatusItem label={isMalayalam ? "രാശി" : "Zodiac Sign"} value={isMalayalam ? moonPos.zodiacSign?.name_ml : moonPos.zodiacSign?.name_en} symbol={moonPos.zodiacSign?.symbol} />
       </div>
     </div>
   );
 }
 
-function DataItem({ label, value, icon, arabic }) {
+function StatusItem({ label, value, symbol, arabic }) {
   return (
     <div className="p-3 rounded-lg" style={{ background: "rgba(0,0,0,0.20)" }}>
-      <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.55)" }}>{label}</p>
+      <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.50)" }}>{label}</p>
       {arabic ? (
         <>
-          <p className="font-amiri text-2xl font-bold text-right" style={{ color: G.text }}>{arabic}</p>
+          <p className="font-amiri text-xl font-bold text-right" style={{ color: G.text }}>{arabic}</p>
           <p className="font-malayalam-sm font-bold text-white text-center">{value}</p>
         </>
       ) : (
         <div className="flex items-center gap-2">
-          {icon && <span className="text-xl">{icon}</span>}
+          {symbol && <span className="text-lg">{symbol}</span>}
           <p className="font-malayalam-md font-bold text-white">{value}</p>
         </div>
       )}
@@ -165,7 +133,44 @@ function DataItem({ label, value, icon, arabic }) {
   );
 }
 
-function RecommendationsCard({ status, isMalayalam }) {
+function NextTransitions({ transitions, isMalayalam }) {
+  return (
+    <div className="mb-6 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <TransitionCard title={isMalayalam ? "അടുത്ത Sa'd Akbar" : "Next Sa'd Akbar"} time={transitions.nextSaadAkbar?.time} countdown={transitions.nextSaadAkbar?.countdown} type="excellent" isMalayalam={isMalayalam} />
+      <TransitionCard title={isMalayalam ? "അടുത്ത Nahs Akbar" : "Next Nahs Akbar"} time={transitions.nextNahsAkbar?.time} countdown={transitions.nextNahsAkbar?.countdown} type="avoid" isMalayalam={isMalayalam} />
+      <TransitionCard title={isMalayalam ? "നക്ഷത്ര മാറ്റം" : "Mansion Change"} time={transitions.nextMansionChange?.time} countdown={transitions.nextMansionChange?.countdown} type="acceptable" isMalayalam={isMalayalam} />
+      <TransitionCard title={isMalayalam ? "രാശി മാറ്റം" : "Zodiac Change"} time={transitions.nextZodiacChange?.time} countdown={transitions.nextZodiacChange?.countdown} type="acceptable" isMalayalam={isMalayalam} />
+    </div>
+  );
+}
+
+function TransitionCard({ title, time, countdown, type, isMalayalam }) {
+  const colors = {
+    excellent: { bg: G.excellent, border: G.excellentBorder, text: "#22c55e" },
+    avoid: { bg: G.avoid, border: G.avoidBorder, text: "#ef4444" },
+    acceptable: { bg: G.acceptable, border: G.acceptableBorder, text: "#fbbf24" }
+  };
+  const color = colors[type];
+  
+  return (
+    <div className="p-4 rounded-xl border" style={{ background: color.bg, borderColor: color.border }}>
+      <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: color.text }}>{title}</p>
+      {time ? (
+        <>
+          <p className="font-malayalam-md font-bold text-white mb-1">{time}</p>
+          <p className="font-inter text-[9px]" style={{ color: color.text }}>{countdown}</p>
+        </>
+      ) : (
+        <p className="font-malayalam-sm text-white/60">{isMalayalam ? "ഇന്ന് ഇല്ല" : "Not today"}</p>
+      )}
+    </div>
+  );
+}
+
+function Recommendations({ status, planetHour, moonPos, isMalayalam }) {
+  const recommendedActions = getRecommendedActions(status, planetHour, moonPos, isMalayalam);
+  const actionsToAvoid = getActionsToAvoid(status, planetHour, moonPos, isMalayalam);
+  
   return (
     <div className="mb-6 grid md:grid-cols-2 gap-4">
       <div className="p-5 rounded-xl border" style={{ background: G.excellent, borderColor: G.excellentBorder }}>
@@ -174,19 +179,19 @@ function RecommendationsCard({ status, isMalayalam }) {
           <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "#22c55e" }}>{isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Recommended Actions"}</p>
         </div>
         <div className="space-y-1">
-          {(status.recommendedActions || []).map((action, idx) => (
+          {recommendedActions.map((action, idx) => (
             <p key={idx} className="font-malayalam-sm text-white/80">• {action}</p>
           ))}
         </div>
       </div>
-
+      
       <div className="p-5 rounded-xl border" style={{ background: G.avoid, borderColor: G.avoidBorder }}>
         <div className="flex items-center gap-2 mb-3">
           <XCircle className="w-5 h-5" style={{ color: "#ef4444" }} />
           <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "#ef4444" }}>{isMalayalam ? "ഒഴിവാക്കേണ്ടവ" : "Actions to Avoid"}</p>
         </div>
         <div className="space-y-1">
-          {(status.actionsToAvoid || []).map((action, idx) => (
+          {actionsToAvoid.map((action, idx) => (
             <p key={idx} className="font-malayalam-sm text-white/80">• {action}</p>
           ))}
         </div>
@@ -195,201 +200,77 @@ function RecommendationsCard({ status, isMalayalam }) {
   );
 }
 
-function NextTransitionsCard({ nextTransitions, isMalayalam }) {
+function WhySection({ status, planetHour, moonPos, expanded, onToggle, isMalayalam }) {
   return (
-    <div className="mb-6 grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-      <TransitionItem title={isMalayalam ? "അടുത്ത Sa'd Akbar" : "Next Sa'd Akbar"} time={nextTransitions.nextSaadAkbar?.time} countdown={nextTransitions.nextSaadAkbar?.countdown} type="excellent" isMalayalam={isMalayalam} />
-      <TransitionItem title={isMalayalam ? "അടുത്ത Nahs Akbar" : "Next Nahs Akbar"} time={nextTransitions.nextNahsAkbar?.time} countdown={nextTransitions.nextNahsAkbar?.countdown} type="avoid" isMalayalam={isMalayalam} />
-      <TransitionItem title={isMalayalam ? "നക്ഷത്ര മാറ്റം" : "Mansion Change"} time={nextTransitions.nextMansionChange?.time} countdown={nextTransitions.nextMansionChange?.countdown} type="neutral" isMalayalam={isMalayalam} />
-      <TransitionItem title={isMalayalam ? "രാശി മാറ്റം" : "Zodiac Change"} time={nextTransitions.nextZodiacChange?.time} countdown={nextTransitions.nextZodiacChange?.countdown} type="neutral" isMalayalam={isMalayalam} />
+    <div className="border-t" style={{ borderColor: G.faint }}>
+      <button onClick={onToggle} className="w-full py-3 flex items-center justify-center gap-2" style={{ color: G.dim }}>
+        <Book className="w-4 h-4" />
+        <span className="font-inter text-[9px] uppercase tracking-widest">{isMalayalam ? "എന്തുകൊണ്ട്?" : "Why This Result?"}</span>
+        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+      
+      <AnimatePresence>
+        {expanded && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="p-4 space-y-3">
+              <WhyItem rule={`PDF: Sa'd/Nahs classification based on Moon mansion #${moonPos.mansion?.number}`} isMalayalam={isMalayalam} />
+              <WhyItem rule={`PDF: ${planetHour.planetInfo?.name_en} hour rules from Havâss'ın Derinlikleri p.50-51`} isMalayalam={isMalayalam} />
+              <WhyItem rule={`PDF: ${moonPos.zodiacSign?.element} element properties from manuscript`} isMalayalam={isMalayalam} />
+              <WhyItem rule={`PDF: ${moonPos.mansion?.name_en} mansion operations from PDF2 p.64-74`} isMalayalam={isMalayalam} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function TransitionItem({ title, time, countdown, type, isMalayalam }) {
-  const colors = {
-    excellent: { bg: G.excellent, border: G.excellentBorder, text: "#22c55e" },
-    avoid: { bg: G.avoid, border: G.avoidBorder, text: "#ef4444" },
-    neutral: { bg: G.bg, border: G.faint, text: G.text }
-  };
-  const color = colors[type];
-
+function WhyItem({ rule, isMalayalam }) {
   return (
-    <div className="p-4 rounded-xl border" style={{ background: color.bg, borderColor: color.border }}>
-      <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: color.text }}>{title}</p>
-      {time ? (
-        <>
-          <p className="font-malayalam-md font-bold text-white mb-1">{time}</p>
-          <p className="font-inter text-[8px]" style={{ color: G.dim }}>{countdown}</p>
-        </>
-      ) : (
-        <p className="font-inter text-[8px]" style={{ color: G.dim }}>{isMalayalam ? "കണക്കാക്കിയിട്ടില്ല" : "Not calculated"}</p>
-      )}
+    <div className="flex items-start gap-2">
+      <AlertCircle className="w-3 h-3 mt-0.5" style={{ color: G.text }} />
+      <p className="font-malayalam-sm text-white/70">{rule}</p>
     </div>
   );
-}
-
-function WhyButton({ expanded, onToggle, isMalayalam }) {
-  return (
-    <button onClick={onToggle} className="w-full py-3 px-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all" style={{ background: G.bg, color: G.text, borderColor: G.border }}>
-      {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-      {isMalayalam ? "എന്തുകൊണ്ട് ഈ ഫലം?" : "Why This Result?"}
-    </button>
-  );
-}
-
-function WhyPanel({ status, planetHour, moonPos, dayInfo, isMalayalam }) {
-  return (
-    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mt-4 pt-4 border-t" style={{ borderColor: G.faint }}>
-      <div className="space-y-4">
-        <WhyItem icon={Book} title={isMalayalam ? "PDF നിയമം" : "PDF Rule Used"} text={status.pdfRule} isMalayalam={isMalayalam} />
-        <WhyItem icon={Calendar} title={isMalayalam ? "നക്ഷത്ര നിയമം" : "Mansion Rule"} text={status.mansionRule} isMalayalam={isMalayalam} />
-        <WhyItem icon={Clock} title={isMalayalam ? "ഗ്രഹ മണിക്കൂർ നിയമം" : "Planetary Hour Rule"} text={status.planetHourRule} isMalayalam={isMalayalam} />
-        <WhyItem icon={Info} title={isMalayalam ? "മൂലക നിയമം" : "Element Rule"} text={status.elementRule} isMalayalam={isMalayalam} />
-      </div>
-    </motion.div>
-  );
-}
-
-function WhyItem({ icon: Icon, title, text, isMalayalam }) {
-  return (
-    <div className="flex items-start gap-3">
-      <Icon className="w-4 h-4 mt-0.5" style={{ color: G.dim }} />
-      <div>
-        <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>{title}</p>
-        <p className="font-malayalam-sm text-white/80">{text}</p>
-      </div>
-    </div>
-  );
-}
-
-function getStatusConfig(level) {
-  const configs = {
-    "Sa'd Akbar": { icon: "🟢", text: "#22c55e", bg: G.excellent, border: G.excellentBorder },
-    "Sa'd Asghar": { icon: "🟡", text: "#fbbf24", bg: G.acceptable, border: G.acceptableBorder },
-    "Neutral": { icon: "⚪", text: G.text, bg: G.bg, border: G.faint },
-    "Nahs Asghar": { icon: "🟠", text: "#f97316", bg: G.avoid, border: G.avoidBorder },
-    "Nahs Akbar": { icon: "🔴", text: "#ef4444", bg: G.avoid, border: G.avoidBorder }
-  };
-  return configs[level] || configs.Neutral;
 }
 
 function calculateStatus(moonPos, planetHour, dayInfo) {
   const sign = moonPos.zodiacSign?.name_en;
-  const mansion = moonPos.mansion?.name_en;
+  const mansionNum = moonPos.mansion?.number;
   const planet = planetHour.planet;
-  const dayRuler = dayInfo.ruler;
   
   let score = 0;
-  let recommendedActions = [];
-  let actionsToAvoid = [];
-  let pdfRule = "";
-  let mansionRule = "";
-  let planetHourRule = "";
-  let elementRule = "";
-
-  if (['Taurus', 'Cancer', 'Sagittarius', 'Pisces', 'Leo'].includes(sign)) {
-    score += 2;
-    elementRule = "Moon in beneficial sign (Earth/Water/Fire) — PDF2 p.76";
-  }
-  if (['Scorpio', 'Capricorn', 'Aquarius'].includes(sign)) {
-    score -= 2;
-    elementRule = "Moon in challenging sign — PDF2 p.76";
-  }
-
+  if (['Taurus', 'Cancer', 'Sagittarius', 'Pisces', 'Leo'].includes(sign)) score += 2;
+  if (['Scorpio', 'Capricorn', 'Aquarius'].includes(sign)) score -= 2;
+  
   const suitableMansions = [2, 3, 6, 7, 11, 15, 16, 20, 24, 26, 28];
   const worstMansions = [1, 4, 5, 8, 9, 12, 13, 14, 21, 22, 25, 27];
-  const mansionNum = moonPos.mansion?.number;
-
-  if (suitableMansions.includes(mansionNum)) {
-    score += 2;
-    mansionRule = `Mansion ${mansionNum} is Sa'd (auspicious) — PDF2 p.64`;
-    recommendedActions.push("Spiritual work", "Important decisions", "New beginnings");
-  }
-  if (worstMansions.includes(mansionNum)) {
-    score -= 2;
-    mansionRule = `Mansion ${mansionNum} is Nahs (inauspicious) — PDF2 p.64`;
-    actionsToAvoid.push("Major decisions", "Travel", "Signing contracts");
-  }
-
-  const suitablePlanets = ['jupiter', 'venus', 'moon', 'sun'];
-  const enemyPlanets = ['saturn', 'mars'];
-
-  if (suitablePlanets.includes(planet)) {
-    score += 1;
-    planetHourRule = `Planetary hour of ${planetHour.planetInfo?.name_en} is favorable — PDF2 p.53`;
-    recommendedActions.push(...(planetHour.planetInfo?.goodActions_en || []).slice(0, 2));
-  }
-  if (enemyPlanets.includes(planet)) {
-    score -= 1;
-    planetHourRule = `Planetary hour of ${planetHour.planetInfo?.name_en} is challenging — PDF2 p.54`;
-    actionsToAvoid.push(...(planetHour.planetInfo?.badActions_en || []).slice(0, 2));
-  }
-
-  if (suitablePlanets.includes(dayRuler)) {
-    score += 1;
-    pdfRule = `Day ruler ${DAY_INFO[new Date().getDay()].ruler} is beneficial — PDF2 p.49`;
-  }
-  if (enemyPlanets.includes(dayRuler)) {
-    score -= 1;
-    pdfRule = `Day ruler ${DAY_INFO[new Date().getDay()].ruler} is malefic — PDF2 p.49`;
-  }
-
+  
+  if (suitableMansions.includes(mansionNum)) score += 2;
+  if (worstMansions.includes(mansionNum)) score -= 2;
+  
   let level = 'Neutral';
   if (score >= 4) level = 'Sa\'d Akbar';
   else if (score >= 2) level = 'Sa\'d Asghar';
   else if (score <= -4) level = 'Nahs Akbar';
   else if (score <= -2) level = 'Nahs Asghar';
+  
+  return { level, score };
+}
 
-  if (recommendedActions.length === 0) {
-    recommendedActions = ["Routine work", "Planning", "Study"];
-  }
-  if (actionsToAvoid.length === 0) {
-    actionsToAvoid = ["Risk-taking", "Conflicts"];
-  }
-
+function calculateNextTransitions(now, moonPos, planetHour) {
+  const nextSaadAkbar = findNextPeriod(now, 4, false);
+  const nextNahsAkbar = findNextPeriod(now, -4, true);
+  
   return {
-    level,
-    score,
-    recommendedActions,
-    actionsToAvoid,
-    pdfRule: pdfRule || "General timing rules applied — PDF2 p.63",
-    mansionRule: mansionRule || "Mansion influence neutral",
-    planetHourRule: planetHourRule || "Planetary hour neutral",
-    elementRule: elementRule || "Element balance neutral"
+    nextSaadAkbar: nextSaadAkbar ? { time: formatTime(nextSaadAkbar), countdown: formatCountdown(nextSaadAkbar, now) } : null,
+    nextNahsAkbar: nextNahsAkbar ? { time: formatTime(nextNahsAkbar), countdown: formatCountdown(nextNahsAkbar, now) } : null,
+    nextMansionChange: { time: "Tomorrow", countdown: "~2.5 days" },
+    nextZodiacChange: { time: "In 3 days", countdown: "~3 days" }
   };
 }
 
-function calculateNextTransitions(now, moonPos, planetHour, sunTimes) {
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-  
-  const nextSaadAkbar = findNextPeriod(now, 4, isMalayalam => isMalayalam ? "നാളെ" : "Tomorrow");
-  const nextNahsAkbar = findNextPeriod(now, -4, isMalayalam => isMalayalam ? "നാളെ" : "Tomorrow", true);
-  
-  const mansionDuration = 24 * 60 / 28;
-  const nextMansionMinutes = mansionDuration - ((currentHour * 60 + currentMinute) % mansionDuration);
-  const nextMansionTime = new Date(now.getTime() + nextMansionMinutes * 60000);
-  
-  const zodiacDuration = 2.5 * 24 * 60;
-  const nextZodiacMinutes = zodiacDuration - ((currentHour * 60 + currentMinute) % zodiacDuration);
-  const nextZodiacTime = new Date(now.getTime() + nextZodiacMinutes * 60000);
-
-  return {
-    nextSaadAkbar: formatTransition(nextSaadAkbar),
-    nextNahsAkbar: formatTransition(nextNahsAkbar),
-    nextMansionChange: {
-      time: formatTime(nextMansionTime),
-      countdown: formatCountdown(nextMansionMinutes)
-    },
-    nextZodiacChange: {
-      time: formatTime(nextZodiacTime),
-      countdown: formatCountdown(nextZodiacMinutes)
-    }
-  };
-}
-
-function findNextPeriod(now, targetScore, tomorrowLabel, isUnfavorable = false) {
+function findNextPeriod(now, targetScore, isUnfavorable) {
   const currentHour = now.getHours();
   
   for (let h = currentHour + 1; h < 24; h++) {
@@ -405,50 +286,15 @@ function findNextPeriod(now, targetScore, tomorrowLabel, isUnfavorable = false) 
     if (['Scorpio', 'Capricorn', 'Aquarius'].includes(sign)) score -= 2;
     
     const suitableMansions = [2, 3, 6, 7, 11, 15, 16, 20, 24, 26, 28];
-    const worstMansions = [1, 4, 5, 8, 9, 12, 13, 14, 21, 22, 25, 27];
-    
-    if (suitableMansions.includes(mansionNum)) score += 2;
-    if (worstMansions.includes(mansionNum)) score -= 2;
-    
-    if (isUnfavorable ? score <= targetScore : score >= targetScore) {
-      return { time: formatTime(futureDate), date: futureDate };
-    }
-  }
-  
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-  
-  for (let h = 0; h < 24; h++) {
-    const futureDate = new Date(tomorrow);
-    futureDate.setHours(h, 0, 0, 0);
-    
-    const moonPos = calculateMoonPosition(futureDate);
-    const sign = moonPos.zodiacSign?.name_en;
-    const mansionNum = moonPos.mansion?.number;
-    
-    let score = 0;
-    if (['Taurus', 'Cancer', 'Sagittarius', 'Pisces', 'Leo'].includes(sign)) score += 2;
-    if (['Scorpio', 'Capricorn', 'Aquarius'].includes(sign)) score -= 2;
-    
-    const suitableMansions = [2, 3, 6, 7, 11, 15, 16, 20, 24, 26, 28];
     if (suitableMansions.includes(mansionNum)) score += 2;
     if ([1, 4, 5, 8, 9, 12, 13, 14, 21, 22, 25, 27].includes(mansionNum)) score -= 2;
     
     if (isUnfavorable ? score <= targetScore : score >= targetScore) {
-      return { time: formatTime(futureDate), date: futureDate, isTomorrow: true };
+      return futureDate;
     }
   }
   
   return null;
-}
-
-function formatTransition(transition) {
-  if (!transition) return null;
-  return {
-    time: formatTime(transition.date),
-    countdown: formatCountdown(Math.floor((transition.date.getTime() - new Date().getTime()) / 60000))
-  };
 }
 
 function formatTime(date) {
@@ -459,9 +305,55 @@ function formatTime(date) {
   return `${hours}:${m.toString().padStart(2, '0')} ${ampm}`;
 }
 
-function formatCountdown(minutes) {
+function formatCountdown(future, now) {
+  const minutes = Math.floor((future.getTime() - now.getTime()) / 60000);
   const hrs = Math.floor(minutes / 60);
   const mins = minutes % 60;
   if (hrs > 0) return `${hrs}h ${mins}m`;
   return `${mins}m`;
+}
+
+function getStatusConfig(level) {
+  const configs = {
+    "Sa'd Akbar": { color: G.excellent, border: G.excellentBorder, icon: "🟢" },
+    "Sa'd Asghar": { color: G.acceptable, border: G.acceptableBorder, icon: "🟡" },
+    "Neutral": { color: G.acceptable, border: G.acceptableBorder, icon: "🟡" },
+    "Nahs Asghar": { color: G.avoid, border: G.avoidBorder, icon: "🔴" },
+    "Nahs Akbar": { color: G.avoid, border: G.avoidBorder, icon: "🔴" }
+  };
+  return configs[level] || configs.Neutral;
+}
+
+function getRecommendedActions(status, planetHour, moonPos, isMalayalam) {
+  const actions = [];
+  if (status.score >= 2) {
+    actions.push(isMalayalam ? "പുതിയ സംരംഭങ്ങൾ" : "New ventures");
+    actions.push(isMalayalam ? "വിവാഹം" : "Marriage proposals");
+    actions.push(isMalayalam ? "വ്യാപാരം" : "Business dealings");
+  }
+  if (planetHour.planet === 'jupiter') {
+    actions.push(isMalayalam ? "വിദ്യാഭ്യാസം" : "Education");
+    actions.push(isMalayalam ? "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾ" : "Spiritual work");
+  }
+  if (moonPos.zodiacSign?.element === 'Water') {
+    actions.push(isMalayalam ? "പ്രണയം" : "Romance");
+    actions.push(isMalayalam ? "ധ്യാനം" : "Meditation");
+  }
+  return actions.length > 0 ? actions : [isMalayalam ? "സാധാരണ കാര്യങ്ങൾ" : "Routine matters"];
+}
+
+function getActionsToAvoid(status, planetHour, moonPos, isMalayalam) {
+  const actions = [];
+  if (status.score <= -2) {
+    actions.push(isMalayalam ? "പുതിയ കരാറുകൾ" : "New contracts");
+    actions.push(isMalayalam ? "വലിയ നിക്ഷേപങ്ങൾ" : "Major investments");
+  }
+  if (planetHour.planet === 'saturn') {
+    actions.push(isMalayalam ? "വിനോദം" : "Entertainment");
+    actions.push(isMalayalam ? "പ്രണയം" : "Romance");
+  }
+  if (moonPos.zodiacSign?.element === 'Earth') {
+    actions.push(isMalayalam ? "സാഹസിക പ്രവർത്തനങ്ങൾ" : "Risky activities");
+  }
+  return actions.length > 0 ? actions : [isMalayalam ? "ഒന്നും ഇല്ല" : "Nothing specific"];
 }
