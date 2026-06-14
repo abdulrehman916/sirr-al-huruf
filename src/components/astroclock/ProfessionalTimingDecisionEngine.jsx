@@ -5,8 +5,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Book, Info, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Book, Info, CheckCircle, ChevronDown, ChevronUp, Quote } from "lucide-react";
 import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
 import { getCurrentPlanetaryHour, PLANET_INFO, DAY_INFO } from "@/lib/astroClockLiveEngine.js";
 import { ACTION_RULES } from "@/lib/astroClockActionTimingAdvisor.js";
@@ -129,6 +129,7 @@ function CategoryGrid({ categoryTimings, isMalayalam }) {
 
 function CategoryCard({ category, isMalayalam }) {
   const { status, rules, icon } = category;
+  const [showWhy, setShowWhy] = useState(false);
   const statusConfig = {
     "Sa'd Akbar": { color: G.excellent, border: G.excellentBorder, icon: "🟢", label: isMalayalam ? "മികച്ചത്" : "Excellent" },
     "Sa'd Asghar": { color: G.acceptable, border: G.acceptableBorder, icon: "🟡", label: isMalayalam ? "സ്വീകാര്യം" : "Acceptable" },
@@ -154,29 +155,120 @@ function CategoryCard({ category, isMalayalam }) {
         <div className="flex items-center justify-between"><span className="text-white/60">{isMalayalam ? "ചന്ദ്രൻ:" : "Moon Sign:"}</span><span className="font-bold text-white">{status.currentMoonSign}</span></div>
         <div className="flex items-center justify-between"><span className="text-white/60">{isMalayalam ? "നക്ഷത്രം:" : "Mansion:"}</span><span className="font-bold text-white">{status.currentMansion}</span></div>
         <div className="flex items-center justify-between"><span className="text-white/60">{isMalayalam ? "മൂലകം:" : "Element:"}</span><span className="font-bold text-white">{status.currentElement}</span></div>
-        <div className="flex items-center justify-between"><span className="text-white/60">{isMalayalam ? "സ്ഥിതി:" : "Status:"}</span><span className="font-bold" style={{ color: config.border }}>{config.label}</span></div>
+        <div className="flex items-center justify-between"><span className="text-white/60">{isMalayalam ? "സ്കോർ:" : "Score:"}</span><span className="font-bold" style={{ color: config.border }}>{status.score > 0 ? '+' : ''}{status.score}</span></div>
       </div>
-      {source && (
-        <div className="mt-3 pt-3 border-t" style={{ borderColor: config.border }}>
-          <div className="flex items-center gap-2 mb-2">
-            <Book className="w-3 h-3" style={{ color: config.border }} />
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: config.border }}>{isMalayalam ? "സ്രോതസ്സ്" : "Source"}</p>
-          </div>
-          <p className="font-malayalam-sm text-white/80 mb-1">{source.book}</p>
-          <p className="font-inter text-[8px]" style={{ color: G.dim }}>{isMalayalam ? "പേജ്:" : "Page"} {source.page} • {source.author}</p>
-        </div>
-      )}
-      {rules.suitableMansions?.length > 0 && (
-        <div className="mt-2">
-          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>{isMalayalam ? "ഉചിത നക്ഷത്രങ്ങൾ:" : "Suitable Mansions:"}</p>
-          <div className="flex flex-wrap gap-1">
-            {rules.suitableMansions.slice(0, 5).map((num) => {
-              const m = LUNAR_MANSION_DATA.find(mans => mans.number === num);
-              return m ? <span key={num} className="px-2 py-1 rounded text-[8px]" style={{ background: "rgba(34,197,94,0.20)", color: "#22c55e" }}>{m.number}. {isMalayalam ? m.name_ml : m.name_en}</span> : null;
-            })}
-          </div>
-        </div>
-      )}
+      
+      {/* Why? Button */}
+      <button
+        onClick={() => setShowWhy(!showWhy)}
+        className="w-full mt-3 py-2 px-3 rounded-lg border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+        style={{
+          background: "rgba(212,175,55,0.10)",
+          color: G.text,
+          borderColor: G.border
+        }}
+      >
+        {showWhy ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        {isMalayalam ? "എന്തുകൊണ്ട്?" : "Why?"}
+      </button>
+
+      <AnimatePresence>
+        {showWhy && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 pt-3 border-t space-y-3" style={{ borderColor: config.border }}>
+              {/* Source PDF Info */}
+              {source && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Book className="w-3 h-3" style={{ color: config.border }} />
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: config.border }}>{isMalayalam ? "സ്രോതസ്സ് PDF" : "Source PDF"}</p>
+                  </div>
+                  <p className="font-malayalam-sm text-white/80 mb-1">{source.book}</p>
+                  <p className="font-inter text-[8px]" style={{ color: G.dim }}>{isMalayalam ? "പേജ്:" : "Page"} {source.page} • {source.author}</p>
+                  {source.chapter && (
+                    <p className="font-inter text-[8px] mt-1" style={{ color: G.dim }}>{isMalayalam ? "അധ്യായം:" : "Chapter"} {source.chapter}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Rule Text */}
+              {rules.ruleText && (
+                <div className="p-3 rounded-lg" style={{ background: "rgba(0,0,0,0.25)" }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Quote className="w-3 h-3" style={{ color: G.text }} />
+                    <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.text }}>{isMalayalam ? "നിയമം" : "Rule Text"}</p>
+                  </div>
+                  <p className="font-malayalam-sm text-white/90 italic">{rules.ruleText}</p>
+                </div>
+              )}
+
+              {/* PDF-Based Reasoning */}
+              <div>
+                <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>{isMalayalam ? "PDF അടിസ്ഥാനമാക്കിയ തീരുമാനം" : "PDF-Based Reasoning"}</p>
+                <div className="space-y-1 text-xs">
+                  {status.score >= 2 && (
+                    <p className="text-white/70">
+                      <span className="text-green-400 font-bold">✓</span> {isMalayalam ? "അനുയോജ്യമായ രാശി/നക്ഷത്രം/ഗ്രഹം" : "Favorable sign/mansion/planet from PDF rules"}
+                    </p>
+                  )}
+                  {status.score <= -2 && (
+                    <p className="text-white/70">
+                      <span className="text-red-400 font-bold">✗</span> {isMalayalam ? "അനുയോജ്യമല്ലാത്ത രാശി/നക്ഷത്രം/ഗ്രഹം" : "Unfavorable sign/mansion/planet from PDF rules"}
+                    </p>
+                  )}
+                  {status.suitableMansions?.includes(status.currentMansionNum) && (
+                    <p className="text-white/70">
+                      <span className="text-green-400 font-bold">✓</span> {isMalayalam ? `${status.currentMansion} ഉചിത നക്ഷത്രമാണ്` : `${status.currentMansion} is a suitable mansion per PDF`}
+                    </p>
+                  )}
+                  {status.worstMansions?.includes(status.currentMansionNum) && (
+                    <p className="text-white/70">
+                      <span className="text-red-400 font-bold">✗</span> {isMalayalam ? `${status.currentMansion} ഒഴിവാക്കേണ്ട നക്ഷത്രമാണ്` : `${status.currentMansion} is a forbidden mansion per PDF`}
+                    </p>
+                  )}
+                  {status.suitablePlanets?.includes(status.currentPlanetHour) && (
+                    <p className="text-white/70">
+                      <span className="text-green-400 font-bold">✓</span> {isMalayalam ? `${status.currentPlanetHour} ഉചിത ഗ്രഹ മണിക്കൂരാണ്` : `${status.currentPlanetHour} is a favorable planetary hour per PDF`}
+                    </p>
+                  )}
+                  {status.enemyPlanets?.includes(status.currentPlanetHour) && (
+                    <p className="text-white/70">
+                      <span className="text-red-400 font-bold">✗</span> {isMalayalam ? `${status.currentPlanetHour} ഒഴിവാക്കേണ്ട ഗ്രഹ മണിക്കൂരാണ്` : `${status.currentPlanetHour} is an enemy planetary hour per PDF`}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Suitable Mansions */}
+              {rules.suitableMansions?.length > 0 && (
+                <div>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>{isMalayalam ? "ഉചിത നക്ഷത്രങ്ങൾ:" : "Suitable Mansions (PDF):"}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {rules.suitableMansions.map((num) => {
+                      const m = LUNAR_MANSION_DATA.find(mans => mans.number === num);
+                      const isCurrent = num === status.currentMansionNum;
+                      return m ? (
+                        <span key={num} className={`px-2 py-1 rounded text-[8px] ${isCurrent ? 'font-bold' : ''}`} style={{ 
+                          background: isCurrent ? "rgba(34,197,94,0.30)" : "rgba(34,197,94,0.20)", 
+                          color: isCurrent ? "#22c55e" : "#22c55e",
+                          border: isCurrent ? `1px solid ${G.excellentBorder}` : 'none'
+                        }}>
+                          {m.number}. {isMalayalam ? m.name_ml : m.name_en}{isCurrent ? ' ✓' : ''}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -235,7 +327,20 @@ function determineStatus(rules, moonPos, planetHour, dayInfo) {
   else if (score <= -4) level = 'Nahs Akbar';
   else if (score <= -2) level = 'Nahs Asghar';
 
-  return { level, score, currentPlanetHour: planet, currentMoonSign: sign, currentMansion: mansion, currentElement: moonPos.zodiacSign?.element, dayRuler };
+  return { 
+    level, 
+    score, 
+    currentPlanetHour: planet, 
+    currentMoonSign: sign, 
+    currentMansion: mansion, 
+    currentMansionNum: mansionNum,
+    currentElement: moonPos.zodiacSign?.element, 
+    dayRuler,
+    suitableMansions,
+    worstMansions,
+    suitablePlanets,
+    enemyPlanets
+  };
 }
 
 function getCategoryIcon(key) {
