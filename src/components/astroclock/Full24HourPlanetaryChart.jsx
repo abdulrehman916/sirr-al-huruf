@@ -9,11 +9,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Sun, Moon, Calendar, Book, FileText, ChevronDown, ChevronUp, CheckCircle, XCircle, AlertCircle, Star, Zap } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import { getAllPlanetaryHours, DAY_INFO } from "@/lib/astroClockLiveEngine.js";
+import { getAllPlanetaryHours, DAY_INFO, PLANET_INFO } from "@/lib/astroClockLiveEngine.js";
 import { calculateSunriseSunset, formatDecimalTime } from "@/lib/astroClockSunriseSunset.js";
 import { getPlanetFriendships } from "@/lib/astroClockPlanetFriendships.js";
 import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 import { safeFormatTime } from "@/lib/astroClockDateUtils.js";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -399,13 +400,15 @@ function HourRow({ hour, index, isCurrent, isNext, expanded, onToggle, isMalayal
             exit={{ height: 0, opacity: 0 }}
           >
             <td colSpan={6} className="p-0">
-              <HourDetails 
-                hour={hour} 
-                index={index}
-                planetRules={planetRules}
-                friendships={friendships}
-                isMalayalam={isMalayalam}
-              />
+              <ErrorBoundary fallbackMessage="Could not load hour details. Please try again.">
+                <HourDetails 
+                  hour={hour} 
+                  index={index}
+                  planetRules={planetRules}
+                  friendships={friendships}
+                  isMalayalam={isMalayalam}
+                />
+              </ErrorBoundary>
             </td>
           </motion.tr>
         )}
@@ -436,7 +439,7 @@ function HourDetails({ hour, index, planetRules, friendships, isMalayalam }) {
             <DetailRow label={isMalayalam ? "അവസാനം" : "End"} value={hour.endTime} />
             <DetailRow label={isMalayalam ? "ദൈർഘ്യം" : "Duration"} value={`${typeof hour.durationMinutes === 'number' && Number.isFinite(hour.durationMinutes) ? hour.durationMinutes.toFixed(1) : '--'} min`} />
             <DetailRow label={isMalayalam ? "ഗ്രഹം" : "Planet Ruler"} value={hour.planetInfo?.name_en} symbol={hour.planetInfo?.symbol} />
-            <DetailRow label={isMalayalam ? "ദിവസ നാഥൻ" : "Day Ruler"} value={dayInfo.ruler_en} symbol={dayInfo.symbol} />
+            <DetailRow label={isMalayalam ? "ദിവസ നാഥൻ" : "Day Ruler"} value={dayInfo?.ruler ? (isMalayalam ? (PLANET_INFO[dayInfo.ruler]?.name_ml_equivalent) : PLANET_INFO[dayInfo.ruler]?.name_en) : '--'} symbol={dayInfo?.ruler ? PLANET_INFO[dayInfo.ruler]?.symbol : ''} />
           </div>
         </div>
 
@@ -496,7 +499,7 @@ function HourDetails({ hour, index, planetRules, friendships, isMalayalam }) {
                 {isMalayalam ? "ശുഭകരം" : "Recommended"}
               </p>
               <ul className="text-sm text-white/80 space-y-1">
-                {planetRules?.suitable?.slice(0, 5).map((action, idx) => (
+                {(planetRules?.suitableActions?.en || planetRules?.suitable || []).slice(0, 5).map((action, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <CheckCircle className="w-3 h-3 mt-0.5" style={{ color: "#22c55e" }} />
                     <span>{action}</span>
@@ -509,7 +512,7 @@ function HourDetails({ hour, index, planetRules, friendships, isMalayalam }) {
                 {isMalayalam ? "നിഷിദ്ധം" : "Prohibited"}
               </p>
               <ul className="text-sm text-white/80 space-y-1">
-                {planetRules?.unsuitable?.slice(0, 5).map((action, idx) => (
+                {(planetRules?.unsuitableActions?.en || planetRules?.unsuitable || []).slice(0, 5).map((action, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <XCircle className="w-3 h-3 mt-0.5" style={{ color: "#ef4444" }} />
                     <span>{action}</span>
@@ -541,7 +544,7 @@ function HourDetails({ hour, index, planetRules, friendships, isMalayalam }) {
               <FileText className="w-4 h-4" style={{ color: G.text }} />
               <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "പേജ്" : "Page"}</p>
             </div>
-            <p className="font-malayalam-sm font-bold text-white">{planetRules?.source_pages || "PDF2 p.50-62"}</p>
+            <p className="font-malayalam-sm font-bold text-white">{planetRules?.pdf_pages || planetRules?.source_pages || "PDF2 p.50-62"}</p>
           </div>
 
           {planetRules?.original_text && (
