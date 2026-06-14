@@ -5,12 +5,14 @@
 // Arabic Terminology Preservation Rule: Implemented
 // ═══════════════════════════════════════════════════════════════
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, ChevronDown, BookOpen } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import { LUNAR_MANSION_DATA } from "@/lib/astroClockLunarMansionML.js";
+import { base44 } from "@/api/base44Client";
 import ManuscriptKnowledgeExplorer from "./ManuscriptKnowledgeExplorer";
+import ManuscriptCorrespondences from "./ManuscriptCorrespondences";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -30,12 +32,30 @@ export default function ManazilDatabase() {
   const [expandedManzil, setExpandedManzil] = useState(null);
   const [explorerOpen, setExplorerOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
+  const [manzilRecords, setManzilRecords] = useState({});
 
   const getClassificationColor = (nature) => {
     if (nature === "Saad") return G.saad;
     if (nature === "Nahs") return G.nahs;
     return G.mixed;
   };
+
+  useEffect(() => {
+    (LUNAR_MANSION_DATA || []).forEach(async (manzil) => {
+      try {
+        const result = await base44.functions.invoke('queryManuscriptLibrary', {
+          entity_type: 'LUNAR_MANSION',
+          entity_value: manzil.name_arabic
+        });
+        setManzilRecords(prev => ({
+          ...prev,
+          [manzil.number]: result.data?.rules || []
+        }));
+      } catch (err) {
+        console.error("Failed to load manuscripts for manzil", manzil.number, err);
+      }
+    });
+  }, []);
 
   function openExplorer(manzil) {
     setSelectedEntity({
@@ -128,6 +148,11 @@ export default function ManazilDatabase() {
                                         <p key={idx} className="font-inter text-sm text-white/80">• {op}</p>
                                     ))}
                                 </div>
+
+                                {/* Manuscript Correspondences from Database */}
+                                {manzilRecords[manzil.number] && manzilRecords[manzil.number].length > 0 && (
+                                    <ManuscriptCorrespondences records={manzilRecords[manzil.number]} isMalayalam={isMalayalam} />
+                                )}
                             </div>
                         </motion.div>
                     )}

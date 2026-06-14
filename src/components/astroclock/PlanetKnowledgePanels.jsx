@@ -5,12 +5,14 @@
 // Arabic Terminology Preservation Rule: Implemented
 // ═══════════════════════════════════════════════════════════════
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, ChevronDown, BookOpen } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import { PLANET_INFO, WEEKDAY_ANALYSIS } from "@/lib/astroClockLiveEngine.js";
+import { base44 } from "@/api/base44Client";
 import ManuscriptKnowledgeExplorer from "./ManuscriptKnowledgeExplorer";
+import ManuscriptCorrespondences from "./ManuscriptCorrespondences";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -27,6 +29,24 @@ export default function PlanetKnowledgePanels() {
   const planets = Object.values(PLANET_INFO);
   const [explorerOpen, setExplorerOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
+  const [planetRecords, setPlanetRecords] = useState({});
+
+  useEffect(() => {
+    (planets || []).forEach(async (planet) => {
+      try {
+        const result = await base44.functions.invoke('queryManuscriptLibrary', {
+          entity_type: 'PLANET',
+          entity_value: planet.name_ar
+        });
+        setPlanetRecords(prev => ({
+          ...prev,
+          [planet.name_en]: result.data?.rules || []
+        }));
+      } catch (err) {
+        console.error("Failed to load manuscripts for planet", planet.name_en, err);
+      }
+    });
+  }, [planets]);
 
   function openExplorer(planet) {
     setSelectedEntity({
@@ -66,6 +86,7 @@ export default function PlanetKnowledgePanels() {
             planet={planet} 
             isMalayalam={isMalayalam}
             openExplorer={openExplorer}
+            planetRecords={planetRecords}
           />
         ))}
       </div>
@@ -84,7 +105,7 @@ export default function PlanetKnowledgePanels() {
   );
 }
 
-function PlanetCard({ planet, isMalayalam, openExplorer }) {
+function PlanetCard({ planet, isMalayalam, openExplorer, planetRecords }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -168,6 +189,11 @@ function PlanetCard({ planet, isMalayalam, openExplorer }) {
                 ))}
             </div>
           </div>
+
+          {/* Manuscript Correspondences from Database */}
+          {planetRecords[planet.name_en] && planetRecords[planet.name_en].length > 0 && (
+            <ManuscriptCorrespondences records={planetRecords[planet.name_en]} isMalayalam={isMalayalam} />
+          )}
 
         </div>
       )}
