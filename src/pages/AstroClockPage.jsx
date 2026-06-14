@@ -67,6 +67,17 @@ function AstroClockContent() {
           />
           <div className="flex items-center gap-3">
             <Link
+              to="/manuscript-action-finder"
+              className="px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
+              style={{
+                background: "rgba(212,175,55,0.10)",
+                color: "#F5D060",
+                borderColor: "rgba(212,175,55,0.40)"
+              }}
+            >
+              🔍 {isMalayalam ? "തിരയുക" : "Finder"}
+            </Link>
+            <Link
               to="/manuscript-audit-full"
               className="px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
               style={{

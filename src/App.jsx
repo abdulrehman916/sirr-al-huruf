@@ -45,6 +45,7 @@ const MizanRubaiVerification = lazy(() => import('./pages/MizanRubaiVerification
 const MizanManuscriptVerification = lazy(() => import('./pages/MizanManuscriptVerification'));
 const MizanManuscriptAudit = lazy(() => import('./pages/MizanManuscriptAudit'));
 const ManuscriptAuditPage = lazy(() => import('./pages/ManuscriptAuditPage'));
+const ManuscriptActionFinder = lazy(() => import('./pages/ManuscriptActionFinder'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -120,6 +121,7 @@ const AuthenticatedApp = () => {
             <Route path="/rubai-verification" element={<MizanRubaiVerification />} />
             <Route path="/manuscript-audit" element={<MizanManuscriptAudit />} />
             <Route path="/manuscript-audit-full" element={<ManuscriptAuditPage />} />
+            <Route path="/manuscript-action-finder" element={<ManuscriptActionFinder />} />
 
 
             <Route path="*" element={<PageNotFound />} />
