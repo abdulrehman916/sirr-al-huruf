@@ -321,7 +321,7 @@ export const AY_MANAZILLERI = [
   {
     no: 1,
     name: "ŞARTEYN",
-    harfi: "Elif",
+    harfi: "അലിഫ്",
     harf_arabic: "ا",
     baslama_siniri: "Koç burcunun 25. Derecesi",
     zodiac_sign: "Koç",
@@ -338,7 +338,7 @@ export const AY_MANAZILLERI = [
   {
     no: 2,
     name: "BUTEYN",
-    harfi: "Ba",
+    harfi: "ബാ",
     harf_arabic: "ب",
     baslama_siniri: "Boğa burcunun 8. Derecesi",
     zodiac_sign: "Boğa",
@@ -360,7 +360,7 @@ export const AY_MANAZILLERI = [
   {
     no: 3,
     name: "SÜREYYA",
-    harfi: "Cim",
+    harfi: "ജീം",
     harf_arabic: "ج",
     baslama_siniri: "Boğa burcunun 21. Derecesi",
     zodiac_sign: "Boğa",
@@ -379,7 +379,7 @@ export const AY_MANAZILLERI = [
   {
     no: 4,
     name: "DÜBRAN",
-    harfi: "Dal",
+    harfi: "ദാൽ",
     harf_arabic: "د",
     baslama_siniri: "İkizler burcunun 3. Derecesi",
     zodiac_sign: "İkizler",
@@ -402,7 +402,7 @@ export const AY_MANAZILLERI = [
   {
     no: 5,
     name: "HAK'A",
-    harfi: "He",
+    harfi: "ഹാ",
     harf_arabic: "ه",
     baslama_siniri: "İkizler burcunun 16. Derecesi",
     zodiac_sign: "İkizler",
@@ -426,7 +426,7 @@ export const AY_MANAZILLERI = [
   {
     no: 6,
     name: "HENA",
-    harfi: "Vav",
+    harfi: "വാവ്",
     harf_arabic: "و",
     baslama_siniri: "İkizler burcunun 29. Derecesi",
     zodiac_sign: "İkizler",
@@ -452,7 +452,7 @@ export const AY_MANAZILLERI = [
   {
     no: 7,
     name: "ZİRA",
-    harfi: "Zel",
+    harfi: "സായി",
     harf_arabic: "ز",
     baslama_siniri: "Yengeç burcunun 12. Derecesi",
     zodiac_sign: "Yengeç",
@@ -471,7 +471,7 @@ export const AY_MANAZILLERI = [
   {
     no: 8,
     name: "NESRE",
-    harfi: "Ha",
+    harfi: "ഹാ",
     harf_arabic: "ح",
     baslama_siniri: "Yengeç burcunun 25. Derecesi",
     zodiac_sign: "Yengeç",
@@ -492,7 +492,7 @@ export const AY_MANAZILLERI = [
   {
     no: 9,
     name: "TARFA",
-    harfi: "Tı",
+    harfi: "ത്വാ",
     harf_arabic: "ط",
     baslama_siniri: "Arslan burcunun 8. Derecesi",
     zodiac_sign: "Arslan",
@@ -511,7 +511,7 @@ export const AY_MANAZILLERI = [
   {
     no: 10,
     name: "CEPHE",
-    harfi: "Ye",
+    harfi: "യാ",
     harf_arabic: "ي",
     baslama_siniri: "Arslan burcunun 21. Derecesi",
     zodiac_sign: "Arslan",
@@ -529,7 +529,7 @@ export const AY_MANAZILLERI = [
   {
     no: 11,
     name: "ZEBRA",
-    harfi: "Kef",
+    harfi: "കാഫ്",
     harf_arabic: "ك",
     baslama_siniri: "Başak burcunun 3. Derecesi",
     zodiac_sign: "Başak",
@@ -548,7 +548,7 @@ export const AY_MANAZILLERI = [
   {
     no: 12,
     name: "SURFA",
-    harfi: "Lam",
+    harfi: "ലാം",
     harf_arabic: "ل",
     baslama_siniri: "Başak burcunun 16. Derecesi",
     zodiac_sign: "Başak",
@@ -563,7 +563,7 @@ export const AY_MANAZILLERI = [
   {
     no: 13,
     name: "AVA",
-    harfi: "Mim",
+    harfi: "മീം",
     harf_arabic: "م",
     baslama_siniri: "Başak burcunun 29. Derecesi",
     zodiac_sign: "Başak",
@@ -584,7 +584,7 @@ export const AY_MANAZILLERI = [
   {
     no: 14,
     name: "SEMMAK",
-    harfi: "Nun",
+    harfi: "നൂൻ",
     harf_arabic: "ن",
     baslama_siniri: "Terazi burcunun 12. Derecesi",
     zodiac_sign: "Terazi",
@@ -607,7 +607,7 @@ export const AY_MANAZILLERI = [
   {
     no: 15,
     name: "GUFUR",
-    harfi: "Sin",
+    harfi: "സീൻ",
     harf_arabic: "س",
     baslama_siniri: "Terazi burcunun 25. Derecesi",
     zodiac_sign: "Terazi",
@@ -627,7 +627,7 @@ export const AY_MANAZILLERI = [
   {
     no: 16,
     name: "ZİBANA",
-    harfi: "Ayın",
+    harfi: "ഐൻ",
     harf_arabic: "ع",
     baslama_siniri: "Akrep burcunun 8. Derecesi",
     zodiac_sign: "Akrep",
@@ -645,7 +645,7 @@ export const AY_MANAZILLERI = [
   {
     no: 17,
     name: "İKLİL",
-    harfi: "Fe",
+    harfi: "ഫാ",
     harf_arabic: "ف",
     baslama_siniri: "Akrep burcunun 21. Derecesi",
     zodiac_sign: "Akrep",
@@ -664,7 +664,7 @@ export const AY_MANAZILLERI = [
   {
     no: 18,
     name: "KÂLP",
-    harfi: "Sad",
+    harfi: "സ്വാദ്",
     harf_arabic: "ص",
     baslama_siniri: "Yay burcunun 3. Derecesi",
     zodiac_sign: "Yay",
@@ -684,7 +684,7 @@ export const AY_MANAZILLERI = [
   {
     no: 19,
     name: "ŞEVLE",
-    harfi: "Kaf",
+    harfi: "ഖാഫ്",
     harf_arabic: "ق",
     baslama_siniri: "Yay burcunun 16. Derecesi",
     zodiac_sign: "Yay",
@@ -700,7 +700,7 @@ export const AY_MANAZILLERI = [
   {
     no: 20,
     name: "NEAİM",
-    harfi: "Re",
+    harfi: "റാ",
     harf_arabic: "ر",
     baslama_siniri: "Yay burcunun 29. Derecesi",
     zodiac_sign: "Yay",
@@ -720,7 +720,7 @@ export const AY_MANAZILLERI = [
   {
     no: 21,
     name: "BELDE",
-    harfi: "Şın",
+    harfi: "ഷീൻ",
     harf_arabic: "ش",
     baslama_siniri: "Oğlak burcunun 12. Derecesi",
     zodiac_sign: "Oğlak",
@@ -741,7 +741,7 @@ export const AY_MANAZILLERI = [
   {
     no: 22,
     name: "SAADÜZZABİH",
-    harfi: "Te",
+    harfi: "ത്വാ",
     harf_arabic: "ت",
     baslama_siniri: "Oğlak burcunun 25. Derecesi",
     zodiac_sign: "Oğlak",
@@ -760,7 +760,7 @@ export const AY_MANAZILLERI = [
   {
     no: 23,
     name: "SAUDBELA",
-    harfi: "Se",
+    harfi: "സാ",
     harf_arabic: "ث",
     baslama_siniri: "Kova burcunun 8. Derecesi",
     zodiac_sign: "Kova",
@@ -776,7 +776,7 @@ export const AY_MANAZILLERI = [
   {
     no: 24,
     name: "SAADÜSSUUD",
-    harfi: "Hı",
+    harfi: "ഖാ",
     harf_arabic: "خ",
     baslama_siniri: "Kova burcunun 21. Derecesi",
     zodiac_sign: "Kova",
@@ -793,7 +793,7 @@ export const AY_MANAZILLERI = [
   {
     no: 25,
     name: "SAADÜLAHBİYYE",
-    harfi: "Zal",
+    harfi: "സാൽ",
     harf_arabic: "ذ",
     baslama_siniri: "Balık burcunun 3. Derecesi",
     zodiac_sign: "Balık",
@@ -809,7 +809,7 @@ export const AY_MANAZILLERI = [
   {
     no: 26,
     name: "FERÜLMUKADDEM",
-    harfi: "Dad",
+    harfi: "ദ്വാദ്",
     harf_arabic: "ض",
     baslama_siniri: "Balık burcunun 16. Derecesi",
     zodiac_sign: "Balık",
@@ -829,7 +829,7 @@ export const AY_MANAZILLERI = [
   {
     no: 27,
     name: "FERÜLMÜAHHİR",
-    harfi: "Zı",
+    harfi: "സ്വാ",
     harf_arabic: "ظ",
     baslama_siniri: "Balık burcunun 29. Derecesi",
     zodiac_sign: "Balık",
@@ -846,7 +846,7 @@ export const AY_MANAZILLERI = [
   {
     no: 28,
     name: "EERREŞA",
-    harfi: "Gayın",
+    harfi: "ഗൈൻ",
     harf_arabic: "غ",
     baslama_siniri: "Koç burcunun 12. Derecesi",
     zodiac_sign: "Koç",
@@ -881,34 +881,34 @@ export const MANAZIL_CLASSIFICATION = {
 // "Harflerin Ay menazillerine göre dağılımları aşağıdaki gibidir"
 // ─────────────────────────────────────────────────────────────────────────────
 export const MANAZIL_HARF_TABLE = [
-  { menazil: "Şarteyn",         harf: "Elif",  harf_arabic: "ا" },
-  { menazil: "Buteyn",          harf: "Ba",    harf_arabic: "ب" },
-  { menazil: "Süreyya",         harf: "Cim",   harf_arabic: "ج" },
-  { menazil: "Düberan",         harf: "Dal",   harf_arabic: "د" },
-  { menazil: "Hak'a",           harf: "He",    harf_arabic: "ه" },
-  { menazil: "Hena",            harf: "Vav",   harf_arabic: "و" },
-  { menazil: "Zira",            harf: "Ze",    harf_arabic: "ز" },
-  { menazil: "Nesre",           harf: "Ha",    harf_arabic: "ح" },
-  { menazil: "Tarfe",           harf: "Tı",    harf_arabic: "ط" },
-  { menazil: "Cebhe",           harf: "Ye",    harf_arabic: "ي" },
-  { menazil: "Harsan (Zebra)",  harf: "Kef",   harf_arabic: "ك" },
-  { menazil: "Sarfe (Surfa)",   harf: "Lam",   harf_arabic: "ل" },
-  { menazil: "Ava",             harf: "Mim",   harf_arabic: "م" },
-  { menazil: "Semmak",          harf: "Nun",   harf_arabic: "ن" },
-  { menazil: "Gufur",           harf: "Sin",   harf_arabic: "س" },
-  { menazil: "Zibana",          harf: "Ayın",  harf_arabic: "ع" },
-  { menazil: "İklil",           harf: "Fe",    harf_arabic: "ف" },
-  { menazil: "Kalb",            harf: "Sad",   harf_arabic: "ص" },
-  { menazil: "Şevle",           harf: "Kaf",   harf_arabic: "ق" },
-  { menazil: "Neayim",          harf: "Ra",    harf_arabic: "ر" },
-  { menazil: "Belde",           harf: "Şın",   harf_arabic: "ش" },
-  { menazil: "Saadüzzabih",     harf: "Te",    harf_arabic: "ت" },
-  { menazil: "Saudbela",        harf: "Se",    harf_arabic: "ث" },
-  { menazil: "Saadüssuud",      harf: "Hı",    harf_arabic: "خ" },
-  { menazil: "Saadülahbiyye",   harf: "Zal",   harf_arabic: "ذ" },
-  { menazil: "Ferülmukaddem",   harf: "Dad",   harf_arabic: "ض" },
-  { menazil: "Ferülmuahhir",    harf: "Zı",    harf_arabic: "ظ" },
-  { menazil: "Erreşa",          harf: "Gayın", harf_arabic: "غ" }
+  { menazil: "Şarteyn",         harf: "അലിഫ്",  harf_arabic: "ا" },
+  { menazil: "Buteyn",          harf: "ബാ",    harf_arabic: "ب" },
+  { menazil: "Süreyya",         harf: "ജീം",   harf_arabic: "ج" },
+  { menazil: "Düberan",         harf: "ദാൽ",   harf_arabic: "د" },
+  { menazil: "Hak'a",           harf: "ഹാ",    harf_arabic: "ه" },
+  { menazil: "Hena",            harf: "വാവ്",   harf_arabic: "و" },
+  { menazil: "Zira",            harf: "സായി",    harf_arabic: "ز" },
+  { menazil: "Nesre",           harf: "ഹാ",    harf_arabic: "ح" },
+  { menazil: "Tarfe",           harf: "ത്വാ",    harf_arabic: "ط" },
+  { menazil: "Cebhe",           harf: "യാ",    harf_arabic: "ي" },
+  { menazil: "Harsan (Zebra)",  harf: "കാഫ്",   harf_arabic: "ك" },
+  { menazil: "Sarfe (Surfa)",   harf: "ലാം",   harf_arabic: "ل" },
+  { menazil: "Ava",             harf: "മീം",   harf_arabic: "م" },
+  { menazil: "Semmak",          harf: "നൂൻ",   harf_arabic: "ن" },
+  { menazil: "Gufur",           harf: "സീൻ",   harf_arabic: "س" },
+  { menazil: "Zibana",          harf: "ഐൻ",  harf_arabic: "ع" },
+  { menazil: "İklil",           harf: "ഫാ",    harf_arabic: "ف" },
+  { menazil: "Kalb",            harf: "സ്വാദ്",   harf_arabic: "ص" },
+  { menazil: "Şevle",           harf: "ഖാഫ്",   harf_arabic: "ق" },
+  { menazil: "Neayim",          harf: "റാ",    harf_arabic: "ر" },
+  { menazil: "Belde",           harf: "ഷീൻ",   harf_arabic: "ش" },
+  { menazil: "Saadüzzabih",     harf: "ത്വാ",    harf_arabic: "ت" },
+  { menazil: "Saudbela",        harf: "സാ",    harf_arabic: "ث" },
+  { menazil: "Saadüssuud",      harf: "ഖാ",    harf_arabic: "خ" },
+  { menazil: "Saadülahbiyye",   harf: "സാൽ",   harf_arabic: "ذ" },
+  { menazil: "Ferülmukaddem",   harf: "ദ്വാദ്",   harf_arabic: "ض" },
+  { menazil: "Ferülmuahhir",    harf: "സ്വാ",    harf_arabic: "ظ" },
+  { menazil: "Erreşa",          harf: "ഗൈൻ", harf_arabic: "غ" }
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -916,13 +916,13 @@ export const MANAZIL_HARF_TABLE = [
 // Source: PDF2 p.81
 // ─────────────────────────────────────────────────────────────────────────────
 export const YILDIZ_HARFLERI = [
-  { gezegen: "Güneş",  harf: "Fe",   harf_arabic: "ف" },
-  { gezegen: "Ay",     harf: "Cim",  harf_arabic: "ج" },
-  { gezegen: "Merkür", harf: "Se",   harf_arabic: "ث" },
-  { gezegen: "Venüs",  harf: "Hı",   harf_arabic: "خ" },
-  { gezegen: "Mars",   harf: "Sin",  harf_arabic: "س" },
-  { gezegen: "Jüpiter",harf: "Tı",   harf_arabic: "ط" },
-  { gezegen: "Satürn", harf: "Zal",  harf_arabic: "ذ" }
+  { gezegen: "Güneş",  harf: "ഫാ",   harf_arabic: "ف" },
+  { gezegen: "Ay",     harf: "ജീം",  harf_arabic: "ج" },
+  { gezegen: "Merkür", harf: "സാ",   harf_arabic: "ث" },
+  { gezegen: "Venüs",  harf: "ഖാ",   harf_arabic: "خ" },
+  { gezegen: "Mars",   harf: "സീൻ",  harf_arabic: "س" },
+  { gezegen: "Jüpiter",harf: "ത്വാ",   harf_arabic: "ط" },
+  { gezegen: "Satürn", harf: "സാൽ",  harf_arabic: "ذ" }
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

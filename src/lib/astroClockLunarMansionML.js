@@ -6,6 +6,7 @@
  */
 
 import { AY_MANAZILLERI } from './astroClockData.js';
+import { getLetterInfo } from './arabicLetterNamesML.js';
 
 export const MANSION_ML_NAMES = {
   "ŞARTEYN": "ഷർതെയ്ൻ", "BUTEYN": "ബുതെയ്ൻ", "SÜREYYA": "സുരയ്യ", "DÜBRAN": "ദുബ്രാൻ",
@@ -27,7 +28,8 @@ export const LUNAR_MANSION_DATA = AY_MANAZILLERI.map(mansion => ({
   number: mansion.no,
   name_en: mansion.name,
   name_ml: MANSION_ML_NAMES[mansion.name] || mansion.name,
-  name_arabic: mansion.harfi,
+  name_arabic: mansion.harf_arabic,
+  letter_malayalam: getLetterInfo(mansion.harf_arabic).malayalam,
   nature: mansion.genel_hukum === "Uygun (Saad)" ? "Saad" : mansion.genel_hukum === "Uğursuz (Nahs)" ? "Nahs" : "Mixed",
   nature_ml: mansion.genel_hukum === "Uygun (Saad)" ? "ഉത്തമം" : mansion.genel_hukum === "Uğursuz (Nahs)" ? "അനുചിതം" : "മിശ്രം",
   zodiac_sign: mansion.zodiac_sign,

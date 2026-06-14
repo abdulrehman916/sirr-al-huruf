@@ -66,13 +66,14 @@ export default function ManazilDatabase() {
                             </span>
                             <div style={{width: '4px', height: '32px', borderRadius: '2px', background: getClassificationColor(manzil.nature)}}></div>
                             <div>
-                                <p className="font-amiri font-bold text-4xl md:text-5xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}}>{manzil.name_en}</p>
-                                <p className="font-inter text-base font-semibold text-white/90 mt-1">{isMalayalam ? manzil.zodiac_sign_ml : manzil.zodiac_sign}</p>
+                                <p className="font-amiri font-bold text-3xl md:text-4xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}}>{manzil.name_en}</p>
+                                <p className="font-malayalam-sm font-semibold text-white/80 mt-0.5">{isMalayalam ? manzil.zodiac_sign_ml : manzil.zodiac_sign}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="text-right">
-                                <p className="font-amiri text-4xl md:text-5xl text-white/95 leading-relaxed" style={{ textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{manzil.name_arabic}</p>
+                                <p className="font-amiri text-4xl md:text-5xl text-white/95 leading-relaxed" style={{ textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{manzil.letter_malayalam}</p>
+                                <p className="font-inter text-[8px] text-white/50 mt-0.5">Arabic: {manzil.name_arabic}</p>
                             </div>
                             <ChevronDown 
                                 className="w-6 h-6 text-gold transition-transform"
@@ -93,6 +94,24 @@ export default function ManazilDatabase() {
                                 <p className="font-inter text-xs font-bold uppercase tracking-wider" style={{color: getClassificationColor(manzil.nature)}}>
                                     {isMalayalam ? manzil.nature_ml : manzil.nature}
                                 </p>
+                                
+                                {/* Letter Info with Malayalam Name */}
+                                <div className="mt-3 p-3 rounded-lg" style={{background: G.bg, border: `1px solid ${G.border}`}}>
+                                    <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{color: G.dim}}>
+                                        {isMalayalam ? "അക്ഷരം" : "Letter"}
+                                    </p>
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-center">
+                                            <p className="font-amiri text-5xl font-bold mb-1" style={{color: G.text}}>{manzil.name_arabic}</p>
+                                            <p className="font-inter text-[8px] uppercase tracking-wider" style={{color: G.dim}}>Arabic Letter</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="font-malayalam-md font-bold text-white text-lg">{manzil.letter_malayalam}</p>
+                                            <p className="font-inter text-[8px] uppercase tracking-wider" style={{color: G.dim}}>Malayalam Name</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div className="space-y-1">
                                     {(isMalayalam ? manzil.operations_ml : manzil.operations).map((op, idx) => (
                                         <p key={idx} className="font-inter text-sm text-white/80">• {op}</p>
