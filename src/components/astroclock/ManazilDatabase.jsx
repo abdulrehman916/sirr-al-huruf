@@ -33,6 +33,7 @@ export default function ManazilDatabase() {
   const { isMalayalam } = useAstroClockLanguage();
   const [expandedManzil, setExpandedManzil] = useState(null);
   const [manzilRecords, setManzilRecords] = useState({});
+  const [loading, setLoading] = useState(true);
   const { explorerOpen, selectedEntity, openExplorer, closeExplorer } = useManuscriptExplorer();
 
   const getClassificationColor = (nature) => {
@@ -43,20 +44,25 @@ export default function ManazilDatabase() {
 
   // Load manuscript records for each mansion
   useEffect(() => {
-    (LUNAR_MANSION_DATA || []).forEach(async (manzil) => {
-      try {
-        const result = await base44.functions.invoke('queryManuscriptLibrary', {
-          entity_type: 'LUNAR_MANSION',
-          entity_value: manzil.name_arabic
-        });
-        setManzilRecords(prev => ({
-          ...prev,
-          [manzil.number]: result.data?.rules || []
-        }));
-      } catch (err) {
-        console.error("Failed to load manuscripts for manzil", manzil.number, err);
+    const loadManzilRecords = async () => {
+      setLoading(true);
+      const records = {};
+      for (const manzil of (LUNAR_MANSION_DATA || [])) {
+        try {
+          const result = await base44.functions.invoke('queryManuscriptLibrary', {
+            entity_type: 'LUNAR_MANSION',
+            entity_value: manzil.name_arabic
+          });
+          records[manzil.number] = result.data?.rules || [];
+        } catch (err) {
+          console.error("Failed to load manuscripts for manzil", manzil.number, err);
+          records[manzil.number] = [];
+        }
       }
-    });
+      setManzilRecords(records);
+      setLoading(false);
+    };
+    loadManzilRecords();
   }, []);
 
 
@@ -80,6 +86,14 @@ export default function ManazilDatabase() {
             </div>
         </div>
 
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="w-8 h-8 border-4 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin mx-auto" />
+            <p className="font-inter text-xs mt-4" style={{ color: G.dim }}>
+              {isMalayalam ? "ലോഡിംഗ്..." : "Loading manuscripts..."}
+            </p>
+          </div>
+        ) : (
         <div className="space-y-2">
             {(LUNAR_MANSION_DATA || []).map((manzil) => (
                 <div key={manzil.number} className="rounded-lg border" style={{borderColor: G.faint, background: G.bg}}>
@@ -226,6 +240,7 @@ export default function ManazilDatabase() {
                 </div>
             ))}
         </div>
+        )}
 
         {/* Manuscript Knowledge Explorer Modal */}
         <AnimatePresence>

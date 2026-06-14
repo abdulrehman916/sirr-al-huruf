@@ -338,7 +338,7 @@ function MonthlyMansionCalendar({ transits, expandedMansion, setExpandedMansion,
           <tbody>
             {transits.slice(0, 14).map((transit, idx) => (
               <MansionRow
-                key={idx}
+                key={`${transit.mansion.number}-${idx}`}
                 transit={transit}
                 index={idx}
                 expanded={expandedMansion === idx}
