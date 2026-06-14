@@ -123,10 +123,10 @@ export default function LivePlanetaryHours() {
         <div className="flex items-center gap-3">
           {isDay ? <Sun className="w-6 h-6" style={{ color: G.text }} /> : <Moon className="w-6 h-6" style={{ color: G.text }} />}
           <div>
-            <h2 className="font-inter text-lg font-bold uppercase tracking-widest" style={{ color: G.text }}>
+            <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: G.text }}>
               {isMalayalam ? "നിലവിലെ ഗ്രഹ മണിക്കൂർ" : "Current Planetary Hour"}
             </h2>
-            <p className="font-inter text-[9px]" style={{ color: G.dim }}>
+            <p className="font-malayalam-sm" style={{ color: G.dim }}>
               {isMalayalam ? "ലൈവ് കൗണ്ടൗൺ" : "Live Countdown"}
             </p>
           </div>
@@ -149,30 +149,30 @@ export default function LivePlanetaryHours() {
         <div className="space-y-4">
           {/* Planet Card */}
           <div className="p-6 rounded-xl border text-center" style={{ background: G.bgHi, borderColor: G.border }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+            <p className="font-malayalam-sm uppercase tracking-widest mb-3" style={{ color: G.dim }}>
               {isMalayalam ? "ഗ്രഹ നാഥൻ" : "Ruling Planet"}
             </p>
-            <p className="text-6xl mb-2">{currentHour.planetInfo.symbol}</p>
-            <p className="font-amiri text-4xl md:text-5xl font-bold mb-2" style={{ color: G.text }}>
+            <p className="text-7xl mb-3">{currentHour.planetInfo.symbol}</p>
+            <p className="font-amiri text-5xl md:text-6xl font-bold mb-3 leading-tight" style={{ color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)" }}>
               {currentHour.planetInfo.name_ar}
             </p>
-            <p className="font-inter text-lg font-bold text-white">
+            <p className="font-malayalam-lg text-white font-bold">
               {isMalayalam ? currentHour.planetInfo.name_ml_equivalent : currentHour.planetInfo.name_en}
             </p>
-            <p className="font-inter text-xs mt-1" style={{ color: G.dim }}>
+            <p className="font-malayalam-sm mt-2" style={{ color: G.dim }}>
               {isMalayalam ? currentHour.planetInfo.nature_ml : currentHour.planetInfo.nature_en}
             </p>
           </div>
 
           {/* Countdown */}
-          <div className="p-4 rounded-xl border text-center" style={{ background: "rgba(34,197,94,0.08)", borderColor: G.success }}>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Timer className="w-4 h-4" style={{ color: G.success }} />
-              <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.success }}>
+          <div className="p-5 rounded-xl border text-center" style={{ background: "rgba(34,197,94,0.08)", borderColor: G.success }}>
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Timer className="w-5 h-5" style={{ color: G.success }} />
+              <p className="font-malayalam-sm uppercase tracking-widest" style={{ color: G.success }}>
                 {isMalayalam ? "അടുത്ത മണിക്കൂറിലേക്ക്" : "Until Next Hour"}
               </p>
             </div>
-            <p className="font-mono text-3xl font-bold text-white">{countdown}</p>
+            <p className="font-mono text-4xl md:text-5xl font-bold text-white tracking-wider">{countdown}</p>
           </div>
         </div>
 
@@ -215,29 +215,29 @@ export default function LivePlanetaryHours() {
 
       {/* Actions for Current Hour */}
       <div className="mt-5 grid md:grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl border" style={{ background: "rgba(34,197,94,0.05)", borderColor: "rgba(34,197,94,0.30)" }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: "#22c55e" }}>
+        <div className="p-5 rounded-xl border" style={{ background: "rgba(34,197,94,0.05)", borderColor: "rgba(34,197,94,0.30)" }}>
+          <p className="font-malayalam-md font-bold uppercase tracking-widest mb-3" style={{ color: "#22c55e" }}>
             {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Suitable Actions"}
           </p>
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {(currentHour.planetInfo.goodActions_ml || currentHour.planetInfo.goodActions_en || []).slice(0, 4).map((action, idx) => (
-              <li key={idx} className="font-inter text-xs text-white/70 flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full mt-1" style={{ background: "#22c55e" }} />
-                {action}
+              <li key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
+                <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#22c55e" }} />
+                <span>{action}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="p-4 rounded-xl border" style={{ background: "rgba(239,68,68,0.05)", borderColor: "rgba(239,68,68,0.30)" }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: "#ef4444" }}>
+        <div className="p-5 rounded-xl border" style={{ background: "rgba(239,68,68,0.05)", borderColor: "rgba(239,68,68,0.30)" }}>
+          <p className="font-malayalam-md font-bold uppercase tracking-widest mb-3" style={{ color: "#ef4444" }}>
             {isMalayalam ? "അനുചിത പ്രവർത്തനങ്ങൾ" : "Avoid These"}
           </p>
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {(currentHour.planetInfo.badActions_ml || currentHour.planetInfo.badActions_en || []).slice(0, 4).map((action, idx) => (
-              <li key={idx} className="font-inter text-xs text-white/70 flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full mt-1" style={{ background: "#ef4444" }} />
-                {action}
+              <li key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
+                <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
+                <span>{action}</span>
               </li>
             ))}
           </ul>
@@ -249,11 +249,11 @@ export default function LivePlanetaryHours() {
 
 function InfoRow({ label, value, symbol, isMalayalam }) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: G.bg }}>
-      <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</span>
+    <div className="flex items-center justify-between p-4 rounded-lg" style={{ background: G.bg }}>
+      <span className="font-malayalam-sm uppercase tracking-widest" style={{ color: G.dim }}>{label}</span>
       <div className="flex items-center gap-2">
-        {symbol && <span className="text-lg">{symbol}</span>}
-        <span className="font-inter text-sm font-bold text-white">{value}</span>
+        {symbol && <span className="text-xl">{symbol}</span>}
+        <span className="font-malayalam-md font-bold text-white">{value}</span>
       </div>
     </div>
   );

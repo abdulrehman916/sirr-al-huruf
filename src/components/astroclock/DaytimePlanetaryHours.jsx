@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
-// DAYTIME PLANETARY HOURS — SECTION 2
-// Real sunrise/sunset based calculations with detailed actions
+// DAYTIME PLANETARY HOURS — MOBILE-OPTIMIZED CARDS
+// Real sunrise/sunset based calculations with card layout
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sun, Clock, Info, MapPin } from "lucide-react";
 import { getAllPlanetaryHours } from "@/lib/astroClockLiveEngine";
-import { calculateSunriseSunset, formatDecimalTime, formatDurationDetailed } from "@/lib/astroClockSunriseSunset";
+import { calculateSunriseSunset, formatDecimalTime } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 
 const G = {
@@ -31,7 +31,6 @@ export default function DaytimePlanetaryHours() {
   useEffect(() => {
     const today = new Date();
     
-    // Try browser geolocation first
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -53,7 +52,6 @@ export default function DaytimePlanetaryHours() {
           }
         },
         (error) => {
-          // Fallback to Dubai
           const loc = { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE (Default)" };
           setLocation(loc);
           const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
@@ -66,7 +64,6 @@ export default function DaytimePlanetaryHours() {
         }
       );
     } else {
-      // No geolocation support
       const loc = { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE (Default)" };
       setLocation(loc);
       const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
@@ -94,125 +91,128 @@ export default function DaytimePlanetaryHours() {
         style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.50), transparent)` }} />
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Sun className="w-6 h-6" style={{ color: G.text }} />
+          <Sun className="w-7 h-7" style={{ color: G.text }} />
           <div>
-            <h2 className="font-inter text-lg font-bold uppercase tracking-widest" style={{ color: G.text }}>
+            <h2 className="font-malayalam-lg uppercase tracking-widest" style={{ color: G.text }}>
               {isMalayalam ? "പകൽ 12 ഗ്രഹ മണിക്കൂറുകൾ" : "Daytime 12 Planetary Hours"}
             </h2>
-            <p className="font-inter text-[9px]" style={{ color: G.dim }}>
+            <p className="font-malayalam-sm" style={{ color: G.dim }}>
               {isMalayalam ? "സൂര്യോദയം മുതൽ സൂര്യാസ്തമയം വരെ" : "From Sunrise to Sunset"}
             </p>
           </div>
         </div>
         
-        {/* Location & Sun Times */}
         {location && sunData && (
-          <div className="text-right">
-            <div className="flex items-center gap-1 justify-end mb-1">
-              <MapPin className="w-3 h-3" style={{ color: G.dim }} />
-              <p className="font-inter text-[9px] text-white/60">{location.name}</p>
+          <div className="text-right hidden md:block">
+            <div className="flex items-center gap-2 justify-end mb-1">
+              <MapPin className="w-4 h-4" style={{ color: G.dim }} />
+              <p className="font-malayalam-sm text-white/70">{location.name}</p>
             </div>
-            <div className="flex items-center gap-3 text-[10px]">
-              <span style={{ color: G.dim }}>
-                {isMalayalam ? "സൂര്യോദയം:" : "Sunrise:"} {formatDecimalTime(sunData.sunrise)}
+            <div className="flex items-center gap-4">
+              <span className="font-malayalam-sm" style={{ color: G.dim }}>
+                {isMalayalam ? "സൂര്യോദയം:" : "Sunrise:"} <span className="text-white font-bold">{formatDecimalTime(sunData.sunrise)}</span>
               </span>
-              <span style={{ color: G.dim }}>
-                {isMalayalam ? "സൂര്യാസ്തമയം:" : "Sunset:"} {formatDecimalTime(sunData.sunset)}
+              <span className="font-malayalam-sm" style={{ color: G.dim }}>
+                {isMalayalam ? "സൂര്യാസ്തമയം:" : "Sunset:"} <span className="text-white font-bold">{formatDecimalTime(sunData.sunset)}</span>
               </span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Hours Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b" style={{ borderColor: G.faint }}>
-              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                {isMalayalam ? "മണിക്കൂർ" : "Hour"}
-              </th>
-              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                {isMalayalam ? "സമയം" : "Time"}
-              </th>
-              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                {isMalayalam ? "ഗ്രഹം" : "Planet"}
-              </th>
-              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                {isMalayalam ? "ദൈർഘ്യം" : "Duration"}
-              </th>
-              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                {isMalayalam ? "ഉചിതം" : "Good Actions"}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {(hours || []).map((hour) => (
-              <tr key={hour.hourNumber} className="border-b" style={{ borderColor: G.faint }}>
-                <td className="py-3 px-3">
-                  <span className="font-inter text-sm font-bold text-white">#{hour.hourNumber}</span>
-                </td>
-                <td className="py-3 px-3">
-                  <div className="font-inter text-xs text-white/80">
-                    <div>{hour.startTime}</div>
-                    <div className="text-[10px]" style={{ color: G.dim }}>→ {hour.endTime}</div>
-                  </div>
-                </td>
-                <td className="py-3 px-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{hour.planetInfo?.symbol}</span>
-                    <div>
-                      <p className="font-inter text-xs font-bold text-white">
-                        {isMalayalam ? hour.planetInfo?.name_ml : hour.planetInfo?.name_en}
-                      </p>
-                      <p className="font-inter text-[9px]" style={{ color: G.dim }}>
-                        {isMalayalam ? hour.planetInfo?.nature_ml : hour.planetInfo?.nature_en}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3 px-3">
-                  <div className="font-inter text-xs">
-                    <div className="text-white/80">{hour.duration}</div>
-                    <div className="text-[9px]" style={{ color: G.dim }}>
-                      {hour.durationMinutes}m {hour.durationSeconds}s
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3 px-3">
-                  <div className="max-w-[180px]">
-                    {(hour.goodActions || []).slice(0, 2).map((action, idx) => (
-                      <div key={idx} className="font-inter text-[10px] text-white/70">• {action}</div>
-                    ))}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Cards Grid - Mobile Optimized */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {(hours || []).map((hour) => (
+          <HourCard key={hour.hourNumber} hour={hour} isMalayalam={isMalayalam} />
+        ))}
       </div>
 
       {/* Notes */}
-      <div className="mt-4 p-3 rounded-xl" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
-        <div className="flex items-start gap-2">
-          <Info className="w-4 h-4 mt-0.5" style={{ color: G.dim }} />
+      <div className="mt-6 p-4 rounded-xl" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 mt-0.5" style={{ color: G.dim }} />
           <div>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+            <p className="font-malayalam-sm uppercase tracking-widest mb-2" style={{ color: G.dim }}>
               {isMalayalam ? "കുറിപ്പ്" : "Note"}
             </p>
-            <p className="font-inter text-xs text-white/60">
+            <p className="font-malayalam-md text-white/70">
               {isMalayalam 
                 ? "ഗ്രഹ മണിക്കൂറുകൾ സൂര്യോദയം മുതൽ സൂര്യാസ്തമയം വരെ 12 തുല്യ ഭാഗങ്ങളായി വിഭജിക്കുന്നു. കാലഘട്ടം അനുസരിച്ച് ദൈർഘ്യം മാറുന്നു."
                 : "Planetary hours divide sunrise to sunset into 12 equal parts. Duration varies by season."}
             </p>
-            <p className="font-inter text-[10px] text-white/40 mt-1">
+            <p className="font-malayalam-sm text-white/50 mt-2">
               {isMalayalam ? "സ്രോതസ്സ്:" : "Source:"} Havâss'ın Derinlikleri, Taha
             </p>
           </div>
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function HourCard({ hour, isMalayalam }) {
+  return (
+    <div className="p-5 rounded-xl border hover:border-opacity-60 transition-all duration-200"
+      style={{
+        background: G.bg,
+        borderColor: G.border,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
+      }}>
+      {/* Hour Number & Time */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-malayalam-lg font-bold text-white">#{hour.hourNumber}</span>
+        <Clock className="w-4 h-4" style={{ color: G.dim }} />
+      </div>
+      
+      <div className="mb-4 pb-3 border-b" style={{ borderColor: G.faint }}>
+        <div className="font-malayalam-md text-white/90">
+          <div className="font-bold">{hour.startTime}</div>
+          <div className="font-malayalam-sm" style={{ color: G.dim }}>→ {hour.endTime}</div>
+        </div>
+      </div>
+
+      {/* Planet Info */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-3xl">{hour.planetInfo?.symbol}</span>
+        <div className="flex-1">
+          <p className="font-malayalam-md font-bold text-white">
+            {isMalayalam ? hour.planetInfo?.name_ml_equivalent : hour.planetInfo?.name_en}
+          </p>
+          <p className="font-malayalam-sm" style={{ color: G.dim }}>
+            {isMalayalam ? hour.planetInfo?.nature_ml : hour.planetInfo?.nature_en}
+          </p>
+        </div>
+      </div>
+
+      {/* Duration */}
+      <div className="mb-3">
+        <p className="font-malayalam-sm uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+          {isMalayalam ? "ദൈർഘ്യം" : "Duration"}
+        </p>
+        <p className="font-malayalam-md text-white/80 font-bold">
+          {hour.duration}
+          <span className="font-malayalam-sm text-white/50 ml-2">
+            ({hour.durationMinutes}m {hour.durationSeconds}s)
+          </span>
+        </p>
+      </div>
+
+      {/* Good Actions */}
+      <div>
+        <p className="font-malayalam-sm uppercase tracking-widest mb-2" style={{ color: "#22c55e" }}>
+          {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Good Actions"}
+        </p>
+        <div className="space-y-1">
+          {(hour.goodActions || []).slice(0, 3).map((action, idx) => (
+            <div key={idx} className="font-malayalam-sm text-white/70 flex items-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#22c55e" }} />
+              <span>{action}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

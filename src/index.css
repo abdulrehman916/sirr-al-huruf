@@ -189,6 +189,38 @@
     line-height: 1.6;
   }
 
+  /* Malayalam text: premium typography for Astro Clock */
+  .font-malayalam {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: 0.02em;
+    line-height: 1.8;
+    font-weight: 600;
+  }
+
+  /* Large Malayalam headings */
+  .font-malayalam-lg {
+    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+    line-height: 1.6;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  /* Medium Malayalam text */
+  .font-malayalam-md {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    line-height: 1.7;
+    font-weight: 600;
+  }
+
+  /* Small Malayalam text (minimum readable size) */
+  .font-malayalam-sm {
+    font-size: clamp(0.875rem, 1.8vw, 1rem);
+    line-height: 1.6;
+    font-weight: 500;
+  }
+
   /* Non-selectable interactive elements — Arabic text remains selectable */
   button, a, [role="button"], nav, .font-inter {
     -webkit-user-select: none;
