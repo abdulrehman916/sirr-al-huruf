@@ -10,6 +10,7 @@ import { Clock, Timer, Sun, Moon } from "lucide-react";
 import { getCurrentPlanetaryHour, getAllPlanetaryHours, PLANET_INFO } from "@/lib/astroClockLiveEngine";
 import { calculateSunriseSunset } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
+import { safeFormatTime } from "@/lib/astroClockDateUtils.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -136,8 +137,8 @@ export default function LivePlanetaryHours() {
           <div className="text-right">
             <p className="font-inter text-[9px]" style={{ color: G.dim }}>{location.name}</p>
             <p className="font-inter text-[10px] text-white/60">
-              {isMalayalam ? "സൂര്യോദയം:" : "Sunrise:"} {formatTime(sunData.sunrise)} • 
-              {isMalayalam ? " സൂര്യാസ്തമയം:" : " Sunset:"} {formatTime(sunData.sunset)}
+              {isMalayalam ? "സൂര്യോദയം:" : "Sunrise:"} {safeFormatTime(sunData.sunrise)} • 
+              {isMalayalam ? " സൂര്യാസ്തമയം:" : " Sunset:"} {safeFormatTime(sunData.sunset)}
             </p>
           </div>
         )}
@@ -259,11 +260,4 @@ function InfoRow({ label, value, symbol, isMalayalam }) {
   );
 }
 
-function formatTime(decimalHour) {
-  const hours = Math.floor(decimalHour);
-  const minutes = Math.round((decimalHour - hours) * 60);
-  const h = hours >= 24 ? hours - 24 : hours < 0 ? hours + 24 : hours;
-  const hDisplay = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  const ampm = hours >= 0 && hours < 12 ? 'AM' : 'PM';
-  return `${hDisplay}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-}
+// Removed - using safeFormatTime from astroClockDateUtils

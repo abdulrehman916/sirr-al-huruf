@@ -11,6 +11,7 @@ import { Moon, Calendar, Clock, Book, FileText, ChevronDown, ChevronUp, Star, Al
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
 import { AY_MANAZILLERI } from "@/lib/astroClockData.js";
+import { safeFormatDate, safeFormatTime, safeFormatDateTime } from "@/lib/astroClockDateUtils.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -367,12 +368,12 @@ function MansionRow({ transit, index, expanded, onToggle, isMalayalam }) {
           </div>
         </td>
         <td className="py-3 px-3">
-          <p className="font-malayalam-sm text-white">{formatDate(transit.entryTime)}</p>
-          <p className="font-inter text-[9px]" style={{ color: G.dim }}>{formatTime(transit.entryTime)}</p>
+          <p className="font-malayalam-sm text-white">{safeFormatDate(transit.entryTime)}</p>
+          <p className="font-inter text-[9px]" style={{ color: G.dim }}>{safeFormatTime(transit.entryTime)}</p>
         </td>
         <td className="py-3 px-3">
-          <p className="font-malayalam-sm text-white">{formatDate(transit.exitTime)}</p>
-          <p className="font-inter text-[9px]" style={{ color: G.dim }}>{formatTime(transit.exitTime)}</p>
+          <p className="font-malayalam-sm text-white">{safeFormatDate(transit.exitTime)}</p>
+          <p className="font-inter text-[9px]" style={{ color: G.dim }}>{safeFormatTime(transit.exitTime)}</p>
         </td>
         <td className="py-3 px-3">
           <p className="font-malayalam-sm text-white">{calculateDuration(transit.entryTime, transit.exitTime)}</p>
@@ -434,8 +435,8 @@ function MansionDetails({ transit, mansionData, isMalayalam }) {
             {isMalayalam ? "സമയം" : "Timing"}
           </h4>
           <div className="space-y-2 text-sm">
-            <DetailRow label={isMalayalam ? "പ്രവേശനം" : "Entry"} value={transit.entryTime.toLocaleString()} />
-            <DetailRow label={isMalayalam ? "നിർഗ്ഗമനം" : "Exit"} value={transit.exitTime.toLocaleString()} />
+            <DetailRow label={isMalayalam ? "പ്രവേശനം" : "Entry"} value={safeFormatDateTime(transit.entryTime)} />
+            <DetailRow label={isMalayalam ? "നിർഗ്ഗമനം" : "Exit"} value={safeFormatDateTime(transit.exitTime)} />
             <DetailRow label={isMalayalam ? "ദൈർഘ്യം" : "Duration"} value={calculateDuration(transit.entryTime, transit.exitTime)} />
           </div>
         </div>
@@ -642,16 +643,17 @@ function DetailRow({ label, value }) {
   );
 }
 
-function formatDate(date) {
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-function formatTime(date) {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
+// Removed - using safeFormatDate and safeFormatTime from astroClockDateUtils
 
 function calculateDuration(start, end) {
-  const diff = end - start;
+  const safeStart = start instanceof Date ? start : new Date(start);
+  const safeEnd = end instanceof Date ? end : new Date(end);
+  
+  if (isNaN(safeStart.getTime()) || isNaN(safeEnd.getTime())) {
+    return "N/A";
+  }
+  
+  const diff = safeEnd - safeStart;
   const hrs = Math.floor(diff / 3600000);
   const mins = Math.floor((diff % 3600000) / 60000);
   return `${hrs}h ${mins}m`;
