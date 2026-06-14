@@ -5,7 +5,7 @@
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Calendar, Clock, Book, FileText, ChevronDown, ChevronUp, Star, AlertCircle, CheckCircle, Zap } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
@@ -36,9 +36,10 @@ export default function MoonMansionTracker() {
   const [monthlyTransits, setMonthlyTransits] = useState([]);
   const [expandedMansion, setExpandedMansion] = useState(null);
 
+  // Optimized: Single interval, reduced frequency
   useEffect(() => {
     updateMoonData();
-    const interval = setInterval(updateMoonData, 60000);
+    const interval = setInterval(updateMoonData, 300000); // 5 min instead of 1 min
     return () => clearInterval(interval);
   }, []);
 
@@ -95,12 +96,13 @@ export default function MoonMansionTracker() {
     return transits;
   }
 
-  function formatCountdown(ms) {
+  // Memoized countdown formatter
+  const formatCountdown = useMemo(() => (ms) => {
     const hours = Math.floor(ms / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((ms % (1000 * 60)) / 1000);
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  }
+  }, []);
 
   return (
     <motion.div

@@ -4,7 +4,7 @@
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { Moon, MapPin, Clock, Info } from "lucide-react";
 import { calculateMoonPosition } from "@/lib/astroClockMoonPosition";
@@ -21,50 +21,69 @@ const G = {
   bgHi:     "rgba(212,175,55,0.14)"
 };
 
-export default function LiveMoonPosition() {
+const LiveMoonPosition = memo(function LiveMoonPosition() {
   const { isMalayalam } = useAstroClockLanguage();
   const [moonData, setMoonData] = useState(null);
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Memoized location callback to prevent re-renders
+  const handleLocationSuccess = useMemo(() => (position) => {
+    const loc = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    };
+    setLocation(loc);
+    const moon = calculateMoonPosition(new Date());
+    setMoonData(moon);
+    setLoading(false);
+  }, []);
+
+  const handleLocationError = useMemo(() => () => {
+    setLocation({ lat: 25.2048, lng: 55.2708, name: "Default" });
+    const moon = calculateMoonPosition(new Date());
+    setMoonData(moon);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
+    let mounted = true;
+    
     const updateMoonPosition = () => {
-      // Get location
+      if (!mounted) return;
+      
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const loc = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
-            setLocation(loc);
-            
-            // Calculate moon position
-            const moon = calculateMoonPosition(new Date());
-            setMoonData(moon);
-            setLoading(false);
-          },
-          () => {
-            // Fallback
-            setLocation({ lat: 25.2048, lng: 55.2708, name: "Default" });
-            const moon = calculateMoonPosition(new Date());
-            setMoonData(moon);
-            setLoading(false);
-          }
+          handleLocationSuccess,
+          handleLocationError
         );
       } else {
-        const moon = calculateMoonPosition(new Date());
-        setMoonData(moon);
-        setLoading(false);
+        handleLocationError();
       }
     };
 
     updateMoonPosition();
     
-    // Update every minute
-    const interval = setInterval(updateMoonPosition, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    // Update every 5 minutes (reduced from 1 minute for battery)
+    const interval = setInterval(updateMoonPosition, 300000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [handleLocationSuccess, handleLocationError]);
+
+  // Memoized display data to prevent recalculation
+  const displayData = useMemo(() => {
+    if (!moonData) return null;
+    return {
+      longitude: moonData.longitude,
+      latitude: moonData.latitude,
+      distance: moonData.distance,
+      phase: moonData.phase,
+      zodiacSign: moonData.zodiacSign,
+      mansion: moonData.mansion
+    };
+  }, [moonData]);
 
   if (loading) {
     return (
@@ -85,7 +104,7 @@ export default function LiveMoonPosition() {
     );
   }
 
-  if (!moonData) return null;
+  if (!displayData) return null;
 
   return (
     <motion.div
@@ -130,7 +149,7 @@ export default function LiveMoonPosition() {
             {isMalayalam ? "രേഖാംശം" : "Longitude"}
           </p>
           <p className="font-inter text-2xl font-bold text-white mb-1">
-            {moonData.longitude}°
+            {displayData.longitude}°
           </p>
           <p className="font-inter text-[9px]" style={{ color: G.dim }}>
             {isMalayalam ? "വിഷുവരേഖ" : "Ecliptic"}
@@ -143,7 +162,7 @@ export default function LiveMoonPosition() {
             {isMalayalam ? "അക്ഷാംശം" : "Latitude"}
           </p>
           <p className="font-inter text-2xl font-bold text-white mb-1">
-            {moonData.latitude}°
+            {displayData.latitude}°
           </p>
           <p className="font-inter text-[9px]" style={{ color: G.dim }}>
             {isMalayalam ? "ക്രാന്തിവൃത്തം" : "Orbital"}
@@ -156,7 +175,7 @@ export default function LiveMoonPosition() {
             {isMalayalam ? "ദൂരം" : "Distance"}
           </p>
           <p className="font-inter text-2xl font-bold text-white mb-1">
-            {moonData.distance}
+            {displayData.distance}
           </p>
           <p className="font-inter text-[9px]" style={{ color: G.dim }}>
             {isMalayalam ? "ഭൂമി ആരം" : "Earth Radii"}
@@ -169,7 +188,7 @@ export default function LiveMoonPosition() {
             {isMalayalam ? "കല" : "Phase"}
           </p>
           <p className="font-inter text-2xl font-bold text-white mb-1">
-            {moonData.phase}%
+            {displayData.phase}%
           </p>
           <p className="font-inter text-[9px]" style={{ color: G.dim }}>
             {isMalayalam ? "പ്രകാശം" : "Illumination"}
@@ -182,20 +201,20 @@ export default function LiveMoonPosition() {
         {/* Zodiac Sign */}
         <div className="p-5 rounded-xl border" style={{ background: G.bgHi, borderColor: G.border }}>
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-3xl">{moonData.zodiacSign?.symbol}</span>
+            <span className="text-3xl">{displayData.zodiacSign?.symbol}</span>
             <div>
               <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
                 {isMalayalam ? "രാശി" : "Zodiac Sign"}
               </p>
               <p className="font-inter text-lg font-bold text-white">
-                {isMalayalam ? moonData.zodiacSign?.name_ml : moonData.zodiacSign?.name_en}
+                {isMalayalam ? displayData.zodiacSign?.name_ml : displayData.zodiacSign?.name_en}
               </p>
             </div>
           </div>
           <p className="font-inter text-xs text-white/60">
             {isMalayalam 
-              ? `ചന്ദ്രൻ ${isMalayalam ? moonData.zodiacSign?.name_ml : moonData.zodiacSign?.name_en} രാശിയിൽ`
-              : `Moon in ${moonData.zodiacSign?.name_en}`}
+              ? `ചന്ദ്രൻ ${isMalayalam ? displayData.zodiacSign?.name_ml : displayData.zodiacSign?.name_en} രാശിയിൽ`
+              : `Moon in ${displayData.zodiacSign?.name_en}`}
           </p>
         </div>
 
@@ -205,20 +224,20 @@ export default function LiveMoonPosition() {
             <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
               {isMalayalam ? "നക്ഷത്രം (മൻസിൽ)" : "Lunar Mansion (Manzil)"}
             </p>
-            {moonData.mansion && (
+            {displayData.mansion && (
               <>
                 <p className="font-amiri text-4xl font-bold mb-2 leading-relaxed" style={{ color: G.text, textAlign: 'center' }}>
-                  {moonData.mansion.name_ar}
+                  {displayData.mansion.name_ar}
                 </p>
                 <p className="font-inter text-lg font-bold text-white text-center">
-                  {isMalayalam ? moonData.mansion.name_ml : moonData.mansion.name_en}
+                  {isMalayalam ? displayData.mansion.name_ml : displayData.mansion.name_en}
                 </p>
               </>
             )}
           </div>
-          {moonData.mansion && (
+          {displayData.mansion && (
             <p className="font-inter text-xs text-white/60 text-center">
-              {isMalayalam ? moonData.mansion.meaning_ml : moonData.mansion.meaning_en}
+              {isMalayalam ? displayData.mansion.meaning_ml : displayData.mansion.meaning_en}
             </p>
           )}
         </div>
@@ -242,4 +261,6 @@ export default function LiveMoonPosition() {
       </div>
     </motion.div>
   );
-}
+});
+
+export default LiveMoonPosition;
