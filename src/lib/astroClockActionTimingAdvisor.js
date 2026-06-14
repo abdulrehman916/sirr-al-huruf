@@ -4,8 +4,8 @@
  * Astro Clock module only — completely isolated
  */
 
-import { KNOWLEDGE_DAYS, KNOWLEDGE_LUNAR_MANSIONS, LUNAR_MANSION_DATA } from './astroClockKnowledgeBase.js';
-import { PLANET_DATA } from './astroClockData.js';
+import { KNOWLEDGE_DAYS, KNOWLEDGE_LUNAR_MANSIONS } from './astroClockKnowledgeBase.js';
+import { LUNAR_MANSION_DATA, PLANET_DATA } from './astroClockData.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ACTION CATEGORIES WITH COMPLETE RULES

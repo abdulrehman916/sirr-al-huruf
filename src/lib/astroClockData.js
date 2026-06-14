@@ -1311,6 +1311,87 @@ export const HAVASS_HAZIRLIK_KURALLARI = {
 // ─────────────────────────────────────────────────────────────────────────────
 // METADATA
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// LUNAR MANSION DATA — Normalized format for Action Timing Advisor
+// Source: AY_MANAZILLERI above
+// ─────────────────────────────────────────────────────────────────────────────
+export const LUNAR_MANSION_DATA = AY_MANAZILLERI.map(mansion => ({
+  number: mansion.no,
+  name_en: mansion.name,
+  name_ml: mansion.name, // Malayalam uses same name for now
+  name_arabic: mansion.harfi,
+  nature: mansion.genel_hukum === "Uygun (Saad)" ? "Saad" : mansion.genel_hukum === "Uğursuz (Nahs)" ? "Nahs" : "Mixed",
+  nature_ml: mansion.genel_hukum === "Uygun (Saad)" ? "ഉത്തമം" : mansion.genel_hukum === "Uğursuz (Nahs)" ? "അനുചിതം" : "മിശ്രം",
+  zodiac_sign: mansion.zodiac_sign,
+  zodiac_degree: mansion.zodiac_degree,
+  operations: mansion.operations
+}));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLANET DATA — Normalized format for Action Timing Advisor
+// ─────────────────────────────────────────────────────────────────────────────
+export const PLANET_DATA = {
+  sun: {
+    name_en: "Sun",
+    name_ml: "സൂര്യൻ",
+    name_ar: "شمس",
+    symbol: "☉",
+    nature_en: "Leadership and success",
+    nature_ml: "നേതൃത്വവും വിജയവും"
+  },
+  moon: {
+    name_en: "Moon",
+    name_ml: "ചന്ദ്രൻ",
+    name_ar: "قمر",
+    symbol: "☽",
+    nature_en: "Emotions and intuition",
+    nature_ml: "വികാരങ്ങളും അറിവും"
+  },
+  mars: {
+    name_en: "Mars",
+    name_ml: "ചൊവ്വ",
+    name_ar: "مریخ",
+    symbol: "♂",
+    nature_en: "Energy and conflict",
+    nature_ml: "ഊർജ്ജവും സംഘർഷവും"
+  },
+  mercury: {
+    name_en: "Mercury",
+    name_ml: "ബുധൻ",
+    name_ar: "عطارد",
+    symbol: "☿",
+    nature_en: "Communication and trade",
+    nature_ml: "ആശയവിനിമയവും വ്യാപാരവും"
+  },
+  jupiter: {
+    name_en: "Jupiter",
+    name_ml: "ഗുരു",
+    name_ar: "مشتری",
+    symbol: "♃",
+    nature_en: "Wisdom and expansion",
+    nature_ml: "ജ്ഞാനവും വികാസവും"
+  },
+  venus: {
+    name_en: "Venus",
+    name_ml: "ശുക്രൻ",
+    name_ar: "زهره",
+    symbol: "♀",
+    nature_en: "Love and harmony",
+    nature_ml: "പ്രണയവും ഐക്യവും"
+  },
+  saturn: {
+    name_en: "Saturn",
+    name_ml: "ശനി",
+    name_ar: "زحل",
+    symbol: "♄",
+    nature_en: "Discipline and delays",
+    nature_ml: "ശിക്ഷണവും വൈകലും"
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// METADATA
+// ─────────────────────────────────────────────────────────────────────────────
 export const ASTRO_METADATA = {
   source_book: "Havâss'ın Derinlikleri",
   author: "Bülent Kısa",
