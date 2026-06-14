@@ -102,12 +102,12 @@ export default function LiveMoonStatus() {
                 </td>
                 <td className="py-3 px-3">
                   <div>
-                    <p className="font-amiri text-xl font-bold mb-1" style={{ color: G.text }}>{mansion.name}</p>
-                    <p className="font-inter text-xs text-white/60">{mansion.harf}</p>
+                    <p className="font-amiri text-3xl font-bold mb-1" style={{ color: G.text }} dir="rtl">{mansion.name_arabic || mansion.name}</p>
+                    <p className="font-inter text-xs text-white/60">#{mansion.no} • {mansion.harf}</p>
                   </div>
                 </td>
                 <td className="py-3 px-3">
-                  <p className="font-amiri text-lg" style={{ color: G.text }}>{mansion.harf_arabic}</p>
+                  <p className="font-amiri text-2xl font-bold" style={{ color: G.text }} dir="rtl">{mansion.harf_arabic}</p>
                 </td>
                 <td className="py-3 px-3">
                   <p className="font-inter text-xs text-white/80">{mansion.zodiac_sign}</p>

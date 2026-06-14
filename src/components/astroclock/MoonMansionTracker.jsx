@@ -180,27 +180,50 @@ function CurrentMansionDisplay({ mansion, nextMansion, countdown, isMalayalam })
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MansionDetail label={isMalayalam ? "നമ്പർ" : "Number"} value={`#${mansion.number}`} />
-        <MansionDetail label={isMalayalam ? "അറബിക് പേര്" : "Arabic Name"} value={mansion.name_ar} arabic />
-        <MansionDetail label={isMalayalam ? "മലയാളം പേര്" : "Malayalam Name"} value={mansion.name_ml} />
-        <MansionDetail label={isMalayalam ? "ഇംഗ്ലീഷ് പേര്" : "English Name"} value={mansion.name_en} />
+        <MansionDetail label={isMalayalam ? "അറബിക് പേര്" : "Arabic Name"} value={mansionData?.name_arabic || mansion.name_ar} arabic large />
+        <MansionDetail label={isMalayalam ? "മലയാളം പേര്" : "Malayalam Name"} value={mansionData?.name_ml || mansion.name_ml} />
+        <MansionDetail label={isMalayalam ? "ഇംഗ്ലീഷ് പേര്" : "English Name"} value={mansionData?.name_en || mansion.name_en} />
       </div>
 
       {mansionData && (
-        <div className="mt-4 grid md:grid-cols-2 gap-4">
-          <div>
+        <div className="mt-4 grid md:grid-cols-3 gap-4">
+          <div className="p-3 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
             <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              {isMalayalam ? "ഘടകം" : "Element"}
+              {isMalayalam ? "അക്ഷരം" : "Arabic Letter"}
             </p>
-            <p className="font-malayalam-sm text-white">{mansionData.element || "Not specified"}</p>
+            <p className="font-amiri text-3xl font-bold text-center" style={{ color: G.text }} dir="rtl">{mansionData.letter_arabic}</p>
           </div>
-          <div>
+          <div className="p-3 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
             <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              {isMalayalam ? "സ്വഭാവം" : "Nature"}
+              {isMalayalam ? "ഗ്രഹം" : "Planet"}
             </p>
-            <p className="font-malayalam-sm text-white">{mansionData.nature || "Not specified"}</p>
+            <p className="font-malayalam-sm text-center text-white">{mansionData.planet || "Not specified"}</p>
+          </div>
+          <div className="p-3 rounded-lg" style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+            <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+              {isMalayalam ? "രാശി" : "Zodiac"}
+            </p>
+            <p className="font-malayalam-sm text-center text-white">{mansionData.zodiac_sign_ml || mansionData.zodiac_sign}</p>
           </div>
         </div>
       )}
+
+      {/* Saad/Nahs Badge + Actions */}
+      <div className="mt-4 flex items-center gap-3 mb-4">
+        <div className={`px-4 py-2 rounded-lg font-bold uppercase tracking-wider text-sm ${
+          mansionData?.nature?.includes('Saad') ? 'bg-green-500/20 text-green-400 border-green-500/50' :
+          mansionData?.nature?.includes('Nahs') ? 'bg-red-500/20 text-red-400 border-red-500/50' :
+          'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+        }`} style={{ border: '2px solid' }}>
+          {mansionData?.nature?.includes('Saad') ? '🟢' : mansionData?.nature?.includes('Nahs') ? '🔴' : '🟡'} {mansionData?.nature || 'Mixed'}
+        </div>
+        <div className="flex-1">
+          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+            {isMalayalam ? "സ്വഭാവം" : "Nature Classification"}
+          </p>
+          <p className="font-malayalam-sm text-white/80">{mansionData?.nature_ml || (mansionData?.genel_hukum)}</p>
+        </div>
+      </div>
 
       {/* Recommended Actions */}
       <div className="mt-4 grid md:grid-cols-2 gap-4">
@@ -209,7 +232,7 @@ function CurrentMansionDisplay({ mansion, nextMansion, countdown, isMalayalam })
             {isMalayalam ? "ശുഭകരം" : "Recommended Actions"}
           </p>
           <ul className="text-sm text-white/80 space-y-1">
-            {(mansionData?.suitable || []).slice(0, 4).map((action, idx) => (
+            {(mansionData?.operations || mansion.operations || []).slice(0, 4).map((action, idx) => (
               <li key={idx} className="flex items-start gap-2">
                 <CheckCircle className="w-3 h-3 mt-0.5" style={{ color: "#22c55e" }} />
                 <span>{action}</span>
@@ -223,7 +246,7 @@ function CurrentMansionDisplay({ mansion, nextMansion, countdown, isMalayalam })
             {isMalayalam ? "നിഷിദ്ധം" : "Prohibited Actions"}
           </p>
           <ul className="text-sm text-white/80 space-y-1">
-            {(mansionData?.unsuitable || []).slice(0, 4).map((action, idx) => (
+            {(mansionData?.operations || mansion.operations || []).slice(4, 8).map((action, idx) => (
               <li key={idx} className="flex items-start gap-2">
                 <AlertCircle className="w-3 h-3 mt-0.5" style={{ color: "#fbbf24" }} />
                 <span>{action}</span>
@@ -625,11 +648,11 @@ function ManuscriptSourceSection({ isMalayalam }) {
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function MansionDetail({ label, value, arabic }) {
+function MansionDetail({ label, value, arabic, large }) {
   return (
     <div>
       <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>{label}</p>
-      <p className={`font-malayalam-sm text-white ${arabic ? 'font-amiri text-lg text-right' : ''}`}>{value}</p>
+      <p className={`${large ? 'font-amiri text-4xl font-bold text-right' : arabic ? 'font-amiri text-lg text-right' : 'font-malayalam-sm'} text-white`} dir={arabic || large ? 'rtl' : undefined}>{value}</p>
     </div>
   );
 }
