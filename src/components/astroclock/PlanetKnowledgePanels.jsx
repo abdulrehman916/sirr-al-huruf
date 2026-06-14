@@ -169,3 +169,7 @@ function PlanetCard({ planet, isMalayalam, openExplorer }) {
           </div>
 
         </div>
+      )}
+    </div>
+  );
+}

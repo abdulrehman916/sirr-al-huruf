@@ -94,7 +94,7 @@ export default function ManazilDatabase() {
                                 style={{transform: expandedManzil === manzil.number ? 'rotate(180deg)' : 'rotate(0deg)'}}
                             />
                         </div>
-
+                    </button>
 
                     <AnimatePresence>
                     {expandedManzil === manzil.number && (
