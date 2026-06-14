@@ -1,12 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
 // LIVE MOON STATUS — SECTION 4
-// Current lunar mansion, degree, zodiac sign
+// Current lunar mansion from ingested PDF knowledge
 // Astro Clock module only — completely isolated
+// NO APPROXIMATIONS — Reference data only
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Moon, Star, Info, BookOpen } from "lucide-react";
+import { Moon, Star, Info, BookOpen, AlertCircle } from "lucide-react";
 import { AY_MANAZILLERI } from "@/lib/astroClockData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 
@@ -21,50 +22,11 @@ const G = {
   bgHi:     "rgba(212,175,55,0.14)"
 };
 
-// Simplified moon position calculation
-function getCurrentMoonPosition() {
-  const now = new Date();
-  const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / (24 * 60 * 60 * 1000));
-  
-  // Moon completes cycle in ~27.32 days through 28 mansions
-  const mansionIndex = Math.floor((dayOfYear % 27.32) / 27.32 * 28);
-  const mansion = AY_MANAZILLERI[mansionIndex] || AY_MANAZILLERI[0];
-  
-  // Approximate zodiac position
-  const zodiacIndex = Math.floor((dayOfYear % 27.32) / 27.32 * 12);
-  const zodiacSigns = [
-    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
-  ];
-  const zodiacSignsML = [
-    "മേഷം", "ഇടവം", "മിഥുനം", "കർക്കിടകം", "ചിങ്ങം", "കന്നി",
-    "തുലാം", "വൃശ്ചികം", "ധനു", "മകരം", "കുംഭം", "മീനം"
-  ];
-  
-  return {
-    mansion,
-    mansionIndex: mansionIndex + 1,
-    zodiacSign: zodiacSigns[zodiacIndex],
-    zodiacSignML: zodiacSignsML[zodiacIndex],
-    degree: Math.floor((dayOfYear % 27.32) / 27.32 * 30)
-  };
-}
-
 export default function LiveMoonStatus() {
   const { isMalayalam } = useAstroClockLanguage();
-  const [moonData, setMoonData] = useState(null);
-
-  useEffect(() => {
-    setMoonData(getCurrentMoonPosition());
-    const interval = setInterval(() => {
-      setMoonData(getCurrentMoonPosition());
-    }, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!moonData) return null;
-
-  const { mansion, mansionIndex, zodiacSign, zodiacSignML, degree } = moonData;
+  
+  // Display all 28 mansions as reference (no real-time calculation)
+  const mansions = AY_MANAZILLERI || [];
 
   return (
     <motion.div
@@ -85,97 +47,87 @@ export default function LiveMoonStatus() {
         <Moon className="w-6 h-6" style={{ color: G.text }} />
         <div>
           <h2 className="font-inter text-lg font-bold uppercase tracking-widest" style={{ color: G.text }}>
-            {isMalayalam ? "ചന്ദ്ര നിലപാട്" : "Current Moon Status"}
+            {isMalayalam ? "28 ചാന്ദ്ര നക്ഷത്രങ്ങൾ" : "The 28 Lunar Mansions"}
           </h2>
           <p className="font-inter text-[9px]" style={{ color: G.dim }}>
-            {isMalayalam ? "നിലവിലെ ചാന്ദ്ര നക്ഷത്രം" : "Current Lunar Mansion"}
+            {isMalayalam ? "അൽ-മനാസിൽ അൽ-ഖമർ — ഗ്രന്ഥ ഡാറ്റ" : "Al-Manāzil al-Qamar — Reference Data"}
           </p>
         </div>
       </div>
 
-      {/* Moon Mansion Info */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        {/* Mansion Name */}
-        <div className="p-4 rounded-xl border" style={{ background: G.bg, borderColor: G.faint }}>
-          <div className="flex items-center gap-2 mb-2">
-            <Star className="w-4 h-4" style={{ color: G.text }} />
-            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-              {isMalayalam ? "നക്ഷത്രം" : "Lunar Mansion"}
+      {/* Notice: No Real-Time Calculation */}
+      <div className="mb-5 p-4 rounded-xl border" style={{ background: "rgba(255,193,7,0.05)", borderColor: "rgba(255,193,7,0.30)" }}>
+        <div className="flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 mt-0.5" style={{ color: "#ffc107" }} />
+          <div>
+            <p className="font-inter text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "#ffc107" }}>
+              {isMalayalam ? "ശ്രദ്ധിക്കുക" : "Important Notice"}
+            </p>
+            <p className="font-inter text-xs text-white/70 leading-relaxed">
+              {isMalayalam 
+                ? "കൃത്യമായ ചന്ദ്ര നിലപാട് കണക്കാക്കാൻ എഫെമറിസ് ഡാറ്റ ആവശ്യമാണ്. ഇവിടെ കാണിക്കുന്നത് ഗ്രന്ഥങ്ങളിൽ നിന്നുള്ള റഫറൻസ് ഡാറ്റ മാത്രമാണ്."
+                : "Accurate moon position requires ephemeris data. This displays reference data from ingested manuscripts only."}
             </p>
           </div>
-          <p className="font-amiri text-2xl font-bold mb-1" style={{ color: G.text }} dir="rtl">
-            {mansion?.harf_arabic}
-          </p>
-          <p className="font-inter text-sm font-bold text-white">
-            {mansion?.name || "Unknown"}
-          </p>
-          <p className="font-inter text-[10px]" style={{ color: G.dim }}>
-            #{mansionIndex} / 28
-          </p>
-        </div>
-
-        {/* Zodiac Sign */}
-        <div className="p-4 rounded-xl border" style={{ background: G.bg, borderColor: G.faint }}>
-          <div className="flex items-center gap-2 mb-2">
-            <Star className="w-4 h-4" style={{ color: G.text }} />
-            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-              {isMalayalam ? "രാശി" : "Zodiac Sign"}
-            </p>
-          </div>
-          <p className="font-inter text-lg font-bold text-white mb-1">
-            {isMalayalam ? zodiacSignML : zodiacSign}
-          </p>
-          <p className="font-inter text-xs text-white/70">
-            {degree}° {isMalayalam ? zodiacSignML : zodiacSign}
-          </p>
         </div>
       </div>
 
-      {/* Operations */}
-      <div className="p-4 rounded-xl border mb-4" style={{ background: G.bg, borderColor: G.faint }}>
-        <div className="flex items-center gap-2 mb-3">
-          <Info className="w-4 h-4" style={{ color: G.text }} />
-          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.text }}>
-            {isMalayalam ? "ഉചിത പ്രവൃത്തികൾ" : "Suitable Operations"}
-          </p>
-        </div>
-        <div className="space-y-2">
-          {(mansion?.operations || []).slice(0, 4).map((op, idx) => (
-            <div key={idx} className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: G.text }} />
-              <p className="font-inter text-xs text-white/80">{op}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Classification */}
-      <div className="p-3 rounded-xl border mb-4" style={{ 
-        background: mansion?.genel_hukum?.includes("Uğursuz") || mansion?.genel_hukum?.includes("Nahs") 
-          ? "rgba(239,68,68,0.05)" 
-          : "rgba(34,197,94,0.05)",
-        borderColor: mansion?.genel_hukum?.includes("Uğursuz") || mansion?.genel_hukum?.includes("Nahs")
-          ? "rgba(239,68,68,0.30)"
-          : "rgba(34,197,94,0.30)"
-      }}>
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ 
-          color: mansion?.genel_hukum?.includes("Uğursuz") || mansion?.genel_hukum?.includes("Nahs")
-            ? "#ef4444"
-            : "#22c55e"
-        }}>
-          {isMalayalam ? "വർഗ്ഗീകരണം" : "Classification"}
-        </p>
-        <p className="font-inter text-sm font-bold" style={{ 
-          color: mansion?.genel_hukum?.includes("Uğursuz") || mansion?.genel_hukum?.includes("Nahs")
-            ? "#ef4444"
-            : "#22c55e"
-        }}>
-          {mansion?.genel_hukum || "Unknown"}
-        </p>
+      {/* All 28 Mansions Reference Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b" style={{ borderColor: G.faint }}>
+              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                #
+              </th>
+              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                {isMalayalam ? "നക്ഷത്രം" : "Mansion"}
+              </th>
+              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                {isMalayalam ? "അക്ഷരം" : "Letter"}
+              </th>
+              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                {isMalayalam ? "രാശി" : "Zodiac"}
+              </th>
+              <th className="text-left py-2 px-3 font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                {isMalayalam ? "സ്വഭാവം" : "Nature"}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {(mansions || []).map((mansion) => (
+              <tr key={mansion.no} className="border-b" style={{ borderColor: G.faint }}>
+                <td className="py-3 px-3">
+                  <span className="font-inter text-sm font-bold text-white">#{mansion.no}</span>
+                </td>
+                <td className="py-3 px-3">
+                  <div>
+                    <p className="font-amiri text-xl font-bold mb-1" style={{ color: G.text }}>{mansion.name}</p>
+                    <p className="font-inter text-xs text-white/60">{mansion.harf}</p>
+                  </div>
+                </td>
+                <td className="py-3 px-3">
+                  <p className="font-amiri text-lg" style={{ color: G.text }}>{mansion.harf_arabic}</p>
+                </td>
+                <td className="py-3 px-3">
+                  <p className="font-inter text-xs text-white/80">{mansion.zodiac_sign}</p>
+                </td>
+                <td className="py-3 px-3">
+                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                    mansion.genel_hukum.includes('Saad') ? 'text-green-400' : 
+                    mansion.genel_hukum.includes('Nahs') ? 'text-red-400' : 'text-yellow-400'
+                  }`} style={{ background: "rgba(255,255,255,0.05)" }}>
+                    {mansion.genel_hukum}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Source */}
-      <div className="p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)" }}>
+      <div className="mt-4 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)" }}>
         <div className="flex items-center gap-2 mb-1">
           <BookOpen className="w-3 h-3" style={{ color: G.dim }} />
           <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
@@ -183,7 +135,7 @@ export default function LiveMoonStatus() {
           </p>
         </div>
         <p className="font-inter text-xs text-white/60">
-          Havâss'ın Derinlikleri — p.64-74
+          Havâss'ın Derinlikleri — Pages 64-74
         </p>
       </div>
     </motion.div>

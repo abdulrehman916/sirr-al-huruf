@@ -42,7 +42,7 @@ export default function BirthProfileAnalyzer() {
   const [activeTab, setActiveTab] = useState("zodiac");
   const [liveData, setLiveData] = useState(null);
 
-  // Update live data every minute
+  // Update live data every minute (sunrise/sunset + planetary hours only)
   useEffect(() => {
     const updateLiveData = () => {
       const now = new Date();
@@ -51,7 +51,6 @@ export default function BirthProfileAnalyzer() {
       const currentHourData = getCurrentPlanetaryHour(now, sunData.sunrise, sunData.sunset);
       
       setLiveData({
-        moonPosition: calculateMoonPosition(now),
         currentHour: currentHourData,
         dayRuler: currentHourData.dayRuler,
         sunData
@@ -60,7 +59,7 @@ export default function BirthProfileAnalyzer() {
     };
 
     updateLiveData();
-    const interval = setInterval(updateLiveData, 60000); // Update every minute
+    const interval = setInterval(updateLiveData, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -289,43 +288,34 @@ export default function BirthProfileAnalyzer() {
 
             {/* Live Data Section */}
             {liveData && (
-              <div className="rounded-xl border p-4" style={{ background: "rgba(212,175,55,0.04)", borderColor: G.faint }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Clock className="w-4 h-4" style={{ color: G.dim }} />
-                  <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                    {isMalayalam ? "തത്സമയ ഗ്രഹ നിലവാരം" : "Live Planetary Data"}
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                    <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                      {isMalayalam ? "നിലവിലെ ഗ്രഹ മണിക്കൂർ" : "Current Hour"}
-                    </p>
-                    <p className="font-inter text-sm font-bold text-white">
-                      {liveData.currentHour?.planetInfo?.[isMalayalam ? "name_ml" : "name_en"]}
-                    </p>
-                  </div>
-                  
-                  <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                    <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                      {isMalayalam ? "ദിന നാഥൻ" : "Day Ruler"}
-                    </p>
-                    <p className="font-inter text-sm font-bold text-white">
-                      {PLANET_INFO[liveData.dayRuler]?.[isMalayalam ? "name_ml" : "name_en"]}
-                    </p>
-                  </div>
-                  
-                  <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                    <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                      {isMalayalam ? "ചന്ദ്രൻ" : "Moon Position"}
-                    </p>
-                    <p className="font-inter text-sm font-bold text-white">
-                      {liveData.moonPosition?.sign || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+             <div className="rounded-xl border p-4" style={{ background: "rgba(212,175,55,0.04)", borderColor: G.faint }}>
+               <div className="flex items-center gap-2 mb-3">
+                 <Clock className="w-4 h-4" style={{ color: G.dim }} />
+                 <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                   {isMalayalam ? "തത്സമയ ഗ്രഹ മണിക്കൂർ" : "Live Planetary Hour"}
+                 </p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3">
+                 <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                   <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                     {isMalayalam ? "നിലവിലെ ഗ്രഹ മണിക്കൂർ" : "Current Hour"}
+                   </p>
+                   <p className="font-inter text-sm font-bold text-white">
+                     {liveData.currentHour?.planetInfo?.[isMalayalam ? "name_ml" : "name_en"]}
+                   </p>
+                 </div>
+
+                 <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                   <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                     {isMalayalam ? "ദിന നാഥൻ" : "Day Ruler"}
+                   </p>
+                   <p className="font-inter text-sm font-bold text-white">
+                     {PLANET_INFO[liveData.dayRuler]?.[isMalayalam ? "name_ml" : "name_en"]}
+                   </p>
+                 </div>
+               </div>
+             </div>
             )}
           </motion.div>
         )}
@@ -352,15 +342,7 @@ export default function BirthProfileAnalyzer() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HELPER FUNCTIONS
+// NO APPROXIMATE CALCULATIONS
 // ─────────────────────────────────────────────────────────────────────────────
-
-function calculateMoonPosition(date) {
-  // Approximate moon sign calculation (simplified)
-  const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-  const moonCycle = 27.3;
-  const position = (dayOfYear % moonCycle) / moonCycle * 360;
-  const signIndex = Math.floor(position / 30);
-  const signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
-  return { sign: signs[signIndex] || "Unknown", degree: Math.floor(position % 30) };
-}
+// All calculations use verified Astro Clock knowledge from ingested PDFs.
+// Moon position requires ephemeris data (not included).
