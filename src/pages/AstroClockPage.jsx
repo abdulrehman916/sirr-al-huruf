@@ -17,6 +17,7 @@ import LiveMoonPosition from "../components/astroclock/LiveMoonPosition";
 import ManazilDatabase from "../components/astroclock/ManazilDatabase";
 import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
 import ProfessionalActionTimingAdvisor from "../components/astroclock/ProfessionalActionTimingAdvisor";
+import ProfessionalTimingDecisionEngine from "../components/astroclock/ProfessionalTimingDecisionEngine";
 import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel.jsx";
 import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
 import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.jsx";
@@ -107,6 +108,9 @@ function AstroClockContent() {
 
         {/* SECTION 10: Professional Action Timing Advisor */}
         <ProfessionalActionTimingAdvisor />
+
+        {/* SECTION 11: Professional Timing Decision Engine */}
+        <ProfessionalTimingDecisionEngine />
 
         {/* SECTION 11: Birth Profile Analyzer */}
         <BirthProfileAnalyzer />
