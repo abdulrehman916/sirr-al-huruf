@@ -93,16 +93,15 @@ export default function ManazilDatabase() {
                         className="w-full p-4 flex items-center justify-between text-left"
                     >
                         <div className="flex items-center gap-4">
-                            <span className="font-inter font-bold text-base text-white/90 w-8 h-8 flex items-center justify-center rounded-full" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
-                              {manzil.number}
-                            </span>
-                            <div style={{width: '4px', height: '32px', borderRadius: '2px', background: getClassificationColor(manzil.nature)}}></div>
+                            <div className="flex flex-col items-center">
+                                <span className="font-inter font-bold text-xs text-white/60 px-2 py-1 rounded" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
+                                  {manzil.number}
+                                </span>
+                                <div style={{width: '3px', height: '24px', borderRadius: '2px', marginTop: '4px', background: getClassificationColor(manzil.nature)}}></div>
+                            </div>
                             <div className="flex flex-col">
-                                <p className="font-amiri font-bold text-4xl md:text-5xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}} dir="rtl">{manzil.name_arabic}</p>
+                                <p className="font-amiri font-bold text-5xl md:text-6xl leading-relaxed" style={{color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)"}} dir="rtl">{manzil.name_arabic}</p>
                                 <p className="font-malayalam-md font-semibold text-white/90 mt-1">{isMalayalam ? manzil.name_ml : manzil.name_en}</p>
-                                {manzil.letter_malayalam && (
-                                    <p className="font-inter text-xs text-white/60 mt-0.5">Letter: {manzil.letter_malayalam}</p>
-                                )}
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
