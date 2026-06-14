@@ -158,6 +158,125 @@ function getZodiacSign(longitude) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MOON TRANSIT CALCULATIONS
+// Calculate upcoming sign and mansion transitions
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calculate upcoming Moon sign and mansion transits
+ * @param {Date} fromDate - Starting date for calculations
+ * @returns {Object} Transit data with sign and mansion transitions
+ */
+export function calculateMoonTransits(fromDate = new Date()) {
+  const signTransits = [];
+  const mansionTransits = { current: null, next: null, upcoming: [] };
+  
+  // Get current moon position
+  const currentPosition = calculateMoonPosition(fromDate);
+  const currentLongitude = parseFloat(currentPosition.longitude);
+  
+  // Calculate current sign
+  const currentSignIndex = Math.floor(currentLongitude / 30);
+  const signs = getZodiacSigns();
+  
+  // Find when moon enters next sign
+  const nextSignIndex = (currentSignIndex + 1) % 12;
+  const nextSignBoundary = nextSignIndex * 30;
+  
+  // Calculate time to next sign entry
+  const moonSpeed = 0.5; // degrees per hour (average)
+  const degreesToNextSign = nextSignBoundary - currentLongitude;
+  const hoursToNextSign = degreesToNextSign / moonSpeed;
+  
+  // Current sign transit
+  signTransits.push({
+    name: signs[currentSignIndex].name_en,
+    symbol: signs[currentSignIndex].symbol,
+    entryTime: fromDate,
+    remainingTime: hoursToNextSign * 60 * 60 * 1000 // ms
+  });
+  
+  // Next sign transit
+  const nextSignTime = new Date(fromDate.getTime() + hoursToNextSign * 60 * 60 * 1000);
+  signTransits.push({
+    name: signs[nextSignIndex].name_en,
+    symbol: signs[nextSignIndex].symbol,
+    entryTime: nextSignTime
+  });
+  
+  // Calculate next 5 sign transits
+  for (let i = 1; i <= 5; i++) {
+    const signIndex = (currentSignIndex + i) % 12;
+    const signTime = new Date(nextSignTime.getTime() + (i * 2.5 * 24 * 60 * 60 * 1000)); // ~2.5 days per sign
+    signTransits.push({
+      name: signs[signIndex].name_en,
+      symbol: signs[signIndex].symbol,
+      entryTime: signTime
+    });
+  }
+  
+  // Calculate mansion transits
+  const mansionWidth = 360 / 28; // ~12.857 degrees per mansion
+  const currentMansionIndex = Math.floor(currentLongitude / mansionWidth);
+  const mansions = AY_MANAZILLERI;
+  
+  // Current mansion
+  const degreesToNextMansion = mansionWidth - (currentLongitude % mansionWidth);
+  const hoursToNextMansion = degreesToNextMansion / moonSpeed;
+  
+  mansionTransits.current = {
+    number: mansions[currentMansionIndex]?.no || currentMansionIndex + 1,
+    name: mansions[currentMansionIndex]?.name_en || `Mansion ${currentMansionIndex + 1}`,
+    arabic: mansions[currentMansionIndex]?.harfi || "",
+    entryTime: fromDate,
+    remainingTime: hoursToNextMansion * 60 * 60 * 1000 // ms
+  };
+  
+  // Next mansion
+  const nextMansionIndex = (currentMansionIndex + 1) % 28;
+  const nextMansionTime = new Date(fromDate.getTime() + hoursToNextMansion * 60 * 60 * 1000);
+  
+  mansionTransits.next = {
+    number: mansions[nextMansionIndex]?.no || nextMansionIndex + 1,
+    name: mansions[nextMansionIndex]?.name_en || `Mansion ${nextMansionIndex + 1}`,
+    arabic: mansions[nextMansionIndex]?.harfi || "",
+    entryTime: nextMansionTime
+  };
+  
+  // Next 5 mansions
+  for (let i = 1; i <= 5; i++) {
+    const mansionIndex = (currentMansionIndex + i) % 28;
+    const mansionTime = new Date(nextMansionTime.getTime() + (i * 0.9 * 24 * 60 * 60 * 1000)); // ~0.9 days per mansion
+    
+    mansionTransits.upcoming.push({
+      number: mansions[mansionIndex]?.no || mansionIndex + 1,
+      name: mansions[mansionIndex]?.name_en || `Mansion ${mansionIndex + 1}`,
+      arabic: mansions[mansionIndex]?.harfi || "",
+      entryTime: mansionTime
+    });
+  }
+  
+  return { signTransits, mansionTransits };
+}
+
+function getZodiacSigns() {
+  return [
+    { name_en: 'Aries', name_ml: 'മേഷം', symbol: '♈' },
+    { name_en: 'Taurus', name_ml: 'ഇടവം', symbol: '♉' },
+    { name_en: 'Gemini', name_ml: 'മിഥുനം', symbol: '♊' },
+    { name_en: 'Cancer', name_ml: 'കർക്കിടകം', symbol: '♋' },
+    { name_en: 'Leo', name_ml: 'ചിങ്ങം', symbol: '♌' },
+    { name_en: 'Virgo', name_ml: 'കന്നി', symbol: '♍' },
+    { name_en: 'Libra', name_ml: 'തുലാം', symbol: '♎' },
+    { name_en: 'Scorpio', name_ml: 'വൃശ്ചികം', symbol: '♏' },
+    { name_en: 'Sagittarius', name_ml: 'ധനു', symbol: '♐' },
+    { name_en: 'Capricorn', name_ml: 'മകരം', symbol: '♑' },
+    { name_en: 'Aquarius', name_ml: 'കുംഭം', symbol: '♒' },
+    { name_en: 'Pisces', name_ml: 'മീനം', symbol: '♓' }
+  ];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MOON PHASE DESCRIPTION
 // ─────────────────────────────────────────────────────────────────────────────
 export function getMoonPhaseDescription(phase) {

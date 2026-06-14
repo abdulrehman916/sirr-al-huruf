@@ -20,6 +20,8 @@ import ProfessionalActionTimingAdvisor from "../components/astroclock/Profession
 import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel.jsx";
 import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
 import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.jsx";
+import TraditionalMoonTransitForecast from "../components/astroclock/TraditionalMoonTransitForecast.jsx";
+import BuhurReference from "../components/astroclock/BuhurReference.jsx";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 
 function LanguageToggle() {
@@ -108,6 +110,12 @@ function AstroClockContent() {
 
         {/* SECTION 11: Birth Profile Analyzer */}
         <BirthProfileAnalyzer />
+
+        {/* SECTION 12: Traditional Moon Transit Forecast */}
+        <TraditionalMoonTransitForecast />
+
+        {/* SECTION 13: Buhur Reference */}
+        <BuhurReference />
 
         {/* Framework Notice */}
         <motion.div
