@@ -73,6 +73,7 @@ export default function ProfessionalTimingDecisionEngine() {
       </div>
 
       <CurrentFactors data={engineData} isMalayalam={isMalayalam} />
+      <NextPeriods data={engineData} isMalayalam={isMalayalam} />
       <CategoryGrid categoryTimings={engineData.actionTimings} isMalayalam={isMalayalam} />
       <SourceLegend isMalayalam={isMalayalam} />
     </motion.div>
@@ -271,6 +272,136 @@ function CategoryCard({ category, isMalayalam }) {
       </AnimatePresence>
     </div>
   );
+}
+
+function NextPeriods({ data, isMalayalam }) {
+  const { actionTimings } = data;
+  
+  // Calculate average status across all categories
+  const avgScore = actionTimings.reduce((sum, a) => sum + a.status.score, 0) / actionTimings.length;
+  const currentStatus = avgScore <= -2 ? 'Nahs Asghar' : avgScore >= 2 ? 'Sa\'d Asghar' : 'Neutral';
+  
+  // Find next favorable period (score >= 2)
+  const nextFavorable = findNextPeriod(actionTimings, 2, isMalayalam);
+  // Find next unfavorable period (score <= -2)
+  const nextUnfavorable = findNextPeriod(actionTimings, -2, isMalayalam, true);
+  
+  return (
+    <div className="mb-6 grid md:grid-cols-2 gap-4">
+      {/* Next Favorable Period */}
+      <div className="p-5 rounded-xl border" style={{ background: G.excellent, borderColor: G.excellentBorder }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
+            {isMalayalam ? "അടുത്ത ഉചിത സമയം" : "Next Favorable Period"}
+          </p>
+          <span className="text-xl">🟢</span>
+        </div>
+        {nextFavorable ? (
+          <>
+            <p className="font-malayalam-lg font-bold text-white mb-1">{nextFavorable.time}</p>
+            <p className="font-malayalam-sm text-white/70 mb-2">{nextFavorable.remaining}</p>
+            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#22c55e" }}>{nextFavorable.level}</p>
+          </>
+        ) : (
+          <p className="font-malayalam-sm text-white/60">{isMalayalam ? "ഇന്ന് ഉചിത സമയമില്ല" : "No favorable period today"}</p>
+        )}
+      </div>
+
+      {/* Next Unfavorable Period */}
+      <div className="p-5 rounded-xl border" style={{ background: G.avoid, borderColor: G.avoidBorder }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
+            {isMalayalam ? "അടുത്ത അനുചിത സമയം" : "Next Unfavorable Period"}
+          </p>
+          <span className="text-xl">🔴</span>
+        </div>
+        {nextUnfavorable ? (
+          <>
+            <p className="font-malayalam-lg font-bold text-white mb-1">{nextUnfavorable.time}</p>
+            <p className="font-malayalam-sm text-white/70 mb-2">{nextUnfavorable.remaining}</p>
+            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#ef4444" }}>{nextUnfavorable.level}</p>
+          </>
+        ) : (
+          <p className="font-malayalam-sm text-white/60">{isMalayalam ? "ഇന്ന് അനുചിത സമയമില്ല" : "No unfavorable period today"}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function findNextPeriod(actionTimings, targetScore, isMalayalam, isUnfavorable = false) {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  // Check remaining hours today
+  for (let h = currentHour + 1; h < 24; h++) {
+    const futureDate = new Date(now);
+    futureDate.setHours(h, 0, 0, 0);
+    
+    // Recalculate status for this future time
+    const moonPos = calculateMoonPosition(futureDate);
+    const planetHour = getCurrentPlanetaryHour(futureDate, 6.5, 18.25);
+    const dayInfo = DAY_INFO[futureDate.getDay()];
+    
+    // Check first category as representative
+    const firstCategory = actionTimings[0]?.rules;
+    if (firstCategory) {
+      const futureStatus = determineStatus(firstCategory, moonPos, planetHour, dayInfo);
+      
+      if (isUnfavorable ? futureStatus.score <= targetScore : futureStatus.score >= targetScore) {
+        const minutesUntil = (h - currentHour) * 60 - currentMinute;
+        const hoursUntil = Math.floor(minutesUntil / 60);
+        const minsUntil = minutesUntil % 60;
+        
+        return {
+          time: formatTime(h, 0),
+          remaining: isMalayalam 
+            ? `${hoursUntil}മണിക്കൂർ ${minsUntil}മിനിറ്റ് കഴിഞ്ഞ്`
+            : `${hoursUntil}h ${minsUntil}m remaining`,
+          level: futureStatus.level
+        };
+      }
+    }
+  }
+  
+  // Check tomorrow
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  
+  for (let h = 0; h < 24; h++) {
+    const futureDate = new Date(tomorrow);
+    futureDate.setHours(h, 0, 0, 0);
+    
+    const moonPos = calculateMoonPosition(futureDate);
+    const planetHour = getCurrentPlanetaryHour(futureDate, 6.5, 18.25);
+    const dayInfo = DAY_INFO[futureDate.getDay()];
+    
+    const firstCategory = actionTimings[0]?.rules;
+    if (firstCategory) {
+      const futureStatus = determineStatus(firstCategory, moonPos, planetHour, dayInfo);
+      
+      if (isUnfavorable ? futureStatus.score <= targetScore : futureStatus.score >= targetScore) {
+        const isTomorrow = true;
+        return {
+          time: formatTime(h, 0),
+          remaining: isMalayalam 
+            ? `${isTomorrow ? 'നാളെ' : 'ഇന്ന്'} ${formatTime(h, 0)}`
+            : `${isTomorrow ? 'Tomorrow' : 'Today'} ${formatTime(h, 0)}`,
+          level: futureStatus.level
+        };
+      }
+    }
+  }
+  
+  return null;
+}
+
+function formatTime(hour, minute) {
+  const h = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  const ampm = hour >= 12 && hour < 24 ? 'PM' : 'AM';
+  return `${h}:${minute.toString().padStart(2, '0')} ${ampm}`;
 }
 
 function SourceLegend({ isMalayalam }) {
