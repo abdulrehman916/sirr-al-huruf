@@ -346,6 +346,17 @@ function formatDuration(decimalHours) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FORMAT COUNTDOWN (for time remaining/until start)
+// ─────────────────────────────────────────────────────────────────────────────
+function formatCountdown(ms) {
+  if (ms <= 0) return '00:00:00';
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GET ALL 24 HOURS FOR A DAY
 // ─────────────────────────────────────────────────────────────────────────────
 export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
@@ -357,6 +368,9 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   const dayHourDuration = dayDuration / 12;
   const nightHourDuration = nightDuration / 12;
   
+  const now = new Date();
+  const currentHours = now.getHours() + now.getMinutes() / 60;
+  
   const hours = [];
   
   // Day hours (1-12)
@@ -365,6 +379,26 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
     const planet = PLANET_SEQUENCE[planetIndex];
     const start = sunrise + i * dayHourDuration;
     const end = start + dayHourDuration;
+    
+    // Calculate countdown for each hour
+    const startMs = start * 60 * 60 * 1000;
+    const endMs = end * 60 * 60 * 1000;
+    const nowMs = currentHours * 60 * 60 * 1000;
+    let timeRemaining = null;
+    let timeUntilStart = null;
+    let status = 'upcoming';
+    
+    if (nowMs >= startMs && nowMs < endMs) {
+      // Current hour
+      timeRemaining = formatCountdown(endMs - nowMs);
+      status = 'current';
+    } else if (nowMs < startMs) {
+      // Upcoming hour
+      timeUntilStart = formatCountdown(startMs - nowMs);
+    } else {
+      // Past hour
+      status = 'past';
+    }
     
     hours.push({
       hourNumber: i + 1,
@@ -378,6 +412,9 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
       duration: formatDuration(dayHourDuration),
       durationMinutes: Math.round(dayHourDuration * 60),
       durationSeconds: Math.round((dayHourDuration * 60 - Math.floor(dayHourDuration * 60)) * 60),
+      timeRemaining,
+      timeUntilStart,
+      status,
       goodActions: PLANET_INFO[planet]?.goodActions_en || [],
       badActions: PLANET_INFO[planet]?.badActions_en || [],
       spiritualOperations: PLANET_INFO[planet]?.spiritualOperations_en || [],
@@ -386,24 +423,52 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   }
   
   // Night hours (13-24)
+  // Night hours continue from where day hours ended (hour 12)
+  // First night hour planet = (dayRuler.index + 12) % 7
+  const firstNightPlanetIndex = (dayRuler.index + 12) % 7;
   for (let i = 0; i < 12; i++) {
-    const planetIndex = (dayRuler.index + i) % 7; // This seems incorrect for night hours, but let's keep it for now as per original logic
+    const planetIndex = (firstNightPlanetIndex + i) % 7;
     const planet = PLANET_SEQUENCE[planetIndex];
     const start = sunset + i * nightHourDuration;
     const end = start + nightHourDuration;
+    
+    // Calculate countdown for each night hour
+    const startAdjusted = start >= 24 ? start - 24 : start;
+    const endAdjusted = end >= 24 ? end - 24 : end;
+    const startMs = startAdjusted * 60 * 60 * 1000;
+    const endMs = endAdjusted * 60 * 60 * 1000;
+    const nowMs = currentHours * 60 * 60 * 1000;
+    let timeRemaining = null;
+    let timeUntilStart = null;
+    let status = 'upcoming';
+    
+    if (nowMs >= startMs && nowMs < endMs) {
+      // Current hour
+      timeRemaining = formatCountdown(endMs - nowMs);
+      status = 'current';
+    } else if (nowMs < startMs) {
+      // Upcoming hour
+      timeUntilStart = formatCountdown(startMs - nowMs);
+    } else {
+      // Past hour
+      status = 'past';
+    }
     
     hours.push({
       hourNumber: i + 13,
       period: 'night',
       planet,
       planetInfo: PLANET_INFO[planet],
-      startTime: formatTime(start >= 24 ? start - 24 : start),
-      endTime: formatTime(end >= 24 ? end - 24 : end),
-      startTimeDecimal: start >= 24 ? start - 24 : start,
-      endTimeDecimal: end >= 24 ? end - 24 : end,
+      startTime: formatTime(startAdjusted),
+      endTime: formatTime(endAdjusted),
+      startTimeDecimal: startAdjusted,
+      endTimeDecimal: endAdjusted,
       duration: formatDuration(nightHourDuration),
       durationMinutes: Math.round(nightHourDuration * 60),
       durationSeconds: Math.round((nightHourDuration * 60 - Math.floor(nightHourDuration * 60)) * 60),
+      timeRemaining,
+      timeUntilStart,
+      status,
       goodActions: PLANET_INFO[planet]?.goodActions_en || [],
       badActions: PLANET_INFO[planet]?.badActions_en || [],
       spiritualOperations: PLANET_INFO[planet]?.spiritualOperations_en || [],

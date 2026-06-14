@@ -286,8 +286,39 @@ function NightHoursSection({ hours, currentHour, expandedHour, setExpandedHour, 
 // ─────────────────────────────────────────────────────────────────────────────
 
 function HourRow({ hour, index, isCurrent, isNext, expanded, onToggle, isMalayalam }) {
+  const [hourCountdown, setHourCountdown] = useState("");
   const planetRules = getPlanetHourRules(hour.planet);
   const friendships = getPlanetFriendships(hour.planet);
+  
+  // Calculate countdown for this specific hour
+  useEffect(() => {
+    const updateHourCountdown = () => {
+      const now = new Date();
+      // Convert decimal hours to milliseconds for today
+      let endTimeHours = hour.endTimeDecimal;
+      if (endTimeHours >= 24) {
+        endTimeHours = endTimeHours - 24; // Next day
+      }
+      
+      const endDate = new Date();
+      endDate.setHours(Math.floor(endTimeHours), Math.round((endTimeHours % 1) * 60), 0, 0);
+      
+      // If end time is before now, it's already ended
+      if (endDate < now) {
+        setHourCountdown("Ended");
+        return;
+      }
+      
+      const diff = endDate - now;
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      setHourCountdown(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+    };
+    
+    updateHourCountdown();
+    const interval = setInterval(updateHourCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [hour.endTimeDecimal]);
   const status = isCurrent ? "current" : isNext ? "next" : hour.planetInfo?.nature === "benefic" ? "best" : "adverse";
   
   const statusConfig = {
@@ -320,6 +351,11 @@ function HourRow({ hour, index, isCurrent, isNext, expanded, onToggle, isMalayal
           <div className="font-inter text-[9px]" style={{ color: G.dim }}>
             {typeof hour.durationMinutes === 'number' && Number.isFinite(hour.durationMinutes) ? `${hour.durationMinutes.toFixed(1)} min` : hour.duration || '--'}
           </div>
+          {hourCountdown && (
+            <div className={`font-inter text-[8px] font-bold ${isCurrent ? 'text-green-400' : isNext ? 'text-blue-400' : ''}`} style={{ color: isCurrent ? '#22c55e' : isNext ? '#3b82f6' : G.dim }}>
+              {hourCountdown}
+            </div>
+          )}
         </td>
         <td className="py-3 px-3">
           <div className="flex items-center gap-2">
