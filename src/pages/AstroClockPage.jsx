@@ -25,6 +25,7 @@ import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
 import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.jsx";
 import TraditionalMoonTransitForecast from "../components/astroclock/TraditionalMoonTransitForecast.jsx";
 import BuhurReference from "../components/astroclock/BuhurReference.jsx";
+import PlanetaryHourVerification from "../components/astroclock/PlanetaryHourVerification.jsx";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 
 function LanguageToggle() {
@@ -127,6 +128,9 @@ function AstroClockContent() {
 
         {/* SECTION 15: Buhur Reference */}
         <BuhurReference />
+
+        {/* SECTION 16: Planetary Hour Verification */}
+        <PlanetaryHourVerification />
 
         {/* Framework Notice */}
         <motion.div
