@@ -16,9 +16,9 @@ import LiveMoonStatus from "../components/astroclock/LiveMoonStatus";
 import ManazilDatabase from "../components/astroclock/ManazilDatabase";
 import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
 import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
-import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel";
-import IncenseAdvisor from "../components/astroclock/IncenseAdvisor";
-import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer";
+import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel.jsx";
+import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
+import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.jsx";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 
 function LanguageToggle() {

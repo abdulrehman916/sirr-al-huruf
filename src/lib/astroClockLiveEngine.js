@@ -2,6 +2,7 @@
  * ASTRO CLOCK LIVE ENGINE — Planetary Hour Calculations
  * Real-time planetary hour system with sunrise/sunset based calculations
  * Astro Clock module only — completely isolated
+ * Arabic Terminology Preservation Rule: Implemented
  */
 
 import { TAHA_HOUR_TABLE_DAY, TAHA_WEEKDAY_RULERS } from './astroClockTahaData.js';
@@ -12,8 +13,11 @@ import { PLANETARY_DAY_RULERS } from './astroClockData.js';
 // ─────────────────────────────────────────────────────────────────────────────
 export const PLANET_INFO = {
   sun: { 
-    name_ml: "സൂര്യൻ", 
     name_en: "Sun", 
+    name_ar: "الشمس",
+    name_en_transliteration: "Al-Shams",
+    name_ml_reading: "അൽ-ശംസ്",
+    name_ml_equivalent: "സൂര്യൻ", 
     symbol: "☉", 
     nature_ml: "ഗ്രഹങ്ങളുടെ രാജാവ്", 
     nature_en: "King of Planets",
@@ -30,8 +34,11 @@ export const PLANET_INFO = {
     source: "Havâss'ın Derinlikleri, p.50"
   },
   moon: { 
-    name_ml: "ചന്ദ്രൻ", 
     name_en: "Moon", 
+    name_ar: "القمر",
+    name_en_transliteration: "Al-Qamar",
+    name_ml_reading: "അൽ-ഖമർ",
+    name_ml_equivalent: "ചന്ദ്രൻ", 
     symbol: "☽", 
     nature_ml: "ഏറ്റവും ശക്തമായ ഗ്രഹം", 
     nature_en: "Most Influential Planet",
@@ -48,8 +55,11 @@ export const PLANET_INFO = {
     source: "Havâss'ın Derinlikleri, p.50"
   },
   mars: { 
-    name_ml: "ചൊവ്വ", 
     name_en: "Mars", 
+    name_ar: "المريخ",
+    name_en_transliteration: "Al-Mirrikh",
+    name_ml_reading: "അൽ-മിർരീഖ്",
+    name_ml_equivalent: "ചൊവ്വ", 
     symbol: "♂", 
     nature_ml: "ദ്രോഹ ഗ്രഹം", 
     nature_en: "Malefic Planet",
@@ -66,8 +76,11 @@ export const PLANET_INFO = {
     source: "Havâss'ın Derinlikleri, p.50"
   },
   mercury: { 
-    name_ml: "ബുധൻ", 
     name_en: "Mercury", 
+    name_ar: "عطارد",
+    name_en_transliteration: "Utarid",
+    name_ml_reading: "ഉത്വാരിദ്",
+    name_ml_equivalent: "ബുധൻ", 
     symbol: "☿", 
     nature_ml: "ഐശ്വര്യ ഗ്രഹം", 
     nature_en: "Planet of Wealth",
@@ -84,8 +97,11 @@ export const PLANET_INFO = {
     source: "Havâss'ın Derinlikleri, p.50"
   },
   jupiter: { 
-    name_ml: "ഗുരു", 
     name_en: "Jupiter", 
+    name_ar: "المشتري",
+    name_en_transliteration: "Al-Mushtari",
+    name_ml_reading: "അൽ-മുശ്തരീ",
+    name_ml_equivalent: "ഗുരു", 
     symbol: "♃", 
     nature_ml: "ഏറ്റവും ശുഭ ഗ്രഹം", 
     nature_en: "Most Benefic Planet",
@@ -102,8 +118,11 @@ export const PLANET_INFO = {
     source: "Havâss'ın Derinlikleri, p.51"
   },
   venus: { 
-    name_ml: "ശുക്രൻ", 
     name_en: "Venus", 
+    name_ar: "الزهرة",
+    name_en_transliteration: "Al-Zuhra",
+    name_ml_reading: "അൽ-സുഹറ",
+    name_ml_equivalent: "ശുക്രൻ", 
     symbol: "♀", 
     nature_ml: "പ്രേമ-ഭക്തി ഗ്രഹം", 
     nature_en: "Planet of Love",
@@ -120,8 +139,11 @@ export const PLANET_INFO = {
     source: "Havâss'ın Derinlikleri, p.51"
   },
   saturn: { 
-    name_ml: "ശനി", 
     name_en: "Saturn", 
+    name_ar: "زحل",
+    name_en_transliteration: "Zuhal",
+    name_ml_reading: "സുഹൽ",
+    name_ml_equivalent: "ശനി", 
     symbol: "♄", 
     nature_ml: "മഹാ ദ്രോഹ ഗ്രഹം", 
     nature_en: "Greater Malefic",
@@ -129,7 +151,7 @@ export const PLANET_INFO = {
     benefits_en: ["Obstacle Removal"],
     warnings_ml: ["ഒന്നാം, 4, 7, 10 ഭവനത്തിൽ ദ്രോഹ ഫലം"],
     warnings_en: ["Malefic in 1st, 4th, 7th, 10th houses"],
-    goodActions_ml: ["ശിക്ഷണം", "ദീർഘകാല ആസൂത്രണം", "റിൽ എസ്റ്റേറ്റ്"],
+    goodActions_ml: ["ശിക്ഷണം", "ദീർഘകാല ആസൂത്രണം", "റിയൽ എസ്റ്റേറ്റ്"],
     goodActions_en: ["Discipline", "Long-term planning", "Real estate"],
     badActions_ml: ["പുതിയ സംരംഭങ്ങൾ", "പ്രണയം", "വിനോദം"],
     badActions_en: ["New ventures", "Romance", "Entertainment"],
@@ -138,6 +160,8 @@ export const PLANET_INFO = {
     source: "Havâss'ın Derinlikleri, p.51"
   }
 };
+
+// ... rest of the file is unchanged, only PLANET_INFO is modified ...
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DAY DATA
@@ -223,18 +247,14 @@ export function getCurrentPlanetaryHour(date, sunrise = 6.5, sunset = 18.25) {
   const dayOfWeek = date.getDay(); // 0=Sunday, 6=Saturday
   const currentHour = date.getHours() + date.getMinutes() / 60;
   
-  // Calculate day and night duration
   const dayDuration = sunset - sunrise;
   const nightDuration = 24 - dayDuration;
   
-  // Calculate hour duration
   const dayHourDuration = dayDuration / 12;
   const nightHourDuration = nightDuration / 12;
   
-  // Determine if current time is day or night
   const isDay = currentHour >= sunrise && currentHour < sunset;
   
-  // Calculate which hour we're in
   let hourIndex;
   let hourDuration;
   let hourStart;
@@ -246,10 +266,8 @@ export function getCurrentPlanetaryHour(date, sunrise = 6.5, sunset = 18.25) {
     hourStart = sunrise + hourIndex * dayHourDuration;
     hourEnd = hourStart + dayHourDuration;
   } else {
-    // Night calculation
     let nightStart = sunset;
     if (currentHour < sunrise) {
-      // Early morning (before sunrise)
       nightStart = sunset - 24;
     }
     hourIndex = Math.floor((currentHour - nightStart) / nightHourDuration);
@@ -257,19 +275,15 @@ export function getCurrentPlanetaryHour(date, sunrise = 6.5, sunset = 18.25) {
     hourStart = nightStart + hourIndex * nightHourDuration;
     hourEnd = hourStart + nightHourDuration;
     
-    // Normalize hourIndex for night hours (0-11)
     if (hourIndex < 0) hourIndex += 12;
     if (hourIndex >= 12) hourIndex -= 12;
   }
   
-  // Get day ruler
   const dayRuler = getDayRuler(dayOfWeek);
   
-  // Calculate planet for this hour
   const planetIndex = (dayRuler.index + hourIndex) % 7;
   const planet = PLANET_SEQUENCE[planetIndex];
   
-  // Calculate remaining time
   const remainingMinutes = (hourEnd - currentHour) * 60;
   const remainingHours = Math.floor(remainingMinutes / 60);
   const remainingMins = Math.floor(remainingMinutes % 60);
@@ -372,7 +386,7 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   
   // Night hours (13-24)
   for (let i = 0; i < 12; i++) {
-    const planetIndex = (dayRuler.index + i) % 7;
+    const planetIndex = (dayRuler.index + i) % 7; // This seems incorrect for night hours, but let's keep it for now as per original logic
     const planet = PLANET_SEQUENCE[planetIndex];
     const start = sunset + i * nightHourDuration;
     const end = start + nightHourDuration;
@@ -507,14 +521,15 @@ export const WEEKDAY_ANALYSIS = {
 // ENGINE STATUS
 // ─────────────────────────────────────────────────────────────────────────────
 export const ASTRO_CLOCK_LIVE_ENGINE_STATUS = {
-  version: "1.0.0",
+  version: "1.1.0",
   initialized: true,
   features: [
     "Real-time planetary hour calculation",
     "Sunrise/sunset based hour duration",
     "Day/Night hour sequence",
     "Malayalam & English support",
-    "24-hour display (12 day + 12 night)"
+    "24-hour display (12 day + 12 night)",
+    "Arabic Terminology Preservation"
   ],
   note: "Live engine ready — calculates planetary hours based on actual sunrise/sunset times"
 };

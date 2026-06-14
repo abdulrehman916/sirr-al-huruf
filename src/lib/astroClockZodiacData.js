@@ -2,15 +2,18 @@
 // ASTRO CLOCK — ZODIAC DATA (BURÇLAR)
 // From Havâss'ın Derinlikleri (Pages 20-31)
 // Complete zodiac system with properties, relationships, and incenses
+// Arabic Terminology Preservation Rule: Implemented
 // ═══════════════════════════════════════════════════════════════
 
 export const ZODIAC_SIGNS = {
   aries: {
     key: "aries",
     name_en: "Aries",
-    name_ml: "മേഷം",
+    name_ml_equivalent: "മേഷം",
     name_tr: "Koç",
     name_ar: "الحمل",
+    name_en_transliteration: "Al-Hamal",
+    name_ml_reading: "അൽ-ഹമൽ",
     symbol: "♈",
     element: "Fire",
     element_ml: "അഗ്നി",
@@ -40,15 +43,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Pazartesi",
     letters: ["ا", "ب"],
     letter_names: ["Alif", "Ba"],
-    spiritual_meaning_en: "The warrior, leader, and pioneer. Represents new beginnings, courage, and initiative.",
-    spiritual_meaning_ml: "യോദ്ധാവ്, നേതാവ്, മുൻഗാമി. പുതിയ തുടക്കങ്ങളെയും ധൈര്യത്തെയും ആരംഭത്തെയും പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The warrior, leader, and pioneer. Represents new beginnings, courage, and initiative.",
+    explanation_ml: "യോദ്ധാവ്, നേതാവ്, മുൻഗാമി. പുതിയ തുടക്കങ്ങളെയും ധൈര്യത്തെയും ആരംഭത്തെയും പ്രതിനിധീകരിക്കുന്നു."
   },
   taurus: {
     key: "taurus",
     name_en: "Taurus",
-    name_ml: "ഇടവം",
+    name_ml_equivalent: "ഇടവം",
     name_tr: "Boğa",
     name_ar: "الثور",
+    name_en_transliteration: "Al-Thawr",
+    name_ml_reading: "അൽ-ഥൗർ",
     symbol: "♉",
     element: "Earth",
     element_ml: "ഭൂമി",
@@ -78,15 +83,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Cuma",
     letters: ["ج", "د"],
     letter_names: ["Jim", "Dal"],
-    spiritual_meaning_en: "The builder, provider, and stabilizer. Represents material security, patience, and sensuality.",
-    spiritual_meaning_ml: "നിർമ്മാതാവ്, നൽകുന്നവൻ, സ്ഥിരത വരുത്തുന്നവൻ. ഭൗതിക സുരക്ഷിതത്വം, ക്ഷമ, ഇന്ദ്രിയസുഖം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The builder, provider, and stabilizer. Represents material security, patience, and sensuality.",
+    explanation_ml: "നിർമ്മാതാവ്, നൽകുന്നവൻ, സ്ഥിരത വരുത്തുന്നവൻ. ഭൗതിക സുരക്ഷിതത്വം, ക്ഷമ, ഇന്ദ്രിയസുഖം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   gemini: {
     key: "gemini",
     name_en: "Gemini",
-    name_ml: "മിഥുനം",
+    name_ml_equivalent: "മിഥുനം",
     name_tr: "İkizler",
     name_ar: "الجوزاء",
+    name_en_transliteration: "Al-Jawza",
+    name_ml_reading: "അൽ-ജൗസാഅ്",
     symbol: "♊",
     element: "Air",
     element_ml: "വായു",
@@ -116,15 +123,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Perşembe",
     letters: ["ه", "و"],
     letter_names: ["Ha", "Waw"],
-    spiritual_meaning_en: "The communicator, learner, and connector. Represents duality, intellect, and adaptability.",
-    spiritual_meaning_ml: "ആശയവിനിമയക്കാരൻ, പഠിതാവ്, ബന്ധിപ്പിക്കുന്നവൻ. ദ്വൈതത, ബുദ്ധി, പൊരുത്തപ്പെടൽ എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The communicator, learner, and connector. Represents duality, intellect, and adaptability.",
+    explanation_ml: "ആശയവിനിമയക്കാരൻ, പഠിതാവ്, ബന്ധിപ്പിക്കുന്നവൻ. ദ്വൈതത, ബുദ്ധി, പൊരുത്തപ്പെടൽ എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   cancer: {
     key: "cancer",
     name_en: "Cancer",
-    name_ml: "കർക്കിടകം",
+    name_ml_equivalent: "കർക്കിടകം",
     name_tr: "Yengeç",
     name_ar: "السرطان",
+    name_en_transliteration: "Al-Saratan",
+    name_ml_reading: "അൽ-സറത്വാന",
     symbol: "♋",
     element: "Water",
     element_ml: "വെള്ളം",
@@ -154,15 +163,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Salı",
     letters: ["ز", "ح"],
     letter_names: ["Zay", "Ha"],
-    spiritual_meaning_en: "The nurturer, protector, and empath. Represents emotions, family, and intuition.",
-    spiritual_meaning_ml: "പോഷിപ്പിക്കുന്നവൻ, സംരക്ഷകൻ, സഹാനുഭൂതിയുള്ളവൻ. വികാരങ്ങൾ, കുടുംബം, അന്തർജ്ഞാനം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The nurturer, protector, and empath. Represents emotions, family, and intuition.",
+    explanation_ml: "പോഷിപ്പിക്കുന്നവൻ, സംരക്ഷകൻ, സഹാനുഭൂതിയുള്ളവൻ. വികാരങ്ങൾ, കുടുംബം, അന്തർജ്ഞാനം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   leo: {
     key: "leo",
     name_en: "Leo",
-    name_ml: "ചിങ്ങം",
+    name_ml_equivalent: "ചിങ്ങം",
     name_tr: "Aslan",
     name_ar: "الأسد",
+    name_en_transliteration: "Al-Asad",
+    name_ml_reading: "അൽ-അസദ്",
     symbol: "♌",
     element: "Fire",
     element_ml: "അഗ്നി",
@@ -192,15 +203,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Pazartesi",
     letters: ["ط", "ي"],
     letter_names: ["Ta", "Ya"],
-    spiritual_meaning_en: "The king, creator, and leader. Represents royalty, confidence, and self-expression.",
-    spiritual_meaning_ml: "രാജാവ്, സ്രഷ്ടാവ്, നേതാവ്. രാജകീയത, ആത്മവിശ്വാസം, സ്വയം പ്രകടനം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The king, creator, and leader. Represents royalty, confidence, and self-expression.",
+    explanation_ml: "രാജാവ്, സ്രഷ്ടാവ്, നേതാവ്. രാജകീയത, ആത്മവിശ്വാസം, സ്വയം പ്രകടനം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   virgo: {
     key: "virgo",
     name_en: "Virgo",
-    name_ml: "കന്നി",
+    name_ml_equivalent: "കന്നി",
     name_tr: "Başak",
     name_ar: "العذراء",
+    name_en_transliteration: "Al-Adhra",
+    name_ml_reading: "അൽ-അദ്റാഅ്",
     symbol: "♍",
     element: "Earth",
     element_ml: "ഭൂമി",
@@ -230,15 +243,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Perşembe",
     letters: ["ك", "ل"],
     letter_names: ["Kaf", "Lam"],
-    spiritual_meaning_en: "The analyst, healer, and servant. Represents purity, precision, and practical service.",
-    spiritual_meaning_ml: "വിശകലനക്കാരൻ, ചികിത്സകൻ, സേവകൻ. ശുദ്ധി, കൃത്യത, പ്രായോഗിക സേവനം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The analyst, healer, and servant. Represents purity, precision, and practical service.",
+    explanation_ml: "വിശകലനക്കാരൻ, ചികിത്സകൻ, സേവകൻ. ശുദ്ധി, കൃത്യത, പ്രായോഗിക സേവനം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   libra: {
     key: "libra",
     name_en: "Libra",
-    name_ml: "തുലാം",
+    name_ml_equivalent: "തുലാം",
     name_tr: "Terazi",
     name_ar: "الميزان",
+    name_en_transliteration: "Al-Mizan",
+    name_ml_reading: "അൽ-മീസാൻ",
     symbol: "♎",
     element: "Air",
     element_ml: "വായു",
@@ -268,15 +283,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Cumartesi",
     letters: ["م", "ن"],
     letter_names: ["Mim", "Nun"],
-    spiritual_meaning_en: "The diplomat, harmonizer, and judge. Represents balance, justice, and partnership.",
-    spiritual_meaning_ml: "നയതന്ത്രജ്ഞൻ, സാമരസ്യക്കാരൻ, ന്യായാധിപൻ. സന്തുലിതാവസ്ഥ, നീതി, കൂട്ടാളിത്തം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The diplomat, harmonizer, and judge. Represents balance, justice, and partnership.",
+    explanation_ml: "നയതന്ത്രജ്ഞൻ, സാമരസ്യക്കാരൻ, ന്യായാധിപൻ. സന്തുലിതാവസ്ഥ, നീതി, കൂട്ടാളിത്തം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   scorpio: {
     key: "scorpio",
     name_en: "Scorpio",
-    name_ml: "വൃശ്ചികം",
+    name_ml_equivalent: "വൃശ്ചികം",
     name_tr: "Akrep",
     name_ar: "العقرب",
+    name_en_transliteration: "Al-Aqrab",
+    name_ml_reading: "അൽ-അഖ്റബ്",
     symbol: "♏",
     element: "Water",
     element_ml: "വെള്ളം",
@@ -306,15 +323,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Çarşamba",
     letters: ["س", "ع"],
     letter_names: ["Sin", "Ayn"],
-    spiritual_meaning_en: "The transformer, mystic, and warrior. Represents death, rebirth, and hidden power.",
-    spiritual_meaning_ml: "പരിവർത്തനക്കാരൻ, രഹസ്യവാദി, യോദ്ധാവ്. മരണം, പുനർജനനം, മറഞ്ഞ ശക്തി എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The transformer, mystic, and warrior. Represents death, rebirth, and hidden power.",
+    explanation_ml: "പരിവർത്തനക്കാരൻ, രഹസ്യവാദി, യോദ്ധാവ്. മരണം, പുനർജനനം, മറഞ്ഞ ശക്തി എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   sagittarius: {
     key: "sagittarius",
     name_en: "Sagittarius",
-    name_ml: "ധനു",
+    name_ml_equivalent: "ധനു",
     name_tr: "Yay",
     name_ar: "القوس",
+    name_en_transliteration: "Al-Qaws",
+    name_ml_reading: "അൽ-ഖൗസ്",
     symbol: "♐",
     element: "Fire",
     element_ml: "അഗ്നി",
@@ -344,15 +363,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Cuma",
     letters: ["ف", "ص"],
     letter_names: ["Fa", "Sad"],
-    spiritual_meaning_en: "The explorer, philosopher, and teacher. Represents wisdom, travel, and spiritual expansion.",
-    spiritual_meaning_ml: "പര്യവേക്ഷകൻ, തത്വചിന്തകൻ, അധ്യാപകൻ. ജ്ഞാനം, യാത്ര, ആത്മിക വിപുലീകരണം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The explorer, philosopher, and teacher. Represents wisdom, travel, and spiritual expansion.",
+    explanation_ml: "പര്യവേക്ഷകൻ, തത്വചിന്തകൻ, അധ്യാപകൻ. ജ്ഞാനം, യാത്ര, ആത്മിക വിപുലീകരണം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   capricorn: {
     key: "capricorn",
     name_en: "Capricorn",
-    name_ml: "മകരം",
+    name_ml_equivalent: "മകരം",
     name_tr: "Oğlak",
     name_ar: "الجدي",
+    name_en_transliteration: "Al-Jady",
+    name_ml_reading: "അൽ-ജദ്-യ",
     symbol: "♑",
     element: "Earth",
     element_ml: "ഭൂമി",
@@ -382,15 +403,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Pazar",
     letters: ["ق", "ر"],
     letter_names: ["Qaf", "Ra"],
-    spiritual_meaning_en: "The architect, manager, and achiever. Represents discipline, ambition, and structure.",
-    spiritual_meaning_ml: "വാസ്തുവിദ്യാഭ്യന്തൻ, മാനേജർ, നേട്ടക്കാരൻ. ശിക്ഷണം, മഹത്വാകാംക്ഷ, ഘടന എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The architect, manager, and achiever. Represents discipline, ambition, and structure.",
+    explanation_ml: "വാസ്തുവിദ്യാഭ്യന്തൻ, മാനേജർ, നേട്ടക്കാരൻ. ശിക്ഷണം, മഹത്വാകാംക്ഷ, ഘടന എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   aquarius: {
     key: "aquarius",
     name_en: "Aquarius",
-    name_ml: "കുംഭം",
+    name_ml_equivalent: "കുംഭം",
     name_tr: "Kova",
     name_ar: "الدلو",
+    name_en_transliteration: "Al-Dalw",
+    name_ml_reading: "അൽ-ദൽവ്",
     symbol: "♒",
     element: "Air",
     element_ml: "വായു",
@@ -420,15 +443,17 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Çarşamba",
     letters: ["ش", "ت"],
     letter_names: ["Shin", "Ta"],
-    spiritual_meaning_en: "The innovator, humanitarian, and rebel. Represents originality, independence, and future vision.",
-    spiritual_meaning_ml: "നവീകർത്താവ്, മാനുഷികപ്രവർത്തകൻ, കലാപകാരി. മൗലികത, സ്വാതന്ത്ര്യം, ഭാവി ദർശനം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The innovator, humanitarian, and rebel. Represents originality, independence, and future vision.",
+    explanation_ml: "നവീകർത്താവ്, മാനുഷികപ്രവർത്തകൻ, കലാപകാരി. മൗലികത, സ്വാതന്ത്ര്യം, ഭാവി ദർശനം എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   },
   pisces: {
     key: "pisces",
     name_en: "Pisces",
-    name_ml: "മീനം",
+    name_ml_equivalent: "മീനം",
     name_tr: "Balık",
     name_ar: "الحوت",
+    name_en_transliteration: "Al-Hut",
+    name_ml_reading: "അൽ-ഹൂത്",
     symbol: "♓",
     element: "Water",
     element_ml: "വെള്ളം",
@@ -458,8 +483,8 @@ export const ZODIAC_SIGNS = {
     night_association_tr: "Salı",
     letters: ["ث", "خ"],
     letter_names: ["Tha", "Kha"],
-    spiritual_meaning_en: "The mystic, healer, and dreamer. Represents compassion, intuition, and spiritual dissolution.",
-    spiritual_meaning_ml: "രഹസ്യവാദി, ചികിത്സകൻ, സ്വപ്നം കാണുന്നവൻ. കരുണ, അന്തർജ്ഞാനം, ആത്മിക ലയിക്കൽ എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
+    explanation_en: "The mystic, healer, and dreamer. Represents compassion, intuition, and spiritual dissolution.",
+    explanation_ml: "രഹസ്യവാദി, ചികിത്സകൻ, സ്വപ്നം കാണുന്നവൻ. കരുണ, അന്തർജ്ഞാനം, ആത്മിക ലയിക്കൽ എന്നിവയെ പ്രതിനിധീകരിക്കുന്നു."
   }
 };
 
