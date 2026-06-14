@@ -15,6 +15,11 @@ import {
   ASTEROID_HOUSE_RULES,
   ASTEROID_ASPECT_RULES
 } from './astroClockAsteroidData.js';
+import {
+  JUNO_HOUSE_RULES,
+  VESTA_ASTEROID_RULES,
+  ALL_ASTEROID_PAGES_61_118
+} from './astroClockAsteroidDataPages61to118.js';
 
 // Combine all knowledge sources
 const ALL_KNOWLEDGE = [
@@ -25,7 +30,9 @@ const ALL_KNOWLEDGE = [
   // Asteroid knowledge (additive only)
   ...ASTEROID_TIMING_RULES,
   ...ASTEROID_HOUSE_RULES,
-  ...ASTEROID_ASPECT_RULES
+  ...ASTEROID_ASPECT_RULES,
+  // Asteroid pages 61-118 expansion (Juno houses + Vesta)
+  ...ALL_ASTEROID_PAGES_61_118
 ];
 
 /**
