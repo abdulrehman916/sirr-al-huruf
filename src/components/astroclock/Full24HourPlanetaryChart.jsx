@@ -5,7 +5,7 @@
 // Astro Clock module only — completely isolated
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Sun, Moon, Calendar, Book, FileText, ChevronDown, ChevronUp, CheckCircle, XCircle, AlertCircle, Star, Zap } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
@@ -35,6 +35,22 @@ const G = {
   adverseBorder: "rgba(239,68,68,0.60)"
 };
 
+function decimalEndToCountdown(endDecimal) {
+  if (endDecimal == null) return "";
+  let ed = endDecimal >= 24 ? endDecimal - 24 : endDecimal;
+  const endH = Math.floor(ed);
+  const endMinFrac = (ed - endH) * 60;
+  const endM = Math.floor(endMinFrac);
+  const endS = Math.floor((endMinFrac - endM) * 60);
+  const endDate = new Date();
+  endDate.setHours(endH, endM, endS, 0);
+  const diffMs = endDate - new Date();
+  if (diffMs <= 0) return "Ended";
+  const mins = Math.floor(diffMs / 60000);
+  const secs = Math.floor((diffMs % 60000) / 1000);
+  return `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+}
+
 export default function Full24HourPlanetaryChart() {
   const { isMalayalam } = useAstroClockLanguage();
   const [allHours, setAllHours] = useState([]);
@@ -42,69 +58,53 @@ export default function Full24HourPlanetaryChart() {
   const [location, setLocation] = useState(null);
   const [sunData, setSunData] = useState(null);
   const [expandedHour, setExpandedHour] = useState(null);
-  const [countdown, setCountdown] = useState("");
+  // Shared tick counter — increments every second, rows read from allHours directly
+  const [tick, setTick] = useState(0);
+  const hoursRef = useRef([]);
 
+  // FIX 2: GPS called ONCE on mount only
   useEffect(() => {
-    calculateAllHours();
+    const defaultLoc = { lat: 25.2048, lng: 55.2708, timezone: 4 };
+    function initWithLocation(loc) {
+      setLocation(loc);
+      const today = new Date();
+      const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
+      setSunData(sunTimes);
+      const hours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+      hoursRef.current = hours;
+      setAllHours(hours);
+      // FIX 1: use engine's status field, not Date >= string comparison
+      setCurrentHour(hours.find(h => h.status === 'current') || null);
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => initWithLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          timezone: -(pos.coords.longitude / 15)
+        }),
+        () => initWithLocation(defaultLoc)
+      );
+    } else {
+      initWithLocation(defaultLoc);
+    }
+  }, []);
+
+  // FIX 3: ONE shared interval — updates current hour detection + tick for countdowns
+  useEffect(() => {
     const interval = setInterval(() => {
-      calculateAllHours();
-      updateCountdown();
+      const hours = hoursRef.current;
+      if (hours.length > 0) {
+        // FIX 1: always use status field
+        setCurrentHour(hours.find(h => h.status === 'current') || null);
+      }
+      setTick(t => t + 1);
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  function calculateAllHours() {
-    const today = new Date();
-    let loc = { lat: 25.2048, lng: 55.2708, timezone: 4 };
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        loc = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          timezone: -pos.coords.longitude / 15
-        };
-        setLocation(loc);
-        const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-        setSunData(sunTimes);
-        
-        const hours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-        setAllHours(hours);
-        
-        const now = new Date();
-        const current = hours.find(h => now >= h.startTime && now < h.endTime);
-        setCurrentHour(current);
-      });
-    } else {
-      setLocation(loc);
-      const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-      setSunData(sunTimes);
-      const hours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-      setAllHours(hours);
-      
-      const now = new Date();
-      const current = hours.find(h => now >= h.startTime && now < h.endTime);
-      setCurrentHour(current);
-    }
-  }
-
-  function updateCountdown() {
-    if (!currentHour) return;
-    const now = new Date();
-    // endTimeDecimal is decimal hours (e.g. 14.5 = 2:30 PM)
-    const endDecimal = currentHour.endTimeDecimal;
-    if (endDecimal == null) return;
-    const endDate = new Date();
-    const endH = Math.floor(endDecimal);
-    const endM = Math.floor((endDecimal - endH) * 60);
-    const endS = Math.floor(((endDecimal - endH) * 60 - endM) * 60);
-    endDate.setHours(endH, endM, endS, 0);
-    const diffMs = endDate - now;
-    if (diffMs <= 0) { setCountdown("00:00"); return; }
-    const mins = Math.floor(diffMs / 60000);
-    const secs = Math.floor((diffMs % 60000) / 1000);
-    setCountdown(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-  }
+  const countdown = currentHour ? decimalEndToCountdown(currentHour.endTimeDecimal) : "";
 
   const dayHours = allHours.filter(h => h.period === "day");
   const nightHours = allHours.filter(h => h.period === "night");
@@ -182,6 +182,7 @@ export default function Full24HourPlanetaryChart() {
         expandedHour={expandedHour}
         setExpandedHour={setExpandedHour}
         isMalayalam={isMalayalam}
+        tick={tick}
       />
 
       {/* Night Hours Table */}
@@ -191,6 +192,7 @@ export default function Full24HourPlanetaryChart() {
         expandedHour={expandedHour}
         setExpandedHour={setExpandedHour}
         isMalayalam={isMalayalam}
+        tick={tick}
       />
 
       {/* Manuscript Source */}
@@ -203,7 +205,7 @@ export default function Full24HourPlanetaryChart() {
 // DAY HOURS SECTION
 // ─────────────────────────────────────────────────────────────────────────────
 
-function DayHoursSection({ hours, currentHour, expandedHour, setExpandedHour, isMalayalam }) {
+function DayHoursSection({ hours, currentHour, expandedHour, setExpandedHour, isMalayalam, tick }) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-4">
@@ -236,6 +238,7 @@ function DayHoursSection({ hours, currentHour, expandedHour, setExpandedHour, is
                 expanded={expandedHour === idx}
                 onToggle={() => setExpandedHour(expandedHour === idx ? null : idx)}
                 isMalayalam={isMalayalam}
+                tick={tick}
               />
             ))}
           </tbody>
@@ -249,7 +252,7 @@ function DayHoursSection({ hours, currentHour, expandedHour, setExpandedHour, is
 // NIGHT HOURS SECTION
 // ─────────────────────────────────────────────────────────────────────────────
 
-function NightHoursSection({ hours, currentHour, expandedHour, setExpandedHour, isMalayalam }) {
+function NightHoursSection({ hours, currentHour, expandedHour, setExpandedHour, isMalayalam, tick }) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-4">
@@ -282,6 +285,7 @@ function NightHoursSection({ hours, currentHour, expandedHour, setExpandedHour, 
                 expanded={expandedHour === (12 + idx)}
                 onToggle={() => setExpandedHour(expandedHour === (12 + idx) ? null : (12 + idx))}
                 isMalayalam={isMalayalam}
+                tick={tick}
               />
             ))}
           </tbody>
@@ -295,39 +299,12 @@ function NightHoursSection({ hours, currentHour, expandedHour, setExpandedHour, 
 // HOUR ROW
 // ─────────────────────────────────────────────────────────────────────────────
 
-function HourRow({ hour, index, isCurrent, isNext, expanded, onToggle, isMalayalam }) {
-  const [hourCountdown, setHourCountdown] = useState("");
+// FIX 3: No per-row setInterval. tick prop from parent drives re-render every second.
+function HourRow({ hour, index, isCurrent, isNext, expanded, onToggle, isMalayalam, tick }) {
   const planetRules = getPlanetHourRules(hour.planet);
   const friendships = getPlanetFriendships(hour.planet);
-  
-  // Calculate countdown for this specific hour
-  useEffect(() => {
-    const updateHourCountdown = () => {
-      const now = new Date();
-      let endDecimal = hour.endTimeDecimal;
-      if (endDecimal == null) return;
-      // Wrap past-midnight hours to next day
-      if (endDecimal >= 24) endDecimal -= 24;
-      const endH = Math.floor(endDecimal);
-      const endMinFrac = (endDecimal - endH) * 60;
-      const endM = Math.floor(endMinFrac);
-      const endS = Math.floor((endMinFrac - endM) * 60);
-      const endDate = new Date();
-      endDate.setHours(endH, endM, endS, 0);
-      const diffMs = endDate - now;
-      if (diffMs <= 0) {
-        setHourCountdown("Ended");
-        return;
-      }
-      const mins = Math.floor(diffMs / 60000);
-      const secs = Math.floor((diffMs % 60000) / 1000);
-      setHourCountdown(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-    };
-    
-    updateHourCountdown();
-    const interval = setInterval(updateHourCountdown, 1000);
-    return () => clearInterval(interval);
-  }, [hour.endTimeDecimal]);
+  // Derived directly from tick — no state, no interval
+  const hourCountdown = (isCurrent || expanded) ? decimalEndToCountdown(hour.endTimeDecimal) : "";
   const status = isCurrent ? "current" : isNext ? "next" : hour.planetInfo?.nature === "benefic" ? "best" : "adverse";
   
   const statusConfig = {
