@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, Mail, Phone, User, Calendar, CheckCircle, Clock, AlertCircle, XCircle } from "lucide-react";
+import { Navigate } from "react-router-dom";
+import { Search, Filter, Mail, Phone, User, Calendar, CheckCircle, Clock, AlertCircle, XCircle, ShieldAlert } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
@@ -42,6 +43,7 @@ const G = {
 
 export default function AdminSupport() {
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,8 +55,32 @@ export default function AdminSupport() {
   const [submittingReply, setSubmittingReply] = useState(false);
 
   useEffect(() => {
-    loadTickets();
+    checkAdminAccess();
   }, []);
+
+  const checkAdminAccess = async () => {
+    try {
+      const user = await base44.auth.me();
+      if (!user || user.role !== 'admin') {
+        setIsAdmin(false);
+        toast({
+          title: "Access Denied",
+          description: "Only administrators can access this page",
+          variant: "destructive"
+        });
+      } else {
+        setIsAdmin(true);
+        loadTickets();
+      }
+    } catch (error) {
+      setIsAdmin(false);
+      toast({
+        title: "Authentication Error",
+        description: "Please log in to continue",
+        variant: "destructive"
+      });
+    }
+  };
 
   const loadTickets = async () => {
     setLoading(true);
@@ -141,6 +167,25 @@ export default function AdminSupport() {
       </Badge>
     );
   };
+
+  // Redirect non-admin users to home page
+  if (isAdmin === false) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Show loading state while checking admin access
+  if (isAdmin === null) {
+    return (
+      <PageLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-white/60">Verifying access...</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
