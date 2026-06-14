@@ -23,6 +23,23 @@ export const KNOWLEDGE_SOURCES = [
     status: "FULLY_INGESTED"
   },
   {
+    id: "taha_judicial_astrology",
+    book_name: "تدریس نجوم احکامی (Teaching Judicial Astrology)",
+    author: "استاد طاها (Ustad Taha)",
+    platform: "ABJAD / ابجدانه",
+    tradition: "Islamic Judicial Astrology",
+    pages_ingested: "1-80",
+    pdf_files: [
+      "6533b9e12_-1-40.pdf (pages 1-40)",
+      "190da9a3d_-41-80.pdf (pages 41-80)"
+    ],
+    ingestion_date: "2026-06-14",
+    total_records: 59,
+    categories: ["PRINCIPLES", "ZODIAC", "PLANETS", "ASPECTS", "HOUSES", "MOON_TIMING", "PLANETARY_HOURS", "TIMING_RULES", "COSMOLOGY"],
+    malayalam_support: true,
+    status: "FULLY_INGESTED"
+  },
+  {
     id: "havass_derinlikleri_2",
     book_name: "Havâss'ın Derinlikleri — II. Kitap (Pages 51-100)",
     author: "Bülent Kısa",
@@ -534,13 +551,17 @@ export const KNOWLEDGE_LETTER_RULES = [];
 // KNOWLEDGE BASE STATUS
 // ═══════════════════════════════════════════════════════════════
 export const KNOWLEDGE_BASE_STATUS = {
-  version: "1.0.0",
+  version: "2.0.0",
   status: "ACTIVE",
-  total_sources: 2,
-  total_rules_ingested: 350,
-  sections_active: 14,
+  total_sources: 3,
+  total_rules_ingested: 409,
+  sections_active: 19,
   last_ingestion: "2026-06-14",
   principle: "ADDITIVE_ONLY",
   conflict_resolution: "PRESERVE_ALL_SOURCES",
-  ready_for_next_pdf: true
+  ready_for_next_pdf: true,
+  sources_summary: [
+    { id: "havass_derinlikleri_1", records: 350, pages: "1-100" },
+    { id: "taha_judicial_astrology", records: 59, pages: "1-80" }
+  ]
 };
