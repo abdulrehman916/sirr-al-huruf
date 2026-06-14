@@ -29,6 +29,7 @@ const PlantDetailPage   = lazy(() => import('./pages/PlantDetailPage'));
 const EvilJinnPage          = lazy(() => import('./pages/EvilJinnPage.jsx'));
 const MagicalHolyNamesPage  = lazy(() => import('./pages/MagicalHolyNamesPage'));
 const AdminFaalChobUpload   = lazy(() => import('./pages/AdminFaalChobUpload'));
+const AstroClockPage        = lazy(() => import('./pages/AstroClockPage'));
 const HierarchyAuditPage    = lazy(() => import('./pages/HierarchyAuditPage.jsx'));
 const MizaanPipelineTest    = lazy(() => import('./pages/MizaanPipelineTest'));
 const MizaanAuditReport        = lazy(() => import('./pages/MizaanAuditReport'));
@@ -101,6 +102,7 @@ const AuthenticatedApp = () => {
             <Route path="/plants/:id" element={<PlantDetailPage />} />
             <Route path="/evil-jinn" element={<EvilJinnPage />} />
             <Route path="/holy-names" element={<MagicalHolyNamesPage />} />
+            <Route path="/astro-clock" element={<AstroClockPage />} />
             <Route path="/admin/faal-chob-upload" element={<AdminFaalChobUpload />} />
             <Route path="/hierarchy-audit" element={<HierarchyAuditPage />} />
             <Route path="/pipeline-test" element={<MizaanPipelineTest />} />

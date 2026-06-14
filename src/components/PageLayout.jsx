@@ -20,7 +20,8 @@ const TABS = [
   { id: "faal-hasrath",     label: "FAAL",   arabic: "فأل",       path: "/faal-hasrath" },
   { id: "plants",           label: "PLANTS", arabic: "نباتات",    path: "/plants" },
   { id: "evil-jinn",        label: "EVIL JINN", arabic: "الجن",      path: "/evil-jinn" },
-  { id: "holy-names",       label: "HOLY NAMES",arabic: "الأسماء",   path: "/holy-names" },
+  { id: "holy-names",       label: "HOLY NAMES", arabic: "الأسماء",   path: "/holy-names" },
+  { id: "astro-clock",      label: "ASTRO CLOCK", arabic: "الساعة الفلكية", path: "/astro-clock" },
 ];
 
 const pageVariants = {
