@@ -299,19 +299,38 @@ function RecordCard({ record, expanded, onToggle, isMalayalam }) {
               <RelatedEntities data={JSON.parse(record.data_json)} isMalayalam={isMalayalam} />
             )}
 
-            {/* Source Info */}
-            <div className="p-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
-              <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                {isMalayalam ? "സ്രോതസ്സ്" : "Source"}
+            {/* Source Citation */}
+            <div className="p-4 rounded-lg border-2" style={{ background: "rgba(212,175,55,0.1)", borderColor: G.border }}>
+              <p className="font-inter text-[8px] uppercase tracking-widest mb-3 font-bold" style={{ color: G.text }}>
+                📖 {isMalayalam ? "സ്രോതസ്സ്" : "MANUSCRIPT SOURCE"}
               </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="font-inter text-[9px] text-white/70">
-                  {record.author} · {record.book_name}
-                </span>
-                <span className="font-inter text-[9px] text-white/50">
-                  · {record.ingestion_date}
-                </span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-3 rounded" style={{ background: "rgba(0,0,0,0.3)" }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                    ✍️ {isMalayalam ? "രചയിതാവ്" : "Author"}
+                  </p>
+                  <p className="font-inter text-sm font-bold text-white/90">{record.author}</p>
+                </div>
+                <div className="p-3 rounded" style={{ background: "rgba(0,0,0,0.3)" }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                    📚 {isMalayalam ? "പുസ്തകം" : "Book"}
+                  </p>
+                  <p className="font-inter text-sm font-bold text-white/90">{record.book_name}</p>
+                </div>
+                <div className="p-3 rounded" style={{ background: "rgba(0,0,0,0.3)" }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                    📄 {isMalayalam ? "പേജ്" : "Page"}
+                  </p>
+                  <p className="font-inter text-sm font-bold text-white/90">p. {record.page_number || 'N/A'}</p>
+                </div>
               </div>
+              {record.chapter && (
+                <div className="mt-3 pt-3 border-t" style={{ borderColor: G.faint }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+                    📑 {isMalayalam ? "അധ്യായം" : "Chapter"}: <span className="text-white/80">{record.chapter}</span>
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

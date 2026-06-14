@@ -51,6 +51,9 @@ const ManuscriptFinalAudit = lazy(() => import('./pages/ManuscriptFinalAudit'));
 const AstrologyOnlyAudit = lazy(() => import('./pages/AstrologyOnlyAudit'));
 const ManuscriptRecordBrowser = lazy(() => import('./pages/ManuscriptRecordBrowser'));
 const ManuscriptRuleAudit = lazy(() => import('./pages/ManuscriptRuleAudit'));
+const ManuscriptAdvancedSearch = lazy(() => import('./pages/ManuscriptAdvancedSearch'));
+const ManazilQualityAudit = lazy(() => import('./pages/ManazilQualityAudit'));
+const ManuscriptCompletionReport = lazy(() => import('./pages/ManuscriptCompletionReport'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -132,6 +135,9 @@ const AuthenticatedApp = () => {
             <Route path="/astrology-only-audit" element={<AstrologyOnlyAudit />} />
             <Route path="/manuscript-browser" element={<ManuscriptRecordBrowser />} />
             <Route path="/manuscript-rule-audit" element={<ManuscriptRuleAudit />} />
+            <Route path="/manuscript-search" element={<ManuscriptAdvancedSearch />} />
+            <Route path="/manazil-quality-audit" element={<ManazilQualityAudit />} />
+            <Route path="/manuscript-completion-report" element={<ManuscriptCompletionReport />} />
 
 
             <Route path="*" element={<PageNotFound />} />
