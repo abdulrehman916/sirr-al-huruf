@@ -118,10 +118,10 @@ function PlanetCard({ planet, isMalayalam, openExplorer, planetRecords }) {
           <div className="flex items-center gap-4">
             <span className="text-4xl flex-shrink-0">{planet.symbol}</span>
             <div className="flex-1">
-              <p className="font-amiri text-4xl md:text-5xl font-bold leading-relaxed" style={{ color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)" }}>
+              <p className="font-amiri text-5xl md:text-6xl font-bold leading-relaxed" style={{ color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)" }} dir="rtl">
                 {planet.name_ar}
               </p>
-              <p className="font-inter text-lg font-bold text-white/95 mt-1">
+              <p className="font-malayalam-md font-bold text-white/90 mt-1">
                 {isMalayalam ? planet.name_ml_equivalent : planet.name_en}
               </p>
             </div>

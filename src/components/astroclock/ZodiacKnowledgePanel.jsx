@@ -75,8 +75,8 @@ export default function ZodiacKnowledgePanel() {
                 boxShadow: selectedSignKey === sign.key ? `0 0 15px ${G.glow}` : 'none',
               }}
             >
-              <p className="text-3xl mb-1">{sign.symbol}</p>
-              <p className="font-inter text-xs font-bold text-white/80">
+              <p className="font-amiri text-3xl md:text-4xl font-bold mb-1" style={{ color: G.text }} dir="rtl">{sign.name_ar}</p>
+              <p className="font-malayalam-sm font-bold text-white/85">
                 {isMalayalam ? sign.name_ml_equivalent : sign.name_en}
               </p>
             </button>
@@ -125,14 +125,14 @@ function SignDetails({ sign, isMalayalam }) {
     <div className="rounded-xl border p-4 space-y-4" style={{ background: G.bg, borderColor: G.faint }}>
       {/* Main Identity - Premium Arabic Typography */}
       <div className="text-center p-6 rounded-lg" style={{ background: "rgba(0,0,0,0.3)", border: `1px solid ${G.faint}`}}>
-        <p className="font-amiri text-5xl md:text-6xl font-bold mb-4 leading-relaxed" style={{ color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)" }}>
+        <p className="font-amiri text-6xl md:text-7xl font-bold mb-3 leading-relaxed" style={{ color: G.text, textShadow: "0 0 35px rgba(212,175,55,0.35)" }} dir="rtl">
           {sign.name_ar}
         </p>
-        <div className="h-px w-24 mx-auto mb-4" style={{ background: `linear-gradient(90deg, transparent, ${G.border}, transparent)` }} />
-        <p className="font-inter text-lg md:text-xl font-bold text-white/95">
+        <p className="font-malayalam-lg font-bold text-white/90 mb-3">
           {isMalayalam ? sign.name_ml_equivalent : sign.name_en}
         </p>
-        <p className="font-inter text-sm mt-3 text-white/70 leading-relaxed">
+        <div className="h-px w-32 mx-auto mb-4" style={{ background: `linear-gradient(90deg, transparent, ${G.border}, transparent)` }} />
+        <p className="font-inter text-sm text-white/70 leading-relaxed">
           {isMalayalam ? sign.explanation_ml : sign.explanation_en}
         </p>
       </div>
@@ -173,8 +173,8 @@ function InfoBox({label, value, arabic}){
     return (
         <div className="p-4 rounded-lg bg-black/30 border" style={{ borderColor: G.faint }}>
             <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>{label}</p>
-            <p className="font-amiri text-3xl md:text-4xl font-bold mb-2 leading-relaxed" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{arabic}</p>
-            <p className="font-inter text-base font-bold text-white/95">{value}</p>
+            <p className="font-amiri text-4xl md:text-5xl font-bold mb-2 leading-relaxed" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.2)" }} dir="rtl">{arabic}</p>
+            <p className="font-malayalam-sm font-bold text-white/90">{value}</p>
         </div>
     )
 }

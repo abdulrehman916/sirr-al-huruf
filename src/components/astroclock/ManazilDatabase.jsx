@@ -97,9 +97,12 @@ export default function ManazilDatabase() {
                               {manzil.number}
                             </span>
                             <div style={{width: '4px', height: '32px', borderRadius: '2px', background: getClassificationColor(manzil.nature)}}></div>
-                            <div>
-                                <p className="font-amiri font-bold text-3xl md:text-4xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}}>{manzil.name_arabic}</p>
-                                <p className="font-malayalam-sm font-semibold text-white/80 mt-0.5">{isMalayalam ? manzil.zodiac_sign_ml : manzil.zodiac_sign}</p>
+                            <div className="flex flex-col">
+                                <p className="font-amiri font-bold text-4xl md:text-5xl leading-relaxed" style={{color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)"}} dir="rtl">{manzil.name_arabic}</p>
+                                <p className="font-malayalam-md font-semibold text-white/90 mt-1">{isMalayalam ? manzil.name_ml : manzil.name_en}</p>
+                                {manzil.letter_malayalam && (
+                                    <p className="font-inter text-xs text-white/60 mt-0.5">Letter: {manzil.letter_malayalam}</p>
+                                )}
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -136,9 +139,9 @@ export default function ManazilDatabase() {
                                         {isMalayalam ? "അറബിക് അക്ഷരം" : "Arabic Letter"}
                                     </p>
                                     <div className="flex flex-col items-center gap-2">
-                                        <p className="font-amiri text-6xl font-bold" style={{color: G.text}}>{manzil.name_arabic}</p>
+                                        <p className="font-amiri text-7xl font-bold" style={{color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)"}} dir="rtl">{manzil.name_arabic}</p>
                                         {manzil.letter_malayalam && (
-                                            <p className="font-malayalam-sm text-white/70">{manzil.letter_malayalam}</p>
+                                            <p className="font-malayalam-md text-white/80">{manzil.letter_malayalam}</p>
                                         )}
                                     </div>
                                 </div>
