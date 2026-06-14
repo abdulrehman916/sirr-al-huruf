@@ -16,6 +16,8 @@ import LiveMoonStatus from "../components/astroclock/LiveMoonStatus";
 import ManazilDatabase from "../components/astroclock/ManazilDatabase";
 import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
 import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
+import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel";
+import IncenseAdvisor from "../components/astroclock/IncenseAdvisor";
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 
 function LanguageToggle() {
@@ -90,7 +92,13 @@ function AstroClockContent() {
         {/* SECTION 6: Planet Knowledge Panels */}
         <PlanetKnowledgePanels />
 
-        {/* SECTION 7: Action Timing Advisor */}
+        {/* SECTION 7: Zodiac Knowledge Panel */}
+        <ZodiacKnowledgePanel />
+
+        {/* SECTION 8: Incense Advisor */}
+        <IncenseAdvisor />
+
+        {/* SECTION 9: Action Timing Advisor */}
         <ActionTimingAdvisor />
 
         {/* Framework Notice */}
