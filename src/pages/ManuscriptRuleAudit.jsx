@@ -17,9 +17,11 @@ const G = {
 
 export default function ManuscriptRuleAudit() {
   const [audit, setAudit] = useState(null);
+  const [prevAudit, setPrevAudit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [enriching, setEnriching] = useState(false);
+  const [enrichmentProgress, setEnrichmentProgress] = useState(null);
   const [enrichmentDone, setEnrichmentDone] = useState(false);
 
   useEffect(() => {
@@ -30,6 +32,7 @@ export default function ManuscriptRuleAudit() {
     try {
       setLoading(true);
       const response = await base44.functions.invoke('auditManuscriptRuleCompleteness', {});
+      setPrevAudit(audit);
       setAudit(response.data.audit);
       setError(null);
     } catch (err) {
@@ -42,14 +45,54 @@ export default function ManuscriptRuleAudit() {
   async function runEnrichment() {
     try {
       setEnriching(true);
-      await base44.functions.invoke('enrichManuscriptRules', { batch_size: 10, delay_ms: 2000 });
+      setEnrichmentProgress({ processed: 0, enriched: 0, skipped: 0, total: 0 });
+      
+      let skip = 0;
+      let totalEnriched = 0;
+      let totalSkipped = 0;
+      let done = false;
+
+      while (!done && enriching) {
+        const response = await base44.functions.invoke('enrichManuscriptRules', { skip, batchSize: 5 });
+        
+        if (response.data.error) {
+          throw new Error(response.data.error);
+        }
+
+        skip = response.data.nextSkip || skip + 5;
+        totalEnriched += response.data.enriched || 0;
+        totalSkipped += response.data.skipped || 0;
+        done = response.data.done;
+
+        setEnrichmentProgress({
+          processed: response.data.processed || skip,
+          enriched: totalEnriched,
+          skipped: totalSkipped,
+          total: response.data.total || 962,
+          percentage: Math.round(((response.data.processed || skip) / (response.data.total || 962)) * 100)
+        });
+
+        if (!done) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
       setEnrichmentDone(true);
+      setEnriching(false);
       await runAudit();
     } catch (err) {
       setError('Enrichment failed: ' + err.message);
-    } finally {
       setEnriching(false);
     }
+  }
+
+  function stopEnrichment() {
+    setEnriching(false);
+  }
+
+  function getPercentageIncrease(prev, curr, total) {
+    if (!prev || prev === 0) return curr > 0 ? 100 : 0;
+    return Math.round(((curr - prev) / total) * 100);
   }
 
   if (loading) {
@@ -97,24 +140,89 @@ export default function ManuscriptRuleAudit() {
             <p className="font-inter text-sm mt-2" style={{ color: G.dim }}>
               Completeness Report - {new Date().toLocaleDateString()}
             </p>
-            {!enrichmentDone && (
+            
+            {!enrichmentDone && !enriching && (
               <button
                 onClick={runEnrichment}
-                disabled={enriching}
                 className="mt-4 px-6 py-3 rounded-lg flex items-center gap-2 mx-auto font-bold"
-                style={{ 
-                  background: enriching ? G.dim : G.text, 
-                  color: '#0d1b2a',
-                  opacity: enriching ? 0.7 : 1
-                }}
+                style={{ background: G.text, color: '#0d1b2a' }}
               >
                 <Wand2 className="w-5 h-5" />
-                {enriching ? 'Enriching...' : 'Auto-Enrich Associations'}
+                Auto-Enrich Associations
               </button>
             )}
-            {enrichmentDone && (
+
+            {enriching && enrichmentProgress && (
+              <div className="mt-4 max-w-xl mx-auto">
+                <div className="p-4 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+                  <p className="font-inter text-sm font-bold mb-2" style={{ color: G.text }}>
+                    Enrichment in Progress: {enrichmentProgress.percentage}%
+                  </p>
+                  <div className="h-3 rounded-full mb-3" style={{ background: "rgba(255,255,255,0.1)" }}>
+                    <div
+                      className="h-3 rounded-full transition-all duration-300"
+                      style={{ width: `${enrichmentProgress.percentage}%`, background: G.success }}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-center text-xs">
+                    <div>
+                      <p className="font-inter text-xs" style={{ color: G.dim }}>Processed</p>
+                      <p className="font-inter text-lg font-bold" style={{ color: G.text }}>{enrichmentProgress.processed}</p>
+                    </div>
+                    <div>
+                      <p className="font-inter text-xs" style={{ color: G.success }}>Enriched</p>
+                      <p className="font-inter text-lg font-bold" style={{ color: G.success }}>{enrichmentProgress.enriched}</p>
+                    </div>
+                    <div>
+                      <p className="font-inter text-xs" style={{ color: G.dim }}>Skipped</p>
+                      <p className="font-inter text-lg font-bold" style={{ color: G.dim }}>{enrichmentProgress.skipped}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={stopEnrichment}
+                    className="mt-3 px-4 py-2 rounded-lg text-xs font-bold"
+                    style={{ background: G.danger, color: "#fff" }}
+                  >
+                    Stop
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {enrichmentDone && prevAudit && (
+              <div className="mt-4 max-w-4xl mx-auto">
+                <div className="p-6 rounded-lg" style={{ background: "rgba(34,197,94,0.15)", border: `1px solid ${G.success}` }}>
+                  <h3 className="font-inter text-lg font-bold mb-4" style={{ color: G.success }}>
+                    ✓ Enrichment Complete!
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                    <ImprovementCard label="Letters" prev={prevAudit.with_arabic_letter} curr={audit.with_arabic_letter} total={audit.total_records} />
+                    <ImprovementCard label="Planets" prev={prevAudit.with_planet} curr={audit.with_planet} total={audit.total_records} />
+                    <ImprovementCard label="Zodiac" prev={prevAudit.with_zodiac} curr={audit.with_zodiac} total={audit.total_records} />
+                    <ImprovementCard label="Mansions" prev={prevAudit.with_lunar_mansion} curr={audit.with_lunar_mansion} total={audit.total_records} />
+                    <ImprovementCard label="Elements" prev={prevAudit.with_element} curr={audit.with_element} total={audit.total_records} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="p-3 rounded" style={{ background: "rgba(0,0,0,0.3)" }}>
+                      <p className="font-inter text-xs" style={{ color: G.dim }}>Total Enriched</p>
+                      <p className="font-inter text-2xl font-bold" style={{ color: G.success }}>{enrichmentProgress?.enriched || 'N/A'}</p>
+                    </div>
+                    <div className="p-3 rounded" style={{ background: "rgba(0,0,0,0.3)" }}>
+                      <p className="font-inter text-xs" style={{ color: G.dim }}>Still Need Review</p>
+                      <p className="font-inter text-2xl font-bold" style={{ color: G.warning }}>{audit.total_records - audit.with_arabic_letter - audit.with_planet}</p>
+                    </div>
+                    <div className="p-3 rounded" style={{ background: "rgba(0,0,0,0.3)" }}>
+                      <p className="font-inter text-xs" style={{ color: G.dim }}>New Score</p>
+                      <p className="font-inter text-2xl font-bold" style={{ color: G.text }}>{audit.completeness_score}%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {enrichmentDone && !prevAudit && (
               <div className="mt-4 px-6 py-3 rounded-lg" style={{ background: "rgba(34,197,94,0.2)", color: "#86efac" }}>
-                ✓ Enrichment complete! Run audit again to see updated scores.
+                ✓ Enrichment complete! Run audit again to see comparison.
               </div>
             )}
           </motion.div>
@@ -135,15 +243,15 @@ export default function ManuscriptRuleAudit() {
             />
             <SummaryCard
               icon={FileText}
-              label="Missing Arabic"
-              value={audit.missing_fields.missing_arabic.length}
-              color={audit.missing_fields.missing_arabic.length === 0 ? G.success : G.danger}
+              label="With Arabic Text"
+              value={audit.with_original_arabic}
+              color={audit.with_original_arabic === audit.total_records ? G.success : G.text}
             />
             <SummaryCard
-              icon={AlertCircle}
-              label="Needs Re-ingestion"
-              value={audit.records_requiring_reingestion_count}
-              color={audit.records_requiring_reingestion_count === 0 ? G.success : G.warning}
+              icon={TrendingUp}
+              label="Auto-Extracted"
+              value={enrichmentProgress?.enriched || '-'}
+              color={G.success}
             />
           </div>
 
@@ -195,6 +303,10 @@ export default function ManuscriptRuleAudit() {
                     <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Planets</th>
                     <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Zodiac</th>
                     <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Mansions</th>
+                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Elements</th>
+                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Saad/Nahs</th>
+                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Metals</th>
+                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Colors</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -208,79 +320,16 @@ export default function ManuscriptRuleAudit() {
                       <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_planet === stats.total ? G.success : G.text }}>{stats.with_planet}</td>
                       <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_zodiac === stats.total ? G.success : G.text }}>{stats.with_zodiac}</td>
                       <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_mansion === stats.total ? G.success : G.text }}>{stats.with_mansion}</td>
+                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_element === stats.total ? G.success : G.text }}>{stats.with_element}</td>
+                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_saad_nahs === stats.total ? G.success : G.text }}>{stats.with_saad_nahs}</td>
+                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_metal === stats.total ? G.success : G.text }}>{stats.with_metal}</td>
+                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_color === stats.total ? G.success : G.text }}>{stats.with_color}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </motion.div>
-
-          {/* By Manuscript */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="rounded-xl border p-6"
-            style={{ background: G.bg, borderColor: G.faint }}
-          >
-            <h2 className="font-inter text-xl font-bold uppercase tracking-widest mb-6" style={{ color: G.text }}>
-              Completeness by Manuscript
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${G.faint}` }}>
-                    <th className="text-left py-3 px-4 font-inter" style={{ color: G.dim }}>Manuscript</th>
-                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Total</th>
-                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Arabic</th>
-                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Malayalam</th>
-                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Letters</th>
-                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Planets</th>
-                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Zodiac</th>
-                    <th className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>Mansions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(audit.by_manuscript).map(([manuscript, stats]) => (
-                    <tr key={manuscript} style={{ borderBottom: `1px solid ${G.faint}` }}>
-                      <td className="py-3 px-4 font-inter text-xs" style={{ color: G.text }}>{manuscript}</td>
-                      <td className="text-center py-3 px-4 font-inter" style={{ color: G.dim }}>{stats.total}</td>
-                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_arabic === stats.total ? G.success : G.text }}>{stats.with_arabic}</td>
-                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_malayalam === stats.total ? G.success : G.text }}>{stats.with_malayalam}</td>
-                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_letter === stats.total ? G.success : G.text }}>{stats.with_letter}</td>
-                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_planet === stats.total ? G.success : G.text }}>{stats.with_planet}</td>
-                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_zodiac === stats.total ? G.success : G.text }}>{stats.with_zodiac}</td>
-                      <td className="text-center py-3 px-4 font-inter" style={{ color: stats.with_mansion === stats.total ? G.success : G.text }}>{stats.with_mansion}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-
-          {/* Action Required */}
-          {audit.records_requiring_reingestion_count > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="rounded-xl border p-6"
-              style={{ background: "rgba(255,193,7,0.08)", borderColor: G.warning }}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <AlertCircle className="w-6 h-6" style={{ color: G.warning }} />
-                <h2 className="font-inter text-xl font-bold uppercase tracking-widest" style={{ color: G.warning }}>
-                  Records Requiring Re-ingestion
-                </h2>
-              </div>
-              <p className="font-inter text-white/70 mb-4">
-                {audit.records_requiring_reingestion_count} records are missing 3 or more critical fields and should be re-ingested with enhanced extraction.
-              </p>
-              <div className="text-xs font-mono" style={{ color: G.dim }}>
-                Sample IDs: {audit.records_requiring_reingestion.slice(0, 5).join(", ")}...
-              </div>
-            </motion.div>
-          )}
         </div>
       </div>
     </PageLayout>
@@ -316,6 +365,25 @@ function FieldBar({ label, count, total, color }) {
           style={{ width: `${percentage}%`, background: color }}
         />
       </div>
+    </div>
+  );
+}
+
+function ImprovementCard({ label, prev, curr, total }) {
+  const increase = curr - prev;
+  const percentageIncrease = prev > 0 ? Math.round((increase / total) * 100) : 0;
+  
+  return (
+    <div className="p-3 rounded" style={{ background: "rgba(0,0,0,0.3)" }}>
+      <p className="font-inter text-xs mb-1" style={{ color: G.dim }}>{label}</p>
+      <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
+        {prev} → {curr}
+      </p>
+      {increase > 0 && (
+        <p className="font-inter text-xs font-bold" style={{ color: G.success }}>
+          +{increase} (+{percentageIncrease}%)
+        </p>
+      )}
     </div>
   );
 }

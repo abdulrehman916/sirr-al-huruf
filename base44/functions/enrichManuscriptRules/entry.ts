@@ -1,83 +1,155 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const PATTERNS = {
-  letters: ['أ', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي'],
-  mansions: ['الشرطان', 'البطين', 'الثريا', 'الدبران', 'الهقعة', 'الهنعة', 'الذراع', 'النسرة', 'الطرف', 'الجبهة', 'الزبرة', 'الصرفة', 'العواء', 'السماك', 'الغفر', 'الزبانا', 'الإكليل', 'القلب', 'الشولة', 'النعائم', 'البلدة', 'سعد الذابح', 'سعد بلع', 'سعد السعود', 'سعد الأخبية', 'الفرغ المقدم', 'الفرغ المؤخر', 'الحوت'],
-  planets: { 'شمس': 'Sun', 'قمر': 'Moon', 'عطارد': 'Mercury', 'زهرة': 'Venus', 'مریخ': 'Mars', 'مرّيخ': 'Mars', 'مشتری': 'Jupiter', 'زحل': 'Saturn' },
-  zodiac: { 'حمل': 'Aries', 'ثور': 'Taurus', 'جوزا': 'Gemini', 'سرطان': 'Cancer', 'اسد': 'Leo', 'سنبله': 'Virgo', 'میزان': 'Libra', 'عقرب': 'Scorpio', 'قوس': 'Sagittarius', 'جدی': 'Capricorn', 'دلو': 'Aquarius', 'حوت': 'Pisces' },
-  elements: { 'نار': 'Fire', 'هواء': 'Air', 'ماء': 'Water', 'تراب': 'Earth', 'آتش': 'Fire', 'باد': 'Air', 'آب': 'Water', 'خاک': 'Earth' },
-  saad_nahs: { 'سعد': 'Saad', 'نحس': 'Nahs', 'مبارك': 'Saad', 'شوم': 'Nahs' },
-  metals: { 'ذهب': 'Gold', 'فضة': 'Silver', 'نحاس': 'Copper', 'حديد': 'Iron' },
-  colors: { 'أحمر': 'Red', 'أبيض': 'White', 'أسود': 'Black', 'أصفر': 'Yellow', 'أخضر': 'Green', 'أزرق': 'Blue' }
+  letters: [
+    { ar: 'أ', en: 'Alif' }, { ar: 'ب', en: 'Ba' }, { ar: 'ت', en: 'Ta' },
+    { ar: 'ث', en: 'Tha' }, { ar: 'ج', en: 'Jim' }, { ar: 'ح', en: 'Ha' },
+    { ar: 'خ', en: 'Kha' }, { ar: 'د', en: 'Dal' }, { ar: 'ذ', en: 'Dhal' },
+    { ar: 'ر', en: 'Ra' }, { ar: 'ز', en: 'Zay' }, { ar: 'س', en: 'Sin' },
+    { ar: 'ش', en: 'Shin' }, { ar: 'ص', en: 'Sad' }, { ar: 'ض', en: 'Dad' },
+    { ar: 'ط', en: 'Ta' }, { ar: 'ظ', en: 'Za' }, { ar: 'ع', en: 'Ayn' },
+    { ar: 'غ', en: 'Ghayn' }, { ar: 'ف', en: 'Fa' }, { ar: 'ق', en: 'Qaf' },
+    { ar: 'ك', en: 'Kaf' }, { ar: 'ل', en: 'Lam' }, { ar: 'م', en: 'Mim' },
+    { ar: 'ن', en: 'Nun' }, { ar: 'ه', en: 'Ha' }, { ar: 'و', en: 'Waw' },
+    { ar: 'ي', en: 'Ya' }
+  ],
+  mansions: ['Al-Sharatain', 'Al-Butayn', 'Al-Thurayya', 'Al-Dabaran', 'Al-Haqah', 
+    'Al-Hanah', 'Al-Dhira', 'Al-Nathrah', 'Al-Tarf', 'Al-Jabhah', 'Al-Zubrah', 
+    'Al-Sarfah', 'Al-Awwa', 'Al-Simak', 'Al-Ghafr', 'Al-Zubana', 'Al-Iklil', 
+    'Al-Qalb', 'Al-Shawlah', 'Al-Naim', 'Al-Baldah', 'Sad al-Dhabih', 
+    'Sad al-Bulah', 'Sad al-Suud', 'Sad al-Akhbiyah', 'Al-Fargh al-Muqaddam', 
+    'Al-Fargh al-Muakhkhar', 'Al-Risha'],
+  planets: [
+    { ar: 'شمس', en: 'Sun' }, { ar: 'قمر', en: 'Moon' },
+    { ar: 'عطارد', en: 'Mercury' }, { ar: 'زهرة', en: 'Venus' },
+    { ar: 'مرّيخ', en: 'Mars' }, { ar: 'مشترى', en: 'Jupiter' },
+    { ar: 'زحل', en: 'Saturn' }
+  ],
+  zodiacs: [
+    { ar: 'حمل', en: 'Aries' }, { ar: 'ثور', en: 'Taurus' },
+    { ar: 'جوزاء', en: 'Gemini' }, { ar: 'سرطان', en: 'Cancer' },
+    { ar: 'أسد', en: 'Leo' }, { ar: 'سنبل', en: 'Virgo' },
+    { ar: 'ميزان', en: 'Libra' }, { ar: 'عقرب', en: 'Scorpio' },
+    { ar: 'قوس', en: 'Sagittarius' }, { ar: 'جدي', en: 'Capricorn' },
+    { ar: 'دلو', en: 'Aquarius' }, { ar: 'حوت', en: 'Pisces' }
+  ],
+  elements: [
+    { ar: 'نار', en: 'Fire' }, { ar: 'هواء', en: 'Air' },
+    { ar: 'ماء', en: 'Water' }, { ar: 'تراب', en: 'Earth' }
+  ],
+  saadNahs: ['Saad', 'Nahs', 'سعد', 'نحس', 'سعيد', 'نحس'],
+  metals: ['ذهب', 'فضة', 'نحاس', 'حديد', 'قصدير', 'رصاص', 'زئبق'],
+  colors: ['أحمر', 'أبيض', 'أسود', 'أصفر', 'أخضر', 'أزرق']
 };
 
-function extract(text, patternObj, isArray = false) {
-  if (Array.isArray(patternObj)) {
-    return patternObj.filter(p => text.includes(p));
-  }
-  const results = [];
-  Object.entries(patternObj).forEach(([ar, en]) => {
-    if (text.includes(ar)) {
-      results.push(isArray ? { arabic: ar, english: en } : en);
-    }
-  });
-  return results;
+function extractEntities(text) {
+  if (!text || typeof text !== 'string') return {};
+  const result = {};
+  
+  const foundLetters = PATTERNS.letters.filter(p => text.includes(p.ar)).map(p => p.en);
+  if (foundLetters.length > 0) result.letters = foundLetters;
+  
+  const foundMansions = PATTERNS.mansions.filter(m => text.includes(m));
+  if (foundMansions.length > 0) result.lunar_mansions = foundMansions;
+  
+  const foundPlanets = PATTERNS.planets.filter(p => text.includes(p.ar)).map(p => p.en);
+  if (foundPlanets.length > 0) result.planets = foundPlanets;
+  
+  const foundZodiacs = PATTERNS.zodiacs.filter(z => text.includes(z.ar)).map(z => z.en);
+  if (foundZodiacs.length > 0) result.zodiac_signs = foundZodiacs;
+  
+  const foundElements = PATTERNS.elements.filter(e => text.includes(e.ar)).map(e => e.en);
+  if (foundElements.length > 0) result.elements = foundElements;
+  
+  const hasSaad = PATTERNS.saadNahs.some(s => text.includes(s));
+  if (hasSaad) result.saad_nahs = PATTERNS.saadNahs.filter(s => text.includes(s))[0];
+  
+  const foundMetals = PATTERNS.metals.filter(m => text.includes(m));
+  if (foundMetals.length > 0) result.metals = foundMetals;
+  
+  const foundColors = PATTERNS.colors.filter(c => text.includes(c));
+  if (foundColors.length > 0) result.colors = foundColors;
+  
+  return result;
 }
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
+    if (!user || user.role !== 'admin') {
+      return Response.json({ error: 'Unauthorized - Admin only' }, { status: 403 });
+    }
 
-    const { batch_size = 50, delay_ms = 1000 } = await req.json().catch(() => ({}));
-    const allRules = await base44.entities.ManuscriptRule.filter({});
+    const payload = await req.json().catch(() => ({}));
+    const { batchSize = 3, skip = 0 } = payload;
+
+    const allRules = await base44.entities.ManuscriptRule.filter({}, '-created_date', 1000);
+    const batch = allRules.slice(skip, skip + batchSize);
     
-    let enrichedCount = 0;
-    let updatedRecords = [];
+    if (batch.length === 0) {
+      return Response.json({ 
+        success: true, 
+        done: true, 
+        message: 'All records processed',
+        enriched: 0,
+        skipped: 0
+      });
+    }
 
-    for (let i = 0; i < allRules.length; i++) {
-      const rule = allRules[i];
-      const text = (rule.original_text || '') + ' ' + (rule.rule_summary || '');
-      if (!text.trim()) continue;
+    let enriched = 0;
+    let skipped = 0;
+    const updates = [];
 
-      let parsedData = {};
-      try { parsedData = rule.data_json ? JSON.parse(rule.data_json) : {}; } catch (e) {}
+    for (const rule of batch) {
+      try {
+        const existingData = rule.data_json ? JSON.parse(rule.data_json) : {};
+        
+        if (existingData.auto_extracted && 
+            existingData.letters && existingData.lunar_mansions && 
+            existingData.planets && existingData.zodiac_signs) {
+          skipped++;
+          continue;
+        }
 
-      const extracted = {
-        letters: extract(text, PATTERNS.letters),
-        mansions: extract(text, PATTERNS.mansions),
-        planets: extract(text, PATTERNS.planets, true),
-        zodiac_signs: extract(text, PATTERNS.zodiac, true),
-        elements: extract(text, PATTERNS.elements, true),
-        saad_nahs: extract(text, PATTERNS.saad_nahs)[0] || null,
-        metals: extract(text, PATTERNS.metals, true),
-        colors: extract(text, PATTERNS.colors, true)
-      };
+        const extracted = extractEntities(rule.original_text);
+        
+        if (Object.keys(extracted).length === 0) {
+          skipped++;
+          continue;
+        }
 
-      const hasNewData = Object.values(extracted).some(v => 
-        (Array.isArray(v) && v.length > 0) || (typeof v === 'string' && v)
+        const newData = {
+          ...existingData,
+          ...extracted,
+          auto_extracted: true,
+          extraction_date: new Date().toISOString()
+        };
+
+        updates.push({
+          id: rule.id,
+          data_json: JSON.stringify(newData)
+        });
+        enriched++;
+      } catch (e) {
+        console.error(`Error processing rule ${rule.id}:`, e.message);
+      }
+    }
+
+    if (updates.length > 0) {
+      await Promise.all(
+        updates.map(u => base44.entities.ManuscriptRule.update(u.id, { data_json: u.data_json }))
       );
-
-      if (hasNewData) {
-        const updatedDataJson = JSON.stringify({ ...parsedData, ...extracted });
-        await base44.entities.ManuscriptRule.update(rule.id, { data_json: updatedDataJson });
-        enrichedCount++;
-        updatedRecords.push(rule.rule_id || rule.id);
-      }
-
-      if ((i + 1) % batch_size === 0 && i < allRules.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay_ms));
-      }
     }
 
     return Response.json({
       success: true,
-      total_processed: allRules.length,
-      enriched_count: enrichedCount,
-      updated_records: updatedRecords.slice(0, 20),
-      message: `Enriched ${enrichedCount}/${allRules.length} records`
+      done: skip + batchSize >= allRules.length,
+      nextSkip: skip + batchSize,
+      total: allRules.length,
+      enriched,
+      skipped,
+      processed: skip + batch.length
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
