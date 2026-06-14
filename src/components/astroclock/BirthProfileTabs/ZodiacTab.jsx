@@ -23,12 +23,15 @@ const G = {
 export default function ZodiacTab({ profile, isMalayalam }) {
   return (
     <div className="space-y-4">
-      <div className="text-center mb-4">
-        <p className="text-6xl mb-2">{profile.zodiacSign.symbol}</p>
+      <div className="text-center mb-6">
+        <p className="font-amiri text-5xl md:text-6xl font-bold leading-relaxed mb-3" style={{ color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)" }}>
+          {profile.zodiacSign.name_ar}
+        </p>
+        <div className="h-px w-20 mx-auto mb-3" style={{ background: `linear-gradient(90deg, transparent, ${G.border}, transparent)` }} />
         <p className="font-inter text-xl font-bold text-white">
           {isMalayalam ? profile.zodiacSign.name_ml : profile.zodiacSign.name_en}
         </p>
-        <p className="font-inter text-xs text-white/60">
+        <p className="font-inter text-xs text-white/60 mt-1">
           {isMalayalam ? profile.zodiacSign.dateRangeMl : profile.zodiacSign.dateRange}
         </p>
       </div>

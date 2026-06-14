@@ -25,12 +25,16 @@ export default function PlanetTab({ profile, isMalayalam }) {
 
   return (
     <div className="space-y-4">
-      <div className="text-center mb-4">
+      <div className="text-center mb-6">
         <p className="text-5xl mb-2">{profile.rulingPlanet.symbol}</p>
+        <p className="font-amiri text-5xl md:text-6xl font-bold leading-relaxed mb-3" style={{ color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)" }}>
+          {profile.rulingPlanet.name_ar}
+        </p>
+        <div className="h-px w-20 mx-auto mb-3" style={{ background: `linear-gradient(90deg, transparent, ${G.border}, transparent)` }} />
         <p className="font-inter text-lg font-bold text-white">
           {isMalayalam ? profile.rulingPlanet.name_ml : profile.rulingPlanet.name_en}
         </p>
-        <p className="font-inter text-xs text-white/60">
+        <p className="font-inter text-xs text-white/60 mt-1">
           {isMalayalam ? profile.rulingPlanet.nature_ml : profile.rulingPlanet.nature_en}
         </p>
       </div>
