@@ -54,6 +54,8 @@ const ManuscriptRuleAudit = lazy(() => import('./pages/ManuscriptRuleAudit'));
 const ManuscriptAdvancedSearch = lazy(() => import('./pages/ManuscriptAdvancedSearch'));
 const ManazilQualityAudit = lazy(() => import('./pages/ManazilQualityAudit'));
 const ManuscriptCompletionReport = lazy(() => import('./pages/ManuscriptCompletionReport'));
+const CustomerService = lazy(() => import('./pages/CustomerService'));
+const AdminSupport = lazy(() => import('./pages/AdminSupport'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -138,6 +140,8 @@ const AuthenticatedApp = () => {
             <Route path="/manuscript-search" element={<ManuscriptAdvancedSearch />} />
             <Route path="/manazil-quality-audit" element={<ManazilQualityAudit />} />
             <Route path="/manuscript-completion-report" element={<ManuscriptCompletionReport />} />
+            <Route path="/customer-service" element={<CustomerService />} />
+            <Route path="/admin/support" element={<AdminSupport />} />
 
 
             <Route path="*" element={<PageNotFound />} />

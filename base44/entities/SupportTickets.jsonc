@@ -1,0 +1,74 @@
+{
+  "name": "SupportTickets",
+  "type": "object",
+  "properties": {
+    "ticket_id": {
+      "type": "string",
+      "description": "Unique ticket ID e.g. SUP-000001"
+    },
+    "name": {
+      "type": "string",
+      "description": "Customer name"
+    },
+    "mobile": {
+      "type": "string",
+      "description": "Customer mobile number"
+    },
+    "email": {
+      "type": "string",
+      "description": "Customer email"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Bug Report",
+        "Feature Request",
+        "Content Correction",
+        "Access Problem",
+        "General Question"
+      ],
+      "description": "Support category"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Ticket subject"
+    },
+    "message": {
+      "type": "string",
+      "description": "Customer message"
+    },
+    "attachment_url": {
+      "type": "string",
+      "description": "Uploaded file URL (image/screenshot/PDF)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "IN_PROGRESS",
+        "RESOLVED",
+        "CLOSED"
+      ],
+      "default": "OPEN",
+      "description": "Ticket status"
+    },
+    "admin_reply": {
+      "type": "string",
+      "description": "Admin response"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "Ticket creation date"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "name",
+    "mobile",
+    "email",
+    "category",
+    "subject",
+    "message",
+    "status"
+  ]
+}
