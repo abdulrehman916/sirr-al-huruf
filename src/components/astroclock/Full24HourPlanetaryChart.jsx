@@ -90,9 +90,18 @@ export default function Full24HourPlanetaryChart() {
   function updateCountdown() {
     if (!currentHour) return;
     const now = new Date();
-    const diff = currentHour.endTime - now;
-    const mins = Math.floor(diff / 60000);
-    const secs = Math.floor((diff % 60000) / 1000);
+    // endTimeDecimal is decimal hours (e.g. 14.5 = 2:30 PM)
+    const endDecimal = currentHour.endTimeDecimal;
+    if (endDecimal == null) return;
+    const endDate = new Date();
+    const endH = Math.floor(endDecimal);
+    const endM = Math.floor((endDecimal - endH) * 60);
+    const endS = Math.floor(((endDecimal - endH) * 60 - endM) * 60);
+    endDate.setHours(endH, endM, endS, 0);
+    const diffMs = endDate - now;
+    if (diffMs <= 0) { setCountdown("00:00"); return; }
+    const mins = Math.floor(diffMs / 60000);
+    const secs = Math.floor((diffMs % 60000) / 1000);
     setCountdown(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
   }
 
@@ -294,24 +303,23 @@ function HourRow({ hour, index, isCurrent, isNext, expanded, onToggle, isMalayal
   useEffect(() => {
     const updateHourCountdown = () => {
       const now = new Date();
-      // Convert decimal hours to milliseconds for today
-      let endTimeHours = hour.endTimeDecimal;
-      if (endTimeHours >= 24) {
-        endTimeHours = endTimeHours - 24; // Next day
-      }
-      
+      let endDecimal = hour.endTimeDecimal;
+      if (endDecimal == null) return;
+      // Wrap past-midnight hours to next day
+      if (endDecimal >= 24) endDecimal -= 24;
+      const endH = Math.floor(endDecimal);
+      const endMinFrac = (endDecimal - endH) * 60;
+      const endM = Math.floor(endMinFrac);
+      const endS = Math.floor((endMinFrac - endM) * 60);
       const endDate = new Date();
-      endDate.setHours(Math.floor(endTimeHours), Math.round((endTimeHours % 1) * 60), 0, 0);
-      
-      // If end time is before now, it's already ended
-      if (endDate < now) {
+      endDate.setHours(endH, endM, endS, 0);
+      const diffMs = endDate - now;
+      if (diffMs <= 0) {
         setHourCountdown("Ended");
         return;
       }
-      
-      const diff = endDate - now;
-      const mins = Math.floor(diff / 60000);
-      const secs = Math.floor((diff % 60000) / 1000);
+      const mins = Math.floor(diffMs / 60000);
+      const secs = Math.floor((diffMs % 60000) / 1000);
       setHourCountdown(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
     };
     
