@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, CheckCircle, XCircle, AlertCircle, Book, Search } from "lucide-react";
+import { Clock, CheckCircle, XCircle, AlertCircle, Book, Search, Shield, Sword } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import { 
   searchManuscriptsForAction, 
@@ -14,8 +14,6 @@ import {
   compareRulesAgainstConditions,
   calculateNextSuitableTime 
 } from "@/lib/advancedManuscriptDecisionEngine.js";
-import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
-import { getCurrentPlanetaryHour } from "@/lib/astroClockLiveEngine.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -68,7 +66,7 @@ export default function AdvancedManuscriptDecisionEngine() {
     setLoading(true);
     const now = new Date();
     
-    // STEP 1: Search all manuscripts
+    // STEP 1: Search all manuscripts (includes classification)
     const manuscriptSearch = searchManuscriptsForAction(action.key);
     
     if (!manuscriptSearch.found) {
@@ -84,13 +82,17 @@ export default function AdvancedManuscriptDecisionEngine() {
     // STEP 2: Get current live conditions
     const liveConditions = getCurrentLiveConditions(now, 6.5, 18.25);
     
-    // STEP 3: Compare rules against conditions
+    // STEP 3: Compare rules against conditions (with action type awareness)
     const allRules = [];
     Object.values(manuscriptSearch.rulesByManuscript).forEach(rules => {
       allRules.push(...rules);
     });
     
-    const comparison = compareRulesAgainstConditions(allRules, liveConditions);
+    const comparison = compareRulesAgainstConditions(
+      allRules, 
+      liveConditions, 
+      manuscriptSearch.classification
+    );
     
     // STEP 4: Calculate next suitable time
     const nextSuitable = calculateNextSuitableTime(allRules, now, 6.5, 18.25);
@@ -109,6 +111,7 @@ export default function AdvancedManuscriptDecisionEngine() {
     setDecisionResult({
       manuscriptFound: true,
       action: action,
+      classification: manuscriptSearch.classification,
       liveConditions,
       comparison,
       timingGuidance,
@@ -254,10 +257,15 @@ function DecisionResults({ result, isMalayalam }) {
     );
   }
 
-  const { comparison, timingGuidance, nextSuitable, liveConditions } = result;
+  const { comparison, timingGuidance, nextSuitable, liveConditions, classification } = result;
 
   return (
     <div className="space-y-6">
+      {/* Action Type Classification */}
+      {classification && classification.classified && (
+        <ActionTypeDisplay classification={classification} isMalayalam={isMalayalam} />
+      )}
+      
       {/* Current Status */}
       <CurrentStatusDisplay comparison={comparison} isMalayalam={isMalayalam} />
       
@@ -275,6 +283,62 @@ function DecisionResults({ result, isMalayalam }) {
       {/* Manuscript Evidence */}
       <ManuscriptEvidenceDisplay rulesByManuscript={result.rulesByManuscript} isMalayalam={isMalayalam} />
     </div>
+  );
+}
+
+function ActionTypeDisplay({ classification, isMalayalam }) {
+  const isBeneficial = classification.actionType === 'beneficial';
+  const isHarmful = classification.actionType === 'harmful';
+  
+  const Icon = isBeneficial ? Shield : isHarmful ? Sword : AlertCircle;
+  const color = isBeneficial ? '#22c55e' : isHarmful ? '#ef4444' : '#fbbf24';
+  const bg = isBeneficial ? 'rgba(34,197,94,0.10)' : isHarmful ? 'rgba(239,68,68,0.10)' : 'rgba(251,191,36,0.10)';
+  const border = isBeneficial ? 'rgba(34,197,94,0.50)' : isHarmful ? 'rgba(239,68,68,0.50)' : 'rgba(251,191,36,0.50)';
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-5 rounded-xl border text-center"
+      style={{ background: bg, borderColor: border }}
+    >
+      <div className="flex items-center justify-center gap-3 mb-3">
+        <Icon className="w-8 h-8" style={{ color }} />
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color }}>
+            {isMalayalam ? "പ്രവർത്തന തരം" : "Action Type"}
+          </p>
+          <p className="font-malayalam-lg font-bold text-white">
+            {isMalayalam ? classification.classification?.ml : classification.classification?.en}
+          </p>
+        </div>
+      </div>
+      
+      <div className="grid md:grid-cols-2 gap-3 text-sm">
+        <div className="p-3 rounded-lg" style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.30)' }}>
+          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: '#22c55e' }}>
+            {isMalayalam ? "ഉചിത സമയങ്ങൾ" : "Use These Periods"}
+          </p>
+          <p className="font-malayalam-sm text-white/80">
+            {classification.timingCriteria?.preferred?.join(', ')}
+          </p>
+        </div>
+        <div className="p-3 rounded-lg" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.30)' }}>
+          <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>
+            {isMalayalam ? "ഒഴിവാക്കേണ്ട സമയങ്ങൾ" : "Avoid These Periods"}
+          </p>
+          <p className="font-malayalam-sm text-white/80">
+            {classification.timingCriteria?.avoid?.join(', ')}
+          </p>
+        </div>
+      </div>
+      
+      {classification.confidence && (
+        <p className="font-inter text-[8px] mt-3" style={{ color: 'rgba(255,255,255,0.50)' }}>
+          {isMalayalam ? "വിശ്വാസം:" : "Confidence:"} {Math.round(classification.confidence * 100)}% ({classification.beneficialIndicators} {isMalayalam ? "ഗുണകരം" : "beneficial"} / {classification.harmfulIndicators} {isMalayalam ? "ഹാനികരം" : "harmful"})
+        </p>
+      )}
+    </motion.div>
   );
 }
 

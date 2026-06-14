@@ -1,25 +1,27 @@
 /**
- * ADVANCED MANUSCRIPT DECISION ENGINE
+ * ADVANCED MANUSCRIPT DECISION ENGINE - ACTION TYPE AWARE
  * FINAL MANUSCRIPT RULE: Only uploaded PDF manuscripts as knowledge source
  * 
- * For every recommendation, displays:
- * 1. Book name
- * 2. Page number
- * 3. Original manuscript text
- * 4. Malayalam translation
- * 5. Why this rule applies now
+ * ACTION CLASSIFICATION:
+ * - Beneficial Actions: Marriage, Muhabbah, Rizq, Healing, Knowledge, Worship, Prosperity
+ *   → Use Sa'd Akbar, Sa'd Asghar, suitable mansions, suitable planetary hours
+ * - Harmful Actions: Fear, Enemy work, Separation, Conflict, Repulsion, Destruction
+ *   → Use Nahs Asghar, Nahs Akbar, harmful mansions, harmful planetary hours
  * 
- * If no manuscript rule matches: "No matching manuscript rule found"
+ * NEVER recommend Sa'd periods for harmful actions.
+ * NEVER recommend Nahs periods for beneficial actions.
+ * Classification determined ONLY from uploaded manuscripts.
  */
 
 import { AY_MANAZILLERI } from './astroClockData.js';
 import { PLANETARY_HOUR_RULES } from './astroClockPlanetaryHourRules.js';
 import { getRulesForTopic } from './astroClockKnowledgeBaseFramework.js';
+import { classifyActionType } from './actionTypeClassification.js';
 
 /**
- * Search manuscripts for action-related rules
+ * Search manuscripts for action-related rules with classification
  * @param {string} action - User action (marriage, business, travel, etc.)
- * @returns {object} Manuscript search results
+ * @returns {object} Manuscript search results with classification
  */
 export function searchManuscriptsForAction(action) {
   const actionKey = action.toLowerCase().replace(/\s+/g, '_');
@@ -38,6 +40,9 @@ export function searchManuscriptsForAction(action) {
     };
   }
   
+  // Classify action type
+  const classification = classifyActionType(actionKey);
+  
   // Group by manuscript source
   const rulesByManuscript = {};
   rules.forEach(rule => {
@@ -51,6 +56,7 @@ export function searchManuscriptsForAction(action) {
   return {
     found: true,
     action,
+    classification,
     rulesByManuscript,
     totalRules: rules.length,
     manuscriptNames: Object.keys(rulesByManuscript)
@@ -85,12 +91,14 @@ export function getCurrentLiveConditions(timestamp, sunrise = 6.5, sunset = 18.2
       number: mansionNumber,
       name_en: mansion?.name || `Mansion ${mansionNumber}`,
       name_ml: mansion?.name_ml || `മൻസിൽ ${mansionNumber}`,
-      name_ar: mansion?.name_arabic || `منزل ${mansionNumber}`
+      name_ar: mansion?.name_arabic || `منزل ${mansionNumber}`,
+      nature: mansion?.nature || ''
     },
     planetaryHour: {
       planet: planetHour.planet,
       name_en: planetHour.planetInfo?.name_en || planetHour.planet,
       name_ml: planetHour.planetInfo?.name_ml_equivalent || planetHour.planet,
+      nature: planetHour.planetInfo?.nature || '',
       isDaytime
     },
     dayRuler: {
@@ -104,53 +112,111 @@ export function getCurrentLiveConditions(timestamp, sunrise = 6.5, sunset = 18.2
 
 /**
  * Compare manuscript rules against current conditions
- * FINAL MANUSCRIPT RULE: No recommendation without matching rules
+ * ACTION TYPE AWARE: Apply Sa'd/Nahs criteria based on action classification
  * @param {array} manuscriptRules - Rules from manuscripts
  * @param {object} currentConditions - Live conditions
+ * @param {object} actionClassification - Action type classification
  * @returns {object} Comparison results
  */
-export function compareRulesAgainstConditions(manuscriptRules, currentConditions) {
+export function compareRulesAgainstConditions(manuscriptRules, currentConditions, actionClassification = null) {
   let score = 0;
   const matchingFactors = [];
   const conflictingFactors = [];
   
+  // Get timing criteria from classification
+  const timingCriteria = actionClassification?.timingCriteria || {
+    preferred: [],
+    avoid: [],
+    mansionType: 'any',
+    planetType: 'any'
+  };
+  
+  // Check current planetary hour nature (Sa'd vs Nahs)
+  const currentPlanetNature = currentConditions.planetaryHour.nature || '';
+  const isCurrentSaad = currentPlanetNature.includes('Sa\'d') || currentPlanetNature.includes('beneficial');
+  const isCurrentNahs = currentPlanetNature.includes('Nahs') || currentPlanetNature.includes('harmful');
+  
+  // ACTION TYPE ENFORCEMENT
+  let actionTypePenalty = 0;
+  if (actionClassification?.actionType === 'beneficial' && isCurrentNahs) {
+    conflictingFactors.push({
+      type: 'action_type_conflict',
+      reason: 'Beneficial action during Nahs (harmful) planetary hour',
+      severity: 'major'
+    });
+    actionTypePenalty = -5;
+  } else if (actionClassification?.actionType === 'harmful' && isCurrentSaad) {
+    conflictingFactors.push({
+      type: 'action_type_conflict',
+      reason: 'Harmful action during Sa\'d (beneficial) planetary hour',
+      severity: 'major'
+    });
+    actionTypePenalty = -5;
+  }
+  
   manuscriptRules.forEach(rule => {
-    // Extract suitable factors from rule text
     const suitableMansions = extractMansionNumbers(rule.ruleText);
     const suitablePlanets = extractPlanets(rule.ruleText);
     const suitableDays = extractDays(rule.ruleText);
     const dayOrNight = extractDayOrNight(rule.ruleText);
     
-    // Check mansion match
+    // Check mansion match with action type awareness
     if (suitableMansions.includes(currentConditions.lunarMansion.number)) {
-      score += 3;
-      matchingFactors.push({
-        type: "mansion_match",
-        value: currentConditions.lunarMansion.number,
-        name: currentConditions.lunarMansion.name_en,
-        ruleText: rule.ruleText,
-        book: rule.book || "Havâss'ın Derinlikleri",
-        pages: rule.pages || "PDF2",
-        original_text: rule.ruleText,
-        malayalam_translation: rule.malayalamTranslation || null,
-        why_applies: `Current mansion (${currentConditions.lunarMansion.number}) matches manuscript rule`
-      });
+      const mansion = AY_MANAZILLERI.find(m => m.no === currentConditions.lunarMansion.number);
+      const mansionNature = mansion?.nature || '';
+      
+      let mansionScore = 3;
+      
+      if (actionClassification?.actionType === 'beneficial' && (mansionNature.includes('harmful') || mansionNature.includes('Nahs'))) {
+        mansionScore = -2;
+      } else if (actionClassification?.actionType === 'harmful' && (mansionNature.includes('beneficial') || mansionNature.includes('Sa\'d'))) {
+        mansionScore = -2;
+      }
+      
+      score += mansionScore;
+      
+      if (mansionScore > 0) {
+        matchingFactors.push({
+          type: "mansion_match",
+          value: currentConditions.lunarMansion.number,
+          name: currentConditions.lunarMansion.name_en,
+          ruleText: rule.ruleText,
+          book: rule.book || "Havâss'ın Derinlikleri",
+          pages: rule.pages || "PDF2",
+          original_text: rule.ruleText,
+          malayalam_translation: rule.malayalamTranslation || null,
+          why_applies: `Current mansion (${currentConditions.lunarMansion.number}) matches manuscript rule`
+        });
+      }
     }
     
-    // Check planet match
+    // Check planet match with action type awareness
     if (suitablePlanets.includes(currentConditions.planetaryHour.planet)) {
-      score += 2;
-      matchingFactors.push({
-        type: "planet_match",
-        value: currentConditions.planetaryHour.planet,
-        name: currentConditions.planetaryHour.name_en,
-        ruleText: rule.ruleText,
-        book: rule.book || "Havâss'ın Derinlikleri",
-        pages: rule.pages || "PDF2",
-        original_text: rule.ruleText,
-        malayalam_translation: rule.malayalamTranslation || null,
-        why_applies: `Current ${currentConditions.planetaryHour.name_en} hour matches manuscript rule`
-      });
+      const planetNature = currentConditions.planetaryHour.nature || '';
+      
+      let planetScore = 2;
+      
+      if (actionClassification?.actionType === 'beneficial' && (planetNature.includes('Nahs') || planetNature.includes('harmful'))) {
+        planetScore = -2;
+      } else if (actionClassification?.actionType === 'harmful' && (planetNature.includes('Sa\'d') || planetNature.includes('beneficial'))) {
+        planetScore = -2;
+      }
+      
+      score += planetScore;
+      
+      if (planetScore > 0) {
+        matchingFactors.push({
+          type: "planet_match",
+          value: currentConditions.planetaryHour.planet,
+          name: currentConditions.planetaryHour.name_en,
+          ruleText: rule.ruleText,
+          book: rule.book || "Havâss'ın Derinlikleri",
+          pages: rule.pages || "PDF2",
+          original_text: rule.ruleText,
+          malayalam_translation: rule.malayalamTranslation || null,
+          why_applies: `Current ${currentConditions.planetaryHour.name_en} hour matches manuscript rule`
+        });
+      }
     }
     
     // Check day match
@@ -196,11 +262,23 @@ export function compareRulesAgainstConditions(manuscriptRules, currentConditions
     }
   });
   
-  // FINAL MANUSCRIPT RULE: No recommendation without matching rules
+  score += actionTypePenalty;
+  
   const hasMatchingRules = matchingFactors.length > 0;
-  const isSuitableNow = score >= 3 && hasMatchingRules;
-  const isWait = score >= 1 && score < 3 && hasMatchingRules;
-  const isUnsuitable = !hasMatchingRules || score === 0;
+  const hasConflicts = conflictingFactors.length > 0;
+  
+  let isSuitableNow = false;
+  let isWait = false;
+  
+  if (hasConflicts) {
+    isSuitableNow = false;
+    isWait = false;
+  } else {
+    isSuitableNow = score >= 3 && hasMatchingRules;
+    isWait = score >= 1 && score < 3 && hasMatchingRules;
+  }
+  
+  const isUnsuitable = !hasMatchingRules || score === 0 || hasConflicts;
   
   return {
     score,
@@ -208,8 +286,10 @@ export function compareRulesAgainstConditions(manuscriptRules, currentConditions
     isWait,
     isUnsuitable,
     hasMatchingRules,
+    hasConflicts,
     matchingFactors,
     conflictingFactors,
+    actionTypePenalty,
     totalRulesEvaluated: manuscriptRules.length,
     no_manuscript_match: !hasMatchingRules
   };
@@ -254,8 +334,6 @@ export function calculateNextSuitableTime(manuscriptRules, now, sunrise = 6.5, s
 function calculatePlanetaryHour(date, sunrise, sunset) {
   const hour = date.getHours() + date.getMinutes() / 60;
   const isDaytime = hour >= sunrise && hour < sunset;
-  
-  // Simplified - would use full calculation in production
   const dayIndex = date.getDay();
   const planetSequence = ["saturn", "jupiter", "mars", "sun", "venus", "mercury", "moon"];
   const planetIndex = (dayIndex * 12 + Math.floor((hour - sunrise) / ((sunset - sunrise) / 12))) % 7;
@@ -315,5 +393,6 @@ export default {
   searchManuscriptsForAction,
   getCurrentLiveConditions,
   compareRulesAgainstConditions,
-  calculateNextSuitableTime
+  calculateNextSuitableTime,
+  classifyActionType
 };
