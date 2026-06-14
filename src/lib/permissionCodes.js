@@ -23,6 +23,7 @@ export const PERMISSION_CODES = {
   // Admin Pages
   ADMIN_FAAL_CHOB: 'ADMIN_FAAL_CHOB_ACCESS',
   ADMIN_SUPPORT: 'ADMIN_SUPPORT_ACCESS',
+  ADMIN_PERMISSIONS: 'ADMIN_PERMISSIONS_ACCESS',
   
   // Audit & Pipeline Pages
   HIERARCHY_AUDIT: 'HIERARCHY_AUDIT_ACCESS',
@@ -74,6 +75,7 @@ export const ROUTE_PERMISSION_MAP = {
   // Admin Pages
   '/admin/faal-chob-upload': { code: PERMISSION_CODES.ADMIN_FAAL_CHOB, name: 'Admin Faal Chob', requiresPermission: true, adminOnly: true },
   '/admin/support': { code: PERMISSION_CODES.ADMIN_SUPPORT, name: 'Admin Support', requiresPermission: true, adminOnly: true },
+  '/admin/permissions': { code: PERMISSION_CODES.ADMIN_PERMISSIONS, name: 'Admin Permissions', requiresPermission: true, adminOnly: true },
   
   // Audit & Pipeline Pages
   '/hierarchy-audit': { code: PERMISSION_CODES.HIERARCHY_AUDIT, name: 'Hierarchy Audit', requiresPermission: true },

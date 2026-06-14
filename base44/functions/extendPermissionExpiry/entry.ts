@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const { permission_id, new_expiry_date, reason } = await req.json();
+    const { permission_id, new_expiry_date, extended_by } = await req.json();
 
     if (!permission_id || !new_expiry_date) {
       return Response.json({ error: 'Permission ID and new expiry date required' }, { status: 400 });
@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
       expiry_date: newExpiry.toISOString(),
       extended_count: (permission.extended_count || 0) + 1,
       last_extended_at: now.toISOString(),
+      last_extended_by: extended_by || user.id,
       is_active: true // Reactivate if expired
     });
 
