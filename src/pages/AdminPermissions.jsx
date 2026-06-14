@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
-import { Users, Shield, Calendar, Clock, CheckCircle, XCircle, Plus, Trash2, Edit } from "lucide-react";
+import { Users, Shield, Calendar, Clock, CheckCircle, XCircle, Plus, Trash2, Edit, Globe, Lock, Eye, EyeOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
@@ -66,6 +66,8 @@ export default function AdminPermissions() {
     duration: "7"
   });
   const [processing, setProcessing] = useState(false);
+  const [visibilityProcessing, setVisibilityProcessing] = useState(false);
+  const [pageVisibility, setPageVisibility] = useState([]);
 
   useEffect(() => {
     checkAdminAccess();
@@ -104,6 +106,15 @@ export default function AdminPermissions() {
       ]);
       setUsers(allUsers);
       setPermissions(allPermissions);
+      
+      // Load page visibility settings
+      const visibilityList = Object.entries(ROUTE_PERMISSION_MAP).map(([path, config]) => ({
+        path,
+        name: config.name,
+        requiresPermission: config.requiresPermission,
+        adminOnly: config.adminOnly || false
+      }));
+      setPageVisibility(visibilityList);
     } catch (error) {
       toast({
         title: "Error Loading Data",
@@ -239,6 +250,34 @@ export default function AdminPermissions() {
     }
   };
 
+  const handleToggleVisibility = async (pagePath, newVisibility) => {
+    const action = newVisibility ? 'PRIVATE' : 'PUBLIC';
+    if (!confirm(`Make this page ${action}? This will ${newVisibility ? 'require permission' : 'allow public access'}.`)) return;
+
+    setVisibilityProcessing(true);
+    try {
+      await base44.functions.invoke("updatePageVisibility", {
+        page_path: pagePath,
+        requiresPermission: newVisibility
+      });
+
+      toast({
+        title: "Visibility Updated",
+        description: `Page is now ${action}`
+      });
+
+      await loadData();
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setVisibilityProcessing(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -340,6 +379,67 @@ export default function AdminPermissions() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Page Visibility Manager */}
+        <Card className="border-0" style={{ background: G.bg }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-inter text-lg font-bold text-white flex items-center gap-2">
+                <Globe className="w-5 h-5" style={{ color: G.text }} />
+                Page Visibility Manager
+              </h2>
+              <Badge variant="outline" className="border-gold text-gold">
+                Owner Control
+              </Badge>
+            </div>
+            <p className="text-white/60 text-sm mb-4">
+              Make pages PUBLIC (no permission needed) or PRIVATE (requires manual permission grant)
+            </p>
+
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {pageVisibility.filter(p => !p.adminOnly).map(page => (
+                <div
+                  key={page.path}
+                  className="p-3 rounded-lg border flex items-center justify-between"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    borderColor: G.border
+                  }}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-white">{page.name}</span>
+                      <Badge className={`${page.requiresPermission ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-green-500/20 text-green-400 border-green-500/50'} border font-semibold text-xs`}>
+                        {page.requiresPermission ? 'PRIVATE' : 'PUBLIC'}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-white/50 font-mono">{page.path}</p>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={visibilityProcessing}
+                    className={`${page.requiresPermission ? 'border-green-400 text-green-400 hover:bg-green-400/10' : 'border-red-400 text-red-400 hover:bg-red-400/10'}`}
+                    onClick={() => handleToggleVisibility(page.path, !page.requiresPermission)}
+                  >
+                    {page.requiresPermission ? (
+                      <>
+                        <EyeOff className="w-3 h-3 mr-1" />
+                        Make Public
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3 h-3 mr-1" />
+                        Make Private
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Grant Permission Button */}
         <div className="flex justify-end">
