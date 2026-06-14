@@ -92,15 +92,20 @@ function SignDetails({ sign, isMalayalam }) {
 
   return (
     <div className="rounded-xl border p-4 space-y-4" style={{ background: G.bg, borderColor: G.faint }}>
-      {/* Main Identity */}
-      <div className="text-center p-4 rounded-lg" style={{ background: "rgba(0,0,0,0.2)"}}>
-        <p className="font-amiri text-3xl font-bold" style={{ color: G.text }}>{sign.name_ar}</p>
-        <p className="font-inter text-lg mt-1 font-bold text-white/90">
+      {/* Main Identity - Premium Arabic Typography */}
+      <div className="text-center p-6 rounded-lg" style={{ background: "rgba(0,0,0,0.3)"}}>
+        <p className="font-amiri text-5xl md:text-6xl font-bold mb-4 leading-relaxed" style={{ color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)" }}>
+          {sign.name_ar}
+        </p>
+        <div className="h-px w-24 mx-auto mb-4" style={{ background: `linear-gradient(90deg, transparent, ${G.border}, transparent)` }} />
+        <p className="font-inter text-lg md:text-xl font-bold text-white/95">
           {isMalayalam ? sign.name_ml_equivalent : sign.name_en}
         </p>
-        <p className="font-inter text-xs mt-2" style={{ color: G.dim }}>
-          {isMalayalam ? sign.explanation_ml : sign.explanation_en}
-        </p>
+        {sign.name_ml_equivalent !== sign.name_en && (
+          <p className="font-inter text-sm text-white/60 mt-1">
+            {isMalayalam ? sign.name_en : sign.name_ml_equivalent}
+          </p>
+        )}
       </div>
 
       {/* Explanation */}
@@ -120,13 +125,15 @@ function SignDetails({ sign, isMalayalam }) {
         <InfoBox label={isMalayalam ? "ലോഹം" : "Metal"} value={isMalayalam ? sign.metal_ml : sign.metal} arabic={sign.metal_ar} />
       </div>
       
-      {/* Incense */}
-      <div className="p-3 rounded-lg bg-black/20">
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-1 text-center" style={{ color: G.dim }}>
+      {/* Incense - Arabic Typography Display */}
+      <div className="p-4 rounded-lg bg-black/30 border" style={{ borderColor: G.faint }}>
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-3 text-center" style={{ color: G.dim }}>
             {isMalayalam ? "സുഗന്ധം (Buhur)" : "Incense (Buhur)"}
         </p>
-        <p className="font-amiri text-lg text-center font-bold" style={{color: G.text}}>{sign.incense_ar}</p>
-        <p className="text-center font-inter text-sm text-white/80">{isMalayalam ? sign.incense_ml : sign.incense}</p>
+        <p className="font-amiri text-4xl md:text-5xl text-center font-bold mb-3 leading-relaxed" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>
+          {sign.incense_ar}
+        </p>
+        <p className="text-center font-inter text-base font-semibold text-white/90">{isMalayalam ? sign.incense_ml : sign.incense}</p>
       </div>
 
     </div>
@@ -135,10 +142,10 @@ function SignDetails({ sign, isMalayalam }) {
 
 function InfoBox({label, value, arabic}){
     return (
-        <div className="p-3 rounded-lg bg-black/20">
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>{label}</p>
-            <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{arabic}</p>
-            <p className="font-inter text-sm font-bold text-white/90 -mt-1">{value}</p>
+        <div className="p-4 rounded-lg bg-black/30 border" style={{ borderColor: G.faint }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>{label}</p>
+            <p className="font-amiri text-3xl md:text-4xl font-bold text-center leading-relaxed mb-2" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.2)" }}>{arabic}</p>
+            <p className="font-inter text-sm font-bold text-white/90 text-center">{value}</p>
         </div>
     )
 }

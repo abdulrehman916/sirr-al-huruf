@@ -66,12 +66,16 @@ export default function LiveDayAnalysis() {
                 <p className="font-inter text-xs uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "ദിവസം" : "Day"}</p>
                 <p className="font-inter text-2xl font-bold text-white">{isMalayalam ? dayInfo.name_ml : dayInfo.name_en}</p>
             </div>
-             <div className="p-4 rounded-lg" style={{background: G.bg}}>
-                <p className="font-inter text-xs uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "ഭരണാധികാരി" : "Ruler"}</p>
-                 <p className="font-amiri text-2xl font-bold" style={{ color: G.text }}>{planetInfo.name_ar}</p>
-                <p className="font-inter text-base font-bold text-white/90 -mt-1">
+             <div className="p-5 rounded-lg" style={{background: "rgba(0,0,0,0.3)", border: `1px solid ${G.faint}`}}>
+                <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>{isMalayalam ? "ഭരണാധികാരി" : "Ruler"}</p>
+                 <p className="font-amiri text-5xl font-bold text-center leading-relaxed" style={{ color: G.text, textShadow: "0 0 30px rgba(212,175,55,0.3)" }}>{planetInfo.name_ar}</p>
+                 <div className="h-px w-16 mx-auto my-3" style={{ background: `linear-gradient(90deg, transparent, ${G.border}, transparent)` }} />
+                <p className="font-inter text-lg font-bold text-white/95 text-center">
                     {isMalayalam ? planetInfo.name_ml_equivalent : planetInfo.name_en}
                 </p>
+                {isMalayalam && planetInfo.name_en && (
+                  <p className="font-inter text-xs text-white/50 text-center mt-1">{planetInfo.name_en}</p>
+                )}
             </div>
         </div>
 

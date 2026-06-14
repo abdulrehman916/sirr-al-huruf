@@ -157,7 +157,7 @@
   /* Prevent horizontal overflow globally — only on media, not layout containers */
   img, svg, video { max-width: 100%; height: auto; }
 
-  /* Arabic text: optimal rendering with proper shaping and spacing */
+  /* Arabic text: premium typography with optimal rendering */
   .font-amiri {
     overflow-wrap: break-word;
     word-break: break-word;
@@ -165,9 +165,19 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    letter-spacing: 0.03em;
+    line-height: 1.8;
+    font-weight: 600;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  }
+
+  /* Large Arabic display text */
+  .font-amiri-display {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1.6;
+    font-weight: 700;
     letter-spacing: 0.02em;
-    line-height: 1.7;
-    font-weight: 500;
+    text-rendering: optimizeLegibility;
   }
 
   /* Enhanced English text readability */

@@ -65,13 +65,18 @@ function PlanetCard({ planet, isMalayalam }) {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full p-4 flex items-center justify-between"
       >
-        <div className="flex items-center gap-3 text-left">
-          <span className="text-3xl">{planet.symbol}</span>
-          <div>
-            <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{planet.name_ar}</p>
-            <p className="font-inter text-sm font-bold text-white/90 -mt-1">
+        <div className="flex items-center gap-4 text-left">
+          <span className="text-4xl">{planet.symbol}</span>
+          <div className="flex-1">
+            <p className="font-amiri text-4xl font-bold leading-relaxed" style={{ color: G.text, textShadow: "0 0 25px rgba(212,175,55,0.25)" }}>
+              {planet.name_ar}
+            </p>
+            <p className="font-inter text-lg font-bold text-white/95 mt-1">
               {isMalayalam ? planet.name_ml_equivalent : planet.name_en}
             </p>
+            {isMalayalam && planet.name_en && (
+              <p className="font-inter text-xs text-white/50 mt-0.5">{planet.name_en}</p>
+            )}
           </div>
         </div>
         <ChevronDown
@@ -81,46 +86,63 @@ function PlanetCard({ planet, isMalayalam }) {
       </button>
 
       {isOpen && (
-        <div className="p-4 border-t space-y-3" style={{ borderColor: G.faint }}>
-          <p className="font-inter text-sm text-white/80 italic">
-            {isMalayalam ? planet.nature_ml : planet.nature_en}
-          </p>
+        <div className="p-5 border-t space-y-4" style={{ borderColor: G.faint }}>
+          <div className="p-4 rounded-lg bg-black/30">
+            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+              {isMalayalam ? "സ്വഭാവം" : "Nature"}
+            </p>
+            <p className="font-inter text-base text-white/90 leading-relaxed">
+              {isMalayalam ? planet.nature_ml : planet.nature_en}
+            </p>
+          </div>
           
-          {/* Pronunciation (Optional Details) */}
-          <div className="p-3 rounded-lg bg-black/20">
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+          {/* Pronunciation (Optional Details Section) */}
+          <div className="p-4 rounded-lg bg-black/20 border" style={{ borderColor: G.faint }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
                 {isMalayalam ? "ഉച്ചാരണം" : "Pronunciation"}
             </p>
-            <p className="font-inter text-xs text-white/70">
+            <p className="font-inter text-sm text-white/70">
                 {isMalayalam ? planet.name_ml_reading : planet.name_en_transliteration}
             </p>
           </div>
 
-          <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
-              <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.success }}>
+          <div className="p-4 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: `1px solid ${G.success}` }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest mb-2 font-bold" style={{ color: G.success }}>
                   {isMalayalam ? "നല്ല പ്രവർത്തനങ്ങൾ" : "Good Actions"}
               </p>
-              <p className="font-inter text-xs text-white/70">
-                  {(isMalayalam ? planet.goodActions_ml : planet.goodActions_en || []).join(', ')}
-              </p>
+              <div className="flex flex-wrap gap-2">
+                  {(isMalayalam ? planet.goodActions_ml : planet.goodActions_en || []).map((action, idx) => (
+                    <span key={idx} className="px-3 py-1.5 rounded-full text-sm font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#86efac" }}>
+                      {action}
+                    </span>
+                  ))}
+              </div>
           </div>
 
-          <div className="p-3 rounded-lg" style={{ background: "rgba(239,68,68,0.05)" }}>
-              <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.danger }}>
+          <div className="p-4 rounded-lg" style={{ background: "rgba(239,68,68,0.08)", border: `1px solid ${G.danger}` }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest mb-2 font-bold" style={{ color: G.danger }}>
                   {isMalayalam ? "ചീത്ത പ്രവർത്തനങ്ങൾ" : "Bad Actions"}
               </p>
-              <p className="font-inter text-xs text-white/70">
-                  {(isMalayalam ? planet.badActions_ml : planet.badActions_en || []).join(', ')}
-              </p>
+              <div className="flex flex-wrap gap-2">
+                  {(isMalayalam ? planet.badActions_ml : planet.badActions_en || []).map((action, idx) => (
+                    <span key={idx} className="px-3 py-1.5 rounded-full text-sm font-medium" style={{ background: "rgba(239,68,68,0.15)", color: "#fca5a5" }}>
+                      {action}
+                    </span>
+                  ))}
+              </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-black/20">
-            <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+          <div className="p-4 rounded-lg bg-black/30 border" style={{ borderColor: G.faint }}>
+            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.text }}>
                 {isMalayalam ? "ആത്മിക പ്രവർത്തനങ്ങൾ" : "Spiritual Operations"}
             </p>
-            <p className="font-inter text-xs text-white/70">
-                {isMalayalam ? planet.spiritualOperations_ml.join(', ') : planet.spiritualOperations_en.join(', ')}
-            </p>
+            <div className="space-y-2">
+                {(isMalayalam ? planet.spiritualOperations_ml : planet.spiritualOperations_en).map((op, idx) => (
+                  <p key={idx} className="font-inter text-sm text-white/85 leading-relaxed">
+                    <span className="text-gold mr-2">✦</span>{op}
+                  </p>
+                ))}
+            </div>
           </div>
 
         </div>
