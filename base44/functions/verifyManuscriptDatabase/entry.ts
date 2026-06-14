@@ -19,64 +19,79 @@ Deno.serve(async (req) => {
     const allManuscripts = await base44.asServiceRole.entities.ManuscriptLibrary.filter({});
 
     // 1. Total ManuscriptRule count
-    const totalRules = allRules.length;
+    const totalRuleCount = allRules.length;
 
     // 2. Total unique page numbers stored
     const uniquePages = new Set(allRules.map(r => r.page_number).filter(p => p != null));
     const uniquePageCount = uniquePages.size;
 
-    // 3. Pages with zero extracted rules (check against expected range 1-200)
-    const expectedPages = new Set();
-    for (let i = 1; i <= 200; i++) expectedPages.add(i);
-    const pagesWithRules = new Set(allRules.map(r => r.page_number));
-    const pagesWithZeroRules = [...expectedPages].filter(p => !pagesWithRules.has(p));
+    // 3. Pages with zero extracted rules (gaps in sequence)
+    const allPageNumbers = Array.from(uniquePages).sort((a, b) => a - b);
+    const minPage = Math.min(...allPageNumbers);
+    const maxPage = Math.max(...allPageNumbers);
+    const expectedPages = [];
+    for (let p = minPage; p <= maxPage; p++) expectedPages.push(p);
+    const pagesWithZeroRules = expectedPages.filter(p => !uniquePages.has(p));
 
     // 4. Rules missing page citations
-    const rulesMissingPageCitation = allRules.filter(r => !r.page_number || r.page_number === null || r.page_number === undefined);
-    const rulesMissingPageCitationCount = rulesMissingPageCitation.length;
+    const rulesMissingPageCitation = allRules.filter(r => 
+      r.page_number == null || r.page_number === undefined
+    );
 
     // 5. Duplicate rule IDs
-    const ruleIdCounts = {};
+    const ruleIdCount = {};
     allRules.forEach(r => {
-      ruleIdCounts[r.rule_id] = (ruleIdCounts[r.rule_id] || 0) + 1;
+      const rid = r.rule_id;
+      ruleIdCount[rid] = (ruleIdCount[rid] || 0) + 1;
     });
-    const duplicateRuleIds = Object.entries(ruleIdCounts)
+    const duplicateRuleIds = Object.entries(ruleIdCount)
       .filter(([_, count]) => count > 1)
-      .map(([id, count]) => ({ rule_id: id, count }));
-    const duplicateRuleIdCount = duplicateRuleIds.length;
+      .map(([rule_id, count]) => ({ rule_id, count }));
 
     // 6. Orphaned records (manuscript_id not in ManuscriptLibrary)
     const manuscriptIds = new Set(allManuscripts.map(m => m.book_id));
     const orphanedRecords = allRules.filter(r => !manuscriptIds.has(r.manuscript_id));
-    const orphanedRecordCount = orphanedRecords.length;
 
     // 7. Categories with zero records
-    const definedCategories = [
+    const validCategories = [
       'PLANETARY_HOURS', 'LUNAR_MANSIONS', 'ZODIAC', 'PLANETS',
       'FRIENDSHIP_RULES', 'INCENSE_RULES', 'LETTER_RULES', 'TIMING_RULES',
       'DAY_RULERS', 'SAAD_NAHS', 'SPIRITUAL_WORKS', 'PROTECTION_WORKS',
       'LOVE_WORKS', 'WEALTH_WORKS', 'TRAVEL_WORKS', 'ELEMENT_RULES',
-      'COSMOLOGY', 'OTHER', 'EXALTATION', 'VEFK', 'HADIM', 'ABJAD',
-      'SOFTWARE_USAGE'
+      'COSMOLOGY', 'OTHER', 'EXALTATION', 'VEFK', 'ABJAD', 'SOFTWARE_USAGE'
     ];
     const categoriesInUse = new Set(allRules.map(r => r.category));
-    const categoriesWithZeroRecords = definedCategories.filter(c => !categoriesInUse.has(c));
+    const categoriesWithZeroRecords = validCategories.filter(c => !categoriesInUse.has(c));
+
+    // Category breakdown
+    const categoryBreakdown = {};
+    allRules.forEach(r => {
+      const cat = r.category || 'UNKNOWN';
+      categoryBreakdown[cat] = (categoryBreakdown[cat] || 0) + 1;
+    });
 
     return Response.json({
-      audit_results: {
-        total_manuscript_rules: totalRules,
-        unique_pages_with_rules: uniquePageCount,
+      verification_audit: {
+        total_manuscript_rules: totalRuleCount,
+        unique_page_numbers: uniquePageCount,
         pages_with_zero_rules: pagesWithZeroRules.length,
-        rules_missing_page_citations: rulesMissingPageCitationCount,
-        duplicate_rule_ids: duplicateRuleIdCount,
-        orphaned_records: orphanedRecordCount,
-        categories_with_zero_records: categoriesWithZeroRecords.length
-      },
-      details: {
         pages_with_zero_rules_list: pagesWithZeroRules,
-        duplicate_rule_ids_detail: duplicateRuleIds,
+        rules_missing_page_citation: rulesMissingPageCitation.length,
+        rules_missing_page_citation_ids: rulesMissingPageCitation.map(r => r.id),
+        duplicate_rule_ids: duplicateRuleIds.length,
+        duplicate_rule_ids_list: duplicateRuleIds,
+        orphaned_records: orphanedRecords.length,
+        orphaned_records_ids: orphanedRecords.map(r => r.id),
+        categories_with_zero_records: categoriesWithZeroRecords.length,
         categories_with_zero_records_list: categoriesWithZeroRecords,
-        orphaned_manuscript_ids: [...new Set(orphanedRecords.map(r => r.manuscript_id))]
+        category_breakdown: categoryBreakdown,
+        page_range: {
+          min: minPage,
+          max: maxPage,
+          coverage_percentage: Math.round((uniquePageCount / (maxPage - minPage + 1)) * 100 * 100) / 100
+        },
+        manuscripts_in_library: allManuscripts.length,
+        manuscript_ids: allManuscripts.map(m => m.book_id)
       }
     });
 
