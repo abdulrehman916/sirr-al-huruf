@@ -296,6 +296,7 @@ export function getCurrentPlanetaryHour(date, sunrise = 6.5, sunset = 18.25) {
     hourStart: formatTime(hourStart),
     hourEnd: formatTime(hourEnd),
     duration: formatDuration(hourDuration),
+    durationMinutes: Math.round(hourDuration * 60),
     remainingTime: `${remainingHours}h ${remainingMins}m`,
     dayRuler: PLANET_SEQUENCE[dayRuler.index],
     dayOfWeek,
