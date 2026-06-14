@@ -354,7 +354,7 @@ function HourRow({ hour, index, isCurrent, isNext, expanded, onToggle, isMalayal
         </td>
         <td className="py-3 px-3">
           <div className="font-malayalam-sm text-white">
-            {safeFormatTime(hour.startTime)} - {safeFormatTime(hour.endTime)}
+            {hour.startTime} - {hour.endTime}
           </div>
           <div className="font-inter text-[9px]" style={{ color: G.dim }}>
             {typeof hour.durationMinutes === 'number' && Number.isFinite(hour.durationMinutes) ? `${hour.durationMinutes.toFixed(1)} min` : hour.duration || '--'}
@@ -432,8 +432,8 @@ function HourDetails({ hour, index, planetRules, friendships, isMalayalam }) {
           </h4>
           <div className="space-y-2 text-sm">
             <DetailRow label={isMalayalam ? "മണിക്കൂർ നമ്പർ" : "Hour Number"} value={`#${index + 1}`} />
-            <DetailRow label={isMalayalam ? "ആരംഭം" : "Start"} value={safeFormatTime(hour.startTime)} />
-            <DetailRow label={isMalayalam ? "അവസാനം" : "End"} value={safeFormatTime(hour.endTime)} />
+            <DetailRow label={isMalayalam ? "ആരംഭം" : "Start"} value={hour.startTime} />
+            <DetailRow label={isMalayalam ? "അവസാനം" : "End"} value={hour.endTime} />
             <DetailRow label={isMalayalam ? "ദൈർഘ്യം" : "Duration"} value={`${typeof hour.durationMinutes === 'number' && Number.isFinite(hour.durationMinutes) ? hour.durationMinutes.toFixed(1) : '--'} min`} />
             <DetailRow label={isMalayalam ? "ഗ്രഹം" : "Planet Ruler"} value={hour.planetInfo?.name_en} symbol={hour.planetInfo?.symbol} />
             <DetailRow label={isMalayalam ? "ദിവസ നാഥൻ" : "Day Ruler"} value={dayInfo.ruler_en} symbol={dayInfo.symbol} />
