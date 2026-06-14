@@ -69,9 +69,7 @@ function PlanetCard({ planet, isMalayalam }) {
           <span className="text-3xl">{planet.symbol}</span>
           <div>
             <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{planet.name_ar}</p>
-            <p className="font-inter text-xs text-white/70 -mt-1">
-              {isMalayalam ? planet.name_ml_reading : planet.name_en_transliteration}
-              {" / "}
+            <p className="font-inter text-sm font-bold text-white/90 -mt-1">
               {isMalayalam ? planet.name_ml_equivalent : planet.name_en}
             </p>
           </div>
@@ -88,6 +86,16 @@ function PlanetCard({ planet, isMalayalam }) {
             {isMalayalam ? planet.nature_ml : planet.nature_en}
           </p>
           
+          {/* Pronunciation (Optional Details) */}
+          <div className="p-3 rounded-lg bg-black/20">
+            <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                {isMalayalam ? "ഉച്ചാരണം" : "Pronunciation"}
+            </p>
+            <p className="font-inter text-xs text-white/70">
+                {isMalayalam ? planet.name_ml_reading : planet.name_en_transliteration}
+            </p>
+          </div>
+
           <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
               <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.success }}>
                   {isMalayalam ? "നല്ല പ്രവർത്തനങ്ങൾ" : "Good Actions"}

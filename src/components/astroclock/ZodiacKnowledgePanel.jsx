@@ -95,11 +95,11 @@ function SignDetails({ sign, isMalayalam }) {
       {/* Main Identity */}
       <div className="text-center p-4 rounded-lg" style={{ background: "rgba(0,0,0,0.2)"}}>
         <p className="font-amiri text-3xl font-bold" style={{ color: G.text }}>{sign.name_ar}</p>
-        <p className="font-inter text-base mt-1" style={{ color: G.dim }}>
-          {isMalayalam ? sign.name_ml_reading : sign.name_en_transliteration}
-        </p>
-        <p className="font-inter text-sm text-white/80">
+        <p className="font-inter text-lg mt-1 font-bold text-white/90">
           {isMalayalam ? sign.name_ml_equivalent : sign.name_en}
+        </p>
+        <p className="font-inter text-xs mt-2" style={{ color: G.dim }}>
+          {isMalayalam ? sign.explanation_ml : sign.explanation_en}
         </p>
       </div>
 
@@ -114,10 +114,10 @@ function SignDetails({ sign, isMalayalam }) {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-        <InfoBox label={isMalayalam ? "മൂലകം" : "Element"} value={isMalayalam ? sign.element_ml : sign.element} />
-        <InfoBox label={isMalayalam ? "ഗ്രഹം" : "Ruling Planet"} value={isMalayalam ? sign.ruling_planet_ml : sign.ruling_planet} />
-        <InfoBox label={isMalayalam ? "ലിംഗം" : "Gender"} value={isMalayalam ? sign.gender_ml : sign.gender} />
-        <InfoBox label={isMalayalam ? "ലോഹം" : "Metal"} value={isMalayalam ? sign.metal_ml : sign.metal} />
+        <InfoBox label={isMalayalam ? "മൂലകം" : "Element"} value={isMalayalam ? sign.element_ml : sign.element} arabic={sign.element_ar} />
+        <InfoBox label={isMalayalam ? "ഗ്രഹം" : "Ruling Planet"} value={isMalayalam ? sign.ruling_planet_ml : sign.ruling_planet} arabic={sign.ruling_planet_ar} />
+        <InfoBox label={isMalayalam ? "ലിംഗം" : "Gender"} value={isMalayalam ? sign.gender_ml : sign.gender} arabic={sign.gender_ar} />
+        <InfoBox label={isMalayalam ? "ലോഹം" : "Metal"} value={isMalayalam ? sign.metal_ml : sign.metal} arabic={sign.metal_ar} />
       </div>
       
       {/* Incense */}
@@ -133,11 +133,12 @@ function SignDetails({ sign, isMalayalam }) {
   );
 }
 
-function InfoBox({label, value}){
+function InfoBox({label, value, arabic}){
     return (
         <div className="p-3 rounded-lg bg-black/20">
             <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>{label}</p>
-            <p className="font-inter text-sm font-bold text-white/90">{value}</p>
+            <p className="font-amiri text-lg font-bold" style={{ color: G.text }}>{arabic}</p>
+            <p className="font-inter text-sm font-bold text-white/90 -mt-1">{value}</p>
         </div>
     )
 }

@@ -69,8 +69,8 @@ export default function LiveDayAnalysis() {
              <div className="p-4 rounded-lg" style={{background: G.bg}}>
                 <p className="font-inter text-xs uppercase tracking-widest" style={{ color: G.dim }}>{isMalayalam ? "ഭരണാധികാരി" : "Ruler"}</p>
                  <p className="font-amiri text-2xl font-bold" style={{ color: G.text }}>{planetInfo.name_ar}</p>
-                <p className="font-inter text-sm text-white/70 -mt-1">
-                    {isMalayalam ? planetInfo.name_ml_reading : planetInfo.name_en_transliteration} / {isMalayalam ? planetInfo.name_ml_equivalent : planetInfo.name_en}
+                <p className="font-inter text-base font-bold text-white/90 -mt-1">
+                    {isMalayalam ? planetInfo.name_ml_equivalent : planetInfo.name_en}
                 </p>
             </div>
         </div>
