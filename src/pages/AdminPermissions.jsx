@@ -67,11 +67,39 @@ export default function AdminPermissions() {
   });
   const [processing, setProcessing] = useState(false);
   const [visibilityProcessing, setVisibilityProcessing] = useState(false);
+  const [loadingVisibility, setLoadingVisibility] = useState(true);
   const [pageVisibility, setPageVisibility] = useState([]);
 
   useEffect(() => {
     checkAdminAccess();
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadPageVisibility();
+    }
+  }, [isAdmin]);
+
+  const loadPageVisibility = async () => {
+    setLoadingVisibility(true);
+    try {
+      const configs = await base44.entities.PageVisibilityConfig.list();
+      const visibilityList = Object.entries(ROUTE_PERMISSION_MAP).map(([path, config]) => {
+        const dbConfig = configs.find(c => c.page_path === path);
+        return {
+          path,
+          name: config.name,
+          requiresPermission: dbConfig !== undefined ? dbConfig.requires_permission : config.requiresPermission,
+          adminOnly: config.adminOnly || false
+        };
+      });
+      setPageVisibility(visibilityList);
+    } catch (error) {
+      console.error('Error loading page visibility:', error);
+    } finally {
+      setLoadingVisibility(false);
+    }
+  };
 
   const checkAdminAccess = async () => {
     try {
@@ -106,15 +134,6 @@ export default function AdminPermissions() {
       ]);
       setUsers(allUsers);
       setPermissions(allPermissions);
-      
-      // Load page visibility settings
-      const visibilityList = Object.entries(ROUTE_PERMISSION_MAP).map(([path, config]) => ({
-        path,
-        name: config.name,
-        requiresPermission: config.requiresPermission,
-        adminOnly: config.adminOnly || false
-      }));
-      setPageVisibility(visibilityList);
     } catch (error) {
       toast({
         title: "Error Loading Data",
@@ -267,6 +286,7 @@ export default function AdminPermissions() {
       });
 
       await loadData();
+      await loadPageVisibility();
     } catch (error) {
       toast({
         title: "Update Failed",
@@ -396,6 +416,12 @@ export default function AdminPermissions() {
               Make pages PUBLIC (no permission needed) or PRIVATE (requires manual permission grant)
             </p>
 
+            {loadingVisibility ? (
+              <div className="text-center py-8">
+                <div className="w-6 h-6 border-2 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-white/60 text-sm">Loading visibility settings...</p>
+              </div>
+            ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {pageVisibility.filter(p => !p.adminOnly).map(page => (
                 <div
@@ -438,6 +464,7 @@ export default function AdminPermissions() {
                 </div>
               ))}
             </div>
+            )}
           </CardContent>
         </Card>
 
