@@ -332,10 +332,18 @@ function UsersTab({ users, profiles }) {
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-xs mt-0.5 font-semibold capitalize"
-                  style={{ color: u.role === "admin" ? G.text : "rgba(255,255,255,0.35)" }}>
-                  {u.profile?.role || u.role || "user"}
-                </p>
+                <div className="flex items-center gap-1 justify-end">
+                  {u.profile?.lifetime_access && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5"
+                      style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.30)" }}>
+                      <Crown className="w-3 h-3" />
+                    </span>
+                  )}
+                  <p className="text-xs font-semibold capitalize"
+                    style={{ color: u.role === "admin" ? G.text : "rgba(255,255,255,0.35)" }}>
+                    {u.profile?.role || u.role || "user"}
+                  </p>
+                </div>
                 <p className="text-xs mt-0.5 font-semibold capitalize"
                   style={{ color: u.profile?.account_status === "SUSPENDED" ? "#f59e0b" : u.profile?.account_status === "DEACTIVATED" ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
                   {u.profile?.account_status || "ACTIVE"}

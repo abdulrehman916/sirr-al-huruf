@@ -56,6 +56,8 @@ export default function UserDetailPage() {
 
   // Modals
   const [grantModal, setGrantModal] = useState(false);
+  const [lifetimeModal, setLifetimeModal] = useState(false);
+  const [lifetimeMode, setLifetimeMode] = useState(null); // "all" | "select"
   const [extendModal, setExtendModal] = useState(null);
   const [roleModal, setRoleModal] = useState(false);
   const [statusModal, setStatusModal] = useState(false);
@@ -175,11 +177,17 @@ export default function UserDetailPage() {
 
   // ── Grant Lifetime ──
   const handleGrantLifetime = async () => {
-    if (!confirm("Grant lifetime access to ALL pages?")) return;
+    setGranting(true);
     try {
       const now = new Date();
       const farFuture = new Date(now.getFullYear() + 100, 0, 1).toISOString();
-      for (const page of CONTENT_PAGES) {
+
+      const pagesToGrant = lifetimeMode === "all"
+        ? CONTENT_PAGES
+        : CONTENT_PAGES.filter(p => selectedPages.includes(p.path));
+
+      let granted = 0;
+      for (const page of pagesToGrant) {
         const existing = permissions.filter(p => p.page_path === page.path && p.is_active && !p.is_revoked);
         if (existing.length > 0) continue;
         try {
@@ -187,15 +195,29 @@ export default function UserDetailPage() {
             user_id: userId, page_path: page.path, page_name: page.name,
             permission_code: page.code, start_date: now.toISOString(), expiry_date: farFuture,
           });
+          granted++;
         } catch {}
       }
-      // Update profile
-      if (profile) {
+
+      // Set lifetime_access flag for Option A only
+      if (lifetimeMode === "all" && profile) {
         await base44.entities.UserAccessProfile.update(profile.id, { lifetime_access: true });
       }
-      toast({ title: "✓ Lifetime access granted" });
+
+      toast({
+        title: lifetimeMode === "all"
+          ? "✓ Lifetime access granted to ALL pages"
+          : `✓ Lifetime access granted to ${granted} page(s)`
+      });
+      setLifetimeModal(false);
+      setLifetimeMode(null);
+      setSelectedPages([]);
       loadAll();
-    } catch (e) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    } catch (e) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setGranting(false);
+    }
   };
 
   // ── Change Role ──
@@ -304,7 +326,7 @@ export default function UserDetailPage() {
                   style={{ background: G.bgHi, border: `1px solid ${G.borderHi}`, color: G.text }}>
                   <Plus className="w-3.5 h-3.5" /> Grant Access
                 </button>
-                <button onClick={handleGrantLifetime}
+                <button onClick={() => setLifetimeModal(true)}
                   className="px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5"
                   style={{ background: "rgba(168,85,247,0.12)", border: "1px solid rgba(168,85,247,0.30)", color: "#a855f7" }}>
                   <Crown className="w-3.5 h-3.5" /> Lifetime
@@ -337,6 +359,52 @@ export default function UserDetailPage() {
                 <p className="text-xs text-white/35">{label}</p>
               </div>
             ))}
+          </div>
+
+          {/* Lifetime Access row — separate for prominence */}
+          <div className="pt-0">
+            <div className="rounded-xl border p-4 flex items-center gap-4 flex-wrap"
+              style={{
+                background: profile?.lifetime_access ? "rgba(168,85,247,0.08)" : "rgba(255,255,255,0.015)",
+                borderColor: profile?.lifetime_access ? "rgba(168,85,247,0.35)" : "rgba(255,255,255,0.06)"
+              }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: profile?.lifetime_access ? "rgba(168,85,247,0.18)" : "rgba(255,255,255,0.04)", border: `1px solid ${profile?.lifetime_access ? "rgba(168,85,247,0.35)" : "rgba(255,255,255,0.08)"}` }}>
+                <Crown className="w-5 h-5" style={{ color: profile?.lifetime_access ? "#a855f7" : "rgba(255,255,255,0.20)" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-inter font-bold text-sm" style={{ color: profile?.lifetime_access ? "#c084fc" : "rgba(255,255,255,0.30)" }}>
+                  Lifetime Access: {profile?.lifetime_access ? "YES ✓" : "NO"}
+                </p>
+                {profile?.lifetime_access ? (
+                  <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
+                    <span className="text-xs text-white/40 flex items-center gap-1">
+                      <Globe className="w-3 h-3" /> All {CONTENT_PAGES.length} pages + future pages
+                    </span>
+                    <span className="text-xs text-white/40 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> Expiry: Never
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-white/25 mt-0.5">No lifetime access granted</p>
+                )}
+              </div>
+              {isAdmin && profile?.lifetime_access && (
+                <button
+                  onClick={async () => {
+                    if (!confirm("Remove lifetime access? Existing page permissions will remain.")) return;
+                    try {
+                      await base44.entities.UserAccessProfile.update(profile.id, { lifetime_access: false });
+                      toast({ title: "✓ Lifetime access removed" });
+                      loadAll();
+                    } catch (e) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0"
+                  style={{ background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444" }}>
+                  Remove
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -535,6 +603,140 @@ export default function UserDetailPage() {
                   {granting ? "Granting…" : `Grant ${selectedPages.length} Page(s)`}
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Lifetime Access Modal ── */}
+      <AnimatePresence>
+        {lifetimeModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.85)" }}
+            onClick={() => { setLifetimeModal(false); setLifetimeMode(null); setSelectedPages([]); }}>
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+              className="w-full max-w-lg rounded-2xl p-6 space-y-5"
+              style={{ background: "linear-gradient(145deg,#0c1630,#060c1c)", border: `1px solid ${G.borderHi}` }}
+              onClick={e => e.stopPropagation()}>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-inter font-bold text-white text-base flex items-center gap-2">
+                    <Crown className="w-5 h-5" style={{ color: "#a855f7" }} />
+                    Grant Lifetime Access
+                  </h3>
+                  <p className="text-xs text-white/45 mt-0.5">
+                    {profile?.lifetime_access
+                      ? "⚠️ User already has lifetime access. Granting again will add missing pages."
+                      : "Choose how to grant permanent access"}
+                  </p>
+                </div>
+                <button onClick={() => { setLifetimeModal(false); setLifetimeMode(null); setSelectedPages([]); }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10"
+                  style={{ color: "rgba(255,255,255,0.40)" }}><X className="w-4 h-4" /></button>
+              </div>
+
+              {!lifetimeMode ? (
+                <div className="space-y-3">
+                  {/* Option A: All Pages */}
+                  <button onClick={() => { setLifetimeMode("all"); setSelectedPages([]); }}
+                    className="w-full flex items-center gap-4 p-5 rounded-xl text-left transition-all"
+                    style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.30)" }}>
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: "rgba(168,85,247,0.18)", border: "1px solid rgba(168,85,247,0.35)" }}>
+                      <Crown className="w-5 h-5" style={{ color: "#a855f7" }} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-white text-sm">All Current & Future Pages</p>
+                      <p className="text-xs text-white/40 mt-0.5">Grant lifetime access to ALL pages. New pages added later are automatically included.</p>
+                    </div>
+                    <ChevronDown className="w-5 h-5" style={{ color: "#a855f7", transform: "rotate(-90deg)" }} />
+                  </button>
+
+                  {/* Option B: Select Pages */}
+                  <button onClick={() => setLifetimeMode("select")}
+                    className="w-full flex items-center gap-4 p-5 rounded-xl text-left transition-all"
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.20)" }}>
+                      <Star className="w-5 h-5" style={{ color: G.text }} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-white text-sm">Choose Specific Pages</p>
+                      <p className="text-xs text-white/40 mt-0.5">Select individual pages for lifetime access. New pages are NOT included.</p>
+                    </div>
+                    <ChevronDown className="w-5 h-5" style={{ color: G.dim, transform: "rotate(-90deg)" }} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* ── Option A confirmation ── */}
+                  {lifetimeMode === "all" && (
+                    <div className="p-4 rounded-xl space-y-2" style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.20)" }}>
+                      <p className="text-sm text-white font-semibold flex items-center gap-2">
+                        <Crown className="w-4 h-4" style={{ color: "#a855f7" }} /> Lifetime to ALL Pages
+                      </p>
+                      <ul className="text-xs text-white/45 space-y-0.5">
+                        <li>• All {CONTENT_PAGES.length} current pages</li>
+                        <li>• All future pages automatically included</li>
+                        <li>• Lifetime Access flag: <span className="text-green-400 font-bold">YES</span></li>
+                        <li>• Expiry: <span className="text-purple-400 font-bold">Never</span></li>
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* ── Option B page selector ── */}
+                  {lifetimeMode === "select" && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+                        Select Pages ({selectedPages.length})
+                      </p>
+                      <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                        {CONTENT_PAGES.map(page => {
+                          const sel = selectedPages.includes(page.path);
+                          const already = activePerms.some(p => p.page_path === page.path);
+                          return (
+                            <button key={page.path}
+                              onClick={() => !already && setSelectedPages(p => sel ? p.filter(x => x !== page.path) : [...p, page.path])}
+                              className="w-full flex items-center gap-3 p-2.5 rounded-lg text-left"
+                              style={{
+                                background: sel ? G.bgHi : "rgba(255,255,255,0.02)",
+                                border: `1px solid ${sel ? G.borderHi : "rgba(255,255,255,0.05)"}`,
+                                opacity: already ? 0.4 : 1, cursor: already ? "not-allowed" : "pointer"
+                              }}>
+                              <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                                style={{ background: sel ? G.text : "transparent", border: `1px solid ${sel ? G.text : "rgba(255,255,255,0.25)"}` }}>
+                                {sel && <Check className="w-3 h-3 text-black" />}
+                              </div>
+                              <span className="text-sm flex-1" style={{ color: sel ? "white" : "rgba(255,255,255,0.65)" }}>
+                                {page.name}
+                              </span>
+                              {already && <span className="text-xs text-green-400 flex-shrink-0">Active</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex gap-3 pt-1">
+                    <button onClick={() => { setLifetimeMode(null); setSelectedPages([]); }}
+                      className="flex-1 py-3 rounded-xl font-semibold text-sm"
+                      style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
+                      Back
+                    </button>
+                    <button onClick={handleGrantLifetime}
+                      disabled={granting || (lifetimeMode === "select" && selectedPages.length === 0)}
+                      className="flex-1 py-3 rounded-xl font-bold text-sm disabled:opacity-50"
+                      style={{ background: "linear-gradient(135deg,#a855f7,#7c3aed)", color: "white" }}>
+                      {granting ? "Granting…" : lifetimeMode === "all"
+                        ? "Grant Lifetime to All Pages"
+                        : `Grant Lifetime to ${selectedPages.length} Page(s)`}
+                    </button>
+                  </div>
+                </>
+              )}
             </motion.div>
           </div>
         )}

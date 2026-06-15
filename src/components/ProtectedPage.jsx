@@ -80,6 +80,15 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         return;
       }
 
+      // Lifetime access check
+      try {
+        const profiles = await base44.entities.UserAccessProfile.filter({ user_id: user.id });
+        if (profiles.length > 0 && profiles[0].lifetime_access) {
+          setAccessStatus("granted");
+          return;
+        }
+      } catch {}
+
       // VIP check
       try {
         const vipRes = await base44.functions.invoke("checkVIPAccess", { page_path: routePath });

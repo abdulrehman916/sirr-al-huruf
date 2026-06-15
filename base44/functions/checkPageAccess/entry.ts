@@ -18,6 +18,19 @@ Deno.serve(async (req) => {
 
     const now = new Date();
 
+    // Lifetime access bypass
+    try {
+      const profiles = await base44.entities.UserAccessProfile.filter({ user_id: user.id });
+      if (profiles.length > 0 && profiles[0].lifetime_access) {
+        return Response.json({
+          success: true,
+          access_granted: true,
+          reason: 'Lifetime access',
+          expiry_date: null
+        });
+      }
+    } catch {}
+
     // Check for valid permission
     const permissions = await base44.entities.PagePermission.filter({
       user_id: user.id,
