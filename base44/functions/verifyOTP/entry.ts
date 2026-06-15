@@ -71,8 +71,11 @@ Deno.serve(async (req) => {
       status: 'VERIFIED'
     });
 
-    // Update user access profile
-    const userProfiles = await base44.entities.UserAccessProfile.filter({ user_id: otpRecord.user_id });
+    // Update user access profile (use service role for unauthenticated onboarding)
+    let userProfiles = [];
+    try {
+      userProfiles = await base44.asServiceRole.entities.UserAccessProfile.filter({ user_id: otpRecord.user_id });
+    } catch {}
     if (userProfiles.length > 0) {
       const profile = userProfiles[0];
       const updateData = {
@@ -88,16 +91,21 @@ Deno.serve(async (req) => {
       await base44.entities.UserAccessProfile.update(profile.id, updateData);
     }
 
-    // Get user details from User entity
-    const users = await base44.asServiceRole.entities.User.filter({ id: otpRecord.user_id });
-    const user = users.length > 0 ? users[0] : null;
+    // Get user details from User entity (skip for pending users)
+    let user = null;
+    if (otpRecord.user_id && otpRecord.user_id !== 'pending') {
+      try {
+        const users = await base44.asServiceRole.entities.User.filter({ id: otpRecord.user_id });
+        user = users.length > 0 ? users[0] : null;
+      } catch {}
+    }
     
     // Generate simple access token (Base44 session token format)
     const access_token = `b44_${otpRecord.user_id || 'pending'}_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
 
     // Update user access profile last_login
     if (otpRecord.user_id && otpRecord.user_id !== 'pending') {
-      const profiles = await base44.entities.UserAccessProfile.filter({ user_id: otpRecord.user_id });
+      const profiles = await base44.asServiceRole.entities.UserAccessProfile.filter({ user_id: otpRecord.user_id });
       if (profiles.length > 0) {
         await base44.entities.UserAccessProfile.update(profiles[0].id, {
           last_login: new Date().toISOString(),

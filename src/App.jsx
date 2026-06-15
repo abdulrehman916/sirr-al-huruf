@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -16,6 +16,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedPage from './components/ProtectedPage';
 // Add page imports here — lazy loaded for performance
 import Home from './pages/Home';
+import Onboarding from './pages/Onboarding';
 
 const AnasirPage        = lazy(() => import('./pages/AnasirPage'));
 const HadimPage         = lazy(() => import('./pages/HadimPage'));
@@ -90,14 +91,26 @@ const PageFallback = () => (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Redirect unauthenticated users to onboarding (except auth pages)
+  useEffect(() => {
+    if (!isLoadingAuth && !isAuthenticated && !authError) {
+      const publicAuthPaths = ['/onboarding', '/otp-login', '/login', '/register', '/forgot-password', '/reset-password'];
+      const isAuthPath = publicAuthPaths.some(p => location.pathname.startsWith(p));
+      if (!isAuthPath) {
+        navigate('/onboarding', { replace: true });
+      }
+    }
+  }, [isLoadingAuth, isAuthenticated, authError, location.pathname, navigate]);
 
   useEffect(() => {
     if (authError?.type === 'auth_required') {
-      navigateToLogin();
+      navigate('/onboarding', { replace: true });
     }
-  }, [authError, navigateToLogin]);
+  }, [authError, navigate]);
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -128,6 +141,7 @@ const AuthenticatedApp = () => {
         <Suspense fallback={<PageFallback />}>
           <Routes location={location}>
             <Route path="/" element={<ProtectedPage routePath="/"><Home /></ProtectedPage>} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/abjad" element={<ProtectedPage routePath="/abjad"><AbjadKabirPage /></ProtectedPage>} />
             <Route path="/anasir" element={<ProtectedPage routePath="/anasir"><AnasirPage /></ProtectedPage>} />
             <Route path="/hadim" element={<ProtectedPage routePath="/hadim"><HadimPage /></ProtectedPage>} />
