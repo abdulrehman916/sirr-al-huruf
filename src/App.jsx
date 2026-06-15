@@ -77,6 +77,7 @@ const PremiumAccessRequest = lazy(() => import('./pages/PremiumAccessRequest'));
 const AdminSubscriptionRequests = lazy(() => import('./pages/AdminSubscriptionRequests'));
 const AdminUserPermissions = lazy(() => import('./pages/AdminUserPermissions'));
 const OwnerAccessDashboard = lazy(() => import('./pages/OwnerAccessDashboard'));
+const MySubscription = lazy(() => import('./pages/MySubscription'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -182,6 +183,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/subscription-requests" element={<ProtectedPage routePath="/admin/subscription-requests" requiresPermission={false} requiresSubscription={false}><AdminSubscriptionRequests /></ProtectedPage>} />
             <Route path="/admin/user-permissions" element={<ProtectedPage routePath="/admin/user-permissions" requiresPermission={false} requiresSubscription={false}><AdminUserPermissions /></ProtectedPage>} />
             <Route path="/admin/access-dashboard" element={<ProtectedPage routePath="/admin/access-dashboard" requiresPermission={false} requiresSubscription={false}><OwnerAccessDashboard /></ProtectedPage>} />
+            <Route path="/my-subscription" element={<ProtectedPage routePath="/my-subscription" requiresPermission={false} requiresSubscription={false}><MySubscription /></ProtectedPage>} />
 
 
             <Route path="*" element={<PageNotFound />} />

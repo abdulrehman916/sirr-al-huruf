@@ -4,7 +4,8 @@ import { Navigate } from "react-router-dom";
 import {
   Users, CreditCard, Globe, Shield, Search, Plus, Trash2,
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
-  Phone, Mail, Calendar, Crown, RefreshCw
+  Phone, Mail, Calendar, Crown, RefreshCw, Star, Zap,
+  DollarSign, TrendingUp, Edit2, Save
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
@@ -50,9 +51,13 @@ function daysLeft(d) {
 const TABS = [
   { id: "users",       label: "Users",            icon: Users },
   { id: "subs",        label: "Subscriptions",    icon: CreditCard },
+  { id: "plans",       label: "Plans",            icon: Star },
   { id: "visibility",  label: "Page Visibility",  icon: Globe },
   { id: "access",      label: "User Access",      icon: Shield },
 ];
+
+const PLAN_COLORS = { Basic: "#60a5fa", Premium: "#f59e0b", VIP: "#a855f7" };
+const PLAN_ICONS_MAP = { Basic: Zap, Premium: Star, VIP: Crown };
 
 // ── Grant Access Modal ────────────────────────────────────────────────────────
 function GrantAccessModal({ user, existingPaths, onClose, onGranted }) {
@@ -260,25 +265,50 @@ function SubscriptionsTab({ subscriptions, users }) {
     EXPIRED: enriched.filter(s => s.status === "EXPIRED").length,
     PENDING: enriched.filter(s => s.status === "PENDING").length,
   };
-
+  const totalRevenue = enriched.reduce((sum, s) => sum + (s.amount || 0), 0);
+  const activeRevenue = enriched.filter(s => s.status === "ACTIVE").reduce((sum, s) => sum + (s.amount || 0), 0);
   const statusColor = { ACTIVE: "#22c55e", EXPIRED: "#ef4444", PENDING: "#f59e0b", CANCELLED: "#6b7280" };
+
+  // Expiring within 7 days
+  const expiringSoon = enriched.filter(s => {
+    if (s.status !== "ACTIVE" || !s.expiry_date) return false;
+    const d = daysLeft(s.expiry_date);
+    return d !== null && d <= 7 && d >= 0;
+  });
 
   return (
     <div className="space-y-4">
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Revenue + summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Active", value: counts.ACTIVE, color: "#22c55e" },
-          { label: "Expired", value: counts.EXPIRED, color: "#ef4444" },
-          { label: "Pending", value: counts.PENDING, color: "#f59e0b" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-xl border p-3 text-center"
-            style={{ background: G.bg, borderColor: G.border }}>
-            <p className="text-xl font-bold" style={{ color }}>{value}</p>
-            <p className="text-xs text-white/40 mt-0.5">{label}</p>
+          { label: "Total Revenue", value: `${totalRevenue.toLocaleString()}`, icon: DollarSign, color: G.text },
+          { label: "Active Revenue", value: `${activeRevenue.toLocaleString()}`, icon: TrendingUp, color: "#22c55e" },
+          { label: "Active Subs", value: counts.ACTIVE, icon: CreditCard, color: "#60a5fa" },
+          { label: "Expiring ≤7d", value: expiringSoon.length, icon: Clock, color: expiringSoon.length > 0 ? "#f59e0b" : "rgba(255,255,255,0.30)" },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="rounded-xl border p-3 text-center" style={{ background: G.bg, borderColor: G.border }}>
+            <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} />
+            <p className="text-lg font-bold leading-tight" style={{ color }}>{value}</p>
+            <p className="text-xs text-white/35 mt-0.5 leading-tight">{label}</p>
           </div>
         ))}
       </div>
+
+      {/* Expiring soon warning */}
+      {expiringSoon.length > 0 && (
+        <div className="rounded-xl border p-3" style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.35)" }}>
+          <p className="text-xs font-semibold text-amber-400 flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5" /> {expiringSoon.length} subscription(s) expiring within 7 days
+          </p>
+          <div className="mt-2 space-y-1">
+            {expiringSoon.map(s => (
+              <p key={s.id} className="text-xs text-white/50">
+                {s.userName} · {s.page_name} · {daysLeft(s.expiry_date)}d left
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filter */}
       <div className="flex gap-2 flex-wrap">
@@ -290,7 +320,7 @@ function SubscriptionsTab({ subscriptions, users }) {
               border: `1px solid ${filter === f ? G.borderHi : "rgba(255,255,255,0.08)"}`,
               color: filter === f ? G.text : "rgba(255,255,255,0.45)",
             }}>
-            {f === "all" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()}
+            {f === "all" ? `All (${enriched.length})` : `${f.charAt(0) + f.slice(1).toLowerCase()} (${counts[f] || 0})`}
           </button>
         ))}
       </div>
@@ -304,9 +334,10 @@ function SubscriptionsTab({ subscriptions, users }) {
         <div className="space-y-2">
           {filtered.map(sub => {
             const days = daysLeft(sub.expiry_date);
+            const urgent = sub.status === "ACTIVE" && days !== null && days <= 7;
             return (
               <div key={sub.id} className="rounded-xl border p-4"
-                style={{ background: G.bg, borderColor: G.border }}>
+                style={{ background: G.bg, borderColor: urgent ? "rgba(245,158,11,0.45)" : G.border }}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <p className="font-inter font-bold text-white text-sm">{sub.userName}</p>
@@ -317,9 +348,15 @@ function SubscriptionsTab({ subscriptions, users }) {
                         {sub.page_name || sub.page_path}
                       </span>
                       <span className="px-2 py-0.5 rounded text-xs font-semibold"
-                        style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.50)" }}>
+                        style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)" }}>
                         {(sub.plan_name || "").replace(/_/g, " ")}
                       </span>
+                      {sub.amount > 0 && (
+                        <span className="px-2 py-0.5 rounded text-xs font-semibold"
+                          style={{ background: "rgba(34,197,94,0.10)", color: "#4ade80" }}>
+                          {sub.currency || "INR"} {sub.amount}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -331,11 +368,12 @@ function SubscriptionsTab({ subscriptions, users }) {
                       }}>
                       {sub.status}
                     </span>
-                    <p className="text-xs text-white/35 mt-1.5 flex items-center gap-1 justify-end">
+                    <p className="text-xs text-white/35 mt-1.5 flex items-center gap-1 justify-end"
+                      style={{ color: urgent ? "#f59e0b" : undefined }}>
                       <Clock className="w-3 h-3" />
                       {sub.expiry_date
-                        ? sub.status === "ACTIVE"
-                          ? days > 0 ? `${days}d left` : "Expiring today"
+                        ? days !== null && days < 36000
+                          ? `${days}d left · ${fmt(sub.expiry_date)}`
                           : fmt(sub.expiry_date)
                         : "Lifetime"}
                     </p>
@@ -345,6 +383,258 @@ function SubscriptionsTab({ subscriptions, users }) {
             );
           })}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── Plans Tab (owner configures Basic/Premium/VIP) ────────────────────────────
+function PlansTab({ plans, onRefresh }) {
+  const { toast } = useToast();
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [editData, setEditData] = useState({});
+  const [creating, setCreating] = useState(false);
+  const [newPlan, setNewPlan] = useState({ plan_name: "Basic", description: "", price_monthly: 0, price_6months: 0, price_yearly: 0, price_lifetime: 0, currency: "INR", page_paths: [], color: "#60a5fa", sort_order: 1 });
+  const [newPages, setNewPages] = useState([]);
+
+  const startEdit = (plan) => {
+    setEditingId(plan.id);
+    setEditData({ ...plan });
+  };
+
+  const saveEdit = async () => {
+    setSaving(true);
+    try {
+      await base44.entities.SubscriptionPlan.update(editingId, editData);
+      toast({ title: "✓ Plan updated" });
+      setEditingId(null);
+      onRefresh();
+    } catch (e) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleEditPage = (path) => {
+    const cur = editData.page_paths || [];
+    setEditData(d => ({ ...d, page_paths: cur.includes(path) ? cur.filter(p => p !== path) : [...cur, path] }));
+  };
+
+  const handleCreate = async () => {
+    setSaving(true);
+    try {
+      const planId = "PLAN_" + newPlan.plan_name.toUpperCase() + "_" + Date.now();
+      await base44.entities.SubscriptionPlan.create({
+        ...newPlan,
+        plan_id: planId,
+        page_paths: newPages,
+        is_active: true,
+      });
+      toast({ title: "✓ Plan created" });
+      setCreating(false);
+      setNewPlan({ plan_name: "Basic", description: "", price_monthly: 0, price_6months: 0, price_yearly: 0, price_lifetime: 0, currency: "INR", page_paths: [], color: "#60a5fa", sort_order: 1 });
+      setNewPages([]);
+      onRefresh();
+    } catch (e) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-white/45">Configure subscription plans. Each plan unlocks a set of pages.</p>
+        <button onClick={() => setCreating(v => !v)}
+          className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2"
+          style={{ background: G.bgHi, border: `1px solid ${G.borderHi}`, color: G.text }}>
+          <Plus className="w-3.5 h-3.5" /> New Plan
+        </button>
+      </div>
+
+      {/* Create form */}
+      <AnimatePresence>
+        {creating && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }} style={{ overflow: "hidden" }}>
+            <div className="rounded-xl border p-4 space-y-4" style={{ background: G.bgHi, borderColor: G.borderHi }}>
+              <h3 className="font-inter font-bold text-white text-sm">New Subscription Plan</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-white/45 mb-1 block">Plan Type</label>
+                  <select value={newPlan.plan_name} onChange={e => setNewPlan(p => ({ ...p, plan_name: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+                    style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }}>
+                    {["Basic", "Premium", "VIP"].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-white/45 mb-1 block">Currency</label>
+                  <input value={newPlan.currency} onChange={e => setNewPlan(p => ({ ...p, currency: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+                    style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-white/45 mb-1 block">Description</label>
+                <input value={newPlan.description} onChange={e => setNewPlan(p => ({ ...p, description: e.target.value }))}
+                  placeholder="Short description for users"
+                  className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+                  style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[["Monthly", "price_monthly"], ["6 Months", "price_6months"], ["Yearly", "price_yearly"], ["Lifetime", "price_lifetime"]].map(([label, key]) => (
+                  <div key={key}>
+                    <label className="text-xs text-white/45 mb-1 block">{label} Price</label>
+                    <input type="number" value={newPlan[key]} onChange={e => setNewPlan(p => ({ ...p, [key]: parseFloat(e.target.value) || 0 }))}
+                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+                      style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className="text-xs text-white/45 mb-2 block">Pages Included ({newPages.length} selected)</label>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {CONTENT_PAGES.map(p => {
+                    const sel = newPages.includes(p.path);
+                    return (
+                      <button key={p.path} onClick={() => setNewPages(prev => sel ? prev.filter(x => x !== p.path) : [...prev, p.path])}
+                        className="w-full flex items-center gap-2 p-2 rounded-lg text-left text-sm"
+                        style={{ background: sel ? G.bg : "transparent", border: `1px solid ${sel ? G.border : "transparent"}`, color: sel ? "white" : "rgba(255,255,255,0.45)" }}>
+                        <div className="w-3.5 h-3.5 rounded flex-shrink-0 flex items-center justify-center"
+                          style={{ background: sel ? G.text : "transparent", border: `1px solid ${sel ? G.text : "rgba(255,255,255,0.20)"}` }}>
+                          {sel && <CheckCircle className="w-2.5 h-2.5 text-black" />}
+                        </div>
+                        {p.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setCreating(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>Cancel</button>
+                <button onClick={handleCreate} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50"
+                  style={{ background: "linear-gradient(135deg,#f6d860,#c98a14)", color: "#0d1b2a" }}>
+                  {saving ? "Saving…" : "Create Plan"}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {plans.length === 0 ? (
+        <div className="text-center py-16" style={{ color: "rgba(255,255,255,0.25)" }}>
+          <Star className="w-12 h-12 mx-auto mb-3 opacity-25" />
+          <p className="text-sm">No plans created yet. Click "New Plan" to start.</p>
+        </div>
+      ) : (
+        plans.sort((a, b) => (a.sort_order || 9) - (b.sort_order || 9)).map(plan => {
+          const isEditing = editingId === plan.id;
+          const color = plan.color || PLAN_COLORS[plan.plan_name] || G.text;
+          const PlanIcon = PLAN_ICONS_MAP[plan.plan_name] || Star;
+          return (
+            <div key={plan.id} className="rounded-xl border p-4 space-y-3"
+              style={{ background: G.bg, borderColor: `${color}40` }}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${color}18`, border: `1px solid ${color}35` }}>
+                    <PlanIcon className="w-4.5 h-4.5" style={{ color }} />
+                  </div>
+                  <div>
+                    <p className="font-inter font-bold text-white">{plan.plan_name}</p>
+                    <p className="text-xs text-white/35">{(plan.page_paths || []).length} pages · {plan.currency} {plan.price_monthly}/mo</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-2 py-0.5 rounded"
+                    style={{ background: plan.is_active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.05)", color: plan.is_active ? "#4ade80" : "rgba(255,255,255,0.30)" }}>
+                    {plan.is_active ? "Active" : "Inactive"}
+                  </span>
+                  {isEditing ? (
+                    <button onClick={saveEdit} disabled={saving}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.30)" }}>
+                      <Save className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <button onClick={() => startEdit(plan)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: G.bgHi, color: G.text, border: `1px solid ${G.borderHi}` }}>
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {isEditing ? (
+                <div className="space-y-3 pt-2 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                  <div>
+                    <label className="text-xs text-white/40 mb-1 block">Description</label>
+                    <input value={editData.description || ""} onChange={e => setEditData(d => ({ ...d, description: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[["Monthly", "price_monthly"], ["6 Months", "price_6months"], ["Yearly", "price_yearly"], ["Lifetime", "price_lifetime"]].map(([label, key]) => (
+                      <div key={key}>
+                        <label className="text-xs text-white/40 mb-1 block">{label}</label>
+                        <input type="number" value={editData[key] || 0} onChange={e => setEditData(d => ({ ...d, [key]: parseFloat(e.target.value) || 0 }))}
+                          className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+                          style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }} />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <label className="text-xs text-white/40 mb-2 block">Pages ({(editData.page_paths || []).length} selected)</label>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {CONTENT_PAGES.map(p => {
+                        const sel = (editData.page_paths || []).includes(p.path);
+                        return (
+                          <button key={p.path} onClick={() => toggleEditPage(p.path)}
+                            className="w-full flex items-center gap-2 p-2 rounded-lg text-left text-sm"
+                            style={{ background: sel ? G.bg : "transparent", border: `1px solid ${sel ? G.border : "transparent"}`, color: sel ? "white" : "rgba(255,255,255,0.45)" }}>
+                            <div className="w-3.5 h-3.5 rounded flex-shrink-0 flex items-center justify-center"
+                              style={{ background: sel ? G.text : "transparent", border: `1px solid ${sel ? G.text : "rgba(255,255,255,0.20)"}` }}>
+                              {sel && <CheckCircle className="w-2.5 h-2.5 text-black" />}
+                            </div>
+                            {p.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-white/40">Active</label>
+                    <button onClick={() => setEditData(d => ({ ...d, is_active: !d.is_active }))}
+                      className="w-10 h-5 rounded-full transition-all flex-shrink-0"
+                      style={{ background: editData.is_active ? "#22c55e" : "rgba(255,255,255,0.12)" }}>
+                      <div className="w-4 h-4 rounded-full bg-white transition-all ml-0.5"
+                        style={{ transform: editData.is_active ? "translateX(20px)" : "translateX(0)" }} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {(plan.page_paths || []).map(path => {
+                    const name = CONTENT_PAGES.find(p => p.path === path)?.name || path;
+                    return (
+                      <span key={path} className="px-2 py-0.5 rounded text-xs"
+                        style={{ background: `${color}12`, color: `${color}cc`, border: `1px solid ${color}25` }}>
+                        {name}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })
       )}
     </div>
   );
@@ -592,6 +882,7 @@ export default function OwnerAccessDashboard() {
   const [permissions, setPermissions] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [pageConfigs, setPageConfigs] = useState([]);
+  const [plans, setPlans] = useState([]);
 
   useEffect(() => { init(); }, []);
 
@@ -609,16 +900,18 @@ export default function OwnerAccessDashboard() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [allUsers, perms, subs, configs] = await Promise.all([
+      const [allUsers, perms, subs, configs, allPlans] = await Promise.all([
         base44.entities.User.list(),
         base44.entities.PagePermission.list("-granted_at", 500),
         base44.entities.Subscription.list("-start_date", 500),
         base44.entities.PageVisibilityConfig.list(),
+        base44.entities.SubscriptionPlan.list(),
       ]);
       setUsers(allUsers);
       setPermissions(perms);
       setSubscriptions(subs);
       setPageConfigs(configs);
+      setPlans(allPlans);
     } catch (e) {
       toast({ title: "Load error", description: e.message, variant: "destructive" });
     } finally {
@@ -691,6 +984,7 @@ export default function OwnerAccessDashboard() {
         <div>
           {tab === "users"      && <UsersTab users={users} />}
           {tab === "subs"       && <SubscriptionsTab subscriptions={subscriptions} users={users} />}
+          {tab === "plans"      && <PlansTab plans={plans} onRefresh={loadAll} />}
           {tab === "visibility" && <VisibilityTab pageConfigs={pageConfigs} onRefresh={loadAll} />}
           {tab === "access"     && <UserAccessTab users={users} permissions={permissions} onRefresh={loadAll} />}
         </div>
