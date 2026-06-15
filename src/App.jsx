@@ -77,6 +77,8 @@ const PremiumAccessRequest = lazy(() => import('./pages/PremiumAccessRequest'));
 const AdminSubscriptionRequests = lazy(() => import('./pages/AdminSubscriptionRequests'));
 const AdminUserPermissions = lazy(() => import('./pages/AdminUserPermissions'));
 const OwnerAccessDashboard = lazy(() => import('./pages/OwnerAccessDashboard'));
+const MessagesTab = lazy(() => import('./components/admin/MessagesTab'));
+const SubscriptionRequestsTab = lazy(() => import('./components/admin/SubscriptionRequestsTab'));
 const MySubscription = lazy(() => import('./pages/MySubscription'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 
@@ -181,7 +183,8 @@ const AuthenticatedApp = () => {
             <Route path="/admin/access-logs" element={<ProtectedPage routePath="/admin/access-logs" requiresPermission={false} requiresSubscription={false}><AdminAccessLogs /></ProtectedPage>} />
             <Route path="/admin/subscriptions-management" element={<ProtectedPage routePath="/admin/subscriptions-management"><AdminSubscriptionsManagement /></ProtectedPage>} />
             <Route path="/premium-access-request" element={<ProtectedPage routePath="/premium-access-request" requiresSubscription={false}><PremiumAccessRequest /></ProtectedPage>} />
-            <Route path="/admin/subscription-requests" element={<ProtectedPage routePath="/admin/subscription-requests" requiresPermission={false} requiresSubscription={false}><AdminSubscriptionRequests /></ProtectedPage>} />
+            <Route path="/admin/subscription-requests" element={<ProtectedPage routePath="/admin/subscription-requests" requiresPermission={false} requiresSubscription={false}><SubscriptionRequestsTab /></ProtectedPage>} />
+            <Route path="/admin/messages" element={<ProtectedPage routePath="/admin/messages" requiresPermission={false}><MessagesTab /></ProtectedPage>} />
             <Route path="/admin/user-permissions" element={<ProtectedPage routePath="/admin/user-permissions" requiresPermission={false} requiresSubscription={false}><AdminUserPermissions /></ProtectedPage>} />
             <Route path="/admin/access-dashboard" element={<ProtectedPage routePath="/admin/access-dashboard" requiresPermission={false} requiresSubscription={false}><OwnerAccessDashboard /></ProtectedPage>} />
             <Route path="/my-subscription" element={<ProtectedPage routePath="/my-subscription" requiresPermission={false} requiresSubscription={false}><MySubscription /></ProtectedPage>} />
