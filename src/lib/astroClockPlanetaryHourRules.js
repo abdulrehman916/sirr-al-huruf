@@ -27,6 +27,14 @@ export const PLANETARY_HOUR_RULES = {
     element_ml: "ഭൂമി",
     nature: "Nahs Akbar",
     nature_ml: "അനുചിതം (നഹ്സ് അക്ബർ)",
+    strengthenedActions: {
+      en: ["Land purchase", "Construction", "Agriculture", "Mining", "Binding enemies", "Long-term planning"],
+      ml: ["ഭൂമി വാങ്ങൽ", "നിർമ്മാണം", "കൃഷി", "ഖനനം", "ശത്രുക്കളെ ബന്ധിക്കൽ", "ദീർഘകാല ആസൂത്രണം"]
+    },
+    weakenedActions: {
+      en: ["Marriage", "Romance", "Social events", "New partnerships", "Education"],
+      ml: ["വിവാഹം", "പ്രണയം", "സാമൂഹിക ചടങ്ങുകൾ", "പുതിയ പങ്കാളിത്തം", "വിദ്യാഭ്യാസം"]
+    },
     suitableActions: {
       en: [
         "Land purchase and real estate",
@@ -90,6 +98,14 @@ export const PLANETARY_HOUR_RULES = {
     element_ml: "വായു",
     nature: "Sa'd Akbar",
     nature_ml: "ഉത്തമം (സഅദ് അക്ബർ)",
+    strengthenedActions: {
+      en: ["Education", "Spiritual work", "Legal matters", "Teaching", "Financial investments", "Marriage proposals"],
+      ml: ["വിദ്യാഭ്യാസം", "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾ", "നിയമ കാര്യങ്ങൾ", "പഠിപ്പിക്കൽ", "സാമ്പത്തിക നിക്ഷേപം", "വിവാഹ ആലോചനകൾ"]
+    },
+    weakenedActions: {
+      en: ["Harmful magic", "Separation", "Conflict", "Deception", "Frivolity"],
+      ml: ["ദോഷകരമായ മാന്ത്രികത", "വേർപിരിയൽ", "തർക്കങ്ങൾ", "വഞ്ചന", "ലഘുവായ പ്രവർത്തനങ്ങൾ"]
+    },
     suitableActions: {
       en: [
         "Education and learning",
@@ -149,6 +165,14 @@ export const PLANETARY_HOUR_RULES = {
     element_ml: "അഗ്നി",
     nature: "Nahs Asghar",
     nature_ml: "അനുചിതം (നഹ്സ് അസ്ഗർ)",
+    strengthenedActions: {
+      en: ["Sports & physical work", "Military & defense", "Surgery", "Metalwork", "Breaking bindings", "Courageous acts"],
+      ml: ["കായിക വിനോദം", "സൈനിക പ്രവർത്തനങ്ങൾ", "ശസ്ത്രക്രിയ", "ലോഹ പണി", "ബന്ധനങ്ങൾ തകർക്കൽ", "ധൈര്യ പ്രവർത്തനങ്ങൾ"]
+    },
+    weakenedActions: {
+      en: ["Marriage", "Peaceful negotiations", "Social gatherings", "New businesses", "Financial investments"],
+      ml: ["വിവാഹം", "സമാധാന ചർച്ചകൾ", "സാമൂഹിക സമ്മേളനങ്ങൾ", "പുതിയ ബിസിനസ്", "സാമ്പത്തിക നിക്ഷേപം"]
+    },
     suitableActions: {
       en: [
         "Sports and physical activities",
@@ -208,6 +232,14 @@ export const PLANETARY_HOUR_RULES = {
     element_ml: "അഗ്നി",
     nature: "Sa'd Asghar",
     nature_ml: "ഉത്തമം (സഅദ് അസ്ഗർ)",
+    strengthenedActions: {
+      en: ["Meeting authorities", "Seeking employment", "Business & commerce", "Leadership", "Gold & precious metals", "Success & achievement"],
+      ml: ["അധികാരികളെ കാണൽ", "തൊഴിൽ തേടൽ", "ബിസിനസ്", "നേതൃത്വം", "സ്വർണ്ണ-ലോഹ വ്യാപാരം", "വിജയ നേട്ടം"]
+    },
+    weakenedActions: {
+      en: ["Secret operations", "Deception", "Nighttime activities", "Water-related work"],
+      ml: ["രഹസ്യ പ്രവർത്തനങ്ങൾ", "വഞ്ചന", "രാത്രി പ്രവർത്തനങ്ങൾ", "ജല സംബന്ധിത ജോലികൾ"]
+    },
     suitableActions: {
       en: [
         "Meeting rulers and authorities",
@@ -265,6 +297,14 @@ export const PLANETARY_HOUR_RULES = {
     element_ml: "ജലം",
     nature: "Sa'd Akbar",
     nature_ml: "ഉത്തമം (സഅദ് അക്ബർ)",
+    strengthenedActions: {
+      en: ["Marriage & engagement", "Love & romance", "Arts & music", "Social gatherings", "Beauty & adornment", "Friendship & reconciliation"],
+      ml: ["വിവാഹം", "പ്രണയം", "കലകളും സംഗീതം", "സാമൂഹിക സമ്മേളനങ്ങൾ", "സൗന്ദര്യം", "സൗഹൃദ പുനഃസ്ഥാപനം"]
+    },
+    weakenedActions: {
+      en: ["Conflict & fighting", "Separation & divorce", "Harsh words", "Austerity", "Medical treatment"],
+      ml: ["തർക്കം", "വേർപിരിയൽ", "കഠിന വാക്കുകൾ", "തപസ്സ്", "വൈദ്യ ചികിത്സ"]
+    },
     suitableActions: {
       en: [
         "Marriage and engagement",
@@ -324,6 +364,14 @@ export const PLANETARY_HOUR_RULES = {
     element_ml: "വായു",
     nature: "Sa'd Asghar",
     nature_ml: "ഉത്തമം (സഅദ് അസ്ഗർ)",
+    strengthenedActions: {
+      en: ["Writing & correspondence", "Communication & speaking", "Business contracts", "Travel", "Science & mathematics", "Trade & commerce"],
+      ml: ["എഴുത്ത്", "ആശയ വിനിമയം", "ബിസിനസ് കരാറുകൾ", "യാത്ര", "ശാസ്ത്രം-ഗണിതം", "വ്യാപാരം"]
+    },
+    weakenedActions: {
+      en: ["Deception & lies", "Theft & fraud", "Gossip", "Confusion"],
+      ml: ["വഞ്ചന", "മോഷണം", "ഗോസിപ്പ്", "ആശയക്കുഴപ്പം"]
+    },
     suitableActions: {
       en: [
         "Writing and correspondence",
@@ -381,6 +429,14 @@ export const PLANETARY_HOUR_RULES = {
     element_ml: "ജലം",
     nature: "Sa'd Akbar",
     nature_ml: "ഉത്തമം (സഅദ് അക്ബർ)",
+    strengthenedActions: {
+      en: ["Marriage & love", "Pregnancy & childbirth", "Healing & medical treatment", "Spiritual work", "Water travel", "Dreams & visions"],
+      ml: ["വിവാഹം", "ഗർഭധാരണം", "ചികിത്സ", "ആദ്ധ്യാത്മിക പ്രവർത്തനങ്ങൾ", "ജല യാത്ര", "സ്വപ്നങ്ങൾ"]
+    },
+    weakenedActions: {
+      en: ["Conflict & fighting", "Surgery (major)", "Fire-related work", "Harsh discipline", "Breaking relationships"],
+      ml: ["തർക്കം", "വലിയ ശസ്ത്രക്രിയ", "തീ സംബന്ധിത ജോലികൾ", "കഠിന ശിക്ഷണം", "ബന്ധങ്ങൾ തകർക്കൽ"]
+    },
     suitableActions: {
       en: [
         "Marriage and love",
