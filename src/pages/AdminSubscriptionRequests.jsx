@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Activity, Search, Shield, CheckCircle, Clock, XCircle, 
-  Loader2, User, CreditCard, Calendar, ArrowRight, ExternalLink 
+  Loader2, User, Calendar, ArrowRight
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PageLayout from "@/components/PageLayout";
@@ -16,9 +16,8 @@ import { motion } from "framer-motion";
 
 const STATUS_COLORS = {
   PENDING: "bg-orange-500/20 text-orange-500 border-orange-500/30",
-  ACTIVE: "bg-green-500/20 text-green-500 border-green-500/30",
-  EXPIRED: "bg-gray-500/20 text-gray-500 border-gray-500/30",
-  CANCELLED: "bg-red-500/20 text-red-500 border-red-500/30",
+  APPROVED: "bg-green-500/20 text-green-500 border-green-500/30",
+  REJECTED: "bg-red-500/20 text-red-500 border-red-500/30",
 };
 
 export default function AdminSubscriptionRequests() {
@@ -58,7 +57,7 @@ export default function AdminSubscriptionRequests() {
 
   const fetchRequests = async () => {
     try {
-      const allRequests = await base44.entities.PremiumAccessRequest.list("-requested_at", 100);
+      const allRequests = await base44.entities.AccessRequest.list("-requested_at", 100);
       setRequests(allRequests);
     } catch (err) {
       toast({
@@ -71,25 +70,14 @@ export default function AdminSubscriptionRequests() {
 
   const handleApprove = async (req) => {
     try {
-      await base44.functions.invoke("grantManualAccess", {
-        user_id: req.user_id,
-        grants: [{
-          page_path: req.page_path,
-          page_name: req.page_name,
-          plan_name: req.plan_name,
-          duration: req.plan_name
-        }]
-      });
-
-      await base44.entities.PremiumAccessRequest.update(req.id, {
-        status: "APPROVED",
-        approved_by: user.id,
-        approved_at: new Date().toISOString()
+      await base44.functions.invoke("approveAccessRequest", {
+        request_id: req.request_id,
+        duration: "1_MONTH"
       });
 
       toast({
         title: "Approved",
-        description: `${req.user_name}'s access has been granted`,
+        description: `${req.name || req.email}'s access has been granted for 1 month`,
       });
       fetchRequests();
     } catch (err) {
@@ -103,11 +91,14 @@ export default function AdminSubscriptionRequests() {
 
   const handleReject = async (reqId) => {
     try {
-      await base44.entities.PremiumAccessRequest.update(reqId, {
-        status: "REJECTED",
-        approved_by: user.id,
-        approved_at: new Date().toISOString()
-      });
+      const reqs = await base44.entities.AccessRequest.filter({ request_id: reqId });
+      if (reqs.length > 0) {
+        await base44.entities.AccessRequest.update(reqs[0].id, {
+          status: "REJECTED",
+          approved_by: user.id,
+          approved_at: new Date().toISOString()
+        });
+      }
 
       toast({
         title: "Rejected",
@@ -125,8 +116,8 @@ export default function AdminSubscriptionRequests() {
 
   const filteredRequests = requests.filter(req => {
     const matchesSearch = searchQuery === "" || 
-      req.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.user_email?.toLowerCase().includes(searchQuery.toLowerCase());
+      (req.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (req.email || "").toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = filterStatus === "all" || req.status === filterStatus;
     const matchesPage = filterPage === "all" || req.page_path === filterPage;
@@ -155,11 +146,11 @@ export default function AdminSubscriptionRequests() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-            <CreditCard className="w-8 h-8 text-gold" />
-            Subscription Requests
+            <Shield className="w-8 h-8 text-gold" />
+            Access Requests
           </h1>
           <p className="text-white/70">
-            Review and approve premium access requests
+            Review and approve manual access requests
           </p>
         </motion.div>
 
@@ -228,9 +219,8 @@ export default function AdminSubscriptionRequests() {
                   <SelectContent className="bg-slate-900 border-white/10">
                     <SelectItem value="all" className="text-white">All Status</SelectItem>
                     <SelectItem value="PENDING" className="text-white">Pending</SelectItem>
-                    <SelectItem value="ACTIVE" className="text-white">Active</SelectItem>
-                    <SelectItem value="EXPIRED" className="text-white">Expired</SelectItem>
-                    <SelectItem value="CANCELLED" className="text-white">Cancelled</SelectItem>
+                    <SelectItem value="APPROVED" className="text-white">Approved</SelectItem>
+                    <SelectItem value="REJECTED" className="text-white">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -288,19 +278,16 @@ export default function AdminSubscriptionRequests() {
                           <div className="flex items-center gap-2 mb-1">
                             <User className="w-3 h-3 text-white/50" />
                             <span className="text-white text-sm font-medium truncate">
-                              {req.user_name}
+                              {req.name || "Unknown"}
                             </span>
                           </div>
                           <div className="flex items-center gap-4 text-xs text-white/60">
-                            <span className="truncate">{req.user_email}</span>
+                            <span className="truncate">{req.email || req.phone || "No contact"}</span>
                           </div>
                           <div className="flex items-center gap-4 mt-2 text-xs">
                             <Badge variant="outline" className="border-gold-dim text-gold-dim">
                               {req.page_name}
                             </Badge>
-                            <span className="text-white/70">
-                              {req.plan_name.replace("_", " ")}
-                            </span>
                             {req.message && (
                               <span className="text-white/50 italic max-w-xs truncate">
                                 "{req.message}"
@@ -344,7 +331,7 @@ export default function AdminSubscriptionRequests() {
                               size="sm"
                               variant="outline"
                               className="border-red-500/30 text-red-500 hover:bg-red-500/20"
-                              onClick={() => handleReject(req.id)}
+                              onClick={() => handleReject(req.request_id)}
                             >
                               <XCircle className="w-4 h-4 mr-1" />
                               Reject

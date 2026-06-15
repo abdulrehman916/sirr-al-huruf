@@ -22,6 +22,10 @@
       "type": "string",
       "description": "User email address"
     },
+    "plan_id": {
+      "type": "string",
+      "description": "SubscriptionPlan ID (e.g. PLAN_BASIC, PLAN_PREMIUM)"
+    },
     "page_path": {
       "type": "string",
       "description": "Page route this subscription grants access to e.g. /abjad, /hadim"
@@ -42,12 +46,20 @@
     },
     "amount": {
       "type": "number",
-      "description": "Amount paid in INR"
+      "description": "Amount paid"
     },
     "currency": {
       "type": "string",
       "default": "INR",
       "description": "Currency code"
+    },
+    "payment_gateway": {
+      "type": "string",
+      "enum": [
+        "razorpay",
+        "stripe"
+      ],
+      "description": "Payment gateway used"
     },
     "razorpay_order_id": {
       "type": "string",
@@ -60,6 +72,37 @@
     "razorpay_signature": {
       "type": "string",
       "description": "Razorpay payment signature"
+    },
+    "stripe_payment_intent_id": {
+      "type": "string",
+      "description": "Stripe Payment Intent ID"
+    },
+    "stripe_charge_id": {
+      "type": "string",
+      "description": "Stripe Charge ID"
+    },
+    "refund_id": {
+      "type": "string",
+      "description": "Refund transaction ID (gateway)"
+    },
+    "refund_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "pending",
+        "completed",
+        "failed"
+      ],
+      "default": "none",
+      "description": "Refund status"
+    },
+    "refund_amount": {
+      "type": "number",
+      "description": "Refunded amount"
+    },
+    "refund_reason": {
+      "type": "string",
+      "description": "Reason for refund"
     },
     "start_date": {
       "type": "string",
@@ -75,7 +118,8 @@
         "PENDING",
         "ACTIVE",
         "EXPIRED",
-        "CANCELLED"
+        "CANCELLED",
+        "REFUNDED"
       ],
       "default": "PENDING",
       "description": "Current subscription status"
