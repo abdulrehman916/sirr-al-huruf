@@ -23,6 +23,7 @@ const TABS = [
   { id: "evil-jinn",        label: "EVIL JINN", arabic: "الجن",      path: "/evil-jinn" },
   { id: "holy-names",       label: "HOLY NAMES", arabic: "الأسماء",   path: "/holy-names" },
   { id: "astro-clock",      label: "ASTRO CLOCK", arabic: "الساعة الفلكية", path: "/astro-clock" },
+  { id: "support",          label: "SUPPORT", arabic: "الدعم", path: "/support" },
 ];
 
 const pageVariants = {
