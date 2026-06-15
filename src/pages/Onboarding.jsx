@@ -8,6 +8,7 @@ import { Mail, Loader2, KeyRound, ArrowRight, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import AtmosphericBackground from "@/components/AtmosphericBackground";
 import { derivePassword } from "@/lib/derivePassword";
+import useTranslation from "@/i18n/useTranslation";
 
 const STEPS = { WELCOME: 0, EMAIL: 1, OTP: 2 };
 
@@ -26,6 +27,7 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const { toast } = useToast();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -139,16 +141,16 @@ export default function Onboarding() {
           </p>
           <p className="font-inter text-sm mb-8 leading-relaxed"
             style={{ color: "rgba(255,255,255,0.55)" }}>
-            Welcome to the occult encyclopedia of magick squares, planetary hours, and sacred letter sciences.
+            {t('welcome_description')}
           </p>
           <Button onClick={() => setStep(STEPS.EMAIL)}
             className="w-full h-12 font-medium btn-gold" style={{ fontSize: "0.95rem" }}>
-            Get Started <ArrowRight className="w-4 h-4 ml-1" />
+            {t('get_started')} <ArrowRight className="w-4 h-4 ml-1 mirror-rtl" />
           </Button>
           <p className="font-inter text-xs mt-6" style={{ color: "rgba(255,255,255,0.25)" }}>
-            Already have an account?{" "}
+            {t('already_have_account')}{" "}
             <button onClick={goToLogin} className="underline" style={{ color: "rgba(212,175,55,0.70)" }}>
-              Sign in
+              {t('sign_in')}
             </button>
           </p>
         </div>

@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Trash2, AlertTriangle, CheckCircle, Shield, Globe, CreditCard } from "lucide-react";
+import { X, LogOut, Trash2, AlertTriangle, CheckCircle, Shield, Globe, CreditCard, Settings } from "lucide-react";
 import { base44 } from "../api/base44Client";
 import { Link } from "react-router-dom";
+import useTranslation from "@/i18n/useTranslation";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function AccountModal({ user, onClose }) {
+  const { t } = useTranslation();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -57,8 +60,8 @@ export default function AccountModal({ user, onClose }) {
                 {user?.full_name || "حسابي"}
               </p>
               {isAdmin && (
-                <span className="font-inter text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060", border: "1px solid rgba(212,175,55,0.35)" }}>
-                  ADMIN
+                <span className="font-inter text-[9px] font-bold px-1.5 py-0.5 rounded ltr-preserve" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060", border: "1px solid rgba(212,175,55,0.35)" }}>
+                  {t('nav_admin').toUpperCase()}
                 </span>
               )}
             </div>
@@ -79,84 +82,103 @@ export default function AccountModal({ user, onClose }) {
 
         {/* Body */}
         <div className="p-5 space-y-3">
+          {/* Language Selector */}
+          <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(212,175,55,0.10)" }}>
+            <LanguageSelector compact />
+          </div>
+
+          {/* My Subscription link */}
+          <Link
+            to="/my-subscription"
+            onClick={onClose}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              WebkitTapHighlightColor: "transparent",
+              userSelect: "none", WebkitUserSelect: "none",
+            }}
+          >
+            <CreditCard className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(212,175,55,0.55)" }} />
+            <span className="font-inter text-sm font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>{t('settings_my_subscription')}</span>
+          </Link>
+
+          {/* Support link */}
+          <Link
+            to="/support"
+            onClick={onClose}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              WebkitTapHighlightColor: "transparent",
+              userSelect: "none", WebkitUserSelect: "none",
+            }}
+          >
+            <Settings className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(212,175,55,0.55)" }} />
+            <span className="font-inter text-sm font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>{t('settings_support')}</span>
+          </Link>
+
           {/* Admin Section */}
           {isAdmin && (
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3 pb-3" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+            <div className="mb-4 pt-3" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4" style={{ color: "#D4AF37" }} />
-                  <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: "#D4AF37" }}>Admin Panel</span>
+                  <span className="font-inter text-xs font-bold uppercase tracking-wider ltr-preserve" style={{ color: "#D4AF37" }}>{t('dashboard_title')}</span>
                 </div>
-                <span className="font-inter text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060", border: "1px solid rgba(212,175,55,0.30)" }}>
-                  OWNER & SUPER ADMIN
-                </span>
               </div>
-              
+
               <div className="space-y-2">
                 <Link
-                  to="/admin/page-permissions"
+                  to="/admin/access-dashboard"
                   onClick={onClose}
                   className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
                   style={{
                     background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
                     border: "1px solid rgba(212,175,55,0.25)",
                     WebkitTapHighlightColor: "transparent",
-                    userSelect: "none",
-                    WebkitUserSelect: "none",
-                  }}
-                >
-                  <Globe className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
-                  <div className="flex-1 text-left">
-                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>Page Permissions</p>
-                    <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Toggle PUBLIC/PRIVATE access</p>
-                  </div>
-                  <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
-                    OPEN
-                  </span>
-                </Link>
-
-                <Link
-                  to="/admin/permissions"
-                  onClick={onClose}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
-                    border: "1px solid rgba(212,175,55,0.25)",
-                    WebkitTapHighlightColor: "transparent",
-                    userSelect: "none",
-                    WebkitUserSelect: "none",
+                    userSelect: "none", WebkitUserSelect: "none",
                   }}
                 >
                   <Shield className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
                   <div className="flex-1 text-left">
-                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>User Access Manager</p>
-                    <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Grant & manage user permissions</p>
+                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>{t('dashboard_users')}</p>
                   </div>
-                  <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
-                    OPEN
-                  </span>
                 </Link>
 
                 <Link
-                  to="/admin/subscriptions"
+                  to="/admin/subscriptions-management"
                   onClick={onClose}
                   className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
                   style={{
                     background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
                     border: "1px solid rgba(212,175,55,0.25)",
                     WebkitTapHighlightColor: "transparent",
-                    userSelect: "none",
-                    WebkitUserSelect: "none",
+                    userSelect: "none", WebkitUserSelect: "none",
                   }}
                 >
                   <CreditCard className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
                   <div className="flex-1 text-left">
-                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>Subscriptions</p>
-                    <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Manage plans & access</p>
+                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>{t('dashboard_subscriptions')}</p>
                   </div>
-                  <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
-                    OPEN
-                  </span>
+                </Link>
+
+                <Link
+                  to="/admin/user-management"
+                  onClick={onClose}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
+                    border: "1px solid rgba(212,175,55,0.25)",
+                    WebkitTapHighlightColor: "transparent",
+                    userSelect: "none", WebkitUserSelect: "none",
+                  }}
+                >
+                  <Globe className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
+                  <div className="flex-1 text-left">
+                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>{t('dashboard_permissions')}</p>
+                  </div>
                 </Link>
               </div>
             </div>
@@ -167,7 +189,7 @@ export default function AccountModal({ user, onClose }) {
               <CheckCircle className="w-10 h-10" style={{ color: "rgba(212,175,55,0.70)" }} />
               <p className="font-amiri text-base" style={{ color: "#f5ecd4" }}>تم استلام طلبك</p>
               <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-                Account deletion request submitted. Your data will be removed within 30 days. Signing you out…
+                {t('msg_deleted')}
               </p>
             </div>
           ) : (
@@ -180,12 +202,11 @@ export default function AccountModal({ user, onClose }) {
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.07)",
                   WebkitTapHighlightColor: "transparent",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
+                  userSelect: "none", WebkitUserSelect: "none",
                 }}
               >
                 <LogOut className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(255,255,255,0.38)" }} />
-                <span className="font-inter text-sm font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>Sign Out</span>
+                <span className="font-inter text-sm font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>{t('settings_logout')}</span>
               </button>
 
               {/* Delete Account */}
@@ -197,12 +218,11 @@ export default function AccountModal({ user, onClose }) {
                     background: "rgba(239,68,68,0.05)",
                     border: "1px solid rgba(239,68,68,0.16)",
                     WebkitTapHighlightColor: "transparent",
-                    userSelect: "none",
-                    WebkitUserSelect: "none",
+                    userSelect: "none", WebkitUserSelect: "none",
                   }}
                 >
                   <Trash2 className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(239,68,68,0.55)" }} />
-                  <span className="font-inter text-sm font-semibold" style={{ color: "rgba(239,68,68,0.60)" }}>Delete Account</span>
+                  <span className="font-inter text-sm font-semibold" style={{ color: "rgba(239,68,68,0.60)" }}>{t('btn_delete')} {t('settings_account')}</span>
                 </button>
               ) : (
                 <div
@@ -211,7 +231,7 @@ export default function AccountModal({ user, onClose }) {
                 >
                   <div className="flex items-start gap-2.5">
                     <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#F87171" }} />
-                    <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
+                    <p className="font-inter text-xs leading-relaxed ltr-preserve" style={{ color: "rgba(255,255,255,0.60)" }}>
                       This will permanently delete your account and all associated data. This cannot be undone.
                     </p>
                   </div>
@@ -221,7 +241,7 @@ export default function AccountModal({ user, onClose }) {
                       className="flex-1 py-2.5 rounded-xl font-inter text-xs font-semibold"
                       style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)", WebkitTapHighlightColor: "transparent" }}
                     >
-                      Cancel
+                      {t('btn_cancel')}
                     </button>
                     <button
                       onClick={handleDeleteAccount}
@@ -229,7 +249,7 @@ export default function AccountModal({ user, onClose }) {
                       className="flex-1 py-2.5 rounded-xl font-inter text-xs font-semibold"
                       style={{ background: "rgba(239,68,68,0.20)", color: "#F87171", WebkitTapHighlightColor: "transparent" }}
                     >
-                      {deleting ? "Processing…" : "Confirm Delete"}
+                      {deleting ? t('lbl_loading') : t('btn_confirm') + ' ' + t('btn_delete')}
                     </button>
                   </div>
                 </div>

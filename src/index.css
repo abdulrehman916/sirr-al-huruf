@@ -151,8 +151,36 @@
     display: none;
   }
 
-  /* Safe RTL text containers */
-  [dir="rtl"] { text-align: right; }
+  /* ── RTL (Arabic) Support ── */
+  [dir="rtl"] {
+    text-align: right;
+    direction: rtl;
+  }
+  [dir="rtl"] .font-inter {
+    direction: ltr;
+    text-align: left;
+  }
+  [dir="rtl"] input,
+  [dir="rtl"] textarea {
+    text-align: right;
+    direction: rtl;
+  }
+  [dir="rtl"] input[type="email"],
+  [dir="rtl"] input[type="search"] {
+    direction: ltr;
+    text-align: left;
+  }
+  [dir="rtl"] .ltr-preserve {
+    direction: ltr;
+    text-align: left;
+  }
+  [dir="rtl"] .nav-scroll-container {
+    direction: ltr;
+  }
+  /* Mirror chevron-based icons for RTL */
+  [dir="rtl"] .mirror-rtl {
+    transform: scaleX(-1);
+  }
 
   /* Prevent horizontal overflow globally — only on media, not layout containers */
   img, svg, video { max-width: 100%; height: auto; }

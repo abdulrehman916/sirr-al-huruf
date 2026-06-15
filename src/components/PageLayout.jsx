@@ -7,24 +7,42 @@ import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
 import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
+import useTranslation from "@/i18n/useTranslation";
 
-const TABS = [
-  { id: "home",             label: "HOME",   arabic: "الرئيسية", path: "/" },
-
-  { id: "abjad-kabir",      label: "ABJAD",  arabic: "الأبجد",   path: "/abjad" },
-  { id: "anasir",           label: "ANASIR", arabic: "عناصر",    path: "/anasir" },
-  { id: "hadim",            label: "HADIM",  arabic: "خادم",     path: "/hadim" },
-  { id: "mizaan9",          label: "MIZAN",  arabic: "ميزان",    path: "/mizaan9" },
-  { id: "magic-sqayer",     label: "SQAYER", arabic: "السحر",    path: "/magic-sqayer" },
-  { id: "vefkin-yapilisi",  label: "VEFKİN", arabic: "الوفق",    path: "/vefkin-yapilisi" },
-  { id: "basthul-huroof-2", label: "BAST",   arabic: "البسط",    path: "/basthul-huroof-2" },
-  { id: "faal-hasrath",     label: "FAAL",   arabic: "فأل",       path: "/faal-hasrath" },
-  { id: "plants",           label: "PLANTS", arabic: "نباتات",    path: "/plants" },
-  { id: "evil-jinn",        label: "EVIL JINN", arabic: "الجن",      path: "/evil-jinn" },
-  { id: "holy-names",       label: "HOLY NAMES", arabic: "الأسماء",   path: "/holy-names" },
-  { id: "astro-clock",      label: "ASTRO CLOCK", arabic: "الساعة الفلكية", path: "/astro-clock" },
-  { id: "support",          label: "SUPPORT", arabic: "الدعم", path: "/support" },
+const TAB_KEYS = [
+  { id: "home",             labelKey: "nav_home",  path: "/" },
+  { id: "abjad-kabir",      labelKey: "nav_abjad", path: "/abjad" },
+  { id: "anasir",           labelKey: "nav_anasir", path: "/anasir" },
+  { id: "hadim",            labelKey: "nav_hadim", path: "/hadim" },
+  { id: "mizaan9",          labelKey: "nav_mizaan", path: "/mizaan9" },
+  { id: "magic-sqayer",     labelKey: "nav_vefk", path: "/magic-sqayer" },
+  { id: "vefkin-yapilisi",  labelKey: "nav_vefk", path: "/vefkin-yapilisi" },
+  { id: "basthul-huroof-2", labelKey: "nav_bast", path: "/basthul-huroof-2" },
+  { id: "faal-hasrath",     labelKey: "nav_faal", path: "/faal-hasrath" },
+  { id: "plants",           labelKey: "nav_plants", path: "/plants" },
+  { id: "evil-jinn",        labelKey: "nav_jinn", path: "/evil-jinn" },
+  { id: "holy-names",       labelKey: "nav_names", path: "/holy-names" },
+  { id: "astro-clock",      labelKey: "nav_astro", path: "/astro-clock" },
+  { id: "support",          labelKey: "nav_support", path: "/support" },
 ];
+
+const PAGE_TITLE_KEYS = {
+  "/":                  "page_home",
+  "/abjad":             "page_abjad",
+  "/anasir":            "page_anasir",
+  "/hadim":             "page_hadim",
+  "/mizaan9":           "page_mizaan",
+  "/magic-sqayer":      "page_magic_sqayer",
+  "/vefkin-yapilisi":   "page_vefk",
+  "/basthul-huroof-2":  "page_bast",
+  "/faal-hasrath":      "page_faal_hasrath",
+  "/plants":            "page_plants",
+  "/evil-jinn":         "page_evil_jinn",
+  "/holy-names":        "page_holy_names",
+  "/astro-clock":       "page_astro_clock",
+  "/support":           "support_title",
+  "/admin/access-dashboard": "dashboard_title",
+};
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -33,7 +51,7 @@ const pageVariants = {
 };
 
 // ── Top horizontal nav tab — instant activation, zero delay ──
-const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
+const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef, t, language }) {
   const handleTouchStart = (e) => {
     // Instant visual feedback on touch
     e.currentTarget.style.opacity = '0.7';
@@ -98,23 +116,12 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         <span
           className="font-amiri font-bold leading-none"
           style={{
-            fontSize: 14,
+            fontSize: language === 'ar' ? 13 : 14,
             color: isActive ? "#E8C84A" : "rgba(255,255,255,0.52)",
             willChange: 'color',
           }}
         >
-          {tab.arabic}
-        </span>
-
-        <span
-          className="font-inter font-semibold tracking-widest mt-0.5 leading-none"
-          style={{
-            fontSize: 7.5,
-            color: isActive ? "rgba(232,200,74,0.88)" : "rgba(255,255,255,0.28)",
-            willChange: 'color',
-          }}
-        >
-          {tab.label}
+          {t(tab.labelKey)}
         </span>
 
         <div
@@ -145,28 +152,13 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
 // Pages where we show a back button instead of breadcrumb nav
 const CHILD_PAGES = ["/plants/"];
 
-// Map pathnames to display titles for the mobile header
-const PAGE_TITLES = {
-  "/":                  "سرّ الحروف",
-  "/abjad":             "الأبجد",
-  "/anasir":            "عناصر",
-  "/hadim":             "خادم",
-  "/mizaan9":           "ميزان",
-  "/magic-sqayer":      "السحر",
-  "/vefkin-yapilisi":   "الوفق",
-  "/basthul-huroof-2":  "بسط الحروف",
-  "/faal-hasrath":      "فأل",
-  "/plants":            "نباتات",
-  "/evil-jinn":         "الجن",
-  "/holy-names":        "الأسماء",
-};
-
 export default function PageLayout({ children }) {
   const location = useLocation();
   const navigate  = useNavigate();
   const { startNav } = useNavigation();
   const [showAccount, setShowAccount] = useState(false);
   const [user, setUser] = useState(null);
+  const { t, language } = useTranslation();
   useScrollPersist();
 
   useEffect(() => {
@@ -176,10 +168,11 @@ export default function PageLayout({ children }) {
 
 
   const isChildPage = CHILD_PAGES.some(p => location.pathname.startsWith(p));
-  const pageTitle = isChildPage ? null : PAGE_TITLES[location.pathname];
+  const pageTitleKey = PAGE_TITLE_KEYS[location.pathname];
+  const pageTitle = isChildPage ? null : (pageTitleKey ? t(pageTitleKey) : null);
 
   const activeId = useMemo(
-    () => TABS.find(t => t.path === location.pathname)?.id ?? undefined,
+    () => TAB_KEYS.find(tab => tab.path === location.pathname)?.id ?? undefined,
     [location.pathname]
   );
 
@@ -275,7 +268,7 @@ export default function PageLayout({ children }) {
               }}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="font-inter text-xs font-semibold tracking-wide">Back</span>
+              <span className="font-inter text-xs font-semibold tracking-wide">{t('btn_back')}</span>
             </button>
           </div>
         )}
@@ -300,7 +293,7 @@ export default function PageLayout({ children }) {
               }}
             >
               <Shield className="w-3.5 h-3.5" />
-              <span className="font-inter text-xs font-bold tracking-wide">Admin</span>
+              <span className="font-inter text-xs font-bold tracking-wide">{t('nav_admin')}</span>
             </button>
           )}
 
@@ -365,13 +358,15 @@ export default function PageLayout({ children }) {
               WebkitUserSelect: 'none',
             }}
           >
-            {TABS.map((tab) => (
+            {TAB_KEYS.map((tab) => (
               <NavTab
                 key={tab.id}
                 tab={tab}
                 isActive={activeId === tab.id}
                 onClick={startNav}
                 tabRef={(el) => (tabRefs.current[tab.id] = el)}
+                t={t}
+                language={language}
               />
             ))}
           </div>

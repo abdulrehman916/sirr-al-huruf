@@ -6,6 +6,7 @@ import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
 import PageSubscriptionModal from "@/components/PageSubscriptionModal";
 import RequestAccessModal from "@/components/RequestAccessModal";
 import { useToast } from "@/components/ui/use-toast";
+import useTranslation from "@/i18n/useTranslation";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -197,6 +198,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 }
 
 function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath, onSubscribe, onRequestAccess }) {
+  const { t } = useTranslation();
   const isExpired = accessStatus === "expired";
   const isRevoked = accessStatus === "revoked";
   const isLocked = accessStatus === "locked";
@@ -223,7 +225,7 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath,
           </div>
 
           <h1 className="font-amiri text-2xl font-bold mb-1" style={{ color: G.text }}>
-            {isExpired ? "Access Expired" : isRevoked ? "Access Revoked" : isLocked ? "Premium Content" : "Access Denied"}
+            {isExpired ? t('protected_expired_title') : isRevoked ? t('protected_revoked_title') : isLocked ? t('protected_locked_title') : t('access_denied')}
           </h1>
           <p className="font-inter text-xs text-white/50 uppercase tracking-widest mb-4">
             {pageName}
@@ -237,7 +239,17 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath,
 
           {isLocked && (
             <p className="text-sm text-white/50 mb-6">
-              This page requires special access. You can subscribe for instant access or request it from the owner.
+              {t('protected_locked_desc')}
+            </p>
+          )}
+          {isExpired && (
+            <p className="text-sm text-white/50 mb-6">
+              {t('protected_expired_desc')}
+            </p>
+          )}
+          {isRevoked && (
+            <p className="text-sm text-white/50 mb-6">
+              {t('protected_revoked_desc')}
             </p>
           )}
 
@@ -255,7 +267,7 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath,
                 }}
               >
                 <Crown className="w-4 h-4" />
-                Subscribe for Access
+                {t('access_subscribe')}
               </button>
 
               {/* Request Access button */}
@@ -269,7 +281,7 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath,
                 }}
               >
                 <Send className="w-4 h-4" />
-                Request Access from Owner
+                {t('access_request')}
               </button>
             </div>
           )}
@@ -285,14 +297,14 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath,
                   color: "#0d1b2a",
                 }}
               >
-                Return to Home
+                {t('not_found_home')}
               </button>
               <button
                 onClick={() => window.location.reload()}
                 className="w-full py-3 rounded-xl font-inter font-semibold text-xs"
                 style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}
               >
-                Try Again
+                {t('msg_try_again')}
               </button>
             </div>
           )}
@@ -306,7 +318,7 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath,
           }}>
             <Star className="w-5 h-5 mx-auto mb-2" style={{ color: "#a855f7" }} />
             <p className="font-inter text-xs text-white/60">
-              Already a VIP member? Your phone or email grants automatic free access.
+              {t('protected_locked_desc')}
             </p>
           </div>
         )}
