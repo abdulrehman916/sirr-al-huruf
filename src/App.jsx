@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense, useMemo } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -17,81 +17,122 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import OfflineNotice from './components/OfflineNotice';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedPage from './components/ProtectedPage';
-// Add page imports here — lazy loaded for performance
-import Home from './pages/Home';
-import Onboarding from './pages/Onboarding';
+import ROUTE_MANIFEST from '@/lib/routeManifest';
 
-const AnasirPage        = lazy(() => import('./pages/AnasirPage'));
-const HadimPage         = lazy(() => import('./pages/HadimPage'));
-const Mizaan9Page       = lazy(() => import('./pages/Mizaan9Page'));
-const AbjadKabirPage    = lazy(() => import('./pages/AbjadKabirPage'));
-const MagicSqayerPage   = lazy(() => import('./pages/MagicSqayerPage'));
-const VefkinYapilisiPage= lazy(() => import('./pages/VefkinYapilisiPage'));
-const BastHuroofPage    = lazy(() => import('./pages/BastHuroofPage'));
-const FaalHasrathPage   = lazy(() => import('./pages/FaalHasrathPage'));
-const PlantsPage        = lazy(() => import('./pages/PlantsPage.jsx'));
-const PlantDetailPage   = lazy(() => import('./pages/PlantDetailPage'));
-const EvilJinnPage          = lazy(() => import('./pages/EvilJinnPage.jsx'));
-const MagicalHolyNamesPage  = lazy(() => import('./pages/MagicalHolyNamesPage'));
-const AdminFaalChobUpload   = lazy(() => import('./pages/AdminFaalChobUpload'));
-const AstroClockPage        = lazy(() => import('./pages/AstroClockPage'));
-const HierarchyAuditPage    = lazy(() => import('./pages/HierarchyAuditPage.jsx'));
-const MizaanPipelineTest    = lazy(() => import('./pages/MizaanPipelineTest'));
-const MizaanAuditReport        = lazy(() => import('./pages/MizaanAuditReport'));
-const IstintakRuleDiscovery    = lazy(() => import('./pages/IstintakRuleDiscovery'));
-const ManuscriptPipelinePage   = lazy(() => import('./pages/ManuscriptPipelinePage'));
-const AbjadBastAuditPage       = lazy(() => import('./pages/AbjadBastAuditPage'));
-const MizanCalculationAudit    = lazy(() => import('./components/mizaan/MizanCalculationAudit'));
-const MizanVefkAuditPage       = lazy(() => import('./pages/MizanVefkAuditPage'));
-const MizanMethodClassification = lazy(() => import('./pages/MizanMethodClassification'));
-const MizanManuscriptAnalysis = lazy(() => import('./pages/MizanManuscriptAnalysis'));
-const MizanVefkModelVerification = lazy(() => import('./pages/MizanVefkModelVerification'));
-const MizanRubaiVerification = lazy(() => import('./pages/MizanRubaiVerification'));
-const MizanManuscriptVerification = lazy(() => import('./pages/MizanManuscriptVerification'));
-const MizanManuscriptAudit = lazy(() => import('./pages/MizanManuscriptAudit'));
-const ManuscriptAuditPage = lazy(() => import('./pages/ManuscriptAuditPage'));
-const ManuscriptActionFinder = lazy(() => import('./pages/ManuscriptActionFinder'));
-const ManuscriptLibraryPage = lazy(() => import('./pages/ManuscriptLibraryPage'));
-const ManuscriptFinalAudit = lazy(() => import('./pages/ManuscriptFinalAudit'));
-const AstrologyOnlyAudit = lazy(() => import('./pages/AstrologyOnlyAudit'));
-const ManuscriptRecordBrowser = lazy(() => import('./pages/ManuscriptRecordBrowser'));
-const ManuscriptRuleAudit = lazy(() => import('./pages/ManuscriptRuleAudit'));
-const ManuscriptAdvancedSearch = lazy(() => import('./pages/ManuscriptAdvancedSearch'));
-const ManazilQualityAudit = lazy(() => import('./pages/ManazilQualityAudit'));
-const ManuscriptCompletionReport = lazy(() => import('./pages/ManuscriptCompletionReport'));
-const CustomerService = lazy(() => import('./pages/CustomerService'));
-const SupportHub = lazy(() => import('./pages/SupportHub'));
-const SupportChat = lazy(() => import('./pages/SupportChat'));
-const SupportVoice = lazy(() => import('./pages/SupportVoice'));
-const SupportTicket = lazy(() => import('./pages/SupportTicket'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const AdminTest = lazy(() => import('./pages/AdminTest'));
-const AdminSupport = lazy(() => import('./pages/AdminSupport'));
-const AdminPermissions = lazy(() => import('./pages/AdminPermissions'));
-const PagePermissions = lazy(() => import('./pages/PagePermissions'));
-const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'));
-const AdminPageSubscriptions = lazy(() => import('./pages/AdminPageSubscriptions'));
-const AdminPricingSettings = lazy(() => import('./pages/AdminPricingSettings.jsx'));
-const SubscriptionExpired = lazy(() => import('./pages/SubscriptionExpired'));
-const OTPLogin = lazy(() => import('./pages/OTPLogin'));
-const SubscriptionPayment = lazy(() => import('./pages/SubscriptionPayment'));
-const SubscriptionPending = lazy(() => import('./pages/SubscriptionPending'));
-const AdminSubscriptionsManagement = lazy(() => import('./pages/AdminSubscriptionsManagement'));
-const RazorpayPayment = lazy(() => import('./pages/RazorpayPayment'));
-const AdminUserManager = lazy(() => import('./pages/AdminUserManager'));
-const AdminUserManagement = lazy(() => import('./pages/AdminUserManagement'));
-const AdminAccessLogs = lazy(() => import('./pages/AdminAccessLogs'));
-const SecurityAuditLogs = lazy(() => import('./pages/SecurityAuditLogs.jsx'));
-const PremiumAccessRequest = lazy(() => import('./pages/PremiumAccessRequest'));
-const AdminSubscriptionRequests = lazy(() => import('./pages/AdminSubscriptionRequests'));
-const AdminUserPermissions = lazy(() => import('./pages/AdminUserPermissions'));
-const OwnerAccessDashboard = lazy(() => import('./pages/OwnerAccessDashboard'));
-const UserDetailPage = lazy(() => import('./pages/UserDetailPage'));
-const MessagesTab = lazy(() => import('./components/admin/MessagesTab'));
-const SubscriptionRequestsTab = lazy(() => import('./components/admin/SubscriptionRequestsTab'));
-const MySubscription = lazy(() => import('./pages/MySubscription'));
-const PaymentPage = lazy(() => import('./pages/PaymentPage'));
+// ── Lazy import map — each chunk name → dynamic import function ──────
+// Vite statically analyzes these for code splitting. Scales to 500+ pages.
+const PAGE_IMPORTS = {
+  // Core
+  Home:                     () => import('./pages/Home'),
+  Onboarding:               () => import('./pages/Onboarding'),
+  OTPLogin:                 () => import('./pages/OTPLogin'),
+  // Content
+  AbjadKabirPage:           () => import('./pages/AbjadKabirPage'),
+  AnasirPage:               () => import('./pages/AnasirPage'),
+  HadimPage:                () => import('./pages/HadimPage'),
+  Mizaan9Page:              () => import('./pages/Mizaan9Page'),
+  MagicSqayerPage:          () => import('./pages/MagicSqayerPage'),
+  VefkinYapilisiPage:       () => import('./pages/VefkinYapilisiPage'),
+  BastHuroofPage:           () => import('./pages/BastHuroofPage'),
+  FaalHasrathPage:          () => import('./pages/FaalHasrathPage'),
+  PlantsPage:               () => import('./pages/PlantsPage'),
+  PlantDetailPage:          () => import('./pages/PlantDetailPage'),
+  EvilJinnPage:             () => import('./pages/EvilJinnPage'),
+  MagicalHolyNamesPage:     () => import('./pages/MagicalHolyNamesPage'),
+  AstroClockPage:           () => import('./pages/AstroClockPage'),
+  // Support
+  CustomerService:          () => import('./pages/CustomerService'),
+  SupportHub:               () => import('./pages/SupportHub'),
+  SupportChat:              () => import('./pages/SupportChat'),
+  SupportVoice:             () => import('./pages/SupportVoice'),
+  SupportTicket:            () => import('./pages/SupportTicket'),
+  // Subscriptions
+  SubscriptionExpired:      () => import('./pages/SubscriptionExpired'),
+  SubscriptionPending:      () => import('./pages/SubscriptionPending'),
+  RazorpayPayment:          () => import('./pages/RazorpayPayment'),
+  PremiumAccessRequest:     () => import('./pages/PremiumAccessRequest'),
+  MySubscription:           () => import('./pages/MySubscription'),
+  PaymentPage:              () => import('./pages/PaymentPage'),
+  // Admin
+  AdminDashboard:           () => import('./pages/AdminDashboard'),
+  AdminTest:                () => import('./pages/AdminTest'),
+  AdminSupport:             () => import('./pages/AdminSupport'),
+  AdminPermissions:         () => import('./pages/AdminPermissions'),
+  PagePermissions:          () => import('./pages/PagePermissions'),
+  AdminSubscriptions:       () => import('./pages/AdminSubscriptions'),
+  AdminPageSubscriptions:   () => import('./pages/AdminPageSubscriptions'),
+  AdminPricingSettings:     () => import('./pages/AdminPricingSettings'),
+  AdminUserManager:         () => import('./pages/AdminUserManager'),
+  AdminUserManagement:      () => import('./pages/AdminUserManagement'),
+  AdminAccessLogs:          () => import('./pages/AdminAccessLogs'),
+  SecurityAuditLogs:        () => import('./pages/SecurityAuditLogs'),
+  AdminSubscriptionsManagement: () => import('./pages/AdminSubscriptionsManagement'),
+  AdminUserPermissions:     () => import('./pages/AdminUserPermissions'),
+  OwnerAccessDashboard:     () => import('./pages/OwnerAccessDashboard'),
+  UserDetailPage:           () => import('./pages/UserDetailPage'),
+  AdminFaalChobUpload:      () => import('./pages/AdminFaalChobUpload'),
+  // Non-pages components
+  SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
+  MessagesTab:              () => import('./components/admin/MessagesTab'),
+  // Audit
+  HierarchyAuditPage:              () => import('./pages/HierarchyAuditPage'),
+  MizaanPipelineTest:              () => import('./pages/MizaanPipelineTest'),
+  MizaanAuditReport:               () => import('./pages/MizaanAuditReport'),
+  IstintakRuleDiscovery:           () => import('./pages/IstintakRuleDiscovery'),
+  ManuscriptPipelinePage:          () => import('./pages/ManuscriptPipelinePage'),
+  AbjadBastAuditPage:              () => import('./pages/AbjadBastAuditPage'),
+  MizanCalculationAudit:           () => import('./components/mizaan/MizanCalculationAudit'),
+  MizanVefkAuditPage:              () => import('./pages/MizanVefkAuditPage'),
+  MizanMethodClassification:       () => import('./pages/MizanMethodClassification'),
+  MizanManuscriptVerification:     () => import('./pages/MizanManuscriptVerification'),
+  MizanManuscriptAnalysis:         () => import('./pages/MizanManuscriptAnalysis'),
+  MizanVefkModelVerification:      () => import('./pages/MizanVefkModelVerification'),
+  MizanRubaiVerification:          () => import('./pages/MizanRubaiVerification'),
+  MizanManuscriptAudit:            () => import('./pages/MizanManuscriptAudit'),
+  ManuscriptAuditPage:             () => import('./pages/ManuscriptAuditPage'),
+  ManuscriptActionFinder:          () => import('./pages/ManuscriptActionFinder'),
+  ManuscriptLibraryPage:           () => import('./pages/ManuscriptLibraryPage'),
+  ManuscriptFinalAudit:            () => import('./pages/ManuscriptFinalAudit'),
+  AstrologyOnlyAudit:              () => import('./pages/AstrologyOnlyAudit'),
+  ManuscriptRecordBrowser:         () => import('./pages/ManuscriptRecordBrowser'),
+  ManuscriptRuleAudit:             () => import('./pages/ManuscriptRuleAudit'),
+  ManuscriptAdvancedSearch:        () => import('./pages/ManuscriptAdvancedSearch'),
+  ManazilQualityAudit:             () => import('./pages/ManazilQualityAudit'),
+  ManuscriptCompletionReport:      () => import('./pages/ManuscriptCompletionReport'),
+};
 
+// ── Route factory — one lazy() + one <Route> per manifest entry ──────
+function useRouteElements() {
+  return useMemo(() => ROUTE_MANIFEST.map(entry => {
+    const importFn = PAGE_IMPORTS[entry.chunk];
+    if (!importFn) {
+      console.warn(`[RouteManifest] No import for chunk: ${entry.chunk}`);
+      return null;
+    }
+    const LazyPage = lazy(importFn);
+
+    const isPublic  = entry.flags?.includes('public');
+    const isNoAuth  = entry.flags?.includes('noauth');
+
+    if (isNoAuth) {
+      return <Route key={entry.path} path={entry.path} element={<LazyPage />} />;
+    }
+
+    return (
+      <Route
+        key={entry.path}
+        path={entry.path}
+        element={
+          <ErrorBoundary>
+            <ProtectedPage routePath={entry.path} requiresPermission={isPublic ? false : undefined}>
+              <LazyPage />
+            </ProtectedPage>
+          </ErrorBoundary>
+        }
+      />
+    );
+  }).filter(Boolean), []);
+}
 
 // Minimal fallback — matches app background, no flash
 const PageFallback = () => (
@@ -102,16 +143,15 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const routeElements = useRouteElements();
 
   // Redirect unauthenticated users to onboarding (except auth pages and public pages)
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated && !authError) {
       const publicAuthPaths = ['/onboarding', '/otp-login', '/login', '/register', '/forgot-password', '/reset-password'];
       const isAuthPath = publicAuthPaths.some(p => location.pathname.startsWith(p));
-      // Check if the current path is a public page (requiresPermission: false)
       const permConfig = getPageConfig(location.pathname);
       const isPublicPage = permConfig && permConfig.requiresPermission === false;
-      // Support sub-pages beginning with /support
       const isSupportPath = location.pathname.startsWith('/support');
       if (!isAuthPath && !isPublicPage && !isSupportPath) {
         navigate('/onboarding', { replace: true });
@@ -153,77 +193,7 @@ const AuthenticatedApp = () => {
       >
         <Suspense fallback={<PageFallback />}>
           <Routes location={location}>
-            <Route path="/" element={<ProtectedPage routePath="/"><Home /></ProtectedPage>} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/abjad" element={<ProtectedPage routePath="/abjad"><AbjadKabirPage /></ProtectedPage>} />
-            <Route path="/anasir" element={<ProtectedPage routePath="/anasir"><AnasirPage /></ProtectedPage>} />
-            <Route path="/hadim" element={<ProtectedPage routePath="/hadim"><HadimPage /></ProtectedPage>} />
-            <Route path="/mizaan9" element={<ProtectedPage routePath="/mizaan9"><Mizaan9Page /></ProtectedPage>} />
-            <Route path="/magic-sqayer" element={<ProtectedPage routePath="/magic-sqayer"><MagicSqayerPage /></ProtectedPage>} />
-            <Route path="/vefkin-yapilisi" element={<ProtectedPage routePath="/vefkin-yapilisi"><VefkinYapilisiPage /></ProtectedPage>} />
-            <Route path="/basthul-huroof-2" element={<ProtectedPage routePath="/basthul-huroof-2"><BastHuroofPage /></ProtectedPage>} />
-            <Route path="/faal-hasrath" element={<ProtectedPage routePath="/faal-hasrath"><FaalHasrathPage /></ProtectedPage>} />
-            <Route path="/plants" element={<ProtectedPage routePath="/plants"><PlantsPage /></ProtectedPage>} />
-            <Route path="/plants/:id" element={<ProtectedPage routePath="/plants/:id"><PlantDetailPage /></ProtectedPage>} />
-            <Route path="/evil-jinn" element={<ProtectedPage routePath="/evil-jinn"><EvilJinnPage /></ProtectedPage>} />
-            <Route path="/holy-names" element={<ProtectedPage routePath="/holy-names"><MagicalHolyNamesPage /></ProtectedPage>} />
-            <Route path="/astro-clock" element={<ProtectedPage routePath="/astro-clock"><AstroClockPage /></ProtectedPage>} />
-            <Route path="/admin/faal-chob-upload" element={<ProtectedPage routePath="/admin/faal-chob-upload"><AdminFaalChobUpload /></ProtectedPage>} />
-            <Route path="/hierarchy-audit" element={<ProtectedPage routePath="/hierarchy-audit"><HierarchyAuditPage /></ProtectedPage>} />
-            <Route path="/pipeline-test" element={<ProtectedPage routePath="/pipeline-test"><MizaanPipelineTest /></ProtectedPage>} />
-            <Route path="/audit-report" element={<ProtectedPage routePath="/audit-report"><MizaanAuditReport /></ProtectedPage>} />
-            <Route path="/istintak-discovery" element={<ProtectedPage routePath="/istintak-discovery"><IstintakRuleDiscovery /></ProtectedPage>} />
-            <Route path="/manuscript-pipeline" element={<ProtectedPage routePath="/manuscript-pipeline"><ManuscriptPipelinePage /></ProtectedPage>} />
-            <Route path="/abjad-bast-audit" element={<ProtectedPage routePath="/abjad-bast-audit"><AbjadBastAuditPage /></ProtectedPage>} />
-            <Route path="/mizan-calculation-audit" element={<ProtectedPage routePath="/mizan-calculation-audit"><MizanCalculationAudit /></ProtectedPage>} />
-            <Route path="/vefk-audit" element={<ProtectedPage routePath="/vefk-audit"><MizanVefkAuditPage /></ProtectedPage>} />
-            <Route path="/method-classification" element={<ProtectedPage routePath="/method-classification"><MizanMethodClassification /></ProtectedPage>} />
-            <Route path="/manuscript-verification" element={<ProtectedPage routePath="/manuscript-verification"><MizanManuscriptVerification /></ProtectedPage>} />
-            <Route path="/manuscript-analysis" element={<ProtectedPage routePath="/manuscript-analysis"><MizanManuscriptAnalysis /></ProtectedPage>} />
-            <Route path="/vefk-model-verification" element={<ProtectedPage routePath="/vefk-model-verification"><MizanVefkModelVerification /></ProtectedPage>} />
-            <Route path="/rubai-verification" element={<ProtectedPage routePath="/rubai-verification"><MizanRubaiVerification /></ProtectedPage>} />
-            <Route path="/manuscript-audit" element={<ProtectedPage routePath="/manuscript-audit"><MizanManuscriptAudit /></ProtectedPage>} />
-            <Route path="/manuscript-audit-full" element={<ProtectedPage routePath="/manuscript-audit-full"><ManuscriptAuditPage /></ProtectedPage>} />
-            <Route path="/manuscript-action-finder" element={<ProtectedPage routePath="/manuscript-action-finder"><ManuscriptActionFinder /></ProtectedPage>} />
-            <Route path="/manuscript-library" element={<ProtectedPage routePath="/manuscript-library"><ManuscriptLibraryPage /></ProtectedPage>} />
-            <Route path="/manuscript-final-audit" element={<ProtectedPage routePath="/manuscript-final-audit"><ManuscriptFinalAudit /></ProtectedPage>} />
-            <Route path="/astrology-only-audit" element={<ProtectedPage routePath="/astrology-only-audit"><AstrologyOnlyAudit /></ProtectedPage>} />
-            <Route path="/manuscript-browser" element={<ProtectedPage routePath="/manuscript-browser"><ManuscriptRecordBrowser /></ProtectedPage>} />
-            <Route path="/manuscript-rule-audit" element={<ProtectedPage routePath="/manuscript-rule-audit"><ManuscriptRuleAudit /></ProtectedPage>} />
-            <Route path="/manuscript-search" element={<ProtectedPage routePath="/manuscript-search"><ManuscriptAdvancedSearch /></ProtectedPage>} />
-            <Route path="/manazil-quality-audit" element={<ProtectedPage routePath="/manazil-quality-audit"><ManazilQualityAudit /></ProtectedPage>} />
-            <Route path="/manuscript-completion-report" element={<ProtectedPage routePath="/manuscript-completion-report"><ManuscriptCompletionReport /></ProtectedPage>} />
-            <Route path="/customer-service" element={<ProtectedPage routePath="/customer-service"><CustomerService /></ProtectedPage>} />
-            <Route path="/support" element={<ProtectedPage routePath="/support" requiresSubscription={false}><SupportHub /></ProtectedPage>} />
-            <Route path="/support/chat" element={<ProtectedPage routePath="/support/chat" requiresSubscription={false}><SupportChat /></ProtectedPage>} />
-            <Route path="/support/voice" element={<ProtectedPage routePath="/support/voice" requiresSubscription={false}><SupportVoice /></ProtectedPage>} />
-            <Route path="/support/ticket" element={<ProtectedPage routePath="/support/ticket" requiresSubscription={false}><SupportTicket /></ProtectedPage>} />
-            <Route path="/admin/dashboard" element={<ProtectedPage routePath="/admin/dashboard" requiresPermission={false} requiresSubscription={false}><AdminDashboard /></ProtectedPage>} />
-            <Route path="/admin/test" element={<ProtectedPage routePath="/admin/test" requiresPermission={false}><AdminTest /></ProtectedPage>} />
-            <Route path="/admin/support" element={<ProtectedPage routePath="/admin/support"><AdminSupport /></ProtectedPage>} />
-            <Route path="/admin/permissions" element={<ProtectedPage routePath="/admin/permissions" requiresPermission={false}><AdminPermissions /></ProtectedPage>} />
-            <Route path="/admin/page-permissions" element={<ProtectedPage routePath="/admin/page-permissions" requiresPermission={false}><PagePermissions /></ProtectedPage>} />
-            <Route path="/admin/subscriptions" element={<ProtectedPage routePath="/admin/subscriptions"><AdminSubscriptions /></ProtectedPage>} />
-            <Route path="/admin/page-subscriptions" element={<ProtectedPage routePath="/admin/page-subscriptions" requiresPermission={false}><AdminPageSubscriptions /></ProtectedPage>} />
-            <Route path="/admin/pricing-settings" element={<ProtectedPage routePath="/admin/pricing-settings" requiresPermission={false}><AdminPricingSettings /></ProtectedPage>} />
-            <Route path="/subscription-expired" element={<ProtectedPage routePath="/subscription-expired" requiresPermission={false}><SubscriptionExpired /></ProtectedPage>} />
-            <Route path="/otp-login" element={<ProtectedPage routePath="/otp-login" requiresPermission={false}><OTPLogin /></ProtectedPage>} />
-            <Route path="/subscription-payment/:pagePath" element={<ProtectedPage routePath="/subscription-payment/:pagePath"><RazorpayPayment /></ProtectedPage>} />
-            <Route path="/subscription-pending" element={<ProtectedPage routePath="/subscription-pending"><SubscriptionPending /></ProtectedPage>} />
-            <Route path="/admin/user-manager" element={<ProtectedPage routePath="/admin/user-manager"><AdminUserManager /></ProtectedPage>} />
-            <Route path="/admin/user-management" element={<ProtectedPage routePath="/admin/user-management" requiresPermission={false} requiresSubscription={false}><AdminUserManagement /></ProtectedPage>} />
-            <Route path="/admin/access-logs" element={<ProtectedPage routePath="/admin/access-logs" requiresPermission={false} requiresSubscription={false}><AdminAccessLogs /></ProtectedPage>} />
-            <Route path="/admin/security-audit" element={<ProtectedPage routePath="/admin/security-audit" requiresPermission={false} requiresSubscription={false}><SecurityAuditLogs /></ProtectedPage>} />
-            <Route path="/admin/subscriptions-management" element={<ProtectedPage routePath="/admin/subscriptions-management"><AdminSubscriptionsManagement /></ProtectedPage>} />
-            <Route path="/premium-access-request" element={<ProtectedPage routePath="/premium-access-request" requiresSubscription={false}><PremiumAccessRequest /></ProtectedPage>} />
-            <Route path="/admin/subscription-requests" element={<ProtectedPage routePath="/admin/subscription-requests" requiresPermission={false} requiresSubscription={false}><SubscriptionRequestsTab /></ProtectedPage>} />
-            <Route path="/admin/messages" element={<ProtectedPage routePath="/admin/messages" requiresPermission={false}><MessagesTab /></ProtectedPage>} />
-            <Route path="/admin/user-permissions" element={<ProtectedPage routePath="/admin/user-permissions" requiresPermission={false} requiresSubscription={false}><AdminUserPermissions /></ProtectedPage>} />
-            <Route path="/admin/access-dashboard" element={<ProtectedPage routePath="/admin/access-dashboard" requiresPermission={false} requiresSubscription={false}><OwnerAccessDashboard /></ProtectedPage>} />
-            <Route path="/admin/user-detail/:userId" element={<ProtectedPage routePath="/admin/user-detail/:userId" requiresPermission={false} requiresSubscription={false}><UserDetailPage /></ProtectedPage>} />
-            <Route path="/my-subscription" element={<ProtectedPage routePath="/my-subscription" requiresPermission={false} requiresSubscription={false}><MySubscription /></ProtectedPage>} />
-            <Route path="/payment/:planId" element={<ProtectedPage routePath="/payment/:planId" requiresPermission={false} requiresSubscription={false}><PaymentPage /></ProtectedPage>} />
-
+            {routeElements}
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Suspense>
@@ -238,7 +208,6 @@ function App() {
   const { langSet } = useI18n();
   const [langSetupDone, setLangSetupDone] = useState(langSet);
 
-  // If language never set, show language picker after splash
   const showLanguageSetup = splashDone && !langSetupDone;
 
   if (showLanguageSetup) {
