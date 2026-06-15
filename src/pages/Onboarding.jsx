@@ -4,22 +4,32 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Smartphone, Mail, Loader2, KeyRound, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { Smartphone, Mail, Loader2, KeyRound, ArrowRight, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import AtmosphericBackground from "@/components/AtmosphericBackground";
 
-const STEPS = { WELCOME: 0, CONTACT: 1, OTP: 2, COMPLETE: 3 };
+const STEPS = { WELCOME: 0, CONTACT: 1, OTP: 2 };
+
+function generatePassword() {
+  return "sah_" + Math.random().toString(36).substring(2, 18) + "!A1";
+}
+
+function generateEmailFromPhone(phone) {
+  const digits = (phone || "").replace(/\D/g, "").slice(-10);
+  return `user${digits}@sirralhuruf.internal`;
+}
 
 export default function Onboarding() {
   const [step, setStep] = useState(STEPS.WELCOME);
-  const [contactType, setContactType] = useState("mobile");
+  const [contactType, setContactType] = useState("email");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [otpId, setOtpId] = useState(null);
-  const [verifyToken, setVerifyToken] = useState(null);
+  const [password, setPassword] = useState("");
+  const [platformEmail, setPlatformEmail] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -34,22 +44,40 @@ export default function Onboarding() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      const contactValue = contactType === "mobile" ? mobile : email;
-      const response = await base44.functions.invoke("generateLoginOTP", {
-        mobile: contactType === "mobile" ? contactValue : "",
-        email: contactType === "email" ? contactValue : "",
-        purpose: "REGISTRATION"
-      });
-      if (response.data.success) {
-        setOtpId(response.data.otp_id);
+      if (contactType === "email") {
+        // ── Email: Full platform auth ────────────────────────────
+        const pwd = generatePassword();
+        setPassword(pwd);
+        setPlatformEmail(email);
+
+        await base44.auth.register({ email, password: pwd });
+        // Platform sends OTP to email — show OTP input
         setStep(STEPS.OTP);
-        toast({ title: "OTP Sent", description: `Check your ${contactType}` });
+        toast({ title: "Verification Code Sent", description: "Check your email for the 6-digit code" });
       } else {
-        setError(response.data.message || "Failed to send OTP");
+        // ── Mobile: Custom OTP via SMS ───────────────────────────
+        const response = await base44.functions.invoke("generateLoginOTP", {
+          mobile,
+          email: "",
+          purpose: "REGISTRATION"
+        });
+        if (response.data?.success) {
+          setOtpId(response.data.otp_id);
+          // Also generate platform credentials for later use
+          const genEmail = generateEmailFromPhone(mobile);
+          const pwd = generatePassword();
+          setPassword(pwd);
+          setPlatformEmail(genEmail);
+          setStep(STEPS.OTP);
+          toast({ title: "OTP Sent", description: "Check your phone for the verification code" });
+        } else {
+          setError(response.data?.message || "Failed to send OTP");
+        }
       }
     } catch (err) {
-      setError("Unable to send OTP. Please try again.");
+      setError(err?.message || "Unable to send OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -59,50 +87,63 @@ export default function Onboarding() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      const contactValue = contactType === "mobile" ? mobile : email;
-      const verifyRes = await base44.functions.invoke("verifyOTP", {
-        otp_id: otpId,
-        otp_code: otp
-      });
-      if (!verifyRes.data.success) {
-        setError(verifyRes.data.message || verifyRes.data.error || "Invalid OTP");
-        setLoading(false);
-        return;
-      }
+      if (contactType === "email") {
+        // ── Email: Verify platform OTP ───────────────────────────
+        const verifyResult = await base44.auth.verifyOtp({ email: platformEmail, otpCode: otp });
+        await base44.auth.setToken(verifyResult.access_token);
 
-      // Store the token for later use
-      setVerifyToken(verifyRes.data.access_token);
+        // Complete onboarding profile
+        await base44.functions.invoke("completeOnboarding", {
+          email: platformEmail,
+          mobile: "",
+          otp_id: "platform_auth"
+        }).catch(() => {});
 
-      // Complete onboarding — create profile
-      const onboardRes = await base44.functions.invoke("completeOnboarding", {
-        email: contactType === "email" ? contactValue : "",
-        mobile: contactType === "mobile" ? contactValue : "",
-        otp_id: otpId
-      });
-
-      if (onboardRes.data.success) {
-        // Try to auto-register on the platform if email provided
-        if (contactType === "email") {
-          try {
-            const randomPwd = "b44_" + Math.random().toString(36).substring(2, 15);
-            await base44.auth.register({ email: contactValue, password: randomPwd });
-            // Registration succeeded — now verify with the platform's OTP flow
-            // The platform may send its own OTP; use our verified token meanwhile
-          } catch (regErr) {
-            // Registration might fail if user already exists — that's fine
-          }
-        }
-
-        // Set token and enter the app
-        await base44.auth.setToken(verifyRes.data.access_token);
         toast({ title: "Welcome!", description: "Your account is ready." });
         window.location.href = "/";
       } else {
-        setError(onboardRes.data.message || "Failed to complete setup");
+        // ── Mobile: Verify custom OTP, then register on platform ─
+        const verifyRes = await base44.functions.invoke("verifyOTP", {
+          otp_id: otpId,
+          otp_code: otp
+        });
+        if (!verifyRes.data?.success) {
+          setError(verifyRes.data?.message || verifyRes.data?.error || "Invalid OTP");
+          setLoading(false);
+          return;
+        }
+
+        // Create platform account with generated email
+        try {
+          await base44.auth.register({ email: platformEmail, password });
+        } catch (regErr) {
+          // User may already exist — try logging in directly
+        }
+
+        // Attempt platform login
+        try {
+          await base44.auth.loginViaEmailPassword(platformEmail, password);
+          // Success — real platform session
+        } catch (loginErr) {
+          // If login fails (unverified), show error and suggest email
+          setError("Mobile login unavailable. Please use Email option instead.");
+          setLoading(false);
+          return;
+        }
+
+        await base44.functions.invoke("completeOnboarding", {
+          email: platformEmail,
+          mobile: mobile,
+          otp_id: otpId
+        }).catch(() => {});
+
+        toast({ title: "Welcome!", description: "Your account is ready." });
+        window.location.href = "/";
       }
     } catch (err) {
-      setError("Verification failed. Please try again.");
+      setError(err?.message || "Verification failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -111,15 +152,22 @@ export default function Onboarding() {
   const handleResendOTP = async () => {
     setLoading(true);
     try {
-      const contactValue = contactType === "mobile" ? mobile : email;
-      const response = await base44.functions.invoke("generateLoginOTP", {
-        mobile: contactType === "mobile" ? contactValue : "",
-        email: contactType === "email" ? contactValue : "",
-        purpose: "REGISTRATION"
-      });
-      if (response.data.success) {
-        setOtpId(response.data.otp_id);
-        toast({ title: "OTP Resent", description: "Check your messages" });
+      if (contactType === "email") {
+        // Re-register to trigger new platform OTP
+        const pwd = generatePassword();
+        setPassword(pwd);
+        await base44.auth.register({ email: platformEmail, password: pwd });
+        toast({ title: "Code Resent", description: "Check your email" });
+      } else {
+        const response = await base44.functions.invoke("generateLoginOTP", {
+          mobile,
+          email: "",
+          purpose: "REGISTRATION"
+        });
+        if (response.data?.success) {
+          setOtpId(response.data.otp_id);
+          toast({ title: "OTP Resent", description: "Check your phone" });
+        }
       }
     } catch {
       toast({ title: "Error", description: "Failed to resend OTP", variant: "destructive" });
@@ -188,7 +236,7 @@ export default function Onboarding() {
           </h2>
           <p className="font-inter text-[10px] tracking-[0.2em] uppercase"
             style={{ color: "rgba(212,175,55,0.60)" }}>
-            {step === STEPS.CONTACT ? "Enter your details" : "Enter OTP"}
+            {step === STEPS.CONTACT ? "Enter your details" : "Enter verification code"}
           </p>
         </div>
 
@@ -202,15 +250,6 @@ export default function Onboarding() {
           {step === STEPS.CONTACT ? (
             <form onSubmit={handleSendOTP} className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => setContactType("mobile")}
-                  className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all"
-                  style={{
-                    background: contactType === "mobile" ? "rgba(212,175,55,0.18)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${contactType === "mobile" ? "rgba(212,175,55,0.45)" : "rgba(255,255,255,0.08)"}`,
-                    color: contactType === "mobile" ? "#E8C84A" : "rgba(255,255,255,0.50)"
-                  }}>
-                  <Smartphone className="w-4 h-4" /> Mobile
-                </button>
                 <button type="button" onClick={() => setContactType("email")}
                   className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all"
                   style={{
@@ -220,22 +259,31 @@ export default function Onboarding() {
                   }}>
                   <Mail className="w-4 h-4" /> Email
                 </button>
+                <button type="button" onClick={() => setContactType("mobile")}
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    background: contactType === "mobile" ? "rgba(212,175,55,0.18)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${contactType === "mobile" ? "rgba(212,175,55,0.45)" : "rgba(255,255,255,0.08)"}`,
+                    color: contactType === "mobile" ? "#E8C84A" : "rgba(255,255,255,0.50)"
+                  }}>
+                  <Smartphone className="w-4 h-4" /> Mobile
+                </button>
               </div>
 
               <div className="space-y-1.5">
                 <Label style={{ color: "rgba(255,255,255,0.60)", fontSize: "0.8rem" }}>
-                  {contactType === "mobile" ? "Mobile Number" : "Email Address"}
+                  {contactType === "email" ? "Email Address" : "Mobile Number"}
                 </Label>
                 <div className="relative">
-                  {contactType === "mobile"
-                    ? <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.30)" }} />
-                    : <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.30)" }} />
+                  {contactType === "email"
+                    ? <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.30)" }} />
+                    : <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.30)" }} />
                   }
                   <Input
-                    type={contactType === "mobile" ? "tel" : "email"}
-                    placeholder={contactType === "mobile" ? "+971 50 123 4567" : "you@example.com"}
-                    value={contactType === "mobile" ? mobile : email}
-                    onChange={(e) => contactType === "mobile" ? setMobile(e.target.value) : setEmail(e.target.value)}
+                    type={contactType === "email" ? "email" : "tel"}
+                    placeholder={contactType === "email" ? "you@example.com" : "+971 50 123 4567"}
+                    value={contactType === "email" ? email : mobile}
+                    onChange={(e) => contactType === "email" ? setEmail(e.target.value) : setMobile(e.target.value)}
                     className="pl-10 h-12"
                     style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", color: "#e0e0e0", fontSize: "16px" }}
                     required
@@ -244,7 +292,7 @@ export default function Onboarding() {
               </div>
 
               <Button type="submit" className="w-full h-12 font-medium btn-gold" disabled={loading}>
-                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</> : "Send OTP"}
+                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</> : `Send ${contactType === "email" ? "Verification" : "OTP"}`}
               </Button>
             </form>
           ) : (
@@ -252,12 +300,12 @@ export default function Onboarding() {
               <p className="text-sm text-center" style={{ color: "rgba(255,255,255,0.45)" }}>
                 Code sent to{" "}
                 <span style={{ color: "rgba(255,255,255,0.75)" }}>
-                  {contactType === "mobile" ? mobile : email}
+                  {contactType === "email" ? email : mobile}
                 </span>
               </p>
 
               <div className="space-y-1.5">
-                <Label htmlFor="otp" style={{ color: "rgba(255,255,255,0.60)", fontSize: "0.8rem" }}>OTP Code</Label>
+                <Label htmlFor="otp" style={{ color: "rgba(255,255,255,0.60)", fontSize: "0.8rem" }}>Verification Code</Label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.30)" }} />
                   <Input
@@ -283,7 +331,7 @@ export default function Onboarding() {
               <div className="text-center space-y-2">
                 <button type="button" onClick={handleResendOTP} disabled={loading}
                   className="text-sm underline" style={{ color: "rgba(212,175,55,0.70)" }}>
-                  Resend OTP
+                  Resend Code
                 </button>
                 <br />
                 <button type="button" onClick={() => { setStep(STEPS.CONTACT); setError(""); }}

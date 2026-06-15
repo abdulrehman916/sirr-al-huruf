@@ -7,6 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { NavigationProvider } from './context/NavigationContext';
+import { ROUTE_PERMISSION_MAP } from '@/lib/permissionCodes';
 import { PageStateProvider } from './context/PageStateContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
@@ -99,12 +100,17 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Redirect unauthenticated users to onboarding (except auth pages)
+  // Redirect unauthenticated users to onboarding (except auth pages and public pages)
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated && !authError) {
       const publicAuthPaths = ['/onboarding', '/otp-login', '/login', '/register', '/forgot-password', '/reset-password'];
       const isAuthPath = publicAuthPaths.some(p => location.pathname.startsWith(p));
-      if (!isAuthPath) {
+      // Check if the current path is a public page (requiresPermission: false)
+      const permConfig = ROUTE_PERMISSION_MAP[location.pathname];
+      const isPublicPage = permConfig && permConfig.requiresPermission === false;
+      // Support sub-pages beginning with /support
+      const isSupportPath = location.pathname.startsWith('/support');
+      if (!isAuthPath && !isPublicPage && !isSupportPath) {
         navigate('/onboarding', { replace: true });
       }
     }

@@ -192,6 +192,83 @@ function GrantAccessModal({ user, existingPaths, onClose, onGranted }) {
   );
 }
 
+// ── Extend Access Modal ──────────────────────────────────────────────────────
+function ExtendAccessModal({ permission, onClose, onExtended }) {
+  const { toast } = useToast();
+  const [duration, setDuration] = useState("1_MONTH");
+  const [processing, setProcessing] = useState(false);
+
+  const handleExtend = async () => {
+    setProcessing(true);
+    const dur = DURATION_OPTIONS.find(d => d.value === duration);
+    const newExpiry = new Date(Date.now() + dur.days * 86400000).toISOString();
+    try {
+      await base44.functions.invoke("extendPermissionExpiry", {
+        permission_id: permission.permission_id,
+        new_expiry_date: newExpiry,
+        extended_by: (await base44.auth.me()).id,
+      });
+      toast({ title: `✓ Extended "${permission.page_name}" by ${dur.label}` });
+      onExtended();
+      onClose();
+    } catch (e) {
+      toast({ title: "Extend failed", description: e.message, variant: "destructive" });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.85)" }} onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+        className="w-full max-w-sm rounded-2xl p-6 space-y-5"
+        style={{ background: "linear-gradient(145deg,#0c1630,#060c1c)", border: `1px solid ${G.borderHi}` }}
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-inter font-bold text-white text-base">Extend Access</h3>
+            <p className="text-xs text-white/45 mt-0.5">{permission.page_name} · expires {fmt(permission.expiry_date)}</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10" style={{ color: "rgba(255,255,255,0.40)" }}>
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: G.dim }}>New Duration</p>
+          <div className="flex flex-wrap gap-2">
+            {DURATION_OPTIONS.map(opt => (
+              <button key={opt.value} onClick={() => setDuration(opt.value)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: duration === opt.value ? G.bgHi : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${duration === opt.value ? G.borderHi : "rgba(255,255,255,0.08)"}`,
+                  color: duration === opt.value ? G.text : "rgba(255,255,255,0.55)",
+                }}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl font-inter font-semibold text-sm"
+            style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
+            Cancel
+          </button>
+          <button onClick={handleExtend} disabled={processing}
+            className="flex-1 py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg,#f6d860,#c98a14)", color: "#0d1b2a" }}>
+            {processing ? "Extending…" : "Extend Access"}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ── Users Tab ─────────────────────────────────────────────────────────────────
 function UsersTab({ users }) {
   const [search, setSearch] = useState("");
@@ -1233,6 +1310,7 @@ function UserAccessTab({ users, permissions, onRefresh }) {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [grantUser, setGrantUser] = useState(null);
+  const [extendPerm, setExtendPerm] = useState(null);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -1285,7 +1363,8 @@ function UserAccessTab({ users, permissions, onRefresh }) {
             return (
               <UserAccessRow key={u.id} user={u} userPerms={userPerms} activeCount={activePerms.length}
                 existingPaths={existingPaths} onRevoke={handleRevoke}
-                onGrant={() => setGrantUser(u)} />
+                onGrant={() => setGrantUser(u)}
+                onExtend={(perm) => setExtendPerm(perm)} />
             );
           })}
         </div>
@@ -1300,12 +1379,19 @@ function UserAccessTab({ users, permissions, onRefresh }) {
             onGranted={onRefresh}
           />
         )}
+        {extendPerm && (
+          <ExtendAccessModal
+            permission={extendPerm}
+            onClose={() => setExtendPerm(null)}
+            onExtended={onRefresh}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
 }
 
-function UserAccessRow({ user, userPerms, activeCount, existingPaths, onRevoke, onGrant }) {
+function UserAccessRow({ user, userPerms, activeCount, existingPaths, onRevoke, onGrant, onExtend }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="rounded-xl border overflow-hidden" style={{ background: G.bg, borderColor: G.border }}>
@@ -1362,11 +1448,20 @@ function UserAccessRow({ user, userPerms, activeCount, existingPaths, onRevoke, 
                           </p>
                         </div>
                         {!revoked && !expired && (
-                          <button onClick={() => onRevoke(perm)}
-                            className="w-7 h-7 rounded flex items-center justify-center hover:bg-red-500/20 flex-shrink-0"
-                            style={{ color: "#ef4444", border: "1px solid rgba(239,68,68,0.20)" }}>
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button onClick={() => onExtend(perm)}
+                              className="w-7 h-7 rounded flex items-center justify-center hover:bg-blue-500/20"
+                              style={{ color: "#60a5fa", border: "1px solid rgba(96,165,250,0.25)" }}
+                              title="Extend access">
+                              <CalendarPlus2 className="w-3 h-3" />
+                            </button>
+                            <button onClick={() => onRevoke(perm)}
+                              className="w-7 h-7 rounded flex items-center justify-center hover:bg-red-500/20"
+                              style={{ color: "#ef4444", border: "1px solid rgba(239,68,68,0.20)" }}
+                              title="Revoke access">
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     );
