@@ -173,45 +173,6 @@ export default function PageLayout({ children }) {
 
 
 
-  // ── Touch gesture lock: horizontal swipe inside nav → only nav moves, page stays still ──
-  // iOS Safari ignores touch-action:pan-x when the element is inside a scrollable parent,
-  // so we intercept touchmove and preventDefault on horizontal gestures to lock the page.
-  useEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
-
-    let startX = 0;
-    let startY = 0;
-    let isLocked = false;
-
-    const onTouchStart = (e) => {
-      if (e.touches.length !== 1) return;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      isLocked = false;
-    };
-
-    const onTouchMove = (e) => {
-      if (e.touches.length !== 1 || isLocked) return;
-      const dx = Math.abs(e.touches[0].clientX - startX);
-      const dy = Math.abs(e.touches[0].clientY - startY);
-      // Only lock when the gesture is clearly horizontal (>2x horizontal bias)
-      if (dx > 8 && dx > dy * 2) {
-        isLocked = true;
-        e.preventDefault();
-      }
-    };
-
-    // Must use non-passive listener so preventDefault works
-    nav.addEventListener("touchstart", onTouchStart, { passive: true });
-    nav.addEventListener("touchmove", onTouchMove, { passive: false });
-
-    return () => {
-      nav.removeEventListener("touchstart", onTouchStart);
-      nav.removeEventListener("touchmove", onTouchMove);
-    };
-  }, []);
-
   // Native back gesture support
   useEffect(() => {
     const onPop = () => {
@@ -230,6 +191,7 @@ export default function PageLayout({ children }) {
         height: "100dvh",
         overflow: "hidden",
         overflowX: "hidden",
+        overscrollBehaviorX: "none",
         maxWidth: "100vw",
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
@@ -339,6 +301,7 @@ export default function PageLayout({ children }) {
           flex: 1,
           minHeight: 0,
           overflowX: "hidden",
+          overscrollBehaviorX: "none",
           overscrollBehaviorY: "none",
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
