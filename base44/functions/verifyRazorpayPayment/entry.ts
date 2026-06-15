@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import crypto from 'node:crypto';
 
 Deno.serve(async (req) => {
   try {
@@ -13,24 +14,39 @@ Deno.serve(async (req) => {
     }
 
     const { 
-      user_id, 
-      page_path, 
-      page_name, 
-      plan_name, 
-      amount,
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
+      razorpay_order_id, 
+      razorpay_payment_id, 
+      razorpay_signature,
+      page_path,
+      page_name,
+      plan_name,
+      amount
     } = await req.json();
 
-    // Validate required fields
-    if (!user_id || !page_path || !plan_name) {
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return Response.json({ 
         success: false, 
-        message: "Missing required fields" 
+        message: "Missing payment details" 
       }, { status: 400 });
     }
 
+    // Verify signature
+    const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    
+    const expectedSignature = crypto
+      .createHmac("sha256", keySecret)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return Response.json({ 
+        success: false, 
+        message: "Invalid payment signature" 
+      }, { status: 400 });
+    }
+
+    // Payment verified - create subscription
     const now = new Date();
     const subscriptionId = `SUB-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
@@ -45,33 +61,26 @@ Deno.serve(async (req) => {
     }
     // LIFETIME has null expiry
 
-    // Create subscription record (ACTIVE immediately after Razorpay payment)
+    // Create active subscription
     const subscription = await base44.entities.Subscription.create({
       subscription_id: subscriptionId,
-      user_id: user_id,
-      user_name: user.full_name || "",
-      user_phone: user.mobile || "",
-      user_email: user.email || "",
+      user_id: user.id,
       page_path: page_path,
       page_name: page_name,
       plan_name: plan_name,
-      amount: amount || 0,
-      currency: "INR",
-      razorpay_order_id: razorpay_order_id || "",
-      razorpay_payment_id: razorpay_payment_id || "",
-      razorpay_signature: razorpay_signature || "",
       start_date: now.toISOString(),
       expiry_date: expiryDate ? expiryDate.toISOString() : null,
-      status: "ACTIVE", // Active immediately after payment
+      status: "ACTIVE",
       granted_by: "system",
       granted_at: now.toISOString(),
-      notes: `Razorpay Payment: ${razorpay_payment_id}. Order: ${razorpay_order_id}`
+      notes: `Razorpay Payment: ${razorpay_payment_id}. Order: ${razorpay_order_id}. Amount: ₹${amount}`
     });
 
     return Response.json({
       success: true,
-      message: "Subscription activated successfully",
-      subscription_id: subscriptionId
+      message: "Payment successful! Access granted.",
+      subscription_id: subscriptionId,
+      payment_id: razorpay_payment_id
     });
 
   } catch (error) {

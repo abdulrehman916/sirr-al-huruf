@@ -69,6 +69,8 @@ const OTPLogin = lazy(() => import('./pages/OTPLogin'));
 const SubscriptionPayment = lazy(() => import('./pages/SubscriptionPayment'));
 const SubscriptionPending = lazy(() => import('./pages/SubscriptionPending'));
 const AdminSubscriptionsManagement = lazy(() => import('./pages/AdminSubscriptionsManagement'));
+const RazorpayPayment = lazy(() => import('./pages/RazorpayPayment'));
+const AdminUserManager = lazy(() => import('./pages/AdminUserManager'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -164,8 +166,9 @@ const AuthenticatedApp = () => {
             <Route path="/admin/pricing-settings" element={<ProtectedPage routePath="/admin/pricing-settings" requiresPermission={false}><AdminPricingSettings /></ProtectedPage>} />
             <Route path="/subscription-expired" element={<ProtectedPage routePath="/subscription-expired" requiresPermission={false}><SubscriptionExpired /></ProtectedPage>} />
             <Route path="/otp-login" element={<ProtectedPage routePath="/otp-login" requiresPermission={false}><OTPLogin /></ProtectedPage>} />
-            <Route path="/subscription-payment" element={<ProtectedPage routePath="/subscription-payment"><SubscriptionPayment /></ProtectedPage>} />
+            <Route path="/subscription-payment/:pagePath" element={<ProtectedPage routePath="/subscription-payment/:pagePath"><RazorpayPayment /></ProtectedPage>} />
             <Route path="/subscription-pending" element={<ProtectedPage routePath="/subscription-pending"><SubscriptionPending /></ProtectedPage>} />
+            <Route path="/admin/user-manager" element={<ProtectedPage routePath="/admin/user-manager"><AdminUserManager /></ProtectedPage>} />
             <Route path="/admin/subscriptions-management" element={<ProtectedPage routePath="/admin/subscriptions-management"><AdminSubscriptionsManagement /></ProtectedPage>} />
 
 

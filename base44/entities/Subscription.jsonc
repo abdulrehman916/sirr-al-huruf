@@ -10,6 +10,18 @@
       "type": "string",
       "description": "Base44 User ID (foreign key)"
     },
+    "user_name": {
+      "type": "string",
+      "description": "User full name"
+    },
+    "user_phone": {
+      "type": "string",
+      "description": "User phone number"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "User email address"
+    },
     "page_path": {
       "type": "string",
       "description": "Page route this subscription grants access to e.g. /abjad, /hadim"
@@ -21,13 +33,33 @@
     "plan_name": {
       "type": "string",
       "enum": [
-        "TRIAL",
-        "30_DAY",
-        "60_DAY",
-        "90_DAY",
+        "1_MONTH",
+        "6_MONTHS",
+        "1_YEAR",
         "LIFETIME"
       ],
       "description": "Subscription plan type"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Amount paid in INR"
+    },
+    "currency": {
+      "type": "string",
+      "default": "INR",
+      "description": "Currency code"
+    },
+    "razorpay_order_id": {
+      "type": "string",
+      "description": "Razorpay order ID"
+    },
+    "razorpay_payment_id": {
+      "type": "string",
+      "description": "Razorpay payment ID"
+    },
+    "razorpay_signature": {
+      "type": "string",
+      "description": "Razorpay payment signature"
     },
     "start_date": {
       "type": "string",
@@ -40,11 +72,12 @@
     "status": {
       "type": "string",
       "enum": [
+        "PENDING",
         "ACTIVE",
         "EXPIRED",
         "CANCELLED"
       ],
-      "default": "ACTIVE",
+      "default": "PENDING",
       "description": "Current subscription status"
     },
     "granted_by": {
@@ -75,8 +108,6 @@
     "page_name",
     "plan_name",
     "start_date",
-    "status",
-    "granted_by",
-    "granted_at"
+    "status"
   ]
 }

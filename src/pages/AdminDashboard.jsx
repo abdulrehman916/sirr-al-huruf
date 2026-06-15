@@ -54,6 +54,20 @@ const SIDEBAR_ITEMS = [
     description: "Set custom prices per page"
   },
   {
+    path: "/admin/user-manager",
+    label: "User Manager",
+    arabic: "إدارة المستخدمين",
+    icon: Users,
+    description: "View users & subscriptions"
+  },
+  {
+    path: "/admin/user-management",
+    label: "User Manager",
+    arabic: "إدارة المستخدمين",
+    icon: Users,
+    description: "View users & subscriptions"
+  },
+  {
     path: "/admin/subscriptions-management",
     label: "Subscriptions",
     arabic: "الاشتراكات",
