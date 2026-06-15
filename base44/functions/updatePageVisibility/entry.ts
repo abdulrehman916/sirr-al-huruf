@@ -78,6 +78,19 @@ Deno.serve(async (req) => {
         updated_at: now
       });
       
+      // Create audit log
+      try {
+        await base44.functions.invoke('createAuditLog', {
+          action_type: 'PAGE_VISIBILITY_CHANGE',
+          target_entity: 'PageVisibilityConfig',
+          target_id: existingConfigs[0].id,
+          details: JSON.stringify({ page_path, page_name: pageName, requires_permission, changed_by: user.email }),
+          ip_address: req.headers.get("x-forwarded-for")?.split(",")[0] || null
+        });
+      } catch (auditError) {
+        console.error("Failed to create audit log:", auditError);
+      }
+      
       return Response.json({ 
         success: true, 
         message: `Page ${page_path} visibility updated to ${requires_permission ? 'PRIVATE' : 'PUBLIC'}`,
@@ -95,6 +108,18 @@ Deno.serve(async (req) => {
         updated_by: user.id,
         updated_at: now
       });
+      
+      // Create audit log
+      try {
+        await base44.functions.invoke('createAuditLog', {
+          action_type: 'PAGE_VISIBILITY_CHANGE',
+          target_entity: 'PageVisibilityConfig',
+          details: JSON.stringify({ page_path, page_name: pageName, requires_permission, created_by: user.email }),
+          ip_address: req.headers.get("x-forwarded-for")?.split(",")[0] || null
+        });
+      } catch (auditError) {
+        console.error("Failed to create audit log:", auditError);
+      }
       
       return Response.json({ 
         success: true, 

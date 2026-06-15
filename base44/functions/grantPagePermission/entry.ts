@@ -51,6 +51,34 @@ Deno.serve(async (req) => {
       extended_count: 0
     });
 
+    // Create audit log
+    try {
+      await base44.functions.invoke('createAuditLog', {
+        action_type: 'PERMISSION_GRANT',
+        target_user_id: user_id,
+        target_entity: 'PagePermission',
+        target_id: permissionId,
+        details: JSON.stringify({ page_path, page_name, permission_code, granted_by: user.email, start_date, expiry_date }),
+        ip_address: req.headers.get("x-forwarded-for")?.split(",")[0] || null
+      });
+    } catch (auditError) {
+      console.error("Failed to create audit log:", auditError);
+    }
+
+    // Create audit log
+    try {
+      await base44.functions.invoke('createAuditLog', {
+        action_type: 'PERMISSION_GRANT',
+        target_user_id: user_id,
+        target_entity: 'PagePermission',
+        target_id: permissionId,
+        details: JSON.stringify({ page_path, page_name, granted_by: user.email, start_date, expiry_date }),
+        ip_address: req.headers.get("x-forwarded-for")?.split(",")[0] || null
+      });
+    } catch (auditError) {
+      console.error("Failed to create audit log:", auditError);
+    }
+
     // Update user profile permission count
     const profiles = await base44.entities.UserAccessProfile.filter({ user_id: user_id });
     if (profiles.length > 0) {

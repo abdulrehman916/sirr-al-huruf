@@ -73,6 +73,7 @@ const RazorpayPayment = lazy(() => import('./pages/RazorpayPayment'));
 const AdminUserManager = lazy(() => import('./pages/AdminUserManager'));
 const AdminUserManagement = lazy(() => import('./pages/AdminUserManagement'));
 const AdminAccessLogs = lazy(() => import('./pages/AdminAccessLogs'));
+const SecurityAuditLogs = lazy(() => import('./pages/SecurityAuditLogs.jsx'));
 const PremiumAccessRequest = lazy(() => import('./pages/PremiumAccessRequest'));
 const AdminSubscriptionRequests = lazy(() => import('./pages/AdminSubscriptionRequests'));
 const AdminUserPermissions = lazy(() => import('./pages/AdminUserPermissions'));
@@ -181,6 +182,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/user-manager" element={<ProtectedPage routePath="/admin/user-manager"><AdminUserManager /></ProtectedPage>} />
             <Route path="/admin/user-management" element={<ProtectedPage routePath="/admin/user-management" requiresPermission={false} requiresSubscription={false}><AdminUserManagement /></ProtectedPage>} />
             <Route path="/admin/access-logs" element={<ProtectedPage routePath="/admin/access-logs" requiresPermission={false} requiresSubscription={false}><AdminAccessLogs /></ProtectedPage>} />
+            <Route path="/admin/security-audit" element={<ProtectedPage routePath="/admin/security-audit" requiresPermission={false} requiresSubscription={false}><SecurityAuditLogs /></ProtectedPage>} />
             <Route path="/admin/subscriptions-management" element={<ProtectedPage routePath="/admin/subscriptions-management"><AdminSubscriptionsManagement /></ProtectedPage>} />
             <Route path="/premium-access-request" element={<ProtectedPage routePath="/premium-access-request" requiresSubscription={false}><PremiumAccessRequest /></ProtectedPage>} />
             <Route path="/admin/subscription-requests" element={<ProtectedPage routePath="/admin/subscription-requests" requiresPermission={false} requiresSubscription={false}><SubscriptionRequestsTab /></ProtectedPage>} />

@@ -17,6 +17,7 @@ import PaymentsTab from "@/components/admin/PaymentsTab";
 import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal";
 import MessagesTab from "@/components/admin/MessagesTab";
 import SubscriptionRequestsTab from "@/components/admin/SubscriptionRequestsTab";
+import { Link } from "react-router-dom";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -63,6 +64,7 @@ const TABS = [
   { id: "messages",    label: "Messages",         icon: MessageSquare },
   { id: "visibility",  label: "Page Visibility",  icon: Globe },
   { id: "access",      label: "User Access",      icon: Shield },
+  { id: "security",    label: "Security Audit",   icon: Shield },
 ];
 
 const PLAN_COLORS = { Basic: "#60a5fa", Premium: "#f59e0b", VIP: "#a855f7" };
@@ -1506,6 +1508,18 @@ export default function OwnerAccessDashboard() {
           {tab === "messages"   && <MessagesTab />}
           {tab === "visibility" && <VisibilityTab pageConfigs={pageConfigs} onRefresh={loadAll} />}
           {tab === "access"     && <UserAccessTab users={users} permissions={permissions} onRefresh={loadAll} />}
+          {tab === "security"   && (
+            <div className="text-center py-12">
+              <Shield className="w-12 h-12 mx-auto mb-3 opacity-30" style={{ color: G.text }} />
+              <p className="text-white/60 mb-4">View detailed security audit logs</p>
+              <Link to="/admin/security-audit">
+                <button className="px-6 py-3 rounded-xl text-sm font-bold"
+                  style={{ background: G.bgHi, border: `1px solid ${G.borderHi}`, color: G.text }}>
+                  Open Security Audit Logs →
+                </button>
+              </Link>
+            </div>
+          )}
         </div>
 
       </motion.div>
