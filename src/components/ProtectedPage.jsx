@@ -35,11 +35,35 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 
   const checkAccess = async () => {
     try {
+      // ── Layer 1: Explicit prop override — no auth needed ──────────────────
+      if (!requiresPermission) {
+        setAccessStatus("granted");
+        return;
+      }
+
+      // ── Layer 2: Database page visibility — public pages bypass auth ──────
+      try {
+        const dbConfigs = await base44.entities.PageVisibilityConfig.list();
+        const dbConfig = (dbConfigs || []).find(c => c.page_path === routePath);
+        if (dbConfig && !dbConfig.requires_permission) {
+          setAccessStatus("granted");
+          return;
+        }
+      } catch {}
+
+      // ── Layer 3: Static route map fallback — public pages bypass auth ─────
+      const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
+      if (!permissionConfig || !permissionConfig.requiresPermission) {
+        setAccessStatus("granted");
+        return;
+      }
+
+      // ── Layer 4: Auth-required from this point ────────────────────────────
       let user;
       try {
         user = await base44.auth.me();
       } catch {
-        setError("Session expired. Please refresh.");
+        setError("Authentication required");
         setAccessStatus("denied");
         return;
       }
@@ -50,34 +74,11 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         return;
       }
 
-      // No permission required → grant immediately
-      if (!requiresPermission) {
-        setAccessStatus("granted");
-        return;
-      }
-
       // Admin/owner bypass
       if (user.role === "admin" || user.role === "owner") {
         setAccessStatus("granted");
         return;
       }
-
-      // Check database page visibility
-      try {
-        const dbConfigs = await base44.entities.PageVisibilityConfig.list();
-        const dbConfig = (dbConfigs || []).find(c => c.page_path === routePath);
-        if (dbConfig && !dbConfig.requires_permission) {
-          setAccessStatus("granted");
-          return;
-        }
-        if (!dbConfig) {
-          const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
-          if (!permissionConfig || !permissionConfig.requiresPermission) {
-            setAccessStatus("granted");
-            return;
-          }
-        }
-      } catch {}
 
       // VIP check
       try {
@@ -99,7 +100,6 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       } catch {}
 
       // Permission-based access
-      const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
       if (permissionConfig?.code) {
         try {
           const response = await base44.functions.invoke("checkPageAccess", {
