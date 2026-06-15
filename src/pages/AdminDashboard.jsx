@@ -19,6 +19,13 @@ const G = {
 
 const SIDEBAR_ITEMS = [
   {
+    path: "/admin/user-permissions",
+    label: "User Permissions",
+    arabic: "أذونات المستخدمين",
+    icon: Shield,
+    description: "Grant & revoke page access per user"
+  },
+  {
     path: "/admin/user-management",
     label: "User Access Manager",
     arabic: "إدارة المستخدمين",
