@@ -10,7 +10,7 @@ import { useScrollPersist } from "../context/PageStateContext";
 
 const TABS = [
   { id: "home",             label: "HOME",   arabic: "الرئيسية", path: "/" },
-  { id: "page-permissions", label: "PAGE PERMISSIONS", arabic: "أذونات الصفحات", path: "/admin/page-permissions" },
+
   { id: "abjad-kabir",      label: "ABJAD",  arabic: "الأبجد",   path: "/abjad" },
   { id: "anasir",           label: "ANASIR", arabic: "عناصر",    path: "/anasir" },
   { id: "hadim",            label: "HADIM",  arabic: "خادم",     path: "/hadim" },
@@ -171,6 +171,8 @@ export default function PageLayout({ children }) {
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
+
+
 
   const isChildPage = CHILD_PAGES.some(p => location.pathname.startsWith(p));
   const pageTitle = isChildPage ? null : PAGE_TITLES[location.pathname];

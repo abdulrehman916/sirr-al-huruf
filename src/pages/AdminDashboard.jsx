@@ -83,6 +83,7 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [user, setUser] = useState(null);
   const [pendingRequests, setPendingRequests] = useState(0);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -103,6 +104,7 @@ export default function AdminDashboard() {
       }
       setUser(currentUser);
       setIsAdmin(true);
+      setIsOwner(currentUser.role === 'owner');
     } catch (error) {
       setIsAdmin(false);
       toast({
@@ -189,7 +191,7 @@ export default function AdminDashboard() {
 
             {/* Navigation */}
             <nav className="space-y-2">
-              {SIDEBAR_ITEMS.map((item) => {
+              {SIDEBAR_ITEMS.filter(item => item.path !== '/admin/page-permissions' || isOwner).map((item) => {
                 const isActive = location.pathname === item.path;
                 const Icon = item.icon;
                 const hasBadge = item.path === "/admin/subscription-requests" && pendingRequests > 0;
@@ -257,7 +259,7 @@ export default function AdminDashboard() {
 
               {/* Quick Access Cards */}
               <div className="grid md:grid-cols-2 gap-4">
-                {SIDEBAR_ITEMS.map((item) => {
+                {SIDEBAR_ITEMS.filter(item => item.path !== '/admin/page-permissions' || isOwner).map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link

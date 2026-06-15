@@ -27,9 +27,8 @@ export default function PagePermissions() {
   const checkAdmin = async () => {
     try {
       const user = await base44.auth.me();
-      if (!['admin', 'owner'].includes(user?.role)) {
+      if (user?.role !== 'owner') {
         setIsAdmin(false);
-        toast({ title: "Access Denied", description: "Admin/owner only", variant: "destructive" });
         return;
       }
       setIsAdmin(true);

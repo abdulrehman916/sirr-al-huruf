@@ -56,13 +56,6 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         return;
       }
       
-      // Admin/owner bypass all checks
-      if (user.role === 'admin' || user.role === 'owner') {
-        console.log("Admin/Owner bypass:", user.email, "Role:", user.role);
-        setAccessStatus("granted");
-        return;
-      }
-
       // If explicitly marked as not requiring permission, grant access
       if (!requiresPermission) {
         setAccessStatus("granted");
