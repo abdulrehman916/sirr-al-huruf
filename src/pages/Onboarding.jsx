@@ -97,9 +97,8 @@ export default function Onboarding() {
         // Complete onboarding profile
         await base44.functions.invoke("completeOnboarding", {
           email: platformEmail,
-          mobile: "",
-          otp_id: "platform_auth"
-        }).catch(() => {});
+          mobile: ""
+        });
 
         toast({ title: "Welcome!", description: "Your account is ready." });
         window.location.href = "/";
@@ -137,7 +136,7 @@ export default function Onboarding() {
           email: platformEmail,
           mobile: mobile,
           otp_id: otpId
-        }).catch(() => {});
+        });
 
         toast({ title: "Welcome!", description: "Your account is ready." });
         window.location.href = "/";
