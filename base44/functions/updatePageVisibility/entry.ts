@@ -9,14 +9,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const { page_path, requiresPermission } = await req.json();
+    const { page_path, requires_permission } = await req.json();
 
-    if (!page_path || typeof requiresPermission !== 'boolean') {
-      return Response.json({ error: 'Invalid input: page_path and requiresPermission (boolean) required' }, { status: 400 });
+    if (!page_path || typeof requires_permission !== 'boolean') {
+      return Response.json({ error: 'Invalid input: page_path and requires_permission (boolean) required' }, { status: 400 });
     }
 
-    // Get permission config from permissionCodes.js to get page_name
-    const permissionCodesModule = await import('npm:@base44/sdk@0.8.31');
     // Use hardcoded page names mapping for simplicity
     const pageNames = {
       '/': 'Home',
@@ -65,7 +63,7 @@ Deno.serve(async (req) => {
       '/admin/test': 'Admin Test'
     };
 
-    const page_name = pageNames[page_path] || page_path;
+    const pageName = pageNames[page_path] || page_path;
 
     // Upsert: try to find existing record, update or create
     const existingConfigs = await base44.entities.PageVisibilityConfig.filter({ page_path });
@@ -75,24 +73,24 @@ Deno.serve(async (req) => {
     if (existingConfigs && existingConfigs.length > 0) {
       // Update existing
       await base44.entities.PageVisibilityConfig.update(existingConfigs[0].id, {
-        requires_permission: requiresPermission,
+        requires_permission: requires_permission,
         updated_by: user.id,
         updated_at: now
       });
       
       return Response.json({ 
         success: true, 
-        message: `Page ${page_path} visibility updated to ${requiresPermission ? 'PRIVATE' : 'PUBLIC'}`,
+        message: `Page ${page_path} visibility updated to ${requires_permission ? 'PRIVATE' : 'PUBLIC'}`,
         page_path,
-        requiresPermission,
+        requires_permission,
         action: 'updated'
       });
     } else {
       // Create new
       await base44.entities.PageVisibilityConfig.create({
         page_path,
-        page_name,
-        requires_permission: requiresPermission,
+        page_name: pageName,
+        requires_permission: requires_permission,
         admin_only: page_path.startsWith('/admin/'),
         updated_by: user.id,
         updated_at: now
@@ -100,9 +98,9 @@ Deno.serve(async (req) => {
       
       return Response.json({ 
         success: true, 
-        message: `Page ${page_path} visibility created as ${requiresPermission ? 'PRIVATE' : 'PUBLIC'}`,
+        message: `Page ${page_path} visibility created as ${requires_permission ? 'PRIVATE' : 'PUBLIC'}`,
         page_path,
-        requiresPermission,
+        requires_permission,
         action: 'created'
       });
     }
