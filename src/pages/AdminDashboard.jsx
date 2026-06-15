@@ -275,7 +275,38 @@ export default function AdminDashboard() {
 
               {/* Quick Access Cards */}
               <div className="grid md:grid-cols-2 gap-4">
+                {/* Access Dashboard - Featured First */}
+                <Link
+                  to="/admin/access-dashboard"
+                  className="p-5 rounded-2xl transition-all duration-200 hover:scale-[1.02] ring-2 ring-gold/40"
+                  style={{
+                    background: G.bgHi,
+                    border: `1px solid ${G.borderHi}`
+                  }}
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className="p-2 rounded-lg"
+                      style={{ background: "rgba(212,175,55,0.25)", border: `1px solid ${G.text}` }}
+                    >
+                      <Crown className="w-5 h-5" style={{ color: G.text }} />
+                    </div>
+                    <div>
+                      <h3 className="font-inter text-base font-bold text-white">
+                        Access Dashboard
+                      </h3>
+                      <p className="font-amiri text-xs" style={{ color: G.text }}>
+                        لوحة تحكم الوصول
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-white/60 text-sm">
+                    Unified: requests, VIP, user permissions, page visibility
+                  </p>
+                </Link>
+
                 {SIDEBAR_ITEMS.filter(item => item.path !== '/admin/page-permissions' || isOwner).map((item) => {
+                  if (item.path === '/admin/access-dashboard') return null;
                   const Icon = item.icon;
                   return (
                     <Link
