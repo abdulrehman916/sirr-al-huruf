@@ -70,7 +70,6 @@ const PagePermissions = lazy(() => import('./pages/PagePermissions'));
 const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'));
 const AdminPageSubscriptions = lazy(() => import('./pages/AdminPageSubscriptions'));
 const AdminPricingSettings = lazy(() => import('./pages/AdminPricingSettings.jsx'));
-const AccessTestPrivate = lazy(() => import('./pages/AccessTestPrivate'));
 const SubscriptionExpired = lazy(() => import('./pages/SubscriptionExpired'));
 const OTPLogin = lazy(() => import('./pages/OTPLogin'));
 const SubscriptionPayment = lazy(() => import('./pages/SubscriptionPayment'));
@@ -220,8 +219,6 @@ const AuthenticatedApp = () => {
             <Route path="/admin/access-dashboard" element={<ProtectedPage routePath="/admin/access-dashboard" requiresPermission={false} requiresSubscription={false}><OwnerAccessDashboard /></ProtectedPage>} />
             <Route path="/my-subscription" element={<ProtectedPage routePath="/my-subscription" requiresPermission={false} requiresSubscription={false}><MySubscription /></ProtectedPage>} />
             <Route path="/payment/:planId" element={<ProtectedPage routePath="/payment/:planId" requiresPermission={false} requiresSubscription={false}><PaymentPage /></ProtectedPage>} />
-            <Route path="/access-test-private" element={<ProtectedPage routePath="/access-test-private"><AccessTestPrivate /></ProtectedPage>} />
-
 
             <Route path="*" element={<PageNotFound />} />
           </Routes>
