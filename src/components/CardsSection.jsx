@@ -90,6 +90,16 @@ const CARD_ICONS = {
       <circle cx="16" cy="16" r="9" stroke={color} strokeWidth="0.4" strokeOpacity="0.25" strokeDasharray="1.5,3"/>
     </svg>
   ),
+  astroClock: (color) => (
+    <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+      <circle cx="16" cy="16" r="13" stroke={color} strokeWidth="1" strokeOpacity="0.75" fill="none"/>
+      <circle cx="16" cy="16" r="2" fill={color} fillOpacity="0.9"/>
+      <line x1="16" y1="5" x2="16" y2="10" stroke={color} strokeWidth="1.2" strokeOpacity="0.8"/>
+      <line x1="16" y1="14" x2="16" y2="8" stroke={color} strokeWidth="1" strokeOpacity="0.85"/>
+      <line x1="16" y1="14" x2="21" y2="18" stroke={color} strokeWidth="0.8" strokeOpacity="0.65"/>
+      <circle cx="16" cy="5" r="1" fill={color} fillOpacity="0.7"/>
+    </svg>
+  ),
   evilJinn: (color) => (
     <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
       <path d="M16 4 C10 4 6 10 6 16 C6 22 10 28 16 28 C22 28 26 22 26 16 C26 10 22 4 16 4Z"
@@ -113,7 +123,8 @@ const NAV_CARDS = [
   { path: "/faal-hasrath",     arabic: "فأل",          label: "FAAL",             subtitle: "Sacred Omen System",        iconKey: "faal",   accent: [212, 175, 55] },
   { path: "/plants",           arabic: "نباتات",       label: "PLANTS",           subtitle: "Medicinal Dictionary",      iconKey: "plants", accent: [34, 197, 94] },
   { path: "/holy-names",       arabic: "أسماء مقدسة",  label: "HOLY NAMES",       subtitle: "Sacred Names Reference",    iconKey: "holyNames", accent: [212, 175, 55] },
-  { path: "/evil-jinn",        arabic: "الجن الشرير",  label: "EVIL JINN",        subtitle: "Jinn Classification",       iconKey: "evilJinn", accent: [239, 68, 68] },
+  { path: "/evil-jinn",        arabic: "الجن الشرير",  label: "EVIL JINN",        subtitle: "Jinn Classification",       iconKey: "evilJinn",   accent: [239, 68, 68] },
+  { path: "/astro-clock",      arabic: "الساعة الفلكية", label: "ASTRO CLOCK",      subtitle: "Celestial Time Engine",     iconKey: "astroClock", accent: [99, 179, 237] },
 ];
 
 function IconOrb({ iconKey, accent }) {
