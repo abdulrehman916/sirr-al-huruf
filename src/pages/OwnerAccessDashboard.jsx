@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import {
   Users, CreditCard, Globe, Shield, Search, Plus, Trash2,
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
@@ -270,16 +270,21 @@ function ExtendAccessModal({ permission, onClose, onExtended }) {
 }
 
 // ── Users Tab ─────────────────────────────────────────────────────────────────
-function UsersTab({ users }) {
+function UsersTab({ users, profiles }) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const enriched = useMemo(() => users.map(u => {
+    const prof = profiles.find(p => p.user_id === u.id);
+    return { ...u, profile: prof };
+  }), [users, profiles]);
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return users;
-    return users.filter(u =>
+    if (!q) return enriched;
+    return enriched.filter(u =>
       (u.email || "").toLowerCase().includes(q) ||
       (u.full_name || "").toLowerCase().includes(q)
     );
-  }, [users, search]);
+  }, [enriched, search]);
 
   return (
     <div className="space-y-4">
@@ -305,30 +310,41 @@ function UsersTab({ users }) {
               style={{ background: G.bg, borderColor: G.border }}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
                 style={{ background: G.bgHi, color: G.text, border: `1px solid ${G.border}` }}>
-                {(u.full_name || u.email || "?")[0].toUpperCase()}
+                {(u.profile?.full_name || u.full_name || u.email || "?")[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-inter font-bold text-white text-sm truncate">{u.full_name || "Unnamed"}</p>
+                <p className="font-inter font-bold text-white text-sm truncate">
+                  {u.profile?.full_name || u.full_name || "Unnamed"}
+                </p>
                 <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
                   <span className="text-xs text-white/40 flex items-center gap-1">
                     <Mail className="w-3 h-3" />{u.email || "—"}
                   </span>
-                  {u.mobile && (
+                  {(u.profile?.mobile || u.mobile) && (
                     <span className="text-xs text-white/40 flex items-center gap-1">
-                      <Phone className="w-3 h-3" />{u.mobile}
+                      <Phone className="w-3 h-3" />{u.profile?.mobile || u.mobile}
                     </span>
                   )}
+                  <span className="text-xs text-white/40 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {u.profile?.last_login ? fmt(u.profile.last_login) : "—"}
+                  </span>
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-xs text-white/30 flex items-center gap-1 justify-end">
-                  <Calendar className="w-3 h-3" />
-                  {fmt(u.created_date)}
-                </p>
                 <p className="text-xs mt-0.5 font-semibold capitalize"
                   style={{ color: u.role === "admin" ? G.text : "rgba(255,255,255,0.35)" }}>
-                  {u.role || "user"}
+                  {u.profile?.role || u.role || "user"}
                 </p>
+                <p className="text-xs mt-0.5 font-semibold capitalize"
+                  style={{ color: u.profile?.account_status === "SUSPENDED" ? "#f59e0b" : u.profile?.account_status === "DEACTIVATED" ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
+                  {u.profile?.account_status || "ACTIVE"}
+                </p>
+                <button onClick={() => navigate(`/admin/user-detail/${u.id}`)}
+                  className="mt-1.5 px-3 py-1 rounded-lg text-xs font-bold"
+                  style={{ background: "rgba(59,130,246,0.10)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.25)" }}>
+                  View Details →
+                </button>
               </div>
             </div>
           ))}
@@ -1484,6 +1500,7 @@ export default function OwnerAccessDashboard() {
   const [loading, setLoading] = useState(true);
 
   const [users, setUsers] = useState([]);
+  const [profiles, setProfiles] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [pageConfigs, setPageConfigs] = useState([]);
@@ -1508,8 +1525,9 @@ export default function OwnerAccessDashboard() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [allUsers, perms, subs, configs, allPlans, allVip, allRequests] = await Promise.all([
+      const [allUsers, allProfiles, perms, subs, configs, allPlans, allVip, allRequests] = await Promise.all([
         base44.entities.User.list(),
+        base44.entities.UserAccessProfile.list(),
         base44.entities.PagePermission.list("-granted_at", 500),
         base44.entities.Subscription.list("-start_date", 500),
         base44.entities.PageVisibilityConfig.list(),
@@ -1518,6 +1536,7 @@ export default function OwnerAccessDashboard() {
         base44.entities.AccessRequest.list("-requested_at", 500),
       ]);
       setUsers(allUsers);
+      setProfiles(allProfiles);
       setPermissions(perms);
       setSubscriptions(subs);
       setPageConfigs(configs);
@@ -1594,7 +1613,7 @@ export default function OwnerAccessDashboard() {
 
         {/* Tab content */}
         <div>
-          {tab === "users"      && <UsersTab users={users} />}
+          {tab === "users"      && <UsersTab users={users} profiles={profiles} />}
           {tab === "subs"       && <SubscriptionsTab subscriptions={subscriptions} users={users} />}
           {tab === "payments"   && <PaymentsTab subscriptions={subscriptions} users={users} onManage={setManagingSub} />}
           {tab === "plans"      && <PlansTab plans={plans} onRefresh={loadAll} />}

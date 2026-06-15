@@ -84,6 +84,7 @@ const PremiumAccessRequest = lazy(() => import('./pages/PremiumAccessRequest'));
 const AdminSubscriptionRequests = lazy(() => import('./pages/AdminSubscriptionRequests'));
 const AdminUserPermissions = lazy(() => import('./pages/AdminUserPermissions'));
 const OwnerAccessDashboard = lazy(() => import('./pages/OwnerAccessDashboard'));
+const UserDetailPage = lazy(() => import('./pages/UserDetailPage'));
 const MessagesTab = lazy(() => import('./components/admin/MessagesTab'));
 const SubscriptionRequestsTab = lazy(() => import('./components/admin/SubscriptionRequestsTab'));
 const MySubscription = lazy(() => import('./pages/MySubscription'));
@@ -217,6 +218,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/messages" element={<ProtectedPage routePath="/admin/messages" requiresPermission={false}><MessagesTab /></ProtectedPage>} />
             <Route path="/admin/user-permissions" element={<ProtectedPage routePath="/admin/user-permissions" requiresPermission={false} requiresSubscription={false}><AdminUserPermissions /></ProtectedPage>} />
             <Route path="/admin/access-dashboard" element={<ProtectedPage routePath="/admin/access-dashboard" requiresPermission={false} requiresSubscription={false}><OwnerAccessDashboard /></ProtectedPage>} />
+            <Route path="/admin/user-detail/:userId" element={<ProtectedPage routePath="/admin/user-detail/:userId" requiresPermission={false} requiresSubscription={false}><UserDetailPage /></ProtectedPage>} />
             <Route path="/my-subscription" element={<ProtectedPage routePath="/my-subscription" requiresPermission={false} requiresSubscription={false}><MySubscription /></ProtectedPage>} />
             <Route path="/payment/:planId" element={<ProtectedPage routePath="/payment/:planId" requiresPermission={false} requiresSubscription={false}><PaymentPage /></ProtectedPage>} />
 
