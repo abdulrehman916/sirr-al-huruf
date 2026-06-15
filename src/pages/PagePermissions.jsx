@@ -43,12 +43,20 @@ export default function PagePermissions() {
   const loadPages = async () => {
     setLoading(true);
     try {
+      // Get database records first (source of truth)
+      const dbConfigs = await base44.entities.PageVisibilityConfig.list();
+      const dbMap = {};
+      (dbConfigs || []).forEach(config => {
+        dbMap[config.page_path] = config.requires_permission;
+      });
+
+      // Merge: database values override hardcoded defaults
       const list = Object.entries(ROUTE_PERMISSION_MAP)
         .filter(([_, config]) => !config.adminOnly)
         .map(([path, config]) => ({
           path,
           name: config.name,
-          requiresPermission: config.requiresPermission,
+          requiresPermission: dbMap.hasOwnProperty(path) ? dbMap[path] : config.requiresPermission,
           isLocked: LOCKED_PAGES.includes(path)
         }))
         .sort((a, b) => a.name.localeCompare(b.name));

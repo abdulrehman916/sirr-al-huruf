@@ -44,7 +44,6 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       try {
         user = await base44.auth.me();
       } catch (authErr) {
-        // Session might be stale - reload to refresh
         console.error("Auth check failed:", authErr);
         setError("Session expired. Please refresh.");
         setAccessStatus("denied");
@@ -57,9 +56,11 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         return;
       }
       
-      // Debug logging for admin/owner users
+      // Admin/owner bypass all checks
       if (user.role === 'admin' || user.role === 'owner') {
-        console.log("Admin/Owner user detected:", user.email, "Role:", user.role);
+        console.log("Admin/Owner bypass:", user.email, "Role:", user.role);
+        setAccessStatus("granted");
+        return;
       }
 
       // If explicitly marked as not requiring permission, grant access
@@ -68,19 +69,30 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         return;
       }
 
-      // Get permission code for this route
-      const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
-      
-      // If no permission required (e.g., home page), grant access
-      if (!permissionConfig || !permissionConfig.requiresPermission) {
-        setAccessStatus("granted");
-        return;
-      }
-
-      // Admin-only pages: grant access to admin/owner users without permission check
-      if (permissionConfig.adminOnly && (user.role === 'admin' || user.role === 'owner')) {
-        setAccessStatus("granted");
-        return;
+      // Check database for page visibility setting (source of truth)
+      try {
+        const dbConfigs = await base44.entities.PageVisibilityConfig.list();
+        const dbConfig = (dbConfigs || []).find(c => c.page_path === routePath);
+        
+        if (dbConfig) {
+          // Database has a setting - use it
+          if (!dbConfig.requires_permission) {
+            // Page is PUBLIC in database
+            setAccessStatus("granted");
+            return;
+          }
+          // Page is PRIVATE - continue to subscription/permission check
+        } else {
+          // No database record - use hardcoded default
+          const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
+          if (!permissionConfig || !permissionConfig.requiresPermission) {
+            setAccessStatus("granted");
+            return;
+          }
+        }
+      } catch (dbErr) {
+        console.error("Database visibility check failed:", dbErr);
+        // Fallback to hardcoded defaults on error
       }
 
       // Check page-specific subscription
@@ -97,42 +109,48 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
             plan_name: pageSubResponse.data.plan_name
           });
           return;
-        } else {
-          // No subscription - show subscription modal
-          setRequiresPageSubscription(true);
-          setAccessStatus("subscription_required");
-          setShowSubscriptionModal(true);
-          return;
         }
       } catch (subErr) {
         console.error("Page subscription check failed:", subErr);
       }
 
-      // Check access using backend function (fallback for permission-based access)
-      const response = await base44.functions.invoke("checkPageAccess", {
-        page_path: routePath,
-        permission_code: permissionConfig.code,
-      });
+      // Check permission-based access
+      const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
+      if (permissionConfig?.code) {
+        try {
+          const response = await base44.functions.invoke("checkPageAccess", {
+            page_path: routePath,
+            permission_code: permissionConfig.code,
+          });
 
-      if (response.data.access_granted) {
-        setAccessStatus("granted");
-        setAccessDetails({
-          expiry_date: response.data.expiry_date,
-          permission_id: response.data.permission_id,
-        });
-      } else {
-        // Handle different denial reasons
-        if (response.data.reason === "Permission has expired") {
-          setAccessStatus("expired");
-        } else if (response.data.reason === "Permission has been revoked") {
-          setAccessStatus("revoked");
-        } else {
-          setAccessStatus("denied");
+          if (response.data.access_granted) {
+            setAccessStatus("granted");
+            setAccessDetails({
+              expiry_date: response.data.expiry_date,
+              permission_id: response.data.permission_id,
+            });
+            return;
+          } else {
+            if (response.data.reason === "Permission has expired") {
+              setAccessStatus("expired");
+            } else if (response.data.reason === "Permission has been revoked") {
+              setAccessStatus("revoked");
+            } else {
+              setAccessStatus("denied");
+            }
+            setError(response.data.reason || "Access denied");
+            return;
+          }
+        } catch (permErr) {
+          console.error("Permission check failed:", permErr);
         }
-        setError(response.data.reason || "Access denied");
       }
+
+      // No valid access found - require subscription
+      setRequiresPageSubscription(true);
+      setAccessStatus("subscription_required");
+      setShowSubscriptionModal(true);
     } catch (err) {
-      // Handle errors (403 = access denied, 401 = not authenticated)
       if (err.response?.status === 403) {
         const reason = err.response?.data?.reason;
         if (reason === "Permission has expired") {
