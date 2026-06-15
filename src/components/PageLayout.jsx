@@ -52,115 +52,55 @@ const pageVariants = {
   exit:    { opacity: 0 },
 };
 
-// ── Top horizontal nav tab — original two-line Arabic + English brand design ──
+// ── Top nav tab — lightweight, GPU-friendly, pure CSS-driven ──
 const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
-  const handleTouchStart = (e) => {
-    e.currentTarget.style.opacity = '0.7';
-  };
-
-  const handleTouchEnd = (e) => {
-    e.currentTarget.style.opacity = '1';
-    onClick();
-  };
-
   return (
-    <div
+    <Link
       ref={tabRef}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      to={tab.path}
+      onClick={onClick}
+      className="nav-tab flex-shrink-0 relative overflow-hidden flex flex-col items-center justify-center py-1.5 px-2 select-none"
       style={{
         borderRadius: 10,
-        border: "1px solid",
-        flexShrink: 0,
-        position: "relative",
-        overflow: "hidden",
+        minHeight: 44,
+        minWidth: 48,
+        border: isActive ? "1px solid rgba(212,175,55,0.60)" : "1px solid rgba(255,255,255,0.06)",
         background: isActive
           ? "linear-gradient(160deg, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.07) 100%)"
           : "transparent",
-        borderColor: isActive ? "rgba(212,175,55,0.60)" : "rgba(255,255,255,0.06)",
-        boxShadow: isActive
-          ? "0 0 16px rgba(212,175,55,0.22), inset 0 1px 0 rgba(212,175,55,0.22)"
-          : "none",
-        willChange: 'transform',
-        transform: 'translateZ(0)',
-        backfaceVisibility: 'hidden',
-        touchAction: 'pan-y',
+        boxShadow: isActive ? "0 0 16px rgba(212,175,55,0.22), inset 0 1px 0 rgba(212,175,55,0.22)" : "none",
+        WebkitTapHighlightColor: "transparent",
+        touchAction: "manipulation",
       }}
     >
       {isActive && (
-        <div
-          style={{
-            position: "absolute", top: 0, left: 0, right: 0, height: 1,
-            background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.70), transparent)",
-            zIndex: 2,
-          }}
-        />
+        <div className="absolute top-0 left-0 right-0 z-[2]" style={{
+          height: 1,
+          background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.70), transparent)",
+        }} />
       )}
-
-      <Link
-        to={tab.path}
-        onClick={onClick}
-        className="relative flex flex-col items-center justify-center py-1.5 px-2"
-        style={{
-          WebkitTapHighlightColor: "transparent",
-          touchAction: 'pan-y',
-          userSelect: "none",
-          WebkitUserSelect: "none",
-          minHeight: 44,
-          minWidth: 48,
-          willChange: 'transform',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
-        }}
-      >
-        {/* Arabic title — top line */}
-        <span
-          className="font-amiri font-bold leading-tight"
-          style={{
-            fontSize: 13,
-            color: isActive ? "#E8C84A" : "rgba(255,255,255,0.52)",
-            willChange: 'color',
-          }}
-        >
-          {tab.arabicTitle}
-        </span>
-
-        {/* English subtitle — bottom line, smaller, tracked */}
-        <span
-          className="font-inter font-semibold leading-none tracking-[0.12em]"
-          style={{
-            fontSize: 8.5,
-            color: isActive ? "rgba(212,175,55,0.65)" : "rgba(255,255,255,0.22)",
-            marginTop: 1,
-            willChange: 'color',
-          }}
-        >
-          {tab.englishSubtitle}
-        </span>
-
-        {/* Active indicator dot */}
-        <div
-          style={{
-            position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)",
-            height: 1.5, borderRadius: 999,
-            background: "linear-gradient(90deg, transparent, #E8C84A, transparent)",
-            width: isActive ? 26 : 0,
-            opacity: isActive ? 1 : 0,
-            willChange: 'width, opacity',
-          }}
-        />
-
-        {isActive && (
-          <div
-            className="absolute inset-0 rounded-[9px] pointer-events-none"
-            style={{
-              background:
-                "radial-gradient(ellipse 80% 60% at 50% 115%, rgba(212,175,55,0.20) 0%, transparent 70%)",
-            }}
-          />
-        )}
-      </Link>
-    </div>
+      <span className="font-amiri font-bold leading-tight text-[13px]" style={{
+        color: isActive ? "#E8C84A" : "rgba(255,255,255,0.52)",
+      }}>
+        {tab.arabicTitle}
+      </span>
+      <span className="font-inter font-semibold leading-none tracking-[0.12em] text-[8.5px] mt-[1px]" style={{
+        color: isActive ? "rgba(212,175,55,0.65)" : "rgba(255,255,255,0.22)",
+      }}>
+        {tab.englishSubtitle}
+      </span>
+      <div className="absolute bottom-[3px] left-1/2 -translate-x-1/2 h-[1.5px] rounded-full" style={{
+        background: "linear-gradient(90deg, transparent, #E8C84A, transparent)",
+        width: isActive ? 26 : 0,
+        opacity: isActive ? 1 : 0,
+        transition: "width 0.2s ease, opacity 0.2s ease",
+      }} />
+      {isActive && (
+        <div className="absolute inset-0 rounded-[9px] pointer-events-none" style={{
+          background: "radial-gradient(ellipse 80% 60% at 50% 115%, rgba(212,175,55,0.20) 0%, transparent 70%)",
+        }} />
+      )}
+    </Link>
   );
 });
 
@@ -209,29 +149,21 @@ export default function PageLayout({ children }) {
   const navRef = useRef(null);
   const tabRefs = useRef({});
 
-  // Auto-scroll navigation bar to center the active tab (mobile/tablet only)
+  // Auto-scroll to center the active tab — uses native scrollIntoView (non-blocking)
   useEffect(() => {
-    const navEl = navRef.current;
     const activeTabEl = tabRefs.current[activeId];
-    
-    if (!navEl || !activeTabEl) return;
+    if (!activeTabEl) return;
 
-    // Use requestAnimationFrame for 60fps smooth scrolling
+    // Delay slightly to let the DOM settle after route change
     const timer = setTimeout(() => {
-      requestAnimationFrame(() => {
-        const tabRect = activeTabEl.getBoundingClientRect();
-        const navRect = navEl.getBoundingClientRect();
-        
-        // Calculate position to center the active tab
-        const centerPosition = navEl.scrollLeft + (tabRect.left - navRect.left) - (navRect.width / 2) + (tabRect.width / 2);
-        
-        // Smooth scroll with native behavior
-        navEl.scrollTo({
-          left: Math.max(0, Math.min(centerPosition, navEl.scrollWidth - navRect.width)),
-          behavior: 'smooth',
-        });
+      // Only auto-scroll on mobile/tablet (non-pointer devices)
+      // Use scrollIntoView with smooth behavior — doesn't fight user touch
+      activeTabEl.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
       });
-    }, 50);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [activeId, location.pathname]);
@@ -329,62 +261,17 @@ export default function PageLayout({ children }) {
           <div
             ref={navRef}
             className="nav-scroll-container flex gap-1 flex-nowrap"
-            onTouchStart={(e) => {
-              // Enable touch drag scrolling
-              const touch = e.touches[0];
-              navRef.current.dataset.startX = touch.clientX;
-              navRef.current.dataset.scrollStart = navRef.current.scrollLeft;
-            }}
-            onTouchMove={(e) => {
-              // Enable touch drag scrolling
-              const touch = e.touches[0];
-              const startX = parseFloat(navRef.current.dataset.startX || 0);
-              const scrollStart = parseFloat(navRef.current.dataset.scrollStart || 0);
-              const deltaX = startX - touch.clientX;
-              navRef.current.scrollLeft = scrollStart + deltaX;
-            }}
-            onWheel={(e) => {
-              // Allow horizontal scroll with mouse wheel
-              if (e.deltaY !== 0) {
-                e.currentTarget.scrollLeft += e.deltaY;
-                e.preventDefault();
-              }
-            }}
-            onMouseDown={(e) => {
-              // Enable mouse drag scrolling
-              e.currentTarget.style.cursor = 'grabbing';
-              navRef.current.dataset.mouseStartX = e.clientX;
-              navRef.current.dataset.mouseScrollStart = navRef.current.scrollLeft;
-              navRef.current.dataset.isDragging = 'true';
-            }}
-            onMouseMove={(e) => {
-              // Enable mouse drag scrolling
-              if (navRef.current.dataset.isDragging !== 'true') return;
-              const mouseStartX = parseFloat(navRef.current.dataset.mouseStartX || 0);
-              const scrollStart = parseFloat(navRef.current.dataset.mouseScrollStart || 0);
-              const deltaX = mouseStartX - e.clientX;
-              navRef.current.scrollLeft = scrollStart + deltaX;
-            }}
-            onMouseUp={() => {
-              navRef.current.dataset.isDragging = 'false';
-              navRef.current.style.cursor = 'grab';
-            }}
-            onMouseLeave={() => {
-              navRef.current.dataset.isDragging = 'false';
-              navRef.current.style.cursor = 'grab';
-            }}
             style={{
-              willChange: 'scroll-position',
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden',
-              touchAction: 'pan-x',
-              WebkitOverflowScrolling: 'touch',
-              cursor: 'grab',
-              overflowX: 'auto',
-              overflowY: 'hidden',
+              overflowX: "auto",
+              overflowY: "hidden",
               flexShrink: 0,
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
+              WebkitOverflowScrolling: "touch",
+              scrollBehavior: "smooth",
+              overscrollBehaviorX: "contain",
+              touchAction: "pan-x pan-y",
+              scrollSnapType: "x mandatory",
+              userSelect: "none",
+              WebkitUserSelect: "none",
             }}
           >
             {TAB_KEYS.map((tab) => (

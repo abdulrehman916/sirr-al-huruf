@@ -154,16 +154,42 @@
   .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
   
-  /* Navigation scroll container */
+  /* ── Navigation scroll container — buttery smooth momentum ── */
   .nav-scroll-container {
     -webkit-overflow-scrolling: touch;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    /* Prevent scroll chaining — nav stays independent */
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: none;
+    /* Momentum deceleration — natural feel */
+    -webkit-scroll-snap-type: x mandatory;
+    scroll-snap-type: x mandatory;
+    /* Prevent rubber-banding fighting with page scroll */
+    -webkit-overflow-scrolling: touch;
+    /* Ensure fast, hardware-accelerated compositing */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
   .nav-scroll-container::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Individual nav tabs snap into view naturally */
+  .nav-tab {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    /* Instant tap feedback via active state */
+    transition: opacity 0.1s ease;
+  }
+  .nav-tab:active {
+    opacity: 0.75;
   }
 
   /* ── RTL (Arabic) Support ── */
@@ -191,6 +217,11 @@
   }
   [dir="rtl"] .nav-scroll-container {
     direction: ltr;
+    /* RTL: tabs still render LTR inside RTL page — preserves natural swipe */
+  }
+  [dir="rtl"] .nav-tab {
+    direction: rtl;
+    /* Tab content (Arabic text) stays RTL */
   }
   /* Mirror chevron-based icons for RTL */
   [dir="rtl"] .mirror-rtl {
