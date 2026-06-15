@@ -30,11 +30,11 @@ const G = {
 };
 
 const DURATION_OPTIONS = [
-  { value: "1_MONTH",   label: "1 Month",    days: 30 },
-  { value: "3_MONTHS",  label: "3 Months",   days: 90 },
-  { value: "6_MONTHS",  label: "6 Months",   days: 180 },
-  { value: "1_YEAR",    label: "1 Year",      days: 365 },
-  { value: "PERMANENT", label: "Permanent",   days: 36500 },
+  { value: "1_MONTH",    label: "1 Month",    days: 30 },
+  { value: "3_MONTHS",   label: "3 Months",   days: 90 },
+  { value: "6_MONTHS",   label: "6 Months",   days: 180 },
+  { value: "12_MONTHS",  label: "12 Months",  days: 365 },
+  { value: "LIFETIME",   label: "Lifetime",   days: 36500 },
 ];
 
 // Only content pages (non-admin, non-audit) for the owner UI
