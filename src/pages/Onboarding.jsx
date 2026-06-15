@@ -7,12 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Smartphone, Mail, Loader2, KeyRound, ArrowRight, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import AtmosphericBackground from "@/components/AtmosphericBackground";
+import { derivePassword } from "@/lib/derivePassword";
 
 const STEPS = { WELCOME: 0, CONTACT: 1, OTP: 2 };
-
-function generatePassword() {
-  return "sah_" + Math.random().toString(36).substring(2, 18) + "!A1";
-}
 
 function generateEmailFromPhone(phone) {
   const digits = (phone || "").replace(/\D/g, "").slice(-10);
@@ -48,7 +45,7 @@ export default function Onboarding() {
     try {
       if (contactType === "email") {
         // ── Email: Full platform auth ────────────────────────────
-        const pwd = generatePassword();
+        const pwd = derivePassword(email);
         setPassword(pwd);
         setPlatformEmail(email);
 
@@ -67,7 +64,7 @@ export default function Onboarding() {
           setOtpId(response.data.otp_id);
           // Also generate platform credentials for later use
           const genEmail = generateEmailFromPhone(mobile);
-          const pwd = generatePassword();
+          const pwd = derivePassword(genEmail);
           setPassword(pwd);
           setPlatformEmail(genEmail);
           setStep(STEPS.OTP);
@@ -153,7 +150,7 @@ export default function Onboarding() {
     try {
       if (contactType === "email") {
         // Re-register to trigger new platform OTP
-        const pwd = generatePassword();
+        const pwd = derivePassword(platformEmail);
         setPassword(pwd);
         await base44.auth.register({ email: platformEmail, password: pwd });
         toast({ title: "Code Resent", description: "Check your email" });
