@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
-  Users, Search, Clock, CheckCircle, XCircle, 
+  Users, Search, Clock, CheckCircle, XCircle, Gift,
   Loader2, Calendar, Phone, Mail, Shield 
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import GrantAccessModal from "@/components/admin/GrantAccessModal";
 import { useToast } from "@/components/ui/use-toast";
 import PageLayout from "@/components/PageLayout";
 import { motion } from "framer-motion";
@@ -22,7 +24,9 @@ export default function AdminUserManagement() {
   const [users, setUsers] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchType, setSearchType] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [grantModalUser, setGrantModalUser] = useState(null);
 
   useEffect(() => {
     checkAuth();
@@ -118,9 +122,24 @@ export default function AdminUserManagement() {
 
   const filteredUsers = users.filter(u => {
     const matchesSearch = searchQuery === "" || 
-      u.mobile?.includes(searchQuery) ||
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+      (searchType === "phone" || searchType === "all") && u.mobile?.includes(searchQuery) ||
+      (searchType === "email" || searchType === "all") && u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (searchType === "name" || searchType === "all") && u.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    if (statusFilter === "all") return true;
+    const userSubs = getUserSubscriptions(u.user_id);
+    if (statusFilter === "active") {
+      return userSubs.some(s => s.status === "ACTIVE" && s.expiry_date && new Date(s.expiry_date) > new Date());
+    }
+    if (statusFilter === "expired") {
+      return userSubs.some(s => s.status === "EXPIRED" || (s.expiry_date && new Date(s.expiry_date) < new Date()));
+    }
+    if (statusFilter === "lifetime") {
+      return userSubs.some(s => s.plan_name === "LIFETIME" && s.status === "ACTIVE");
+    }
+    return true;
   });
 
   const getUserSubscriptions = (userId) => {
@@ -156,10 +175,10 @@ export default function AdminUserManagement() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-white mb-2">
-            User & Subscription Management
+            User Access Manager
           </h1>
           <p className="text-white/70">
-            View users, search by phone, manage subscriptions
+            Grant manual access, search users, manage subscriptions
           </p>
         </motion.div>
 
@@ -205,22 +224,83 @@ export default function AdminUserManagement() {
           </Card>
         </div>
 
-        {/* Search */}
+        {/* Search & Filters */}
         <Card className="border-white/10 bg-white/5 mb-8">
           <CardContent className="pt-6">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-white">Search by Phone Number or Email</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                  <Input
-                    placeholder="+91 98765 43210 or user@example.com"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-12 bg-white/5 border-white/10 text-white"
-                  />
+              {/* Search Bar */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="md:col-span-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                    <Input
+                      placeholder={
+                        searchType === "phone" ? "Search by mobile number..." :
+                        searchType === "email" ? "Search by email..." :
+                        searchType === "name" ? "Search by name..." :
+                        "Search by mobile, email, or name..."
+                      }
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-12 bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Select value={searchType} onValueChange={setSearchType}>
+                    <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white">
+                      <SelectValue placeholder="Search by" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-white/10">
+                      <SelectItem value="all" className="text-white">All Fields</SelectItem>
+                      <SelectItem value="phone" className="text-white">Mobile Number</SelectItem>
+                      <SelectItem value="email" className="text-white">Email</SelectItem>
+                      <SelectItem value="name" className="text-white">Name</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+
+              {/* Status Filters */}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => setStatusFilter("all")}
+                  className={statusFilter === "all" ? "bg-gold text-slate-900 hover:bg-gold/90" : "border-white/20 text-white hover:bg-white/10"}
+                >
+                  All Users
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setStatusFilter("active")}
+                  className={statusFilter === "active" ? "bg-green-500 text-white hover:bg-green-600" : "border-white/20 text-white hover:bg-white/10"}
+                >
+                  Active
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setStatusFilter("expired")}
+                  className={statusFilter === "expired" ? "bg-red-500 text-white hover:bg-red-600" : "border-white/20 text-white hover:bg-white/10"}
+                >
+                  Expired
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setStatusFilter("lifetime")}
+                  className={statusFilter === "lifetime" ? "bg-purple-500 text-white hover:bg-purple-600" : "border-white/20 text-white hover:bg-white/10"}
+                >
+                  Lifetime
+                </Button>
+              </div>
+
+              {/* Results Count */}
+              {(searchQuery || statusFilter !== "all") && (
+                <div className="text-sm text-white/60">
+                  Found {filteredUsers.length} user(s)
+                  {searchQuery && ` matching "${searchQuery}"`}
+                  {statusFilter !== "all" && ` (${statusFilter} access)`}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -240,24 +320,39 @@ export default function AdminUserManagement() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="text-white flex items-center gap-3">
-                          <Users className="w-5 h-5 text-gold" />
-                          {u.mobile || "No mobile"}
-                        </CardTitle>
-                        <CardDescription className="text-white/70 flex items-center gap-4 mt-2">
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {u.email || "No email"}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Joined {new Date(u.registration_date).toLocaleDateString()}
-                          </span>
-                        </CardDescription>
+                        <div>
+                          <CardTitle className="text-white flex items-center gap-3 mb-2">
+                            <Users className="w-5 h-5 text-gold" />
+                            {u.full_name || u.email || u.mobile || "User"}
+                          </CardTitle>
+                          <CardDescription className="text-white/70 flex flex-wrap gap-4">
+                            {u.mobile && (
+                              <span className="flex items-center gap-1">
+                                <Phone className="w-3 h-3" />
+                                {u.mobile}
+                              </span>
+                            )}
+                            {u.email && (
+                              <span className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {u.email}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              Joined {new Date(u.registration_date).toLocaleDateString()}
+                            </span>
+                          </CardDescription>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => setGrantModalUser(u)}
+                          className="bg-gold text-slate-900 hover:bg-gold/90"
+                        >
+                          <Gift className="w-4 h-4 mr-2" />
+                          Grant Access
+                        </Button>
                       </div>
-                      <Badge className={u.account_status === "ACTIVE" ? "bg-green-500/20 text-green-500 border-green-500/30" : "bg-red-500/20 text-red-500 border-red-500/30"}>
-                        {u.account_status}
-                      </Badge>
                     </div>
                   </CardHeader>
                   {userSubs.length > 0 && (
