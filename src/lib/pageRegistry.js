@@ -73,8 +73,10 @@ export function isPublicPage(pathname) {
  * Get all registered page paths for admin UIs
  */
 export function getAllRegisteredPages() {
-  return Array.from(registry.values())
-    .filter(p => !p.path.includes(':') && !p.path.endsWith('/'))
+  const seen = new Set();
+  return Array.from(registry.entries())
+    .filter(([key, p]) => !p.path.includes(':') && !key.endsWith('/') && !seen.has(p.path) && seen.add(p.path))
+    .map(([, p]) => p)
     .sort((a, b) => a.name?.localeCompare?.(b.name) || 0);
 }
 
