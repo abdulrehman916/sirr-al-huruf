@@ -100,7 +100,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 
       // Subscription check
       try {
-        const pageSubResponse = await base44.functions.invoke("checkPageSubscription", { page_path: routePath });
+        const pageSubResponse = await base44.functions.invoke("checkPageSubscription", { user_id: user.id, page_path: routePath });
         if (pageSubResponse.data?.has_access) {
           setAccessStatus("granted");
           setAccessDetails({ expiry_date: pageSubResponse.data.expiry_date });

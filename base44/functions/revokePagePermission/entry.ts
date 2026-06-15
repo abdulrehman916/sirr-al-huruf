@@ -49,20 +49,6 @@ Deno.serve(async (req) => {
       console.error("Failed to create audit log:", auditError);
     }
 
-    // Create audit log
-    try {
-      await base44.functions.invoke('createAuditLog', {
-        action_type: 'PERMISSION_REVOKE',
-        target_user_id: permission.user_id,
-        target_entity: 'PagePermission',
-        target_id: permission.permission_id,
-        details: JSON.stringify({ page_path: permission.page_path, revoked_by: user.email, reason: reason || 'No reason provided' }),
-        ip_address: req.headers.get("x-forwarded-for")?.split(",")[0] || null
-      });
-    } catch (auditError) {
-      console.error("Failed to create audit log:", auditError);
-    }
-
     // Update user profile
     const profiles = await base44.entities.UserAccessProfile.filter({ user_id: permission.user_id });
     if (profiles.length > 0) {
