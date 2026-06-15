@@ -6,7 +6,7 @@ import {
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
   Phone, Mail, Calendar, Crown, RefreshCw, Star, Zap,
   DollarSign, TrendingUp, Edit2, Save, AlertCircle, Loader2,
-  Undo2, Ban, CalendarPlus2
+  Undo2, Ban, CalendarPlus2, MessageSquare
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
@@ -15,6 +15,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
 import PaymentsTab from "@/components/admin/PaymentsTab";
 import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal";
+import MessagesTab from "@/components/admin/MessagesTab";
+import SubscriptionRequestsTab from "@/components/admin/SubscriptionRequestsTab";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -58,6 +60,7 @@ const TABS = [
   { id: "plans",       label: "Plans",            icon: Star },
   { id: "vip",         label: "VIP Access",       icon: Crown },
   { id: "requests",    label: "Access Requests",  icon: Mail },
+  { id: "messages",    label: "Messages",         icon: MessageSquare },
   { id: "visibility",  label: "Page Visibility",  icon: Globe },
   { id: "access",      label: "User Access",      icon: Shield },
 ];
@@ -1499,7 +1502,8 @@ export default function OwnerAccessDashboard() {
           {tab === "payments"   && <PaymentsTab subscriptions={subscriptions} users={users} onManage={setManagingSub} />}
           {tab === "plans"      && <PlansTab plans={plans} onRefresh={loadAll} />}
           {tab === "vip"        && <VIPTab vipAccess={vipAccess} users={users} onRefresh={loadAll} />}
-          {tab === "requests"   && <AccessRequestsTab requests={accessRequests} users={users} onRefresh={loadAll} />}
+          {tab === "requests"   && <SubscriptionRequestsTab requests={accessRequests} users={users} onRefresh={loadAll} />}
+          {tab === "messages"   && <MessagesTab />}
           {tab === "visibility" && <VisibilityTab pageConfigs={pageConfigs} onRefresh={loadAll} />}
           {tab === "access"     && <UserAccessTab users={users} permissions={permissions} onRefresh={loadAll} />}
         </div>
