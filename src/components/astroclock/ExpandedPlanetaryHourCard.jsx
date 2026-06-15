@@ -218,7 +218,7 @@ function ActionsSection({ planetRules, isMalayalam }) {
           </p>
         </div>
         <div className="space-y-1">
-          {(isMalayalam ? planetRules?.strengthenedActions?.ml : planetRules?.strengthenedActions?.en || []).map((action, idx) => (
+          {(Array.isArray(isMalayalam ? planetRules?.strengthenedActions?.ml : planetRules?.strengthenedActions?.en) ? (isMalayalam ? planetRules.strengthenedActions.ml : planetRules.strengthenedActions.en) : []).map((action, idx) => (
             <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#22c55e" }} />
               {action}
@@ -240,7 +240,7 @@ function ActionsSection({ planetRules, isMalayalam }) {
           </p>
         </div>
         <div className="space-y-1">
-          {(isMalayalam ? planetRules?.weakenedActions?.ml : planetRules?.weakenedActions?.en || []).map((action, idx) => (
+          {(Array.isArray(isMalayalam ? planetRules?.weakenedActions?.ml : planetRules?.weakenedActions?.en) ? (isMalayalam ? planetRules.weakenedActions.ml : planetRules.weakenedActions.en) : []).map((action, idx) => (
             <p key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
               {action}

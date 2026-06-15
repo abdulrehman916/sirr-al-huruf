@@ -158,7 +158,7 @@ function PlanetCard({ planet, isMalayalam, openExplorer, planetRecords }) {
                   {isMalayalam ? "നല്ല പ്രവർത്തനങ്ങൾ" : "Good Actions"}
               </p>
               <div className="flex flex-wrap gap-2">
-                  {(isMalayalam ? planet.goodActions_ml : planet.goodActions_en || []).map((action, idx) => (
+                  {(Array.isArray(isMalayalam ? planet.goodActions_ml : planet.goodActions_en) ? (isMalayalam ? planet.goodActions_ml : planet.goodActions_en) : []).map((action, idx) => (
                     <span key={idx} className="px-3 py-1.5 rounded-full text-sm font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#86efac" }}>
                       {action}
                     </span>
@@ -171,7 +171,7 @@ function PlanetCard({ planet, isMalayalam, openExplorer, planetRecords }) {
                   {isMalayalam ? "ചീത്ത പ്രവർത്തനങ്ങൾ" : "Bad Actions"}
               </p>
               <div className="flex flex-wrap gap-2">
-                  {(isMalayalam ? planet.badActions_ml : planet.badActions_en || []).map((action, idx) => (
+                  {(Array.isArray(isMalayalam ? planet.badActions_ml : planet.badActions_en) ? (isMalayalam ? planet.badActions_ml : planet.badActions_en) : []).map((action, idx) => (
                     <span key={idx} className="px-3 py-1.5 rounded-full text-sm font-medium" style={{ background: "rgba(239,68,68,0.15)", color: "#fca5a5" }}>
                       {action}
                     </span>
