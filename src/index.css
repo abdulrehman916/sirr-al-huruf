@@ -150,6 +150,9 @@
     height: auto;
     min-height: 100%;
     overflow-y: visible;
+    overflow-x: hidden;
+    max-width: 100vw;
+    position: relative;
   }
 
   /* Scrollbar */
@@ -169,10 +172,11 @@
     overflow-y: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    width: 100%;
     /* Lock page scroll when swiping nav — horizontal only */
-    overscroll-behavior-x: contain;
+    overscroll-behavior-x: none;
     overscroll-behavior-y: none;
-    /* Proximity snap — snaps on slow release, free on fast flick (like Instagram) */
+    /* Proximity snap — snaps on slow release, free on fast flick (like YouTube / Instagram) */
     scroll-snap-type: x proximity;
     /* Keep scroll position smooth during programmatic scrolls */
     scroll-behavior: smooth;
