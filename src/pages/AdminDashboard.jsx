@@ -26,6 +26,27 @@ const SIDEBAR_ITEMS = [
     description: "Grant manual access & manage subscriptions"
   },
   {
+    path: "/admin/pricing-settings",
+    label: "Pricing Settings",
+    arabic: "إعدادات الأسعار",
+    icon: DollarSign,
+    description: "Set custom prices per page"
+  },
+  {
+    path: "/admin/subscription-requests",
+    label: "Access Requests",
+    arabic: "طلبات الوصول",
+    icon: Clock,
+    description: "Review & approve access requests"
+  },
+  {
+    path: "/admin/subscriptions-management",
+    label: "Subscription Management",
+    arabic: "إدارة الاشتراكات",
+    icon: CreditCard,
+    description: "Manage active subscriptions"
+  },
+  {
     path: "/admin/access-logs",
     label: "Access Logs",
     arabic: "سجلات الوصول",
@@ -52,27 +73,6 @@ const SIDEBAR_ITEMS = [
     arabic: "اشتراكات الصفحات",
     icon: Shield,
     description: "Manage page-specific subscriptions"
-  },
-  {
-    path: "/admin/pricing-settings",
-    label: "Pricing Settings",
-    arabic: "إعدادات الأسعار",
-    icon: DollarSign,
-    description: "Set custom prices per page"
-  },
-  {
-    path: "/admin/subscriptions-management",
-    label: "Subscriptions",
-    arabic: "الاشتراكات",
-    icon: CreditCard,
-    description: "Manage active subscriptions"
-  },
-  {
-    path: "/admin/subscription-requests",
-    label: "Access Requests",
-    arabic: "طلبات الوصول",
-    icon: Clock,
-    description: "Review & approve access requests"
   }
 ];
 
