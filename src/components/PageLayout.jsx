@@ -1,7 +1,7 @@
 import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft, User } from "lucide-react";
+import { ChevronLeft, User, Shield } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
@@ -281,9 +281,28 @@ export default function PageLayout({ children }) {
 
         {/* Enhanced horizontal navigation with improved touch scrolling */}
         <div 
-          className="px-2 py-2 w-full"
+          className="px-2 py-2 w-full flex items-center gap-2"
           style={{ overflowX: 'auto', overflowY: 'hidden' }}
         >
+          {/* Admin button - only visible for admin users */}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => { startNav(); navigate('/admin/access-dashboard'); }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.10))",
+                border: "1px solid rgba(212,175,55,0.40)",
+                color: "#E8C84A",
+                WebkitTapHighlightColor: "transparent",
+                userSelect: "none",
+                WebkitUserSelect: "none",
+              }}
+            >
+              <Shield className="w-3.5 h-3.5" />
+              <span className="font-inter text-xs font-bold tracking-wide">Admin</span>
+            </button>
+          )}
+
           <div
             ref={navRef}
             className="nav-scroll-container flex gap-1 flex-nowrap"
