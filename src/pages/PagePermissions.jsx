@@ -64,7 +64,11 @@ export default function PagePermissions() {
   const handleToggle = async (pagePath, newVisibility) => {
     const page = pageVisibility.find(p => p.path === pagePath);
     if (page?.isLocked) {
-      toast({ title: "Locked", description: `${page.name} cannot be changed`, variant: "destructive" });
+      toast({
+        variant: "destructive",
+        title: "Locked",
+        description: `${page.name} is locked`,
+      });
       return;
     }
 
@@ -80,11 +84,15 @@ export default function PagePermissions() {
       );
       
       toast({
-        title: "Updated",
-        description: `${page?.name} is now ${newVisibility ? 'Private' : 'Public'}`,
+        title: "✓ Updated",
+        description: `${page.name} → ${newVisibility ? 'Private' : 'Public'}`,
       });
     } catch (error) {
-      toast({ title: "Failed", description: error.message, variant: "destructive" });
+      toast({
+        variant: "destructive",
+        title: "✗ Failed",
+        description: error.message,
+      });
     } finally {
       setProcessing(false);
     }
