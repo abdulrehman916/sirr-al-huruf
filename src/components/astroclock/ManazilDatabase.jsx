@@ -221,7 +221,7 @@ export default function ManazilDatabase() {
                                         {isMalayalam ? "ഉചിതമായ പ്രവർത്തനങ്ങൾ" : "Suitable Operations"}
                                     </p>
                                     <div className="space-y-2">
-                                        {(isMalayalam ? manzil.operations_ml : manzil.operations).map((op, idx) => (
+                                        {(isMalayalam ? (manzil.operations_ml || manzil.operations || []) : (manzil.operations || [])).map((op, idx) => (
                                             <p key={idx} className="font-inter text-sm text-white/85 leading-relaxed">
                                                 <span className="text-green-400 mr-2">✦</span>{op}
                                             </p>

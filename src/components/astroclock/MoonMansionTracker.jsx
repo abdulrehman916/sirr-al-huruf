@@ -46,6 +46,7 @@ export default function MoonMansionTracker() {
   function updateMoonData() {
     const now = new Date();
     const moonPos = calculateMoonPosition(now);
+    if (!moonPos?.mansion) return; // guard: skip if moon data unavailable
     setCurrentMansion(moonPos.mansion);
 
     // Calculate next mansion timing using live astronomical calculations

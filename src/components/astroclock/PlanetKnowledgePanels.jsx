@@ -31,8 +31,10 @@ export default function PlanetKnowledgePanels() {
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [planetRecords, setPlanetRecords] = useState({});
 
+  // Empty dep array — planets is stable (derived from a constant), run once only
   useEffect(() => {
-    (planets || []).forEach(async (planet) => {
+    const planetList = Object.values(PLANET_INFO);
+    planetList.forEach(async (planet) => {
       try {
         const result = await base44.functions.invoke('queryManuscriptLibrary', {
           entity_type: 'PLANET',
@@ -46,7 +48,7 @@ export default function PlanetKnowledgePanels() {
         console.error("Failed to load manuscripts for planet", planet.name_en, err);
       }
     });
-  }, [planets]);
+  }, []);
 
   function openExplorer(planet) {
     setSelectedEntity({
@@ -182,7 +184,7 @@ function PlanetCard({ planet, isMalayalam, openExplorer, planetRecords }) {
                 {isMalayalam ? "ആത്മിക പ്രവർത്തനങ്ങൾ" : "Spiritual Operations"}
             </p>
             <div className="space-y-2">
-                {(isMalayalam ? planet.spiritualOperations_ml : planet.spiritualOperations_en).map((op, idx) => (
+                {(isMalayalam ? (planet.spiritualOperations_ml || []) : (planet.spiritualOperations_en || [])).map((op, idx) => (
                   <p key={idx} className="font-inter text-sm text-white/85 leading-relaxed">
                     <span className="text-gold mr-2">✦</span>{op}
                   </p>

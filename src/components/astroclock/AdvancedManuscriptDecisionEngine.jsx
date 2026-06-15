@@ -276,7 +276,7 @@ function DecisionResults({ result, isMalayalam }) {
       <TimingGuidanceDisplay guidance={timingGuidance} isMalayalam={isMalayalam} />
       
       {/* Next Suitable Time */}
-      {nextSuitable.found && (
+      {nextSuitable?.found && (
         <NextSuitableTimeDisplay next={nextSuitable} isMalayalam={isMalayalam} />
       )}
       

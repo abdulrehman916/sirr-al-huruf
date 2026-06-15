@@ -176,7 +176,7 @@ function StatusDisplay({ evaluation, isMalayalam }) {
     <div className="mb-6 p-6 rounded-xl border text-center" style={{ background: statusConfig.bg, borderColor: statusConfig.border }}>
       <StatusIcon className="w-12 h-12 mx-auto mb-3" style={{ color: statusConfig.text }} />
       <p className="font-inter text-[10px] uppercase tracking-widest mb-2" style={{ color: statusConfig.text }}>{statusConfig.label}</p>
-      <p className="font-malayalam-lg font-bold text-white">{evaluation.rules.action}</p>
+      <p className="font-malayalam-lg font-bold text-white">{evaluation.rules?.action || ""}</p>
     </div>
   );
 }

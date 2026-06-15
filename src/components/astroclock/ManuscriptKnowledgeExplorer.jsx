@@ -295,9 +295,14 @@ function RecordCard({ record, expanded, onToggle, isMalayalam }) {
             )}
 
             {/* Related Entities */}
-            {record.data_json && (
-              <RelatedEntities data={JSON.parse(record.data_json)} isMalayalam={isMalayalam} />
-            )}
+            {record.data_json && (() => {
+              try {
+                const parsed = JSON.parse(record.data_json);
+                return <RelatedEntities data={parsed} isMalayalam={isMalayalam} />;
+              } catch (e) {
+                return null;
+              }
+            })()}
 
             {/* Source Citation */}
             <div className="p-4 rounded-lg border-2" style={{ background: "rgba(212,175,55,0.1)", borderColor: G.border }}>
