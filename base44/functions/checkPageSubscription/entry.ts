@@ -3,45 +3,62 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    const { user_id, page_path } = await req.json();
 
-    const { page_path } = await req.json();
-
-    if (!page_path) {
-      return Response.json({ error: 'page_path required' }, { status: 400 });
+    if (!user_id || !page_path) {
+      return Response.json({ 
+        success: false, 
+        message: "User ID and page path required" 
+      }, { status: 400 });
     }
 
-    // Get all subscriptions for this user and page
-    const allSubs = await base44.entities.Subscription.list();
-    const pageSubs = allSubs.filter(s => 
-      s.user_id === user.id && 
-      s.page_path === page_path &&
-      s.status === 'ACTIVE'
-    );
-
-    // Check for active subscription
-    const now = new Date();
-    const activeSub = pageSubs.find(sub => {
-      if (sub.plan_name === 'LIFETIME') return true;
-      if (!sub.expiry_date) return false;
-      return new Date(sub.expiry_date) > now;
+    // Find active subscriptions for this user and page
+    const subscriptions = await base44.entities.Subscription.filter({
+      user_id: user_id,
+      page_path: page_path,
+      status: "ACTIVE"
     });
 
-    if (activeSub) {
+    if (subscriptions.length === 0) {
       return Response.json({
-        has_access: true,
-        subscription: activeSub,
-        expiry_date: activeSub.expiry_date,
-        plan_name: activeSub.plan_name
+        success: true,
+        has_subscription: false,
+        message: "No active subscription found"
       });
     }
 
-    return Response.json({
-      has_access: false,
-      message: 'No active subscription found'
+    // Check if any subscription is still valid
+    const now = new Date();
+    const validSubscription = subscriptions.find(sub => {
+      if (!sub.expiry_date) {
+        // LIFETIME subscription
+        return true;
+      }
+      return new Date(sub.expiry_date) > now;
     });
+
+    if (validSubscription) {
+      return Response.json({
+        success: true,
+        has_subscription: true,
+        subscription: validSubscription,
+        message: "Active subscription found"
+      });
+    } else {
+      // All subscriptions expired
+      return Response.json({
+        success: true,
+        has_subscription: false,
+        expired: true,
+        message: "Subscription has expired"
+      });
+    }
+
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ 
+      success: false, 
+      message: error.message 
+    }, { status: 500 });
   }
 });

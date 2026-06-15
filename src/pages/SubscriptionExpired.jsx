@@ -1,124 +1,186 @@
-import { motion } from "framer-motion";
-import { Navigate, Link } from "react-router-dom";
-import { AlertCircle, CreditCard, Home, Mail } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import PageLayout from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
+import PageLayout from "@/components/PageLayout";
+import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
-import { useState, useEffect } from "react";
-
-const G = {
-  border: "rgba(212,175,55,0.40)",
-  text: "#F5D060",
-  dim: "rgba(212,175,55,0.55)",
-  bg: "rgba(212,175,55,0.07)"
-};
 
 export default function SubscriptionExpired() {
+  const { pagePath } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [subscription, setSubscription] = useState(null);
+  const [user, setUser] = useState(null);
+  const [expiredSub, setExpiredSub] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [pricing, setPricing] = useState([]);
+
+  const DECODED_PAGE_PATH = decodeURIComponent(pagePath || "");
 
   useEffect(() => {
-    checkAuth();
+    checkAuthAndSubscription();
   }, []);
 
-  const checkAuth = async () => {
+  const checkAuthAndSubscription = async () => {
     try {
-      const user = await base44.auth.me();
-      if (!user) {
-        setIsAuthenticated(false);
-        return;
-      }
-      setIsAuthenticated(true);
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
 
-      // Fetch subscription details
-      const response = await base44.functions.invoke("checkSubscriptionStatus", {});
-      setSubscription(response.data);
-    } catch (error) {
-      setIsAuthenticated(false);
+      // Check for expired subscription
+      const subs = await base44.entities.Subscription.filter({
+        user_id: currentUser.id,
+        page_path: DECODED_PAGE_PATH,
+        status: "EXPIRED"
+      });
+
+      if (subs.length > 0) {
+        setExpiredSub(subs[0]);
+      }
+
+      // Fetch pricing for renewal
+      const response = await base44.functions.invoke("getPagePricing", {
+        page_path: DECODED_PAGE_PATH
+      });
+
+      if (response.data.success) {
+        setPricing(response.data.pricing);
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+      navigate("/");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (isAuthenticated === null) {
+  const handleRenew = (plan) => {
+    navigate(`/subscription-payment/${encodeURIComponent(DECODED_PAGE_PATH)}?plan=${plan.plan_name}`);
+  };
+
+  if (loading) {
     return (
       <PageLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-gold" />
         </div>
       </PageLayout>
     );
   }
 
-  if (isAuthenticated === false) {
-    return <Navigate to="/login" replace />;
-  }
-
   return (
     <PageLayout>
-      <div className="min-h-[80vh] flex items-center justify-center">
+      <div className="max-w-4xl mx-auto py-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-md"
+          className="mb-8"
         >
-          <Card className="border-0" style={{ background: G.bg }}>
-            <CardContent className="p-8 text-center">
-              <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
-                <AlertCircle className="w-10 h-10" style={{ color: "#ef4444" }} />
-              </div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+              <Clock className="w-6 h-6 text-red-500" />
+            </div>
+            <h1 className="text-3xl font-bold text-white">
+              Subscription Expired
+            </h1>
+          </div>
+          <p className="text-white/70">
+            Your access to {getPageName(DECODED_PAGE_PATH)} has expired. Renew now to continue.
+          </p>
+        </motion.div>
 
-              <h1 className="font-inter text-2xl font-bold text-white mb-2">
-                Subscription Expired
-              </h1>
-
-              <p className="text-white/60 mb-6">
-                Your access has expired. Please contact support to renew your subscription.
-              </p>
-
-              {subscription && !subscription.is_lifetime && (
-                <div className="p-4 rounded-lg mb-6" style={{ background: "rgba(255,255,255,0.05)" }}>
-                  <p className="text-sm text-white/70 mb-2">Previous Plan</p>
-                  <p className="text-lg font-bold" style={{ color: G.text }}>
-                    {subscription.plan_name?.replace('_', ' ')}
-                  </p>
-                  {subscription.expired_at && (
-                    <p className="text-xs text-white/50 mt-2">
-                      Expired: {new Date(subscription.expired_at).toLocaleDateString()}
-                    </p>
-                  )}
+        {expiredSub && (
+          <Card className="border-red-500/20 bg-red-500/5 mb-8">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+                Expired Subscription Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-white/60 text-sm">Previous Plan</p>
+                  <p className="text-white font-medium">{expiredSub.plan_name}</p>
                 </div>
-              )}
-
-              <div className="space-y-3">
-                <Link to="/customer-service">
-                  <Button className="w-full btn-gold">
-                    <Mail className="w-4 h-4 mr-2" />
-                    Contact Support
-                  </Button>
-                </Link>
-
-                <Button
-                  variant="outline"
-                  className="w-full border-white/20 text-white/70 hover:bg-white/10"
-                  onClick={() => window.location.href = '/'}
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Return to Home
-                </Button>
-              </div>
-
-              <div className="mt-6 pt-6 border-t" style={{ borderColor: G.border }}>
-                <p className="text-xs text-white/40">
-                  Need help? Email us at support@example.com
-                </p>
+                <div>
+                  <p className="text-white/60 text-sm">Expired On</p>
+                  <p className="text-white font-medium">
+                    {expiredSub.expiry_date ? new Date(expiredSub.expiry_date).toLocaleDateString() : "N/A"}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
+        )}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h2 className="text-2xl font-bold text-white mb-6">
+            Choose Renewal Plan
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {pricing.map((plan, idx) => (
+              <motion.div
+                key={plan.plan_name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <Card className="border-white/10 bg-white/5 hover:border-gold/50 transition-all">
+                  <CardHeader>
+                    <CardTitle className="text-white">
+                      {plan.plan_name.replace("_", " ")}
+                    </CardTitle>
+                    <CardDescription className="text-white/70">
+                      {plan.plan_name === "LIFETIME" ? "One-time payment" : "Recurring access"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-gold mb-4">
+                      {plan.price} {plan.currency}
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={() => handleRenew(plan)}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Renew Now
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
+
+        <div className="mt-8 text-center">
+          <Link to="/">
+            <Button variant="outline">
+              Return to Home
+            </Button>
+          </Link>
+        </div>
       </div>
     </PageLayout>
   );
+}
+
+function getPageName(pagePath) {
+  const pageNames = {
+    "/abjad": "Abjad Kabir",
+    "/vefkin-yapilisi": "Vefk",
+    "/mizaan9": "Mizan",
+    "/hadim": "Hadim",
+  };
+  return pageNames[pagePath] || "Premium Page";
 }

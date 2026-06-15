@@ -52,6 +52,13 @@ const SIDEBAR_ITEMS = [
     arabic: "إعدادات الأسعار",
     icon: DollarSign,
     description: "Set custom prices per page"
+  },
+  {
+    path: "/admin/subscriptions-management",
+    label: "Subscriptions",
+    arabic: "الاشتراكات",
+    icon: CreditCard,
+    description: "Approve & manage subscriptions"
   }
 ];
 
