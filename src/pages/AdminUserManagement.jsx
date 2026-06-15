@@ -35,7 +35,7 @@ export default function AdminUserManagement() {
   const checkAuth = async () => {
     try {
       const currentUser = await base44.auth.me();
-      if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "owner")) {
+      if (!currentUser || currentUser.role !== "admin") {
         toast({
           title: "Access Denied",
           description: "Admin access required",

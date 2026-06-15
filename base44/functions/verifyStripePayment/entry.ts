@@ -47,8 +47,8 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Payment succeeded - activate subscription
-    const activationResult = await base44.functions.invoke('activateSubscriptionPlan', {
+    // Payment succeeded - activate subscription (asServiceRole bypasses admin check)
+    const activationResult = await base44.asServiceRole.functions.invoke('activateSubscriptionPlan', {
       plan_id,
       duration,
       amount,

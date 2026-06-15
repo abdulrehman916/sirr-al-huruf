@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, message: "Invalid payment signature" }, { status: 400 });
     }
 
-    // Payment verified - activate subscription
-    const activationResult = await base44.functions.invoke('activateSubscriptionPlan', {
+    // Payment verified - activate subscription (asServiceRole bypasses admin check)
+    const activationResult = await base44.asServiceRole.functions.invoke('activateSubscriptionPlan', {
       plan_id,
       duration,
       amount,

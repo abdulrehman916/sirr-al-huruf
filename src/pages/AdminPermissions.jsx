@@ -104,7 +104,7 @@ export default function AdminPermissions() {
   const checkAdminAccess = async () => {
     try {
       const user = await base44.auth.me();
-      if (!user || (user.role !== 'admin' && user.role !== 'owner')) {
+      if (!user || user.role !== 'admin') {
         setIsAdmin(false);
         toast({
           title: "Access Denied",

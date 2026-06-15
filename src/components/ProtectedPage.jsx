@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
+import { useNavigate } from "react-router-dom";
 import { ShieldAlert, Lock, Clock, XCircle, Crown, Star, Send } from "lucide-react";
 import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, accessCheckKey, visibilityKey } from "@/lib/permissionCache";
-import PageSubscriptionModal from "@/components/PageSubscriptionModal";
 import RequestAccessModal from "@/components/RequestAccessModal";
 import { useToast } from "@/components/ui/use-toast";
 import useTranslation from "@/i18n/useTranslation";
@@ -25,10 +25,10 @@ const ACCESS_CACHE_TTL = 2 * 60 * 1000;
 
 export default function ProtectedPage({ routePath, children, requiresPermission, requiresSubscription }) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [accessStatus, setAccessStatus] = useState("checking");
   const [accessDetails, setAccessDetails] = useState(null);
   const [error, setError] = useState(null);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [pageName, setPageName] = useState("");
 
@@ -130,28 +130,6 @@ export default function ProtectedPage({ routePath, children, requiresPermission,
 
   if (accessStatus === "granted") return children;
 
-  // Modals
-  if (showSubscriptionModal) {
-    return (
-      <>
-        <LockedScreen
-          accessStatus={accessStatus}
-          error={error}
-          accessDetails={accessDetails}
-          pageName={pageName}
-          routePath={routePath}
-          onSubscribe={() => setShowSubscriptionModal(true)}
-          onRequestAccess={() => { setShowSubscriptionModal(false); setShowRequestModal(true); }}
-        />
-        <PageSubscriptionModal
-          isOpen={showSubscriptionModal}
-          onClose={() => setShowSubscriptionModal(false)}
-          pagePath={routePath}
-        />
-      </>
-    );
-  }
-
   return (
     <>
       <LockedScreen
@@ -160,7 +138,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission,
         accessDetails={accessDetails}
         pageName={pageName}
         routePath={routePath}
-        onSubscribe={() => setShowSubscriptionModal(true)}
+        onSubscribe={() => navigate('/my-subscription')}
         onRequestAccess={() => setShowRequestModal(true)}
       />
       <AnimatePresence>

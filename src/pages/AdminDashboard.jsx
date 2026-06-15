@@ -107,7 +107,7 @@ export default function AdminDashboard() {
   const checkAdminAccess = async () => {
     try {
       const currentUser = await base44.auth.me();
-      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'owner')) {
+      if (!currentUser || currentUser.role !== 'admin') {
         setIsAdmin(false);
         toast({
           title: "Access Denied",
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
       }
       setUser(currentUser);
       setIsAdmin(true);
-      setIsOwner(currentUser.role === 'owner' || currentUser.role === 'admin');
+      setIsOwner(currentUser.role === 'admin');
     } catch (error) {
       setIsAdmin(false);
       toast({
