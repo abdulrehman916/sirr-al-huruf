@@ -277,7 +277,7 @@ export default function AdminPermissions() {
     try {
       await base44.functions.invoke("updatePageVisibility", {
         page_path: pagePath,
-        requiresPermission: newVisibility
+        requires_permission: newVisibility
       });
 
       toast({

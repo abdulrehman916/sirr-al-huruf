@@ -83,7 +83,7 @@ export default function PagePermissions() {
     try {
       await base44.functions.invoke("updatePageVisibility", {
         page_path: pagePath,
-        requiresPermission: newVisibility
+        requires_permission: newVisibility
       });
 
       setPageVisibility(prev => 
