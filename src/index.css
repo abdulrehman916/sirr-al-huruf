@@ -161,7 +161,7 @@
     overflow-y: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    /* Prevent scroll from escaping to the page */
+    /* Lock page scroll when swiping nav — horizontal only */
     overscroll-behavior-x: contain;
     overscroll-behavior-y: none;
     /* Proximity snap — snaps on slow release, free on fast flick (like Instagram) */
