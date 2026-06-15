@@ -1,113 +1,104 @@
 import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
-import { ShieldAlert, Lock, Clock, XCircle } from "lucide-react";
-import { motion } from "framer-motion";
-import { PERMISSION_CODES, ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
+import { ShieldAlert, Lock, Clock, XCircle, Crown, Star, Send } from "lucide-react";
+import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
 import PageSubscriptionModal from "@/components/PageSubscriptionModal";
+import RequestAccessModal from "@/components/RequestAccessModal";
 import { useToast } from "@/components/ui/use-toast";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
   borderHi: "rgba(212,175,55,0.65)",
-  glow: "rgba(212,175,55,0.22)",
   text: "#F5D060",
   dim: "rgba(212,175,55,0.55)",
   bg: "rgba(212,175,55,0.07)",
+  bgHi: "rgba(212,175,55,0.14)",
   error: "rgba(239,68,68,0.15)",
   errorBorder: "rgba(239,68,68,0.50)",
 };
 
-/**
- * ProtectedPage Wrapper Component
- * Enforces access control for all pages using the Access Control System
- * 
- * @param {string} routePath - The route path to check permissions for
- * @param {React.ReactNode} children - The page component to render if access granted
- */
 export default function ProtectedPage({ routePath, children, requiresPermission = true, requiresSubscription = false }) {
   const { toast } = useToast();
   const [accessStatus, setAccessStatus] = useState("checking");
   const [accessDetails, setAccessDetails] = useState(null);
   const [error, setError] = useState(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [requiresPageSubscription, setRequiresPageSubscription] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [pageName, setPageName] = useState("");
 
   useEffect(() => {
+    const config = ROUTE_PERMISSION_MAP[routePath];
+    setPageName(config?.name || routePath);
     checkAccess();
   }, [routePath]);
 
   const checkAccess = async () => {
     try {
-      // Get current user first - with error handling for session issues
       let user;
       try {
         user = await base44.auth.me();
-      } catch (authErr) {
-        console.error("Auth check failed:", authErr);
+      } catch {
         setError("Session expired. Please refresh.");
         setAccessStatus("denied");
         return;
       }
-      
+
       if (!user) {
         setError("Authentication required");
         setAccessStatus("denied");
         return;
       }
-      
-      // If explicitly marked as not requiring permission, grant access
+
+      // No permission required → grant immediately
       if (!requiresPermission) {
         setAccessStatus("granted");
         return;
       }
 
-      // Check database for page visibility setting (source of truth)
+      // Admin/owner bypass
+      if (user.role === "admin" || user.role === "owner") {
+        setAccessStatus("granted");
+        return;
+      }
+
+      // Check database page visibility
       try {
         const dbConfigs = await base44.entities.PageVisibilityConfig.list();
         const dbConfig = (dbConfigs || []).find(c => c.page_path === routePath);
-        
-        if (dbConfig) {
-          // Database has a setting - use it
-          if (!dbConfig.requires_permission) {
-            // Page is PUBLIC in database
-            setAccessStatus("granted");
-            return;
-          }
-          // Page is PRIVATE - continue to subscription/permission check
-        } else {
-          // No database record - use hardcoded default
+        if (dbConfig && !dbConfig.requires_permission) {
+          setAccessStatus("granted");
+          return;
+        }
+        if (!dbConfig) {
           const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
           if (!permissionConfig || !permissionConfig.requiresPermission) {
             setAccessStatus("granted");
             return;
           }
         }
-      } catch (dbErr) {
-        console.error("Database visibility check failed:", dbErr);
-        // Fallback to hardcoded defaults on error
-      }
+      } catch {}
 
-      // Check page-specific subscription
+      // VIP check
       try {
-        const pageSubResponse = await base44.functions.invoke("checkPageSubscription", {
-          page_path: routePath
-        });
-        
-        if (pageSubResponse.data.has_access) {
+        const vipRes = await base44.functions.invoke("checkVIPAccess", { page_path: routePath });
+        if (vipRes.data?.is_vip) {
           setAccessStatus("granted");
-          setAccessDetails({
-            expiry_date: pageSubResponse.data.expiry_date,
-            subscription_id: pageSubResponse.data.subscription.subscription_id,
-            plan_name: pageSubResponse.data.plan_name
-          });
           return;
         }
-      } catch (subErr) {
-        console.error("Page subscription check failed:", subErr);
-      }
+      } catch {}
 
-      // Check permission-based access
+      // Subscription check
+      try {
+        const pageSubResponse = await base44.functions.invoke("checkPageSubscription", { page_path: routePath });
+        if (pageSubResponse.data?.has_access) {
+          setAccessStatus("granted");
+          setAccessDetails({ expiry_date: pageSubResponse.data.expiry_date });
+          return;
+        }
+      } catch {}
+
+      // Permission-based access
       const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
       if (permissionConfig?.code) {
         try {
@@ -115,13 +106,9 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
             page_path: routePath,
             permission_code: permissionConfig.code,
           });
-
           if (response.data.access_granted) {
             setAccessStatus("granted");
-            setAccessDetails({
-              expiry_date: response.data.expiry_date,
-              permission_id: response.data.permission_id,
-            });
+            setAccessDetails({ expiry_date: response.data.expiry_date });
             return;
           } else {
             if (response.data.reason === "Permission has expired") {
@@ -129,193 +116,191 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
             } else if (response.data.reason === "Permission has been revoked") {
               setAccessStatus("revoked");
             } else {
-              setAccessStatus("denied");
+              setAccessStatus("locked");
             }
             setError(response.data.reason || "Access denied");
             return;
           }
-        } catch (permErr) {
-          console.error("Permission check failed:", permErr);
-        }
+        } catch {}
       }
 
-      // No valid access found - require subscription
-      setRequiresPageSubscription(true);
-      setAccessStatus("subscription_required");
-      setShowSubscriptionModal(true);
+      setAccessStatus("locked");
     } catch (err) {
-      if (err.response?.status === 403) {
-        const reason = err.response?.data?.reason;
-        if (reason === "Permission has expired") {
-          setAccessStatus("expired");
-        } else {
-          setAccessStatus("denied");
-        }
-        setError(reason || "Access denied");
-      } else if (err.response?.status === 401) {
-        setError("Authentication required");
-        setAccessStatus("denied");
-      } else {
-        setError(err.message || "Access check failed");
-        setAccessStatus("denied");
-      }
+      setError(err.message || "Access check failed");
+      setAccessStatus("denied");
     }
   };
 
-  // Show loading state while checking
   if (accessStatus === "checking") {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: G.bg }}>
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/60 font-inter text-sm">Verifying access...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-t-yellow-400 border-r-transparent border-b-yellow-400 border-l-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  // Render page if access granted
-  if (accessStatus === "granted") {
-    return children;
-  }
+  if (accessStatus === "granted") return children;
 
-  // Show subscription modal if required
-  if (accessStatus === "subscription_required" && requiresPageSubscription && showSubscriptionModal) {
+  // Modals
+  if (showSubscriptionModal) {
     return (
-      <PageSubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={() => {
-          setShowSubscriptionModal(false);
-          setAccessStatus("denied");
-        }}
-        pagePath={routePath}
-      />
+      <>
+        <LockedScreen
+          accessStatus={accessStatus}
+          error={error}
+          accessDetails={accessDetails}
+          pageName={pageName}
+          routePath={routePath}
+          onSubscribe={() => setShowSubscriptionModal(true)}
+          onRequestAccess={() => { setShowSubscriptionModal(false); setShowRequestModal(true); }}
+        />
+        <PageSubscriptionModal
+          isOpen={showSubscriptionModal}
+          onClose={() => setShowSubscriptionModal(false)}
+          pagePath={routePath}
+        />
+      </>
     );
   }
 
-  // Render access denied page
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ 
+    <>
+      <LockedScreen
+        accessStatus={accessStatus}
+        error={error}
+        accessDetails={accessDetails}
+        pageName={pageName}
+        routePath={routePath}
+        onSubscribe={() => setShowSubscriptionModal(true)}
+        onRequestAccess={() => setShowRequestModal(true)}
+      />
+      <AnimatePresence>
+        {showRequestModal && (
+          <RequestAccessModal
+            pagePath={routePath}
+            pageName={pageName}
+            onClose={() => setShowRequestModal(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath, onSubscribe, onRequestAccess }) {
+  const isExpired = accessStatus === "expired";
+  const isRevoked = accessStatus === "revoked";
+  const isLocked = accessStatus === "locked";
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6" style={{
       background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)"
     }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full"
-      >
-        <div className="rounded-2xl border p-8 text-center" style={{ 
-          background: accessStatus === "expired" 
-            ? "rgba(234,179,8,0.10)" 
-            : accessStatus === "revoked"
-            ? "rgba(239,68,68,0.10)"
-            : G.bg,
-          borderColor: accessStatus === "expired"
-            ? "rgba(234,179,8,0.40)"
-            : accessStatus === "revoked"
-            ? G.errorBorder
-            : G.border,
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full space-y-4">
+
+        {/* Main card */}
+        <div className="rounded-2xl border p-8 text-center" style={{
+          background: isExpired ? "rgba(234,179,8,0.08)" : isRevoked ? G.error : G.bg,
+          borderColor: isExpired ? "rgba(234,179,8,0.40)" : isRevoked ? G.errorBorder : G.border,
         }}>
           {/* Icon */}
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ 
-            background: accessStatus === "expired"
-              ? "rgba(234,179,8,0.15)"
-              : accessStatus === "revoked"
-              ? G.error
-              : G.bg,
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{
+            background: isExpired ? "rgba(234,179,8,0.12)" : isRevoked ? G.error : G.bgHi,
           }}>
-            {accessStatus === "expired" ? (
-              <Clock className="w-8 h-8" style={{ color: "#eab308" }} />
-            ) : accessStatus === "revoked" ? (
-              <XCircle className="w-8 h-8" style={{ color: "#ef4444" }} />
-            ) : (
-              <ShieldAlert className="w-8 h-8" style={{ color: G.text }} />
-            )}
+            {isExpired ? <Clock className="w-8 h-8" style={{ color: "#eab308" }} />
+              : isRevoked ? <XCircle className="w-8 h-8 text-red-400" />
+              : isLocked ? <Lock className="w-8 h-8" style={{ color: G.text }} />
+              : <ShieldAlert className="w-8 h-8" style={{ color: G.text }} />}
           </div>
 
-          {/* Title */}
-          <h1 className="font-amiri text-2xl font-bold mb-2" style={{ color: G.text }}>
-            {accessStatus === "expired" 
-              ? "Access Expired" 
-              : accessStatus === "revoked"
-              ? "Access Revoked"
-              : "Access Denied"}
+          <h1 className="font-amiri text-2xl font-bold mb-1" style={{ color: G.text }}>
+            {isExpired ? "Access Expired" : isRevoked ? "Access Revoked" : isLocked ? "Premium Content" : "Access Denied"}
           </h1>
-
-          {/* Subtitle */}
-          <p className="font-inter text-xs text-white/60 uppercase tracking-widest mb-4">
-            {accessStatus === "expired"
-              ? "PERMISSION EXPIRED"
-              : accessStatus === "revoked"
-              ? "PERMISSION REVOKED"
-              : "INSUFFICIENT PERMISSIONS"}
+          <p className="font-inter text-xs text-white/50 uppercase tracking-widest mb-4">
+            {pageName}
           </p>
 
-          {/* Error message */}
-          {error && (
-            <div className="p-3 rounded-lg mb-4" style={{ 
-              background: "rgba(255,255,255,0.05)",
-              border: `1px solid ${G.border}`
-            }}>
-              <p className="font-inter text-xs text-white/70">{error}</p>
+          {error && !isLocked && (
+            <div className="p-3 rounded-lg mb-4" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}` }}>
+              <p className="font-inter text-xs text-white/60">{error}</p>
             </div>
           )}
 
-          {/* Details */}
-          {accessDetails?.expiry_date && (
-            <div className="mb-6">
-              <p className="font-inter text-xs text-white/50 mb-1">Expired on</p>
-              <p className="font-inter text-sm text-white/80">
-                {new Date(accessDetails.expiry_date).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
-              </p>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="space-y-3">
-            <button
-              onClick={() => window.location.href = "/"}
-              className="w-full py-3 rounded-xl font-inter font-bold text-xs text-[#0d1b2a]"
-              style={{
-                background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)",
-                boxShadow: `0 0 24px ${G.glow}`,
-              }}
-            >
-              Return to Home
-            </button>
-            
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full py-3 rounded-xl font-inter font-semibold text-xs"
-              style={{
-                background: "transparent",
-                border: `1px solid ${G.border}`,
-                color: G.text,
-              }}
-            >
-              Try Again
-            </button>
-          </div>
-
-          {/* Contact info */}
-          <div className="mt-6 pt-6 border-t" style={{ borderColor: G.border }}>
-            <p className="font-inter text-xs text-white/50 mb-2">
-              Need access? Contact support
+          {isLocked && (
+            <p className="text-sm text-white/50 mb-6">
+              This page requires special access. You can subscribe for instant access or request it from the owner.
             </p>
-            <a
-              href="/customer-service"
-              className="font-inter text-xs text-gold hover:underline"
-              style={{ color: G.text }}
-            >
-              Submit Support Ticket →
-            </a>
-          </div>
+          )}
+
+          {/* Action buttons for locked pages */}
+          {(isLocked || isExpired) && (
+            <div className="space-y-3 mt-4">
+              {/* Subscribe button */}
+              <button
+                onClick={onSubscribe}
+                className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2"
+                style={{
+                  background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)",
+                  color: "#0d1b2a",
+                  boxShadow: "0 0 24px rgba(212,175,55,0.35)",
+                }}
+              >
+                <Crown className="w-4 h-4" />
+                Subscribe for Access
+              </button>
+
+              {/* Request Access button */}
+              <button
+                onClick={onRequestAccess}
+                className="w-full py-3.5 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:bg-white/10"
+                style={{
+                  background: "rgba(212,175,55,0.08)",
+                  border: `1px solid ${G.border}`,
+                  color: G.text,
+                }}
+              >
+                <Send className="w-4 h-4" />
+                Request Access from Owner
+              </button>
+            </div>
+          )}
+
+          {/* Return home for revoked/denied */}
+          {!isLocked && !isExpired && (
+            <div className="space-y-3 mt-4">
+              <button
+                onClick={() => window.location.href = "/"}
+                className="w-full py-3 rounded-xl font-inter font-bold text-sm"
+                style={{
+                  background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)",
+                  color: "#0d1b2a",
+                }}
+              >
+                Return to Home
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full py-3 rounded-xl font-inter font-semibold text-xs"
+                style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}
+              >
+                Try Again
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* VIP info card */}
+        {isLocked && (
+          <div className="rounded-xl border p-4 text-center" style={{
+            background: "rgba(147,51,234,0.06)",
+            borderColor: "rgba(147,51,234,0.30)",
+          }}>
+            <Star className="w-5 h-5 mx-auto mb-2" style={{ color: "#a855f7" }} />
+            <p className="font-inter text-xs text-white/60">
+              Already a VIP member? Your phone or email grants automatic free access.
+            </p>
+          </div>
+        )}
       </motion.div>
     </div>
   );

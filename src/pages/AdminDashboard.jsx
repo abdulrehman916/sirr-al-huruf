@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity, Clock } from "lucide-react";
+import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity, Clock, Crown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,6 +18,13 @@ const G = {
 };
 
 const SIDEBAR_ITEMS = [
+  {
+    path: "/admin/access-dashboard",
+    label: "Access Dashboard",
+    arabic: "لوحة تحكم الوصول",
+    icon: Crown,
+    description: "Unified: requests, VIP, user permissions, page visibility"
+  },
   {
     path: "/admin/user-permissions",
     label: "User Permissions",
@@ -124,9 +131,11 @@ export default function AdminDashboard() {
 
   const fetchPendingRequests = async () => {
     try {
-      const requests = await base44.entities.PremiumAccessRequest.list();
-      const pending = requests.filter(r => r.status === 'PENDING').length;
-      setPendingRequests(pending);
+      const [old, newReqs] = await Promise.all([
+        base44.entities.PremiumAccessRequest.filter({ status: "PENDING" }),
+        base44.entities.AccessRequest.filter({ status: "PENDING" }),
+      ]);
+      setPendingRequests((old?.length || 0) + (newReqs?.length || 0));
     } catch (error) {
       console.error('Failed to fetch pending requests:', error);
     }
@@ -201,7 +210,7 @@ export default function AdminDashboard() {
               {SIDEBAR_ITEMS.filter(item => item.path !== '/admin/page-permissions' || isOwner).map((item) => {
                 const isActive = location.pathname === item.path;
                 const Icon = item.icon;
-                const hasBadge = item.path === "/admin/subscription-requests" && pendingRequests > 0;
+                const hasBadge = (item.path === "/admin/subscription-requests" || item.path === "/admin/access-dashboard") && pendingRequests > 0;
                 
                 return (
                   <Link
