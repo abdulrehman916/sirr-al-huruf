@@ -1,94 +1,127 @@
 // ═══════════════════════════════════════════════════════════════
-// SERVICE WORKER — PWA OFFLINE SUPPORT
-// Caches app shell and enables offline functionality
+// SERVICE WORKER — Enterprise PWA Offline Support
+// Network-first for HTML, Cache-first for static assets
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'sirr-al-huruf-v1';
-const STATIC_ASSETS = [
+const CACHE_VERSION = 'sah-v3';
+const STATIC_CACHE = CACHE_VERSION + '-static';
+const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
+
+// Static assets to precache on install
+const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
 ];
 
-// Install event — cache static assets
+// Extensions that are safe to cache aggressively (immutable-ish)
+const STATIC_EXTENSIONS = /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|ico|webp|avif)$/i;
+
+// ── Install: precache static shell ──────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+    caches.open(STATIC_CACHE).then((cache) => {
+      return cache.addAll(PRECACHE_URLS);
     })
   );
-  // Activate immediately
   self.skipWaiting();
 });
 
-// Activate event — clean old caches
+// ── Activate: purge old caches ──────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
+          .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
           .map((name) => caches.delete(name))
       );
     })
   );
-  // Claim all clients immediately
   self.clients.claim();
 });
 
-// Fetch event — serve from cache, fallback to network
+// ── Fetch: smart strategy ───────────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
+  const { request } = event;
+  const url = new URL(request.url);
 
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) return;
+  // Skip non-GET
+  if (request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  // Skip cross-origin (except CDN/fonts)
+  const isSameOrigin = url.origin === self.location.origin;
+  const isCdnOrFont = /(fonts\.gstatic\.com|cdnjs|unpkg|jsdelivr)/.test(url.hostname);
+  if (!isSameOrigin && !isCdnOrFont) return;
 
-      return fetch(event.request).then((networkResponse) => {
-        // Don't cache failed responses
-        if (!networkResponse || networkResponse.status !== 200) {
-          return networkResponse;
-        }
-
-        // Clone the response
-        const responseToCache = networkResponse.clone();
-
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return networkResponse;
-      });
-    }).catch(() => {
-      // Return offline page for navigation requests
-      if (event.request.mode === 'navigate') {
-        return caches.match('/index.html');
-      }
-    })
-  );
-});
-
-// Handle messages from main thread (cache warming)
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'CACHE_URLS') {
-    const urls = event.data.urls;
-    if (urls && urls.length > 0) {
-      caches.open(CACHE_NAME).then((cache) => {
-        cache.addAll(urls).catch(() => {
-          // Ignore caching errors
-        });
-      });
-    }
+  // Skip Base44 API calls — don't cache dynamic data
+  if (url.pathname.includes('/api/') || url.pathname.includes('/functions/')) {
+    return; // Let them pass through to network
   }
 
-  // Handle skip waiting message
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  // Strategy: Cache-first for static assets, Network-first for HTML
+  const isStatic = STATIC_EXTENSIONS.test(url.pathname);
+  const isHtml = request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/';
+
+  if (isStatic) {
+    // Cache-first: serve instantly, update cache in background
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const fetchPromise = fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const clone = networkResponse.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
+          }
+          return networkResponse;
+        }).catch(() => cached);
+
+        return cached || fetchPromise;
+      })
+    );
+  } else if (isHtml) {
+    // Network-first for HTML: always try network, fall back to cache
+    event.respondWith(
+      fetch(request).then((networkResponse) => {
+        if (networkResponse && networkResponse.ok) {
+          const clone = networkResponse.clone();
+          caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
+        }
+        return networkResponse;
+      }).catch(() => {
+        return caches.match(request).then((cached) => {
+          return cached || caches.match('/index.html');
+        });
+      })
+    );
+  } else {
+    // Default: network-first
+    event.respondWith(
+      fetch(request).then((response) => {
+        if (response && response.ok) {
+          const clone = response.clone();
+          caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(request))
+    );
+  }
+});
+
+// ── Message: cache warming from main thread ─────────────────────
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'CACHE_URLS') {
+    const urls = event.data.urls || [];
+    caches.open(STATIC_CACHE).then((cache) => {
+      urls.forEach((url) => {
+        cache.add(url).catch(() => {});
+      });
+    });
+  }
+
+  // Clear dynamic cache on request
+  if (event.data && event.data.type === 'CLEAR_DYNAMIC') {
+    caches.delete(DYNAMIC_CACHE).then(() => {
+      caches.open(DYNAMIC_CACHE); // recreate
+    });
   }
 });

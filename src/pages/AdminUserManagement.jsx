@@ -56,8 +56,8 @@ export default function AdminUserManagement() {
   const fetchData = async () => {
     try {
       const [userProfiles, subs] = await Promise.all([
-        base44.entities.UserAccessProfile.list(),
-        base44.entities.Subscription.list()
+        base44.entities.UserAccessProfile.list(null, 500),
+        base44.entities.Subscription.list('-start_date', 500)
       ]);
       setUsers(userProfiles);
       setSubscriptions(subs);

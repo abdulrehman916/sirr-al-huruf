@@ -73,9 +73,9 @@ export default function SupportTicket() {
     }
     setLoading(true);
     try {
-      const all = await base44.entities.SupportTickets.list();
-      const maxN = all.reduce((m, t) => Math.max(m, parseInt(t.ticket_id?.split("-")[1] || "0")), 0);
-      const tid = `SUP-${String(maxN + 1).padStart(6, "0")}`;
+      // Use timestamp-based ID instead of counting all tickets — O(1) vs O(n)
+      const ts = Date.now().toString(36).toUpperCase();
+      const tid = `SUP-${ts.slice(-6)}`;
       await base44.entities.SupportTickets.create({
         ticket_id: tid,
         name: form.name,

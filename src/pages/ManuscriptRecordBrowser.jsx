@@ -62,8 +62,9 @@ export default function ManuscriptRecordBrowser() {
 
   async function loadStats() {
     try {
+      // Load only what's needed — manuscripts list is small, rules should be sampled
       const [rules, manuscripts] = await Promise.all([
-        base44.entities.ManuscriptRule.list(),
+        base44.entities.ManuscriptRule.list('-created_date', 500),
         base44.entities.ManuscriptLibrary.list()
       ]);
       

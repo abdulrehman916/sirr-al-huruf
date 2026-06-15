@@ -117,8 +117,25 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     font-feature-settings: "kern" 1, "liga" 1;
     overflow-y: auto;
+    /* Eliminate 300ms tap delay on all browsers */
+    -ms-touch-action: manipulation;
+  }
+
+  /* Instant tap response on all interactive elements */
+  a, button, [role="button"], input, select, textarea, label {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* Only allow text selection on content areas */
+  .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
 
   #root {
@@ -253,10 +270,11 @@
     font-weight: 500;
   }
 
-  /* Non-selectable interactive elements — Arabic text remains selectable */
+  /* Non-selectable interactive elements — instant response, no selection */
   button, a, [role="button"], nav, .font-inter {
     -webkit-user-select: none;
     user-select: none;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
   /* Arabic/Amiri text stays selectable for copy */
