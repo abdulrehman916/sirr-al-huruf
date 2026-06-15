@@ -33,13 +33,10 @@ export default function LivePlanetaryHours() {
   const [sunData, setSunData] = useState(null);
 
   useEffect(() => {
-    if (!location) return;
+    const loc = location || { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE (Default)" };
     const today = new Date();
-    const sunTimes = calculateSunriseSunset(today, location.lat, location.lng, location.timezone);
+    const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
     setSunData(sunTimes);
-    if (sunTimes.sunrise && sunTimes.sunset) {
-      updateCurrentHour(today, sunTimes);
-    }
 
     const interval = setInterval(() => {
       const now = new Date();
@@ -47,6 +44,10 @@ export default function LivePlanetaryHours() {
         updateCurrentHour(now, sunTimes);
       }
     }, 1000);
+    // initial call
+    if (sunTimes.sunrise && sunTimes.sunset) {
+      updateCurrentHour(today, sunTimes);
+    }
 
     return () => clearInterval(interval);
   }, [location]);

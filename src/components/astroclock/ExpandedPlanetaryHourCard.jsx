@@ -37,7 +37,7 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
   const isSaad = planetRules?.nature?.includes("Sa'd");
 
   return (
-    <div className="rounded-xl border p-5 mb-4"
+    <div className="rounded-xl border p-5"
       style={{
         background: G.bg,
         borderColor: G.border,
