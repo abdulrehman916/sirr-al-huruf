@@ -5,13 +5,16 @@ import {
   Users, CreditCard, Globe, Shield, Search, Plus, Trash2,
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
   Phone, Mail, Calendar, Crown, RefreshCw, Star, Zap,
-  DollarSign, TrendingUp, Edit2, Save
+  DollarSign, TrendingUp, Edit2, Save, AlertCircle, Loader2,
+  Undo2, Ban, CalendarPlus2
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
 import { useToast } from "@/components/ui/use-toast";
 import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
+import PaymentsTab from "@/components/admin/PaymentsTab";
+import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -51,6 +54,7 @@ function daysLeft(d) {
 const TABS = [
   { id: "users",       label: "Users",            icon: Users },
   { id: "subs",        label: "Subscriptions",    icon: CreditCard },
+  { id: "payments",    label: "Payments",         icon: TrendingUp },
   { id: "plans",       label: "Plans",            icon: Star },
   { id: "visibility",  label: "Page Visibility",  icon: Globe },
   { id: "access",      label: "User Access",      icon: Shield },
@@ -883,6 +887,7 @@ export default function OwnerAccessDashboard() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [pageConfigs, setPageConfigs] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [managingSub, setManagingSub] = useState(null);
 
   useEffect(() => { init(); }, []);
 
@@ -984,12 +989,24 @@ export default function OwnerAccessDashboard() {
         <div>
           {tab === "users"      && <UsersTab users={users} />}
           {tab === "subs"       && <SubscriptionsTab subscriptions={subscriptions} users={users} />}
+          {tab === "payments"   && <PaymentsTab subscriptions={subscriptions} users={users} onManage={setManagingSub} />}
           {tab === "plans"      && <PlansTab plans={plans} onRefresh={loadAll} />}
           {tab === "visibility" && <VisibilityTab pageConfigs={pageConfigs} onRefresh={loadAll} />}
           {tab === "access"     && <UserAccessTab users={users} permissions={permissions} onRefresh={loadAll} />}
         </div>
 
       </motion.div>
+
+      <AnimatePresence>
+        {managingSub && (
+          <ManageSubscriptionModal
+            subscription={managingSub}
+            onClose={() => setManagingSub(null)}
+            onSuccess={() => { loadAll(); setManagingSub(null); }}
+          />
+        )}
+      </AnimatePresence>
+
     </PageLayout>
   );
 }
