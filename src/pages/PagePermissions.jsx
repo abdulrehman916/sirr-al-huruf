@@ -27,7 +27,7 @@ export default function PagePermissions() {
   const checkAdmin = async () => {
     try {
       const user = await base44.auth.me();
-      if (user?.role !== 'owner') {
+      if (user?.role !== 'owner' && user?.role !== 'admin') {
         setIsAdmin(false);
         return;
       }

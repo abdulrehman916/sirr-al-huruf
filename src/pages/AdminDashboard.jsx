@@ -104,7 +104,7 @@ export default function AdminDashboard() {
       }
       setUser(currentUser);
       setIsAdmin(true);
-      setIsOwner(currentUser.role === 'owner');
+      setIsOwner(currentUser.role === 'owner' || currentUser.role === 'admin');
     } catch (error) {
       setIsAdmin(false);
       toast({
