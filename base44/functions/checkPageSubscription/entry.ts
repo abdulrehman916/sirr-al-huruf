@@ -3,7 +3,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
     const { user_id, page_path } = await req.json();
 
     if (!user_id || !page_path) {
@@ -11,6 +10,15 @@ Deno.serve(async (req) => {
         success: false, 
         message: "User ID and page path required" 
       }, { status: 400 });
+    }
+
+    // Security: only allow checking own subscriptions or admin access
+    const user = await base44.auth.me();
+    if (!user || (user.id !== user_id && user.role !== 'admin')) {
+      return Response.json({
+        success: false,
+        message: "Access denied"
+      }, { status: 403 });
     }
 
     // Find active subscriptions for this user and page

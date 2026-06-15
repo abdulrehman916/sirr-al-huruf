@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Smartphone, Loader2, KeyRound, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Mail, Loader2, KeyRound, ArrowLeft, ShieldCheck } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/components/ui/use-toast";
 import { derivePassword } from "@/lib/derivePassword";
@@ -28,106 +28,35 @@ function getCountry() {
 }
 
 export default function OTPLogin() {
-  const [step, setStep] = useState("choose");
-  const [contactType, setContactType] = useState(null);
-  const [mobile, setMobile] = useState("");
+  const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [otpId, setOtpId] = useState(null);
   const { toast } = useToast();
 
   const deviceType = detectDevice();
   const country = getCountry();
 
-  // ── Step 1: Choose method ─────────────────────────────────────────
-  if (step === "choose") {
-    return (
-      <AuthLayout
-        icon={ShieldCheck}
-        title="Login with OTP"
-        subtitle="Choose your verification method"
-        footer={
-          <>
-            New user?{" "}
-            <Link to="/onboarding" className="text-primary font-medium hover:underline">
-              Create account
-            </Link>
-          </>
-        }
-      >
-        <div className="space-y-3">
-          <button
-            onClick={() => { setContactType("email"); setStep("contact"); }}
-            className="w-full flex items-center gap-4 p-5 rounded-xl text-left transition-all
-              bg-card hover:bg-accent/5 border border-border hover:border-primary/30"
-          >
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.25)" }}>
-              <Mail className="w-5 h-5 text-blue-400" />
-            </div>
-            <div>
-              <p className="font-semibold text-foreground text-base">Login with Email</p>
-              <p className="text-sm text-muted-foreground">Send OTP to your email</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => { setContactType("mobile"); setStep("contact"); }}
-            className="w-full flex items-center gap-4 p-5 rounded-xl text-left transition-all
-              bg-card hover:bg-accent/5 border border-border hover:border-primary/30"
-          >
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)" }}>
-              <Smartphone className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <p className="font-semibold text-foreground text-base">Login with Phone</p>
-              <p className="text-sm text-muted-foreground">Send OTP by SMS</p>
-            </div>
-          </button>
-        </div>
-      </AuthLayout>
-    );
-  }
-
-  // ── Step 2: Enter contact & send OTP ──────────────────────────────
-  if (step === "contact") {
+  // ── Step 1: Enter email ──────────────────────────────────────────
+  if (step === "email") {
     const handleSendOTP = async (e) => {
       e.preventDefault();
       setError("");
       setLoading(true);
 
       try {
-        if (contactType === "email") {
-          // ── EMAIL: Platform-native OTP ─────────────────────────────
-          try {
-            await base44.auth.register({ email, password: derivePassword(email) });
-          } catch {
-            try { await base44.auth.resendOtp(email); } catch {
-              setError("Unable to send OTP. Please check your email.");
-              setLoading(false);
-              return;
-            }
-          }
-          setStep("verify");
-          toast({ title: "OTP Sent", description: "Check your email for the 6-digit code" });
-        } else {
-          // ── MOBILE: Production SMS OTP ─────────────────────────────
-          const response = await base44.functions.invoke("sendOtp", {
-            mobile,
-            email: "",
-            purpose: "LOGIN"
-          });
-          if (response.data?.success) {
-            setOtpId(response.data.otp_id);
-            setStep("verify");
-            toast({ title: "OTP Sent", description: response.data.sms_sent ? "Check your phone for the SMS code" : "OTP generated — check logs" });
-          } else {
-            setError(response.data?.message || "Failed to send OTP");
+        try {
+          await base44.auth.register({ email, password: derivePassword(email) });
+        } catch {
+          try { await base44.auth.resendOtp(email); } catch {
+            setError("Unable to send OTP. Please check your email.");
+            setLoading(false);
+            return;
           }
         }
+        setStep("verify");
+        toast({ title: "OTP Sent", description: "Check your email for the 6-digit code" });
       } catch (err) {
         setError(err?.message || "Failed to send OTP. Please try again.");
       } finally {
@@ -137,13 +66,16 @@ export default function OTPLogin() {
 
     return (
       <AuthLayout
-        icon={contactType === "email" ? Mail : Smartphone}
-        title={contactType === "email" ? "Login with Email" : "Login with Phone"}
-        subtitle={contactType === "email" ? "Enter your email to receive a code" : "Enter your phone to receive an SMS code"}
+        icon={Mail}
+        title="Login with Email"
+        subtitle="Enter your email to receive a verification code"
         footer={
-          <button onClick={() => { setStep("choose"); setError(""); }} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto">
-            <ArrowLeft className="w-3.5 h-3.5" /> Choose another method
-          </button>
+          <>
+            New user?{" "}
+            <Link to="/onboarding" className="text-primary font-medium hover:underline">
+              Create account
+            </Link>
+          </>
         }
       >
         {error && (
@@ -152,19 +84,15 @@ export default function OTPLogin() {
 
         <form onSubmit={handleSendOTP} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="contact">{contactType === "email" ? "Email Address" : "Mobile Number"}</Label>
+            <Label htmlFor="email">Email Address</Label>
             <div className="relative">
-              {contactType === "email" ? (
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              ) : (
-                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              )}
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                id="contact"
-                type={contactType === "email" ? "email" : "tel"}
-                placeholder={contactType === "email" ? "you@example.com" : "+971 50 123 4567"}
-                value={contactType === "email" ? email : mobile}
-                onChange={(e) => contactType === "email" ? setEmail(e.target.value) : setMobile(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="pl-10 h-12"
                 required
                 autoFocus
@@ -180,66 +108,25 @@ export default function OTPLogin() {
     );
   }
 
-  // ── Step 3: Verify OTP ────────────────────────────────────────────
+  // ── Step 2: Verify OTP ──────────────────────────────────────────
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      if (contactType === "email") {
-        // ── EMAIL: Platform-native OTP verification ──────────────────
-        const result = await base44.auth.verifyOtp({ email, otpCode: otp });
-        await base44.auth.setToken(result.access_token);
+      const result = await base44.auth.verifyOtp({ email, otpCode: otp });
+      await base44.auth.setToken(result.access_token);
 
-        await base44.functions.invoke("completeOnboarding", {
-          email,
-          mobile: "",
-          device_type: deviceType,
-          country
-        });
+      await base44.functions.invoke("completeOnboarding", {
+        email,
+        mobile: "",
+        device_type: deviceType,
+        country
+      });
 
-        toast({ title: "Welcome back!", description: "Login successful." });
-        window.location.href = "/";
-      } else {
-        // ── MOBILE: Custom OTP verification ──────────────────────────
-        const verifyRes = await base44.functions.invoke("verifyOtp", {
-          otp_id: otpId,
-          otp_code: otp
-        });
-
-        if (!verifyRes.data?.success) {
-          setError(verifyRes.data?.message || "Invalid OTP code");
-          setLoading(false);
-          return;
-        }
-
-        const synthEmail = `user${mobile.replace(/\D/g, "").slice(-10)}@sirralhuruf.internal`;
-        const pwd = derivePassword(synthEmail);
-
-        try {
-          await base44.auth.loginViaEmailPassword(synthEmail, pwd);
-        } catch {
-          try {
-            await base44.auth.register({ email: synthEmail, password: pwd });
-            await base44.auth.loginViaEmailPassword(synthEmail, pwd);
-          } catch {
-            setError("Phone login unavailable. Please use Email option or create an account first.");
-            setLoading(false);
-            return;
-          }
-        }
-
-        await base44.functions.invoke("completeOnboarding", {
-          email: synthEmail,
-          mobile,
-          device_type: deviceType,
-          country
-        });
-
-        toast({ title: "Welcome back!", description: "Login successful." });
-        window.location.href = "/";
-      }
+      toast({ title: "Welcome back!", description: "Login successful." });
+      window.location.href = "/";
     } catch (err) {
       setError(err?.message || "Verification failed. Please try again.");
     } finally {
@@ -250,22 +137,10 @@ export default function OTPLogin() {
   const handleResendOTP = async () => {
     setLoading(true);
     try {
-      if (contactType === "email") {
-        try { await base44.auth.resendOtp(email); } catch {
-          await base44.auth.register({ email, password: derivePassword(email) });
-        }
-        toast({ title: "OTP Resent", description: "Check your email" });
-      } else {
-        const response = await base44.functions.invoke("sendOtp", {
-          mobile,
-          email: "",
-          purpose: "LOGIN"
-        });
-        if (response.data?.success) {
-          setOtpId(response.data.otp_id);
-          toast({ title: "OTP Resent", description: "Check your phone" });
-        }
+      try { await base44.auth.resendOtp(email); } catch {
+        await base44.auth.register({ email, password: derivePassword(email) });
       }
+      toast({ title: "OTP Resent", description: "Check your email" });
     } catch {
       toast({ title: "Error", description: "Failed to resend OTP", variant: "destructive" });
     } finally {
@@ -277,10 +152,11 @@ export default function OTPLogin() {
     <AuthLayout
       icon={KeyRound}
       title="Enter OTP Code"
-      subtitle={`We sent a 6-digit code to your ${contactType === "email" ? "email" : "phone"}`}
+      subtitle={`We sent a 6-digit code to ${email}`}
       footer={
-        <button onClick={() => { setStep("choose"); setError(""); }} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto">
-          <ArrowLeft className="w-3.5 h-3.5" /> Choose another method
+        <button onClick={() => { setStep("email"); setError(""); }}
+          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto">
+          <ArrowLeft className="w-3.5 h-3.5" /> Change email
         </button>
       }
     >
@@ -319,9 +195,9 @@ export default function OTPLogin() {
             Resend OTP
           </button>
           <br />
-          <button type="button" onClick={() => { setStep("contact"); setError(""); setOtp(""); }}
+          <button type="button" onClick={() => { setStep("email"); setError(""); setOtp(""); }}
             className="text-xs text-muted-foreground hover:text-foreground">
-            Change {contactType === "email" ? "email" : "number"}
+            Change email
           </button>
         </div>
       </form>
