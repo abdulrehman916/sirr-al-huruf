@@ -151,7 +151,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/dashboard" element={<ProtectedPage routePath="/admin/dashboard"><AdminDashboard /></ProtectedPage>} />
             <Route path="/admin/test" element={<ProtectedPage routePath="/admin/test" requiresPermission={false}><AdminTest /></ProtectedPage>} />
             <Route path="/admin/support" element={<ProtectedPage routePath="/admin/support"><AdminSupport /></ProtectedPage>} />
-            <Route path="/admin/permissions" element={<ProtectedPage routePath="/admin/permissions"><AdminPermissions /></ProtectedPage>} />
+            <Route path="/admin/permissions" element={<ProtectedPage routePath="/admin/permissions" requiresPermission={false}><AdminPermissions /></ProtectedPage>} />
             <Route path="/admin/page-permissions" element={<ProtectedPage routePath="/admin/page-permissions"><PagePermissions /></ProtectedPage>} />
             <Route path="/admin/subscriptions" element={<ProtectedPage routePath="/admin/subscriptions"><AdminSubscriptions /></ProtectedPage>} />
             <Route path="/subscription-expired" element={<ProtectedPage routePath="/subscription-expired" requiresPermission={false}><SubscriptionExpired /></ProtectedPage>} />

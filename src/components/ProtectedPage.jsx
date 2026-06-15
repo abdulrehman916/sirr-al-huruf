@@ -52,9 +52,9 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         return;
       }
       
-      // Debug logging for admin users
-      if (user.role === 'admin') {
-        console.log("Admin user detected:", user.email, "Role:", user.role);
+      // Debug logging for admin/owner users
+      if (user.role === 'admin' || user.role === 'owner') {
+        console.log("Admin/Owner user detected:", user.email, "Role:", user.role);
       }
 
       // If explicitly marked as not requiring permission, grant access
@@ -72,8 +72,8 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         return;
       }
 
-      // Admin-only pages: grant access to admin users without permission check
-      if (permissionConfig.adminOnly && user.role === 'admin') {
+      // Admin-only pages: grant access to admin/owner users without permission check
+      if (permissionConfig.adminOnly && (user.role === 'admin' || user.role === 'owner')) {
         setAccessStatus("granted");
         return;
       }
