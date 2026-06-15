@@ -109,7 +109,7 @@ export default function LivePlanetaryHours() {
           </div>
         </div>
         
-        {location?.name && (
+        {location?.name && sunData && (
           <div className="text-right">
             <p className="font-inter text-[9px]" style={{ color: G.dim }}>{location.name}</p>
             <p className="font-inter text-[10px] text-white/60">
@@ -197,7 +197,7 @@ export default function LivePlanetaryHours() {
             {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Suitable Actions"}
           </p>
           <ul className="space-y-2">
-            {(currentHour.planetInfo.goodActions_ml || currentHour.planetInfo.goodActions_en || []).slice(0, 4).map((action, idx) => (
+            {((isMalayalam ? currentHour.planetInfo.goodActions_ml : currentHour.planetInfo.goodActions_en) || []).slice(0, 4).map((action, idx) => (
               <li key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
                 <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#22c55e" }} />
                 <span>{action}</span>
@@ -211,7 +211,7 @@ export default function LivePlanetaryHours() {
             {isMalayalam ? "അനുചിത പ്രവർത്തനങ്ങൾ" : "Avoid These"}
           </p>
           <ul className="space-y-2">
-            {(currentHour.planetInfo.badActions_ml || currentHour.planetInfo.badActions_en || []).slice(0, 4).map((action, idx) => (
+            {((isMalayalam ? currentHour.planetInfo.badActions_ml : currentHour.planetInfo.badActions_en) || []).slice(0, 4).map((action, idx) => (
               <li key={idx} className="font-malayalam-sm text-white/80 flex items-start gap-2">
                 <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
                 <span>{action}</span>
