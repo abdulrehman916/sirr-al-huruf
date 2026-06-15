@@ -11,6 +11,7 @@ import { getCurrentPlanetaryHour, getAllPlanetaryHours, PLANET_INFO } from "@/li
 import { calculateSunriseSunset } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import { safeFormatTime } from "@/lib/astroClockDateUtils.js";
+import { usePersistedLocation } from "@/lib/usePersistedLocation.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -26,54 +27,29 @@ const G = {
 
 export default function LivePlanetaryHours() {
   const { isMalayalam } = useAstroClockLanguage();
+  const { location } = usePersistedLocation();
   const [currentHour, setCurrentHour] = useState(null);
   const [countdown, setCountdown] = useState("");
-  const [location, setLocation] = useState(null);
   const [sunData, setSunData] = useState(null);
 
   useEffect(() => {
-    // Get location and calculate sun times
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const loc = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          timezone: -position.coords.longitude / 15,
-          name: `Lat: ${position.coords.latitude.toFixed(2)}, Lng: ${position.coords.longitude.toFixed(2)}`
-        };
-        setLocation(loc);
-        
-        const today = new Date();
-        const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-        setSunData(sunTimes);
-        
-        if (sunTimes.sunrise && sunTimes.sunset) {
-          updateCurrentHour(today, sunTimes);
-        }
-      },
-      (error) => {
-        // Fallback to Dubai
-        const loc = { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE (Default)" };
-        setLocation(loc);
-        const today = new Date();
-        const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-        setSunData(sunTimes);
-        if (sunTimes.sunrise && sunTimes.sunset) {
-          updateCurrentHour(today, sunTimes);
-        }
-      }
-    );
+    if (!location) return;
+    const today = new Date();
+    const sunTimes = calculateSunriseSunset(today, location.lat, location.lng, location.timezone);
+    setSunData(sunTimes);
+    if (sunTimes.sunrise && sunTimes.sunset) {
+      updateCurrentHour(today, sunTimes);
+    }
 
-    // Update every second for countdown
     const interval = setInterval(() => {
-      const today = new Date();
-      if (sunData?.sunrise && sunData?.sunset) {
-        updateCurrentHour(today, sunData);
+      const now = new Date();
+      if (sunTimes?.sunrise && sunTimes?.sunset) {
+        updateCurrentHour(now, sunTimes);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [location]);
 
   const updateCurrentHour = (date, sunTimes) => {
     const hour = getCurrentPlanetaryHour(date, sunTimes.sunrise, sunTimes.sunset);
@@ -133,7 +109,7 @@ export default function LivePlanetaryHours() {
           </div>
         </div>
         
-        {location && (
+        {location?.name && (
           <div className="text-right">
             <p className="font-inter text-[9px]" style={{ color: G.dim }}>{location.name}</p>
             <p className="font-inter text-[10px] text-white/60">

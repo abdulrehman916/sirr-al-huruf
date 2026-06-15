@@ -12,6 +12,7 @@ import { calculateSunriseSunset, formatDecimalTime } from "@/lib/astroClockSunri
 import { getCurrentPlanetaryHour } from "@/lib/astroClockLiveEngine";
 import { getPlanetFriendships } from "@/lib/astroClockPlanetFriendships.js";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
+import { usePersistedLocation } from "@/lib/usePersistedLocation.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -30,61 +31,31 @@ const G = {
 
 export default function PlanetaryHourBookView() {
   const { isMalayalam } = useAstroClockLanguage();
+  const { location } = usePersistedLocation();
   const [allHours, setAllHours] = useState([]);
   const [currentHour, setCurrentHour] = useState(null);
   const [nextHour, setNextHour] = useState(null);
   const [dayRuler, setDayRuler] = useState(null);
-  const [location, setLocation] = useState(null);
   const [sunData, setSunData] = useState(null);
   const [countdown, setCountdown] = useState("");
 
   useEffect(() => {
     const today = new Date();
     const dayIndex = today.getDay();
-    const dayInfo = DAY_INFO[dayIndex];
-    setDayRuler(dayInfo);
+    setDayRuler(DAY_INFO[dayIndex]);
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            timezone: -position.coords.longitude / 15
-          };
-          setLocation(loc);
-          
-          const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-          setSunData(sunTimes);
-          
-          if (sunTimes.sunrise && sunTimes.sunset) {
-            const hours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-            setAllHours(hours);
-            
-            const current = getCurrentPlanetaryHour(today, sunTimes.sunrise, sunTimes.sunset);
-            setCurrentHour(current);
-            
-            const nextIndex = hours.findIndex(h => 
-              h.hourNumber === (current?.hourNumber || 0) + 1
-            );
-            setNextHour(nextIndex >= 0 ? hours[nextIndex] : hours[0]);
-          }
-        },
-        () => {
-          const loc = { lat: 25.2048, lng: 55.2708, timezone: 4 };
-          setLocation(loc);
-          const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-          setSunData(sunTimes);
-          if (sunTimes.sunrise && sunTimes.sunset) {
-            const hours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-            setAllHours(hours);
-            const current = getCurrentPlanetaryHour(today, sunTimes.sunrise, sunTimes.sunset);
-            setCurrentHour(current);
-          }
-        }
-      );
+    if (!location) return;
+    const sunTimes = calculateSunriseSunset(today, location.lat, location.lng, location.timezone);
+    setSunData(sunTimes);
+    if (sunTimes.sunrise && sunTimes.sunset) {
+      const hours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+      setAllHours(hours);
+      const current = getCurrentPlanetaryHour(today, sunTimes.sunrise, sunTimes.sunset);
+      setCurrentHour(current);
+      const nextIndex = hours.findIndex(h => h.hourNumber === (current?.hourNumber || 0) + 1);
+      setNextHour(nextIndex >= 0 ? hours[nextIndex] : hours[0]);
     }
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     if (currentHour && currentHour.endTime) {

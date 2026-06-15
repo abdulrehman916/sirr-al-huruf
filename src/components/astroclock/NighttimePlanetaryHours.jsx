@@ -11,6 +11,7 @@ import { getAllPlanetaryHours } from "@/lib/astroClockLiveEngine";
 import { calculateSunriseSunset, formatDecimalTime } from "@/lib/astroClockSunriseSunset";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
 import ExpandedPlanetaryHourCard from "./ExpandedPlanetaryHourCard";
+import { usePersistedLocation } from "@/lib/usePersistedLocation.js";
 
 const G = {
   border:   "rgba(212,175,55,0.40)",
@@ -29,57 +30,20 @@ const G = {
 
 export default function NighttimePlanetaryHours() {
   const { isMalayalam } = useAstroClockLanguage();
+  const { location } = usePersistedLocation();
   const [hours, setHours] = useState([]);
-  const [location, setLocation] = useState(null);
   const [sunData, setSunData] = useState(null);
 
   useEffect(() => {
+    if (!location) return;
     const today = new Date();
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            timezone: -position.coords.longitude / 15,
-            name: `Lat: ${position.coords.latitude.toFixed(2)}, Lng: ${position.coords.longitude.toFixed(2)}`
-          };
-          setLocation(loc);
-          
-          const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-          setSunData(sunTimes);
-          
-          if (sunTimes.sunrise && sunTimes.sunset) {
-            const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-            const nightHours = allHours.filter(h => h.period === "night");
-            setHours(nightHours);
-          }
-        },
-        (error) => {
-          const loc = { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE (Default)" };
-          setLocation(loc);
-          const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-          setSunData(sunTimes);
-          if (sunTimes.sunrise && sunTimes.sunset) {
-            const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-            const nightHours = allHours.filter(h => h.period === "night");
-            setHours(nightHours);
-          }
-        }
-      );
-    } else {
-      const loc = { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE (Default)" };
-      setLocation(loc);
-      const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-      setSunData(sunTimes);
-      if (sunTimes.sunrise && sunTimes.sunset) {
-        const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-        const nightHours = allHours.filter(h => h.period === "night");
-        setHours(nightHours);
-      }
+    const sunTimes = calculateSunriseSunset(today, location.lat, location.lng, location.timezone);
+    setSunData(sunTimes);
+    if (sunTimes.sunrise && sunTimes.sunset) {
+      const allHours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+      setHours(allHours.filter(h => h.period === "night"));
     }
-  }, []);
+  }, [location]);
 
   return (
     <motion.div

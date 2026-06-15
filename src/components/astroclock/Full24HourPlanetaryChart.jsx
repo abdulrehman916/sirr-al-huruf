@@ -15,6 +15,7 @@ import { getPlanetFriendships } from "@/lib/astroClockPlanetFriendships.js";
 import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 import { safeFormatTime } from "@/lib/astroClockDateUtils.js";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { usePersistedLocation } from "@/lib/usePersistedLocation.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -53,43 +54,24 @@ function decimalEndToCountdown(endDecimal) {
 
 export default function Full24HourPlanetaryChart() {
   const { isMalayalam } = useAstroClockLanguage();
+  const { location } = usePersistedLocation();
   const [allHours, setAllHours] = useState([]);
   const [currentHour, setCurrentHour] = useState(null);
-  const [location, setLocation] = useState(null);
   const [sunData, setSunData] = useState(null);
   const [expandedHour, setExpandedHour] = useState(null);
-  // Shared tick counter — increments every second, rows read from allHours directly
   const [tick, setTick] = useState(0);
   const hoursRef = useRef([]);
 
-  // FIX 2: GPS called ONCE on mount only
   useEffect(() => {
-    const defaultLoc = { lat: 25.2048, lng: 55.2708, timezone: 4 };
-    function initWithLocation(loc) {
-      setLocation(loc);
-      const today = new Date();
-      const sunTimes = calculateSunriseSunset(today, loc.lat, loc.lng, loc.timezone);
-      setSunData(sunTimes);
-      const hours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
-      hoursRef.current = hours;
-      setAllHours(hours);
-      // FIX 1: use engine's status field, not Date >= string comparison
-      setCurrentHour(hours.find(h => h.status === 'current') || null);
-    }
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => initWithLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          timezone: -(pos.coords.longitude / 15)
-        }),
-        () => initWithLocation(defaultLoc)
-      );
-    } else {
-      initWithLocation(defaultLoc);
-    }
-  }, []);
+    if (!location) return;
+    const today = new Date();
+    const sunTimes = calculateSunriseSunset(today, location.lat, location.lng, location.timezone);
+    setSunData(sunTimes);
+    const hours = getAllPlanetaryHours(today, sunTimes.sunrise, sunTimes.sunset);
+    hoursRef.current = hours;
+    setAllHours(hours);
+    setCurrentHour(hours.find(h => h.status === 'current') || null);
+  }, [location]);
 
   // FIX 3: ONE shared interval — updates current hour detection + tick for countdowns
   useEffect(() => {
