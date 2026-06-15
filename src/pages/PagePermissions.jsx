@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
-import { Globe, Lock, Eye, EyeOff, Save, CheckCircle } from "lucide-react";
+import { Globe, Lock, Eye, EyeOff, Save, CheckCircle, ShieldAlert, Users, Zap } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
+import { MASTER_PAGE_REGISTRY, PERMISSION_STABILITY_RULES } from "@/lib/permissionStabilityRules";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -29,6 +30,7 @@ export default function PagePermissions() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [savedPages, setSavedPages] = useState(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -125,6 +127,36 @@ export default function PagePermissions() {
     }
   };
 
+  const handleBulkUpdate = async (action) => {
+    const actionLabel = action === 'MAKE_ALL_PUBLIC' ? 'PUBLIC' : 'PRIVATE';
+    if (!confirm(`Make ALL non-locked pages ${actionLabel}? This cannot be undone.`)) return;
+
+    setBulkProcessing(true);
+    try {
+      const result = await base44.functions.invoke("bulkUpdatePageVisibility", {
+        action,
+        exclude_paths: [] // Could add specific exclusions here
+      });
+
+      toast({
+        title: "Bulk Update Complete",
+        description: `${result.data.total_updated} pages set to ${actionLabel}`,
+        variant: "default"
+      });
+
+      // Reload visibility
+      await loadPageVisibility();
+    } catch (error) {
+      toast({
+        title: "Bulk Update Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
   if (isAdmin === false) {
     return <Navigate to="/" replace />;
   }
@@ -155,6 +187,30 @@ export default function PagePermissions() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
+        {/* Bulk Actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={bulkProcessing}
+            className="border-green-400 text-green-400 hover:bg-green-400/10"
+            onClick={() => handleBulkUpdate('MAKE_ALL_PUBLIC')}
+          >
+            <Globe className="w-3.5 h-3.5 mr-1.5" />
+            Make All Pages Public
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={bulkProcessing}
+            className="border-red-400 text-red-400 hover:bg-red-400/10"
+            onClick={() => handleBulkUpdate('MAKE_ALL_PRIVATE')}
+          >
+            <Lock className="w-3.5 h-3.5 mr-1.5" />
+            Make All Pages Private
+          </Button>
+        </div>
+
         {/* Info Card */}
         <Card className="border-0" style={{ background: G.bg }}>
           <CardContent className="p-6">
@@ -167,6 +223,9 @@ export default function PagePermissions() {
                 <p className="text-white/60 text-sm leading-relaxed">
                   Toggle pages between <span className="text-green-400 font-semibold">PUBLIC</span> (no permission required) 
                   and <span className="text-red-400 font-semibold">PRIVATE</span> (requires manual permission grant via Admin Permissions)
+                </p>
+                <p className="text-white/50 text-xs mt-2">
+                  ⚠️ Locked pages (Home, Customer Service, OTP Login) cannot be changed and remain permanently PUBLIC
                 </p>
               </div>
             </div>
