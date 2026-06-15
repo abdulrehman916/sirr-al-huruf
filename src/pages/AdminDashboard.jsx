@@ -82,9 +82,11 @@ export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [user, setUser] = useState(null);
+  const [pendingRequests, setPendingRequests] = useState(0);
 
   useEffect(() => {
     checkAdminAccess();
+    fetchPendingRequests();
   }, []);
 
   const checkAdminAccess = async () => {
@@ -108,6 +110,16 @@ export default function AdminDashboard() {
         description: "Please log in to continue",
         variant: "destructive"
       });
+    }
+  };
+
+  const fetchPendingRequests = async () => {
+    try {
+      const requests = await base44.entities.PremiumAccessRequest.list();
+      const pending = requests.filter(r => r.status === 'PENDING').length;
+      setPendingRequests(pending);
+    } catch (error) {
+      console.error('Failed to fetch pending requests:', error);
     }
   };
 
@@ -180,6 +192,7 @@ export default function AdminDashboard() {
               {SIDEBAR_ITEMS.map((item) => {
                 const isActive = location.pathname === item.path;
                 const Icon = item.icon;
+                const hasBadge = item.path === "/admin/subscription-requests" && pendingRequests > 0;
                 
                 return (
                   <Link
@@ -204,6 +217,11 @@ export default function AdminDashboard() {
                           {item.arabic}
                         </p>
                       </div>
+                      {hasBadge && (
+                        <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-orange-500 rounded-full">
+                          {pendingRequests > 9 ? '9+' : pendingRequests}
+                        </span>
+                      )}
                       {isActive && <ChevronRight className="w-4 h-4 text-gold" />}
                     </div>
                   </Link>

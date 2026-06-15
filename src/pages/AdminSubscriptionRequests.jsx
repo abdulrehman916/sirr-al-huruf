@@ -26,7 +26,7 @@ export default function AdminSubscriptionRequests() {
   const { toast } = useToast();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [subscriptions, setSubscriptions] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPage, setFilterPage] = useState("all");
@@ -48,7 +48,7 @@ export default function AdminSubscriptionRequests() {
         return;
       }
       setUser(currentUser);
-      fetchSubscriptions();
+      fetchRequests();
     } catch (err) {
       navigate("/");
     } finally {
@@ -56,44 +56,42 @@ export default function AdminSubscriptionRequests() {
     }
   };
 
-  const fetchSubscriptions = async () => {
+  const fetchRequests = async () => {
     try {
-      const allSubs = await base44.entities.Subscription.list("-created_date", 100);
-      setSubscriptions(allSubs);
+      const allRequests = await base44.entities.PremiumAccessRequest.list("-requested_at", 100);
+      setRequests(allRequests);
     } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to load subscriptions",
+        description: "Failed to load access requests",
         variant: "destructive",
       });
     }
   };
 
-  const handleApprove = async (sub) => {
+  const handleApprove = async (req) => {
     try {
       await base44.functions.invoke("grantManualAccess", {
-        user_id: sub.user_id,
+        user_id: req.user_id,
         grants: [{
-          page_path: sub.page_path,
-          page_name: sub.page_name,
-          plan_name: sub.plan_name,
-          duration: sub.plan_name
+          page_path: req.page_path,
+          page_name: req.page_name,
+          plan_name: req.plan_name,
+          duration: req.plan_name
         }]
       });
 
-      await base44.entities.Subscription.update(sub.id, {
-        status: "ACTIVE",
-        granted_by: user.id,
-        granted_at: new Date().toISOString(),
-        last_modified_by: user.id,
-        last_modified_at: new Date().toISOString()
+      await base44.entities.PremiumAccessRequest.update(req.id, {
+        status: "APPROVED",
+        approved_by: user.id,
+        approved_at: new Date().toISOString()
       });
 
       toast({
         title: "Approved",
-        description: `${sub.user_name}'s access has been granted`,
+        description: `${req.user_name}'s access has been granted`,
       });
-      fetchSubscriptions();
+      fetchRequests();
     } catch (err) {
       toast({
         title: "Error",
@@ -103,19 +101,19 @@ export default function AdminSubscriptionRequests() {
     }
   };
 
-  const handleReject = async (subId) => {
+  const handleReject = async (reqId) => {
     try {
-      await base44.entities.Subscription.update(subId, {
-        status: "CANCELLED",
-        last_modified_by: user.id,
-        last_modified_at: new Date().toISOString()
+      await base44.entities.PremiumAccessRequest.update(reqId, {
+        status: "REJECTED",
+        approved_by: user.id,
+        approved_at: new Date().toISOString()
       });
 
       toast({
         title: "Rejected",
-        description: "Subscription request rejected",
+        description: "Access request rejected",
       });
-      fetchSubscriptions();
+      fetchRequests();
     } catch (err) {
       toast({
         title: "Error",
@@ -125,18 +123,18 @@ export default function AdminSubscriptionRequests() {
     }
   };
 
-  const filteredSubs = subscriptions.filter(sub => {
+  const filteredRequests = requests.filter(req => {
     const matchesSearch = searchQuery === "" || 
-      sub.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.user_email?.toLowerCase().includes(searchQuery.toLowerCase());
+      req.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      req.user_email?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = filterStatus === "all" || sub.status === filterStatus;
-    const matchesPage = filterPage === "all" || sub.page_path === filterPage;
+    const matchesStatus = filterStatus === "all" || req.status === filterStatus;
+    const matchesPage = filterPage === "all" || req.page_path === filterPage;
     
     return matchesSearch && matchesStatus && matchesPage;
   });
 
-  const uniquePages = [...new Set(subscriptions.map(sub => sub.page_path))].filter(Boolean);
+  const uniquePages = [...new Set(requests.map(req => req.page_path))].filter(Boolean);
 
   if (loading) {
     return (
@@ -172,7 +170,7 @@ export default function AdminSubscriptionRequests() {
               <CardTitle className="text-white/70 text-sm">Total Requests</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{subscriptions.length}</div>
+              <div className="text-2xl font-bold text-white">{requests.length}</div>
             </CardContent>
           </Card>
           <Card className="border-orange-500/20 bg-orange-500/5">
@@ -181,27 +179,27 @@ export default function AdminSubscriptionRequests() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-500">
-                {subscriptions.filter(s => s.status === "PENDING").length}
+                {requests.filter(r => r.status === "PENDING").length}
               </div>
             </CardContent>
           </Card>
           <Card className="border-green-500/20 bg-green-500/5">
             <CardHeader className="pb-2">
-              <CardTitle className="text-green-500/70 text-sm">Active</CardTitle>
+              <CardTitle className="text-green-500/70 text-sm">Approved</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">
-                {subscriptions.filter(s => s.status === "ACTIVE").length}
+                {requests.filter(r => r.status === "APPROVED").length}
               </div>
             </CardContent>
           </Card>
           <Card className="border-red-500/20 bg-red-500/5">
             <CardHeader className="pb-2">
-              <CardTitle className="text-red-500/70 text-sm">Cancelled</CardTitle>
+              <CardTitle className="text-red-500/70 text-sm">Rejected</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-500">
-                {subscriptions.filter(s => s.status === "CANCELLED").length}
+                {requests.filter(r => r.status === "REJECTED").length}
               </div>
             </CardContent>
           </Card>
@@ -255,25 +253,25 @@ export default function AdminSubscriptionRequests() {
 
             {(searchQuery || filterStatus !== "all" || filterPage !== "all") && (
               <div className="text-sm text-white/60 mt-3">
-                Found {filteredSubs.length} request(s)
+                Found {filteredRequests.length} request(s)
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Subscriptions List */}
+        {/* Access Requests List */}
         <div className="space-y-3">
-          {filteredSubs.length === 0 ? (
+          {filteredRequests.length === 0 ? (
             <Card className="border-white/10 bg-white/5">
               <CardContent className="pt-6 text-center text-white/60">
-                <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No subscription requests found</p>
+                <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No access requests found</p>
               </CardContent>
             </Card>
           ) : (
-            filteredSubs.map((sub, idx) => (
+            filteredRequests.map((req, idx) => (
               <motion.div
-                key={sub.id}
+                key={req.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.03 }}
@@ -282,30 +280,32 @@ export default function AdminSubscriptionRequests() {
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1">
-                        <Badge className={STATUS_COLORS[sub.status] || STATUS_COLORS.PENDING}>
-                          {sub.status}
+                        <Badge className={STATUS_COLORS[req.status] || STATUS_COLORS.PENDING}>
+                          {req.status}
                         </Badge>
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <User className="w-3 h-3 text-white/50" />
                             <span className="text-white text-sm font-medium truncate">
-                              {sub.user_name}
+                              {req.user_name}
                             </span>
                           </div>
                           <div className="flex items-center gap-4 text-xs text-white/60">
-                            <span className="truncate">{sub.user_email}</span>
+                            <span className="truncate">{req.user_email}</span>
                           </div>
                           <div className="flex items-center gap-4 mt-2 text-xs">
                             <Badge variant="outline" className="border-gold-dim text-gold-dim">
-                              {sub.page_name}
+                              {req.page_name}
                             </Badge>
                             <span className="text-white/70">
-                              {sub.plan_name.replace("_", " ")}
+                              {req.plan_name.replace("_", " ")}
                             </span>
-                            <span className="text-gold font-semibold">
-                              {sub.amount} {sub.currency}
-                            </span>
+                            {req.message && (
+                              <span className="text-white/50 italic max-w-xs truncate">
+                                "{req.message}"
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -314,22 +314,28 @@ export default function AdminSubscriptionRequests() {
                         <div className="text-right hidden md:block">
                           <div className="flex items-center gap-1 justify-end mb-1">
                             <Calendar className="w-3 h-3" />
-                            {new Date(sub.start_date).toLocaleDateString()}
+                            {new Date(req.requested_at).toLocaleDateString()}
                           </div>
-                          {sub.status === "PENDING" && (
+                          {req.status === "PENDING" && (
                             <div className="text-orange-500 flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               Awaiting approval
                             </div>
                           )}
+                          {req.status === "APPROVED" && req.approved_at && (
+                            <div className="text-green-500 flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" />
+                              Approved {new Date(req.approved_at).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
                         
-                        {sub.status === "PENDING" && (
+                        {req.status === "PENDING" && (
                           <div className="flex gap-2">
                             <Button
                               size="sm"
                               className="bg-green-500/20 text-green-500 hover:bg-green-500/30 border border-green-500/30"
-                              onClick={() => handleApprove(sub)}
+                              onClick={() => handleApprove(req)}
                             >
                               <CheckCircle className="w-4 h-4 mr-1" />
                               Approve
@@ -338,7 +344,7 @@ export default function AdminSubscriptionRequests() {
                               size="sm"
                               variant="outline"
                               className="border-red-500/30 text-red-500 hover:bg-red-500/20"
-                              onClick={() => handleReject(sub.id)}
+                              onClick={() => handleReject(req.id)}
                             >
                               <XCircle className="w-4 h-4 mr-1" />
                               Reject
@@ -346,7 +352,7 @@ export default function AdminSubscriptionRequests() {
                           </div>
                         )}
                         
-                        {sub.status !== "PENDING" && (
+                        {req.status !== "PENDING" && (
                           <ArrowRight className="w-4 h-4 text-white/30" />
                         )}
                       </div>

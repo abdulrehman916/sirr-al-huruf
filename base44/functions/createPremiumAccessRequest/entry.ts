@@ -43,21 +43,6 @@ Deno.serve(async (req) => {
       requested_at: now.toISOString()
     });
 
-    // Send WhatsApp notification to admin
-    try {
-      await base44.functions.invoke('sendWhatsAppNotification', {
-        type: 'ADMIN_NEW_ACCESS_REQUEST',
-        recipientPhone: Deno.env.get("ADMIN_WHATSAPP_NUMBER"),
-        userName: user.full_name,
-        userEmail: user.email,
-        pageName: page_name,
-        planName: plan_name
-      });
-    } catch (notifError) {
-      console.error('WhatsApp notification failed:', notifError);
-      // Don't fail the request if notification fails
-    }
-
     return Response.json({ 
       success: true,
       request_id: requestId,
