@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity } from "lucide-react";
+import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity, Clock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -65,7 +65,14 @@ const SIDEBAR_ITEMS = [
     label: "Subscriptions",
     arabic: "الاشتراكات",
     icon: CreditCard,
-    description: "Approve & manage subscriptions"
+    description: "Manage active subscriptions"
+  },
+  {
+    path: "/admin/subscription-requests",
+    label: "Access Requests",
+    arabic: "طلبات الوصول",
+    icon: Clock,
+    description: "Review & approve access requests"
   }
 ];
 

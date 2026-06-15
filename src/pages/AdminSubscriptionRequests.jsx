@@ -1,0 +1,363 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Activity, Search, Shield, CheckCircle, Clock, XCircle, 
+  Loader2, User, CreditCard, Calendar, ArrowRight, ExternalLink 
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import PageLayout from "@/components/PageLayout";
+import { motion } from "framer-motion";
+
+const STATUS_COLORS = {
+  PENDING: "bg-orange-500/20 text-orange-500 border-orange-500/30",
+  ACTIVE: "bg-green-500/20 text-green-500 border-green-500/30",
+  EXPIRED: "bg-gray-500/20 text-gray-500 border-gray-500/30",
+  CANCELLED: "bg-red-500/20 text-red-500 border-red-500/30",
+};
+
+export default function AdminSubscriptionRequests() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPage, setFilterPage] = useState("all");
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const currentUser = await base44.auth.me();
+      if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "owner")) {
+        toast({
+          title: "Access Denied",
+          description: "Admin access required",
+          variant: "destructive",
+        });
+        navigate("/");
+        return;
+      }
+      setUser(currentUser);
+      fetchSubscriptions();
+    } catch (err) {
+      navigate("/");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSubscriptions = async () => {
+    try {
+      const allSubs = await base44.entities.Subscription.list("-created_date", 100);
+      setSubscriptions(allSubs);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to load subscriptions",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleApprove = async (sub) => {
+    try {
+      await base44.functions.invoke("grantManualAccess", {
+        user_id: sub.user_id,
+        grants: [{
+          page_path: sub.page_path,
+          page_name: sub.page_name,
+          plan_name: sub.plan_name,
+          duration: sub.plan_name
+        }]
+      });
+
+      await base44.entities.Subscription.update(sub.id, {
+        status: "ACTIVE",
+        granted_by: user.id,
+        granted_at: new Date().toISOString(),
+        last_modified_by: user.id,
+        last_modified_at: new Date().toISOString()
+      });
+
+      toast({
+        title: "Approved",
+        description: `${sub.user_name}'s access has been granted`,
+      });
+      fetchSubscriptions();
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReject = async (subId) => {
+    try {
+      await base44.entities.Subscription.update(subId, {
+        status: "CANCELLED",
+        last_modified_by: user.id,
+        last_modified_at: new Date().toISOString()
+      });
+
+      toast({
+        title: "Rejected",
+        description: "Subscription request rejected",
+      });
+      fetchSubscriptions();
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredSubs = subscriptions.filter(sub => {
+    const matchesSearch = searchQuery === "" || 
+      sub.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sub.user_email?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = filterStatus === "all" || sub.status === filterStatus;
+    const matchesPage = filterPage === "all" || sub.page_path === filterPage;
+    
+    return matchesSearch && matchesStatus && matchesPage;
+  });
+
+  const uniquePages = [...new Set(subscriptions.map(sub => sub.page_path))].filter(Boolean);
+
+  if (loading) {
+    return (
+      <PageLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-gold" />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  return (
+    <PageLayout>
+      <div className="max-w-6xl mx-auto py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <CreditCard className="w-8 h-8 text-gold" />
+            Subscription Requests
+          </h1>
+          <p className="text-white/70">
+            Review and approve premium access requests
+          </p>
+        </motion.div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="border-white/10 bg-white/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-white/70 text-sm">Total Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{subscriptions.length}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-orange-500/20 bg-orange-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-orange-500/70 text-sm">Pending</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-500">
+                {subscriptions.filter(s => s.status === "PENDING").length}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-green-500/20 bg-green-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-green-500/70 text-sm">Active</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-500">
+                {subscriptions.filter(s => s.status === "ACTIVE").length}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-red-500/20 bg-red-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-red-500/70 text-sm">Cancelled</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-500">
+                {subscriptions.filter(s => s.status === "CANCELLED").length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <Card className="border-white/10 bg-white/5 mb-8">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                  <Input
+                    placeholder="Search by name or email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-12 bg-white/5 border-white/10 text-white"
+                  />
+                </div>
+              </div>
+              <div>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-white/10">
+                    <SelectItem value="all" className="text-white">All Status</SelectItem>
+                    <SelectItem value="PENDING" className="text-white">Pending</SelectItem>
+                    <SelectItem value="ACTIVE" className="text-white">Active</SelectItem>
+                    <SelectItem value="EXPIRED" className="text-white">Expired</SelectItem>
+                    <SelectItem value="CANCELLED" className="text-white">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Select value={filterPage} onValueChange={setFilterPage}>
+                  <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white">
+                    <SelectValue placeholder="Filter by page" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-white/10">
+                    <SelectItem value="all" className="text-white">All Pages</SelectItem>
+                    {uniquePages.map(page => (
+                      <SelectItem key={page} value={page} className="text-white">
+                        {page}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {(searchQuery || filterStatus !== "all" || filterPage !== "all") && (
+              <div className="text-sm text-white/60 mt-3">
+                Found {filteredSubs.length} request(s)
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Subscriptions List */}
+        <div className="space-y-3">
+          {filteredSubs.length === 0 ? (
+            <Card className="border-white/10 bg-white/5">
+              <CardContent className="pt-6 text-center text-white/60">
+                <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No subscription requests found</p>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredSubs.map((sub, idx) => (
+              <motion.div
+                key={sub.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.03 }}
+              >
+                <Card className="border-white/10 bg-white/5 hover:border-white/20 transition-colors">
+                  <CardContent className="pt-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Badge className={STATUS_COLORS[sub.status] || STATUS_COLORS.PENDING}>
+                          {sub.status}
+                        </Badge>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <User className="w-3 h-3 text-white/50" />
+                            <span className="text-white text-sm font-medium truncate">
+                              {sub.user_name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-white/60">
+                            <span className="truncate">{sub.user_email}</span>
+                          </div>
+                          <div className="flex items-center gap-4 mt-2 text-xs">
+                            <Badge variant="outline" className="border-gold-dim text-gold-dim">
+                              {sub.page_name}
+                            </Badge>
+                            <span className="text-white/70">
+                              {sub.plan_name.replace("_", " ")}
+                            </span>
+                            <span className="text-gold font-semibold">
+                              {sub.amount} {sub.currency}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs text-white/60">
+                        <div className="text-right hidden md:block">
+                          <div className="flex items-center gap-1 justify-end mb-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(sub.start_date).toLocaleDateString()}
+                          </div>
+                          {sub.status === "PENDING" && (
+                            <div className="text-orange-500 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Awaiting approval
+                            </div>
+                          )}
+                        </div>
+                        
+                        {sub.status === "PENDING" && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-green-500/20 text-green-500 hover:bg-green-500/30 border border-green-500/30"
+                              onClick={() => handleApprove(sub)}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-500/30 text-red-500 hover:bg-red-500/20"
+                              onClick={() => handleReject(sub.id)}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {sub.status !== "PENDING" && (
+                          <ArrowRight className="w-4 h-4 text-white/30" />
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </div>
+    </PageLayout>
+  );
+}

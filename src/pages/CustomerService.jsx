@@ -291,7 +291,7 @@ export default function CustomerService() {
     <PageLayout>
       <PageTitle 
         title="Customer Service" 
-        subtitle="Support & Help Desk"
+        subtitle="Support Tickets & Complaints"
         icon={<Send className="w-6 h-6" style={{ color: G.text }} />}
       />
 
@@ -303,7 +303,12 @@ export default function CustomerService() {
         <Card className="border-0" style={{ background: "transparent" }}>
           <CardContent className="p-0">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Personal Information */}
+              {/* Personal Information - Required for Support Tickets */}
+              <div className="mb-6 p-4 rounded-lg border border-blue-500/30 bg-blue-500/5">
+                <p className="text-blue-400 text-xs mb-2">
+                  ℹ️ For support tickets, we need your contact details to respond to your inquiry.
+                </p>
+              </div>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-white/80">Full Name *</Label>
