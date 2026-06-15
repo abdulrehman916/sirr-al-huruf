@@ -213,6 +213,13 @@ export const MASTER_PAGE_REGISTRY = [
 ];
 
 /**
+ * Array of locked page paths (for quick lookup)
+ */
+export const LOCKED_PAGES = MASTER_PAGE_REGISTRY
+  .filter(page => page.locked)
+  .map(page => page.path);
+
+/**
  * Get page config by path
  */
 export const getPageConfig = (path) => {
