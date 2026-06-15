@@ -88,6 +88,8 @@ Deno.serve(async (req) => {
 
       // Also create/update subscription record for consistency
       const subId = `SUB-MANUAL-${now.getTime()}-${Math.random().toString(36).substr(2, 9)}`;
+      const normalizedPlanName = plan_name === "30_DAYS" ? "1_MONTH" : plan_name === "6_MONTHS" ? "6_MONTHS" : plan_name === "1_YEAR" ? "1_YEAR" : "LIFETIME";
+      
       await base44.entities.Subscription.create({
         subscription_id: subId,
         user_id,
@@ -96,7 +98,7 @@ Deno.serve(async (req) => {
         user_email: user_email || '',
         page_path,
         page_name: page_name || page_path,
-        plan_name: plan_name === "30_DAYS" ? "1_MONTH" : plan_name === "6_MONTHS" ? "6_MONTHS" : plan_name === "1_YEAR" ? "1_YEAR" : "LIFETIME",
+        plan_name: normalizedPlanName,
         amount: 0, // Manual grant = no payment
         currency: "INR",
         start_date: now.toISOString(),
@@ -106,6 +108,29 @@ Deno.serve(async (req) => {
         granted_at: now.toISOString(),
         notes: `Manual admin grant by ${user.full_name || user.id}`
       });
+
+      // Send WhatsApp notification to user
+      try {
+        const durationMap = {
+          "30_DAYS": "30 Days",
+          "1_MONTH": "1 Month",
+          "6_MONTHS": "6 Months",
+          "1_YEAR": "1 Year",
+          "LIFETIME": "Lifetime"
+        };
+        
+        await base44.functions.invoke('sendWhatsAppNotification', {
+          type: 'ACCESS_GRANTED',
+          recipientPhone: user_phone || "",
+          userName: user_name || user_email || "Valued User",
+          pageName: page_name || page_path,
+          duration: durationMap[plan_name] || plan_name,
+          expiryDate: expiryDate ? expiryDate.toISOString() : null
+        });
+      } catch (whatsappError) {
+        console.error('WhatsApp notification failed:', whatsappError.message);
+        // Don't fail the grant if WhatsApp fails
+      }
     }
 
     // Update user profile

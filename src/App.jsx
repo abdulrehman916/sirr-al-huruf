@@ -72,6 +72,7 @@ const AdminSubscriptionsManagement = lazy(() => import('./pages/AdminSubscriptio
 const RazorpayPayment = lazy(() => import('./pages/RazorpayPayment'));
 const AdminUserManager = lazy(() => import('./pages/AdminUserManager'));
 const AdminUserManagement = lazy(() => import('./pages/AdminUserManagement'));
+const AdminAccessLogs = lazy(() => import('./pages/AdminAccessLogs'));
 
 
 // Minimal fallback — matches app background, no flash
@@ -171,6 +172,7 @@ const AuthenticatedApp = () => {
             <Route path="/subscription-pending" element={<ProtectedPage routePath="/subscription-pending"><SubscriptionPending /></ProtectedPage>} />
             <Route path="/admin/user-manager" element={<ProtectedPage routePath="/admin/user-manager"><AdminUserManager /></ProtectedPage>} />
             <Route path="/admin/user-management" element={<ProtectedPage routePath="/admin/user-management" requiresPermission={false}><AdminUserManagement /></ProtectedPage>} />
+            <Route path="/admin/access-logs" element={<ProtectedPage routePath="/admin/access-logs" requiresPermission={false}><AdminAccessLogs /></ProtectedPage>} />
             <Route path="/admin/subscriptions-management" element={<ProtectedPage routePath="/admin/subscriptions-management"><AdminSubscriptionsManagement /></ProtectedPage>} />
 
 

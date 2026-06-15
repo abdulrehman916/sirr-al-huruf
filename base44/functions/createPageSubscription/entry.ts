@@ -68,6 +68,28 @@ Deno.serve(async (req) => {
       notes: `Razorpay Payment: ${razorpay_payment_id}. Order: ${razorpay_order_id}`
     });
 
+    // Send WhatsApp notification to user
+    try {
+      const durationMap = {
+        "1_MONTH": "1 Month",
+        "6_MONTHS": "6 Months",
+        "1_YEAR": "1 Year",
+        "LIFETIME": "Lifetime"
+      };
+      
+      await base44.functions.invoke('sendWhatsAppNotification', {
+        type: 'SUBSCRIPTION_PURCHASED',
+        recipientPhone: user.mobile || "",
+        userName: user.full_name || user.email || "Valued User",
+        pageName: page_name,
+        duration: durationMap[plan_name] || plan_name,
+        expiryDate: expiryDate ? expiryDate.toISOString() : null
+      });
+    } catch (whatsappError) {
+      console.error('WhatsApp notification failed:', whatsappError.message);
+      // Don't fail the subscription if WhatsApp fails
+    }
+
     return Response.json({
       success: true,
       message: "Subscription activated successfully",
