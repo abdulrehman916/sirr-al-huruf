@@ -50,7 +50,7 @@ export default function AdminSubscriptionsManagement() {
 
   const fetchSubscriptions = async () => {
     try {
-      const subs = await base44.entities.Subscription.list();
+      const subs = await base44.entities.Subscription.list('-start_date', 500);
       setSubscriptions(subs);
     } catch (err) {
       toast({

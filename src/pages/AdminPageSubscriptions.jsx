@@ -61,8 +61,8 @@ export default function AdminPageSubscriptions() {
     setLoading(true);
     try {
       const [allSubs, allUsers] = await Promise.all([
-        base44.entities.Subscription.list(),
-        base44.entities.User.list()
+        base44.entities.Subscription.list('-start_date', 500),
+        base44.entities.User.list(null, 500)
       ]);
       setSubscriptions(allSubs);
       setUsers(allUsers);

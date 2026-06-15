@@ -1548,7 +1548,7 @@ export default function OwnerAccessDashboard() {
   const init = async () => {
     try {
       const me = await base44.auth.me();
-      if (!me || (me.role !== "admin" && me.role !== "owner")) {
+      if (!me || me.role !== "admin") {
         setIsAdmin(false); return;
       }
       setIsAdmin(true);
@@ -1567,7 +1567,7 @@ export default function OwnerAccessDashboard() {
         base44.entities.PagePermission.list("-granted_at", PAGE_LIMIT),
         base44.entities.Subscription.list("-start_date", PAGE_LIMIT),
         base44.entities.PageVisibilityConfig.list(null, PAGE_LIMIT),
-        base44.entities.SubscriptionPlan.list(),
+        base44.entities.SubscriptionPlan.list(null, 100),
         base44.entities.VIPAccess.list("-added_at", PAGE_LIMIT),
         base44.entities.AccessRequest.list("-requested_at", PAGE_LIMIT),
       ]);

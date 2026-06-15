@@ -211,7 +211,7 @@ export default function CustomerService() {
   };
 
   const generateTicketId = async () => {
-    const existingTickets = await base44.entities.SupportTickets.list();
+    const existingTickets = await base44.entities.SupportTickets.list('-created_at', 100);
     const maxNum = existingTickets.reduce((max, ticket) => {
       const num = parseInt(ticket.ticket_id.split('-')[1]);
       return num > max ? num : max;

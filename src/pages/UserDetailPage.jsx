@@ -84,7 +84,7 @@ export default function UserDetailPage() {
       setProfile(prof);
 
       // Load platform user
-      const users = await base44.entities.User.list();
+      const users = await base44.entities.User.list(null, 200);
       const pu = users.find(u => u.id === userId) || null;
       setPlatformUser(pu);
 

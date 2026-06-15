@@ -83,7 +83,7 @@ export default function AdminPermissions() {
   const loadPageVisibility = async () => {
     setLoadingVisibility(true);
     try {
-      const configs = await base44.entities.PageVisibilityConfig.list();
+      const configs = await base44.entities.PageVisibilityConfig.list(null, 500);
       const visibilityList = Object.entries(ROUTE_PERMISSION_MAP).map(([path, config]) => {
         const dbConfig = configs.find(c => c.page_path === path);
         return {
@@ -129,8 +129,8 @@ export default function AdminPermissions() {
     setLoading(true);
     try {
       const [allUsers, allPermissions] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.PagePermission.list()
+        base44.entities.User.list(null, 500),
+        base44.entities.PagePermission.list(null, 500)
       ]);
       setUsers(allUsers);
       setPermissions(allPermissions);

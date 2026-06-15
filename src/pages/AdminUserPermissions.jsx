@@ -376,7 +376,7 @@ export default function AdminUserPermissions() {
   const init = async () => {
     try {
       const me = await base44.auth.me();
-      if (!me || (me.role !== "admin" && me.role !== "owner")) {
+      if (!me || me.role !== "admin") {
         setIsAdmin(false);
         return;
       }
@@ -391,8 +391,8 @@ export default function AdminUserPermissions() {
     setLoading(true);
     try {
       const [allUsers, allPerms] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.PagePermission.list(),
+        base44.entities.User.list(null, 500),
+        base44.entities.PagePermission.list(null, 500),
       ]);
       setUsers(allUsers);
       setPermissions(allPerms);

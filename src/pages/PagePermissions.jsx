@@ -43,7 +43,7 @@ export default function PagePermissions() {
     setLoading(true);
     try {
       // Get database records first (source of truth)
-      const dbConfigs = await base44.entities.PageVisibilityConfig.list();
+      const dbConfigs = await base44.entities.PageVisibilityConfig.list(null, 500);
       const dbMap = {};
       (dbConfigs || []).forEach(config => {
         dbMap[config.page_path] = config.requires_permission;

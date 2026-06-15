@@ -84,7 +84,7 @@ export default function SupportVoice() {
     try {
       const file = new File([audioBlob], `voice-${Date.now()}.webm`, { type: "audio/webm" });
       const uploadRes = await base44.integrations.Core.UploadFile({ file });
-      const allTickets = await base44.entities.SupportTickets.list();
+      const allTickets = await base44.entities.SupportTickets.list('-created_at', 100);
       const maxNum = allTickets.reduce((max, t) => {
         const n = parseInt(t.ticket_id?.split("-")[1] || "0");
         return n > max ? n : max;

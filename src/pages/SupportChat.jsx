@@ -64,7 +64,7 @@ export default function SupportChat() {
       if (existing.length > 0 && existing[0].status !== "CLOSED") {
         tid = existing[0].ticket_id;
       } else {
-        const allTickets = await base44.entities.SupportTickets.list();
+        const allTickets = await base44.entities.SupportTickets.list('-created_at', 100);
         const maxNum = allTickets.reduce((max, t) => {
           const n = parseInt(t.ticket_id?.split("-")[1] || "0");
           return n > max ? n : max;
