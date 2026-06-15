@@ -1,5 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.32';
 import { createHash } from 'node:crypto';
+import jwt from 'npm:jsonwebtoken@9.0.2';
 
 Deno.serve(async (req) => {
   try {
@@ -71,9 +72,31 @@ Deno.serve(async (req) => {
       await base44.entities.UserAccessProfile.update(profile.id, updateData);
     }
 
+    // Get user details for token
+    const users = await base44.asServiceRole.entities.User.filter({ id: otpRecord.user_id });
+    const user = users.length > 0 ? users[0] : null;
+    
+    if (!user) {
+      return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Generate JWT access token
+    const JWT_SECRET = Deno.env.get("JWT_SECRET") || "base44-app-secret-key-change-in-production";
+    const access_token = jwt.sign(
+      { 
+        user_id: user.id, 
+        email: user.email, 
+        role: user.role || 'user',
+        full_name: user.full_name 
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
     return Response.json({ 
       success: true,
       user_id: otpRecord.user_id,
+      access_token: access_token,
       message: 'OTP verified successfully'
     });
   } catch (error) {
