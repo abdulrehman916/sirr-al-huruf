@@ -63,6 +63,7 @@ const AdminPermissions = lazy(() => import('./pages/AdminPermissions'));
 const PagePermissions = lazy(() => import('./pages/PagePermissions'));
 const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'));
 const AdminPageSubscriptions = lazy(() => import('./pages/AdminPageSubscriptions'));
+const AdminPricingSettings = lazy(() => import('./pages/AdminPricingSettings.jsx'));
 const SubscriptionExpired = lazy(() => import('./pages/SubscriptionExpired'));
 
 
@@ -156,6 +157,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/page-permissions" element={<ProtectedPage routePath="/admin/page-permissions"><PagePermissions /></ProtectedPage>} />
             <Route path="/admin/subscriptions" element={<ProtectedPage routePath="/admin/subscriptions"><AdminSubscriptions /></ProtectedPage>} />
             <Route path="/admin/page-subscriptions" element={<ProtectedPage routePath="/admin/page-subscriptions" requiresPermission={false}><AdminPageSubscriptions /></ProtectedPage>} />
+            <Route path="/admin/pricing-settings" element={<ProtectedPage routePath="/admin/pricing-settings" requiresPermission={false}><AdminPricingSettings /></ProtectedPage>} />
             <Route path="/subscription-expired" element={<ProtectedPage routePath="/subscription-expired" requiresPermission={false}><SubscriptionExpired /></ProtectedPage>} />
 
 

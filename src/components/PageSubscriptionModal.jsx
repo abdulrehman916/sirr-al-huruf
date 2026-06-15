@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, Check, Clock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -105,11 +105,50 @@ export default function PageSubscriptionModal({ isOpen, onClose, pagePath }) {
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [pricing, setPricing] = useState([]);
+  const [fetchingPricing, setFetchingPricing] = useState(true);
   
-  // Get page-specific plans
+  // Get page config
   const pageConfig = PAGE_PLANS_CONFIG[pagePath] || PAGE_PLANS_CONFIG['/abjad'];
   const pageTitle = pageConfig.name;
-  const pagePlans = pageConfig.plans;
+
+  useEffect(() => {
+    if (isOpen && pagePath) {
+      fetchPricing();
+    }
+  }, [isOpen, pagePath]);
+
+  const fetchPricing = async () => {
+    setFetchingPricing(true);
+    try {
+      const res = await base44.functions.invoke('getPagePricing', { page_path: pagePath });
+      if (res.data.success && res.data.pricing.length > 0) {
+        // Map pricing to plans
+        const plansWithPricing = pageConfig.plans.map(plan => {
+          const pricingInfo = res.data.pricing.find(p => p.plan_name === plan.id.replace(/_\d+/, '').toUpperCase() + '_MONTH') || 
+                             res.data.pricing.find(p => plan.id.includes('30') && p.plan_name === '1_MONTH') ||
+                             res.data.pricing.find(p => plan.id.includes('180') && p.plan_name === '6_MONTHS') ||
+                             res.data.pricing.find(p => plan.id.includes('365') && p.plan_name === '1_YEAR') ||
+                             res.data.pricing.find(p => plan.id.includes('lifetime') && p.plan_name === 'LIFETIME');
+          
+          return {
+            ...plan,
+            price: pricingInfo ? `${pricingInfo.currency} ${pricingInfo.price}` : plan.price,
+            currency: pricingInfo?.currency || 'AED'
+          };
+        });
+        setPricing(plansWithPricing);
+      } else {
+        setPricing(pageConfig.plans);
+      }
+    } catch (error) {
+      console.error('Error fetching pricing:', error);
+      setPricing(pageConfig.plans);
+    }
+    setFetchingPricing(false);
+  };
+
+  const pagePlans = pricing.length > 0 ? pricing : pageConfig.plans;
 
   const handleSubscribe = async (plan) => {
     setLoading(true);
@@ -159,61 +198,67 @@ export default function PageSubscriptionModal({ isOpen, onClose, pagePath }) {
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          {pagePlans.map((plan, idx) => (
-            <motion.div
-              key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className={`p-5 rounded-xl border cursor-pointer transition-all ${
-                selectedPlan?.id === plan.id 
-                  ? 'border-gold bg-gold/10' 
-                  : 'border-white/10 hover:border-gold/50'
-              }`}
-              style={{
-                background: selectedPlan?.id === plan.id ? G.bgHi : 'rgba(255,255,255,0.03)'
-              }}
-              onClick={() => setSelectedPlan(plan)}
-            >
-              {/* Plan name */}
-              <h3 className="font-inter text-lg font-bold text-white mb-2">
-                {plan.name}
-              </h3>
-
-              {/* Price */}
-              <div className="mb-4">
-                <span className="font-inter text-3xl font-bold" style={{ color: G.text }}>
-                  {plan.price}
-                </span>
-              </div>
-
-              {/* Features */}
-              <div className="space-y-2 mb-6">
-                {plan.features.map((feature, fIdx) => (
-                  <div key={fIdx} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: G.text }} />
-                    <span className="text-white/80 text-sm">{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Select button */}
-              <Button
-                className={`w-full ${
+          {fetchingPricing ? (
+            <div className="col-span-full flex justify-center py-8">
+              <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            pagePlans.map((plan, idx) => (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className={`p-5 rounded-xl border cursor-pointer transition-all ${
                   selectedPlan?.id === plan.id 
-                    ? 'bg-gold text-black' 
-                    : 'bg-white/10 text-white hover:bg-gold/20'
+                    ? 'border-gold bg-gold/10' 
+                    : 'border-white/10 hover:border-gold/50'
                 }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSubscribe(plan);
+                style={{
+                  background: selectedPlan?.id === plan.id ? G.bgHi : 'rgba(255,255,255,0.03)'
                 }}
-                disabled={loading}
+                onClick={() => setSelectedPlan(plan)}
               >
-                {loading ? 'Processing...' : 'Select Plan'}
-              </Button>
-            </motion.div>
-          ))}
+                {/* Plan name */}
+                <h3 className="font-inter text-lg font-bold text-white mb-2">
+                  {plan.name}
+                </h3>
+
+                {/* Price */}
+                <div className="mb-4">
+                  <span className="font-inter text-3xl font-bold" style={{ color: G.text }}>
+                    {plan.price}
+                  </span>
+                </div>
+
+                {/* Features */}
+                <div className="space-y-2 mb-6">
+                  {plan.features.map((feature, fIdx) => (
+                    <div key={fIdx} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: G.text }} />
+                      <span className="text-white/80 text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Select button */}
+                <Button
+                  className={`w-full ${
+                    selectedPlan?.id === plan.id 
+                      ? 'bg-gold text-black' 
+                      : 'bg-white/10 text-white hover:bg-gold/20'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSubscribe(plan);
+                  }}
+                  disabled={loading}
+                >
+                  {loading ? 'Processing...' : 'Select Plan'}
+                </Button>
+              </motion.div>
+            ))
+          )}
         </div>
 
         {/* Info */}

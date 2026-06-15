@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, Globe, Shield, CreditCard, ChevronRight, Menu, X } from "lucide-react";
+import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -45,6 +45,13 @@ const SIDEBAR_ITEMS = [
     arabic: "اشتراكات الصفحات",
     icon: Shield,
     description: "Manage page-specific subscriptions"
+  },
+  {
+    path: "/admin/pricing-settings",
+    label: "Pricing Settings",
+    arabic: "إعدادات الأسعار",
+    icon: DollarSign,
+    description: "Set custom prices per page"
   }
 ];
 
