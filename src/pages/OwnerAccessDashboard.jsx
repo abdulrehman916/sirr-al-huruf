@@ -12,7 +12,7 @@ import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
 import { useToast } from "@/components/ui/use-toast";
-import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
+import { getContentPages, getAllRegisteredPages } from "@/lib/pageRegistry";
 import PaymentsTab from "@/components/admin/PaymentsTab";
 import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal";
 import MessagesTab from "@/components/admin/MessagesTab";
@@ -37,11 +37,8 @@ const DURATION_OPTIONS = [
   { value: "LIFETIME",   label: "Lifetime",   days: 36500 },
 ];
 
-// Only content pages (non-admin, non-audit) for the owner UI
-const CONTENT_PAGES = Object.entries(ROUTE_PERMISSION_MAP)
-  .filter(([path, c]) => !c.adminOnly && c.code && path !== "/" && !path.startsWith("/admin"))
-  .map(([path, c]) => ({ path, name: c.name, code: c.code }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+// Only content pages (non-admin, non-audit) for the owner UI — from dynamic registry
+const CONTENT_PAGES = getContentPages().map(p => ({ path: p.path, name: p.name, code: p.code }));
 
 function fmt(d) {
   if (!d) return "—";
@@ -1287,7 +1284,7 @@ function VisibilityTab({ pageConfigs, onRefresh }) {
 
   const pages = CONTENT_PAGES.map(p => {
     const db = pageConfigs.find(c => c.page_path === p.path);
-    const isPrivate = db ? db.requires_permission : (ROUTE_PERMISSION_MAP[p.path]?.requiresPermission ?? true);
+    const isPrivate = db ? db.requires_permission : (p.requiresPermission ?? true);
     return { ...p, isPrivate };
   });
 
@@ -1562,15 +1559,17 @@ export default function OwnerAccessDashboard() {
   const loadAll = async () => {
     setLoading(true);
     try {
+      // Paginated: limit initial loads to prevent OOM with 10K+ users
+      const PAGE_LIMIT = 200;
       const [allUsers, allProfiles, perms, subs, configs, allPlans, allVip, allRequests] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.UserAccessProfile.list(),
-        base44.entities.PagePermission.list("-granted_at", 500),
-        base44.entities.Subscription.list("-start_date", 500),
-        base44.entities.PageVisibilityConfig.list(),
+        base44.entities.User.list(null, PAGE_LIMIT),
+        base44.entities.UserAccessProfile.list(null, PAGE_LIMIT),
+        base44.entities.PagePermission.list("-granted_at", PAGE_LIMIT),
+        base44.entities.Subscription.list("-start_date", PAGE_LIMIT),
+        base44.entities.PageVisibilityConfig.list(null, PAGE_LIMIT),
         base44.entities.SubscriptionPlan.list(),
-        base44.entities.VIPAccess.list("-added_at", 500),
-        base44.entities.AccessRequest.list("-requested_at", 500),
+        base44.entities.VIPAccess.list("-added_at", PAGE_LIMIT),
+        base44.entities.AccessRequest.list("-requested_at", PAGE_LIMIT),
       ]);
       setUsers(allUsers);
       setProfiles(allProfiles);
@@ -1603,7 +1602,7 @@ export default function OwnerAccessDashboard() {
   const activePerms = permissions.filter(p => p.is_active && !p.is_revoked && !isExp(p.expiry_date)).length;
   const publicPages = CONTENT_PAGES.filter(p => {
     const db = pageConfigs.find(c => c.page_path === p.path);
-    return db ? !db.requires_permission : !(ROUTE_PERMISSION_MAP[p.path]?.requiresPermission ?? true);
+    return db ? !db.requires_permission : !(p.requiresPermission ?? true);
   }).length;
 
   return (

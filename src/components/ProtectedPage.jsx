@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { ShieldAlert, Lock, Clock, XCircle, Crown, Star, Send } from "lucide-react";
-import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
+import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
+import { getCached, setCached, accessCheckKey, visibilityKey } from "@/lib/permissionCache";
 import PageSubscriptionModal from "@/components/PageSubscriptionModal";
 import RequestAccessModal from "@/components/RequestAccessModal";
 import { useToast } from "@/components/ui/use-toast";
@@ -19,7 +20,10 @@ const G = {
   errorBorder: "rgba(239,68,68,0.50)",
 };
 
-export default function ProtectedPage({ routePath, children, requiresPermission = true, requiresSubscription = false }) {
+// TTL for access check cache — 2 minutes (enough for a browsing session)
+const ACCESS_CACHE_TTL = 2 * 60 * 1000;
+
+export default function ProtectedPage({ routePath, children, requiresPermission, requiresSubscription }) {
   const { toast } = useToast();
   const [accessStatus, setAccessStatus] = useState("checking");
   const [accessDetails, setAccessDetails] = useState(null);
@@ -29,37 +33,48 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
   const [pageName, setPageName] = useState("");
 
   useEffect(() => {
-    const config = ROUTE_PERMISSION_MAP[routePath];
+    const config = getPageConfig(routePath);
     setPageName(config?.name || routePath);
     checkAccess();
   }, [routePath]);
 
   const checkAccess = async () => {
     try {
-      // ── Layer 1: Explicit prop override — no auth needed ──────────────────
-      if (!requiresPermission) {
+      // ── Layer 0: Explicit prop override — no auth needed ────────────────
+      if (requiresPermission === false) {
         setAccessStatus("granted");
         return;
       }
 
-      // ── Layer 2: Database page visibility — public pages bypass auth ──────
-      try {
-        const dbConfigs = await base44.entities.PageVisibilityConfig.list();
-        const dbConfig = (dbConfigs || []).find(c => c.page_path === routePath);
-        if (dbConfig && !dbConfig.requires_permission) {
-          setAccessStatus("granted");
-          return;
+      // ── Layer 1: Static page registry — public pages bypass everything ──
+      if (isPublicPage(routePath)) {
+        setAccessStatus("granted");
+        return;
+      }
+
+      // ── Layer 2: Cached visibility check ────────────────────────────────
+      const visKey = visibilityKey(routePath);
+      let isPublicByDb = getCached(visKey);
+      if (isPublicByDb === undefined || isPublicByDb === null) {
+        try {
+          const dbConfigs = await base44.entities.PageVisibilityConfig.filter(
+            { page_path: routePath },
+            null,
+            1
+          );
+          isPublicByDb = dbConfigs.length > 0 && !dbConfigs[0].requires_permission;
+          setCached(visKey, isPublicByDb);
+        } catch {
+          isPublicByDb = false;
+          setCached(visKey, false, 30000); // short TTL on error
         }
-      } catch {}
-
-      // ── Layer 3: Static route map fallback — public pages bypass auth ─────
-      const permissionConfig = ROUTE_PERMISSION_MAP[routePath];
-      if (!permissionConfig || !permissionConfig.requiresPermission) {
+      }
+      if (isPublicByDb) {
         setAccessStatus("granted");
         return;
       }
 
-      // ── Layer 4: Auth-required from this point ────────────────────────────
+      // ── Layer 3: Auth required — get user ───────────────────────────────
       let user;
       try {
         user = await base44.auth.me();
@@ -68,73 +83,37 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         setAccessStatus("denied");
         return;
       }
-
       if (!user) {
         setError("Authentication required");
         setAccessStatus("denied");
         return;
       }
 
-      // Admin/owner bypass
-      if (user.role === "admin" || user.role === "owner") {
-        setAccessStatus("granted");
-        return;
-      }
+      // ── Layer 4: Cached consolidated access check ────────────────────────
+      const accKey = accessCheckKey(user.id, routePath);
+      let result = getCached(accKey);
 
-      // Lifetime access check
-      try {
-        const profiles = await base44.entities.UserAccessProfile.filter({ user_id: user.id });
-        if (profiles.length > 0 && profiles[0].lifetime_access) {
-          setAccessStatus("granted");
-          return;
-        }
-      } catch {}
-
-      // VIP check
-      try {
-        const vipRes = await base44.functions.invoke("checkVIPAccess", { page_path: routePath });
-        if (vipRes.data?.is_vip) {
-          setAccessStatus("granted");
-          return;
-        }
-      } catch {}
-
-      // Subscription check
-      try {
-        const pageSubResponse = await base44.functions.invoke("checkPageSubscription", { user_id: user.id, page_path: routePath });
-        if (pageSubResponse.data?.has_access) {
-          setAccessStatus("granted");
-          setAccessDetails({ expiry_date: pageSubResponse.data.expiry_date });
-          return;
-        }
-      } catch {}
-
-      // Permission-based access
-      if (permissionConfig?.code) {
+      if (!result) {
         try {
-          const response = await base44.functions.invoke("checkPageAccess", {
+          const response = await base44.functions.invoke("checkPageAccessFast", {
             page_path: routePath,
-            permission_code: permissionConfig.code,
           });
-          if (response.data.access_granted) {
-            setAccessStatus("granted");
-            setAccessDetails({ expiry_date: response.data.expiry_date });
-            return;
-          } else {
-            if (response.data.reason === "Permission has expired") {
-              setAccessStatus("expired");
-            } else if (response.data.reason === "Permission has been revoked") {
-              setAccessStatus("revoked");
-            } else {
-              setAccessStatus("locked");
-            }
-            setError(response.data.reason || "Access denied");
-            return;
-          }
-        } catch {}
+          result = response.data;
+          setCached(accKey, result, ACCESS_CACHE_TTL);
+        } catch {
+          // Fallback: treat as locked on backend error
+          result = { granted: false, reason: "Access denied", status: "locked" };
+          setCached(accKey, result, 30000);
+        }
       }
 
-      setAccessStatus("locked");
+      if (result.granted) {
+        setAccessStatus("granted");
+        setAccessDetails({ expiry_date: result.expiry_date });
+      } else {
+        setAccessStatus(result.status || "locked");
+        setError(result.reason || "Access denied");
+      }
     } catch (err) {
       setError(err.message || "Access check failed");
       setAccessStatus("denied");

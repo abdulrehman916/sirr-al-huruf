@@ -7,7 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { NavigationProvider } from './context/NavigationContext';
-import { ROUTE_PERMISSION_MAP } from '@/lib/permissionCodes';
+import { getPageConfig } from '@/lib/pageRegistry';
 import { PageStateProvider } from './context/PageStateContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
@@ -109,7 +109,7 @@ const AuthenticatedApp = () => {
       const publicAuthPaths = ['/onboarding', '/otp-login', '/login', '/register', '/forgot-password', '/reset-password'];
       const isAuthPath = publicAuthPaths.some(p => location.pathname.startsWith(p));
       // Check if the current path is a public page (requiresPermission: false)
-      const permConfig = ROUTE_PERMISSION_MAP[location.pathname];
+      const permConfig = getPageConfig(location.pathname);
       const isPublicPage = permConfig && permConfig.requiresPermission === false;
       // Support sub-pages beginning with /support
       const isSupportPath = location.pathname.startsWith('/support');
