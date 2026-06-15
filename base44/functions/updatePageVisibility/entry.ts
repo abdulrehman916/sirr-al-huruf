@@ -5,8 +5,8 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     
-    if (!user || user.role !== 'owner') {
-      return Response.json({ error: 'Unauthorized - Owner access required' }, { status: 403 });
+    if (!user || (user.role !== 'admin' && user.role !== 'owner')) {
+      return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
     const { page_path, requiresPermission } = await req.json();
