@@ -290,9 +290,10 @@ export default function CustomerService() {
   return (
     <PageLayout>
       <PageTitle 
-        title="Customer Service" 
-        subtitle="Support Tickets & Complaints"
-        icon={<Send className="w-6 h-6" style={{ color: G.text }} />}
+        arabic="دعم العملاء"
+        latin="SIRR AL-HURUF SUPPORT"
+        subtitle="Submit Support Tickets & Inquiries"
+        icon="📧"
       />
 
       <motion.div
@@ -534,17 +535,23 @@ export default function CustomerService() {
 
         {/* Info Cards */}
         <div className="grid md:grid-cols-3 gap-4 mt-8">
-          <div className="p-4 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <h3 className="font-bold text-white mb-2">📧 Email Support</h3>
-            <p className="text-white/70 text-sm">support@sirralhuruf.com</p>
+          <div className="p-4 rounded-lg border" style={{ background: G.bg, borderColor: G.border }}>
+            <h3 className="font-bold text-white mb-2 flex items-center gap-2">
+              <span>📧</span> Sirr al-Huruf Support
+            </h3>
+            <p className="text-white/70 text-sm">All communications appear from our branded support team</p>
           </div>
-          <div className="p-4 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <h3 className="font-bold text-white mb-2">📱 WhatsApp</h3>
-            <p className="text-white/70 text-sm">+971 50 XXX XXXX</p>
+          <div className="p-4 rounded-lg border" style={{ background: G.bg, borderColor: G.border }}>
+            <h3 className="font-bold text-white mb-2 flex items-center gap-2">
+              <span>🔒</span> Privacy Protected
+            </h3>
+            <p className="text-white/70 text-sm">Your contact details are secure and never shared</p>
           </div>
-          <div className="p-4 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <h3 className="font-bold text-white mb-2">⏰ Response Time</h3>
-            <p className="text-white/70 text-sm">24-48 hours</p>
+          <div className="p-4 rounded-lg border" style={{ background: G.bg, borderColor: G.border }}>
+            <h3 className="font-bold text-white mb-2 flex items-center gap-2">
+              <span>⏰</span> Response Time
+            </h3>
+            <p className="text-white/70 text-sm">We typically respond within 24-48 hours</p>
           </div>
         </div>
       </motion.div>

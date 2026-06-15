@@ -173,10 +173,13 @@ export default function MessagesTab() {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-inter font-bold text-white text-base">{selectedTicket.subject}</h3>
-                  <p className="text-xs text-white/40 mt-0.5">{selectedTicket.name} · {selectedTicket.email}</p>
-                </div>
+              <div>
+              <h3 className="font-inter font-bold text-white text-base">{selectedTicket.subject}</h3>
+              <p className="text-xs text-white/40 mt-0.5 flex items-center gap-1">
+                <span>{selectedTicket.name} · {selectedTicket.email}</span>
+                <span className="text-gold">· 🛡️ Sirr al-Huruf Support</span>
+              </p>
+              </div>
                 <button onClick={() => setSelectedTicket(null)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10" style={{ color: "rgba(255,255,255,0.40)" }}>
                   <X className="w-4 h-4" />
                 </button>
@@ -187,7 +190,16 @@ export default function MessagesTab() {
                 {(messages[selectedTicket.ticket_id] || []).map(msg => (
                   <div key={msg.id} className={`flex ${msg.sender_type === "ADMIN" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[80%] rounded-lg p-3 ${msg.sender_type === "ADMIN" ? "bg-gold/20 border border-gold/30" : "bg-white/5 border border-white/10"}`}>
-                      <p className="text-xs text-white/40 mb-1">{msg.sender_name} · {formatTime(msg.created_at)}</p>
+                      <p className="text-xs text-white/40 mb-1 flex items-center gap-1">
+                        {msg.sender_type === "ADMIN" ? (
+                          <>
+                            <span className="text-gold font-semibold">🛡️ {msg.sender_name}</span>
+                            <span>· {formatTime(msg.created_at)}</span>
+                          </>
+                        ) : (
+                          <>{msg.sender_name} · {formatTime(msg.created_at)}</>
+                        )}
+                      </p>
                       <p className="text-white text-sm">{msg.message}</p>
                     </div>
                   </div>

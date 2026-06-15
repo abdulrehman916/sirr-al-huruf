@@ -90,6 +90,13 @@ export default function SecurityAuditLogs() {
 
   useEffect(() => {
     checkAuth();
+    
+    // Real-time subscription for instant audit log updates
+    const unsubscribe = base44.entities.AuditLog.subscribe(() => {
+      fetchLogs();
+    });
+    
+    return () => unsubscribe();
   }, []);
 
   const checkAuth = async () => {

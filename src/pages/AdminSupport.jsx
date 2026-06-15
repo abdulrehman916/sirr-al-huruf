@@ -196,9 +196,10 @@ export default function AdminSupport() {
   return (
     <PageLayout>
       <PageTitle 
-        title="Support Tickets" 
+        arabic="دعم العملاء"
+        latin="SIRR AL-HURUF SUPPORT"
         subtitle="Customer Service Administration"
-        icon={<Mail className="w-6 h-6" style={{ color: G.text }} />}
+        icon="🛡️"
       />
 
       <motion.div
@@ -352,7 +353,10 @@ export default function AdminSupport() {
                           </div>
 
                           <div>
-                            <Label className="text-white/70">Customer Information</Label>
+                            <Label className="text-white/70 flex items-center gap-2">
+                              Customer Information
+                              <Badge className="bg-gold/20 text-gold border-gold/30 text-xs">🛡️ Sirr al-Huruf Support</Badge>
+                            </Label>
                             <div className="mt-2 p-3 rounded-lg bg-white/5 space-y-2">
                               <p className="text-white"><strong>Name:</strong> {ticket.name}</p>
                               <p className="text-white"><strong>Email:</strong> {ticket.email}</p>
@@ -411,19 +415,25 @@ export default function AdminSupport() {
                           )}
 
                           <div>
-                            <Label className="text-white/70">Admin Reply</Label>
+                            <Label className="text-white/70 flex items-center gap-2">
+                              Reply as Support
+                              <Badge className="bg-gold/20 text-gold border-gold/30 text-xs">Sirr al-Huruf</Badge>
+                            </Label>
                             <Textarea
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}
-                              placeholder="Type your reply here..."
+                              placeholder="Type your reply as Sirr al-Huruf Support..."
                               className="mt-2 bg-white/5 border-white/10 text-white min-h-[100px]"
                             />
+                            <p className="text-xs text-white/40 mt-1">
+                              ✓ Your reply will appear from "Sirr al-Huruf Support" (your personal identity is hidden)
+                            </p>
                             <Button
                               onClick={handleReplySubmit}
                               disabled={submittingReply || !replyText.trim()}
                               className="mt-2 btn-gold"
                             >
-                              {submittingReply ? "Saving..." : "Save Reply"}
+                              {submittingReply ? "Sending..." : "Send Reply"}
                             </Button>
                           </div>
 
