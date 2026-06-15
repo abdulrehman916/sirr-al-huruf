@@ -97,11 +97,11 @@ export default function LivePlanetaryHours() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col gap-2 mb-5">
         <div className="flex items-center gap-3">
-          {isDay ? <Sun className="w-6 h-6" style={{ color: G.text }} /> : <Moon className="w-6 h-6" style={{ color: G.text }} />}
-          <div>
-            <h2 className="font-malayalam-md uppercase tracking-widest" style={{ color: G.text }}>
+          {isDay ? <Sun className="w-6 h-6 flex-shrink-0" style={{ color: G.text }} /> : <Moon className="w-6 h-6 flex-shrink-0" style={{ color: G.text }} />}
+          <div className="min-w-0">
+            <h2 className="font-malayalam-md uppercase tracking-widest truncate" style={{ color: G.text }}>
               {isMalayalam ? "നിലവിലെ ഗ്രഹ മണിക്കൂർ" : "Current Planetary Hour"}
             </h2>
             <p className="font-malayalam-sm" style={{ color: G.dim }}>
@@ -110,12 +110,16 @@ export default function LivePlanetaryHours() {
           </div>
         </div>
         
-        {location?.name && sunData && (
-          <div className="text-right">
-            <p className="font-inter text-[9px]" style={{ color: G.dim }}>{location.name}</p>
+        {sunData && (
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {(location?.name) && (
+              <p className="font-inter text-[9px]" style={{ color: G.dim }}>{location.name}</p>
+            )}
             <p className="font-inter text-[10px] text-white/60">
-              {isMalayalam ? "സൂര്യോദയം:" : "Sunrise:"} {safeFormatTime(sunData.sunrise)} • 
-              {isMalayalam ? " സൂര്യാസ്തമയം:" : " Sunset:"} {safeFormatTime(sunData.sunset)}
+              {isMalayalam ? "സൂര്യോദയം:" : "Sunrise:"} {safeFormatTime(sunData.sunrise)}
+            </p>
+            <p className="font-inter text-[10px] text-white/60">
+              {isMalayalam ? "സൂര്യാസ്തമയം:" : "Sunset:"} {safeFormatTime(sunData.sunset)}
             </p>
           </div>
         )}
@@ -227,11 +231,11 @@ export default function LivePlanetaryHours() {
 
 function InfoRow({ label, value, symbol, isMalayalam }) {
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg" style={{ background: G.bg }}>
-      <span className="font-malayalam-sm uppercase tracking-widest" style={{ color: G.dim }}>{label}</span>
-      <div className="flex items-center gap-2">
-        {symbol && <span className="text-xl">{symbol}</span>}
-        <span className="font-malayalam-md font-bold text-white">{value}</span>
+    <div className="flex flex-col gap-1 p-3 rounded-lg" style={{ background: G.bg }}>
+      <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>{label}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        {symbol && <span className="text-lg flex-shrink-0">{symbol}</span>}
+        <span className="font-malayalam-md font-bold text-white break-words">{value}</span>
       </div>
     </div>
   );
