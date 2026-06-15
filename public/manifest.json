@@ -1,45 +1,53 @@
 {
   "name": "سرّ الحروف — Sirr al-Huruf",
-  "short_name": "Sirr",
-  "description": "Traditional Ilm al-Huruf & Astro Clock System",
+  "short_name": "Sirr al-Huruf",
+  "description": "The occult encyclopedia of magick squares, planetary hours, and sacred letter sciences — Ilm al-Huruf",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "background_color": "#020710",
   "theme_color": "#0B1020",
-  "background_color": "#000000",
-  "scope": "/",
-  "lang": "en",
+  "lang": "ar",
   "dir": "rtl",
-  "categories": ["education", "reference", "lifestyle"],
+  "categories": ["education", "books", "lifestyle"],
+  "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/d7997e0c5_generated_image.png",
-      "sizes": "512x512",
+      "src": "/icons/icon-48.png",
+      "sizes": "48x48",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/d7997e0c5_generated_image.png",
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Astro Clock",
-      "short_name": "Astro",
-      "description": "Open Astro Clock",
-      "url": "/astro-clock",
-      "icons": [{ "src": "https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/d7997e0c5_generated_image.png", "sizes": "192x192" }]
     },
     {
-      "name": "Manuscript Library",
-      "short_name": "Library",
-      "description": "Browse Manuscripts",
-      "url": "/manuscript-library",
-      "icons": [{ "src": "https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/d7997e0c5_generated_image.png", "sizes": "192x192" }]
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ],
-  "prefer_related_applications": false
+  ]
 }
