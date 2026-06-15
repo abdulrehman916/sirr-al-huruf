@@ -61,10 +61,8 @@ export default function OTPLogin() {
       const contactValue = contactType === "mobile" ? mobile : email;
       
       const response = await base44.functions.invoke("verifyOTP", {
-        user_id: userId,
-        otp_code: otp,
-        otp_type: contactType.toUpperCase(),
-        purpose: "LOGIN"
+        otp_id: userId, // userId is actually otp_id from generateRegistrationOTP
+        otp_code: otp
       });
 
       if (response.data.success) {
