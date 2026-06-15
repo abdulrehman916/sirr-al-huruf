@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, Globe, Shield, ChevronRight, Menu, X } from "lucide-react";
+import { Users, Globe, Shield, CreditCard, ChevronRight, Menu, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -31,6 +31,13 @@ const SIDEBAR_ITEMS = [
     arabic: "أذونات الصفحات",
     icon: Globe,
     description: "Toggle PUBLIC/PRIVATE access"
+  },
+  {
+    path: "/admin/subscriptions",
+    label: "Subscriptions",
+    arabic: "الاشتراكات",
+    icon: CreditCard,
+    description: "Manage user subscriptions & access"
   }
 ];
 

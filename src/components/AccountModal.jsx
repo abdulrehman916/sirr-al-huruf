@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Trash2, AlertTriangle, CheckCircle, Shield, Globe } from "lucide-react";
+import { X, LogOut, Trash2, AlertTriangle, CheckCircle, Shield, Globe, CreditCard } from "lucide-react";
 import { base44 } from "../api/base44Client";
 import { Link } from "react-router-dom";
 
@@ -131,6 +131,28 @@ export default function AccountModal({ user, onClose }) {
                   <div className="flex-1 text-left">
                     <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>User Access Manager</p>
                     <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Grant & manage user permissions</p>
+                  </div>
+                  <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
+                    OPEN
+                  </span>
+                </Link>
+
+                <Link
+                  to="/admin/subscriptions"
+                  onClick={onClose}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
+                    border: "1px solid rgba(212,175,55,0.25)",
+                    WebkitTapHighlightColor: "transparent",
+                    userSelect: "none",
+                    WebkitUserSelect: "none",
+                  }}
+                >
+                  <CreditCard className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
+                  <div className="flex-1 text-left">
+                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>Subscriptions</p>
+                    <p className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.60)" }}>Manage plans & access</p>
                   </div>
                   <span className="font-inter text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060" }}>
                     OPEN
