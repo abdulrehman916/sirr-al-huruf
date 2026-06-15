@@ -58,6 +58,7 @@ export const PERMISSION_CODES = {
  */
 export const ROUTE_PERMISSION_MAP = {
   '/': { code: PERMISSION_CODES.HOME, name: 'Home', requiresPermission: false },
+  '/admin/page-permissions': { code: PERMISSION_CODES.ADMIN_PAGE_PERMISSIONS, name: 'Page Permissions', requiresPermission: true, adminOnly: true },
   '/abjad': { code: PERMISSION_CODES.ABJAD, name: 'Abjad Kabir', requiresPermission: true },
   '/anasir': { code: PERMISSION_CODES.ANASIR, name: 'Anasir', requiresPermission: true },
   '/hadim': { code: PERMISSION_CODES.HADIM, name: 'Hadim', requiresPermission: true },
