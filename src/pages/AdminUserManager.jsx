@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
-  Users, Search, Clock, CheckCircle, XCircle, RefreshCw, 
+  Users, Search, Clock, CheckCircle, XCircle, RefreshCw, Gift,
   Loader2, Shield, Calendar, Phone, Mail
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import PageLayout from "@/components/PageLayout";
 import { motion } from "framer-motion";
+import GrantAccessModal from "@/components/admin/GrantAccessModal";
 
 export default function AdminUserManager() {
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ export default function AdminUserManager() {
   const [users, setUsers] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchType, setSearchType] = useState("all"); // all, phone, email, name
+  const [grantModalUser, setGrantModalUser] = useState(null);
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
@@ -118,10 +122,21 @@ export default function AdminUserManager() {
   };
 
   const filteredUsers = users.filter(u => {
-    const matchesSearch = searchQuery === "" || 
-      u.mobile?.includes(searchQuery) ||
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+    if (searchQuery === "") return true;
+    
+    const query = searchQuery.toLowerCase();
+    
+    if (searchType === "phone" || searchType === "all") {
+      if (u.mobile?.includes(query)) return true;
+    }
+    if (searchType === "email" || searchType === "all") {
+      if (u.email?.toLowerCase().includes(query)) return true;
+    }
+    if (searchType === "name" || searchType === "all") {
+      if (u.full_name?.toLowerCase().includes(query)) return true;
+    }
+    
+    return false;
   });
 
   const getUserSubscriptions = (userId) => {
@@ -208,14 +223,43 @@ export default function AdminUserManager() {
         {/* Search */}
         <Card className="border-white/10 bg-white/5 mb-8">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Search className="w-5 h-5 text-white/50" />
-              <Input
-                placeholder="Search by phone number or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/5 border-white/10 text-white"
-              />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="md:col-span-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                    <Input
+                      placeholder={
+                        searchType === "phone" ? "Search by phone number..." :
+                        searchType === "email" ? "Search by email..." :
+                        searchType === "name" ? "Search by name..." :
+                        "Search by phone, email, or name..."
+                      }
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-12 bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Select value={searchType} onValueChange={setSearchType}>
+                    <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white">
+                      <SelectValue placeholder="Search by" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-white/10">
+                      <SelectItem value="all" className="text-white">All Fields</SelectItem>
+                      <SelectItem value="phone" className="text-white">Phone</SelectItem>
+                      <SelectItem value="email" className="text-white">Email</SelectItem>
+                      <SelectItem value="name" className="text-white">Name</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {searchQuery && (
+                <div className="text-sm text-white/60">
+                  Found {filteredUsers.length} user(s) matching "{searchQuery}"
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -238,18 +282,22 @@ export default function AdminUserManager() {
                         <div className="flex items-center gap-3 mb-2">
                           <Users className="w-5 h-5 text-gold" />
                           <h3 className="text-white font-bold text-lg">
-                            {u.email || "User"}
+                            {u.full_name || u.email || "User"}
                           </h3>
+                          {u.mobile && (
+                            <Badge className="bg-white/10 text-white/80 border-white/20">
+                              <Phone className="w-3 h-3 mr-1" />
+                              {u.mobile}
+                            </Badge>
+                          )}
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className="flex items-center gap-2 text-white/80">
-                            <Phone className="w-4 h-4" />
-                            {u.mobile || "N/A"}
-                          </div>
-                          <div className="flex items-center gap-2 text-white/80">
-                            <Mail className="w-4 h-4" />
-                            {u.email || "N/A"}
-                          </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                          {u.email && (
+                            <div className="flex items-center gap-2 text-white/80">
+                              <Mail className="w-4 h-4" />
+                              {u.email}
+                            </div>
+                          )}
                           <div className="flex items-center gap-2 text-white/80">
                             <Calendar className="w-4 h-4" />
                             Joined: {new Date(u.registration_date).toLocaleDateString()}
@@ -260,6 +308,14 @@ export default function AdminUserManager() {
                           </div>
                         </div>
                       </div>
+                      <Button
+                        size="sm"
+                        onClick={() => setGrantModalUser(u)}
+                        className="bg-gold text-slate-900 hover:bg-gold/90"
+                      >
+                        <Gift className="w-4 h-4 mr-2" />
+                        Grant Access
+                      </Button>
                     </div>
 
                     {/* User's Subscriptions */}
@@ -330,6 +386,18 @@ export default function AdminUserManager() {
           })}
         </div>
       </div>
+
+      {/* Grant Access Modal */}
+      {grantModalUser && (
+        <GrantAccessModal
+          user={grantModalUser}
+          onClose={() => setGrantModalUser(null)}
+          onSuccess={() => {
+            fetchData();
+            setGrantModalUser(null);
+          }}
+        />
+      )}
     </PageLayout>
   );
 }
