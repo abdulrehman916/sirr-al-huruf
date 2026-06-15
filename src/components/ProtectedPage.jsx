@@ -22,7 +22,7 @@ const G = {
  * @param {string} routePath - The route path to check permissions for
  * @param {React.ReactNode} children - The page component to render if access granted
  */
-export default function ProtectedPage({ routePath, children }) {
+export default function ProtectedPage({ routePath, children, requiresPermission = true }) {
   const [accessStatus, setAccessStatus] = useState("checking"); // checking, granted, denied, expired, revoked
   const [accessDetails, setAccessDetails] = useState(null);
   const [error, setError] = useState(null);
@@ -33,11 +33,32 @@ export default function ProtectedPage({ routePath, children }) {
 
   const checkAccess = async () => {
     try {
-      // Get current user first
-      const user = await base44.auth.me();
+      // Get current user first - with error handling for session issues
+      let user;
+      try {
+        user = await base44.auth.me();
+      } catch (authErr) {
+        // Session might be stale - reload to refresh
+        console.error("Auth check failed:", authErr);
+        setError("Session expired. Please refresh.");
+        setAccessStatus("denied");
+        return;
+      }
+      
       if (!user) {
         setError("Authentication required");
         setAccessStatus("denied");
+        return;
+      }
+      
+      // Debug logging for admin users
+      if (user.role === 'admin') {
+        console.log("Admin user detected:", user.email, "Role:", user.role);
+      }
+
+      // If explicitly marked as not requiring permission, grant access
+      if (!requiresPermission) {
+        setAccessStatus("granted");
         return;
       }
 
@@ -46,6 +67,12 @@ export default function ProtectedPage({ routePath, children }) {
       
       // If no permission required (e.g., home page), grant access
       if (!permissionConfig || !permissionConfig.requiresPermission) {
+        setAccessStatus("granted");
+        return;
+      }
+
+      // Admin-only pages: grant access to admin users without permission check
+      if (permissionConfig.adminOnly && user.role === 'admin') {
         setAccessStatus("granted");
         return;
       }

@@ -57,6 +57,7 @@ const ManazilQualityAudit = lazy(() => import('./pages/ManazilQualityAudit'));
 const ManuscriptCompletionReport = lazy(() => import('./pages/ManuscriptCompletionReport'));
 const CustomerService = lazy(() => import('./pages/CustomerService'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminTest = lazy(() => import('./pages/AdminTest'));
 const AdminSupport = lazy(() => import('./pages/AdminSupport'));
 const AdminPermissions = lazy(() => import('./pages/AdminPermissions'));
 const PagePermissions = lazy(() => import('./pages/PagePermissions'));
@@ -146,6 +147,7 @@ const AuthenticatedApp = () => {
             <Route path="/manuscript-completion-report" element={<ProtectedPage routePath="/manuscript-completion-report"><ManuscriptCompletionReport /></ProtectedPage>} />
             <Route path="/customer-service" element={<ProtectedPage routePath="/customer-service"><CustomerService /></ProtectedPage>} />
             <Route path="/admin/dashboard" element={<ProtectedPage routePath="/admin/dashboard"><AdminDashboard /></ProtectedPage>} />
+            <Route path="/admin/test" element={<ProtectedPage routePath="/admin/test" requiresPermission={false}><AdminTest /></ProtectedPage>} />
             <Route path="/admin/support" element={<ProtectedPage routePath="/admin/support"><AdminSupport /></ProtectedPage>} />
             <Route path="/admin/permissions" element={<ProtectedPage routePath="/admin/permissions"><AdminPermissions /></ProtectedPage>} />
             <Route path="/admin/page-permissions" element={<ProtectedPage routePath="/admin/page-permissions"><PagePermissions /></ProtectedPage>} />
