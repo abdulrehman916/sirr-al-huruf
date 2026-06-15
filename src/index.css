@@ -154,42 +154,38 @@
   .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
   
-  /* ── Navigation scroll container — buttery smooth momentum ── */
+  /* ── Navigation scroll container — native momentum, zero JS interference ── */
   .nav-scroll-container {
     -webkit-overflow-scrolling: touch;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    /* Prevent scroll chaining — nav stays independent */
+    /* Prevent scroll from escaping to the page */
     overscroll-behavior-x: contain;
     overscroll-behavior-y: none;
-    /* Momentum deceleration — natural feel */
-    -webkit-scroll-snap-type: x mandatory;
-    scroll-snap-type: x mandatory;
-    /* Prevent rubber-banding fighting with page scroll */
-    -webkit-overflow-scrolling: touch;
-    /* Ensure fast, hardware-accelerated compositing */
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    /* Proximity snap — snaps on slow release, free on fast flick (like Instagram) */
+    scroll-snap-type: x proximity;
+    /* Keep scroll position smooth during programmatic scrolls */
+    scroll-behavior: smooth;
   }
   .nav-scroll-container::-webkit-scrollbar {
     display: none;
   }
 
-  /* Individual nav tabs snap into view naturally */
+  /* Individual nav tabs — snap targets, instant feedback */
   .nav-tab {
-    scroll-snap-align: start;
-    scroll-snap-stop: normal;
+    scroll-snap-align: center;
     -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
-    /* Instant tap feedback via active state */
-    transition: opacity 0.1s ease;
+    cursor: pointer;
+    /* Instant active-state feedback (no JS needed) */
+    transition: opacity 0.05s ease;
   }
   .nav-tab:active {
-    opacity: 0.75;
+    opacity: 0.7;
+    transition: opacity 0s;
   }
 
   /* ── RTL (Arabic) Support ── */

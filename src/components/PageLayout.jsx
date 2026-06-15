@@ -1,6 +1,6 @@
-import { memo, useMemo, useRef, useEffect, useState, lazy, Suspense } from "react";
+import { memo, useMemo, useRef, useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, Shield } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
@@ -52,13 +52,22 @@ const pageVariants = {
   exit:    { opacity: 0 },
 };
 
-// ── Top nav tab — lightweight, GPU-friendly, pure CSS-driven ──
+// ── Top nav tab — <div> for zero link-delay, GPU-composited via container ──
 const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
+  const navigate = useNavigate();
+  
+  const handleClick = useCallback((e) => {
+    e.preventDefault();
+    onClick();
+    navigate(tab.path);
+  }, [tab.path, onClick, navigate]);
+
   return (
-    <Link
+    <div
       ref={tabRef}
-      to={tab.path}
-      onClick={onClick}
+      onClick={handleClick}
+      role="link"
+      tabIndex={0}
       className="nav-tab flex-shrink-0 relative overflow-hidden flex flex-col items-center justify-center py-1.5 px-2 select-none"
       style={{
         borderRadius: 10,
@@ -70,7 +79,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
           : "transparent",
         boxShadow: isActive ? "0 0 16px rgba(212,175,55,0.22), inset 0 1px 0 rgba(212,175,55,0.22)" : "none",
         WebkitTapHighlightColor: "transparent",
-        touchAction: "manipulation",
       }}
     >
       {isActive && (
@@ -100,7 +108,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
           background: "radial-gradient(ellipse 80% 60% at 50% 115%, rgba(212,175,55,0.20) 0%, transparent 70%)",
         }} />
       )}
-    </Link>
+    </div>
   );
 });
 
@@ -149,24 +157,19 @@ export default function PageLayout({ children }) {
   const navRef = useRef(null);
   const tabRefs = useRef({});
 
-  // Auto-scroll to center the active tab — uses native scrollIntoView (non-blocking)
+  // Auto-scroll active tab into view on first mount only — never interrupt user gestures
+  const didInitialScroll = useRef(false);
   useEffect(() => {
+    if (didInitialScroll.current) return;
     const activeTabEl = tabRefs.current[activeId];
     if (!activeTabEl) return;
-
-    // Delay slightly to let the DOM settle after route change
+    didInitialScroll.current = true;
+    // Delay to let DOM fully commit before scrolling
     const timer = setTimeout(() => {
-      // Only auto-scroll on mobile/tablet (non-pointer devices)
-      // Use scrollIntoView with smooth behavior — doesn't fight user touch
-      activeTabEl.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
-      });
-    }, 100);
-
+      activeTabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, 200);
     return () => clearTimeout(timer);
-  }, [activeId, location.pathname]);
+  }, [activeId]);
 
 
 
@@ -234,11 +237,8 @@ export default function PageLayout({ children }) {
           </div>
         )}
 
-        {/* Enhanced horizontal navigation with improved touch scrolling */}
-        <div 
-          className="px-2 py-2 w-full flex items-center gap-2"
-          style={{ overflowX: 'auto', overflowY: 'hidden' }}
-        >
+        {/* Horizontal navigation — single native scroll layer, GPU-composited */}
+        <div className="px-2 py-2 w-full flex items-center gap-2">
           {/* Admin button - only visible for admin users */}
           {user?.role === 'admin' && (
             <button
@@ -268,10 +268,13 @@ export default function PageLayout({ children }) {
               WebkitOverflowScrolling: "touch",
               scrollBehavior: "smooth",
               overscrollBehaviorX: "contain",
-              touchAction: "pan-x pan-y",
-              scrollSnapType: "x mandatory",
+              touchAction: "pan-x",
+              scrollSnapType: "x proximity",
               userSelect: "none",
               WebkitUserSelect: "none",
+              willChange: "transform",
+              transform: "translate3d(0,0,0)",
+              backfaceVisibility: "hidden",
             }}
           >
             {TAB_KEYS.map((tab) => (
