@@ -232,6 +232,8 @@ export default function PageLayout({ children }) {
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         height: "100dvh",
         overflow: "hidden",
+        overflowX: "hidden",
+        maxWidth: "100vw",
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
@@ -360,10 +362,11 @@ export default function PageLayout({ children }) {
       <div
         ref={scrollRef}
         data-scroll-container="true"
-        className="flex-1 overflow-y-auto overflow-x-hidden"
+        className="flex-1 overflow-y-auto"
         style={{
           flex: 1,
           minHeight: 0,
+          overflowX: "hidden",
           overscrollBehaviorY: "none",
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
@@ -385,6 +388,8 @@ export default function PageLayout({ children }) {
               willChange: 'opacity',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
+              overflowX: 'hidden',
+              maxWidth: '100%',
             }}
           >
             {children}

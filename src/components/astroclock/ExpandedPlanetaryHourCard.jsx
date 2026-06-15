@@ -111,7 +111,7 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-x-hidden w-full"
+            style={{ overflow: "hidden", width: "100%", maxWidth: "100%" }}
           >
             <div className="pt-4 space-y-4 w-full max-w-full">
               {/* Planet Friendships */}
