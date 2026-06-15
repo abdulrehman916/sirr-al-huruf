@@ -4,7 +4,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    const { page_path, permission_code } = await req.query;
+    const { page_path, permission_code } = await req.json();
 
     if (!page_path || !permission_code) {
       return Response.json({ error: 'Page path and permission code required' }, { status: 400 });
