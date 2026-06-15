@@ -44,27 +44,9 @@ function SubscribeModal({ plan, onClose, onSuccess }) {
   const priceKey = { "1_MONTH": "price_monthly", "6_MONTHS": "price_6months", "1_YEAR": "price_yearly", "LIFETIME": "price_lifetime" };
   const price = plan[priceKey[duration]];
 
-  const handleSubscribe = async () => {
-    setProcessing(true);
-    try {
-      const res = await base44.functions.invoke("activateSubscriptionPlan", {
-        plan_id: plan.plan_id,
-        duration,
-        amount: price || 0,
-        currency: plan.currency || "INR",
-      });
-      if (res.data?.success) {
-        toast({ title: `✓ Subscribed to ${plan.plan_name}!`, description: `${res.data.granted_pages} page(s) unlocked.` });
-        onSuccess();
-        onClose();
-      } else {
-        throw new Error(res.data?.error || "Subscription failed");
-      }
-    } catch (e) {
-      toast({ title: "Failed", description: e.message, variant: "destructive" });
-    } finally {
-      setProcessing(false);
-    }
+  const handleSubscribe = () => {
+    onClose();
+    window.location.href = `/payment/${plan.plan_id}`;
   };
 
   const PlanIcon = PLAN_ICONS[plan.plan_name] || Star;

@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     
     // Verify admin access (scheduled task)
     const user = await base44.auth.me();
-    if (!user || (user.role !== 'admin' && user.role !== 'owner')) {
+    if (!user || user.role !== 'admin') {
       return Response.json({ 
         success: false, 
         message: "Admin access required" 
@@ -34,6 +34,22 @@ Deno.serve(async (req) => {
           last_modified_by: "system",
           last_modified_at: now.toISOString()
         });
+
+        // Revoke associated page permissions
+        try {
+          const perms = await base44.entities.PagePermission.filter({
+            user_id: sub.user_id,
+            is_active: true,
+            is_revoked: false,
+          });
+          for (const perm of perms) {
+            if (perm.expiry_date && new Date(perm.expiry_date) < now) {
+              await base44.entities.PagePermission.update(perm.id, {
+                is_active: false,
+              });
+            }
+          }
+        } catch {}
         
         expiredCount++;
         expiredIds.push(sub.subscription_id);

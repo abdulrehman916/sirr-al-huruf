@@ -4,28 +4,12 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Loader2, KeyRound, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Mail, Loader2, KeyRound, ArrowLeft } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/components/ui/use-toast";
 import { derivePassword } from "@/lib/derivePassword";
-
-function detectDevice() {
-  const ua = (navigator.userAgent || "").toLowerCase();
-  if (/mobi|android/.test(ua)) return "mobile";
-  if (/tablet|ipad/.test(ua)) return "tablet";
-  return "desktop";
-}
-
-function getCountry() {
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    if (tz.startsWith("Asia/Dubai") || tz.startsWith("Asia/Muscat")) return "AE";
-    if (tz.startsWith("Asia/Kolkata") || tz.startsWith("Asia/Calcutta")) return "IN";
-    if (tz.startsWith("America/")) return "US";
-    if (tz.startsWith("Europe/London")) return "GB";
-    return tz.split("/")[0] === "Asia" ? "AE" : (tz.split("/")[1] || "").substring(0, 2).toUpperCase() || "";
-  } catch { return ""; }
-}
+import { detectDevice, getCountry } from "@/lib/deviceUtils";
+import useTranslation from "@/i18n/useTranslation";
 
 export default function OTPLogin() {
   const [step, setStep] = useState("email");
@@ -34,6 +18,7 @@ export default function OTPLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const deviceType = detectDevice();
   const country = getCountry();
@@ -50,15 +35,15 @@ export default function OTPLogin() {
           await base44.auth.register({ email, password: derivePassword(email) });
         } catch {
           try { await base44.auth.resendOtp(email); } catch {
-            setError("Unable to send OTP. Please check your email.");
+            setError(t('unable_send_otp'));
             setLoading(false);
             return;
           }
         }
         setStep("verify");
-        toast({ title: "OTP Sent", description: "Check your email for the 6-digit code" });
+        toast({ title: t('otp_sent_title'), description: t('otp_sent_desc') });
       } catch (err) {
-        setError(err?.message || "Failed to send OTP. Please try again.");
+        setError(err?.message || t('msg_error_occurred'));
       } finally {
         setLoading(false);
       }
@@ -67,13 +52,13 @@ export default function OTPLogin() {
     return (
       <AuthLayout
         icon={Mail}
-        title="Login with Email"
-        subtitle="Enter your email to receive a verification code"
+        title={t('otp_login_title')}
+        subtitle={t('otp_login_desc')}
         footer={
           <>
-            New user?{" "}
+            {t('otp_new_user')}{" "}
             <Link to="/onboarding" className="text-primary font-medium hover:underline">
-              Create account
+              {t('otp_create_account')}
             </Link>
           </>
         }
@@ -84,7 +69,7 @@ export default function OTPLogin() {
 
         <form onSubmit={handleSendOTP} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email">{t('email_address')}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -101,7 +86,7 @@ export default function OTPLogin() {
           </div>
 
           <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-            {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</> : "Send OTP"}
+            {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('sending')}</> : t('otp_send_login')}
           </Button>
         </form>
       </AuthLayout>
@@ -125,10 +110,10 @@ export default function OTPLogin() {
         country
       });
 
-      toast({ title: "Welcome back!", description: "Login successful." });
+      toast({ title: t('otp_welcome_back'), description: t('otp_login_success') });
       window.location.href = "/";
     } catch (err) {
-      setError(err?.message || "Verification failed. Please try again.");
+      setError(err?.message || t('verification_failed'));
     } finally {
       setLoading(false);
     }
@@ -140,9 +125,9 @@ export default function OTPLogin() {
       try { await base44.auth.resendOtp(email); } catch {
         await base44.auth.register({ email, password: derivePassword(email) });
       }
-      toast({ title: "OTP Resent", description: "Check your email" });
+      toast({ title: t('otp_sent_title'), description: t('otp_sent_desc') });
     } catch {
-      toast({ title: "Error", description: "Failed to resend OTP", variant: "destructive" });
+      toast({ title: t('error_title'), description: t('resend_failed'), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -151,12 +136,12 @@ export default function OTPLogin() {
   return (
     <AuthLayout
       icon={KeyRound}
-      title="Enter OTP Code"
-      subtitle={`We sent a 6-digit code to ${email}`}
+      title={t('otp_enter_login_code')}
+      subtitle={`${t('otp_code_sent_to')} ${email}`}
       footer={
         <button onClick={() => { setStep("email"); setError(""); }}
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto">
-          <ArrowLeft className="w-3.5 h-3.5" /> Change email
+          <ArrowLeft className="w-3.5 h-3.5" /> {t('change_email')}
         </button>
       }
     >
@@ -166,7 +151,7 @@ export default function OTPLogin() {
 
       <form onSubmit={handleVerifyOTP} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="otp">OTP Code</Label>
+          <Label htmlFor="otp">{t('verification_code')}</Label>
           <div className="relative">
             <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -186,18 +171,18 @@ export default function OTPLogin() {
         </div>
 
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading || otp.length < 6}>
-          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</> : "Verify & Login"}
+          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('verifying')}</> : t('otp_verify_login')}
         </Button>
 
         <div className="text-center space-y-2">
           <button type="button" onClick={handleResendOTP} disabled={loading}
             className="text-sm text-primary hover:underline disabled:opacity-50">
-            Resend OTP
+            {t('otp_resend')}
           </button>
           <br />
           <button type="button" onClick={() => { setStep("email"); setError(""); setOtp(""); }}
             className="text-xs text-muted-foreground hover:text-foreground">
-            Change email
+            {t('change_email')}
           </button>
         </div>
       </form>

@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     }
 
     // 3. Admin/owner bypass
-    if (user.role === 'admin' || user.role === 'owner') {
+    if (user.role === 'admin') {
       return Response.json({ granted: true, status: 'granted', source: 'admin_bypass' });
     }
 

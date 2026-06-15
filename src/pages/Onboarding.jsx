@@ -8,16 +8,10 @@ import { Mail, Loader2, KeyRound, ArrowRight, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import AtmosphericBackground from "@/components/AtmosphericBackground";
 import { derivePassword } from "@/lib/derivePassword";
+import { detectDevice, getCountry } from "@/lib/deviceUtils";
 import useTranslation from "@/i18n/useTranslation";
 
 const STEPS = { WELCOME: 0, EMAIL: 1, OTP: 2 };
-
-function detectDevice() {
-  const ua = (navigator.userAgent || "").toLowerCase();
-  if (/mobi|android/.test(ua)) return "mobile";
-  if (/tablet|ipad/.test(ua)) return "tablet";
-  return "desktop";
-}
 
 export default function Onboarding() {
   const [step, setStep] = useState(STEPS.WELCOME);
@@ -37,17 +31,6 @@ export default function Onboarding() {
   }, [navigate]);
 
   const deviceType = detectDevice();
-
-  const getCountry = () => {
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-      if (tz.startsWith("Asia/Dubai") || tz.startsWith("Asia/Muscat")) return "AE";
-      if (tz.startsWith("Asia/Kolkata") || tz.startsWith("Asia/Calcutta")) return "IN";
-      if (tz.startsWith("America/")) return "US";
-      if (tz.startsWith("Europe/London")) return "GB";
-      return tz.split("/")[0] === "Asia" ? "AE" : (tz.split("/")[1] || "").substring(0, 2).toUpperCase() || "";
-    } catch { return ""; }
-  };
 
   const handleSendOTP = async (e) => {
     e.preventDefault();
@@ -165,11 +148,11 @@ export default function Onboarding() {
       <div className="relative z-10 w-full max-w-sm">
         <div className="text-center mb-8">
           <h2 className="font-amiri font-bold text-xl mb-1" style={{ color: "#f5ead4" }}>
-            {step === STEPS.EMAIL ? "تسجيل الدخول" : "أدخل الرمز"}
+            {step === STEPS.EMAIL ? t('onboarding_email_title') : t('onboarding_otp_title')}
           </h2>
           <p className="font-inter text-[10px] tracking-[0.2em] uppercase"
             style={{ color: "rgba(212,175,55,0.60)" }}>
-            {step === STEPS.EMAIL ? "Enter your email" : "Enter verification code"}
+            {step === STEPS.EMAIL ? "‎" : "‎"}
           </p>
         </div>
 
@@ -183,7 +166,7 @@ export default function Onboarding() {
           {step === STEPS.EMAIL ? (
             <form onSubmit={handleSendOTP} className="space-y-4">
               <div className="space-y-1.5">
-                <Label style={{ color: "rgba(255,255,255,0.60)", fontSize: "0.8rem" }}>Email Address</Label>
+                <Label style={{ color: "rgba(255,255,255,0.60)", fontSize: "0.8rem" }}>{t('email_address')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.30)" }} />
                   <Input
@@ -200,18 +183,18 @@ export default function Onboarding() {
               </div>
 
               <Button type="submit" className="w-full h-12 font-medium btn-gold" disabled={loading}>
-                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</> : "Send Verification Code"}
+                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('sending')}</> : t('send_code')}
               </Button>
             </form>
           ) : (
             <form onSubmit={handleVerifyOTP} className="space-y-4">
               <p className="text-sm text-center" style={{ color: "rgba(255,255,255,0.45)" }}>
-                Code sent to{" "}
+                {t('code_sent_to')}{" "}
                 <span style={{ color: "rgba(255,255,255,0.75)" }}>{email}</span>
               </p>
 
               <div className="space-y-1.5">
-                <Label htmlFor="otp" style={{ color: "rgba(255,255,255,0.60)", fontSize: "0.8rem" }}>Verification Code</Label>
+                <Label htmlFor="otp" style={{ color: "rgba(255,255,255,0.60)", fontSize: "0.8rem" }}>{t('verification_code')}</Label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.30)" }} />
                   <Input
@@ -232,18 +215,18 @@ export default function Onboarding() {
               </div>
 
               <Button type="submit" className="w-full h-12 font-medium btn-gold" disabled={loading || otp.length < 6}>
-                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</> : "Verify & Enter"}
+                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('verifying')}</> : t('verify_enter')}
               </Button>
 
               <div className="text-center space-y-2">
                 <button type="button" onClick={handleResendOTP} disabled={loading}
                   className="text-sm underline" style={{ color: "rgba(212,175,55,0.70)" }}>
-                  Resend Code
+                  {t('resend_code')}
                 </button>
                 <br />
                 <button type="button" onClick={() => { setStep(STEPS.EMAIL); setError(""); }}
                   className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  Change email
+                  {t('change_email')}
                 </button>
               </div>
             </form>

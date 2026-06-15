@@ -211,6 +211,20 @@ const translations = {
   otp_login_desc: { ml: "നിങ്ങളുടെ ഇമെയിൽ നൽകുക", en: "Enter your email to login", ar: "أدخل بريدك الإلكتروني لتسجيل الدخول" },
   otp_send_login: { ml: "ലോഗിൻ കോഡ് അയയ്ക്കുക", en: "Send Login Code", ar: "إرسال رمز الدخول" },
   otp_enter_code: { ml: "ലോഗിൻ കോഡ് നൽകുക", en: "Enter login code", ar: "أدخل رمز الدخول" },
+  otp_create_account: { ml: "പുതിയ അക്കൗണ്ട്", en: "Create account", ar: "إنشاء حساب" },
+  otp_new_user: { ml: "പുതിയ ഉപയോക്താവോ?", en: "New user?", ar: "مستخدم جديد؟" },
+  otp_sent_title: { ml: "OTP അയച്ചു", en: "OTP Sent", ar: "تم إرسال الرمز" },
+  otp_sent_desc: { ml: "6 അക്ക കോഡിനായി ഇമെയിൽ പരിശോധിക്കുക", en: "Check your email for the 6-digit code", ar: "تحقق من بريدك الإلكتروني للرمز" },
+  otp_verify_login: { ml: "പരിശോധിച്ച് ലോഗിൻ", en: "Verify & Login", ar: "تحقق وتسجيل الدخول" },
+  otp_welcome_back: { ml: "തിരികെ സ്വാഗതം!", en: "Welcome back!", ar: "مرحباً بعودتك!" },
+  otp_login_success: { ml: "ലോഗിൻ വിജയകരം.", en: "Login successful.", ar: "تم تسجيل الدخول بنجاح." },
+  otp_resend: { ml: "OTP വീണ്ടും അയയ്ക്കുക", en: "Resend OTP", ar: "إعادة إرسال الرمز" },
+  otp_code_sent_to: { ml: "കോഡ് ഇതിലേക്ക് അയച്ചു", en: "We sent a 6-digit code to", ar: "تم إرسال رمز مكون من 6 أرقام إلى" },
+  otp_enter_login_code: { ml: "ലോഗിൻ കോഡ് നൽകുക", en: "Enter OTP Code", ar: "أدخل رمز التحقق" },
+
+  // ── Onboarding Additional ──
+  onboarding_email_title: { ml: "ഇമെയിൽ നൽകുക", en: "Enter your email", ar: "أدخل بريدك الإلكتروني" },
+  onboarding_otp_title: { ml: "കോഡ് നൽകുക", en: "Enter verification code", ar: "أدخل رمز التحقق" },
 
   // ── Protected Page / Access ──
   protected_loading: { ml: "പ്രവേശനം പരിശോധിക്കുന്നു...", en: "Checking access...", ar: "جاري التحقق من الوصول..." },

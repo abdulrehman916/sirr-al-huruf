@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
 
     // Scheduled task — must run as admin/service-role
     const user = await base44.auth.me();
-    if (!user || (user.role !== 'admin' && user.role !== 'owner')) {
+    if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
@@ -22,8 +22,9 @@ Deno.serve(async (req) => {
     for (const perm of activePermissions) {
       const expiryDate = new Date(perm.expiry_date);
       if (expiryDate < now) {
-        // Don't set is_active=false — let checkPageAccess handle expiry at access time
-        // so users see "Access Expired" instead of "No valid permission found"
+        await base44.entities.PagePermission.update(perm.id, {
+          is_active: false
+        });
         expiredCount++;
         expiredIds.push(perm.permission_id);
       }

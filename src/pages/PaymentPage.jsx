@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CreditCard, Loader2, CheckCircle, Globe, MapPin, AlertCircle } from "lucide-react";
+import { CreditCard, Loader2, CheckCircle, Globe, MapPin } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
@@ -137,36 +137,24 @@ export default function PaymentPage() {
 
         new window.Razorpay(options).open();
       } else {
-        // Stripe flow
-        const intentRes = await base44.functions.invoke("createStripePaymentIntent", {
+        // Stripe Checkout redirect flow
+        const checkoutRes = await base44.functions.invoke("createStripePaymentIntent", {
           plan_id: plan.plan_id,
           duration,
           amount,
           currency: plan.currency || "USD",
+          return_url: window.location.origin + "/my-subscription",
         });
 
-        if (!intentRes.data?.success) throw new Error(intentRes.data?.message || "Failed to create payment intent");
+        if (!checkoutRes.data?.success) throw new Error(checkoutRes.data?.message || "Failed to create checkout");
 
-        const { client_secret, payment_intent_id } = intentRes.data;
+        const { checkout_url } = checkoutRes.data;
 
-        // Use Stripe Elements or redirect to Stripe-hosted page
-        // For simplicity, we'll use Stripe's payment element redirect
-        const stripeRes = await base44.functions.invoke("verifyStripePayment", {
-          payment_intent_id,
-          plan_id: plan.plan_id,
-          duration,
-          amount,
-          currency: plan.currency || "USD",
-          client_secret, // In real flow, this comes from Stripe Elements confirmation
-        });
-
-        // Note: Real Stripe integration requires Stripe Elements on frontend
-        // This is a simplified version - production needs proper Stripe Elements setup
-        if (stripeRes.data?.success) {
-          toast({ title: "✓ Payment Successful!", description: "Access granted instantly." });
-          navigate("/my-subscription");
+        if (checkout_url) {
+          // Redirect to Stripe Checkout — callback handled by verifyStripePayment webhook
+          window.location.href = checkout_url;
         } else {
-          throw new Error(stripeRes.data?.message || "Payment verification failed");
+          throw new Error("No checkout URL returned");
         }
       }
     } catch (e) {
@@ -333,14 +321,7 @@ export default function PaymentPage() {
           )}
         </Button>
 
-        {gateway === "stripe" && (
-          <div className="rounded-lg border p-3 flex items-center gap-2" style={{ background: "rgba(251, 191, 36, 0.08)", borderColor: "rgba(251, 191, 36, 0.30)" }}>
-            <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#fbbf24" }} />
-            <p className="text-xs text-white/50">
-              Stripe integration requires Stripe Elements setup. For production, install @stripe/react-stripe-js and implement proper payment form.
-            </p>
-          </div>
-        )}
+
 
       </motion.div>
     </PageLayout>

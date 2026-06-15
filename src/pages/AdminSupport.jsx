@@ -85,7 +85,7 @@ export default function AdminSupport() {
   const loadTickets = async () => {
     setLoading(true);
     try {
-      const allTickets = await base44.entities.SupportTickets.list('-created_at');
+      const allTickets = await base44.entities.SupportTickets.list('-created_at', 500);
       setTickets(allTickets);
     } catch (error) {
       toast({

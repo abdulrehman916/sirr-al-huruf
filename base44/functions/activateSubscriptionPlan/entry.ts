@@ -6,7 +6,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user || user.role !== 'admin') {
+      return Response.json({ error: 'Admin access required' }, { status: 403 });
+    }
 
     const {
       plan_id,
@@ -15,16 +17,14 @@ Deno.serve(async (req) => {
       currency,
       payment_id,
       order_id,
-      target_user_id,     // optional: for owner granting on behalf of another user
+      target_user_id,     // optional: for admin granting on behalf of another user
     } = await req.json();
 
     if (!plan_id || !duration) {
       return Response.json({ error: 'plan_id and duration are required' }, { status: 400 });
     }
 
-    // Owner can grant on behalf of any user; normal user can only subscribe for themselves
-    const isAdmin = user.role === 'admin' || user.role === 'owner';
-    const recipientId = (isAdmin && target_user_id) ? target_user_id : user.id;
+    const recipientId = target_user_id || user.id;
 
     // Load plan
     const plans = await base44.asServiceRole.entities.SubscriptionPlan.filter({ plan_id });
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
       start_date: now.toISOString(),
       expiry_date: duration === 'LIFETIME' ? null : expiryDate.toISOString(),
       status: 'ACTIVE',
-      granted_by: isAdmin ? user.id : 'system',
+      granted_by: user.id,
       granted_at: now.toISOString(),
       notes: `Plan: ${plan.plan_name} · Duration: ${duration}${payment_id ? ' · Payment: ' + payment_id : ''}`,
     });
@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
         page_path: pagePath,
         page_name: pagePath.replace(/\//g, '').replace(/-/g, ' '),
         permission_code: pagePath.replace(/\//g, '').toUpperCase() + '_ACCESS',
-        granted_by: isAdmin ? user.id : 'system',
+        granted_by: user.id,
         granted_at: now.toISOString(),
         start_date: now.toISOString(),
         expiry_date: duration === 'LIFETIME' ? new Date(now.getTime() + 36500 * 86400000).toISOString() : expiryDate.toISOString(),
