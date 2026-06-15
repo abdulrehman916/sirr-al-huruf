@@ -37,8 +37,11 @@ const DURATION_OPTIONS = [
   { value: "LIFETIME",   label: "Lifetime",   days: 36500 },
 ];
 
-// Only content pages (non-admin, non-audit) for the owner UI — from dynamic registry
-const CONTENT_PAGES = getContentPages().map(p => ({ path: p.path, name: p.name, code: p.code }));
+// Only content pages (non-admin) for the owner UI — from dynamic registry
+// Must be a function to always use the latest registry (not a cached module constant)
+function getContentPageList() {
+  return getContentPages().map(p => ({ path: p.path, name: p.name, code: p.code }));
+}
 
 function fmt(d) {
   if (!d) return "—";
@@ -87,7 +90,7 @@ function GrantAccessModal({ user, existingPaths, onClose, onGranted }) {
     const expiry = new Date(now.getTime() + dur.days * 86400000).toISOString();
     let granted = 0;
     for (const path of selectedPages) {
-      const page = CONTENT_PAGES.find(p => p.path === path);
+      const page = getContentPageList().find(p => p.path === path);
       if (!page) continue;
       try {
         await base44.functions.invoke("grantPagePermission", {
@@ -149,7 +152,7 @@ function GrantAccessModal({ user, existingPaths, onClose, onGranted }) {
             Select Pages ({selectedPages.length} selected)
           </p>
           <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
-            {CONTENT_PAGES.map(page => {
+            {getContentPageList().map(page => {
               const sel = selectedPages.includes(page.path);
               const has = existingPaths.includes(page.path);
               return (
@@ -636,7 +639,7 @@ function PlansTab({ plans, onRefresh }) {
               <div>
                 <label className="text-xs text-white/45 mb-2 block">Pages Included ({newPages.length} selected)</label>
                 <div className="max-h-40 overflow-y-auto space-y-1">
-                  {CONTENT_PAGES.map(p => {
+                  {getContentPageList().map(p => {
                     const sel = newPages.includes(p.path);
                     return (
                       <button key={p.path} onClick={() => setNewPages(prev => sel ? prev.filter(x => x !== p.path) : [...prev, p.path])}
@@ -731,7 +734,7 @@ function PlansTab({ plans, onRefresh }) {
                   <div>
                     <label className="text-xs text-white/40 mb-2 block">Pages ({(editData.page_paths || []).length} selected)</label>
                     <div className="max-h-40 overflow-y-auto space-y-1">
-                      {CONTENT_PAGES.map(p => {
+                      {getContentPageList().map(p => {
                         const sel = (editData.page_paths || []).includes(p.path);
                         return (
                           <button key={p.path} onClick={() => toggleEditPage(p.path)}
@@ -760,7 +763,7 @@ function PlansTab({ plans, onRefresh }) {
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {(plan.page_paths || []).map(path => {
-                    const name = CONTENT_PAGES.find(p => p.path === path)?.name || path;
+                    const name = getContentPageList().find(p => p.path === path)?.name || path;
                     return (
                       <span key={path} className="px-2 py-0.5 rounded text-xs"
                         style={{ background: `${color}12`, color: `${color}cc`, border: `1px solid ${color}25` }}>
@@ -1017,7 +1020,7 @@ function GrantVIPModal({ users, existingVip, onClose, onGranted }) {
           <div>
             <label className="text-xs text-white/45 mb-2 block">Select Pages ({selectedPages.length} selected)</label>
             <div className="max-h-40 overflow-y-auto space-y-1">
-              {CONTENT_PAGES.map(p => {
+              {getContentPageList().map(p => {
                 const sel = selectedPages.includes(p.path);
                 return (
                   <button key={p.path} onClick={() => setSelectedPages(prev => sel ? prev.filter(x => x !== p.path) : [...prev, p.path])}
@@ -1282,7 +1285,7 @@ function VisibilityTab({ pageConfigs, onRefresh }) {
   const { toast } = useToast();
   const [toggling, setToggling] = useState(null);
 
-  const pages = CONTENT_PAGES.map(p => {
+  const pages = getContentPageList().map(p => {
     const db = pageConfigs.find(c => c.page_path === p.path);
     const isPrivate = db ? db.requires_permission : (p.requiresPermission ?? true);
     return { ...p, isPrivate };
@@ -1600,7 +1603,7 @@ export default function OwnerAccessDashboard() {
 
   const activeSubs = subscriptions.filter(s => s.status === "ACTIVE").length;
   const activePerms = permissions.filter(p => p.is_active && !p.is_revoked && !isExp(p.expiry_date)).length;
-  const publicPages = CONTENT_PAGES.filter(p => {
+  const publicPages = getContentPageList().filter(p => {
     const db = pageConfigs.find(c => c.page_path === p.path);
     return db ? !db.requires_permission : !(p.requiresPermission ?? true);
   }).length;
@@ -1617,7 +1620,7 @@ export default function OwnerAccessDashboard() {
             { label: "Registered Users",    value: users.length,  color: G.text },
             { label: "Active Subscriptions", value: activeSubs,    color: "#22c55e" },
             { label: "Active Permissions",   value: activePerms,   color: "#60a5fa" },
-            { label: "Public Pages",         value: `${publicPages}/${CONTENT_PAGES.length}`, color: "#a78bfa" },
+            { label: "Public Pages",         value: `${publicPages}/${getContentPageList().length}`, color: "#a78bfa" },
           ].map(({ label, value, color }) => (
             <div key={label} className="p-4 rounded-xl border text-center" style={{ background: G.bg, borderColor: G.border }}>
               <p className="text-2xl font-bold" style={{ color }}>{value}</p>
