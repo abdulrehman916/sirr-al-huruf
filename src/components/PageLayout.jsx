@@ -1,7 +1,7 @@
 import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft, User, Shield } from "lucide-react";
+import { ChevronLeft, Shield } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
@@ -9,21 +9,22 @@ import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
 import useTranslation from "@/i18n/useTranslation";
 
+// ── Permanent brand navigation terms — Arabic + English, never translated ──
 const TAB_KEYS = [
-  { id: "home",             labelKey: "nav_home",  path: "/" },
-  { id: "abjad-kabir",      labelKey: "nav_abjad", path: "/abjad" },
-  { id: "anasir",           labelKey: "nav_anasir", path: "/anasir" },
-  { id: "hadim",            labelKey: "nav_hadim", path: "/hadim" },
-  { id: "mizaan9",          labelKey: "nav_mizaan", path: "/mizaan9" },
-  { id: "magic-sqayer",     labelKey: "nav_vefk", path: "/magic-sqayer" },
-  { id: "vefkin-yapilisi",  labelKey: "nav_vefk", path: "/vefkin-yapilisi" },
-  { id: "basthul-huroof-2", labelKey: "nav_bast", path: "/basthul-huroof-2" },
-  { id: "faal-hasrath",     labelKey: "nav_faal", path: "/faal-hasrath" },
-  { id: "plants",           labelKey: "nav_plants", path: "/plants" },
-  { id: "evil-jinn",        labelKey: "nav_jinn", path: "/evil-jinn" },
-  { id: "holy-names",       labelKey: "nav_names", path: "/holy-names" },
-  { id: "astro-clock",      labelKey: "nav_astro", path: "/astro-clock" },
-  { id: "support",          labelKey: "nav_support", path: "/support" },
+  { id: "home",             arabicTitle: "الرئيسية",        englishSubtitle: "HOME",    path: "/" },
+  { id: "abjad-kabir",      arabicTitle: "الأبجد",          englishSubtitle: "ABJAD",   path: "/abjad" },
+  { id: "anasir",           arabicTitle: "العناصر",         englishSubtitle: "ANASIR",  path: "/anasir" },
+  { id: "hadim",            arabicTitle: "الخادم",          englishSubtitle: "HADIM",   path: "/hadim" },
+  { id: "mizaan9",          arabicTitle: "الميزان",         englishSubtitle: "MIZAN",   path: "/mizaan9" },
+  { id: "magic-sqayer",     arabicTitle: "السقاير",         englishSubtitle: "SQAYER",  path: "/magic-sqayer" },
+  { id: "vefkin-yapilisi",  arabicTitle: "وفقین",           englishSubtitle: "VEFK",    path: "/vefkin-yapilisi" },
+  { id: "basthul-huroof-2", arabicTitle: "بسط الحروف",      englishSubtitle: "BAST",    path: "/basthul-huroof-2" },
+  { id: "faal-hasrath",     arabicTitle: "فال الحسرات",     englishSubtitle: "FAAL",    path: "/faal-hasrath" },
+  { id: "plants",           arabicTitle: "النباتات",        englishSubtitle: "PLANTS",  path: "/plants" },
+  { id: "evil-jinn",        arabicTitle: "الجن",            englishSubtitle: "JINN",    path: "/evil-jinn" },
+  { id: "holy-names",       arabicTitle: "الأسماء",         englishSubtitle: "NAMES",   path: "/holy-names" },
+  { id: "astro-clock",      arabicTitle: "الساعة",          englishSubtitle: "ASTRO",   path: "/astro-clock" },
+  { id: "support",          arabicTitle: "الدعم",           englishSubtitle: "SUPPORT", path: "/support" },
 ];
 
 const PAGE_TITLE_KEYS = {
@@ -50,16 +51,14 @@ const pageVariants = {
   exit:    { opacity: 0 },
 };
 
-// ── Top horizontal nav tab — instant activation, zero delay ──
-const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef, t, language }) {
+// ── Top horizontal nav tab — original two-line Arabic + English brand design ──
+const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
   const handleTouchStart = (e) => {
-    // Instant visual feedback on touch
     e.currentTarget.style.opacity = '0.7';
   };
 
   const handleTouchEnd = (e) => {
     e.currentTarget.style.opacity = '1';
-    // Trigger navigation immediately
     onClick();
   };
 
@@ -100,33 +99,48 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef, t, languag
       <Link
         to={tab.path}
         onClick={onClick}
-        className="relative flex flex-col items-center justify-center py-2 px-2.5"
+        className="relative flex flex-col items-center justify-center py-1.5 px-2"
         style={{
           WebkitTapHighlightColor: "transparent",
           touchAction: 'pan-y',
           userSelect: "none",
           WebkitUserSelect: "none",
           minHeight: 44,
-          minWidth: 52,
+          minWidth: 48,
           willChange: 'transform',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
         }}
       >
+        {/* Arabic title — top line */}
         <span
-          className="font-amiri font-bold leading-none"
+          className="font-amiri font-bold leading-tight"
           style={{
-            fontSize: language === 'ar' ? 13 : 14,
+            fontSize: 13,
             color: isActive ? "#E8C84A" : "rgba(255,255,255,0.52)",
             willChange: 'color',
           }}
         >
-          {t(tab.labelKey)}
+          {tab.arabicTitle}
         </span>
 
+        {/* English subtitle — bottom line, smaller, tracked */}
+        <span
+          className="font-inter font-semibold leading-none tracking-[0.12em]"
+          style={{
+            fontSize: 8.5,
+            color: isActive ? "rgba(212,175,55,0.65)" : "rgba(255,255,255,0.22)",
+            marginTop: 1,
+            willChange: 'color',
+          }}
+        >
+          {tab.englishSubtitle}
+        </span>
+
+        {/* Active indicator dot */}
         <div
           style={{
-            position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)",
+            position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)",
             height: 1.5, borderRadius: 999,
             background: "linear-gradient(90deg, transparent, #E8C84A, transparent)",
             width: isActive ? 26 : 0,
@@ -158,7 +172,7 @@ export default function PageLayout({ children }) {
   const { startNav } = useNavigation();
   const [showAccount, setShowAccount] = useState(false);
   const [user, setUser] = useState(null);
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   useScrollPersist();
 
   useEffect(() => {
@@ -365,8 +379,6 @@ export default function PageLayout({ children }) {
                 isActive={activeId === tab.id}
                 onClick={startNav}
                 tabRef={(el) => (tabRefs.current[tab.id] = el)}
-                t={t}
-                language={language}
               />
             ))}
           </div>
