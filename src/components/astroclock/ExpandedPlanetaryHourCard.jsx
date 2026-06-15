@@ -44,10 +44,10 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
         boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
       }}>
       {/* Header: Basic Info */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-2 mb-4">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{hour.planetInfo?.symbol}</span>
-          <div>
+          <span className="text-3xl flex-shrink-0">{hour.planetInfo?.symbol}</span>
+          <div className="min-w-0">
             <p className="font-amiri text-2xl font-bold" style={{ color: G.text }}>
               {hour.planetInfo?.name_ar}
             </p>
@@ -59,8 +59,7 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
             </p>
           </div>
         </div>
-        
-        <div className="text-right">
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-1">
           <p className="font-malayalam-sm text-white/90 font-bold">
             {hour.startTime} → {hour.endTime}
           </p>
@@ -163,7 +162,7 @@ function PlanetFriendshipsSection({ friendships, isMalayalam }) {
         {isMalayalam ? "ഗ്രഹ ബന്ധങ്ങൾ" : "Planet Relationships"}
       </p>
       
-      <div className="grid md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         {/* Friends */}
         <div className="p-3 rounded-lg" style={{ background: G.excellent, border: `1px solid ${G.excellentBorder}` }}>
           <div className="flex items-center gap-2 mb-2">
@@ -209,7 +208,7 @@ function PlanetFriendshipsSection({ friendships, isMalayalam }) {
 
 function ActionsSection({ planetRules, isMalayalam }) {
   return (
-    <div className="grid md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 gap-3">
       <div className="p-4 rounded-lg border" style={{ background: G.excellent, borderColor: G.excellentBorder }}>
         <div className="flex items-center gap-2 mb-3">
           <CheckCircle className="w-4 h-4" style={{ color: "#22c55e" }} />
@@ -262,7 +261,7 @@ function OperationsSection({ planetRules, isMalayalam }) {
   const unsuitableActions = isMalayalam ? planetRules?.unsuitableActions?.ml : planetRules?.unsuitableActions?.en;
 
   return (
-    <div className="grid md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 gap-3">
       <div className="p-4 rounded-lg border" style={{ background: "rgba(34,197,94,0.05)", borderColor: "rgba(34,197,94,0.30)" }}>
         <div className="flex items-center gap-2 mb-3">
           <CheckCircle className="w-4 h-4" style={{ color: "#22c55e" }} />
