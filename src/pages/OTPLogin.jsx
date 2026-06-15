@@ -9,9 +9,27 @@ import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/components/ui/use-toast";
 import { derivePassword } from "@/lib/derivePassword";
 
+function detectDevice() {
+  const ua = (navigator.userAgent || "").toLowerCase();
+  if (/mobi|android/.test(ua)) return "mobile";
+  if (/tablet|ipad/.test(ua)) return "tablet";
+  return "desktop";
+}
+
+function getCountry() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if (tz.startsWith("Asia/Dubai") || tz.startsWith("Asia/Muscat")) return "AE";
+    if (tz.startsWith("Asia/Kolkata") || tz.startsWith("Asia/Calcutta")) return "IN";
+    if (tz.startsWith("America/")) return "US";
+    if (tz.startsWith("Europe/London")) return "GB";
+    return tz.split("/")[0] === "Asia" ? "AE" : (tz.split("/")[1] || "").substring(0, 2).toUpperCase() || "";
+  } catch { return ""; }
+}
+
 export default function OTPLogin() {
-  const [step, setStep] = useState("choose"); // choose | contact | verify
-  const [contactType, setContactType] = useState(null); // "email" | "mobile"
+  const [step, setStep] = useState("choose");
+  const [contactType, setContactType] = useState(null);
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -19,6 +37,9 @@ export default function OTPLogin() {
   const [loading, setLoading] = useState(false);
   const [otpId, setOtpId] = useState(null);
   const { toast } = useToast();
+
+  const deviceType = detectDevice();
+  const country = getCountry();
 
   // ── Step 1: Choose method ─────────────────────────────────────────
   if (step === "choose") {
@@ -37,7 +58,6 @@ export default function OTPLogin() {
         }
       >
         <div className="space-y-3">
-          {/* Option 1: Email */}
           <button
             onClick={() => { setContactType("email"); setStep("contact"); }}
             className="w-full flex items-center gap-4 p-5 rounded-xl text-left transition-all
@@ -53,7 +73,6 @@ export default function OTPLogin() {
             </div>
           </button>
 
-          {/* Option 2: Phone */}
           <button
             onClick={() => { setContactType("mobile"); setStep("contact"); }}
             className="w-full flex items-center gap-4 p-5 rounded-xl text-left transition-all
@@ -82,37 +101,29 @@ export default function OTPLogin() {
 
       try {
         if (contactType === "email") {
-          // ── EMAIL: Use platform's native OTP ───────────────────
-          const pwd = derivePassword(email);
-
+          // ── EMAIL: Platform-native OTP ─────────────────────────────
           try {
-            // Try registering — platform sends OTP to email
-            await base44.auth.register({ email, password: pwd });
-          } catch (regErr) {
-            // Email already registered — resend OTP instead
-            try {
-              await base44.auth.resendOtp(email);
-            } catch (resendErr) {
-              setError("Unable to send OTP. Please try again.");
+            await base44.auth.register({ email, password: derivePassword(email) });
+          } catch {
+            try { await base44.auth.resendOtp(email); } catch {
+              setError("Unable to send OTP. Please check your email.");
               setLoading(false);
               return;
             }
           }
-
           setStep("verify");
           toast({ title: "OTP Sent", description: "Check your email for the 6-digit code" });
         } else {
-          // ── MOBILE: Custom SMS OTP ────────────────────────────
-          const response = await base44.functions.invoke("generateLoginOTP", {
+          // ── MOBILE: Production SMS OTP ─────────────────────────────
+          const response = await base44.functions.invoke("sendOtp", {
             mobile,
             email: "",
             purpose: "LOGIN"
           });
-
           if (response.data?.success) {
             setOtpId(response.data.otp_id);
             setStep("verify");
-            toast({ title: "OTP Sent", description: "Check your phone for the verification code" });
+            toast({ title: "OTP Sent", description: response.data.sms_sent ? "Check your phone for the SMS code" : "OTP generated — check logs" });
           } else {
             setError(response.data?.message || "Failed to send OTP");
           }
@@ -170,8 +181,6 @@ export default function OTPLogin() {
   }
 
   // ── Step 3: Verify OTP ────────────────────────────────────────────
-  const contactValue = contactType === "email" ? email : mobile;
-
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setError("");
@@ -179,20 +188,22 @@ export default function OTPLogin() {
 
     try {
       if (contactType === "email") {
-        // ── EMAIL: Platform-native OTP verification ──────────────
+        // ── EMAIL: Platform-native OTP verification ──────────────────
         const result = await base44.auth.verifyOtp({ email, otpCode: otp });
         await base44.auth.setToken(result.access_token);
 
         await base44.functions.invoke("completeOnboarding", {
           email,
-          mobile: ""
+          mobile: "",
+          device_type: deviceType,
+          country
         });
 
         toast({ title: "Welcome back!", description: "Login successful." });
         window.location.href = "/";
       } else {
-        // ── MOBILE: Custom OTP verification ─────────────────────
-        const verifyRes = await base44.functions.invoke("verifyLoginOTP", {
+        // ── MOBILE: Custom OTP verification ──────────────────────────
+        const verifyRes = await base44.functions.invoke("verifyOtp", {
           otp_id: otpId,
           otp_code: otp
         });
@@ -203,39 +214,31 @@ export default function OTPLogin() {
           return;
         }
 
-        // Create platform account with synthetic email
         const synthEmail = `user${mobile.replace(/\D/g, "").slice(-10)}@sirralhuruf.internal`;
         const pwd = derivePassword(synthEmail);
 
-        let authed = false;
         try {
           await base44.auth.loginViaEmailPassword(synthEmail, pwd);
-          authed = true;
         } catch {
           try {
             await base44.auth.register({ email: synthEmail, password: pwd });
             await base44.auth.loginViaEmailPassword(synthEmail, pwd);
-            authed = true;
           } catch {
-            // Can't fully authenticate — still sync profile
+            setError("Phone login unavailable. Please use Email option or create an account first.");
+            setLoading(false);
+            return;
           }
         }
 
         await base44.functions.invoke("completeOnboarding", {
           email: synthEmail,
           mobile,
+          device_type: deviceType,
+          country
         });
 
-        if (authed) {
-          toast({ title: "Welcome back!", description: "Login successful." });
-          window.location.href = "/";
-        } else {
-          toast({
-            title: "Limited Access",
-            description: "Phone login works best after email registration. Some features may be limited.",
-          });
-          window.location.href = "/";
-        }
+        toast({ title: "Welcome back!", description: "Login successful." });
+        window.location.href = "/";
       }
     } catch (err) {
       setError(err?.message || "Verification failed. Please try again.");
@@ -248,15 +251,12 @@ export default function OTPLogin() {
     setLoading(true);
     try {
       if (contactType === "email") {
-        try {
-          await base44.auth.resendOtp(email);
-        } catch {
-          // If resendOtp fails, try register again
+        try { await base44.auth.resendOtp(email); } catch {
           await base44.auth.register({ email, password: derivePassword(email) });
         }
         toast({ title: "OTP Resent", description: "Check your email" });
       } else {
-        const response = await base44.functions.invoke("generateLoginOTP", {
+        const response = await base44.functions.invoke("sendOtp", {
           mobile,
           email: "",
           purpose: "LOGIN"

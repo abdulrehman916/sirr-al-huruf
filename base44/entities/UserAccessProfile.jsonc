@@ -86,6 +86,21 @@
       "type": "integer",
       "default": 0,
       "description": "Count of currently active permissions"
+    },
+    "device_type": {
+      "type": "string",
+      "enum": [
+        "mobile",
+        "desktop",
+        "tablet",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "Device type from last session"
+    },
+    "country": {
+      "type": "string",
+      "description": "Country code from IP (e.g. AE, IN, US)"
     }
   },
   "required": [

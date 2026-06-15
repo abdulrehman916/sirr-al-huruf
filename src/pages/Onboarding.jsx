@@ -16,6 +16,13 @@ function generateEmailFromPhone(phone) {
   return `user${digits}@sirralhuruf.internal`;
 }
 
+function detectDevice() {
+  const ua = (navigator.userAgent || "").toLowerCase();
+  if (/mobi|android/.test(ua)) return "mobile";
+  if (/tablet|ipad/.test(ua)) return "tablet";
+  return "desktop";
+}
+
 export default function Onboarding() {
   const [step, setStep] = useState(STEPS.WELCOME);
   const [contactType, setContactType] = useState("email");
@@ -30,12 +37,24 @@ export default function Onboarding() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Skip if already authenticated
   useEffect(() => {
     base44.auth.isAuthenticated().then((authed) => {
       if (authed) navigate("/", { replace: true });
     });
   }, [navigate]);
+
+  const deviceType = detectDevice();
+
+  const getCountry = () => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      if (tz.startsWith("Asia/Dubai") || tz.startsWith("Asia/Muscat")) return "AE";
+      if (tz.startsWith("Asia/Kolkata") || tz.startsWith("Asia/Calcutta")) return "IN";
+      if (tz.startsWith("America/")) return "US";
+      if (tz.startsWith("Europe/London")) return "GB";
+      return tz.split("/")[0] === "Asia" ? "AE" : (tz.split("/")[1] || "").substring(0, 2).toUpperCase() || "";
+    } catch { return ""; }
+  };
 
   const handleSendOTP = async (e) => {
     e.preventDefault();
@@ -44,31 +63,38 @@ export default function Onboarding() {
 
     try {
       if (contactType === "email") {
-        // ── Email: Full platform auth ────────────────────────────
+        // ── EMAIL: Platform auth sends real email OTP ───────────────
         const pwd = derivePassword(email);
         setPassword(pwd);
         setPlatformEmail(email);
 
-        await base44.auth.register({ email, password: pwd });
-        // Platform sends OTP to email — show OTP input
+        try {
+          await base44.auth.register({ email, password: pwd });
+        } catch (regErr) {
+          // May already be registered — platform still sends/resends OTP
+          if (regErr?.message?.includes?.("already exists")) {
+            try { await base44.auth.resendOtp(email); } catch {}
+          } else {
+            throw regErr;
+          }
+        }
         setStep(STEPS.OTP);
         toast({ title: "Verification Code Sent", description: "Check your email for the 6-digit code" });
       } else {
-        // ── Mobile: Custom OTP via SMS ───────────────────────────
-        const response = await base44.functions.invoke("generateLoginOTP", {
+        // ── MOBILE: Production SMS OTP ──────────────────────────────
+        const response = await base44.functions.invoke("sendOtp", {
           mobile,
           email: "",
           purpose: "REGISTRATION"
         });
         if (response.data?.success) {
           setOtpId(response.data.otp_id);
-          // Also generate platform credentials for later use
           const genEmail = generateEmailFromPhone(mobile);
           const pwd = derivePassword(genEmail);
           setPassword(pwd);
           setPlatformEmail(genEmail);
           setStep(STEPS.OTP);
-          toast({ title: "OTP Sent", description: "Check your phone for the verification code" });
+          toast({ title: "OTP Sent", description: response.data.sms_sent ? "Check your phone for the SMS code" : "OTP generated — check logs" });
         } else {
           setError(response.data?.message || "Failed to send OTP");
         }
@@ -87,52 +113,50 @@ export default function Onboarding() {
 
     try {
       if (contactType === "email") {
-        // ── Email: Verify platform OTP ───────────────────────────
+        // ── EMAIL: Platform OTP verification ────────────────────────
         const verifyResult = await base44.auth.verifyOtp({ email: platformEmail, otpCode: otp });
         await base44.auth.setToken(verifyResult.access_token);
 
-        // Complete onboarding profile
         await base44.functions.invoke("completeOnboarding", {
           email: platformEmail,
-          mobile: ""
+          mobile: "",
+          device_type: deviceType,
+          country: getCountry()
         });
 
         toast({ title: "Welcome!", description: "Your account is ready." });
         window.location.href = "/";
       } else {
-        // ── Mobile: Verify custom OTP, then register on platform ─
-        const verifyRes = await base44.functions.invoke("verifyOTP", {
+        // ── MOBILE: Custom OTP verification ─────────────────────────
+        const verifyRes = await base44.functions.invoke("verifyOtp", {
           otp_id: otpId,
           otp_code: otp
         });
         if (!verifyRes.data?.success) {
-          setError(verifyRes.data?.message || verifyRes.data?.error || "Invalid OTP");
+          setError(verifyRes.data?.message || "Invalid OTP code");
           setLoading(false);
           return;
         }
 
-        // Create platform account with generated email
+        // Register platform account with synthetic email
         try {
           await base44.auth.register({ email: platformEmail, password });
-        } catch (regErr) {
-          // User may already exist — try logging in directly
-        }
+        } catch {}
 
-        // Attempt platform login
+        // Login
         try {
           await base44.auth.loginViaEmailPassword(platformEmail, password);
-          // Success — real platform session
         } catch (loginErr) {
-          // If login fails (unverified), show error and suggest email
-          setError("Mobile login unavailable. Please use Email option instead.");
+          setError("Phone authentication requires email verification. Please use Email option.");
           setLoading(false);
           return;
         }
 
         await base44.functions.invoke("completeOnboarding", {
           email: platformEmail,
-          mobile: mobile,
-          otp_id: otpId
+          mobile,
+          device_type: deviceType,
+          country: getCountry()
         });
 
         toast({ title: "Welcome!", description: "Your account is ready." });
@@ -149,13 +173,14 @@ export default function Onboarding() {
     setLoading(true);
     try {
       if (contactType === "email") {
-        // Re-register to trigger new platform OTP
-        const pwd = derivePassword(platformEmail);
-        setPassword(pwd);
-        await base44.auth.register({ email: platformEmail, password: pwd });
+        try { await base44.auth.resendOtp(platformEmail); } catch {
+          const pwd = derivePassword(platformEmail);
+          setPassword(pwd);
+          await base44.auth.register({ email: platformEmail, password: pwd });
+        }
         toast({ title: "Code Resent", description: "Check your email" });
       } else {
-        const response = await base44.functions.invoke("generateLoginOTP", {
+        const response = await base44.functions.invoke("sendOtp", {
           mobile,
           email: "",
           purpose: "REGISTRATION"
@@ -174,7 +199,6 @@ export default function Onboarding() {
 
   const goToLogin = () => navigate("/otp-login");
 
-  // ── Step 0: Welcome ──
   if (step === STEPS.WELCOME) {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] px-5 text-center overflow-hidden"
@@ -185,7 +209,6 @@ export default function Onboarding() {
             style={{ background: "linear-gradient(145deg, rgba(212,175,55,0.22), rgba(212,175,55,0.06))", border: "1px solid rgba(212,175,55,0.25)" }}>
             <Sparkles className="w-8 h-8" style={{ color: "#D4AF37" }} />
           </div>
-
           <h1 className="font-amiri font-bold leading-tight mb-2"
             style={{ fontSize: "2rem", color: "#f5ead4", textShadow: "0 0 20px rgba(212,175,55,0.25)" }}>
             سرّ الحروف
@@ -194,21 +217,14 @@ export default function Onboarding() {
             style={{ color: "rgba(212,175,55,0.70)" }}>
             Sirr al-Huruf
           </p>
-
           <p className="font-inter text-sm mb-8 leading-relaxed"
             style={{ color: "rgba(255,255,255,0.55)" }}>
             Welcome to the occult encyclopedia of magick squares, planetary hours, and sacred letter sciences.
           </p>
-
-          <Button
-            onClick={() => setStep(STEPS.CONTACT)}
-            className="w-full h-12 font-medium btn-gold"
-            style={{ fontSize: "0.95rem" }}
-          >
-            Get Started
-            <ArrowRight className="w-4 h-4 ml-1" />
+          <Button onClick={() => setStep(STEPS.CONTACT)}
+            className="w-full h-12 font-medium btn-gold" style={{ fontSize: "0.95rem" }}>
+            Get Started <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
-
           <p className="font-inter text-xs mt-6" style={{ color: "rgba(255,255,255,0.25)" }}>
             Already have an account?{" "}
             <button onClick={goToLogin} className="underline" style={{ color: "rgba(212,175,55,0.70)" }}>
@@ -220,7 +236,6 @@ export default function Onboarding() {
     );
   }
 
-  // ── Steps 1 & 2: Contact + OTP ──
   return (
     <div className="relative flex flex-col items-center justify-center min-h-[100dvh] px-5 overflow-hidden"
       style={{ background: "linear-gradient(180deg, #020710 0%, #050d1a 45%, #08101f 100%)" }}>

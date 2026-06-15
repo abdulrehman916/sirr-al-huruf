@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
-  Users, CreditCard, Globe, Shield, Search, Plus, Trash2,
+  Users, CreditCard, Globe, Shield, Search, Plus, Trash2, Smartphone,
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
   Phone, Mail, Calendar, Crown, RefreshCw, Star, Zap,
   DollarSign, TrendingUp, Edit2, Save, AlertCircle, Loader2,
@@ -313,9 +313,17 @@ function UsersTab({ users, profiles }) {
                 {(u.profile?.full_name || u.full_name || u.email || "?")[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-inter font-bold text-white text-sm truncate">
-                  {u.profile?.full_name || u.full_name || "Unnamed"}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-inter font-bold text-white text-sm truncate">
+                    {u.profile?.full_name || u.full_name || "Unnamed"}
+                  </p>
+                  {u.profile?.lifetime_access && (
+                    <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                      style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.30)" }}>
+                      <Crown className="w-3 h-3 inline" />
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
                   <span className="text-xs text-white/40 flex items-center gap-1">
                     <Mail className="w-3 h-3" />{u.email || "—"}
@@ -329,6 +337,27 @@ function UsersTab({ users, profiles }) {
                     <Clock className="w-3 h-3" />
                     {u.profile?.last_login ? fmt(u.profile.last_login) : "—"}
                   </span>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                  {u.profile?.device_type && u.profile.device_type !== "unknown" && (
+                    <span className="text-[10px] text-white/25 capitalize flex items-center gap-1">
+                      <Smartphone className="w-2.5 h-2.5" />{u.profile.device_type}
+                    </span>
+                  )}
+                  {u.profile?.country && (
+                    <span className="text-[10px] text-white/25 flex items-center gap-1">
+                      <Globe className="w-2.5 h-2.5" />{u.profile.country}
+                    </span>
+                  )}
+                  <span className="text-[10px] text-white/25 flex items-center gap-1">
+                    <Calendar className="w-2.5 h-2.5" />
+                    {u.profile?.registration_date ? fmt(u.profile.registration_date) : "—"}
+                  </span>
+                  {u.profile?.subscription_plan && u.profile.subscription_plan !== "NONE" && (
+                    <span className="text-[10px] text-white/25 flex items-center gap-1">
+                      <CreditCard className="w-2.5 h-2.5" />{(u.profile.subscription_plan || "").replace(/_/g, " ")}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
