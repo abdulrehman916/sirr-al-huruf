@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X } from "lucide-react";
+import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -19,11 +19,18 @@ const G = {
 
 const SIDEBAR_ITEMS = [
   {
-    path: "/admin/permissions",
+    path: "/admin/user-management",
     label: "User Access Manager",
     arabic: "إدارة المستخدمين",
     icon: Users,
-    description: "Grant & manage user permissions"
+    description: "Grant manual access & manage subscriptions"
+  },
+  {
+    path: "/admin/access-logs",
+    label: "Access Logs",
+    arabic: "سجلات الوصول",
+    icon: Activity,
+    description: "Monitor all page access attempts"
   },
   {
     path: "/admin/page-permissions",
