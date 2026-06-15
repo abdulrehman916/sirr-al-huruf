@@ -105,6 +105,9 @@ export const ROUTE_PERMISSION_MAP = {
   '/manuscript-search': { code: PERMISSION_CODES.MANUSCRIPT_SEARCH, name: 'Manuscript Search', requiresPermission: true },
   '/manazil-quality-audit': { code: PERMISSION_CODES.MANAZIL_QUALITY_AUDIT, name: 'Manazil Quality Audit', requiresPermission: true },
   '/manuscript-completion-report': { code: PERMISSION_CODES.MANUSCRIPT_COMPLETION_REPORT, name: 'Manuscript Completion Report', requiresPermission: true },
+  
+  // Test Page
+  '/access-test-private': { code: 'ACCESS_TEST_PRIVATE', name: 'Access Test Private', requiresPermission: true },
 };
 
 /**
