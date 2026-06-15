@@ -1,13 +1,14 @@
-import { memo, useMemo, useRef, useEffect, useState } from "react";
+import { memo, useMemo, useRef, useEffect, useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, Shield } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
-import AccountModal from "./AccountModal";
 import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
 import useTranslation from "@/i18n/useTranslation";
+
+const AccountModal = lazy(() => import("./AccountModal"));
 
 // ── Permanent brand navigation terms — Arabic + English, never translated ──
 const TAB_KEYS = [
@@ -166,6 +167,11 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
 // Pages where we show a back button instead of breadcrumb nav
 const CHILD_PAGES = ["/plants/"];
 
+// Simple user cache — avoid re-fetching auth on every page navigation
+let _userCache = null;
+let _userCacheTime = 0;
+const USER_CACHE_TTL = 60000; // 1 minute
+
 export default function PageLayout({ children }) {
   const location = useLocation();
   const navigate  = useNavigate();
@@ -176,7 +182,16 @@ export default function PageLayout({ children }) {
   useScrollPersist();
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    const now = Date.now();
+    if (_userCache && (now - _userCacheTime) < USER_CACHE_TTL) {
+      setUser(_userCache);
+      return;
+    }
+    base44.auth.me().then((u) => {
+      _userCache = u;
+      _userCacheTime = now;
+      setUser(u);
+    }).catch(() => {});
   }, []);
 
 
@@ -426,9 +441,13 @@ export default function PageLayout({ children }) {
 
     </div>
 
-    {/* Account modal */}
+    {/* Account modal — lazy loaded */}
     <AnimatePresence>
-      {showAccount && <AccountModal user={user} onClose={() => setShowAccount(false)} />}
+      {showAccount && (
+        <Suspense fallback={null}>
+          <AccountModal user={user} onClose={() => setShowAccount(false)} />
+        </Suspense>
+      )}
     </AnimatePresence>
     </>
   );

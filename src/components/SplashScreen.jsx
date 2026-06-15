@@ -112,7 +112,12 @@ function SacredGeometry({ size = 320 }) {
 
 // ── Main component ────────────────────────────────────────────────
 export default function SplashScreen({ onComplete }) {
-  const [phase, setPhase] = useState("in");  // in → hold → out
+  const [phase, setPhase] = useState(
+    // Skip splash on return visits within same session — instant load
+    typeof window !== "undefined" && window.sessionStorage?.getItem("_splash_shown")
+      ? "skip"
+      : "in"
+  );
   const wheelSize = 280;
   // Reduce animation count on low-end / mobile devices
   const isLowPower = useRef(
@@ -123,6 +128,12 @@ export default function SplashScreen({ onComplete }) {
   const visibleRings     = isLowPower ? RINGS.slice(0, 2) : RINGS;
 
   useEffect(() => {
+    if (phase === "skip") {
+      onComplete();
+      return;
+    }
+    // Mark shown so subsequent visits skip the splash
+    try { window.sessionStorage?.setItem("_splash_shown", "1"); } catch {}
     // Hold for 2.2 s then exit
     const hold = setTimeout(() => setPhase("out"), 2200);
     return () => clearTimeout(hold);

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap&font-display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -185,6 +183,12 @@
   /* Prevent horizontal overflow globally — only on media, not layout containers */
   img, svg, video { max-width: 100%; height: auto; }
 
+  /* ── Performance: skip rendering off-screen content sections ── */
+  .content-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+  }
+
   /* Arabic text: premium typography with optimal rendering */
   .font-amiri {
     overflow-wrap: break-word;
@@ -271,6 +275,21 @@
   /* Landscape mode: adjust safe areas */
   @media (orientation: landscape) and (max-height: 500px) {
     body { font-size: 14px; }
+  }
+
+  /* ── Respect user motion preference ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ── Low-end device optimizations ── */
+  @media (max-width: 480px) {
+    .atm-anim { animation-duration: 2s !important; }
+    .content-section { contain-intrinsic-size: auto 300px; }
   }
 
   /* Tablet: wider max content width */
