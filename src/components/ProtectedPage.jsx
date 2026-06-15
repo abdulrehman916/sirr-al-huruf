@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { ShieldAlert, Lock, Clock, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { PERMISSION_CODES, ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
+import PageSubscriptionModal from "@/components/PageSubscriptionModal";
+import { useToast } from "@/components/ui/use-toast";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -23,10 +25,13 @@ const G = {
  * @param {React.ReactNode} children - The page component to render if access granted
  */
 export default function ProtectedPage({ routePath, children, requiresPermission = true, requiresSubscription = false }) {
+  const { toast } = useToast();
   const [accessStatus, setAccessStatus] = useState("checking");
   const [accessDetails, setAccessDetails] = useState(null);
   const [error, setError] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [requiresPageSubscription, setRequiresPageSubscription] = useState(false);
 
   useEffect(() => {
     checkAccess();
@@ -78,29 +83,32 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
         return;
       }
 
-      // Check subscription status if required
-      if (requiresSubscription) {
-        try {
-          const subResponse = await base44.functions.invoke("checkSubscriptionStatus", {});
-          const subData = subResponse.data;
-          
-          if (!subData.has_active_subscription) {
-            if (subData.status === 'EXPIRED') {
-              window.location.href = '/subscription-expired';
-              return;
-            } else if (subData.status === 'NO_SUBSCRIPTION') {
-              window.location.href = '/subscription-expired';
-              return;
-            }
-          }
-          
-          setSubscriptionStatus(subData);
-        } catch (subErr) {
-          console.error("Subscription check failed:", subErr);
+      // Check page-specific subscription
+      try {
+        const pageSubResponse = await base44.functions.invoke("checkPageSubscription", {
+          page_path: routePath
+        });
+        
+        if (pageSubResponse.data.has_access) {
+          setAccessStatus("granted");
+          setAccessDetails({
+            expiry_date: pageSubResponse.data.expiry_date,
+            subscription_id: pageSubResponse.data.subscription.subscription_id,
+            plan_name: pageSubResponse.data.plan_name
+          });
+          return;
+        } else {
+          // No subscription - show subscription modal
+          setRequiresPageSubscription(true);
+          setAccessStatus("subscription_required");
+          setShowSubscriptionModal(true);
+          return;
         }
+      } catch (subErr) {
+        console.error("Page subscription check failed:", subErr);
       }
 
-      // Check access using backend function
+      // Check access using backend function (fallback for permission-based access)
       const response = await base44.functions.invoke("checkPageAccess", {
         page_path: routePath,
         permission_code: permissionConfig.code,
@@ -158,6 +166,20 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
   // Render page if access granted
   if (accessStatus === "granted") {
     return children;
+  }
+
+  // Show subscription modal if required
+  if (accessStatus === "subscription_required" && requiresPageSubscription && showSubscriptionModal) {
+    return (
+      <PageSubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => {
+          setShowSubscriptionModal(false);
+          setAccessStatus("denied");
+        }}
+        pagePath={routePath}
+      />
+    );
   }
 
   // Render access denied page

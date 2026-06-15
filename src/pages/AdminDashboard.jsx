@@ -34,10 +34,17 @@ const SIDEBAR_ITEMS = [
   },
   {
     path: "/admin/subscriptions",
-    label: "Subscriptions",
-    arabic: "الاشتراكات",
+    label: "Global Subscriptions",
+    arabic: "الاشتراكات العامة",
     icon: CreditCard,
-    description: "Manage user subscriptions & access"
+    description: "Manage global subscription plans"
+  },
+  {
+    path: "/admin/page-subscriptions",
+    label: "Page Subscriptions",
+    arabic: "اشتراكات الصفحات",
+    icon: Shield,
+    description: "Manage page-specific subscriptions"
   }
 ];
 

@@ -10,6 +10,14 @@
       "type": "string",
       "description": "Base44 User ID (foreign key)"
     },
+    "page_path": {
+      "type": "string",
+      "description": "Page route this subscription grants access to e.g. /abjad, /hadim"
+    },
+    "page_name": {
+      "type": "string",
+      "description": "Human-readable page name"
+    },
     "plan_name": {
       "type": "string",
       "enum": [
@@ -63,6 +71,8 @@
   "required": [
     "subscription_id",
     "user_id",
+    "page_path",
+    "page_name",
     "plan_name",
     "start_date",
     "status",
