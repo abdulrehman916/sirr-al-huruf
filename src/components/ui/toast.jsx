@@ -60,7 +60,7 @@ const ToastAction = React.forwardRef(({ className, ...props }, ref) => (
 ));
 ToastAction.displayName = "ToastAction";
 
-const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
+const ToastClose = React.forwardRef(({ className, onClick, ...props }, ref) => (
   <button
     ref={ref}
     className={cn(
@@ -68,6 +68,9 @@ const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
       className
     )}
     toast-close=""
+    onClick={(e) => {
+      onClick?.(e);
+    }}
     {...props}
   >
     <X className="h-4 w-4" />
@@ -101,4 +104,4 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
-}; 
+};
