@@ -61,13 +61,6 @@ const SIDEBAR_ITEMS = [
     description: "Set custom prices per page"
   },
   {
-    path: "/admin/user-management",
-    label: "User Access Manager",
-    arabic: "إدارة صلاحيات المستخدمين",
-    icon: Users,
-    description: "Grant manual access & manage subscriptions"
-  },
-  {
     path: "/admin/subscriptions-management",
     label: "Subscriptions",
     arabic: "الاشتراكات",
@@ -90,7 +83,7 @@ export default function AdminDashboard() {
   const checkAdminAccess = async () => {
     try {
       const currentUser = await base44.auth.me();
-      if (!currentUser || currentUser.role !== 'admin') {
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'owner')) {
         setIsAdmin(false);
         toast({
           title: "Access Denied",

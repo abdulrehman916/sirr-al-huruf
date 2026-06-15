@@ -158,7 +158,7 @@ const AuthenticatedApp = () => {
             <Route path="/manazil-quality-audit" element={<ProtectedPage routePath="/manazil-quality-audit"><ManazilQualityAudit /></ProtectedPage>} />
             <Route path="/manuscript-completion-report" element={<ProtectedPage routePath="/manuscript-completion-report"><ManuscriptCompletionReport /></ProtectedPage>} />
             <Route path="/customer-service" element={<ProtectedPage routePath="/customer-service"><CustomerService /></ProtectedPage>} />
-            <Route path="/admin/dashboard" element={<ProtectedPage routePath="/admin/dashboard"><AdminDashboard /></ProtectedPage>} />
+            <Route path="/admin/dashboard" element={<ProtectedPage routePath="/admin/dashboard" requiresPermission={false} requiresSubscription={false}><AdminDashboard /></ProtectedPage>} />
             <Route path="/admin/test" element={<ProtectedPage routePath="/admin/test" requiresPermission={false}><AdminTest /></ProtectedPage>} />
             <Route path="/admin/support" element={<ProtectedPage routePath="/admin/support"><AdminSupport /></ProtectedPage>} />
             <Route path="/admin/permissions" element={<ProtectedPage routePath="/admin/permissions" requiresPermission={false}><AdminPermissions /></ProtectedPage>} />
@@ -171,8 +171,8 @@ const AuthenticatedApp = () => {
             <Route path="/subscription-payment/:pagePath" element={<ProtectedPage routePath="/subscription-payment/:pagePath"><RazorpayPayment /></ProtectedPage>} />
             <Route path="/subscription-pending" element={<ProtectedPage routePath="/subscription-pending"><SubscriptionPending /></ProtectedPage>} />
             <Route path="/admin/user-manager" element={<ProtectedPage routePath="/admin/user-manager"><AdminUserManager /></ProtectedPage>} />
-            <Route path="/admin/user-management" element={<ProtectedPage routePath="/admin/user-management" requiresPermission={false}><AdminUserManagement /></ProtectedPage>} />
-            <Route path="/admin/access-logs" element={<ProtectedPage routePath="/admin/access-logs" requiresPermission={false}><AdminAccessLogs /></ProtectedPage>} />
+            <Route path="/admin/user-management" element={<ProtectedPage routePath="/admin/user-management" requiresPermission={false} requiresSubscription={false}><AdminUserManagement /></ProtectedPage>} />
+            <Route path="/admin/access-logs" element={<ProtectedPage routePath="/admin/access-logs" requiresPermission={false} requiresSubscription={false}><AdminAccessLogs /></ProtectedPage>} />
             <Route path="/admin/subscriptions-management" element={<ProtectedPage routePath="/admin/subscriptions-management"><AdminSubscriptionsManagement /></ProtectedPage>} />
 
 
