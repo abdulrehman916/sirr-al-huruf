@@ -151,7 +151,6 @@
     min-height: 100%;
     overflow-y: visible;
     overflow-x: hidden;
-    max-width: 100vw;
     position: relative;
   }
 

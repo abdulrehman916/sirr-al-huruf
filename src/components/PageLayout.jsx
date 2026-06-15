@@ -192,10 +192,11 @@ export default function PageLayout({ children }) {
         overflow: "hidden",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
-        maxWidth: "100vw",
+        width: "100%",
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
       <AtmosphericBackground />
@@ -209,9 +210,8 @@ export default function PageLayout({ children }) {
           background: "rgba(2,6,16,0.98)",
           borderBottom: "1px solid rgba(212,175,55,0.13)",
           boxShadow: "0 1px 0 rgba(212,175,55,0.05), 0 4px 24px rgba(0,0,0,0.80)",
-          overflow: "hidden",
+          overflowX: "hidden",
           width: "100%",
-          maxWidth: "100vw",
         }}
       >
         <div
@@ -242,7 +242,7 @@ export default function PageLayout({ children }) {
         )}
 
         {/* Horizontal navigation — single native scroll layer, GPU-composited */}
-        <div className="px-2 py-2 flex items-center gap-2" style={{ width: "100%", overflow: "hidden", maxWidth: "100vw" }}>
+        <div className="px-2 py-2 flex items-center gap-2" style={{ width: "100%" }}>
           {/* Admin button - only visible for admin users */}
           {user?.role === 'admin' && (
             <button
@@ -271,7 +271,7 @@ export default function PageLayout({ children }) {
               flexShrink: 0,
               WebkitOverflowScrolling: "touch",
               scrollBehavior: "smooth",
-              overscrollBehaviorX: "contain",
+              overscrollBehaviorX: "none",
               overscrollBehaviorY: "none",
               touchAction: "pan-x",
               scrollSnapType: "x proximity",
@@ -306,6 +306,7 @@ export default function PageLayout({ children }) {
           overflowX: "hidden",
           overscrollBehaviorX: "none",
           overscrollBehaviorY: "none",
+          paddingBottom: 72,
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
           willChange: 'scroll-position',
