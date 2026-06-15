@@ -49,7 +49,7 @@ export default function NighttimePlanetaryHours() {
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border p-5 relative overflow-hidden"
+      className="rounded-2xl border p-5 relative overflow-x-hidden w-full"
       style={{
         background: "linear-gradient(145deg, rgba(10,22,56,0.99) 0%, rgba(5,12,36,0.99) 100%)",
         borderColor: G.borderHi,

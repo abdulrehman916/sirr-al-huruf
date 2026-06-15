@@ -37,7 +37,7 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
   const isSaad = planetRules?.nature?.includes("Sa'd");
 
   return (
-    <div className="rounded-xl border p-5"
+    <div className="rounded-xl border p-5 w-full max-w-full overflow-x-hidden"
       style={{
         background: G.bg,
         borderColor: G.border,
@@ -111,9 +111,9 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
+            className="overflow-x-hidden w-full"
           >
-            <div className="pt-4 space-y-4">
+            <div className="pt-4 space-y-4 w-full max-w-full">
               {/* Planet Friendships */}
               <PlanetFriendshipsSection friendships={friendships} isMalayalam={isMalayalam} />
               
@@ -316,8 +316,8 @@ function ManuscriptSourceSection({ planetRules, isMalayalam }) {
       borderColor: planetRules?.manuscript_verified ? "rgba(34,197,94,0.40)" : "rgba(251,191,36,0.40)"
     }}>
       <div className="flex items-start gap-3">
-        <Book className="w-5 h-5 mt-0.5" style={{ color: G.text }} />
-        <div className="flex-1">
+        <Book className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: G.text }} />
+        <div className="flex-1 min-w-0">
           <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.text }}>
             {isMalayalam ? "ഹസ്തലിഖിത സ്രോതസ്സ്" : "Manuscript Source"}
           </p>
