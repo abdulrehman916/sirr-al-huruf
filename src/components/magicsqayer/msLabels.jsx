@@ -12,7 +12,7 @@ const L = {
     suffix:        "Suffix System",
     suffixNone:      "No Suffix",
     suffixArAngel:   "Arabic Angel (−41)",
-    suffixArJinn:    "Arabic Jinn (−319)",
+    suffixArJinn:    "Arabic Sher Jinn (−319)",
     suffixHebAngel:  "Hebrew Angel (−31)",
     suffixHebJinn:   "Hebrew Jinn (−329)",
     suffixSufliHadim:"Arabic Sufli Hadim (−316)",
