@@ -198,7 +198,9 @@ function SectionTitle({ label }) {
 /**
  * MsQasam — Dynamic Arabic QASAM with structured guardian sections.
  */
-export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, suffix = "ar-angel" }) {
+export { WEEKDAY_ULVI, WEEKDAY_SUFLI, ARABIC_WEEKDAYS };
+
+export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, suffix = "ar-angel", customWeekdayName, customWeekdayUlvi, customWeekdaySufli }) {
   const weekday = useMemo(() => getWeekdayInfo(), []);
 
   const hier = useMemo(() => {
@@ -237,9 +239,9 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
     const ulviStr = joinArabicNames(ulviNames);
     const sufliStr = joinArabicNames(sufliNames);
     const archangels = 'جبرائيل و إسرافيل و ميكائيل و عزرائيل';
-    const wkName = weekday.name;
-    const wkUlvi = weekday.ulvi;
-    const wkSufli = weekday.sufli;
+    const wkName = customWeekdayName || weekday.name;
+    const wkUlvi = customWeekdayUlvi || weekday.ulvi;
+    const wkSufli = customWeekdaySufli || weekday.sufli;
 
     return `بسم الله الرحمن الرحيم
 

@@ -13,7 +13,7 @@ import {
 // ── Display components ───────────────────────────────────────────
 import MsHierarchyTable from "../components/magicsqayer/MsHierarchyTable";
 import MsLetterTables   from "../components/magicsqayer/MsLetterTables";
-import MsQasam         from "../components/magicsqayer/MsQasam";
+import MsQasam, { WEEKDAY_ULVI, WEEKDAY_SUFLI, ARABIC_WEEKDAYS } from "../components/magicsqayer/MsQasam";
 import MsPlanetReport   from "../components/magicsqayer/MsPlanetReport";
 
 // ── Labels ───────────────────────────────────────────────────────
@@ -266,6 +266,12 @@ export default function MagicSqayerPage() {
   });
   const { lang, inputNum, suffix, gridSize, element, grid } = state;
 
+  // ── Custom weekday override (QASAM placeholder control) ──────────
+  const [customWeekdayMode, setCustomWeekdayMode] = useState(false);
+  const [customWeekdayName, setCustomWeekdayName] = useState('');
+  const [customWeekdayUlvi, setCustomWeekdayUlvi] = useState('');
+  const [customWeekdaySufli, setCustomWeekdaySufli] = useState('');
+
   // useTransition: heavy renders (grid/hierarchy) are interruptible — button feels instant
   const [, startTransition] = useTransition();
 
@@ -424,6 +430,78 @@ export default function MagicSqayerPage() {
           </div>
         </SectionCard>
 
+        {/* 2b. Custom Weekday Override — QASAM placeholder control */}
+        <SectionCard>
+          <div className="flex items-center justify-between">
+            <SLabel>Custom Weekday</SLabel>
+            <motion.button
+              whileTap={{ scale:0.96 }}
+              onClick={() => setCustomWeekdayMode(!customWeekdayMode)}
+              className="rounded-lg px-3 py-1 font-inter font-bold text-[9px] border"
+              style={{
+                background: customWeekdayMode ? "rgba(212,175,55,0.15)" : "rgba(4,12,34,0.97)",
+                borderColor: customWeekdayMode ? G.borderHi : "rgba(255,255,255,0.08)",
+                color: customWeekdayMode ? G.text : "rgba(255,255,255,0.35)",
+              }}>
+              {customWeekdayMode ? "ON" : "OFF"}
+            </motion.button>
+          </div>
+          {customWeekdayMode && (
+            <div className="space-y-2 mt-3">
+              <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:"rgba(255,255,255,0.20)" }}>
+                Day Name
+              </p>
+              <select
+                value={ARABIC_WEEKDAYS.indexOf(customWeekdayName)}
+                onChange={(e) => {
+                  const idx = parseInt(e.target.value);
+                  if (idx >= 0) {
+                    setCustomWeekdayName(ARABIC_WEEKDAYS[idx]);
+                    setCustomWeekdayUlvi(WEEKDAY_ULVI[idx]);
+                    setCustomWeekdaySufli(WEEKDAY_SUFLI[idx]);
+                  } else {
+                    setCustomWeekdayName('');
+                    setCustomWeekdayUlvi('');
+                    setCustomWeekdaySufli('');
+                  }
+                }}
+                className="w-full rounded-lg px-3 py-2 font-amiri text-sm focus:outline-none"
+                style={{ background:"rgba(4,12,34,0.97)", border:"1px solid rgba(255,255,255,0.10)", color:"rgba(245,235,210,0.80)" }}>
+                <option value={-1}>— Auto (Today) —</option>
+                {ARABIC_WEEKDAYS.map((name, idx) => (
+                  <option key={idx} value={idx}>{name}</option>
+                ))}
+              </select>
+              <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:"rgba(255,255,255,0.20)" }}>
+                Day Ulvi
+              </p>
+              <select
+                value={customWeekdayUlvi}
+                onChange={(e) => setCustomWeekdayUlvi(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 font-amiri text-sm focus:outline-none"
+                style={{ background:"rgba(4,12,34,0.97)", border:"1px solid rgba(255,255,255,0.10)", color:"rgba(245,235,210,0.80)" }}>
+                <option value="">— Auto —</option>
+                {Object.entries(WEEKDAY_ULVI).map(([idx, name]) => (
+                  <option key={idx} value={name}>{name} · {ARABIC_WEEKDAYS[parseInt(idx)]}</option>
+                ))}
+              </select>
+              <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color:"rgba(255,255,255,0.20)" }}>
+                Day Sufli
+              </p>
+              <select
+                value={customWeekdaySufli}
+                onChange={(e) => setCustomWeekdaySufli(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 font-amiri text-sm focus:outline-none"
+                style={{ background:"rgba(4,12,34,0.97)", border:"1px solid rgba(255,255,255,0.10)", color:"rgba(255,255,255,0.80)" }}>
+                <option value="">— Auto —</option>
+                {Object.entries(WEEKDAY_SUFLI).map(([idx, name]) => (
+                  <option key={idx} value={name}>{name} · {ARABIC_WEEKDAYS[parseInt(idx)]}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </SectionCard>
+
         {/* 3. Grid Size (3–16) */}
         <SectionCard>
           <SLabel>{L.gridSize}</SLabel>
@@ -543,6 +621,9 @@ export default function MagicSqayerPage() {
           gridSize={gridSize}
           grid={grid}
           suffix={suffix}
+          customWeekdayName={customWeekdayMode ? customWeekdayName : undefined}
+          customWeekdayUlvi={customWeekdayMode ? customWeekdayUlvi : undefined}
+          customWeekdaySufli={customWeekdayMode ? customWeekdaySufli : undefined}
         />
 
       </div>
