@@ -538,7 +538,11 @@ export default function MagicSqayerPage() {
         <MsLetterTables mc={squareMC} L={L} />
 
         {/* QASAM */}
-        <MsQasam />
+        <MsQasam
+          mc={squareMC}
+          gridSize={gridSize}
+          grid={grid}
+        />
 
       </div>
     </PageLayout>
