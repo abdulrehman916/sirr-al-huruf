@@ -293,18 +293,20 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
         <div className="mt-3">
           <p className="font-amiri text-center" dir="rtl"
             style={{
-              color: "rgba(245,235,210,0.88)",
+              color: "rgba(245,235,210,0.92)",
               whiteSpace: "pre-wrap",
-              textShadow: "0 0 12px rgba(212,175,55,0.12)",
-              fontFamily: '"Amiri Quran", "Amiri", "Noto Naskh Arabic", serif',
-              fontSize: "1.65em",
-              lineHeight: 3.8,
-              letterSpacing: "0.04em",
-              wordSpacing: "0.18em",
-              fontWeight: 800,
+              textShadow: "0 0 10px rgba(212,175,55,0.10)",
+              fontFamily: '"Scheherazade New", "Amiri", "Noto Naskh Arabic", serif',
+              fontSize: "1.45rem",
+              lineHeight: 4.2,
+              letterSpacing: "0.06em",
+              wordSpacing: "0.28em",
+              fontWeight: 400,
               textRendering: "optimizeLegibility",
               WebkitFontSmoothing: "antialiased",
               MozOsxFontSmoothing: "grayscale",
+              fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
+              unicodeBidi: "bidi-override",
             }}>
             {qasamText}
           </p>
