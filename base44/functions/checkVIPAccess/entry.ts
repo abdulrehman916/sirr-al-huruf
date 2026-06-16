@@ -12,21 +12,39 @@ Deno.serve(async (req) => {
     const profiles = await base44.asServiceRole.entities.UserAccessProfile.filter({ user_id: user.id });
     const profile = profiles[0];
 
-    const identifiers = [];
-    if (user.email) identifiers.push(user.email.toLowerCase().trim());
-    if (profile?.mobile) identifiers.push(profile.mobile.trim());
-    if (profile?.email) identifiers.push(profile.email.toLowerCase().trim());
+    // Collect user's email identifiers (normalised to lowercase)
+    const emailIdentifiers = [];
+    if (user.email) emailIdentifiers.push(user.email.toLowerCase().trim());
+    if (profile?.email) emailIdentifiers.push(profile.email.toLowerCase().trim());
 
-    if (identifiers.length === 0) return Response.json({ is_vip: false });
+    // Collect user's phone identifiers (preserve original formatting for phone matching)
+    const phoneIdentifiers = [];
+    if (profile?.mobile) phoneIdentifiers.push(profile.mobile.trim());
+
+    if (emailIdentifiers.length === 0 && phoneIdentifiers.length === 0) {
+      return Response.json({ is_vip: false });
+    }
 
     // Load all active VIP entries
     const vipEntries = await base44.asServiceRole.entities.VIPAccess.filter({ is_active: true });
 
     for (const vip of vipEntries) {
       const vipId = vip.identifier?.trim();
-      const matches = identifiers.some(id =>
-        id === vipId?.toLowerCase() || id === vipId
-      );
+      if (!vipId) continue;
+
+      // Match based on identifier_type: EMAIL → compare against email identifiers,
+      // PHONE → compare against phone identifiers.
+      // Falls back to checking all identifiers for legacy entries without a type.
+      let matches = false;
+      if (vip.identifier_type === 'EMAIL') {
+        matches = emailIdentifiers.some(id => id === vipId.toLowerCase());
+      } else if (vip.identifier_type === 'PHONE') {
+        matches = phoneIdentifiers.some(id => id === vipId);
+      } else {
+        // Legacy / unknown type — try both sets (original behaviour)
+        const all = [...emailIdentifiers, ...phoneIdentifiers];
+        matches = all.some(id => id === vipId.toLowerCase() || id === vipId);
+      }
       if (!matches) continue;
 
       // VIP entry matches this user
