@@ -119,7 +119,9 @@ export function getContentPages() {
 // New content pages register with default pageType='content' and appear automatically.
 
 export function getVisibleContentPages() {
-  return getContentPages().filter(p => p.pageType !== 'system');
+  // Child-tab entries (isChild:true) share the parent route — exclude them so
+  // every visibility toggle maps to exactly one real route.
+  return getContentPages().filter(p => p.pageType !== 'system' && !p.isChild);
 }
 
 // ── Pre-register existing pages ────────────────────────────────────────────────
