@@ -132,18 +132,18 @@ const WEEKDAY_ULVI = {
   2: 'سمسمائيل',   // Tuesday — Mars
   3: 'ميخائيل',    // Wednesday — Mercury
   4: 'صرفيائيل',   // Thursday — Jupiter
-  5: 'عنيائيل',    // Friday — Venus
+  5: 'عينائيل',    // Friday — Venus
   6: 'كسفيائيل',   // Saturday — Saturn
 };
 
 const WEEKDAY_SUFLI = {
-  0: 'روقيائش',    // Sunday
-  1: 'جبرائش',     // Monday
-  2: 'سمسمائش',    // Tuesday
-  3: 'ميخائش',     // Wednesday
-  4: 'صرفيائش',    // Thursday
-  5: 'عنيائش',     // Friday
-  6: 'كسفيائش',    // Saturday
+  0: 'مذهب',       // Sunday — Mezheb
+  1: 'أبيض',       // Monday — Ebyad
+  2: 'أحمر',       // Tuesday — Ahmer
+  3: 'بركان',      // Wednesday — Bürkan
+  4: 'شمهورش',     // Thursday — Şemhureş
+  5: 'زوبعة',      // Friday — Zubea
+  6: 'ميمون',      // Saturday — Meymun
 };
 
 function getWeekdayInfo() {
@@ -224,6 +224,8 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
     return generateGuardianName(hier.adjuster, suffix);
   }, [hier, suffix]);
 
+  // Ulvi names for QASAM guardian position — all 8 hierarchy rows (−41 angel), fixed per vefk
+  const ulviNames = useMemo(() => hierValues.map(v => generateUlviNameSuffixed(v, suffix)), [hierValues, suffix]);
   // Sufli names for QASAM invocation — all 8 hierarchy rows, suffix-dispatched
   const sufliNames = useMemo(() => hierValues.map(v => generateSufliNameSuffixed(v, suffix)), [hierValues, suffix]);
 
@@ -232,9 +234,9 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
 
     const purpose = userPurpose || '...';
     const esmaulAvanStr = joinArabicNames(esmaulAvanNames);
+    const ulviStr = joinArabicNames(ulviNames);
     const sufliStr = joinArabicNames(sufliNames);
     const archangels = 'جبرائيل و إسرافيل و ميكائيل و عزرائيل';
-    const guardian = mainGuardian || '...';
     const wkName = weekday.name;
     const wkUlvi = weekday.ulvi;
     const wkSufli = weekday.sufli;
@@ -243,8 +245,8 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
 
 عزيمة من الله ورسوله سليمان بن داود عليهما السلام. إلى ملوك الجن والشياطين والمردة والعفاريت جنود إبليس أجمعين. أقسمت عليكم أيتها الأرواح الروحانية والأعوان الأرضية أن تجيبوا دعوتي وتحضروا مقامي وتشموا دخاني وتقضوا حوائجي وهي ${purpose}. بعزة برهتيهين برهتيهين. كريرين كريرين. تطلحين تطلحين. طورانين طورانين. مزجلين مزجلين. بزجلين بزجلين. تركابين تركابين. برهشين برهشين. غلمشين غلمشين. حطورين حطورين. كالنهودين كالنهودين. برشانين برشانين. كزهيرين كزهيرين. نموشلحين نموشلحين. برهايولين برهايولين. بشكيلاهين بشكيلاهين. كزمجين كزمجين. أنغلاليتين أنغلاليتين. كبراتين كبراتين. غاياهين غاياهين. كيدهولين كيدهولين. شمهاهيرين شمهاهيرين. شمهاهيرين شمهاهيرين. شمهاهيرين شمهاهيرين.
 
-بكهتهونهين بكهتهونهين. بشارشين بشارشين. طنيشين طنيشين. شمهبروهين شمهبروهين. اللهم بحق كهكهيجين يغتشين بلط سغ شغويلين. أمولين جلدين مهمن هلمجين ورودهين مهفياجين بعزتك إلا أخذت سمعهم وأبصارهم سبحان من ليس كمثله شيء وهو السميع البصير وبحق ${esmaulAvanStr} أجب أيها الملوك والأعوان بحق هذه الأسماء عليكم وطاعتها لديكم وبحق من قال للسماوات والأرض ائتيا طوعاً أو كرهاً قالتا أتينا طائعين لله رب العالمين. أجب واسمع وأطع ولا تكن من الذين قالوا سمعنا وأطعنا وهم لا يسمعون. أجب يا ${archangels} عليه السلام وأنت يا أملاك الموكلين بهذا الوفق ${guardian}. أقسمت عليكم بالملك العظيم منزل الوحي على الرسول من مرادقات العظمة إلى اللوح المحفوظ. إلا ما أجبتم عزيمتي هذه واحضرتم خادمي هذا اليوم الموكلين بيوم ${wkName} ${wkUlvi} وخادمه ${wkSufli} وخدام هذا الوفق ${sufliStr} بحق ما فيها من سر الأسرار ونور الأنوار. هيا هيا. الواحا الواحا. العجل العجل. الساعة الساعة.`;
-  }, [mc, userPurpose, weekday, mainGuardian, sufliNames, esmaulAvanNames]);
+بكهتهونهين بكهتهونهين. بشارشين بشارشين. طنيشين طنيشين. شمهبروهين شمهبروهين. اللهم بحق كهكهيجين يغتشين بلط سغ شغويلين. أمولين جلدين مهمن هلمجين ورودهين مهفياجين بعزتك إلا أخذت سمعهم وأبصارهم سبحان من ليس كمثله شيء وهو السميع البصير وبحق ${esmaulAvanStr} أجب أيها الملوك والأعوان بحق هذه الأسماء عليكم وطاعتها لديكم وبحق من قال للسماوات والأرض ائتيا طوعاً أو كرهاً قالتا أتينا طائعين لله رب العالمين. أجب واسمع وأطع ولا تكن من الذين قالوا سمعنا وأطعنا وهم لا يسمعون. أجب يا ${archangels} عليه السلام وأنت يا أملاك الموكلين بهذا الوفق ${ulviStr}. أقسمت عليكم بالملك العظيم منزل الوحي على الرسول من مرادقات العظمة إلى اللوح المحفوظ. إلا ما أجبتم عزيمتي هذه واحضرتم خادمي هذا اليوم الموكلين بيوم ${wkName} ${wkUlvi} وخادمه ${wkSufli} وخدام هذا الوفق ${sufliStr} بحق ما فيها من سر الأسرار ونور الأنوار. هيا هيا. الواحا الواحا. العجل العجل. الساعة الساعة.`;
+  }, [mc, userPurpose, weekday, ulviNames, sufliNames, esmaulAvanNames]);
 
   const malayalamText = useMemo(() => {
     if (!mc) return null;
