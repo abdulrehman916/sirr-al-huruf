@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { buildHierarchy } from "./msEngine";
+import { buildHierarchy, numToArabic } from "./msEngine";
 import { buildAngelName, buildSufliHadimName } from "./msHarakat";
 
 const G = {
@@ -118,10 +118,11 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName })
     return buildHierarchy(mc, gridSize);
   }, [mc, gridSize]);
 
-  // Esmaul Avan — one angel name per grid cell (N² names from cell values)
+  // Esmaul Avan — per source: convert cell value to Arabic letters + append طاطيل
+  // N² names: 3×3=9, 4×4=16, etc.
   const esmaulAvanNames = useMemo(() => {
     if (!grid || !grid.grid) return [];
-    return grid.grid.flat().map(v => generateUlviName(v));
+    return grid.grid.flat().map(v => numToArabic(v) + 'طاطيل');
   }, [grid]);
 
   // Ulvi Hadim — one angel name per hierarchy value (8 names)
