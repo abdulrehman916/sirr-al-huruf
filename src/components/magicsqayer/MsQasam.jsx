@@ -94,9 +94,6 @@ function getWeekdayInfo() {
   };
 }
 
-/**
- * Join Arabic names with "و" separator (Arabic "and")
- */
 function joinArabicNames(names) {
   if (!names || names.length === 0) return "";
   if (names.length === 1) return names[0];
@@ -108,11 +105,12 @@ function joinArabicNames(names) {
  *
  * Props:
  *   mc          — magic constant (rawNum)
- *   gridSize    — selected grid size  
- *   userPurpose — optional purpose string (replaces placeholder 17)
- *   targetName  — optional target person name (replaces placeholder 26)
+ *   gridSize    — selected grid size
+ *   grid        — { grid: number[][], usurper, incompatible? } from generateSquare
+ *   userPurpose — optional purpose string
+ *   targetName  — optional target person name
  */
-export default function MsQasam({ mc, gridSize, userPurpose, targetName }) {
+export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName }) {
   const weekday = useMemo(() => getWeekdayInfo(), []);
 
   const hier = useMemo(() => {
@@ -120,16 +118,24 @@ export default function MsQasam({ mc, gridSize, userPurpose, targetName }) {
     return buildHierarchy(mc, gridSize);
   }, [mc, gridSize]);
 
-  const hierValues = hier ? [
-    hier.usurper, hier.guide, hier.mystery, hier.adjuster,
-    hier.leader, hier.regulator, hier.genGov, hier.highOver,
-  ] : [];
+  // Esmaul Avan — one angel name per grid cell (N² names from cell values)
+  const esmaulAvanNames = useMemo(() => {
+    if (!grid || !grid.grid) return [];
+    return grid.grid.flat().map(v => generateUlviName(v));
+  }, [grid]);
+
+  // Ulvi Hadim — one angel name per hierarchy value (8 names)
+  const hierValues = useMemo(() => {
+    if (!hier) return [];
+    return [hier.usurper, hier.guide, hier.mystery, hier.adjuster,
+            hier.leader, hier.regulator, hier.genGov, hier.highOver];
+  }, [hier]);
 
   const ulviNames = useMemo(() => hierValues.map(v => generateUlviName(v)), [hierValues]);
   const sufliNames = useMemo(() => hierValues.map(v => generateSufliHadimName(v)), [hierValues]);
 
   const qasamText = useMemo(() => {
-    if (!mc || !gridSize || !hier) return null;
+    if (!mc) return null;
 
     const purpose = userPurpose || '...';
     const target = targetName || '...';
@@ -140,8 +146,8 @@ export default function MsQasam({ mc, gridSize, userPurpose, targetName }) {
     const ulviStr = joinArabicNames(ulviNames);
     const sufliStr = joinArabicNames(sufliNames);
 
-    // Esmaul Avan — generated from hierarchy values (angel names)
-    const esmaulAvanStr = joinArabicNames(ulviNames);
+    // Esmaul Avan — all N² cell-based names
+    const esmaulAvanStr = joinArabicNames(esmaulAvanNames);
 
     // Four surrounding archangels
     const archangels = 'جبرائيل و إسرافيل و ميكائيل و عزرائيل';
@@ -151,10 +157,27 @@ export default function MsQasam({ mc, gridSize, userPurpose, targetName }) {
 عزيمة من الله ورسوله سليمان بن داود عليهما السلام. إلى ملوك الجن والشياطين والمردة والعفاريت جنود إبليس أجمعين. أقسمت عليكم أيتها الأرواح الروحانية والأعوان الأرضية أن تجيبوا دعوتي وتحضروا مقامي وتشموا دخاني وتقضوا حوائجي وهي ${purpose}. بعزة برهتيهين برهتيهين. كريرين كريرين. تطلحين تطلحين. طورانين طورانين. مزجلين مزجلين. بزجلين بزجلين. تركابين تركابين. برهشين برهشين. غلمشين غلمشين. حطورين حطورين. كالنهودين كالنهودين. برشانين برشانين. كزهيرين كزهيرين. نموشلحين نموشلحين. برهايولين برهايولين. بشكيلاهين بشكيلاهين. كزمجين كزمجين. أنغلاليتين أنغلاليتين. كبراتين كبراتين. غاياهين غاياهين. كيدهولين كيدهولين. شمهاهيرين شمهاهيرين. شمهاهيرين شمهاهيرين. شمهاهيرين شمهاهيرين.
 
 بكهتهونهين بكهتهونهين. بشارشين بشارشين. طنيشين طنيشين. شمهبروهين شمهبروهين. اللهم بحق كهكهيجين يغتشين بلط سغ شغويلين. أمولين جلدين مهمن هلمجين ورودهين مهفياجين بعزتك إلا أخذت سمعهم وأبصارهم سبحان من ليس كمثله شيء وهو السميع البصير وبحق ${esmaulAvanStr} أجب أيها الملوك والأعوان بحق هذه الأسماء عليكم وطاعتها لديكم وبحق من قال للسماوات والأرض ائتيا طوعاً أو كرهاً قالتا أتينا طائعين لله رب العالمين. أجب واسمع وأطع ولا تكن من الذين قالوا سمعنا وأطعنا وهم لا يسمعون. أجب يا ${archangels} عليه السلام وأنت يا أملاك الموكلين بهذا الوفق ${ulviStr}. أقسمت عليكم بالملك العظيم منزل الوحي على الرسول من مرادقات العظمة إلى اللوح المحفوظ. إلا ما أجبتم عزيمتي هذه واحضرتم خادمي هذا اليوم الموكلين بيوم ${wkName} ${wkUlvi} وخادمه ${wkSufli} وخدام هذا الوفق ${sufliStr} بحق ما فيها من سر الأسرار ونور الأنوار. هيا هيا. الواحا الواحا. العجل العجل. الساعة الساعة.`;
-  }, [mc, gridSize, hier, userPurpose, targetName, weekday, ulviNames, sufliNames]);
+  }, [mc, userPurpose, targetName, weekday, ulviNames, sufliNames, esmaulAvanNames]);
 
-  // Only render when we have the minimum required data
-  if (!qasamText) return null;
+  // Malayalam translation — structural, sacred names preserved in original form
+  const malayalamText = useMemo(() => {
+    if (!mc) return null;
+
+    const purpose = userPurpose || '...';
+    const target = targetName || '...';
+    const wkName = weekday.name;
+
+    return `بسم الله الرحمن الرحيم
+
+അല്ലാഹുവിന്റെ നാമത്തിൽ, പരമകാരുണികനും കരുണാനിധിയുമായവന്റെ.
+
+അല്ലാഹുവിൽ നിന്നും അവന്റെ ദൂതൻ സുലൈമാൻ ബിൻ ദാവൂദ് (അ) യിൽ നിന്നുമുള്ള ഒരു ശക്തമായ ആജ്ഞ. ജിന്നുകളുടെ രാജാക്കന്മാർക്കും, പിശാചുക്കൾക്കും, വിമതന്മാർക്കും, ഇഫ്രീത്തുകൾക്കും, ഇബ്ലീസിന്റെ എല്ലാ സൈന്യങ്ങൾക്കും. ഓ ആത്മീയ ശക്തികളേ, ഓ ഭൗമിക സഹായികളേ, നിങ്ങളോട് ഞാൻ ആണയിടുന്നു — എന്റെ വിളിക്ക് ഉത്തരം നൽകുക, എന്റെ സന്നിധിയിൽ ഹാജരാകുക, എന്റെ ധൂപം മണക്കുക, എന്റെ ആവശ്യം നിറവേറ്റുക, അതായത്: ${purpose}. ബിര്‍ഹത്തീഹീൻ, കരീരീൻ, തത്‌ലഹീൻ, ത്വൂറാനീൻ, മസ്‌ജലീൻ, ബിസ്‌ജലീൻ, തർകാബീൻ, ബർഹശീൻ, ഗുൽമശീൻ, ഹത്വൂരീൻ, കാല്‍നഹൂദീൻ, ബർശാനീൻ, കസ്‌ഹീരീൻ, നമൂശ്‌ലഹീൻ, ബർഹായൂലീൻ, ബശ്‌കീലാഹീൻ, കസ്‌മജീൻ, അൻഗലാലീത്തീൻ, കബ്റാത്തീൻ, ഗായാഹീൻ, കൈദഹൂലീൻ, ശംഹാഹീരീൻ (മൂന്ന് പ്രാവശ്യം) എന്നീ നാമങ്ങളുടെ പ്രതാപത്താൽ.
+
+ബകഹ്‌തഹൂനഹീൻ (രണ്ട് പ്രാവശ്യം), ബശാരിശീൻ, ത്വനീശീൻ, ശംഹബ്‌റൂഹീൻ. അല്ലാഹുവേ, കഹ്‌കഹീജീൻ, യഗ്‌തശീൻ, ബൽത്വ് സഗ് ശഗ്‌വീലീൻ എന്നിവയുടെ അവകാശത്താൽ... അവരുടെ കേൾവിയും കാഴ്ചകളും തട്ടിയെടുക്കുക. അവനു തുല്യമായി യാതൊന്നുമില്ലാത്തവൻ എത്ര പരിശുദ്ധൻ! അവൻ എല്ലാം കേൾക്കുന്നവനും കാണുന്നവനുമാണ്. ഈ വഫ്‌ഖിന്റെ പേരുകളുടെ (${esmaulAvanNames.length} നാമങ്ങൾ) അവകാശത്താൽ — ഓ രാജാക്കന്മാരേ, സഹായികളേ, ഉത്തരം നൽകുക. ആകാശത്തോടും ഭൂമിയോടും "സ്വമേധയാ അല്ലെങ്കിൽ നിർബന്ധിതമായി വരുവിൻ" എന്ന് പറഞ്ഞവന്റെ അവകാശത്താൽ. അവർ പറഞ്ഞു: "ഞങ്ങൾ അനുസരണയോടെ വന്നിരിക്കുന്നു." ജിബ്രീൽ, ഇസ്‌റാഫീൽ, മീകാഈൽ, അസ്‌റാഈൽ (അ) എന്നിവരേ, ഉത്തരം നൽകുക. ഈ വഫ്‌ഖിന്റെ ചുമതലയുള്ള മലക്കുകളേ, ഉത്തരം നൽകുക. മഹത്തായ രാജാവിന്റെ പേരിൽ ഞാൻ നിങ്ങളോട് ആണയിടുന്നു, വഹ്‌യ് ഇറക്കിയവന്റെ, സംരക്ഷിത ഫലകത്തിലേക്ക് മഹത്വത്തിന്റെ തിരശ്ശീലകളിൽ നിന്ന്... ${wkName} ദിവസത്തിന്റെ ചുമതലയുള്ള ഈ ദിവസത്തെ ഖാദിമിനെ ഹാജരാക്കുക. രഹസ്യങ്ങളുടെ രഹസ്യവും പ്രകാശങ്ങളുടെ പ്രകാശവും ഇതിൽ അടങ്ങിയിരിക്കുന്നതിന്റെ അവകാശത്താൽ. വേഗം വേഗം. ഉടൻ ഉടൻ. ഈ നിമിഷം ഈ നിമിഷം.`;
+  }, [mc, userPurpose, targetName, weekday, esmaulAvanNames]);
+
+  // Only render when we have the minimum required data (mc)
+  if (!mc) return null;
 
   return (
     <motion.div
@@ -207,27 +230,29 @@ export default function MsQasam({ mc, gridSize, userPurpose, targetName }) {
         </p>
       </div>
 
-      {/* Metadata summary — shows what values were used */}
-      <div
-        className="rounded-xl p-3 space-y-1.5"
-        style={{
-          background: "rgba(212,175,55,0.02)",
-          border: "1px solid rgba(212,175,55,0.08)",
-        }}
-      >
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-inter text-[9px]">
-          <span style={{ color: G.dim }}>العنوان / Purpose:</span>
-          <span style={{ color: "rgba(255,255,255,0.55)" }}>{userPurpose || '—'}</span>
-          <span style={{ color: G.dim }}>اليوم / Day:</span>
-          <span className="font-amiri" dir="rtl" style={{ color: "rgba(255,255,255,0.55)" }}>{weekday.name}</span>
-          <span style={{ color: G.dim }}>الهدف / Target:</span>
-          <span style={{ color: "rgba(255,255,255,0.55)" }}>{targetName || '—'}</span>
-          <span style={{ color: G.dim }}>أسماء الأولياء / Ulvi Hadim:</span>
-          <span className="font-amiri text-[8px]" dir="rtl" style={{ color: "rgba(79,227,255,0.70)" }}>{ulviNames.join(' · ')}</span>
-          <span style={{ color: G.dim }}>أسماء يوش / Sufli Hadim:</span>
-          <span className="font-amiri text-[8px]" dir="rtl" style={{ color: "rgba(52,211,153,0.70)" }}>{sufliNames.join(' · ')}</span>
+      {/* Malayalam Translation */}
+      {malayalamText && (
+        <div
+          className="rounded-xl p-5"
+          style={{
+            background: "rgba(212,175,55,0.02)",
+            border: "1px solid rgba(212,175,55,0.10)",
+          }}
+        >
+          <p className="font-inter text-[9px] uppercase tracking-widest text-center mb-3" style={{ color: "rgba(212,175,55,0.40)" }}>
+            മലയാളം · Malayalam Translation
+          </p>
+          <p
+            className="text-sm leading-[2.2] text-left"
+            style={{
+              color: "rgba(220,220,220,0.80)",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {malayalamText}
+          </p>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 }
