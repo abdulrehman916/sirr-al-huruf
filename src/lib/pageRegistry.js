@@ -25,12 +25,12 @@ const DEFAULT_CONFIG = { requiresPermission: true, adminOnly: false, name: null 
  * @param {boolean} adminOnly         - Admin-restricted page
  * @param {string}  pageType          - 'content' (user-facing, shown in visibility dashboards) or 'system' (internal, hidden). Default 'content'.
  */
-export function registerPage({ path, name, requiresPermission = true, adminOnly = false, pageType = 'content' }) {
+export function registerPage({ path, name, requiresPermission = true, adminOnly = false, pageType = 'content', children = [] }) {
   const code = pathToPermissionCode(path);
-  registry.set(path, { path, name, code, requiresPermission, adminOnly, pageType });
+  registry.set(path, { path, name, code, requiresPermission, adminOnly, pageType, children });
   // Also register path with trailing slash for consistency
   if (!path.endsWith('/') && !path.includes(':')) {
-    registry.set(path + '/', { path, name, code, requiresPermission, adminOnly, pageType });
+    registry.set(path + '/', { path, name, code, requiresPermission, adminOnly, pageType, children });
   }
 }
 
@@ -80,10 +80,29 @@ export function isPublicPage(pathname) {
  */
 export function getAllRegisteredPages() {
   const seen = new Set();
-  return Array.from(registry.entries())
-    .filter(([key, p]) => !p.path.includes(':') && !key.endsWith('/') && !seen.has(p.path) && seen.add(p.path))
-    .map(([, p]) => p)
-    .sort((a, b) => a.name?.localeCompare?.(b.name) || 0);
+  const pages = [];
+  for (const [key, p] of registry) {
+    if (key.endsWith('/')) continue;
+    if (seen.has(p.path)) continue;
+    seen.add(p.path);
+    pages.push(p);
+    // Expand child pages as separate entries — each shares the parent path
+    // so visibility toggles apply to the same route
+    if (p.children && p.children.length > 0) {
+      for (const child of p.children) {
+        pages.push({
+          path: p.path,
+          name: child.name,
+          code: pathToPermissionCode(p.path),
+          requiresPermission: child.requiresPermission ?? p.requiresPermission,
+          adminOnly: p.adminOnly,
+          pageType: p.pageType,
+          isChild: true,
+        });
+      }
+    }
+  }
+  return pages.sort((a, b) => (a.name || '').localeCompare(b.name || '') || 0);
 }
 
 /**
@@ -112,9 +131,16 @@ const PRE_REGISTERED = [
   { path: '/hadim',                name: 'Hadim',                   requiresPermission: true },
   { path: '/mizaan9',              name: 'Mizan 9',                 requiresPermission: true },
   { path: '/magic-sqayer',         name: 'Magic Sqayer',            requiresPermission: true },
-  { path: '/vefkin-yapilisi',      name: 'Vefkin Yapilisi',         requiresPermission: true },
+  { path: '/vefkin-yapilisi',      name: 'Vefkin Yapilisi',         requiresPermission: true, children: [
+    { name: 'Ana Vefk' },
+    { name: 'Tanzim Vefki' },
+  ]},
   { path: '/basthul-huroof-2',     name: 'Basthul Huroof',          requiresPermission: true },
-  { path: '/faal-hasrath',         name: 'Faal Hasrath',            requiresPermission: true },
+  { path: '/faal-hasrath',         name: 'Faal Hasrath',            requiresPermission: true, children: [
+    { name: 'Faal Ali' },
+    { name: 'Faal Luqman' },
+    { name: 'Faal Chob' },
+  ]},
   { path: '/plants',               name: 'Plants',                  requiresPermission: false },
   { path: '/plants/:id',           name: 'Plant Detail',            requiresPermission: true },
   { path: '/evil-jinn',            name: 'Evil Jinn',               requiresPermission: true },
