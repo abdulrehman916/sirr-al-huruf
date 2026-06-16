@@ -13,6 +13,7 @@ import {
 // ── Display components ───────────────────────────────────────────
 import MsHierarchyTable from "../components/magicsqayer/MsHierarchyTable";
 import MsLetterTables   from "../components/magicsqayer/MsLetterTables";
+import MsQasam         from "../components/magicsqayer/MsQasam";
 import MsPlanetReport   from "../components/magicsqayer/MsPlanetReport";
 
 // ── Labels ───────────────────────────────────────────────────────
@@ -535,6 +536,9 @@ export default function MagicSqayerPage() {
 
         {/* Letter Tables */}
         <MsLetterTables mc={squareMC} L={L} />
+
+        {/* QASAM */}
+        <MsQasam />
 
       </div>
     </PageLayout>
