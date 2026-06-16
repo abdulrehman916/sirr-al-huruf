@@ -122,6 +122,8 @@ function toast({ ...props }) {
   const dismiss = () =>
     dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
 
+  const autoDismissDelay = props.duration || 4000;
+
   dispatch({
     type: actionTypes.ADD_TOAST,
     toast: {
@@ -133,6 +135,9 @@ function toast({ ...props }) {
       },
     },
   });
+
+  // Auto-dismiss after the specified delay (default 4s)
+  setTimeout(() => dismiss(), autoDismissDelay);
 
   return {
     id,
