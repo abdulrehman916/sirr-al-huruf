@@ -542,6 +542,7 @@ export default function MagicSqayerPage() {
           mc={squareMC}
           gridSize={gridSize}
           grid={grid}
+          suffix={suffix}
         />
 
       </div>

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, numToArabic } from "./msEngine";
-import { buildAngelName, buildSufliHadimName } from "./msHarakat";
+import { buildAngelName, buildJinnName, buildSufliHadimName, buildHebrewAngelName, buildHebrewJinnName } from "./msHarakat";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -43,23 +43,84 @@ function extractArabicLetters(value) {
   return letters;
 }
 
-function generateUlviName(value) {
-  if (!value || value <= 0) return "...";
-  const adjusted = value < 41 ? value + 360 - 41 : value - 41;
-  if (adjusted <= 0) return "...";
-  const consonants = extractArabicLetters(adjusted);
-  const reversed = [...consonants].reverse();
-  return buildAngelName(reversed);
+// ── Hebrew positional digit-cycle letter extraction ─────────────
+const HE_UNITS    = { 1:'א',2:'ב',3:'ג',4:'ד',5:'ה',6:'ו',7:'ז',8:'ח',9:'ט' };
+const HE_TENS     = { 10:'י',20:'כ',30:'ל',40:'מ',50:'נ',60:'ס',70:'ע',80:'פ',90:'צ' };
+const HE_HUNDREDS = { 100:'ק',200:'ר',300:'ש',400:'ת',500:'ך',600:'ם',700:'ן',800:'ף',900:'ץ' };
+const HE_THOUSAND = 'א';
+
+function extractHebrewLetters(value) {
+  if (!value || value <= 0) return [];
+  const letters = [];
+  let n = Math.floor(value);
+  const digits = [];
+  while (n > 0) { digits.push(n % 10); n = Math.floor(n / 10); }
+  let slot = 0;
+  for (let i = 0; i < digits.length; i++) {
+    const d = digits[i];
+    if (slot === 0) {
+      if (d !== 0 && HE_UNITS[d]) letters.push(HE_UNITS[d]);
+      slot = 1;
+    } else if (slot === 1) {
+      if (d !== 0 && HE_TENS[d * 10]) letters.push(HE_TENS[d * 10]);
+      slot = 2;
+    } else if (slot === 2) {
+      if (d !== 0 && HE_HUNDREDS[d * 100]) letters.push(HE_HUNDREDS[d * 100]);
+      slot = 3;
+    } else {
+      letters.push(HE_THOUSAND);
+      if (d !== 0 && d !== 1 && HE_UNITS[d]) letters.push(HE_UNITS[d]);
+      slot = 1;
+    }
+  }
+  return letters;
 }
 
-function generateSufliHadimName(value) {
+// ── Suffix-dispatched name generators ────────────────────────────
+const ULV_SUFFIXES = { angelAr: 41, angelHeb: 31 };
+const SFL_SUFFIXES = { jinnAr: 319, jinnHeb: 329 };
+
+// Underflow rule: if value < suffix, add 360 first, then subtract
+function adjustedValue(value, suffix) {
+  if (!value || value <= 0) return 0;
+  return value < suffix ? value + 360 - suffix : value - suffix;
+}
+
+function generateUlviNameSuffixed(value, suffix) {
   if (!value || value <= 0) return "...";
-  const angelVal = value < 41 ? value + 360 - 41 : value - 41;
-  const adjusted = angelVal < 316 ? angelVal + 360 - 316 : angelVal - 316;
-  if (adjusted <= 0) return "...";
-  const consonants = extractArabicLetters(adjusted);
-  const reversed = [...consonants].reverse();
-  return buildSufliHadimName(reversed);
+  if (suffix === "heb-angel") {
+    const adj = adjustedValue(value, ULV_SUFFIXES.angelHeb);
+    if (adj <= 0) return "...";
+    const consonants = extractHebrewLetters(adj);
+    return buildHebrewAngelName([...consonants].reverse());
+  }
+  // Default: Arabic Angel (-41)
+  const adj = adjustedValue(value, ULV_SUFFIXES.angelAr);
+  if (adj <= 0) return "...";
+  const consonants = extractArabicLetters(adj);
+  return buildAngelName([...consonants].reverse());
+}
+
+function generateSufliNameSuffixed(value, suffix) {
+  if (!value || value <= 0) return "...";
+  if (suffix === "ar-jinn") {
+    const adj = adjustedValue(value, SFL_SUFFIXES.jinnAr);
+    if (adj <= 0) return "...";
+    const consonants = extractArabicLetters(adj);
+    return buildJinnName([...consonants].reverse());
+  }
+  if (suffix === "heb-jinn") {
+    const adj = adjustedValue(value, SFL_SUFFIXES.jinnHeb);
+    if (adj <= 0) return "...";
+    const consonants = extractHebrewLetters(adj);
+    return buildHebrewJinnName([...consonants].reverse());
+  }
+  // Default: Arabic Sufli Hadim (-316, applied after angel -41)
+  const angelVal = adjustedValue(value, ULV_SUFFIXES.angelAr);
+  const adj = angelVal < 316 ? angelVal + 360 - 316 : angelVal - 316;
+  if (adj <= 0) return "...";
+  const consonants = extractArabicLetters(adj);
+  return buildSufliHadimName([...consonants].reverse());
 }
 
 // ── Weekday computation ─────────────────────────────────────────
@@ -110,7 +171,7 @@ function joinArabicNames(names) {
  *   userPurpose — optional purpose string
  *   targetName  — optional target person name
  */
-export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName }) {
+export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, suffix = "ar-angel" }) {
   const weekday = useMemo(() => getWeekdayInfo(), []);
 
   const hier = useMemo(() => {
@@ -132,8 +193,8 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName })
             hier.leader, hier.regulator, hier.genGov, hier.highOver];
   }, [hier]);
 
-  const ulviNames = useMemo(() => hierValues.map(v => generateUlviName(v)), [hierValues]);
-  const sufliNames = useMemo(() => hierValues.map(v => generateSufliHadimName(v)), [hierValues]);
+  const ulviNames = useMemo(() => hierValues.map(v => generateUlviNameSuffixed(v, suffix)), [hierValues, suffix]);
+  const sufliNames = useMemo(() => hierValues.map(v => generateSufliNameSuffixed(v, suffix)), [hierValues, suffix]);
 
   const qasamText = useMemo(() => {
     if (!mc) return null;
