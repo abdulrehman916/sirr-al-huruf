@@ -26,6 +26,7 @@ export default function AdminUserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [accountTab, setAccountTab] = useState("active"); // "active" | "deactivated"
   const [grantModalUser, setGrantModalUser] = useState(null);
 
   useEffect(() => {
@@ -120,14 +121,22 @@ export default function AdminUserManagement() {
     }
   };
 
+  const INACTIVE_STATUSES = ["DEACTIVATED", "DISMISSED"];
+
   const filteredUsers = users.filter(u => {
+    // Account tab filter
+    const isInactive = INACTIVE_STATUSES.includes(u.account_status);
+    if (accountTab === "active" && isInactive) return false;
+    if (accountTab === "deactivated" && !isInactive) return false;
+
+    // Search filter
     const matchesSearch = searchQuery === "" || 
-      (searchType === "phone" || searchType === "all") && u.mobile?.includes(searchQuery) ||
-      (searchType === "email" || searchType === "all") && u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (searchType === "name" || searchType === "all") && u.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+      ((searchType === "phone" || searchType === "all") && u.mobile?.includes(searchQuery)) ||
+      ((searchType === "email" || searchType === "all") && u.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      ((searchType === "name" || searchType === "all") && u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()));
     if (!matchesSearch) return false;
-    
+
+    // Subscription status filter (only on active tab)
     if (statusFilter === "all") return true;
     const userSubs = getUserSubscriptions(u.user_id);
     if (statusFilter === "active") {
@@ -222,6 +231,22 @@ export default function AdminUserManagement() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Account Status Tabs */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setAccountTab("active")}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${accountTab === "active" ? "bg-green-500 text-white" : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"}`}
+          >
+            Active Users ({users.filter(u => !["DEACTIVATED","DISMISSED"].includes(u.account_status)).length})
+          </button>
+          <button
+            onClick={() => setAccountTab("deactivated")}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${accountTab === "deactivated" ? "bg-red-500 text-white" : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"}`}
+          >
+            Deactivated ({users.filter(u => ["DEACTIVATED","DISMISSED"].includes(u.account_status)).length})
+          </button>
         </div>
 
         {/* Search & Filters */}
