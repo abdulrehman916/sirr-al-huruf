@@ -2,7 +2,7 @@ import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { buildHierarchy, toArabicIndic, isCompatible } from "./msEngine";
 import { perfStore } from "./perfStore";
-import { buildAngelName, buildJinnName, buildHebrewAngelName, buildHebrewJinnName, transliterateHebrew } from "./msHarakat";
+import { buildAngelName, buildJinnName, buildHebrewAngelName, buildHebrewJinnName, buildSufliHadimName, transliterateHebrew } from "./msHarakat";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -18,6 +18,7 @@ const SUFFIXES = {
   'ar-jinn':   319,  // Arabic: طيش
   'heb-angel': 31,   // Hebrew: אל
   'heb-jinn':  329,  // Hebrew: טכש
+  'ar-sufli-hadim': 316, // Arabic Sufli Hadim: يوش (applied after angel -41)
 };
 
 // ── Arabic positional digit-cycle letter mappings ──
@@ -74,12 +75,18 @@ function extractLettersFromValue(value, isHebrew = false) {
 }
 
 function generateTraditionalName(value, suffixType) {
+  const isSufliHadim = suffixType === 'ar-sufli-hadim';
   const suffix = SUFFIXES[suffixType];
   const isAngel = suffixType.includes('angel');
   
   // STEP 1: Apply Ulvi adjustment (underflow rule: if value < suffix, add 360 first)
   let adjustedValue = value;
-  if (value < suffix) {
+  
+  if (isSufliHadim) {
+    // Sufli Hadim: first apply angel -41, then subtract 316 from that result
+    const angelVal = (value < 41) ? value + 360 - 41 : value - 41;
+    adjustedValue = (angelVal < 316) ? angelVal + 360 - 316 : angelVal - 316;
+  } else if (value < suffix) {
     adjustedValue = value + 360 - suffix;
   } else {
     adjustedValue = value - suffix;
@@ -100,9 +107,14 @@ function generateTraditionalName(value, suffixType) {
   const mirroredSequence = reversedConsonants.join(''); // Final name uses reversed sequence
   
   // STEP 4: Apply harakat/suffix based on system
-  const displayName = isHebrew
-    ? (isAngel ? buildHebrewAngelName(reversedConsonants) : buildHebrewJinnName(reversedConsonants))
-    : (isAngel ? buildAngelName(reversedConsonants)       : buildJinnName(reversedConsonants));
+  let displayName;
+  if (isSufliHadim) {
+    displayName = buildSufliHadimName(reversedConsonants);
+  } else if (isHebrew) {
+    displayName = isAngel ? buildHebrewAngelName(reversedConsonants) : buildHebrewJinnName(reversedConsonants);
+  } else {
+    displayName = isAngel ? buildAngelName(reversedConsonants) : buildJinnName(reversedConsonants);
+  }
   
   return {
     originalValue: value,
@@ -155,7 +167,8 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
     const result = base.map(row => {
       const nameData = generateTraditionalName(row.val, suffix);
       const isAngel = suffix.includes('angel');
-      const color = isAngel ? "#4FE3FF" : suffix === 'ar-jinn' ? "#FF9F5A" : "#F9A8D4";
+      const isSufliHadim = suffix === 'ar-sufli-hadim';
+      const color = isSufliHadim ? "#34D399" : isAngel ? "#4FE3FF" : suffix === 'ar-jinn' ? "#FF9F5A" : "#F9A8D4";
       
       return {
         ...row,
@@ -171,8 +184,8 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
   // Always render if we have mc — show "choose grid size" message if no gridSize
   if (!mc) return null;
 
-  const showNames = true; // All 4 suffix modes display names
-  const activeNameKey = suffix.includes("angel") ? "angel" : "jinn";
+  const showNames = true; // All suffix modes display names
+  const activeNameKey = suffix === 'ar-sufli-hadim' ? 'hadim' : suffix.includes("angel") ? "angel" : "jinn";
 
   return (
     <motion.div
@@ -193,6 +206,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
           "ar-jinn":   { c: "#FF9F5A", b: "rgba(255,159,90,0.35)",   bg: "rgba(255,159,90,0.06)",   label: lang==="ar" ? "جن عربي — طيش (−٣١٩)" : "Arabic Jinn — طيش (−319)" },
           "heb-angel": { c: "#C4B5FD", b: "rgba(196,181,253,0.35)",  bg: "rgba(196,181,253,0.06)",  label: lang==="ar" ? "ملاك عبري — אל (−٣١)" : "Hebrew Angel — אל (−31)" },
           "heb-jinn":  { c: "#F9A8D4", b: "rgba(249,168,212,0.35)",  bg: "rgba(249,168,212,0.06)",  label: lang==="ar" ? "جن عبري — תקש (−٣٢٩)" : "Hebrew Jinn — תקש (−329)" },
+          "ar-sufli-hadim": { c: "#34D399", b: "rgba(52,211,153,0.35)", bg: "rgba(52,211,153,0.06)", label: lang==="ar" ? "سفلي هادم — يوش (−٣١٦)" : "Sufli Hadim — يوش (−316)" },
         };
         const cfg = badgeCfg[suffix] || badgeCfg["ar-angel"];
         return (
@@ -286,7 +300,7 @@ const MsHierarchyTable = memo(function MsHierarchyTable({ mc, gridSize, rawInput
                   {/* Angel/Jinn Value centered */}
                   <div className="flex flex-col items-center flex-1">
                     <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.45)", letterSpacing: "0.5px" }}>
-                      {suffix === 'ar-angel' ? 'Angel (Arabic)' : suffix === 'ar-jinn' ? 'Jinn (Arabic)' : suffix === 'heb-angel' ? 'Angel (Hebrew)' : 'Jinn (Hebrew)'}
+                      {suffix === 'ar-angel' ? 'Angel (Arabic)' : suffix === 'ar-jinn' ? 'Jinn (Arabic)' : suffix === 'heb-angel' ? 'Angel (Hebrew)' : suffix === 'heb-jinn' ? 'Jinn (Hebrew)' : 'Sufli Hadim'}
                     </p>
                     <p 
                       className="font-amiri font-bold" 

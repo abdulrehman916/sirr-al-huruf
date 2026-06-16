@@ -64,6 +64,13 @@ export function buildJinnName(consonants) {
   return vocalizeConsonants(consonants) + JINN_SUFFIX;
 }
 
+/** Arabic Sufli Hadim: vocalized root + يوش (316) */
+const HADIM_SUFFIX = 'يُوش'; // Ya + Damma + Waw + Shin + Sukun
+export function buildSufliHadimName(consonants) {
+  if (!consonants || consonants.length === 0) return HADIM_SUFFIX;
+  return vocalizeConsonants(consonants) + HADIM_SUFFIX;
+}
+
 /** Hebrew Angel: plain root + אל (31) — no Arabic diacritics */
 export function buildHebrewAngelName(consonants) {
   if (!consonants || consonants.length === 0) return HEB_ANGEL_SUFFIX;

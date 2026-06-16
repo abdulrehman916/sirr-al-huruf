@@ -349,6 +349,7 @@ export default function MagicSqayerPage() {
   const suffixOpts = [
     { key:"ar-angel",  label: L.suffixArAngel,  color: "#4FE3FF",  borderActive: "rgba(79,227,255,0.55)" },
     { key:"ar-jinn",   label: L.suffixArJinn,   color: "#FF9F5A",  borderActive: "rgba(255,159,90,0.55)"  },
+    { key:"ar-sufli-hadim", label: L.suffixSufliHadim, color: "#34D399", borderActive: "rgba(52,211,153,0.55)" },
     { key:"heb-angel", label: L.suffixHebAngel, color: "#C4B5FD",  borderActive: "rgba(196,181,253,0.55)" },
     { key:"heb-jinn",  label: L.suffixHebJinn,  color: "#F9A8D4",  borderActive: "rgba(249,168,212,0.55)" },
   ];
