@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
+import { getVisibleContentPages } from "@/lib/pageRegistry";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -83,16 +84,19 @@ export default function AdminPermissions() {
   const loadPageVisibility = async () => {
     setLoadingVisibility(true);
     try {
+      const visiblePaths = new Set(getVisibleContentPages().map(p => p.path));
       const configs = await base44.entities.PageVisibilityConfig.list(null, 500);
-      const visibilityList = Object.entries(ROUTE_PERMISSION_MAP).map(([path, config]) => {
-        const dbConfig = configs.find(c => c.page_path === path);
-        return {
-          path,
-          name: config.name,
-          requiresPermission: dbConfig !== undefined ? dbConfig.requires_permission : config.requiresPermission,
-          adminOnly: config.adminOnly || false
-        };
-      });
+      const visibilityList = Object.entries(ROUTE_PERMISSION_MAP)
+        .filter(([path]) => visiblePaths.has(path))
+        .map(([path, config]) => {
+          const dbConfig = configs.find(c => c.page_path === path);
+          return {
+            path,
+            name: config.name,
+            requiresPermission: dbConfig !== undefined ? dbConfig.requires_permission : config.requiresPermission,
+            adminOnly: config.adminOnly || false
+          };
+        });
       setPageVisibility(visibilityList);
     } catch (error) {
       console.error('Error loading page visibility:', error);

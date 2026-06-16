@@ -12,7 +12,7 @@ import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
 import { useToast } from "@/components/ui/use-toast";
-import { getContentPages, getAllRegisteredPages } from "@/lib/pageRegistry";
+import { getContentPages, getAllRegisteredPages, getVisibleContentPages } from "@/lib/pageRegistry";
 import PaymentsTab from "@/components/admin/PaymentsTab";
 import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal";
 import MessagesTab from "@/components/admin/MessagesTab";
@@ -1285,7 +1285,7 @@ function VisibilityTab({ pageConfigs, onRefresh }) {
   const { toast } = useToast();
   const [toggling, setToggling] = useState(null);
 
-  const pages = getContentPageList().map(p => {
+  const pages = getVisibleContentPages().map(p => ({ path: p.path, name: p.name, code: p.code })).map(p => {
     const db = pageConfigs.find(c => c.page_path === p.path);
     const isPrivate = db ? db.requires_permission : (p.requiresPermission ?? true);
     return { ...p, isPrivate };

@@ -88,6 +88,25 @@ export function getContentPages() {
     .filter(p => !p.path.startsWith('/admin') && p.path !== '/');
 }
 
+// ── Page Visibility whitelist — only these user-facing pages appear in admin visibility dashboards ──
+const VISIBLE_CONTENT_PATHS = new Set([
+  '/',
+  '/abjad',
+  '/anasir',
+  '/hadim',
+  '/mizaan9',
+  '/magic-sqayer',
+  '/vefkin-yapilisi',
+  '/basthul-huroof-2',
+  '/holy-names',
+  '/astro-clock',
+  '/evil-jinn',
+]);
+
+export function getVisibleContentPages() {
+  return getContentPages().filter(p => VISIBLE_CONTENT_PATHS.has(p.path));
+}
+
 // ── Pre-register existing pages ────────────────────────────────────────────────
 // These are the current pages. New pages just call registerPage() in their own file.
 const PRE_REGISTERED = [
