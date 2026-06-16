@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
+import { buildHierarchy } from "./msEngine";
+import { buildAngelName, buildSufliHadimName } from "./msHarakat";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -9,32 +10,151 @@ const G = {
   dim:      "rgba(212,175,55,0.55)",
 };
 
-const QASAM_TEXT = `Bismillahirrahmanirrahîm.
+// ── Positional digit-cycle letter extraction (Arabic) ───────────
+const AR_UNITS    = { 1:'ا',2:'ب',3:'ج',4:'د',5:'ه',6:'و',7:'ز',8:'ح',9:'ط' };
+const AR_TENS     = { 10:'ي',20:'ك',30:'ل',40:'م',50:'ن',60:'س',70:'ع',80:'ف',90:'ص' };
+const AR_HUNDREDS = { 100:'ق',200:'ر',300:'ش',400:'ت',500:'ث',600:'خ',700:'ذ',800:'ض',900:'ظ' };
+const AR_THOUSAND = 'غ';
 
-Azimetün min Allahi ve resulihi Süleyman ibni Davud Aleyhümüsselam. İla mülikil cinni veşşeytani vel mürdeti vel afarite cünudi iblisi ecmain. Aksemtü aleyküm eyyetühel ervahür ruhaniyeti vel avanil ardiyyete en tecibu daveti ve tahzuru makami ve teşimmu duhani ve takzu havaici ve hiye(17). Bi izzeti Berhetihin Berhetihin. Keririn Keririn. Tetlihin Tetlihin. Turânin Turânin. Mezcelin Mezcelin. Bezcelin Bezcelin. Terkâbin Terkâbin. Berheşin Berheşin. Galmeşin Galmeşin. Hutûrin Hutûrin. Kalnehûdin Kalnehûdin. Berşânin Barşânin. Kezhirin Kezhirin. Nemuşelhin Nemuşelhin. Berhayûlen Berhayûlen. Beşkeylahin Beşkeylahin. Kazmecin Kazmecin. Engalelitin Engalelitin. Kabâratin Kabâratin. Gayâhen Gâyahen. Keydehûlen Keydehûlen. Şemhâhirin Şemhâhirin. Şemhahirin Şemhahirin. Şemhahîrin Şemhahîrin.(18) Bikehtahûnihin Bikehtahûnihin. Beşârişin Beşârişin. Tunîşin Tunîşin. Şemhabarûhin Şemhabarûhin. Allahümme bi hakkı kehkehicin yağtaşin bi lat sağ şağavilin. emvilin celedin mehcemen helmecin vurudihin mehfeyacin bi izzetike illa ahazte semihim ve ebsarihim sübhane men leyse kemislihi şeyün ve hüves semiül Basir ve bi hakkı(19) Ecibü eyyetühel mülikil vel avan bi hakkı hazihil esmai aleyküm vetaatiha ledeyküm ve bi hakkı men kale lissemavati vel ardi i'tiya tavanen kerhen kaleta eteyna tai ine lillahi Rabbil alemin. Ecibu vesmeu ve atiu vela tekunü minellezine kalu semina ve atânâ ve hüm la yesmaune. Ecib Ya Cebrâil Aleyhisselam ve Ya İsrâfil Aleyhisselam ve Ya Mikâil Aleyhisselam ve Ya Azrâil Aleyhisselam(20) ve ente ya emlakil müvekkiline bi hazel vefk(21) Aksemtü Aleyküm bil meklekil azim münzilelvahi aler resuli min muradikatil azameti ila levhil Mahfuz. İlla ma ecebtüm azimeti hazihi veh zurtüm hâdimi hazel yevmül müvekkiline bi yevmil(22) El Meliki(23) ve hâdimihi meleki(24) Ve hüddami hazel vefk(25) Bi hakkı(26) ma fiha min sırri vel esrari ve nurül envari Heyyen Heyyen. Elvahen Elvahen.. Elacele Elacele. Essate Essate.`;
+function extractArabicLetters(value) {
+  if (!value || value <= 0) return [];
+  const letters = [];
+  let n = Math.floor(value);
+  const digits = [];
+  while (n > 0) { digits.push(n % 10); n = Math.floor(n / 10); }
+  let slot = 0;
+  for (let i = 0; i < digits.length; i++) {
+    const d = digits[i];
+    if (slot === 0) {
+      if (d !== 0 && AR_UNITS[d]) letters.push(AR_UNITS[d]);
+      slot = 1;
+    } else if (slot === 1) {
+      if (d !== 0 && AR_TENS[d * 10]) letters.push(AR_TENS[d * 10]);
+      slot = 2;
+    } else if (slot === 2) {
+      if (d !== 0 && AR_HUNDREDS[d * 100]) letters.push(AR_HUNDREDS[d * 100]);
+      slot = 3;
+    } else {
+      letters.push(AR_THOUSAND);
+      if (d !== 0 && d !== 1 && AR_UNITS[d]) letters.push(AR_UNITS[d]);
+      slot = 1;
+    }
+  }
+  return letters;
+}
 
-const FOOTNOTES = [
-  { num: 17, text: "Burada okunan Esma'nin adedine bağlı olarak, Vefk içine yerleştirilen sayı kadar okunmaktadır." },
-  { num: 18, text: "Üç farklı Şemhahirin sözü ilk bakışta hep aynı kelime gibi görünebilir. Harflerin üzerlerindeki aksan işaretlerine dikkat edilmelidir." },
-  { num: 19, text: "Burada vefkin hane adedi kadar olan \"Esmaül Avan\" okunur." },
-  { num: 20, text: "Burada vefkin çevresindeki dört başmeleğin isimleri sayılmaktadır fakat bir amaca uygun olarak vefkin dört tarafına da aynı meleğin ismi yazılmışsa sadece o meleğin ismi okunur. Ayrıca aşağıda da görülecek olduğu gibi, belli bir amaçla, Vefk çevresindeki melek isimleri farklı bir sıralamada yazılırlarsa, burada okunurken de o sıralamada okunmalıdırlar." },
-  { num: 21, text: "Bu noktada sekiz ulvî hâdimin isimleri zikredilir." },
-  { num: 22, text: "Okumanın yapıldığı günün ismi Arapça zikredilecek." },
-  { num: 23, text: "Vefk'in yapıldığı vaktin gezegeninin ismi Arapça zikredilecek." },
-  { num: 24, text: "Ulvî ve Sulfî hâdim isimleri, vefkin içinde okunan ve vefkin yapıldığı güne ait olan hâdim isimleridir." },
-  { num: 25, text: "Burada vefke ait olan hüddam isimleri zikredilir." },
-  { num: 26, text: "Vefkin okunuşu sırasında hüddam isimleri çıkartılmış ise, burada bu isimlerin tamamı zikredilmelidir." },
-];
+function generateUlviName(value) {
+  if (!value || value <= 0) return "...";
+  const adjusted = value < 41 ? value + 360 - 41 : value - 41;
+  if (adjusted <= 0) return "...";
+  const consonants = extractArabicLetters(adjusted);
+  const reversed = [...consonants].reverse();
+  return buildAngelName(reversed);
+}
 
-const HATIRLATMA = `Hatırlatma: Okunan dua adedi, aynı gün, aynı hafta günü veya uygun astrolojik vakitlerde yapılmalıdır. Eğer dualar 3, 7 veya 9 gün içerisinde tamamlanamazsa, 9 günlük bir çalışma sürecine yayılır ve ilk gün okuması tamamlanamazsa, 9. günde tamamlanmalıdır. Esmaları olan ve vefkin sekiz noktasından çıkarılan Ulvî ve Sulfî hâdim isimleri ile vefkin ekteren ekleri ile gereken titreşimi kazanarak ulvî ve sulfî hâdimlere ulaşılır. Bu çalışma da aynen okunacaklardır.`;
+function generateSufliHadimName(value) {
+  if (!value || value <= 0) return "...";
+  const angelVal = value < 41 ? value + 360 - 41 : value - 41;
+  const adjusted = angelVal < 316 ? angelVal + 360 - 316 : angelVal - 316;
+  if (adjusted <= 0) return "...";
+  const consonants = extractArabicLetters(adjusted);
+  const reversed = [...consonants].reverse();
+  return buildSufliHadimName(reversed);
+}
 
-const HADIM_ISIMLERI = `Hâdim İsimleri Hakkında: Hâdim isimleri, anlamları, nitelikleri ve esma ile ayetler kategorisinde olup olmadıkları tartışmalı bir konudur. Bazı alimler, bunların potansiyelini gerçekleştirmek için gerekli olan ilham edilmiş isimler olduğunu düşünürler. Vefk'in amacı hâdim isimleri üretmek değilse, o vefk esma değildir ve hâdim özellikleri taşımaz. Vefkten türetilen isimlerin kullanıma uygun olup olmadığı sorgulanır. Bütün vefklerden çıkartılan hâdim isimleri aslında hâdimlerin gerçek isimleridir. Fakat önemsiz de değildirler. Bu sözler, istenen işi yapacak olan hâdimleri active edecek olan ses kodlarıdır. Ses kodları vefkin yapısına ve kullanılan ayet veya esmaya göre şekillenirler. Âil, Yûşin, Tayşın ve Tatil ekleri ile gereken titreşimi kazanarak ulvî ve sulfî hâdimlere ulaşırlar. Dolayısıyla, yukarda örnek olarak yazdığım uydurma kelimelerle ya da yaygın bir şarkı ile yapılan bir saçma vefekten çıkan kodlarla da hiç bir hâdim uyarilamaz. Çünkü onun arkasında Astral gücü, birikimi olan bir ayet veya esma olmadığı gibi niyet ve iç dürtü de yoktur.`;
+// ── Weekday computation ─────────────────────────────────────────
+const ARABIC_WEEKDAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
-const VEFK_KONTROL = `Bitmiş Bir Vefkin Kontrolü: Doğru olarak yapılan bir vefkin bütün satır, sütun ve çaprazlarının toplamı, vefk yapılan sayıyı verir. Dört köşesinin toplamı da her açıdan aynı sayıyı vermelidir.`;
+const WEEKDAY_ULVI = {
+  0: 'روقيائيل',   // Sunday — Sun
+  1: 'جبرائيل',    // Monday — Moon
+  2: 'سمسمائيل',   // Tuesday — Mars
+  3: 'ميخائيل',    // Wednesday — Mercury
+  4: 'صرفيائيل',   // Thursday — Jupiter
+  5: 'عنيائيل',    // Friday — Venus
+  6: 'كسفيائيل',   // Saturday — Saturn
+};
 
-export default function MsQasam() {
-  const [showFootnotes, setShowFootnotes] = useState(false);
-  const [showNotes, setShowNotes] = useState(false);
+const WEEKDAY_SUFLI = {
+  0: 'روقيائش',    // Sunday
+  1: 'جبرائش',     // Monday
+  2: 'سمسمائش',    // Tuesday
+  3: 'ميخائش',     // Wednesday
+  4: 'صرفيائش',    // Thursday
+  5: 'عنيائش',     // Friday
+  6: 'كسفيائش',    // Saturday
+};
+
+function getWeekdayInfo() {
+  const d = new Date().getDay();
+  return {
+    name: ARABIC_WEEKDAYS[d],
+    ulvi: WEEKDAY_ULVI[d],
+    sufli: WEEKDAY_SUFLI[d],
+  };
+}
+
+/**
+ * Join Arabic names with "و" separator (Arabic "and")
+ */
+function joinArabicNames(names) {
+  if (!names || names.length === 0) return "";
+  if (names.length === 1) return names[0];
+  return names.join(' و ');
+}
+
+/**
+ * MsQasam — Dynamic Arabic QASAM generated from live Magic Sqayer values.
+ *
+ * Props:
+ *   mc          — magic constant (rawNum)
+ *   gridSize    — selected grid size  
+ *   userPurpose — optional purpose string (replaces placeholder 17)
+ *   targetName  — optional target person name (replaces placeholder 26)
+ */
+export default function MsQasam({ mc, gridSize, userPurpose, targetName }) {
+  const weekday = useMemo(() => getWeekdayInfo(), []);
+
+  const hier = useMemo(() => {
+    if (!mc || !gridSize) return null;
+    return buildHierarchy(mc, gridSize);
+  }, [mc, gridSize]);
+
+  const hierValues = hier ? [
+    hier.usurper, hier.guide, hier.mystery, hier.adjuster,
+    hier.leader, hier.regulator, hier.genGov, hier.highOver,
+  ] : [];
+
+  const ulviNames = useMemo(() => hierValues.map(v => generateUlviName(v)), [hierValues]);
+  const sufliNames = useMemo(() => hierValues.map(v => generateSufliHadimName(v)), [hierValues]);
+
+  const qasamText = useMemo(() => {
+    if (!mc || !gridSize || !hier) return null;
+
+    const purpose = userPurpose || '...';
+    const target = targetName || '...';
+    const wkName = weekday.name;
+    const wkUlvi = weekday.ulvi;
+    const wkSufli = weekday.sufli;
+
+    const ulviStr = joinArabicNames(ulviNames);
+    const sufliStr = joinArabicNames(sufliNames);
+
+    // Esmaul Avan — generated from hierarchy values (angel names)
+    const esmaulAvanStr = joinArabicNames(ulviNames);
+
+    // Four surrounding archangels
+    const archangels = 'جبرائيل و إسرافيل و ميكائيل و عزرائيل';
+
+    return `بسم الله الرحمن الرحيم
+
+عزيمة من الله ورسوله سليمان بن داود عليهما السلام. إلى ملوك الجن والشياطين والمردة والعفاريت جنود إبليس أجمعين. أقسمت عليكم أيتها الأرواح الروحانية والأعوان الأرضية أن تجيبوا دعوتي وتحضروا مقامي وتشموا دخاني وتقضوا حوائجي وهي ${purpose}. بعزة برهتيهين برهتيهين. كريرين كريرين. تطلحين تطلحين. طورانين طورانين. مزجلين مزجلين. بزجلين بزجلين. تركابين تركابين. برهشين برهشين. غلمشين غلمشين. حطورين حطورين. كالنهودين كالنهودين. برشانين برشانين. كزهيرين كزهيرين. نموشلحين نموشلحين. برهايولين برهايولين. بشكيلاهين بشكيلاهين. كزمجين كزمجين. أنغلاليتين أنغلاليتين. كبراتين كبراتين. غاياهين غاياهين. كيدهولين كيدهولين. شمهاهيرين شمهاهيرين. شمهاهيرين شمهاهيرين. شمهاهيرين شمهاهيرين.
+
+بكهتهونهين بكهتهونهين. بشارشين بشارشين. طنيشين طنيشين. شمهبروهين شمهبروهين. اللهم بحق كهكهيجين يغتشين بلط سغ شغويلين. أمولين جلدين مهمن هلمجين ورودهين مهفياجين بعزتك إلا أخذت سمعهم وأبصارهم سبحان من ليس كمثله شيء وهو السميع البصير وبحق ${esmaulAvanStr} أجب أيها الملوك والأعوان بحق هذه الأسماء عليكم وطاعتها لديكم وبحق من قال للسماوات والأرض ائتيا طوعاً أو كرهاً قالتا أتينا طائعين لله رب العالمين. أجب واسمع وأطع ولا تكن من الذين قالوا سمعنا وأطعنا وهم لا يسمعون. أجب يا ${archangels} عليه السلام وأنت يا أملاك الموكلين بهذا الوفق ${ulviStr}. أقسمت عليكم بالملك العظيم منزل الوحي على الرسول من مرادقات العظمة إلى اللوح المحفوظ. إلا ما أجبتم عزيمتي هذه واحضرتم خادمي هذا اليوم الموكلين بيوم ${wkName} ${wkUlvi} وخادمه ${wkSufli} وخدام هذا الوفق ${sufliStr} بحق ما فيها من سر الأسرار ونور الأنوار. هيا هيا. الواحا الواحا. العجل العجل. الساعة الساعة.`;
+  }, [mc, gridSize, hier, userPurpose, targetName, weekday, ulviNames, sufliNames]);
+
+  // Only render when we have the minimum required data
+  if (!qasamText) return null;
 
   return (
     <motion.div
@@ -66,15 +186,7 @@ export default function MsQasam() {
         />
       </div>
 
-      {/* OKUNACAK DUA Heading */}
-      <h3
-        className="font-inter font-bold tracking-[0.15em] uppercase text-center"
-        style={{ color: "rgba(212,175,55,0.80)", fontSize: "0.85rem" }}
-      >
-        OKUNACAK DUA
-      </h3>
-
-      {/* Main Qasam Text */}
+      {/* Dynamic Arabic QASAM */}
       <div
         className="rounded-xl p-5"
         style={{
@@ -83,7 +195,7 @@ export default function MsQasam() {
         }}
       >
         <p
-          className="font-amiri text-base leading-[2.2] text-center"
+          className="font-amiri text-base leading-[2.4] text-center"
           dir="rtl"
           style={{
             color: "rgba(245,235,210,0.88)",
@@ -91,172 +203,31 @@ export default function MsQasam() {
             textShadow: "0 0 12px rgba(212,175,55,0.12)",
           }}
         >
-          {QASAM_TEXT}
+          {qasamText}
         </p>
       </div>
 
-      {/* Footnotes Toggle */}
-      <div className="text-center">
-        <button
-          onClick={() => setShowFootnotes(!showFootnotes)}
-          className="inline-flex items-center gap-1.5 font-inter text-[10px] uppercase tracking-widest py-1.5 px-3 rounded-xl border transition-all"
-          style={{
-            color: G.dim,
-            borderColor: "rgba(212,175,55,0.20)",
-            background: showFootnotes ? "rgba(212,175,55,0.08)" : "transparent",
-          }}
-        >
-          {showFootnotes ? "Dipnotları Gizle" : "Dipnotları Göster"}
-          <ChevronDown
-            className="w-3 h-3"
-            style={{
-              transform: showFootnotes ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.2s ease",
-            }}
-          />
-        </button>
+      {/* Metadata summary — shows what values were used */}
+      <div
+        className="rounded-xl p-3 space-y-1.5"
+        style={{
+          background: "rgba(212,175,55,0.02)",
+          border: "1px solid rgba(212,175,55,0.08)",
+        }}
+      >
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-inter text-[9px]">
+          <span style={{ color: G.dim }}>العنوان / Purpose:</span>
+          <span style={{ color: "rgba(255,255,255,0.55)" }}>{userPurpose || '—'}</span>
+          <span style={{ color: G.dim }}>اليوم / Day:</span>
+          <span className="font-amiri" dir="rtl" style={{ color: "rgba(255,255,255,0.55)" }}>{weekday.name}</span>
+          <span style={{ color: G.dim }}>الهدف / Target:</span>
+          <span style={{ color: "rgba(255,255,255,0.55)" }}>{targetName || '—'}</span>
+          <span style={{ color: G.dim }}>أسماء الأولياء / Ulvi Hadim:</span>
+          <span className="font-amiri text-[8px]" dir="rtl" style={{ color: "rgba(79,227,255,0.70)" }}>{ulviNames.join(' · ')}</span>
+          <span style={{ color: G.dim }}>أسماء يوش / Sufli Hadim:</span>
+          <span className="font-amiri text-[8px]" dir="rtl" style={{ color: "rgba(52,211,153,0.70)" }}>{sufliNames.join(' · ')}</span>
+        </div>
       </div>
-
-      {/* Footnotes */}
-      <AnimatePresence>
-        {showFootnotes && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="rounded-xl p-4 space-y-2 overflow-hidden"
-            style={{
-              background: "rgba(212,175,55,0.03)",
-              border: "1px solid rgba(212,175,55,0.10)",
-            }}
-          >
-            <p
-              className="font-inter text-[9px] uppercase tracking-widest mb-3"
-              style={{ color: G.dim }}
-            >
-              Dipnotlar
-            </p>
-            {FOOTNOTES.map((fn) => (
-              <div key={fn.num} className="flex gap-2">
-                <span
-                  className="font-inter text-[10px] font-bold flex-shrink-0 mt-0.5"
-                  style={{ color: G.text }}
-                >
-                  ({fn.num})
-                </span>
-                <p
-                  className="font-inter text-[10px] leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.50)" }}
-                >
-                  {fn.text}
-                </p>
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Supplementary Notes Toggle */}
-      <div className="text-center">
-        <button
-          onClick={() => setShowNotes(!showNotes)}
-          className="inline-flex items-center gap-1.5 font-inter text-[10px] uppercase tracking-widest py-1.5 px-3 rounded-xl border transition-all"
-          style={{
-            color: G.dim,
-            borderColor: "rgba(212,175,55,0.20)",
-            background: showNotes ? "rgba(212,175,55,0.08)" : "transparent",
-          }}
-        >
-          {showNotes ? "Açıklamaları Gizle" : "Açıklamaları Göster"}
-          <ChevronDown
-            className="w-3 h-3"
-            style={{
-              transform: showNotes ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.2s ease",
-            }}
-          />
-        </button>
-      </div>
-
-      {/* Supplementary Notes */}
-      <AnimatePresence>
-        {showNotes && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="rounded-xl p-4 space-y-4 overflow-hidden"
-            style={{
-              background: "rgba(212,175,55,0.03)",
-              border: "1px solid rgba(212,175,55,0.10)",
-            }}
-          >
-            {/* HATIRLATMA */}
-            <div className="space-y-1.5">
-              <p
-                className="font-inter text-[10px] uppercase tracking-widest"
-                style={{ color: G.text }}
-              >
-                HATIRLATMA
-              </p>
-              <p
-                className="font-inter text-[10px] leading-relaxed"
-                style={{ color: "rgba(255,255,255,0.50)" }}
-              >
-                {HATIRLATMA}
-              </p>
-            </div>
-
-            <div
-              style={{
-                height: 1,
-                background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.12), transparent)`,
-              }}
-            />
-
-            {/* HÂDİM İSİMLERİ HAKKINDA */}
-            <div className="space-y-1.5">
-              <p
-                className="font-inter text-[10px] uppercase tracking-widest"
-                style={{ color: G.text }}
-              >
-                HÂDİM İSİMLERİ HAKKINDA
-              </p>
-              <p
-                className="font-inter text-[10px] leading-relaxed"
-                style={{ color: "rgba(255,255,255,0.50)" }}
-              >
-                {HADIM_ISIMLERI}
-              </p>
-            </div>
-
-            <div
-              style={{
-                height: 1,
-                background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.12), transparent)`,
-              }}
-            />
-
-            {/* BİTMİŞ BİR VEFKİN KONTROLÜ */}
-            <div className="space-y-1.5">
-              <p
-                className="font-inter text-[10px] uppercase tracking-widest"
-                style={{ color: G.text }}
-              >
-                BİTMİŞ BİR VEFKİN KONTROLÜ
-              </p>
-              <p
-                className="font-inter text-[10px] leading-relaxed"
-                style={{ color: "rgba(255,255,255,0.50)" }}
-              >
-                {VEFK_KONTROL}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
