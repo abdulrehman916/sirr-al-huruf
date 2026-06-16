@@ -198,7 +198,7 @@ function SectionTitle({ label }) {
 /**
  * MsQasam — Dynamic Arabic QASAM with structured guardian sections.
  */
-export { WEEKDAY_ULVI, WEEKDAY_SUFLI, ARABIC_WEEKDAYS };
+export { WEEKDAY_ULVI, WEEKDAY_SUFLI, ARABIC_WEEKDAYS, generateGuardianName };
 
 export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, suffix = "ar-angel", customWeekdayName, customWeekdayUlvi, customWeekdaySufli }) {
   const weekday = useMemo(() => getWeekdayInfo(), []);
@@ -286,84 +286,7 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
         <SectionDivider />
       </div>
 
-      {/* 1. ESMAUL AVAN */}
-      {esmaulAvanNames.length > 0 && (
-        <div className="rounded-xl border p-4 space-y-3"
-          style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.18)" }}>
-          <SectionTitle label="ESMAUL AVAN" />
-          <SectionDivider />
-          <div className="flex flex-wrap gap-2 justify-center">
-            {esmaulAvanNames.map((name, i) => (
-              <span key={i} className="font-amiri font-bold px-2.5 py-1 rounded-lg text-sm"
-                dir="rtl"
-                style={{
-                  background: "rgba(212,175,55,0.08)",
-                  border: "1px solid rgba(212,175,55,0.20)",
-                  color: "rgba(245,235,210,0.85)",
-                }}>
-                {name}
-              </span>
-            ))}
-          </div>
-          <p className="font-inter text-[8px] uppercase tracking-widest text-center"
-            style={{ color: "rgba(212,175,55,0.30)" }}>
-            {esmaulAvanNames.length} {esmaulAvanNames.length === 1 ? "NAME" : "NAMES"} · N²
-          </p>
-        </div>
-      )}
-
-      {/* 2. SELECTED MAIN GUARDIAN */}
-      {mainGuardian && (
-        <div className="rounded-xl border p-4 space-y-3"
-          style={{ background: "rgba(79,227,255,0.04)", borderColor: "rgba(79,227,255,0.25)" }}>
-          <SectionTitle label="SELECTED MAIN GUARDIAN" />
-          <SectionDivider />
-          <p className="font-amiri text-2xl font-bold text-center" dir="rtl"
-            style={{ color: "#4FE3FF", textShadow: "0 0 16px rgba(79,227,255,0.30)" }}>
-            {mainGuardian}
-          </p>
-          <p className="font-inter text-[8px] uppercase tracking-widest text-center"
-            style={{ color: "rgba(79,227,255,0.35)" }}>
-            {suffix === "ar-angel" ? "Arabic Angel · −٤١" :
-             suffix === "ar-jinn" ? "Arabic Jinn · −٣١٩" :
-             suffix === "ar-sufli-hadim" ? "Sufli Hadim · −٣١٦" :
-             suffix === "heb-angel" ? "Hebrew Angel · −٣١" :
-             suffix === "heb-jinn" ? "Hebrew Jinn · −٣٢٩" : ""}
-          </p>
-        </div>
-      )}
-
-      {/* 3. TODAY'S ULVI */}
-      <div className="rounded-xl border p-4 space-y-3"
-        style={{ background: "rgba(212,175,55,0.03)", borderColor: "rgba(212,175,55,0.14)" }}>
-        <SectionTitle label={customWeekdayName ? "SELECTED ULVI" : "TODAY'S ULVI"} />
-        <SectionDivider />
-        <p className="font-amiri text-xl font-bold text-center" dir="rtl"
-          style={{ color: "rgba(245,235,210,0.80)", textShadow: "0 0 10px rgba(212,175,55,0.15)" }}>
-          {customWeekdayUlvi || weekday.ulvi}
-        </p>
-        <p className="font-inter text-[8px] uppercase tracking-widest text-center"
-          style={{ color: "rgba(212,175,55,0.30)" }}>
-          {customWeekdayName || weekday.name}
-        </p>
-      </div>
-
-      {/* 4. TODAY'S SUFLI */}
-      <div className="rounded-xl border p-4 space-y-3"
-        style={{ background: "rgba(255,159,90,0.03)", borderColor: "rgba(255,159,90,0.18)" }}>
-        <SectionTitle label={customWeekdayName ? "SELECTED SUFLI" : "TODAY'S SUFLI"} />
-        <SectionDivider />
-        <p className="font-amiri text-xl font-bold text-center" dir="rtl"
-          style={{ color: "rgba(255,159,90,0.85)", textShadow: "0 0 10px rgba(255,159,90,0.20)" }}>
-          {customWeekdaySufli || weekday.sufli}
-        </p>
-        <p className="font-inter text-[8px] uppercase tracking-widest text-center"
-          style={{ color: "rgba(255,159,90,0.30)" }}>
-          {customWeekdayName || weekday.name}
-        </p>
-      </div>
-
-      {/* 5. Arabic QASAM */}
+      {/* Arabic QASAM */}
       <div className="rounded-xl p-5"
         style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
         <SectionTitle label="ARABIC QASAM" />
@@ -387,7 +310,7 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
         </div>
       </div>
 
-      {/* 6. Malayalam Translation */}
+      {/* Malayalam Translation */}
       {malayalamText && (
         <div className="rounded-xl p-5"
           style={{ background: "rgba(212,175,55,0.02)", border: "1px solid rgba(212,175,55,0.10)" }}>

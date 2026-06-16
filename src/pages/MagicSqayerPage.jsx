@@ -8,12 +8,17 @@ import {
   PLANETS, ELEMENTS, SIZE_PLANET_MAP, PLANET_EN,
   isCompatible, compatibleSizes,
   computeUsurper, generateSquare, verifySquare, toArabicIndic,
+  buildHierarchy,
 } from "../components/magicsqayer/msEngine";
 
 // ── Display components ───────────────────────────────────────────
 import MsHierarchyTable from "../components/magicsqayer/MsHierarchyTable";
 import MsLetterTables   from "../components/magicsqayer/MsLetterTables";
-import MsQasam, { WEEKDAY_ULVI, WEEKDAY_SUFLI, ARABIC_WEEKDAYS } from "../components/magicsqayer/MsQasam";
+import MsQasam, { WEEKDAY_ULVI, WEEKDAY_SUFLI, ARABIC_WEEKDAYS, generateGuardianName } from "../components/magicsqayer/MsQasam";
+import MsEsmaulAvanCard from "../components/magicsqayer/MsEsmaulAvanCard";
+import MsMainGuardianCard from "../components/magicsqayer/MsMainGuardianCard";
+import MsWeekdayUlviCard from "../components/magicsqayer/MsWeekdayUlviCard";
+import MsWeekdaySufliCard from "../components/magicsqayer/MsWeekdaySufliCard";
 import MsWeekdayEditor from "../components/magicsqayer/MsWeekdayEditor";
 import MsPlanetReport   from "../components/magicsqayer/MsPlanetReport";
 
@@ -291,6 +296,14 @@ export default function MagicSqayerPage() {
     if (!squareMC) return {};
     return Object.fromEntries(GRID_SIZES.map(gs => [gs.value, isCompatible(squareMC, gs.value)]));
   }, [squareMC]);
+
+  // ── Main Guardian — computed from hierarchy + suffix ──────────
+  const mainGuardian = useMemo(() => {
+    if (!squareMC || !gridSize) return null;
+    const hier = buildHierarchy(squareMC, gridSize);
+    if (!hier) return null;
+    return generateGuardianName(hier.adjuster, suffix);
+  }, [squareMC, gridSize, suffix]);
 
   // ── Build grid (pure fn, no side-effects) ─────────────────────
   const buildGrid = useCallback((mc, size, el) => {
@@ -598,6 +611,18 @@ export default function MagicSqayerPage() {
 
         {/* Letter Tables */}
         <MsLetterTables mc={squareMC} L={L} />
+
+        {/* Esmaul Avan Card */}
+        {gridReady && <MsEsmaulAvanCard grid={grid} />}
+
+        {/* Selected Main Guardian Card */}
+        {mainGuardian && <MsMainGuardianCard name={mainGuardian} suffix={suffix} />}
+
+        {/* Selected Ulvi Card */}
+        <MsWeekdayUlviCard name={weekdayUlvi} dayName={ARABIC_WEEKDAYS[selectedDayIndex]} />
+
+        {/* Selected Sufli Card */}
+        <MsWeekdaySufliCard name={weekdaySufli} dayName={ARABIC_WEEKDAYS[selectedDayIndex]} />
 
         {/* QASAM */}
         <MsQasam
