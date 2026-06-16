@@ -248,12 +248,12 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
 عزيمة من الله ورسوله سليمان بن داود عليهما السلام. إلى ملوك الجن والشياطين والمردة والعفاريت جنود إبليس أجمعين. أقسمت عليكم أيتها الأرواح الروحانية والأعوان الأرضية أن تجيبوا دعوتي وتحضروا مقامي وتشموا دخاني وتقضوا حوائجي وهي ${purpose}. بعزة برهتيه برهتيه. كرير كرير. تتليه تتليه. طوران طوران. مزجل مزجل. برجل برجل. ترقب ترقب. برهش برهش. غلمش غلمش. خوطير خوطير. قلنهود قلنهود. برشان برشان. كظهير كظهير. نموشلخ نموشلخ. برهيولا برهيولا. بشكيلخ بشكيلخ. قزمز قزمز. أنغلليط أنغلليط. قبرات قبرات. غياها غياها. كيدهولا كيدهولا. شمخاهر شمخاهر. شمهاهر شمهاهر. شمخاهير شمخاهير.
 
 بكهطهونيه بكهطهونيه. بشارش بشارش. طونش طونش. شمخاباروح شمخاباروح. اللهم بحق كهكهيج يعتشى بلطشغشعويل أمويل جلد مهجما هلمج وروديه مهفياج بعزتك الاما اخذت سمعهم وابصارهم سبحان من ليس كمثله شيء وهو السميع البصير اقسمت عليكم وادعوكم معاشر الارواح الروحانية بالاسم الذي تكلم به ملك الارواح فتساقطت منه رؤس الملائكة الروحانية والكروبيين والصافين سجدا تحت عرش رب العالمين وهو يانكير يانكير هورين هورين هورش هورش باروخ باروخ ابراخ ابراخ ابداخ ابداخ وبحق اشمخ شماخ العالي على كل براخ وبحق طشطيش طشطيش بانطيطيون بانطيطيون بانطيطيوه بانطيطيوه وبحق شلشليش شلشليش شلش شلش باكرا كروك ال قدوس على قوي عزيز وبحق ${esmaulAvanStr} أجب أيها الملوك والأعوان بحق هذه الأسماء عليكم وطاعتها لديكم وبحق من قال للسماوات والأرض ائتيا طوعاً أو كرهاً قالتا أتينا طائعين لله رب العالمين. أجب واسمع وأطع ولا تكن من الذين قالوا سمعنا وأطعنا وهم لا يسمعون. أجب يا ${archangels} عليه السلام وأنت يا أملاك الموكلين بهذا الوفق ${ulviStr}. أقسمت عليكم بالملك العظيم منزل الوحي على الرسول من مرادقات العظمة إلى اللوح المحفوظ. إلا ما أجبتم عزيمتي هذه واحضرتم خادمي هذا اليوم الموكلين بيوم ${wkName} ${wkUlvi} وخادمه ${wkSufli} وخدام هذا الوفق ${sufliStr} بحق ما فيها من سر الأسرار ونور الأنوار. هيا هيا. الواحا الواحا. العجل العجل. الساعة الساعة.`;
-  }, [mc, userPurpose, weekday, ulviNames, sufliNames, esmaulAvanNames]);
+  }, [mc, userPurpose, weekday, ulviNames, sufliNames, esmaulAvanNames, customWeekdayName, customWeekdayUlvi, customWeekdaySufli]);
 
   const malayalamText = useMemo(() => {
     if (!mc) return null;
     const purpose = userPurpose || '...';
-    const wkName = weekday.name;
+    const wkName = customWeekdayName || weekday.name;
     return `بسم الله الرحمن الرحيم
 
 അല്ലാഹുവിന്റെ നാമത്തിൽ, പരമകാരുണികനും കരുണാനിധിയുമായവന്റെ.
@@ -261,7 +261,7 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
 അല്ലാഹുവിൽ നിന്നും അവന്റെ ദൂതൻ സുലൈമാൻ ബിൻ ദാവൂദ് (അ) യിൽ നിന്നുമുള്ള ഒരു ശക്തമായ ആജ്ഞ. ജിന്നുകളുടെ രാജാക്കന്മാർക്കും, പിശാചുക്കൾക്കും, വിമതന്മാർക്കും, ഇഫ്രീത്തുകൾക്കും, ഇബ്ലീസിന്റെ എല്ലാ സൈന്യങ്ങൾക്കും. ഓ ആത്മീയ ശക്തികളേ, ഓ ഭൗമിക സഹായികളേ, നിങ്ങളോട് ഞാൻ ആണയിടുന്നു — എന്റെ വിളിക്ക് ഉത്തരം നൽകുക, എന്റെ സന്നിധിയിൽ ഹാജരാകുക, എന്റെ ധൂപം മണക്കുക, എന്റെ ആവശ്യം നിറവേറ്റുക, അതായത്: ${purpose}. ബിര്‍ഹത്തീഹീൻ, കരീരീൻ, തത്‌ലഹീൻ, ത്വൂറാനീൻ, മസ്‌ജലീൻ, ബിസ്‌ജലീൻ, തർകാബീൻ, ബർഹശീൻ, ഗുൽമശീൻ, ഹത്വൂരീൻ, കാല്‍നഹൂദീൻ, ബർശാനീൻ, കസ്‌ഹീരീൻ, നമൂശ്‌ലഹീൻ, ബർഹായൂലീൻ, ബശ്‌കീലാഹീൻ, കസ്‌മജീൻ, അൻഗലാലീത്തീൻ, കബ്റാത്തീൻ, ഗായാഹീൻ, കൈദഹൂലീൻ, ശംഹാഹീരീൻ (മൂന്ന് പ്രാവശ്യം) എന്നീ നാമങ്ങളുടെ പ്രതാപത്താൽ.
 
 ബകഹ്‌തഹൂനഹീൻ (രണ്ട് പ്രാവശ്യം), ബശാരിശീൻ, ത്വനീശീൻ, ശംഹബ്‌റൂഹീൻ. അല്ലാഹുവേ, കഹ്‌കഹീജീൻ, യഗ്‌തശീൻ, ബൽത്വ് സഗ് ശഗ്‌വീലീൻ എന്നിവയുടെ അവകാശത്താൽ... അവരുടെ കേൾവിയും കാഴ്ചകളും തട്ടിയെടുക്കുക. അവനു തുല്യമായി യാതൊന്നുമില്ലാത്തവൻ എത്ര പരിശുദ്ധൻ! അവൻ എല്ലാം കേൾക്കുന്നവനും കാണുന്നവനുമാണ്. ഈ വഫ്‌ഖിന്റെ പേരുകളുടെ (${esmaulAvanNames.length} നാമങ്ങൾ) അവകാശത്താൽ — ഓ രാജാക്കന്മാരേ, സഹായികളേ, ഉത്തരം നൽകുക. ആകാശത്തോടും ഭൂമിയോടും "സ്വമേധയാ അല്ലെങ്കിൽ നിർബന്ധിതമായി വരുവിൻ" എന്ന് പറഞ്ഞവന്റെ അവകാശത്താൽ. അവർ പറഞ്ഞു: "ഞങ്ങൾ അനുസരണയോടെ വന്നിരിക്കുന്നു." ജിബ്രീൽ, ഇസ്‌റാഫീൽ, മീകാഈൽ, അസ്‌റാഈൽ (അ) എന്നിവരേ, ഉത്തരം നൽകുക. ഈ വഫ്‌ഖിന്റെ ചുമതലയുള്ള മലക്കുകളേ, ഉത്തരം നൽകുക. മഹത്തായ രാജാവിന്റെ പേരിൽ ഞാൻ നിങ്ങളോട് ആണയിടുന്നു, വഹ്‌യ് ഇറക്കിയവന്റെ, സംരക്ഷിത ഫലകത്തിലേക്ക് മഹത്വത്തിന്റെ തിരശ്ശീലകളിൽ നിന്ന്... ${wkName} ദിവസത്തിന്റെ ചുമതലയുള്ള ഈ ദിവസത്തെ ഖാദിമിനെ ഹാജരാക്കുക. രഹസ്യങ്ങളുടെ രഹസ്യവും പ്രകാശങ്ങളുടെ പ്രകാശവും ഇതിൽ അടങ്ങിയിരിക്കുന്നതിന്റെ അവകാശത്താൽ. വേഗം വേഗം. ഉടൻ ഉടൻ. ഈ നിമിഷം ഈ നിമിഷം.`;
-  }, [mc, userPurpose, weekday, esmaulAvanNames]);
+  }, [mc, userPurpose, weekday, esmaulAvanNames, customWeekdayName, customWeekdayUlvi, customWeekdaySufli]);
 
   if (!mc) return null;
 
@@ -336,30 +336,30 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
       {/* 3. TODAY'S ULVI */}
       <div className="rounded-xl border p-4 space-y-3"
         style={{ background: "rgba(212,175,55,0.03)", borderColor: "rgba(212,175,55,0.14)" }}>
-        <SectionTitle label="TODAY'S ULVI" />
+        <SectionTitle label={customWeekdayName ? "SELECTED ULVI" : "TODAY'S ULVI"} />
         <SectionDivider />
         <p className="font-amiri text-xl font-bold text-center" dir="rtl"
           style={{ color: "rgba(245,235,210,0.80)", textShadow: "0 0 10px rgba(212,175,55,0.15)" }}>
-          {weekday.ulvi}
+          {customWeekdayUlvi || weekday.ulvi}
         </p>
         <p className="font-inter text-[8px] uppercase tracking-widest text-center"
           style={{ color: "rgba(212,175,55,0.30)" }}>
-          {weekday.name}
+          {customWeekdayName || weekday.name}
         </p>
       </div>
 
       {/* 4. TODAY'S SUFLI */}
       <div className="rounded-xl border p-4 space-y-3"
         style={{ background: "rgba(255,159,90,0.03)", borderColor: "rgba(255,159,90,0.18)" }}>
-        <SectionTitle label="TODAY'S SUFLI" />
+        <SectionTitle label={customWeekdayName ? "SELECTED SUFLI" : "TODAY'S SUFLI"} />
         <SectionDivider />
         <p className="font-amiri text-xl font-bold text-center" dir="rtl"
           style={{ color: "rgba(255,159,90,0.85)", textShadow: "0 0 10px rgba(255,159,90,0.20)" }}>
-          {weekday.sufli}
+          {customWeekdaySufli || weekday.sufli}
         </p>
         <p className="font-inter text-[8px] uppercase tracking-widest text-center"
           style={{ color: "rgba(255,159,90,0.30)" }}>
-          {weekday.name}
+          {customWeekdayName || weekday.name}
         </p>
       </div>
 
