@@ -445,60 +445,6 @@ export default function MagicSqayerPage() {
           </div>
         </SectionCard>
 
-        {/* 2b. Day Selector + Edit */}
-        <SectionCard>
-          <div className="flex items-center justify-between mb-2">
-            <SLabel>Weekday</SLabel>
-            <motion.button
-              whileTap={{ scale:0.96 }}
-              onClick={() => setShowWeekdayEditor(true)}
-              className="rounded-lg px-3 py-1 font-inter font-bold text-[9px] border"
-              style={{
-                background: "rgba(212,175,55,0.08)",
-                borderColor: "rgba(212,175,55,0.25)",
-                color: G.dim,
-              }}>
-              ✎ Edit
-            </motion.button>
-          </div>
-          <div className="flex gap-1 overflow-x-auto scrollbar-none py-1">
-            {ARABIC_WEEKDAYS.map((name, idx) => {
-              const sel = selectedDayIndex === idx;
-              const hasOverride = weekdayOverrides[idx]?.ulvi || weekdayOverrides[idx]?.sufli;
-              return (
-                <motion.button
-                  key={idx}
-                  whileTap={{ scale:0.95 }}
-                  onClick={() => setSelectedDayIndex(idx)}
-                  className="flex-shrink-0 rounded-xl px-3 py-2 font-amiri text-sm font-bold border transition-all relative"
-                  style={{
-                    background: sel ? "rgba(212,175,55,0.14)" : "rgba(4,12,34,0.97)",
-                    borderColor: sel ? G.borderHi : "rgba(255,255,255,0.08)",
-                    color: sel ? G.text : "rgba(255,255,255,0.40)",
-                  }}>
-                  {name}
-                  {hasOverride && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                      style={{ background: "#4FE3FF", boxShadow: "0 0 4px #4FE3FF" }} />
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-3 mt-3 text-center">
-            <div className="flex-1 rounded-lg py-1.5 px-2"
-              style={{ background:"rgba(79,227,255,0.05)", border:"1px solid rgba(79,227,255,0.14)" }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color:"rgba(79,227,255,0.40)" }}>Ulvi</p>
-              <p className="font-amiri text-sm font-bold" dir="rtl" style={{ color:"rgba(79,227,255,0.85)" }}>{weekdayUlvi}</p>
-            </div>
-            <div className="flex-1 rounded-lg py-1.5 px-2"
-              style={{ background:"rgba(255,159,90,0.05)", border:"1px solid rgba(255,159,90,0.14)" }}>
-              <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color:"rgba(255,159,90,0.40)" }}>Sufli</p>
-              <p className="font-amiri text-sm font-bold" dir="rtl" style={{ color:"rgba(255,159,90,0.85)" }}>{weekdaySufli}</p>
-            </div>
-          </div>
-        </SectionCard>
-
         {/* 3. Grid Size (3–16) */}
         <SectionCard>
           <SLabel>{L.gridSize}</SLabel>
@@ -623,6 +569,60 @@ export default function MagicSqayerPage() {
 
         {/* Selected Sufli Card */}
         <MsWeekdaySufliCard name={weekdaySufli} dayName={ARABIC_WEEKDAYS[selectedDayIndex]} />
+
+        {/* Weekday Selector */}
+        <SectionCard>
+          <div className="flex items-center justify-between mb-2">
+            <SLabel>Weekday</SLabel>
+            <motion.button
+              whileTap={{ scale:0.96 }}
+              onClick={() => setShowWeekdayEditor(true)}
+              className="rounded-lg px-3 py-1 font-inter font-bold text-[9px] border"
+              style={{
+                background: "rgba(212,175,55,0.08)",
+                borderColor: "rgba(212,175,55,0.25)",
+                color: G.dim,
+              }}>
+              ✎ Edit
+            </motion.button>
+          </div>
+          <div className="flex gap-1 overflow-x-auto scrollbar-none py-1">
+            {ARABIC_WEEKDAYS.map((name, idx) => {
+              const sel = selectedDayIndex === idx;
+              const hasOverride = weekdayOverrides[idx]?.ulvi || weekdayOverrides[idx]?.sufli;
+              return (
+                <motion.button
+                  key={idx}
+                  whileTap={{ scale:0.95 }}
+                  onClick={() => setSelectedDayIndex(idx)}
+                  className="flex-shrink-0 rounded-xl px-3 py-2 font-amiri text-sm font-bold border transition-all relative"
+                  style={{
+                    background: sel ? "rgba(212,175,55,0.14)" : "rgba(4,12,34,0.97)",
+                    borderColor: sel ? G.borderHi : "rgba(255,255,255,0.08)",
+                    color: sel ? G.text : "rgba(255,255,255,0.40)",
+                  }}>
+                  {name}
+                  {hasOverride && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                      style={{ background: "#4FE3FF", boxShadow: "0 0 4px #4FE3FF" }} />
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-3 mt-3 text-center">
+            <div className="flex-1 rounded-lg py-1.5 px-2"
+              style={{ background:"rgba(79,227,255,0.05)", border:"1px solid rgba(79,227,255,0.14)" }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color:"rgba(79,227,255,0.40)" }}>Ulvi</p>
+              <p className="font-amiri text-sm font-bold" dir="rtl" style={{ color:"rgba(79,227,255,0.85)" }}>{weekdayUlvi}</p>
+            </div>
+            <div className="flex-1 rounded-lg py-1.5 px-2"
+              style={{ background:"rgba(255,159,90,0.05)", border:"1px solid rgba(255,159,90,0.14)" }}>
+              <p className="font-inter text-[7px] uppercase tracking-widest" style={{ color:"rgba(255,159,90,0.40)" }}>Sufli</p>
+              <p className="font-amiri text-sm font-bold" dir="rtl" style={{ color:"rgba(255,159,90,0.85)" }}>{weekdaySufli}</p>
+            </div>
+          </div>
+        </SectionCard>
 
         {/* QASAM */}
         <MsQasam
