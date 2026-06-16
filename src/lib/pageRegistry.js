@@ -18,13 +18,19 @@ const DEFAULT_CONFIG = { requiresPermission: true, adminOnly: false, name: null 
 /**
  * Register a page in the dynamic registry.
  * Call this once in each page file at module level.
+ *
+ * @param {string}  path              - React Router path
+ * @param {string}  name              - Human-readable name
+ * @param {boolean} requiresPermission - Default true (private)
+ * @param {boolean} adminOnly         - Admin-restricted page
+ * @param {string}  pageType          - 'content' (user-facing, shown in visibility dashboards) or 'system' (internal, hidden). Default 'content'.
  */
-export function registerPage({ path, name, requiresPermission = true, adminOnly = false }) {
+export function registerPage({ path, name, requiresPermission = true, adminOnly = false, pageType = 'content' }) {
   const code = pathToPermissionCode(path);
-  registry.set(path, { path, name, code, requiresPermission, adminOnly });
+  registry.set(path, { path, name, code, requiresPermission, adminOnly, pageType });
   // Also register path with trailing slash for consistency
   if (!path.endsWith('/') && !path.includes(':')) {
-    registry.set(path + '/', { path, name, code, requiresPermission, adminOnly });
+    registry.set(path + '/', { path, name, code, requiresPermission, adminOnly, pageType });
   }
 }
 
@@ -88,55 +94,13 @@ export function getContentPages() {
     .filter(p => !p.path.startsWith('/admin') && p.path !== '/');
 }
 
-// ── Page classification for admin visibility dashboards ──
-// Content pages: user-facing — SHOWN in Page Visibility
-// System/Audit pages: internal technical routes — HIDDEN in Page Visibility
-// New content pages register themselves and automatically appear — no whitelist needed.
-
-const SYSTEM_PATH_PREFIXES = [
-  '/support',
-  '/customer-service',
-  '/onboarding',
-  '/otp-login',
-  '/subscription',
-  '/premium-access',
-  '/my-subscription',
-  '/payment',
-  '/razorpay',
-];
-
-const AUDIT_PATH_PREFIXES = [
-  '/hierarchy-audit',
-  '/pipeline-test',
-  '/audit-report',
-  '/istintak-discovery',
-  '/manuscript-pipeline',
-  '/abjad-bast-audit',
-  '/mizan-calculation-audit',
-  '/vefk-audit',
-  '/method-classification',
-  '/manuscript-verification',
-  '/manuscript-analysis',
-  '/vefk-model-verification',
-  '/rubai-verification',
-  '/manuscript-audit',
-  '/manuscript-action-finder',
-  '/manuscript-library',
-  '/manuscript-final-audit',
-  '/astrology-only-audit',
-  '/manuscript-browser',
-  '/manuscript-rule-audit',
-  '/manuscript-search',
-  '/manazil-quality-audit',
-  '/manuscript-completion-report',
-];
+// ── Page Visibility — driven by pageType, not path patterns ──
+// Content pages (pageType='content') → SHOWN in admin visibility dashboards
+// System pages  (pageType='system')  → HIDDEN (support, onboarding, OTP, subscriptions, audit, etc.)
+// New content pages register with default pageType='content' and appear automatically.
 
 export function getVisibleContentPages() {
-  return getContentPages().filter(p => {
-    const isSystem = SYSTEM_PATH_PREFIXES.some(prefix => p.path.startsWith(prefix));
-    const isAudit  = AUDIT_PATH_PREFIXES.some(prefix => p.path.startsWith(prefix));
-    return !isSystem && !isAudit;
-  });
+  return getContentPages().filter(p => p.pageType !== 'system');
 }
 
 // ── Pre-register existing pages ────────────────────────────────────────────────
@@ -156,17 +120,17 @@ const PRE_REGISTERED = [
   { path: '/evil-jinn',            name: 'Evil Jinn',               requiresPermission: true },
   { path: '/holy-names',           name: 'Holy Names',              requiresPermission: true },
   { path: '/astro-clock',          name: 'Astro Clock',             requiresPermission: true },
-  { path: '/customer-service',     name: 'Customer Service',        requiresPermission: false },
-  { path: '/support',              name: 'Support Hub',             requiresPermission: false },
-  { path: '/support/chat',         name: 'Support Chat',            requiresPermission: false },
-  { path: '/support/voice',        name: 'Support Voice',           requiresPermission: false },
-  { path: '/support/ticket',       name: 'Support Ticket',          requiresPermission: false },
-  { path: '/otp-login',            name: 'OTP Login',               requiresPermission: false },
-  { path: '/onboarding',           name: 'Onboarding',              requiresPermission: false },
-  { path: '/subscription-expired', name: 'Subscription Expired',    requiresPermission: false },
-  { path: '/subscription-pending', name: 'Subscription Pending',    requiresPermission: false },
-  { path: '/premium-access-request', name: 'Premium Access Request', requiresPermission: false },
-  { path: '/my-subscription',      name: 'My Subscription',         requiresPermission: false },
+  { path: '/customer-service',     name: 'Customer Service',        requiresPermission: false, pageType: 'system' },
+  { path: '/support',              name: 'Support Hub',             requiresPermission: false, pageType: 'system' },
+  { path: '/support/chat',         name: 'Support Chat',            requiresPermission: false, pageType: 'system' },
+  { path: '/support/voice',        name: 'Support Voice',           requiresPermission: false, pageType: 'system' },
+  { path: '/support/ticket',       name: 'Support Ticket',          requiresPermission: false, pageType: 'system' },
+  { path: '/otp-login',            name: 'OTP Login',               requiresPermission: false, pageType: 'system' },
+  { path: '/onboarding',           name: 'Onboarding',              requiresPermission: false, pageType: 'system' },
+  { path: '/subscription-expired', name: 'Subscription Expired',    requiresPermission: false, pageType: 'system' },
+  { path: '/subscription-pending', name: 'Subscription Pending',    requiresPermission: false, pageType: 'system' },
+  { path: '/premium-access-request', name: 'Premium Access Request', requiresPermission: false, pageType: 'system' },
+  { path: '/my-subscription',      name: 'My Subscription',         requiresPermission: false, pageType: 'system' },
   // Admin pages
   { path: '/admin/dashboard',              name: 'Admin Dashboard',              requiresPermission: false, adminOnly: true },
   { path: '/admin/test',                   name: 'Admin Test',                   requiresPermission: false, adminOnly: true },
@@ -187,31 +151,31 @@ const PRE_REGISTERED = [
   { path: '/admin/access-dashboard',       name: 'Owner Access Dashboard',       requiresPermission: false, adminOnly: true },
   { path: '/admin/user-detail/:userId',    name: 'User Detail',                  requiresPermission: false, adminOnly: true },
   { path: '/admin/faal-chob-upload',       name: 'Admin Faal Chob',              requiresPermission: true,  adminOnly: true },
-  // Audit pages
-  { path: '/hierarchy-audit',              name: 'Hierarchy Audit',              requiresPermission: true },
-  { path: '/pipeline-test',                name: 'Pipeline Test',                requiresPermission: true },
-  { path: '/audit-report',                 name: 'Audit Report',                 requiresPermission: true },
-  { path: '/istintak-discovery',           name: 'Istintak Discovery',           requiresPermission: true },
-  { path: '/manuscript-pipeline',          name: 'Manuscript Pipeline',          requiresPermission: true },
-  { path: '/abjad-bast-audit',             name: 'Abjad Bast Audit',             requiresPermission: true },
-  { path: '/mizan-calculation-audit',      name: 'Mizan Calculation Audit',      requiresPermission: true },
-  { path: '/vefk-audit',                   name: 'Vefk Audit',                   requiresPermission: true },
-  { path: '/method-classification',        name: 'Method Classification',        requiresPermission: true },
-  { path: '/manuscript-verification',      name: 'Manuscript Verification',      requiresPermission: true },
-  { path: '/manuscript-analysis',          name: 'Manuscript Analysis',          requiresPermission: true },
-  { path: '/vefk-model-verification',      name: 'Vefk Model Verification',      requiresPermission: true },
-  { path: '/rubai-verification',           name: 'Rubai Verification',           requiresPermission: true },
-  { path: '/manuscript-audit',             name: 'Manuscript Audit',             requiresPermission: true },
-  { path: '/manuscript-audit-full',        name: 'Manuscript Audit Full',        requiresPermission: true },
-  { path: '/manuscript-action-finder',     name: 'Manuscript Action Finder',     requiresPermission: true },
-  { path: '/manuscript-library',           name: 'Manuscript Library',           requiresPermission: true },
-  { path: '/manuscript-final-audit',       name: 'Manuscript Final Audit',       requiresPermission: true },
-  { path: '/astrology-only-audit',         name: 'Astrology Only Audit',         requiresPermission: true },
-  { path: '/manuscript-browser',           name: 'Manuscript Browser',           requiresPermission: true },
-  { path: '/manuscript-rule-audit',        name: 'Manuscript Rule Audit',        requiresPermission: true },
-  { path: '/manuscript-search',            name: 'Manuscript Search',            requiresPermission: true },
-  { path: '/manazil-quality-audit',        name: 'Manazil Quality Audit',        requiresPermission: true },
-  { path: '/manuscript-completion-report', name: 'Manuscript Completion Report', requiresPermission: true },
+  // Audit pages (system)
+  { path: '/hierarchy-audit',              name: 'Hierarchy Audit',              requiresPermission: true,  pageType: 'system' },
+  { path: '/pipeline-test',                name: 'Pipeline Test',                requiresPermission: true,  pageType: 'system' },
+  { path: '/audit-report',                 name: 'Audit Report',                 requiresPermission: true,  pageType: 'system' },
+  { path: '/istintak-discovery',           name: 'Istintak Discovery',           requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-pipeline',          name: 'Manuscript Pipeline',          requiresPermission: true,  pageType: 'system' },
+  { path: '/abjad-bast-audit',             name: 'Abjad Bast Audit',             requiresPermission: true,  pageType: 'system' },
+  { path: '/mizan-calculation-audit',      name: 'Mizan Calculation Audit',      requiresPermission: true,  pageType: 'system' },
+  { path: '/vefk-audit',                   name: 'Vefk Audit',                   requiresPermission: true,  pageType: 'system' },
+  { path: '/method-classification',        name: 'Method Classification',        requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-verification',      name: 'Manuscript Verification',      requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-analysis',          name: 'Manuscript Analysis',          requiresPermission: true,  pageType: 'system' },
+  { path: '/vefk-model-verification',      name: 'Vefk Model Verification',      requiresPermission: true,  pageType: 'system' },
+  { path: '/rubai-verification',           name: 'Rubai Verification',           requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-audit',             name: 'Manuscript Audit',             requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-audit-full',        name: 'Manuscript Audit Full',        requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-action-finder',     name: 'Manuscript Action Finder',     requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-library',           name: 'Manuscript Library',           requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-final-audit',       name: 'Manuscript Final Audit',       requiresPermission: true,  pageType: 'system' },
+  { path: '/astrology-only-audit',         name: 'Astrology Only Audit',         requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-browser',           name: 'Manuscript Browser',           requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-rule-audit',        name: 'Manuscript Rule Audit',        requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-search',            name: 'Manuscript Search',            requiresPermission: true,  pageType: 'system' },
+  { path: '/manazil-quality-audit',        name: 'Manazil Quality Audit',        requiresPermission: true,  pageType: 'system' },
+  { path: '/manuscript-completion-report', name: 'Manuscript Completion Report', requiresPermission: true,  pageType: 'system' },
 ];
 
 // Initialize registry
