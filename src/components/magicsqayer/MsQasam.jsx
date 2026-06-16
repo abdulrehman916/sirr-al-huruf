@@ -366,11 +366,18 @@ export default function MsQasam({ mc, gridSize, grid, userPurpose, targetName, s
         style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
         <SectionTitle label="ARABIC QASAM" />
         <div className="mt-3">
-          <p className="font-amiri text-base leading-[2.4] text-center" dir="rtl"
+          <p className="font-amiri text-center" dir="rtl"
             style={{
               color: "rgba(245,235,210,0.88)",
               whiteSpace: "pre-wrap",
               textShadow: "0 0 12px rgba(212,175,55,0.12)",
+              fontFamily: '"Amiri Quran", "Amiri", "Noto Naskh Arabic", serif',
+              fontSize: "1.3em",
+              lineHeight: 2.2,
+              fontWeight: 500,
+              textRendering: "optimizeLegibility",
+              WebkitFontSmoothing: "antialiased",
+              MozOsxFontSmoothing: "grayscale",
             }}>
             {qasamText}
           </p>
