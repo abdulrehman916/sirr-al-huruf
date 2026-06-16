@@ -88,23 +88,55 @@ export function getContentPages() {
     .filter(p => !p.path.startsWith('/admin') && p.path !== '/');
 }
 
-// ── Page Visibility whitelist — only these user-facing pages appear in admin visibility dashboards ──
-const VISIBLE_CONTENT_PATHS = new Set([
-  '/',
-  '/abjad',
-  '/anasir',
-  '/hadim',
-  '/mizaan9',
-  '/magic-sqayer',
-  '/vefkin-yapilisi',
-  '/basthul-huroof-2',
-  '/holy-names',
-  '/astro-clock',
-  '/evil-jinn',
-]);
+// ── Page classification for admin visibility dashboards ──
+// Content pages: user-facing — SHOWN in Page Visibility
+// System/Audit pages: internal technical routes — HIDDEN in Page Visibility
+// New content pages register themselves and automatically appear — no whitelist needed.
+
+const SYSTEM_PATH_PREFIXES = [
+  '/support',
+  '/customer-service',
+  '/onboarding',
+  '/otp-login',
+  '/subscription',
+  '/premium-access',
+  '/my-subscription',
+  '/payment',
+  '/razorpay',
+];
+
+const AUDIT_PATH_PREFIXES = [
+  '/hierarchy-audit',
+  '/pipeline-test',
+  '/audit-report',
+  '/istintak-discovery',
+  '/manuscript-pipeline',
+  '/abjad-bast-audit',
+  '/mizan-calculation-audit',
+  '/vefk-audit',
+  '/method-classification',
+  '/manuscript-verification',
+  '/manuscript-analysis',
+  '/vefk-model-verification',
+  '/rubai-verification',
+  '/manuscript-audit',
+  '/manuscript-action-finder',
+  '/manuscript-library',
+  '/manuscript-final-audit',
+  '/astrology-only-audit',
+  '/manuscript-browser',
+  '/manuscript-rule-audit',
+  '/manuscript-search',
+  '/manazil-quality-audit',
+  '/manuscript-completion-report',
+];
 
 export function getVisibleContentPages() {
-  return getContentPages().filter(p => VISIBLE_CONTENT_PATHS.has(p.path));
+  return getContentPages().filter(p => {
+    const isSystem = SYSTEM_PATH_PREFIXES.some(prefix => p.path.startsWith(prefix));
+    const isAudit  = AUDIT_PATH_PREFIXES.some(prefix => p.path.startsWith(prefix));
+    return !isSystem && !isAudit;
+  });
 }
 
 // ── Pre-register existing pages ────────────────────────────────────────────────
