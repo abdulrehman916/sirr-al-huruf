@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
         user_id: user.id,
         page_path,
       });
-      if (subCheck?.has_access) {
+      if (subCheck?.has_subscription) {
         return Response.json({
           granted: true,
           status: 'granted',

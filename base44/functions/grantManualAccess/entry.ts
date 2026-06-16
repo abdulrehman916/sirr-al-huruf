@@ -46,7 +46,11 @@ Deno.serve(async (req) => {
       // LIFETIME has null expiry
 
       const permissionId = `PERM-${now.getTime()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      const permissionCode = `${page_path.replace(/\//g, '_').toUpperCase()}_ACCESS`;
+      const permissionCode = page_path
+        .replace(/^\//, '')
+        .replace(/\/$/, '')
+        .replace(/[\/\-:]/g, '_')
+        .toUpperCase() + '_ACCESS';
 
       // Check existing permission
       const existing = await base44.entities.PagePermission.filter({
@@ -137,10 +141,15 @@ Deno.serve(async (req) => {
     const profiles = await base44.entities.UserAccessProfile.filter({ user_id });
     if (profiles.length > 0) {
       const profile = profiles[0];
-      await base44.entities.UserAccessProfile.update(profile.id, {
+      const updateData = {
         total_permissions: (profile.total_permissions || 0) + grants.length,
         active_permissions: (profile.active_permissions || 0) + grants.length
-      });
+      };
+      // If any grant is LIFETIME, set the lifetime_access flag for fast-path bypass
+      if (grants.some(g => g.plan_name === 'LIFETIME')) {
+        updateData.lifetime_access = true;
+      }
+      await base44.entities.UserAccessProfile.update(profile.id, updateData);
     }
 
     return Response.json({
