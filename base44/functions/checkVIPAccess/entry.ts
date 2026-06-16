@@ -21,43 +21,82 @@ Deno.serve(async (req) => {
     const phoneIdentifiers = [];
     if (profile?.mobile) phoneIdentifiers.push(profile.mobile.trim());
 
+    console.log(`[VIPAccess] User: ${user.email}, emailIdentifiers: [${emailIdentifiers.join(', ')}], phoneIdentifiers: [${phoneIdentifiers.join(', ')}]`);
+
     if (emailIdentifiers.length === 0 && phoneIdentifiers.length === 0) {
-      return Response.json({ is_vip: false });
+      console.log(`[VIPAccess] FAIL: No identifiers found for user`);
+      return Response.json({ is_vip: false, reason: 'No identifiers found' });
     }
 
     // Load all active VIP entries
     const vipEntries = await base44.asServiceRole.entities.VIPAccess.filter({ is_active: true });
+    console.log(`[VIPAccess] Found ${vipEntries.length} active VIP entries`);
 
     for (const vip of vipEntries) {
       const vipId = vip.identifier?.trim();
-      if (!vipId) continue;
+      if (!vipId) {
+        console.log(`[VIPAccess] SKIP: VIP entry has empty identifier`);
+        continue;
+      }
+
+      console.log(`[VIPAccess] Checking VIP: identifier=${vipId}, type=${vip.identifier_type}, grant_all=${vip.grant_all}`);
 
       // Match based on identifier_type: EMAIL → compare against email identifiers,
       // PHONE → compare against phone identifiers.
       // Falls back to checking all identifiers for legacy entries without a type.
       let matches = false;
+      let matchReason = '';
       if (vip.identifier_type === 'EMAIL') {
-        matches = emailIdentifiers.some(id => id === vipId.toLowerCase());
+        matches = emailIdentifiers.some(id => {
+          const match = id === vipId.toLowerCase();
+          console.log(`[VIPAccess] EMAIL match attempt: ${id} === ${vipId.toLowerCase()} ? ${match}`);
+          return match;
+        });
+        matchReason = 'EMAIL';
       } else if (vip.identifier_type === 'PHONE') {
-        matches = phoneIdentifiers.some(id => id === vipId);
+        matches = phoneIdentifiers.some(id => {
+          const match = id === vipId;
+          console.log(`[VIPAccess] PHONE match attempt: ${id} === ${vipId} ? ${match}`);
+          return match;
+        });
+        matchReason = 'PHONE';
       } else {
         // Legacy / unknown type — try both sets (original behaviour)
         const all = [...emailIdentifiers, ...phoneIdentifiers];
-        matches = all.some(id => id === vipId.toLowerCase() || id === vipId);
+        matches = all.some(id => {
+          const match = id === vipId.toLowerCase() || id === vipId;
+          console.log(`[VIPAccess] LEGACY match attempt: ${id} === ${vipId.toLowerCase()} or ${vipId} ? ${match}`);
+          return match;
+        });
+        matchReason = 'LEGACY';
       }
-      if (!matches) continue;
+      
+      if (!matches) {
+        console.log(`[VIPAccess] NO MATCH for VIP ${vipId} (${matchReason})`);
+        continue;
+      }
+
+      console.log(`[VIPAccess] MATCH FOUND for VIP ${vipId} (${matchReason})`);
 
       // VIP entry matches this user
-      if (vip.grant_all) return Response.json({ is_vip: true, label: vip.label });
+      if (vip.grant_all) {
+        console.log(`[VIPAccess] GRANT ALL - access granted`);
+        return Response.json({ is_vip: true, label: vip.label });
+      }
 
       // Check if this page is in the VIP's allowed pages
       if (Array.isArray(vip.page_paths) && vip.page_paths.includes(page_path)) {
+        console.log(`[VIPAccess] PAGE MATCH - ${page_path} in allowed pages`);
         return Response.json({ is_vip: true, label: vip.label });
+      } else {
+        console.log(`[VIPAccess] PAGE NOT IN LIST - ${page_path} not in [${vip.page_paths?.join(', ') || ''}]`);
       }
     }
 
-    return Response.json({ is_vip: false });
+    console.log(`[VIPAccess] FINAL: No VIP match found`);
+    return Response.json({ is_vip: false, reason: 'No VIP match' });
   } catch (error) {
+    console.error(`[VIPAccess] ERROR: ${error.message}`);
     return Response.json({ is_vip: false, error: error.message });
   }
 });
