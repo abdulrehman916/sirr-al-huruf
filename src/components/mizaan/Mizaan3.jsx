@@ -4,7 +4,7 @@ import { MIZAAN_DAYNIGHT_FULL } from "../../lib/mizaan9Data";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
-export default function Mizaan3({ dominant, selected, onChange }) {
+export default function Mizaan3({ dominant, selected, onChange, dayNightData }) {
   const toggle = (key) => onChange(selected === key ? null : key);
 
   return (
@@ -17,7 +17,7 @@ export default function Mizaan3({ dominant, selected, onChange }) {
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        {Object.entries(MIZAAN_DAYNIGHT_FULL).map(([key, item], i) => {
+        {Object.entries(dayNightData ?? MIZAAN_DAYNIGHT_FULL).map(([key, item], i) => {
           const isSuggested = item.elements.includes(dominant);
           const isSelected  = selected === key;
           return (

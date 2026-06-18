@@ -65,7 +65,7 @@ function CustomPurposePanel({ customPurpose, onCustomPurpose }) {
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.40)", bg: "rgba(212,175,55,0.07)" };
 
-export default function Mizaan7({ selected, onChange, customPurpose, onCustomPurpose }) {
+export default function Mizaan7({ selected, onChange, customPurpose, onCustomPurpose, purposesData }) {
   // selected is now an array
   const selectedArr = Array.isArray(selected) ? selected : (selected ? [selected] : []);
   const toggle = (key) => {
@@ -87,7 +87,7 @@ export default function Mizaan7({ selected, onChange, customPurpose, onCustomPur
 
       {/* 5 Purpose Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {MIZAAN_PURPOSES.map((p, i) => {
+        {(purposesData ?? MIZAAN_PURPOSES).map((p, i) => {
           const isSelected = selectedArr.includes(p.key);
           const col        = p.color;
           return (

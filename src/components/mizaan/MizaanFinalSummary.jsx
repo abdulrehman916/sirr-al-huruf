@@ -100,11 +100,21 @@ function MizaanRow({ number, numberAR, label, entries, bast, letters, color }) {
 }
 
 // ─── Main Component ──────────────────────────────────────────────
-export default function MizaanFinalSummary({ result, selections, degreeSels = {}, inputText = "", customPurpose = "" }) {
+export default function MizaanFinalSummary({ result, selections, degreeSels = {}, inputText = "", customPurpose = "", ds }) {
   const { dominant, bast1Total: inputBast = 0, letterCount: inputLetterCount = 0 } = result ?? {};
 
   const mizaans = useMemo(() => {
     const list = [];
+
+    // Active dataset bindings (fall back to Section 1 imports if ds not provided)
+    const bast2map    = ds?.bast2       ?? MIZAAN_BAST2;
+    const dayNightMap = ds?.dayNight    ?? MIZAAN_DAYNIGHT_FULL;
+    const hours       = ds?.hours       ?? MIZAAN_HOURS;
+    const days        = ds?.days        ?? MIZAAN_DAYS;
+    const planets     = ds?.planets     ?? MIZAAN_PLANETS_ALL;
+    const purposes    = ds?.purposes    ?? MIZAAN_PURPOSES;
+    const ks8map      = ds?.khayrSharr8 ?? KHAYR_SHARR_8;
+    const degreesMap  = ds?.degrees     ?? MIZAAN_ELEMENT_DEGREES;
 
     // ── Mizaan 1 — Input Text (Bast-ul Aval of the analyzed text) ─
     list.push({
@@ -121,7 +131,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
     let m2Letters = 0;
     const m2Entries = elKeys.map(k => {
       const meta = ELEMENT_META[k];
-      const bast2 = MIZAAN_BAST2[k] ?? 0;
+      const bast2 = bast2map[k] ?? 0;
       if (meta) {
         m2Bast += bast2;
         m2Letters += countArabicLetters(meta.arabic);
@@ -139,7 +149,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
 
     // ── Mizaan 3 — Day / Night ────────────────────────────────────
     const dn3 = selections?.dayNight;
-    const dn3Data = dn3 ? MIZAAN_DAYNIGHT_FULL[dn3] : null;
+    const dn3Data = dn3 ? dayNightMap[dn3] : null;
     list.push({
       number: "3", numberAR: "الثالث",
       label: "Day / Night",
@@ -149,7 +159,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
     });
 
     // ── Mizaan 4 — Hour ───────────────────────────────────────────
-    const hourEntry = MIZAAN_HOURS.find(h => h.hour === selections?.hour);
+    const hourEntry = hours.find(h => h.hour === selections?.hour);
     list.push({
       number: "4", numberAR: "الرابع",
       label: "Hour",
@@ -159,7 +169,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
     });
 
     // ── Mizaan 5 — Day ────────────────────────────────────────────
-    const dayEntry = MIZAAN_DAYS.find(d => d.key === selections?.days);
+    const dayEntry = days.find(d => d.key === selections?.days);
     list.push({
       number: "5", numberAR: "الخامس",
       label: "Day",
@@ -169,7 +179,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
     });
 
     // ── Mizaan 6 — Planet ─────────────────────────────────────────
-    const planetEntry = MIZAAN_PLANETS_ALL.find(p => p.key === selections?.planet);
+    const planetEntry = planets.find(p => p.key === selections?.planet);
     list.push({
       number: "6", numberAR: "السادس",
       label: "Planet",
@@ -184,7 +194,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
     let m7Bast = 0;
     let m7Letters = 0;
     purposeArr.forEach(pk => {
-      const pe = MIZAAN_PURPOSES.find(p => p.key === pk);
+      const pe = purposes.find(p => p.key === pk);
       if (pe) {
         m7Entries.push({ arabic: pe.arabic, icon: pe.icon, bast: pe.bast, color: pe.color });
         m7Bast += pe.bast;
@@ -209,7 +219,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
 
     // ── Mizaan 8 — Khayr / Sharr (scale) ─────────────────────────
     const ks8 = selections?.khayrSharr8;
-    const ks8Data = ks8 ? KHAYR_SHARR_8[ks8] : null;
+    const ks8Data = ks8 ? ks8map[ks8] : null;
     list.push({
       number: "8", numberAR: "الثامن",
       label: "Khayr / Sharr",
@@ -224,7 +234,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
     let m9Letters = 0;
     Object.entries(degreeSels).forEach(([elKey, degKey]) => {
       if (!degKey) return;
-      const elDegData = MIZAAN_ELEMENT_DEGREES[elKey];
+      const elDegData = degreesMap[elKey];
       const deg = elDegData?.degrees.find(d => d.key === degKey);
       const elMeta = ELEMENT_META[elKey];
       if (deg) {
@@ -242,7 +252,7 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
     });
 
     return list;
-  }, [result, selections, degreeSels, inputText, customPurpose, dominant, inputBast, inputLetterCount]);
+  }, [result, selections, degreeSels, inputText, customPurpose, dominant, inputBast, inputLetterCount, ds]);
 
   // Grand total — sum all mizaans
   const { grandBast, grandLetters } = useMemo(() => {

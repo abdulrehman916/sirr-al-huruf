@@ -4,7 +4,7 @@ import { MIZAAN_PLANETS_ALL, DAY_PLANET_MAP } from "../../lib/mizaan9Data";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
-export default function Mizaan6({ selectedDay, selected, onChange }) {
+export default function Mizaan6({ selectedDay, selected, onChange, planetsData }) {
   const autoKey = selectedDay ? (DAY_PLANET_MAP[selectedDay] ?? null) : null;
   const toggle  = (key) => onChange(selected === key ? null : key);
 
@@ -18,7 +18,7 @@ export default function Mizaan6({ selectedDay, selected, onChange }) {
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-        {MIZAAN_PLANETS_ALL.map((p, i) => {
+        {(planetsData ?? MIZAAN_PLANETS_ALL).map((p, i) => {
           const isAuto     = p.key === autoKey;
           const isSelected = selected === p.key;
           const col        = p.color;

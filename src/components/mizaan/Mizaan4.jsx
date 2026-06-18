@@ -10,7 +10,7 @@ function getCurrentMizaanHour() {
   return (Math.floor(h / 2) % 12) + 1;
 }
 
-export default function Mizaan4({ selected, onChange }) {
+export default function Mizaan4({ selected, onChange, hoursData }) {
   const autoHour = getCurrentMizaanHour();
   const toggle = (hour) => onChange(selected === hour ? null : hour);
 
@@ -24,7 +24,7 @@ export default function Mizaan4({ selected, onChange }) {
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-        {MIZAAN_HOURS.map((h, i) => {
+        {(hoursData ?? MIZAAN_HOURS).map((h, i) => {
           const isAuto     = h.hour === autoHour;
           const isSelected = selected === h.hour;
           return (

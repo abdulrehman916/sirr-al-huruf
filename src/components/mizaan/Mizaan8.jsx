@@ -32,7 +32,7 @@ const KHAYR_PURPOSES = ['celb', 'sihhat', 'tarfet'];
 // Purpose keys that map to Sharr
 const SHARR_PURPOSES = ['tard', 'sekam'];
 
-export default function Mizaan8({ selected, onChange, selectedPurpose }) {
+export default function Mizaan8({ selected, onChange, selectedPurpose, khayrSharr8Data }) {
   // Auto-select based on Mizaan 7 purposes (array)
   useEffect(() => {
     const arr = Array.isArray(selectedPurpose) ? selectedPurpose : (selectedPurpose ? [selectedPurpose] : []);
@@ -90,7 +90,7 @@ export default function Mizaan8({ selected, onChange, selectedPurpose }) {
               </motion.span>
               <p className="font-amiri text-2xl font-bold" style={{ color: isSelected ? col : `${col}44` }}>{item.arabic}</p>
               <p className="font-inter text-sm font-bold tabular-nums" style={{ color: isSelected ? col : `${col}44` }}>
-                {item.bast.toLocaleString()}
+                {(khayrSharr8Data?.[item.key]?.bast ?? item.bast).toLocaleString()}
               </p>
               {isSelected && (
                 <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}

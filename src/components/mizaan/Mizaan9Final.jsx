@@ -52,8 +52,8 @@ function DegreeCard({ degree, isSelected, col, glow, bg, border, onToggle }) {
   );
 }
 
-function ElementSection({ elKey, isOpen, onToggle, selectedDegree, onSelectDegree }) {
-  const el = MIZAAN_ELEMENT_DEGREES[elKey];
+function ElementSection({ elKey, isOpen, onToggle, selectedDegree, onSelectDegree, degreesMap }) {
+  const el = degreesMap[elKey];
   if (!el) return null;
   const { arabic, icon, color: col, glow, bg, border, degrees } = el;
 
@@ -114,8 +114,9 @@ function ElementSection({ elKey, isOpen, onToggle, selectedDegree, onSelectDegre
   );
 }
 
-export default function Mizaan9Final({ result, selections, degreeSels = {}, onDegreeSels }) {
+export default function Mizaan9Final({ result, selections, degreeSels = {}, onDegreeSels, degrees9Data }) {
   const { dominant } = result ?? {};
+  const degreesSource = degrees9Data ?? MIZAAN_ELEMENT_DEGREES;
 
   const [openSections, setOpenSections] = useState(
     () => Object.fromEntries(ELEMENT_ORDER.map(e => [e, false]))
@@ -152,6 +153,7 @@ export default function Mizaan9Final({ result, selections, degreeSels = {}, onDe
             onToggle={() => toggleSection(elKey)}
             selectedDegree={degreeSels?.[elKey] ?? null}
             onSelectDegree={selectDegree}
+            degreesMap={degreesSource}
           />
         ))}
       </div>

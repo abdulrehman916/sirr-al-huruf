@@ -11,7 +11,7 @@ function getCurrentDayKey() {
   return DAY_KEYS[new Date().getDay()];
 }
 
-export default function Mizaan5({ selected, onChange }) {
+export default function Mizaan5({ selected, onChange, daysData }) {
   const autoDay = getCurrentDayKey();
   const toggle  = (key) => onChange(selected === key ? null : key);
 
@@ -25,7 +25,7 @@ export default function Mizaan5({ selected, onChange }) {
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-        {MIZAAN_DAYS.map((d, i) => {
+        {(daysData ?? MIZAAN_DAYS).map((d, i) => {
           const isAuto     = d.key === autoDay;
           const isSelected = selected === d.key;
           const col        = d.color;

@@ -11,7 +11,7 @@ const EL = {
   water: { color: "#4FC3F7", glow: "rgba(79,195,247,0.45)",  bg: "rgba(79,195,247,0.12)",  border: "rgba(79,195,247,0.50)" },
 };
 
-export default function Mizaan2({ dominant, tiebreak, selected, onChange }) {
+export default function Mizaan2({ dominant, tiebreak, selected, onChange, elementsData }) {
   const toggle = (key) => {
     const next = selected.includes(key)
       ? selected.filter(k => k !== key)
@@ -29,7 +29,7 @@ export default function Mizaan2({ dominant, tiebreak, selected, onChange }) {
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        {Object.entries(MIZAAN_ELEMENTS).map(([key, el], i) => {
+        {Object.entries(elementsData ?? MIZAAN_ELEMENTS).map(([key, el], i) => {
           const s = EL[key];
           const isSuggested = key === dominant;
           const isSelected  = selected.includes(key);

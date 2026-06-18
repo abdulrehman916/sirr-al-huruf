@@ -25,6 +25,7 @@ import ConclusionRulesPanel from "../components/mizaan/ConclusionRulesPanel.jsx"
 import KasamSection from "../components/mizaan/KasamSection.jsx";
 
 
+import { getDataSet } from "../lib/mizaanDataSets";
 import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
 import { usePageState } from "../context/PageStateContext";
 
@@ -74,18 +75,13 @@ function buildDefaultSelections(dominant) {
 const PAGE_KEY = 'mizaan9';
 
 // ── Helper: re-derive grand totals using same logic as MizaanFinalSummary ──
-function computeGrandTotals(result, selections, degreeSels, inputText, customPurpose) {
+function computeGrandTotals(result, selections, degreeSels, inputText, customPurpose, ds) {
   if (!result) return { grandBast: 0, grandLetters: 0 };
 
   function countArabicLetters(str) {
     if (!str) return 0;
     return str.replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '').replace(/[^\u0600-\u06FF]/g, '').length;
   }
-
-  const KHAYR_SHARR_8 = {
-    khayr: { arabic: 'الخير', bast: 2731 },
-    sharr: { arabic: 'الشر',  bast: 2725 },
-  };
 
   const ELEMENT_META_ARABIC = { fire: "النار", earth: "التراب", air: "الهواء", water: "الماء" };
 
@@ -99,31 +95,31 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
   // M2 — element
   const elKeys = Array.isArray(selections?.elements) ? selections.elements : (selections?.elements ? [selections.elements] : []);
   elKeys.forEach(k => {
-    grandBast   += MIZAAN_BAST2[k] ?? 0;
+    grandBast   += ds.bast2[k] ?? 0;
     grandLetters += countArabicLetters(ELEMENT_META_ARABIC[k] || '');
   });
 
   // M3 — day/night
   const dn3 = selections?.dayNight;
-  const dn3d = dn3 ? MIZAAN_DAYNIGHT_FULL[dn3] : null;
+  const dn3d = dn3 ? ds.dayNight[dn3] : null;
   if (dn3d) { grandBast += dn3d.bast; grandLetters += countArabicLetters(dn3d.arabic); }
 
   // M4 — hour
-  const hourEntry = MIZAAN_HOURS.find(h => h.hour === selections?.hour);
+  const hourEntry = ds.hours.find(h => h.hour === selections?.hour);
   if (hourEntry) { grandBast += hourEntry.bast; grandLetters += countArabicLetters(hourEntry.arabic); }
 
   // M5 — day
-  const dayEntry = MIZAAN_DAYS.find(d => d.key === selections?.days);
+  const dayEntry = ds.days.find(d => d.key === selections?.days);
   if (dayEntry) { grandBast += dayEntry.bast; grandLetters += countArabicLetters(dayEntry.arabic); }
 
   // M6 — planet
-  const planetEntry = MIZAAN_PLANETS_ALL.find(p => p.key === selections?.planet);
+  const planetEntry = ds.planets.find(p => p.key === selections?.planet);
   if (planetEntry) { grandBast += planetEntry.bast; grandLetters += countArabicLetters(planetEntry.arabic); }
 
   // M7 — purposes + custom
   const purposeArr = Array.isArray(selections?.purposes) ? selections.purposes : (selections?.purposes ? [selections.purposes] : []);
   purposeArr.forEach(pk => {
-    const pe = MIZAAN_PURPOSES.find(p => p.key === pk);
+    const pe = ds.purposes.find(p => p.key === pk);
     if (pe) { grandBast += pe.bast; grandLetters += countArabicLetters(pe.arabic); }
   });
   const trimmedCustom = (customPurpose ?? "").trim();
@@ -135,13 +131,13 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
 
   // M8 — khayr/sharr8
   const ks8 = selections?.khayrSharr8;
-  const ks8d = ks8 ? KHAYR_SHARR_8[ks8] : null;
+  const ks8d = ks8 ? ds.khayrSharr8[ks8] : null;
   if (ks8d) { grandBast += ks8d.bast; grandLetters += countArabicLetters(ks8d.arabic); }
 
   // M9 — degrees
   Object.entries(degreeSels || {}).forEach(([elKey, degKey]) => {
     if (!degKey) return;
-    const elDegData = MIZAAN_ELEMENT_DEGREES[elKey];
+    const elDegData = ds.degrees[elKey];
     const deg = elDegData?.degrees.find(d => d.key === degKey);
     if (deg) { grandBast += deg.bast; grandLetters += countArabicLetters(deg.arabic); }
   });
@@ -174,6 +170,8 @@ export default function Mizaan9Page() {
   const [s1VefkData, setS1VefkData] = useState(null);
   const [s2VefkData, setS2VefkData] = useState(null);
   const [s3VefkData, setS3VefkData] = useState(null);
+  const [activeSection, setActiveSection] = useState(1);
+  const ds = getDataSet(activeSection);
   const abortRef = useRef(false);
 
   useEffect(() => {
@@ -228,6 +226,23 @@ export default function Mizaan9Page() {
 
         {/* Header */}
         <PageTitle arabic="ميزان الأعداد" latin="9 Mizan" subtitle="Complete Occult Analysis System" icon="٩" />
+
+        {/* Section 1 / Section 2 Toggle */}
+        <div className="flex gap-2">
+          {[1, 2].map(s => (
+            <button key={s} onClick={() => setActiveSection(s)}
+              className="flex-1 py-2.5 px-4 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+              style={{
+                background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
+              }}>
+              <span className="font-amiri text-base">{s === 1 ? 'المجموعة الأولى' : 'المجموعة الثانية'}</span>
+              <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
+            </button>
+          ))}
+        </div>
 
         {/* Input card */}
         <div className="rounded-2xl border p-5 relative overflow-hidden"
@@ -296,53 +311,60 @@ export default function Mizaan9Page() {
                 tiebreak={result.tiebreak}
                 selected={selections.elements}
                 onChange={updateSel("elements")}
+              elementsData={ds.elements}
               />
               <MizaanDivider />
               <Mizaan3
                 dominant={result.dominant}
                 selected={selections.dayNight}
                 onChange={updateSel("dayNight")}
-              />
+                dayNightData={ds.dayNight}
+                />
               <MizaanDivider />
               <Mizaan4
                 selected={selections.hour}
                 onChange={updateSel("hour")}
-              />
+                hoursData={ds.hours}
+                />
               <MizaanDivider />
               <Mizaan5
                 selected={selections.days}
                 onChange={updateSel("days")}
-              />
+                daysData={ds.days}
+                />
               <MizaanDivider />
               <Mizaan6
                 selectedDay={selections.days}
                 selected={selections.planet}
                 onChange={updateSel("planet")}
-              />
+                planetsData={ds.planets}
+                />
               <MizaanDivider />
               <Mizaan7
                 selected={selections.purposes}
                 onChange={updateSel("purposes")}
                 customPurpose={customPurpose}
                 onCustomPurpose={setCustomPurpose}
-              />
+                purposesData={ds.purposes}
+                />
               <MizaanDivider />
               <Mizaan8
                 selected={selections.khayrSharr8}
                 onChange={updateSel("khayrSharr8")}
                 selectedPurpose={selections.purposes}
-              />
+                khayrSharr8Data={ds.khayrSharr8}
+                />
               <MizaanDivider />
-              <Mizaan9Final result={result} selections={selections} degreeSels={degreeSels} onDegreeSels={setDegreeSels} />
+              <Mizaan9Final               result={result} selections={selections} degreeSels={degreeSels} onDegreeSels={setDegreeSels} degrees9Data={ds.degrees} />
               <MizaanDivider />
-              <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} />
+              <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} ds={ds} />
               <MizaanDivider />
 
               {/* ═══════════════════════════════════════════════════════════════ */}
               {/* SECTION 1: OPTION 1 — POST-PIPELINE RESULTS (LOCKED) */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               {(() => {
-                const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose);
+                const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds);
                 const dominant = result?.dominant;
                 if (!grandBast || grandBast <= 0) return null;
 
