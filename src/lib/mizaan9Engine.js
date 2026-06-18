@@ -37,10 +37,10 @@ const MIZAAN_BAST1 = Object.freeze({
 // BAST-1 CALCULATED VALUES from manuscript pages 42-43
 // FROZEN: No modifications allowed
 const MIZAAN_ELEMENTS_RAW = {
-  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 2411 },  // النار: ا(16)+ل(1097)+ن(765)+ا(16)+ر(517) = 2411 ✅
-  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'التراب', icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 2599 },  // التراب: ا(16)+ل(1097)+ت(337)+ر(517)+ا(16)+ب(616) = 2599 ✅
-  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 2322 },  // الهواء: ا(16)+ل(1097)+ه(709)+و(468)+ا(16)+ء(16) = 2322 ✅
-  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 1484 },  // الماء: ا(16)+ل(1097)+م(339)+ا(16)+ء(16) = 1484 ✅
+  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 3550 },  // Manuscript Anasir First Bast: Fire = 3550
+  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'التراب', icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 4015 },  // Manuscript Anasir First Bast: Earth = 4015
+  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 3757 },  // Manuscript Anasir First Bast: Air = 3757
+  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 3342 },  // Manuscript Anasir First Bast: Water = 3342
 };
 export const MIZAAN_ELEMENTS = Object.freeze(MIZAAN_ELEMENTS_RAW);
 

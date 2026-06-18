@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { mizaanAnalyzeAsync, mizaanCalcBast } from "../lib/mizaan9Engine";
-import { DAY_PLANET_MAP, MIZAAN_KHAYR_SHARR, MIZAAN_HOURS, MIZAAN_DAYS, MIZAAN_PLANETS_ALL, MIZAAN_PURPOSES, MIZAAN_ELEMENT_DEGREES } from "../lib/mizaan9Data";
+import { DAY_PLANET_MAP, MIZAAN_DAYNIGHT_FULL, MIZAAN_HOURS, MIZAAN_DAYS, MIZAAN_PLANETS_ALL, MIZAAN_PURPOSES, MIZAAN_ELEMENT_DEGREES } from "../lib/mizaan9Data";
 import { MIZAAN_BAST2 } from "../lib/mizaan9Engine";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
@@ -59,9 +59,10 @@ function MizaanDivider() {
 
 // Build initial selections from dominant element
 function buildDefaultSelections(dominant) {
+  const dn = dominant ? (['fire','earth'].includes(dominant) ? 'gunduz' : 'gece') : null;
   return {
     elements:   dominant ? [dominant] : [],
-    khayrSharr: null,
+    dayNight:   dn,
     hour:       (Math.floor(new Date().getHours() / 2) % 12) + 1,
     days:       ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()],
     planet:     DAY_PLANET_MAP[['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]] ?? null,
@@ -102,10 +103,10 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
     grandLetters += countArabicLetters(ELEMENT_META_ARABIC[k] || '');
   });
 
-  // M3 — khayr/sharr
-  const ks3 = selections?.khayrSharr;
-  const ks3d = ks3 ? MIZAAN_KHAYR_SHARR[ks3] : null;
-  if (ks3d) { grandBast += ks3d.bast; grandLetters += countArabicLetters(ks3d.arabic); }
+  // M3 — day/night
+  const dn3 = selections?.dayNight;
+  const dn3d = dn3 ? MIZAAN_DAYNIGHT_FULL[dn3] : null;
+  if (dn3d) { grandBast += dn3d.bast; grandLetters += countArabicLetters(dn3d.arabic); }
 
   // M4 — hour
   const hourEntry = MIZAAN_HOURS.find(h => h.hour === selections?.hour);
@@ -299,8 +300,8 @@ export default function Mizaan9Page() {
               <MizaanDivider />
               <Mizaan3
                 dominant={result.dominant}
-                selected={selections.khayrSharr}
-                onChange={updateSel("khayrSharr")}
+                selected={selections.dayNight}
+                onChange={updateSel("dayNight")}
               />
               <MizaanDivider />
               <Mizaan4

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  MIZAAN_KHAYR_SHARR,
+  MIZAAN_DAYNIGHT_FULL,
   MIZAAN_HOURS,
   MIZAAN_DAYS,
   MIZAAN_PLANETS_ALL,
@@ -137,15 +137,15 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
       letters: m2Letters,
     });
 
-    // ── Mizaan 3 — Khayr / Sharr ─────────────────────────────────
-    const ks3 = selections?.khayrSharr;
-    const ks3Data = ks3 ? MIZAAN_KHAYR_SHARR[ks3] : null;
+    // ── Mizaan 3 — Day / Night ────────────────────────────────────
+    const dn3 = selections?.dayNight;
+    const dn3Data = dn3 ? MIZAAN_DAYNIGHT_FULL[dn3] : null;
     list.push({
       number: "3", numberAR: "الثالث",
-      label: "Khayr / Sharr",
-      entries: ks3Data ? [{ arabic: ks3Data.arabic, icon: ks3Data.icon, bast: ks3Data.bast, color: ks3Data.color }] : [],
-      bast: ks3Data?.bast ?? 0,
-      letters: ks3Data ? countArabicLetters(ks3Data.arabic) : 0,
+      label: "Day / Night",
+      entries: dn3Data ? [{ arabic: dn3Data.arabic, icon: dn3Data.icon, bast: dn3Data.bast, color: dn3Data.color }] : [],
+      bast: dn3Data?.bast ?? 0,
+      letters: dn3Data ? countArabicLetters(dn3Data.arabic) : 0,
     });
 
     // ── Mizaan 4 — Hour ───────────────────────────────────────────

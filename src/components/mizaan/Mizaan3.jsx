@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
-import { MIZAAN_KHAYR_SHARR } from "../../lib/mizaan9Data";
+import { MIZAAN_DAYNIGHT_FULL } from "../../lib/mizaan9Data";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
@@ -11,13 +11,13 @@ export default function Mizaan3({ dominant, selected, onChange }) {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
       className="rounded-2xl border p-5 space-y-4"
       style={{ background: "rgba(6,14,36,0.98)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}` }}>
-      <MizaanHeader number="٣" titleAR="الميزان الثالث — الخير والشر" titleTR="Third Mizan · Khayr & Sharr" />
+      <MizaanHeader number="٣" titleAR="الميزان الثالث — النهار والليل" titleTR="Third Mizan · Day & Night" />
       <p className="font-inter text-[9px] uppercase tracking-widest text-center" style={{ color: G.dim }}>
         Tap to select
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        {Object.entries(MIZAAN_KHAYR_SHARR).map(([key, item], i) => {
+        {Object.entries(MIZAAN_DAYNIGHT_FULL).map(([key, item], i) => {
           const isSuggested = item.elements.includes(dominant);
           const isSelected  = selected === key;
           return (
