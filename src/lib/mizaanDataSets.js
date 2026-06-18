@@ -22,6 +22,8 @@ import {
   MIZAAN_PURPOSES_B,
   KHAYR_SHARR8_B,
   MIZAAN_ELEMENT_DEGREES_B,
+  BAST_TABLE_B,
+  getBastLevelB,
 } from './mizaan9DataB.js';
 
 // M8 Khayr/Sharr bast values for Section 1 (mirrors Mizaan8 local array)
@@ -43,7 +45,9 @@ export const DATASET_A = {
   degrees:     MIZAAN_ELEMENT_DEGREES,
 };
 
-// ── Section 2 Dataset (placeholder — values filled from screenshots) ──
+// ── Section 2 Dataset ──
+// Bast1 = shared with Section 1 (identical, never changes)
+// Bast2–Bast5 = manuscript pp.52–53 values via BAST_TABLE_B
 export const DATASET_B = {
   elements:    MIZAAN_ELEMENTS_B,
   bast2:       MIZAAN_BAST2_B,
@@ -54,6 +58,8 @@ export const DATASET_B = {
   purposes:    MIZAAN_PURPOSES_B,
   khayrSharr8: KHAYR_SHARR8_B,
   degrees:     MIZAAN_ELEMENT_DEGREES_B,
+  bastTable:   BAST_TABLE_B,
+  getBastLevel: getBastLevelB,
 };
 
 export function getDataSet(section) {
