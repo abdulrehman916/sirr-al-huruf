@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -68,7 +68,7 @@ function OrnamentalDivider() {
   );
 }
 
-function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
+function ExpandedLetterValues({ allExpandedLetters, elementColor, getBastLevelFn = getBastLevelA }) {
   const [isOpen, setIsOpen] = useState(false);
   
   const safeLetters = Array.isArray(allExpandedLetters) ? allExpandedLetters : [];
@@ -87,7 +87,7 @@ function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
         <div className="mt-2 space-y-1">
           <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[6px] font-inter" style={{ color: G.dim }}>
             {safeLetters.map((letter, idx) => {
-              const bastVal = getBastLevel(letter, 1) || 0;
+              const bastVal = getBastLevelFn(letter, 1) || 0;
               return (
                 <div key={idx} className="contents">
                   <span className="text-right font-amiri" style={{ color: elementColor }}>{letter}</span>
@@ -100,7 +100,7 @@ function ExpandedLetterValues({ allExpandedLetters, elementColor }) {
             <div className="mt-1.5 pt-1.5 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
               <span className="text-[6px]" style={{ color: G.dim }}>Total: </span>
               <span className="text-[8px] font-bold tabular-nums" style={{ color: elementColor }}>
-                {safeLetters.reduce((sum, l) => sum + (getBastLevel(l, 1) || 0), 0).toLocaleString()}
+                {safeLetters.reduce((sum, l) => sum + (getBastLevelFn(l, 1) || 0), 0).toLocaleString()}
               </span>
             </div>
           )}
@@ -142,7 +142,7 @@ function SourceSection({ grandBast, expandedLettersTotal, elementColor }) {
   );
 }
 
-export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, onVefkReady }) {
+export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA }) {
   const pipeline = useMemo(() => {
     if (!grandBast || grandBast <= 0) return null;
     return runMizaanPostPipeline({ grandBast, grandLetters, dominant });
@@ -156,7 +156,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
     const bastLevel = isFerd ? 5 : 4;
     let allExpanded = [];
     for (let i = seed.length - 1; i >= 0; i--) {
-      allExpanded = [...allExpanded, ...istintak(getBastLevel(seed[i], bastLevel))];
+      allExpanded = [...allExpanded, ...istintak(getBastLevelFn(seed[i], bastLevel))];
     }
     const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
     const rem = allExpanded.length % gSize;
@@ -217,6 +217,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
         <SatrVahidGrouping
           satrVahidLetters={initialSeedLetters}
           dominant={dominant}
+          getBastLevelFn={getBastLevelFn}
         />
 
         {/* VEFK MAGIC SQUARE */}
@@ -344,10 +345,10 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
               })()}
 
               {/* Expanded Letter Values */}
-              <ExpandedLetterValues allExpandedLetters={allExpandedLetters} elementColor={elementMeta.color} />
+              <ExpandedLetterValues allExpandedLetters={allExpandedLetters} elementColor={elementMeta.color} getBastLevelFn={getBastLevelFn} />
               
               {/* Source Explanation */}
-              <SourceSection grandBast={grandBast} expandedLettersTotal={allExpandedLetters.reduce((sum, letter) => sum + (getBastLevel(letter, 1) || 0), 0)} elementColor={elementMeta.color} />
+              <SourceSection grandBast={grandBast} expandedLettersTotal={allExpandedLetters.reduce((sum, letter) => sum + (getBastLevelFn(letter, 1) || 0), 0)} elementColor={elementMeta.color} />
             </div>
           </Card>
         )}

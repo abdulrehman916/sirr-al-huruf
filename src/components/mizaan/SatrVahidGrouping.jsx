@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import { getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 
 // ── Design tokens ─────────────────────────────────────────────
 const G = {
@@ -134,6 +134,7 @@ export default function SatrVahidGrouping({
   sectionLabel = "OPTION 1 — Esma-i Kitabet",
   sectionArabic = "أسماء الكتابة",
   sectionSubtitle = "Complete Manuscript Workflow",
+  getBastLevelFn = getBastLevelA,
 }) {
   const safeSeed = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
   const totalSeed = safeSeed.length;
@@ -152,7 +153,7 @@ export default function SatrVahidGrouping({
     // Process in REVERSE order: last index → first index
     for (let i = safeSeed.length - 1; i >= 0; i--) {
       const letter = safeSeed[i];
-      const bastValue = getBastLevel(letter, bastLevel);
+      const bastValue = getBastLevelFn(letter, bastLevel);
       const expanded = istintak(bastValue);
       
       // Concatenate expanded letters in reverse derivation order

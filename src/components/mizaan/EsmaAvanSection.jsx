@@ -16,7 +16,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -86,7 +86,7 @@ function OrnamentalDivider() {
 }
 
 // Collapsible expanded letter values — identical to Section 1
-function ExpandedLetterValues({ letters, elementColor }) {
+function ExpandedLetterValues({ letters, elementColor, getBastLevelFn = getBastLevelA }) {
   const [isOpen, setIsOpen] = useState(false);
   const safe = Array.isArray(letters) ? letters : [];
   return (
@@ -101,7 +101,7 @@ function ExpandedLetterValues({ letters, elementColor }) {
         <div className="mt-2 space-y-1">
           <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[6px] font-inter">
             {safe.map((letter, idx) => {
-              const bast = getBastLevel(letter, 1) || 0;
+              const bast = getBastLevelFn(letter, 1) || 0;
               return (
                 <div key={idx} className="contents">
                   <span className="text-right font-amiri" style={{ color: elementColor }}>{letter}</span>
@@ -114,7 +114,7 @@ function ExpandedLetterValues({ letters, elementColor }) {
             <div className="mt-1.5 pt-1.5 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
               <span className="text-[6px]" style={{ color: G.dim }}>Total: </span>
               <span className="text-[8px] font-bold tabular-nums" style={{ color: elementColor }}>
-                {safe.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0).toLocaleString()}
+                {safe.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0).toLocaleString()}
               </span>
             </div>
           )}
@@ -286,10 +286,10 @@ function AvanSourceDerivation({ section1Letters, bastTotal, letterCount, sourceT
 // Props:
 //   allExpandedLetters — Section 1 output (read-only, never modified)
 //   dominant           — Galib Anasir key from Section 1
-export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkReady }) {
+export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA }) {
   const pipeline = useMemo(() => {
     if (!allExpandedLetters || allExpandedLetters.length === 0) return null;
-    const grandBast    = allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+    const grandBast    = allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
     const grandLetters = allExpandedLetters.length;
     if (grandBast <= 0) return null;
     // Re-use EXACTLY the same engine as Section 1 — only the input numbers differ
@@ -311,7 +311,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     const bastLevel = isFerd ? 5 : 4;
     let allExpanded = [];
     for (let i = seed.length - 1; i >= 0; i--) {
-      allExpanded = [...allExpanded, ...istintak(getBastLevel(seed[i], bastLevel))];
+      allExpanded = [...allExpanded, ...istintak(getBastLevelFn(seed[i], bastLevel))];
     }
     const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
     const rem = allExpanded.length % gSize;
@@ -347,7 +347,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
 
   const element     = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
-  const vefkSource  = avanExpanded.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+  const vefkSource  = avanExpanded.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
 
   return (
     <motion.div
@@ -403,6 +403,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
           sectionLabel="SECTION 2 — Esma-i A'van"
           sectionArabic="أسماء الأعوان"
           sectionSubtitle="A'van Derivation Workflow"
+          getBastLevelFn={getBastLevelFn}
         />
 
         {/* ── VEFK MAGIC SQUARE (Step 5) ── */}
@@ -550,7 +551,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
               })()}
 
               {/* Collapsible: Expanded Letter Values */}
-              <ExpandedLetterValues letters={avanExpanded} elementColor={elementMeta.color} />
+              <ExpandedLetterValues letters={avanExpanded} elementColor={elementMeta.color} getBastLevelFn={getBastLevelFn} />
 
               {/* Collapsible: Source derivation */}
               <SourceSection

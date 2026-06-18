@@ -20,7 +20,7 @@
 
 import { useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { getBastLevel, istintak, GALIB_ANASIR_VALUES, buildVefk } from "../../lib/mizaanPostEngine";
+import { getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES, buildVefk } from "../../lib/mizaanPostEngine";
 
 // ── Design tokens ────────────────────────────────────────────────
 const G = {
@@ -250,11 +250,11 @@ function KasemSourceDerivation({ section2Letters, bastTotal, letterCount, source
 // Props:
 //   section2ExpandedLetters — Section 2's allExpandedLetters (read-only)
 //   dominant                — Galib Anasir key
-export default function EsmaKasemSection({ section2ExpandedLetters, dominant, onVefkReady }) {
+export default function EsmaKasemSection({ section2ExpandedLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA }) {
   const safe2 = Array.isArray(section2ExpandedLetters) ? section2ExpandedLetters : [];
 
   // ── STEP 0: Derive Section 3 source from Section 2 expanded letters ──
-  const kasemBastTotal   = useMemo(() => safe2.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0), [safe2]);
+  const kasemBastTotal   = useMemo(() => safe2.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0), [safe2, getBastLevelFn]);
   const kasemLetterCount = safe2.length;
   const kasemSourceTotal = kasemBastTotal + kasemLetterCount;
 
@@ -272,7 +272,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     let allExpanded = [];
     for (let i = seedLetters.length - 1; i >= 0; i--) {
       const letter    = seedLetters[i];
-      const bastValue = getBastLevel(letter, bastLevel);
+      const bastValue = getBastLevelFn(letter, bastLevel);
       const expanded  = istintak(bastValue);
       allExpanded = [...allExpanded, ...expanded];
       derivs.push({
@@ -284,7 +284,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
       });
     }
     return { derivations: derivs, allExpandedLetters: allExpanded };
-  }, [seedLetters, bastLevel]);
+  }, [seedLetters, bastLevel, getBastLevelFn]);
 
   // ── STEP 4: Group Formation with self-referential remainder ──
   const groupFormation = useMemo(() => {
@@ -316,8 +316,8 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
   // ── SECTION 3 VEFK SOURCE: Sum of B5 values for every letter in allExpandedLetters ──
   // RULE: getBastLevel(letter, 5) for each allExpandedLetter → sum → Vefk source
   const s3VefkSourceNumber = useMemo(
-    () => allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 5) || 0), 0),
-    [allExpandedLetters]
+    () => allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 5) || 0), 0),
+    [allExpandedLetters, getBastLevelFn]
   );
 
   const s3Vefk = useMemo(() => {

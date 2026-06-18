@@ -27,6 +27,7 @@ import KasamSection from "../components/mizaan/KasamSection.jsx";
 
 import { getDataSet } from "../lib/mizaanDataSets";
 import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
+import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
 
 const G = {
@@ -172,6 +173,9 @@ export default function Mizaan9Page() {
   const [s3VefkData, setS3VefkData] = useState(null);
   const [activeSection, setActiveSection] = useState(1);
   const ds = getDataSet(activeSection);
+  // Section 1 uses Section A Bast table; Section 2 uses Section B Bast table.
+  // Bast1 is shared (identical). Only Bast2–Bast5 differ.
+  const getBastLevelFn = activeSection === 2 ? getBastLevelB : getBastLevel;
   const abortRef = useRef(false);
 
   useEffect(() => {
@@ -375,7 +379,7 @@ export default function Mizaan9Page() {
                 // Pure function call: no state, no mutation of Section 1 or Section 2
                 const section2ExpandedLetters = (() => {
                   if (!section1?.allExpandedLetters?.length) return [];
-                  const s2GrandBast    = section1.allExpandedLetters.reduce((s, l) => s + (getBastLevel(l, 1) || 0), 0);
+                  const s2GrandBast    = section1.allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
                   const s2GrandLetters = section1.allExpandedLetters.length;
                   const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant });
                   return s2Pipeline?.allExpandedLetters || [];
@@ -388,7 +392,7 @@ export default function Mizaan9Page() {
                 return (
                   <>
                     {/* ═══ SECTION 1: LOCKED ═══ */}
-                    <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} onVefkReady={setS1VefkData} />
+                    <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} onVefkReady={setS1VefkData} getBastLevelFn={getBastLevelFn} />
 
                     {/* ═══ SECTION 2: ESMA-I A'VAN ═══ */}
                     {section1?.allExpandedLetters?.length > 0 && (
@@ -396,6 +400,7 @@ export default function Mizaan9Page() {
                         allExpandedLetters={section1.allExpandedLetters}
                         dominant={dominant}
                         onVefkReady={setS2VefkData}
+                        getBastLevelFn={getBastLevelFn}
                       />
                     )}
 
@@ -405,6 +410,7 @@ export default function Mizaan9Page() {
                         section2ExpandedLetters={section2ExpandedLetters}
                         dominant={dominant}
                         onVefkReady={setS3VefkData}
+                        getBastLevelFn={getBastLevelFn}
                       />
                     )}
 
