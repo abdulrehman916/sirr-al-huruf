@@ -8,14 +8,19 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── M2: Element Letter Group First Bast (Section 2) ──
+// Source: Harflerin Bastı Cetveli, pp.93-94 — Birinci Bast column
+// Fire  (ا ه ط م ف ش ذ): 16+709+539+339+657+1095+195 = 3550
+// Earth (ب و ى ن ص ت ض): 616+468+579+765+594+337+655 = 4014
+// Air   (ج ز ك س ق ث ظ): 1041+141+635+524+60+763+593 = 3757
+// Water (د ح ل ع ر خ غ): 283+612+1097+197+517+522+114 = 3342
 export const MIZAAN_ELEMENTS_B = {
-  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 0 },  // TODO: fill from Section 2 screenshots
-  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'التراب', icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 0 },  // TODO
-  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 0 },  // TODO
-  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 0 },  // TODO
+  fire:  { key: 'fire',  labelTR: 'Ateş',   arabic: 'النار',  icon: '🔥', letters: ['ا','ه','ط','م','ف','ش','ذ'], bast2: 3550 },
+  earth: { key: 'earth', labelTR: 'Toprak', arabic: 'التراب', icon: '🪨', letters: ['ب','و','ي','ن','ص','ت','ض'], bast2: 4014 },
+  air:   { key: 'air',   labelTR: 'Hava',   arabic: 'الهواء', icon: '🌪', letters: ['ج','ز','ك','س','ق','ث','ظ'], bast2: 3757 },
+  water: { key: 'water', labelTR: 'Su',     arabic: 'الماء',  icon: '💧', letters: ['د','ح','ل','ع','ر','خ','غ'], bast2: 3342 },
 };
 
-export const MIZAAN_BAST2_B = { fire: 0, earth: 0, air: 0, water: 0 };  // TODO
+export const MIZAAN_BAST2_B = { fire: 3550, earth: 4014, air: 3757, water: 3342 };
 
 // ── M3: Day / Night First Bast (Section 2) ──
 export const MIZAAN_DAYNIGHT_B = {
