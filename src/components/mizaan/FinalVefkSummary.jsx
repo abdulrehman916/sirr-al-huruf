@@ -41,6 +41,11 @@ function OrnamentalDivider() {
   );
 }
 
+// ── Arabic-Indic numeral converter ──────────────────────────────
+function toArabicIndic(n) {
+  return String(n).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+}
+
 // ── Vefk Writing Assistant ──────────────────────────────────────
 // UI helper only. No calculations. Reveals cells in ascending numeric order.
 function VefkWritingAssistant({ grid, color }) {
@@ -114,7 +119,7 @@ function VefkWritingAssistant({ grid, color }) {
                 color:       revealed ? color : "transparent",
                 boxShadow:   revealed ? `0 0 8px ${color}22` : "none",
               }}>
-              {val.toLocaleString()}
+              {toArabicIndic(val)}
             </div>
           );
         })}
