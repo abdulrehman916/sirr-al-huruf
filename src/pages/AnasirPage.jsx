@@ -55,7 +55,7 @@ export default function AnasirPage() {
 
   return (
     <PageLayout accentColor="cyan">
-      <div className="space-y-4">
+      <div className="space-y-4" style={{ width: "100%", maxWidth: "100vw", overflowX: "hidden", margin: 0, padding: 0 }}>
         {/* Header */}
         <PageTitle arabic="حاسبة العناصر" latin="Anasir Calculator" subtitle="Elemental Domination Analysis" icon="🌊" />
 

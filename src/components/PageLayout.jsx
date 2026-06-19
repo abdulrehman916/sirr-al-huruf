@@ -228,10 +228,14 @@ export default function PageLayout({ children }) {
         overflowX: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
+        maxWidth: "100vw",
+        margin: 0,
+        padding: 0,
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
         paddingBottom: "env(safe-area-inset-bottom)",
+        boxSizing: "border-box",
       }}
     >
       <AtmosphericBackground />
@@ -378,6 +382,10 @@ export default function PageLayout({ children }) {
           willChange: 'scroll-position',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
+          width: "100%",
+          maxWidth: "100vw",
+          margin: 0,
+          padding: 0,
         }}
       >
         <AnimatePresence mode="wait">
@@ -394,10 +402,18 @@ export default function PageLayout({ children }) {
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
               overflowX: 'hidden',
-              maxWidth: '100%',
+              width: '100%',
+              maxWidth: '100vw',
+              margin: 0,
+              marginLeft: 0,
+              marginRight: 0,
+              paddingLeft: 0,
+              paddingRight: 0,
             }}
           >
-            {children}
+            <div style={{ width: "100%", maxWidth: "100vw", overflowX: "hidden" }}>
+              {children}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
