@@ -343,8 +343,8 @@ export default function PageLayout({ children }) {
               backfaceVisibility: "hidden",
               scrollbarWidth: "none",
               msOverflowStyle: "none",
-              paddingRight: "60px",
               paddingLeft: "10px",
+              paddingRight: "24px",
             }}
           >
             {TAB_KEYS.map((tab) => (
