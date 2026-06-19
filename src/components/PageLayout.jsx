@@ -199,7 +199,7 @@ export default function PageLayout({ children }) {
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         height: "100dvh",
-        overflowY: "auto",
+        overflow: "hidden",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -207,7 +207,6 @@ export default function PageLayout({ children }) {
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
         paddingBottom: "env(safe-area-inset-bottom)",
-        WebkitOverflowScrolling: "touch",
       }}
     >
       <AtmosphericBackground />
@@ -310,10 +309,10 @@ export default function PageLayout({ children }) {
       <div
         ref={scrollRef}
         data-scroll-container="true"
-        className="flex-1 overflow-y-auto"
         style={{
           flex: 1,
           minHeight: 0,
+          overflowY: "auto",
           overflowX: "hidden",
           overscrollBehaviorX: "none",
           overscrollBehaviorY: "auto",
