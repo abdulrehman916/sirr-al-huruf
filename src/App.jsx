@@ -79,6 +79,7 @@ const PAGE_IMPORTS = {
   PreLaunchVerification:    () => import('./pages/PreLaunchVerification'),
   FinalProductionAudit:     () => import('./pages/FinalProductionAudit'),
   PerformanceTestReport:    () => import('./pages/PerformanceTestReport'),
+  FinalEnterpriseSignOff:   () => import('./pages/FinalEnterpriseSignOff'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),

@@ -75,6 +75,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/pre-launch-verification', chunk: 'PreLaunchVerification',          flags: 'public' },
   { path: '/admin/final-audit',            chunk: 'FinalProductionAudit',           flags: 'public' },
   { path: '/admin/performance-report',     chunk: 'PerformanceTestReport',          flags: 'public' },
+  { path: '/admin/final-signoff',          chunk: 'FinalEnterpriseSignOff',         flags: 'public' },
 
   // ── Audit / Verification ───────────────────────────────────────────
   { path: '/hierarchy-audit',               chunk: 'HierarchyAuditPage' },
