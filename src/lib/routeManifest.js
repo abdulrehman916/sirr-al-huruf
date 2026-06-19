@@ -72,6 +72,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/launch-checklist',      chunk: 'FinalLaunchChecklist',             flags: 'public' },
   { path: '/admin/pre-launch-report',     chunk: 'PreLaunchReport',                  flags: 'public' },
   { path: '/admin/enterprise-audit',      chunk: 'EnterpriseAuditDashboard',         flags: 'public' },
+  { path: '/admin/pre-launch-verification', chunk: 'PreLaunchVerification',          flags: 'public' },
 
   // ── Audit / Verification ───────────────────────────────────────────
   { path: '/hierarchy-audit',               chunk: 'HierarchyAuditPage' },
