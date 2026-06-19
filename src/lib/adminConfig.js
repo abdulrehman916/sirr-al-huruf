@@ -6,4 +6,7 @@
 export const ADMIN_CONFIG = {
   WHATSAPP_NUMBER: "971522308926",
   WHATSAPP_DISPLAY: "+971 52 230 8926",
+  // Owner email — always receives admin privileges on any device after OTP login.
+  // Change this if the owner email ever changes.
+  OWNER_EMAIL: "abdulrehmanrehman916@gmail.com",
 };

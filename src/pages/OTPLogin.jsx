@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { derivePassword } from "@/lib/derivePassword";
 import { detectDevice, getCountry } from "@/lib/deviceUtils";
 import useTranslation from "@/i18n/useTranslation";
+import { ADMIN_CONFIG } from "@/lib/adminConfig";
 
 export default function OTPLogin() {
   const [step, setStep] = useState("email");
@@ -102,6 +103,11 @@ export default function OTPLogin() {
     try {
       const result = await base44.auth.verifyOtp({ email, otpCode: otp });
       await base44.auth.setToken(result.access_token);
+
+      // Owner email always gets admin role on every device
+      if (email.trim().toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase()) {
+        try { await base44.auth.updateMe({ role: "admin" }); } catch {}
+      }
 
       await base44.functions.invoke("completeOnboarding", {
         email,

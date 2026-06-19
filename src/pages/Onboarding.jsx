@@ -10,6 +10,7 @@ import AtmosphericBackground from "@/components/AtmosphericBackground";
 import { derivePassword } from "@/lib/derivePassword";
 import { detectDevice, getCountry } from "@/lib/deviceUtils";
 import useTranslation from "@/i18n/useTranslation";
+import { ADMIN_CONFIG } from "@/lib/adminConfig";
 
 const STEPS = { WELCOME: 0, EMAIL: 1, OTP: 2 };
 
@@ -68,6 +69,11 @@ export default function Onboarding() {
     try {
       const verifyResult = await base44.auth.verifyOtp({ email, otpCode: otp });
       await base44.auth.setToken(verifyResult.access_token);
+
+      // Owner email always gets admin role on every device
+      if (email.trim().toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase()) {
+        try { await base44.auth.updateMe({ role: "admin" }); } catch {}
+      }
 
       await base44.functions.invoke("completeOnboarding", {
         email,
