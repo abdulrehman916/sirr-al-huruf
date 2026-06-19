@@ -75,7 +75,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         borderRadius: 10,
         minHeight: 44,
         minWidth: 48,
-        maxWidth: "none",
         marginRight: tab.id === 'support' ? 24 : 0,
         border: isActive ? "1px solid rgba(212,175,55,0.60)" : "1px solid rgba(255,255,255,0.06)",
         background: isActive
@@ -83,7 +82,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
           : "transparent",
         boxShadow: isActive ? "0 0 16px rgba(212,175,55,0.22), inset 0 1px 0 rgba(212,175,55,0.22)" : "none",
         WebkitTapHighlightColor: "transparent",
-        flex: "0 0 auto",
       }}
     >
       {isActive && (
@@ -287,15 +285,7 @@ export default function PageLayout({ children }) {
         )}
 
         {/* Horizontal navigation — single native scroll layer, GPU-composited */}
-        <div
-          className="px-2 py-2 flex items-center gap-2 relative nav-scroll-container"
-          style={{
-            width: "100%",
-            flexShrink: 0,
-            overflowX: "auto",
-            overflowY: "hidden",
-          }}
-        >
+        <div className="px-2 py-2 flex items-center gap-2 relative" style={{ width: "100%", minWidth: "100%", flexShrink: 0 }}>
           {/* Admin button - visible for owner email OR platform admin role */}
           {(user?.role === 'admin' || (user?.email && user.email.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase())) && (
             <button
@@ -308,12 +298,10 @@ export default function PageLayout({ children }) {
                 WebkitTapHighlightColor: "transparent",
                 userSelect: "none",
                 WebkitUserSelect: "none",
-                whiteSpace: "nowrap",
-                flex: "0 0 auto",
               }}
             >
-              <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="font-inter text-xs font-bold tracking-wide flex-shrink-0">{t('nav_admin')}</span>
+              <Shield className="w-3.5 h-3.5" />
+              <span className="font-inter text-xs font-bold tracking-wide">{t('nav_admin')}</span>
             </button>
           )}
 
