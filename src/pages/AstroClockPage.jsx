@@ -35,7 +35,7 @@ import { Link } from "react-router-dom";
 import AstroClockErrorBoundary from "../components/astroclock/AstroClockErrorBoundary";
 import AstroClockSearch from "../components/astroclock/AstroClockSearch.jsx";
 import BookBasedSearchBox from "../components/astroclock/BookBasedSearchBox.jsx";
-import TodayAnalysis from "../components/astroclock/TodayAnalysis.jsx";
+import TodayOverviewFull from "../components/astroclock/TodayOverviewFull.jsx";
 
 function LanguageToggle() {
   const { t, toggleLanguage } = useAstroClockLanguage();
@@ -132,9 +132,9 @@ function AstroClockContent() {
           <BookBasedSearchBox onActionSelect={setSelectedAction} currentAstroData={{}} />
         </AstroClockErrorBoundary>
 
-        {/* ✨ ENHANCED: Today's Analysis with Book References */}
-        <AstroClockErrorBoundary label="Today Analysis">
-          <TodayAnalysis />
+        {/* ✨ RESTRUCTURED: Full Today Overview with 7 Influences */}
+        <AstroClockErrorBoundary label="Today Overview">
+          <TodayOverviewFull />
         </AstroClockErrorBoundary>
 
         {/* ORIGINAL: Live Day Analysis (Preserved) */}
