@@ -157,17 +157,43 @@ export default function PageLayout({ children }) {
   const scrollRef = useRef(null);
   const navRef = useRef(null);
   const tabRefs = useRef({});
+  const [scrollMetrics, setScrollMetrics] = useState({ scrollWidth: 0, clientWidth: 0, scrollLeft: 0 });
+
+  // Track scroll metrics for fade indicators
+  useEffect(() => {
+    if (!navRef.current) return;
+    const nav = navRef.current;
+    const updateMetrics = () => {
+      setScrollMetrics({
+        scrollWidth: nav.scrollWidth,
+        clientWidth: nav.clientWidth,
+        scrollLeft: nav.scrollLeft,
+      });
+    };
+    updateMetrics();
+    nav.addEventListener('scroll', updateMetrics);
+    window.addEventListener('resize', updateMetrics);
+    return () => {
+      nav.removeEventListener('scroll', updateMetrics);
+      window.removeEventListener('resize', updateMetrics);
+    };
+  }, [activeId]);
 
   // Auto-scroll active tab into view on first mount only — never interrupt user gestures
   const didInitialScroll = useRef(false);
   useEffect(() => {
     if (didInitialScroll.current) return;
     const activeTabEl = tabRefs.current[activeId];
-    if (!activeTabEl) return;
+    if (!activeTabEl || !navRef.current) return;
     didInitialScroll.current = true;
     // Delay to let DOM fully commit before scrolling
     const timer = setTimeout(() => {
-      activeTabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      const nav = navRef.current;
+      const tabRect = activeTabEl.getBoundingClientRect();
+      const navRect = nav.getBoundingClientRect();
+      // Calculate position to center the tab
+      const scrollPosition = nav.scrollLeft + tabRect.left - navRect.left - (navRect.width / 2) + (tabRect.width / 2);
+      nav.scrollTo({ left: scrollPosition, behavior: 'smooth' });
     }, 200);
     return () => clearTimeout(timer);
   }, [activeId]);
@@ -220,8 +246,9 @@ export default function PageLayout({ children }) {
           background: "rgba(2,6,16,0.98)",
           borderBottom: "1px solid rgba(212,175,55,0.13)",
           boxShadow: "0 1px 0 rgba(212,175,55,0.05), 0 4px 24px rgba(0,0,0,0.80)",
-          overflowX: "hidden",
+          overflowX: "visible",
           width: "100%",
+          minWidth: "100%",
         }}
       >
         <div
@@ -252,7 +279,7 @@ export default function PageLayout({ children }) {
         )}
 
         {/* Horizontal navigation — single native scroll layer, GPU-composited */}
-        <div className="px-2 py-2 flex items-center gap-2 relative" style={{ width: "100%" }}>
+        <div className="px-2 py-2 flex items-center gap-2 relative" style={{ width: "100%", minWidth: "100%", flexShrink: 0 }}>
           {/* Admin button - visible for owner email OR platform admin role */}
           {(user?.role === 'admin' || (user?.email && user.email.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase())) && (
             <button
@@ -273,24 +300,28 @@ export default function PageLayout({ children }) {
           )}
 
           {/* Left fade indicator - shows when more tabs exist to the left */}
-          <div
-            className="pointer-events-none absolute left-0 top-0 bottom-0 z-10"
-            style={{
-              width: 40,
-              background: "linear-gradient(90deg, rgba(2,6,16,0.98) 0%, rgba(2,6,16,0.70) 50%, transparent 100%)",
-              opacity: 0.8,
-            }}
-          />
+          {scrollMetrics.scrollLeft > 10 && (
+            <div
+              className="pointer-events-none absolute left-0 top-0 bottom-0 z-10"
+              style={{
+                width: 40,
+                background: "linear-gradient(90deg, rgba(2,6,16,0.98) 0%, rgba(2,6,16,0.70) 50%, transparent 100%)",
+                opacity: 0.8,
+              }}
+            />
+          )}
           
           {/* Right fade indicator - shows when more tabs exist to the right */}
-          <div
-            className="pointer-events-none absolute right-0 top-0 bottom-0 z-10"
-            style={{
-              width: 40,
-              background: "linear-gradient(270deg, rgba(2,6,16,0.98) 0%, rgba(2,6,16,0.70) 50%, transparent 100%)",
-              opacity: 0.8,
-            }}
-          />
+          {scrollMetrics.scrollWidth > scrollMetrics.clientWidth + scrollMetrics.scrollLeft + 10 && (
+            <div
+              className="pointer-events-none absolute right-0 top-0 bottom-0 z-10"
+              style={{
+                width: 40,
+                background: "linear-gradient(270deg, rgba(2,6,16,0.98) 0%, rgba(2,6,16,0.70) 50%, transparent 100%)",
+                opacity: 0.8,
+              }}
+            />
+          )}
 
           <div
             ref={navRef}
@@ -312,6 +343,8 @@ export default function PageLayout({ children }) {
               backfaceVisibility: "hidden",
               scrollbarWidth: "none",
               msOverflowStyle: "none",
+              paddingRight: "60px",
+              paddingLeft: "10px",
             }}
           >
             {TAB_KEYS.map((tab) => (
