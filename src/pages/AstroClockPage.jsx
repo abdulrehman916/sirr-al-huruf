@@ -34,6 +34,8 @@ import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 import { Link } from "react-router-dom";
 import AstroClockErrorBoundary from "../components/astroclock/AstroClockErrorBoundary";
 import AstroClockSearch from "../components/astroclock/AstroClockSearch.jsx";
+import BookBasedSearchBox from "../components/astroclock/BookBasedSearchBox.jsx";
+import TodayAnalysis from "../components/astroclock/TodayAnalysis.jsx";
 
 function LanguageToggle() {
   const { t, toggleLanguage } = useAstroClockLanguage();
@@ -125,12 +127,17 @@ function AstroClockContent() {
           </motion.div>
         )}
 
-        {/* ✨ NEW: Search Component (Top of Page) */}
-        <AstroClockErrorBoundary label="Astro Clock Search">
-          <AstroClockSearch onActionSelect={setSelectedAction} />
+        {/* ✨ ENHANCED: Book-Based Search Box (Top Position) */}
+        <AstroClockErrorBoundary label="Book Search">
+          <BookBasedSearchBox onActionSelect={setSelectedAction} currentAstroData={{}} />
         </AstroClockErrorBoundary>
 
-        {/* SECTION 1: Today's Day Analysis (After Search) */}
+        {/* ✨ ENHANCED: Today's Analysis with Book References */}
+        <AstroClockErrorBoundary label="Today Analysis">
+          <TodayAnalysis />
+        </AstroClockErrorBoundary>
+
+        {/* ORIGINAL: Live Day Analysis (Preserved) */}
         <AstroClockErrorBoundary label="Live Day Analysis"><LiveDayAnalysis /></AstroClockErrorBoundary>
 
         {/* ✨ SECTION 2: ACTION TIMING ADVISOR — Search integration */}
