@@ -79,6 +79,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/page-visibility-audit',  chunk: 'PageVisibilityAudit',            flags: 'public' },
   { path: '/admin/verify-vip-access',      chunk: 'VerifyVIPAccess',                flags: 'public' },
   { path: '/admin/content-rendering-audit', chunk: 'ContentRenderingAudit',         flags: 'public' },
+  { path: '/admin/audit-table-rendering',  chunk: 'AuditTableRendering',            flags: 'public' },
   { path: '/admin/test-customer-content',  chunk: 'TestRealCustomerContent',        flags: 'public' },
 
   // ── Audit / Verification ───────────────────────────────────────────

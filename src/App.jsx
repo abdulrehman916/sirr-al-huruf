@@ -85,6 +85,7 @@ const PAGE_IMPORTS = {
   ContentRenderingAudit:    () => import('./pages/ContentRenderingAudit'),
   TestRealCustomerContent:  () => import('./pages/TestRealCustomerContent'),
   AuditAndFixContent:       () => import('./pages/AuditAndFixContent'),
+  AuditTableRendering:      () => import('./pages/AuditTableRendering'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),
