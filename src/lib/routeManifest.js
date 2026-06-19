@@ -69,6 +69,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/faal-chob-upload',        chunk: 'AdminFaalChobUpload' },
   { path: '/admin/access-requests',        chunk: 'AdminAccessRequests',              flags: 'public' },
   { path: '/admin/qa-report',             chunk: 'QAReport',                         flags: 'public' },
+  { path: '/admin/launch-checklist',      chunk: 'FinalLaunchChecklist',             flags: 'public' },
 
   // ── Audit / Verification ───────────────────────────────────────────
   { path: '/hierarchy-audit',               chunk: 'HierarchyAuditPage' },
