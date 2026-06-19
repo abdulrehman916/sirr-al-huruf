@@ -50,10 +50,23 @@
       "enum": [
         "ACTIVE",
         "SUSPENDED",
-        "DEACTIVATED"
+        "DEACTIVATED",
+        "BLOCKED"
       ],
       "default": "ACTIVE",
-      "description": "Current account status"
+      "description": "Current account status. BLOCKED = cannot login, receive OTP, use subscriptions, or access pages."
+    },
+    "blocked_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when account was blocked"
+    },
+    "blocked_by": {
+      "type": "string",
+      "description": "Admin user ID who blocked this account"
+    },
+    "block_reason": {
+      "type": "string",
+      "description": "Reason for blocking the account"
     },
     "subscription_plan": {
       "type": "string",

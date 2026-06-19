@@ -4,14 +4,15 @@
   "properties": {
     "plan_id": {
       "type": "string",
-      "description": "Unique plan ID e.g. PLAN_BASIC, PLAN_PREMIUM, PLAN_VIP"
+      "description": "Unique plan ID e.g. PLAN_BASIC, PLAN_PREMIUM, PLAN_PRO"
     },
     "plan_name": {
       "type": "string",
       "enum": [
         "Basic",
         "Premium",
-        "VIP"
+        "Pro",
+        "Ultimate"
       ],
       "description": "Plan display name"
     },

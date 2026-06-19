@@ -18,7 +18,9 @@ import AccessCodesTab from "@/components/admin/AccessCodesTab";
 import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal";
 import MessagesTab from "@/components/admin/MessagesTab";
 import SubscriptionRequestsTab from "@/components/admin/SubscriptionRequestsTab";
+import UsersManagementTab from "@/components/admin/UsersManagementTab";
 import { Link } from "react-router-dom";
+import { ADMIN_CONFIG } from "@/lib/adminConfig";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -69,8 +71,8 @@ const TABS = [
   { id: "security",    label: "Security Audit",   icon: Shield },
 ];
 
-const PLAN_COLORS = { Basic: "#60a5fa", Premium: "#f59e0b", VIP: "#a855f7" };
-const PLAN_ICONS_MAP = { Basic: Zap, Premium: Star, VIP: Crown };
+const PLAN_COLORS = { Basic: "#60a5fa", Premium: "#f59e0b", Pro: "#a855f7", Ultimate: "#ec4899" };
+const PLAN_ICONS_MAP = { Basic: Zap, Premium: Star, Pro: Crown, Ultimate: Crown };
 
 // ── Grant Access Modal ────────────────────────────────────────────────────────
 function GrantAccessModal({ user, existingPaths, onClose, onGranted }) {
@@ -271,127 +273,7 @@ function ExtendAccessModal({ permission, onClose, onExtended }) {
   );
 }
 
-// ── Users Tab ─────────────────────────────────────────────────────────────────
-function UsersTab({ users, profiles }) {
-  const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const enriched = useMemo(() => users.map(u => {
-    const prof = profiles.find(p => p.user_id === u.id);
-    return { ...u, profile: prof };
-  }), [users, profiles]);
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return enriched;
-    return enriched.filter(u =>
-      (u.email || "").toLowerCase().includes(q) ||
-      (u.full_name || "").toLowerCase().includes(q)
-    );
-  }, [enriched, search]);
-
-  return (
-    <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: G.dim }} />
-        <input
-          value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name or email…"
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none"
-          style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}` }}
-        />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="text-center py-16" style={{ color: "rgba(255,255,255,0.25)" }}>
-          <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No users found</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filtered.map(u => (
-            <div key={u.id} className="rounded-xl border p-4 flex items-center gap-4"
-              style={{ background: G.bg, borderColor: G.border }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
-                style={{ background: G.bgHi, color: G.text, border: `1px solid ${G.border}` }}>
-                {(u.profile?.full_name || u.full_name || u.email || "?")[0].toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-inter font-bold text-white text-sm truncate">
-                    {u.profile?.full_name || u.full_name || "Unnamed"}
-                  </p>
-                  {u.profile?.lifetime_access && (
-                    <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold"
-                      style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.30)" }}>
-                      <Crown className="w-3 h-3 inline" />
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
-                  <span className="text-xs text-white/40 flex items-center gap-1">
-                    <Mail className="w-3 h-3" />{u.email || "—"}
-                  </span>
-                  {(u.profile?.mobile || u.mobile) && (
-                    <span className="text-xs text-white/40 flex items-center gap-1">
-                      <Phone className="w-3 h-3" />{u.profile?.mobile || u.mobile}
-                    </span>
-                  )}
-                  <span className="text-xs text-white/40 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {u.profile?.last_login ? fmt(u.profile.last_login) : "—"}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                  {u.profile?.device_type && u.profile.device_type !== "unknown" && (
-                    <span className="text-[10px] text-white/25 capitalize flex items-center gap-1">
-                      <Smartphone className="w-2.5 h-2.5" />{u.profile.device_type}
-                    </span>
-                  )}
-                  {u.profile?.country && (
-                    <span className="text-[10px] text-white/25 flex items-center gap-1">
-                      <Globe className="w-2.5 h-2.5" />{u.profile.country}
-                    </span>
-                  )}
-                  <span className="text-[10px] text-white/25 flex items-center gap-1">
-                    <Calendar className="w-2.5 h-2.5" />
-                    {u.profile?.registration_date ? fmt(u.profile.registration_date) : "—"}
-                  </span>
-                  {u.profile?.subscription_plan && u.profile.subscription_plan !== "NONE" && (
-                    <span className="text-[10px] text-white/25 flex items-center gap-1">
-                      <CreditCard className="w-2.5 h-2.5" />{(u.profile.subscription_plan || "").replace(/_/g, " ")}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <div className="flex items-center gap-1 justify-end">
-                  {u.profile?.lifetime_access && (
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5"
-                      style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.30)" }}>
-                      <Crown className="w-3 h-3" />
-                    </span>
-                  )}
-                  <p className="text-xs font-semibold capitalize"
-                    style={{ color: u.role === "admin" ? G.text : "rgba(255,255,255,0.35)" }}>
-                    {u.profile?.role || u.role || "user"}
-                  </p>
-                </div>
-                <p className="text-xs mt-0.5 font-semibold capitalize"
-                  style={{ color: u.profile?.account_status === "SUSPENDED" ? "#f59e0b" : u.profile?.account_status === "DEACTIVATED" ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
-                  {u.profile?.account_status || "ACTIVE"}
-                </p>
-                <button onClick={() => navigate(`/admin/user-detail/${u.id}`)}
-                  className="mt-1.5 px-3 py-1 rounded-lg text-xs font-bold"
-                  style={{ background: "rgba(59,130,246,0.10)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.25)" }}>
-                  View Details →
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+// UsersTab replaced by UsersManagementTab (imported component)
 
 // ── Subscriptions Tab ─────────────────────────────────────────────────────────
 function SubscriptionsTab({ subscriptions, users }) {
@@ -619,7 +501,7 @@ function PlansTab({ plans, onRefresh }) {
                   <select value={newPlan.plan_name} onChange={e => setNewPlan(p => ({ ...p, plan_name: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
                     style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }}>
-                    {["Basic", "Premium", "VIP"].map(n => <option key={n} value={n}>{n}</option>)}
+                    {["Basic", "Premium", "Pro", "Ultimate"].map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
                 <div>
@@ -1287,7 +1169,8 @@ export default function OwnerAccessDashboard() {
   const init = async () => {
     try {
       const me = await base44.auth.me();
-      if (!me || me.role !== "admin") {
+      const isOwner = me?.email?.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase();
+      if (!me || (me.role !== "admin" && !isOwner)) {
         setIsAdmin(false); return;
       }
       setIsAdmin(true);
@@ -1386,7 +1269,7 @@ export default function OwnerAccessDashboard() {
 
         {/* Tab content */}
         <div>
-          {tab === "users"      && <UsersTab users={users} profiles={profiles} />}
+          {tab === "users"      && <UsersManagementTab users={users} profiles={profiles} onRefresh={loadAll} />}
           {tab === "subs"       && <SubscriptionsTab subscriptions={subscriptions} users={users} />}
           {tab === "payments"   && <PaymentsTab subscriptions={subscriptions} users={users} onManage={setManagingSub} />}
           {tab === "plans"      && <PlansTab plans={plans} onRefresh={loadAll} />}

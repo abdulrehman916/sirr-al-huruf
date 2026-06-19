@@ -42,12 +42,15 @@ Deno.serve(async (req) => {
       return Response.json({ granted: true, status: 'granted', source: 'admin_bypass' });
     }
 
-    // 4. Lifetime access check (single filtered query)
+    // 4. Profile check: blocked users are denied everything
     const profiles = await base44.entities.UserAccessProfile.filter(
       { user_id: user.id },
       null,
       1
     );
+    if (profiles.length > 0 && profiles[0].account_status === 'BLOCKED') {
+      return Response.json({ granted: false, reason: 'Account blocked', status: 'blocked' });
+    }
     if (profiles.length > 0 && profiles[0].lifetime_access) {
       return Response.json({ granted: true, status: 'granted', source: 'lifetime_access' });
     }
