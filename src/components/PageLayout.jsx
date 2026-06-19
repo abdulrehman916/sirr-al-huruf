@@ -285,7 +285,25 @@ export default function PageLayout({ children }) {
         )}
 
         {/* Horizontal navigation — single native scroll layer, GPU-composited */}
-        <div className="px-2 py-2 flex items-center gap-2 relative" style={{ width: "100%", minWidth: "100%", flexShrink: 0 }}>
+        <div
+          ref={navRef}
+          className="nav-scroll-container px-2 py-2 flex items-center gap-1 scrollbar-none"
+          style={{
+            width: "100%",
+            overflowX: "auto",
+            overflowY: "hidden",
+            WebkitOverflowScrolling: "touch",
+            scrollBehavior: "smooth",
+            overscrollBehaviorX: "none",
+            touchAction: "auto",
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            paddingLeft: "10px",
+            paddingRight: "48px",
+          }}
+        >
           {/* Admin button - visible for owner email OR platform admin role */}
           {(user?.role === 'admin' || (user?.email && user.email.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase())) && (
             <button
@@ -329,43 +347,17 @@ export default function PageLayout({ children }) {
             />
           )}
 
-          <div
-            ref={navRef}
-            className="nav-scroll-container flex gap-1 flex-nowrap scrollbar-none"
-            style={{
-              flex: "1 1 auto",
-              overflowX: "auto",
-              overflowY: "hidden",
-              WebkitOverflowScrolling: "touch",
-              scrollBehavior: "smooth",
-              overscrollBehaviorX: "none",
-              overscrollBehaviorY: "none",
-              touchAction: "auto",
-              scrollSnapType: "x proximity",
-              userSelect: "none",
-              WebkitUserSelect: "none",
-              willChange: "transform",
-              transform: "translate3d(0,0,0)",
-              backfaceVisibility: "hidden",
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-              paddingLeft: "10px",
-              paddingRight: "48px",
-              minWidth: 0,
-            }}
-          >
-            {TAB_KEYS.map((tab) => (
-              <NavTab
-                key={tab.id}
-                tab={tab}
-                isActive={activeId === tab.id}
-                onClick={startNav}
-                tabRef={(el) => (tabRefs.current[tab.id] = el)}
-              />
-            ))}
-            {/* Extra end spacer for last tab visibility */}
-            <div style={{ flexShrink: 0, width: 24 }} />
-          </div>
+          {TAB_KEYS.map((tab) => (
+            <NavTab
+              key={tab.id}
+              tab={tab}
+              isActive={activeId === tab.id}
+              onClick={startNav}
+              tabRef={(el) => (tabRefs.current[tab.id] = el)}
+            />
+          ))}
+          {/* Extra end spacer for last tab visibility */}
+          <div style={{ flexShrink: 0, width: 24 }} />
         </div>
       </div>
 
