@@ -60,7 +60,7 @@ const TABS = [
   { id: "subs",        label: "Subscriptions",    icon: CreditCard },
   { id: "payments",    label: "Payments",         icon: TrendingUp },
   { id: "plans",       label: "Plans",            icon: Star },
-  { id: "vip",         label: "VIP Access",       icon: Crown },
+
   { id: "requests",    label: "Access Requests",  icon: Mail },
   { id: "messages",    label: "Messages",         icon: MessageSquare },
   { id: "visibility",  label: "Page Visibility",  icon: Globe },
@@ -1666,7 +1666,7 @@ export default function OwnerAccessDashboard() {
           {tab === "subs"       && <SubscriptionsTab subscriptions={subscriptions} users={users} />}
           {tab === "payments"   && <PaymentsTab subscriptions={subscriptions} users={users} onManage={setManagingSub} />}
           {tab === "plans"      && <PlansTab plans={plans} onRefresh={loadAll} />}
-          {tab === "vip"        && <VIPTab vipAccess={vipAccess} users={users} onRefresh={loadAll} />}
+
           {tab === "requests"   && (
             <div className="space-y-4">
               <Link to="/admin/access-requests">

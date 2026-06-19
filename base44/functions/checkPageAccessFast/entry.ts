@@ -52,27 +52,7 @@ Deno.serve(async (req) => {
       return Response.json({ granted: true, status: 'granted', source: 'lifetime_access' });
     }
 
-    // 5. VIP check
-    try {
-      const vipCheck = await base44.functions.invoke('checkVIPAccess', { page_path });
-      // base44.functions.invoke returns Axios response: { data, status, headers }
-      const vipResult = vipCheck?.data;
-      console.log(`[AccessFast] VIP check response:`, JSON.stringify(vipResult));
-      if (vipResult?.is_vip) {
-        console.log(`[AccessFast] VIP access GRANTED for ${page_path} via ${vipResult.label || 'VIP'}`);
-        return Response.json({ granted: true, status: 'granted', source: 'vip', vip_label: vipResult.label });
-      }
-      if (vipCheck?.error) {
-        console.error(`[AccessFast] VIP check returned error: ${vipCheck.error}`);
-      }
-      if (vipCheck?.reason) {
-        console.log(`[AccessFast] VIP check reason: ${vipCheck.reason}`);
-      }
-    } catch (error) {
-      console.error(`[AccessFast] VIP check threw error: ${error.message}`);
-    }
-
-    // 6. Subscription-based access
+    // 5. Subscription-based access
     try {
       const subCheck = await base44.functions.invoke('checkPageSubscription', {
         user_id: user.id,
