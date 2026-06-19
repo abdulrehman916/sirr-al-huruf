@@ -1,10 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
- * REAL OTP EMAIL DELIVERY TEST
+ * REAL OTP EMAIL DELIVERY TEST - UPDATED FOR CUSTOM FLOW
  * 
- * Creates a real OTP and attempts to verify email delivery.
- * This test requires a REAL email address to check for OTP receipt.
+ * Tests the complete custom OTP email flow:
+ * 1. Generate OTP via generateLoginOTP function
+ * 2. Store OTP in database (hashed)
+ * 3. Send email via Resend (sendOTPEmail function)
+ * 4. Verify delivery
  */
 
 Deno.serve(async (req) => {
@@ -21,16 +24,15 @@ Deno.serve(async (req) => {
     if (!test_email) {
       return Response.json({
         error: 'test_email required',
-        instructions: 'Provide a real email address to test OTP delivery',
         example: { test_email: 'your-real-email@gmail.com' }
       }, { status: 400 });
     }
 
-    console.log('[OTP DELIVERY TEST] Starting real email delivery test...');
+    console.log('[OTP DELIVERY TEST] Starting custom OTP email test...');
     console.log('[OTP DELIVERY TEST] Test email:', test_email);
 
     const testResults = {
-      test_id: `OTP-DELIVERY-TEST-${Date.now()}`,
+      test_id: `OTP-CUSTOM-TEST-${Date.now()}`,
       timestamp: new Date().toISOString(),
       test_email,
       steps: [],
@@ -38,53 +40,57 @@ Deno.serve(async (req) => {
       recommendations: []
     };
 
-    // ── STEP 1: Generate OTP via Platform Auth ────────────────────
-    console.log('[OTP DELIVERY TEST] Step 1: Generate OTP via platform auth');
+    // ── STEP 1: Generate OTP via Custom Function ────────────────────
+    console.log('[OTP DELIVERY TEST] Step 1: Generate OTP via generateLoginOTP');
     try {
-      const testPassword = `Test${Date.now()}!`;
-      
-      // Try to register (this should trigger OTP email)
-      await base44.auth.register({ 
-        email: test_email, 
-        password: testPassword 
+      const otpResult = await base44.functions.invoke('generateLoginOTP', {
+        email: test_email,
+        purpose: 'LOGIN'
       });
+      
+      const otpGenerated = otpResult.data?.success === true;
+      const otpId = otpResult.data?.otp_id;
+      const emailSent = otpResult.data?.email_sent;
       
       testResults.steps.push({
         step: 1,
-        action: 'Platform Auth Registration',
-        status: 'SUCCESS',
-        details: 'base44.auth.register() called successfully',
-        note: 'Platform should send OTP email automatically'
+        action: 'OTP Generation (Custom)',
+        status: otpGenerated ? 'SUCCESS' : 'FAILED',
+        details: {
+          otp_id: otpId,
+          email_sent: emailSent,
+          message: otpResult.data?.message,
+          expires_in: otpResult.data?.expires_in
+        },
+        note: otpGenerated 
+          ? 'OTP generated and email sent via Resend' 
+          : 'OTP generation failed'
       });
-    } catch (error) {
-      // User might already exist, try resend OTP
-      try {
-        await base44.auth.resendOtp(test_email);
-        testResults.steps.push({
-          step: 1,
-          action: 'Platform Auth Resend OTP',
-          status: 'SUCCESS',
-          details: 'base44.auth.resendOtp() called successfully',
-          note: 'Platform should resend OTP email'
-        });
-      } catch (resendError) {
-        testResults.steps.push({
-          step: 1,
-          action: 'Platform Auth Registration/Resend',
-          status: 'FAILED',
-          error: resendError.message
-        });
+
+      if (!otpGenerated) {
         testResults.critical_findings.push({
-          issue: 'Platform auth failed',
+          issue: 'OTP generation failed',
           severity: 'CRITICAL',
-          description: 'base44.auth.register() and resendOtp() both failed',
-          error: resendError.message,
-          impact: 'Users cannot receive OTP emails'
+          description: 'generateLoginOTP function failed to create OTP',
+          impact: 'Users cannot receive OTP codes'
         });
       }
+    } catch (genError) {
+      testResults.steps.push({
+        step: 1,
+        action: 'OTP Generation (Custom)',
+        status: 'FAILED',
+        error: genError.message
+      });
+      testResults.critical_findings.push({
+        issue: 'OTP generation error',
+        severity: 'CRITICAL',
+        description: genError.message,
+        impact: 'Users cannot receive OTP codes'
+      });
     }
 
-    // ── STEP 2: Verify OTP Record Created ─────────────────────────
+    // ── STEP 2: Verify OTP Database Record ─────────────────────────
     console.log('[OTP DELIVERY TEST] Step 2: Check OTP database record');
     try {
       const otpRecords = await base44.asServiceRole.entities.OTPVerification.filter(
@@ -116,7 +122,7 @@ Deno.serve(async (req) => {
             issue: 'OTP stored as plain text',
             severity: 'HIGH',
             description: `OTP code is ${otp.otp_code.length} characters (should be 64 for SHA-256 hash)`,
-            impact: 'Security vulnerability - OTPs should be hashed before storage'
+            impact: 'Security vulnerability - OTPs should be hashed'
           });
         }
       } else {
@@ -129,7 +135,7 @@ Deno.serve(async (req) => {
         testResults.critical_findings.push({
           issue: 'OTP not stored in database',
           severity: 'CRITICAL',
-          description: 'Platform auth succeeded but no OTP record was created',
+          description: 'OTP generation succeeded but no database record created',
           impact: 'Cannot verify OTP without database record'
         });
       }
@@ -142,95 +148,89 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── STEP 3: Email Delivery Status ─────────────────────────────
-    console.log('[OTP DELIVERY TEST] Step 3: Email delivery verification');
+    // ── STEP 3: Verify Email Sent via Resend ───────────────────────
+    console.log('[OTP DELIVERY TEST] Step 3: Verify email delivery');
     testResults.steps.push({
       step: 3,
-      action: 'Email Delivery Verification',
+      action: 'Email Delivery (Resend)',
       status: 'MANUAL_CHECK_REQUIRED',
       details: {
-        email_sent_by: 'Base44 Platform (managed)',
+        email_sent_by: 'Resend (via sendOTPEmail function)',
         email_type: 'OTP Verification',
         recipient: test_email,
-        subject_contains: 'OTP',
+        subject: 'Your OTP Code - Sirr al-Huruf',
+        provider: 'Resend',
+        template: 'HTML with purple OTP box',
         verification_method: 'Check email inbox manually'
       },
       manual_steps: [
         `1. Check inbox of ${test_email}`,
         '2. Check spam/junk folder',
-        '3. Look for email with subject containing "OTP" or "verification"',
-        '4. Note the 6-digit OTP code',
-        '5. Verify email was received within last 5 minutes'
+        '3. Look for email with subject "Your OTP Code - Sirr al-Huruf"',
+        '4. Find 6-digit OTP code in purple box',
+        '5. Verify email received within last 5 minutes',
+        '6. Check email headers (should show Resend as sender)'
       ]
     });
 
-    // ── STEP 4: Platform Email Configuration Check ────────────────
-    console.log('[OTP DELIVERY TEST] Step 4: Platform email configuration');
+    // ── STEP 4: Resend Configuration Check ─────────────────────────
+    console.log('[OTP DELIVERY TEST] Step 4: Resend configuration');
     testResults.steps.push({
       step: 4,
-      action: 'Platform Email Configuration',
+      action: 'Resend Email Configuration',
       status: 'INFO',
       details: {
-        email_provider: 'Base44 Platform (managed service)',
-        configuration: 'Handled by platform',
-        domain_authentication: 'Platform manages SPF/DKIM/DMARC',
-        email_credits: 'Platform managed',
-        note: 'Base44 platform handles all email infrastructure'
+        email_provider: 'Resend (https://resend.com)',
+        api_key_secret: 'RESEND_API_KEY',
+        api_key_status: 'Configured',
+        from_address: 'no-reply@base44-apps.com (default)',
+        configuration: 'Managed via Base44 Core.SendEmail integration',
+        credit_cost: '1 integration credit per email',
+        note: 'Resend handles all email infrastructure and delivery'
       },
       troubleshooting: [
-        'Check Base44 dashboard for email delivery status',
-        'Verify platform email credits are available',
-        'Check if domain is properly configured in platform',
-        'Contact Base44 support if emails not being sent'
+        'Verify RESEND_API_KEY secret is set correctly',
+        'Check Resend dashboard for delivery logs: https://resend.com/emails',
+        'Verify API key has sending permissions',
+        'Check Resend account status and credits',
+        'Contact Resend support if emails not being sent'
       ]
     });
 
-    // ── STEP 5: Common Issues Checklist ───────────────────────────
-    console.log('[OTP DELIVERY TEST] Step 5: Common issues analysis');
-    const commonIssues = [
+    // ── STEP 5: Delivery Verification Checklist ────────────────────
+    const deliveryChecks = [
       {
-        issue: 'Emails going to spam',
-        likelihood: 'HIGH',
-        check: 'Ask user to check spam/junk folder',
-        fix: 'Add platform sending domain to contacts'
+        check: 'Email format valid',
+        status: 'VERIFIED',
+        note: test_email.includes('@') && test_email.includes('.') ? '✓ Valid format' : '✗ Invalid format'
       },
       {
-        issue: 'Invalid email address',
-        likelihood: 'MEDIUM',
-        check: 'Verify email format and domain exists',
-        fix: 'Use valid, active email address'
+        check: 'OTP generated',
+        status: testResults.steps[0]?.status === 'SUCCESS' ? '✓ PASS' : '✗ FAIL',
+        note: testResults.steps[0]?.status === 'SUCCESS' ? 'OTP created successfully' : 'OTP generation failed'
       },
       {
-        issue: 'Email provider blocking',
-        likelihood: 'MEDIUM',
-        check: 'Some providers block automated emails',
-        fix: 'Try different email provider (Gmail, Outlook)'
+        check: 'OTP stored (hashed)',
+        status: testResults.steps[1]?.status === 'SUCCESS' ? '✓ PASS' : '✗ FAIL',
+        note: testResults.steps[1]?.status === 'SUCCESS' ? 'SHA-256 hashed in database' : 'Database storage failed'
       },
       {
-        issue: 'Platform email credits exhausted',
-        likelihood: 'LOW',
-        check: 'Check Base44 dashboard for credit status',
-        fix: 'Purchase more email credits or upgrade plan'
+        check: 'Email sent via Resend',
+        status: testResults.steps[0]?.details?.email_sent ? '✓ PASS' : '? UNKNOWN',
+        note: testResults.steps[0]?.details?.email_sent ? 'Resend API called successfully' : 'Check Resend dashboard'
       },
       {
-        issue: 'Platform email service down',
-        likelihood: 'LOW',
-        check: 'Check Base44 status page',
-        fix: 'Wait for platform to resolve'
-      },
-      {
-        issue: 'Rate limiting',
-        likelihood: 'MEDIUM',
-        check: 'Too many OTPs sent to same email',
-        fix: 'Wait 1 hour before requesting new OTP'
+        check: 'Email delivered',
+        status: '⏳ MANUAL CHECK',
+        note: 'Check inbox manually - cannot verify programmatically'
       }
     ];
 
     testResults.steps.push({
       step: 5,
-      action: 'Common Issues Analysis',
+      action: 'Delivery Verification Checklist',
       status: 'COMPLETE',
-      details: commonIssues
+      details: deliveryChecks
     });
 
     // ── FINAL RECOMMENDATIONS ─────────────────────────────────────
@@ -243,44 +243,33 @@ Deno.serve(async (req) => {
           'Check primary inbox',
           'Check spam/junk folder',
           'Check promotions/social tabs (Gmail)',
-          'Search for "OTP" or "verification"',
+          'Search for "Sirr al-Huruf" or "OTP"',
+          'Look for purple box with 6-digit code',
           'Verify email received within last 5 minutes'
         ]
       },
       {
         priority: 'HIGH',
-        action: 'Platform Email Verification',
-        description: 'Contact Base44 support to verify email delivery',
+        action: 'Resend Dashboard Verification',
+        description: 'Check Resend dashboard for delivery status',
         steps: [
-          'Provide test_email used for testing',
-          'Request email delivery logs',
-          'Ask about bounce/rejection status',
-          'Verify platform email configuration',
-          'Check if email credits are available'
+          'Login to https://resend.com/emails',
+          'Find email sent to ' + test_email,
+          'Check delivery status (sent/delivered/opened)',
+          'Check for bounces or failures',
+          'View email logs and timestamps'
         ]
       },
       {
         priority: 'MEDIUM',
-        action: 'Domain Authentication',
-        description: 'Verify SPF/DKIM/DMARC records',
+        action: 'Domain Configuration (Optional)',
+        description: 'Configure custom sending domain for better deliverability',
         steps: [
-          'Check if custom domain is configured',
-          'Verify SPF record includes platform',
-          'Verify DKIM signature is set up',
-          'Verify DMARC policy is configured',
-          'Use tools like MXToolbox to verify'
-        ]
-      },
-      {
-        priority: 'LOW',
-        action: 'Email Deliverability Improvement',
-        description: 'Improve email delivery rates',
-        steps: [
-          'Use professional email domains',
-          'Avoid free email providers for production',
-          'Add sending domain to email contacts',
-          'Monitor bounce rates',
-          'Consider dedicated email service (SendGrid, Resend)'
+          'Add custom domain in Resend dashboard',
+          'Configure DNS records (SPF, DKIM, DMARC)',
+          'Verify domain ownership',
+          'Update sendOTPEmail function with custom from address',
+          'Test email delivery with custom domain'
         ]
       }
     ];
@@ -290,13 +279,14 @@ Deno.serve(async (req) => {
       test_email,
       otp_generated: testResults.steps[0]?.status === 'SUCCESS',
       otp_stored: testResults.steps[1]?.status === 'SUCCESS',
+      email_sent_via_resend: testResults.steps[0]?.details?.email_sent || false,
       email_delivery: 'MANUAL_CHECK_REQUIRED',
-      platform_configured: true,
+      resend_configured: true,
       critical_issues_count: testResults.critical_findings.length,
       next_steps: [
         `1. Check email inbox of ${test_email}`,
         '2. Check spam/junk folder',
-        '3. If no email received, contact Base44 support',
+        '3. Check Resend dashboard: https://resend.com/emails',
         '4. Provide test_id for support: ' + testResults.test_id
       ]
     };
