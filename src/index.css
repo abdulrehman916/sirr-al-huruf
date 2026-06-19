@@ -441,9 +441,63 @@
     user-select: text;
   }
 
-  /* Landscape mode: adjust safe areas */
-  @media (orientation: landscape) and (max-height: 500px) {
-    body { font-size: 14px; }
+  /* ── RESPONSIVE LAYOUT LOCK: Independent Mobile & Desktop ── */
+  /* Mobile-first base (< 768px) — touch-optimized, compact spacing */
+  .page-container, .main-content, .app-container {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Tablet (768px - 1024px) — transitional layout */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .page-container, .main-content, .app-container {
+      max-width: 100%;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+  }
+
+  /* Desktop (> 1024px) — dedicated desktop layout, no mobile inheritance */
+  @media (min-width: 1025px) {
+    html, body {
+      overflow-x: visible;
+    }
+    
+    #root {
+      max-width: 100%;
+    }
+    
+    .page-container, .main-content, .app-container,
+    [class*="PageLayout"],
+    [data-scroll-container="true"] {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding-left: 32px;
+      padding-right: 32px;
+      overflow-x: visible;
+    }
+    
+    /* Desktop navigation — centered, fixed width */
+    [class*="PageLayout"] .nav-scroll-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    /* Prevent mobile stretching on desktop */
+    .card, .card-dark, .card-gold,
+    .rounded-2xl, .rounded-xl {
+      max-width: 100%;
+    }
+  }
+
+  /* Large desktop (> 1440px) — generous spacing */
+  @media (min-width: 1441px) {
+    .page-container, .main-content, .app-container,
+    [class*="PageLayout"],
+    [data-scroll-container="true"] {
+      padding-left: 48px;
+      padding-right: 48px;
+    }
   }
 
   /* ── Respect user motion preference ── */
