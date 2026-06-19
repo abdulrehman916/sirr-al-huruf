@@ -77,6 +77,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/performance-report',     chunk: 'PerformanceTestReport',          flags: 'public' },
   { path: '/admin/final-signoff',          chunk: 'FinalEnterpriseSignOff',         flags: 'public' },
   { path: '/admin/page-visibility-audit',  chunk: 'PageVisibilityAudit',            flags: 'public' },
+  { path: '/admin/verify-vip-access',      chunk: 'VerifyVIPAccess',                flags: 'public' },
 
   // ── Audit / Verification ───────────────────────────────────────────
   { path: '/hierarchy-audit',               chunk: 'HierarchyAuditPage' },
