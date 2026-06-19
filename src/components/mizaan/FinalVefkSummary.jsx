@@ -5,9 +5,9 @@
 // NO calculations. All data received as props.
 // ═══════════════════════════════════════════════════════════════
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, RotateCcw, ChevronRight } from "lucide-react";
 
 const G = {
   gold:         "#F5D060",
@@ -37,6 +37,95 @@ function OrnamentalDivider() {
       <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
       <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
       <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
+    </div>
+  );
+}
+
+// ── Vefk Writing Assistant ──────────────────────────────────────
+// UI helper only. No calculations. Reveals cells in ascending numeric order.
+function VefkWritingAssistant({ grid, color }) {
+  const flat = useMemo(() => grid.flat(), [grid]);
+
+  // Build sorted reveal order: [{cellIndex, value}] ascending by value
+  const revealOrder = useMemo(() => {
+    return flat
+      .map((value, cellIndex) => ({ cellIndex, value }))
+      .sort((a, b) => a.value - b.value);
+  }, [flat]);
+
+  const [step, setStep] = useState(0); // 0 = all hidden, N = N cells revealed
+
+  const revealedSet = useMemo(() => {
+    const s = new Set();
+    for (let i = 0; i < step; i++) s.add(revealOrder[i].cellIndex);
+    return s;
+  }, [step, revealOrder]);
+
+  const total = flat.length;
+  const done  = step >= total;
+
+  return (
+    <div className="mt-3 rounded-xl border p-3 space-y-3"
+      style={{ background: "rgba(0,0,0,0.25)", borderColor: color + "33" }}>
+
+      {/* Header + Controls */}
+      <div className="flex items-center justify-between">
+        <span className="font-inter text-[8px] uppercase tracking-[0.2em] font-bold" style={{ color: color + "99" }}>
+          Writing Assistant
+        </span>
+        <div className="flex items-center gap-2">
+          {/* Step counter */}
+          <span className="font-inter text-[8px] tabular-nums" style={{ color: "rgba(255,255,255,0.30)" }}>
+            {step}/{total}
+          </span>
+          {/* Clear */}
+          <button
+            onClick={() => setStep(0)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg font-inter text-[8px] font-bold uppercase tracking-wider transition-opacity hover:opacity-70 active:opacity-50"
+            style={{ background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.30)", color: "#F87171" }}
+          >
+            <RotateCcw className="w-2.5 h-2.5" />
+            Clear
+          </button>
+          {/* Next */}
+          <button
+            onClick={() => { if (!done) setStep(s => s + 1); }}
+            disabled={done}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg font-inter text-[8px] font-bold uppercase tracking-wider transition-opacity hover:opacity-70 active:opacity-50 disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ background: color + "22", border: `1px solid ${color}55`, color }}
+          >
+            <ChevronRight className="w-2.5 h-2.5" />
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* Writable preview grid */}
+      <div className="grid grid-cols-4 gap-1.5">
+        {flat.map((val, idx) => {
+          const revealed = revealedSet.has(idx);
+          return (
+            <div key={idx}
+              className="aspect-square flex items-center justify-center rounded-lg border font-inter text-sm font-bold tabular-nums transition-all duration-300"
+              style={{
+                minWidth:    "2.6rem",
+                background:  revealed ? (idx % 2 === 0 ? "rgba(245,208,96,0.10)" : "rgba(212,175,55,0.06)") : "rgba(255,255,255,0.03)",
+                borderColor: revealed ? color + "55" : "rgba(255,255,255,0.08)",
+                color:       revealed ? color : "transparent",
+                boxShadow:   revealed ? `0 0 8px ${color}22` : "none",
+              }}>
+              {val.toLocaleString()}
+            </div>
+          );
+        })}
+      </div>
+
+      {done && (
+        <div className="text-center font-inter text-[8px] font-bold py-1 rounded"
+          style={{ color: "#4ADE80", background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.20)" }}>
+          ✓ All cells revealed
+        </div>
+      )}
     </div>
   );
 }
@@ -246,6 +335,9 @@ function SectionPanel({ label, arabic, subtitle, vefk, sourceNumber, borderLette
                     style={{ background: allOk ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", color: allOk ? G.green : G.red }}>
                     {allOk ? "✓ Valid Magic Square" : "✗ Invalid Magic Square"}
                   </div>
+
+                  {/* Writing Assistant — UI only, no calc changes */}
+                  <VefkWritingAssistant grid={g} color={color} />
                 </div>
               )}
 
