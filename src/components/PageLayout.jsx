@@ -359,8 +359,6 @@ export default function PageLayout({ children }) {
               tabRef={(el) => (tabRefs.current[tab.id] = el)}
             />
           ))}
-          {/* Extra end spacer for last tab visibility */}
-          <div style={{ flexShrink: 0, width: 24 }} />
         </div>
       </div>
 
