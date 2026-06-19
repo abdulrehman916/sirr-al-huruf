@@ -15,11 +15,17 @@ export default function TodayAnalysis() {
     const now = new Date();
     const dayOfWeek = now.getDay(); // 0=Sunday, 1=Monday, etc.
     
+    // Console trace for debugging
+    console.log("[TodayAnalysis] Day of week:", dayOfWeek, ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][dayOfWeek]);
+    console.log("[TodayAnalysis] PLANETARY_DAY_RULERS loaded:", PLANETARY_DAY_RULERS?.length || 0);
+    
     // Get planetary ruler for today
     const dayRuler = PLANETARY_DAY_RULERS.find(d => {
       const dayIndex = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(d.day_name_en);
       return dayIndex === dayOfWeek;
     });
+    
+    console.log("[TodayAnalysis] Day ruler found:", dayRuler ? dayRuler.day_name_en : "NOT FOUND");
 
     // Get current hour's planetary ruler (simplified)
     const currentHour = now.getHours();
@@ -30,15 +36,30 @@ export default function TodayAnalysis() {
     // Get moon mansion (simplified - would need real calculation)
     const moonMansion = AY_MANAZILLERI[0]; // Placeholder
 
+    // Defensive checks - show fallback if data unavailable
+    if (!dayRuler) {
+      console.error("TodayAnalysis: Day ruler not found for day", dayOfWeek);
+      setTodayData(null);
+      setLoading(false);
+      return;
+    }
+
+    if (!moonMansion) {
+      console.error("TodayAnalysis: Moon mansion data not available");
+      setTodayData(null);
+      setLoading(false);
+      return;
+    }
+
     setTodayData({
       date: now,
-      dayOfWeek: dayRuler?.data.day || "Unknown",
-      dayRuler: dayRuler?.data.ruler || "Unknown",
-      dayRulerSymbol: dayRuler?.data.symbol || "",
+      dayOfWeek: dayRuler.day_name_en || "Unknown",
+      dayRuler: dayRuler.planet_tr || "Unknown",
+      dayRulerSymbol: dayRuler.symbol || "",
       currentPlanet,
       currentHour,
-      moonMansion: moonMansion?.data.name || "Unknown",
-      moonMansionNo: moonMansion?.data.number || 0,
+      moonMansion: moonMansion.name || "Unknown",
+      moonMansionNo: moonMansion.no || 0,
       moonPhase: "Waxing", // Placeholder
       zodiacSign: "Aries", // Placeholder
       star: "Ashwini" // Placeholder
@@ -47,7 +68,7 @@ export default function TodayAnalysis() {
     setLoading(false);
   }, []);
 
-  if (loading || !todayData) {
+  if (loading) {
     return (
       <div className="rounded-xl border p-6" style={{
         background: "rgba(8,18,44,0.95)",
@@ -62,32 +83,50 @@ export default function TodayAnalysis() {
     );
   }
 
+  if (!todayData) {
+    return (
+      <div className="rounded-xl border p-6 text-center" style={{
+        background: "rgba(8,18,44,0.95)",
+        borderColor: "rgba(212,175,55,0.20)"
+      }}>
+        <AlertCircle className="w-8 h-8 mx-auto mb-3" style={{ color: "rgba(255,255,255,0.40)" }} />
+        <p className="font-inter text-sm mb-1" style={{ color: "rgba(255,255,255,0.70)" }}>
+          {isMalayalam ? "ഇന്നത്തെ വിശകലനം ലഭ്യമല്ല" : "Today's Analysis Not Available"}
+        </p>
+        <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
+          {isMalayalam ? "ഇന്നത്തെ ഉറവിട ഡാറ്റ ലഭ്യമല്ല" : "Today's reference data not available"}
+        </p>
+      </div>
+    );
+  }
+
   // Generate GOOD FOR / AVOID / NEUTRAL lists from book data
-  const goodFor = todayData.dayRuler === "Güneş" 
+  const dayRuler = todayData.dayRuler || "Unknown";
+  const goodFor = dayRuler === "Güneş" 
     ? ["Leadership", "Success", "Authority meetings", "Friendship"]
-    : todayData.dayRuler === "Ay"
+    : dayRuler === "Ay"
     ? ["Travel", "Water activities", "Love", "Dreams"]
-    : todayData.dayRuler === "Mars"
+    : dayRuler === "Mars"
     ? ["Competition", "Sports", "Courage"]
-    : todayData.dayRuler === "Merkür"
+    : dayRuler === "Merkür"
     ? ["Business", "Communication", "Learning"]
-    : todayData.dayRuler === "Jüpiter"
+    : dayRuler === "Jüpiter"
     ? ["Wealth", "Knowledge", "Friendship"]
-    : todayData.dayRuler === "Venüs"
+    : dayRuler === "Venüs"
     ? ["Love", "Beauty", "Entertainment"]
     : ["Discipline", "Long-term planning"];
 
-  const avoid = todayData.dayRuler === "Güneş"
+  const avoid = dayRuler === "Güneş"
     ? ["Hidden activities", "Solitude"]
-    : todayData.dayRuler === "Ay"
+    : dayRuler === "Ay"
     ? ["Confrontations", "Major decisions"]
-    : todayData.dayRuler === "Mars"
+    : dayRuler === "Mars"
     ? ["Peace negotiations", "Romance"]
-    : todayData.dayRuler === "Merkür"
+    : dayRuler === "Merkür"
     ? ["Physical labor"]
-    : todayData.dayRuler === "Jüpiter"
+    : dayRuler === "Jüpiter"
     ? ["Short-term thinking"]
-    : todayData.dayRuler === "Venüs"
+    : dayRuler === "Venüs"
     ? ["Serious business", "Conflict"]
     : ["New beginnings", "Social events"];
 
