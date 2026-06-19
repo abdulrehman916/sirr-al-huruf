@@ -308,7 +308,7 @@ export default function PageLayout({ children }) {
           {(user?.role === 'admin' || (user?.email && user.email.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase())) && (
             <button
               onClick={() => { startNav(); navigate('/admin/access-dashboard'); }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
               style={{
                 background: "linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.10))",
                 border: "1px solid rgba(212,175,55,0.40)",
@@ -316,6 +316,9 @@ export default function PageLayout({ children }) {
                 WebkitTapHighlightColor: "transparent",
                 userSelect: "none",
                 WebkitUserSelect: "none",
+                flexShrink: 0,
+                width: "auto",
+                whiteSpace: "nowrap",
               }}
             >
               <Shield className="w-3.5 h-3.5" />
