@@ -56,6 +56,7 @@ const pageVariants = {
 // ── Top nav tab — <div> for zero link-delay, GPU-composited via container ──
 const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
   const navigate = useNavigate();
+  const isLastTab = tab.id === 'support';
   
   const handleClick = useCallback((e) => {
     e.preventDefault();
@@ -74,6 +75,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         borderRadius: 10,
         minHeight: 44,
         minWidth: 48,
+        marginRight: tab.id === 'support' ? 24 : 0,
         border: isActive ? "1px solid rgba(212,175,55,0.60)" : "1px solid rgba(255,255,255,0.06)",
         background: isActive
           ? "linear-gradient(160deg, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.07) 100%)"
@@ -179,22 +181,26 @@ export default function PageLayout({ children }) {
     };
   }, [activeId]);
 
-  // Auto-scroll active tab into view on first mount only — never interrupt user gestures
-  const didInitialScroll = useRef(false);
+  // Auto-scroll active tab into view — ensures first and last tabs are fully visible
   useEffect(() => {
-    if (didInitialScroll.current) return;
     const activeTabEl = tabRefs.current[activeId];
     if (!activeTabEl || !navRef.current) return;
-    didInitialScroll.current = true;
-    // Delay to let DOM fully commit before scrolling
+    
     const timer = setTimeout(() => {
       const nav = navRef.current;
       const tabRect = activeTabEl.getBoundingClientRect();
       const navRect = nav.getBoundingClientRect();
-      // Calculate position to center the tab
+      
+      // Calculate scroll position to center the active tab
       const scrollPosition = nav.scrollLeft + tabRect.left - navRect.left - (navRect.width / 2) + (tabRect.width / 2);
-      nav.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-    }, 200);
+      
+      // Ensure we don't scroll past the boundaries
+      const maxScroll = nav.scrollWidth - nav.clientWidth;
+      const clampedScroll = Math.max(0, Math.min(scrollPosition, maxScroll));
+      
+      nav.scrollTo({ left: clampedScroll, behavior: 'smooth' });
+    }, 150);
+    
     return () => clearTimeout(timer);
   }, [activeId]);
 
