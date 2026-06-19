@@ -1,91 +1,83 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// Verify OTP with brute-force protection and account lockout
+// Verify OTP with brute-force protection and block enforcement
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const { otp_id, otp_code } = await req.json();
 
     if (!otp_id || !otp_code) {
-      return Response.json({ 
-        success: false, 
-        message: "OTP ID and code required" 
-      }, { status: 400 });
+      return Response.json({ success: false, message: "OTP ID and code required" }, { status: 400 });
     }
 
     // Find OTP record
     const otps = await base44.entities.OTPVerification.filter({ otp_id });
     if (otps.length === 0) {
-      return Response.json({ 
-        success: false, 
-        message: "Invalid OTP" 
-      }, { status: 400 });
+      return Response.json({ success: false, message: "Invalid OTP" }, { status: 400 });
     }
 
     const otp = otps[0];
     const now = new Date();
 
+    // ── BLOCK CHECK: verify at the point of OTP confirmation too ─────────────
+    const contactEmail = otp.email || null;
+    if (contactEmail) {
+      const profiles = await base44.asServiceRole.entities.UserAccessProfile.filter(
+        { email: contactEmail }, null, 1
+      );
+      if (profiles.length > 0) {
+        const status = profiles[0].account_status;
+        if (status === 'BLOCKED') {
+          return Response.json({ success: false, message: "Account is blocked. Contact support.", blocked: true }, { status: 403 });
+        }
+        if (status === 'ARCHIVED') {
+          return Response.json({ success: false, message: "Account not found.", blocked: true }, { status: 403 });
+        }
+      }
+    }
+
     // Check if expired
     if (new Date(otp.expires_at) < now) {
       await base44.entities.OTPVerification.update(otp.id, { status: "EXPIRED" });
-      return Response.json({ 
-        success: false, 
-        message: "OTP has expired" 
-      }, { status: 400 });
+      return Response.json({ success: false, message: "OTP has expired" }, { status: 400 });
     }
 
     // Check if already verified
     if (otp.verified) {
-      return Response.json({ 
-        success: false, 
-        message: "OTP already used" 
-      }, { status: 400 });
+      return Response.json({ success: false, message: "OTP already used" }, { status: 400 });
     }
 
-    // BRUTE-FORCE PROTECTION: Check attempt limit
+    // BRUTE-FORCE PROTECTION
     const attempts = otp.attempts || 0;
     const maxAttempts = otp.max_attempts || 3;
 
     if (attempts >= maxAttempts) {
-      await base44.entities.OTPVerification.update(otp.id, {
-        status: "FAILED",
-        attempts: attempts + 1
-      });
-
-      return Response.json({ 
-        success: false, 
+      await base44.entities.OTPVerification.update(otp.id, { status: "FAILED", attempts: attempts + 1 });
+      return Response.json({
+        success: false,
         message: "Too many failed attempts. Please request a new OTP.",
         locked: true
       }, { status: 403 });
     }
 
-    // Verify OTP code
     if (otp.otp_code !== otp_code) {
       const newAttempts = attempts + 1;
-      await base44.entities.OTPVerification.update(otp.id, {
-        attempts: newAttempts,
-        status: "PENDING"
-      });
-
-      const remainingAttempts = maxAttempts - newAttempts;
-      
-      return Response.json({ 
-        success: false, 
+      await base44.entities.OTPVerification.update(otp.id, { attempts: newAttempts, status: "PENDING" });
+      return Response.json({
+        success: false,
         message: "Invalid OTP code",
-        remaining_attempts: remainingAttempts
+        remaining_attempts: maxAttempts - newAttempts
       }, { status: 400 });
     }
 
     // OTP verified successfully
-    const newAttempts = attempts + 1;
     await base44.entities.OTPVerification.update(otp.id, {
       verified: true,
       verified_at: now.toISOString(),
       status: "VERIFIED",
-      attempts: newAttempts
+      attempts: (attempts + 1)
     });
 
-    // Create audit log for successful verification
     try {
       await base44.functions.invoke('createAuditLog', {
         action_type: 'OTP_VERIFIED',
@@ -97,11 +89,7 @@ Deno.serve(async (req) => {
       });
     } catch {}
 
-    return Response.json({
-      success: true,
-      message: "OTP verified successfully",
-      verified: true
-    });
+    return Response.json({ success: true, message: "OTP verified successfully", verified: true });
 
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

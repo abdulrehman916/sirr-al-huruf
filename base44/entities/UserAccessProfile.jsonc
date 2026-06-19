@@ -51,22 +51,35 @@
         "ACTIVE",
         "SUSPENDED",
         "DEACTIVATED",
-        "BLOCKED"
+        "BLOCKED",
+        "ARCHIVED"
       ],
       "default": "ACTIVE",
-      "description": "Current account status. BLOCKED = cannot login, receive OTP, use subscriptions, or access pages."
+      "description": "Current account status. BLOCKED = cannot login/OTP/access. ARCHIVED = hidden, cannot login, records preserved."
     },
     "blocked_at": {
       "type": "string",
-      "description": "ISO 8601 timestamp when account was blocked"
+      "description": "ISO 8601 timestamp when account was blocked/archived"
     },
     "blocked_by": {
       "type": "string",
-      "description": "Admin user ID who blocked this account"
+      "description": "Admin user ID who blocked/archived this account"
     },
     "block_reason": {
       "type": "string",
-      "description": "Reason for blocking the account"
+      "description": "Reason for blocking or archiving the account"
+    },
+    "archived_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when account was archived"
+    },
+    "archived_by": {
+      "type": "string",
+      "description": "Admin user ID who archived this account"
+    },
+    "archive_reason": {
+      "type": "string",
+      "description": "Reason for archiving"
     },
     "subscription_plan": {
       "type": "string",

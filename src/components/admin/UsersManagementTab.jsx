@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Users, Search, Mail, Phone, Clock, Globe, Smartphone,
-  Calendar, CreditCard, Crown, Ban, CheckCircle, AlertTriangle, X
+  Calendar, Crown, Ban, AlertTriangle, X, Archive, RotateCcw, MessageSquare
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
+import WhatsAppMessenger from "./WhatsAppMessenger";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -22,43 +23,44 @@ function fmt(d) {
   return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-// ── Block/Unblock Modal ───────────────────────────────────────────────────────
-function BlockModal({ user, profile, onClose, onDone }) {
+// ── Status Action Modal (Block/Unblock/Archive/Restore) ───────────────────────
+function StatusModal({ user, profile, action, onClose, onDone }) {
   const { toast } = useToast();
   const [reason, setReason] = useState("");
   const [processing, setProcessing] = useState(false);
-  const isBlocked = profile?.account_status === "BLOCKED";
+
+  // action: 'block' | 'unblock' | 'archive' | 'restore'
+  const isDestructive = action === "block" || action === "archive";
+  const labels = {
+    block:   { title: "Block User",      btn: "Block User",    color: "#ef4444", gradient: "linear-gradient(135deg,#ef4444,#b91c1c)" },
+    unblock: { title: "Unblock User",    btn: "Unblock",       color: "#22c55e", gradient: "linear-gradient(135deg,#22c55e,#16a34a)" },
+    archive: { title: "Archive User",    btn: "Archive User",  color: "#a855f7", gradient: "linear-gradient(135deg,#a855f7,#7c3aed)" },
+    restore: { title: "Restore Account", btn: "Restore",       color: "#22c55e", gradient: "linear-gradient(135deg,#22c55e,#16a34a)" },
+  };
+  const lbl = labels[action];
 
   const handle = async () => {
     setProcessing(true);
     try {
       const me = await base44.auth.me();
-      if (isBlocked) {
-        // Unblock: restore to ACTIVE
-        const existing = await base44.entities.UserAccessProfile.filter({ user_id: user.id }, null, 1);
-        if (existing.length > 0) {
-          await base44.entities.UserAccessProfile.update(existing[0].id, {
-            account_status: "ACTIVE",
-            blocked_at: null,
-            blocked_by: null,
-            block_reason: null,
-          });
-        }
-        toast({ title: `✓ ${user.full_name || user.email} unblocked` });
-      } else {
-        // Block
-        const existing = await base44.entities.UserAccessProfile.filter({ user_id: user.id }, null, 1);
-        const now = new Date().toISOString();
-        if (existing.length > 0) {
-          await base44.entities.UserAccessProfile.update(existing[0].id, {
-            account_status: "BLOCKED",
-            blocked_at: now,
-            blocked_by: me.id,
-            block_reason: reason || "Blocked by admin",
-          });
-        }
-        toast({ title: `✓ ${user.full_name || user.email} blocked` });
+      const existing = await base44.entities.UserAccessProfile.filter({ user_id: user.id }, null, 1);
+      if (existing.length === 0) { toast({ title: "Profile not found", variant: "destructive" }); return; }
+
+      const now = new Date().toISOString();
+      let update = {};
+
+      if (action === "block") {
+        update = { account_status: "BLOCKED", blocked_at: now, blocked_by: me.id, block_reason: reason || "Blocked by admin" };
+      } else if (action === "unblock") {
+        update = { account_status: "ACTIVE", blocked_at: null, blocked_by: null, block_reason: null };
+      } else if (action === "archive") {
+        update = { account_status: "ARCHIVED", archived_at: now, archived_by: me.id, archive_reason: reason || "Archived by admin" };
+      } else if (action === "restore") {
+        update = { account_status: "ACTIVE", archived_at: null, archived_by: null, archive_reason: null, blocked_at: null, blocked_by: null, block_reason: null };
       }
+
+      await base44.entities.UserAccessProfile.update(existing[0].id, update);
+      toast({ title: `✓ ${user.full_name || user.email} — ${lbl.btn}d` });
       onDone();
       onClose();
     } catch (e) {
@@ -74,13 +76,12 @@ function BlockModal({ user, profile, onClose, onDone }) {
       <motion.div
         initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
         className="w-full max-w-sm rounded-2xl p-6 space-y-4"
-        style={{ background: "linear-gradient(145deg,#0c1630,#060c1c)", border: `1px solid ${isBlocked ? G.borderHi : "rgba(239,68,68,0.60)"}` }}
+        style={{ background: "linear-gradient(145deg,#0c1630,#060c1c)", border: `1px solid ${isDestructive ? lbl.color + "99" : G.borderHi}` }}
         onClick={e => e.stopPropagation()}>
+
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-inter font-bold text-white text-base">
-              {isBlocked ? "Unblock User" : "Block User"}
-            </h3>
+            <h3 className="font-inter font-bold text-white text-base">{lbl.title}</h3>
             <p className="text-xs text-white/40 mt-0.5">{user.full_name || user.email}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10"
@@ -89,27 +90,39 @@ function BlockModal({ user, profile, onClose, onDone }) {
           </button>
         </div>
 
-        {!isBlocked && (
-          <>
-            <div className="rounded-xl border p-3 flex items-start gap-2"
-              style={{ background: "rgba(239,68,68,0.07)", borderColor: "rgba(239,68,68,0.30)" }}>
-              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />
-              <p className="text-xs text-red-400/80">
-                Blocked users <strong>cannot log in, receive OTP, use subscriptions, or access any pages</strong>.
-              </p>
-            </div>
-            <div>
-              <label className="text-xs text-white/40 mb-1 block">Block Reason (optional)</label>
-              <input value={reason} onChange={e => setReason(e.target.value)}
-                placeholder="e.g. Violation of terms"
-                className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid rgba(239,68,68,0.25)` }} />
-            </div>
-          </>
+        {action === "block" && (
+          <div className="rounded-xl border p-3 flex items-start gap-2"
+            style={{ background: "rgba(239,68,68,0.07)", borderColor: "rgba(239,68,68,0.30)" }}>
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />
+            <p className="text-xs text-red-400/80">Blocked users <strong>cannot log in, receive OTP, use subscriptions, access pages, or redeem codes</strong>.</p>
+          </div>
         )}
 
-        {isBlocked && profile?.block_reason && (
-          <p className="text-xs text-white/50 italic">Blocked for: "{profile.block_reason}"</p>
+        {action === "archive" && (
+          <div className="rounded-xl border p-3 flex items-start gap-2"
+            style={{ background: "rgba(168,85,247,0.07)", borderColor: "rgba(168,85,247,0.30)" }}>
+            <Archive className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#a855f7" }} />
+            <p className="text-xs" style={{ color: "rgba(168,85,247,0.80)" }}>
+              Archived users <strong>cannot log in or access the app</strong>, but all historical data (permissions, subscriptions, tickets) is preserved. They can be restored at any time.
+            </p>
+          </div>
+        )}
+
+        {isDestructive && (
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Reason (optional)</label>
+            <input value={reason} onChange={e => setReason(e.target.value)}
+              placeholder={action === "archive" ? "e.g. Inactive account" : "e.g. Violation of terms"}
+              className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+              style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${lbl.color}40` }} />
+          </div>
+        )}
+
+        {action === "unblock" && profile?.block_reason && (
+          <p className="text-xs text-white/50 italic">Originally blocked for: "{profile.block_reason}"</p>
+        )}
+        {action === "restore" && profile?.archive_reason && (
+          <p className="text-xs text-white/50 italic">Originally archived for: "{profile.archive_reason}"</p>
         )}
 
         <div className="flex gap-3">
@@ -119,13 +132,8 @@ function BlockModal({ user, profile, onClose, onDone }) {
           </button>
           <button onClick={handle} disabled={processing}
             className="flex-1 py-3 rounded-xl text-sm font-bold disabled:opacity-50"
-            style={{
-              background: isBlocked
-                ? "linear-gradient(135deg,#22c55e,#16a34a)"
-                : "linear-gradient(135deg,#ef4444,#b91c1c)",
-              color: "white"
-            }}>
-            {processing ? "…" : isBlocked ? "Unblock" : "Block User"}
+            style={{ background: lbl.gradient, color: "white" }}>
+            {processing ? "…" : lbl.btn}
           </button>
         </div>
       </motion.div>
@@ -134,91 +142,123 @@ function BlockModal({ user, profile, onClose, onDone }) {
 }
 
 // ── Single User Row ───────────────────────────────────────────────────────────
-function UserRow({ u, onBlock }) {
+function UserRow({ u, subTab, onAction, onWhatsApp }) {
   const navigate = useNavigate();
   const status = u.profile?.account_status || "ACTIVE";
-  const isBlocked = status === "BLOCKED";
-  const isDeactivated = status === "DEACTIVATED";
 
-  const statusColor = isBlocked ? "#ef4444" : isDeactivated ? "#f59e0b" : status === "SUSPENDED" ? "#f59e0b" : "rgba(255,255,255,0.25)";
+  const statusColor = {
+    BLOCKED: "#ef4444",
+    ARCHIVED: "#a855f7",
+    DEACTIVATED: "#f59e0b",
+    SUSPENDED: "#f59e0b",
+  }[status] || "rgba(255,255,255,0.25)";
+
+  const phone = u.profile?.mobile || u.mobile;
 
   return (
-    <div className="rounded-xl border p-4 flex items-center gap-4"
-      style={{ background: isBlocked ? "rgba(239,68,68,0.04)" : G.bg, borderColor: isBlocked ? "rgba(239,68,68,0.25)" : G.border }}>
+    <div className="rounded-xl border p-4 flex items-center gap-3"
+      style={{
+        background: status === "BLOCKED" ? "rgba(239,68,68,0.04)" : status === "ARCHIVED" ? "rgba(168,85,247,0.04)" : G.bg,
+        borderColor: status === "BLOCKED" ? "rgba(239,68,68,0.22)" : status === "ARCHIVED" ? "rgba(168,85,247,0.22)" : G.border
+      }}>
+
       <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
         style={{ background: G.bgHi, color: G.text, border: `1px solid ${G.border}` }}>
         {(u.profile?.full_name || u.full_name || u.email || "?")[0].toUpperCase()}
       </div>
+
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-inter font-bold text-white text-sm truncate">
-            {u.profile?.full_name || u.full_name || "Unnamed"}
-          </p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p className="font-inter font-bold text-white text-sm truncate">{u.profile?.full_name || u.full_name || "Unnamed"}</p>
           {u.profile?.lifetime_access && (
             <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold"
               style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.30)" }}>
               <Crown className="w-3 h-3 inline" />
             </span>
           )}
-          {isBlocked && (
+          {status !== "ACTIVE" && (
             <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold"
-              style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.30)" }}>
-              BLOCKED
+              style={{ background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}40` }}>
+              {status}
             </span>
           )}
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
           <span className="text-xs text-white/40 flex items-center gap-1"><Mail className="w-3 h-3" />{u.email || "—"}</span>
-          {(u.profile?.mobile || u.mobile) && (
-            <span className="text-xs text-white/40 flex items-center gap-1"><Phone className="w-3 h-3" />{u.profile?.mobile || u.mobile}</span>
-          )}
+          {phone && <span className="text-xs text-white/40 flex items-center gap-1"><Phone className="w-3 h-3" />{phone}</span>}
           <span className="text-xs text-white/40 flex items-center gap-1">
             <Clock className="w-3 h-3" />{u.profile?.last_login ? fmt(u.profile.last_login) : "—"}
           </span>
         </div>
-        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-          {u.profile?.device_type && u.profile.device_type !== "unknown" && (
-            <span className="text-[10px] text-white/25 capitalize flex items-center gap-1">
-              <Smartphone className="w-2.5 h-2.5" />{u.profile.device_type}
-            </span>
-          )}
-          {u.profile?.country && (
-            <span className="text-[10px] text-white/25 flex items-center gap-1">
-              <Globe className="w-2.5 h-2.5" />{u.profile.country}
-            </span>
-          )}
-          <span className="text-[10px] text-white/25 flex items-center gap-1">
-            <Calendar className="w-2.5 h-2.5" />{u.profile?.registration_date ? fmt(u.profile.registration_date) : "—"}
-          </span>
-        </div>
-        {isBlocked && u.profile?.block_reason && (
-          <p className="text-[10px] text-red-400/60 mt-1 italic">Reason: {u.profile.block_reason}</p>
+        {(u.profile?.block_reason || u.profile?.archive_reason) && (
+          <p className="text-[10px] text-white/35 mt-0.5 italic">
+            Reason: {u.profile.block_reason || u.profile.archive_reason}
+          </p>
         )}
       </div>
-      <div className="text-right flex-shrink-0 space-y-1.5">
-        <p className="text-xs font-semibold" style={{ color: statusColor }}>{status}</p>
+
+      <div className="flex flex-col gap-1 flex-shrink-0 items-end">
         <button onClick={() => navigate(`/admin/user-detail/${u.id}`)}
-          className="block px-3 py-1 rounded-lg text-xs font-bold"
+          className="px-3 py-1 rounded-lg text-xs font-bold"
           style={{ background: "rgba(59,130,246,0.10)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.25)" }}>
-          Details →
+          Details
         </button>
-        <button onClick={() => onBlock(u)}
-          className="block px-3 py-1 rounded-lg text-xs font-bold w-full"
-          style={isBlocked
-            ? { background: "rgba(34,197,94,0.10)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.25)" }
-            : { background: "rgba(239,68,68,0.10)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.22)" }}>
-          {isBlocked ? "Unblock" : "Block"}
-        </button>
+
+        {phone && (
+          <button onClick={() => onWhatsApp(u)}
+            className="px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1"
+            style={{ background: "rgba(37,211,102,0.10)", color: "#25D366", border: "1px solid rgba(37,211,102,0.22)" }}>
+            <MessageSquare className="w-3 h-3" /> WA
+          </button>
+        )}
+
+        {/* Action button depending on current status */}
+        {subTab === "active" && (
+          <div className="flex gap-1">
+            <button onClick={() => onAction(u, "block")}
+              className="px-2 py-1 rounded text-[10px] font-bold"
+              style={{ background: "rgba(239,68,68,0.10)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.22)" }}>
+              Block
+            </button>
+            <button onClick={() => onAction(u, "archive")}
+              className="px-2 py-1 rounded text-[10px] font-bold"
+              style={{ background: "rgba(168,85,247,0.10)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.22)" }}>
+              Archive
+            </button>
+          </div>
+        )}
+        {subTab === "blocked" && (
+          <button onClick={() => onAction(u, "unblock")}
+            className="px-3 py-1 rounded-lg text-xs font-bold"
+            style={{ background: "rgba(34,197,94,0.10)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.25)" }}>
+            Unblock
+          </button>
+        )}
+        {subTab === "archived" && (
+          <button onClick={() => onAction(u, "restore")}
+            className="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1"
+            style={{ background: "rgba(34,197,94,0.10)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.25)" }}>
+            <RotateCcw className="w-3 h-3" /> Restore
+          </button>
+        )}
+        {subTab === "removed" && (
+          <button onClick={() => onAction(u, "archive")}
+            className="px-3 py-1 rounded-lg text-xs font-bold"
+            style={{ background: "rgba(168,85,247,0.10)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.22)" }}>
+            Archive
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function UsersManagementTab({ users, profiles, onRefresh }) {
   const [search, setSearch] = useState("");
   const [subTab, setSubTab] = useState("active");
-  const [blockTarget, setBlockTarget] = useState(null);
+  const [modal, setModal] = useState(null); // { user, action }
+  const [waTarget, setWaTarget] = useState(null);
 
   const enriched = useMemo(() => users.map(u => ({
     ...u,
@@ -230,42 +270,49 @@ export default function UsersManagementTab({ users, profiles, onRefresh }) {
     const bySearch = q
       ? enriched.filter(u => (u.email || "").toLowerCase().includes(q) || (u.full_name || "").toLowerCase().includes(q))
       : enriched;
-    if (subTab === "active") return bySearch.filter(u => !u.profile?.account_status || u.profile.account_status === "ACTIVE");
-    if (subTab === "removed") return bySearch.filter(u => u.profile?.account_status === "DEACTIVATED" || u.profile?.account_status === "SUSPENDED");
-    if (subTab === "blocked") return bySearch.filter(u => u.profile?.account_status === "BLOCKED");
+    if (subTab === "active")   return bySearch.filter(u => !u.profile?.account_status || u.profile.account_status === "ACTIVE");
+    if (subTab === "removed")  return bySearch.filter(u => ["DEACTIVATED", "SUSPENDED"].includes(u.profile?.account_status));
+    if (subTab === "blocked")  return bySearch.filter(u => u.profile?.account_status === "BLOCKED");
+    if (subTab === "archived") return bySearch.filter(u => u.profile?.account_status === "ARCHIVED");
     return bySearch;
   }, [enriched, search, subTab]);
 
   const counts = useMemo(() => ({
-    active: enriched.filter(u => !u.profile?.account_status || u.profile.account_status === "ACTIVE").length,
-    removed: enriched.filter(u => u.profile?.account_status === "DEACTIVATED" || u.profile?.account_status === "SUSPENDED").length,
-    blocked: enriched.filter(u => u.profile?.account_status === "BLOCKED").length,
+    active:   enriched.filter(u => !u.profile?.account_status || u.profile.account_status === "ACTIVE").length,
+    removed:  enriched.filter(u => ["DEACTIVATED", "SUSPENDED"].includes(u.profile?.account_status)).length,
+    blocked:  enriched.filter(u => u.profile?.account_status === "BLOCKED").length,
+    archived: enriched.filter(u => u.profile?.account_status === "ARCHIVED").length,
   }), [enriched]);
 
   const SUB_TABS = [
-    { id: "active",  label: "Active",   color: "#4ade80", count: counts.active },
-    { id: "removed", label: "Removed",  color: "#f59e0b", count: counts.removed },
-    { id: "blocked", label: "Blocked",  color: "#ef4444", count: counts.blocked },
+    { id: "active",   label: "Active",   color: "#4ade80", count: counts.active },
+    { id: "removed",  label: "Removed",  color: "#f59e0b", count: counts.removed },
+    { id: "blocked",  label: "Blocked",  color: "#ef4444", count: counts.blocked },
+    { id: "archived", label: "Archived", color: "#a855f7", count: counts.archived },
   ];
+
+  const NOTICES = {
+    blocked: { bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.25)", icon: <Ban className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />, color: "text-red-400/80", text: "Blocked users cannot log in, receive OTP, use subscriptions, access pages, or redeem codes. Unblocking fully restores their account." },
+    archived: { bg: "rgba(168,85,247,0.06)", border: "rgba(168,85,247,0.25)", icon: <Archive className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#a855f7" }} />, color: "text-purple-400/80", text: "Archived users are hidden from normal lists and cannot log in. All historical data is preserved. They can be restored at any time." },
+  };
+
+  const notice = NOTICES[subTab];
 
   return (
     <div className="space-y-4">
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: G.dim }} />
-        <input
-          value={search} onChange={e => setSearch(e.target.value)}
+        <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search by name or email…"
           className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none"
-          style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}` }}
-        />
+          style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}` }} />
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {SUB_TABS.map(st => (
           <button key={st.id} onClick={() => setSubTab(st.id)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
             style={{
               background: subTab === st.id ? `${st.color}18` : "rgba(255,255,255,0.03)",
               border: `1px solid ${subTab === st.id ? `${st.color}50` : "rgba(255,255,255,0.07)"}`,
@@ -280,13 +327,11 @@ export default function UsersManagementTab({ users, profiles, onRefresh }) {
         ))}
       </div>
 
-      {subTab === "blocked" && counts.blocked > 0 && (
+      {notice && filtered.length > 0 && (
         <div className="rounded-xl border p-3 flex items-start gap-2"
-          style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.25)" }}>
-          <Ban className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />
-          <p className="text-xs text-red-400/80">
-            Blocked users cannot log in, receive OTP, use subscriptions, or access any pages. Unblocking fully restores their account.
-          </p>
+          style={{ background: notice.bg, borderColor: notice.border }}>
+          {notice.icon}
+          <p className={`text-xs ${notice.color}`}>{notice.text}</p>
         </div>
       )}
 
@@ -298,19 +343,26 @@ export default function UsersManagementTab({ users, profiles, onRefresh }) {
       ) : (
         <div className="space-y-2">
           {filtered.map(u => (
-            <UserRow key={u.id} u={u} onBlock={u => setBlockTarget(u)} />
+            <UserRow key={u.id} u={u} subTab={subTab}
+              onAction={(user, action) => setModal({ user, action })}
+              onWhatsApp={u => setWaTarget({ name: u.full_name, mobile: u.profile?.mobile || u.mobile, email: u.email })}
+            />
           ))}
         </div>
       )}
 
       <AnimatePresence>
-        {blockTarget && (
-          <BlockModal
-            user={blockTarget}
-            profile={profiles.find(p => p.user_id === blockTarget.id)}
-            onClose={() => setBlockTarget(null)}
+        {modal && (
+          <StatusModal
+            user={modal.user}
+            profile={profiles.find(p => p.user_id === modal.user.id)}
+            action={modal.action}
+            onClose={() => setModal(null)}
             onDone={onRefresh}
           />
+        )}
+        {waTarget && (
+          <WhatsAppMessenger user={waTarget} onClose={() => setWaTarget(null)} />
         )}
       </AnimatePresence>
     </div>

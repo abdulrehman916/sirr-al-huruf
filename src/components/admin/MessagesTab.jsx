@@ -8,6 +8,7 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
+import WhatsAppMessenger from "./WhatsAppMessenger";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -278,6 +279,7 @@ export default function MessagesTab() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [waTarget, setWaTarget] = useState(null);
 
   useEffect(() => { loadTickets(); }, []);
 
@@ -347,11 +349,7 @@ export default function MessagesTab() {
         <div className="space-y-2">
           {filtered.map(ticket => {
             const msgCount = (messages[ticket.ticket_id] || []).length;
-            const whatsappUrl = ticket.mobile
-              ? `https://wa.me/${ticket.mobile.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${ticket.name}, regarding your support ticket.`)}`
-              : null;
             const callUrl = ticket.mobile ? `tel:${ticket.mobile.replace(/\s/g, "")}` : null;
-
             return (
               <div key={ticket.id} className="rounded-xl border p-4" style={{ background: G.bg, borderColor: G.border }}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -369,9 +367,7 @@ export default function MessagesTab() {
                     </div>
                     <p className="font-inter font-bold text-white text-sm">{ticket.subject}</p>
                     <p className="text-xs text-white/40 mt-0.5">{ticket.name} · {ticket.email}</p>
-                    {ticket.mobile && (
-                      <p className="text-xs text-white/30 mt-0.5">{ticket.mobile}</p>
-                    )}
+                    {ticket.mobile && <p className="text-xs text-white/30 mt-0.5">{ticket.mobile}</p>}
                     <p className="text-xs text-white/25 mt-1 flex items-center gap-1">
                       <Clock className="w-3 h-3" />{formatTime(ticket.created_at)}
                     </p>
@@ -391,13 +387,14 @@ export default function MessagesTab() {
                           <Phone className="w-3 h-3" />
                         </a>
                       )}
-                      {whatsappUrl && (
-                        <a href={whatsappUrl} target="_blank" rel="noreferrer"
+                      {ticket.mobile && (
+                        <button
+                          onClick={() => setWaTarget({ name: ticket.name, mobile: ticket.mobile, email: ticket.email })}
                           className="w-7 h-7 rounded flex items-center justify-center"
                           style={{ background: "rgba(37,211,102,0.10)", border: "1px solid rgba(37,211,102,0.25)", color: "#25D366" }}
-                          title="WhatsApp">
+                          title="WhatsApp Templates">
                           <ExternalLink className="w-3 h-3" />
-                        </a>
+                        </button>
                       )}
                     </div>
                   </div>
@@ -416,6 +413,9 @@ export default function MessagesTab() {
             onClose={() => setSelectedTicket(null)}
             onRefresh={() => { loadTickets(); }}
           />
+        )}
+        {waTarget && (
+          <WhatsAppMessenger user={waTarget} onClose={() => setWaTarget(null)} />
         )}
       </AnimatePresence>
     </div>
