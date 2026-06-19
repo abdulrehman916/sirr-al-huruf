@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, KeyRound, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { clearAllCache } from "@/lib/permissionCache";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -31,7 +32,10 @@ export default function RedeemCodeModal({ onClose }) {
       const res = await base44.functions.invoke("redeemAccessCode", { code: trimmed });
       const data = res.data;
       setResult(data);
-      
+      // Clear permission cache immediately so the page unlocks without waiting
+      if (data?.success) {
+        clearAllCache();
+      }
     } catch (e) {
       setResult({ success: false, message: e.message || "Redemption failed. Please try again." });
     } finally {

@@ -421,6 +421,14 @@ function SubscriptionsTab({ subscriptions, users }) {
 
   return (
     <div className="space-y-4">
+      {/* Legacy notice */}
+      <div className="rounded-xl border p-3 flex items-start gap-2"
+        style={{ background: "rgba(245,158,11,0.07)", borderColor: "rgba(245,158,11,0.30)" }}>
+        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#f59e0b" }} />
+        <p className="text-xs text-amber-400/80">
+          <span className="font-bold">Legacy data only.</span> This tab shows historical Stripe/Razorpay records from the old payment system. New access granted via Access Codes does not appear here — use the <span className="font-bold">User Access</span> tab to see current active permissions.
+        </p>
+      </div>
       {/* Revenue + summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[

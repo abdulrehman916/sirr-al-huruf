@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { MessageCircle, CheckCircle, KeyRound } from "lucide-react";
+import { MessageCircle, CheckCircle, KeyRound, AlertCircle } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
@@ -16,6 +16,7 @@ export default function WhatsAppAccessRequest({ pageName, routePath }) {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showRedeem, setShowRedeem] = useState(false);
+  const [dbError, setDbError] = useState("");
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -23,6 +24,7 @@ export default function WhatsAppAccessRequest({ pageName, routePath }) {
 
   const handleRequest = async () => {
     setLoading(true);
+    setDbError("");
     try {
       // 1. Save AccessRequest record for admin visibility
       const requestId = "REQ-" + Date.now();
@@ -54,21 +56,9 @@ export default function WhatsAppAccessRequest({ pageName, routePath }) {
       const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank");
       setSubmitted(true);
-    } catch {
-      // Even if DB save fails, still open WhatsApp
-      const name = user?.full_name || "Unknown User";
-      const email = user?.email || "No email";
-      const message =
-        `السلام عليكم\n\n` +
-        `*Access Request — Sirr al-Huruf*\n\n` +
-        `👤 Name: ${name}\n` +
-        `📧 Email: ${email}\n` +
-        `📄 Page: ${pageName}\n` +
-        `🔗 Path: ${routePath}\n\n` +
-        `Please grant me access to this page.`;
-      const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-      window.open(url, "_blank");
-      setSubmitted(true);
+    } catch (err) {
+      // DB save failed — show error, do NOT silently continue
+      setDbError("Failed to save your request. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -93,6 +83,13 @@ export default function WhatsAppAccessRequest({ pageName, routePath }) {
   return (
     <>
       <div className="space-y-2 w-full">
+        {dbError && (
+          <div className="flex items-start gap-2 p-3 rounded-xl"
+            style={{ background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.35)" }}>
+            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-red-300">{dbError}</p>
+          </div>
+        )}
         <button
           onClick={handleRequest}
           disabled={loading}
