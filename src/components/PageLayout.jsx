@@ -75,7 +75,6 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
         borderRadius: 10,
         minHeight: 44,
         minWidth: 48,
-        marginRight: tab.id === 'support' ? 24 : 0,
         border: isActive ? "1px solid rgba(212,175,55,0.60)" : "1px solid rgba(255,255,255,0.06)",
         background: isActive
           ? "linear-gradient(160deg, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.07) 100%)"
