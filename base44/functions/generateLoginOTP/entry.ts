@@ -57,6 +57,8 @@ Deno.serve(async (req) => {
     const expiresAt = new Date(now.getTime() + 5 * 60 * 1000);
     const otpId = `OTP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+    // Store plain OTP code (not hashed) so we can email it
+    // Hash will be used for verification comparison only
     await base44.entities.OTPVerification.create({
       otp_id: otpId,
       user_id: "pending",
@@ -73,22 +75,37 @@ Deno.serve(async (req) => {
       max_attempts: 3
     });
 
+    // Send OTP email via Resend
+    let emailSent = false;
+    try {
+      await base44.functions.invoke('sendOTPEmail', {
+        email: email,
+        otp_code: otpCode,
+        otp_id: otpId
+      });
+      emailSent = true;
+    } catch (emailError) {
+      console.error('[OTP] Failed to send email:', emailError.message);
+      // Continue anyway - OTP is still valid for manual entry
+    }
+
     try {
       await base44.functions.invoke('createAuditLog', {
         action_type: 'OTP_GENERATED',
         target_user_id: null,
         target_entity: 'OTPVerification',
         target_id: otpId,
-        details: JSON.stringify({ contact: email || mobile, otp_type: otpType, purpose }),
+        details: JSON.stringify({ contact: email, otp_type: otpType, purpose, email_sent: emailSent }),
         ip_address: req.headers.get("x-forwarded-for")?.split(",")[0] || null
       });
     } catch {}
 
     return Response.json({
       success: true,
-      message: "OTP sent successfully",
+      message: emailSent ? "OTP sent successfully" : "OTP generated (email delivery may have failed)",
       otp_id: otpId,
-      expires_in: 300
+      expires_in: 300,
+      email_sent: emailSent
     });
 
   } catch (error) {
