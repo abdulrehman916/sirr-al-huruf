@@ -7,6 +7,7 @@ import AtmosphericBackground from "./AtmosphericBackground";
 import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
 import useTranslation from "@/i18n/useTranslation";
+import { ADMIN_CONFIG } from "@/lib/adminConfig";
 
 const AccountModal = lazy(() => import("./AccountModal"));
 
@@ -118,7 +119,7 @@ const CHILD_PAGES = ["/plants/"];
 // Simple user cache — avoid re-fetching auth on every page navigation
 let _userCache = null;
 let _userCacheTime = 0;
-const USER_CACHE_TTL = 60000; // 1 minute
+const USER_CACHE_TTL = 30000; // 30 seconds
 
 export default function PageLayout({ children }) {
   const location = useLocation();
@@ -243,8 +244,8 @@ export default function PageLayout({ children }) {
 
         {/* Horizontal navigation — single native scroll layer, GPU-composited */}
         <div className="px-2 py-2 flex items-center gap-2" style={{ width: "100%" }}>
-          {/* Admin button - only visible for admin users */}
-          {user?.role === 'admin' && (
+          {/* Admin button - visible for owner email OR platform admin role */}
+          {(user?.role === 'admin' || (user?.email && user.email.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase())) && (
             <button
               onClick={() => { startNav(); navigate('/admin/access-dashboard'); }}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
