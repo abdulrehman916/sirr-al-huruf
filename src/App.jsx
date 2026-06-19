@@ -71,6 +71,7 @@ const PAGE_IMPORTS = {
   OwnerAccessDashboard:     () => import('./pages/OwnerAccessDashboard'),
   UserDetailPage:           () => import('./pages/UserDetailPage'),
   AdminFaalChobUpload:      () => import('./pages/AdminFaalChobUpload'),
+  AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),

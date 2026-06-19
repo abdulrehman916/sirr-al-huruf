@@ -1657,7 +1657,29 @@ export default function OwnerAccessDashboard() {
           {tab === "payments"   && <PaymentsTab subscriptions={subscriptions} users={users} onManage={setManagingSub} />}
           {tab === "plans"      && <PlansTab plans={plans} onRefresh={loadAll} />}
           {tab === "vip"        && <VIPTab vipAccess={vipAccess} users={users} onRefresh={loadAll} />}
-          {tab === "requests"   && <SubscriptionRequestsTab requests={accessRequests} users={users} onRefresh={loadAll} />}
+          {tab === "requests"   && (
+            <div className="space-y-4">
+              <Link to="/admin/access-requests">
+                <div className="rounded-xl border p-4 flex items-center gap-3 cursor-pointer"
+                  style={{ background: "rgba(37,211,102,0.08)", borderColor: "rgba(37,211,102,0.35)" }}>
+                  <MessageSquare className="w-5 h-5 flex-shrink-0" style={{ color: "#25D366" }} />
+                  <div className="flex-1">
+                    <p className="font-inter font-bold text-sm" style={{ color: "#25D366" }}>WhatsApp Access Requests</p>
+                    <p className="text-xs text-white/40 mt-0.5">
+                      View &amp; approve pending WhatsApp access requests
+                      {accessRequests.filter(r => r.status === "PENDING").length > 0 &&
+                        ` · ${accessRequests.filter(r => r.status === "PENDING").length} pending`}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                    style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.35)" }}>
+                    Open →
+                  </span>
+                </div>
+              </Link>
+              <SubscriptionRequestsTab requests={accessRequests} users={users} onRefresh={loadAll} />
+            </div>
+          )}
           {tab === "messages"   && <MessagesTab />}
           {tab === "visibility" && <VisibilityTab pageConfigs={pageConfigs} onRefresh={loadAll} />}
           {tab === "access"     && <UserAccessTab users={users} permissions={permissions} onRefresh={loadAll} />}

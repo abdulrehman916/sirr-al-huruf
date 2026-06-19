@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
-import { ShieldAlert, Lock, Clock, XCircle, Crown, Star, Send } from "lucide-react";
+import { ShieldAlert, Lock, Clock, XCircle, Star } from "lucide-react";
 import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, accessCheckKey, visibilityKey } from "@/lib/permissionCache";
-import RequestAccessModal from "@/components/RequestAccessModal";
 import { useToast } from "@/components/ui/use-toast";
 import useTranslation from "@/i18n/useTranslation";
+import WhatsAppAccessRequest from "@/components/WhatsAppAccessRequest";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -29,7 +29,6 @@ export default function ProtectedPage({ routePath, children, requiresPermission,
   const [accessStatus, setAccessStatus] = useState("checking");
   const [accessDetails, setAccessDetails] = useState(null);
   const [error, setError] = useState(null);
-  const [showRequestModal, setShowRequestModal] = useState(false);
   const [pageName, setPageName] = useState("");
 
   useEffect(() => {
@@ -131,30 +130,17 @@ export default function ProtectedPage({ routePath, children, requiresPermission,
   if (accessStatus === "granted") return children;
 
   return (
-    <>
-      <LockedScreen
-        accessStatus={accessStatus}
-        error={error}
-        accessDetails={accessDetails}
-        pageName={pageName}
-        routePath={routePath}
-        onSubscribe={() => navigate('/my-subscription')}
-        onRequestAccess={() => setShowRequestModal(true)}
-      />
-      <AnimatePresence>
-        {showRequestModal && (
-          <RequestAccessModal
-            pagePath={routePath}
-            pageName={pageName}
-            onClose={() => setShowRequestModal(false)}
-          />
-        )}
-      </AnimatePresence>
-    </>
+    <LockedScreen
+      accessStatus={accessStatus}
+      error={error}
+      accessDetails={accessDetails}
+      pageName={pageName}
+      routePath={routePath}
+    />
   );
 }
 
-function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath, onSubscribe, onRequestAccess }) {
+function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath }) {
   const { t } = useTranslation();
   const isExpired = accessStatus === "expired";
   const isRevoked = accessStatus === "revoked";
@@ -210,36 +196,10 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath,
             </p>
           )}
 
-          {/* Action buttons for locked pages */}
+          {/* WhatsApp access request button */}
           {(isLocked || isExpired) && (
-            <div className="space-y-3 mt-4">
-              {/* Subscribe button */}
-              <button
-                onClick={onSubscribe}
-                className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2"
-                style={{
-                  background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)",
-                  color: "#0d1b2a",
-                  boxShadow: "0 0 24px rgba(212,175,55,0.35)",
-                }}
-              >
-                <Crown className="w-4 h-4" />
-                {t('access_subscribe')}
-              </button>
-
-              {/* Request Access button */}
-              <button
-                onClick={onRequestAccess}
-                className="w-full py-3.5 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:bg-white/10"
-                style={{
-                  background: "rgba(212,175,55,0.08)",
-                  border: `1px solid ${G.border}`,
-                  color: G.text,
-                }}
-              >
-                <Send className="w-4 h-4" />
-                {t('access_request')}
-              </button>
+            <div className="mt-4">
+              <WhatsAppAccessRequest pageName={pageName} routePath={routePath} />
             </div>
           )}
 

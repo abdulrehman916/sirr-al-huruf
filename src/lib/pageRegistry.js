@@ -179,6 +179,7 @@ const PRE_REGISTERED = [
   { path: '/admin/access-dashboard',       name: 'Owner Access Dashboard',       requiresPermission: false, adminOnly: true },
   { path: '/admin/user-detail/:userId',    name: 'User Detail',                  requiresPermission: false, adminOnly: true },
   { path: '/admin/faal-chob-upload',       name: 'Admin Faal Chob',              requiresPermission: true,  adminOnly: true },
+  { path: '/admin/access-requests',        name: 'Access Requests',               requiresPermission: false, adminOnly: true },
   // Audit pages (system)
   { path: '/hierarchy-audit',              name: 'Hierarchy Audit',              requiresPermission: true,  pageType: 'system' },
   { path: '/pipeline-test',                name: 'Pipeline Test',                requiresPermission: true,  pageType: 'system' },
