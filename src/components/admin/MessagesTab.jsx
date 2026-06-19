@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  MessageSquare, Search, Clock, X, Send, Phone, Image, Mic,
-  MicOff, Square, Play, Pause, ExternalLink
+  MessageSquare, Search, Clock, X, Send, Image, Mic,
+  Square, Play, Pause, ExternalLink
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
@@ -161,11 +161,6 @@ function ChatModal({ ticket, messages, onClose, onRefresh }) {
     }
   };
 
-  const whatsappUrl = ticket.mobile
-    ? `https://wa.me/${ticket.mobile.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${ticket.name}, regarding your ticket: ${ticket.subject}`)}`
-    : null;
-  const callUrl = ticket.mobile ? `tel:${ticket.mobile.replace(/\s/g, "")}` : null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4"
       style={{ background: "rgba(0,0,0,0.88)" }} onClick={onClose}>
@@ -182,21 +177,6 @@ function ChatModal({ ticket, messages, onClose, onRefresh }) {
             <p className="text-xs text-white/40 mt-0.5">{ticket.name} · {ticket.email}</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-            {callUrl && (
-              <a href={callUrl}
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.30)", color: "#60a5fa" }}
-                title="Call user">
-                <Phone className="w-3.5 h-3.5" />
-              </a>
-            )}
-            {whatsappUrl && (
-              <a href={whatsappUrl} target="_blank" rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
-                style={{ background: "rgba(37,211,102,0.12)", border: "1px solid rgba(37,211,102,0.35)", color: "#25D366" }}>
-                <ExternalLink className="w-3 h-3" /> WhatsApp
-              </a>
-            )}
             <button onClick={onClose}
               className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10"
               style={{ color: "rgba(255,255,255,0.40)" }}>
@@ -349,7 +329,6 @@ export default function MessagesTab() {
         <div className="space-y-2">
           {filtered.map(ticket => {
             const msgCount = (messages[ticket.ticket_id] || []).length;
-            const callUrl = ticket.mobile ? `tel:${ticket.mobile.replace(/\s/g, "")}` : null;
             return (
               <div key={ticket.id} className="rounded-xl border p-4" style={{ background: G.bg, borderColor: G.border }}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -379,14 +358,6 @@ export default function MessagesTab() {
                       Open Chat
                     </button>
                     <div className="flex gap-1.5">
-                      {callUrl && (
-                        <a href={callUrl}
-                          className="w-7 h-7 rounded flex items-center justify-center"
-                          style={{ background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.25)", color: "#60a5fa" }}
-                          title="Call">
-                          <Phone className="w-3 h-3" />
-                        </a>
-                      )}
                       {ticket.mobile && (
                         <button
                           onClick={() => setWaTarget({ name: ticket.name, mobile: ticket.mobile, email: ticket.email })}

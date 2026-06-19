@@ -26,6 +26,7 @@ Deno.serve(async (req) => {
         if (status === 'ARCHIVED') {
           return Response.json({ success: false, message: "Account not found.", blocked: true }, { status: 403 });
         }
+        // REMOVED users can still log in — only hidden from admin active list
       }
     }
 
