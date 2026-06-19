@@ -52,7 +52,7 @@ export default function ActionTimingAdvisor({ selectedActionKey }) {
   }, [selectedActionKey]);
 
   useEffect(() => {
-    if (selectedAction) {
+    if (selectedAction && selectedAction.key) {
       calculateTiming();
       const interval = setInterval(calculateTiming, 60000);
       return () => clearInterval(interval);
@@ -60,7 +60,27 @@ export default function ActionTimingAdvisor({ selectedActionKey }) {
   }, [selectedAction]);
 
   function calculateTiming() {
+    // CRITICAL: Guard against null selectedAction
+    if (!selectedAction || !selectedAction.key) {
+      console.warn("calculateTiming: No selected action or key");
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
+    
+    // CRITICAL: Null protection for selectedAction
+    if (!selectedAction || !selectedAction.key) {
+      console.error("ActionTimingAdvisor: No selected action or missing key");
+      setTimingResult({
+        error: "No action selected",
+        message: isMalayalam ? "പ്രവർത്തനം തിരഞ്ഞെടുത്തിട്ടില്ല" : "No action selected"
+      });
+      setLoading(false);
+      return;
+    }
+    
+    console.log("ActionTimingAdvisor: Calculating for action:", selectedAction.key);
     
     const now = new Date();
     const dayIndex = now.getDay();
@@ -73,6 +93,12 @@ export default function ActionTimingAdvisor({ selectedActionKey }) {
     
     const rules = ACTION_TIMING_RULES[selectedAction.key];
     if (!rules) {
+      console.warn("ActionTimingAdvisor: No timing rules found for", selectedAction.key);
+      setTimingResult({
+        error: "no_rules_found",
+        message: isMalayalam ? "ഈ പ്രവർത്തനത്തിനുള്ള നിയമങ്ങൾ ലഭ്യമല്ല" : "No timing rules found for this action",
+        actionKey: selectedAction.key
+      });
       setLoading(false);
       return;
     }
@@ -178,17 +204,42 @@ export default function ActionTimingAdvisor({ selectedActionKey }) {
   }
 
   function handleActionSelect(actionKey) {
+    // CRITICAL: Null protection for actionKey
+    if (!actionKey) {
+      console.error("ActionTimingAdvisor: Invalid action key");
+      return;
+    }
+    
     const actionData = ACTION_CATEGORIES[actionKey];
+    
+    // CRITICAL: Check if action data exists
+    if (!actionData) {
+      console.warn("ActionTimingAdvisor: No data found for action", actionKey);
+      setSelectedAction(null);
+      return;
+    }
+    
+    console.log("ActionTimingAdvisor: Selected action:", actionKey, actionData);
     setSelectedAction({ key: actionKey, ...actionData });
     setSearchInput("");
   }
 
   function handleSearch(input) {
     setSearchInput(input);
-    const matchedKey = findActionCategory(input);
-    if (matchedKey) {
-      handleActionSelect(matchedKey);
+    
+    if (!input || input.trim() === "") {
+      return;
     }
+    
+    const matchedKey = findActionCategory(input);
+    
+    // CRITICAL: Check if match was found
+    if (!matchedKey) {
+      console.log("ActionTimingAdvisor: No category matched for", input);
+      return;
+    }
+    
+    handleActionSelect(matchedKey);
   }
 
   return (
@@ -262,7 +313,7 @@ export default function ActionTimingAdvisor({ selectedActionKey }) {
       </div>
 
       {/* Selected Action */}
-      {selectedAction && (
+      {selectedAction && selectedAction.key && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -271,9 +322,11 @@ export default function ActionTimingAdvisor({ selectedActionKey }) {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-amiri text-3xl font-bold" style={{ color: G.text }}>{selectedAction.arabic}</p>
+              <p className="font-amiri text-3xl font-bold" style={{ color: G.text }}>
+                {selectedAction?.arabic || "Unknown"}
+              </p>
               <p className="font-malayalam-md font-bold text-white">
-                {isMalayalam ? selectedAction.ml[0] : selectedAction.en[0]}
+                {isMalayalam ? (selectedAction?.ml?.[0] || "ലഭ്യമല്ല") : (selectedAction?.en?.[0] || "Not available")}
               </p>
             </div>
             <button
@@ -302,11 +355,26 @@ export default function ActionTimingAdvisor({ selectedActionKey }) {
       )}
 
       {/* Results */}
-      {timingResult && !loading && (
+      {timingResult && !loading && !timingResult.error && (
         <>
           <CurrentStatus status={timingResult} isMalayalam={isMalayalam} />
           <TimingRules action={selectedAction} result={timingResult} isMalayalam={isMalayalam} />
         </>
+      )}
+      
+      {/* Error State */}
+      {timingResult?.error && !loading && (
+        <div className="mt-6 p-6 rounded-xl border text-center" style={{ background: G.bg, borderColor: G.border }}>
+          <Book className="w-8 h-8 mx-auto mb-3" style={{ color: G.dim }} />
+          <p className="font-inter text-sm mb-1" style={{ color: G.dim }}>
+            {timingResult.message || (isMalayalam ? "വിവരങ്ങൾ ലഭ്യമല്ല" : "Information not available")}
+          </p>
+          {timingResult.actionKey && (
+            <p className="font-inter text-xs" style={{ color: G.faint }}>
+              Action: {timingResult.actionKey}
+            </p>
+          )}
+        </div>
       )}
 
       {!selectedAction && (
@@ -329,9 +397,20 @@ export default function ActionTimingAdvisor({ selectedActionKey }) {
 }
 
 function CurrentStatus({ status, isMalayalam }) {
-  const config = status.isSuitable
-    ? { color: G.excellent, border: G.excellentBorder, text: "#22c55e", icon: "🟢" }
-    : { color: G.avoid, border: G.avoidBorder, text: "#ef4444", icon: "🔴" };
+// CRITICAL: Null protection for status
+if (!status) {
+  return (
+    <div className="mb-6 p-5 rounded-xl border text-center" style={{ background: G.bg, borderColor: G.border }}>
+      <p className="font-inter text-sm" style={{ color: G.dim }}>
+        {isMalayalam ? "നിലവിലെ സ്ഥിതി ലഭ്യമല്ല" : "Status not available"}
+      </p>
+    </div>
+  );
+}
+
+const config = status.isSuitable
+  ? { color: G.excellent, border: G.excellentBorder, text: "#22c55e", icon: "🟢" }
+  : { color: G.avoid, border: G.avoidBorder, text: "#ef4444", icon: "🔴" };
 
   return (
     <div className="mb-6 p-5 rounded-xl border" style={{ background: config.color, borderColor: config.border }}>
@@ -375,8 +454,32 @@ function CurrentStatus({ status, isMalayalam }) {
 }
 
 function TimingRules({ action, result, isMalayalam }) {
+  // CRITICAL: Null protection for action and result
+  if (!action || !action.key) {
+    console.warn("TimingRules: No action or action.key");
+    return null;
+  }
+  
+  if (!result) {
+    console.warn("TimingRules: No result data");
+    return null;
+  }
+  
   const rules = ACTION_TIMING_RULES[action.key];
-  if (!rules) return null;
+  if (!rules) {
+    console.warn("TimingRules: No rules found for", action.key);
+    return (
+      <div className="mt-6 p-6 rounded-xl border text-center" style={{ background: G.bg, borderColor: G.border }}>
+        <Book className="w-8 h-8 mx-auto mb-3" style={{ color: G.dim }} />
+        <p className="font-inter text-sm mb-2" style={{ color: G.dim }}>
+          {isMalayalam ? "ഈ പ്രവർത്തനത്തിനുള്ള നിയമങ്ങൾ ലഭ്യമല്ല" : "No timing rules found"}
+        </p>
+        <p className="font-inter text-xs" style={{ color: G.faint }}>
+          Action: {action.key}
+        </p>
+      </div>
+    );
+  }
 
   // If no manuscript match, show warning
   if (result.no_manuscript_match) {
