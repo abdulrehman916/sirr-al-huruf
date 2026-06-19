@@ -6,7 +6,7 @@ import {
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
   Phone, Mail, Calendar, Crown, RefreshCw, Star, Zap,
   DollarSign, TrendingUp, Edit2, Save, AlertCircle, Loader2,
-  Undo2, Ban, CalendarPlus2, MessageSquare
+  Undo2, Ban, CalendarPlus2, MessageSquare, KeyRound
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
@@ -14,6 +14,7 @@ import PageTitle from "@/components/PageTitle";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages, getAllRegisteredPages, getVisibleContentPages } from "@/lib/pageRegistry";
 import PaymentsTab from "@/components/admin/PaymentsTab";
+import AccessCodesTab from "@/components/admin/AccessCodesTab";
 import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal";
 import MessagesTab from "@/components/admin/MessagesTab";
 import SubscriptionRequestsTab from "@/components/admin/SubscriptionRequestsTab";
@@ -64,6 +65,7 @@ const TABS = [
   { id: "messages",    label: "Messages",         icon: MessageSquare },
   { id: "visibility",  label: "Page Visibility",  icon: Globe },
   { id: "access",      label: "User Access",      icon: Shield },
+  { id: "codes",       label: "Access Codes",     icon: KeyRound },
   { id: "security",    label: "Security Audit",   icon: Shield },
 ];
 
@@ -1683,6 +1685,7 @@ export default function OwnerAccessDashboard() {
           {tab === "messages"   && <MessagesTab />}
           {tab === "visibility" && <VisibilityTab pageConfigs={pageConfigs} onRefresh={loadAll} />}
           {tab === "access"     && <UserAccessTab users={users} permissions={permissions} onRefresh={loadAll} />}
+          {tab === "codes"      && <AccessCodesTab />}
           {tab === "security"   && (
             <div className="text-center py-12">
               <Shield className="w-12 h-12 mx-auto mb-3 opacity-30" style={{ color: G.text }} />

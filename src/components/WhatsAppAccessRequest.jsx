@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
-import { MessageCircle, CheckCircle } from "lucide-react";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { MessageCircle, CheckCircle, KeyRound } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
+
+const RedeemCodeModal = lazy(() => import("@/components/RedeemCodeModal"));
 
 /**
  * WhatsAppAccessRequest — opens WhatsApp with a pre-filled message containing
@@ -12,6 +15,7 @@ export default function WhatsAppAccessRequest({ pageName, routePath }) {
   const [user, setUser] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showRedeem, setShowRedeem] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -87,22 +91,47 @@ export default function WhatsAppAccessRequest({ pageName, routePath }) {
   }
 
   return (
-    <button
-      onClick={handleRequest}
-      disabled={loading}
-      className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 transition-all"
-      style={{
-        background: loading
-          ? "rgba(37,211,102,0.08)"
-          : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-        color: loading ? "#25D366" : "#ffffff",
-        border: loading ? "1px solid rgba(37,211,102,0.40)" : "none",
-        boxShadow: loading ? "none" : "0 0 24px rgba(37,211,102,0.35)",
-        opacity: loading ? 0.7 : 1,
-      }}
-    >
-      <MessageCircle className="w-4 h-4" />
-      {loading ? "Opening WhatsApp..." : "Request Access via WhatsApp"}
-    </button>
+    <>
+      <div className="space-y-2 w-full">
+        <button
+          onClick={handleRequest}
+          disabled={loading}
+          className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 transition-all"
+          style={{
+            background: loading
+              ? "rgba(37,211,102,0.08)"
+              : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+            color: loading ? "#25D366" : "#ffffff",
+            border: loading ? "1px solid rgba(37,211,102,0.40)" : "none",
+            boxShadow: loading ? "none" : "0 0 24px rgba(37,211,102,0.35)",
+            opacity: loading ? 0.7 : 1,
+          }}
+        >
+          <MessageCircle className="w-4 h-4" />
+          {loading ? "Opening WhatsApp..." : "Request Access via WhatsApp"}
+        </button>
+
+        <button
+          onClick={() => setShowRedeem(true)}
+          className="w-full py-3 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+          style={{
+            background: "rgba(212,175,55,0.08)",
+            border: "1px solid rgba(212,175,55,0.35)",
+            color: "#F5D060",
+          }}
+        >
+          <KeyRound className="w-4 h-4" />
+          Have a Code? Redeem it
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {showRedeem && (
+          <Suspense fallback={null}>
+            <RedeemCodeModal onClose={() => setShowRedeem(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
