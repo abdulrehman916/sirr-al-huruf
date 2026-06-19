@@ -437,6 +437,48 @@ export default function Mizaan9Page() {
 
                     <MizaanDivider />
                     <ConclusionRulesPanel />
+                    <MizaanDivider />
+
+                    {/* ═══ CONCLUSION B — READ ONLY, NO CALC CONNECTION ═══ */}
+                    <div className="rounded-2xl border overflow-hidden"
+                      style={{
+                        background: "rgba(3,6,20,0.99)",
+                        borderColor: "rgba(212,175,55,0.60)",
+                        boxShadow: "0 0 80px rgba(212,175,55,0.14), 0 0 160px rgba(0,0,0,0.7), inset 0 1px 0 rgba(212,175,55,0.08)",
+                      }}>
+                      <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.60) 40%, rgba(245,208,96,0.53) 50%, rgba(212,175,55,0.60) 60%, transparent 95%)" }} />
+                      <div className="px-6 py-5 space-y-4">
+                        {/* Title */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-xl font-inter text-sm font-black"
+                            style={{ background: "rgba(245,208,96,0.12)", border: "1px solid rgba(212,175,55,0.40)", color: "#F5D060" }}>
+                            B
+                          </div>
+                          <span className="font-inter text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: "#F5D060" }}>
+                            Conclusion B
+                          </span>
+                        </div>
+                        {/* Body paragraphs */}
+                        {[
+                          "പുസ്തകത്തിലെ ഉദാഹരണപ്രകാരം ആദ്യം Esma-i Kitabet, Esma-i A'van, Esma-i Kasem എന്നീ മൂന്ന് വഫ്കുകളും തയ്യാറാക്കണം. തുടർന്ന് അവ നിർദേശിച്ച ക്രമത്തിൽ ചെമ്പിലോ പാത്രത്തിലോ മൺചട്ടി കഷണത്തിലോ എഴുതണം. ശേഷം വഫ്കിന്റെ ഗാലിബ് മലക്കിന്റെ പേര് വഫ്കിന്റെ നാല് വശങ്ങളിലും എഴുതണം. ഈ ഉദാഹരണത്തിൽ ഗാലിബ് അനാസിർ അഗ്നിയായതിനാൽ മൂന്ന് വഫ്കുകളും തീയുടെ സമീപത്തോ തീയുടെ അടിയിലോ കുഴിച്ചിടണം. കുഴിച്ചിട്ട ശേഷം Esma-i Kitabet, Esma-i A'van, Esma-i Kasem എന്നീ പേരുകൾ അവയുടെ നിർണയിച്ച എണ്ണത്തിന് അനുസരിച്ച് വായിക്കണം.",
+                          "തുടർന്ന് Azimet (അസീമത്ത്) ചെയ്യേണ്ടതുണ്ടെങ്കിൽ (Kasam ഓതുന്നുണ്ടെങ്കിൽ) Esma-i A'van, Esma-i Kasem എന്നീ പേരുകൾ മാത്രമേ അസീമത്തിൽ ചേർക്കാവൂ; Esma-i Kitabet അസീമത്തിൽ ചേർക്കരുത് എന്ന് ഗ്രന്ഥം പ്രത്യേകം പറയുന്നു.",
+                          "ആരംഭിക്കുമ്പോൾ അതിന് അനുയോജ്യമായ ദിവസവും സമയവും അറിയേണ്ടതുണ്ടെന്നും, ഒരു മാസം നാല് ആഴ്ചകളായും ഓരോ ഘടകത്തിനും നാല് ഘട്ടങ്ങളായും കണക്കാക്കുന്നുവെന്നും ഗ്രന്ഥം വിശദീകരിക്കുന്നു. ഒന്നാം ആഴ്ച മുഹബ്ബത്ത്, ആകർഷണം, സൗഹൃദം എന്നിവയ്ക്കും, രണ്ടാം ആഴ്ച ആവശ്യസിദ്ധി, ശിഫാ, രോഗശാന്തി എന്നിവയ്ക്കും, മൂന്നാം ആഴ്ച നാവ് ബന്ധനം, ഉറക്കബന്ധനം, പുരുഷന്മാരെയും സ്ത്രീകളെയും ബന്ധിക്കൽ, രോഗപ്പെടുത്തൽ എന്നിവയ്ക്കും, നാലാം ആഴ്ച കഹ്ർ, നാശം, വേർപെടുത്തൽ, ശത്രുത എന്നിവയ്ക്കുമായി ഉപയോഗിക്കണമെന്ന് പറയുന്നു.",
+                          "പ്രബല ഘടകം ഭൂമിയോ വായുവോ ജലമോ ആണെങ്കിൽ അതനുസരിച്ചുള്ള ഘട്ടങ്ങൾ സ്വീകരിക്കണം. ഞായർ, വ്യാഴം, വെള്ളി ദിവസങ്ങളിലെ സൂര്യോദയത്തിന് ശേഷമുള്ള ആദ്യ മണിക്കൂർ നല്ല കാര്യങ്ങൾക്കായും, തിങ്കളും ബുധനും നാവ് ബന്ധനം, ഉറക്കബന്ധനം തുടങ്ങിയ കാര്യങ്ങൾക്കായും, ചൊവ്വയും ശനിയും വേർപെടുത്തൽ, കഹ്ർ, നാശം, ശത്രുത എന്നിവയ്ക്കായും ഉപയോഗിക്കണമെന്ന് ഗ്രന്ഥം നിർദേശിക്കുന്നു.",
+                          "എല്ലാ നിബന്ധനകളും പൂർണ്ണമായി പാലിക്കണമെന്നും, തെറ്റായി ചെയ്താൽ അമൽ ഫലമില്ലാതെയാകുമെന്നും, പറഞ്ഞിരിക്കുന്ന ദിവസങ്ങളിലും സൂര്യോദയ സമയത്തും ആദ്യ മണിക്കൂറിലും ചെയ്യണമെന്നുമാണ് ഗ്രന്ഥത്തിൽ പറയുന്നത്.",
+                        ].map((para, i) => (
+                          <p key={i} className="font-inter text-[13px] leading-relaxed" style={{ color: "rgba(245,208,96,0.55)", lineHeight: 1.9 }}>
+                            {para}
+                          </p>
+                        ))}
+                        {/* Footer note */}
+                        <div className="pt-3 border-t" style={{ borderColor: "rgba(212,175,55,0.25)" }}>
+                          <p className="font-inter text-[12px] font-bold" style={{ color: "#F5D060", lineHeight: 1.7 }}>
+                            (Kasam ഓതുന്നുണ്ടെങ്കിൽ മുകളിലുള്ള Conclusion A വായിക്കുക.)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.60) 40%, rgba(245,208,96,0.53) 50%, rgba(212,175,55,0.60) 60%, transparent 95%)" }} />
+                    </div>
                   </>
                 );
               })()}
