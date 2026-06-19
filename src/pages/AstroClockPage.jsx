@@ -36,6 +36,7 @@ import AstroClockErrorBoundary from "../components/astroclock/AstroClockErrorBou
 import AstroClockSearch from "../components/astroclock/AstroClockSearch.jsx";
 import BookBasedSearchBox from "../components/astroclock/BookBasedSearchBox.jsx";
 import TodayOverviewFull from "../components/astroclock/TodayOverviewFull.jsx";
+import AdvancedKnowledgeSearch from "../components/astroclock/AdvancedKnowledgeSearch.jsx";
 
 function LanguageToggle() {
   const { t, toggleLanguage } = useAstroClockLanguage();
@@ -129,6 +130,11 @@ function AstroClockContent() {
         {/* ✨ ENHANCED: Book-Based Search Box (Top Position) */}
         <AstroClockErrorBoundary label="Book Search">
           <BookBasedSearchBox currentAstroData={{}} />
+        </AstroClockErrorBoundary>
+
+        {/* ✨ NEW: Advanced Knowledge Search */}
+        <AstroClockErrorBoundary label="Advanced Knowledge Search">
+          <AdvancedKnowledgeSearch />
         </AstroClockErrorBoundary>
 
         {/* ✨ RESTRUCTURED: Full Today Overview with 7 Influences */}
