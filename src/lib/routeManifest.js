@@ -84,6 +84,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/otp-email-test',         chunk: 'OTPEmailTest',                   flags: 'public' },
   { path: '/admin/test-otp-login',         chunk: 'TestOTPLogin',                   flags: 'public' },
   { path: '/admin/debug-otp-email',        chunk: 'DebugOTPEmail',                  flags: 'public' },
+  { path: '/admin/test-otp-e2e',           chunk: 'TestOTPEndToEnd',                flags: 'public' },
   { path: '/admin/test-customer-content',  chunk: 'TestRealCustomerContent',        flags: 'public' },
 
   // ── Audit / Verification ───────────────────────────────────────────

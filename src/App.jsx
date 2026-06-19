@@ -90,6 +90,7 @@ const PAGE_IMPORTS = {
   OTPEmailTest:             () => import('./pages/OTPEmailTest'),
   TestOTPLogin:             () => import('./pages/TestOTPLogin'),
   DebugOTPEmail:            () => import('./pages/DebugOTPEmail'),
+  TestOTPEndToEnd:          () => import('./pages/TestOTPEndToEnd'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),
