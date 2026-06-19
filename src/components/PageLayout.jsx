@@ -236,6 +236,9 @@ export default function PageLayout({ children }) {
         paddingRight: "env(safe-area-inset-right)",
         paddingBottom: "env(safe-area-inset-bottom)",
         boxSizing: "border-box",
+        transform: "none",
+        left: "auto",
+        right: "auto",
       }}
     >
       <AtmosphericBackground />
@@ -386,6 +389,8 @@ export default function PageLayout({ children }) {
           maxWidth: "100vw",
           margin: 0,
           padding: 0,
+          left: "auto",
+          right: "auto",
         }}
       >
         <AnimatePresence mode="wait">
@@ -407,13 +412,9 @@ export default function PageLayout({ children }) {
               margin: 0,
               marginLeft: 0,
               marginRight: 0,
-              paddingLeft: 0,
-              paddingRight: 0,
             }}
           >
-            <div style={{ width: "100%", maxWidth: "100vw", overflowX: "hidden" }}>
-              {children}
-            </div>
+            {children}
           </motion.div>
         </AnimatePresence>
       </div>
