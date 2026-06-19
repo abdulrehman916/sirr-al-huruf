@@ -1,37 +1,23 @@
 # PWA Icons for Sirr al-Huruf
 
-## Icon Requirements
+## Icon Files
+- `icon-192.svg` - 192x192 SVG icon for Android PWA
+- `icon-512.svg` - 512x512 SVG icon for Android PWA
 
-Place the following icon files in this directory:
+## PNG Generation
+To generate PNG versions (required for PWA):
+1. Open SVG in any image editor
+2. Export as PNG at 192x192 and 512x512
+3. Save as `icon-192.png` and `icon-512.png`
 
-- `icon-72x72.png`
-- `icon-96x96.png`
-- `icon-128x128.png`
-- `icon-144x144.png`
-- `icon-152x152.png`
-- `icon-192x192.png`
-- `icon-384x384.png`
-- `icon-512x512.png`
+Or use online converter: https://svgtopng.com
 
-## Generated Icon
+## Icon Design
+- Background: #0B1020 (app theme color)
+- Accent: #D4AF37 (gold)
+- Center: Arabic letter "س" (Seen - for Sirr)
+- Concentric circles representing mystical squares
 
-Base icon generated: `https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/d7997e0c5_generated_image.png`
-
-## Icon Specifications
-
-- **Format:** PNG
-- **Background:** Transparent or #0B1020
-- **Style:** Islamic geometric patterns with Arabic calligraphy
-- **Colors:** Gold (#D4AF37) on Navy (#0B1020)
-
-## Usage
-
-Icons are referenced in `/manifest.json` and used for:
-- Android home screen installation
-- PWA installation prompt
-- App launcher icon
-- Splash screen
-
-## Generation
-
-Use the base generated icon and resize to all required dimensions using image editing software or automated tools like `sharp` or `imagemagick`.
+## Manifest Validation
+After adding PNG files, validate at:
+https://manifest-validator.appspot.com/

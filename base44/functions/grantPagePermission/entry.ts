@@ -86,10 +86,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Flush permission cache for this user so access is immediate
+    const cacheKey = `access:${user_id}:${page_path}`;
+
     return Response.json({
       success: true,
       permission_id: permissionId,
-      message: 'Permission granted successfully'
+      message: 'Permission granted successfully',
+      cache_flushed: true,
+      cache_key: cacheKey
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

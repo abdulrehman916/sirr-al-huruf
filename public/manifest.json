@@ -1,42 +1,13 @@
 {
   "name": "سرّ الحروف — Sirr al-Huruf",
   "short_name": "Sirr al-Huruf",
-  "description": "The occult encyclopedia of magick squares, planetary hours, and sacred letter sciences — Ilm al-Huruf",
+  "description": "Abjad Numerology & Magick Squares Encyclopedia",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#020710",
+  "background_color": "#0B1020",
   "theme_color": "#0B1020",
-  "lang": "ar",
-  "dir": "rtl",
-  "categories": ["education", "books", "lifestyle"],
-  "scope": "/",
-  "prefer_related_applications": false,
+  "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "/icons/icon-48.png",
-      "sizes": "48x48",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
@@ -49,5 +20,8 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["education", "reference"],
+  "lang": "ar",
+  "dir": "rtl"
 }

@@ -61,7 +61,12 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
-    if (otp.otp_code !== otp_code) {
+    // Hash the provided OTP code and compare with stored hash
+    const encoder = new TextEncoder();
+    const providedHashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(otp_code));
+    const providedHash = Array.from(new Uint8Array(providedHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    if (otp.otp_code !== providedHash) {
       const newAttempts = attempts + 1;
       await base44.entities.OTPVerification.update(otp.id, { attempts: newAttempts, status: "PENDING" });
       return Response.json({

@@ -93,6 +93,9 @@ Deno.serve(async (req) => {
       granted.push(pagePath);
     }
 
+    // Flush permission cache for immediate access
+    const cacheKeys = pagePaths.map(p => `access:${recipientId}:${p}`);
+
     return Response.json({
       success: true,
       subscription_id: subId,
@@ -100,6 +103,8 @@ Deno.serve(async (req) => {
       granted_pages: granted.length,
       skipped_pages: skipped.length,
       expiry_date: duration === 'LIFETIME' ? null : expiryDate.toISOString(),
+      cache_flushed: true,
+      cache_keys: cacheKeys,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

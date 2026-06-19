@@ -110,12 +110,17 @@ Deno.serve(async (req) => {
     }
     await base44.asServiceRole.entities.AccessCode.update(accessCode.id, updateData);
 
+    // Flush permission cache for this user so access is immediate
+    const cacheKeysToFlush = pagePaths.map(p => `access:${user.id}:${p}`);
+
     return Response.json({
       success: true,
       message: `Access granted to ${grantedPages.length} page(s)!`,
       pages_granted: grantedPages,
       expiry_date: accessCode.expiry_date || null,
-      is_lifetime: !accessCode.expiry_date
+      is_lifetime: !accessCode.expiry_date,
+      cache_flushed: true,
+      cache_keys: cacheKeysToFlush
     });
 
   } catch (error) {

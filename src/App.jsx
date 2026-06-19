@@ -74,6 +74,7 @@ const PAGE_IMPORTS = {
   AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
   QAReport:                 () => import('./pages/QAReport'),
   FinalLaunchChecklist:     () => import('./pages/FinalLaunchChecklist'),
+  PreLaunchReport:          () => import('./pages/PreLaunchReport'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),

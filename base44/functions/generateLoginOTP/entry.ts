@@ -48,8 +48,12 @@ Deno.serve(async (req) => {
       }, { status: 429 });
     }
 
-    // Generate OTP
+    // Generate OTP and hash it with SHA-256 before storage
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const encoder = new TextEncoder();
+    const otpHashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(otpCode));
+    const otpHash = Array.from(new Uint8Array(otpHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    
     const expiresAt = new Date(now.getTime() + 5 * 60 * 1000);
     const otpId = `OTP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -58,7 +62,7 @@ Deno.serve(async (req) => {
       user_id: "pending",
       mobile: mobile || null,
       email: email || null,
-      otp_code: otpCode,
+      otp_code: otpHash,
       otp_type: otpType,
       purpose: purpose || "LOGIN",
       created_at: now.toISOString(),
