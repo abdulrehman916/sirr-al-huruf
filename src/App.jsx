@@ -84,6 +84,7 @@ const PAGE_IMPORTS = {
   VerifyVIPAccess:          () => import('./pages/VerifyVIPAccess'),
   ContentRenderingAudit:    () => import('./pages/ContentRenderingAudit'),
   TestRealCustomerContent:  () => import('./pages/TestRealCustomerContent'),
+  AuditAndFixContent:       () => import('./pages/AuditAndFixContent'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),
