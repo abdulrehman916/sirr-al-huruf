@@ -1,9 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // NEXT GOOD DAY
 // Book-based knowledge ONLY
+// Turkish → Malayalam Translation Layer: Applied
 // ═══════════════════════════════════════════════════════════════
 
 import { Sun, ArrowRight, Calendar } from "lucide-react";
+import { translateTurkishToMalayalam } from "@/lib/astroClockTurkishToMalayalam.js";
 
 const G = {
   excellent: "rgba(34,197,94,0.15)",
@@ -63,7 +65,7 @@ export default function NextGoodDay({ nextGoodDay, isMalayalam }) {
             {isMalayalam ? "ദിവസ നാഥൻ" : "DAY RULER"}
           </p>
           <p className="font-amiri text-lg font-bold" style={{ color: "#86efac" }}>
-            {nextGoodDay.ruler}
+            {translateTurkishToMalayalam(nextGoodDay.ruler)}
           </p>
         </div>
 

@@ -1,9 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // NEXT GOOD HOUR
 // Book-based knowledge ONLY
+// Turkish → Malayalam Translation Layer: Applied
 // ═══════════════════════════════════════════════════════════════
 
 import { Clock, ArrowRight, Star } from "lucide-react";
+import { translateTurkishToMalayalam } from "@/lib/astroClockTurkishToMalayalam.js";
 
 const G = {
   excellent: "rgba(34,197,94,0.15)",
@@ -53,7 +55,7 @@ export default function NextGoodHour({ nextGoodHour, isMalayalam }) {
             {isMalayalam ? "ഗ്രഹം" : "PLANET"}
           </p>
           <p className="font-inter text-sm font-bold" style={{ color: "#86efac" }}>
-            {nextGoodHour.planet}
+            {translateTurkishToMalayalam(nextGoodHour.planet)}
           </p>
         </div>
 

@@ -1,9 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // CURRENT INFLUENCES GRID — 7 KEY INFLUENCES
 // Book-based knowledge ONLY
+// Turkish → Malayalam Translation Layer: Applied
 // ═══════════════════════════════════════════════════════════════
 
 import { Sun, Moon, Star, Sparkles, Clock, Book } from "lucide-react";
+import { translateTurkishToMalayalam } from "@/lib/astroClockTurkishToMalayalam.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -20,14 +22,14 @@ export default function CurrentInfluencesGrid({ todayData, isMalayalam }) {
     {
       icon: Star,
       label: isMalayalam ? "ഗ്രഹം" : "Planet",
-      value: todayData.currentPlanetaryHour?.planet || "Unknown",
+      value: translateTurkishToMalayalam(todayData.currentPlanetaryHour?.planet || "Unknown"),
       color: "#60a5fa",
       source: "p.51-52"
     },
     {
       icon: Moon,
       label: isMalayalam ? "മൻസിൽ" : "Mansion",
-      value: `${todayData.currentMansion?.name || 'Unknown'}`,
+      value: `${translateTurkishToMalayalam(todayData.currentMansion?.name || 'Unknown')}`,
       subValue: `#${todayData.currentMansion?.no || ''}`,
       color: "#a855f7",
       source: "p.64-74"
@@ -35,7 +37,7 @@ export default function CurrentInfluencesGrid({ todayData, isMalayalam }) {
     {
       icon: Sparkles,
       label: isMalayalam ? "രാശി" : "Zodiac",
-      value: todayData.zodiacSign,
+      value: translateTurkishToMalayalam(todayData.zodiacSign),
       color: "#c084fc",
       source: "p.64-74"
     },
@@ -57,7 +59,7 @@ export default function CurrentInfluencesGrid({ todayData, isMalayalam }) {
     {
       icon: Sun,
       label: isMalayalam ? "ദിവസ നാഥൻ" : "Day Ruler",
-      value: todayData.dayRuler?.planet_tr || "Unknown",
+      value: translateTurkishToMalayalam(todayData.dayRuler?.planet_tr || "Unknown"),
       color: "#fcd34d",
       source: "p.49-50"
     }

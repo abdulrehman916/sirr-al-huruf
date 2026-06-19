@@ -1,9 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // TODAY GOOD FOR / BAD FOR LISTS
 // Book-based knowledge ONLY
+// Turkish → Malayalam Translation Layer: Applied
 // ═══════════════════════════════════════════════════════════════
 
 import { CheckCircle, AlertCircle } from "lucide-react";
+import { translateTurkishToMalayalam } from "@/lib/astroClockTurkishToMalayalam.js";
 
 const G = {
   excellent: "rgba(34,197,94,0.15)",
@@ -39,7 +41,9 @@ function GoodForToday({ goodFor, isMalayalam }) {
           <div key={idx} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.20)" }}>
             <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: G.excellentText }} />
             <div>
-              <p className="font-inter text-xs font-medium" style={{ color: "#86efac" }}>{item.text}</p>
+              <p className="font-inter text-xs font-medium" style={{ color: "#86efac" }}>
+                {translateTurkishToMalayalam(item.text)}
+              </p>
               <p className="font-inter text-[8px]" style={{ color: "rgba(34,197,94,0.50)" }}>{item.source} {item.page}</p>
             </div>
           </div>
@@ -65,7 +69,9 @@ function BadForToday({ badFor, isMalayalam }) {
           <div key={idx} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.20)" }}>
             <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: G.avoidText }} />
             <div>
-              <p className="font-inter text-xs font-medium" style={{ color: "#fca5a5" }}>{item.text}</p>
+              <p className="font-inter text-xs font-medium" style={{ color: "#fca5a5" }}>
+                {translateTurkishToMalayalam(item.text)}
+              </p>
               <p className="font-inter text-[8px]" style={{ color: "rgba(239,68,68,0.50)" }}>{item.source} {item.page}</p>
             </div>
           </div>

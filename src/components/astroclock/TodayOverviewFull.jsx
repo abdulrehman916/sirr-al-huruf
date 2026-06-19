@@ -1,11 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
 // TODAY OVERVIEW — FULL ASTROLOGICAL ANALYSIS
 // Book-based knowledge ONLY — no AI generation
+// Turkish → Malayalam Translation Layer: Applied
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
+import { translateTurkishToMalayalam } from "@/lib/astroClockTurkishToMalayalam.js";
 import { 
   PLANETARY_DAY_RULERS, 
   AY_MANAZILLERI,
@@ -100,12 +102,12 @@ export default function TodayOverviewFull() {
     const items = [];
     if (dayRuler?.suitable_operations) {
       (dayRuler.suitable_operations || []).slice(0, 5).forEach(op => {
-        items.push({ text: op, source: "Havâss'ın Derinlikleri", page: "p.49-50" });
+        items.push({ text: translateTurkishToMalayalam(op), source: "Havâss'ın Derinlikleri", page: "p.49-50" });
       });
     }
     if (mansion?.operations) {
       (mansion.operations || []).filter(op => op && !op.includes("uğursuz")).slice(0, 3).forEach(op => {
-        items.push({ text: op, source: "Havâss'ın Derinlikleri", page: `p.64-${64+(mansion.no || 0)}` });
+        items.push({ text: translateTurkishToMalayalam(op), source: "Havâss'ın Derinlikleri", page: `p.64-${64+(mansion.no || 0)}` });
       });
     }
     return items;
@@ -115,7 +117,7 @@ export default function TodayOverviewFull() {
     const items = [];
     if (mansion?.operations) {
       (mansion.operations || []).filter(op => op && (op.includes("uğursuz") || op.includes("kötü"))).slice(0, 4).forEach(op => {
-        items.push({ text: op, source: "Havâss'ın Derinlikleri", page: `p.64-${64+(mansion.no || 0)}` });
+        items.push({ text: translateTurkishToMalayalam(op), source: "Havâss'ın Derinlikleri", page: `p.64-${64+(mansion.no || 0)}` });
       });
     }
     if (!dayRuler) {
@@ -130,7 +132,7 @@ export default function TodayOverviewFull() {
     
     if (planetaryHour?.planetInfo?.suitable_operations) {
       (planetaryHour.planetInfo.suitable_operations || []).slice(0, 3).forEach(op => {
-        canDo.push({ text: op, source: "Havâss'ın Derinlikleri", page: "p.51-52" });
+        canDo.push({ text: translateTurkishToMalayalam(op), source: "Havâss'ın Derinlikleri", page: "p.51-52" });
       });
     }
     
