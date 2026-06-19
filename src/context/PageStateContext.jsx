@@ -102,22 +102,15 @@ export function usePageState() {
   return context;
 }
 
-// ── Convenience hook: auto-save + auto-restore scroll ──────────
+// ── Convenience hook: auto-save scroll only (NO restore) ──────────
 // Use in any page: useScrollPersist() — no args needed
+// NOTE: Scroll restoration is DISABLED - pages always open at top
 export function useScrollPersist() {
-  const { saveScrollPosition, getScrollPosition } = usePageState();
+  const { saveScrollPosition } = usePageState();
   const location = useLocation();
   const scrollContainerSelector = '[data-scroll-container="true"]';
 
-  // Restore scroll on mount
-  useEffect(() => {
-    const saved = getScrollPosition(location.pathname);
-    if (!saved) return;
-    const el = document.querySelector(scrollContainerSelector);
-    if (el) el.scrollTop = saved;
-  }, [location.pathname]);
-
-  // Save scroll continuously
+  // Save scroll continuously (for potential future use, but never restore)
   useEffect(() => {
     const el = document.querySelector(scrollContainerSelector);
     if (!el) return;

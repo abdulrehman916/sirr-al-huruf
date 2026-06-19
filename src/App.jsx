@@ -166,6 +166,11 @@ const AuthenticatedApp = () => {
   const navigate = useNavigate();
   const routeElements = useRouteElements();
 
+  // Scroll to top on every route change
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
   // Redirect unauthenticated users to onboarding (except auth pages and public pages)
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated && !authError) {

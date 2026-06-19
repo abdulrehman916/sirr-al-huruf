@@ -172,6 +172,15 @@ export default function PageLayout({ children }) {
     return () => clearTimeout(timer);
   }, [activeId]);
 
+  // Reset scroll to top on every navigation/tab change
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (scrollEl) {
+      scrollEl.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
 
 
   // Native back gesture support
