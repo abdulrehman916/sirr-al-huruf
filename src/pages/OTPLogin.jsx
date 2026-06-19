@@ -4,10 +4,9 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Loader2, KeyRound, ArrowLeft } from "lucide-react";
+import { Mail, Loader2, KeyRound, ArrowLeft, CheckCircle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/components/ui/use-toast";
-import { derivePassword } from "@/lib/derivePassword";
 import { detectDevice, getCountry } from "@/lib/deviceUtils";
 import useTranslation from "@/i18n/useTranslation";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
@@ -17,10 +16,11 @@ export default function OTPLogin() {
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [otpId, setOtpId] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState(null);
   const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -32,6 +32,7 @@ export default function OTPLogin() {
     const handleSendOTP = async (e) => {
       e.preventDefault();
       setError("");
+      setSuccessMsg("");
       setLoading(true);
 
       try {
@@ -40,17 +41,37 @@ export default function OTPLogin() {
           setLoading(false);
           return;
         }
-        try {
-          await base44.auth.register({ email, password: derivePassword(email) });
-        } catch {
-          try { await base44.auth.resendOtp(email); } catch {
-            setError(t('unable_send_otp'));
-            setLoading(false);
-            return;
+
+        // Call custom generateLoginOTP function (uses Resend)
+        const result = await base44.functions.invoke("generateLoginOTP", {
+          email: email,
+          purpose: "LOGIN"
+        });
+
+        if (!result.data?.success) {
+          if (result.data?.rate_limited) {
+            setError("Too many requests. Please wait 1 hour.");
+          } else if (result.data?.blocked) {
+            setError(result.data?.message || "Account not found");
+          } else {
+            setError(result.data?.message || t('unable_send_otp'));
           }
+          setLoading(false);
+          return;
         }
+
+        setOtpId(result.data.otp_id);
         setStep("verify");
-        toast({ title: t('otp_sent_title'), description: t('otp_sent_desc') });
+        
+        const emailStatus = result.data.email_sent 
+          ? "OTP sent to your email via Resend"
+          : "OTP generated (check email - delivery may be delayed)";
+        
+        toast({ 
+          title: t('otp_sent_title'), 
+          description: emailStatus,
+          duration: 5000
+        });
       } catch (err) {
         setError(err?.message || t('msg_error_occurred'));
       } finally {
@@ -98,7 +119,7 @@ export default function OTPLogin() {
             {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('sending')}</> : t('otp_send_login')}
           </Button>
           <div className="mt-4">
-            <Captcha onVerify={(token) => { setCaptchaToken(token); setCaptchaVerified(true); }} onError={(err) => setError(`CAPTCHA: ${err}`)} />
+            <Captcha onVerify={(token) => { setCaptchaVerified(true); }} onError={(err) => setError(`CAPTCHA: ${err}`)} />
           </div>
         </form>
       </AuthLayout>
@@ -109,13 +130,34 @@ export default function OTPLogin() {
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMsg("");
     setLoading(true);
 
     try {
-      const result = await base44.auth.verifyOtp({ email, otpCode: otp });
-      await base44.auth.setToken(result.access_token);
+      // Call custom verifyLoginOTP function
+      const result = await base44.functions.invoke("verifyLoginOTP", {
+        otp_id: otpId,
+        otp_code: otp
+      });
 
-      // Owner email always gets admin role on every device
+      if (!result.data?.success) {
+        if (result.data?.locked) {
+          setError("Too many failed attempts. Request new OTP.");
+        } else if (result.data?.blocked) {
+          setError(result.data?.message || "Account not found");
+        } else {
+          setError(result.data?.message || t('verification_failed'));
+        }
+        setLoading(false);
+        return;
+      }
+
+      // OTP verified - now get platform auth token
+      // Use platform verifyOtp to get access token (OTP already verified in our system)
+      const platformResult = await base44.auth.verifyOtp({ email, otpCode: otp });
+      await base44.auth.setToken(platformResult.access_token);
+
+      // Owner email always gets admin role
       if (email.trim().toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase()) {
         try { await base44.auth.updateMe({ role: "admin" }); } catch {}
       }
@@ -127,8 +169,12 @@ export default function OTPLogin() {
         country
       });
 
+      setSuccessMsg("✓ Login successful! Redirecting...");
       toast({ title: t('otp_welcome_back'), description: t('otp_login_success') });
-      window.location.href = "/";
+      
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     } catch (err) {
       setError(err?.message || t('verification_failed'));
     } finally {
@@ -138,13 +184,23 @@ export default function OTPLogin() {
 
   const handleResendOTP = async () => {
     setLoading(true);
+    setError("");
     try {
-      try { await base44.auth.resendOtp(email); } catch {
-        await base44.auth.register({ email, password: derivePassword(email) });
+      const result = await base44.functions.invoke("generateLoginOTP", {
+        email: email,
+        purpose: "LOGIN"
+      });
+      
+      if (result.data?.success) {
+        toast({ 
+          title: t('otp_sent_title'), 
+          description: result.data.email_sent ? "OTP resent via Resend" : "OTP regenerated"
+        });
+      } else {
+        setError(result.data?.message || t('resend_failed'));
       }
-      toast({ title: t('otp_sent_title'), description: t('otp_sent_desc') });
     } catch {
-      toast({ title: t('error_title'), description: t('resend_failed'), variant: "destructive" });
+      setError(t('resend_failed'));
     } finally {
       setLoading(false);
     }
@@ -156,7 +212,7 @@ export default function OTPLogin() {
       title={t('otp_enter_login_code')}
       subtitle={`${t('otp_code_sent_to')} ${email}`}
       footer={
-        <button onClick={() => { setStep("email"); setError(""); }}
+        <button onClick={() => { setStep("email"); setError(""); setOtp(""); setOtpId(""); }}
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto">
           <ArrowLeft className="w-3.5 h-3.5" /> {t('change_email')}
         </button>
@@ -164,6 +220,13 @@ export default function OTPLogin() {
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+      )}
+      
+      {successMsg && (
+        <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm flex items-center gap-2">
+          <CheckCircle className="w-4 h-4" />
+          {successMsg}
+        </div>
       )}
 
       <form onSubmit={handleVerifyOTP} className="space-y-4">
@@ -197,7 +260,7 @@ export default function OTPLogin() {
             {t('otp_resend')}
           </button>
           <br />
-          <button type="button" onClick={() => { setStep("email"); setError(""); setOtp(""); }}
+          <button type="button" onClick={() => { setStep("email"); setError(""); setOtp(""); setOtpId(""); }}
             className="text-xs text-muted-foreground hover:text-foreground">
             {t('change_email')}
           </button>

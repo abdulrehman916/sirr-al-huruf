@@ -88,6 +88,7 @@ const PAGE_IMPORTS = {
   AuditTableRendering:      () => import('./pages/AuditTableRendering'),
   VIPTestCustomer:          () => import('./pages/VIPTestCustomer'),
   OTPEmailTest:             () => import('./pages/OTPEmailTest'),
+  TestOTPLogin:             () => import('./pages/TestOTPLogin'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),
