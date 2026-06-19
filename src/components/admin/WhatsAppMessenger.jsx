@@ -6,7 +6,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, X, ChevronDown, Phone, MessageSquare } from "lucide-react";
 
-const ADMIN_WA = "971522308926"; // fallback; override via props
+const ADMIN_WA = "971522308926"; // fallback; override via props - matches lib/emailBranding.js WHATSAPP_SUPPORT
 
 // ── Message Templates ─────────────────────────────────────────────────────────
 function buildTemplates(user) {

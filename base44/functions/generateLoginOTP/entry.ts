@@ -153,9 +153,10 @@ Deno.serve(async (req) => {
 </html>
         `;
 
-        // Use verified sender email for testing mode
-        // In production, verify a domain and use: from: 'Sirr al-Huruf <noreply@yourdomain.com>'
-        const fromEmail = 'abdulrehmanrehman916@gmail.com'; // Verified email in Resend (testing mode)
+        // Use branded sender identity (configured in lib/emailBranding.js)
+        // Current: Testing mode with verified personal email
+        // After domain verification: Update EMAIL_BRANDING.NOREPLY_EMAIL in lib/emailBranding.js
+        const fromEmail = 'abdulrehmanrehman916@gmail.com'; // TEMPORARY: Testing mode only - update after domain verification
         
         const resendResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -164,7 +165,7 @@ Deno.serve(async (req) => {
             'Authorization': `Bearer ${resendApiKey}`
           },
           body: JSON.stringify({
-            from: `Sirr al-Huruf <${fromEmail}>`,
+            from: `Sirr al-Huruf <${fromEmail}>`, // Customer sees: "Sirr al-Huruf"
             to: [email],
             subject: 'Your OTP Code - Sirr al-Huruf',
             html: htmlContent
