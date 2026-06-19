@@ -11,6 +11,7 @@ import { derivePassword } from "@/lib/derivePassword";
 import { detectDevice, getCountry } from "@/lib/deviceUtils";
 import useTranslation from "@/i18n/useTranslation";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
+import Captcha from "@/components/Captcha";
 
 export default function OTPLogin() {
   const [step, setStep] = useState("email");
@@ -18,6 +19,8 @@ export default function OTPLogin() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -32,6 +35,11 @@ export default function OTPLogin() {
       setLoading(true);
 
       try {
+        if (!captchaVerified) {
+          setError("Please complete the security check");
+          setLoading(false);
+          return;
+        }
         try {
           await base44.auth.register({ email, password: derivePassword(email) });
         } catch {
@@ -89,6 +97,9 @@ export default function OTPLogin() {
           <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
             {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('sending')}</> : t('otp_send_login')}
           </Button>
+          <div className="mt-4">
+            <Captcha onVerify={(token) => { setCaptchaToken(token); setCaptchaVerified(true); }} onError={(err) => setError(`CAPTCHA: ${err}`)} />
+          </div>
         </form>
       </AuthLayout>
     );

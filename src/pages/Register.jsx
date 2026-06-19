@@ -9,6 +9,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
+import Captcha from "@/components/Captcha";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -16,12 +17,18 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!captchaVerified) {
+      setError("Please complete the security check");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -222,6 +229,9 @@ export default function Register() {
             "Create account"
           )}
         </Button>
+        <div className="mt-4">
+          <Captcha onVerify={(token) => { setCaptchaToken(token); setCaptchaVerified(true); }} onError={(err) => setError(`CAPTCHA: ${err}`)} />
+        </div>
       </form>
     </AuthLayout>
   );
