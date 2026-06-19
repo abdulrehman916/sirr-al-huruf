@@ -306,6 +306,8 @@ export default function AbjadKabirPage() {
                 background: "rgba(4,12,34,0.97)",
                 borderColor: "rgba(255,255,255,0.12)",
                 color: "rgba(212,175,55,0.60)",
+                width: "auto",
+                flexShrink: 0,
               }}
             >
               <Trash2 className="w-4 h-4" />

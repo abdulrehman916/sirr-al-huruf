@@ -317,7 +317,7 @@ export default function HadimPage() {
             <motion.button onClick={handleClear} disabled={!talib && !matloob && !isms.some(t=>t.trim()) && !result}
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}>
+              style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)", width: "auto", flexShrink: 0 }}>
               <Trash2 className="w-3.5 h-3.5" /> Clear
             </motion.button>
           </div>
