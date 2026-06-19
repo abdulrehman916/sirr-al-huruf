@@ -21,7 +21,9 @@ const SECTION_ICONS = {
   13: AlertCircle,
   14: Book,
   15: Book,
-  16: Book
+  16: Book,
+  17: Book,
+  18: Book
 };
 
 export default function UnifiedReport({ report, isMalayalam }) {
@@ -43,7 +45,9 @@ export default function UnifiedReport({ report, isMalayalam }) {
     { id: 13, data: report.section13_opposing },
     { id: 14, data: report.section14_sources },
     { id: 15, data: report.section15_book_citations },
-    { id: 16, data: report.section16_pdf_citations }
+    { id: 16, data: report.section16_pdf_citations },
+    { id: 17, data: report.section17_manuscript_citations },
+    { id: 18, data: report.section18_summary }
   ];
   
   return (
