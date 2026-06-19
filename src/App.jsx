@@ -82,6 +82,7 @@ const PAGE_IMPORTS = {
   FinalEnterpriseSignOff:   () => import('./pages/FinalEnterpriseSignOff'),
   PageVisibilityAudit:      () => import('./pages/PageVisibilityAudit'),
   VerifyVIPAccess:          () => import('./pages/VerifyVIPAccess'),
+  ContentRenderingAudit:    () => import('./pages/ContentRenderingAudit'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),
