@@ -252,7 +252,7 @@ export default function PageLayout({ children }) {
         )}
 
         {/* Horizontal navigation — single native scroll layer, GPU-composited */}
-        <div className="px-2 py-2 flex items-center gap-2" style={{ width: "100%" }}>
+        <div className="px-2 py-2 flex items-center gap-2 relative" style={{ width: "100%" }}>
           {/* Admin button - visible for owner email OR platform admin role */}
           {(user?.role === 'admin' || (user?.email && user.email.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase())) && (
             <button
@@ -272,9 +272,29 @@ export default function PageLayout({ children }) {
             </button>
           )}
 
+          {/* Left fade indicator - shows when more tabs exist to the left */}
+          <div
+            className="pointer-events-none absolute left-0 top-0 bottom-0 z-10"
+            style={{
+              width: 40,
+              background: "linear-gradient(90deg, rgba(2,6,16,0.98) 0%, rgba(2,6,16,0.70) 50%, transparent 100%)",
+              opacity: 0.8,
+            }}
+          />
+          
+          {/* Right fade indicator - shows when more tabs exist to the right */}
+          <div
+            className="pointer-events-none absolute right-0 top-0 bottom-0 z-10"
+            style={{
+              width: 40,
+              background: "linear-gradient(270deg, rgba(2,6,16,0.98) 0%, rgba(2,6,16,0.70) 50%, transparent 100%)",
+              opacity: 0.8,
+            }}
+          />
+
           <div
             ref={navRef}
-            className="nav-scroll-container flex gap-1 flex-nowrap"
+            className="nav-scroll-container flex gap-1 flex-nowrap scrollbar-none"
             style={{
               overflowX: "auto",
               overflowY: "hidden",
@@ -290,6 +310,8 @@ export default function PageLayout({ children }) {
               willChange: "transform",
               transform: "translate3d(0,0,0)",
               backfaceVisibility: "hidden",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
             }}
           >
             {TAB_KEYS.map((tab) => (
