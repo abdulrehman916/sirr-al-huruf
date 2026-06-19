@@ -80,6 +80,7 @@ const PAGE_IMPORTS = {
   FinalProductionAudit:     () => import('./pages/FinalProductionAudit'),
   PerformanceTestReport:    () => import('./pages/PerformanceTestReport'),
   FinalEnterpriseSignOff:   () => import('./pages/FinalEnterpriseSignOff'),
+  PageVisibilityAudit:      () => import('./pages/PageVisibilityAudit'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),
