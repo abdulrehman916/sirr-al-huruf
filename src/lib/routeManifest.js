@@ -81,6 +81,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/content-rendering-audit', chunk: 'ContentRenderingAudit',         flags: 'public' },
   { path: '/admin/audit-table-rendering',  chunk: 'AuditTableRendering',            flags: 'public' },
   { path: '/admin/vip-test-customer',      chunk: 'VIPTestCustomer',                flags: 'public' },
+  { path: '/admin/otp-email-test',         chunk: 'OTPEmailTest',                   flags: 'public' },
   { path: '/admin/test-customer-content',  chunk: 'TestRealCustomerContent',        flags: 'public' },
 
   // ── Audit / Verification ───────────────────────────────────────────
