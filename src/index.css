@@ -199,6 +199,50 @@
     transition: opacity 0s;
   }
 
+  /* ── RESPONSIVE NAVIGATION — Device-specific optimizations ── */
+  
+  /* Mobile navigation */
+  @media (max-width: 767px) {
+    .nav-scroll-container {
+      padding: 0 4px;
+    }
+    .nav-tab {
+      min-width: 48px;
+      min-height: 44px;
+      padding: 6px 8px;
+    }
+  }
+
+  /* Tablet navigation */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .nav-scroll-container {
+      padding: 0 8px;
+    }
+    .nav-tab {
+      min-width: 64px;
+      min-height: 52px;
+      padding: 8px 12px;
+    }
+  }
+
+  /* Desktop navigation */
+  @media (min-width: 1024px) {
+    .nav-scroll-container {
+      padding: 0 16px;
+      /* Desktop: center nav items */
+      justify-content: center;
+    }
+    .nav-tab {
+      min-width: 80px;
+      min-height: 56px;
+      padding: 10px 16px;
+    }
+    /* Desktop: show full navigation without scroll if fits */
+    .nav-scroll-container {
+      overflow-x: auto;
+    }
+  }
+
   /* ── RTL (Arabic) Support ── */
   [dir="rtl"] {
     text-align: right;
@@ -342,18 +386,53 @@
     }
   }
 
-  /* ── Low-end device optimizations ── */
-  @media (max-width: 480px) {
+  /* ── RESPONSIVE LAYOUT BREAKPOINTS ── */
+  
+  /* Mobile (default) - up to 767px */
+  @media (max-width: 767px) {
+    .responsive-nav { height: 56px; padding: 8px; }
+    .responsive-content { padding: 12px; }
+    .responsive-card { padding: 16px; border-radius: 12px; }
+    .responsive-touch { min-height: 44px; }
+    .responsive-heading { font-size: 1.5rem; }
+    .responsive-body { font-size: 0.875rem; }
     .atm-anim { animation-duration: 2s !important; }
     .content-section { contain-intrinsic-size: auto 300px; }
   }
 
-  /* Tablet: wider max content width */
-  @media (min-width: 768px) {
+  /* Tablet - 768px to 1023px */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .responsive-nav { height: 64px; padding: 12px; }
+    .responsive-content { padding: 24px; max-width: 90%; }
+    .responsive-card { padding: 20px; border-radius: 16px; }
+    .responsive-touch { min-height: 48px; }
+    .responsive-heading { font-size: 2rem; }
+    .responsive-body { font-size: 1rem; }
     .max-w-2xl { max-width: 680px; }
+    /* Tablet-specific optimizations */
+    .tablet-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .tablet-nav-tabs { min-width: 64px; font-size: 15px; }
   }
+
+  /* Desktop - 1024px and above */
   @media (min-width: 1024px) {
+    .responsive-nav { height: 72px; padding: 16px; }
+    .responsive-content { padding: 32px; max-width: 1200px; margin: 0 auto; }
+    .responsive-card { padding: 24px; border-radius: 20px; }
+    .responsive-touch { min-height: 40px; }
+    .responsive-heading { font-size: 2.5rem; }
+    .responsive-body { font-size: 1.125rem; }
     .max-w-2xl { max-width: 760px; }
+    /* Desktop-specific optimizations */
+    .desktop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .desktop-nav-tabs { min-width: 80px; font-size: 16px; }
+    .desktop-hover:hover { transform: translateY(-2px); transition: transform 0.2s ease; }
+  }
+
+  /* Large Desktop - 1440px and above */
+  @media (min-width: 1440px) {
+    .responsive-content { max-width: 1400px; }
+    .xl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
   }
 }
 
@@ -436,5 +515,49 @@
   .btn-gold:hover {
     box-shadow: 0 0 40px rgba(212,175,55,0.65), 0 2px 12px rgba(0,0,0,0.40);
     filter: brightness(1.08);
+  }
+
+  /* ── RESPONSIVE LAYOUT UTILITIES ── */
+  
+  /* Layout containers */
+  .responsive-layout { }
+  .mobile-layout { }
+  .tablet-layout { }
+  .desktop-layout { }
+  
+  /* Navigation */
+  .responsive-nav { }
+  
+  /* Content */
+  .responsive-content { }
+  .responsive-content-container { }
+  
+  /* Cards */
+  .responsive-card { }
+  
+  /* Touch targets */
+  .responsive-touch { }
+  
+  /* Typography */
+  .responsive-heading { }
+  .responsive-body { }
+  
+  /* Grids */
+  .tablet-grid { }
+  .desktop-grid { }
+  .xl-grid { }
+  
+  /* Hover effects (desktop only) */
+  .desktop-hover { }
+  
+  /* Spacing utilities */
+  .responsive-spacing-sm {
+    @apply spacing-2;
+  }
+  .responsive-spacing-md {
+    @apply spacing-4;
+  }
+  .responsive-spacing-lg {
+    @apply spacing-6;
   }
 }
