@@ -8,10 +8,8 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Book, Clock, Star, Moon, Sun, Zap, Heart, AlertCircle, CheckCircle, Info } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import { searchBookKnowledge, findBestTimeForAction, getTodaysAnalysis, getMansionDetails, getZodiacDetails } from "@/lib/astroClockBookSearch.js";
+import { searchBookKnowledge } from "@/lib/astroClockBookSearch.js";
 import { useToast } from "@/components/ui/use-toast";
-import { getCurrentPlanetaryHour } from "@/lib/astroClockLiveEngine.js";
-import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
 
 const SEARCH_CATEGORIES = [
   { key: "ACTIONS", en: "Actions & Rituals", ml: "പ്രവർത്തികൾ", ar: "الأعمال" },
@@ -43,11 +41,13 @@ export default function AdvancedKnowledgeSearch({ currentAstroData }) {
       setSearchResults(results);
       
       if (results.found) {
+        const sectionCount = results.type === 'ACTION_TIMING' ? 1 : 
+          (results.dayRules?.length || 0) + (results.mansionRules?.length || 0) + (results.timingRules?.length || 0);
         toast({
           title: isMalayalam ? "ഫലങ്ങൾ കണ്ടെത്തി" : "Results Found",
           description: isMalayalam 
-            ? `ബുക്ക് ഡാറ്റാബേസിൽ നിന്നും ${results.sections?.length || 1} വിഭാഗങ്ങൾ`
-            : `Found ${results.sections?.length || 1} sections from book database`,
+            ? `ബുക്ക് ഡാറ്റാബേസിൽ നിന്നും ${sectionCount} ഫലങ്ങൾ`
+            : `Found ${sectionCount} entries from book database`,
           duration: 3000
         });
       } else {
@@ -151,16 +151,21 @@ export default function AdvancedKnowledgeSearch({ currentAstroData }) {
             exit={{ opacity: 0, y: -8 }}
             className="space-y-4"
           >
-            {/* Render each section */}
-            {searchResults.sections?.map((section, idx) => (
-              <KnowledgeSectionCard
-                key={idx}
-                section={section}
-                isExpanded={expandedSections[idx]}
-                onToggle={() => toggleSection(idx)}
-                isMalayalam={isMalayalam}
+            {/* Action Timing Results */}
+            {searchResults.type === "ACTION_TIMING" && (
+              <ActionTimingResult 
+                results={searchResults} 
+                isMalayalam={isMalayalam} 
               />
-            ))}
+            )}
+            
+            {/* General Search Results */}
+            {searchResults.type === "GENERAL_SEARCH" && (
+              <GeneralSearchResult 
+                results={searchResults} 
+                isMalayalam={isMalayalam} 
+              />
+            )}
           </motion.div>
         )}
 
@@ -372,4 +377,119 @@ function ContentBlock({ block, isMalayalam }) {
   }
   
   return null;
+}
+
+function ActionTimingResult({ results, isMalayalam }) {
+  const { category, rules, mansions, planets, days } = results;
+  
+  return (
+    <div className="space-y-4">
+      {/* Category Info */}
+      <div className="p-4 rounded-xl border" style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.25)" }}>
+        <h3 className="font-inter text-sm font-bold mb-2" style={{ color: "#D4AF37" }}>
+          {isMalayalam ? category.ml || category.en : category.en}
+        </h3>
+        <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
+          {rules.source}
+        </p>
+      </div>
+
+      {/* Suitable Mansions */}
+      {mansions?.suitable?.length > 0 && (
+        <ContentBlock
+          block={{
+            type: "list",
+            title_en: "Suitable Lunar Mansions",
+            title_ml: "ഉത്തമ ചന്ദ്ര നക്ഷത്രങ്ങൾ",
+            items: mansions.suitable.map(m => ({ en: `${m.name} (#${m.no})`, ml: `${m.name} (#${m.no})` })),
+            color: "#4ade80"
+          }}
+          isMalayalam={isMalayalam}
+        />
+      )}
+
+      {/* Suitable Days */}
+      {days?.suitable?.length > 0 && (
+        <ContentBlock
+          block={{
+            type: "list",
+            title_en: "Suitable Days",
+            title_ml: "ഉത്തമ ദിവസങ്ങൾ",
+            items: days.suitable.map(d => ({ en: d, ml: d })),
+            color: "#60a5fa"
+          }}
+          isMalayalam={isMalayalam}
+        />
+      )}
+
+      {/* Suitable Planets */}
+      {planets?.suitable?.length > 0 && (
+        <ContentBlock
+          block={{
+            type: "list",
+            title_en: "Suitable Planets",
+            title_ml: "ഉത്തമ ഗ്രഹങ്ങൾ",
+            items: planets.suitable.map(p => ({ en: p, ml: p })),
+            color: "#fbbf24"
+          }}
+          isMalayalam={isMalayalam}
+        />
+      )}
+    </div>
+  );
+}
+
+function GeneralSearchResult({ results, isMalayalam }) {
+  const sections = [];
+  
+  if (results.dayRules?.length > 0) {
+    sections.push({
+      title_en: "Day Rules",
+      title_ml: "ദിവസ നിയമങ്ങൾ",
+      icon: Sun,
+      items: results.dayRules
+    });
+  }
+  
+  if (results.mansionRules?.length > 0) {
+    sections.push({
+      title_en: "Lunar Mansion Rules",
+      title_ml: "ചന്ദ്ര നക്ഷത്ര നിയമങ്ങൾ",
+      icon: Moon,
+      items: results.mansionRules
+    });
+  }
+  
+  if (results.timingRules?.length > 0) {
+    sections.push({
+      title_en: "Timing Rules",
+      title_ml: "സമയ നിയമങ്ങൾ",
+      icon: Clock,
+      items: results.timingRules
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      {sections.map((section, idx) => (
+        <KnowledgeSectionCard
+          key={idx}
+          section={{
+            title_en: section.title_en,
+            title_ml: section.title_ml,
+            icon: section.icon,
+            content: section.items.map(item => ({
+              type: "text",
+              text_en: item.data?.description || JSON.stringify(item.data),
+              text_ml: item.data?.description || ""
+            })),
+            sources: section.items.map(item => item.source)
+          }}
+          isExpanded={true}
+          onToggle={() => {}}
+          isMalayalam={isMalayalam}
+        />
+      ))}
+    </div>
+  );
 }
