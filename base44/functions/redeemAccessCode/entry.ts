@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     for (let i = 0; i < pagePaths.length; i++) {
       const pagePath = pagePaths[i];
       const pageName = pageNames[i] || pagePath;
-      const permCode = pagePath.replace(/^\//, "").replace(/-/g, "_").toUpperCase() + "_ACCESS";
+      const permCode = pagePath.replace(/^\//, "").replace(/\/$/, "").replace(/[\/\-:]/g, "_").toUpperCase() + "_ACCESS";
 
       const existing = await base44.asServiceRole.entities.PagePermission.filter({
         user_id: user.id, page_path: pagePath, is_active: true, is_revoked: false
