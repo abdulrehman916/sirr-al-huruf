@@ -187,19 +187,12 @@ export default function PageLayout({ children }) {
     if (!activeTabEl || !navRef.current) return;
     
     const timer = setTimeout(() => {
-      const nav = navRef.current;
-      const tabRect = activeTabEl.getBoundingClientRect();
-      const navRect = nav.getBoundingClientRect();
-      
-      // Calculate scroll position to center the active tab
-      const scrollPosition = nav.scrollLeft + tabRect.left - navRect.left - (navRect.width / 2) + (tabRect.width / 2);
-      
-      // Ensure we don't scroll past the boundaries
-      const maxScroll = nav.scrollWidth - nav.clientWidth;
-      const clampedScroll = Math.max(0, Math.min(scrollPosition, maxScroll));
-      
-      nav.scrollTo({ left: clampedScroll, behavior: 'smooth' });
-    }, 150);
+      activeTabEl.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest'
+      });
+    }, 100);
     
     return () => clearTimeout(timer);
   }, [activeId]);
@@ -350,7 +343,7 @@ export default function PageLayout({ children }) {
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               paddingLeft: "10px",
-              paddingRight: "24px",
+              paddingRight: "48px",
             }}
           >
             {TAB_KEYS.map((tab) => (
@@ -362,6 +355,8 @@ export default function PageLayout({ children }) {
                 tabRef={(el) => (tabRefs.current[tab.id] = el)}
               />
             ))}
+            {/* Extra end spacer for last tab visibility */}
+            <div style={{ flexShrink: 0, width: 24 }} />
           </div>
         </div>
       </div>
