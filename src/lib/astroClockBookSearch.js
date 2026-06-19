@@ -11,11 +11,6 @@ import { AY_MANAZILLERI, PLANETARY_DAY_RULERS } from "@/lib/astroClockData";
 import { ACTION_CATEGORIES, ACTION_TIMING_RULES, findActionCategory, getTimingRulesForAction, evaluateCurrentTiming } from "@/lib/astroClockActionTimingRules";
 
 /**
- * Search knowledge base for action-related timing rules
- * @param {string} query - User's search query (e.g., "marriage", "business", "travel")
- * @returns {Object} Search results with book references
- */
-/**
  * MASTER SEARCH FUNCTION — Queries ALL knowledge sources
  * PRESERVATION LAW COMPLIANT: Never deletes, always merges results
  */

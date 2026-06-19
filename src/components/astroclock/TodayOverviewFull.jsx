@@ -47,12 +47,12 @@ export default function TodayOverviewFull() {
     const dayKeys = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const dayKey = dayKeys[dayOfWeek];
 
-    const dayRuler = PLANETARY_DAY_RULERS.find(d => d.day_name_en === dayKey);
+    const dayRuler = PLANETARY_DAY_RULERS?.find(d => d?.day_name_en === dayKey) || null;
     const currentHour = now.getHours();
     const currentPlanetaryHour = getCurrentPlanetaryHour(now, 6.5, 18.25);
     const moonPos = calculateMoonPosition(now);
-    const currentMansion = AY_MANAZILLERI.find(m => m.no === moonPos.mansion?.number);
-    const zodiacSign = moonPos.mansion?.zodiac_sign || "Unknown";
+    const currentMansion = moonPos?.mansion?.number ? (AY_MANAZILLERI?.find(m => m?.no === moonPos.mansion.number) || null) : null;
+    const zodiacSign = moonPos?.mansion?.zodiac_sign || "Unknown";
     const element = getElementForMansion(currentMansion);
     const goodFor = buildGoodForList(dayRuler, currentMansion);
     const badFor = buildBadForList(dayRuler, currentMansion);
@@ -85,7 +85,7 @@ export default function TodayOverviewFull() {
 
   function getElementForMansion(mansion) {
     if (!mansion) return null;
-    const zodiac = mansion.zodiac_sign;
+    const zodiac = mansion?.zodiac_sign;
     if (!zodiac) return null;
     const fireSigns = ["Koç", "Arslan", "Yay"];
     const earthSigns = ["Boğa", "Başak", "Oğlak"];
@@ -99,13 +99,13 @@ export default function TodayOverviewFull() {
   function buildGoodForList(dayRuler, mansion) {
     const items = [];
     if (dayRuler?.suitable_operations) {
-      dayRuler.suitable_operations.slice(0, 5).forEach(op => {
+      (dayRuler.suitable_operations || []).slice(0, 5).forEach(op => {
         items.push({ text: op, source: "Havâss'ın Derinlikleri", page: "p.49-50" });
       });
     }
     if (mansion?.operations) {
-      mansion.operations.filter(op => !op.includes("uğursuz")).slice(0, 3).forEach(op => {
-        items.push({ text: op, source: "Havâss'ın Derinlikleri", page: `p.64-${64+mansion.no}` });
+      (mansion.operations || []).filter(op => op && !op.includes("uğursuz")).slice(0, 3).forEach(op => {
+        items.push({ text: op, source: "Havâss'ın Derinlikleri", page: `p.64-${64+(mansion.no || 0)}` });
       });
     }
     return items;
@@ -114,8 +114,8 @@ export default function TodayOverviewFull() {
   function buildBadForList(dayRuler, mansion) {
     const items = [];
     if (mansion?.operations) {
-      mansion.operations.filter(op => op.includes("uğursuz") || op.includes("kötü")).slice(0, 4).forEach(op => {
-        items.push({ text: op, source: "Havâss'ın Derinlikleri", page: `p.64-${64+mansion.no}` });
+      (mansion.operations || []).filter(op => op && (op.includes("uğursuz") || op.includes("kötü"))).slice(0, 4).forEach(op => {
+        items.push({ text: op, source: "Havâss'ın Derinlikleri", page: `p.64-${64+(mansion.no || 0)}` });
       });
     }
     if (!dayRuler) {
@@ -129,7 +129,7 @@ export default function TodayOverviewFull() {
     const avoid = [];
     
     if (planetaryHour?.planetInfo?.suitable_operations) {
-      planetaryHour.planetInfo.suitable_operations.slice(0, 3).forEach(op => {
+      (planetaryHour.planetInfo.suitable_operations || []).slice(0, 3).forEach(op => {
         canDo.push({ text: op, source: "Havâss'ın Derinlikleri", page: "p.51-52" });
       });
     }
