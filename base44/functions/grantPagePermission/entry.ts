@@ -12,8 +12,9 @@ Deno.serve(async (req) => {
 
     const { user_id, page_path, page_name, permission_code, start_date, expiry_date } = await req.json();
 
-    if (!user_id || !page_path || !permission_code || !start_date || !expiry_date) {
-      return Response.json({ error: 'All fields required' }, { status: 400 });
+    // expiry_date is optional — null means Lifetime access
+    if (!user_id || !page_path || !permission_code || !start_date) {
+      return Response.json({ error: 'user_id, page_path, permission_code, start_date are required' }, { status: 400 });
     }
 
     const now = new Date();
@@ -45,7 +46,7 @@ Deno.serve(async (req) => {
       granted_by: user.id,
       granted_at: now.toISOString(),
       start_date: new Date(start_date).toISOString(),
-      expiry_date: new Date(expiry_date).toISOString(),
+      expiry_date: expiry_date ? new Date(expiry_date).toISOString() : null,
       is_active: true,
       is_revoked: false,
       extended_count: 0

@@ -22,6 +22,14 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+const APPROVE_DURATIONS = [
+  { key: "1_DAY",    label: "1 Day",    days: 1 },
+  { key: "1_MONTH",  label: "1 Month",  days: 30 },
+  { key: "6_MONTHS", label: "6 Months", days: 180 },
+  { key: "1_YEAR",   label: "1 Year",   days: 365 },
+  { key: "LIFETIME", label: "Lifetime", days: null },
+];
+
 export default function AdminAccessRequests() {
   const { toast } = useToast();
   const [requests, setRequests] = useState([]);
@@ -29,6 +37,8 @@ export default function AdminAccessRequests() {
   const [filter, setFilter] = useState("PENDING");
   const [processing, setProcessing] = useState(null);
   const [user, setUser] = useState(null);
+  const [approvingReq, setApprovingReq] = useState(null);
+  const [selectedDuration, setSelectedDuration] = useState("1_MONTH");
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -52,16 +62,33 @@ export default function AdminAccessRequests() {
     filter === "ALL" ? true : r.status === filter
   );
 
-  const handleApprove = async (req) => {
+  // Step 1: open duration picker
+  const handleApprove = (req) => {
+    setSelectedDuration("1_MONTH");
+    setApprovingReq(req);
+  };
+
+  // Step 2: execute approval with chosen duration
+  const confirmApprove = async () => {
+    const req = approvingReq;
+    setApprovingReq(null);
     setProcessing(req.id);
     try {
-      // Grant permission using existing backend function
+      const opt = APPROVE_DURATIONS.find(d => d.key === selectedDuration) || APPROVE_DURATIONS[1];
+      const now = new Date();
+      // null expiry_date = Lifetime (never expires, per BUG-05 fix in checkPageAccess.js)
+      const expiryDate = opt.days === null
+        ? null
+        : new Date(now.getTime() + opt.days * 86400000).toISOString();
+      const permCode = req.page_path.replace(/^\//, "").replace(/[\/\-:]/g, "_").toUpperCase() + "_ACCESS";
+
       await base44.functions.invoke("grantPagePermission", {
         user_id: req.user_id,
         page_path: req.page_path,
         page_name: req.page_name,
-        duration_days: 30,
-        notes: `Approved via WhatsApp request ${req.request_id}`,
+        permission_code: permCode,
+        start_date: now.toISOString(),
+        expiry_date: expiryDate,
       });
 
       // Mark request as APPROVED
@@ -79,6 +106,9 @@ export default function AdminAccessRequests() {
       setProcessing(null);
     }
   };
+
+  // Legacy inline handler still used for keyboard dismiss
+  const cancelApprove = () => setApprovingReq(null);
 
   const handleReject = async (req) => {
     setProcessing(req.id);
@@ -250,7 +280,7 @@ export default function AdminAccessRequests() {
                             }}
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
-                            {isProcessing ? "..." : "Approve"}
+                            {isProcessing ? "Granting…" : "Approve"}
                           </button>
                           <button
                             onClick={() => handleReject(req)}
@@ -292,6 +322,47 @@ export default function AdminAccessRequests() {
           </div>
         )}
       </div>
+
+      {/* Duration picker modal */}
+      {approvingReq && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }}
+          onClick={cancelApprove}>
+          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4"
+            style={{ background: "linear-gradient(145deg,#0c1630,#060c1c)", border: "1px solid rgba(212,175,55,0.50)" }}
+            onClick={e => e.stopPropagation()}>
+            <div>
+              <h3 className="font-inter font-bold text-white text-sm">Select Access Duration</h3>
+              <p className="text-xs text-white/40 mt-0.5">{approvingReq.name} · {approvingReq.page_name}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {APPROVE_DURATIONS.map(opt => (
+                <button key={opt.key} onClick={() => setSelectedDuration(opt.key)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                  style={{
+                    background: selectedDuration === opt.key ? "rgba(212,175,55,0.20)" : "rgba(255,255,255,0.05)",
+                    border: `1px solid ${selectedDuration === opt.key ? "rgba(212,175,55,0.60)" : "rgba(255,255,255,0.10)"}`,
+                    color: selectedDuration === opt.key ? "#F5D060" : "rgba(255,255,255,0.50)",
+                  }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button onClick={cancelApprove}
+                className="flex-1 py-2.5 rounded-xl font-inter font-semibold text-sm"
+                style={{ background: "transparent", border: "1px solid rgba(212,175,55,0.35)", color: "#F5D060" }}>
+                Cancel
+              </button>
+              <button onClick={confirmApprove}
+                className="flex-1 py-2.5 rounded-xl font-inter font-bold text-sm"
+                style={{ background: "linear-gradient(135deg,#f6d860,#c98a14)", color: "#0d1b2a" }}>
+                Grant Access
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </PageLayout>
   );
 }

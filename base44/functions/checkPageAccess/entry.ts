@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
 
     const permission = permissions[0];
 
-    // Check expiry
-    if (new Date(permission.expiry_date) < now) {
+    // Check expiry — null/empty expiry_date means Lifetime: never expires
+    if (permission.expiry_date && new Date(permission.expiry_date) < now) {
       await base44.entities.AccessLog.create({
         log_id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
         user_id: user.id,
