@@ -5,8 +5,8 @@ import {
   Users, CreditCard, Globe, Shield, Search, Plus, Trash2, Smartphone,
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
   Phone, Mail, Calendar, Crown, RefreshCw, Star, Zap,
-  DollarSign, TrendingUp, Edit2, Save, AlertCircle, Loader2,
-  Undo2, Ban, CalendarPlus2, MessageSquare, KeyRound
+  DollarSign, TrendingUp, Edit2, Save, AlertCircle,
+  Ban, CalendarPlus2, MessageSquare, KeyRound
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
@@ -436,9 +436,9 @@ function SubscriptionsTab({ subscriptions, users }) {
           { label: "Active Revenue", value: `${activeRevenue.toLocaleString()}`, icon: TrendingUp, color: "#22c55e" },
           { label: "Active Subs", value: counts.ACTIVE, icon: CreditCard, color: "#60a5fa" },
           { label: "Expiring ≤7d", value: expiringSoon.length, icon: Clock, color: expiringSoon.length > 0 ? "#f59e0b" : "rgba(255,255,255,0.30)" },
-        ].map(({ label, value, icon: Icon, color }) => (
+        ].map(({ label, value, icon: StatIcon, color }) => (
           <div key={label} className="rounded-xl border p-3 text-center" style={{ background: G.bg, borderColor: G.border }}>
-            <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} />
+            <StatIcon className="w-4 h-4 mx-auto mb-1" style={{ color }} />
             <p className="text-lg font-bold leading-tight" style={{ color }}>{value}</p>
             <p className="text-xs text-white/35 mt-0.5 leading-tight">{label}</p>
           </div>
@@ -787,279 +787,6 @@ function PlansTab({ plans, onRefresh }) {
           );
         })
       )}
-    </div>
-  );
-}
-
-// ── VIP Access Tab ─────────────────────────────────────────────────────────────
-function VIPTab({ vipAccess, users, onRefresh }) {
-  const { toast } = useToast();
-  const [search, setSearch] = useState("");
-  const [granting, setGranting] = useState(null);
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return vipAccess;
-    return vipAccess.filter(v =>
-      (v.label || "").toLowerCase().includes(q) ||
-      (v.identifier || "").toLowerCase().includes(q)
-    );
-  }, [vipAccess, search]);
-
-  const handleRevoke = async (vip) => {
-    if (!confirm(`Revoke VIP access for "${vip.identifier || vip.label}"?`)) return;
-    try {
-      await base44.entities.VIPAccess.update(vip.id, { is_active: false });
-      toast({ title: "✓ VIP access revoked" });
-      onRefresh();
-    } catch (e) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: G.dim }} />
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name, phone, or email…"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none"
-            style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}` }}
-          />
-        </div>
-        <button onClick={() => setGranting({})}
-          className="px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2"
-          style={{ background: G.bgHi, border: `1px solid ${G.borderHi}`, color: G.text }}>
-          <Plus className="w-3.5 h-3.5" /> Add VIP
-        </button>
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="text-center py-16" style={{ color: "rgba(255,255,255,0.25)" }}>
-          <Crown className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No VIP users found</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filtered.map(vip => (
-            <div key={vip.id} className="rounded-xl border p-4" style={{ background: G.bg, borderColor: G.border }}>
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Crown className="w-4 h-4" style={{ color: G.text }} />
-                    <p className="font-inter font-bold text-white text-sm">{vip.label || "VIP User"}</p>
-                  </div>
-                  <p className="text-xs text-white/40 mt-0.5 flex items-center gap-2">
-                    <span>{vip.identifier}</span>
-                    <span className="text-white/20">•</span>
-                    <span className="capitalize">{vip.identifier_type}</span>
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {vip.grant_all ? (
-                      <span className="px-2 py-0.5 rounded text-xs font-semibold" style={{ background: "rgba(34,197,94,0.12)", color: "#4ade80" }}>
-                        All Pages
-                      </span>
-                    ) : (
-                      (vip.page_paths || []).slice(0, 5).map(path => (
-                        <span key={path} className="px-2 py-0.5 rounded text-xs" style={{ background: G.bgHi, color: G.text, border: `1px solid ${G.border}` }}>
-                          {path}
-                        </span>
-                      ))
-                    )}
-                    {(vip.page_paths || []).length > 5 && (
-                      <span className="px-2 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.35)" }}>
-                        +{(vip.page_paths || []).length - 5} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${vip.is_active ? "bg-green-500/10 text-green-400 border border-green-500/30" : "bg-red-500/10 text-red-400 border border-red-500/30"}`}>
-                    {vip.is_active ? "Active" : "Revoked"}
-                  </span>
-                  {vip.is_active && (
-                    <button onClick={() => handleRevoke(vip)}
-                      className="mt-2 px-3 py-1 rounded text-xs font-semibold"
-                      style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.30)" }}>
-                      Revoke
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <AnimatePresence>
-        {granting && (
-          <GrantVIPModal
-            users={users}
-            existingVip={granting.existing}
-            onClose={() => setGranting(null)}
-            onGranted={() => { onRefresh(); setGranting(null); }}
-          />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function GrantVIPModal({ users, existingVip, onClose, onGranted }) {
-  const { toast } = useToast();
-  const [selectedUser, setSelectedUser] = useState("");
-  const [identifier, setIdentifier] = useState("");
-  const [identifierType, setIdentifierType] = useState("PHONE");
-  const [label, setLabel] = useState("");
-  const [grantAll, setGrantAll] = useState(false);
-  const [selectedPages, setSelectedPages] = useState([]);
-  const [duration, setDuration] = useState("PERMANENT");
-  const [processing, setProcessing] = useState(false);
-
-  const handleGrant = async () => {
-    if (!identifier && !selectedUser) {
-      toast({ title: "Select a user or enter identifier", variant: "destructive" });
-      return;
-    }
-    if (!grantAll && selectedPages.length === 0) {
-      toast({ title: "Select at least one page", variant: "destructive" });
-      return;
-    }
-    setProcessing(true);
-    try {
-      let userId = selectedUser;
-      let identifierVal = identifier;
-      let identifierT = identifierType;
-
-      if (selectedUser) {
-        const user = users.find(u => u.id === selectedUser);
-        if (user) {
-          identifierVal = user.email;
-          identifierT = "EMAIL";
-          if (!label) setLabel(user.full_name || user.email);
-        }
-      }
-
-      await base44.entities.VIPAccess.create({
-        identifier: identifierVal,
-        identifier_type: identifierT,
-        label: label || "VIP User",
-        page_paths: grantAll ? [] : selectedPages,
-        grant_all: grantAll,
-        is_active: true,
-        added_by: (await base44.auth.me()).id,
-      });
-      toast({ title: "✓ VIP access granted" });
-      onGranted();
-    } catch (e) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.85)" }} onClick={onClose}>
-      <motion.div
-        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-        className="w-full max-w-lg rounded-2xl p-6 space-y-5"
-        style={{ background: "linear-gradient(145deg,#0c1630,#060c1c)", border: `1px solid ${G.borderHi}` }}
-        onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-inter font-bold text-white text-base">Grant VIP Access</h3>
-            <p className="text-xs text-white/45 mt-0.5">Free access to selected pages</p>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10" style={{ color: "rgba(255,255,255,0.40)" }}>
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div>
-          <label className="text-xs text-white/45 mb-1 block">Or Select Existing User</label>
-          <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }}>
-            <option value="">-- Choose User --</option>
-            {users.map(u => (
-              <option key={u.id} value={u.id}>{u.full_name || u.email}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="text-xs text-white/45 mb-1 block">Or Enter Identifier</label>
-          <input value={identifier} onChange={e => setIdentifier(e.target.value)} placeholder="Phone or email"
-            className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
-          <div className="flex gap-2 mt-2">
-            {["PHONE", "EMAIL"].map(t => (
-              <button key={t} onClick={() => setIdentifierType(t)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${identifierType === t ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/40" : "bg-white/5 text-white/45 border border-white/10"}`}>
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-xs text-white/45 mb-1 block">Label (Optional)</label>
-          <input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Family Member, VIP Client"
-            className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: G.dim }}>Access Type</p>
-          <div className="flex gap-2">
-            <button onClick={() => setGrantAll(true)}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${grantAll ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/40" : "bg-white/5 text-white/45 border border-white/10"}`}>
-              All Pages
-            </button>
-            <button onClick={() => setGrantAll(false)}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${!grantAll ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/40" : "bg-white/5 text-white/45 border border-white/10"}`}>
-              Selected Pages
-            </button>
-          </div>
-        </div>
-
-        {!grantAll && (
-          <div>
-            <label className="text-xs text-white/45 mb-2 block">Select Pages ({selectedPages.length} selected)</label>
-            <div className="max-h-40 overflow-y-auto space-y-1">
-              {getContentPageList().map(p => {
-                const sel = selectedPages.includes(p.path);
-                return (
-                  <button key={p.path} onClick={() => setSelectedPages(prev => sel ? prev.filter(x => x !== p.path) : [...prev, p.path])}
-                    className="w-full flex items-center gap-2 p-2 rounded-lg text-left text-sm"
-                    style={{ background: sel ? G.bg : "transparent", border: `1px solid ${sel ? G.border : "transparent"}`, color: sel ? "white" : "rgba(255,255,255,0.45)" }}>
-                    <div className="w-3.5 h-3.5 rounded flex-shrink-0 flex items-center justify-center"
-                      style={{ background: sel ? G.text : "transparent", border: `1px solid ${sel ? G.text : "rgba(255,255,255,0.20)"}` }}>
-                      {sel && <CheckCircle className="w-2.5 h-2.5 text-black" />}
-                    </div>
-                    {p.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <div className="flex gap-3 pt-1">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl font-inter font-semibold text-sm"
-            style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
-            Cancel
-          </button>
-          <button onClick={handleGrant} disabled={processing}
-            className="flex-1 py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg,#f6d860,#c98a14)", color: "#0d1b2a" }}>
-            {processing ? "Granting…" : "Grant VIP Access"}
-          </button>
-        </div>
-      </motion.div>
     </div>
   );
 }
@@ -1552,7 +1279,6 @@ export default function OwnerAccessDashboard() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [pageConfigs, setPageConfigs] = useState([]);
   const [plans, setPlans] = useState([]);
-  const [vipAccess, setVipAccess] = useState([]);
   const [accessRequests, setAccessRequests] = useState([]);
   const [managingSub, setManagingSub] = useState(null);
 
@@ -1574,14 +1300,13 @@ export default function OwnerAccessDashboard() {
     try {
       // Paginated: limit initial loads to prevent OOM with 10K+ users
       const PAGE_LIMIT = 200;
-      const [allUsers, allProfiles, perms, subs, configs, allPlans, allVip, allRequests] = await Promise.all([
+      const [allUsers, allProfiles, perms, subs, configs, allPlans, allRequests] = await Promise.all([
         base44.entities.User.list(null, PAGE_LIMIT),
         base44.entities.UserAccessProfile.list(null, PAGE_LIMIT),
         base44.entities.PagePermission.list("-granted_at", PAGE_LIMIT),
         base44.entities.Subscription.list("-start_date", PAGE_LIMIT),
         base44.entities.PageVisibilityConfig.list(null, PAGE_LIMIT),
         base44.entities.SubscriptionPlan.list(null, 100),
-        base44.entities.VIPAccess.list("-added_at", PAGE_LIMIT),
         base44.entities.AccessRequest.list("-requested_at", PAGE_LIMIT),
       ]);
       setUsers(allUsers);
@@ -1590,7 +1315,6 @@ export default function OwnerAccessDashboard() {
       setSubscriptions(subs);
       setPageConfigs(configs);
       setPlans(allPlans);
-      setVipAccess(allVip);
       setAccessRequests(allRequests);
     } catch (e) {
       toast({ title: "Load error", description: e.message, variant: "destructive" });
@@ -1641,7 +1365,7 @@ export default function OwnerAccessDashboard() {
 
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap">
-          {TABS.map(({ id, label, icon: Icon }) => (
+          {TABS.map(({ id, label, icon: TabIcon }) => (
             <button key={id} onClick={() => setTab(id)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all"
               style={{
@@ -1649,7 +1373,7 @@ export default function OwnerAccessDashboard() {
                 border: `1px solid ${tab === id ? G.borderHi : "rgba(255,255,255,0.07)"}`,
                 color: tab === id ? G.text : "rgba(255,255,255,0.45)",
               }}>
-              <Icon className="w-3.5 h-3.5" />
+              <TabIcon className="w-3.5 h-3.5" />
               {label}
             </button>
           ))}
