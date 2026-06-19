@@ -38,12 +38,18 @@ const EXAMPLE_ACTIONS = [
   { ml: "വീട് നിർമ്മാണം", en: "construction", key: "CONSTRUCTION" }
 ];
 
-export default function ActionTimingAdvisor() {
+export default function ActionTimingAdvisor({ selectedActionKey }) {
   const { isMalayalam } = useAstroClockLanguage();
   const [searchInput, setSearchInput] = useState("");
   const [selectedAction, setSelectedAction] = useState(null);
   const [timingResult, setTimingResult] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedActionKey) {
+      handleActionSelect(selectedActionKey);
+    }
+  }, [selectedActionKey]);
 
   useEffect(() => {
     if (selectedAction) {

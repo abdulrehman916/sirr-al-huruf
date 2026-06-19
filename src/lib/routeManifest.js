@@ -31,6 +31,7 @@ const ROUTE_MANIFEST = [
   { path: '/evil-jinn',                     chunk: 'EvilJinnPage' },
   { path: '/holy-names',                    chunk: 'MagicalHolyNamesPage' },
   { path: '/astro-clock',                   chunk: 'AstroClockPage' },
+  { path: '/astro-clock/search',            chunk: 'AstroClockSearch',                 dir: 'components/astroclock' },
 
   // ── Support ────────────────────────────────────────────────────────
   { path: '/customer-service',              chunk: 'CustomerService',                  flags: 'public' },

@@ -40,6 +40,7 @@ const PAGE_IMPORTS = {
   EvilJinnPage:             () => import('./pages/EvilJinnPage'),
   MagicalHolyNamesPage:     () => import('./pages/MagicalHolyNamesPage'),
   AstroClockPage:           () => import('./pages/AstroClockPage'),
+  AstroClockSearch:         () => import('./components/astroclock/AstroClockSearch'),
   // Support
   CustomerService:          () => import('./pages/CustomerService'),
   SupportHub:               () => import('./pages/SupportHub'),

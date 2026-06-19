@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// ASTRO CLOCK PAGE — COMPREHENSIVE TRADITIONAL SYSTEM
+// ASTRO CLOCK PAGE — RESTRUCTURED UX
 // 9 Sections: Day Analysis, Planetary Hours, Moon Status, Manazil, Planets, Timing Advisor
 // Astro Clock module only — completely isolated
+// ✨ NEW: Search box at top, Today's Summary first
 // ═══════════════════════════════════════════════════════════════
 
 import { useState } from "react";
@@ -16,7 +17,6 @@ import NighttimePlanetaryHours from "../components/astroclock/NighttimePlanetary
 import LiveMoonPosition from "../components/astroclock/LiveMoonPosition";
 import ManazilDatabase from "../components/astroclock/ManazilDatabase";
 import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
-
 import ProfessionalTimingDecisionEngine from "../components/astroclock/ProfessionalTimingDecisionEngine";
 import KarmaTimingAdvisor from "../components/astroclock/KarmaTimingAdvisor";
 import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
@@ -33,6 +33,7 @@ import MoonMansionTracker from "../components/astroclock/MoonMansionTracker.jsx"
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 import { Link } from "react-router-dom";
 import AstroClockErrorBoundary from "../components/astroclock/AstroClockErrorBoundary";
+import AstroClockSearch from "../components/astroclock/AstroClockSearch.jsx";
 
 function LanguageToggle() {
   const { t, toggleLanguage } = useAstroClockLanguage();
@@ -55,12 +56,13 @@ function LanguageToggle() {
 function AstroClockContent() {
   const { isMalayalam } = useAstroClockLanguage();
   const [engineStatus, setEngineStatus] = useState(ASTRO_CLOCK_LIVE_ENGINE_STATUS);
+  const [selectedAction, setSelectedAction] = useState(null);
 
   return (
     <PageLayout>
       <div className="space-y-6 pb-8">
 
-        {/* Header with Language Toggle and Audit Link */}
+        {/* Header with Language Toggle and Audit Links */}
         <div className="flex items-center justify-between mb-6">
           <PageTitle
             arabic="الساعة الفلكية"
@@ -111,7 +113,7 @@ function AstroClockContent() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl border p-3 text-center"
+            className="rounded-xl border p-3 text-center mb-6"
             style={{
               background: "rgba(212,175,55,0.04)",
               borderColor: "rgba(212,175,55,0.20)",
@@ -123,62 +125,70 @@ function AstroClockContent() {
           </motion.div>
         )}
 
-        {/* SECTION 1: Live Day Analysis */}
+        {/* ✨ NEW: Search Component (Top of Page) */}
+        <AstroClockErrorBoundary label="Astro Clock Search">
+          <AstroClockSearch onActionSelect={setSelectedAction} />
+        </AstroClockErrorBoundary>
+
+        {/* SECTION 1: Today's Day Analysis (After Search) */}
         <AstroClockErrorBoundary label="Live Day Analysis"><LiveDayAnalysis /></AstroClockErrorBoundary>
 
-        {/* SECTION 2: Current Planetary Hour (Live with Countdown) */}
-        <AstroClockErrorBoundary label="Live Planetary Hours"><LivePlanetaryHours /></AstroClockErrorBoundary>
+        {/* ✨ SECTION 2: ACTION TIMING ADVISOR — Search integration */}
+        <AstroClockErrorBoundary label="Action Timing Advisor"><ActionTimingAdvisor selectedActionKey={selectedAction} /></AstroClockErrorBoundary>
 
-        {/* SECTION 3: Daytime 12 Hours */}
-        <AstroClockErrorBoundary label="Daytime Planetary Hours"><DaytimePlanetaryHours /></AstroClockErrorBoundary>
+        {/* SECTION 3: Current Planetary Hour (Live with Countdown) */}
+        <AstroClockErrorBoundary label="Current Planetary Hour"><LivePlanetaryHours /></AstroClockErrorBoundary>
 
-        {/* SECTION 4: Nighttime 12 Hours */}
-        <AstroClockErrorBoundary label="Nighttime Planetary Hours"><NighttimePlanetaryHours /></AstroClockErrorBoundary>
+        {/* SECTION 4: Daytime 12 Hours */}
+        <AstroClockErrorBoundary label="Daytime Hours"><DaytimePlanetaryHours /></AstroClockErrorBoundary>
 
-        {/* SECTION 5: Live Moon Position */}
-        <AstroClockErrorBoundary label="Live Moon Position"><LiveMoonPosition /></AstroClockErrorBoundary>
+        {/* SECTION 5: Nighttime 12 Hours */}
+        <AstroClockErrorBoundary label="Nighttime Hours"><NighttimePlanetaryHours /></AstroClockErrorBoundary>
 
-        {/* SECTION 6: Manazil Database */}
-        <AstroClockErrorBoundary label="Manazil Database"><ManazilDatabase /></AstroClockErrorBoundary>
+        {/* SECTION 6: Live Moon Position */}
+        <AstroClockErrorBoundary label="Moon Position"><LiveMoonPosition /></AstroClockErrorBoundary>
 
-        {/* SECTION 7: Planet Knowledge Panels */}
-        <AstroClockErrorBoundary label="Planet Knowledge Panels"><PlanetKnowledgePanels /></AstroClockErrorBoundary>
+        {/* SECTION 7: Manazil Database */}
+        <AstroClockErrorBoundary label="Moon Mansions"><ManazilDatabase /></AstroClockErrorBoundary>
 
-        {/* SECTION 8: Zodiac Knowledge Panel */}
-        <AstroClockErrorBoundary label="Zodiac Knowledge Panel"><ZodiacKnowledgePanel /></AstroClockErrorBoundary>
+        {/* SECTION 8: Planet Knowledge Panels */}
+        <AstroClockErrorBoundary label="Planet Knowledge"><PlanetKnowledgePanels /></AstroClockErrorBoundary>
 
-        {/* SECTION 9: Incense Advisor */}
+        {/* SECTION 9: Zodiac Knowledge Panel */}
+        <AstroClockErrorBoundary label="Zodiac Knowledge"><ZodiacKnowledgePanel /></AstroClockErrorBoundary>
+
+        {/* SECTION 10: Incense Advisor */}
         <AstroClockErrorBoundary label="Incense Advisor"><IncenseAdvisor /></AstroClockErrorBoundary>
 
         {/* SECTION 11: Professional Timing Decision Engine */}
-        <AstroClockErrorBoundary label="Professional Timing Engine"><ProfessionalTimingDecisionEngine /></AstroClockErrorBoundary>
+        <AstroClockErrorBoundary label="Professional Timing"><ProfessionalTimingDecisionEngine /></AstroClockErrorBoundary>
 
-        {/* SECTION 12: Karma Timing Advisor — PDF Knowledge Base */}
-        <AstroClockErrorBoundary label="Karma Timing Advisor"><KarmaTimingAdvisor /></AstroClockErrorBoundary>
+        {/* SECTION 12: Karma Timing Advisor */}
+        <AstroClockErrorBoundary label="Karma Timing"><KarmaTimingAdvisor /></AstroClockErrorBoundary>
 
-        {/* SECTION 14: Advanced Manuscript Decision Engine */}
+        {/* SECTION 13: Advanced Manuscript Decision Engine */}
         <AstroClockErrorBoundary label="Advanced Decision Engine"><AdvancedManuscriptDecisionEngine /></AstroClockErrorBoundary>
 
-        {/* SECTION 15: Birth Profile Analyzer */}
-        <AstroClockErrorBoundary label="Birth Profile Analyzer"><BirthProfileAnalyzer /></AstroClockErrorBoundary>
+        {/* SECTION 14: Birth Profile Analyzer */}
+        <AstroClockErrorBoundary label="Birth Profile"><BirthProfileAnalyzer /></AstroClockErrorBoundary>
 
-        {/* SECTION 14: Traditional Moon Transit Forecast */}
-        <AstroClockErrorBoundary label="Moon Transit Forecast"><TraditionalMoonTransitForecast /></AstroClockErrorBoundary>
+        {/* SECTION 15: Traditional Moon Transit Forecast */}
+        <AstroClockErrorBoundary label="Moon Transit"><TraditionalMoonTransitForecast /></AstroClockErrorBoundary>
 
-        {/* SECTION 15: Buhur Reference */}
+        {/* SECTION 16: Buhur Reference */}
         <AstroClockErrorBoundary label="Buhur Reference"><BuhurReference /></AstroClockErrorBoundary>
 
-        {/* SECTION 16: Planetary Hour Verification */}
-        <AstroClockErrorBoundary label="Planetary Hour Verification"><PlanetaryHourVerification /></AstroClockErrorBoundary>
+        {/* SECTION 17: Planetary Hour Verification */}
+        <AstroClockErrorBoundary label="Hour Verification"><PlanetaryHourVerification /></AstroClockErrorBoundary>
 
-        {/* SECTION 17: Planetary Hour Book View — Complete 24-Hour Sequence */}
-        <AstroClockErrorBoundary label="Planetary Hour Book View"><PlanetaryHourBookView /></AstroClockErrorBoundary>
+        {/* SECTION 18: Planetary Hour Book View */}
+        <AstroClockErrorBoundary label="Book View"><PlanetaryHourBookView /></AstroClockErrorBoundary>
 
-        {/* SECTION 18: Full 24-Hour Manuscript Planetary Chart */}
-        <AstroClockErrorBoundary label="24-Hour Planetary Chart"><Full24HourPlanetaryChart /></AstroClockErrorBoundary>
+        {/* SECTION 19: Full 24-Hour Planetary Chart */}
+        <AstroClockErrorBoundary label="24-Hour Chart"><Full24HourPlanetaryChart /></AstroClockErrorBoundary>
 
-        {/* SECTION 19: Moon Mansion Tracking System */}
-        <AstroClockErrorBoundary label="Moon Mansion Tracker"><MoonMansionTracker /></AstroClockErrorBoundary>
+        {/* SECTION 20: Moon Mansion Tracker */}
+        <AstroClockErrorBoundary label="Moon Tracker"><MoonMansionTracker /></AstroClockErrorBoundary>
 
         {/* Framework Notice */}
         <motion.div
