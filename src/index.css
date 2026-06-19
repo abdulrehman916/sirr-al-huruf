@@ -199,50 +199,6 @@
     transition: opacity 0s;
   }
 
-  /* ── RESPONSIVE NAVIGATION — Device-specific optimizations ── */
-  
-  /* Mobile navigation */
-  @media (max-width: 767px) {
-    .nav-scroll-container {
-      padding: 0 4px;
-    }
-    .nav-tab {
-      min-width: 48px;
-      min-height: 44px;
-      padding: 6px 8px;
-    }
-  }
-
-  /* Tablet navigation */
-  @media (min-width: 768px) and (max-width: 1023px) {
-    .nav-scroll-container {
-      padding: 0 8px;
-    }
-    .nav-tab {
-      min-width: 64px;
-      min-height: 52px;
-      padding: 8px 12px;
-    }
-  }
-
-  /* Desktop navigation */
-  @media (min-width: 1024px) {
-    .nav-scroll-container {
-      padding: 0 16px;
-      /* Desktop: center nav items */
-      justify-content: center;
-    }
-    .nav-tab {
-      min-width: 80px;
-      min-height: 56px;
-      padding: 10px 16px;
-    }
-    /* Desktop: show full navigation without scroll if fits */
-    .nav-scroll-container {
-      overflow-x: auto;
-    }
-  }
-
   /* ── RTL (Arabic) Support ── */
   [dir="rtl"] {
     text-align: right;
@@ -517,47 +473,4 @@
     filter: brightness(1.08);
   }
 
-  /* ── RESPONSIVE LAYOUT UTILITIES ── */
-  
-  /* Layout containers */
-  .responsive-layout { }
-  .mobile-layout { }
-  .tablet-layout { }
-  .desktop-layout { }
-  
-  /* Navigation */
-  .responsive-nav { }
-  
-  /* Content */
-  .responsive-content { }
-  .responsive-content-container { }
-  
-  /* Cards */
-  .responsive-card { }
-  
-  /* Touch targets */
-  .responsive-touch { }
-  
-  /* Typography */
-  .responsive-heading { }
-  .responsive-body { }
-  
-  /* Grids */
-  .tablet-grid { }
-  .desktop-grid { }
-  .xl-grid { }
-  
-  /* Hover effects (desktop only) */
-  .desktop-hover { }
-  
-  /* Spacing utilities */
-  .responsive-spacing-sm {
-    @apply spacing-2;
-  }
-  .responsive-spacing-md {
-    @apply spacing-4;
-  }
-  .responsive-spacing-lg {
-    @apply spacing-6;
-  }
 }

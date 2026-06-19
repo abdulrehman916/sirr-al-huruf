@@ -8,7 +8,6 @@ import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
 import useTranslation from "@/i18n/useTranslation";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
-import useResponsiveLayout from "@/hooks/useResponsiveLayout";
 
 const AccountModal = lazy(() => import("./AccountModal"));
 
@@ -54,8 +53,8 @@ const pageVariants = {
   exit:    { opacity: 0 },
 };
 
-// ── Top nav tab — Responsive with device-specific touch targets ──
-const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef, deviceType = 'mobile' }) {
+// ── Top nav tab — <div> for zero link-delay, GPU-composited via container ──
+const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
   const navigate = useNavigate();
   
   const handleClick = useCallback((e) => {
@@ -64,25 +63,17 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef, deviceType
     navigate(tab.path);
   }, [tab.path, onClick, navigate]);
 
-  // Device-specific sizing
-  const sizing = {
-    mobile: { borderRadius: 10, minHeight: 44, minWidth: 48, padding: '6px 8px', arabicSize: '13px', englishSize: '8.5px' },
-    tablet: { borderRadius: 12, minHeight: 52, minWidth: 64, padding: '8px 12px', arabicSize: '15px', englishSize: '10px' },
-    desktop: { borderRadius: 14, minHeight: 56, minWidth: 80, padding: '10px 16px', arabicSize: '16px', englishSize: '11px' },
-  }[deviceType];
-
   return (
     <div
       ref={tabRef}
       onClick={handleClick}
       role="link"
       tabIndex={0}
-      className="nav-tab flex-shrink-0 relative overflow-hidden flex flex-col items-center justify-center select-none responsive-touch"
+      className="nav-tab flex-shrink-0 relative overflow-hidden flex flex-col items-center justify-center py-1.5 px-2 select-none"
       style={{
-        borderRadius: sizing.borderRadius,
-        minHeight: sizing.minHeight,
-        minWidth: sizing.minWidth,
-        padding: sizing.padding,
+        borderRadius: 10,
+        minHeight: 44,
+        minWidth: 48,
         border: isActive ? "1px solid rgba(212,175,55,0.60)" : "1px solid rgba(255,255,255,0.06)",
         background: isActive
           ? "linear-gradient(160deg, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.07) 100%)"
@@ -97,16 +88,13 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef, deviceType
           background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.70), transparent)",
         }} />
       )}
-      <span className="font-amiri font-bold leading-tight" style={{
+      <span className="font-amiri font-bold leading-tight text-[13px]" style={{
         color: isActive ? "#E8C84A" : "rgba(255,255,255,0.52)",
-        fontSize: sizing.arabicSize,
       }}>
         {tab.arabicTitle}
       </span>
-      <span className="font-inter font-semibold leading-none mt-[1px]" style={{
+      <span className="font-inter font-semibold leading-none tracking-[0.12em] text-[8.5px] mt-[1px]" style={{
         color: isActive ? "rgba(212,175,55,0.65)" : "rgba(255,255,255,0.22)",
-        fontSize: sizing.englishSize,
-        tracking: '0.12em',
       }}>
         {tab.englishSubtitle}
       </span>
@@ -140,7 +128,6 @@ export default function PageLayout({ children }) {
   const [showAccount, setShowAccount] = useState(false);
   const [user, setUser] = useState(null);
   const { t } = useTranslation();
-  const { isMobile, isTablet, isDesktop, layout } = useResponsiveLayout();
   useScrollPersist();
 
   useEffect(() => {
@@ -199,7 +186,7 @@ export default function PageLayout({ children }) {
   return (
     <>
     <div
-      className={`font-inter relative flex flex-col responsive-layout ${isMobile ? 'mobile-layout' : isTablet ? 'tablet-layout' : 'desktop-layout'}`}
+      className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         height: "100dvh",
@@ -215,15 +202,15 @@ export default function PageLayout({ children }) {
     >
       <AtmosphericBackground />
 
-      {/* ── Sticky Top Nav — Responsive with device-specific styling ── */}
+      {/* ── Sticky Top Nav — desktop + child page back button on mobile ── */}
       <div
-        className={`sticky top-0 z-50 w-full flex-shrink-0 responsive-nav`}
+        className="sticky top-0 z-50 w-full flex-shrink-0"
         role="navigation"
         aria-label="Main navigation"
         style={{
           background: "rgba(2,6,16,0.98)",
           borderBottom: "1px solid rgba(212,175,55,0.13)",
-          boxShadow: isDesktop ? "0 2px 8px rgba(0,0,0,0.40)" : "0 1px 0 rgba(212,175,55,0.05), 0 4px 24px rgba(0,0,0,0.80)",
+          boxShadow: "0 1px 0 rgba(212,175,55,0.05), 0 4px 24px rgba(0,0,0,0.80)",
           overflowX: "hidden",
           width: "100%",
         }}
@@ -238,33 +225,30 @@ export default function PageLayout({ children }) {
 
         {/* Back button for child pages only (all devices) */}
         {isChildPage && (
-          <div className={`flex items-center justify-between ${isMobile ? 'px-3 py-2.5' : isTablet ? 'px-4 py-3' : 'px-6 py-3'}`}>
+          <div className="flex items-center justify-between px-3 py-2.5">
             <button
               onClick={() => { startNav(); navigate(-1); }}
-              className={`flex items-center gap-1.5 rounded-xl responsive-touch`}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl"
               style={{
-                color: "#D4AF37", 
-                background: "rgba(212,175,55,0.08)",
+                color: "#D4AF37", background: "rgba(212,175,55,0.08)",
                 border: "1px solid rgba(212,175,55,0.18)",
                 WebkitTapHighlightColor: "transparent",
-                userSelect: "none", 
-                WebkitUserSelect: "none",
-                padding: isMobile ? '6px 10px' : isTablet ? '8px 14px' : '8px 16px',
+                userSelect: "none", WebkitUserSelect: "none",
               }}
             >
-              <ChevronLeft className={isMobile ? "w-4 h-4" : "w-5 h-5"} />
-              <span className={`font-inter ${isMobile ? 'text-xs' : 'text-sm'} font-semibold tracking-wide`}>{t('btn_back')}</span>
+              <ChevronLeft className="w-4 h-4" />
+              <span className="font-inter text-xs font-semibold tracking-wide">{t('btn_back')}</span>
             </button>
           </div>
         )}
 
-        {/* Horizontal navigation — Responsive with device-specific touch targets */}
-        <div className={`flex items-center gap-2 ${isMobile ? 'px-2 py-2' : isTablet ? 'px-4 py-3' : 'px-6 py-3'}`} style={{ width: "100%" }}>
+        {/* Horizontal navigation — single native scroll layer, GPU-composited */}
+        <div className="px-2 py-2 flex items-center gap-2" style={{ width: "100%" }}>
           {/* Admin button - visible for owner email OR platform admin role */}
           {(user?.role === 'admin' || (user?.email && user.email.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase())) && (
             <button
               onClick={() => { startNav(); navigate('/admin/access-dashboard'); }}
-              className={`flex items-center gap-1.5 rounded-xl flex-shrink-0 responsive-touch ${isDesktop ? 'desktop-hover' : ''}`}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
               style={{
                 background: "linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.10))",
                 border: "1px solid rgba(212,175,55,0.40)",
@@ -272,23 +256,22 @@ export default function PageLayout({ children }) {
                 WebkitTapHighlightColor: "transparent",
                 userSelect: "none",
                 WebkitUserSelect: "none",
-                padding: isMobile ? '8px 12px' : isTablet ? '10px 16px' : '10px 18px',
               }}
             >
-              <Shield className={isMobile ? "w-3.5 h-3.5" : "w-4 h-4"} />
-              <span className={`font-inter ${isMobile ? 'text-xs' : 'text-sm'} font-bold tracking-wide`}>{t('nav_admin')}</span>
+              <Shield className="w-3.5 h-3.5" />
+              <span className="font-inter text-xs font-bold tracking-wide">{t('nav_admin')}</span>
             </button>
           )}
 
           <div
             ref={navRef}
-            className={`nav-scroll-container flex gap-1 flex-nowrap ${isDesktop ? 'justify-center' : ''}`}
+            className="nav-scroll-container flex gap-1 flex-nowrap"
             style={{
               overflowX: "auto",
               overflowY: "hidden",
               flexShrink: 0,
-              WebkitOverflowScrolling: isMobile ? "touch" : "auto",
-              scrollBehavior: layout.scrollBehavior,
+              WebkitOverflowScrolling: "touch",
+              scrollBehavior: "smooth",
               overscrollBehaviorX: "none",
               overscrollBehaviorY: "none",
               touchAction: "pan-x",
@@ -307,27 +290,26 @@ export default function PageLayout({ children }) {
                 isActive={activeId === tab.id}
                 onClick={startNav}
                 tabRef={(el) => (tabRefs.current[tab.id] = el)}
-                deviceType={isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop'}
               />
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Scrollable page content — Responsive padding and max-width ── */}
+      {/* ── Scrollable page content ── */}
       <div
         ref={scrollRef}
         data-scroll-container="true"
-        className="flex-1 overflow-y-auto responsive-content-container"
+        className="flex-1 overflow-y-auto"
         style={{
           flex: 1,
           minHeight: 0,
           overflowX: "hidden",
           overscrollBehaviorX: "none",
-          overscrollBehaviorY: "none",
-          paddingBottom: isMobile ? 72 : isTablet ? 80 : 96,
-          WebkitOverflowScrolling: isMobile ? "touch" : "auto",
-          touchAction: "pan-y",
+          overscrollBehaviorY: "auto",
+          paddingBottom: 72,
+          WebkitOverflowScrolling: "touch",
+          touchAction: "auto",
           willChange: 'scroll-position',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
@@ -341,14 +323,13 @@ export default function PageLayout({ children }) {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className={`relative z-10 w-full responsive-content ${isDesktop ? 'max-w-6xl mx-auto' : ''}`}
+            className="relative z-10 w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
               willChange: 'opacity',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
               overflowX: 'hidden',
               maxWidth: '100%',
-              padding: isMobile ? '12px' : isTablet ? '24px' : '32px',
             }}
           >
             {children}
