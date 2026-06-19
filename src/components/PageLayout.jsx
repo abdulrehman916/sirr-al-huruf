@@ -301,7 +301,7 @@ export default function PageLayout({ children }) {
             scrollbarWidth: "none",
             msOverflowStyle: "none",
             paddingLeft: "10px",
-            paddingRight: "48px",
+            paddingRight: "10px",
           }}
         >
           {/* Admin button - visible for owner email OR platform admin role */}
