@@ -8,7 +8,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Book, Clock, Star, Moon, Sun, Zap, Heart, AlertCircle, CheckCircle, Info } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import { searchBookKnowledge } from "@/lib/astroClockBookSearch.js";
+import { searchBookKnowledge, generateComprehensiveAnalysis } from "@/lib/astroClockBookSearch.js";
 import { useToast } from "@/components/ui/use-toast";
 
 const SEARCH_CATEGORIES = [
@@ -37,8 +37,21 @@ export default function AdvancedKnowledgeSearch({ currentAstroData }) {
     setIsSearching(true);
     
     setTimeout(() => {
+      // Search all sources (PRESERVATION LAW COMPLIANT)
       const results = searchBookKnowledge(query);
-      setSearchResults(results);
+      
+      // Generate comprehensive 18-point analysis
+      const comprehensiveAnalysis = generateComprehensiveAnalysis(query, {});
+      
+      // Combine results
+      const enrichedResults = {
+        ...results,
+        comprehensive_analysis: comprehensiveAnalysis,
+        all_sources_searched: true,
+        preservation_compliant: true
+      };
+      
+      setSearchResults(enrichedResults);
       
       if (results.found) {
         const sectionCount = results.type === 'ACTION_TIMING' ? 1 : 
