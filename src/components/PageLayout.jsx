@@ -190,7 +190,7 @@ export default function PageLayout({ children }) {
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         height: "100dvh",
-        overflow: "hidden",
+        overflowY: "auto",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -198,6 +198,7 @@ export default function PageLayout({ children }) {
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
         paddingBottom: "env(safe-area-inset-bottom)",
+        WebkitOverflowScrolling: "touch",
       }}
     >
       <AtmosphericBackground />
@@ -274,7 +275,7 @@ export default function PageLayout({ children }) {
               scrollBehavior: "smooth",
               overscrollBehaviorX: "none",
               overscrollBehaviorY: "none",
-              touchAction: "pan-x",
+              touchAction: "auto",
               scrollSnapType: "x proximity",
               userSelect: "none",
               WebkitUserSelect: "none",
