@@ -67,7 +67,8 @@ const ROUTE_MANIFEST = [
   { path: '/admin/access-dashboard',        chunk: 'OwnerAccessDashboard',             flags: 'public' },
   { path: '/admin/user-detail/:userId',     chunk: 'UserDetailPage',                   flags: 'public' },
   { path: '/admin/faal-chob-upload',        chunk: 'AdminFaalChobUpload' },
-  { path: '/admin/access-requests',         chunk: 'AdminAccessRequests',              flags: 'public' },
+  { path: '/admin/access-requests',        chunk: 'AdminAccessRequests',              flags: 'public' },
+  { path: '/admin/qa-report',             chunk: 'QAReport',                         flags: 'public' },
 
   // ── Audit / Verification ───────────────────────────────────────────
   { path: '/hierarchy-audit',               chunk: 'HierarchyAuditPage' },

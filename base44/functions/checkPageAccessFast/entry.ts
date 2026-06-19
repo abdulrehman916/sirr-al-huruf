@@ -42,14 +42,20 @@ Deno.serve(async (req) => {
       return Response.json({ granted: true, status: 'granted', source: 'admin_bypass' });
     }
 
-    // 4. Profile check: blocked users are denied everything
-    const profiles = await base44.entities.UserAccessProfile.filter(
+    // 4. Profile check: blocked/archived users are denied everything
+    const profiles = await base44.asServiceRole.entities.UserAccessProfile.filter(
       { user_id: user.id },
       null,
       1
     );
-    if (profiles.length > 0 && profiles[0].account_status === 'BLOCKED') {
-      return Response.json({ granted: false, reason: 'Account blocked', status: 'blocked' });
+    if (profiles.length > 0) {
+      const status = profiles[0].account_status;
+      if (status === 'BLOCKED') {
+        return Response.json({ granted: false, reason: 'Account blocked', status: 'blocked' });
+      }
+      if (status === 'ARCHIVED') {
+        return Response.json({ granted: false, reason: 'Account not accessible', status: 'denied' });
+      }
     }
     if (profiles.length > 0 && profiles[0].lifetime_access) {
       return Response.json({ granted: true, status: 'granted', source: 'lifetime_access' });
@@ -61,12 +67,14 @@ Deno.serve(async (req) => {
         user_id: user.id,
         page_path,
       });
-      if (subCheck?.has_subscription) {
+      // subCheck is the parsed response body (invoke returns response.data directly in Deno)
+      const subData = subCheck?.has_subscription !== undefined ? subCheck : (subCheck?.data || subCheck);
+      if (subData?.has_subscription) {
         return Response.json({
           granted: true,
           status: 'granted',
           source: 'subscription',
-          expiry_date: subCheck.expiry_date,
+          expiry_date: subData.expiry_date,
         });
       }
     } catch { /* continue */ }

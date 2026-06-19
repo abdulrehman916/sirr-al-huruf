@@ -49,7 +49,11 @@ Deno.serve(async (req) => {
     }
 
     const permId = `PERM-${Date.now()}`;
-    const permCode = `${accessReq.page_path.replace(/\//g, '').replace(/-/g, '_').toUpperCase()}_ACCESS`;
+    const permCode = accessReq.page_path
+      .replace(/^\//, '')
+      .replace(/\/$/, '')
+      .replace(/[\/\-:]/g, '_')
+      .toUpperCase() + '_ACCESS';
 
     await base44.asServiceRole.entities.PagePermission.create({
       permission_id: permId,

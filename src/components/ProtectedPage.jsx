@@ -198,8 +198,15 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath 
 
           {/* WhatsApp access request button */}
           {(isLocked || isExpired) && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-3">
               <WhatsAppAccessRequest pageName={pageName} routePath={routePath} />
+              <button
+                onClick={() => window.location.href = "/"}
+                className="w-full py-2.5 rounded-xl font-inter font-semibold text-sm"
+                style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}
+              >
+                {t('not_found_home')}
+              </button>
             </div>
           )}
 
@@ -227,7 +234,7 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath 
           )}
         </div>
 
-        {/* VIP info card */}
+        {/* Contact info card */}
         {isLocked && (
           <div className="rounded-xl border p-4 text-center" style={{
             background: "rgba(147,51,234,0.06)",
@@ -235,7 +242,7 @@ function LockedScreen({ accessStatus, error, accessDetails, pageName, routePath 
           }}>
             <Star className="w-5 h-5 mx-auto mb-2" style={{ color: "#a855f7" }} />
             <p className="font-inter text-xs text-white/60">
-              {t('protected_locked_desc')}
+              Contact support via WhatsApp to request access to this content.
             </p>
           </div>
         )}

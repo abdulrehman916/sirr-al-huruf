@@ -30,10 +30,20 @@ Deno.serve(async (req) => {
     });
 
     if (existingPermissions.length > 0) {
-      return Response.json({ 
-        error: 'Permission already exists for this user and page',
-        existing_permission_id: existingPermissions[0].permission_id
-      }, { status: 409 });
+      // Update expiry instead of failing — allows re-granting / extending
+      const existing = existingPermissions[0];
+      await base44.entities.PagePermission.update(existing.id, {
+        expiry_date: expiry_date ? new Date(expiry_date).toISOString() : null,
+        extended_count: (existing.extended_count || 0) + 1,
+        last_extended_at: new Date().toISOString(),
+        last_extended_by: user.id,
+      });
+      return Response.json({
+        success: true,
+        permission_id: existing.permission_id,
+        message: 'Permission expiry updated (re-granted)',
+        updated: true
+      });
     }
 
     // Create permission

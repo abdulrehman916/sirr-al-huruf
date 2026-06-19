@@ -72,6 +72,7 @@ const PAGE_IMPORTS = {
   UserDetailPage:           () => import('./pages/UserDetailPage'),
   AdminFaalChobUpload:      () => import('./pages/AdminFaalChobUpload'),
   AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
+  QAReport:                 () => import('./pages/QAReport'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),
