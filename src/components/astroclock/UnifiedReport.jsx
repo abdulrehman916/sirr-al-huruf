@@ -11,7 +11,8 @@ import {
   translateMansionToMalayalam,
   formatPlanetDisplay,
   formatDayDisplay,
-  formatMansionDisplay
+  formatMansionDisplay,
+  translateTurkishToMalayalam
 } from "@/lib/astroClockTurkishToMalayalam.js";
 
 const SECTION_ICONS = {
@@ -197,21 +198,10 @@ function renderOtherData(data, isMalayalam) {
               </span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {value.map((item, idx) => {
-                  // Translate Turkish planet/day/mansion names
                   let displayItem = String(item);
                   if (typeof item === 'string') {
-                    // Check if it's a Turkish planet name
-                    if (['Güneş', 'Ay', 'Merkür', 'Venüs', 'Mars', 'Jüpiter', 'Satürn', 'GÜNEŞ', 'AY', 'MERKÜR', 'VENÜS', 'MARS', 'JÜPİTER', 'SATÜRN'].includes(item)) {
-                      displayItem = translatePlanetToMalayalam(item);
-                    }
-                    // Check if it's a Turkish day name
-                    if (['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'].includes(item)) {
-                      displayItem = translateDayToMalayalam(item);
-                    }
-                    // Check if it's a Turkish mansion name
-                    if (['ŞARTEYN', 'BUTEYN', 'SÜREYYA', 'DÜBRAN', 'HAK\'A', 'HENA', 'ZİRA', 'NESRE', 'TARFA', 'CEPHE', 'ZEBRA', 'SURFA', 'AVA', 'SEMMAK', 'GUFUR', 'ZİBANA', 'İKLİL', 'KÂLP', 'ŞEVLE', 'NEAİM', 'BELDE', 'SAADÜZZABİH', 'SAUDBELA', 'SAADÜSSUUD', 'SAADÜLAHBİYYE', 'FERÜLMUKADDEM', 'FERÜLMÜAHHİR', 'EERREŞA'].includes(item)) {
-                      displayItem = translateMansionToMalayalam(item);
-                    }
+                    // Use centralized translator for ALL Turkish text
+                    displayItem = translateTurkishToMalayalam(item);
                   }
                   return (
                     <span key={idx} className="px-2 py-0.5 rounded text-xs" style={{ 
@@ -233,6 +223,9 @@ function renderOtherData(data, isMalayalam) {
         return null; // Skip complex nested objects
       }
       
+      // Translate Turkish text before display
+      const displayValue = typeof value === 'string' ? translateTurkishToMalayalam(value) : String(value);
+      
       return (
         <div key={key} className="flex items-start gap-2 mt-1">
           <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "rgba(212,175,55,0.60)" }} />
@@ -241,7 +234,7 @@ function renderOtherData(data, isMalayalam) {
               {key.replace(/_/g, ' ')}: 
             </span>
             <span className="font-inter text-sm ml-1" style={{ color: "rgba(255,255,255,0.80)" }}>
-              {String(value)}
+              {displayValue}
             </span>
           </div>
         </div>

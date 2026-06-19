@@ -79,7 +79,39 @@ export const GENERAL_TRANSLATIONS = {
   'Gündüz': { ml: 'പകൽ', ar: 'نهار', en: 'Day' },
   'Gece': { ml: 'രാത്രി', ar: 'ليل', en: 'Night' },
   'Saat': { ml: 'മണിക്കൂർ', ar: 'ساعة', en: 'Hour' },
-  'Dakika': { ml: 'മിനിറ്റ്', ar: 'دقيقة', en: 'Minute' }
+  'Dakika': { ml: 'മിനിറ്റ്', ar: 'دقيقة', en: 'Minute' },
+  
+  // Specific occult operations (from user report)
+  'İyi ve şerli uygulamalara aynı derecede yarar': { ml: 'നല്ലതും ചീത്തയുമായ പ്രവൃത്തികൾക്ക് തുല്യമായി ഗുണകരം', ar: 'نافع بالتساوي للأعمال الصالحة والطالحة', en: 'Equally beneficial for good and evil practices' },
+  'Hâdim davetleri': { ml: 'ഹാദിം ആഹ്വാനങ്ങൾ', ar: 'دعاء الخادم', en: 'Summoning servants' },
+  'Birisinin rüyasına girmek ve telkin': { ml: 'ഒരാളുടെ സ്വപ്നത്തിൽ പ്രത്യക്ഷപ്പെടൽ, സ്വാധീന നിർദ്ദേശം', ar: 'دخول حلم شخص وإلقاء اقتراح', en: 'Enter someone\'s dream and suggest' },
+  'Mesleki şans veya bela': { ml: 'തൊഴിൽ ഭാഗ്യം അല്ലെങ്കിൽ പ്രതിബന്ധം', ar: 'حظ مهني أو بلاء', en: 'Professional luck or calamity' },
+  'Mal, mülk': { ml: 'ധനം, സ്വത്ത്', ar: 'مال، ممتلكات', en: 'Wealth, property' },
+  'Havâss ilmi': { ml: 'ഇൽം അൽ-ഹവാസ്സ്', ar: 'علم الخواص', en: 'Science of special properties' },
+  'Ruhani varlık': { ml: 'ആത്മീയ ജീവി', ar: 'كائن روحي', en: 'Spiritual being' },
+  'Tılsım yapımı': { ml: 'തലിസ്മാൻ നിർമ്മാണം', ar: 'صنع تميمة', en: 'Talisman making' },
+  'Şifa çalışmaları': { ml: 'സൗഖ്യപ്രവർത്തനങ്ങൾ', ar: 'أعمال الشفاء', en: 'Healing works' },
+  'Aşk ve muhabbet': { ml: 'സ്നേഹവും ആകർഷണവും', ar: 'حب ومودة', en: 'Love and attraction' },
+  'Koruma ve muhafaza': { ml: 'സംരക്ഷണവും കാവലും', ar: 'حماية وحفظ', en: 'Protection and preservation' },
+  'Rızık ve bereket': { ml: 'ഉപജീവനവും അനുഗ്രഹവും', ar: 'رزق وبركة', en: 'Sustenance and blessing' },
+  'Seyr ve süluk': { ml: 'ആത്മീയ യാത്ര', ar: 'سير وسلوك', en: 'Spiritual journey' },
+  'İstihare': { ml: 'ഇസ്തിഖാറ', ar: 'استخارة', en: 'Prayer for guidance' },
+  'Vefk yazımı': { ml: 'വെഫ്ക് എഴുത്ത്', ar: 'كتابة وفق', en: 'Writing square talisman' },
+  'Mürekkep hazırlama': { ml: 'മഷി തയ്യാറാക്കൽ', ar: 'تحضير الحبر', en: 'Ink preparation' },
+  'Tütsü yakma': { ml: 'ധൂപം കാട്ടൽ', ar: 'حرق البخور', en: 'Burning incense' },
+  'Perhiz ve riyazet': { ml: 'ഉപവാസവും തപസ്സും', ar: 'صيام ورياضة', en: 'Fasting and austerity' },
+  'Halvet': { ml: 'ഏകാന്തവാസം', ar: 'خلوة', en: 'Seclusion' },
+  'Çile': { ml: 'തപസ്സ്', ar: 'أربعين', en: 'Forty-day retreat' },
+  'Niyaz': { ml: 'പ്രാർത്ഥന', ar: 'نياز', en: 'Supplication' },
+  'Rabıta': { ml: 'ആത്മീയ ബന്ധം', ar: 'رابطة', en: 'Spiritual connection' },
+  'Hizmet': { ml: 'സേവനം', ar: 'خدمة', en: 'Service' },
+  'Davet': { ml: 'ആഹ്വാനം', ar: 'دعاء', en: 'Invocation' },
+  'Azimet': { ml: 'അസീമത്ത്', ar: 'عزيمة', en: 'Determination/prayer' },
+  'Kasem': { ml: 'ഖസം', ar: 'قسم', en: 'Oath' },
+  'Bast': { ml: 'വികസിപ്പിക്കൽ', ar: 'بسط', en: 'Expansion' },
+  'İstintak': { ml: 'ഇസ്തിന്താഖ്', ar: 'إستنطاق', en: 'Extraction' },
+  'Mecz': { ml: 'മിശ്രണം', ar: 'مزج', en: 'Mixing' },
+  'Teksir': { ml: 'ഗുണനം', ar: 'تكثير', en: 'Multiplication' }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -128,7 +160,8 @@ export const MANSION_TRANSLATIONS = {
 export function translatePlanetToMalayalam(turkishName) {
   if (!turkishName) return '';
   const translation = PLANET_TRANSLATIONS[turkishName];
-  return translation?.ml || turkishName;
+  if (!translation) return turkishName;
+  return `${translation.ml} (${translation.ar})`;
 }
 
 /**
@@ -139,7 +172,8 @@ export function translatePlanetToMalayalam(turkishName) {
 export function translateDayToMalayalam(turkishName) {
   if (!turkishName) return '';
   const translation = DAY_TRANSLATIONS[turkishName];
-  return translation?.ml || turkishName;
+  if (!translation) return turkishName;
+  return `${translation.ml} (${translation.ar})`;
 }
 
 /**
@@ -150,7 +184,8 @@ export function translateDayToMalayalam(turkishName) {
 export function translateMansionToMalayalam(turkishName) {
   if (!turkishName) return '';
   const translation = MANSION_TRANSLATIONS[turkishName];
-  return translation?.ml || turkishName;
+  if (!translation) return turkishName;
+  return `${translation.ml} (${translation.ar})`;
 }
 
 /**
@@ -237,6 +272,70 @@ export function formatMansionDisplay(turkishName) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// CENTRALIZED TRANSLATOR — Turkish → Malayalam for display
+// Use this function before rendering ANY Turkish text in UI
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Translate Turkish text to Malayalam for display
+ * Database remains unchanged - this is display-only translation
+ * @param {string} turkishText - Turkish text to translate
+ * @returns {string} Malayalam translation (or original if no match)
+ */
+export function translateTurkishToMalayalam(turkishText) {
+  if (!turkishText || typeof turkishText !== 'string') return '';
+  
+  // Skip if already Arabic or Malayalam
+  if (/[\u0600-\u06FF]/.test(turkishText) || /[\u0D00-\u0D7F]/.test(turkishText)) {
+    return turkishText;
+  }
+  
+  let translated = turkishText;
+  
+  // Translate general terms first
+  Object.entries(GENERAL_TRANSLATIONS).forEach(([tr, trans]) => {
+    translated = translated.replace(new RegExp(tr, 'gi'), trans.ml);
+  });
+  
+  // Translate planet names
+  Object.entries(PLANET_TRANSLATIONS).forEach(([tr, trans]) => {
+    translated = translated.replace(new RegExp(tr, 'gi'), trans.ml);
+  });
+  
+  // Translate day names
+  Object.entries(DAY_TRANSLATIONS).forEach(([tr, trans]) => {
+    translated = translated.replace(new RegExp(tr, 'gi'), trans.ml);
+  });
+  
+  // If no translation happened, return original
+  return translated;
+}
+
+/**
+ * Translate array of Turkish text to Malayalam
+ * @param {string[]} turkishTexts - Array of Turkish strings
+ * @returns {string[]} Array of Malayalam translations
+ */
+export function translateArrayToMalayalam(turkishTexts) {
+  if (!turkishTexts || !Array.isArray(turkishTexts)) return [];
+  return turkishTexts.map(translateTurkishToMalayalam);
+}
+
+/**
+ * Format display with Malayalam + Arabic
+ * @param {string} turkishText - Turkish text
+ * @param {string} arabicText - Optional Arabic text
+ * @returns {string} Formatted display string
+ */
+export function formatDisplayWithArabic(turkishText, arabicText = '') {
+  const malayalam = translateTurkishToMalayalam(turkishText);
+  if (arabicText) {
+    return `${malayalam} | ${arabicText}`;
+  }
+  return malayalam;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TEXT CLEANER — Remove Turkish text from operations lists
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -256,13 +355,8 @@ export function cleanOperationsList(operations) {
       return op;
     }
     
-    // Translate common Turkish terms
-    let cleaned = op;
-    Object.entries(GENERAL_TRANSLATIONS).forEach(([tr, trans]) => {
-      cleaned = cleaned.replace(new RegExp(tr, 'g'), trans.ml);
-    });
-    
-    return cleaned;
+    // Use centralized translator
+    return translateTurkishToMalayalam(op);
   });
 }
 
