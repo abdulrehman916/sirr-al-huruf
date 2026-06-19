@@ -1,9 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// UNIFIED REPORT COMPONENT — 16 SECTIONS
+// UNIFIED REPORT COMPONENT — 18 SECTIONS
 // Knowledge Preservation Compliant
+// Malayalam-first display with Arabic preservation
 // ═══════════════════════════════════════════════════════════════
 
-import { Book, CheckCircle, Info, Moon, Sun, Clock, Sparkles, Calendar, AlertCircle } from "lucide-react";
+import { Book, CheckCircle, Info, Moon, Sun, Clock, Sparkles, Calendar, AlertCircle, Star } from "lucide-react";
+import { 
+  translatePlanetToMalayalam, 
+  translateDayToMalayalam,
+  translateMansionToMalayalam,
+  formatPlanetDisplay,
+  formatDayDisplay,
+  formatMansionDisplay
+} from "@/lib/astroClockTurkishToMalayalam.js";
 
 const SECTION_ICONS = {
   1: Book,
@@ -176,9 +185,54 @@ function renderOtherData(data, isMalayalam) {
   return Object.entries(data)
     .filter(([key]) => !skipKeys.includes(key))
     .map(([key, value]) => {
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        return null; // Skip complex objects for now
+      // Handle arrays (planets, mansions, days, etc.)
+      if (Array.isArray(value)) {
+        if (value.length === 0) return null;
+        return (
+          <div key={key} className="flex items-start gap-2 mt-1">
+            <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "rgba(212,175,55,0.60)" }} />
+            <div className="flex-1">
+              <span className="font-inter text-xs font-semibold capitalize" style={{ color: "rgba(212,175,55,0.70)" }}>
+                {key.replace(/_/g, ' ')}: 
+              </span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {value.map((item, idx) => {
+                  // Translate Turkish planet/day/mansion names
+                  let displayItem = String(item);
+                  if (typeof item === 'string') {
+                    // Check if it's a Turkish planet name
+                    if (['Güneş', 'Ay', 'Merkür', 'Venüs', 'Mars', 'Jüpiter', 'Satürn', 'GÜNEŞ', 'AY', 'MERKÜR', 'VENÜS', 'MARS', 'JÜPİTER', 'SATÜRN'].includes(item)) {
+                      displayItem = translatePlanetToMalayalam(item);
+                    }
+                    // Check if it's a Turkish day name
+                    if (['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'].includes(item)) {
+                      displayItem = translateDayToMalayalam(item);
+                    }
+                    // Check if it's a Turkish mansion name
+                    if (['ŞARTEYN', 'BUTEYN', 'SÜREYYA', 'DÜBRAN', 'HAK\'A', 'HENA', 'ZİRA', 'NESRE', 'TARFA', 'CEPHE', 'ZEBRA', 'SURFA', 'AVA', 'SEMMAK', 'GUFUR', 'ZİBANA', 'İKLİL', 'KÂLP', 'ŞEVLE', 'NEAİM', 'BELDE', 'SAADÜZZABİH', 'SAUDBELA', 'SAADÜSSUUD', 'SAADÜLAHBİYYE', 'FERÜLMUKADDEM', 'FERÜLMÜAHHİR', 'EERREŞA'].includes(item)) {
+                      displayItem = translateMansionToMalayalam(item);
+                    }
+                  }
+                  return (
+                    <span key={idx} className="px-2 py-0.5 rounded text-xs" style={{ 
+                      background: "rgba(212,175,55,0.10)", 
+                      color: "rgba(255,255,255,0.80)" 
+                    }}>
+                      {displayItem}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
       }
+      
+      // Handle simple values
+      if (typeof value === 'object' && value !== null) {
+        return null; // Skip complex nested objects
+      }
+      
       return (
         <div key={key} className="flex items-start gap-2 mt-1">
           <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "rgba(212,175,55,0.60)" }} />
@@ -194,3 +248,8 @@ function renderOtherData(data, isMalayalam) {
       );
     });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTE: Translation functions imported from lib/astroClockTurkishToMalayalam.js
+// Display-only translation. Database values remain unchanged.
+// ─────────────────────────────────────────────────────────────────────────────
