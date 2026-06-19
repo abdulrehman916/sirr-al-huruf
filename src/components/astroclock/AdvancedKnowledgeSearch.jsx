@@ -380,28 +380,38 @@ function ContentBlock({ block, isMalayalam }) {
 }
 
 function ActionTimingResult({ results, isMalayalam }) {
-  const { category, rules, mansions, planets, days } = results;
+  const { category, rules, mansions, planets, days } = results || {};
+  
+  if (!category || !rules) {
+    return (
+      <div className="p-4 rounded-xl border" style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.30)" }}>
+        <p className="font-inter text-sm" style={{ color: "#f87171" }}>
+          {isMalayalam ? "ഡാറ്റ ലഭ്യമല്ല" : "Data not available"}
+        </p>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4">
       {/* Category Info */}
       <div className="p-4 rounded-xl border" style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.25)" }}>
         <h3 className="font-inter text-sm font-bold mb-2" style={{ color: "#D4AF37" }}>
-          {isMalayalam ? category.ml || category.en : category.en}
+          {isMalayalam ? (category.ml || category.en) : category.en}
         </h3>
         <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
-          {rules.source}
+          {rules.source || "Source not specified"}
         </p>
       </div>
 
       {/* Suitable Mansions */}
-      {mansions?.suitable?.length > 0 && (
+      {(mansions?.suitable?.length || 0) > 0 && (
         <ContentBlock
           block={{
             type: "list",
             title_en: "Suitable Lunar Mansions",
             title_ml: "ഉത്തമ ചന്ദ്ര നക്ഷത്രങ്ങൾ",
-            items: mansions.suitable.map(m => ({ en: `${m.name} (#${m.no})`, ml: `${m.name} (#${m.no})` })),
+            items: mansions.suitable.filter(m => m).map(m => ({ en: `${m?.name} (#${m?.no})`, ml: `${m?.name} (#${m?.no})` })),
             color: "#4ade80"
           }}
           isMalayalam={isMalayalam}
@@ -409,13 +419,13 @@ function ActionTimingResult({ results, isMalayalam }) {
       )}
 
       {/* Suitable Days */}
-      {days?.suitable?.length > 0 && (
+      {(days?.suitable?.length || 0) > 0 && (
         <ContentBlock
           block={{
             type: "list",
             title_en: "Suitable Days",
             title_ml: "ഉത്തമ ദിവസങ്ങൾ",
-            items: days.suitable.map(d => ({ en: d, ml: d })),
+            items: (days.suitable || []).map(d => ({ en: d, ml: d })),
             color: "#60a5fa"
           }}
           isMalayalam={isMalayalam}
@@ -423,13 +433,13 @@ function ActionTimingResult({ results, isMalayalam }) {
       )}
 
       {/* Suitable Planets */}
-      {planets?.suitable?.length > 0 && (
+      {(planets?.suitable?.length || 0) > 0 && (
         <ContentBlock
           block={{
             type: "list",
             title_en: "Suitable Planets",
             title_ml: "ഉത്തമ ഗ്രഹങ്ങൾ",
-            items: planets.suitable.map(p => ({ en: p, ml: p })),
+            items: (planets.suitable || []).map(p => ({ en: p, ml: p })),
             color: "#fbbf24"
           }}
           isMalayalam={isMalayalam}

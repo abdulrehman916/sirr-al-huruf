@@ -60,6 +60,10 @@ export default function TodayOverviewFull() {
     const nextGoodHour = findNextGoodHour(now, dayRuler, currentPlanetaryHour);
     const nextGoodDay = findNextGoodDay(dayOfWeek, dayRuler);
 
+    const sunrise = 6.5;
+    const sunset = 18.25;
+    const isDaytime = currentHour >= sunrise && currentHour < sunset;
+    
     setTodayData({
       date: now,
       dayKey,
@@ -74,6 +78,7 @@ export default function TodayOverviewFull() {
       hourAnalysis,
       nextGoodHour,
       nextGoodDay,
+      isDaytime,
     });
     setLoading(false);
   }

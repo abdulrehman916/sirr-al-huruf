@@ -49,8 +49,8 @@ export default function CurrentInfluencesGrid({ todayData, isMalayalam }) {
     {
       icon: Clock,
       label: isMalayalam ? "ദിനം" : "Period",
-      value: todayData.isDaytime ? "Day" : "Night",
-      subValue: `Hour ${todayData.currentHour}`,
+      value: todayData.isDaytime !== undefined ? (todayData.isDaytime ? "Day" : "Night") : "Unknown",
+      subValue: `Hour ${todayData.currentHour || ''}`,
       color: "#fbbf24",
       source: "p.54"
     },

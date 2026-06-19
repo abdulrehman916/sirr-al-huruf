@@ -33,10 +33,8 @@ import MoonMansionTracker from "../components/astroclock/MoonMansionTracker.jsx"
 import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
 import { Link } from "react-router-dom";
 import AstroClockErrorBoundary from "../components/astroclock/AstroClockErrorBoundary";
-import AstroClockSearch from "../components/astroclock/AstroClockSearch.jsx";
-import BookBasedSearchBox from "../components/astroclock/BookBasedSearchBox.jsx";
-import TodayOverviewFull from "../components/astroclock/TodayOverviewFull.jsx";
 import AdvancedKnowledgeSearch from "../components/astroclock/AdvancedKnowledgeSearch.jsx";
+import TodayOverviewFull from "../components/astroclock/TodayOverviewFull.jsx";
 
 function LanguageToggle() {
   const { t, toggleLanguage } = useAstroClockLanguage();
@@ -127,13 +125,8 @@ function AstroClockContent() {
           </motion.div>
         )}
 
-        {/* ✨ ENHANCED: Book-Based Search Box (Top Position) */}
-        <AstroClockErrorBoundary label="Book Search">
-          <BookBasedSearchBox currentAstroData={{}} />
-        </AstroClockErrorBoundary>
-
-        {/* ✨ NEW: Advanced Knowledge Search */}
-        <AstroClockErrorBoundary label="Advanced Knowledge Search">
+        {/* ✨ MASTER SEARCH: Single unified search for all Astro Clock knowledge */}
+        <AstroClockErrorBoundary label="Master Search">
           <AdvancedKnowledgeSearch />
         </AstroClockErrorBoundary>
 

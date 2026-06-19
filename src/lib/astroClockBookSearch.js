@@ -14,6 +14,10 @@ import { ACTION_CATEGORIES, ACTION_TIMING_RULES, findActionCategory, getTimingRu
  * @returns {Object} Search results with book references
  */
 export function searchBookKnowledge(query) {
+  if (!query || typeof query !== 'string') {
+    return { found: false, type: "GENERAL_SEARCH", dayRules: [], mansionRules: [], timingRules: [], planetRules: [], zodiacRules: [] };
+  }
+  
   const normalizedQuery = query.toLowerCase().trim();
   
   // Step 1: Find matching action category
@@ -21,7 +25,7 @@ export function searchBookKnowledge(query) {
   
   if (actionCategory) {
     const rules = getTimingRulesForAction(actionCategory);
-    if (rules) {
+    if (rules && rules.suitableMansions && rules.suitableDays) {
       return {
         found: true,
         type: "ACTION_TIMING",
@@ -29,16 +33,16 @@ export function searchBookKnowledge(query) {
         rules: rules,
         source: rules.source,
         mansions: {
-          suitable: rules.suitableMansions.map(num => AY_MANAZILLERI.find(m => m.no === num)),
-          unsuitable: rules.unsuitableMansions.map(num => AY_MANAZILLERI.find(m => m.no === num))
+          suitable: (rules.suitableMansions || []).map(num => AY_MANAZILLERI?.find(m => m?.no === num)).filter(m => m),
+          unsuitable: (rules.unsuitableMansions || []).map(num => AY_MANAZILLERI?.find(m => m?.no === num)).filter(m => m)
         },
         planets: {
-          suitable: rules.suitablePlanets,
-          unsuitable: rules.unsuitablePlanets
+          suitable: rules.suitablePlanets || [],
+          unsuitable: rules.unsuitablePlanets || []
         },
         days: {
-          suitable: rules.suitableDays,
-          unsuitable: rules.unsuitableDays
+          suitable: rules.suitableDays || [],
+          unsuitable: rules.unsuitableDays || []
         }
       };
     }
@@ -99,45 +103,53 @@ export function searchBookKnowledge(query) {
  * @returns {Object} Today's guidance with book references
  */
 export function getTodaysAnalysis(astroData) {
-  const { dayOfWeek, mansion, planetaryHour, zodiacSign } = astroData;
+  if (!astroData) {
+    return { day: null, mansion: null, planetaryHour: null, zodiac: null, goodFor: [], avoid: [], neutral: [] };
+  }
+  
+  const { dayOfWeek, mansion, planetaryHour, zodiacSign } = astroData || {};
   
   const goodFor = [];
   const avoid = [];
   const neutral = [];
   
   // Get day ruler operations
-  const dayRuler = PLANETARY_DAY_RULERS.find(d => 
-    d.day_name_en.toLowerCase() === dayOfWeek.toLowerCase()
+  const dayRuler = PLANETARY_DAY_RULERS?.find(d => 
+    d?.day_name_en?.toLowerCase() === dayOfWeek?.toLowerCase()
   );
   
-  if (dayRuler) {
-    dayRuler.suitable_operations.forEach(op => {
-      goodFor.push({
-        text: op,
-        source: `Havâss'ın Derinlikleri p.50-51 — ${dayRuler.day_name} ruled by ${dayRuler.planet}`
-      });
+  if (dayRuler && dayRuler.suitable_operations) {
+    (dayRuler.suitable_operations || []).forEach(op => {
+      if (op) {
+        goodFor.push({
+          text: op,
+          source: `Havâss'ın Derinlikleri p.50-51 — ${dayRuler.day_name} ruled by ${dayRuler.planet}`
+        });
+      }
     });
   }
   
   // Get mansion operations
-  const currentMansion = AY_MANAZILLERI.find(m => m.no === mansion.number);
-  if (currentMansion) {
-    currentMansion.operations.forEach(op => {
-      if (currentMansion.genel_hukum.includes("Uygun")) {
-        goodFor.push({
-          text: op,
-          source: `Havâss'ın Derinlikleri p.64-74 — ${currentMansion.name} mansion`
-        });
-      } else if (currentMansion.genel_hukum.includes("Uğursuz")) {
-        avoid.push({
-          text: op,
-          source: `Havâss'ın Derinlikleri p.64-74 — ${currentMansion.name} mansion (Nahs)`
-        });
-      } else {
-        neutral.push({
-          text: op,
-          source: `Havâss'ın Derinlikleri p.64-74 — ${currentMansion.name} mansion (Mixed)`
-        });
+  const currentMansion = AY_MANAZILLERI?.find(m => m?.no === mansion?.number);
+  if (currentMansion && currentMansion.operations && currentMansion.genel_hukum) {
+    (currentMansion.operations || []).forEach(op => {
+      if (op) {
+        if (currentMansion.genel_hukum.includes("Uygun")) {
+          goodFor.push({
+            text: op,
+            source: `Havâss'ın Derinlikleri p.64-74 — ${currentMansion.name} mansion`
+          });
+        } else if (currentMansion.genel_hukum.includes("Uğursuz")) {
+          avoid.push({
+            text: op,
+            source: `Havâss'ın Derinlikleri p.64-74 — ${currentMansion.name} mansion (Nahs)`
+          });
+        } else {
+          neutral.push({
+            text: op,
+            source: `Havâss'ın Derinlikleri p.64-74 — ${currentMansion.name} mansion (Mixed)`
+          });
+        }
       }
     });
   }
@@ -174,6 +186,10 @@ export function getTodaysAnalysis(astroData) {
  * @returns {Object} Best timing recommendations with book sources
  */
 export function findBestTimeForAction(action, currentData) {
+  if (!action || typeof action !== 'string') {
+    return { found: false, message: "Invalid action provided.", source: null };
+  }
+  
   const category = findActionCategory(action);
   
   if (!category) {
@@ -185,7 +201,7 @@ export function findBestTimeForAction(action, currentData) {
   }
   
   const rules = getTimingRulesForAction(category);
-  if (!rules) {
+  if (!rules || !rules.suitableMansions) {
     return {
       found: false,
       message: "No timing rules found in database.",
@@ -203,14 +219,14 @@ export function findBestTimeForAction(action, currentData) {
     bestTimes: {
       today: findBestHoursToday(rules, currentData),
       thisWeek: findBestDaysThisWeek(rules),
-      mansions: rules.suitableMansions.map(num => AY_MANAZILLERI.find(m => m.no === num)),
-      planets: rules.suitablePlanets,
-      days: rules.suitableDays
+      mansions: (rules.suitableMansions || []).map(num => AY_MANAZILLERI?.find(m => m?.no === num)).filter(m => m),
+      planets: rules.suitablePlanets || [],
+      days: rules.suitableDays || []
     },
     avoid: {
-      mansions: rules.unsuitableMansions.map(num => AY_MANAZILLERI.find(m => m.no === num)),
-      planets: rules.unsuitablePlanets,
-      days: rules.unsuitableDays
+      mansions: (rules.unsuitableMansions || []).map(num => AY_MANAZILLERI?.find(m => m?.no === num)).filter(m => m),
+      planets: rules.unsuitablePlanets || [],
+      days: rules.unsuitableDays || []
     },
     source: rules.source,
     notes: rules.notes
@@ -243,7 +259,11 @@ function findBestDaysThisWeek(rules) {
  * Get full mansion details from database
  */
 export function getMansionDetails(mansionNumber) {
-  const mansion = AY_MANAZILLERI.find(m => m.no === mansionNumber);
+  if (!mansionNumber || typeof mansionNumber !== 'number') {
+    return null;
+  }
+  
+  const mansion = AY_MANAZILLERI?.find(m => m?.no === mansionNumber);
   if (!mansion) return null;
   
   return {
@@ -256,7 +276,7 @@ export function getMansionDetails(mansionNumber) {
       degree: mansion.zodiac_degree
     },
     nature: mansion.genel_hukum,
-    operations: mansion.operations,
+    operations: mansion.operations || [],
     source: "Havâss'ın Derinlikleri p.64-74"
   };
 }

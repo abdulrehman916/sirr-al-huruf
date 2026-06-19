@@ -1,12 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Book, Clock, Star, AlertCircle, CheckCircle, Moon, Sun, Zap, Heart } from "lucide-react";
+import { Search, Book, Moon, Sun, Star, AlertCircle, CheckCircle } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import { searchBookKnowledge, findBestTimeForAction, getTodaysAnalysis } from "@/lib/astroClockBookSearch.js";
+import { searchBookKnowledge, findBestTimeForAction } from "@/lib/astroClockBookSearch.js";
 import { useToast } from "@/components/ui/use-toast";
-import { getCurrentPlanetaryHour } from "@/lib/astroClockLiveEngine.js";
-import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
-import { ACTION_TIMING_RULES } from "@/lib/astroClockActionTimingRules.js";
 
 const ACTION_SUGGESTIONS = [
   { key: "MARRIAGE", en: "Marriage", ml: "വിവാഹം", ar: "النكاح" },
@@ -41,11 +38,13 @@ export default function BookBasedSearchBox({ onActionSelect, currentAstroData })
       setSearchResults(results);
       
       if (results.found) {
+        const resultCount = results.type === 'ACTION_TIMING' ? 1 : 
+          ((results.dayRules?.length || 0) + (results.mansionRules?.length || 0) + (results.timingRules?.length || 0));
         toast({
           title: isMalayalam ? "ഫലങ്ങൾ കണ്ടെത്തി" : "Results Found",
           description: isMalayalam 
-            ? `ബുക്ക് ഡാറ്റാബേസിൽ നിന്നും ${results.type === 'ACTION_TIMING' ? '1' : results.dayRules.length + results.mansionRules.length} ഫലങ്ങൾ`
-            : `Found ${results.type === 'ACTION_TIMING' ? '1' : results.dayRules.length + results.mansionRules.length} entries from book database`,
+            ? `ബുക്ക് ഡാറ്റാബേസിൽ നിന്നും ${resultCount} ഫലങ്ങൾ`
+            : `Found ${resultCount} entries from book database`,
           duration: 3000
         });
       } else {
@@ -188,7 +187,7 @@ export default function BookBasedSearchBox({ onActionSelect, currentAstroData })
                   <InfoCard
                     icon={Moon}
                     title={isMalayalam ? "ഉത്തമ മൻസിലുകൾ" : "Best Mansions"}
-                    items={searchResults.bestTimes.mansions.map(m => `${m.name} (#${m.no})`)}
+                    items={(searchResults.bestTimes?.mansions || []).filter(m => m).map(m => `${m.name} (#${m.no})`)}
                     color="#4ade80"
                     bg="rgba(74,222,128,0.10)"
                     border="rgba(74,222,128,0.20)"
@@ -196,7 +195,7 @@ export default function BookBasedSearchBox({ onActionSelect, currentAstroData })
                   <InfoCard
                     icon={Sun}
                     title={isMalayalam ? "ഉത്തമ ദിവസങ്ങൾ" : "Best Days"}
-                    items={searchResults.bestTimes.days}
+                    items={searchResults.bestTimes?.days || []}
                     color="#60a5fa"
                     bg="rgba(96,165,250,0.10)"
                     border="rgba(96,165,250,0.20)"
@@ -207,7 +206,7 @@ export default function BookBasedSearchBox({ onActionSelect, currentAstroData })
                 <InfoCard
                   icon={Star}
                   title={isMalayalam ? "ഉത്തമ ഗ്രഹങ്ങൾ" : "Best Planets"}
-                  items={searchResults.bestTimes.planets}
+                  items={searchResults.bestTimes?.planets || []}
                   color="#fbbf24"
                   bg="rgba(251,191,36,0.10)"
                   border="rgba(251,191,36,0.20)"
@@ -251,36 +250,36 @@ export default function BookBasedSearchBox({ onActionSelect, currentAstroData })
             {/* General Search Results */}
             {searchResults.type === "GENERAL_SEARCH" && (
               <div className="space-y-4">
-                {searchResults.dayRules.length > 0 && (
+                {(searchResults.dayRules?.length || 0) > 0 && (
                   <div>
                     <h4 className="font-inter text-xs font-semibold mb-2" style={{ color: "rgba(255,255,255,0.80)" }}>
                       {isMalayalam ? "ദിവസ ഫലങ്ങൾ" : "Day Results"}
                     </h4>
-                    {searchResults.dayRules.map((rule, idx) => (
+                    {(searchResults.dayRules || []).map((rule, idx) => (
                       <div key={idx} className="mb-2 p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
                         <p className="font-inter text-xs mb-1" style={{ color: "rgba(255,255,255,0.70)" }}>
-                          {rule.data.day} - {rule.data.ruler}
+                          {rule.data?.day} - {rule.data?.ruler}
                         </p>
                         <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                          {rule.source.book} p.{rule.source.page}
+                          {rule.source?.book} p.{rule.source?.page}
                         </p>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {searchResults.mansionRules.length > 0 && (
+                {(searchResults.mansionRules?.length || 0) > 0 && (
                   <div>
                     <h4 className="font-inter text-xs font-semibold mb-2" style={{ color: "rgba(255,255,255,0.80)" }}>
                       {isMalayalam ? "മൻസിൽ ഫലങ്ങൾ" : "Mansion Results"}
                     </h4>
-                    {searchResults.mansionRules.map((rule, idx) => (
+                    {(searchResults.mansionRules || []).map((rule, idx) => (
                       <div key={idx} className="mb-2 p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
                         <p className="font-inter text-xs mb-1" style={{ color: "rgba(255,255,255,0.70)" }}>
-                          {rule.data.name} - {rule.data.classification}
+                          {rule.data?.name} - {rule.data?.classification}
                         </p>
                         <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                          {rule.source.book} p.{rule.source.page}
+                          {rule.source?.book} p.{rule.source?.page}
                         </p>
                       </div>
                     ))}
@@ -370,7 +369,7 @@ function InfoCard({ icon: Icon, title, items, color, bg, border }) {
 }
 
 function AvoidCard({ avoid, isMalayalam }) {
-  if (!avoid || avoid.mansions.length === 0) return null;
+  if (!avoid || (!avoid.mansions?.length && !avoid.days?.length)) return null;
   
   return (
     <div className="p-4 rounded-xl border" style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.30)" }}>
@@ -380,27 +379,27 @@ function AvoidCard({ avoid, isMalayalam }) {
           {isMalayalam ? "ഒഴിവാക്കുക" : "Avoid"}
         </span>
       </div>
-      {avoid.mansions.length > 0 && (
+      {(avoid.mansions?.length || 0) > 0 && (
         <div className="mb-2">
           <p className="font-inter text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.60)" }}>
             {isMalayalam ? "മൻസിലുകൾ:" : "Mansions:"}
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {avoid.mansions.map((m, idx) => (
+            {avoid.mansions.filter(m => m).map((m, idx) => (
               <span key={idx} className="px-2 py-1 rounded-md text-xs" style={{ background: "rgba(239,68,68,0.20)", color: "#f87171", border: "1px solid rgba(239,68,68,0.30)" }}>
-                {m.name} (#{m.no})
+                {m?.name} (#{m?.no})
               </span>
             ))}
           </div>
         </div>
       )}
-      {avoid.days.length > 0 && (
+      {(avoid.days?.length || 0) > 0 && (
         <div>
           <p className="font-inter text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.60)" }}>
             {isMalayalam ? "ദിവസങ്ങൾ:" : "Days:"}
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {avoid.days.map((d, idx) => (
+            {(avoid.days || []).map((d, idx) => (
               <span key={idx} className="px-2 py-1 rounded-md text-xs capitalize" style={{ background: "rgba(239,68,68,0.20)", color: "#f87171", border: "1px solid rgba(239,68,68,0.30)" }}>
                 {d}
               </span>
