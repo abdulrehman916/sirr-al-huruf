@@ -19,7 +19,7 @@ import ManazilDatabase from "../components/astroclock/ManazilDatabase";
 import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
 import ProfessionalTimingDecisionEngine from "../components/astroclock/ProfessionalTimingDecisionEngine";
 import KarmaTimingAdvisor from "../components/astroclock/KarmaTimingAdvisor";
-import ActionTimingAdvisor from "../components/astroclock/ActionTimingAdvisor";
+
 import AdvancedManuscriptDecisionEngine from "../components/astroclock/AdvancedManuscriptDecisionEngine.jsx";
 import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel.jsx";
 import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
@@ -58,7 +58,6 @@ function LanguageToggle() {
 function AstroClockContent() {
   const { isMalayalam } = useAstroClockLanguage();
   const [engineStatus, setEngineStatus] = useState(ASTRO_CLOCK_LIVE_ENGINE_STATUS);
-  const [selectedAction, setSelectedAction] = useState(null);
 
   return (
     <PageLayout>
@@ -129,7 +128,7 @@ function AstroClockContent() {
 
         {/* ✨ ENHANCED: Book-Based Search Box (Top Position) */}
         <AstroClockErrorBoundary label="Book Search">
-          <BookBasedSearchBox onActionSelect={setSelectedAction} currentAstroData={{}} />
+          <BookBasedSearchBox currentAstroData={{}} />
         </AstroClockErrorBoundary>
 
         {/* ✨ RESTRUCTURED: Full Today Overview with 7 Influences */}
@@ -140,10 +139,7 @@ function AstroClockContent() {
         {/* ORIGINAL: Live Day Analysis (Preserved) */}
         <AstroClockErrorBoundary label="Live Day Analysis"><LiveDayAnalysis /></AstroClockErrorBoundary>
 
-        {/* ✨ SECTION 2: ACTION TIMING ADVISOR — Search integration */}
-        <AstroClockErrorBoundary label="Action Timing Advisor"><ActionTimingAdvisor selectedActionKey={selectedAction} /></AstroClockErrorBoundary>
-
-        {/* SECTION 3: Current Planetary Hour (Live with Countdown) */}
+        {/* SECTION 2: Current Planetary Hour (Live with Countdown) */}
         <AstroClockErrorBoundary label="Current Planetary Hour"><LivePlanetaryHours /></AstroClockErrorBoundary>
 
         {/* SECTION 4: Daytime 12 Hours */}

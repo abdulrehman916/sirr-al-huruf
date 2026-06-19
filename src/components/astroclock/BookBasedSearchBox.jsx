@@ -1,9 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Book, Clock, Star, AlertCircle, CheckCircle } from "lucide-react";
+import { Search, Book, Clock, Star, AlertCircle, CheckCircle, Moon, Sun, Zap, Heart } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import { searchBookKnowledge, findBestTimeForAction } from "@/lib/astroClockBookSearch.js";
+import { searchBookKnowledge, findBestTimeForAction, getTodaysAnalysis } from "@/lib/astroClockBookSearch.js";
 import { useToast } from "@/components/ui/use-toast";
+import { getCurrentPlanetaryHour } from "@/lib/astroClockLiveEngine.js";
+import { calculateMoonPosition } from "@/lib/astroClockMoonPosition.js";
+import { ACTION_TIMING_RULES } from "@/lib/astroClockActionTimingRules.js";
 
 const ACTION_SUGGESTIONS = [
   { key: "MARRIAGE", en: "Marriage", ml: "വിവാഹം", ar: "النكاح" },
@@ -154,7 +157,7 @@ export default function BookBasedSearchBox({ onActionSelect, currentAstroData })
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="rounded-xl border p-4 space-y-4"
+            className="rounded-xl border p-5 space-y-4"
             style={{
               background: "rgba(8,18,44,0.95)",
               borderColor: "rgba(212,175,55,0.25)"
@@ -171,108 +174,62 @@ export default function BookBasedSearchBox({ onActionSelect, currentAstroData })
               </span>
             </div>
 
-            {/* Action Timing Results */}
+            {/* Action Timing Results - COMPREHENSIVE VIEW */}
             {searchResults.type === "ACTION_TIMING" && (
               <div className="space-y-4">
-                {/* Suitable Mansions */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Star className="w-3.5 h-3.5" style={{ color: "#4ade80" }} />
-                    <span className="font-inter text-xs font-semibold" style={{ color: "rgba(255,255,255,0.80)" }}>
-                      {isMalayalam ? "ഉത്തമ മൻസിലുകൾ" : "Suitable Mansions"}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {searchResults.mansions.suitable.map((mansion, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 rounded-md text-xs"
-                        style={{
-                          background: "rgba(74,222,128,0.10)",
-                          color: "#4ade80",
-                          border: "1px solid rgba(74,222,128,0.20)"
-                        }}
-                      >
-                        {mansion.name} (#{mansion.no})
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                {/* Current Status */}
+                <CurrentStatusCard 
+                  currentTiming={searchResults.currentTiming} 
+                  isMalayalam={isMalayalam} 
+                />
 
-                {/* Unsuitable Mansions */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="w-3.5 h-3.5" style={{ color: "#f87171" }} />
-                    <span className="font-inter text-xs font-semibold" style={{ color: "rgba(255,255,255,0.80)" }}>
-                      {isMalayalam ? "അനുചിത മൻസിലുകൾ" : "Unsuitable Mansions"}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {searchResults.mansions.unsuitable.map((mansion, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 rounded-md text-xs"
-                        style={{
-                          background: "rgba(248,113,113,0.10)",
-                          color: "#f87171",
-                          border: "1px solid rgba(248,113,113,0.20)"
-                        }}
-                      >
-                        {mansion.name} (#{mansion.no})
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Suitable Days & Planets */}
+                {/* Best Times Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-3.5 h-3.5" style={{ color: "#60a5fa" }} />
-                      <span className="font-inter text-xs font-semibold" style={{ color: "rgba(255,255,255,0.80)" }}>
-                        {isMalayalam ? "ഉത്തമ ദിവസങ്ങൾ" : "Best Days"}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {searchResults.days.suitable.map((day, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-1 rounded-md text-xs capitalize"
-                          style={{
-                            background: "rgba(96,165,250,0.10)",
-                            color: "#60a5fa",
-                            border: "1px solid rgba(96,165,250,0.20)"
-                          }}
-                        >
-                          {day}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Star className="w-3.5 h-3.5" style={{ color: "#fbbf24" }} />
-                      <span className="font-inter text-xs font-semibold" style={{ color: "rgba(255,255,255,0.80)" }}>
-                        {isMalayalam ? "ഉത്തമ ഗ്രഹങ്ങൾ" : "Best Planets"}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {searchResults.planets.suitable.map((planet, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-1 rounded-md text-xs capitalize"
-                          style={{
-                            background: "rgba(251,191,36,0.10)",
-                            color: "#fbbf24",
-                            border: "1px solid rgba(251,191,36,0.20)"
-                          }}
-                        >
-                          {planet}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  <InfoCard
+                    icon={Moon}
+                    title={isMalayalam ? "ഉത്തമ മൻസിലുകൾ" : "Best Mansions"}
+                    items={searchResults.bestTimes.mansions.map(m => `${m.name} (#${m.no})`)}
+                    color="#4ade80"
+                    bg="rgba(74,222,128,0.10)"
+                    border="rgba(74,222,128,0.20)"
+                  />
+                  <InfoCard
+                    icon={Sun}
+                    title={isMalayalam ? "ഉത്തമ ദിവസങ്ങൾ" : "Best Days"}
+                    items={searchResults.bestTimes.days}
+                    color="#60a5fa"
+                    bg="rgba(96,165,250,0.10)"
+                    border="rgba(96,165,250,0.20)"
+                  />
                 </div>
+
+                {/* Planets */}
+                <InfoCard
+                  icon={Star}
+                  title={isMalayalam ? "ഉത്തമ ഗ്രഹങ്ങൾ" : "Best Planets"}
+                  items={searchResults.bestTimes.planets}
+                  color="#fbbf24"
+                  bg="rgba(251,191,36,0.10)"
+                  border="rgba(251,191,36,0.20)"
+                />
+
+                {/* Avoid Section */}
+                <AvoidCard
+                  avoid={searchResults.avoid}
+                  isMalayalam={isMalayalam}
+                />
+
+                {/* Notes & Source */}
+                {searchResults.notes && (
+                  <div className="p-3 rounded-lg border" style={{ background: "rgba(212,175,55,0.05)", borderColor: "rgba(212,175,55,0.20)" }}>
+                    <p className="font-inter text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(212,175,55,0.60)" }}>
+                      {isMalayalam ? "കുറിപ്പുകൾ" : "Notes"}
+                    </p>
+                    <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
+                      {searchResults.notes}
+                    </p>
+                  </div>
+                )}
 
                 {/* Source Reference */}
                 <div className="pt-3 border-t" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
@@ -357,6 +314,100 @@ export default function BookBasedSearchBox({ onActionSelect, currentAstroData })
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// Helper Components
+function CurrentStatusCard({ currentTiming, isMalayalam }) {
+  const isGood = currentTiming?.isSuitable;
+  const isNeutral = !isGood && currentTiming?.score >= 0;
+  
+  return (
+    <div className={`p-4 rounded-xl border ${
+      isGood ? "bg-green-500/10 border-green-500/40" : 
+      isNeutral ? "bg-yellow-500/10 border-yellow-500/40" : 
+      "bg-red-500/10 border-red-500/40"
+    }`}>
+      <div className="flex items-center gap-2 mb-2">
+        {isGood ? <CheckCircle className="w-4 h-4" style={{ color: "#4ade80" }} /> : 
+         <AlertCircle className="w-4 h-4" style={{ color: "#f87171" }} />}
+        <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: isGood ? "#4ade80" : "#f87171" }}>
+          {isMalayalam 
+            ? (isGood ? "നല്ല സമയം ✓" : isNeutral ? "സാധാരണ സമയം" : "ഉചിതമല്ല ✗")
+            : (isGood ? "Good Time ✓" : isNeutral ? "Neutral" : "Not Suitable ✗")}
+        </span>
+      </div>
+      <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
+        {currentTiming?.reasons?.[0] || (isMalayalam ? "നിലവിലെ ഗ്രഹനിലകൾ പരിശോധിക്കുക" : "Check current planetary positions")}
+      </p>
+    </div>
+  );
+}
+
+function InfoCard({ icon: Icon, title, items, color, bg, border }) {
+  return (
+    <div className="p-3 rounded-lg border" style={{ background: bg, borderColor: border }}>
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-3.5 h-3.5" style={{ color }} />
+        <span className="font-inter text-xs font-semibold" style={{ color: "rgba(255,255,255,0.80)" }}>
+          {title}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((item, idx) => (
+          <span
+            key={idx}
+            className="px-2 py-1 rounded-md text-xs"
+            style={{ background: "rgba(255,255,255,0.05)", color, border: `1px solid ${border}` }}
+          >
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AvoidCard({ avoid, isMalayalam }) {
+  if (!avoid || avoid.mansions.length === 0) return null;
+  
+  return (
+    <div className="p-4 rounded-xl border" style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.30)" }}>
+      <div className="flex items-center gap-2 mb-2">
+        <AlertCircle className="w-4 h-4" style={{ color: "#f87171" }} />
+        <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: "#f87171" }}>
+          {isMalayalam ? "ഒഴിവാക്കുക" : "Avoid"}
+        </span>
+      </div>
+      {avoid.mansions.length > 0 && (
+        <div className="mb-2">
+          <p className="font-inter text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.60)" }}>
+            {isMalayalam ? "മൻസിലുകൾ:" : "Mansions:"}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {avoid.mansions.map((m, idx) => (
+              <span key={idx} className="px-2 py-1 rounded-md text-xs" style={{ background: "rgba(239,68,68,0.20)", color: "#f87171", border: "1px solid rgba(239,68,68,0.30)" }}>
+                {m.name} (#{m.no})
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {avoid.days.length > 0 && (
+        <div>
+          <p className="font-inter text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.60)" }}>
+            {isMalayalam ? "ദിവസങ്ങൾ:" : "Days:"}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {avoid.days.map((d, idx) => (
+              <span key={idx} className="px-2 py-1 rounded-md text-xs capitalize" style={{ background: "rgba(239,68,68,0.20)", color: "#f87171", border: "1px solid rgba(239,68,68,0.30)" }}>
+                {d}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
