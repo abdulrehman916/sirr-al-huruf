@@ -89,6 +89,7 @@ const PAGE_IMPORTS = {
   VIPTestCustomer:          () => import('./pages/VIPTestCustomer'),
   OTPEmailTest:             () => import('./pages/OTPEmailTest'),
   TestOTPLogin:             () => import('./pages/TestOTPLogin'),
+  DebugOTPEmail:            () => import('./pages/DebugOTPEmail'),
   // Non-pages components
   SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
   MessagesTab:              () => import('./components/admin/MessagesTab'),
