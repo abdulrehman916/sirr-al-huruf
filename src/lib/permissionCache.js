@@ -1,8 +1,34 @@
-import { base44 } from './base44Client';
+import { base44 } from '../api/base44Client';
 
 // Permission cache with TTL (30 seconds for faster role updates)
 const CACHE_TTL = 30000;
 const permissionCache = new Map();
+
+// Generic cache for access checks and visibility
+const genericCache = new Map();
+
+export function getCached(key) {
+  const cached = genericCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.value;
+  }
+  return null;
+}
+
+export function setCached(key, value, ttl = CACHE_TTL) {
+  genericCache.set(key, {
+    value,
+    timestamp: Date.now()
+  });
+}
+
+export function accessCheckKey(userId, pagePath) {
+  return `access:${userId}:${pagePath}`;
+}
+
+export function visibilityKey(pagePath) {
+  return `visibility:${pagePath}`;
+}
 
 export function getCachedPermissions(userId) {
   const cached = permissionCache.get(userId);
