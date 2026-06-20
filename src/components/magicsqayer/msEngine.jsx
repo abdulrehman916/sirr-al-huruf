@@ -147,19 +147,23 @@ function singlyEvenStd(n) {
     else { r=nr; c=nc; }
   }
   const g = Array.from({length:n}, () => Array(n).fill(0));
+  // Strachey layout: A|C / D|B
   for (let i=0;i<h;i++) for (let j=0;j<h;j++) {
-    g[i][j]       = base[i][j];
-    g[i+h][j+h]   = base[i][j] + h*h;
-    g[i+h][j]     = base[i][j] + 2*h*h;
-    g[i][j+h]     = base[i][j] + 3*h*h;
+    g[i][j]       = base[i][j];         // A: top-left
+    g[i][j+h]     = base[i][j] + 2*h*h; // C: top-right
+    g[i+h][j]     = base[i][j] + 3*h*h; // D: bottom-left
+    g[i+h][j+h]   = base[i][j] + h*h;   // B: bottom-right
   }
   const k = Math.floor((n-2)/4), mid = Math.floor(h/2);
+  // Left swap: k columns A↔D
   for (let i=0;i<h;i++) for (let j=0;j<k;j++) {
     if (i===mid&&j===0) continue;
     [g[i][j],g[i+h][j]]=[g[i+h][j],g[i][j]];
   }
+  // Middle swap: column k
   [g[mid][k],g[mid+h][k]]=[g[mid+h][k],g[mid][k]];
-  for (let i=0;i<h;i++) for (let j=n-k;j<n;j++) {
+  // Right swap: k-1 columns C↔B
+  for (let i=0;i<h;i++) for (let j=n-k+1;j<n;j++) {
     [g[i][j],g[i+h][j]]=[g[i+h][j],g[i][j]];
   }
   return g;
