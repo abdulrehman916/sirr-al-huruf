@@ -94,7 +94,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
@@ -177,8 +177,8 @@ export default function AdminDashboard() {
         {/* Sidebar - Mobile: overlay, Tablet/Desktop: sticky left sidebar */}
         <aside
           className={`fixed md:sticky md:top-0 left-0 h-screen w-72 transition-transform duration-300 z-40 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-          }`}
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0`}
           style={{
             background: "linear-gradient(180deg, rgba(8,16,40,0.98) 0%, rgba(3,8,22,0.99) 100%)",
             borderRight: `1px solid ${G.border}`
@@ -250,7 +250,7 @@ export default function AdminDashboard() {
         </aside>
 
         {/* Main Content - Mobile: full width, Tablet/Desktop: remaining space beside sidebar */}
-        <main className="flex-1 p-6 md:p-7 lg:p-8 overflow-auto">
+        <main className="flex-1 p-6 md:p-7 lg:p-8 overflow-auto md:ml-72">
           <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

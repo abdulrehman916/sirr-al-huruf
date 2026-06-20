@@ -82,6 +82,14 @@ export function getAllPages() {
 export const getAllRegisteredPages = getAllPages;
 
 /**
+ * Get all visible content pages
+ * @returns {array} All page configs
+ */
+export function getContentPages() {
+  return getAllPages().filter(p => p.pageType === 'content' && p.visible);
+}
+
+/**
  * Get pages visible to admin (for PageVisibilityConfig)
  * @returns {array} Content pages
  */

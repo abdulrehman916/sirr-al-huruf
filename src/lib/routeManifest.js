@@ -56,7 +56,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/security-audit', component: 'SecurityAuditLogs', chunk: 'SecurityAuditLogs' },
   { path: '/admin/subscriptions-management', component: 'AdminSubscriptionsManagement', chunk: 'AdminSubscriptionsManagement' },
   { path: '/admin/user-permissions', component: 'AdminUserPermissions', chunk: 'AdminUserPermissions' },
-  { path: '/admin/access-dashboard', component: 'OwnerAccessDashboard', chunk: 'OwnerAccessDashboard' },
+  
   { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' },
   { path: '/admin/faal-chob-upload', component: 'AdminFaalChobUpload', chunk: 'AdminFaalChobUpload' },
   { path: '/admin/access-requests', component: 'AdminAccessRequests', chunk: 'AdminAccessRequests' },
@@ -83,8 +83,8 @@ const ROUTE_MANIFEST = [
   { path: '/admin/test-otp-e2e', component: 'TestOTPEndToEnd', chunk: 'TestOTPEndToEnd' },
   
   // Admin Tabs (non-page components)
-  { path: '/admin/sub-requests', component: 'SubscriptionRequestsTab', chunk: 'SubscriptionRequestsTab' },
-  { path: '/admin/messages', component: 'MessagesTab', chunk: 'MessagesTab' },
+  
+  ,
   
   // Manuscript Audit
   { path: '/admin/hierarchy-audit', component: 'HierarchyAuditPage', chunk: 'HierarchyAuditPage' },

@@ -12,7 +12,7 @@ import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
 import { useToast } from "@/components/ui/use-toast";
-import { getContentPages, getAllRegisteredPages, getVisibleContentPages } from "@/lib/pageRegistry";
+import { getContentPages, getAllRegisteredPages, getAdminVisiblePages as getVisibleContentPages } from "@/lib/pageRegistry";
 import PaymentsTab from "@/components/admin/PaymentsTab";
 import AccessCodesTab from "@/components/admin/AccessCodesTab";
 import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal";
