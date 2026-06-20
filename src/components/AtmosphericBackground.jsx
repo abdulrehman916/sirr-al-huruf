@@ -48,7 +48,7 @@ const AtmosphericBackground = memo(function AtmosphericBackground() {
   return (
     <div
       id="atm-bg-root"
-      className="fixed inset-0 overflow-hidden pointer-events-none z-0"
+      className="absolute inset-0 overflow-hidden pointer-events-none z-0"
       aria-hidden="true"
       style={{ contain: "strict" }}
     >
