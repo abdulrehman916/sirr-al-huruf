@@ -306,7 +306,7 @@ export default function PageLayout({ children }) {
           paddingBottom: "16px",
           boxSizing: "border-box",
           position: "relative",
-          flex: "1 1 auto",
+          flex: "1 1 0",
         }}
       >
         <AnimatePresence mode="wait">
@@ -325,6 +325,7 @@ export default function PageLayout({ children }) {
               maxWidth: '100vw',
               margin: 0,
               position: 'relative',
+              minHeight: '0',
             }}
           >
             {children}
