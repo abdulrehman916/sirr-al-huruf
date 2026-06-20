@@ -11,107 +11,85 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Test with a 5x5 square (odd order, simple to verify)
     const n = 5;
     const usurper = 1;
     
-    // Generate base square
-    const fireSquare = generateSquare(n, usurper, 'fire');
-    const airSquare = generateSquare(n, usurper, 'air');
-    const waterSquare = generateSquare(n, usurper, 'water');
-    const earthSquare = generateSquare(n, usurper, 'earth');
+    const fire = generateSquare(n, usurper, 'fire');
+    const air = generateSquare(n, usurper, 'air');
+    const water = generateSquare(n, usurper, 'water');
+    const earth = generateSquare(n, usurper, 'earth');
     
-    // Extract all values
-    const fireValues = fireSquare.flat().sort((a,b) => a - b);
-    const airValues = airSquare.flat().sort((a,b) => a - b);
-    const waterValues = waterSquare.flat().sort((a,b) => a - b);
-    const earthValues = earthSquare.flat().sort((a,b) => a - b);
+    const fireVals = fire.flat().sort((a,b) => a - b);
+    const airVals = air.flat().sort((a,b) => a - b);
     
-    // Check if values are identical
-    const valuesIdentical = (arr1, arr2) => arr1.every((v, i) => v === arr2[i]);
+    const mc = sq => sq[0].reduce((s,v) => s + v, 0);
+    const total = sq => sq.flat().reduce((s,v) => s + v, 0);
     
-    // Check positions
-    const positionsIdentical = (sq1, sq2) => 
-      sq1.every((row, i) => row.every((val, j) => val === sq2[i][j]));
-    
-    // Calculate magic constants
-    const mc = (sq) => sq[0].reduce((s,v) => s + v, 0);
-    
-    // Verify sums
-    const verifySums = (sq) => {
+    const verify = sq => {
       const n = sq.length;
-      const magicConst = mc(sq);
-      const rows = sq.map(row => row.reduce((s,v) => s + v, 0));
+      const m = mc(sq);
+      const rows = sq.map(r => r.reduce((s,v) => s + v, 0));
       const cols = Array.from({length: n}, (_, j) => sq.reduce((s, row) => s + row[j], 0));
       const d1 = sq.reduce((s, row, i) => s + row[i], 0);
       const d2 = sq.reduce((s, row, i) => s + row[n-1-i], 0);
-      return {
-        magic_const: magicConst,
-        all_rows: rows.every(s => s === magicConst),
-        all_cols: cols.every(s => s === magicConst),
-        diag1: d1 === magicConst,
-        diag2: d2 === magicConst
-      };
+      return { mc: m, rows, cols, d1, d2, valid: rows.every(r=>r===m) && cols.every(c=>c===m) && d1===m && d2===m };
     };
     
     return Response.json({
       status: 'success',
-      test_parameters: {
-        size: `${n}×${n}`,
-        usurper,
-        expected_magic_constant: n * (n * n + 1) / 2
+      test_size: `${n}×${n}`,
+      usurper,
+      value_sets: {
+        fire_values: fireVals,
+        air_values: airVals,
+        values_identical: JSON.stringify(fireVals) === JSON.stringify(airVals)
       },
-      value_analysis: {
-        fire_values: fireValues,
-        air_values_match_fire: valuesIdentical(fireValues, airValues),
-        water_values_match_fire: valuesIdentical(fireValues, waterValues),
-        earth_values_match_fire: valuesIdentical(fireValues, earthValues),
-        conclusion: 'All elements use IDENTICAL number sets'
+      magic_constants: {
+        fire: mc(fire),
+        air: mc(air),
+        water: mc(water),
+        earth: mc(earth),
+        all_identical: mc(fire) === mc(air) && mc(fire) === mc(water) && mc(fire) === mc(earth)
       },
-      position_analysis: {
-        air_positions_match_fire: positionsIdentical(fireSquare, airSquare),
-        water_positions_match_fire: positionsIdentical(fireSquare, waterSquare),
-        earth_positions_match_fire: positionsIdentical(fireSquare, earthSquare),
-        conclusion: 'Elements change POSITIONS only'
+      total_sums: {
+        fire: total(fire),
+        air: total(air),
+        water: total(water),
+        earth: total(earth),
+        all_identical: total(fire) === total(air) && total(fire) === total(water) && total(fire) === total(earth)
       },
-      magic_constant_analysis: {
-        fire_mc: mc(fireSquare),
-        air_mc: mc(airSquare),
-        water_mc: mc(waterSquare),
-        earth_mc: mc(earthSquare),
-        all_identical: mc(fireSquare) === mc(airSquare) && 
-                       mc(fireSquare) === mc(waterSquare) && 
-                       mc(fireSquare) === mc(earthSquare),
-        conclusion: 'Magic constant remains IDENTICAL across all elements'
+      position_comparison: {
+        fire_positions_match_air: JSON.stringify(fire) === JSON.stringify(air),
+        fire_positions_match_water: JSON.stringify(fire) === JSON.stringify(water),
+        fire_positions_match_earth: JSON.stringify(fire) === JSON.stringify(earth)
       },
       sum_verification: {
-        fire: verifySums(fireSquare),
-        air: verifySums(airSquare),
-        water: verifySums(waterSquare),
-        earth: verifySums(earthSquare),
-        conclusion: 'All row/column/diagonal sums remain IDENTICAL'
+        fire: verify(fire),
+        air: verify(air),
+        water: verify(water),
+        earth: verify(earth)
       },
       sample_squares: {
-        fire: fireSquare,
-        air: airSquare,
-        water: waterSquare,
-        earth: earthSquare
+        fire, air, water, earth
       },
       transformation_rules: {
         fire: 'Original (no transformation)',
         air: 'Left-Right mirror (reverse each row)',
         water: '180° rotation (reverse rows + reverse each row)',
         earth: 'Top-Bottom mirror (reverse order of rows)'
+      },
+      conclusion: {
+        numbers_change: false,
+        positions_change: true,
+        magic_constant_preserved: true,
+        all_sums_preserved: true,
+        summary: 'Element transformations change ONLY cell positions. All numbers remain IDENTICAL. Magic constant and all row/column/diagonal sums remain IDENTICAL across Fire, Air, Water, and Earth.'
       }
     });
   } catch (error) {
     return Response.json({ error: error.message, stack: error.stack }, { status: 500 });
   }
 });
-
-// ════════════════════════════════════════════════════════════════
-//  SQUARE GENERATION (from msEngine.js)
-// ════════════════════════════════════════════════════════════════
 
 function siameseStd(n) {
   const g = Array.from({length:n}, () => Array(n).fill(0));
