@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages } from "@/lib/pageRegistry";
+import CreateCodePageItem from "./CreateCodePageItem";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -16,14 +17,14 @@ const G = {
 };
 
 const DURATION_OPTIONS = [
-  { value: "1_DAY",      label: "1 Day",      days: 1 },
-  { value: "7_DAYS",     label: "7 Days",     days: 7 },
-  { value: "30_DAYS",    label: "30 Days",    days: 30 },
-  { value: "3_MONTHS",   label: "3 Months",   days: 90 },
-  { value: "6_MONTHS",   label: "6 Months",   days: 180 },
-  { value: "1_YEAR",     label: "1 Year",     days: 365 },
-  { value: "LIFETIME",   label: "Lifetime",   days: null },
-  { value: "CUSTOM",     label: "Custom",     days: null },
+    { value: "1_DAY",      label: "1 Day",      days: 1 },
+    { value: "7_DAYS",     label: "7 Days",     days: 7 },
+    { value: "30_DAYS",    label: "30 Days",    days: 30 },
+    { value: "3_MONTHS",   label: "90 Days",   days: 90 },
+    { value: "6_MONTHS",   label: "180 Days",   days: 180 },
+    { value: "1_YEAR",     label: "1 Year",     days: 365 },
+    { value: "LIFETIME",   label: "Lifetime",   days: null },
+    { value: "CUSTOM",     label: "Custom Date",     days: null },
 ];
 
 function fmt(d) {
@@ -64,8 +65,20 @@ function CreateCodeForm({ onCreated, onCancel }) {
   const [notes, setNotes] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pageSearch, setPageSearch] = useState("");
 
-  const pageList = useMemo(() => getContentPages().map(p => ({ path: p.path, name: p.name })), []);
+    const pageList = useMemo(() => getContentPages().map(p => ({ 
+    path: p.path, 
+    name: p.name,
+    icon: p.icon || '📖',
+    category: p.category || 'General',
+    adminOnly: p.adminOnly || false
+  })), []);
+  
+  const filteredPages = useMemo(() => {
+    if (!pageSearch) return pageList;
+    return pageList.filter(p => p.name.toLowerCase().includes(pageSearch.toLowerCase()));
+  }, [pageList, pageSearch]);
 
   const togglePage = (path) => {
     setSelectedPages(p => {
@@ -181,7 +194,7 @@ function CreateCodeForm({ onCreated, onCancel }) {
             <p className="text-white font-bold tracking-widest">{codeStr.trim().toUpperCase()}</p>
           </div>
           <div>
-            <p className="text-white/45 text-xs mb-2">Unlocked Pages</p>
+            <p className="text-white/45 text-xs mb-2">Unlocked Pages ({selectedPages.length})</p>
             <div className="space-y-2">
               {selectedPages.map(path => {
                 const page = pageList.find(p => p.path === path);
@@ -255,49 +268,37 @@ function CreateCodeForm({ onCreated, onCancel }) {
         <label className="text-xs text-white/45 mb-2 block">
           Pages Unlocked * ({selectedPages.length} selected)
         </label>
+                <div className="flex items-center gap-2 mb-2">
+            <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input 
+                    value={pageSearch}
+                    onChange={e => setPageSearch(e.target.value)}
+                    placeholder={`Search ${pageList.length} pages...`}
+                    className="w-full bg-black/20 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-gold"
+                />
+            </div>
+          <button 
+            onClick={() => setSelectedPages(filteredPages.map(p => p.path))}
+            className="px-3 py-2 text-xs font-semibold rounded-lg bg-white/5 border border-white/10 text-white/60 hover:bg-white/10"
+          >
+            Select All
+          </button>
+        </div>
         <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-          {pageList.map(page => {
+          {filteredPages.map(page => {
             const sel = selectedPages.includes(page.path);
             const dur = pageDurations[page.path];
             return (
-              <div key={page.path} className="rounded-lg border p-3"
-                style={{
-                  background: sel ? G.bg : "rgba(255,255,255,0.02)",
-                  borderColor: sel ? G.border : "rgba(255,255,255,0.06)",
-                }}>
-                <button onClick={() => togglePage(page.path)}
-                  className="w-full flex items-center gap-2.5 mb-2"
-                  style={{ color: sel ? "white" : "rgba(255,255,255,0.50)" }}>
-                  <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                    style={{ background: sel ? G.text : "transparent", border: `1px solid ${sel ? G.text : "rgba(255,255,255,0.25)"}` }}>
-                    {sel && <Check className="w-2.5 h-2.5 text-black" />}
-                  </div>
-                  <span className="text-sm font-medium">{page.name}</span>
-                </button>
-                {sel && (
-                  <div className="ml-6 space-y-2">
-                    <label className="text-xs text-white/45 block">Duration</label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {DURATION_OPTIONS.map(opt => (
-                        <button key={opt.value} onClick={() => updatePageDuration(page.path, opt.value)}
-                          className="px-2.5 py-1 rounded text-[11px] font-semibold"
-                          style={{
-                            background: dur?.value === opt.value ? G.bgHi : "rgba(255,255,255,0.04)",
-                            border: `1px solid ${dur?.value === opt.value ? G.borderHi : "rgba(255,255,255,0.08)"}`,
-                            color: dur?.value === opt.value ? G.text : "rgba(255,255,255,0.50)",
-                          }}>
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                    {dur?.value === "CUSTOM" && (
-                      <input type="date" value={dur.custom_date || ""} onChange={e => updateCustomDate(page.path, e.target.value)}
-                        className="mt-1 w-full px-2 py-1.5 rounded text-xs text-white outline-none"
-                        style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }} />
-                    )}
-                  </div>
-                )}
-              </div>
+                <CreateCodePageItem
+                  key={page.path}
+                  page={page}
+                  isSelected={sel}
+                  duration={dur}
+                  onToggle={togglePage}
+                  onDurationChange={updatePageDuration}
+                  onCustomDateChange={updateCustomDate}
+                />
             );
           })}
         </div>

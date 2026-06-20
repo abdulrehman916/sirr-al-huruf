@@ -116,28 +116,28 @@ export function categorizePages() {
 }
 
 // Register core pages
-registerPage('/', { pageType: 'content', visible: true });
+registerPage('/', { name: 'Home', icon: '🏠', category: 'System', pageType: 'content', visible: true });
 registerPage('/onboarding', { requiresPermission: false, pageType: 'system' });
 registerPage('/otp-login', { requiresPermission: false, pageType: 'system' });
 
 // Content pages
-registerPage('/abjad', { pageType: 'content', visible: true });
-registerPage('/anasir', { pageType: 'content', visible: true });
-registerPage('/hadim', { pageType: 'content', visible: true });
+registerPage('/abjad', { name: 'Abjad Calculator', icon: '🔢', category: 'Calculators', pageType: 'content', visible: true });
+registerPage('/anasir', { name: 'Anasir Calculator', icon: '🌊', category: 'Calculators', pageType: 'content', visible: true });
+registerPage('/hadim', { name: 'Hadim Calculator', icon: '👑', category: 'Calculators', pageType: 'content', visible: true });
 registerPage('/mizaan9', { pageType: 'content', visible: true });
-registerPage('/magic-sqayer', { pageType: 'content', visible: true });
-registerPage('/vefkin-yapilisi', { pageType: 'content', visible: true });
-registerPage('/basthul-huroof-2', { pageType: 'content', visible: true });
-registerPage('/faal-hasrath', { pageType: 'content', visible: true });
-registerPage('/plants', { pageType: 'content', visible: true });
+registerPage('/magic-sqayer', { name: 'Magic Sqayer', icon: '✨', category: 'Vefk Systems', pageType: 'content', visible: true });
+registerPage('/vefkin-yapilisi', { name: 'Vefkin Yapılışı', icon: '📜', category: 'Vefk Systems', pageType: 'content', visible: true });
+registerPage('/basthul-huroof-2', { name: 'Basthul Huroof 2', icon: '٢', category: 'Calculators', pageType: 'content', visible: true });
+registerPage('/faal-hasrath', { name: 'Faal Hasrath', icon: '🔮', category: 'Divination', pageType: 'content', visible: true });
+registerPage('/plants', { name: 'Plants Dictionary', icon: '🌿', category: 'Reference', pageType: 'content', visible: true });
 registerPage('/plants/:id', { pageType: 'content', visible: false });
-registerPage('/evil-jinn', { pageType: 'content', visible: true });
-registerPage('/holy-names', { pageType: 'content', visible: true });
-registerPage('/astro-clock', { pageType: 'content', visible: true });
+registerPage('/evil-jinn', { name: 'Evil Jinn Names', icon: '👁️', category: 'Reference', pageType: 'content', visible: true });
+registerPage('/holy-names', { name: 'Magical Holy Names', icon: '✦', category: 'Reference', pageType: 'content', visible: true });
+registerPage('/astro-clock', { name: 'Astro Clock', icon: '🕰️', category: 'Timings', pageType: 'content', visible: true });
 registerPage('/astro-clock/search', { pageType: 'content', visible: false });
 
 // Support pages
-registerPage('/support', { pageType: 'content', visible: true });
+registerPage('/support', { name: 'Support Hub', icon: '🛡️', category: 'System', pageType: 'content', visible: true });
 registerPage('/support/hub', { pageType: 'content', visible: true });
 registerPage('/support/chat', { pageType: 'content', visible: false });
 registerPage('/support/voice', { pageType: 'content', visible: false });
@@ -148,15 +148,15 @@ registerPage('/subscription/expired', { pageType: 'system', visible: false });
 registerPage('/subscription/pending', { pageType: 'system', visible: false });
 registerPage('/payment/razorpay', { pageType: 'system', visible: false });
 registerPage('/premium/request', { pageType: 'content', visible: true });
-registerPage('/my-subscription', { pageType: 'content', visible: true });
+registerPage('/my-subscription', { name: 'My Subscription', icon: '⭐', category: 'System', pageType: 'content', visible: true });
 registerPage('/payment', { pageType: 'system', visible: false });
 
 // Admin pages
-registerPage('/admin/access-dashboard', { pageType: 'admin', adminOnly: true, visible: false });
+registerPage('/admin/access-dashboard', { name: 'Admin Dashboard', icon: '👑', category: 'Admin', pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/test', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/support', { pageType: 'admin', adminOnly: true, visible: false });
+registerPage('/admin/support', { name: 'Support Messages', icon: '💬', category: 'Admin', pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/permissions', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/page-permissions', { pageType: 'admin', adminOnly: true, visible: false });
+registerPage('/admin/page-permissions', { name: 'Page Permissions', icon: '🌐', category: 'Admin', pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/subscriptions', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/page-subscriptions', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/pricing-settings', { pageType: 'admin', adminOnly: true, visible: false });
