@@ -200,25 +200,7 @@ export default function PageLayout({ children }) {
 
 
 
-  // iOS keyboard viewport fix — scroll input into view
-  useEffect(() => {
-    const handleFocusIn = (e) => {
-      const target = e.target;
-      if (!target || !(target instanceof HTMLElement)) return;
-      if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
-      
-      // Scroll input into view after keyboard opens
-      setTimeout(() => {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
-    };
-    
-    window.addEventListener('focusin', handleFocusIn);
-    
-    return () => {
-      window.removeEventListener('focusin', handleFocusIn);
-    };
-  }, []);
+
 
   // Native back gesture support
   useEffect(() => {
@@ -235,7 +217,7 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        height: "100dvh",
+        minHeight: "100dvh",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -245,13 +227,8 @@ export default function PageLayout({ children }) {
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
-        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 120px)",
         boxSizing: "border-box",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
       }}
     >
       <AtmosphericBackground />
@@ -379,12 +356,12 @@ export default function PageLayout({ children }) {
       <div
         ref={scrollRef}
         data-scroll-container="true"
+        className="flex-1"
         style={{
           overflowY: "auto",
           overflowX: "hidden",
           overscrollBehaviorX: "none",
           overscrollBehaviorY: "auto",
-          paddingBottom: "calc(72px + env(keyboard-height, 0px))",
           WebkitOverflowScrolling: "touch",
           width: "100%",
           maxWidth: "100vw",
@@ -393,6 +370,7 @@ export default function PageLayout({ children }) {
           boxSizing: "border-box",
           position: "relative",
           minHeight: "100%",
+          paddingBottom: "140px",
         }}
       >
         <AnimatePresence mode="wait">
