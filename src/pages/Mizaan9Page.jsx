@@ -29,6 +29,10 @@ import { getDataSet } from "../lib/mizaanDataSets";
 import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
+import { registerPage } from "../lib/pageRegistry";
+
+// Register page in dynamic registry
+registerPage({ path: '/mizaan9', name: 'Mizan 9', requiresPermission: true });
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
