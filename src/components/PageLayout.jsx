@@ -184,11 +184,13 @@ export default function PageLayout({ children }) {
   }, [activeId]);
 
   // Auto-scroll active tab into view — ensures first and last tabs are fully visible
+  // CRITICAL: Only scroll the nav container, NEVER the main page content
   useEffect(() => {
     const activeTabEl = tabRefs.current[activeId];
     if (!activeTabEl || !navRef.current) return;
     
     const timer = setTimeout(() => {
+      // Only scroll the navigation bar itself
       activeTabEl.scrollIntoView({
         behavior: 'smooth',
         inline: 'center',
@@ -212,9 +214,27 @@ export default function PageLayout({ children }) {
     return () => window.removeEventListener("popstate", onPop);
   }, [startNav]);
 
-  // Platform-specific keyboard handling
+  // Platform-specific keyboard handling - PREVENT ALL VIEWPORT MOVEMENT
   useEffect(() => {
-    return setupKeyboardBehavior(scrollRef);
+    const cleanup = setupKeyboardBehavior(scrollRef);
+    
+    // CRITICAL: Prevent browser default focus scrolling behavior
+    const preventScrollOnFocus = (e) => {
+      if (scrollRef.current) {
+        const savedTop = scrollRef.current.scrollTop;
+        setTimeout(() => {
+          scrollRef.current.scrollTop = savedTop;
+        }, 0);
+      }
+    };
+    
+    // Intercept focus events to prevent automatic scrollIntoView
+    document.addEventListener('focus', preventScrollOnFocus, true);
+    
+    return () => {
+      cleanup();
+      document.removeEventListener('focus', preventScrollOnFocus, true);
+    };
   }, [scrollRef]);
 
   return (

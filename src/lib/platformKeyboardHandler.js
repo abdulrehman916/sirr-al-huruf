@@ -1,10 +1,13 @@
 /**
  * Platform-Specific Keyboard Handler
  * 
- * Handles keyboard viewport behavior differently for:
- * - iOS Safari: Lock scroll position, prevent jumping
- * - Android Chrome: Use CSS env(keyboard-height)
- * - Desktop/Tablet: No special handling
+ * CRITICAL: DO NOT MOVE THE PAGE WHEN KEYBOARD OPENS
+ * - NO scrollIntoView()
+ * - NO automatic scrolling
+ * - NO viewport movement
+ * - NO layout shift
+ * - Page stays EXACTLY where it is
+ * - Keyboard opens UNDERNEATH
  * 
  * Usage in PageLayout:
  *   useEffect(() => setupKeyboardBehavior(scrollRef), [scrollRef]);
@@ -24,18 +27,8 @@ function getPlatform() {
 }
 
 /**
- * Get keyboard height from visualViewport API
- */
-function getKeyboardHeight() {
-  if (!window.visualViewport) return 0;
-  const viewportHeight = window.visualViewport.height;
-  const windowHeight = window.innerHeight;
-  return Math.max(0, windowHeight - viewportHeight);
-}
-
-/**
- * iOS Safari: Lock scroll position when keyboard opens
- * Prevents viewport from jumping or showing white space
+ * iOS Safari: Completely disable keyboard-induced scrolling
+ * Page stays EXACTLY where it is - keyboard opens underneath
  */
 export function setupIOSKeyboardLock(containerRef) {
   const { isIOS } = getPlatform();
@@ -45,6 +38,7 @@ export function setupIOSKeyboardLock(containerRef) {
   
   const container = containerRef.current;
   let savedScrollY = 0;
+  let isLocked = false;
   
   const handleFocusIn = (e) => {
     const target = e.target;
@@ -52,60 +46,50 @@ export function setupIOSKeyboardLock(containerRef) {
       return;
     }
     
-    // Save current scroll position
-    savedScrollY = window.scrollY;
+    // CRITICAL: Do NOT scroll, do NOT move viewport
+    // Just lock the current position
+    isLocked = true;
+    savedScrollY = container.scrollTop;
     
-    // Lock body scroll to prevent jumping
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${savedScrollY}px`;
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
-    
-    // Scroll focused element into view after keyboard opens
-    setTimeout(() => {
-      if (container && target instanceof HTMLElement) {
-        const containerRect = container.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-        const offset = targetRect.top - containerRect.top - 100;
-        
-        if (offset < 0 || offset > container.clientHeight - 100) {
-          container.scrollTo({
-            top: container.scrollTop + offset,
-            behavior: 'smooth'
-          });
-        }
-      }
-    }, 300);
+    // Prevent any viewport resizing
+    container.style.position = 'relative';
+    container.style.overflowY = 'auto';
   };
   
   const handleFocusOut = () => {
-    // Restore body scroll
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.style.overflow = '';
+    if (!isLocked) return;
     
-    // Restore scroll position
-    window.scrollTo(0, savedScrollY);
+    // Restore to exact same scroll position
+    container.scrollTop = savedScrollY;
+    container.style.position = '';
+    container.style.overflowY = 'auto';
+    isLocked = false;
+  };
+  
+  // Prevent visualViewport from triggering layout shifts
+  const handleVisualViewportResize = () => {
+    if (isLocked) {
+      // Keep scroll position absolutely fixed
+      container.scrollTop = savedScrollY;
+    }
   };
   
   window.addEventListener('focusin', handleFocusIn, { capture: true });
   window.addEventListener('focusout', handleFocusOut, { capture: true });
+  window.visualViewport?.addEventListener('resize', handleVisualViewportResize, { capture: true });
   
   return () => {
     window.removeEventListener('focusin', handleFocusIn, { capture: true });
     window.removeEventListener('focusout', handleFocusOut, { capture: true });
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.style.overflow = '';
+    window.visualViewport?.removeEventListener('resize', handleVisualViewportResize, { capture: true });
+    container.style.position = '';
+    container.style.overflowY = 'auto';
   };
 }
 
 /**
- * Android Chrome: Minimal handling
- * Android handles keyboard viewport better natively
- * Just ensure padding accounts for keyboard
+ * Android Chrome: NO viewport movement
+ * Keyboard opens underneath, page stays stationary
  */
 export function setupAndroidKeyboardPadding(containerRef) {
   const { isAndroid } = getPlatform();
@@ -114,22 +98,43 @@ export function setupAndroidKeyboardPadding(containerRef) {
   }
   
   const container = containerRef.current;
+  let savedScrollY = 0;
+  let isKeyboardOpen = false;
   
-  const updatePadding = () => {
-    const keyboardHeight = getKeyboardHeight();
-    if (keyboardHeight > 0) {
-      container.style.paddingBottom = `${keyboardHeight + 16}px`;
-    } else {
-      container.style.paddingBottom = '16px';
+  const handleFocusIn = (e) => {
+    const target = e.target;
+    if (!target || !['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+      return;
+    }
+    
+    // CRITICAL: Do NOT move the page
+    isKeyboardOpen = true;
+    savedScrollY = container.scrollTop;
+  };
+  
+  const handleFocusOut = () => {
+    if (!isKeyboardOpen) return;
+    
+    // Restore exact scroll position
+    container.scrollTop = savedScrollY;
+    isKeyboardOpen = false;
+  };
+  
+  const handleVisualViewportResize = () => {
+    if (isKeyboardOpen) {
+      // Keep scroll position absolutely fixed - no movement
+      container.scrollTop = savedScrollY;
     }
   };
   
-  window.visualViewport?.addEventListener('resize', updatePadding);
-  updatePadding(); // Initial call
+  window.addEventListener('focusin', handleFocusIn, { capture: true });
+  window.addEventListener('focusout', handleFocusOut, { capture: true });
+  window.visualViewport?.addEventListener('resize', handleVisualViewportResize, { capture: true });
   
   return () => {
-    window.visualViewport?.removeEventListener('resize', updatePadding);
-    container.style.paddingBottom = '16px';
+    window.removeEventListener('focusin', handleFocusIn, { capture: true });
+    window.removeEventListener('focusout', handleFocusOut, { capture: true });
+    window.visualViewport?.removeEventListener('resize', handleVisualViewportResize, { capture: true });
   };
 }
 
@@ -142,6 +147,7 @@ export function setupDesktopKeyboard() {
 
 /**
  * Main setup function - detects platform and applies correct handler
+ * CRITICAL: NO SCROLLING, NO VIEWPORT MOVEMENT
  */
 export function setupKeyboardBehavior(containerRef) {
   const { isIOS, isAndroid, isTablet, isDesktop } = getPlatform();
@@ -158,6 +164,5 @@ export function setupKeyboardBehavior(containerRef) {
     return setupAndroidKeyboardPadding(containerRef);
   }
   
-  // Fallback: no handling
   return () => {};
 }
