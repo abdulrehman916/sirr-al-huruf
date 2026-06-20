@@ -32,7 +32,7 @@ import { usePageState } from "../context/PageStateContext";
 import { registerPage } from "../lib/pageRegistry";
 
 // Register page in dynamic registry
-registerPage({ path: '/mizaan9', name: 'Mizan 9', requiresPermission: true });
+registerPage('/mizaan9', { name: 'Mizan 9', requiresPermission: true });
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
