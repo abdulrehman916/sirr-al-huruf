@@ -14,4 +14,10 @@ export const ADMIN_CONFIG = {
   // Used for: Admin authentication, system notifications
   // Customer-facing emails use: lib/emailBranding.js (SUPPORT_EMAIL, NOREPLY_EMAIL)
   OWNER_EMAIL: "abdulrehmanrehman916@gmail.com",
+  // Emergency admin access codes (fallback when OTP unavailable)
+  // Format: UPPERCASE, store securely, rotate periodically
+  EMERGENCY_ADMIN_CODES: [
+    "SIRR2026ADMIN", // Primary emergency code
+    "OWNER2026ACCESS", // Backup code
+  ],
 };

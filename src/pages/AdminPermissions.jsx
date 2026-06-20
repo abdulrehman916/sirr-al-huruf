@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ROUTE_PERMISSION_MAP } from "@/lib/permissionCodes";
-import { getVisibleContentPages } from "@/lib/pageRegistry";
+import { getAdminVisiblePages } from "@/lib/pageRegistry";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -84,7 +84,7 @@ export default function AdminPermissions() {
   const loadPageVisibility = async () => {
     setLoadingVisibility(true);
     try {
-      const visiblePaths = new Set(getVisibleContentPages().map(p => p.path));
+      const visiblePaths = new Set(getAdminVisiblePages().map(p => p.path));
       const configs = await base44.entities.PageVisibilityConfig.list(null, 500);
       const visibilityList = Object.entries(ROUTE_PERMISSION_MAP)
         .filter(([path]) => visiblePaths.has(path))

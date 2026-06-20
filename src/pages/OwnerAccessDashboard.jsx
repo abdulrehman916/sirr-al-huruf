@@ -19,6 +19,7 @@ import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal"
 import MessagesTab from "@/components/admin/MessagesTab";
 import SubscriptionRequestsTab from "@/components/admin/SubscriptionRequestsTab";
 import UsersManagementTab from "@/components/admin/UsersManagementTab";
+import SecurityAuditTab from "@/components/admin/SecurityAuditTab";
 import { Link } from "react-router-dom";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 
@@ -1301,18 +1302,7 @@ export default function OwnerAccessDashboard() {
           {tab === "visibility" && <VisibilityTab pageConfigs={pageConfigs} onRefresh={loadAll} />}
           {tab === "access"     && <UserAccessTab users={users} permissions={permissions} onRefresh={loadAll} />}
           {tab === "codes"      && <AccessCodesTab />}
-          {tab === "security"   && (
-            <div className="text-center py-12">
-              <Shield className="w-12 h-12 mx-auto mb-3 opacity-30" style={{ color: G.text }} />
-              <p className="text-white/60 mb-4">View detailed security audit logs</p>
-              <Link to="/admin/security-audit">
-                <button className="px-6 py-3 rounded-xl text-sm font-bold"
-                  style={{ background: G.bgHi, border: `1px solid ${G.borderHi}`, color: G.text }}>
-                  Open Security Audit Logs →
-                </button>
-              </Link>
-            </div>
-          )}
+          {tab === "security"   && <SecurityAuditTab />}
         </div>
 
       </motion.div>
