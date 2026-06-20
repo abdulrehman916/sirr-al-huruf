@@ -303,7 +303,7 @@ export default function PageLayout({ children }) {
           maxWidth: "100vw",
           margin: 0,
           padding: "16px",
-          paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          paddingBottom: "16px",
           boxSizing: "border-box",
           position: "relative",
           flex: "1 1 auto",
