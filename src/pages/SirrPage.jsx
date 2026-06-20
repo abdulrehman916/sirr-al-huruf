@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import PageLayout from '../components/PageLayout';
 import PageTitle from '../components/PageTitle';
+import SirrBookSearch from '../components/sirr/SirrBookSearch';
 import SirrUpload from '../components/sirr/SirrUpload';
 import SirrResults from '../components/sirr/SirrResults';
 import SirrSectionViewer from '../components/sirr/SirrSectionViewer';
@@ -142,6 +143,18 @@ export default function SirrPage() {
           subtitle="PDF Knowledge Retrieval System"
           icon="📖"
         />
+
+        {/* Book Search — Samur Hindi Indexed */}
+        <SirrBookSearch />
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-2">
+          <div className="h-px flex-1" style={{ background: "rgba(212,175,55,0.15)" }} />
+          <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.35)" }}>
+            Upload Additional PDF
+          </span>
+          <div className="h-px flex-1" style={{ background: "rgba(212,175,55,0.15)" }} />
+        </div>
 
         {/* Upload Section */}
         <SirrUpload
