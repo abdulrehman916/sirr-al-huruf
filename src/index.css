@@ -127,6 +127,7 @@
     max-width: 100vw;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
+    min-height: 100%;
   }
   #root {
     min-height: 100%;

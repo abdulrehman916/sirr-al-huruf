@@ -200,6 +200,40 @@ export default function PageLayout({ children }) {
 
 
 
+  // iOS keyboard fix — lock body scroll when keyboard opens
+  useEffect(() => {
+    const handleFocusIn = (e) => {
+      const target = e.target;
+      if (!target || !(target instanceof HTMLElement)) return;
+      if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      
+      // Save scroll position and lock body
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    };
+    
+    const handleFocusOut = () => {
+      const scrollY = document.body.style.top ? parseInt(document.body.style.top, 10) * -1 : 0;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+    
+    window.addEventListener('focusin', handleFocusIn);
+    window.addEventListener('focusout', handleFocusOut);
+    
+    return () => {
+      window.removeEventListener('focusin', handleFocusIn);
+      window.removeEventListener('focusout', handleFocusOut);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+    };
+  }, []);
+
   // Native back gesture support
   useEffect(() => {
     const onPop = () => {
@@ -215,8 +249,7 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        minHeight: "100vh",
-        height: "auto",
+        height: "100dvh",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -228,7 +261,11 @@ export default function PageLayout({ children }) {
         paddingRight: "env(safe-area-inset-right)",
         paddingBottom: "env(safe-area-inset-bottom)",
         boxSizing: "border-box",
-        position: "relative",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
       }}
     >
       <AtmosphericBackground />
