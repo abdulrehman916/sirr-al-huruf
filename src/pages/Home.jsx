@@ -13,10 +13,25 @@ export default function Home() {
   return (
     <PageLayout>
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="relative w-full" style={{ minHeight: "100%", flex: "1 1 auto" }}>
+        {/* Full-screen mobile-first wrapper — edge-to-edge layout */}
+        <div className="relative w-full" style={{
+          minHeight: "100dvh",
+          width: "100vw",
+          maxWidth: "100vw",
+          margin: 0,
+          padding: 0,
+          flex: "1 1 auto",
+          overflowX: "hidden",
+        }}>
           <MysticalBackground mouse={mouse} />
-          <HeroSection mouse={mouse} />
-          <CardsSection />
+          {/* Hero section — full width, no centered container */}
+          <div className="w-full" style={{ maxWidth: "100vw", margin: 0, padding: 0 }}>
+            <HeroSection mouse={mouse} />
+          </div>
+          {/* Cards section — edge-to-edge on mobile */}
+          <div className="w-full" style={{ maxWidth: "100vw", margin: 0, paddingLeft: "4px", paddingRight: "4px" }}>
+            <CardsSection />
+          </div>
         </div>
       </PullToRefresh>
     </PageLayout>

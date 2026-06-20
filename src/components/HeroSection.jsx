@@ -405,7 +405,16 @@ export default function HeroSection({ mouse }) {
   }, []);
 
   return (
-    <div className="font-inter relative flex flex-col items-center w-full pb-6 sm:pb-8 pt-3 sm:pt-4" style={{ minHeight: "auto", height: "auto", overflowY: "visible" }}>
+    <div className="font-inter relative flex flex-col items-center w-full pb-6 sm:pb-8 pt-3 sm:pt-4" style={{
+      minHeight: "auto",
+      height: "auto",
+      overflowY: "visible",
+      width: "100%",
+      maxWidth: "100vw",
+      margin: 0,
+      paddingLeft: 0,
+      paddingRight: 0,
+    }}>
 
       {/* Light rays — desktop only */}
       {deviceType === 'desktop' && <LightRays paused={isNavigating} />}

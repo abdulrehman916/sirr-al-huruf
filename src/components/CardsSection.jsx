@@ -182,7 +182,14 @@ export default function CardsSection() {
   const { startNav } = useNavigation();
   
   return (
-    <div className="relative z-20 w-full px-3 py-8 grid grid-cols-2 md:grid-cols-3 gap-3" style={{ marginBottom: "40px" }}>
+    <div className="relative z-20 w-full px-1 sm:px-2 py-6 sm:py-8 grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3" style={{
+      marginBottom: "40px",
+      width: "100%",
+      maxWidth: "100vw",
+      margin: 0,
+      paddingLeft: "4px",
+      paddingRight: "4px",
+    }}>
       {NAV_CARDS.map((card) => {
         const [r, g, b] = card.accent;
         return (
