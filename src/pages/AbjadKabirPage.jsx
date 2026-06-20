@@ -128,25 +128,78 @@ export default function AbjadKabirPage() {
     setSelectedResult(null);
   };
 
-  // Mobile keyboard fix: preserve scroll position on textarea focus
+  // Mobile keyboard viewport fix — VisualViewport API handling
   const textareaRef = useRef(null);
-  const scrollPositionRef = useRef(0);
+  const originalViewportHeight = useRef(null);
+  const keyboardOpenRef = useRef(false);
+
+  useEffect(() => {
+    // Only on mobile — handle visualViewport resize from keyboard
+    if (!window.visualViewport) return;
+
+    const scrollContainer = document.querySelector('[data-scroll-container="true"]');
+    if (!scrollContainer) return;
+
+    const handleViewportResize = () => {
+      const viewport = window.visualViewport;
+      const textarea = textareaRef.current;
+      if (!textarea || !viewport) return;
+
+      const viewportHeight = viewport.height;
+      const isKeyboardOpen = viewportHeight < (originalViewportHeight.current || viewportHeight);
+
+      if (isKeyboardOpen && !keyboardOpenRef.current) {
+        // Keyboard just opened
+        keyboardOpenRef.current = true;
+        originalViewportHeight.current = viewportHeight;
+
+        // Scroll textarea into view with proper offset
+        setTimeout(() => {
+          const textareaRect = textarea.getBoundingClientRect();
+          const keyboardHeight = window.innerHeight - viewportHeight;
+          const visibleArea = viewportHeight;
+
+          // Check if textarea bottom is hidden by keyboard
+          if (textareaRect.bottom > visibleArea - 50) {
+            const scrollOffset = textareaRect.bottom - visibleArea + 100;
+            scrollContainer.scrollTop = scrollContainer.scrollTop + scrollOffset;
+          }
+        }, 150);
+      } else if (!isKeyboardOpen && keyboardOpenRef.current) {
+        // Keyboard just closed
+        keyboardOpenRef.current = false;
+        originalViewportHeight.current = null;
+      }
+    };
+
+    // Store initial viewport height
+    originalViewportHeight.current = window.visualViewport.height;
+
+    window.visualViewport.addEventListener('resize', handleViewportResize);
+    return () => window.visualViewport.removeEventListener('resize', handleViewportResize);
+  }, []);
 
   const handleTextareaFocus = () => {
-    // Store current scroll position to prevent jump
     const scrollContainer = document.querySelector('[data-scroll-container="true"]');
     if (scrollContainer) {
-      scrollPositionRef.current = scrollContainer.scrollTop;
-      // Lock scroll behavior during keyboard open
       scrollContainer.style.scrollBehavior = 'auto';
     }
+    // Small delay to let keyboard start opening
+    setTimeout(() => {
+      if (textareaRef.current && scrollContainer) {
+        const textareaRect = textareaRef.current.getBoundingClientRect();
+        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        // Scroll if textarea is in lower half of screen
+        if (textareaRect.top > viewportHeight * 0.4) {
+          scrollContainer.scrollTop = scrollContainer.scrollTop + textareaRect.top - 100;
+        }
+      }
+    }, 100);
   };
 
   const handleTextareaBlur = () => {
-    // Restore scroll position and normal behavior
     const scrollContainer = document.querySelector('[data-scroll-container="true"]');
     if (scrollContainer) {
-      scrollContainer.scrollTop = scrollPositionRef.current;
       scrollContainer.style.scrollBehavior = 'smooth';
     }
   };
@@ -293,7 +346,7 @@ export default function AbjadKabirPage() {
           <SectionCard>
             <SectionLabel>ARABIC TEXT INPUT — {mode.toUpperCase()}</SectionLabel>
             
-            <div className="relative mt-3 scroll-mt-32">
+            <div className="relative mt-3" style={{ scrollMarginTop: '200px' }}>
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -305,6 +358,7 @@ export default function AbjadKabirPage() {
                 style={{
                   borderColor: "rgba(212,175,55,0.25)",
                   boxShadow: "inset 0 2px 12px rgba(0,0,0,0.40)",
+                  scrollMarginTop: '200px',
                 }}
                 rows={4}
                 dir="rtl"
