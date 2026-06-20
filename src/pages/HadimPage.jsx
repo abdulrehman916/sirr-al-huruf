@@ -290,9 +290,9 @@ export default function HadimPage() {
                     style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)" }} />
                   {isms.length > 1 && (
                     <button onClick={() => removeIsm(i)}
-                      className="absolute top-[28px] right-3 p-1 rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all"
-                      style={{ background: "rgba(239,68,68,0.06)" }}>
-                      <Trash2 className="w-3 h-3" />
+                      className="absolute top-[26px] right-2.5 inline-flex items-center justify-center rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all"
+                      style={{ background: "rgba(239,68,68,0.06)", padding: "4px", width: "fit-content", minWidth: "28px", height: "28px" }}>
+                      <Trash2 className="w-3 h-3" style={{ width: "14px", height: "14px" }} />
                     </button>
                   )}
                 </div>
