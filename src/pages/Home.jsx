@@ -13,9 +13,11 @@ export default function Home() {
   return (
     <PageLayout>
       <PullToRefresh onRefresh={handleRefresh}>
-        <MysticalBackground mouse={mouse} />
-        <HeroSection mouse={mouse} />
-        <CardsSection />
+        <div className="relative w-full" style={{ minHeight: "100%", flex: "1 1 auto" }}>
+          <MysticalBackground mouse={mouse} />
+          <HeroSection mouse={mouse} />
+          <CardsSection />
+        </div>
       </PullToRefresh>
     </PageLayout>
   );
