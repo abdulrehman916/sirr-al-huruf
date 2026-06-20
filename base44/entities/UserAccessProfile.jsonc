@@ -46,10 +46,11 @@
         "ACTIVE",
         "REMOVED",
         "BLOCKED",
-        "ARCHIVED"
+        "ARCHIVED",
+        "EXPIRED"
       ],
       "default": "ACTIVE",
-      "description": "ACTIVE=normal. REMOVED=hidden from active list, can still login, keeps subscriptions. BLOCKED=cannot login/OTP/access/redeem. ARCHIVED=hidden, cannot login, data preserved."
+      "description": "ACTIVE=normal. REMOVED=hidden from active list, can still login, keeps subscriptions. BLOCKED=cannot login/OTP/access/redeem. ARCHIVED=hidden, cannot login, data preserved. EXPIRED=access duration expired."
     },
     "removed_at": {
       "type": "string",
@@ -120,6 +121,10 @@
     },
     "country": {
       "type": "string"
+    },
+    "login_count": {
+      "type": "integer",
+      "default": 0
     }
   },
   "required": [
