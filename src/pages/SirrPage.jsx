@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import PageLayout from '../components/PageLayout';
 import PageTitle from '../components/PageTitle';
 import SirrBookSearch from '../components/sirr/SirrBookSearch';
+import SirrCalculator from '../components/sirr/SirrCalculator';
 import SirrUpload from '../components/sirr/SirrUpload';
 import SirrResults from '../components/sirr/SirrResults';
 import SirrSectionViewer from '../components/sirr/SirrSectionViewer';
@@ -36,6 +37,7 @@ export default function SirrPage() {
   const [searchResults, setSearchResults] = useState(initialState.searchResults);
   const [selectedResult, setSelectedResult] = useState(initialState.selectedResult);
   const [isSearching, setIsSearching] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
 
   // Persist state
   useState(() => {
@@ -140,12 +142,53 @@ export default function SirrPage() {
         <PageTitle
           arabic="السر"
           latin="SIRR"
-          subtitle="PDF Knowledge Retrieval System"
-          icon="📖"
+          subtitle="Book-Based Calculation Engine"
+          icon="🔮"
         />
 
         {/* Book Search — Samur Hindi Indexed */}
         <SirrBookSearch />
+
+        {/* Calculator Toggle */}
+        <div className="flex items-center justify-between gap-3 my-3">
+          <div className="h-px flex-1" style={{ background: "rgba(212,175,55,0.15)" }} />
+          <button
+            onClick={() => setShowCalculator(!showCalculator)}
+            className="px-4 py-2 rounded-xl border font-inter text-[10px] font-bold uppercase tracking-wide"
+            style={{
+              background: showCalculator ? "linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.10))" : "rgba(212,175,55,0.06)",
+              borderColor: showCalculator ? "rgba(212,175,55,0.40)" : "rgba(212,175,55,0.18)",
+              color: showCalculator ? "#E8C84A" : "rgba(212,175,55,0.55)"
+            }}
+          >
+            {showCalculator ? '▼ Hide Calculator' : '▶ Open Calculator'}
+          </button>
+          <div className="h-px flex-1" style={{ background: "rgba(212,175,55,0.15)" }} />
+        </div>
+
+        {/* Calculator — Book-Based Calculation Engine */}
+        {showCalculator && (
+          <div className="rounded-2xl border p-5"
+            style={{
+              background: "rgba(4,12,34,0.97)",
+              borderColor: "rgba(212,175,55,0.35)",
+              boxShadow: "0 0 40px rgba(212,175,55,0.15)"
+            }}
+          >
+            <div className="mb-4">
+              <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: "rgba(212,175,55,0.55)" }}>
+                CALCULATION ENGINE
+              </p>
+              <p className="font-amiri text-lg font-bold" style={{ color: "#E8C84A" }}>
+                تطبيق قواعد الكتاب
+              </p>
+              <p className="font-inter text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                Apply book rules step-by-step — No external methods
+              </p>
+            </div>
+            <SirrCalculator />
+          </div>
+        )}
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-2">
