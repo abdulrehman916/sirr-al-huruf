@@ -128,42 +128,7 @@ export default function AbjadKabirPage() {
     setSelectedResult(null);
   };
 
-  // Mobile keyboard fix — passive scroll position preservation
-  const textareaRef = useRef(null);
-  const scrollPositionRef = useRef(0);
-  const scrollContainerRef = useRef(null);
 
-  useEffect(() => {
-    // Get scroll container reference once mounted
-    scrollContainerRef.current = document.querySelector('[data-scroll-container="true"]');
-  }, []);
-
-  const handleTextareaFocus = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    // Store scroll position BEFORE keyboard triggers viewport change
-    scrollPositionRef.current = container.scrollTop;
-    
-    // Lock scroll behavior to prevent smooth-scroll interference
-    container.style.scrollBehavior = 'auto';
-    container.style.overflowY = 'hidden';
-    
-    // Restore after brief delay (let keyboard open)
-    setTimeout(() => {
-      container.scrollTop = scrollPositionRef.current;
-      container.style.overflowY = 'auto';
-      container.style.scrollBehavior = 'auto';
-    }, 200);
-  };
-
-  const handleTextareaBlur = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    // Restore normal scroll behavior
-    container.style.scrollBehavior = 'smooth';
-  };
 
   const getModeLabel = (id) => {
     const labels = {
@@ -310,11 +275,8 @@ export default function AbjadKabirPage() {
             
             <div className="relative mt-3">
               <textarea
-                ref={textareaRef}
                 value={input}
                 onChange={handleInputChange}
-                onFocus={handleTextareaFocus}
-                onBlur={handleTextareaBlur}
                 placeholder="أدخل النص العربي هنا..."
                 className="w-full rounded-xl border bg-slate-950/60 p-4 text-right font-amiri text-base text-white placeholder-slate-600 focus:outline-none transition-all"
                 style={{
