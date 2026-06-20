@@ -216,7 +216,7 @@ export default function PageLayout({ children }) {
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         minHeight: "100%",
-        height: "auto",
+        height: "100%",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -229,7 +229,7 @@ export default function PageLayout({ children }) {
         paddingBottom: "env(safe-area-inset-bottom)",
         boxSizing: "border-box",
         position: "relative",
-        flex: "1 1 auto",
+        flex: "0 0 auto",
       }}
     >
       <AtmosphericBackground />
@@ -358,8 +358,7 @@ export default function PageLayout({ children }) {
         ref={scrollRef}
         data-scroll-container="true"
         style={{
-          flex: 1,
-          minHeight: 0,
+          flex: "0 0 auto",
           overflowY: "auto",
           overflowX: "hidden",
           overscrollBehaviorX: "none",
@@ -372,6 +371,7 @@ export default function PageLayout({ children }) {
           padding: 0,
           boxSizing: "border-box",
           position: "relative",
+          maxHeight: "100%",
         }}
       >
         <AnimatePresence mode="wait">
