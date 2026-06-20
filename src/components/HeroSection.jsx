@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import SacredWheel from "./SacredWheel";
@@ -347,35 +347,61 @@ export default function HeroSection({ mouse }) {
   const isMobile = useIsMobile();
   const safeMouse = mouse ?? ZERO_MV;
   const [deviceType, setDeviceType] = useState('desktop');
+  const initialDeviceType = useRef(null);
   
+  // Set device type once on mount - NO updates on keyboard/viewport changes
   useEffect(() => {
+    if (initialDeviceType.current) return; // Already set
+    
     const checkDevice = () => {
       const w = window.innerWidth;
-      if (w < 768) setDeviceType('mobile');
-      else if (w < 1366) setDeviceType('tablet');
-      else setDeviceType('desktop');
+      if (w < 768) return 'mobile';
+      else if (w < 1366) return 'tablet';
+      else return 'desktop';
     };
-    checkDevice();
-    window.addEventListener('resize', checkDevice, { passive: true });
-    return () => window.removeEventListener('resize', checkDevice);
+    
+    initialDeviceType.current = checkDevice();
+    setDeviceType(initialDeviceType.current);
+    
+    // ONLY listen for orientation change, NOT resize (keyboard opens trigger resize)
+    const handleOrientation = () => {
+      const newType = checkDevice();
+      if (newType !== initialDeviceType.current) {
+        initialDeviceType.current = newType;
+        setDeviceType(newType);
+      }
+    };
+    
+    window.addEventListener('orientationchange', handleOrientation, { passive: true });
+    return () => window.removeEventListener('orientationchange', handleOrientation);
   }, []);
   
   // Shared wheel size calculation — used by both HeroSection and SacredWheel
+  // Calculate once on mount - NO updates on keyboard/viewport changes
   const getWheelSize = () => {
     if (typeof window === "undefined") return 400;
     const w = window.innerWidth;
-    const h = window.innerHeight;
+    const h = window.screen.height; // Use screen.height (stable) NOT innerHeight (changes with keyboard)
     if (w < 768) return Math.min(h * 0.70, 500, w * 0.85);
     if (w < 1366) return Math.min(h * 0.50, 400, w * 0.55);
     return Math.min(h * 0.70, 500, w * 0.85);
   };
   
   const [wheelSize, setWheelSize] = useState(getWheelSize());
+  const wheelSizeInitialized = useRef(false);
   
+  // ONLY update wheel size on orientation change, NOT resize (keyboard opens trigger resize)
   useEffect(() => {
-    const onResize = () => setWheelSize(getWheelSize());
-    window.addEventListener('resize', onResize, { passive: true });
-    return () => window.removeEventListener('resize', onResize);
+    if (wheelSizeInitialized.current) return; // Already set
+    wheelSizeInitialized.current = true;
+    setWheelSize(getWheelSize());
+    
+    const handleOrientation = () => {
+      setWheelSize(getWheelSize());
+    };
+    
+    window.addEventListener('orientationchange', handleOrientation, { passive: true });
+    return () => window.removeEventListener('orientationchange', handleOrientation);
   }, []);
 
   return (
