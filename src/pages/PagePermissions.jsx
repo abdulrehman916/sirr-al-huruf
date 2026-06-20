@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
 import { Lock, EyeOff, CheckCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import PageLayout from "@/components/PageLayout";
-import PageTitle from "@/components/PageTitle";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
@@ -109,21 +108,16 @@ export default function PagePermissions() {
 
   if (isAdmin === null || loading) {
     return (
-      <PageLayout>
+      <AdminLayout title="Loading..." showBackButton={false}>
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin" />
         </div>
-      </PageLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <PageLayout>
-      <PageTitle 
-        title="Page Permissions" 
-        subtitle="Manage public and private access"
-        icon={<Lock className="w-6 h-6" />}
-      />
+    <AdminLayout title="Page Permissions" subtitle="Manage public and private access">
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
         <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
@@ -200,6 +194,6 @@ export default function PagePermissions() {
           <span className="text-gold font-semibold">Note:</span> Settings persist across deployments. Locked pages cannot be changed.
         </div>
       </motion.div>
-    </PageLayout>
+    </AdminLayout>
   );
 }

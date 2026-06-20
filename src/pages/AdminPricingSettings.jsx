@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Save, RotateCcw } from "lucide-react";
-import PageLayout from "@/components/PageLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 const PLANS = [
   { id: "1_MONTH", label: "1 Month", icon: "📅" },
@@ -130,21 +130,12 @@ export default function AdminPricingSettings() {
   };
 
   return (
-    <PageLayout>
+    <AdminLayout title="Pricing Settings" subtitle="إعدادات الأسعار">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto"
       >
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="font-amiri text-3xl font-bold text-gold mb-2">
-            إعدادات الأسعار
-          </h1>
-          <p className="font-inter text-sm text-gray-400">
-            Subscription Pricing Settings
-          </p>
-        </div>
 
         {/* Page Selector */}
         <Card className="mb-6" style={{ background: COLORS.card, borderColor: COLORS.border }}>
@@ -292,6 +283,6 @@ export default function AdminPricingSettings() {
           </CardContent>
         </Card>
       </motion.div>
-    </PageLayout>
+    </AdminLayout>
   );
 }

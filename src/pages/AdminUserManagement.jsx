@@ -13,7 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GrantAccessModal from "@/components/admin/GrantAccessModal";
 import { useToast } from "@/components/ui/use-toast";
-import PageLayout from "@/components/PageLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { motion } from "framer-motion";
 
 export default function AdminUserManagement() {
@@ -167,17 +167,17 @@ export default function AdminUserManagement() {
 
   if (loading) {
     return (
-      <PageLayout>
+      <AdminLayout title="Loading..." showBackButton={false}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 animate-spin text-gold" />
         </div>
-      </PageLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <PageLayout>
-      <div className="max-w-6xl mx-auto py-8">
+    <AdminLayout title="User Access Manager" subtitle="Grant manual access, search users, manage subscriptions">
+      <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -447,6 +447,6 @@ export default function AdminUserManagement() {
           })}
         </div>
       </div>
-    </PageLayout>
+    </AdminLayout>
   );
 }

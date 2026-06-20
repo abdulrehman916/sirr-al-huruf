@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import PageLayout from "@/components/PageLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import ApprovedUsersTab from "@/components/admin/ApprovedUsersTab";
 import { useToast } from "@/components/ui/use-toast";
-import { Shield } from "lucide-react";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -56,50 +55,22 @@ export default function ApprovedUsersPage() {
 
   if (isAdmin === null) {
     return (
-      <PageLayout>
+      <AdminLayout title="Loading..." showBackButton={false}>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-white/60">Loading...</p>
           </div>
         </div>
-      </PageLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <PageLayout>
+    <AdminLayout title="Approved Users" subtitle="المستخدمون المعتمدون">
       <div className="max-w-7xl mx-auto">
-        <div
-          className="p-6 rounded-2xl mb-6"
-          style={{
-            background: `linear-gradient(135deg, ${G.bg} 0%, rgba(212,175,55,0.05) 100%)`,
-            border: `1px solid ${G.border}`
-          }}
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <div
-              className="p-2 rounded-lg"
-              style={{ background: "rgba(212,175,55,0.25)", border: `1px solid ${G.text}` }}
-            >
-              <Shield className="w-6 h-6" style={{ color: G.text }} />
-            </div>
-            <div>
-              <h2 className="font-inter text-lg font-bold text-white">
-                Approved Users
-              </h2>
-              <p className="font-amiri text-sm" style={{ color: G.dim }}>
-                المستخدمون المعتمدون
-              </p>
-            </div>
-          </div>
-          <p className="text-white/60 text-sm">
-            Grant direct access to trusted users without OTP. Approved users can log in instantly with just their email.
-          </p>
-        </div>
-
         <ApprovedUsersTab />
       </div>
-    </PageLayout>
+    </AdminLayout>
   );
 }

@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
 import { Users, Shield, Calendar, Clock, CheckCircle, XCircle, Plus, Trash2, Edit, Globe, Lock, Eye, EyeOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import PageLayout from "@/components/PageLayout";
-import PageTitle from "@/components/PageTitle";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -332,24 +331,19 @@ export default function AdminPermissions() {
 
   if (isAdmin === null || loading) {
     return (
-      <PageLayout>
+      <AdminLayout title="Loading..." showBackButton={false}>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-white/60">Loading permissions...</p>
           </div>
         </div>
-      </PageLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <PageLayout>
-      <PageTitle 
-        title="Permission Management" 
-        subtitle="Admin Access Control"
-        icon={<Shield className="w-6 h-6" style={{ color: G.text }} />}
-      />
+    <AdminLayout title="Permission Management" subtitle="Admin Access Control">
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -701,6 +695,6 @@ export default function AdminPermissions() {
           )}
         </div>
       </motion.div>
-    </PageLayout>
+    </AdminLayout>
   );
 }

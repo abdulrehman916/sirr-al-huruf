@@ -11,7 +11,7 @@ import {
   Loader2, Calendar, Clock, User, Globe, ArrowRight
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import PageLayout from "@/components/PageLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -93,30 +93,17 @@ export default function AdminAccessLogs() {
 
   if (loading) {
     return (
-      <PageLayout>
+      <AdminLayout title="Loading..." showBackButton={false}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 animate-spin text-gold" />
         </div>
-      </PageLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <PageLayout>
-      <div className="max-w-6xl mx-auto py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-            <Activity className="w-8 h-8 text-gold" />
-            Access Logs
-          </h1>
-          <p className="text-white/70">
-            Monitor all page access attempts and permission checks
-          </p>
-        </motion.div>
+    <AdminLayout title="Access Logs" subtitle="Monitor all page access attempts and permission checks">
+      <div className="max-w-6xl mx-auto">
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -296,6 +283,6 @@ export default function AdminAccessLogs() {
           )}
         </div>
       </div>
-    </PageLayout>
+    </AdminLayout>
   );
 }
