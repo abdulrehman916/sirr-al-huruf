@@ -13,24 +13,44 @@ export default function Home() {
   return (
     <PageLayout>
       <PullToRefresh onRefresh={handleRefresh}>
-        {/* Full-screen mobile-first wrapper — edge-to-edge layout */}
+        {/* ═══ HOME PAGE LOCAL FULL-SCREEN WRAPPER ═══
+            Page-local solution to achieve 100vh full-screen layout
+            without modifying PageLayout (isolation law compliant)
+        ═══════════════════════════════════════════════════ */}
         <div className="relative w-full" style={{
-          minHeight: "100dvh",
+          height: "100dvh",
           width: "100vw",
           maxWidth: "100vw",
           margin: 0,
           padding: 0,
-          flex: "1 1 auto",
           overflowX: "hidden",
+          overflowY: "auto",
+          position: "relative",
         }}>
-          <MysticalBackground mouse={mouse} />
-          {/* Hero section — full width, no centered container */}
-          <div className="w-full" style={{ maxWidth: "100vw", margin: 0, padding: 0 }}>
-            <HeroSection mouse={mouse} />
+          {/* Absolute background layer — prevents viewport shift */}
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
+            pointerEvents: "none",
+          }}>
+            <MysticalBackground mouse={mouse} />
           </div>
-          {/* Cards section — edge-to-edge on mobile */}
-          <div className="w-full" style={{ maxWidth: "100vw", margin: 0, paddingLeft: "4px", paddingRight: "4px" }}>
-            <CardsSection />
+          
+          {/* Content layer — scrolls naturally over background */}
+          <div className="relative z-10" style={{
+            minHeight: "100%",
+            width: "100%",
+          }}>
+            {/* Hero section — edge-to-edge, no padding */}
+            <div style={{ width: "100%", margin: 0, padding: 0 }}>
+              <HeroSection mouse={mouse} />
+            </div>
+            
+            {/* Cards section — minimal side padding */}
+            <div style={{ width: "100%", margin: 0, paddingLeft: "4px", paddingRight: "4px" }}>
+              <CardsSection />
+            </div>
           </div>
         </div>
       </PullToRefresh>
