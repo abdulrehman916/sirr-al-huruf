@@ -282,17 +282,19 @@ export default function HadimPage() {
             <label className="block font-inter text-[10px] uppercase tracking-widest mb-3" style={{ color: "rgba(168,85,247,0.70)" }}>Ism (Names / Ayah / Surah)</label>
             <div className="space-y-3">
               {isms.map((val, i) => (
-                <div key={i} className="relative">
-                  <span className="block font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(168,85,247,0.45)" }}>Ism {i + 1}</span>
-                  <textarea dir="rtl" value={val} onChange={(e) => updateIsm(i, e.target.value)}
-                    placeholder="اسم، آية، سورة..." rows={2}
-                    className="w-full rounded-xl px-4 py-3 pr-12 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/30"
-                    style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)" }} />
+                <div key={i} className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <span className="block font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(168,85,247,0.45)" }}>Ism {i + 1}</span>
+                    <textarea dir="rtl" value={val} onChange={(e) => updateIsm(i, e.target.value)}
+                      placeholder="اسم، آية، سورة..." rows={2}
+                      className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/30"
+                      style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)" }} />
+                  </div>
                   {isms.length > 1 && (
                     <button onClick={() => removeIsm(i)}
-                      className="absolute top-[26px] right-2.5 inline-flex items-center justify-center rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all"
-                      style={{ background: "rgba(239,68,68,0.06)", padding: "4px", width: "fit-content", minWidth: "28px", height: "28px" }}>
-                      <Trash2 className="w-3 h-3" style={{ width: "14px", height: "14px" }} />
+                      className="mt-[22px] inline-flex items-center justify-center rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all flex-shrink-0"
+                      style={{ background: "rgba(239,68,68,0.06)", padding: "6px", width: "28px", height: "28px" }}>
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
