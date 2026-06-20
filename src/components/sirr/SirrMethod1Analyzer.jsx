@@ -372,14 +372,15 @@ export default function SirrMethod1Analyzer() {
           onChange={e => setInputText(e.target.value)}
           placeholder="أدخل النص العربي هنا..."
           dir="rtl"
-          className="w-full min-h-[180px] max-h-[40vh] p-4 font-amiri text-xl text-white focus:outline-none caret-white placeholder:text-white/30 resize-y"
+          className="w-full min-h-[160px] max-h-[35vh] p-4 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30 resize-y"
           style={{ 
             background: "rgba(4,12,34,0.97)", 
             border: `1px solid ${G.border}`,
-            fontSize: '18px',
+            fontSize: '16px',
             lineHeight: '1.8',
             WebkitAppearance: 'none',
             borderRadius: '12px',
+            contain: 'layout',
           }}
         />
         <div className="flex gap-2 mt-3">

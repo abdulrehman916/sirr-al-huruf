@@ -115,10 +115,11 @@
     overflow-x: hidden;
     overscroll-behavior-x: none;
     touch-action: pan-x pan-y;
+    position: fixed;
+    width: 100%;
+    max-width: 100vw;
   }
   body {
-    min-height: 100%;
-    min-height: 100dvh;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -129,10 +130,10 @@
     max-width: 100vw;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
+    position: relative;
   }
   #root {
     min-height: 100%;
-    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -144,6 +145,7 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: "kern" 1, "liga" 1;
+    background-color: #020710 !important;
   }
 
   /* Scrollbar (platform-wide consistent styling) */
@@ -267,21 +269,31 @@
     user-select: text;
   }
 
-  /* Mobile keyboard viewport fix — prevent page jump and blank areas */
-  @supports (height: 100dvh) {
-    html {
-      height: 100dvh;
-    }
-    body {
-      min-height: 100dvh;
-    }
+  /* Mobile keyboard viewport fix — prevent white panel and page jump */
+  html {
+    position: fixed;
+    width: 100%;
+    max-width: 100vw;
+    overflow: hidden;
   }
   
-  /* Prevent blank white area below content on mobile */
   body {
     position: relative;
     overflow-y: auto;
     overscroll-behavior-y: contain;
+    background: #020710;
+  }
+
+  /* Prevent white overlay when keyboard opens */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #020710;
+    z-index: -1;
   }
 
   /* Ensure textareas don't cause viewport shift */
@@ -289,10 +301,14 @@
     max-height: 50vh;
     resize: vertical;
     -webkit-overflow-scrolling: touch;
+    contain: layout;
   }
 
-  /* iOS Safari keyboard fix — smooth scrolling */
+  /* iOS Safari keyboard fix — prevent bounce and white area */
   @supports (-webkit-touch-callout: none) {
+    body {
+      -webkit-overflow-scrolling: touch;
+    }
     #root {
       -webkit-overflow-scrolling: touch;
     }
@@ -303,6 +319,18 @@
     html {
       height: 100dvh;
     }
+  }
+
+  /* Prevent automatic scroll on input focus */
+  input:focus, textarea:focus {
+    scroll-margin-top: 0;
+  }
+
+  /* Lock scroll position during keyboard interaction */
+  .keyboard-active {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
   }
 
   /* ── Motion preference (accessibility) ── */
