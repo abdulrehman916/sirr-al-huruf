@@ -12,7 +12,6 @@ import { PageStateProvider } from './context/PageStateContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
 import { useI18n } from '@/i18n/I18nContext';
-import LanguageSetup from './pages/LanguageSetup';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import OfflineNotice from './components/OfflineNotice';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -231,21 +230,6 @@ const AuthenticatedApp = () => {
 
 function App() {
   const [splashDone, setSplashDone] = useState(false);
-  const { langSet } = useI18n();
-  const [langSetupDone, setLangSetupDone] = useState(langSet);
-
-  // Sync langSetupDone with I18nContext/langSet to prevent LanguageSetup reappearing on refresh
-  useEffect(() => {
-    if (langSet && !langSetupDone) {
-      setLangSetupDone(true);
-    }
-  }, [langSet, langSetupDone]);
-
-  const showLanguageSetup = splashDone && !langSetupDone;
-
-  if (showLanguageSetup) {
-    return <LanguageSetup onComplete={() => setLangSetupDone(true)} />;
-  }
 
   return (
     <>
