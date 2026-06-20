@@ -266,6 +266,17 @@
     user-select: text;
   }
 
+  /* KEYBOARD FIX: Prevent browser auto-scroll on focus */
+  input:focus, textarea:focus, select:focus {
+    scroll-margin: 0;
+    scroll-padding: 0;
+  }
+
+  /* KEYBOARD FIX: Lock scroll behavior when keyboard opens */
+  html:focus-within, body:focus-within, #root:focus-within {
+    scroll-behavior: auto !important;
+  }
+
 
 
 
