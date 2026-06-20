@@ -1,91 +1,35 @@
-<!DOCTYPE html>
-<html lang="ar">
+<!doctype html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
-    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#020710" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
-    <meta name="theme-color" content="#0B1020" />
-    <title>سرّ الحروف — Sirr al-Huruf</title>
-    <meta name="description" content="Abjad Numerology Calculator — Calculate the numerical value of Arabic text using the Abjad (Ebced Kebir) system." />
-    <link rel="icon" type="image/png" href="https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/85c3c0247_generated_image.png" />
-    <link rel="apple-touch-icon" href="https://media.base44.com/images/public/69f3dea51ce92ee2fde20be6/85c3c0247_generated_image.png" />
+    <meta name="apple-mobile-web-app-title" content="Sirr al-Huruf" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sirr al-Huruf - Advanced Islamic Esoteric Calculator" />
+    <meta name="keywords" content="Abjad, Mizaan, Hadim, Islamic, Esoteric, Calculator" />
+    <meta name="author" content="Sirr al-Huruf" />
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sirr al-Huruf" />
+    <meta property="og:description" content="Advanced Islamic Esoteric Calculator" />
+    <meta property="og:image" content="/icons/icon-512.png" />
+    
+    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0B1020" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="سرّ الحروف" />
-    <!-- Preload critical Arabic font to avoid layout shift -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" /></noscript>
-    <!-- Android Chrome customization -->
-    <meta name="msapplication-TileColor" content="#0B1020" />
-    <!-- Android / Google Play -->
-    <meta name="google-play-app" content="app-id=com.base.app" />
-    <meta name="rating" content="general" />
-    <!-- Prevent phone number detection -->
-    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
-    <!-- Preconnect to external origins for faster loading -->
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    <link rel="dns-prefetch" href="https://media.base44.com" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://media.base44.com" />
-    <script>
-      // Unregister any existing service workers to clear stale cache
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (let registration of registrations) {
-            registration.unregister();
-          }
-        }).catch(() => {});
-      }
-
-      if ('serviceWorker' in navigator && !import.meta.env.DEV) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then((reg) => {
-            // When a new SW is waiting, activate it immediately
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              if (!newWorker) return;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
-                }
-              });
-            });
-
-            // Cache-warming: after app loads, send all loaded resource URLs to SW
-            // This ensures every JS chunk (containing all data/calc modules) is
-            // stored offline immediately — no second visit required.
-            function warmCache() {
-              if (!navigator.serviceWorker.controller) return;
-              const urls = performance.getEntriesByType('resource')
-                .map(e => e.name)
-                .filter(u => u.startsWith(location.origin) || u.includes('fonts.g'));
-              if (urls.length) {
-                navigator.serviceWorker.controller.postMessage({ type: 'CACHE_URLS', urls });
-              }
-            }
-
-            // Run after React has mounted and lazy chunks are loaded
-            setTimeout(warmCache, 3000);
-            // Run again after a longer delay to catch lazily loaded page chunks
-            setTimeout(warmCache, 10000);
-          }).catch(() => {});
-
-          // NOTE: Do NOT reload on controllerchange — self.skipWaiting() in sw.js
-          // install fires immediately and causes controllerchange on every load,
-          // which triggers an infinite reload loop on iOS Safari.
-          // Vite asset filenames are content-hashed so stale assets are not possible.
-        });
-      }
-    </script>
+    
+    <title>Sirr al-Huruf</title>
   </head>
   <body>
     <div id="root"></div>

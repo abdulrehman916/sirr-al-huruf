@@ -1,73 +1,68 @@
+import React from "react";
 import { motion } from "framer-motion";
-
-const INSIGHTS = {
-  fire: {
-    title: "Power & Energy",
-    description: "This text carries the energy of fire — dominance, willpower, and transformative strength. Those aligned with this element possess natural leadership and burning drive.",
-    traits: ["Dominant", "Energetic", "Transformative", "Courageous"],
-    color: "#ff6a00",
-    glow: "rgba(255,60,0,0.15)",
-    border: "rgba(255,60,0,0.25)",
-  },
-  air: {
-    title: "Intelligence & Knowledge",
-    description: "The air element governs the realm of thought. This text is imbued with clarity, swift thinking, and the power of communication and learning.",
-    traits: ["Intellectual", "Communicative", "Swift", "Perceptive"],
-    color: "#60a5fa",
-    glow: "rgba(96,165,250,0.12)",
-    border: "rgba(96,165,250,0.25)",
-  },
-  water: {
-    title: "Emotion & Spirituality",
-    description: "Water flows with deep emotion and spiritual resonance. This text holds a reflective, intuitive power — connected to the unseen and the heart.",
-    traits: ["Intuitive", "Spiritual", "Empathetic", "Deep"],
-    color: "#0ea5e9",
-    glow: "rgba(14,165,233,0.12)",
-    border: "rgba(14,165,233,0.25)",
-  },
-  earth: {
-    title: "Stability & Grounding",
-    description: "Earth energy brings solidity and endurance. This text reflects permanence, patience, and a deep connection to the material and the real.",
-    traits: ["Stable", "Patient", "Grounded", "Enduring"],
-    color: "#22c55e",
-    glow: "rgba(34,197,94,0.12)",
-    border: "rgba(34,197,94,0.25)",
-  },
-};
-
-const ELEMENT_ICONS = { fire: "🔥", air: "💨", water: "💧", earth: "🌍" };
+import { ELEMENTS } from "../lib/anasirValues";
 
 export default function ElementInsight({ dominant }) {
   if (!dominant) return null;
-  const insight = INSIGHTS[dominant];
+
+  const element = ELEMENTS[dominant];
+
+  const insights = {
+    fire: {
+      traits: "Passionate, energetic, transformative",
+      spiritual: "Associated with willpower, courage, and divine fire",
+      timing: "Best for works requiring strength and determination"
+    },
+    air: {
+      traits: "Intellectual, communicative, expansive",
+      spiritual: "Connected to knowledge, wisdom, and spiritual breath",
+      timing: "Favorable for learning, teaching, and communication"
+    },
+    water: {
+      traits: "Emotional, intuitive, receptive",
+      spiritual: "Linked to purification, dreams, and spiritual cleansing",
+      timing: "Ideal for emotional healing and spiritual purification"
+    },
+    earth: {
+      traits: "Stable, grounding, manifesting",
+      spiritual: "Represents manifestation, stability, and material success",
+      timing: "Best for grounding work and material manifestations"
+    }
+  };
+
+  const insight = insights[dominant];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45 }}
-      className="rounded-2xl border p-5"
+      transition={{ delay: 0.3 }}
+      className="rounded-2xl border p-5 backdrop-blur-sm"
       style={{
-        background: `linear-gradient(180deg, ${insight.glow} 0%, rgba(0,0,0,0) 100%)`,
-        borderColor: insight.border,
-        boxShadow: `0 0 20px ${insight.glow}`,
+        background: element.bg,
+        borderColor: element.border,
+        boxShadow: `0 4px 24px ${element.glow}`
       }}
     >
-      <p className="font-inter text-[10px] text-white/35 uppercase tracking-widest mb-3">Element Insight</p>
-      <div className="flex items-start gap-3 mb-4">
-        <span className="text-2xl">{ELEMENT_ICONS[dominant]}</span>
+      <h3 className="font-inter text-[10px] uppercase tracking-widest text-white/50 font-semibold mb-3">
+        {element.icon} {element.name} Dominance
+      </h3>
+
+      <div className="space-y-3">
         <div>
-          <p className="font-inter font-semibold text-sm mb-1" style={{ color: insight.color }}>{insight.title}</p>
-          <p className="font-inter text-xs text-white/55 leading-relaxed">{insight.description}</p>
+          <p className="font-inter text-[9px] uppercase tracking-widest text-white/40 mb-1">Characteristics</p>
+          <p className="font-inter text-sm text-white/80">{insight.traits}</p>
         </div>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {insight.traits.map((t) => (
-          <span key={t} className="font-inter text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full border"
-            style={{ color: insight.color, borderColor: insight.border, background: insight.glow }}>
-            {t}
-          </span>
-        ))}
+
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-widest text-white/40 mb-1">Spiritual Meaning</p>
+          <p className="font-inter text-sm text-white/80">{insight.spiritual}</p>
+        </div>
+
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-widest text-white/40 mb-1">Optimal Timing</p>
+          <p className="font-inter text-sm text-white/80">{insight.timing}</p>
+        </div>
       </div>
     </motion.div>
   );

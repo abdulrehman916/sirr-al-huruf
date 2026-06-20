@@ -1,57 +1,53 @@
-import { Component } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 
-export default class ErrorBoundary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+export default function ErrorBoundary({ children }) {
+  const [hasError, setHasError] = React.useState(false);
+  const [error, setError] = React.useState(null);
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
+  React.useEffect(() => {
+    const errorHandler = (error) => {
+      console.error('[ErrorBoundary] Caught error:', error);
+      setHasError(true);
+      setError(error);
+    };
 
-  componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
-  }
+    window.addEventListener('error', errorHandler);
+    return () => window.removeEventListener('error', errorHandler);
+  }, []);
 
-  render() {
-    if (this.state.hasError) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="min-h-[60vh] flex items-center justify-center p-6"
-        >
-          <div className="card-dark rounded-2xl border p-8 max-w-md w-full text-center space-y-4">
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-5xl mb-2"
-            >
-              ⚠️
-            </motion.div>
-            <h2 className="text-2xl font-bold text-white">Failed to Load</h2>
-            <p className="text-white/60 text-sm">
-              {this.props.fallbackMessage || "Something went wrong. Please try refreshing."}
-            </p>
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              onClick={() => window.location.reload()}
-              className="btn-gold px-8 py-3 mt-4 rounded-xl font-inter font-semibold text-sm"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Refresh Page
-            </motion.button>
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6"
+        style={{
+          background: "linear-gradient(180deg, #020710 0%, #050d1a 100%)",
+        }}>
+        <div className="max-w-md text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center text-4xl"
+            style={{
+              background: "rgba(220,38,38,0.15)",
+              border: "2px solid rgba(220,38,38,0.40)",
+            }}>
+            ⚠️
           </div>
-        </motion.div>
-      );
-    }
-
-    return this.props.children;
+          <h2 className="font-amiri text-2xl font-bold text-white mb-3">Something went wrong</h2>
+          <p className="font-inter text-sm text-white/60 mb-6">
+            The application encountered an unexpected error. Please try refreshing the page.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 rounded-xl font-inter text-sm font-semibold"
+            style={{
+              background: "linear-gradient(135deg, rgba(212,175,55,0.30), rgba(212,175,55,0.15))",
+              border: "1px solid rgba(212,175,55,0.40)",
+              color: "#E8C84A",
+            }}>
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
   }
+
+  return children;
 }

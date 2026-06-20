@@ -44,7 +44,7 @@ export default function AnasirPage() {
     setLoading(false);
     setProgress(0);
     clearPageState(PAGE_KEY);
-};
+  };
 
   const handleCopy = () => {
     const dominant = result?.dominant ? ELEMENTS[result.dominant] : null;

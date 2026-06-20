@@ -1,32 +1,33 @@
-import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { createContext, useContext, useCallback } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useNavigate } from 'react-router-dom';
 
-const NavCtx = createContext({ isNavigating: false });
+const NavigationContext = createContext(null);
 
 export function NavigationProvider({ children }) {
-  const [isNavigating, setIsNavigating] = useState(false);
-  // Also pause all animations when the tab is hidden to prevent background memory growth
-  const [isHidden, setIsHidden] = useState(false);
+  const navigate = useNavigate();
 
   const startNav = useCallback(() => {
-    setIsNavigating(true);
-    setTimeout(() => setIsNavigating(false), 350);
+    // Trigger navigation animation/state if needed
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, []);
 
-  useEffect(() => {
-    const onVisibility = () => setIsHidden(document.hidden);
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, []);
-
-  const paused = isNavigating || isHidden;
+  const navigateWithTransition = useCallback((to, options = {}) => {
+    startNav();
+    navigate(to, options);
+  }, [startNav, navigate]);
 
   return (
-    <NavCtx.Provider value={{ isNavigating: paused, startNav }}>
+    <NavigationContext.Provider value={{ startNav, navigate: navigateWithTransition }}>
       {children}
-    </NavCtx.Provider>
+    </NavigationContext.Provider>
   );
 }
 
 export function useNavigation() {
-  return useContext(NavCtx);
+  const context = useContext(NavigationContext);
+  if (!context) {
+    throw new Error('useNavigation must be used within NavigationProvider');
+  }
+  return context;
 }

@@ -1,69 +1,71 @@
-// ── Anasir element display/styling data ──
-// This file contains ONLY UI/styling metadata.
-// All parsing, ranking, and dominance logic lives in lib/anasirEngine.js
+/**
+ * Elements (Anasir) Configuration
+ * Four classical elements with their properties
+ */
+
 export const ELEMENTS = {
   fire: {
-    name: "Fire",
-    arabic: "النار",
-    letters: ['ا', 'ه', 'ط', 'م', 'ف', 'ش', 'ذ'],
-    color: "#FF8C42",
-    arabicColor: "#ffffff",
-    numberColor: "#FFD0B0",
-    glow: "rgba(247,92,60,0.20)",
-    bg: "linear-gradient(135deg, rgba(247,92,60,0.10), rgba(255,179,71,0.07))",
-    dominantBg: "linear-gradient(135deg, #F75C3C 0%, #FF8C42 55%, #FFB347 100%)",
-    dominantShadow: "0 6px 18px rgba(247,92,60,0.28), 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 2px rgba(255,255,255,0.12)",
-    dominantBorder: "1px solid rgba(255,255,255,0.22)",
-    dominantBadge: { background: "linear-gradient(135deg, #F75C3C, #FF8C42)", boxShadow: "0 2px 6px rgba(0,0,0,0.18)", borderColor: "rgba(255,255,255,0.2)" },
-    border: "rgba(255,140,66,0.35)",
-    icon: "🔥",
-  },
-  water: {
-    name: "Water",
-    arabic: "الماء",
-    letters: ['د', 'ح', 'ل', 'ع', 'ر', 'خ', 'ض'],
-    color: "#4FC3F7",
-    arabicColor: "#ffffff",
-    numberColor: "#B3E5FC",
-    glow: "rgba(60,166,247,0.20)",
-    bg: "linear-gradient(135deg, rgba(60,166,247,0.10), rgba(129,212,250,0.07))",
-    dominantBg: "linear-gradient(135deg, #3CA6F7 0%, #4FC3F7 55%, #81D4FA 100%)",
-    dominantShadow: "0 6px 18px rgba(60,166,247,0.28), 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 2px rgba(255,255,255,0.12)",
-    dominantBorder: "1px solid rgba(255,255,255,0.22)",
-    dominantBadge: { background: "linear-gradient(135deg, #3CA6F7, #4FC3F7)", boxShadow: "0 2px 6px rgba(0,0,0,0.18)", borderColor: "rgba(255,255,255,0.2)" },
-    border: "rgba(79,195,247,0.35)",
-    icon: "💧",
+    name: 'Fire',
+    arabic: 'نار',
+    icon: '🔥',
+    color: '#ef4444',
+    bg: 'linear-gradient(180deg, rgba(239,68,68,0.15) 0%, rgba(239,68,68,0.05) 100%)',
+    border: 'rgba(239,68,68,0.40)',
+    glow: 'rgba(239,68,68,0.35)',
+    dominantBg: 'linear-gradient(180deg, rgba(239,68,68,0.25) 0%, rgba(239,68,68,0.10) 100%)',
+    dominantShadow: '0 4px 24px rgba(239,68,68,0.30)',
+    dominantBadge: {
+      background: 'rgba(239,68,68,0.20)',
+      borderColor: 'rgba(239,68,68,0.40)'
+    },
+    letters: 'أهطمر'
   },
   air: {
-    name: "Air",
-    arabic: "الهواء",
-    letters: ['ج', 'ز', 'ك', 'س', 'ق', 'ت', 'ظ'],
-    color: "#90A4AE",
-    arabicColor: "#263238",
-    numberColor: "#455A64",
-    glow: "rgba(0,0,0,0.10)",
-    bg: "linear-gradient(135deg, rgba(176,190,197,0.10), rgba(236,239,241,0.07))",
-    dominantBg: "linear-gradient(135deg, #B0BEC5 0%, #CFD8DC 55%, #ECEFF1 100%)",
-    dominantShadow: "0 6px 18px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.10), inset 0 1px 2px rgba(255,255,255,0.18)",
-    dominantBorder: "1px solid rgba(255,255,255,0.30)",
-    dominantBadge: { background: "linear-gradient(135deg, #B0BEC5, #CFD8DC)", boxShadow: "0 2px 6px rgba(0,0,0,0.18)", borderColor: "rgba(255,255,255,0.2)" },
-    border: "rgba(144,164,174,0.35)",
-    icon: "💨",
+    name: 'Air',
+    arabic: 'هواء',
+    icon: '💨',
+    color: '#fbbf24',
+    bg: 'linear-gradient(180deg, rgba(251,191,36,0.15) 0%, rgba(251,191,36,0.05) 100%)',
+    border: 'rgba(251,191,36,0.40)',
+    glow: 'rgba(251,191,36,0.35)',
+    dominantBg: 'linear-gradient(180deg, rgba(251,191,36,0.25) 0%, rgba(251,191,36,0.10) 100%)',
+    dominantShadow: '0 4px 24px rgba(251,191,36,0.30)',
+    dominantBadge: {
+      background: 'rgba(251,191,36,0.20)',
+      borderColor: 'rgba(251,191,36,0.40)'
+    },
+    letters: 'دزكوي'
+  },
+  water: {
+    name: 'Water',
+    arabic: 'ماء',
+    icon: '💧',
+    color: '#3b82f6',
+    bg: 'linear-gradient(180deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%)',
+    border: 'rgba(59,130,246,0.40)',
+    glow: 'rgba(59,130,246,0.35)',
+    dominantBg: 'linear-gradient(180deg, rgba(59,130,246,0.25) 0%, rgba(59,130,246,0.10) 100%)',
+    dominantShadow: '0 4px 24px rgba(59,130,246,0.30)',
+    dominantBadge: {
+      background: 'rgba(59,130,246,0.20)',
+      borderColor: 'rgba(59,130,246,0.40)'
+    },
+    letters: 'بجلن'
   },
   earth: {
-    name: "Earth",
-    arabic: "الأرض",
-    letters: ['ب', 'و', 'ي', 'ن', 'ص', 'ث', 'غ'],
-    color: "#7CB342",
-    arabicColor: "#ffffff",
-    numberColor: "#DCEDC8",
-    glow: "rgba(93,138,74,0.20)",
-    bg: "linear-gradient(135deg, rgba(93,138,74,0.10), rgba(165,214,167,0.07))",
-    dominantBg: "linear-gradient(135deg, #5D8A4A 0%, #7CB342 55%, #A5D6A7 100%)",
-    dominantShadow: "0 6px 18px rgba(93,138,74,0.28), 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 2px rgba(255,255,255,0.12)",
-    dominantBorder: "1px solid rgba(255,255,255,0.22)",
-    dominantBadge: { background: "linear-gradient(135deg, #5D8A4A, #7CB342)", boxShadow: "0 2px 6px rgba(0,0,0,0.18)", borderColor: "rgba(255,255,255,0.2)" },
-    border: "rgba(124,179,66,0.35)",
-    icon: "🌍",
-  },
+    name: 'Earth',
+    arabic: 'تراب',
+    icon: '🌍',
+    color: '#84cc16',
+    bg: 'linear-gradient(180deg, rgba(132,204,22,0.15) 0%, rgba(132,204,22,0.05) 100%)',
+    border: 'rgba(132,204,22,0.40)',
+    glow: 'rgba(132,204,22,0.35)',
+    dominantBg: 'linear-gradient(180deg, rgba(132,204,22,0.25) 0%, rgba(132,204,22,0.10) 100%)',
+    dominantShadow: '0 4px 24px rgba(132,204,22,0.30)',
+    dominantBadge: {
+      background: 'rgba(132,204,22,0.20)',
+      borderColor: 'rgba(132,204,22,0.40)'
+    },
+    letters: 'سعفصقثخذضظغخشت'
+  }
 };

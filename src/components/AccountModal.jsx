@@ -1,266 +1,128 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Trash2, AlertTriangle, CheckCircle, Shield, Globe, CreditCard, Settings } from "lucide-react";
-import { base44 } from "../api/base44Client";
-import { Link } from "react-router-dom";
-import useTranslation from "@/i18n/useTranslation";
-import LanguageSelector from "@/components/LanguageSelector";
+import { base44 } from "@/api/base44Client";
+import { useNavigate } from "react-router-dom";
 
 export default function AccountModal({ user, onClose }) {
-  const { t } = useTranslation();
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleted, setDeleted] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    setIsAdmin(user?.role === 'admin');
+    if (user?.id) {
+      base44.entities.UserAccessProfile.filter({ user_id: user.id })
+        .then(profiles => {
+          if (profiles && profiles.length > 0) {
+            setProfile(profiles[0]);
+          }
+        })
+        .catch(console.error);
+    }
   }, [user]);
 
-  const handleLogout = () => {
-    base44.auth.logout();
-  };
-
-  const handleDeleteAccount = async () => {
-    setDeleting(true);
-    setDeleted(true);
-    setDeleting(false);
-    setTimeout(() => {
-      base44.auth.logout();
-    }, 2200);
+  const handleLogout = async () => {
+    await base44.auth.logout('/onboarding');
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(5px)" }}
-      onClick={onClose}
-    >
+    <AnimatePresence>
       <motion.div
-        className="relative w-full max-w-sm mx-0 sm:mx-4 rounded-t-3xl sm:rounded-3xl overflow-hidden"
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
-        transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        style={{
-          background: "linear-gradient(160deg, rgba(8,16,40,0.99) 0%, rgba(3,8,22,0.99) 100%)",
-          border: "1px solid rgba(212,175,55,0.20)",
-          boxShadow: "0 -8px 60px rgba(0,0,0,0.70), inset 0 1px 0 rgba(212,175,55,0.10)",
-        }}
-        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+        style={{ background: "rgba(0,0,0,0.70)" }}
+        onClick={onClose}
       >
-        {/* Gold top line */}
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent 10%, rgba(212,175,55,0.55) 50%, transparent 90%)" }} />
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="w-full max-w-md rounded-2xl border p-6"
+          style={{
+            background: "linear-gradient(145deg, rgba(10,36,62,0.99) 0%, rgba(6,22,44,0.99) 100%)",
+            borderColor: "rgba(212,175,55,0.30)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.60), 0 0 40px rgba(212,175,55,0.10)",
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold"
+              style={{
+                background: "linear-gradient(135deg, rgba(212,175,55,0.30), rgba(212,175,55,0.10))",
+                border: "2px solid rgba(212,175,55,0.40)",
+                color: "#E8C84A",
+              }}>
+              {user?.full_name?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <h2 className="font-amiri text-2xl font-bold text-white">{user?.full_name || 'User'}</h2>
+            <p className="font-inter text-xs text-white/50 mt-1">{user?.email}</p>
+          </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-3.5" style={{ borderBottom: "1px solid rgba(212,175,55,0.08)" }}>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-amiri font-bold text-lg leading-tight" style={{ color: "#f5ecd4" }}>
-                {user?.full_name || "حسابي"}
-              </p>
-              {isAdmin && (
-                <span className="font-inter text-[9px] font-bold px-1.5 py-0.5 rounded ltr-preserve" style={{ background: "rgba(212,175,55,0.20)", color: "#F5D060", border: "1px solid rgba(212,175,55,0.35)" }}>
-                  {t('nav_admin').toUpperCase()}
+          {/* Profile Info */}
+          {profile && (
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center justify-between py-2 border-b border-white/10">
+                <span className="font-inter text-xs text-white/60">Role</span>
+                <span className={`font-inter text-xs font-semibold px-2 py-1 rounded-full ${
+                  profile.role === 'admin' 
+                    ? 'text-amber-400 bg-amber-400/10' 
+                    : 'text-blue-400 bg-blue-400/10'
+                }`}>
+                  {profile.role?.toUpperCase()}
                 </span>
-              )}
-            </div>
-            {user?.email && (
-              <p className="font-inter text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>
-                {user.email}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center w-8 h-8 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.32)", WebkitTapHighlightColor: "transparent" }}
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-5 space-y-3">
-          {/* Language Selector */}
-          <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(212,175,55,0.10)" }}>
-            <LanguageSelector compact />
-          </div>
-
-          {/* My Subscription link */}
-          <Link
-            to="/my-subscription"
-            onClick={onClose}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              WebkitTapHighlightColor: "transparent",
-              userSelect: "none", WebkitUserSelect: "none",
-            }}
-          >
-            <CreditCard className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(212,175,55,0.55)" }} />
-            <span className="font-inter text-sm font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>{t('settings_my_subscription')}</span>
-          </Link>
-
-          {/* Support link */}
-          <Link
-            to="/support"
-            onClick={onClose}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              WebkitTapHighlightColor: "transparent",
-              userSelect: "none", WebkitUserSelect: "none",
-            }}
-          >
-            <Settings className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(212,175,55,0.55)" }} />
-            <span className="font-inter text-sm font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>{t('settings_support')}</span>
-          </Link>
-
-          {/* Admin Section */}
-          {isAdmin && (
-            <div className="mb-4 pt-3" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" style={{ color: "#D4AF37" }} />
-                  <span className="font-inter text-xs font-bold uppercase tracking-wider ltr-preserve" style={{ color: "#D4AF37" }}>{t('dashboard_title')}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-white/10">
+                <span className="font-inter text-xs text-white/60">Status</span>
+                <span className="font-inter text-xs font-semibold text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+                  {profile.account_status || 'ACTIVE'}
+                </span>
+              </div>
+              {profile.subscription_plan && profile.subscription_plan !== 'NONE' && (
+                <div className="flex items-center justify-between py-2 border-b border-white/10">
+                  <span className="font-inter text-xs text-white/60">Subscription</span>
+                  <span className="font-inter text-xs font-semibold text-purple-400 bg-purple-400/10 px-2 py-1 rounded-full">
+                    {profile.subscription_plan.replace('_', ' ')}
+                  </span>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Link
-                  to="/admin/access-dashboard"
-                  onClick={onClose}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
-                    border: "1px solid rgba(212,175,55,0.25)",
-                    WebkitTapHighlightColor: "transparent",
-                    userSelect: "none", WebkitUserSelect: "none",
-                  }}
-                >
-                  <Shield className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
-                  <div className="flex-1 text-left">
-                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>{t('dashboard_users')}</p>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/admin/subscriptions-management"
-                  onClick={onClose}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
-                    border: "1px solid rgba(212,175,55,0.25)",
-                    WebkitTapHighlightColor: "transparent",
-                    userSelect: "none", WebkitUserSelect: "none",
-                  }}
-                >
-                  <CreditCard className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
-                  <div className="flex-1 text-left">
-                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>{t('dashboard_subscriptions')}</p>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/admin/user-management"
-                  onClick={onClose}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.05) 100%)",
-                    border: "1px solid rgba(212,175,55,0.25)",
-                    WebkitTapHighlightColor: "transparent",
-                    userSelect: "none", WebkitUserSelect: "none",
-                  }}
-                >
-                  <Globe className="w-4 h-4 flex-shrink-0" style={{ color: "#D4AF37" }} />
-                  <div className="flex-1 text-left">
-                    <p className="font-inter text-sm font-semibold" style={{ color: "#F5D060" }}>{t('dashboard_permissions')}</p>
-                  </div>
-                </Link>
-              </div>
+              )}
             </div>
           )}
 
-          {deleted ? (
-            <div className="flex flex-col items-center gap-3 py-4 text-center">
-              <CheckCircle className="w-10 h-10" style={{ color: "rgba(212,175,55,0.70)" }} />
-              <p className="font-amiri text-base" style={{ color: "#f5ecd4" }}>تم استلام طلبك</p>
-              <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-                {t('msg_deleted')}
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Sign Out */}
+          {/* Actions */}
+          <div className="space-y-2">
+            {user?.role === 'admin' && (
               <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                onClick={() => { onClose(); navigate('/admin/access-dashboard'); }}
+                className="w-full py-3 px-4 rounded-xl font-inter text-sm font-semibold"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  WebkitTapHighlightColor: "transparent",
-                  userSelect: "none", WebkitUserSelect: "none",
-                }}
-              >
-                <LogOut className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(255,255,255,0.38)" }} />
-                <span className="font-inter text-sm font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>{t('settings_logout')}</span>
+                  background: "linear-gradient(135deg, rgba(212,175,55,0.30), rgba(212,175,55,0.15))",
+                  border: "1px solid rgba(212,175,55,0.40)",
+                  color: "#E8C84A",
+                }}>
+                Admin Dashboard
               </button>
-
-              {/* Delete Account */}
-              {!confirmDelete ? (
-                <button
-                  onClick={() => setConfirmDelete(true)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-                  style={{
-                    background: "rgba(239,68,68,0.05)",
-                    border: "1px solid rgba(239,68,68,0.16)",
-                    WebkitTapHighlightColor: "transparent",
-                    userSelect: "none", WebkitUserSelect: "none",
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(239,68,68,0.55)" }} />
-                  <span className="font-inter text-sm font-semibold" style={{ color: "rgba(239,68,68,0.60)" }}>{t('btn_delete')} {t('settings_account')}</span>
-                </button>
-              ) : (
-                <div
-                  className="rounded-2xl p-4 space-y-3"
-                  style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.24)" }}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#F87171" }} />
-                    <p className="font-inter text-xs leading-relaxed ltr-preserve" style={{ color: "rgba(255,255,255,0.60)" }}>
-                      This will permanently delete your account and all associated data. This cannot be undone.
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setConfirmDelete(false)}
-                      className="flex-1 py-2.5 rounded-xl font-inter text-xs font-semibold"
-                      style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)", WebkitTapHighlightColor: "transparent" }}
-                    >
-                      {t('btn_cancel')}
-                    </button>
-                    <button
-                      onClick={handleDeleteAccount}
-                      disabled={deleting}
-                      className="flex-1 py-2.5 rounded-xl font-inter text-xs font-semibold"
-                      style={{ background: "rgba(239,68,68,0.20)", color: "#F87171", WebkitTapHighlightColor: "transparent" }}
-                    >
-                      {deleting ? t('lbl_loading') : t('btn_confirm') + ' ' + t('btn_delete')}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Safe area spacer on mobile */}
-        <div style={{ height: "env(safe-area-inset-bottom)", minHeight: 8 }} />
+            )}
+            
+            <button
+              onClick={handleLogout}
+              className="w-full py-3 px-4 rounded-xl font-inter text-sm font-semibold text-white/80 hover:text-white"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.15)",
+              }}>
+              Logout
+            </button>
+            
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 px-4 rounded-xl font-inter text-xs text-white/50 hover:text-white/80"
+              style={{ background: "transparent" }}>
+              Close
+            </button>
+          </div>
+        </motion.div>
       </motion.div>
-    </div>
+    </AnimatePresence>
   );
 }

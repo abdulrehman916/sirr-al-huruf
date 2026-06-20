@@ -1,118 +1,116 @@
 /**
- * Route Manifest — single source of truth for ALL application routes.
- * Add one object here, zero changes elsewhere. Scales to 500+ pages.
- *
- * Fields:
- *   path   — React Router path
- *   chunk  — page component name (e.g. 'Home')
- *   dir    — import directory; 'pages' (default) or 'components'
- *   flags  — pipe-separated: 'public'=no permission check, 'noauth'=no auth wrapper
- *
- * Each entry auto-generates: lazy import, ProtectedPage wrapper, permission code.
+ * Centralized Route Manifest
+ * Single source of truth for all application routes
+ * Format: { path, component, chunk, flags }
+ * flags: 'public' = no permission required, 'noauth' = no auth check
  */
-
 const ROUTE_MANIFEST = [
-  // ── Public / Core ──────────────────────────────────────────────────
-  { path: '/',                              chunk: 'Home',                             flags: 'public' },
-  { path: '/onboarding',                    chunk: 'Onboarding',                       flags: 'noauth' },
-  { path: '/otp-login',                     chunk: 'OTPLogin',                         flags: 'noauth' },
-
-  // ── Content pages ─────────────────────────────────────────────────
-  { path: '/abjad',                         chunk: 'AbjadKabirPage' },
-  { path: '/anasir',                        chunk: 'AnasirPage' },
-  { path: '/hadim',                         chunk: 'HadimPage' },
-  { path: '/mizaan9',                       chunk: 'Mizaan9Page' },
-  { path: '/magic-sqayer',                  chunk: 'MagicSqayerPage' },
-  { path: '/vefkin-yapilisi',               chunk: 'VefkinYapilisiPage' },
-  { path: '/basthul-huroof-2',              chunk: 'BastHuroofPage' },
-  { path: '/faal-hasrath',                  chunk: 'FaalHasrathPage' },
-  { path: '/plants',                        chunk: 'PlantsPage',                       flags: 'public' },
-  { path: '/plants/:id',                    chunk: 'PlantDetailPage' },
-  { path: '/evil-jinn',                     chunk: 'EvilJinnPage' },
-  { path: '/holy-names',                    chunk: 'MagicalHolyNamesPage' },
-  { path: '/astro-clock',                   chunk: 'AstroClockPage' },
-  { path: '/astro-clock/search',            chunk: 'AstroClockSearch',                 dir: 'components/astroclock' },
-
-  // ── Support ────────────────────────────────────────────────────────
-  { path: '/customer-service',              chunk: 'CustomerService',                  flags: 'public' },
-  { path: '/support',                       chunk: 'SupportHub',                       flags: 'public' },
-  { path: '/support/chat',                  chunk: 'SupportChat',                      flags: 'public' },
-  { path: '/support/voice',                 chunk: 'SupportVoice',                     flags: 'public' },
-  { path: '/support/ticket',                chunk: 'SupportTicket',                    flags: 'public' },
-
-  // ── Subscriptions ─────────────────────────────────────────────────
-  { path: '/subscription-expired',          chunk: 'SubscriptionExpired',              flags: 'public' },
-  { path: '/subscription-pending',          chunk: 'SubscriptionPending',              flags: 'public' },
-  { path: '/subscription-payment/:pagePath',chunk: 'RazorpayPayment' },
-  { path: '/premium-access-request',        chunk: 'PremiumAccessRequest',             flags: 'public' },
-  { path: '/my-subscription',               chunk: 'MySubscription',                   flags: 'public' },
-  { path: '/payment/:planId',               chunk: 'PaymentPage',                      flags: 'public' },
-
-  // ── Admin ──────────────────────────────────────────────────────────
-  { path: '/admin/dashboard',               chunk: 'AdminDashboard',                   flags: 'public' },
-  { path: '/admin/test',                    chunk: 'AdminTest',                        flags: 'public' },
-  { path: '/admin/support',                 chunk: 'AdminSupport' },
-  { path: '/admin/permissions',             chunk: 'AdminPermissions',                 flags: 'public' },
-  { path: '/admin/page-permissions',        chunk: 'PagePermissions',                  flags: 'public' },
-  { path: '/admin/subscriptions',           chunk: 'AdminSubscriptions' },
-  { path: '/admin/page-subscriptions',      chunk: 'AdminPageSubscriptions',           flags: 'public' },
-  { path: '/admin/pricing-settings',        chunk: 'AdminPricingSettings',             flags: 'public' },
-  { path: '/admin/user-manager',            chunk: 'AdminUserManager' },
-  { path: '/admin/user-management',         chunk: 'AdminUserManagement',              flags: 'public' },
-  { path: '/admin/access-logs',             chunk: 'AdminAccessLogs',                  flags: 'public' },
-  { path: '/admin/security-audit',          chunk: 'SecurityAuditLogs',                flags: 'public' },
-  { path: '/admin/subscriptions-management',chunk: 'AdminSubscriptionsManagement' },
-  { path: '/admin/subscription-requests',   chunk: 'SubscriptionRequestsTab',          flags: 'public', dir: 'components/admin' },
-  { path: '/admin/messages',                chunk: 'MessagesTab',                      flags: 'public', dir: 'components/admin' },
-  { path: '/admin/user-permissions',        chunk: 'AdminUserPermissions',             flags: 'public' },
-  { path: '/admin/access-dashboard',        chunk: 'OwnerAccessDashboard',             flags: 'public' },
-  { path: '/admin/user-detail/:userId',     chunk: 'UserDetailPage',                   flags: 'public' },
-  { path: '/admin/faal-chob-upload',        chunk: 'AdminFaalChobUpload' },
-  { path: '/admin/access-requests',        chunk: 'AdminAccessRequests',              flags: 'public' },
-  { path: '/admin/qa-report',             chunk: 'QAReport',                         flags: 'public' },
-  { path: '/admin/launch-checklist',      chunk: 'FinalLaunchChecklist',             flags: 'public' },
-  { path: '/admin/pre-launch-report',     chunk: 'PreLaunchReport',                  flags: 'public' },
-  { path: '/admin/enterprise-audit',      chunk: 'EnterpriseAuditDashboard',         flags: 'public' },
-  { path: '/admin/pre-launch-verification', chunk: 'PreLaunchVerification',          flags: 'public' },
-  { path: '/admin/final-audit',            chunk: 'FinalProductionAudit',           flags: 'public' },
-  { path: '/admin/performance-report',     chunk: 'PerformanceTestReport',          flags: 'public' },
-  { path: '/admin/final-signoff',          chunk: 'FinalEnterpriseSignOff',         flags: 'public' },
-  { path: '/admin/page-visibility-audit',  chunk: 'PageVisibilityAudit',            flags: 'public' },
-  { path: '/admin/verify-vip-access',      chunk: 'VerifyVIPAccess',                flags: 'public' },
-  { path: '/admin/content-rendering-audit', chunk: 'ContentRenderingAudit',         flags: 'public' },
-  { path: '/admin/audit-table-rendering',  chunk: 'AuditTableRendering',            flags: 'public' },
-  { path: '/admin/vip-test-customer',      chunk: 'VIPTestCustomer',                flags: 'public' },
-  { path: '/admin/otp-email-test',         chunk: 'OTPEmailTest',                   flags: 'public' },
-  { path: '/admin/test-otp-login',         chunk: 'TestOTPLogin',                   flags: 'public' },
-  { path: '/admin/debug-otp-email',        chunk: 'DebugOTPEmail',                  flags: 'public' },
-  { path: '/admin/test-otp-e2e',           chunk: 'TestOTPEndToEnd',                flags: 'public' },
-  { path: '/admin/test-customer-content',  chunk: 'TestRealCustomerContent',        flags: 'public' },
-
-  // ── Audit / Verification ───────────────────────────────────────────
-  { path: '/hierarchy-audit',               chunk: 'HierarchyAuditPage' },
-  { path: '/pipeline-test',                 chunk: 'MizaanPipelineTest' },
-  { path: '/audit-report',                  chunk: 'MizaanAuditReport' },
-  { path: '/istintak-discovery',            chunk: 'IstintakRuleDiscovery' },
-  { path: '/manuscript-pipeline',           chunk: 'ManuscriptPipelinePage' },
-  { path: '/abjad-bast-audit',              chunk: 'AbjadBastAuditPage' },
-  { path: '/mizan-calculation-audit',       chunk: 'MizanCalculationAudit',            dir: 'components/mizaan' },
-  { path: '/vefk-audit',                    chunk: 'MizanVefkAuditPage' },
-  { path: '/method-classification',         chunk: 'MizanMethodClassification' },
-  { path: '/manuscript-verification',       chunk: 'MizanManuscriptVerification' },
-  { path: '/manuscript-analysis',           chunk: 'MizanManuscriptAnalysis' },
-  { path: '/vefk-model-verification',       chunk: 'MizanVefkModelVerification' },
-  { path: '/rubai-verification',            chunk: 'MizanRubaiVerification' },
-  { path: '/manuscript-audit',              chunk: 'MizanManuscriptAudit' },
-  { path: '/manuscript-audit-full',         chunk: 'ManuscriptAuditPage' },
-  { path: '/manuscript-action-finder',      chunk: 'ManuscriptActionFinder' },
-  { path: '/manuscript-library',            chunk: 'ManuscriptLibraryPage' },
-  { path: '/manuscript-final-audit',        chunk: 'ManuscriptFinalAudit' },
-  { path: '/astrology-only-audit',          chunk: 'AstrologyOnlyAudit' },
-  { path: '/manuscript-browser',            chunk: 'ManuscriptRecordBrowser' },
-  { path: '/manuscript-rule-audit',         chunk: 'ManuscriptRuleAudit' },
-  { path: '/manuscript-search',             chunk: 'ManuscriptAdvancedSearch' },
-  { path: '/manazil-quality-audit',         chunk: 'ManazilQualityAudit' },
-  { path: '/manuscript-completion-report',  chunk: 'ManuscriptCompletionReport' },
+  // Core & Auth
+  { path: '/', component: 'Home', chunk: 'Home' },
+  { path: '/onboarding', component: 'Onboarding', chunk: 'Onboarding', flags: ['noauth'] },
+  { path: '/otp-login', component: 'OTPLogin', chunk: 'OTPLogin', flags: ['noauth'] },
+  
+  // Content Pages
+  { path: '/abjad', component: 'AbjadKabirPage', chunk: 'AbjadKabirPage' },
+  { path: '/anasir', component: 'AnasirPage', chunk: 'AnasirPage' },
+  { path: '/hadim', component: 'HadimPage', chunk: 'HadimPage' },
+  { path: '/mizaan9', component: 'Mizaan9Page', chunk: 'Mizaan9Page' },
+  { path: '/magic-sqayer', component: 'MagicSqayerPage', chunk: 'MagicSqayerPage' },
+  { path: '/vefkin-yapilisi', component: 'VefkinYapilisiPage', chunk: 'VefkinYapilisiPage' },
+  { path: '/basthul-huroof-2', component: 'BastHuroofPage', chunk: 'BastHuroofPage' },
+  { path: '/faal-hasrath', component: 'FaalHasrathPage', chunk: 'FaalHasrathPage' },
+  { path: '/plants', component: 'PlantsPage', chunk: 'PlantsPage' },
+  { path: '/plants/:id', component: 'PlantDetailPage', chunk: 'PlantDetailPage' },
+  { path: '/evil-jinn', component: 'EvilJinnPage', chunk: 'EvilJinnPage' },
+  { path: '/holy-names', component: 'MagicalHolyNamesPage', chunk: 'MagicalHolyNamesPage' },
+  { path: '/astro-clock', component: 'AstroClockPage', chunk: 'AstroClockPage' },
+  { path: '/astro-clock/search', component: 'AstroClockSearch', chunk: 'AstroClockSearch' },
+  
+  // Support
+  { path: '/support', component: 'CustomerService', chunk: 'CustomerService' },
+  { path: '/support/hub', component: 'SupportHub', chunk: 'SupportHub' },
+  { path: '/support/chat', component: 'SupportChat', chunk: 'SupportChat' },
+  { path: '/support/voice', component: 'SupportVoice', chunk: 'SupportVoice' },
+  { path: '/support/ticket', component: 'SupportTicket', chunk: 'SupportTicket' },
+  
+  // Subscriptions
+  { path: '/subscription/expired', component: 'SubscriptionExpired', chunk: 'SubscriptionExpired' },
+  { path: '/subscription/pending', component: 'SubscriptionPending', chunk: 'SubscriptionPending' },
+  { path: '/payment/razorpay', component: 'RazorpayPayment', chunk: 'RazorpayPayment' },
+  { path: '/premium/request', component: 'PremiumAccessRequest', chunk: 'PremiumAccessRequest' },
+  { path: '/my-subscription', component: 'MySubscription', chunk: 'MySubscription' },
+  { path: '/payment', component: 'PaymentPage', chunk: 'PaymentPage' },
+  
+  // Admin
+  { path: '/admin/access-dashboard', component: 'AdminDashboard', chunk: 'AdminDashboard' },
+  { path: '/admin/test', component: 'AdminTest', chunk: 'AdminTest' },
+  { path: '/admin/support', component: 'AdminSupport', chunk: 'AdminSupport' },
+  { path: '/admin/permissions', component: 'AdminPermissions', chunk: 'AdminPermissions' },
+  { path: '/admin/page-permissions', component: 'PagePermissions', chunk: 'PagePermissions' },
+  { path: '/admin/subscriptions', component: 'AdminSubscriptions', chunk: 'AdminSubscriptions' },
+  { path: '/admin/page-subscriptions', component: 'AdminPageSubscriptions', chunk: 'AdminPageSubscriptions' },
+  { path: '/admin/pricing-settings', component: 'AdminPricingSettings', chunk: 'AdminPricingSettings' },
+  { path: '/admin/user-manager', component: 'AdminUserManager', chunk: 'AdminUserManager' },
+  { path: '/admin/user-management', component: 'AdminUserManagement', chunk: 'AdminUserManagement' },
+  { path: '/admin/access-logs', component: 'AdminAccessLogs', chunk: 'AdminAccessLogs' },
+  { path: '/admin/security-audit', component: 'SecurityAuditLogs', chunk: 'SecurityAuditLogs' },
+  { path: '/admin/subscriptions-management', component: 'AdminSubscriptionsManagement', chunk: 'AdminSubscriptionsManagement' },
+  { path: '/admin/user-permissions', component: 'AdminUserPermissions', chunk: 'AdminUserPermissions' },
+  { path: '/admin/access-dashboard', component: 'OwnerAccessDashboard', chunk: 'OwnerAccessDashboard' },
+  { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' },
+  { path: '/admin/faal-chob-upload', component: 'AdminFaalChobUpload', chunk: 'AdminFaalChobUpload' },
+  { path: '/admin/access-requests', component: 'AdminAccessRequests', chunk: 'AdminAccessRequests' },
+  
+  // Audit & QA
+  { path: '/admin/qa-report', component: 'QAReport', chunk: 'QAReport' },
+  { path: '/admin/launch-checklist', component: 'FinalLaunchChecklist', chunk: 'FinalLaunchChecklist' },
+  { path: '/admin/pre-launch-report', component: 'PreLaunchReport', chunk: 'PreLaunchReport' },
+  { path: '/admin/enterprise-audit', component: 'EnterpriseAuditDashboard', chunk: 'EnterpriseAuditDashboard' },
+  { path: '/admin/pre-launch-verification', component: 'PreLaunchVerification', chunk: 'PreLaunchVerification' },
+  { path: '/admin/final-production-audit', component: 'FinalProductionAudit', chunk: 'FinalProductionAudit' },
+  { path: '/admin/performance-test', component: 'PerformanceTestReport', chunk: 'PerformanceTestReport' },
+  { path: '/admin/final-signoff', component: 'FinalEnterpriseSignOff', chunk: 'FinalEnterpriseSignOff' },
+  { path: '/admin/page-visibility-audit', component: 'PageVisibilityAudit', chunk: 'PageVisibilityAudit' },
+  { path: '/admin/verify-vip', component: 'VerifyVIPAccess', chunk: 'VerifyVIPAccess' },
+  { path: '/admin/content-rendering-audit', component: 'ContentRenderingAudit', chunk: 'ContentRenderingAudit' },
+  { path: '/admin/test-customer-content', component: 'TestRealCustomerContent', chunk: 'TestRealCustomerContent' },
+  { path: '/admin/audit-fix-content', component: 'AuditAndFixContent', chunk: 'AuditAndFixContent' },
+  { path: '/admin/audit-table-rendering', component: 'AuditTableRendering', chunk: 'AuditTableRendering' },
+  { path: '/admin/vip-test-customer', component: 'VIPTestCustomer', chunk: 'VIPTestCustomer' },
+  { path: '/admin/otp-email-test', component: 'OTPEmailTest', chunk: 'OTPEmailTest' },
+  { path: '/admin/test-otp-login', component: 'TestOTPLogin', chunk: 'TestOTPLogin' },
+  { path: '/admin/debug-otp-email', component: 'DebugOTPEmail', chunk: 'DebugOTPEmail' },
+  { path: '/admin/test-otp-e2e', component: 'TestOTPEndToEnd', chunk: 'TestOTPEndToEnd' },
+  
+  // Admin Tabs (non-page components)
+  { path: '/admin/sub-requests', component: 'SubscriptionRequestsTab', chunk: 'SubscriptionRequestsTab' },
+  { path: '/admin/messages', component: 'MessagesTab', chunk: 'MessagesTab' },
+  
+  // Manuscript Audit
+  { path: '/admin/hierarchy-audit', component: 'HierarchyAuditPage', chunk: 'HierarchyAuditPage' },
+  { path: '/admin/mizaan-pipeline-test', component: 'MizaanPipelineTest', chunk: 'MizaanPipelineTest' },
+  { path: '/admin/mizaan-audit-report', component: 'MizaanAuditReport', chunk: 'MizaanAuditReport' },
+  { path: '/admin/istintak-rules', component: 'IstintakRuleDiscovery', chunk: 'IstintakRuleDiscovery' },
+  { path: '/admin/manuscript-pipeline', component: 'ManuscriptPipelinePage', chunk: 'ManuscriptPipelinePage' },
+  { path: '/admin/abjad-bast-audit', component: 'AbjadBastAuditPage', chunk: 'AbjadBastAuditPage' },
+  { path: '/admin/mizan-calc-audit', component: 'MizanCalculationAudit', chunk: 'MizanCalculationAudit' },
+  { path: '/admin/mizan-vefk-audit', component: 'MizanVefkAuditPage', chunk: 'MizanVefkAuditPage' },
+  { path: '/admin/mizan-method', component: 'MizanMethodClassification', chunk: 'MizanMethodClassification' },
+  { path: '/admin/mizan-manuscript-verify', component: 'MizanManuscriptVerification', chunk: 'MizanManuscriptVerification' },
+  { path: '/admin/mizan-manuscript-analysis', component: 'MizanManuscriptAnalysis', chunk: 'MizanManuscriptAnalysis' },
+  { path: '/admin/mizan-vefk-model', component: 'MizanVefkModelVerification', chunk: 'MizanVefkModelVerification' },
+  { path: '/admin/mizan-rubai', component: 'MizanRubaiVerification', chunk: 'MizanRubaiVerification' },
+  { path: '/admin/mizan-manuscript-audit', component: 'MizanManuscriptAudit', chunk: 'MizanManuscriptAudit' },
+  { path: '/admin/manuscript-audit', component: 'ManuscriptAuditPage', chunk: 'ManuscriptAuditPage' },
+  { path: '/admin/manuscript-action', component: 'ManuscriptActionFinder', chunk: 'ManuscriptActionFinder' },
+  { path: '/admin/manuscript-library', component: 'ManuscriptLibraryPage', chunk: 'ManuscriptLibraryPage' },
+  { path: '/admin/manuscript-final', component: 'ManuscriptFinalAudit', chunk: 'ManuscriptFinalAudit' },
+  { path: '/admin/astrology-only', component: 'AstrologyOnlyAudit', chunk: 'AstrologyOnlyAudit' },
+  { path: '/admin/manuscript-browser', component: 'ManuscriptRecordBrowser', chunk: 'ManuscriptRecordBrowser' },
+  { path: '/admin/manuscript-rule-audit', component: 'ManuscriptRuleAudit', chunk: 'ManuscriptRuleAudit' },
+  { path: '/admin/manuscript-advanced-search', component: 'ManuscriptAdvancedSearch', chunk: 'ManuscriptAdvancedSearch' },
+  { path: '/admin/manazil-quality', component: 'ManazilQualityAudit', chunk: 'ManazilQualityAudit' },
+  { path: '/admin/manuscript-completion', component: 'ManuscriptCompletionReport', chunk: 'ManuscriptCompletionReport' },
 ];
 
 export default ROUTE_MANIFEST;

@@ -1,102 +1,47 @@
-/**
- * Lightweight in-memory TTL cache for permission and visibility checks.
- * Eliminates redundant API calls — critical for page-visit-heavy apps.
- *
- * Cache hits avoid:
- *   - PageVisibilityConfig.list() (grows O(n) with pages)
- *   - checkVIPAccess backend call
- *   - checkPageSubscription backend call
- *   - checkPageAccess backend call
- *   - UserAccessProfile.filter() call
- */
+import { base44 } from './base44Client';
 
-const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
+// Permission cache with TTL (30 seconds for faster role updates)
+const CACHE_TTL = 30000;
+const permissionCache = new Map();
 
-const store = new Map();
-
-/**
- * Get a cached value. Returns null if missing or expired.
- */
-export function getCached(key) {
-  const entry = store.get(key);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    store.delete(key);
-    return null;
+export function getCachedPermissions(userId) {
+  const cached = permissionCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.permissions;
   }
-  return entry.value;
+  return null;
 }
 
-/**
- * Set a cached value with optional TTL.
- */
-export function setCached(key, value, ttl = DEFAULT_TTL) {
-  store.set(key, { value, expiresAt: Date.now() + ttl });
-}
-
-/**
- * Remove a specific key from cache.
- */
-export function clearCached(key) {
-  store.delete(key);
-}
-
-/**
- * Clear all cache.
- */
-export function clearAllCache() {
-  store.clear();
-}
-
-/**
- * Purge expired entries (call periodically or on visibility change).
- * Returns number of entries removed.
- */
-export function purgeExpired() {
-  const now = Date.now();
-  let count = 0;
-  for (const [key, entry] of store) {
-    if (now > entry.expiresAt) {
-      store.delete(key);
-      count++;
-    }
+export async function refreshPermissionCache(userId) {
+  try {
+    const permissions = await base44.entities.PagePermission.filter({ user_id: userId, is_active: true, is_revoked: false });
+    permissionCache.set(userId, {
+      permissions,
+      timestamp: Date.now()
+    });
+    return permissions;
+  } catch (error) {
+    console.error('[PermissionCache] Failed to refresh:', error);
+    return [];
   }
-  return count;
 }
 
-// Auto-purge when tab becomes hidden (saves memory)
-if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) purgeExpired();
-  });
+export function clearPermissionCache(userId) {
+  if (userId) {
+    permissionCache.delete(userId);
+  } else {
+    permissionCache.clear();
+  }
 }
 
-// ── Key factories for type-safe cache keys ──────────────────────────────────────
-
-/**
- * Cache key for page visibility config result.
- */
-export function visibilityKey(pagePath) {
-  return `vis:${pagePath}`;
-}
-
-/**
- * Cache key for full access check result (consolidated).
- */
-export function accessCheckKey(userId, pagePath) {
-  return `acc:${userId}:${pagePath}`;
-}
-
-/**
- * Cache key for user profile (lifetime_access check).
- */
-export function profileKey(userId) {
-  return `prof:${userId}`;
-}
-
-/**
- * Cache key for admin data lists (paginated).
- */
-export function adminListKey(entity, page = 0) {
-  return `admin:${entity}:${page}`;
+export function hasPagePermission(userId, pagePath, cachedPermissions = null) {
+  const permissions = cachedPermissions || getCachedPermissions(userId);
+  if (!permissions) return false;
+  
+  return permissions.some(p => 
+    p.page_path === pagePath && 
+    p.is_active && 
+    !p.is_revoked &&
+    new Date(p.expiry_date) > new Date()
+  );
 }

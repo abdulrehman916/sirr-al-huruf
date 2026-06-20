@@ -1,60 +1,43 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const STORAGE_KEY = "app_page_state_v1";
-const SCROLL_KEY  = "app_scroll_pos_v1";
-
-// ── Safe localStorage helpers ───────────────────────────────────
-function loadFromStorage(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw);
-  } catch {
-    return fallback;
-  }
-}
-
-function saveToStorage(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Quota exceeded or private mode — fail silently
-  }
-}
-
-function removeFromStorage(key) {
-  try {
-    localStorage.removeItem(key);
-  } catch {}
-}
-
-// ── Context ─────────────────────────────────────────────────────
 const PageStateContext = createContext(null);
 
 export function PageStateProvider({ children }) {
-  // Hydrate immediately from localStorage on mount
-  const [pageStates, setPageStates] = useState(() => loadFromStorage(STORAGE_KEY, {}));
-  const [scrollPositions, setScrollPositions] = useState(() => loadFromStorage(SCROLL_KEY, {}));
+  const [pageStates, setPageStates] = useState({});
 
-  // Persist page states to localStorage immediately on every change
+  // Load from sessionStorage on mount
   useEffect(() => {
-    saveToStorage(STORAGE_KEY, pageStates);
+    try {
+      const saved = sessionStorage.getItem('pageStates');
+      if (saved) {
+        setPageStates(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn('[PageState] Failed to load from sessionStorage:', e);
+    }
+  }, []);
+
+  // Save to sessionStorage on change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('pageStates', JSON.stringify(pageStates));
+    } catch (e) {
+      console.warn('[PageState] Failed to save to sessionStorage:', e);
+    }
   }, [pageStates]);
 
-  useEffect(() => {
-    saveToStorage(SCROLL_KEY, scrollPositions);
-  }, [scrollPositions]);
-
-  // ── Page state API ───────────────────────────────────────────
-  const getPageState = useCallback((pageKey, initialState) => {
-    if (pageStates[pageKey] === undefined) return initialState;
-    // Merge with initialState so any new keys added to initialState are included
-    return { ...initialState, ...pageStates[pageKey] };
+  const getPageState = useCallback((pageKey, defaultValue = {}) => {
+    return pageStates[pageKey] ?? defaultValue;
   }, [pageStates]);
 
-  const setPageState = useCallback((pageKey, state) => {
-    setPageStates(prev => ({ ...prev, [pageKey]: state }));
+  const setPageState = useCallback((pageKey, newState) => {
+    setPageStates(prev => ({
+      ...prev,
+      [pageKey]: {
+        ...prev[pageKey],
+        ...newState
+      }
+    }));
   }, []);
 
   const clearPageState = useCallback((pageKey) => {
@@ -65,32 +48,8 @@ export function PageStateProvider({ children }) {
     });
   }, []);
 
-  // ── Scroll position API ──────────────────────────────────────
-  const saveScrollPosition = useCallback((routePath, position) => {
-    setScrollPositions(prev => ({ ...prev, [routePath]: position }));
-  }, []);
-
-  const getScrollPosition = useCallback((routePath) => {
-    return scrollPositions[routePath] ?? 0;
-  }, [scrollPositions]);
-
-  // ── Nuclear reset (explicit user action only) ────────────────
-  const resetAllState = useCallback(() => {
-    setPageStates({});
-    setScrollPositions({});
-    removeFromStorage(STORAGE_KEY);
-    removeFromStorage(SCROLL_KEY);
-  }, []);
-
   return (
-    <PageStateContext.Provider value={{
-      getPageState,
-      setPageState,
-      clearPageState,
-      saveScrollPosition,
-      getScrollPosition,
-      resetAllState,
-    }}>
+    <PageStateContext.Provider value={{ getPageState, setPageState, clearPageState }}>
       {children}
     </PageStateContext.Provider>
   );
@@ -98,24 +57,32 @@ export function PageStateProvider({ children }) {
 
 export function usePageState() {
   const context = useContext(PageStateContext);
-  if (!context) throw new Error("usePageState must be used within PageStateProvider");
+  if (!context) {
+    throw new Error('usePageState must be used within PageStateProvider');
+  }
   return context;
 }
 
-// ── Convenience hook: auto-save scroll only (NO restore) ──────────
-// Use in any page: useScrollPersist() — no args needed
-// NOTE: Scroll restoration is DISABLED - pages always open at top
+// Hook for scroll position persistence
 export function useScrollPersist() {
-  const { saveScrollPosition } = usePageState();
-  const location = useLocation();
-  const scrollContainerSelector = '[data-scroll-container="true"]';
-
-  // Save scroll continuously (for potential future use, but never restore)
   useEffect(() => {
-    const el = document.querySelector(scrollContainerSelector);
-    if (!el) return;
-    const onScroll = () => saveScrollPosition(location.pathname, el.scrollTop);
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [location.pathname, saveScrollPosition]);
+    const scrollKey = `scroll_${window.location.pathname}`;
+    
+    // Restore scroll position
+    const saved = sessionStorage.getItem(scrollKey);
+    if (saved) {
+      const scrollContainer = document.querySelector('[data-scroll-container="true"]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = parseInt(saved, 10);
+      }
+    }
+
+    // Save scroll position on unmount
+    return () => {
+      const scrollContainer = document.querySelector('[data-scroll-container="true"]');
+      if (scrollContainer) {
+        sessionStorage.setItem(scrollKey, scrollContainer.scrollTop.toString());
+      }
+    };
+  }, []);
 }

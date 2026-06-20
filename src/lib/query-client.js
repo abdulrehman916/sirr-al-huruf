@@ -1,14 +1,14 @@
+import { base44 } from '@/api/base44Client';
+
+// Query client instance with optimized defaults
 import { QueryClient } from '@tanstack/react-query';
 
-
 export const queryClientInstance = new QueryClient({
-	defaultOptions: {
-		queries: {
-			refetchOnWindowFocus: false,
-			refetchOnReconnect: false,
-			retry: 1,
-			staleTime: 5 * 60 * 1000,       // 5 min — avoid redundant refetches
-			gcTime: 30 * 60 * 1000,          // 30 min — keep cache for returning visitors
-		},
-	},
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
 });
