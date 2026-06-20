@@ -377,8 +377,7 @@ export default function PageLayout({ children }) {
           boxSizing: "border-box",
           position: "relative",
           flex: "1 1 auto",
-          minHeight: "100%",
-          background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
+          minHeight: "0",
         }}
       >
         <AnimatePresence mode="wait">
