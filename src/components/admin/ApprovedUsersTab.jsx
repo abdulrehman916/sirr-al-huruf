@@ -40,11 +40,12 @@ function UserDrawer({ user, onClose, onUpdate }) {
   const loadUserDetails = async () => {
     setLoading(true);
     try {
+      // SCALABILITY: Add limits to all queries
       const [profile, codes, perms, msgs] = await Promise.all([
         base44.entities.UserAccessProfile.filter({ user_id: user.id }).then(r => r[0]),
-        base44.entities.AccessCode.list().then(codes => codes.filter(c => c.used_by_user_id === user.id)),
-        base44.entities.PagePermission.filter({ user_id: user.id }),
-        base44.entities.SupportMessage.filter({ sender_id: user.email }).then(r => r.slice(0, 10)),
+        base44.entities.AccessCode.list(null, 100).then(codes => codes.filter(c => c.used_by_user_id === user.id)),
+        base44.entities.PagePermission.filter({ user_id: user.id }, null, 500), // Limit to 500 permissions
+        base44.entities.SupportMessage.filter({ sender_id: user.email }, null, 10).then(r => r.slice(0, 10)),
       ]);
       setUserProfile(profile);
       setAccessCodes(codes);
@@ -265,6 +266,10 @@ export default function ApprovedUsersTab() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
   const [selectedUser, setSelectedUser] = useState(null);
+  // Pagination for scalability (10M users)
+  const [page, setPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const PAGE_SIZE = 100; // Load 100 users per page
 
   const handleBlockUser = async (userId) => {
     try {
@@ -309,12 +314,18 @@ export default function ApprovedUsersTab() {
   const loadUsers = async () => {
     setLoading(true);
     try {
+      // SCALABILITY: Load only PAGE_SIZE users with pagination
+      const skip = (page - 1) * PAGE_SIZE;
+      
       const [approvedUsers, allUsers] = await Promise.all([
-        base44.entities.ApprovedUser.list(),
-        base44.entities.User.list().catch(() => []),
+        base44.entities.ApprovedUser.list(null, PAGE_SIZE + 1), // Load one extra to check if more exist
+        base44.entities.User.list(null, 500).catch(() => []), // Limit to 500 for performance
       ]);
       
-      const merged = approvedUsers.map(approved => {
+      const hasMore = approvedUsers.length > PAGE_SIZE;
+      const paginatedUsers = hasMore ? approvedUsers.slice(0, PAGE_SIZE) : approvedUsers;
+      
+      const merged = paginatedUsers.map(approved => {
         const platformUser = allUsers.find(u => u.email === approved.email);
         return {
           ...approved,
@@ -327,6 +338,7 @@ export default function ApprovedUsersTab() {
       });
       
       setUsers(merged);
+      setTotalUsers(hasMore ? PAGE_SIZE * page + merged.length : (PAGE_SIZE * (page - 1)) + merged.length);
     } catch (e) {
       toast({ title: "Error loading users", description: e.message, variant: "destructive" });
     } finally {
@@ -334,7 +346,7 @@ export default function ApprovedUsersTab() {
     }
   };
 
-  useEffect(() => { loadUsers(); }, []);
+  useEffect(() => { loadUsers(); }, [page]);
 
   const filtered = useMemo(() => {
     let list = users;
@@ -411,49 +423,84 @@ export default function ApprovedUsersTab() {
           <p className="text-sm">No users found</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filtered.map(user => {
-            const status = STATUS_CONFIG[user.status] || STATUS_CONFIG.ACTIVE;
-            const StatusIcon = status.icon;
-            return (
-              <div key={user.id} 
-                onClick={() => setSelectedUser(user)}
-                className="rounded-xl border p-4 cursor-pointer transition-all hover:scale-[1.01]"
-                style={{ background: G.bg, borderColor: G.border }}>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <StatusIcon className="w-4 h-4 flex-shrink-0" style={{ color: status.color }} />
-                      <span className="font-inter font-bold text-white text-sm truncate">{user.full_name}</span>
-                      <Badge className={`${status.bg} ${status.color} border text-xs flex-shrink-0`}>
-                        {status.label}
-                      </Badge>
+        <>
+          <div className="space-y-2">
+            {filtered.map(user => {
+              const status = STATUS_CONFIG[user.status] || STATUS_CONFIG.ACTIVE;
+              const StatusIcon = status.icon;
+              return (
+                <div key={user.id} 
+                  onClick={() => setSelectedUser(user)}
+                  className="rounded-xl border p-4 cursor-pointer transition-all hover:scale-[1.01]"
+                  style={{ background: G.bg, borderColor: G.border }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <StatusIcon className="w-4 h-4 flex-shrink-0" style={{ color: status.color }} />
+                        <span className="font-inter font-bold text-white text-sm truncate">{user.full_name}</span>
+                        <Badge className={`${status.bg} ${status.color} border text-xs flex-shrink-0`}>
+                          {status.label}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs text-white/45">
+                        <span className="flex items-center gap-1 truncate">
+                          <Mail className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{user.email}</span>
+                        </span>
+                        <span className="flex items-center gap-1 truncate">
+                          <Phone className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{user.phone || "—"}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3 flex-shrink-0" />
+                          Joined: {user.registration_date ? new Date(user.registration_date).toLocaleDateString() : "N/A"}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <LogIn className="w-3 h-3 flex-shrink-0" />
+                          {user.login_count || 0} logins
+                        </span>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs text-white/45">
-                      <span className="flex items-center gap-1 truncate">
-                        <Mail className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{user.email}</span>
-                      </span>
-                      <span className="flex items-center gap-1 truncate">
-                        <Phone className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{user.phone || "—"}</span>
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 flex-shrink-0" />
-                        Joined: {user.registration_date ? new Date(user.registration_date).toLocaleDateString() : "N/A"}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <LogIn className="w-3 h-3 flex-shrink-0" />
-                        {user.login_count || 0} logins
-                      </span>
-                    </div>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" style={{ color: G.dim }} />
                   </div>
-                  <ChevronRight className="w-5 h-5 flex-shrink-0" style={{ color: G.dim }} />
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+          
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t" style={{ borderColor: G.border }}>
+            <p className="text-xs text-white/40">
+              Showing {users.length} users {page > 1 ? `(page ${page})` : ''} {totalUsers > PAGE_SIZE ? '(+ more available)' : ''}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ 
+                  background: page === 1 ? G.bg : G.bgHi, 
+                  color: page === 1 ? G.dim : G.text,
+                  border: `1px solid ${G.border}`
+                }}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setPage(p => p + 1)}
+                disabled={users.length < PAGE_SIZE}
+                className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ 
+                  background: users.length < PAGE_SIZE ? G.bg : G.bgHi, 
+                  color: users.length < PAGE_SIZE ? G.dim : G.text,
+                  border: `1px solid ${G.border}`
+                }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* User Details Drawer */}

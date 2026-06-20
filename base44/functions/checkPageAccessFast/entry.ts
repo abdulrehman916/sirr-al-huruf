@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       return Response.json({ granted: true, status: 'granted', source: 'admin_bypass' });
     }
 
-    // 4. Profile check: blocked/archived users are denied everything
+    // 4. Profile check: blocked/archived/removed users are denied everything
     const profiles = await base44.asServiceRole.entities.UserAccessProfile.filter(
       { user_id: user.id },
       null,
@@ -55,6 +55,9 @@ Deno.serve(async (req) => {
       }
       if (status === 'ARCHIVED') {
         return Response.json({ granted: false, reason: 'Account not accessible', status: 'denied' });
+      }
+      if (status === 'REMOVED') {
+        return Response.json({ granted: false, reason: 'Account removed', status: 'denied' });
       }
     }
     if (profiles.length > 0 && profiles[0].lifetime_access) {

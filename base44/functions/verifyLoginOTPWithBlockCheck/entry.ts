@@ -39,6 +39,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Your account has been blocked. Contact admin.' }, { status: 403 });
     }
 
+    const removedUser = await base44.entities.ApprovedUser.filter({ email, status: 'REMOVED' }).then(r => r[0]);
+    if (removedUser) {
+      return Response.json({ error: 'Your account has been removed. Contact admin.' }, { status: 403 });
+    }
+
     await base44.entities.OTPVerification.update(otp.otp_id, { 
       verified: true, 
       verified_at: new Date().toISOString(),

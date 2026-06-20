@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, message: "Code is required" }, { status: 400 });
     }
 
-    // ── BLOCK/ARCHIVE CHECK ──────────────────────────────────────────────────
+    // ── BLOCK/ARCHIVE/REMOVE CHECK ──────────────────────────────────────────────────
     const profiles = await base44.asServiceRole.entities.UserAccessProfile.filter(
       { user_id: user.id }, null, 1
     );
@@ -23,6 +23,9 @@ Deno.serve(async (req) => {
       }
       if (status === 'ARCHIVED') {
         return Response.json({ success: false, message: "Account not found." });
+      }
+      if (status === 'REMOVED') {
+        return Response.json({ success: false, message: "Account has been removed." });
       }
     }
 
