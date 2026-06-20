@@ -128,80 +128,41 @@ export default function AbjadKabirPage() {
     setSelectedResult(null);
   };
 
-  // Mobile keyboard viewport fix — VisualViewport API handling
+  // Mobile keyboard fix — passive scroll position preservation
   const textareaRef = useRef(null);
-  const originalViewportHeight = useRef(null);
-  const keyboardOpenRef = useRef(false);
+  const scrollPositionRef = useRef(0);
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
-    // Only on mobile — handle visualViewport resize from keyboard
-    if (!window.visualViewport) return;
-
-    const scrollContainer = document.querySelector('[data-scroll-container="true"]');
-    if (!scrollContainer) return;
-
-    const handleViewportResize = () => {
-      const viewport = window.visualViewport;
-      const textarea = textareaRef.current;
-      if (!textarea || !viewport) return;
-
-      const viewportHeight = viewport.height;
-      const isKeyboardOpen = viewportHeight < (originalViewportHeight.current || viewportHeight);
-
-      if (isKeyboardOpen && !keyboardOpenRef.current) {
-        // Keyboard just opened
-        keyboardOpenRef.current = true;
-        originalViewportHeight.current = viewportHeight;
-
-        // Scroll textarea into view with proper offset
-        setTimeout(() => {
-          const textareaRect = textarea.getBoundingClientRect();
-          const keyboardHeight = window.innerHeight - viewportHeight;
-          const visibleArea = viewportHeight;
-
-          // Check if textarea bottom is hidden by keyboard
-          if (textareaRect.bottom > visibleArea - 50) {
-            const scrollOffset = textareaRect.bottom - visibleArea + 100;
-            scrollContainer.scrollTop = scrollContainer.scrollTop + scrollOffset;
-          }
-        }, 150);
-      } else if (!isKeyboardOpen && keyboardOpenRef.current) {
-        // Keyboard just closed
-        keyboardOpenRef.current = false;
-        originalViewportHeight.current = null;
-      }
-    };
-
-    // Store initial viewport height
-    originalViewportHeight.current = window.visualViewport.height;
-
-    window.visualViewport.addEventListener('resize', handleViewportResize);
-    return () => window.visualViewport.removeEventListener('resize', handleViewportResize);
+    // Get scroll container reference once mounted
+    scrollContainerRef.current = document.querySelector('[data-scroll-container="true"]');
   }, []);
 
   const handleTextareaFocus = () => {
-    const scrollContainer = document.querySelector('[data-scroll-container="true"]');
-    if (scrollContainer) {
-      scrollContainer.style.scrollBehavior = 'auto';
-    }
-    // Small delay to let keyboard start opening
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    // Store scroll position BEFORE keyboard triggers viewport change
+    scrollPositionRef.current = container.scrollTop;
+    
+    // Lock scroll behavior to prevent smooth-scroll interference
+    container.style.scrollBehavior = 'auto';
+    container.style.overflowY = 'hidden';
+    
+    // Restore after brief delay (let keyboard open)
     setTimeout(() => {
-      if (textareaRef.current && scrollContainer) {
-        const textareaRect = textareaRef.current.getBoundingClientRect();
-        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        // Scroll if textarea is in lower half of screen
-        if (textareaRect.top > viewportHeight * 0.4) {
-          scrollContainer.scrollTop = scrollContainer.scrollTop + textareaRect.top - 100;
-        }
-      }
-    }, 100);
+      container.scrollTop = scrollPositionRef.current;
+      container.style.overflowY = 'auto';
+      container.style.scrollBehavior = 'auto';
+    }, 200);
   };
 
   const handleTextareaBlur = () => {
-    const scrollContainer = document.querySelector('[data-scroll-container="true"]');
-    if (scrollContainer) {
-      scrollContainer.style.scrollBehavior = 'smooth';
-    }
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    // Restore normal scroll behavior
+    container.style.scrollBehavior = 'smooth';
   };
 
   const getModeLabel = (id) => {
@@ -346,7 +307,7 @@ export default function AbjadKabirPage() {
           <SectionCard>
             <SectionLabel>ARABIC TEXT INPUT — {mode.toUpperCase()}</SectionLabel>
             
-            <div className="relative mt-3" style={{ scrollMarginTop: '200px' }}>
+            <div className="relative mt-3">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -358,7 +319,6 @@ export default function AbjadKabirPage() {
                 style={{
                   borderColor: "rgba(212,175,55,0.25)",
                   boxShadow: "inset 0 2px 12px rgba(0,0,0,0.40)",
-                  scrollMarginTop: '200px',
                 }}
                 rows={4}
                 dir="rtl"
