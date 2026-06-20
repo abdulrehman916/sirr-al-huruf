@@ -38,67 +38,6 @@ export default function SirrPage() {
   const [selectedResult, setSelectedResult] = useState(initialState.selectedResult);
   const [isSearching, setIsSearching] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
-  const pageContainerRef = useRef(null);
-
-  // SIRR PAGE KEYBOARD FIX — VisualViewport API handler (page-scoped, isolated)
-  // Prevents viewport compression, scroll jumps, and layout shifts on iPhone Safari
-  useEffect(() => {
-    if (typeof window.visualViewport === 'undefined') return;
-    
-    let savedScrollY = 0;
-    let keyboardWasOpen = false;
-    let originalOverflow = '';
-    
-    const handleResize = () => {
-      const viewportHeight = window.visualViewport.height;
-      const innerHeight = window.innerHeight;
-      const keyboardIsOpen = viewportHeight < innerHeight * 0.9;
-      
-      // Keyboard just opened
-      if (keyboardIsOpen && !keyboardWasOpen) {
-        savedScrollY = window.scrollY;
-        keyboardWasOpen = true;
-        
-        // Lock body scroll to prevent jump
-        originalOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${savedScrollY}px`;
-        document.body.style.width = '100%';
-      }
-      
-      // Keyboard just closed
-      if (!keyboardIsOpen && keyboardWasOpen) {
-        keyboardWasOpen = false;
-        
-        // Restore body scroll
-        document.body.style.overflow = originalOverflow;
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        
-        // Restore scroll position
-        requestAnimationFrame(() => {
-          window.scrollTo(0, savedScrollY);
-        });
-      }
-    };
-    
-    // Listen for viewport resize (keyboard open/close)
-    window.visualViewport.addEventListener('resize', handleResize, { passive: true });
-    
-    // Initial check
-    handleResize();
-    
-    return () => {
-      window.visualViewport.removeEventListener('resize', handleResize);
-      // Cleanup
-      document.body.style.overflow = originalOverflow;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-    };
-  }, []);
 
   // Persist state
   useState(() => {
@@ -198,19 +137,7 @@ export default function SirrPage() {
 
   return (
     <PageLayout>
-      <div
-        ref={pageContainerRef}
-        className="space-y-4"
-        style={{
-          minHeight: '100dvh',
-          // Prevent flex compression during keyboard open
-          flexShrink: 0,
-          flexGrow: 0,
-          // Ensure content doesn't overflow horizontally
-          maxWidth: '100vw',
-          overflowX: 'hidden',
-        }}
-      >
+      <div className="space-y-4">
         {/* Header */}
         <PageTitle
           arabic="السر"

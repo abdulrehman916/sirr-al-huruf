@@ -165,6 +165,7 @@ export default function PageLayout({ children }) {
 
   // Track scroll metrics for fade indicators
   // TEMPORARILY DISABLED: resize listener triggers on keyboard open → state update → page jump
+  // Track scroll metrics for fade indicators — scroll events only (NO resize to prevent keyboard jumps)
   useEffect(() => {
     if (!navRef.current) return;
     const nav = navRef.current;
@@ -176,13 +177,11 @@ export default function PageLayout({ children }) {
       });
     };
     updateMetrics();
-    nav.addEventListener('scroll', updateMetrics);
-    // window.addEventListener('resize', updateMetrics); // DISABLED FOR KEYBOARD JUMP TEST
+    nav.addEventListener('scroll', updateMetrics, { passive: true });
     return () => {
       nav.removeEventListener('scroll', updateMetrics);
-      // window.removeEventListener('resize', updateMetrics); // DISABLED FOR KEYBOARD JUMP TEST
     };
-  }, [activeId]);
+  }, []);
 
   // Auto-scroll active tab into view — scroll the nav container only, NOT the page
   useEffect(() => {
@@ -222,9 +221,8 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        height: "auto",
-        minHeight: "100%",
-        overflow: "visible",
+        height: "100%",
+        overflow: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
         maxWidth: "100vw",
@@ -358,7 +356,7 @@ export default function PageLayout({ children }) {
         </div>
       </div>
 
-      {/* ── Scrollable page content ── */}
+      {/* ── Scrollable page content — fixed height prevents expansion ── */}
       <div
         ref={scrollRef}
         data-scroll-container="true"
@@ -377,6 +375,7 @@ export default function PageLayout({ children }) {
           boxSizing: "border-box",
           position: "relative",
           flex: "1 1 auto",
+          height: "100%",
           minHeight: "0",
         }}
       >
@@ -396,7 +395,7 @@ export default function PageLayout({ children }) {
               maxWidth: '100vw',
               margin: 0,
               position: 'relative',
-              minHeight: '100%',
+              height: '100%',
             }}
           >
             {children}

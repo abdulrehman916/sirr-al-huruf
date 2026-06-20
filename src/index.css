@@ -103,14 +103,10 @@
 }
 
 @layer base {
-  /* ── ESSENTIAL PLATFORM CSS ONLY ── */
-  /* Removed: universal selectors (*), shared responsive rules, global container rules */
-  /* Pages are now responsible for their own layout and responsive behavior */
-
-  /* Basic reset for root element only */
+  /* ── STABLE VIEWPORT CONSTRAINTS — APK MATCH ── */
+  /* Fixed height prevents keyboard-triggered jumps and viewport compression */
   html {
-    height: auto;
-    min-height: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -127,16 +123,14 @@
     max-width: 100vw;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
-    height: auto;
-    min-height: 100%;
+    height: 100%;
   }
   #root {
-    height: auto;
-    min-height: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
   }
 
   body {

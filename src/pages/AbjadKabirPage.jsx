@@ -181,7 +181,7 @@ export default function AbjadKabirPage() {
       {/* Dark background wrapper - extends through full scroll area, Abjad page only */}
       <div className="relative w-full pb-8" style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        minHeight: "100dvh",
+        minHeight: "100%",
       }}>
         <div className="text-center mb-2">
           <motion.div
