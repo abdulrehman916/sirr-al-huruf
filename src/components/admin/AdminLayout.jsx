@@ -16,9 +16,9 @@ const G = {
 
 const SIDEBAR_ITEMS = [
   { path: "/admin/approved-users", label: "Users", arabic: "المستخدمون", icon: "UserCheck" },
-  { path: "/admin/access-dashboard", label: "Access Dashboard", arabic: "لوحة تحكم الوصول", icon: "Crown" },
-  { path: "/admin/page-permissions", label: "App Permissions", arabic: "أذونات التطبيق", icon: "Globe" },
-  { path: "/admin/access-codes", label: "Access Codes", arabic: "رموز الوصول", icon: "KeyRound" },
+  { path: "/admin/access-dashboard", label: "Dashboard", arabic: "لوحة التحكم", icon: "Crown" },
+  { path: "/admin/page-permissions", label: "Permissions", arabic: "الأذونات", icon: "Globe" },
+  { path: "/admin/access-codes", label: "Codes", arabic: "الرموز", icon: "KeyRound" },
   { path: "/admin/support", label: "Messages", arabic: "الرسائل", icon: "Clock" }
 ];
 
@@ -98,34 +98,34 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
-            width: 240px !important;
+            width: 200px !important;
             height: 100dvh !important;
             z-index: 100 !important;
             transform: translateX(0) !important;
           }
           .admin-main-content {
             width: 100% !important;
-            margin-left: 240px !important;
-            padding: 24px !important;
+            margin-left: 200px !important;
+            padding: 16px !important;
           }
           .admin-mobile-toggle {
             display: none !important;
           }
           .admin-sidebar-content {
-            padding: 16px !important;
+            padding: 12px !important;
           }
         }
       `}</style>
 
-      {/* ========== DESKTOP SIDEBAR (FULL) - > 1024px ========== */}
+      {/* ========== DESKTOP SIDEBAR (COMPACT) - > 1024px ========== */}
       <style>{`
         @media (min-width: 1025px) {
           .admin-sidebar {
             position: sticky !important;
             top: 0 !important;
             left: 0 !important;
-            width: 280px !important;
-            min-width: 280px !important;
+            width: 200px !important;
+            min-width: 200px !important;
             height: 100dvh !important;
             z-index: 50 !important;
             transform: translateX(0) !important;
@@ -133,14 +133,14 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
           .admin-main-content {
             flex: 1 !important;
             margin-left: 0 !important;
-            padding: 32px !important;
-            max-width: calc(100% - 280px) !important;
+            padding: 20px !important;
+            max-width: calc(100% - 200px) !important;
           }
           .admin-mobile-toggle {
             display: none !important;
           }
           .admin-sidebar-content {
-            padding: 24px !important;
+            padding: 12px !important;
           }
         }
       `}</style>
@@ -176,16 +176,15 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
       >
         <div className="admin-sidebar-content">
           {/* Header */}
-          <div style={{ marginBottom: 24 }}>
-            <div className="flex items-center gap-3 mb-3">
-              <Shield className="w-6 h-6" style={{ color: G.text }} />
-              <h1 className="font-inter text-lg font-bold text-white">Admin Panel</h1>
+          <div style={{ marginBottom: 12 }}>
+            <div className="flex items-center gap-2 mb-1">
+              <Shield className="w-5 h-5" style={{ color: G.text }} />
+              <h1 className="font-inter text-base font-bold text-white">Admin</h1>
             </div>
-            <p className="text-xs text-white/50">Owner & Super Admin</p>
           </div>
 
           {/* Navigation */}
-          <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {SIDEBAR_ITEMS.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -196,25 +195,24 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
-                    padding: 12,
-                    borderRadius: 12,
+                    gap: 8,
+                    padding: 10,
+                    borderRadius: 8,
                     background: isActive ? G.bgHi : "transparent",
                     border: isActive ? `1px solid ${G.borderHi}` : "1px solid transparent",
                     textDecoration: "none",
                     transition: "all 0.2s ease"
                   }}
                 >
-                  <span style={{ fontSize: 18 }}>{iconMap[item.icon]}</span>
+                  <span style={{ fontSize: 16 }}>{iconMap[item.icon]}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p className={`font-inter text-sm font-semibold truncate ${isActive ? "text-white" : "text-white/70"}`}>
+                    <p className={`font-inter text-xs font-semibold truncate ${isActive ? "text-white" : "text-white/70"}`}>
                       {item.label}
                     </p>
-                    <p className="font-amiri text-xs truncate" style={{ color: isActive ? G.text : G.dim }}>
+                    <p className="font-amiri text-[10px] truncate" style={{ color: isActive ? G.text : G.dim }}>
                       {item.arabic}
                     </p>
                   </div>
-                  {isActive && <ChevronLeft className="w-4 h-4 text-gold mirror-rtl" />}
                 </Link>
               );
             })}
