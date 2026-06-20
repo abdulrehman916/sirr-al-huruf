@@ -378,8 +378,6 @@ export default function PageLayout({ children }) {
           position: "relative",
           flex: "1 1 auto",
           minHeight: "0",
-          height: "auto",
-          flexBasis: "auto",
         }}
       >
         <AnimatePresence mode="wait">
@@ -398,7 +396,7 @@ export default function PageLayout({ children }) {
               maxWidth: '100vw',
               margin: 0,
               position: 'relative',
-              minHeight: '100dvh',
+              minHeight: '100%',
             }}
           >
             {children}

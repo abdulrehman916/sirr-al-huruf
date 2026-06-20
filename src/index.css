@@ -110,7 +110,7 @@
   /* Basic reset for root element only */
   html {
     height: auto;
-    min-height: 100dvh;
+    min-height: 100%;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -128,11 +128,11 @@
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
     height: auto;
-    min-height: 100dvh;
+    min-height: 100%;
   }
   #root {
     height: auto;
-    min-height: 100dvh;
+    min-height: 100%;
     display: flex;
     flex-direction: column;
     position: relative;
