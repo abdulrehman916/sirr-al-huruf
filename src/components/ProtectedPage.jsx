@@ -57,7 +57,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission,
       if (isPublicByDb === undefined || isPublicByDb === null) {
         try {
           const dbConfigs = await base44.entities.PageVisibilityConfig.filter(
-            { page_path: routePath },
+            { page_path: routePath, archived: false },
             null,
             1
           );
