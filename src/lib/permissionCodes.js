@@ -3,7 +3,7 @@
  * All new code should import from '@/lib/pageRegistry' directly.
  */
 
-import { getAllRegisteredPages, getPageConfig, pathToPermissionCode } from '@/lib/pageRegistry';
+import { getAllRegisteredPages, getPageConfig, derivePermissionCode } from '@/lib/pageRegistry';
 
 // Build ROUTE_PERMISSION_MAP dynamically from the registry
 const _map = {};
@@ -22,7 +22,7 @@ export const ROUTE_PERMISSION_MAP = _map;
 export const PERMISSION_CODES = {};
 getAllRegisteredPages().forEach(p => {
   const key = p.path.replace(/^\//, '').replace(/\/$/, '').replace(/[\/\-:]/g, '_').toUpperCase() + '_ACCESS';
-  PERMISSION_CODES[key] = p.code || pathToPermissionCode(p.path);
+  PERMISSION_CODES[key] = p.code || derivePermissionCode(p.path);
 });
 
 /**

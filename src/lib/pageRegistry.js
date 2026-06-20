@@ -82,15 +82,6 @@ export function getAllPages() {
 export const getAllRegisteredPages = getAllPages;
 
 /**
- * Convert path to permission code format
- * @param {string} path - Route path
- * @returns {string} Permission code
- */
-export function pathToPermissionCode(path) {
-  return derivePermissionCode(path);
-}
-
-/**
  * Get pages visible to admin (for PageVisibilityConfig)
  * @returns {array} Content pages
  */
