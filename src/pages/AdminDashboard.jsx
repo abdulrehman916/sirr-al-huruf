@@ -9,14 +9,18 @@ import { useToast } from "@/components/ui/use-toast";
 function StatCard({ label, value, color, icon: Icon }) {
   return (
     <div
-      className="rounded-xl border p-3 text-center"
-      style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(212,175,55,0.30)" }}
+      className="rounded-xl border p-3 text-center h-full flex flex-col justify-center"
+      style={{ 
+        background: "rgba(255,255,255,0.03)", 
+        borderColor: "rgba(212,175,55,0.30)",
+        minHeight: "80px"
+      }}
     >
-      <div className="flex items-center justify-center gap-1.5 mb-1">
-        <Icon className="w-3.5 h-3.5" style={{ color }} />
-        <p className="text-lg font-bold text-white">{value.toLocaleString()}</p>
+      <div className="flex flex-col items-center justify-center gap-1">
+        <Icon className="w-4 h-4 flex-shrink-0 mb-1" style={{ color }} />
+        <p className="text-base font-bold text-white leading-tight break-words">{value.toLocaleString()}</p>
+        <p className="text-[10px] text-white/40 leading-tight break-words px-1">{label}</p>
       </div>
-      <p className="text-[9px] text-white/40">{label}</p>
     </div>
   );
 }
