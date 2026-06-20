@@ -76,6 +76,12 @@ export function getAllPages() {
 }
 
 /**
+ * Alias for getAllPages - for compatibility
+ * @returns {array} All page configs
+ */
+export const getAllRegisteredPages = getAllPages;
+
+/**
  * Get pages visible to admin (for PageVisibilityConfig)
  * @returns {array} Content pages
  */

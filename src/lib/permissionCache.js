@@ -60,6 +60,14 @@ export function clearPermissionCache(userId) {
   }
 }
 
+/**
+ * Alias for clearPermissionCache - clears all caches (permission + generic)
+ */
+export function clearAllCache() {
+  permissionCache.clear();
+  genericCache.clear();
+}
+
 export function hasPagePermission(userId, pagePath, cachedPermissions = null) {
   const permissions = cachedPermissions || getCachedPermissions(userId);
   if (!permissions) return false;
