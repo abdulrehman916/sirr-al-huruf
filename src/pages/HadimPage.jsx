@@ -208,7 +208,7 @@ export default function HadimPage() {
     setResult(null);
     setHadimMode('ULVI');
     clearPageState(PAGE_KEY);
-};
+  };
 
   return (
     <PageLayout accentColor="purple">
