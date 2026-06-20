@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity, Clock, Crown } from "lucide-react";
+import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity, Clock, Crown, KeyRound } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,6 +18,13 @@ const G = {
 };
 
 const SIDEBAR_ITEMS = [
+  {
+    path: "/admin/access-codes",
+    label: "Access Codes",
+    arabic: "رموز الوصول",
+    icon: KeyRound,
+    description: "Create & manage customer access codes"
+  },
   {
     path: "/admin/access-dashboard",
     label: "Access Dashboard",

@@ -4,6 +4,7 @@ import CardsSection from "../components/CardsSection";
 import PageLayout from "../components/PageLayout";
 import PullToRefresh from "../components/PullToRefresh";
 import useMouseParallax from "../hooks/useMouseParallax";
+import RedeemCodeButton from "../components/RedeemCodeButton";
 
 export default function Home() {
   const mouse = useMouseParallax(1);
@@ -43,6 +44,7 @@ export default function Home() {
           </div>
         </div>
       </PullToRefresh>
+      <RedeemCodeButton />
     </PageLayout>
   );
 }

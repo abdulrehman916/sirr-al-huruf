@@ -60,6 +60,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' },
   { path: '/admin/faal-chob-upload', component: 'AdminFaalChobUpload', chunk: 'AdminFaalChobUpload' },
   { path: '/admin/access-requests', component: 'AdminAccessRequests', chunk: 'AdminAccessRequests' },
+  { path: '/admin/access-codes', component: 'AdminAccessCodes', chunk: 'AdminAccessCodes' },
   
   // Audit & QA
   { path: '/admin/qa-report', component: 'QAReport', chunk: 'QAReport' },
