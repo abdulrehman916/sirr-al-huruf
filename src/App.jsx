@@ -18,8 +18,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedPage from './components/ProtectedPage';
 import ROUTE_MANIFEST from '@/lib/routeManifest';
 
-// ── Lazy import map — each chunk name → dynamic import function ──────
-// Vite statically analyzes these for code splitting. Scales to 500+ pages.
+// ── Lazy import map — Core pages only ──────
 const PAGE_IMPORTS = {
   // Core
   Home:                     () => import('./pages/Home'),
@@ -53,74 +52,13 @@ const PAGE_IMPORTS = {
   PremiumAccessRequest:     () => import('./pages/PremiumAccessRequest'),
   MySubscription:           () => import('./pages/MySubscription'),
   PaymentPage:              () => import('./pages/PaymentPage'),
-  // Admin
+  // Admin - Core 5 + Required
   AdminDashboard:           () => import('./pages/AdminDashboard'),
   ApprovedUsersPage:        () => import('./pages/ApprovedUsersPage'),
-  AdminTest:                () => import('./pages/AdminTest'),
   AdminSupport:             () => import('./pages/AdminSupport'),
-  AdminPermissions:         () => import('./pages/AdminPermissions'),
   PagePermissions:          () => import('./pages/PagePermissions'),
-  AdminSubscriptions:       () => import('./pages/AdminSubscriptions'),
-  AdminPageSubscriptions:   () => import('./pages/AdminPageSubscriptions'),
-  AdminPricingSettings:     () => import('./pages/AdminPricingSettings'),
-  AdminUserManager:         () => import('./pages/AdminUserManager'),
-  AdminUserManagement:      () => import('./pages/AdminUserManagement'),
-  AdminAccessLogs:          () => import('./pages/AdminAccessLogs'),
-  SecurityAuditLogs:        () => import('./pages/SecurityAuditLogs'),
-  AdminSubscriptionsManagement: () => import('./pages/AdminSubscriptionsManagement'),
-  AdminUserPermissions:     () => import('./pages/AdminUserPermissions'),
-  OwnerAccessDashboard:     () => import('./pages/OwnerAccessDashboard'),
-  UserDetailPage:           () => import('./pages/UserDetailPage'),
-  AdminFaalChobUpload:      () => import('./pages/AdminFaalChobUpload'),
-  AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
   AdminAccessCodes:         () => import('./pages/AdminAccessCodes'),
-  QAReport:                 () => import('./pages/QAReport'),
-  FinalLaunchChecklist:     () => import('./pages/FinalLaunchChecklist'),
-  PreLaunchReport:          () => import('./pages/PreLaunchReport'),
-  EnterpriseAuditDashboard: () => import('./pages/EnterpriseAuditDashboard'),
-  PreLaunchVerification:    () => import('./pages/PreLaunchVerification'),
-  FinalProductionAudit:     () => import('./pages/FinalProductionAudit'),
-  PerformanceTestReport:    () => import('./pages/PerformanceTestReport'),
-  FinalEnterpriseSignOff:   () => import('./pages/FinalEnterpriseSignOff'),
-  PageVisibilityAudit:      () => import('./pages/PageVisibilityAudit'),
-  VerifyVIPAccess:          () => import('./pages/VerifyVIPAccess'),
-  ContentRenderingAudit:    () => import('./pages/ContentRenderingAudit'),
-  TestRealCustomerContent:  () => import('./pages/TestRealCustomerContent'),
-  AuditAndFixContent:       () => import('./pages/AuditAndFixContent'),
-  AuditTableRendering:      () => import('./pages/AuditTableRendering'),
-  VIPTestCustomer:          () => import('./pages/VIPTestCustomer'),
-  OTPEmailTest:             () => import('./pages/OTPEmailTest'),
-  TestOTPLogin:             () => import('./pages/TestOTPLogin'),
-  DebugOTPEmail:            () => import('./pages/DebugOTPEmail'),
-  TestOTPEndToEnd:          () => import('./pages/TestOTPEndToEnd'),
-  // Non-pages components
-  SubscriptionRequestsTab:  () => import('./components/admin/SubscriptionRequestsTab'),
-  MessagesTab:              () => import('./components/admin/MessagesTab'),
-  // Audit
-  HierarchyAuditPage:              () => import('./pages/HierarchyAuditPage'),
-  MizaanPipelineTest:              () => import('./pages/MizaanPipelineTest'),
-  MizaanAuditReport:               () => import('./pages/MizaanAuditReport'),
-  IstintakRuleDiscovery:           () => import('./pages/IstintakRuleDiscovery'),
-  ManuscriptPipelinePage:          () => import('./pages/ManuscriptPipelinePage'),
-  AbjadBastAuditPage:              () => import('./pages/AbjadBastAuditPage'),
-  MizanCalculationAudit:           () => import('./components/mizaan/MizanCalculationAudit'),
-  MizanVefkAuditPage:              () => import('./pages/MizanVefkAuditPage'),
-  MizanMethodClassification:       () => import('./pages/MizanMethodClassification'),
-  MizanManuscriptVerification:     () => import('./pages/MizanManuscriptVerification'),
-  MizanManuscriptAnalysis:         () => import('./pages/MizanManuscriptAnalysis'),
-  MizanVefkModelVerification:      () => import('./pages/MizanVefkModelVerification'),
-  MizanRubaiVerification:          () => import('./pages/MizanRubaiVerification'),
-  MizanManuscriptAudit:            () => import('./pages/MizanManuscriptAudit'),
-  ManuscriptAuditPage:             () => import('./pages/ManuscriptAuditPage'),
-  ManuscriptActionFinder:          () => import('./pages/ManuscriptActionFinder'),
-  ManuscriptLibraryPage:           () => import('./pages/ManuscriptLibraryPage'),
-  ManuscriptFinalAudit:            () => import('./pages/ManuscriptFinalAudit'),
-  AstrologyOnlyAudit:              () => import('./pages/AstrologyOnlyAudit'),
-  ManuscriptRecordBrowser:         () => import('./pages/ManuscriptRecordBrowser'),
-  ManuscriptRuleAudit:             () => import('./pages/ManuscriptRuleAudit'),
-  ManuscriptAdvancedSearch:        () => import('./pages/ManuscriptAdvancedSearch'),
-  ManazilQualityAudit:             () => import('./pages/ManazilQualityAudit'),
-  ManuscriptCompletionReport:      () => import('./pages/ManuscriptCompletionReport'),
+  UserDetailPage:           () => import('./pages/UserDetailPage'),
 };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────
