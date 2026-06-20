@@ -136,11 +136,10 @@ function ManuscriptIntro() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 1.6, duration: 0.8 }}
-      className="relative z-10 w-full max-w-xs mx-auto mt-7 px-4">
-      <div className="rounded-2xl px-6 py-4 text-center relative overflow-hidden"
+      className="relative z-10 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto mt-5 sm:mt-6 md:mt-7 px-3 sm:px-4">
+      <div className="rounded-2xl px-5 py-3 sm:px-6 sm:py-4 text-center relative overflow-hidden"
         style={{
           background: "linear-gradient(145deg, rgba(10,20,50,0.75) 0%, rgba(4,10,28,0.85) 100%)",
-
           border: "1px solid rgba(212,175,55,0.22)",
           boxShadow: "0 8px 48px rgba(0,0,0,0.55), 0 0 24px rgba(212,175,55,0.08), inset 0 1px 0 rgba(212,175,55,0.15)",
         }}>
@@ -168,7 +167,7 @@ function GoldDivider({ delay = 0 }) {
   return (
     <motion.div initial={{ scaleX:0, opacity:0 }} animate={{ scaleX:1, opacity:1 }}
       transition={{ duration:0.7, delay, ease:"easeOut" }}
-      className="flex items-center justify-center gap-2 w-full max-w-xs mx-auto my-1">
+      className="flex items-center justify-center gap-2 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto my-1">
       <div style={{ flex:1, height:0.5, background:"linear-gradient(to right,transparent,rgba(212,175,55,0.35))" }} />
       <div style={{ width:4, height:4, borderRadius:"50%", background:"rgba(212,175,55,0.55)", boxShadow:"0 0 6px rgba(212,175,55,0.7)" }} />
       <div style={{ flex:1, height:0.5, background:"linear-gradient(to left,transparent,rgba(212,175,55,0.35))" }} />
@@ -405,12 +404,12 @@ export default function HeroSection({ mouse }) {
   }, []);
 
   return (
-    <div className="font-inter relative flex flex-col items-center w-full pb-6 sm:pb-8 pt-3 sm:pt-4" style={{
+    <div className="font-inter relative flex flex-col items-center w-full pb-4 sm:pb-6 md:pb-8 pt-3 sm:pt-4 md:pt-6" style={{
       minHeight: "auto",
       height: "auto",
       overflowY: "visible",
       width: "100%",
-      maxWidth: "100vw",
+      maxWidth: "100%",
       margin: 0,
       paddingLeft: 0,
       paddingRight: 0,

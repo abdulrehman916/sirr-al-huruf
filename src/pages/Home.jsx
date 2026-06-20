@@ -47,8 +47,8 @@ export default function Home() {
               <HeroSection mouse={mouse} />
             </div>
             
-            {/* Cards section — minimal side padding */}
-            <div style={{ width: "100%", margin: 0, paddingLeft: "4px", paddingRight: "4px" }}>
+            {/* Cards section — CardsSection handles its own responsive padding */}
+            <div style={{ width: "100%", margin: 0, padding: 0 }}>
               <CardsSection />
             </div>
           </div>

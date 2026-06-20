@@ -182,13 +182,13 @@ export default function CardsSection() {
   const { startNav } = useNavigation();
   
   return (
-    <div className="relative z-20 w-full px-1 sm:px-2 py-6 sm:py-8 grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3" style={{
-      marginBottom: "40px",
+    <div className="relative z-20 w-full px-2 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4" style={{
+      marginBottom: "20px",
       width: "100%",
-      maxWidth: "100vw",
-      margin: 0,
-      paddingLeft: "4px",
-      paddingRight: "4px",
+      maxWidth: "1400px",
+      margin: "0 auto",
+      paddingLeft: "8px",
+      paddingRight: "8px",
     }}>
       {NAV_CARDS.map((card) => {
         const [r, g, b] = card.accent;
@@ -200,8 +200,8 @@ export default function CardsSection() {
                 background: `linear-gradient(155deg,rgba(${r},${g},${b},0.13) 0%,rgba(8,16,42,0.92) 55%,rgba(${r},${g},${b},0.05) 100%)`,
                 borderColor: `rgba(${r},${g},${b},0.32)`,
                 boxShadow: `0 0 28px rgba(${r},${g},${b},0.14),0 6px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(${r},${g},${b},0.18)`,
-                minHeight: 160,
-                padding: "20px 16px",
+                minHeight: "clamp(160px, 18vh, 200px)",
+                padding: "clamp(16px, 2vh, 24px) clamp(12px, 1.5vw, 20px)",
                 WebkitTapHighlightColor: "transparent",
                 touchAction: "manipulation",
                 position: "relative",
