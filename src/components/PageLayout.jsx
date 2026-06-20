@@ -378,6 +378,7 @@ export default function PageLayout({ children }) {
           position: "relative",
           flex: "1 1 auto",
           minHeight: "100%",
+          background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         }}
       >
         <AnimatePresence mode="wait">
@@ -396,6 +397,7 @@ export default function PageLayout({ children }) {
               maxWidth: '100vw',
               margin: 0,
               position: 'relative',
+              minHeight: '100%',
             }}
           >
             {children}
