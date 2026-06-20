@@ -1,20 +1,16 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Star, Flame, Circle } from "lucide-react";
 
 export default function HadimTypePanel({ result }) {
-  const typeColors = {
-    ulvi: { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.40)', glow: 'rgba(59,130,246,0.30)', text: '#3b82f6' },
-    sufli: { bg: 'rgba(132,204,22,0.15)', border: 'rgba(132,204,22,0.40)', glow: 'rgba(132,204,22,0.30)', text: '#84cc16' },
-    sherli: { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.40)', glow: 'rgba(239,68,68,0.30)', text: '#ef4444' }
+  const MODE_ICONS = {
+    ulvi: { icon: Star, color: '#FFD700', label: 'ULVI', arabic: 'علوي' },
+    sufli: { icon: Flame, color: '#FF6B35', label: 'SUFLI', arabic: 'سفلي' },
+    sherli: { icon: Circle, color: '#9B7FD4', label: 'SHERLI', arabic: 'شرلي' },
   };
 
-  const typeNames = {
-    ulvi: 'Ulvi (Celestial)',
-    sufli: 'Sufli (Terrestrial)',
-    sherli: 'Sherli (Lion)'
-  };
-
-  const colors = typeColors[result.hadimType] || typeColors.ulvi;
+  const modeData = MODE_ICONS[result.hadimType] || MODE_ICONS.ulvi;
+  const Icon = modeData.icon;
 
   return (
     <motion.div
@@ -22,25 +18,28 @@ export default function HadimTypePanel({ result }) {
       animate={{ opacity: 1, scale: 1 }}
       className="rounded-2xl border p-5 backdrop-blur-sm"
       style={{
-        background: colors.bg,
-        borderColor: colors.border,
-        boxShadow: `0 4px 24px ${colors.glow}`
+        background: `rgba(106,90,205,0.10)`,
+        borderColor: modeData.color,
+        boxShadow: `0 4px 24px rgba(106,90,205,0.30)`
       }}
     >
       <div className="flex items-center justify-between">
-        <div>
-          <p className="font-inter text-[10px] uppercase tracking-widest mb-1 font-semibold" style={{ color: colors.text }}>
-            Hadim Type
-          </p>
-          <p className="font-amiri text-2xl font-bold text-white">
-            {typeNames[result.hadimType]}
-          </p>
-          <p className="font-inter text-xs text-white/55 mt-1">
-            Grand Total: {result.grandTotal}
-          </p>
+        <div className="flex items-center gap-3">
+          <Icon className="w-8 h-8" style={{ color: modeData.color }} />
+          <div>
+            <p className="font-inter text-[10px] uppercase tracking-widest mb-1 font-semibold" style={{ color: modeData.color }}>
+              {modeData.label}
+            </p>
+            <p className="font-amiri text-xl font-bold text-white">
+              {modeData.arabic}
+            </p>
+            <p className="font-inter text-xs text-white/55 mt-1">
+              Grand Total: {result.grandTotal}
+            </p>
+          </div>
         </div>
-        <span className="font-amiri text-5xl opacity-15" style={{ color: colors.text }}>
-          {result.ceremonialName.charAt(0)}
+        <span className="font-amiri text-4xl opacity-20" style={{ color: modeData.color }}>
+          {result.ceremonialName.charAt(0) || '✦'}
         </span>
       </div>
     </motion.div>

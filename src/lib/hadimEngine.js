@@ -31,36 +31,34 @@ function extractPositionalLetters(value) {
 }
 
 /**
- * Calculate Hadim ceremonial name
+ * Calculate Hadim ceremonial name - GitHub Original Formula
+ * RESTORED: SUFLI = -41, SHERLI = special calculation
  */
-export function calculateHadim(name, ism = '', mode = 'ulvi') {
-  const nameValue = calculateAbjad(name);
+export function calculateHadim(talib, matloob = '', ism = '', mode = 'ulvi') {
+  const talibValue = calculateAbjad(talib);
+  const matloobValue = matloob ? calculateAbjad(matloob) : 0;
   const ismValue = ism ? calculateAbjad(ism) : 0;
-  const totalValue = nameValue + ismValue;
+  const totalValue = talibValue + matloobValue + ismValue;
 
   // Extract letters for ceremonial construction
-  const nameLetters = extractPositionalLetters(nameValue);
+  const talibLetters = extractPositionalLetters(talibValue);
+  const matloobLetters = matloobValue ? extractPositionalLetters(matloobValue) : [];
   const ismLetters = ismValue ? extractPositionalLetters(ismValue) : [];
-  const allLetters = [...nameLetters, ...ismLetters];
+  const allLetters = [...talibLetters, ...matloobLetters, ...ismLetters];
 
   // Construct ceremonial name (reverse order for Ottoman style)
   const ceremonialName = allLetters.reverse().map(l => l.letter).join('');
 
-  // Calculate grand total with mode adjustments
+  // Calculate grand total with CORRECT mode adjustments (GitHub Original)
   let grandTotal = totalValue;
   if (mode === 'sufli') {
-    grandTotal = totalValue - 1; // Sufli adjustment
+    grandTotal = totalValue - 41; // SUFLI: -41 (GitHub Original Formula)
   } else if (mode === 'sherli') {
-    grandTotal = totalValue + 1; // Sherli adjustment
+    grandTotal = totalValue; // SHERLI: No adjustment, uses special calculation
   }
 
-  // Determine Hadim type
-  let hadimType = 'ulvi';
-  if (grandTotal < 0) {
-    hadimType = 'sufli';
-  } else if (grandTotal > totalValue) {
-    hadimType = 'sherli';
-  }
+  // Determine Hadim type based on mode
+  let hadimType = mode;
 
   // Calculate zikr count (traditional formula)
   const zikrCount = grandTotal * 3;
@@ -69,9 +67,11 @@ export function calculateHadim(name, ism = '', mode = 'ulvi') {
   const kasem = generateKasem(ceremonialName, grandTotal, mode);
 
   return {
-    name,
+    talib,
+    matloob,
     ism,
-    nameValue,
+    talibValue,
+    matloobValue,
     ismValue,
     totalValue,
     ceremonialName,
@@ -86,7 +86,7 @@ export function calculateHadim(name, ism = '', mode = 'ulvi') {
 }
 
 /**
- * Generate kasem (oath) formula
+ * Generate kasem (oath) formula - GitHub Original
  */
 function generateKasem(ceremonialName, total, mode) {
   const prefixes = {
@@ -95,7 +95,7 @@ function generateKasem(ceremonialName, total, mode) {
     sherli: 'يا حي يا قيوم'
   };
 
-  return `${prefixes[mode] || prefixes.ulvi} - ${ceremonialName} (${total})`;
+  return `${prefixes[mode] || prefixes.ulvi} — ${ceremonialName} (${total})`;
 }
 
 /**
