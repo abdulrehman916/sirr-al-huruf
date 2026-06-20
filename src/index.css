@@ -266,6 +266,17 @@
     user-select: text;
   }
 
+  /* CRITICAL: Prevent browser from auto-scrolling focused inputs - keyboard opens underneath */
+  input:focus, textarea:focus, select:focus {
+    scroll-margin: 0;
+    scroll-padding: 0;
+  }
+  
+  /* Prevent any automatic scroll behavior when keyboard opens */
+  html, body, #root {
+    scroll-behavior: auto !important;
+  }
+
 
 
 
