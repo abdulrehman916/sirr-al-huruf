@@ -174,7 +174,7 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        height: "100%",
+        minHeight: "100%",
         overflow: "visible",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -305,7 +305,7 @@ export default function PageLayout({ children }) {
           paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px) + 80px)",
           boxSizing: "border-box",
           position: "relative",
-          flex: "1 1 auto",
+          flex: "1 0 auto",
         }}
       >
         <AnimatePresence mode="wait">
