@@ -1,6 +1,14 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { calculateBast, getDominantElement, ABJAD_KEBIR, ELEMENT_LETTERS } from '../../lib/samurHindiEngine';
+import { 
+  calculateBast, 
+  getDominantElement, 
+  ABJAD_KEBIR, 
+  ELEMENT_LETTERS,
+  DAY_VALUES,
+  PLANET_VALUES,
+  NEED_VALUES
+} from '../../lib/samurHindiEngine';
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -183,17 +191,19 @@ export default function SirrMethod1Analyzer() {
         source: 'Risale-i Samur Hindi, p.35'
       };
 
-      // MIZAN 3: Gündüz/Gece (Day/Night) - p.38
+      // MIZAN 3: Gündüz/Gece (Day/Night) - p.33
+      // Book values: النَّهَارُ (237) for day, اللَّيْلُ (440) for night
       const isEven = totalValue % 2 === 0;
+      const dayNightValue = isEven ? 237 : 440;
       const mizan3 = {
         step: 3,
         name: isEven ? 'Gündüz' : 'Gece',
         arabic: isEven ? 'النَّهَارُ' : 'اللَّيْلُ',
-        value: isEven ? 237 : 440,
-        formula: `${totalValue} % 2 = ${totalValue % 2} → ${isEven ? 'Even (237)' : 'Odd (440)'}`,
-        calculation: `${totalValue} ÷ 2 = ${totalValue / 2} (remainder: ${totalValue % 2})`,
-        result: isEven ? 237 : 440,
-        source: 'Risale-i Samur Hindi, p.38'
+        value: dayNightValue,
+        formula: `${totalValue} % 2 = ${totalValue % 2} → ${isEven ? 'Even → النَّهَارُ (237)' : 'Odd → اللَّيْلُ (440)'}`,
+        calculation: `${totalValue} ÷ 2 = ${Math.floor(totalValue / 2)} (remainder: ${totalValue % 2}) → ${dayNightValue}`,
+        result: dayNightValue,
+        source: 'Risale-i Samur Hindi, p.33'
       };
 
       // MIZAN 4: Saat (Hour 1-12) - p.40
@@ -209,77 +219,85 @@ export default function SirrMethod1Analyzer() {
         source: 'Risale-i Samur Hindi, p.40'
       };
 
-      // MIZAN 5: Gün (Day of Week) - p.41
+      // MIZAN 5: Gün (Day of Week) - p.33
+      // Book values from DAY_VALUES (verified from Risale-i Samur Hindi p.33)
       const dayIndex = totalValue % 7;
-      const dayNames = ['Ahad', 'Ithnayn', 'Thalatha', 'Arba\'a', 'Khams', 'Jumu\'ah', 'Sabt'];
-      const dayArabic = ['الأَحَدُ', 'الْإِثْنَيْنَ', 'الثَّلَاثَاءُ', 'الْأَرْبَعَاءُ', 'الْخَمِيسُ', 'الْجُمُعَةُ', 'السَّبَّتُ'];
+      const dayKeys = ['pazar', 'pazartesi', 'salı', 'çarşamba', 'perşembe', 'cuma', 'cumartesi'];
+      const dayData = DAY_VALUES[dayKeys[dayIndex]] || DAY_VALUES.pazar;
       const mizan5 = {
         step: 5,
-        name: `Gün: ${dayNames[dayIndex]}`,
-        arabic: dayArabic[dayIndex],
-        value: dayIndex,
-        formula: `${totalValue} % 7`,
-        calculation: `${totalValue} ÷ 7 = ${Math.floor(totalValue / 7)} (remainder: ${dayIndex})`,
-        result: `${dayIndex} (${dayNames[dayIndex]})`,
-        source: 'Risale-i Samur Hindi, p.41'
+        name: `Gün: ${dayKeys[dayIndex]}`,
+        arabic: dayData.arabic,
+        value: dayData.value,
+        formula: `Day index: ${totalValue} % 7 = ${dayIndex} → ${dayKeys[dayIndex].toUpperCase()}`,
+        calculation: `${totalValue} ÷ 7 = ${Math.floor(totalValue / 7)} (remainder: ${dayIndex}) → ${dayData.arabic} (${dayData.value})`,
+        result: dayData.value,
+        source: 'Risale-i Samur Hindi, p.33'
       };
 
-      // MIZAN 6: Gezegen (Planet Year) - p.42
-      const planetYear = (totalValue % 7) + 2029;
-      const planetNames = ['Shams', 'Qamar', 'Mirrikh', 'Utarid', 'Mushtari', 'Zuhrah', 'Zuhal'];
-      const planetArabic = ['شَمْس', 'قَمَر', 'مَرِيخ', 'عُطَارِد', 'مُشْتَرِي', 'زُهْرَة', 'زُحَل'];
+      // MIZAN 6: Gezegen (Planet Year) - p.34
+      // Book values from PLANET_VALUES (verified from Risale-i Samur Hindi p.34)
+      // Planet corresponds to the day's planet
+      const planetKeys = ['zuhal', 'kamer', 'merih', 'utarid', 'musteri', 'zuhre', 'sems'];
+      const planetData = PLANET_VALUES[planetKeys[dayIndex]] || PLANET_VALUES.sems;
       const mizan6 = {
         step: 6,
-        name: `Gezegen: ${planetNames[dayIndex]}`,
-        arabic: planetArabic[dayIndex],
-        value: planetYear,
-        formula: `(${totalValue} % 7) + 2029`,
-        calculation: `${dayIndex} + 2029`,
-        result: planetYear,
-        source: 'Risale-i Samur Hindi, p.42'
+        name: `Gezegen: ${planetKeys[dayIndex]}`,
+        arabic: planetData.arabic,
+        value: planetData.value,
+        formula: `Planet of ${dayKeys[dayIndex]}: ${planetKeys[dayIndex].toUpperCase()}`,
+        calculation: `${planetData.arabic} = ${planetData.value}`,
+        result: planetData.value,
+        source: 'Risale-i Samur Hindi, p.34'
       };
 
-      // MIZAN 7: Hacet (Need Type) - p.43
+      // MIZAN 7: Hacet (Need Type) - p.34
+      // Book values from NEED_VALUES (verified from Risale-i Samur Hindi p.34)
       const needIndex = totalValue % 4;
-      const needTypes = ['Celb (جَلْبٌ)', 'Tard (طَرْدٌ)', 'Sihhat (صِحَّتٌ)', 'Sukm (سُقْمٌ)'];
+      const needKeys = ['celb', 'tard', 'sıhhat', 'sukm'];
+      const needData = NEED_VALUES[needKeys[needIndex]] || NEED_VALUES.celb;
       const mizan7 = {
         step: 7,
-        name: `Hacet: ${needTypes[needIndex].split(' ')[0]}`,
-        arabic: needTypes[needIndex].match(/\(([^)]+)\)/)[1],
-        value: needIndex,
-        formula: `${totalValue} % 4`,
-        calculation: `${totalValue} ÷ 4 = ${Math.floor(totalValue / 4)} (remainder: ${needIndex})`,
-        result: `${needIndex} (${needTypes[needIndex]})`,
-        source: 'Risale-i Samur Hindi, p.43'
+        name: `Hacet: ${needKeys[needIndex]}`,
+        arabic: needData.arabic,
+        value: needData.value,
+        formula: `Need index: ${totalValue} % 4 = ${needIndex} → ${needKeys[needIndex].toUpperCase()}`,
+        calculation: `${totalValue} ÷ 4 = ${Math.floor(totalValue / 4)} (remainder: ${needIndex}) → ${needData.arabic} (${needData.value})`,
+        result: needData.value,
+        source: 'Risale-i Samur Hindi, p.34'
       };
 
-      // MIZAN 8: Hayır/Şer (Good/Evil) - p.44
+      // MIZAN 8: Hayır/Şer (Good/Evil) - p.35
+      // Book values: الْخَيْرُ (2731) for hayır, الشَّرُّ (2725) for şer
       const reversed = totalValue.toString().split('').reverse().join('');
       const isHayir = totalValue > parseInt(reversed);
+      const hayirSerValue = isHayir ? 2731 : 2725;
       const mizan8 = {
         step: 8,
         name: isHayir ? 'Hayır' : 'Şer',
         arabic: isHayir ? 'الْخَيْرُ' : 'الشَّرُّ',
-        value: isHayir ? 2731 : 2725,
-        formula: `${totalValue} > ${reversed} ? 2731 : 2725`,
-        calculation: `${totalValue} vs ${reversed} → ${totalValue > reversed ? 'Greater (2731)' : 'Lesser (2725)'}`,
-        result: isHayir ? 2731 : 2725,
-        source: 'Risale-i Samur Hindi, p.44'
+        value: hayirSerValue,
+        formula: `${totalValue} > reverse(${totalValue}) = ${totalValue} > ${reversed} → ${isHayir ? 'الْخَيْرُ (2731)' : 'الشَّرُّ (2725)'}`,
+        calculation: `${totalValue} vs ${reversed} → ${isHayir ? 'Greater → 2731' : 'Lesser → 2725'}`,
+        result: hayirSerValue,
+        source: 'Risale-i Samur Hindi, p.35'
       };
 
-      // MIZAN 9: Anasır Derecesi (Element Degree) - p.45
+      // MIZAN 9: Anasır Derecesi (Element Degree) - p.35
+      // Book: Each element has 4 degrees (some say 5 for water)
+      // Using 1st degree base value = 100
       const mizan9 = {
         step: 9,
         name: `Anasır Derecesi: ${dominantElement}`,
-        arabic: `دَرَجَةُ ٱلْعُنْصُرِ ${dominantElement.toUpperCase()}`,
+        arabic: `دَرَجَةُ ٱلْعُنْصُرِ`,
         value: 100,
-        formula: 'Fixed value for 1st degree of dominant element',
-        calculation: '1st degree = 100 (base value)',
+        formula: '1st degree of dominant element (base value)',
+        calculation: `${dominantElement.toUpperCase()} 1st degree = 100`,
         result: 100,
-        source: 'Risale-i Samur Hindi, p.45'
+        source: 'Risale-i Samur Hindi, p.35'
       };
 
-      // FINAL TOTAL
+      // FINAL TOTAL - Book formula: Mizan 1 + Mizan 3 + Mizan 4 + Mizan 6 + Mizan 9
       const finalTotal = mizan1.result + mizan3.result + mizan4.result + mizan6.result + mizan9.result;
 
       setAnalysis({
