@@ -163,6 +163,7 @@ export default function PageLayout({ children }) {
   const [scrollMetrics, setScrollMetrics] = useState({ scrollWidth: 0, clientWidth: 0, scrollLeft: 0 });
 
   // Track scroll metrics for fade indicators
+  // TEMPORARILY DISABLED: resize listener triggers on keyboard open → state update → page jump
   useEffect(() => {
     if (!navRef.current) return;
     const nav = navRef.current;
@@ -175,10 +176,10 @@ export default function PageLayout({ children }) {
     };
     updateMetrics();
     nav.addEventListener('scroll', updateMetrics);
-    window.addEventListener('resize', updateMetrics);
+    // window.addEventListener('resize', updateMetrics); // DISABLED FOR KEYBOARD JUMP TEST
     return () => {
       nav.removeEventListener('scroll', updateMetrics);
-      window.removeEventListener('resize', updateMetrics);
+      // window.removeEventListener('resize', updateMetrics); // DISABLED FOR KEYBOARD JUMP TEST
     };
   }, [activeId]);
 
