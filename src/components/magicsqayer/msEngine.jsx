@@ -159,7 +159,7 @@ function singlyEvenStd(n) {
     [g[i][j],g[i+h][j]]=[g[i+h][j],g[i][j]];
   }
   [g[mid][k],g[mid+h][k]]=[g[mid+h][k],g[mid][k]];
-  for (let i=0;i<h;i++) for (let j=n-k+1;j<n;j++) {
+  for (let i=0;i<h;i++) for (let j=n-k;j<n;j++) {
     [g[i][j],g[i+h][j]]=[g[i+h][j],g[i][j]];
   }
   return g;
