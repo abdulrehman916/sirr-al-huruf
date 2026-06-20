@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { executeCalculation, getBookRules, CALCULATION_TYPES } from '../../lib/samurHindiEngine';
+import SirrMethod1Analyzer from './SirrMethod1Analyzer';
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -14,6 +15,7 @@ const G = {
 };
 
 const CALC_OPTIONS = [
+  { id: 'METHOD_1', label: 'Method 1 — Complete Analysis', desc: 'Full letter-by-letter with all 9 Mizan stages' },
   { id: CALCULATION_TYPES.BAST, label: 'Bast Hesabı', desc: '5 seviyeli harf dönüşümü' },
   { id: CALCULATION_TYPES.MIZAN, label: 'Dokuz Mizan', desc: '9 ölçekli tam sistem' },
   { id: CALCULATION_TYPES.VEFK, label: 'Vefk Yapımı', desc: 'Sihirli kare inşası' },
@@ -411,7 +413,7 @@ function CalculationResult({ result, type }) {
 }
 
 export default function SirrCalculator({ bookData }) {
-  const [calcType, setCalcType] = useState(CALCULATION_TYPES.BAST);
+  const [calcType, setCalcType] = useState('METHOD_1');
   const [input, setInput] = useState('');
   const [bastLevel, setBastLevel] = useState(1);
   const [mizanOptions, setMizanOptions] = useState({
@@ -543,28 +545,70 @@ export default function SirrCalculator({ bookData }) {
       </div>
 
       {/* Method-Specific Options */}
+      {calcType === 'METHOD_1' && (
+        <SirrMethod1Analyzer />
+      )}
       {calcType === CALCULATION_TYPES.BAST && (
-        <BastLevelSelector level={bastLevel} setLevel={setBastLevel} />
+        <>
+          <BastLevelSelector level={bastLevel} setLevel={setBastLevel} />
+          <button
+            onClick={handleCalculate}
+            disabled={!input.trim()}
+            className="w-full py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-30 text-[#0d1b2a]"
+            style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)" }}
+          >
+            Calculate — Apply Book Rules
+          </button>
+        </>
       )}
       {calcType === CALCULATION_TYPES.MIZAN && (
-        <MizanOptions options={mizanOptions} setOptions={setMizanOptions} />
+        <>
+          <MizanOptions options={mizanOptions} setOptions={setMizanOptions} />
+          <button
+            onClick={handleCalculate}
+            className="w-full py-3 rounded-xl font-inter font-bold text-sm text-[#0d1b2a]"
+            style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)" }}
+          >
+            Calculate — Apply Book Rules
+          </button>
+        </>
       )}
       {calcType === CALCULATION_TYPES.VEFK && (
-        <VefkOptions options={vefkOptions} setOptions={setVefkOptions} />
+        <>
+          <VefkOptions options={vefkOptions} setOptions={setVefkOptions} />
+          <button
+            onClick={handleCalculate}
+            disabled={!input.trim()}
+            className="w-full py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-30 text-[#0d1b2a]"
+            style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)" }}
+          >
+            Calculate — Apply Book Rules
+          </button>
+        </>
+      )}
+      {calcType === CALCULATION_TYPES.ELEMENT && (
+        <button
+          onClick={handleCalculate}
+          disabled={!input.trim()}
+          className="w-full py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-30 text-[#0d1b2a]"
+          style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)" }}
+        >
+          Calculate — Apply Book Rules
+        </button>
+      )}
+      {calcType === CALCULATION_TYPES.ABJAD && (
+        <button
+          onClick={handleCalculate}
+          disabled={!input.trim()}
+          className="w-full py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-30 text-[#0d1b2a]"
+          style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)" }}
+        >
+          Calculate — Apply Book Rules
+        </button>
       )}
 
-      {/* Calculate Button */}
-      <button
-        onClick={handleCalculate}
-        disabled={!input.trim() && calcType !== CALCULATION_TYPES.MIZAN}
-        className="w-full py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-30 text-[#0d1b2a]"
-        style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)" }}
-      >
-        Calculate — Apply Book Rules
-      </button>
-
-      {/* Error Display */}
-      {error && (
+      {/* Error Display (non-METHOD_1 only) */}
+      {error && calcType !== 'METHOD_1' && (
         <div
           className="rounded-xl border p-4"
           style={{ background: "rgba(239,68,68,0.05)", borderColor: G.error }}
@@ -575,8 +619,8 @@ export default function SirrCalculator({ bookData }) {
         </div>
       )}
 
-      {/* Result Display */}
-      {result && <CalculationResult result={result} type={calcType} />}
+      {/* Result Display (non-METHOD_1 only) */}
+      {result && calcType !== 'METHOD_1' && <CalculationResult result={result} type={calcType} />}
     </div>
   );
 }
