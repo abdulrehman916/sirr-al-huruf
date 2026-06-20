@@ -200,37 +200,23 @@ export default function PageLayout({ children }) {
 
 
 
-  // iOS keyboard fix — lock body scroll when keyboard opens
+  // iOS keyboard viewport fix — scroll input into view
   useEffect(() => {
     const handleFocusIn = (e) => {
       const target = e.target;
       if (!target || !(target instanceof HTMLElement)) return;
       if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
       
-      // Save scroll position and lock body
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-    };
-    
-    const handleFocusOut = () => {
-      const scrollY = document.body.style.top ? parseInt(document.body.style.top, 10) * -1 : 0;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      window.scrollTo(0, scrollY);
+      // Scroll input into view after keyboard opens
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
     };
     
     window.addEventListener('focusin', handleFocusIn);
-    window.addEventListener('focusout', handleFocusOut);
     
     return () => {
       window.removeEventListener('focusin', handleFocusIn);
-      window.removeEventListener('focusout', handleFocusOut);
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
     };
   }, []);
 
@@ -398,7 +384,7 @@ export default function PageLayout({ children }) {
           overflowX: "hidden",
           overscrollBehaviorX: "none",
           overscrollBehaviorY: "auto",
-          paddingBottom: 72,
+          paddingBottom: "calc(72px + env(keyboard-height, 0px))",
           WebkitOverflowScrolling: "touch",
           width: "100%",
           maxWidth: "100vw",
@@ -406,6 +392,7 @@ export default function PageLayout({ children }) {
           padding: 0,
           boxSizing: "border-box",
           position: "relative",
+          minHeight: "100%",
         }}
       >
         <AnimatePresence mode="wait">

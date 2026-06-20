@@ -265,6 +265,13 @@
     user-select: text;
   }
 
+  /* iOS keyboard viewport fix — reserve space for keyboard + accessory bar */
+  @supports (height: env(keyboard-height)) {
+    html {
+      height: 100dvh;
+    }
+  }
+
 
 
   /* ── Motion preference (accessibility) ── */
