@@ -8,6 +8,7 @@ import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
 import useTranslation from "@/i18n/useTranslation";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
+import useKeyboardDiagnostic from "../hooks/useKeyboardDiagnostic";
 
 const AccountModal = lazy(() => import("./AccountModal"));
 
@@ -132,6 +133,9 @@ export default function PageLayout({ children }) {
   const [user, setUser] = useState(null);
   const { t } = useTranslation();
   useScrollPersist();
+  
+  // Keyboard diagnostic — logs exact movement sequence
+  const { logs, clearLogs } = useKeyboardDiagnostic(true);
 
   useEffect(() => {
     const now = Date.now();
@@ -417,6 +421,50 @@ export default function PageLayout({ children }) {
         </Suspense>
       )}
     </AnimatePresence>
+
+    {/* Keyboard diagnostic overlay — shows last 5 events */}
+    {logs.length > 0 && (
+      <div style={{
+        position: "fixed",
+        bottom: "calc(80px + env(safe-area-inset-bottom, 0px))",
+        left: 12,
+        right: 12,
+        background: "rgba(0,0,0,0.92)",
+        border: "1px solid rgba(212,175,55,0.30)",
+        borderRadius: 12,
+        padding: 12,
+        zIndex: 9999,
+        maxHeight: 280,
+        overflow: "auto",
+        fontFamily: "monospace",
+        fontSize: 10,
+        color: "#D4AF37",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <strong>KEYBOARD DIAGNOSTIC</strong>
+          <button onClick={clearLogs} style={{
+            background: "rgba(212,175,55,0.20)",
+            border: "1px solid rgba(212,175,55,0.40)",
+            color: "#D4AF37",
+            padding: "4px 8px",
+            borderRadius: 4,
+            cursor: "pointer",
+          }}>CLEAR</button>
+        </div>
+        {logs.slice(-5).reverse().map((log, i) => (
+          <div key={i} style={{ marginBottom: 6, borderBottom: "1px solid rgba(212,175,55,0.15)", paddingBottom: 4 }}>
+            <span style={{ opacity: 0.6 }}>{log.timestamp}</span> — <strong>{log.type}</strong>
+            {log.delta && (
+              <div style={{ marginTop: 4, opacity: 0.8 }}>
+                Δ scrollY: {log.delta.scrollY || 0}px | 
+                Δ viewport: {log.delta.viewportHeight || 0}px | 
+                Δ offsetTop: {log.delta.viewportOffsetTop || 0}px
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
     </>
-  );
-}
+    );
+    }
