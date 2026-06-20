@@ -24,6 +24,7 @@ export function useKeyboardDiagnostic(enabled = true) {
 
     // Capture initial state before focus
     const captureInitialState = () => {
+      const root = document.getElementById('root');
       initialStateRef.current = {
         scrollY: window.scrollY || window.pageYOffset,
         scrollTop: document.documentElement.scrollTop || document.body.scrollTop,
@@ -32,6 +33,14 @@ export function useKeyboardDiagnostic(enabled = true) {
         viewportWidth: VisualViewport?.width || window.innerWidth,
         activeElement: document.activeElement?.tagName || null,
         timestamp: Date.now(),
+        // CONTAINER HEIGHTS
+        rootClientHeight: root?.clientHeight || 0,
+        rootScrollHeight: root?.scrollHeight || 0,
+        rootOffsetHeight: root?.offsetHeight || 0,
+        bodyClientHeight: document.body.clientHeight,
+        bodyScrollHeight: document.body.scrollHeight,
+        htmlClientHeight: document.documentElement.clientHeight,
+        htmlScrollHeight: document.documentElement.scrollHeight,
       };
       log("INITIAL_STATE", initialStateRef.current);
     };
@@ -79,12 +88,21 @@ export function useKeyboardDiagnostic(enabled = true) {
     const handleViewportResize = () => {
       if (!initialStateRef.current) return;
 
+      const root = document.getElementById('root');
       const current = {
         scrollY: window.scrollY || window.pageYOffset,
         scrollTop: document.documentElement.scrollTop || document.body.scrollTop,
         viewportOffsetTop: VisualViewport?.offsetTop || 0,
         viewportHeight: VisualViewport?.height || window.innerHeight,
         viewportWidth: VisualViewport?.width || window.innerWidth,
+        // CONTAINER HEIGHT TRACKING
+        rootClientHeight: root?.clientHeight || 0,
+        rootScrollHeight: root?.scrollHeight || 0,
+        rootOffsetHeight: root?.offsetHeight || 0,
+        bodyClientHeight: document.body.clientHeight,
+        bodyScrollHeight: document.body.scrollHeight,
+        htmlClientHeight: document.documentElement.clientHeight,
+        htmlScrollHeight: document.documentElement.scrollHeight,
       };
 
       const initial = initialStateRef.current;
@@ -93,10 +111,15 @@ export function useKeyboardDiagnostic(enabled = true) {
         viewportOffsetTop: current.viewportOffsetTop - initial.viewportOffsetTop,
         viewportHeight: current.viewportHeight - initial.viewportHeight,
         viewportWidth: current.viewportWidth - initial.viewportWidth,
+        // CONTAINER HEIGHT DELTAS
+        rootClientHeight: current.rootClientHeight - (initial.rootClientHeight || 0),
+        rootScrollHeight: current.rootScrollHeight - (initial.rootScrollHeight || 0),
+        bodyClientHeight: current.bodyClientHeight - (initial.bodyClientHeight || 0),
+        htmlClientHeight: current.htmlClientHeight - (initial.htmlClientHeight || 0),
       };
 
       // Only log if significant change
-      if (Math.abs(delta.viewportHeight) > 50 || Math.abs(delta.scrollY) > 10) {
+      if (Math.abs(delta.viewportHeight) > 50 || Math.abs(delta.scrollY) > 10 || Math.abs(delta.rootClientHeight) > 10 || Math.abs(delta.bodyClientHeight) > 10 || Math.abs(delta.htmlClientHeight) > 10) {
         log("VIEWPORT_RESIZE", { initial, current, delta });
       }
     };
