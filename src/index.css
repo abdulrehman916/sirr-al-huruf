@@ -105,8 +105,8 @@
 }
 
 @layer base {
-  /* ── STABLE VIEWPORT CONSTRAINTS — MOBILE SCROLL FIX — APK MATCH ── */
-  /* Single scroll point architecture prevents overscroll and keyboard jumps */
+  /* ── STABLE VIEWPORT CONSTRAINTS — KEYBOARD FIX — APK MATCH ── */
+  /* Prevents browser auto-scroll when keyboard opens (ChatGPT-style behavior) */
   html {
     height: 100%;
     margin: 0;
@@ -120,22 +120,21 @@
   body {
     margin: 0;
     padding: 0;
-    overflow: visible;
+    overflow: hidden;
     overscroll-behavior-x: none;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
     width: 100%;
     max-width: 100vw;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
-    min-height: 100%;
+    height: 100%;
   }
   #root {
     height: 100%;
-    min-height: 100%;
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
   }
 
   body {
@@ -266,12 +265,6 @@
     font-size: max(16px, 1em);
     -webkit-user-select: text;
     user-select: text;
-  }
-
-  /* KEYBOARD FIX: Prevent browser auto-scroll on focus */
-  input:focus, textarea:focus, select:focus {
-    scroll-margin: 0;
-    scroll-padding: 0;
   }
 
 
