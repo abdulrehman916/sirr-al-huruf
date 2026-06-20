@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Search, KeyRound, Copy, Check, X, Trash2, ToggleLeft, ToggleRight, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages } from "@/lib/pageRegistry";
@@ -15,12 +16,14 @@ const G = {
 };
 
 const DURATION_OPTIONS = [
-  { value: "1_DAY",     label: "1 Day",     days: 1 },
-  { value: "7_DAYS",    label: "7 Days",    days: 7 },
-  { value: "30_DAYS",   label: "30 Days",   days: 30 },
-  { value: "1_YEAR",    label: "1 Year",    days: 365 },
-  { value: "LIFETIME",  label: "Lifetime",  days: null },
-  { value: "CUSTOM",    label: "Custom",    days: null },
+  { value: "1_DAY",      label: "1 Day",      days: 1 },
+  { value: "7_DAYS",     label: "7 Days",     days: 7 },
+  { value: "30_DAYS",    label: "30 Days",    days: 30 },
+  { value: "3_MONTHS",   label: "3 Months",   days: 90 },
+  { value: "6_MONTHS",   label: "6 Months",   days: 180 },
+  { value: "1_YEAR",     label: "1 Year",     days: 365 },
+  { value: "LIFETIME",   label: "Lifetime",   days: null },
+  { value: "CUSTOM",     label: "Custom",     days: null },
 ];
 
 function fmt(d) {
@@ -234,6 +237,7 @@ export default function AccessCodesTab() {
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [showRedeemed, setShowRedeemed] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -293,10 +297,12 @@ export default function AccessCodesTab() {
     disabled: codes.filter(c => getStatus(c).label === "Disabled").length,
   }), [codes]);
 
+  const redeemedCodes = useMemo(() => codes.filter(c => (c.use_count || 0) > 0), [codes]);
+
   return (
     <div className="space-y-4">
-      {/* Create button */}
-      <div className="flex items-center justify-between">
+      {/* Stats + Actions */}
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="grid grid-cols-4 gap-2 flex-1">
           {[
             { key: "active",   label: "Active",   color: "#22c55e" },
@@ -312,9 +318,14 @@ export default function AccessCodesTab() {
             </div>
           ))}
         </div>
+        <button onClick={() => setShowRedeemed(!showRedeemed)}
+          className="px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2"
+          style={{ background: redeemedCodes.length > 0 ? G.bgHi : G.bg, border: `1px solid ${G.border}`, color: G.text }}>
+          <CheckCircle className="w-3.5 h-3.5" /> Redeemed ({redeemedCodes.length})
+        </button>
         <button onClick={() => setShowCreate(v => !v)}
-          className="ml-3 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 flex-shrink-0"
-          style={{ background: G.bgHi, border: `1px solid ${G.borderHi}`, color: G.text }}>
+          className="px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2"
+          style={{ background: "linear-gradient(135deg,#f6d860,#c98a14)", color: "#0d1b2a" }}>
           <Plus className="w-3.5 h-3.5" /> New Code
         </button>
       </div>
@@ -341,7 +352,35 @@ export default function AccessCodesTab() {
           style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}` }} />
       </div>
 
-      {/* Code list */}
+      {/* Redeemed Codes Section */}
+      {showRedeemed && redeemedCodes.length > 0 && (
+        <div className="rounded-2xl border p-4 space-y-3" style={{ background: G.bg, borderColor: G.border }}>
+          <h3 className="font-inter font-bold text-white text-sm flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" style={{ color: G.text }} />
+            Redeemed Codes ({redeemedCodes.length})
+          </h3>
+          <div className="space-y-2">
+            {redeemedCodes.map(code => (
+              <div key={code.id} className="rounded-xl border p-3" style={{ background: "rgba(34,197,94,0.05)", borderColor: "rgba(34,197,94,0.20)" }}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-inter font-bold text-white tracking-widest text-sm">{code.code}</span>
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/50 border text-xs">Used</Badge>
+                  </div>
+                  <span className="text-xs text-white/40">👤 {code.customer_name || "—"}</span>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/50">
+                  <span>Redeemed by: {code.used_by_email || "N/A"}</span>
+                  <span>Redeemed at: {code.used_at ? new Date(code.used_at).toLocaleString() : "N/A"}</span>
+                  <span>Expires: {fmt(code.expiry_date)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active Codes List */}
       {loading ? (
         <div className="text-center py-12">
           <div className="w-8 h-8 border-4 border-t-yellow-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto" />
@@ -393,6 +432,10 @@ export default function AccessCodesTab() {
                     <CheckCircle className="w-3 h-3" />
                     Used {code.use_count || 0}/{code.max_uses || 1}
                     {(code.max_uses || 1) === 1 && " (single-use)"}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Created: {new Date(code.created_date).toLocaleDateString()}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
