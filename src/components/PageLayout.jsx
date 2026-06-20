@@ -8,7 +8,6 @@ import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
 import useTranslation from "@/i18n/useTranslation";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
-import { setupKeyboardJumpDiagnostic } from "@/lib/keyboardJumpDiagnostic";
 
 const AccountModal = lazy(() => import("./AccountModal"));
 
@@ -214,8 +213,7 @@ export default function PageLayout({ children }) {
     return () => window.removeEventListener("popstate", onPop);
   }, [startNav]);
 
-  // Enable keyboard jump diagnostic - logs exact scroll behavior on focus
-  useEffect(() => setupKeyboardJumpDiagnostic(), []);
+  // NO keyboard handling - CSS-only solution prevents viewport movement
 
   return (
     <>
