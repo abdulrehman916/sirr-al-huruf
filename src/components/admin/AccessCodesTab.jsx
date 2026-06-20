@@ -59,45 +59,95 @@ function CreateCodeForm({ onCreated, onCancel }) {
   const [customerName, setCustomerName] = useState("");
   const [codeStr, setCodeStr] = useState("");
   const [selectedPages, setSelectedPages] = useState([]);
-  const [duration, setDuration] = useState("1_MONTH");
-  const [customDate, setCustomDate] = useState("");
+  const [pageDurations, setPageDurations] = useState({});
   const [maxUses, setMaxUses] = useState(1);
   const [notes, setNotes] = useState("");
+  const [showSummary, setShowSummary] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const pageList = useMemo(() => getContentPages().map(p => ({ path: p.path, name: p.name })), []);
 
-  const togglePage = (path) =>
-    setSelectedPages(p => p.includes(path) ? p.filter(x => x !== path) : [...p, path]);
+  const togglePage = (path) => {
+    setSelectedPages(p => {
+      if (p.includes(path)) {
+        const newPages = p.filter(x => x !== path);
+        const newDurations = { ...pageDurations };
+        delete newDurations[path];
+        setPageDurations(newDurations);
+        return newPages;
+      }
+      return [...p, path];
+    });
+  };
 
-  const computeExpiry = () => {
-    if (duration === "LIFETIME") return null;
-    if (duration === "CUSTOM") return customDate ? new Date(customDate).toISOString() : null;
-    const opt = DURATION_OPTIONS.find(d => d.value === duration);
-    if (!opt || !opt.days) return null;
-    return new Date(Date.now() + opt.days * 86400000).toISOString();
+  const updatePageDuration = (path, durationValue) => {
+    const opt = DURATION_OPTIONS.find(d => d.value === durationValue);
+    setPageDurations(prev => ({
+      ...prev,
+      [path]: {
+        value: durationValue,
+        label: opt?.label || durationValue,
+        days: opt?.days || null,
+        custom_date: null
+      }
+    }));
+  };
+
+  const updateCustomDate = (path, customDate) => {
+    setPageDurations(prev => ({
+      ...prev,
+      [path]: {
+        ...prev[path],
+        custom_date: customDate
+      }
+    }));
+  };
+
+  const computePageExpiry = (path) => {
+    const dur = pageDurations[path];
+    if (!dur) return null;
+    if (dur.value === "LIFETIME") return null;
+    if (dur.value === "CUSTOM" && dur.custom_date) return new Date(dur.custom_date).toISOString();
+    if (dur.days) return new Date(Date.now() + dur.days * 86400000).toISOString();
+    return null;
   };
 
   const handleCreate = async () => {
     if (!customerName.trim()) { toast({ title: "Customer name required", variant: "destructive" }); return; }
     if (!codeStr.trim()) { toast({ title: "Code string required", variant: "destructive" }); return; }
     if (selectedPages.length === 0) { toast({ title: "Select at least one page", variant: "destructive" }); return; }
-    if (duration === "CUSTOM" && !customDate) { toast({ title: "Custom expiry date required", variant: "destructive" }); return; }
+    
+    for (const path of selectedPages) {
+      const dur = pageDurations[path];
+      if (!dur) { toast({ title: `Set duration for ${pageList.find(p => p.path === path)?.name}`, variant: "destructive" }); return; }
+      if (dur.value === "CUSTOM" && !dur.custom_date) { toast({ title: `Set custom date for ${pageList.find(p => p.path === path)?.name}`, variant: "destructive" }); return; }
+    }
 
+    setShowSummary(true);
+  };
+
+  const confirmCreate = async () => {
     setSaving(true);
     try {
       const me = await base44.auth.me();
       const normalizedCode = codeStr.trim().toUpperCase();
-      const expiry = computeExpiry();
       const names = selectedPages.map(path => pageList.find(p => p.path === path)?.name || path);
+      const page_durations = {};
+      selectedPages.forEach(path => {
+        const dur = pageDurations[path];
+        if (dur) {
+          page_durations[path] = dur;
+        }
+      });
 
       await base44.entities.AccessCode.create({
         code: normalizedCode,
         customer_name: customerName.trim(),
         page_paths: selectedPages,
         page_names: names,
-        duration,
-        expiry_date: expiry,
+        page_durations,
+        duration: "CUSTOM",
+        expiry_date: null,
         max_uses: maxUses,
         use_count: 0,
         is_disabled: false,
@@ -113,6 +163,62 @@ function CreateCodeForm({ onCreated, onCancel }) {
       setSaving(false);
     }
   };
+
+  if (showSummary) {
+    return (
+      <div className="rounded-2xl border p-5 space-y-4"
+        style={{ background: "linear-gradient(145deg, #0c1630, #060c1c)", borderColor: G.borderHi }}>
+        <h3 className="font-inter font-bold text-white text-base flex items-center gap-2">
+          <CheckCircle className="w-5 h-5" style={{ color: G.text }} /> Confirm Code Details
+        </h3>
+        <div className="space-y-3 text-sm">
+          <div>
+            <p className="text-white/45 text-xs">Customer</p>
+            <p className="text-white font-semibold">{customerName.trim()}</p>
+          </div>
+          <div>
+            <p className="text-white/45 text-xs">Code</p>
+            <p className="text-white font-bold tracking-widest">{codeStr.trim().toUpperCase()}</p>
+          </div>
+          <div>
+            <p className="text-white/45 text-xs mb-2">Unlocked Pages</p>
+            <div className="space-y-2">
+              {selectedPages.map(path => {
+                const page = pageList.find(p => p.path === path);
+                const dur = pageDurations[path];
+                return (
+                  <div key={path} className="flex items-center justify-between py-2 px-3 rounded-lg"
+                    style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+                    <span className="text-white font-medium">{page?.name || path}</span>
+                    <Badge className="bg-gold/20 text-gold border-gold/50 border text-xs">
+                      {dur?.label || "Lifetime"}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {notes.trim() && (
+            <div>
+              <p className="text-white/45 text-xs">Notes</p>
+              <p className="text-white/70 italic">{notes.trim()}</p>
+            </div>
+          )}
+        </div>
+        <div className="flex gap-3 pt-3">
+          <button onClick={() => setShowSummary(false)} className="flex-1 py-3 rounded-xl font-inter font-semibold text-sm"
+            style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
+            Edit
+          </button>
+          <button onClick={confirmCreate} disabled={saving}
+            className="flex-1 py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
+            {saving ? "Creating…" : "Confirm & Create"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border p-5 space-y-4"
@@ -144,54 +250,57 @@ function CreateCodeForm({ onCreated, onCancel }) {
         </div>
       </div>
 
-      {/* Pages */}
+      {/* Pages with Per-Page Duration */}
       <div>
         <label className="text-xs text-white/45 mb-2 block">
           Pages Unlocked * ({selectedPages.length} selected)
         </label>
-        <div className="max-h-44 overflow-y-auto space-y-1 pr-1">
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
           {pageList.map(page => {
             const sel = selectedPages.includes(page.path);
+            const dur = pageDurations[page.path];
             return (
-              <button key={page.path} onClick={() => togglePage(page.path)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-sm"
+              <div key={page.path} className="rounded-lg border p-3"
                 style={{
-                  background: sel ? G.bgHi : "rgba(255,255,255,0.025)",
-                  border: `1px solid ${sel ? G.borderHi : "rgba(255,255,255,0.06)"}`,
-                  color: sel ? "white" : "rgba(255,255,255,0.50)",
+                  background: sel ? G.bg : "rgba(255,255,255,0.02)",
+                  borderColor: sel ? G.border : "rgba(255,255,255,0.06)",
                 }}>
-                <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                  style={{ background: sel ? G.text : "transparent", border: `1px solid ${sel ? G.text : "rgba(255,255,255,0.25)"}` }}>
-                  {sel && <Check className="w-2.5 h-2.5 text-black" />}
-                </div>
-                {page.name}
-              </button>
+                <button onClick={() => togglePage(page.path)}
+                  className="w-full flex items-center gap-2.5 mb-2"
+                  style={{ color: sel ? "white" : "rgba(255,255,255,0.50)" }}>
+                  <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                    style={{ background: sel ? G.text : "transparent", border: `1px solid ${sel ? G.text : "rgba(255,255,255,0.25)"}` }}>
+                    {sel && <Check className="w-2.5 h-2.5 text-black" />}
+                  </div>
+                  <span className="text-sm font-medium">{page.name}</span>
+                </button>
+                {sel && (
+                  <div className="ml-6 space-y-2">
+                    <label className="text-xs text-white/45 block">Duration</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DURATION_OPTIONS.map(opt => (
+                        <button key={opt.value} onClick={() => updatePageDuration(page.path, opt.value)}
+                          className="px-2.5 py-1 rounded text-[11px] font-semibold"
+                          style={{
+                            background: dur?.value === opt.value ? G.bgHi : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${dur?.value === opt.value ? G.borderHi : "rgba(255,255,255,0.08)"}`,
+                            color: dur?.value === opt.value ? G.text : "rgba(255,255,255,0.50)",
+                          }}>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    {dur?.value === "CUSTOM" && (
+                      <input type="date" value={dur.custom_date || ""} onChange={e => updateCustomDate(page.path, e.target.value)}
+                        className="mt-1 w-full px-2 py-1.5 rounded text-xs text-white outline-none"
+                        style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }} />
+                    )}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
-      </div>
-
-      {/* Duration */}
-      <div>
-        <label className="text-xs text-white/45 mb-2 block">Duration *</label>
-        <div className="flex flex-wrap gap-2">
-          {DURATION_OPTIONS.map(opt => (
-            <button key={opt.value} onClick={() => setDuration(opt.value)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-              style={{
-                background: duration === opt.value ? G.bgHi : "rgba(255,255,255,0.04)",
-                border: `1px solid ${duration === opt.value ? G.borderHi : "rgba(255,255,255,0.08)"}`,
-                color: duration === opt.value ? G.text : "rgba(255,255,255,0.50)",
-              }}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {duration === "CUSTOM" && (
-          <input type="datetime-local" value={customDate} onChange={e => setCustomDate(e.target.value)}
-            className="mt-2 w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }} />
-        )}
       </div>
 
       {/* Max Uses */}
@@ -222,7 +331,7 @@ function CreateCodeForm({ onCreated, onCancel }) {
         <button onClick={handleCreate} disabled={saving}
           className="flex-1 py-3 rounded-xl font-inter font-bold text-sm disabled:opacity-50"
           style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
-          {saving ? "Creating…" : "Create Code"}
+          {saving ? "Creating…" : "Review & Create"}
         </button>
       </div>
     </div>
