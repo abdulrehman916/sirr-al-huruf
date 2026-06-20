@@ -107,19 +107,19 @@
   /* Removed: universal selectors (*), shared responsive rules, global container rules */
   /* Pages are now responsible for their own layout and responsive behavior */
 
-  /* Basic reset for root element only - CRITICAL: NO KEYBOARD JUMP */
+  /* Basic reset for root element only */
   html {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: visible; /* Changed from hidden - allows keyboard viewport to work */
+    overflow-x: hidden;
     overscroll-behavior-x: none;
     touch-action: pan-x pan-y;
   }
   body {
     margin: 0;
     padding: 0;
-    overflow: visible; /* Changed from hidden - prevents keyboard viewport issues */
+    overflow: hidden;
     overscroll-behavior-x: none;
     overscroll-behavior-y: contain;
     width: 100%;
@@ -133,7 +133,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow: visible; /* Changed from hidden - allows keyboard to open without viewport shift */
+    overflow: hidden;
   }
 
   body {
@@ -264,17 +264,6 @@
     font-size: max(16px, 1em);
     -webkit-user-select: text;
     user-select: text;
-  }
-
-  /* CRITICAL: Prevent browser from auto-scrolling focused inputs - keyboard opens underneath */
-  input:focus, textarea:focus, select:focus {
-    scroll-margin: 0;
-    scroll-padding: 0;
-  }
-  
-  /* Prevent any automatic scroll behavior when keyboard opens */
-  html, body, #root {
-    scroll-behavior: auto !important;
   }
 
 
