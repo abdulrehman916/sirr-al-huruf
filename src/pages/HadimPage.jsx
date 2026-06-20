@@ -282,19 +282,17 @@ export default function HadimPage() {
             <label className="block font-inter text-[10px] uppercase tracking-widest mb-3" style={{ color: "rgba(168,85,247,0.70)" }}>Ism (Names / Ayah / Surah)</label>
             <div className="space-y-3">
               {isms.map((val, i) => (
-                <div key={i} className="flex gap-2 items-start">
-                  <div className="flex-1">
-                    <span className="block font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: "rgba(168,85,247,0.45)" }}>Ism {i + 1}</span>
-                    <textarea dir="rtl" value={val} onChange={(e) => updateIsm(i, e.target.value)}
-                      placeholder="اسم، آية، سورة..." rows={2}
-                      className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/30"
-                      style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)" }} />
-                  </div>
+                <div key={i} className="relative">
+                  <span className="block font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(168,85,247,0.45)" }}>Ism {i + 1}</span>
+                  <textarea dir="rtl" value={val} onChange={(e) => updateIsm(i, e.target.value)}
+                    placeholder="اسم، آية، سورة..." rows={2}
+                    className="w-full rounded-xl px-4 py-3 pr-12 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/30"
+                    style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)" }} />
                   {isms.length > 1 && (
                     <button onClick={() => removeIsm(i)}
-                      className="mt-5 p-2.5 rounded-xl border border-red-500/20 text-red-400/50 hover:text-red-400 hover:border-red-500/40 transition-all flex-shrink-0"
+                      className="absolute top-[28px] right-3 p-1 rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all"
                       style={{ background: "rgba(239,68,68,0.06)" }}>
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   )}
                 </div>

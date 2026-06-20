@@ -403,8 +403,12 @@ export default function BastHuroofPage() {
                 disabled={!input && !allResults}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}
+                className="flex items-center gap-1.5 py-3 px-4 rounded-xl font-inter font-bold text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{
+                  background: "rgba(212,175,55,0.08)",
+                  borderColor: "rgba(212,175,55,0.30)",
+                  color: "rgba(212,175,55,0.70)",
+                }}
               >
                 <Trash2 className="w-3.5 h-3.5" /> Clear
               </motion.button>
@@ -466,8 +470,12 @@ export default function BastHuroofPage() {
                 disabled={!numberInput && !allResults}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)" }}
+                className="flex items-center gap-1.5 py-3 px-4 rounded-xl font-inter font-bold text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{
+                  background: "rgba(212,175,55,0.08)",
+                  borderColor: "rgba(212,175,55,0.30)",
+                  color: "rgba(212,175,55,0.70)",
+                }}
               >
                 <Trash2 className="w-3.5 h-3.5" /> Clear
               </motion.button>
