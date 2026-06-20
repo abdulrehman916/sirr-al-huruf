@@ -58,6 +58,10 @@ export default function PullToRefresh({ onRefresh, children }) {
     const container = getScrollContainer(e.currentTarget);
     const scrollTop = container ? container.scrollTop : window.scrollY;
     if (scrollTop > 2) return;
+    // Additional guard: check if keyboard might be open (viewport height reduced)
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const screenHeight = window.screen.height;
+    if (screenHeight > 0 && viewportHeight < screenHeight * 0.7) return;
     startY.current = e.touches[0].clientY;
     pulling.current = true;
   }, [getScrollContainer, disabled]);
