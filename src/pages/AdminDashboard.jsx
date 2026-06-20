@@ -197,36 +197,14 @@ export default function AdminDashboard() {
             className="space-y-4"
           >
             {/* Stats Grid - 7 stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
               <StatCard label="Total Users" value={stats?.total_users || 0} color="#F5D060" icon={Users} />
               <StatCard label="Active" value={stats?.active_users || 0} color="#22c55e" icon={UserCheck} />
               <StatCard label="Expired" value={stats?.expired_users || 0} color="#f59e0b" icon={Clock} />
               <StatCard label="Blocked" value={stats?.blocked_users || 0} color="#ef4444" icon={Shield} />
               <StatCard label="Removed" value={Math.max(0, (stats?.total_users || 0) - (stats?.active_users || 0) - (stats?.expired_users || 0) - (stats?.blocked_users || 0))} color="#6b7280" icon={Users} />
-              <StatCard label="Codes" value={stats?.total_codes || 0} color="#3b82f6" icon={KeyRound} />
+              <StatCard label="Active Codes" value={stats?.total_codes || 0} color="#3b82f6" icon={KeyRound} />
               <StatCard label="Permissions" value={stats?.active_permissions || 0} color="#8b5cf6" icon={Globe} />
-            </div>
-
-            {/* Quick Access Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
-              {SIDEBAR_ITEMS.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="p-4 rounded-xl transition-all duration-200 hover:scale-[1.02]"
-                    style={{ background: "rgba(255,255,255,0.03)", border: `1px solid rgba(212,175,55,0.30)` }}
-                  >
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <div className="p-2 rounded-lg" style={{ background: "rgba(212,175,55,0.15)" }}>
-                        <Icon className="w-5 h-5" style={{ color: "#F5D060" }} />
-                      </div>
-                      <h3 className="font-inter text-sm font-bold text-white">{item.label}</h3>
-                    </div>
-                  </Link>
-                );
-              })}
             </div>
           </motion.div>
         </main>
