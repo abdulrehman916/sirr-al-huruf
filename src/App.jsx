@@ -234,6 +234,13 @@ function App() {
   const { langSet } = useI18n();
   const [langSetupDone, setLangSetupDone] = useState(langSet);
 
+  // Sync langSetupDone with I18nContext/langSet to prevent LanguageSetup reappearing on refresh
+  useEffect(() => {
+    if (langSet && !langSetupDone) {
+      setLangSetupDone(true);
+    }
+  }, [langSet, langSetupDone]);
+
   const showLanguageSetup = splashDone && !langSetupDone;
 
   if (showLanguageSetup) {
