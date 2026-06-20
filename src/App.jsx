@@ -30,7 +30,6 @@ const PAGE_IMPORTS = {
   AbjadKabirPage:           () => import('./pages/AbjadKabirPage'),
   AnasirPage:               () => import('./pages/AnasirPage'),
   HadimPage:                () => import('./pages/HadimPage'),
-  SirrPage:                 () => import('./pages/SirrPage'),
   Mizaan9Page:              () => import('./pages/Mizaan9Page'),
   MagicSqayerPage:          () => import('./pages/MagicSqayerPage'),
   VefkinYapilisiPage:       () => import('./pages/VefkinYapilisiPage'),
