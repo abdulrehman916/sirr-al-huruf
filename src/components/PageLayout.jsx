@@ -182,18 +182,23 @@ export default function PageLayout({ children }) {
     };
   }, [activeId]);
 
-  // Auto-scroll active tab into view — ensures first and last tabs are fully visible
-  // CRITICAL: Only scroll the nav container, NEVER the main page content
+  // Auto-scroll active tab into view — scroll the nav container only, NOT the page
   useEffect(() => {
     const activeTabEl = tabRefs.current[activeId];
-    if (!activeTabEl || !navRef.current) return;
+    const navContainer = navRef.current;
+    if (!activeTabEl || !navContainer) return;
     
     const timer = setTimeout(() => {
-      // Only scroll the navigation bar itself
-      activeTabEl.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest'
+      const tabRect = activeTabEl.getBoundingClientRect();
+      const navRect = navContainer.getBoundingClientRect();
+      const tabCenter = tabRect.left + tabRect.width / 2;
+      const navCenter = navRect.left + navRect.width / 2;
+      const scrollOffset = tabCenter - navCenter;
+      
+      // Scroll the nav container directly, avoiding browser scrollIntoView
+      navContainer.scrollBy({
+        left: scrollOffset,
+        behavior: 'smooth'
       });
     }, 100);
     
