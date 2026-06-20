@@ -224,7 +224,8 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        height: "100dvh",
+        minHeight: "100dvh",
+        height: "auto",
         overflow: "hidden",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
@@ -240,6 +241,7 @@ export default function PageLayout({ children }) {
         transform: "none",
         left: "auto",
         right: "auto",
+        position: "relative",
       }}
     >
       <AtmosphericBackground />
@@ -386,6 +388,8 @@ export default function PageLayout({ children }) {
           padding: 0,
           left: "auto",
           right: "auto",
+          boxSizing: "border-box",
+          position: "relative",
         }}
       >
         <AnimatePresence mode="wait">

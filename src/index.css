@@ -107,11 +107,35 @@
   /* Removed: universal selectors (*), shared responsive rules, global container rules */
   /* Pages are now responsible for their own layout and responsive behavior */
 
-  /* Basic reset for root element only */
-  html, body, #root {
+  /* Basic reset for root element only — mobile-safe viewport */
+  html {
     height: 100%;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+    touch-action: pan-x pan-y;
+  }
+  body {
+    min-height: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: contain;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+  }
+  #root {
+    min-height: 100%;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
   }
 
   body {
@@ -241,6 +265,44 @@
     font-size: max(16px, 1em);
     -webkit-user-select: text;
     user-select: text;
+  }
+
+  /* Mobile keyboard viewport fix — prevent page jump and blank areas */
+  @supports (height: 100dvh) {
+    html {
+      height: 100dvh;
+    }
+    body {
+      min-height: 100dvh;
+    }
+  }
+  
+  /* Prevent blank white area below content on mobile */
+  body {
+    position: relative;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Ensure textareas don't cause viewport shift */
+  textarea {
+    max-height: 50vh;
+    resize: vertical;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* iOS Safari keyboard fix — smooth scrolling */
+  @supports (-webkit-touch-callout: none) {
+    #root {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Android Chrome keyboard fix — interactive-widget support */
+  @supports (interactive-widget: resizes-content) {
+    html {
+      height: 100dvh;
+    }
   }
 
   /* ── Motion preference (accessibility) ── */
