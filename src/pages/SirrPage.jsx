@@ -41,73 +41,62 @@ export default function SirrPage() {
   const pageContainerRef = useRef(null);
 
   // SIRR PAGE KEYBOARD FIX — VisualViewport API handler (page-scoped, isolated)
-  // Prevents viewport compression when keyboard opens on iPhone Safari
+  // Prevents viewport compression, scroll jumps, and layout shifts on iPhone Safari
   useEffect(() => {
     if (typeof window.visualViewport === 'undefined') return;
     
-    let originalHeight;
-    let originalPosition;
+    let savedScrollY = 0;
+    let keyboardWasOpen = false;
+    let originalOverflow = '';
     
     const handleResize = () => {
-      const container = pageContainerRef.current;
-      if (!container) return;
-      
-      // Detect keyboard open: visual viewport shrinks when keyboard appears
       const viewportHeight = window.visualViewport.height;
       const innerHeight = window.innerHeight;
-      const isKeyboardOpen = viewportHeight < innerHeight * 0.9;
+      const keyboardIsOpen = viewportHeight < innerHeight * 0.9;
       
-      if (isKeyboardOpen) {
-        // Lock container to prevent compression
-        if (!originalHeight) {
-          originalHeight = container.style.height;
-          originalPosition = container.style.position;
-          
-          // Set fixed positioning to prevent flex compression
-          container.style.height = `${viewportHeight}px`;
-          container.style.position = 'fixed';
-          container.style.top = '0';
-          container.style.left = '0';
-          container.style.width = '100%';
-          container.style.overflowY = 'auto';
-          container.style.flexShrink = '0';
-          container.style.flexGrow = '0';
-        }
-      } else {
-        // Restore original behavior when keyboard closes
-        if (originalHeight !== undefined) {
-          container.style.height = originalHeight;
-          container.style.position = originalPosition;
-          container.style.top = '';
-          container.style.left = '';
-          container.style.overflowY = '';
-          container.style.flexShrink = '';
-          container.style.flexGrow = '';
-          originalHeight = undefined;
-          originalPosition = undefined;
-        }
+      // Keyboard just opened
+      if (keyboardIsOpen && !keyboardWasOpen) {
+        savedScrollY = window.scrollY;
+        keyboardWasOpen = true;
+        
+        // Lock body scroll to prevent jump
+        originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${savedScrollY}px`;
+        document.body.style.width = '100%';
+      }
+      
+      // Keyboard just closed
+      if (!keyboardIsOpen && keyboardWasOpen) {
+        keyboardWasOpen = false;
+        
+        // Restore body scroll
+        document.body.style.overflow = originalOverflow;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        
+        // Restore scroll position
+        requestAnimationFrame(() => {
+          window.scrollTo(0, savedScrollY);
+        });
       }
     };
     
-    // Listen for viewport resize events (keyboard open/close)
-    window.visualViewport.addEventListener('resize', handleResize);
+    // Listen for viewport resize (keyboard open/close)
+    window.visualViewport.addEventListener('resize', handleResize, { passive: true });
     
     // Initial check
     handleResize();
     
     return () => {
       window.visualViewport.removeEventListener('resize', handleResize);
-      // Cleanup styles on unmount
-      const container = pageContainerRef.current;
-      if (container && originalHeight !== undefined) {
-        container.style.height = originalHeight;
-        container.style.position = originalPosition;
-        container.style.top = '';
-        container.style.left = '';
-        container.style.overflowY = '';
-        container.style.flexShrink = '';
-        container.style.flexGrow = '';
-      }
+      // Cleanup
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
     };
   }, []);
 
@@ -209,7 +198,19 @@ export default function SirrPage() {
 
   return (
     <PageLayout>
-      <div ref={pageContainerRef} className="space-y-4" style={{ minHeight: '100dvh' }}>
+      <div
+        ref={pageContainerRef}
+        className="space-y-4"
+        style={{
+          minHeight: '100dvh',
+          // Prevent flex compression during keyboard open
+          flexShrink: 0,
+          flexGrow: 0,
+          // Ensure content doesn't overflow horizontally
+          maxWidth: '100vw',
+          overflowX: 'hidden',
+        }}
+      >
         {/* Header */}
         <PageTitle
           arabic="السر"
