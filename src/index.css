@@ -264,19 +264,7 @@
     user-select: text;
   }
 
-  /* Ensure textareas don't cause viewport shift */
-  textarea {
-    max-height: 50vh;
-    resize: vertical;
-    -webkit-overflow-scrolling: touch;
-  }
 
-  /* iOS Safari keyboard fix */
-  @supports (-webkit-touch-callout: none) {
-    body, #root {
-      -webkit-overflow-scrolling: touch;
-    }
-  }
 
   /* ── Motion preference (accessibility) ── */
   @media (prefers-reduced-motion: reduce) {

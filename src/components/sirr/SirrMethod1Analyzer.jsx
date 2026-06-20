@@ -380,7 +380,6 @@ export default function SirrMethod1Analyzer() {
             lineHeight: '1.8',
             WebkitAppearance: 'none',
             borderRadius: '12px',
-            contain: 'layout',
           }}
         />
         <div className="flex gap-2 mt-3">

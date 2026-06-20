@@ -198,15 +198,6 @@ export default function PageLayout({ children }) {
     return () => clearTimeout(timer);
   }, [activeId]);
 
-  // Reset scroll to top on every navigation/tab change
-  useEffect(() => {
-    const scrollEl = scrollRef.current;
-    if (scrollEl) {
-      scrollEl.scrollTop = 0;
-    }
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
-
 
 
   // Native back gesture support
@@ -226,7 +217,6 @@ export default function PageLayout({ children }) {
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         minHeight: "100%",
         height: "auto",
-        overflow: "hidden",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -238,9 +228,6 @@ export default function PageLayout({ children }) {
         paddingRight: "env(safe-area-inset-right)",
         paddingBottom: "env(safe-area-inset-bottom)",
         boxSizing: "border-box",
-        transform: "none",
-        left: "auto",
-        right: "auto",
         position: "relative",
         flex: "1 1 auto",
       }}
@@ -379,16 +366,10 @@ export default function PageLayout({ children }) {
           overscrollBehaviorY: "auto",
           paddingBottom: 72,
           WebkitOverflowScrolling: "touch",
-          touchAction: "auto",
-          willChange: 'scroll-position',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
           width: "100%",
           maxWidth: "100vw",
           margin: 0,
           padding: 0,
-          left: "auto",
-          right: "auto",
           boxSizing: "border-box",
           position: "relative",
         }}
@@ -404,14 +385,10 @@ export default function PageLayout({ children }) {
             className="relative z-10 w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6"
             style={{
               willChange: 'opacity',
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden',
               overflowX: 'hidden',
               width: '100%',
               maxWidth: '100vw',
               margin: 0,
-              marginLeft: 0,
-              marginRight: 0,
             }}
           >
             {children}
