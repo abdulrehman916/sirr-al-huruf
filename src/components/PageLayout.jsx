@@ -1,16 +1,12 @@
-import { memo, useMemo, useRef, useEffect, useState, useCallback, lazy, Suspense } from "react";
+import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft, Shield } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ChevronLeft, User } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
+import AccountModal from "./AccountModal";
 import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
-import useTranslation from "@/i18n/useTranslation";
-import { ADMIN_CONFIG } from "@/lib/adminConfig";
-
-
-const AccountModal = lazy(() => import("./AccountModal"));
 
 // ── Permanent brand navigation terms — Arabic + English, never translated ──
 const TAB_KEYS = [
@@ -32,40 +28,38 @@ const TAB_KEYS = [
 ];
 
 const PAGE_TITLE_KEYS = {
-  "/":                  "page_home",
-  "/abjad":             "page_abjad",
-  "/anasir":            "page_anasir",
-  "/hadim":             "page_hadim",
-  "/mizaan9":           "page_mizaan",
-  "/magic-sqayer":      "page_magic_sqayer",
-  "/vefkin-yapilisi":   "page_vefk",
-  "/basthul-huroof-2":  "page_bast",
-  "/faal-hasrath":      "page_faal_hasrath",
-  "/plants":            "page_plants",
-  "/evil-jinn":         "page_evil_jinn",
-  "/holy-names":        "page_holy_names",
-  "/astro-clock":       "page_astro_clock",
-  "/sirr":              "page_sirr",
-  "/support":           "support_title",
-  "/admin/access-dashboard": "dashboard_title",
+  "/": "page_home",
+  "/abjad": "page_abjad",
+  "/anasir": "page_anasir",
+  "/hadim": "page_hadim",
+  "/mizaan9": "page_mizaan",
+  "/magic-sqayer": "page_magic_sqayer",
+  "/vefkin-yapilisi": "page_vefk",
+  "/basthul-huroof-2": "page_bast",
+  "/faal-hasrath": "page_faal_hasrath",
+  "/plants": "page_plants",
+  "/evil-jinn": "page_evil_jinn",
+  "/holy-names": "page_holy_names",
+  "/astro-clock": "page_astro_clock",
+  "/sirr": "page_sirr",
+  "/support": "support_title",
 };
 
 const pageVariants = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
-  exit:    { opacity: 0 },
+  exit: { opacity: 0 },
 };
 
 // ── Top nav tab — <div> for zero link-delay, GPU-composited via container ──
 const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
   const navigate = useNavigate();
-  const isLastTab = tab.id === 'support';
   
-  const handleClick = useCallback((e) => {
+  const handleClick = (e) => {
     e.preventDefault();
     onClick();
     navigate(tab.path);
-  }, [tab.path, onClick, navigate]);
+  };
 
   return (
     <div
@@ -120,38 +114,21 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick, tabRef }) {
 // Pages where we show a back button instead of breadcrumb nav
 const CHILD_PAGES = ["/plants/"];
 
-// Simple user cache — avoid re-fetching auth on every page navigation
-let _userCache = null;
-let _userCacheTime = 0;
-const USER_CACHE_TTL = 30000; // 30 seconds
-
 export default function PageLayout({ children }) {
   const location = useLocation();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const { startNav } = useNavigation();
   const [showAccount, setShowAccount] = useState(false);
   const [user, setUser] = useState(null);
-  const { t } = useTranslation();
   useScrollPersist();
 
   useEffect(() => {
-    const now = Date.now();
-    if (_userCache && (now - _userCacheTime) < USER_CACHE_TTL) {
-      setUser(_userCache);
-      return;
-    }
-    base44.auth.me().then((u) => {
-      _userCache = u;
-      _userCacheTime = now;
-      setUser(u);
-    }).catch(() => {});
+    base44.auth.me().then(setUser).catch(() => {});
   }, []);
-
-
 
   const isChildPage = CHILD_PAGES.some(p => location.pathname.startsWith(p));
   const pageTitleKey = PAGE_TITLE_KEYS[location.pathname];
-  const pageTitle = isChildPage ? null : (pageTitleKey ? t(pageTitleKey) : null);
+  const pageTitle = isChildPage ? null : (pageTitleKey ? pageTitleKey : null);
 
   const activeId = useMemo(
     () => TAB_KEYS.find(tab => tab.path === location.pathname)?.id ?? undefined,
@@ -161,27 +138,6 @@ export default function PageLayout({ children }) {
   const scrollRef = useRef(null);
   const navRef = useRef(null);
   const tabRefs = useRef({});
-  const [scrollMetrics, setScrollMetrics] = useState({ scrollWidth: 0, clientWidth: 0, scrollLeft: 0 });
-
-  // Track scroll metrics for fade indicators
-  // TEMPORARILY DISABLED: resize listener triggers on keyboard open → state update → page jump
-  // Track scroll metrics for fade indicators — scroll events only (NO resize to prevent keyboard jumps)
-  useEffect(() => {
-    if (!navRef.current) return;
-    const nav = navRef.current;
-    const updateMetrics = () => {
-      setScrollMetrics({
-        scrollWidth: nav.scrollWidth,
-        clientWidth: nav.clientWidth,
-        scrollLeft: nav.scrollLeft,
-      });
-    };
-    updateMetrics();
-    nav.addEventListener('scroll', updateMetrics, { passive: true });
-    return () => {
-      nav.removeEventListener('scroll', updateMetrics);
-    };
-  }, []);
 
   // Auto-scroll active tab into view — scroll the nav container only, NOT the page
   useEffect(() => {
@@ -196,7 +152,6 @@ export default function PageLayout({ children }) {
       const navCenter = navRect.left + navRect.width / 2;
       const scrollOffset = tabCenter - navCenter;
       
-      // Scroll the nav container directly, avoiding browser scrollIntoView
       navContainer.scrollBy({
         left: scrollOffset,
         behavior: 'smooth'
@@ -237,7 +192,7 @@ export default function PageLayout({ children }) {
     >
       <AtmosphericBackground />
 
-      {/* ── Sticky Top Nav — desktop + child page back button on mobile ── */}
+      {/* ── Sticky Top Nav ── */}
       <div
         className="sticky top-0 z-50 w-full flex-shrink-0"
         role="navigation"
@@ -254,31 +209,32 @@ export default function PageLayout({ children }) {
         <div
           style={{
             position: "absolute", top: 0, left: 0, right: 0, height: 1,
-            background:
-              "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.42) 40%, rgba(232,200,74,0.55) 50%, rgba(212,175,55,0.42) 60%, transparent 95%)",
+            background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.42) 40%, rgba(232,200,74,0.55) 50%, rgba(212,175,55,0.42) 60%, transparent 95%)",
           }}
         />
 
-        {/* Back button for child pages only (all devices) */}
+        {/* Back button for child pages only */}
         {isChildPage && (
           <div className="flex items-center justify-between px-3 py-2.5">
             <button
               onClick={() => { startNav(); navigate(-1); }}
               className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl"
               style={{
-                color: "#D4AF37", background: "rgba(212,175,55,0.08)",
+                color: "#D4AF37", 
+                background: "rgba(212,175,55,0.08)",
                 border: "1px solid rgba(212,175,55,0.18)",
                 WebkitTapHighlightColor: "transparent",
-                userSelect: "none", WebkitUserSelect: "none",
+                userSelect: "none", 
+                WebkitUserSelect: "none",
               }}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="font-inter text-xs font-semibold tracking-wide">{t('btn_back')}</span>
+              <span className="font-inter text-xs font-semibold tracking-wide">Back</span>
             </button>
           </div>
         )}
 
-        {/* Horizontal navigation — single native scroll layer, GPU-composited */}
+        {/* Horizontal navigation */}
         <div
           ref={navRef}
           className="nav-scroll-container px-2 py-2 flex items-center gap-1 scrollbar-none"
@@ -298,10 +254,11 @@ export default function PageLayout({ children }) {
             paddingRight: "10px",
           }}
         >
-          {/* Admin button - visible for owner email OR platform admin role */}
-          {(user?.role === 'admin' || (user?.email && user.email.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase())) && (
-            <button
-              onClick={() => { startNav(); navigate('/admin/access-dashboard'); }}
+          {/* Admin button */}
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin/access-dashboard"
+              onClick={startNav}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
               style={{
                 background: "linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.10))",
@@ -315,33 +272,9 @@ export default function PageLayout({ children }) {
                 whiteSpace: "nowrap",
               }}
             >
-              <Shield className="w-3.5 h-3.5" />
-              <span className="font-inter text-xs font-bold tracking-wide">{t('nav_admin')}</span>
-            </button>
-          )}
-
-          {/* Left fade indicator - shows when more tabs exist to the left */}
-          {scrollMetrics.scrollLeft > 10 && (
-            <div
-              className="pointer-events-none absolute left-0 top-0 bottom-0 z-10"
-              style={{
-                width: 40,
-                background: "linear-gradient(90deg, rgba(2,6,16,0.98) 0%, rgba(2,6,16,0.70) 50%, transparent 100%)",
-                opacity: 0.8,
-              }}
-            />
-          )}
-          
-          {/* Right fade indicator - shows when more tabs exist to the right */}
-          {scrollMetrics.scrollWidth > scrollMetrics.clientWidth + scrollMetrics.scrollLeft + 10 && (
-            <div
-              className="pointer-events-none absolute right-0 top-0 bottom-0 z-10"
-              style={{
-                width: 40,
-                background: "linear-gradient(270deg, rgba(2,6,16,0.98) 0%, rgba(2,6,16,0.70) 50%, transparent 100%)",
-                opacity: 0.8,
-              }}
-            />
+              <User className="w-3.5 h-3.5" />
+              <span className="font-inter text-xs font-bold tracking-wide">Admin</span>
+            </Link>
           )}
 
           {TAB_KEYS.map((tab) => (
@@ -356,7 +289,7 @@ export default function PageLayout({ children }) {
         </div>
       </div>
 
-      {/* ── Scrollable page content — fixed height prevents expansion ── */}
+      {/* ── Scrollable page content ── */}
       <div
         ref={scrollRef}
         data-scroll-container="true"
@@ -375,7 +308,6 @@ export default function PageLayout({ children }) {
           boxSizing: "border-box",
           position: "relative",
           flex: "1 1 auto",
-          height: "100%",
           minHeight: "0",
         }}
       >
@@ -395,7 +327,7 @@ export default function PageLayout({ children }) {
               maxWidth: '100vw',
               margin: 0,
               position: 'relative',
-              height: '100%',
+              minHeight: '100%',
             }}
           >
             {children}
@@ -405,12 +337,10 @@ export default function PageLayout({ children }) {
 
     </div>
 
-    {/* Account modal — lazy loaded */}
+    {/* Account modal */}
     <AnimatePresence>
       {showAccount && (
-        <Suspense fallback={null}>
-          <AccountModal user={user} onClose={() => setShowAccount(false)} />
-        </Suspense>
+        <AccountModal user={user} onClose={() => setShowAccount(false)} />
       )}
     </AnimatePresence>
     </>
