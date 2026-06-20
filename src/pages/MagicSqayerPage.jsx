@@ -21,6 +21,8 @@ import MsWeekdayUlviCard from "../components/magicsqayer/MsWeekdayUlviCard";
 import MsWeekdaySufliCard from "../components/magicsqayer/MsWeekdaySufliCard";
 import MsWeekdayEditor from "../components/magicsqayer/MsWeekdayEditor";
 import MsPlanetReport   from "../components/magicsqayer/MsPlanetReport";
+import SecondSquare     from "../components/magicsqayer/SecondSquare";
+import { Trash2, ChevronRight } from "lucide-react";
 
 // ── Labels ───────────────────────────────────────────────────────
 import LABELS from "../components/magicsqayer/msLabels";
@@ -263,6 +265,52 @@ function msReducer(state, action) {
 }
 
 // ═════════════════════════════════════════════════════════════════
+//  SECOND SQUARE DISPLAY COMPONENT
+// ═════════════════════════════════════════════════════════════════
+function SecondSquareDisplay({ gridSize, grid, revealedCount, lang, onNext, onClear, canRevealNext }) {
+  return (
+    <div className="space-y-3">
+      {/* Second Square */}
+      <SecondSquare gridSize={gridSize} originalGrid={grid.grid} revealedCount={revealedCount} lang={lang} />
+      
+      {/* Buttons */}
+      <div className="flex gap-2">
+        <motion.button
+          onClick={onClear}
+          disabled={revealedCount === 0}
+          whileHover={{ scale: revealedCount === 0 ? 1 : 1.02 }}
+          whileTap={{ scale: revealedCount === 0 ? 1 : 0.97 }}
+          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-inter font-bold text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ 
+            background: "rgba(255,255,255,0.03)", 
+            borderColor: "rgba(255,255,255,0.12)", 
+            color: "rgba(255,255,255,0.55)" 
+          }}>
+          <Trash2 className="w-3.5 h-3.5" />
+          CLEAR
+        </motion.button>
+        
+        <motion.button
+          onClick={onNext}
+          disabled={!canRevealNext}
+          whileHover={{ scale: canRevealNext ? 1.02 : 1 }}
+          whileTap={{ scale: canRevealNext ? 0.97 : 1 }}
+          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-inter font-bold text-sm text-[#0d1b2a] disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ 
+            background: canRevealNext 
+              ? "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)" 
+              : "rgba(212,175,55,0.10)",
+            boxShadow: canRevealNext ? "0 0 32px rgba(212,175,55,0.55)" : "none" 
+          }}>
+          <ChevronRight className="w-4 h-4" />
+          NEXT
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════
 //  PAGE
 // ═════════════════════════════════════════════════════════════════
 export default function MagicSqayerPage() {
@@ -271,6 +319,9 @@ export default function MagicSqayerPage() {
     gridSize: null, element: null, grid: null,
   });
   const { lang, inputNum, suffix, gridSize, element, grid } = state;
+
+  // ── Second Square state (completely isolated) ───────────────────
+  const [revealedCount, setRevealedCount] = useState(0);
 
   // ── Day selector & per-weekday overrides ─────────────────────────
   const [selectedDayIndex, setSelectedDayIndex] = useState(new Date().getDay());
@@ -364,8 +415,21 @@ export default function MagicSqayerPage() {
     });
   }, [squareMC, gridSize, element, buildGrid]);
 
+  // ── Second Square handlers (isolated) ───────────────────────────
+  const handleNext = useCallback(() => {
+    if (grid && !grid.incompatible) {
+      const totalCells = gridSize * gridSize;
+      setRevealedCount(prev => Math.min(prev + 1, totalCells));
+    }
+  }, [grid, gridSize]);
+
+  const handleClear = useCallback(() => {
+    setRevealedCount(0);
+  }, []);
+
   const canGenerate = !!inputNum && !!gridSize;
   const gridReady = grid && !grid.incompatible && squareMC && gridSize;
+  const canRevealNext = gridReady && revealedCount < (gridSize * gridSize);
 
   // ── Suffix options (name-only — never affects MC or grid) ──────
   const suffixOpts = [
@@ -537,6 +601,19 @@ export default function MagicSqayerPage() {
 
         {/* Sacred Grid */}
         <SacredGrid gridSize={gridSize} element={element} grid={grid} lang={lang} L={L} />
+
+        {/* SECOND SQUARE - Arabic Numerals Only (isolated from original) */}
+        {gridReady && (
+          <SecondSquareDisplay
+            gridSize={gridSize}
+            grid={grid}
+            revealedCount={revealedCount}
+            lang={lang}
+            onNext={handleNext}
+            onClear={handleClear}
+            canRevealNext={canRevealNext}
+          />
+        )}
 
         {/* Planet Report */}
         {gridReady && (
