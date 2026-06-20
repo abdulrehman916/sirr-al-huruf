@@ -13,7 +13,7 @@ const LIGHT_RAYS = Array.from({ length: 12 }, (_, i) => ({
   dur: 5 + i * 0.7,
   delay: i * 0.4,
   width: i % 4 === 0 ? 2 : 1,
-  length: i % 3 === 0 ? "62vh" : "48vh",
+  length: i % 3 === 0 ? 320 : 240,
 }));
 
 const ORBITAL_RINGS = [

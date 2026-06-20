@@ -165,7 +165,7 @@ function NebulaLayers({ mouse, paused }) {
       }} />
       <motion.div className="absolute"
         style={{
-          width: "80vw", height: "60vw", maxWidth: 900,
+          width: 600, height: 450, maxWidth: 900,
           top: "30%", left: "50%", transform: "translateX(-50%)",
           borderRadius: "50%",
           background: "radial-gradient(ellipse, rgba(15,35,90,0.28) 0%, rgba(8,18,55,0.13) 50%, transparent 75%)",
@@ -177,7 +177,7 @@ function NebulaLayers({ mouse, paused }) {
       />
       <motion.div className="absolute"
         style={{
-          width: "55vw", height: "55vw",
+          width: 400, height: 400,
           top: "-15%", left: "-15%",
           borderRadius: "50%",
           background: "radial-gradient(ellipse, rgba(55,45,170,0.12) 0%, rgba(25,18,90,0.06) 55%, transparent 75%)",
@@ -189,7 +189,7 @@ function NebulaLayers({ mouse, paused }) {
       />
       <motion.div className="absolute"
         style={{
-          width: "50vw", height: "50vw",
+          width: 380, height: 380,
           bottom: "-10%", right: "-10%",
           borderRadius: "50%",
           background: "radial-gradient(ellipse, rgba(0,90,165,0.10) 0%, rgba(0,55,110,0.05) 55%, transparent 75%)",
@@ -291,7 +291,7 @@ function LightRays({ mouse, paused }) {
         <motion.div key={i}
           className="absolute"
           style={{
-            width: 1.5, height: "50vh",
+            width: 1.5, height: 280,
             background: "linear-gradient(to bottom, rgba(212,175,55,0.14), transparent)",
             transformOrigin: "top center",
             top: "50%", left: "50%", marginLeft: -0.75,
