@@ -152,7 +152,6 @@ export default function PagePermissions() {
                       {isPrivate ? 'Private' : 'Public'}
                     </Badge>
                   </div>
-                  <p className="text-xs text-white/40 font-mono mt-0.5">{page.path}</p>
                 </div>
 
                 {!isLocked ? (
