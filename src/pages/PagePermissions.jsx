@@ -57,7 +57,7 @@ export default function PagePermissions() {
           requiresPermission: dbMap.hasOwnProperty(path) ? dbMap[path] : config.requiresPermission,
           isLocked: LOCKED_PAGES.includes(path)
         }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .sort((a, b) => (a?.name || '').localeCompare(b?.name || ''));
       
       setPageVisibility(list);
     } catch (error) {

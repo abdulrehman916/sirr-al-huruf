@@ -21,7 +21,7 @@ const SIDEBAR_ITEMS = [
   { path: "/admin/user-permissions", label: "User Permissions", arabic: "أذونات المستخدمين", icon: "Shield" },
   { path: "/admin/user-management", label: "User Access Manager", arabic: "إدارة المستخدمين", icon: "Users" },
   { path: "/admin/pricing-settings", label: "Pricing Settings", arabic: "إعدادات الأسعار", icon: "DollarSign" },
-  { path: "/admin/subscription-requests", label: "Access Requests", arabic: "طلبات الوصول", icon: "Clock" },
+  { path: "/admin/access-requests", label: "Access Requests", arabic: "طلبات الوصول", icon: "Clock" },
   { path: "/admin/subscriptions-management", label: "Subscription Management", arabic: "إدارة الاشتراكات", icon: "CreditCard" },
   { path: "/admin/access-logs", label: "Access Logs", arabic: "سجلات الوصول", icon: "Activity" },
   { path: "/admin/page-permissions", label: "Page Permissions", arabic: "أذونات الصفحات", icon: "Globe" },

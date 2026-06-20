@@ -61,7 +61,7 @@ const SIDEBAR_ITEMS = [
     description: "Set custom prices per page"
   },
   {
-    path: "/admin/subscription-requests",
+    path: "/admin/access-requests",
     label: "Access Requests",
     arabic: "طلبات الوصول",
     icon: Clock,

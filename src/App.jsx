@@ -73,6 +73,7 @@ const PAGE_IMPORTS = {
   UserDetailPage:           () => import('./pages/UserDetailPage'),
   AdminFaalChobUpload:      () => import('./pages/AdminFaalChobUpload'),
   AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
+  AdminAccessCodes:         () => import('./pages/AdminAccessCodes'),
   QAReport:                 () => import('./pages/QAReport'),
   FinalLaunchChecklist:     () => import('./pages/FinalLaunchChecklist'),
   PreLaunchReport:          () => import('./pages/PreLaunchReport'),
