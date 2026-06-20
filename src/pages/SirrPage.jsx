@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import PageLayout from '../components/PageLayout';
 import PageTitle from '../components/PageTitle';
 import SirrBookSearch from '../components/sirr/SirrBookSearch';
@@ -38,6 +38,78 @@ export default function SirrPage() {
   const [selectedResult, setSelectedResult] = useState(initialState.selectedResult);
   const [isSearching, setIsSearching] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
+  const pageContainerRef = useRef(null);
+
+  // SIRR PAGE KEYBOARD FIX — VisualViewport API handler (page-scoped, isolated)
+  // Prevents viewport compression when keyboard opens on iPhone Safari
+  useEffect(() => {
+    if (typeof window.visualViewport === 'undefined') return;
+    
+    let originalHeight;
+    let originalPosition;
+    
+    const handleResize = () => {
+      const container = pageContainerRef.current;
+      if (!container) return;
+      
+      // Detect keyboard open: visual viewport shrinks when keyboard appears
+      const viewportHeight = window.visualViewport.height;
+      const innerHeight = window.innerHeight;
+      const isKeyboardOpen = viewportHeight < innerHeight * 0.9;
+      
+      if (isKeyboardOpen) {
+        // Lock container to prevent compression
+        if (!originalHeight) {
+          originalHeight = container.style.height;
+          originalPosition = container.style.position;
+          
+          // Set fixed positioning to prevent flex compression
+          container.style.height = `${viewportHeight}px`;
+          container.style.position = 'fixed';
+          container.style.top = '0';
+          container.style.left = '0';
+          container.style.width = '100%';
+          container.style.overflowY = 'auto';
+          container.style.flexShrink = '0';
+          container.style.flexGrow = '0';
+        }
+      } else {
+        // Restore original behavior when keyboard closes
+        if (originalHeight !== undefined) {
+          container.style.height = originalHeight;
+          container.style.position = originalPosition;
+          container.style.top = '';
+          container.style.left = '';
+          container.style.overflowY = '';
+          container.style.flexShrink = '';
+          container.style.flexGrow = '';
+          originalHeight = undefined;
+          originalPosition = undefined;
+        }
+      }
+    };
+    
+    // Listen for viewport resize events (keyboard open/close)
+    window.visualViewport.addEventListener('resize', handleResize);
+    
+    // Initial check
+    handleResize();
+    
+    return () => {
+      window.visualViewport.removeEventListener('resize', handleResize);
+      // Cleanup styles on unmount
+      const container = pageContainerRef.current;
+      if (container && originalHeight !== undefined) {
+        container.style.height = originalHeight;
+        container.style.position = originalPosition;
+        container.style.top = '';
+        container.style.left = '';
+        container.style.overflowY = '';
+        container.style.flexShrink = '';
+        container.style.flexGrow = '';
+      }
+    };
+  }, []);
 
   // Persist state
   useState(() => {
@@ -137,7 +209,7 @@ export default function SirrPage() {
 
   return (
     <PageLayout>
-      <div className="space-y-4">
+      <div ref={pageContainerRef} className="space-y-4" style={{ minHeight: '100dvh' }}>
         {/* Header */}
         <PageTitle
           arabic="السر"
