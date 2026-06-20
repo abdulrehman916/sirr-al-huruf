@@ -30,16 +30,89 @@ export const ABJAD_SAGIR = {
 
 export const ELEMENT_LETTERS = {
   fire: ['ا', 'ط', 'ه', 'ف', 'ش', 'ذ'],
-  earth: ['ب', 'و', 'ي', 'ي', 'ص', 'ن', 'ت', 'ض'],
+  earth: ['ب', 'و', 'ي', 'ى', 'ص', 'ن', 'ت', 'ض'],
   air: ['ج', 'ز', 'ل', 'س', 'ق', 'ث', 'ظ'],
-  water: ['د', 'خ', 'ل', 'ع', 'و', 'ر', 'خ', 'غ']
+  water: ['د', 'خ', 'ع', 'ر', 'غ']
 };
+
+// ═══════════════════════════════════════════════════════
+// MEBSUT LETTER TRANSFORMATION (from book pages 41-43)
+// Mebsut (مبسوط) = "Spread/Expanded" forms
+// Each letter transforms into its component strokes/dots
+// Source: Risale-i Samur Hindi pp.41-43
+// ═══════════════════════════════════════════════════════
+
+export const MEBSUT_TRANSFORMS = {
+  // Single form letters (no transformation)
+  'ا': ['ا'],
+  'ب': ['ب', 'ي'],  // ب = body + dot below
+  'ت': ['ت', 'ي', 'ي'],  // ت = body + 2 dots above
+  'ث': ['ث', 'ي', 'ي', 'ي'],  // ث = body + 3 dots above
+  'ج': ['ج', 'ن'],  // ج = body + dot below
+  'ح': ['ح'],
+  'خ': ['خ', 'ن'],  // خ = ح + dot above
+  'د': ['د'],
+  'ذ': ['ذ', 'د'],  // ذ = د + dot above
+  'ر': ['ر'],
+  'ز': ['ز', 'ر'],  // ز = ر + dot above
+  'س': ['س'],
+  'ش': ['ش', 'ن', 'ن', 'ن'],  // ش = س + 3 dots above
+  'ص': ['ص'],
+  'ض': ['ض', 'ص'],  // ض = ص + dot above
+  'ط': ['ط'],
+  'ظ': ['ظ', 'ط'],  // ظ = ط + dot above
+  'ع': ['ع'],
+  'غ': ['غ', 'ع'],  // غ = ع + dot above
+  'ف': ['ف'],
+  'ق': ['ق', 'ن', 'ن'],  // ق = ف + 2 dots above
+  'ك': ['ك', 'ن'],  // ك = body + 2 dots (represented as ن)
+  'ل': ['ل'],
+  'م': ['م'],
+  'ن': ['ن'],
+  'ه': ['ه'],
+  'و': ['و'],
+  'ي': ['ي'],
+  'ى': ['ى'],  // Alif Maqsura
+  'ة': ['ه', 'ي', 'ي'],  // ة = ه + 2 dots
+};
+
+export function transformToMebsut(text) {
+  const result = [];
+  for (const char of text) {
+    const transformed = MEBSUT_TRANSFORMS[char] || [char];
+    result.push(...transformed);
+  }
+  return result;
+}
+
+export function countMebsutLetters(mebsutLetters) {
+  const counts = {};
+  for (const letter of mebsutLetters) {
+    counts[letter] = (counts[letter] || 0) + 1;
+  }
+  return counts;
+}
 
 export function getElementForLetter(letter) {
   for (const [element, letters] of Object.entries(ELEMENT_LETTERS)) {
     if (letters.includes(letter)) return element;
   }
   return null;
+}
+
+export function countElementsByElement(letterCounts) {
+  const elementCounts = { fire: 0, earth: 0, air: 0, water: 0 };
+  const elementValues = { fire: 0, earth: 0, air: 0, water: 0 };
+  
+  for (const [letter, count] of Object.entries(letterCounts)) {
+    const element = getElementForLetter(letter);
+    if (element) {
+      elementCounts[element] += count;
+      elementValues[element] += count * (ABJAD_KEBIR[letter] || 0);
+    }
+  }
+  
+  return { elementCounts, elementValues };
 }
 
 export function getDominantElement(text) {
@@ -60,6 +133,29 @@ export function getDominantElement(text) {
   }
   
   return { element: maxElement, counts, total: Object.values(counts).reduce((a, b) => a + b, 0) };
+}
+
+export function getDominantElementFromMebsut(mebsutLetters) {
+  const letterCounts = countMebsutLetters(mebsutLetters);
+  const { elementCounts, elementValues } = countElementsByElement(letterCounts);
+  
+  // Find dominant element by count (as per pp.42)
+  let maxElement = 'fire';
+  let maxCount = 0;
+  for (const [element, count] of Object.entries(elementCounts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      maxElement = element;
+    }
+  }
+  
+  return {
+    element: maxElement,
+    elementCounts,
+    elementValues,
+    letterCounts,
+    totalLetters: mebsutLetters.length
+  };
 }
 
 // ═══════════════════════════════════════════════════════

@@ -3,6 +3,10 @@ import { motion } from 'framer-motion';
 import { 
   calculateBast, 
   getDominantElement, 
+  getDominantElementFromMebsut,
+  transformToMebsut,
+  countMebsutLetters,
+  countElementsByElement,
   ABJAD_KEBIR, 
   ELEMENT_LETTERS,
   DAY_VALUES,
@@ -109,7 +113,7 @@ export default function SirrMethod1Analyzer() {
       
       // ═══════════════════════════════════════════
       // STEP 1: Normalize Arabic Text
-      // Source: Samur Hindi pp. 16-18 (Arabic letter rules)
+      // Source: Samur Hindi pp. 16-18, 41-43
       // ═══════════════════════════════════════════
       const normalizedText = text
         .replace(/[\u064B-\u065F\u0670]/g, '') // Remove diacritics (tashkeel)
@@ -119,52 +123,51 @@ export default function SirrMethod1Analyzer() {
 
       // ═══════════════════════════════════════════
       // STEP 2: Extract All Letters
-      // Source: Samur Hindi pp. 16-18
+      // Source: Samur Hindi pp. 16-18, 41
       // ═══════════════════════════════════════════
-      const letters = normalizedText.split('').filter(c => c.trim());
+      const originalLetters = normalizedText.split('').filter(c => c.trim());
 
       // ═══════════════════════════════════════════
-      // STEP 3-4: Letter-by-Letter Breakdown with Abjad Values
-      // Source: Samur Hindi pp. 16-18 (Abjad Kebir table)
+      // STEP 3: Generate Mebsut Forms (pp.41-43)
+      // Each letter transforms into component strokes/dots
+      // Source: Samur Hindi pp. 41-43
       // ═══════════════════════════════════════════
-      const letterDetails = letters.map((letter, idx) => {
+      const { mebsutLetters, transformSteps } = transformToMebsut(originalLetters);
+
+      // ═══════════════════════════════════════════
+      // STEP 4: Count Every Resulting Letter
+      // Source: Samur Hindi p.42
+      // ═══════════════════════════════════════════
+      const mebsutCounts = countMebsutLetters(mebsutLetters);
+
+      // ═══════════════════════════════════════════
+      // STEP 5: Separate Counts by Element
+      // Source: Samur Hindi pp. 18, 42
+      // ═══════════════════════════════════════════
+      const { elementCounts, elementValues } = countElementsByElement(mebsutCounts);
+
+      // ═══════════════════════════════════════════
+      // STEP 6: Determine Dominant Element
+      // Source: Samur Hindi p.42
+      // ═══════════════════════════════════════════
+      const dominantElementData = getDominantElementFromMebsut(mebsutLetters);
+      const dominantElement = dominantElementData.element;
+
+      // ═══════════════════════════════════════════
+      // STEP 7: Calculate Total Value (Original Letters)
+      // Source: Samur Hindi pp. 16-18, 32-35
+      // ═══════════════════════════════════════════
+      const originalLetterDetails = originalLetters.map((letter, idx) => {
         const value = getAbjadValue(letter);
         const element = getElementForLetter(letter);
-        return { 
-          letter, 
-          value, 
-          element,
-          position: idx + 1
-        };
+        return { letter, value, element, position: idx + 1 };
       });
-
-      // ═══════════════════════════════════════════
-      // STEP 5: Calculate Total Value
-      // Source: Samur Hindi pp. 32-35
-      // ═══════════════════════════════════════════
-      const totalValue = letterDetails.reduce((sum, l) => sum + l.value, 0);
-
-      // ═══════════════════════════════════════════
-      // STEP 6: Determine Dominant Anasir (Element)
-      // Source: Samur Hindi pp. 18, 32-35
-      // ═══════════════════════════════════════════
-      const elementCounts = { fire: 0, air: 0, water: 0, earth: 0 };
-      const elementValues = { fire: 0, air: 0, water: 0, earth: 0 };
-      
-      letterDetails.forEach(l => {
-        if (elementCounts[l.element] !== undefined) {
-          elementCounts[l.element]++;
-          elementValues[l.element] += l.value;
-        }
-      });
-
-      const dominantElement = Object.entries(elementValues).reduce((a, b) => 
-        b[1] > a[1] ? b : a
-      )[0];
+      const totalValue = originalLetterDetails.reduce((sum, l) => sum + l.value, 0);
 
       // ═══════════════════════════════════════════
       // STEP 7-15: Apply All 9 Mizans Sequentially
       // Source: Samur Hindi pp. 32-45 (Dokuz Mizan system)
+      // Using Mebsut-based element counts from pp.41-43
       // ═══════════════════════════════════════════
       
       // MIZAN 1: Talib İsmi (Name Value) - p.32
@@ -173,22 +176,22 @@ export default function SirrMethod1Analyzer() {
         name: 'Talib İsmi',
         arabic: 'طَالِبُ ٱسْمِ',
         value: totalValue,
-        formula: 'Sum of all letter Abjad values',
-        calculation: letterDetails.map(l => l.value).join(' + '),
+        formula: 'Sum of all original letter Abjad values',
+        calculation: originalLetterDetails.map(l => l.value).join(' + '),
         result: totalValue,
         source: 'Risale-i Samur Hindi, p.32'
       };
 
-      // MIZAN 2: Galip Anasır (Dominant Element) - p.35
+      // MIZAN 2: Galip Anasır (Dominant Element from Mebsut) - p.35, p.42
       const mizan2 = {
         step: 2,
-        name: 'Galip Anasır',
+        name: 'Galip Anasır (Mebsut)',
         arabic: 'غَالِبُ ٱلْعَنَاصِرِ',
-        value: elementValues[dominantElement],
-        formula: 'Element with highest total value',
-        calculation: `Fire: ${elementValues.fire}, Air: ${elementValues.air}, Water: ${elementValues.water}, Earth: ${elementValues.earth}`,
-        result: `${dominantElement.toUpperCase()} (${elementValues[dominantElement]})`,
-        source: 'Risale-i Samur Hindi, p.35'
+        value: dominantElementData.elementValues[dominantElement],
+        formula: 'Element with highest count in Mebsut transformation',
+        calculation: `Fire: ${dominantElementData.elementCounts.fire}, Air: ${dominantElementData.elementCounts.air}, Water: ${dominantElementData.elementCounts.water}, Earth: ${dominantElementData.elementCounts.earth}`,
+        result: `${dominantElement.toUpperCase()} (${dominantElementData.elementCounts[dominantElement]} letters, value: ${dominantElementData.elementValues[dominantElement]})`,
+        source: 'Risale-i Samur Hindi, pp.35, 42'
       };
 
       // MIZAN 3: Gündüz/Gece (Day/Night) - p.33
@@ -303,12 +306,16 @@ export default function SirrMethod1Analyzer() {
       setAnalysis({
         normalizedText,
         originalText: text,
-        letters,
-        letterDetails,
+        originalLetters,
+        originalLetterDetails,
+        mebsutLetters,
+        transformSteps,
+        mebsutCounts,
         totalValue,
         elementCounts,
         elementValues,
         dominantElement,
+        dominantElementData,
         mizanSteps: [mizan1, mizan2, mizan3, mizan4, mizan5, mizan6, mizan7, mizan8, mizan9],
         finalTotal,
         finalFormula: 'Mizan 1 + Mizan 3 + Mizan 4 + Mizan 6 + Mizan 9'
@@ -415,10 +422,10 @@ export default function SirrMethod1Analyzer() {
             </p>
           </SectionCard>
 
-          {/* Step 2-4: Letter Breakdown with Values */}
-          <SectionCard title="Letter Breakdown & Numerical Values" number="2-4">
+          {/* Step 2: Original Letters */}
+          <SectionCard title="Original Letters (pp.16-18)" number="2">
             <div className="flex flex-wrap gap-2 justify-center p-4">
-              {analysis.letterDetails.map((l, i) => (
+              {analysis.originalLetterDetails.map((l, i) => (
                 <LetterBox
                   key={i}
                   index={i}
@@ -430,28 +437,69 @@ export default function SirrMethod1Analyzer() {
             </div>
             <div className="mt-4 p-3 rounded-lg" style={{ background: G.bg }}>
               <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                Calculation Formula:
+                Original Letter Values:
               </p>
               <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.70)" }}>
-                {analysis.letterDetails.map(l => l.value).join(' + ')} = {analysis.totalValue}
+                {analysis.originalLetterDetails.map(l => l.value).join(' + ')} = {analysis.totalValue}
               </p>
             </div>
           </SectionCard>
 
-          {/* Step 5: Total Value */}
-          <SectionCard title="Total Numerical Value" number="5">
+          {/* Step 3: Mebsut Transformation (pp.41-43) */}
+          <SectionCard title="Mebsut Transformation (pp.41-43)" number="3">
+            <div className="space-y-2">
+              {analysis.transformSteps.map((step, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded-lg" style={{ background: G.bg }}>
+                  <span className="font-amiri text-lg" style={{ color: G.text, direction: 'rtl' }}>{step.original}</span>
+                  <span className="font-inter text-xs" style={{ color: G.dim }}>→</span>
+                  <div className="flex gap-1">
+                    {step.mebsut.map((m, i) => (
+                      <span key={i} className="font-amiri text-lg" style={{ color: G.text, direction: 'rtl' }}>{m}</span>
+                    ))}
+                  </div>
+                  <span className="font-inter text-[9px]" style={{ color: G.dim }}>{step.mebsut.length} letters</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 rounded-lg" style={{ background: G.bg }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                TRANSFORMATION SUMMARY
+              </p>
+              <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.70)" }}>
+                Original: {analysis.originalLetters.length} letters → Mebsut: {analysis.mebsutLetters.length} letters
+              </p>
+            </div>
+          </SectionCard>
+
+          {/* Step 4: Mebsut Letter Counts */}
+          <SectionCard title="Mebsut Letter Counts (p.42)" number="4">
+            <div className="grid grid-cols-4 gap-2 p-4">
+              {Object.entries(analysis.mebsutCounts).map(([letter, count]) => (
+                <div key={letter} className="text-center p-2 rounded-lg" style={{ background: G.bg }}>
+                  <span className="font-amiri text-xl block" style={{ color: G.text, direction: 'rtl' }}>{letter}</span>
+                  <span className="font-inter text-xs" style={{ color: G.dim }}>×{count}</span>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Step 5: Total Value (Original Letters) */}
+          <SectionCard title="Total Value - Original Letters" number="5">
             <div className="text-center p-6 rounded-lg" style={{ background: G.bg }}>
               <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-                TOTAL VALUE
+                ORIGINAL LETTER TOTAL
               </p>
               <p className="font-amiri text-5xl font-bold" style={{ color: G.text }}>
                 {analysis.totalValue}
               </p>
+              <p className="font-inter text-xs mt-2" style={{ color: "rgba(255,255,255,0.50)" }}>
+                From {analysis.originalLetters.length} original letters
+              </p>
             </div>
           </SectionCard>
 
-          {/* Step 6: Anasir Analysis */}
-          <SectionCard title="Anasir (Element) Analysis" number="6">
+          {/* Step 6: Anasir Analysis (from Mebsut) */}
+          <SectionCard title="Anasir Analysis - Mebsut (p.42)" number="6">
             <div className="grid grid-cols-2 gap-3 mb-4">
               {Object.entries(analysis.elementCounts).map(([element, count]) => (
                 <div
@@ -473,10 +521,13 @@ export default function SirrMethod1Analyzer() {
             </div>
             <div className="p-3 rounded-lg" style={{ background: G.bg }}>
               <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                DOMINANT ELEMENT
+                DOMINANT ELEMENT (from Mebsut)
               </p>
               <p className="font-inter text-xl font-bold" style={{ color: G.text }}>
-                {analysis.dominantElement}
+                {analysis.dominantElement.toUpperCase()}
+              </p>
+              <p className="font-inter text-xs mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>
+                {analysis.dominantElementData.elementCounts[analysis.dominantElement]} Mebsut letters / {analysis.dominantElementData.elementValues[analysis.dominantElement]} total value
               </p>
             </div>
           </SectionCard>
