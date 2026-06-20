@@ -45,7 +45,43 @@ export default function OTPLogin() {
           return;
         }
 
-        // Call custom generateLoginOTP function (uses Resend)
+        // Check if user is in approved users list
+        const approvedCheck = await base44.functions.invoke("checkApprovedUser", {
+          email: email
+        });
+
+        if (approvedCheck.data?.success && approvedCheck.data?.approved) {
+          // Approved user - grant direct access without OTP
+          const platformResult = await base44.auth.verifyOtp({ email, otpCode: "APPROVED" });
+          await base44.auth.setToken(platformResult.access_token);
+
+          // Owner email always gets admin role
+          if (email.trim().toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase()) {
+            try { await base44.auth.updateMe({ role: "admin" }); } catch {}
+          }
+
+          await base44.functions.invoke("completeOnboarding", {
+            email,
+            mobile: "",
+            device_type: deviceType,
+            country
+          });
+
+          setSuccessMsg(`✓ Access granted as approved user! Redirecting...`);
+          toast({ 
+            title: "Welcome Back", 
+            description: approvedCheck.data.message,
+            duration: 3000
+          });
+          
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 1500);
+          setLoading(false);
+          return;
+        }
+
+        // Not an approved user - proceed with normal OTP flow
         const result = await base44.functions.invoke("generateLoginOTP", {
           email: email,
           purpose: "LOGIN"

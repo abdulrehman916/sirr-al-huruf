@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity, Clock, Crown, KeyRound } from "lucide-react";
+import { Users, Globe, Shield, CreditCard, DollarSign, ChevronRight, Menu, X, Activity, Clock, Crown, KeyRound, UserCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,6 +18,13 @@ const G = {
 };
 
 const SIDEBAR_ITEMS = [
+  {
+    path: "/admin/approved-users",
+    label: "Approved Users",
+    arabic: "المستخدمون المعتمدون",
+    icon: UserCheck,
+    description: "Manage direct access users (no OTP required)"
+  },
   {
     path: "/admin/access-codes",
     label: "Access Codes",

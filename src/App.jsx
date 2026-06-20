@@ -55,6 +55,7 @@ const PAGE_IMPORTS = {
   PaymentPage:              () => import('./pages/PaymentPage'),
   // Admin
   AdminDashboard:           () => import('./pages/AdminDashboard'),
+  ApprovedUsersPage:        () => import('./pages/ApprovedUsersPage'),
   AdminTest:                () => import('./pages/AdminTest'),
   AdminSupport:             () => import('./pages/AdminSupport'),
   AdminPermissions:         () => import('./pages/AdminPermissions'),

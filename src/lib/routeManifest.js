@@ -42,6 +42,7 @@ const ROUTE_MANIFEST = [
   { path: '/payment', component: 'PaymentPage', chunk: 'PaymentPage' },
   
   // Admin
+  { path: '/admin/approved-users', component: 'ApprovedUsersPage', chunk: 'ApprovedUsersPage' },
   { path: '/admin/access-dashboard', component: 'AdminDashboard', chunk: 'AdminDashboard' },
   { path: '/admin/test', component: 'AdminTest', chunk: 'AdminTest' },
   { path: '/admin/support', component: 'AdminSupport', chunk: 'AdminSupport' },
