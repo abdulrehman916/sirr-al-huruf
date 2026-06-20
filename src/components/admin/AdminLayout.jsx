@@ -15,31 +15,19 @@ const G = {
 };
 
 const SIDEBAR_ITEMS = [
-  { path: "/admin/approved-users", label: "Approved Users", arabic: "المستخدمون المعتمدون", icon: "UserCheck" },
-  { path: "/admin/access-codes", label: "Access Codes", arabic: "رموز الوصول", icon: "KeyRound" },
+  { path: "/admin/approved-users", label: "Users", arabic: "المستخدمون", icon: "UserCheck" },
   { path: "/admin/access-dashboard", label: "Access Dashboard", arabic: "لوحة تحكم الوصول", icon: "Crown" },
-  { path: "/admin/user-permissions", label: "User Permissions", arabic: "أذونات المستخدمين", icon: "Shield" },
-  { path: "/admin/user-management", label: "User Access Manager", arabic: "إدارة المستخدمين", icon: "Users" },
-  { path: "/admin/pricing-settings", label: "Pricing Settings", arabic: "إعدادات الأسعار", icon: "DollarSign" },
-  { path: "/admin/access-requests", label: "Access Requests", arabic: "طلبات الوصول", icon: "Clock" },
-  { path: "/admin/subscriptions-management", label: "Subscription Management", arabic: "إدارة الاشتراكات", icon: "CreditCard" },
-  { path: "/admin/access-logs", label: "Access Logs", arabic: "سجلات الوصول", icon: "Activity" },
-  { path: "/admin/page-permissions", label: "Page Permissions", arabic: "أذونات الصفحات", icon: "Globe" },
-  { path: "/admin/subscriptions", label: "Global Subscriptions", arabic: "الاشتراكات العامة", icon: "CreditCard" },
-  { path: "/admin/page-subscriptions", label: "Page Subscriptions", arabic: "اشتراكات الصفحات", icon: "Shield" }
+  { path: "/admin/page-permissions", label: "App Permissions", arabic: "أذونات التطبيق", icon: "Globe" },
+  { path: "/admin/access-codes", label: "Access Codes", arabic: "رموز الوصول", icon: "KeyRound" },
+  { path: "/admin/support", label: "Messages", arabic: "الرسائل", icon: "Clock" }
 ];
 
 const iconMap = {
-  UserCheck: "👤",
-  KeyRound: "🔑",
+  UserCheck: "👥",
   Crown: "👑",
-  Shield: "🛡️",
-  Users: "👥",
-  DollarSign: "💲",
-  Clock: "🕐",
-  CreditCard: "💳",
-  Activity: "📊",
-  Globe: "🌐"
+  Globe: "🌐",
+  KeyRound: "🔑",
+  Clock: "🕐"
 };
 
 export default function AdminLayout({ children, title, subtitle, showBackButton = true }) {

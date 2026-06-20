@@ -20,17 +20,10 @@ const G = {
 const SIDEBAR_ITEMS = [
   {
     path: "/admin/approved-users",
-    label: "Approved Users",
-    arabic: "المستخدمون المعتمدون",
+    label: "Users",
+    arabic: "المستخدمون",
     icon: UserCheck,
-    description: "Manage direct access users (no OTP required)"
-  },
-  {
-    path: "/admin/access-codes",
-    label: "Access Codes",
-    arabic: "رموز الوصول",
-    icon: KeyRound,
-    description: "Create & manage customer access codes"
+    description: "Manage users, block, delete, activity"
   },
   {
     path: "/admin/access-dashboard",
@@ -40,67 +33,25 @@ const SIDEBAR_ITEMS = [
     description: "Unified: requests, VIP, user permissions, page visibility"
   },
   {
-    path: "/admin/user-permissions",
-    label: "User Permissions",
-    arabic: "أذونات المستخدمين",
-    icon: Shield,
-    description: "Grant & revoke page access per user"
-  },
-  {
-    path: "/admin/user-management",
-    label: "User Access Manager",
-    arabic: "إدارة المستخدمين",
-    icon: Users,
-    description: "Grant manual access & manage subscriptions"
-  },
-  {
-    path: "/admin/pricing-settings",
-    label: "Pricing Settings",
-    arabic: "إعدادات الأسعار",
-    icon: DollarSign,
-    description: "Set custom prices per page"
-  },
-  {
-    path: "/admin/access-requests",
-    label: "Access Requests",
-    arabic: "طلبات الوصول",
-    icon: Clock,
-    description: "Review & approve access requests"
-  },
-  {
-    path: "/admin/subscriptions-management",
-    label: "Subscription Management",
-    arabic: "إدارة الاشتراكات",
-    icon: CreditCard,
-    description: "Manage active subscriptions"
-  },
-  {
-    path: "/admin/access-logs",
-    label: "Access Logs",
-    arabic: "سجلات الوصول",
-    icon: Activity,
-    description: "Monitor all page access attempts"
-  },
-  {
     path: "/admin/page-permissions",
-    label: "Page Permissions",
-    arabic: "أذونات الصفحات",
+    label: "App Permissions",
+    arabic: "أذونات التطبيق",
     icon: Globe,
-    description: "Toggle PUBLIC/PRIVATE access"
+    description: "Toggle PUBLIC/PRIVATE pages"
   },
   {
-    path: "/admin/subscriptions",
-    label: "Global Subscriptions",
-    arabic: "الاشتراكات العامة",
-    icon: CreditCard,
-    description: "Manage global subscription plans"
+    path: "/admin/access-codes",
+    label: "Access Codes",
+    arabic: "رموز الوصول",
+    icon: KeyRound,
+    description: "Create & manage access codes"
   },
   {
-    path: "/admin/page-subscriptions",
-    label: "Page Subscriptions",
-    arabic: "اشتراكات الصفحات",
-    icon: Shield,
-    description: "Manage page-specific subscriptions"
+    path: "/admin/support",
+    label: "Messages",
+    arabic: "الرسائل",
+    icon: Clock,
+    description: "Customer messages & support tickets"
   }
 ];
 
