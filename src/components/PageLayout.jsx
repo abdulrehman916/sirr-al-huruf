@@ -222,7 +222,8 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        height: "100%",
+        height: "auto",
+        minHeight: "100%",
         overflow: "visible",
         overscrollBehaviorX: "none",
         width: "100%",
