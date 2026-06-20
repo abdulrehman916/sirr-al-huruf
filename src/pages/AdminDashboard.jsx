@@ -161,10 +161,10 @@ export default function AdminDashboard() {
   return (
     <PageLayout>
       <div className="min-h-screen flex">
-        {/* Mobile sidebar toggle */}
+        {/* Mobile sidebar toggle - visible only on mobile (< 768px) */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg"
+          className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg"
           style={{
             background: G.bg,
             border: `1px solid ${G.border}`,
@@ -174,10 +174,10 @@ export default function AdminDashboard() {
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
-        {/* Sidebar */}
+        {/* Sidebar - Mobile: overlay, Tablet/Desktop: sticky left sidebar */}
         <aside
-          className={`fixed lg:sticky lg:top-0 left-0 h-screen w-72 transition-transform duration-300 z-40 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          className={`fixed md:sticky md:top-0 left-0 h-screen w-72 transition-transform duration-300 z-40 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }`}
           style={{
             background: "linear-gradient(180deg, rgba(8,16,40,0.98) 0%, rgba(3,8,22,0.99) 100%)",
@@ -249,8 +249,8 @@ export default function AdminDashboard() {
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8 overflow-auto">
+        {/* Main Content - Mobile: full width, Tablet/Desktop: remaining space beside sidebar */}
+        <main className="flex-1 p-6 md:p-7 lg:p-8 overflow-auto">
           <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
