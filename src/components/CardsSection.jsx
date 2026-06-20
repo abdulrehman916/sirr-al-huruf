@@ -100,6 +100,15 @@ const CARD_ICONS = {
       <circle cx="16" cy="5" r="1" fill={color} fillOpacity="0.7"/>
     </svg>
   ),
+  sirr: (color) => (
+    <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+      <text x="50%" y="56%" dominantBaseline="middle" textAnchor="middle"
+        fontFamily="Amiri, serif" fontWeight="700" fontSize="16" fill={color}>سر</text>
+      <circle cx="16" cy="16" r="13" stroke={color} strokeWidth="0.8" strokeOpacity="0.55"/>
+      <circle cx="16" cy="16" r="9" stroke={color} strokeWidth="0.4" strokeOpacity="0.25" strokeDasharray="1.5,3"/>
+      <rect x="10" y="10" width="12" height="12" rx="1" stroke={color} strokeWidth="0.5" strokeOpacity="0.35" fill="none"/>
+    </svg>
+  ),
   evilJinn: (color) => (
     <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
       <path d="M16 4 C10 4 6 10 6 16 C6 22 10 28 16 28 C22 28 26 22 26 16 C26 10 22 4 16 4Z"
@@ -125,6 +134,7 @@ const NAV_CARDS = [
   { path: "/holy-names",       arabic: "أسماء مقدسة",  label: "HOLY NAMES",       subtitle: "Sacred Names Reference",    iconKey: "holyNames", accent: [212, 175, 55] },
   { path: "/evil-jinn",        arabic: "الجن الشرير",  label: "EVIL JINN",        subtitle: "Jinn Classification",       iconKey: "evilJinn",   accent: [239, 68, 68] },
   { path: "/astro-clock",      arabic: "الساعة الفلكية", label: "ASTRO CLOCK",      subtitle: "Celestial Time Engine",     iconKey: "astroClock", accent: [99, 179, 237] },
+  { path: "/sirr",             arabic: "السر",           label: "SIRR",             subtitle: "PDF Knowledge Analysis",    iconKey: "sirr",   accent: [212, 175, 55] },
 ];
 
 function IconOrb({ iconKey, accent }) {

@@ -80,6 +80,7 @@ const translations = {
   page_evil_jinn: { ml: "ദുഷ്ട ജിന്നുകൾ", en: "Evil Jinn", ar: "الجن الشرير" },
   page_holy_names: { ml: "പവിത്ര നാമങ്ങൾ", en: "Magical Holy Names", ar: "الأسماء المقدسة" },
   page_astro_clock: { ml: "നക്ഷത്ര ഘടികാരം", en: "Astro Clock", ar: "ساعة الفلك" },
+  page_sirr: { ml: "സിർ", en: "Sirr", ar: "السر" },
 
   // ── Support Hub ──
   support_title: { ml: "സഹായ കേന്ദ്രം", en: "Support Center", ar: "مركز الدعم" },

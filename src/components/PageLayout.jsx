@@ -26,6 +26,7 @@ const TAB_KEYS = [
   { id: "evil-jinn",        arabicTitle: "الجن",            englishSubtitle: "JINN",    path: "/evil-jinn" },
   { id: "holy-names",       arabicTitle: "الأسماء",         englishSubtitle: "NAMES",   path: "/holy-names" },
   { id: "astro-clock",      arabicTitle: "الساعة",          englishSubtitle: "ASTRO",   path: "/astro-clock" },
+  { id: "sirr",             arabicTitle: "السر",            englishSubtitle: "SIRR",    path: "/sirr" },
   { id: "support",          arabicTitle: "الدعم",           englishSubtitle: "SUPPORT", path: "/support" },
 ];
 
@@ -43,6 +44,7 @@ const PAGE_TITLE_KEYS = {
   "/evil-jinn":         "page_evil_jinn",
   "/holy-names":        "page_holy_names",
   "/astro-clock":       "page_astro_clock",
+  "/sirr":              "page_sirr",
   "/support":           "support_title",
   "/admin/access-dashboard": "dashboard_title",
 };
