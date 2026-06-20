@@ -15,11 +15,11 @@ const G = {
 };
 
 const SIDEBAR_ITEMS = [
-  { path: "/admin/approved-users", label: "Users", arabic: "المستخدمون", icon: "UserCheck" },
-  { path: "/admin/access-dashboard", label: "Dashboard", arabic: "لوحة التحكم", icon: "Crown" },
-  { path: "/admin/page-permissions", label: "Permissions", arabic: "الأذونات", icon: "Globe" },
-  { path: "/admin/access-codes", label: "Codes", arabic: "الرموز", icon: "KeyRound" },
-  { path: "/admin/support", label: "Messages", arabic: "الرسائل", icon: "Clock" }
+  { path: "/admin/approved-users", label: "Users", icon: "UserCheck" },
+  { path: "/admin/access-dashboard", label: "Dashboard", icon: "Crown" },
+  { path: "/admin/page-permissions", label: "Permissions", icon: "Globe" },
+  { path: "/admin/access-codes", label: "Codes", icon: "KeyRound" },
+  { path: "/admin/support", label: "Messages", icon: "Clock" }
 ];
 
 const iconMap = {
@@ -205,14 +205,9 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
                   }}
                 >
                   <span style={{ fontSize: 16 }}>{iconMap[item.icon]}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p className={`font-inter text-xs font-semibold truncate ${isActive ? "text-white" : "text-white/70"}`}>
-                      {item.label}
-                    </p>
-                    <p className="font-amiri text-[10px] truncate" style={{ color: isActive ? G.text : G.dim }}>
-                      {item.arabic}
-                    </p>
-                  </div>
+                  <p className={`font-inter text-xs font-semibold truncate ${isActive ? "text-white" : "text-white/70"}`}>
+                    {item.label}
+                  </p>
                 </Link>
               );
             })}

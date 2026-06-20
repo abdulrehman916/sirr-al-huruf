@@ -33,11 +33,11 @@ const G = {
 };
 
 const SIDEBAR_ITEMS = [
-  { path: "/admin/approved-users", label: "Users", arabic: "المستخدمون", icon: UserCheck },
-  { path: "/admin/access-dashboard", label: "Dashboard", arabic: "لوحة التحكم", icon: Crown },
-  { path: "/admin/page-permissions", label: "Permissions", arabic: "الأذونات", icon: Globe },
-  { path: "/admin/access-codes", label: "Codes", arabic: "الرموز", icon: KeyRound },
-  { path: "/admin/support", label: "Messages", arabic: "الرسائل", icon: Clock }
+  { path: "/admin/approved-users", label: "Users", icon: UserCheck },
+  { path: "/admin/access-dashboard", label: "Dashboard", icon: Crown },
+  { path: "/admin/page-permissions", label: "Permissions", icon: Globe },
+  { path: "/admin/access-codes", label: "Codes", icon: KeyRound },
+  { path: "/admin/support", label: "Messages", icon: Clock }
 ];
 
 export default function AdminDashboard() {
@@ -174,14 +174,9 @@ export default function AdminDashboard() {
                   >
                     <div className="flex items-center gap-2">
                       <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-gold" : "text-white/50"}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-inter text-xs font-semibold truncate ${isActive ? "text-white" : "text-white/70"}`}>
-                          {item.label}
-                        </p>
-                        <p className="font-amiri text-[10px] truncate" style={{ color: isActive ? G.text : G.dim }}>
-                          {item.arabic}
-                        </p>
-                      </div>
+                      <p className={`font-inter text-xs font-semibold truncate ${isActive ? "text-white" : "text-white/70"}`}>
+                        {item.label}
+                      </p>
                     </div>
                   </Link>
                 );
@@ -223,10 +218,7 @@ export default function AdminDashboard() {
                       <div className="p-2 rounded-lg" style={{ background: "rgba(212,175,55,0.15)" }}>
                         <Icon className="w-5 h-5" style={{ color: "#F5D060" }} />
                       </div>
-                      <div>
-                        <h3 className="font-inter text-sm font-bold text-white">{item.label}</h3>
-                        <p className="font-amiri text-[10px]" style={{ color: "rgba(212,175,55,0.60)" }}>{item.arabic}</p>
-                      </div>
+                      <h3 className="font-inter text-sm font-bold text-white">{item.label}</h3>
                     </div>
                   </Link>
                 );
