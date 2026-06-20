@@ -124,7 +124,7 @@ registerPage('/otp-login', { requiresPermission: false, pageType: 'system' });
 registerPage('/abjad', { name: 'Abjad Calculator', icon: '🔢', category: 'Calculators', pageType: 'content', visible: true });
 registerPage('/anasir', { name: 'Anasir Calculator', icon: '🌊', category: 'Calculators', pageType: 'content', visible: true });
 registerPage('/hadim', { name: 'Hadim Calculator', icon: '👑', category: 'Calculators', pageType: 'content', visible: true });
-registerPage('/mizaan9', { pageType: 'content', visible: true });
+registerPage('/mizaan9', { name: 'Mizan 9', icon: '⚖️', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: true });
 registerPage('/magic-sqayer', { name: 'Magic Sqayer', icon: '✨', category: 'Vefk Systems', pageType: 'content', visible: true });
 registerPage('/vefkin-yapilisi', { name: 'Vefkin Yapılışı', icon: '📜', category: 'Vefk Systems', pageType: 'content', visible: true });
 registerPage('/basthul-huroof-2', { name: 'Basthul Huroof 2', icon: '٢', category: 'Calculators', pageType: 'content', visible: true });

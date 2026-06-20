@@ -31,8 +31,7 @@ import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
 import { registerPage } from "../lib/pageRegistry";
 
-// Register page in dynamic registry
-registerPage('/mizaan9', { name: 'Mizan 9', requiresPermission: true });
+// Page already registered in lib/pageRegistry.js
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
