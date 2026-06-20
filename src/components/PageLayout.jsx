@@ -8,6 +8,7 @@ import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
 import useTranslation from "@/i18n/useTranslation";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
+import { setupKeyboardBehavior } from "@/lib/platformKeyboardHandler";
 
 const AccountModal = lazy(() => import("./AccountModal"));
 
@@ -211,6 +212,11 @@ export default function PageLayout({ children }) {
     return () => window.removeEventListener("popstate", onPop);
   }, [startNav]);
 
+  // Platform-specific keyboard handling
+  useEffect(() => {
+    return setupKeyboardBehavior(scrollRef);
+  }, [scrollRef]);
+
   return (
     <>
     <div
@@ -367,7 +373,7 @@ export default function PageLayout({ children }) {
           maxWidth: "100vw",
           margin: 0,
           padding: "16px",
-          paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px) + 120px)",
+          paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px) + 20px)",
           boxSizing: "border-box",
           position: "relative",
           flex: "1 1 auto",

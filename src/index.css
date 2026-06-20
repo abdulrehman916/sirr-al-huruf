@@ -126,10 +126,9 @@
     max-width: 100vw;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
-    height: 100%;
   }
   #root {
-    height: 100%;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
   }
