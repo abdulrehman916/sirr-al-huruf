@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Loader2, KeyRound, ArrowLeft, CheckCircle, Shield } from "lucide-react";
+import { Mail, Loader2, KeyRound, ArrowLeft, CheckCircle, Shield, LogIn } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/components/ui/use-toast";
 import { detectDevice, getCountry } from "@/lib/deviceUtils";
@@ -13,12 +13,13 @@ import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import Captcha from "@/components/Captcha";
 
 export default function OTPLogin() {
-  const [loginMethod, setLoginMethod] = useState("otp"); // "otp" or "admin_code"
+  const [loginMethod, setLoginMethod] = useState("otp"); // "otp", "access_code", or "admin_code"
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpId, setOtpId] = useState("");
   const [adminCode, setAdminCode] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [captchaVerified, setCaptchaVerified] = useState(false);
@@ -108,7 +109,15 @@ export default function OTPLogin() {
                 loginMethod === "otp" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Mail className="w-4 h-4" /> OTP Login
+              <Mail className="w-4 h-4" /> OTP
+            </button>
+            <button
+              onClick={() => { setLoginMethod("access_code"); setError(""); }}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+                loginMethod === "access_code" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <KeyRound className="w-4 h-4" /> Access Code
             </button>
             <button
               onClick={() => { setLoginMethod("admin_code"); setError(""); }}
@@ -116,12 +125,25 @@ export default function OTPLogin() {
                 loginMethod === "admin_code" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Shield className="w-4 h-4" /> Admin Code
+              <Shield className="w-4 h-4" /> Admin
             </button>
           </div>
         </div>
 
-        {loginMethod === "otp" ? (
+        {loginMethod === "access_code" ? (
+          <AccessCodeLoginForm
+            accessCode={accessCode}
+            setAccessCode={setAccessCode}
+            loading={loading}
+            setLoading={setLoading}
+            error={error}
+            setError={setError}
+            successMsg={successMsg}
+            setSuccessMsg={setSuccessMsg}
+            toast={toast}
+            t={t}
+          />
+        ) : loginMethod === "otp" ? (
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">{t('email_address')}</Label>
@@ -308,6 +330,103 @@ export default function OTPLogin() {
         </div>
       </form>
     </AuthLayout>
+  );
+}
+
+// ── Access Code Login Form ──────────────────────────────────────────
+function AccessCodeLoginForm({ accessCode, setAccessCode, loading, setLoading, error, setError, successMsg, setSuccessMsg, toast, t }) {
+  const handleAccessCodeLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMsg("");
+    setLoading(true);
+
+    try {
+      const trimmed = accessCode.trim().toUpperCase();
+      if (!trimmed) {
+        setError("Please enter an access code");
+        setLoading(false);
+        return;
+      }
+
+      const result = await base44.functions.invoke("redeemAccessCode", { code: trimmed });
+      const data = result.data;
+
+      if (!data?.success) {
+        setError(data?.message || "Invalid or expired access code");
+        setLoading(false);
+        return;
+      }
+
+      setSuccessMsg(`✓ ${data.message}`);
+      toast({ 
+        title: "Access Granted", 
+        description: `${data.pages_granted?.length || 0} page(s) unlocked`,
+        variant: "default"
+      });
+      
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1500);
+    } catch (err) {
+      setError(err?.message || "Redemption failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleAccessCodeLogin} className="space-y-4">
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+      )}
+      
+      {successMsg && (
+        <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm flex items-center gap-2">
+          <CheckCircle className="w-4 h-4" />
+          {successMsg}
+        </div>
+      )}
+
+      <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+        <p className="text-xs text-blue-400 font-semibold flex items-center gap-2">
+          <KeyRound className="w-3.5 h-3.5" />
+          Customer Access Code
+        </p>
+        <p className="text-[10px] text-blue-300/70 mt-1">
+          Enter your access code to unlock pages
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="access-code">Access Code</Label>
+        <div className="relative">
+          <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            id="access-code"
+            type="text"
+            placeholder="e.g. ABDUL2026"
+            value={accessCode}
+            onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+            className="pl-10 h-12 text-center text-lg tracking-[0.15em] uppercase font-mono"
+            maxLength={50}
+            autoFocus
+            required
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+      </div>
+
+      <Button type="submit" className="w-full h-12 font-medium" disabled={loading || accessCode.length < 3}>
+        {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redeeming…</> : "Redeem Access Code"}
+      </Button>
+
+      <p className="text-xs text-center text-muted-foreground">
+        Contact support to purchase an access code
+      </p>
+    </form>
   );
 }
 
