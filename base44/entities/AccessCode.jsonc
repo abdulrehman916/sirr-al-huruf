@@ -29,9 +29,7 @@
       "enum": [
         "1_DAY",
         "7_DAYS",
-        "1_MONTH",
-        "3_MONTHS",
-        "6_MONTHS",
+        "30_DAYS",
         "1_YEAR",
         "LIFETIME",
         "CUSTOM"
@@ -72,6 +70,10 @@
     "created_by": {
       "type": "string",
       "description": "Admin user ID who created this code"
+    },
+    "created_date": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of code creation (built-in)"
     },
     "notes": {
       "type": "string",

@@ -17,9 +17,7 @@ const G = {
 const DURATION_OPTIONS = [
   { value: "1_DAY",     label: "1 Day",     days: 1 },
   { value: "7_DAYS",    label: "7 Days",    days: 7 },
-  { value: "1_MONTH",   label: "1 Month",   days: 30 },
-  { value: "3_MONTHS",  label: "3 Months",  days: 90 },
-  { value: "6_MONTHS",  label: "6 Months",  days: 180 },
+  { value: "30_DAYS",   label: "30 Days",   days: 30 },
   { value: "1_YEAR",    label: "1 Year",    days: 365 },
   { value: "LIFETIME",  label: "Lifetime",  days: null },
   { value: "CUSTOM",    label: "Custom",    days: null },
