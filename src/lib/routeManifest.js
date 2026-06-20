@@ -21,6 +21,7 @@ const ROUTE_MANIFEST = [
   { path: '/abjad',                         chunk: 'AbjadKabirPage' },
   { path: '/anasir',                        chunk: 'AnasirPage' },
   { path: '/hadim',                         chunk: 'HadimPage' },
+  { path: '/sirr',                          chunk: 'SirrPage' },
   { path: '/mizaan9',                       chunk: 'Mizaan9Page' },
   { path: '/magic-sqayer',                  chunk: 'MagicSqayerPage' },
   { path: '/vefkin-yapilisi',               chunk: 'VefkinYapilisiPage' },

@@ -131,6 +131,7 @@ const PRE_REGISTERED = [
   { path: '/abjad',                name: 'Abjad Kabir',             requiresPermission: true },
   { path: '/anasir',               name: 'Anasir',                  requiresPermission: true },
   { path: '/hadim',                name: 'Hadim',                   requiresPermission: true },
+  { path: '/sirr',                 name: 'Sirr',                    requiresPermission: true },
   { path: '/mizaan9',              name: 'Mizan 9',                 requiresPermission: true },
   { path: '/magic-sqayer',         name: 'Magic Sqayer',            requiresPermission: true },
   { path: '/vefkin-yapilisi',      name: 'Vefkin Yapilisi',         requiresPermission: true, children: [
