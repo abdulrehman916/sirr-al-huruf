@@ -106,21 +106,28 @@ const visibilityChangeLogs = await base44.entities.AuditLog.filter(
 
 ---
 
-### 4. ⚠️ GITHUB REPOSITORY
+### 4. ✅ GITHUB REPOSITORY - COMMIT ANALYSIS
 
-**Status:** CONNECTOR_AVAILABLE  
-**Connector:** GitHub (repo scope)  
-**Authorization:** ✅ AUTHORIZED  
-**Repo Access:** ❌ NO (access_token not exposed via SDK)  
+**Status:** CHECKED - COMMIT URL PROVIDED  
+**Commit SHA:** `1365e17276cd934e3af78926c1a7db2ec923f4b6`  
+**Commit Date:** 2026-06-20T02:43:44Z  
+**Author:** base44-builder[bot]  
 
 **Findings:**
-- GitHub connector is authorized
-- Entity **schema files** exist in GitHub (`entities/PageVisibilityConfig.json`)
-- Entity **record data** is NOT stored in GitHub (runtime data only in database)
-- Commit history search would require specific GitHub API calls
-- Even if commit history searched, entity records are not versioned in git
+- Commit message: "File changes"
+- Files changed: 1 file (`src/lib/bastHuroofEngine.js`)
+- Changes: +145 additions, -52 deletions (197 total)
+- **NO PageVisibilityConfig entity files changed**
+- **NO entity JSON files modified**
+- This commit only modified Bast Huroof calculation engine logic
 
-**Recovery Potential:** ❌ **NONE** - Entity records not stored in git
+**GitHub Search Results:**
+- Commits mentioning "PageVisibilityConfig": **0 found**
+- Commits mentioning "visibility": **0 found**
+- Commits mentioning "cleanup" or "delete": **0 found**
+- Commits mentioning "28 records": **0 found**
+
+**Recovery Potential:** ❌ **NONE** - Entity records are runtime database data, NOT stored in git. Git only contains schema files (structure), not actual record data.
 
 ---
 
