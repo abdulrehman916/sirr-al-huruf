@@ -564,7 +564,7 @@ function GoldenDust({ containerSize, paused }) {
 function getContainerSize() {
   if (typeof window === "undefined") return 400;
   const w = window.innerWidth;
-  const h = window.innerHeight;
+  const h = window.screen.height; // Use screen.height (stable) instead of innerHeight (changes with keyboard)
   
   // Mobile (<768px): original behavior, unchanged
   if (w < 768) {

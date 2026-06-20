@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 
 /**
  * useDeviceType - Detects device type (mobile, tablet, desktop) based on screen width.
+ * Uses matchMedia instead of resize listener to avoid keyboard-triggered updates.
  * 
  * Breakpoints:
  * - Mobile: < 768px
@@ -15,22 +16,33 @@ export default function useDeviceType() {
     const checkDevice = () => {
       const w = window.innerWidth;
       if (w < 768) {
-        setDeviceType('mobile');
+        return 'mobile';
       } else if (w <= 1366) {
-        setDeviceType('tablet');
+        return 'tablet';
       } else {
-        setDeviceType('desktop');
+        return 'desktop';
       }
     };
 
-    // Initial check
-    checkDevice();
+    // Set initial value
+    setDeviceType(checkDevice());
 
-    // Listen for resize events
-    window.addEventListener('resize', checkDevice, { passive: true });
+    // Use matchMedia instead of resize listener - won't fire on keyboard open
+    const mediaQuery = window.matchMedia('(max-width: 1366px)');
+    const mediaQueryMobile = window.matchMedia('(max-width: 767px)');
+    
+    const handleChange = () => {
+      const newType = checkDevice();
+      setDeviceType(newType);
+    };
+
+    // Listen to media query changes (orientation change, not keyboard)
+    mediaQuery.addEventListener('change', handleChange);
+    mediaQueryMobile.addEventListener('change', handleChange);
 
     return () => {
-      window.removeEventListener('resize', checkDevice);
+      mediaQuery.removeEventListener('change', handleChange);
+      mediaQueryMobile.removeEventListener('change', handleChange);
     };
   }, []);
 

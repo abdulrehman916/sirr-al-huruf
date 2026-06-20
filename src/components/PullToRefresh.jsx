@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const THRESHOLD = 72;
@@ -19,8 +19,28 @@ const THRESHOLD = 72;
 export default function PullToRefresh({ onRefresh, children }) {
   const [pullY, setPullY] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [disabled, setDisabled] = useState(false);
   const startY = useRef(null);
   const pulling = useRef(false);
+
+  // Disable pull-to-refresh while any input/textarea is focused (keyboard open)
+  useEffect(() => {
+    const handleFocusIn = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        setDisabled(true);
+      }
+    };
+    const handleFocusOut = () => {
+      setDisabled(false);
+    };
+
+    window.addEventListener('focusin', handleFocusIn);
+    window.addEventListener('focusout', handleFocusOut);
+    return () => {
+      window.removeEventListener('focusin', handleFocusIn);
+      window.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
 
   const getScrollContainer = useCallback((el) => {
     // Walk up the DOM to find the data-scroll-container
@@ -33,25 +53,29 @@ export default function PullToRefresh({ onRefresh, children }) {
   }, []);
 
   const handleTouchStart = useCallback((e) => {
+    // Disabled while keyboard is open (input focused)
+    if (disabled) return;
     const container = getScrollContainer(e.currentTarget);
     const scrollTop = container ? container.scrollTop : window.scrollY;
     if (scrollTop > 2) return;
     startY.current = e.touches[0].clientY;
     pulling.current = true;
-  }, [getScrollContainer]);
+  }, [getScrollContainer, disabled]);
 
   const handleTouchMove = useCallback((e) => {
-    if (!pulling.current || startY.current === null || refreshing) return;
+    // Disabled while keyboard is open (input focused)
+    if (disabled || !pulling.current || startY.current === null || refreshing) return;
     const dy = e.touches[0].clientY - startY.current;
     if (dy <= 0) { pulling.current = false; return; }
     // Rubber-band-style resistance: sqrt curve feels natural
     const resistance = Math.min(dy * 0.42, THRESHOLD + 20);
     setPullY(resistance);
     // Do NOT call e.preventDefault() — keeps iOS scroll momentum intact
-  }, [refreshing]);
+  }, [refreshing, disabled]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!pulling.current) return;
+    // Disabled while keyboard is open
+    if (disabled || !pulling.current) return;
     pulling.current = false;
     startY.current = null;
     if (pullY >= THRESHOLD * 0.45) {
@@ -62,7 +86,7 @@ export default function PullToRefresh({ onRefresh, children }) {
     } else {
       setPullY(0);
     }
-  }, [pullY, onRefresh]);
+  }, [pullY, onRefresh, disabled]);
 
   const progress = Math.min(pullY / (THRESHOLD * 0.45), 1);
   const shouldTrigger = pullY >= THRESHOLD * 0.45;
