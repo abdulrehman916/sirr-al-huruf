@@ -135,7 +135,7 @@ function doublyEvenStd(n) {
   return g;
 }
 
-// Singly-even (n%2===0, n%4!==0): Strachey method
+// Singly-even (n%2===0, n%4!==0): Strachey method (per Wikipedia/Rosetta Code)
 function singlyEvenStd(n) {
   const h = n/2;
   const base = Array.from({length:h}, () => Array(h).fill(0));
@@ -147,18 +147,24 @@ function singlyEvenStd(n) {
     else { r=nr; c=nc; }
   }
   const g = Array.from({length:n}, () => Array(n).fill(0));
+  // Quadrant layout: A|C / D|B (per Rosetta Code Python)
   for (let i=0;i<h;i++) for (let j=0;j<h;j++) {
-    g[i][j]       = base[i][j];
-    g[i][j+h]     = base[i][j]+2*h*h;
-    g[i+h][j]     = base[i][j]+h*h;
-    g[i+h][j+h]   = base[i][j]+3*h*h;
+    g[i][j]       = base[i][j];         // A: 1..h²
+    g[i][j+h]     = base[i][j]+2*h*h;   // C: 2h²+1..3h²
+    g[i+h][j]     = base[i][j]+3*h*h;   // D: 3h²+1..4h²
+    g[i+h][j+h]   = base[i][j]+h*h;     // B: h²+1..2h²
   }
   const k = Math.floor((n-2)/4), mid = Math.floor(h/2);
+  // Left swap: k columns A↔D
   for (let i=0;i<h;i++) for (let j=0;j<k;j++) {
     if (i===mid&&j===0) continue;
     [g[i][j],g[i+h][j]]=[g[i+h][j],g[i][j]];
   }
-  [g[mid][k],g[mid+h][k]]=[g[mid+h][k],g[mid][k]];
+  // Middle column 0 swap
+  [g[mid][0],g[mid+h][0]]=[g[mid+h][0],g[mid][0]];
+  // Central cell swap
+  [g[mid][mid],g[mid+h][mid]]=[g[mid+h][mid],g[mid][mid]];
+  // Right swap: k columns (original)
   for (let i=0;i<h;i++) for (let j=n-k;j<n;j++) {
     [g[i][j],g[i+h][j]]=[g[i+h][j],g[i][j]];
   }
