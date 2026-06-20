@@ -128,6 +128,29 @@ export default function AbjadKabirPage() {
     setSelectedResult(null);
   };
 
+  // Mobile keyboard fix: preserve scroll position on textarea focus
+  const textareaRef = useRef(null);
+  const scrollPositionRef = useRef(0);
+
+  const handleTextareaFocus = () => {
+    // Store current scroll position to prevent jump
+    const scrollContainer = document.querySelector('[data-scroll-container="true"]');
+    if (scrollContainer) {
+      scrollPositionRef.current = scrollContainer.scrollTop;
+      // Lock scroll behavior during keyboard open
+      scrollContainer.style.scrollBehavior = 'auto';
+    }
+  };
+
+  const handleTextareaBlur = () => {
+    // Restore scroll position and normal behavior
+    const scrollContainer = document.querySelector('[data-scroll-container="true"]');
+    if (scrollContainer) {
+      scrollContainer.scrollTop = scrollPositionRef.current;
+      scrollContainer.style.scrollBehavior = 'smooth';
+    }
+  };
+
   const getModeLabel = (id) => {
     const labels = {
       kebir: { en: 'EBCEDI KEBIR', ar: 'الكبير الأبجد' },
@@ -270,10 +293,13 @@ export default function AbjadKabirPage() {
           <SectionCard>
             <SectionLabel>ARABIC TEXT INPUT — {mode.toUpperCase()}</SectionLabel>
             
-            <div className="relative mt-3">
+            <div className="relative mt-3 scroll-mt-32">
               <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={handleInputChange}
+                onFocus={handleTextareaFocus}
+                onBlur={handleTextareaBlur}
                 placeholder="أدخل النص العربي هنا..."
                 className="w-full rounded-xl border bg-slate-950/60 p-4 text-right font-amiri text-base text-white placeholder-slate-600 focus:outline-none transition-all"
                 style={{
