@@ -217,8 +217,8 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        minHeight: "100dvh",
-        overflowX: "hidden",
+        height: "100dvh",
+        overflow: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
         maxWidth: "100vw",
@@ -227,7 +227,7 @@ export default function PageLayout({ children }) {
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
-        paddingBottom: "calc(env(safe-area-inset-bottom) + 120px)",
+        paddingBottom: "env(safe-area-inset-bottom)",
         boxSizing: "border-box",
       }}
     >
@@ -366,11 +366,11 @@ export default function PageLayout({ children }) {
           width: "100%",
           maxWidth: "100vw",
           margin: 0,
-          padding: 0,
+          padding: "16px",
+          paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px) + 120px)",
           boxSizing: "border-box",
           position: "relative",
-          minHeight: "100%",
-          paddingBottom: "140px",
+          flex: "1 1 auto",
         }}
       >
         <AnimatePresence mode="wait">
