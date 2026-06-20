@@ -44,6 +44,16 @@ const SecondSquare = memo(function SecondSquare({ gridSize, originalGrid, reveal
   const flatGrid = originalGrid.flat();
   const totalCells = flatGrid.length;
 
+  // Build value-to-position map: sort all values ascending, track original indices
+  const valueOrder = flatGrid
+    .map((value, originalIdx) => ({ value, originalIdx }))
+    .sort((a, b) => a.value - b.value);
+
+  // Create a set of original indices that should be revealed (first revealedCount values in sorted order)
+  const revealedIndices = new Set(
+    valueOrder.slice(0, revealedCount).map(item => item.originalIdx)
+  );
+
   return (
     <motion.div key={`second-grid-${gridSize}-${revealedCount}`}
       initial={{ opacity:0, scale:0.97 }} animate={{ opacity:1, scale:1 }} transition={{ duration:0.2 }}
@@ -60,12 +70,12 @@ const SecondSquare = memo(function SecondSquare({ gridSize, originalGrid, reveal
         </p>
       </div>
 
-      {/* Grid cells — Arabic numerals only */}
+      {/* Grid cells — Arabic numerals only, revealed in VALUE ORDER (smallest → largest) */}
       <div className="rounded-xl border overflow-hidden" style={{ background:"rgba(4,12,34,0.97)", borderColor:"rgba(212,175,55,0.15)" }}>
         <div style={{ overflowX:"auto", padding:"6px" }}>
           <div style={{ display:"grid", gridTemplateColumns:`repeat(${gridSize},1fr)`, gap:"2px", minWidth: gridSize > 9 ? `${gridSize * 32}px` : "100%" }}>
             {flatGrid.map((num, idx) => {
-              const isRevealed = idx < revealedCount;
+              const isRevealed = revealedIndices.has(idx);
               const fontSize = gridSize >= 14 ? "9px" : gridSize >= 10 ? "10px" : gridSize >= 8 ? "11px" : gridSize >= 6 ? "13px" : "16px";
               
               return (
