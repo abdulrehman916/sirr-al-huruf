@@ -115,8 +115,6 @@
     overflow-x: hidden;
     overscroll-behavior-x: none;
     touch-action: pan-x pan-y;
-    position: fixed;
-    width: 100%;
   }
   body {
     margin: 0;
@@ -131,10 +129,11 @@
     height: 100%;
   }
   #root {
-    height: 100dvh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     position: relative;
+    overflow: hidden;
   }
 
   body {

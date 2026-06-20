@@ -8,7 +8,6 @@ import { base44 } from "../api/base44Client";
 import { useScrollPersist } from "../context/PageStateContext";
 import useTranslation from "@/i18n/useTranslation";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
-import { setupKeyboardBehavior } from "@/lib/platformKeyboardHandler";
 
 const AccountModal = lazy(() => import("./AccountModal"));
 
@@ -214,28 +213,7 @@ export default function PageLayout({ children }) {
     return () => window.removeEventListener("popstate", onPop);
   }, [startNav]);
 
-  // Platform-specific keyboard handling - PREVENT ALL VIEWPORT MOVEMENT
-  useEffect(() => {
-    const cleanup = setupKeyboardBehavior(scrollRef);
-    
-    // CRITICAL: Prevent browser default focus scrolling behavior
-    const preventScrollOnFocus = (e) => {
-      if (scrollRef.current) {
-        const savedTop = scrollRef.current.scrollTop;
-        setTimeout(() => {
-          scrollRef.current.scrollTop = savedTop;
-        }, 0);
-      }
-    };
-    
-    // Intercept focus events to prevent automatic scrollIntoView
-    document.addEventListener('focus', preventScrollOnFocus, true);
-    
-    return () => {
-      cleanup();
-      document.removeEventListener('focus', preventScrollOnFocus, true);
-    };
-  }, [scrollRef]);
+  // NO keyboard handling - CSS-only solution prevents viewport movement
 
   return (
     <>
@@ -243,7 +221,7 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        height: "100dvh",
+        height: "100vh",
         overflow: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -396,7 +374,8 @@ export default function PageLayout({ children }) {
           paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px) + 20px)",
           boxSizing: "border-box",
           position: "relative",
-          flex: "1 1 auto",
+          flex: "0 0 auto",
+          height: "100%",
         }}
       >
         <AnimatePresence mode="wait">
