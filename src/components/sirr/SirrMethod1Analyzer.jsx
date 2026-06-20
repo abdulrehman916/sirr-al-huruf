@@ -97,20 +97,51 @@ export default function SirrMethod1Analyzer() {
     setIsAnalyzing(true);
 
     try {
-      // Step 1-5: Letter breakdown and values
       const text = inputText.trim();
-      const letters = text.split('').filter(c => c.trim());
-      const letterDetails = letters.map(letter => {
+      
+      // ═══════════════════════════════════════════
+      // STEP 1: Normalize Arabic Text
+      // Source: Samur Hindi pp. 16-18 (Arabic letter rules)
+      // ═══════════════════════════════════════════
+      const normalizedText = text
+        .replace(/[\u064B-\u065F\u0670]/g, '') // Remove diacritics (tashkeel)
+        .replace(/[^\u0600-\u06FF\s]/g, '') // Keep only Arabic letters and spaces
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+
+      // ═══════════════════════════════════════════
+      // STEP 2: Extract All Letters
+      // Source: Samur Hindi pp. 16-18
+      // ═══════════════════════════════════════════
+      const letters = normalizedText.split('').filter(c => c.trim());
+
+      // ═══════════════════════════════════════════
+      // STEP 3-4: Letter-by-Letter Breakdown with Abjad Values
+      // Source: Samur Hindi pp. 16-18 (Abjad Kebir table)
+      // ═══════════════════════════════════════════
+      const letterDetails = letters.map((letter, idx) => {
         const value = getAbjadValue(letter);
         const element = getElementForLetter(letter);
-        return { letter, value, element };
+        return { 
+          letter, 
+          value, 
+          element,
+          position: idx + 1
+        };
       });
 
+      // ═══════════════════════════════════════════
+      // STEP 5: Calculate Total Value
+      // Source: Samur Hindi pp. 32-35
+      // ═══════════════════════════════════════════
       const totalValue = letterDetails.reduce((sum, l) => sum + l.value, 0);
 
-      // Step 6: Anasir (Element) Analysis
-      const elementCounts = { Fire: 0, Air: 0, Water: 0, Earth: 0 };
-      const elementValues = { Fire: 0, Air: 0, Water: 0, Earth: 0 };
+      // ═══════════════════════════════════════════
+      // STEP 6: Determine Dominant Anasir (Element)
+      // Source: Samur Hindi pp. 18, 32-35
+      // ═══════════════════════════════════════════
+      const elementCounts = { fire: 0, air: 0, water: 0, earth: 0 };
+      const elementValues = { fire: 0, air: 0, water: 0, earth: 0 };
       
       letterDetails.forEach(l => {
         if (elementCounts[l.element] !== undefined) {
@@ -123,20 +154,136 @@ export default function SirrMethod1Analyzer() {
         b[1] > a[1] ? b : a
       )[0];
 
-      // Step 7: Mizan Calculations (9 stages)
-      const mizan1 = totalValue; // Talib name value
-      const mizan2 = dominantElement; // Galip Anasir
-      const mizan3 = totalValue % 2 === 0 ? 237 : 440; // Day/Night
-      const mizan4 = (totalValue % 12) + 1; // Hour (1-12)
-      const mizan5 = (totalValue % 7); // Day of week (0-6)
-      const mizan6 = (totalValue % 7) + 2029; // Planet year
-      const mizan7 = totalValue % 4; // Need type (0-3)
-      const mizan8 = totalValue > (totalValue.toString().split('').reverse().join('')) ? 2731 : 2725; // Hayir/Ser
-      const mizan9 = 100; // Anasir Derecesi (fixed)
+      // ═══════════════════════════════════════════
+      // STEP 7-15: Apply All 9 Mizans Sequentially
+      // Source: Samur Hindi pp. 32-45 (Dokuz Mizan system)
+      // ═══════════════════════════════════════════
+      
+      // MIZAN 1: Talib İsmi (Name Value) - p.32
+      const mizan1 = {
+        step: 1,
+        name: 'Talib İsmi',
+        arabic: 'طَالِبُ ٱسْمِ',
+        value: totalValue,
+        formula: 'Sum of all letter Abjad values',
+        calculation: letterDetails.map(l => l.value).join(' + '),
+        result: totalValue,
+        source: 'Risale-i Samur Hindi, p.32'
+      };
 
-      const finalTotal = mizan1 + mizan3 + mizan4 + mizan6 + mizan9;
+      // MIZAN 2: Galip Anasır (Dominant Element) - p.35
+      const mizan2 = {
+        step: 2,
+        name: 'Galip Anasır',
+        arabic: 'غَالِبُ ٱلْعَنَاصِرِ',
+        value: elementValues[dominantElement],
+        formula: 'Element with highest total value',
+        calculation: `Fire: ${elementValues.fire}, Air: ${elementValues.air}, Water: ${elementValues.water}, Earth: ${elementValues.earth}`,
+        result: `${dominantElement.toUpperCase()} (${elementValues[dominantElement]})`,
+        source: 'Risale-i Samur Hindi, p.35'
+      };
+
+      // MIZAN 3: Gündüz/Gece (Day/Night) - p.38
+      const isEven = totalValue % 2 === 0;
+      const mizan3 = {
+        step: 3,
+        name: isEven ? 'Gündüz' : 'Gece',
+        arabic: isEven ? 'النَّهَارُ' : 'اللَّيْلُ',
+        value: isEven ? 237 : 440,
+        formula: `${totalValue} % 2 = ${totalValue % 2} → ${isEven ? 'Even (237)' : 'Odd (440)'}`,
+        calculation: `${totalValue} ÷ 2 = ${totalValue / 2} (remainder: ${totalValue % 2})`,
+        result: isEven ? 237 : 440,
+        source: 'Risale-i Samur Hindi, p.38'
+      };
+
+      // MIZAN 4: Saat (Hour 1-12) - p.40
+      const hourValue = (totalValue % 12) + 1;
+      const mizan4 = {
+        step: 4,
+        name: `Saat ${hourValue}`,
+        arabic: `ٱلسَّاعَةُ ${hourValue}`,
+        value: hourValue,
+        formula: `(${totalValue} % 12) + 1`,
+        calculation: `${totalValue} ÷ 12 = ${Math.floor(totalValue / 12)} (remainder: ${totalValue % 12}) + 1`,
+        result: hourValue,
+        source: 'Risale-i Samur Hindi, p.40'
+      };
+
+      // MIZAN 5: Gün (Day of Week) - p.41
+      const dayIndex = totalValue % 7;
+      const dayNames = ['Ahad', 'Ithnayn', 'Thalatha', 'Arba\'a', 'Khams', 'Jumu\'ah', 'Sabt'];
+      const dayArabic = ['الأَحَدُ', 'الْإِثْنَيْنَ', 'الثَّلَاثَاءُ', 'الْأَرْبَعَاءُ', 'الْخَمِيسُ', 'الْجُمُعَةُ', 'السَّبَّتُ'];
+      const mizan5 = {
+        step: 5,
+        name: `Gün: ${dayNames[dayIndex]}`,
+        arabic: dayArabic[dayIndex],
+        value: dayIndex,
+        formula: `${totalValue} % 7`,
+        calculation: `${totalValue} ÷ 7 = ${Math.floor(totalValue / 7)} (remainder: ${dayIndex})`,
+        result: `${dayIndex} (${dayNames[dayIndex]})`,
+        source: 'Risale-i Samur Hindi, p.41'
+      };
+
+      // MIZAN 6: Gezegen (Planet Year) - p.42
+      const planetYear = (totalValue % 7) + 2029;
+      const planetNames = ['Shams', 'Qamar', 'Mirrikh', 'Utarid', 'Mushtari', 'Zuhrah', 'Zuhal'];
+      const planetArabic = ['شَمْس', 'قَمَر', 'مَرِيخ', 'عُطَارِد', 'مُشْتَرِي', 'زُهْرَة', 'زُحَل'];
+      const mizan6 = {
+        step: 6,
+        name: `Gezegen: ${planetNames[dayIndex]}`,
+        arabic: planetArabic[dayIndex],
+        value: planetYear,
+        formula: `(${totalValue} % 7) + 2029`,
+        calculation: `${dayIndex} + 2029`,
+        result: planetYear,
+        source: 'Risale-i Samur Hindi, p.42'
+      };
+
+      // MIZAN 7: Hacet (Need Type) - p.43
+      const needIndex = totalValue % 4;
+      const needTypes = ['Celb (جَلْبٌ)', 'Tard (طَرْدٌ)', 'Sihhat (صِحَّتٌ)', 'Sukm (سُقْمٌ)'];
+      const mizan7 = {
+        step: 7,
+        name: `Hacet: ${needTypes[needIndex].split(' ')[0]}`,
+        arabic: needTypes[needIndex].match(/\(([^)]+)\)/)[1],
+        value: needIndex,
+        formula: `${totalValue} % 4`,
+        calculation: `${totalValue} ÷ 4 = ${Math.floor(totalValue / 4)} (remainder: ${needIndex})`,
+        result: `${needIndex} (${needTypes[needIndex]})`,
+        source: 'Risale-i Samur Hindi, p.43'
+      };
+
+      // MIZAN 8: Hayır/Şer (Good/Evil) - p.44
+      const reversed = totalValue.toString().split('').reverse().join('');
+      const isHayir = totalValue > parseInt(reversed);
+      const mizan8 = {
+        step: 8,
+        name: isHayir ? 'Hayır' : 'Şer',
+        arabic: isHayir ? 'الْخَيْرُ' : 'الشَّرُّ',
+        value: isHayir ? 2731 : 2725,
+        formula: `${totalValue} > ${reversed} ? 2731 : 2725`,
+        calculation: `${totalValue} vs ${reversed} → ${totalValue > reversed ? 'Greater (2731)' : 'Lesser (2725)'}`,
+        result: isHayir ? 2731 : 2725,
+        source: 'Risale-i Samur Hindi, p.44'
+      };
+
+      // MIZAN 9: Anasır Derecesi (Element Degree) - p.45
+      const mizan9 = {
+        step: 9,
+        name: `Anasır Derecesi: ${dominantElement}`,
+        arabic: `دَرَجَةُ ٱلْعُنْصُرِ ${dominantElement.toUpperCase()}`,
+        value: 100,
+        formula: 'Fixed value for 1st degree of dominant element',
+        calculation: '1st degree = 100 (base value)',
+        result: 100,
+        source: 'Risale-i Samur Hindi, p.45'
+      };
+
+      // FINAL TOTAL
+      const finalTotal = mizan1.result + mizan3.result + mizan4.result + mizan6.result + mizan9.result;
 
       setAnalysis({
+        normalizedText,
         originalText: text,
         letters,
         letterDetails,
@@ -144,18 +291,9 @@ export default function SirrMethod1Analyzer() {
         elementCounts,
         elementValues,
         dominantElement,
-        mizan: {
-          mizan1,
-          mizan2,
-          mizan3,
-          mizan4,
-          mizan5,
-          mizan6,
-          mizan7,
-          mizan8,
-          mizan9,
-          finalTotal
-        }
+        mizanSteps: [mizan1, mizan2, mizan3, mizan4, mizan5, mizan6, mizan7, mizan8, mizan9],
+        finalTotal,
+        finalFormula: 'Mizan 1 + Mizan 3 + Mizan 4 + Mizan 6 + Mizan 9'
       });
     } catch (err) {
       console.error('Analysis error:', err);
@@ -170,10 +308,6 @@ export default function SirrMethod1Analyzer() {
     setAnalysis(null);
     setError(null);
   }, []);
-
-  const dayNames = ['Ahad', 'Ithnayn', 'Thalatha', 'Arba\'a', 'Khams', 'Jumu\'ah', 'Sabt'];
-  const planetNames = ['Shams', 'Qamar', 'Mirrikh', 'Utarid', 'Mushtari', 'Zuhrah', 'Zuhal'];
-  const needTypes = ['Celb (Attraction)', 'Tard (Repulsion)', 'Sihhat (Health)', 'Sukm (Silence)'];
 
   return (
     <div className="space-y-4">
@@ -329,130 +463,54 @@ export default function SirrMethod1Analyzer() {
             </div>
           </SectionCard>
 
-          {/* Step 7: Mizan 1-9 */}
-          <SectionCard title="Mizan Calculations (9 Stages)" number="7">
+          {/* Steps 7-15: Mizan 1-9 with Full Details */}
+          <SectionCard title="Mizan Calculations (9 Stages)" number="7-15">
             <div className="space-y-3">
-              {/* Mizan 1 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 1 — Talib İsmi (Name Value)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan1}
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: Total letter value
-                </p>
-              </div>
-
-              {/* Mizan 2 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 2 — Galip Anasır (Dominant Element)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan2}
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: Element with highest total value
-                </p>
-              </div>
-
-              {/* Mizan 3 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 3 — Gündüz/Gece (Day/Night)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan3}
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: {analysis.totalValue} % 2 = {analysis.totalValue % 2 === 0 ? 'Even (237)' : 'Odd (440)'}
-                </p>
-              </div>
-
-              {/* Mizan 4 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 4 — Saat (Hour 1-12)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan4}
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: ({analysis.totalValue} % 12) + 1 = {analysis.mizan.mizan4}
-                </p>
-              </div>
-
-              {/* Mizan 5 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 5 — Gün (Day of Week)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan5} ({dayNames[analysis.mizan.mizan5]})
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: {analysis.totalValue} % 7 = {analysis.mizan.mizan5}
-                </p>
-              </div>
-
-              {/* Mizan 6 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 6 — Gezegen (Planet Year)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan6} ({planetNames[analysis.mizan.mizan5]})
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: ({analysis.totalValue} % 7) + 2029 = {analysis.mizan.mizan6}
-                </p>
-              </div>
-
-              {/* Mizan 7 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 7 — Hacet (Need Type)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan7} ({needTypes[analysis.mizan.mizan7]})
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: {analysis.totalValue} % 4 = {analysis.mizan.mizan7}
-                </p>
-              </div>
-
-              {/* Mizan 8 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 8 — Hayır/Şer (Good/Evil)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan8}
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: Comparison test = {analysis.mizan.mizan8}
-                </p>
-              </div>
-
-              {/* Mizan 9 */}
-              <div className="p-3 rounded-lg" style={{ background: G.bg }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                  MIZAN 9 — Anasır Derecesi (Element Degree)
-                </p>
-                <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-                  {analysis.mizan.mizan9}
-                </p>
-                <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                  Formula: Fixed value = 100
-                </p>
-              </div>
+              {analysis.mizanSteps.map((mizan, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-lg border"
+                  style={{ background: G.bg, borderColor: G.faint }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+                        {mizan.step}. {mizan.name.toUpperCase()}
+                      </p>
+                      <p className="font-amiri text-lg font-bold mt-0.5" style={{ color: G.text, direction: 'rtl' }}>
+                        {mizan.arabic}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-inter text-2xl font-bold" style={{ color: G.text }}>
+                        {typeof mizan.result === 'number' ? mizan.result.toLocaleString() : mizan.result}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: G.faint }}>
+                    <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                      FORMULA
+                    </p>
+                    <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.60)" }}>
+                      {mizan.formula}
+                    </p>
+                    <p className="font-inter text-[8px] uppercase tracking-widest mt-2 mb-1" style={{ color: G.dim }}>
+                      CALCULATION
+                    </p>
+                    <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>
+                      {mizan.calculation}
+                    </p>
+                    <p className="font-inter text-[8px] uppercase tracking-widest mt-2" style={{ color: G.dim }}>
+                      SOURCE: {mizan.source}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </SectionCard>
 
-          {/* Step 9: Final Result */}
-          <SectionCard title="Final Result" number="9">
+          {/* Step 16: Final Result */}
+          <SectionCard title="Final Result" number="16">
             <div className="text-center p-8 rounded-2xl border" 
                  style={{ 
                    background: "linear-gradient(145deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%)",
@@ -463,13 +521,13 @@ export default function SirrMethod1Analyzer() {
                 FINAL CALCULATION
               </p>
               <div className="font-inter text-sm mb-4" style={{ color: "rgba(255,255,255,0.60)" }}>
-                <p>Mizan 1 + Mizan 3 + Mizan 4 + Mizan 6 + Mizan 9</p>
+                <p>{analysis.finalFormula}</p>
                 <p className="mt-2 font-bold">
-                  {analysis.mizan.mizan1} + {analysis.mizan.mizan3} + {analysis.mizan.mizan4} + {analysis.mizan.mizan6} + {analysis.mizan.mizan9}
+                  {analysis.mizanSteps[0].result} + {analysis.mizanSteps[2].result} + {analysis.mizanSteps[3].result} + {analysis.mizanSteps[5].result} + {analysis.mizanSteps[8].result}
                 </p>
               </div>
               <p className="font-amiri text-6xl font-bold" style={{ color: G.text, textShadow: `0 0 30px ${G.glow}` }}>
-                {analysis.mizan.finalTotal}
+                {analysis.finalTotal.toLocaleString()}
               </p>
               <p className="font-inter text-[9px] uppercase tracking-widest mt-3" style={{ color: G.dim }}>
                 TOTAL RESULT
