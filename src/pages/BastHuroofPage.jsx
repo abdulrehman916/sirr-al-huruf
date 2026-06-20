@@ -403,8 +403,8 @@ export default function BastHuroofPage() {
                 disabled={!input && !allResults}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center justify-center p-1.5 rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: "rgba(239,68,68,0.06)", width: "auto", minWidth: "36px" }}
+                className="flex items-center justify-center py-1.5 px-2 rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: "rgba(239,68,68,0.06)", width: "auto", minWidth: "fit-content" }}
               >
                 <Trash2 className="w-3 h-3" />
               </motion.button>
@@ -466,8 +466,8 @@ export default function BastHuroofPage() {
                 disabled={!numberInput && !allResults}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center justify-center p-1.5 rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: "rgba(239,68,68,0.06)", width: "auto", minWidth: "36px" }}
+                className="flex items-center justify-center py-1.5 px-2 rounded-md border border-red-500/20 text-red-400/40 hover:text-red-400 hover:border-red-500/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: "rgba(239,68,68,0.06)", width: "auto", minWidth: "fit-content" }}
               >
                 <Trash2 className="w-3 h-3" />
               </motion.button>
