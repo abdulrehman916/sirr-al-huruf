@@ -82,7 +82,7 @@ function MobileBackground() {
   return (
     <div
       id="mobile-bg-root"
-      className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
+      className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
       style={{
         background: "linear-gradient(180deg, #010308 0%, #020a18 18%, #050d22 50%, #040a1c 75%, #020610 100%)",
         transform: "translateZ(0)",
@@ -349,7 +349,7 @@ const DesktopBackground = memo(function DesktopBackground({ mouse, isNavigating 
   const safeMouse = mouse ?? ZERO_MV;
   return (
     <div
-      className="fixed inset-0 z-0 overflow-hidden"
+      className="absolute inset-0 z-0 overflow-hidden"
       style={{
         background: "linear-gradient(180deg, #010308 0%, #020a18 18%, #050d22 50%, #040a1c 75%, #020610 100%)",
         transform: "translateZ(0)",
