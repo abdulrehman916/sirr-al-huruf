@@ -223,7 +223,7 @@ export default function PageLayout({ children }) {
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
         height: "auto",
-        minHeight: "100%",
+        minHeight: "100dvh",
         overflow: "visible",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -378,6 +378,8 @@ export default function PageLayout({ children }) {
           position: "relative",
           flex: "1 1 auto",
           minHeight: "0",
+          height: "auto",
+          flexBasis: "auto",
         }}
       >
         <AnimatePresence mode="wait">
@@ -396,7 +398,7 @@ export default function PageLayout({ children }) {
               maxWidth: '100vw',
               margin: 0,
               position: 'relative',
-              minHeight: '100%',
+              minHeight: '100dvh',
             }}
           >
             {children}

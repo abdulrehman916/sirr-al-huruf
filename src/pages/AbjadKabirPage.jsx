@@ -179,8 +179,9 @@ export default function AbjadKabirPage() {
   return (
     <PageLayout>
       {/* Dark background wrapper - extends through full scroll area, Abjad page only */}
-      <div className="relative min-h-full w-full pb-8" style={{
+      <div className="relative w-full pb-8" style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
+        minHeight: "100dvh",
       }}>
         <div className="text-center mb-2">
           <motion.div
