@@ -372,7 +372,7 @@ export default function SirrMethod1Analyzer() {
           onChange={e => setInputText(e.target.value)}
           placeholder="أدخل النص العربي هنا..."
           dir="rtl"
-          className="w-full min-h-[160px] max-h-[35vh] p-4 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30 resize-y"
+          className="w-full min-h-[160px] p-4 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30 resize-y"
           style={{ 
             background: "rgba(4,12,34,0.97)", 
             border: `1px solid ${G.border}`,

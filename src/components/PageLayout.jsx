@@ -215,8 +215,8 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        minHeight: "100%",
-        height: "100%",
+        minHeight: "100vh",
+        height: "auto",
         overflowX: "hidden",
         overscrollBehaviorX: "none",
         width: "100%",
@@ -229,7 +229,6 @@ export default function PageLayout({ children }) {
         paddingBottom: "env(safe-area-inset-bottom)",
         boxSizing: "border-box",
         position: "relative",
-        flex: "0 0 auto",
       }}
     >
       <AtmosphericBackground />
@@ -358,7 +357,6 @@ export default function PageLayout({ children }) {
         ref={scrollRef}
         data-scroll-container="true"
         style={{
-          flex: "0 0 auto",
           overflowY: "auto",
           overflowX: "hidden",
           overscrollBehaviorX: "none",
@@ -371,7 +369,6 @@ export default function PageLayout({ children }) {
           padding: 0,
           boxSizing: "border-box",
           position: "relative",
-          maxHeight: "100%",
         }}
       >
         <AnimatePresence mode="wait">
@@ -389,6 +386,7 @@ export default function PageLayout({ children }) {
               width: '100%',
               maxWidth: '100vw',
               margin: 0,
+              position: 'relative',
             }}
           >
             {children}
