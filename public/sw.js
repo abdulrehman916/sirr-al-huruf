@@ -1,127 +1,50 @@
-// ═══════════════════════════════════════════════════════════════
-// SERVICE WORKER — Enterprise PWA Offline Support
-// Network-first for HTML, Cache-first for static assets
-// ═══════════════════════════════════════════════════════════════
+// Sirr al-Huruf Service Worker
+// Cache version bump — forces old SW and all old caches to be replaced immediately.
+// Change CACHE_VERSION to force a full cache bust on all clients.
+const CACHE_VERSION = 'sirr-v4-' + Date.now();
+const STATIC_CACHE = CACHE_VERSION;
 
-const CACHE_VERSION = 'sah-v3';
-const STATIC_CACHE = CACHE_VERSION + '-static';
-const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
-
-// Static assets to precache on install
-const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-];
-
-// Extensions that are safe to cache aggressively (immutable-ish)
-const STATIC_EXTENSIONS = /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|ico|webp|avif)$/i;
-
-// ── Install: precache static shell ──────────────────────────────
+// On install: skip waiting immediately so new SW activates without delay
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      return cache.addAll(PRECACHE_URLS);
-    })
-  );
   self.skipWaiting();
 });
 
-// ── Activate: purge old caches ──────────────────────────────────
+// On activate: delete ALL old caches, then claim all clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames
-          .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
-          .map((name) => caches.delete(name))
+        cacheNames.map((cacheName) => {
+          // Delete every cache (old versions)
+          return caches.delete(cacheName);
+        })
       );
+    }).then(() => {
+      // Take control of all open tabs/windows immediately
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
 
-// ── Fetch: smart strategy ───────────────────────────────────────
+// Fetch: network-first strategy — always try network, never serve stale login screens
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const url = new URL(event.request.url);
 
-  // Skip non-GET
-  if (request.method !== 'GET') return;
-
-  // Skip cross-origin (except CDN/fonts)
-  const isSameOrigin = url.origin === self.location.origin;
-  const isCdnOrFont = /(fonts\.gstatic\.com|cdnjs|unpkg|jsdelivr)/.test(url.hostname);
-  if (!isSameOrigin && !isCdnOrFont) return;
-
-  // Skip Base44 API calls — don't cache dynamic data
-  if (url.pathname.includes('/api/') || url.pathname.includes('/functions/')) {
-    return; // Let them pass through to network
-  }
-
-  // Strategy: Cache-first for static assets, Network-first for HTML
-  const isStatic = STATIC_EXTENSIONS.test(url.pathname);
-  const isHtml = request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/';
-
-  if (isStatic) {
-    // Cache-first: serve instantly, update cache in background
+  // For navigation requests (HTML pages), always go to network
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.ok) {
-            const clone = networkResponse.clone();
-            caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
-          }
-          return networkResponse;
-        }).catch(() => cached);
-
-        return cached || fetchPromise;
+      fetch(event.request).catch(() => {
+        // Offline fallback only — return minimal offline page
+        return new Response(
+          '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offline</title></head><body style="background:#020710;color:#D4AF37;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><p>You are offline. Please reconnect.</p></body></html>',
+          { headers: { 'Content-Type': 'text/html' } }
+        );
       })
     );
-  } else if (isHtml) {
-    // Network-first for HTML: always try network, fall back to cache
-    event.respondWith(
-      fetch(request).then((networkResponse) => {
-        if (networkResponse && networkResponse.ok) {
-          const clone = networkResponse.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
-        }
-        return networkResponse;
-      }).catch(() => {
-        return caches.match(request).then((cached) => {
-          return cached || caches.match('/index.html');
-        });
-      })
-    );
-  } else {
-    // Default: network-first
-    event.respondWith(
-      fetch(request).then((response) => {
-        if (response && response.ok) {
-          const clone = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      }).catch(() => caches.match(request))
-    );
-  }
-});
-
-// ── Message: cache warming from main thread ─────────────────────
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'CACHE_URLS') {
-    const urls = event.data.urls || [];
-    caches.open(STATIC_CACHE).then((cache) => {
-      urls.forEach((url) => {
-        cache.add(url).catch(() => {});
-      });
-    });
+    return;
   }
 
-  // Clear dynamic cache on request
-  if (event.data && event.data.type === 'CLEAR_DYNAMIC') {
-    caches.delete(DYNAMIC_CACHE).then(() => {
-      caches.open(DYNAMIC_CACHE); // recreate
-    });
-  }
+  // For all other requests: network-first, no caching of app JS/CSS
+  // This ensures users always get the latest build
+  event.respondWith(fetch(event.request));
 });

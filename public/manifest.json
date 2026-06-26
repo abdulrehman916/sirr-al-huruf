@@ -1,12 +1,12 @@
 {
-  "name": "سرّ الحروف — Sirr al-Huruf",
-  "short_name": "Sirr al-Huruf",
-  "description": "Abjad Numerology & Magick Squares Encyclopedia",
+  "name": "Sirr al-Huruf",
+  "short_name": "سرّ الحروف",
+  "description": "Advanced Ilm al-Huruf Analysis",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0B1020",
-  "theme_color": "#0B1020",
-  "orientation": "portrait-primary",
+  "background_color": "#020710",
+  "theme_color": "#020710",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -20,8 +20,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": ["education", "reference"],
-  "lang": "ar",
-  "dir": "rtl"
+  ]
 }
