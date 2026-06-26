@@ -1,123 +1,106 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
-import { Save, Book, AlertCircle, CheckCircle } from "lucide-react";
+import { Upload, CheckCircle, Loader2, FileText, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useToast } from "@/components/ui/use-toast";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
   text: "#F5D060",
   bg: "rgba(212,175,55,0.07)",
-  bgHi: "rgba(212,175,55,0.14)",
 };
 
 export default function AdminPDFContentEditor() {
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(null);
-  const [names, setNames] = useState([]);
-  const [selectedName, setSelectedName] = useState(null);
-  const [content, setContent] = useState({
-    arabic_name: '',
-    arabic_transliteration: '',
-    malayalam_pronunciation: '',
-    meaning_malayalam: '',
-    explanation_malayalam: '',
-    virtues_benefits: '',
-    islamic_information: '',
-    authentic_notes: ''
-  });
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('incomplete'); // all, complete, incomplete
-
-  useEffect(() => {
-    checkAdmin();
-  }, []);
+  const [uploadedUrls, setUploadedUrls] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [error, setError] = useState(null);
 
   const checkAdmin = async () => {
     try {
       const user = await base44.auth.me();
       if (user?.role !== "admin") { setIsAdmin(false); return; }
       setIsAdmin(true);
-      loadNames();
     } catch {
       setIsAdmin(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAdmin();
+  }, []);
+
+  const handleFileUpload = async (e, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+    
+    try {
+      const result = await base44.integrations.Core.UploadFile({ file });
+      
+      const newUrls = [...uploadedUrls];
+      newUrls[index] = {
+        url: result.file_url,
+        name: file.name.replace('.pdf', '').toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        fileName: file.name
+      };
+      setUploadedUrls(newUrls);
+      
+      toast({ title: "✓ PDF uploaded", description: file.name });
+    } catch (err) {
+      setError(`Upload failed: ${err.message}`);
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
-  const loadNames = async () => {
-    try {
-      const allNames = await base44.entities.HolyOnePDFName.list("-global_order");
-      setNames(allNames || []);
-    } catch (e) {
-      toast({ title: "Failed to load names", description: e.message, variant: "destructive" });
+  const removePdf = (index) => {
+    const newUrls = [...uploadedUrls];
+    newUrls[index] = null;
+    setUploadedUrls(newUrls);
+  };
+
+  const handleAutoImport = async () => {
+    const validUrls = uploadedUrls.filter(u => u && u.url);
+    if (validUrls.length === 0) {
+      toast({ title: "No PDFs", description: "Upload PDFs first", variant: "destructive" });
+      return;
     }
-  };
 
-  const selectName = (name) => {
-    setSelectedName(name);
-    setContent({
-      arabic_name: name.arabic_name || '',
-      arabic_transliteration: name.arabic_transliteration || '',
-      malayalam_pronunciation: name.malayalam_pronunciation || '',
-      meaning_malayalam: name.meaning_malayalam || '',
-      explanation_malayalam: name.explanation_malayalam || '',
-      virtues_benefits: name.virtues_benefits || '',
-      islamic_information: name.islamic_information || '',
-      authentic_notes: name.authentic_notes || ''
-    });
-  };
+    setImporting(true);
+    setError(null);
+    setImportResult(null);
 
-  const handleSave = async () => {
-    if (!selectedName) return;
-    setSaving(true);
     try {
-      await base44.entities.HolyOnePDFName.update(selectedName.id, {
-        ...content,
-        verification_status: 'pending',
-        verified_at: null,
-        verified_by: null
+      const result = await base44.functions.invoke('autoImportHolyNamesFromPDF', {
+        pdf_urls: validUrls
       });
-      
-      // Update local state
-      setSelectedName(prev => prev ? { ...prev, ...content } : null);
-      loadNames();
-      
+
+      setImportResult(result.data);
       toast({ 
-        title: "✓ Content saved", 
-        description: "Please verify against PDF"
+        title: "✓ Import Complete", 
+        description: `${result.data.count} names imported automatically`
       });
-    } catch (e) {
-      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+    } catch (err) {
+      setError(`Import failed: ${err.message}`);
+      toast({ title: "Import failed", description: err.message, variant: "destructive" });
     } finally {
-      setSaving(false);
-    }
-  };
-
-  const markAsVerified = async () => {
-    if (!selectedName) return;
-    try {
-      const user = await base44.auth.me();
-      await base44.entities.HolyOnePDFName.update(selectedName.id, {
-        verification_status: 'verified',
-        verified_by: user.id,
-        verified_at: new Date().toISOString()
-      });
-      toast({ title: "✓ Verified", description: "Content verified against PDF" });
-      loadNames();
-      setSelectedName(prev => prev ? { ...prev, verification_status: 'verified' } : null);
-    } catch (e) {
-      toast({ title: "Failed", description: e.message, variant: "destructive" });
+      setImporting(false);
     }
   };
 
   if (isAdmin === false) return <Navigate to="/" replace />;
-  if (isAdmin === null || loading) {
+  if (isAdmin === null) {
+    checkAdmin();
     return (
       <AdminLayout title="Loading...">
         <div className="min-h-[60vh] flex items-center justify-center">
@@ -127,290 +110,179 @@ export default function AdminPDFContentEditor() {
     );
   }
 
-  const stats = {
-    total: names.length,
-    complete: names.filter(n => n.explanation_malayalam && n.virtues_benefits).length,
-    incomplete: names.filter(n => !n.explanation_malayalam || !n.virtues_benefits).length
-  };
-
-  const filteredNames = names.filter(n => {
-    if (filter === 'complete') return n.explanation_malayalam && n.virtues_benefits;
-    if (filter === 'incomplete') return !n.explanation_malayalam || !n.virtues_benefits;
-    return true;
-  });
-
   return (
-    <AdminLayout title="PDF Holy Names Content Editor" subtitle="Section B - Complete PDF Content">
+    <AdminLayout title="Automatic PDF Import" subtitle="Section B - Fully Automatic Holy Names Import">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl border p-3 text-center" style={{ background: G.bg, borderColor: G.border }}>
-            <p className="text-2xl font-bold text-white">{stats.total}</p>
-            <p className="text-xs text-white/40">Total Names</p>
-          </div>
-          <div className="rounded-xl border p-3 text-center" style={{ background: "rgba(34,197,94,0.06)", borderColor: "rgba(34,197,94,0.25)" }}>
-            <p className="text-2xl font-bold text-green-400">{stats.complete}</p>
-            <p className="text-xs text-white/40">Complete</p>
-          </div>
-          <div className="rounded-xl border p-3 text-center" style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.25)" }}>
-            <p className="text-2xl font-bold text-red-400">{stats.incomplete}</p>
-            <p className="text-xs text-white/40">Need Content</p>
-          </div>
-        </div>
 
         {/* Info Box */}
         <div className="rounded-xl border p-4" style={{ background: G.bg, borderColor: G.border }}>
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" style={{ color: G.text }} />
+            <FileText className="w-5 h-5 flex-shrink-0" style={{ color: G.text }} />
             <div className="text-sm text-white/60">
-              <p className="font-semibold mb-1" style={{ color: G.text }}>Instructions:</p>
+              <p className="font-semibold mb-2" style={{ color: G.text }}>Fully Automatic Import Process:</p>
               <ol className="list-decimal list-inside space-y-1 text-xs">
-                <li>Select a name from the list</li>
-                <li>Open the source PDF to the specified page</li>
-                <li>Copy ALL content (every word, paragraph, note)</li>
-                <li>Paste into the fields below</li>
-                <li>Save and verify against PDF</li>
+                <li>Upload your PDF files below (all 3 PDFs)</li>
+                <li>Click "Start Automatic Import"</li>
+                <li>System will read each PDF page-by-page</li>
+                <li>Extract ALL Holy Names with complete content</li>
+                <li>Translate everything to Malayalam automatically</li>
+                <li>Import into database with full structure preserved</li>
+                <li>No manual work required - 100% automatic</li>
               </ol>
+              <p className="text-xs text-white/40 mt-2">
+                ⏱️ Processing time: 2-5 minutes per PDF (depends on size)
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* PDF Upload Section */}
+        <div className="space-y-3">
+          <h3 className="font-inter font-semibold text-white text-sm">Upload PDF Files</h3>
           
-          {/* Name List */}
-          <div className="lg:col-span-1 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-inter font-semibold text-white text-sm">Names</h3>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setFilter('all')}
-                  className={`px-2 py-1 rounded text-xs ${filter === 'all' ? 'bg-gold text-black' : 'bg-white/5 text-white/40'}`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setFilter('incomplete')}
-                  className={`px-2 py-1 rounded text-xs ${filter === 'incomplete' ? 'bg-gold text-black' : 'bg-white/5 text-white/40'}`}
-                >
-                  Need Content
-                </button>
-                <button
-                  onClick={() => setFilter('complete')}
-                  className={`px-2 py-1 rounded text-xs ${filter === 'complete' ? 'bg-gold text-black' : 'bg-white/5 text-white/40'}`}
-                >
-                  Complete
-                </button>
+          {[0, 1, 2].map((idx) => (
+            <div key={idx} className="rounded-xl border p-4" style={{ 
+              background: uploadedUrls[idx] ? "rgba(34,197,94,0.06)" : G.bg,
+              borderColor: uploadedUrls[idx] ? "rgba(34,197,94,0.30)" : G.border
+            }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
+                    background: uploadedUrls[idx] ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.05)"
+                  }}>
+                    <FileText className={`w-5 h-5 ${uploadedUrls[idx] ? 'text-green-400' : 'text-white/30'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      {uploadedUrls[idx]?.fileName || `PDF File ${idx + 1}`}
+                    </p>
+                    <p className="text-xs text-white/30">
+                      {uploadedUrls[idx] ? 'Ready for import' : 'Upload PDF (pages range)'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {uploadedUrls[idx] && (
+                    <button
+                      onClick={() => removePdf(idx)}
+                      className="p-2 rounded-lg hover:bg-white/5"
+                    >
+                      <X className="w-4 h-4 text-white/40" />
+                    </button>
+                  )}
+                  <label className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-dashed text-xs cursor-pointer transition-all"
+                    style={{
+                      background: uploadedUrls[idx] ? "rgba(34,197,94,0.10)" : "rgba(255,255,255,0.03)",
+                      borderColor: uploadedUrls[idx] ? "rgba(34,197,94,0.40)" : "rgba(255,255,255,0.15)",
+                      color: uploadedUrls[idx] ? "#4ade80" : "rgba(255,255,255,0.40)"
+                    }}
+                  >
+                    {uploading ? (
+                      <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="w-3 h-3 mr-2" />
+                    )}
+                    {uploadedUrls[idx] ? 'Replace' : 'Upload PDF'}
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => handleFileUpload(e, idx)}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Import Button */}
+        <div className="pt-4">
+          <Button
+            onClick={handleAutoImport}
+            disabled={importing || uploadedUrls.filter(u => u).length === 0}
+            className="w-full py-4 rounded-xl font-inter font-bold text-base flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ 
+              background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", 
+              color: "#0d1b2a" 
+            }}
+          >
+            {importing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Processing PDFs... (This may take 2-5 minutes)
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                Start Automatic Import
+              </>
+            )}
+          </Button>
+          <p className="text-xs text-white/30 text-center mt-2">
+            The system will extract ALL names with complete content automatically
+          </p>
+        </div>
+
+        {/* Results */}
+        {importResult && (
+          <div className="space-y-4 pt-4 border-t" style={{ borderColor: G.border }}>
+            <h3 className="font-inter font-semibold text-white text-sm flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              Import Results
+            </h3>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border p-3 text-center" style={{ background: G.bg, borderColor: G.border }}>
+                <p className="text-2xl font-bold text-gold">{importResult.count}</p>
+                <p className="text-xs text-white/40">Names Imported</p>
+              </div>
+              <div className="rounded-xl border p-3 text-center" style={{ background: G.bg, borderColor: G.border }}>
+                <p className="text-2xl font-bold text-gold">{importResult.global_order_reached}</p>
+                <p className="text-xs text-white/40">Total in Database</p>
               </div>
             </div>
 
-            <div className="space-y-1 max-h-[60vh] overflow-y-auto pr-2 scrollbar-none">
-              {filteredNames.map(name => {
-                const isComplete = name.explanation_malayalam && name.virtues_benefits;
-                return (
-                  <button
-                    key={name.id}
-                    onClick={() => selectName(name)}
-                    className={`w-full p-3 rounded-xl border text-left transition-all ${
-                      selectedName?.id === name.id
-                        ? 'border-gold bg-gold/10'
-                        : 'border-white/5 hover:border-white/10'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-amiri text-gold font-bold truncate">{name.arabic_name}</p>
-                        <p className="text-xs text-white/30 truncate">
-                          PDF {name.source_pdf_file?.replace('pdf', '').split('_')[0] || '?'} • Page {name.source_pdf_page}
-                        </p>
-                      </div>
-                      {isComplete ? (
-                        <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 ml-2" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 ml-2" />
+            <div className="max-h-[40vh] overflow-y-auto space-y-2 pr-2">
+              {importResult.imported_names?.filter(n => !n.error).map((name, i) => (
+                <div key={i} className="rounded-xl border p-3" style={{ background: "rgba(255,255,255,0.03)", borderColor: G.border }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-amiri text-gold font-bold">{name.arabic_name}</span>
+                      {name.has_complete_content && (
+                        <CheckCircle className="w-3 h-3 text-green-400" />
                       )}
                     </div>
-                  </button>
-                );
-              })}
+                    <span className="text-[10px] text-white/30">
+                      Page {name.source_pdf_page}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 text-[9px] text-white/30">
+                    <span>Explanation: {(name.content_length?.explanation || 0) / 1000}k chars</span>
+                    <span>Virtues: {(name.content_length?.virtues || 0) / 1000}k chars</span>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
 
-          {/* Editor */}
-          <div className="lg:col-span-2 space-y-4">
-            {selectedName ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-inter font-semibold text-white text-sm">
-                    Content Editor
-                  </h3>
-                  <Badge style={{ 
-                    background: selectedName.verification_status === 'verified' 
-                      ? "rgba(34,197,94,0.15)" 
-                      : "rgba(239,68,68,0.15)",
-                    borderColor: selectedName.verification_status === 'verified'
-                      ? "rgba(34,197,94,0.40)"
-                      : "rgba(239,68,68,0.40)",
-                    color: selectedName.verification_status === 'verified' ? "#4ade80" : "#f87171"
-                  }}>
-                    {selectedName.verification_status || 'pending'}
-                  </Badge>
-                </div>
-
-                {/* Source Info */}
-                <div className="rounded-xl border p-3 flex items-center gap-4 flex-wrap" style={{ background: G.bg, borderColor: G.border }}>
-                  <div>
-                    <p className="text-[10px] text-white/30 uppercase">Source PDF</p>
-                    <p className="text-xs text-white/60 font-semibold">{selectedName.source_pdf_file || 'Unknown'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-white/30 uppercase">Page Number</p>
-                    <p className="text-xs text-white/60 font-semibold">{selectedName.source_pdf_page || '?'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-white/30 uppercase">Surah</p>
-                    <p className="text-xs text-white/60 font-semibold">{selectedName.surah_name || 'Unknown'}</p>
-                  </div>
-                </div>
-
-                {/* Content Fields */}
-                <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-                  
-                  <div>
-                    <label className="text-xs text-white/40 block mb-1">Arabic Name (from PDF)</label>
-                    <input
-                      value={content.arabic_name}
-                      onChange={e => setContent(prev => ({ ...prev, arabic_name: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none font-amiri text-lg"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 block mb-1">Transliteration (Latin)</label>
-                    <input
-                      value={content.arabic_transliteration}
-                      onChange={e => setContent(prev => ({ ...prev, arabic_transliteration: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 block mb-1">Malayalam Pronunciation</label>
-                    <input
-                      value={content.malayalam_pronunciation}
-                      onChange={e => setContent(prev => ({ ...prev, malayalam_pronunciation: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none font-malayalam"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 block mb-1">
-                      അർത്ഥം (Meaning) - <span className="text-gold">Copy EXACT from PDF</span>
-                    </label>
-                    <textarea
-                      value={content.meaning_malayalam}
-                      onChange={e => setContent(prev => ({ ...prev, meaning_malayalam: e.target.value }))}
-                      rows={2}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none resize-none font-malayalam"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-                      placeholder="Copy complete meaning from PDF..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 block mb-1">
-                      വിശദീകരണം (Explanation) - <span className="text-gold">ALL paragraphs, nothing omitted</span>
-                    </label>
-                    <textarea
-                      value={content.explanation_malayalam}
-                      onChange={e => setContent(prev => ({ ...prev, explanation_malayalam: e.target.value }))}
-                      rows={6}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none resize-none font-malayalam"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-                      placeholder="Copy EVERY paragraph from PDF..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 block mb-1">
-                      ഗുണങ്ങളും ആനുകൂല്യങ്ങളും (Virtues & Benefits) - <span className="text-gold">ALL virtues, benefits, powers</span>
-                    </label>
-                    <textarea
-                      value={content.virtues_benefits}
-                      onChange={e => setContent(prev => ({ ...prev, virtues_benefits: e.target.value }))}
-                      rows={6}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none resize-none font-malayalam"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-                      placeholder="Copy EVERY virtue and benefit..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 block mb-1">
-                      ഇസ്ലാമിക വിവരങ്ങൾ (Islamic Info) - <span className="text-gold">Quran, hadith, scholarly opinions</span>
-                    </label>
-                    <textarea
-                      value={content.islamic_information}
-                      onChange={e => setContent(prev => ({ ...prev, islamic_information: e.target.value }))}
-                      rows={4}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none resize-none font-malayalam"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-                      placeholder="Copy all Islamic references..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-white/40 block mb-1">
-                      ആധികാരിക കുറിപ്പുകൾ (Notes/Warnings) - <span className="text-gold">ALL notes, warnings, conditions</span>
-                    </label>
-                    <textarea
-                      value={content.authentic_notes}
-                      onChange={e => setContent(prev => ({ ...prev, authentic_notes: e.target.value }))}
-                      rows={4}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none resize-none font-malayalam"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-                      placeholder="Copy all notes and warnings..."
-                    />
-                  </div>
-
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="flex-1 py-3 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                    style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}
-                  >
-                    <Save className="w-4 h-4" />
-                    {saving ? "Saving..." : "Save Content"}
-                  </button>
-                  <button
-                    onClick={markAsVerified}
-                    className="flex-1 py-3 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2"
-                    style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.40)", color: "#4ade80" }}
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Verify & Approve
-                  </button>
-                </div>
-
-              </>
-            ) : (
-              <div className="h-full flex items-center justify-center text-white/30">
-                <div className="text-center">
-                  <Book className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">Select a name to edit content</p>
-                </div>
+            {importResult.errors && importResult.errors.length > 0 && (
+              <div className="rounded-xl border p-3" style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.30)" }}>
+                <p className="text-xs text-red-400 font-semibold mb-2">Errors:</p>
+                {importResult.errors.map((err, i) => (
+                  <p key={i} className="text-xs text-red-300">{err.pdf}: {err.error}</p>
+                ))}
               </div>
             )}
           </div>
+        )}
 
-        </div>
+        {error && (
+          <div className="rounded-xl border p-3" style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.30)" }}>
+            <p className="text-xs text-red-400">{error}</p>
+          </div>
+        )}
 
       </motion.div>
     </AdminLayout>
