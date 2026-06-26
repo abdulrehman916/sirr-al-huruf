@@ -28,7 +28,7 @@ import KasamSection from "../components/mizaan/KasamSection.jsx";
 
 
 import { getDataSet } from "../lib/mizaanDataSets";
-import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel } from "../lib/mizaanPostEngine";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
