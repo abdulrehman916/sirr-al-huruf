@@ -284,7 +284,7 @@ function EsmaKitabetSection({ kitabetData, dominant, getBastLevelFn, mizanulMeva
   );
 }
 
-function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, mizanulMevazin, dominantB1, kitabetRemainder, kitabetNames }) {
+function EsmaAvanSection({ avanData, kitabetData, dominant, getBastLevelFn, kitabetTotal, mizanulMevazin, dominantB1, lastKitabetNameB1 }) {
   if (!avanData) return null;
   const safe = {
     seedLetters: Array.isArray(avanData.seedLetters) ? avanData.seedLetters : [],
@@ -304,34 +304,15 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
   };
   const anasirLetters = ANASIR_LETTERS[dominant] || ANASIR_LETTERS.fire;
   
-  // PDF Algorithm: Last Kitabet Name + Dominant Anasir + Nine Mizan Total
-  const safeKitabetNames = Array.isArray(kitabetNames) ? kitabetNames : [];
-  const lastKitabetName = safeKitabetNames.length > 0 ? safeKitabetNames[safeKitabetNames.length - 1] : '';
-  
-  // Calculate First Bast of Last Kitabet Name
-  const lastKitabetNameB1 = lastKitabetName.split('').reduce((s, ch) => s + (getBastLevelFn(ch, 1) || 0), 0);
-  
-  // Calculate First Bast of Dominant Anasir (all 7 letters)
-  const anasirB1 = anasirLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-  
-  // Grand Total = Last Kitabet Name B1 + Dominant Anasir B1 + Nine Mizan Total
-  const grandTotal = lastKitabetNameB1 + anasirB1 + mizanulMevazin;
-  
-  // Istintaq of Grand Total → Seed Letters for A'van
-  const avanSeedLetters = istintak(grandTotal);
+  // PDF: Grand Total already calculated in engine
+  const grandTotal = avanData.grandTotal || 0;
+  const avanSeedLetters = avanData.seedLetters || [];
   const avanSeedCount = avanSeedLetters.length;
-  
-  // Determine Bast level based on even/odd
   const isFerd = avanSeedCount % 2 !== 0;
   const bastLevel = isFerd ? 5 : 4;
-  
-  // Calculate A'van Total using PDF algorithm (remainder from Kitabet + Anasir + Kitabet Total)
-  const safeKitabetRemainder = Array.isArray(kitabetRemainder) ? kitabetRemainder : [];
-  const remainderB1 = safeKitabetRemainder.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-  const avanCalcTotal = remainderB1 + dominantB1 + kitabetTotal;
-  
-  // Calculate seed letters for Kasem stage (Istintaq of A'van Total)
+  const avanCalcTotal = avanData.total || 0;
   const kasemSeedLetters = istintak(avanCalcTotal);
+  
   const arabicLetterNames = {
     'د': 'Dal', 'ع': 'Ayn', 'ذ': 'Zel', 'غ': 'Ğayın', 'ج': 'Cim', 'ك': 'Kaf',
     'ا': 'Elif', 'ب': 'Be', 'ت': 'Te', 'ث': 'Se', 'ح': 'Hı', 'خ': 'Ha',
@@ -340,8 +321,14 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
     'م': 'Mim', 'ن': 'Nun', 'و': 'Vav', 'ه': 'He', 'ي': 'Ye'
   };
   
-  // Combined letters for Bast calculations (remainder + Anasir)
-  const avanCombinedLetters = [...safeKitabetRemainder, ...anasirLetters];
+  // Combined letters for Bast calculations (remainder from Kitabet + Anasir)
+  const kitabetRemainder = Array.isArray(kitabetData?.remainder) ? kitabetData.remainder : [];
+  const avanCombinedLetters = [...kitabetRemainder, ...anasirLetters];
+  
+  // Calculate values for display
+  const anasirB1 = anasirLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+  const remainderB1 = safe.remainder.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+  const lastKitabetName = kitabetData?.lastCompletedName || '';
 
   return (
     <Card accent={elementMeta.color}>
@@ -830,7 +817,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
   );
 }
 
-function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avanNames, avanRemainder }) {
+function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitabetTotal, dominantB1, lastAvanNameB1 }) {
   if (!kasemData) return null;
   const safe = {
     seedLetters: Array.isArray(kasemData.seedLetters) ? kasemData.seedLetters : [],
@@ -850,24 +837,10 @@ function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avan
   };
   const anasirLetters = ANASIR_LETTERS[dominant] || ANASIR_LETTERS.fire;
   
-  // PDF Algorithm: LAST A'van Name (always use it, even if 1-2 letters)
-  const safeAvanNames = Array.isArray(avanNames) ? avanNames : [];
-  const lastAvanName = safeAvanNames.length > 0 ? safeAvanNames[safeAvanNames.length - 1] : '';
-  
-  // Calculate First Bast of LAST A'van Name
-  const lastAvanNameB1 = lastAvanName.split('').reduce((s, ch) => s + (getBastLevelFn(ch, 1) || 0), 0);
-  
-  // Calculate First Bast of Dominant Anasir (all 7 letters)
-  const anasirB1 = anasirLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-  
-  // Grand Total = Last A'van Name B1 + Dominant Anasir B1 + Esma-i Kitabet Total
-  const grandTotal = lastAvanNameB1 + anasirB1 + avanTotal;
-  
-  // Istintaq of Grand Total → Seed Letters for Kasem
-  const kasemSeedLetters = istintak(grandTotal);
+  // PDF: Grand Total already calculated in engine
+  const grandTotal = kasemData.grandTotal || 0;
+  const kasemSeedLetters = kasemData.seedLetters || [];
   const kasemSeedCount = kasemSeedLetters.length;
-  
-  // Determine Bast level based on even/odd
   const isFerd = kasemSeedCount % 2 !== 0;
   const bastLevel = isFerd ? 5 : 4;
   
@@ -879,9 +852,13 @@ function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avan
     'م': 'Mim', 'ن': 'Nun', 'و': 'Vav', 'ه': 'He', 'ي': 'Ye'
   };
   
-  // Combined letters for Bast calculations (remainder + Anasir)
-  const safeAvanRemainder = Array.isArray(avanRemainder) ? avanRemainder : [];
-  const kasemCombinedLetters = [...safeAvanRemainder, ...anasirLetters];
+  // Combined letters for Bast calculations (remainder from Avan + Anasir)
+  const avanRemainder = Array.isArray(avanData?.remainder) ? avanData.remainder : [];
+  const kasemCombinedLetters = [...avanRemainder, ...anasirLetters];
+  
+  // Calculate values for display
+  const anasirB1 = anasirLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+  const lastAvanName = avanData?.lastCompletedName || '';
 
   return (
     <Card accent={elementMeta.color}>
@@ -927,8 +904,8 @@ function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avan
         {/* Component 3: Esma-i Kitabet Total */}
         <div className="mb-4 rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
           <div className="text-[7px] mb-2" style={{ color: G.dim }}>3. Esma-i Kitabet Total</div>
-          <div className="text-3xl font-bold tabular-nums" style={{ color: G.gold }}>{avanTotal.toLocaleString()}</div>
-          <div className="text-[6px] mt-2" style={{ color: G.dim }}>From Esma-i A'van calculation</div>
+          <div className="text-3xl font-bold tabular-nums" style={{ color: G.gold }}>{kitabetTotal.toLocaleString()}</div>
+          <div className="text-[6px] mt-2" style={{ color: G.dim }}>From Kitabet stage</div>
         </div>
         
         {/* Grand Total Formula */}
@@ -938,11 +915,11 @@ function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avan
             <span style={{ color: G.goldDim }}>+</span>
             <span className="tabular-nums" style={{ color: elementMeta.color }}>{anasirB1.toLocaleString()}</span>
             <span style={{ color: G.goldDim }}>+</span>
-            <span className="tabular-nums" style={{ color: G.gold }}>{avanTotal.toLocaleString()}</span>
+            <span className="tabular-nums" style={{ color: G.gold }}>{kitabetTotal.toLocaleString()}</span>
             <span style={{ color: G.goldDim }}>=</span>
             <span className="tabular-nums text-4xl" style={{ color: G.gold }}>{grandTotal.toLocaleString()}</span>
           </div>
-          <div className="text-[7px] mt-3" style={{ color: G.dim }}>Last A'van Name B1 + Dominant Anasir B1 + Kitabet Total = Grand Total</div>
+          <div className="text-[7px] mt-3" style={{ color: G.dim }}>Last A'van Name B1 + Anasir B1 + Kitabet Total = Grand Total</div>
         </div>
       </div>
       
@@ -1152,8 +1129,13 @@ export default function Method2Pipeline({ grandBast, dominant, onVefkReady, getB
       const pipelineResult = runMethod2Pipeline({ mizanulMevazin, dominant, getBastLevelFn });
       setResult(pipelineResult);
       setLoading(false);
-      if (onVefkReady && pipelineResult?.kitabet) {
-        onVefkReady({ vefk: null, source: pipelineResult.kitabet.total, names: pipelineResult.kitabet.names });
+      if (onVefkReady && pipelineResult?.divineNames) {
+        onVefkReady({ 
+          vefk: null, 
+          source: pipelineResult.divineNames.sum, 
+          names: [],
+          divineNames: pipelineResult.divineNames,
+        });
       }
     }, 100);
     return () => clearTimeout(timer);
@@ -1189,16 +1171,44 @@ export default function Method2Pipeline({ grandBast, dominant, onVefkReady, getB
       <OrnamentalDivider />
       <div className="px-4 pb-6 space-y-5 pt-4">
         {/* STAGE 1: Esma-i Kitabet */}
-        <EsmaKitabetSection kitabetData={result.kitabet} dominant={dominant} getBastLevelFn={getBastLevelFn} mizanulMevazin={mizanulMevazin} />
+        {result?.kitabet && (
+          <EsmaKitabetSection 
+            kitabetData={result.kitabet} 
+            dominant={dominant} 
+            getBastLevelFn={getBastLevelFn} 
+            mizanulMevazin={mizanulMevazin} 
+          />
+        )}
         
         {/* STAGE 2: Esma-i A'van */}
-        {result?.avan && <EsmaAvanSection avanData={result.avan} dominant={dominant} getBastLevelFn={getBastLevelFn} kitabetTotal={result.kitabet.total} mizanulMevazin={mizanulMevazin} dominantB1={dominantB1} kitabetRemainder={result.kitabet.remainder} />}
+        {result?.avan && (
+          <EsmaAvanSection 
+            avanData={result.avan} 
+            kitabetData={result.kitabet}
+            dominant={dominant} 
+            getBastLevelFn={getBastLevelFn} 
+            kitabetTotal={result.kitabet.total} 
+            mizanulMevazin={mizanulMevazin} 
+            dominantB1={dominantB1}
+            lastKitabetNameB1={result.kitabet.lastNameB1}
+          />
+        )}
         
         {/* STAGE 3: Esma-i Kasem */}
-        {result?.kasem && <EsmaKasemSection kasemData={result.kasem} dominant={dominant} getBastLevelFn={getBastLevelFn} avanTotal={result.avan.total} avanNames={result.avan.names} avanRemainder={result.avan.remainder} />}
-        
-        {/* STAGE 4: Final Divine Names (Complete Esma-ul Husna) */}
         {result?.kasem && (
+          <EsmaKasemSection 
+            kasemData={result.kasem} 
+            avanData={result.avan}
+            dominant={dominant} 
+            getBastLevelFn={getBastLevelFn} 
+            kitabetTotal={result.kitabet.total}
+            dominantB1={dominantB1}
+            lastAvanNameB1={result.avan.lastAvanNameB1}
+          />
+        )}
+        
+        {/* STAGE 4: Final Divine Names */}
+        {result?.divineNames && (
           <FinalDivineNamesSection
             mizanulMevazin={mizanulMevazin}
             kitabetTotal={result.kitabet.total}
