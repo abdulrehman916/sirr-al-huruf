@@ -18,7 +18,7 @@ import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import Method2Pipeline from "../components/mizaan/Method2Pipeline";
-import { runMethod2Pipeline } from "../lib/mizaanMethod2Engine";
+
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";

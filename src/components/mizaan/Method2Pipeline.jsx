@@ -13,7 +13,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronRight, CheckCircle, AlertCircle } from "lucide-react";
 import { runMethod2Pipeline, calculateKeywordSubtraction } from "../../lib/mizaanMethod2Engine";
-import { istintak, getBastLevel as getBastLevelA } from "../../lib/mizaanPostEngine";
+import { istintak, getBastLevel } from "../../lib/mizaanPostEngine";
 import { getBastLevelB } from "../../lib/mizaan9DataB";
 
 // ── Design tokens ────────────────────────────────────────────────
@@ -278,7 +278,7 @@ function EsmaKitabetSection({ mizanulMevazin, dominant, getBastLevelFn, onVefkRe
 }
 
 // ── MAIN COMPONENT ──────────────────────────────────────────────
-export default function Method2Pipeline({ grandBast, grandLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA }) {
+export default function Method2Pipeline({ grandBast, grandLetters, dominant, onVefkReady, getBastLevelFn = getBastLevel }) {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
 
