@@ -163,7 +163,7 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
     <div style={{
       display: "flex",
       width: "100%",
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "linear-gradient(180deg, #020710 0%, #060c1c 100%)",
       position: "relative",
       overflow: "hidden",
@@ -189,22 +189,59 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
       {/* ── Mobile Hamburger ── */}
       <button
         onClick={() => setSidebarOpen(v => !v)}
+        className="admin-mobile-toggle"
+        aria-label="Toggle navigation"
         style={{
           display: "none",
           position: "fixed",
-          top: 14,
-          left: 14,
+          top: 12,
+          left: 12,
           zIndex: 1001,
-          padding: "9px 11px",
+          width: 40,
+          height: 40,
           borderRadius: 10,
-          background: G.bg,
-          border: `1px solid ${G.border}`,
+          background: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
+          border: `1px solid ${G.borderHi}`,
+          boxShadow: "0 0 18px rgba(212,175,55,0.20), inset 0 1px 0 rgba(212,175,55,0.15)",
           color: G.text,
           cursor: "pointer",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 4,
+          padding: 0,
+          transition: "all 0.2s ease",
         }}
-        className="admin-mobile-toggle"
       >
-        {sidebarOpen ? <X style={{ width: 18, height: 18 }} /> : <Menu style={{ width: 18, height: 18 }} />}
+        <motion.div
+          animate={sidebarOpen ? "open" : "closed"}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
+        >
+          <motion.span
+            variants={{
+              closed: { rotate: 0, y: 0, opacity: 1 },
+              open:   { rotate: 45, y: 8, opacity: 1 },
+            }}
+            transition={{ duration: 0.22 }}
+            style={{ display: "block", width: 18, height: 2, borderRadius: 2, background: G.text, transformOrigin: "center" }}
+          />
+          <motion.span
+            variants={{
+              closed: { opacity: 1, scaleX: 1 },
+              open:   { opacity: 0, scaleX: 0 },
+            }}
+            transition={{ duration: 0.18 }}
+            style={{ display: "block", width: 12, height: 2, borderRadius: 2, background: G.text, transformOrigin: "center" }}
+          />
+          <motion.span
+            variants={{
+              closed: { rotate: 0, y: 0, opacity: 1 },
+              open:   { rotate: -45, y: -8, opacity: 1 },
+            }}
+            transition={{ duration: 0.22 }}
+            style={{ display: "block", width: 18, height: 2, borderRadius: 2, background: G.text, transformOrigin: "center" }}
+          />
+        </motion.div>
       </button>
 
       {/* ── Sidebar ── */}
@@ -226,9 +263,11 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
         className="admin-main-content"
         style={{
           flex: 1,
+          height: "100%",
           overflowY: "auto",
           overflowX: "hidden",
           minWidth: 0,
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {showBackButton && title && (
@@ -280,9 +319,10 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
         .admin-sidebar {
           width: 210px;
           min-width: 210px;
-          height: 100dvh;
+          height: 100%;
           position: sticky;
           top: 0;
+          align-self: flex-start;
           z-index: 50;
         }
 
