@@ -137,6 +137,24 @@ export default function PageLayout({ children }) {
   const navRef = useRef(null);
   const tabRefs = useRef({});
 
+  // ── Scroll focused input into view when keyboard opens (mobile) ──────────
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleFocusIn = (e) => {
+      const el = e.target;
+      if (!el || !['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return;
+      // Small delay allows the keyboard to open and resize the viewport first
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 320);
+    };
+
+    container.addEventListener('focusin', handleFocusIn, { passive: true });
+    return () => container.removeEventListener('focusin', handleFocusIn);
+  }, []);
+
   // Auto-scroll active tab into view — scroll the nav container only, NOT the page
   useEffect(() => {
     const activeTabEl = tabRefs.current[activeId];
