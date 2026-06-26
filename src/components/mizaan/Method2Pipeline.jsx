@@ -180,7 +180,7 @@ function EsmaKitabetSection({ kitabetData, dominant, getBastLevelFn, mizanulMeva
   );
 }
 
-function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal }) {
+function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, mizanulMevazin, dominantB1 }) {
   if (!avanData) return null;
   const safe = {
     seedLetters: Array.isArray(avanData.seedLetters) ? avanData.seedLetters : [],
@@ -191,50 +191,97 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal }) {
   };
   const elementMeta = ELEMENT_COLORS[dominant] || ELEMENT_COLORS.fire;
   const remainderB1 = safe.remainder.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-  const dominantB1 = getBastLevelFn(dominant, 1) || 0;
   const calcTotal = remainderB1 + dominantB1 + kitabetTotal;
 
   return (
     <Card accent={elementMeta.color}>
       <SectionHeader step="2" label="Esma-i A'van" arabic="أسماء الأعوان" color={elementMeta.color} />
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-2xl">{elementMeta.icon}</span>
-        <div className="flex items-center gap-2">
-          <span className="font-amiri text-lg" style={{ color: elementMeta.color }}>{elementMeta.arabic}</span>
-          <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>({dominant})</span>
+      
+      {/* Carry-forward letters from Kitabet */}
+      <div className="mb-4 rounded-lg border p-3" style={{ background: G.bgInner, borderColor: G.goldBorder }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Carry-Forward Letters from Kitabet Stage</div>
+        <LetterRow letters={safe.remainder} color={elementMeta.color} size="xl" rtl />
+        <div className="text-[7px] mt-2" style={{ color: G.dim }}>These letters are used to calculate A'van Total</div>
+      </div>
+
+      {/* A'van Total Formula */}
+      <div className="mb-4 rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-3 text-center" style={{ color: G.dim }}>A'van Total Calculation (PDF Formula)</div>
+        <div className="grid grid-cols-3 gap-3 text-center mb-3">
+          <div className="space-y-1">
+            <div className="text-[6px]" style={{ color: G.dim }}>Remainder B1</div>
+            <div className="text-lg font-bold" style={{ color: elementMeta.color }}>{remainderB1.toLocaleString()}</div>
+            <div className="text-[6px]" style={{ color: G.dim }}>({safe.remainder.length} letters)</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-[6px]" style={{ color: G.dim }}>Dominant B1</div>
+            <div className="text-lg font-bold" style={{ color: elementMeta.color }}>{dominantB1.toLocaleString()}</div>
+            <div className="text-[6px]" style={{ color: G.dim }}>({elementMeta.arabic})</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-[6px]" style={{ color: G.dim }}>Kitabet Total</div>
+            <div className="text-lg font-bold" style={{ color: elementMeta.color }}>{kitabetTotal.toLocaleString()}</div>
+          </div>
+        </div>
+        <div className="text-center pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+          <div className="text-3xl font-black" style={{ color: G.gold }}>{calcTotal.toLocaleString()}</div>
+          <div className="text-[6px] mt-1" style={{ color: G.dim }}>Total for Istintaq</div>
         </div>
       </div>
+
+      {/* Seed Letters from Istintaq */}
       <div className="mb-4">
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Seed Letters (Istintaq of Kitabet Total: {kitabetTotal.toLocaleString()})</div>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Istintaq of A'van Total → Seed Letters</div>
         <LetterRow letters={safe.seedLetters} color={elementMeta.color} size="xl" rtl />
         <div className="text-sm font-inter mt-2" style={{ color: G.dim }}>
           Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{safe.seedLetters.length}</span>
-          <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
-          <span style={{ color: avanData.isFerd ? G.red : G.green, fontWeight: "bold" }}>{avanData.isFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
-          <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
-          <span style={{ color: G.goldDim }}>Bast Level: <span style={{ color: G.gold }}>{avanData.bastLevel}th</span></span>
+          <span className="mx-2" style={{ color: G.dim }}>•</span>
+          <span style={{ color: avanData.isFerd ? G.red : G.green, fontWeight: "bold" }}>
+            {avanData.isFerd ? 'FERD (فرد) → 5th Bast' : 'ZEVC (زوج) → 4th Bast'}
+          </span>
         </div>
       </div>
+
+      {/* Individual Bast Derivations */}
       <div className="space-y-2 mb-4">
         <div className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Individual Bast Derivations (Reverse Order)</div>
         {safe.derivations.map((d, idx) => (
-          <div key={idx} className="rounded-lg border p-2 flex items-center gap-2 flex-wrap" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-            <LetterCell letter={d.originalLetter} color={elementMeta.color} size="sm" />
-            <Arrow label={`B${d.bastLevel}`} />
-            <div className="px-2 py-1 rounded text-xs font-bold tabular-nums" style={{ background: G.greenDim, borderColor: G.green + "40", color: G.green }}>{d.bastValue.toLocaleString()}</div>
-            <Arrow label="→" />
-            <div className="flex items-center gap-1" style={{ direction: "rtl" }}>
-              {Array.isArray(d.expandedLetters) && d.expandedLetters.map((l, i) => <LetterCell key={i} letter={l} color={G.green} size="sm" />)}
+          <div key={idx} className="rounded-lg border p-3" style={{ background: G.bgCard, borderColor: G.goldBorder + "60" }}>
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <LetterCell letter={d.originalLetter} color={elementMeta.color} size="lg" />
+              <Arrow label={`B${d.bastLevel}`} />
+              <div className="px-3 py-1.5 rounded text-sm font-bold tabular-nums" style={{ background: G.greenDim, borderColor: G.green + "40", color: G.green }}>{d.bastValue.toLocaleString()}</div>
+              <Arrow label="→" />
+              <span className="font-inter text-[7px]" style={{ color: G.dim }}>Istintaq</span>
+              <Arrow label="→" />
+            </div>
+            <div className="flex items-center gap-1 flex-wrap pl-12" style={{ direction: "rtl" }}>
+              {Array.isArray(d.expandedLetters) && d.expandedLetters.map((l, i) => (
+                <LetterCell key={i} letter={l} color={G.green} size="sm" />
+              ))}
+            </div>
+            <div className="text-[6px] mt-2 pl-12" style={{ color: G.dim }}>
+              Expanded: {d.expandedLetters?.length || 0} letters
             </div>
           </div>
         ))}
       </div>
+
+      {/* All Expanded Letters */}
       <div className="mb-4">
         <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>All Expanded Letters ({safe.allExpanded.length} total)</div>
         <LetterRow letters={safe.allExpanded} color={G.gold} size="lg" rtl />
       </div>
+
+      {/* Group Formation */}
       <div className="mb-4">
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Group Formation → Esma-i A'van Names</div>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+          Group Formation → Esma-i A'van Names
+          <span className="mx-2" style={{ color: G.dim }}>•</span>
+          <span style={{ color: G.goldDim }}>
+            {safe.allExpanded.length % 2 !== 0 ? '5 letters/name (FERD)' : '4 letters/name (ZEVC)'}
+          </span>
+        </div>
         <div className="space-y-2">
           {safe.groups.map((group, idx) => (
             <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-lg border" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
@@ -245,22 +292,36 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal }) {
             </div>
           ))}
         </div>
+        <div className="text-center mt-3">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border" style={{ background: G.bgInner, borderColor: G.goldBorder }}>
+            <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Total Names</span>
+            <span className="font-inter text-lg font-bold" style={{ color: G.gold }}>{safe.groups.length}</span>
+          </div>
+        </div>
       </div>
+
+      {/* Remainder for next stage */}
       {safe.remainder.length > 0 && (
-        <div className="mb-4 px-3 py-2 rounded-lg border" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-          <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Remainder (Carried to Kasem Stage)</div>
+        <div className="mb-4 px-3 py-3 rounded-lg border" style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+          <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Remainder Letters (Carried to Kasem Stage)</div>
           <LetterRow letters={safe.remainder} color={G.goldDim} size="lg" rtl />
+          <div className="text-[7px] mt-2" style={{ color: G.dim }}>{safe.remainder.length} letters preserved for next stage</div>
         </div>
       )}
-      <div className="rounded-lg border p-3 text-center" style={{ background: G.bgInner, borderColor: elementMeta.color + "55" }}>
+
+      {/* A'van Total Summary */}
+      <div className="rounded-lg border p-4 text-center" style={{ background: G.bg, borderColor: elementMeta.color + "55" }}>
         <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Esma-i A'van Total</div>
-        <div className="text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{calcTotal.toLocaleString()}</div>
-        <CollapsibleSource title="Source Breakdown">
-          <div className="text-[6px] space-y-1">
-            <div>Remainder B1 ({safe.remainder.length} letters): {remainderB1.toLocaleString()}</div>
-            <div>Dominant B1 ({dominant}): {dominantB1.toLocaleString()}</div>
+        <div className="text-3xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{calcTotal.toLocaleString()}</div>
+        <CollapsibleSource title="Complete Formula Breakdown">
+          <div className="text-[6px] space-y-1 pt-2">
+            <div>Remainder from Kitabet: {safe.remainder.length} letters</div>
+            <div>Remainder B1 (First Bast): {remainderB1.toLocaleString()}</div>
+            <div>Dominant Element B1 ({dominant}): {dominantB1.toLocaleString()}</div>
             <div>Kitabet Total: {kitabetTotal.toLocaleString()}</div>
-            <div className="font-bold">Total: {calcTotal.toLocaleString()}</div>
+            <div className="font-bold pt-1 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+              Formula: {remainderB1.toLocaleString()} + {dominantB1.toLocaleString()} + {kitabetTotal.toLocaleString()} = {calcTotal.toLocaleString()}
+            </div>
           </div>
         </CollapsibleSource>
       </div>
@@ -486,46 +547,50 @@ function FinalDivineNamesSection({ finalDivineNamesData, dominant }) {
   );
 }
 
-function DivineNamesSection({ mizanulMevazin, kitabetTotal, avanTotal, getBastLevelFn, dominant }) {
-  const sum = mizanulMevazin + kitabetTotal + avanTotal;
-  const istintaqLetters = istintak(sum);
+function DivineNamesSection({ divineData, dominant, getBastLevelFn }) {
+  if (!divineData) return null;
+  const { sum, istintaqLetters, ebcedValues, ebcedTotal } = divineData;
   const safeLetters = Array.isArray(istintaqLetters) ? istintaqLetters : [];
-  const ebcedValues = safeLetters.map(letter => ({ letter, value: getBastLevelFn(letter, 1) || 0 }));
-  const ebcedTotal = ebcedValues.reduce((s, v) => s + v.value, 0);
   const elementMeta = ELEMENT_COLORS[dominant] || ELEMENT_COLORS.fire;
 
   return (
     <Card accent={elementMeta.color}>
-      <SectionHeader step="4" label="Divine Names Calculation (Three Totals)" arabic="الأسماء الإلهية" color={elementMeta.color} />
-      <div className="mb-4 rounded-lg border p-3 text-center" style={{ background: G.bgInner, borderColor: elementMeta.color + "55" }}>
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Sum of Three Totals (Kitabet + A'van)</div>
-        <div className="grid grid-cols-3 gap-2 text-center mb-2">
-          <div><div className="text-[6px]" style={{ color: G.dim }}>Mizanül Mevazin</div><div className="text-lg font-bold" style={{ color: elementMeta.color }}>{mizanulMevazin.toLocaleString()}</div></div>
-          <div><div className="text-[6px]" style={{ color: G.dim }}>Kitabet Total</div><div className="text-lg font-bold" style={{ color: elementMeta.color }}>{kitabetTotal.toLocaleString()}</div></div>
-          <div><div className="text-[6px]" style={{ color: G.dim }}>A'van Total</div><div className="text-lg font-bold" style={{ color: elementMeta.color }}>{avanTotal.toLocaleString()}</div></div>
-        </div>
-        <div className="text-3xl font-black" style={{ color: G.gold }}>{sum.toLocaleString()}</div>
+      <SectionHeader step="4" label="Divine Names Calculation" arabic="الأسماء الإلهية" color={elementMeta.color} />
+      
+      {/* Sum of Three Totals */}
+      <div className="mb-4 rounded-lg border p-4 text-center" style={{ background: G.bgInner, borderColor: elementMeta.color + "55" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>Sum of All Three Totals</div>
+        <div className="text-3xl font-black mb-2" style={{ color: G.gold }}>{sum?.toLocaleString()}</div>
+        <div className="text-[7px]" style={{ color: G.dim }}>9 Mizan + Esma-i Kitabet + Esma-i A'van</div>
       </div>
+      
+      {/* Istintaq of Sum */}
       <div className="mb-4">
         <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Istintaq of Sum → Divine Name Letters</div>
         <LetterRow letters={safeLetters} color={G.gold} size="xl" rtl />
-        <div className="text-sm font-inter mt-2" style={{ color: G.dim }}>Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{safeLetters.length}</span></div>
+        <div className="text-sm font-inter mt-2" style={{ color: G.dim }}>
+          Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{safeLetters.length}</span>
+        </div>
       </div>
+      
+      {/* Ebcedi Kebir Values */}
       <div className="mb-4">
         <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Ebcedi Kebir (First Bast) Values</div>
-        <div className="grid grid-cols-4 gap-2">
-          {ebcedValues.map((ev, idx) => (
-            <div key={idx} className="rounded-lg border p-2 text-center" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+        <div className="grid grid-cols-5 gap-2">
+          {(ebcedValues || []).map((ev, idx) => (
+            <div key={idx} className="rounded-lg border p-2 text-center" style={{ background: G.bgCard, borderColor: G.goldBorder + "60" }}>
               <span className="font-amiri text-2xl block mb-1" style={{ color: G.gold }}>{ev.letter}</span>
               <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.dim }}>{ev.value.toLocaleString()}</span>
             </div>
           ))}
         </div>
       </div>
-      <div className="rounded-lg border p-3 text-center" style={{ background: G.bgInner, borderColor: elementMeta.color + "55" }}>
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Total of Ebced Values</div>
-        <div className="text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{ebcedTotal.toLocaleString()}</div>
-        <div className="text-[6px] mt-1" style={{ color: G.dim }}>Intermediate Divine Names target (3 totals)</div>
+      
+      {/* Final Ebced Total */}
+      <div className="rounded-lg border p-4 text-center" style={{ background: G.bg, borderColor: G.goldBorderHi }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Total of Ebced Values — Divine Names Target Number</div>
+        <div className="text-4xl font-black" style={{ color: G.gold }}>{ebcedTotal?.toLocaleString()}</div>
+        <div className="text-[7px] mt-2" style={{ color: G.dim }}>Match this number against Esma-ul Husna (99 Divine Names)</div>
       </div>
     </Card>
   );
@@ -553,15 +618,15 @@ export default function Method2Pipeline({ grandBast, dominant, onVefkReady, getB
     return (
       <div className="rounded-2xl border p-8 text-center" style={{ background: G.bg, borderColor: G.goldBorder }}>
         <div className="w-12 h-12 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="font-inter text-sm" style={{ color: G.goldDim }}>Calculating Method 2 — Esma-i Kitabet…</p>
+        <p className="font-inter text-sm" style={{ color: G.goldDim }}>Calculating Method 2 Pipeline…</p>
       </div>
     );
   }
 
   if (!result) return null;
 
-  // Calculate Kitabet Total Istintaq (for next stage - displayed but not continued)
-  const kitabetTotalIstintaq = istintak(result.kitabet.total);
+  const elementMeta = ELEMENT_COLORS[dominant] || ELEMENT_COLORS.fire;
+  const dominantB1 = getBastLevelFn(dominant, 1) || 0;
 
   return (
     <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.5 }}
@@ -570,49 +635,25 @@ export default function Method2Pipeline({ grandBast, dominant, onVefkReady, getB
       <div className="text-center px-6 pt-6 pb-4">
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-3" style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
-          <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Method 2 — Esma-i Kitabet</span>
+          <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Method 2 — Adetlerin Bastı</span>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
-        <h2 className="font-amiri text-xl font-bold" style={{ color: G.gold, lineHeight: 1.7 }}>أسماء الكتابة</h2>
-        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>PDF Workflow — Stage 1 Only</p>
+        <h2 className="font-amiri text-xl font-bold" style={{ color: G.gold, lineHeight: 1.7 }}>أعدادات البسط</h2>
+        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Complete PDF Workflow — All 4 Stages</p>
       </div>
       <OrnamentalDivider />
       <div className="px-4 pb-6 space-y-5 pt-4">
-        {/* Esma-i Kitabet Section — ALL PDF steps visible */}
+        {/* STAGE 1: Esma-i Kitabet */}
         <EsmaKitabetSection kitabetData={result.kitabet} dominant={dominant} getBastLevelFn={getBastLevelFn} mizanulMevazin={mizanulMevazin} />
         
-        {/* Kitabet Total Istintaq — Output for next stage */}
-        <Card accent={G.gold}>
-          <SectionHeader step="F" label="Kitabet Total Istintaq" arabic="استنتاج مجموع الكتابة" color={G.gold} />
-          <div className="rounded-lg border p-4 space-y-4" style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-            <div className="text-center">
-              <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Kitabet Total → Istintaq</div>
-              <div className="text-3xl font-bold mb-3" style={{ color: G.gold }}>{result.kitabet.total.toLocaleString()}</div>
-              <div className="flex items-center justify-center gap-2">
-                <span className="font-inter text-base" style={{ color: G.goldDim }}>↓</span>
-                <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Istintaq</span>
-                <span className="font-inter text-base" style={{ color: G.goldDim }}>↓</span>
-              </div>
-            </div>
-            
-            <div>
-              <div className="font-inter text-[8px] uppercase tracking-widest mb-2 text-center" style={{ color: G.dim }}>
-                Result Letters ({kitabetTotalIstintaq.length} letters)
-                <span className="mx-2" style={{ color: G.dim }}>•</span>
-                <span style={{ color: kitabetTotalIstintaq.length % 2 !== 0 ? G.red : G.green, fontWeight: "bold" }}>
-                  {kitabetTotalIstintaq.length % 2 !== 0 ? 'FERD (فرد)' : 'ZEVC (زوج)'}
-                </span>
-              </div>
-              <LetterRow letters={kitabetTotalIstintaq} color={G.gold} size="xl" rtl />
-            </div>
-            
-            <div className="text-center pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
-              <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>
-                These letters proceed to Esma-i A'van stage
-              </div>
-            </div>
-          </div>
-        </Card>
+        {/* STAGE 2: Esma-i A'van */}
+        {result?.avan && <EsmaAvanSection avanData={result.avan} dominant={dominant} getBastLevelFn={getBastLevelFn} kitabetTotal={result.kitabet.total} mizanulMevazin={mizanulMevazin} dominantB1={dominantB1} />}
+        
+        {/* STAGE 3: Esma-i Kasem */}
+        {result?.kasem && <EsmaKasemSection kasemData={result.kasem} dominant={dominant} getBastLevelFn={getBastLevelFn} avanTotal={result.avan.total} firstAvanName={result.avan.names[0] || ''} />}
+        
+        {/* STAGE 4: Divine Names */}
+        {result?.divineNames && <DivineNamesSection divineData={result.divineNames} dominant={dominant} getBastLevelFn={getBastLevelFn} />}
       </div>
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
     </motion.div>
