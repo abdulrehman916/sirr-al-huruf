@@ -565,7 +565,6 @@ export default function Mizaan9Page() {
           )}
         </AnimatePresence>
 
-          </div>
         </div>
         )}
 
@@ -586,6 +585,7 @@ export default function Mizaan9Page() {
           <p className="font-inter text-xs text-white/30">This method will be implemented when rules are provided</p>
         </div>
       )}
+      </div>
     </PageLayout>
   );
 }
