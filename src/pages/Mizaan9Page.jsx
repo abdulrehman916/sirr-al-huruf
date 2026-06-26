@@ -27,6 +27,7 @@ import KasamSection from "../components/mizaan/KasamSection.jsx";
 
 import { getDataSet } from "../lib/mizaanDataSets";
 import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSeedLetters } from "../lib/mizaanPostEngine";
+import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
 import { registerPage } from "../lib/pageRegistry";
@@ -177,6 +178,7 @@ export default function Mizaan9Page() {
   const [activeSection, setActiveSection] = useState(1);
   const ds = getDataSet(activeSection);
   // Section 1 uses Section A Bast table; Section 2 uses Section B Bast table.
+  // Section 3 uses Section A Bast table (only source values differ, not the expansion table).
   // Bast1 is shared (identical). Only Bast2–Bast5 differ.
   const getBastLevelFn = activeSection === 2 ? getBastLevelB : getBastLevel;
   const abortRef = useRef(false);
@@ -191,6 +193,32 @@ export default function Mizaan9Page() {
     setOption2State(null);
   }, []);
 
+  // Re-analyze when section changes (if text is already entered)
+  useEffect(() => {
+    if (!input.trim()) return;
+    setS1VefkData(null);
+    setS2VefkData(null);
+    setS3VefkData(null);
+    if (activeSection === 3) {
+      const r = mizaanAnalyzeAbjad(input);
+      setResult(r);
+      setSelections(buildDefaultSelections(r.dominant));
+    } else {
+      // Re-run async analysis for Section 1 or 2
+      abortRef.current = false;
+      setLoading(true);
+      setProgress(0);
+      mizaanAnalyzeAsync(input, (p) => { if (!abortRef.current) setProgress(p); }).then(r => {
+        if (!abortRef.current) {
+          setResult(r);
+          setSelections(buildDefaultSelections(r.dominant));
+        }
+        setLoading(false);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
+
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
     abortRef.current = false;
@@ -202,13 +230,19 @@ export default function Mizaan9Page() {
     setS1VefkData(null);
     setS2VefkData(null);
     setS3VefkData(null);
-    const r = await mizaanAnalyzeAsync(input, (p) => { if (!abortRef.current) setProgress(p); });
+    let r;
+    if (activeSection === 3) {
+      r = mizaanAnalyzeAbjad(input);
+      setProgress(100);
+    } else {
+      r = await mizaanAnalyzeAsync(input, (p) => { if (!abortRef.current) setProgress(p); });
+    }
     if (!abortRef.current) {
       setResult(r);
       setSelections(buildDefaultSelections(r.dominant));
     }
     setLoading(false);
-  }, [input]);
+  }, [input, activeSection]);
 
   const handleClear = () => {
     abortRef.current = true;
@@ -234,18 +268,22 @@ export default function Mizaan9Page() {
         {/* Header */}
         <PageTitle arabic="ميزان الأعداد" latin="9 Mizan" subtitle="Complete Occult Analysis System" icon="٩" />
 
-        {/* Section 1 / Section 2 Toggle */}
+        {/* Section 1 / Section 2 / Section 3 Toggle */}
         <div className="flex gap-2">
-          {[1, 2].map(s => (
+          {[
+            { s: 1, arabic: 'المجموعة الأولى' },
+            { s: 2, arabic: 'المجموعة الثانية' },
+            { s: 3, arabic: 'الأبجد الكبير' },
+          ].map(({ s, arabic }) => (
             <button key={s} onClick={() => setActiveSection(s)}
-              className="flex-1 py-2.5 px-4 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+              className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
               style={{
                 background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
                 border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
                 color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
                 boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
               }}>
-              <span className="font-amiri text-base">{s === 1 ? 'المجموعة الأولى' : 'المجموعة الثانية'}</span>
+              <span className="font-amiri text-sm">{arabic}</span>
               <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
             </button>
           ))}

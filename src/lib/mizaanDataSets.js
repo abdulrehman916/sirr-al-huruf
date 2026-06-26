@@ -25,6 +25,17 @@ import {
   BAST_TABLE_B,
   getBastLevelB,
 } from './mizaan9DataB.js';
+import {
+  MIZAAN_ELEMENTS_C,
+  MIZAAN_BAST2_C,
+  MIZAAN_DAYNIGHT_C,
+  MIZAAN_HOURS_C,
+  MIZAAN_DAYS_C,
+  MIZAAN_PLANETS_C,
+  MIZAAN_PURPOSES_C,
+  KHAYR_SHARR8_C,
+  MIZAAN_ELEMENT_DEGREES_C,
+} from './mizaan9DataC.js';
 
 // M8 Khayr/Sharr bast values for Section 1 (mirrors Mizaan8 local array)
 const KHAYR_SHARR8_A = {
@@ -62,6 +73,21 @@ export const DATASET_B = {
   getBastLevel: getBastLevelB,
 };
 
+// ── Section 3 Dataset — Ebcedi Kebir (Abjad Kabir) values ──
+export const DATASET_C = {
+  elements:    MIZAAN_ELEMENTS_C,
+  bast2:       MIZAAN_BAST2_C,
+  dayNight:    MIZAAN_DAYNIGHT_C,
+  hours:       MIZAAN_HOURS_C,
+  days:        MIZAAN_DAYS_C,
+  planets:     MIZAAN_PLANETS_C,
+  purposes:    MIZAAN_PURPOSES_C,
+  khayrSharr8: KHAYR_SHARR8_C,
+  degrees:     MIZAAN_ELEMENT_DEGREES_C,
+};
+
 export function getDataSet(section) {
-  return section === 2 ? DATASET_B : DATASET_A;
+  if (section === 2) return DATASET_B;
+  if (section === 3) return DATASET_C;
+  return DATASET_A;
 }
