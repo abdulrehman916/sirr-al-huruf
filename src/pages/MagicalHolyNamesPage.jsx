@@ -320,11 +320,10 @@ function SectionB() {
                   background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
                   border: "1px solid rgba(212,175,55,0.30)"
                 }}>
-                  <h3 className="font-amiri font-bold leading-[2.6]" style={{
-                    fontSize: "clamp(2rem, 5vw, 2.8rem)",
+                  <h3 className="font-quranic" style={{
                     color: "#F5D060",
-                    textShadow: "0 0 24px rgba(212,175,55,0.35)",
-                    letterSpacing: "0.03em"
+                    margin: 0,
+                    padding: "0.5rem 0.25rem"
                   }}>
                     {name.arabic_name}
                   </h3>

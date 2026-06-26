@@ -159,7 +159,7 @@ export default function HolyOneDetailPage() {
 
         {/* Arabic Name */}
         <div className="text-center mb-6">
-          <h1 className="font-amiri text-4xl font-bold text-gold mb-3">{name.arabic_name || "Unknown"}</h1>
+          <h1 className={source === "B" ? "font-quranic text-gold mb-3" : "font-amiri text-4xl font-bold text-gold mb-3"}>{name.arabic_name || "Unknown"}</h1>
           <p className="text-lg text-white/60 mb-2">{name.malayalam_pronunciation || ""}</p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Badge style={{ background: G.bg, borderColor: G.border, fontSize: 12 }}>
