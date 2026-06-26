@@ -328,10 +328,10 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
   // Calculate A'van Total using PDF algorithm (remainder from Kitabet + Anasir + Kitabet Total)
   const safeKitabetRemainder = Array.isArray(kitabetRemainder) ? kitabetRemainder : [];
   const remainderB1 = safeKitabetRemainder.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-  const calcTotal = remainderB1 + dominantB1 + kitabetTotal;
+  const avanCalcTotal = remainderB1 + dominantB1 + kitabetTotal;
   
   // Calculate seed letters for Kasem stage (Istintaq of A'van Total)
-  const kasemSeedLetters = istintak(calcTotal);
+  const kasemSeedLetters = istintak(avanCalcTotal);
   const arabicLetterNames = {
     'د': 'Dal', 'ع': 'Ayn', 'ذ': 'Zel', 'غ': 'Ğayın', 'ج': 'Cim', 'ك': 'Kaf',
     'ا': 'Elif', 'ب': 'Be', 'ت': 'Te', 'ث': 'Se', 'ح': 'Hı', 'خ': 'Ha',
@@ -341,7 +341,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
   };
   
   // Combined letters for Bast calculations (remainder + Anasir)
-  const combinedLetters = [...safeKitabetRemainder, ...anasirLetters];
+  const avanCombinedLetters = [...safeKitabetRemainder, ...anasirLetters];
 
   return (
     <Card accent={elementMeta.color}>
@@ -431,7 +431,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
           Step 2 — Individual {bastLevel}th Bast Calculations (Every Letter)
         </div>
         <div className="space-y-3">
-          {combinedLetters.map((letter, idx) => {
+          {avanCombinedLetters.map((letter, idx) => {
             const bastValue = getBastLevelFn(letter, bastLevel) || 0;
             const expanded = istintak(bastValue);
             return (
@@ -439,7 +439,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
                 key={idx}
                 derivation={{ originalLetter: letter, bastValue, expandedLetters: expanded, bastLevel }}
                 idx={idx}
-                totalLetters={combinedLetters.length}
+                totalLetters={avanCombinedLetters.length}
                 elementColor={elementMeta.color}
                 bastLevel={bastLevel}
               />
@@ -450,7 +450,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
       
       {/* STEP 3: All Expanded Letters Merged */}
       {(() => {
-        const allExpanded = combinedLetters.flatMap(l => istintak(getBastLevelFn(l, bastLevel) || 0));
+        const allExpanded = avanCombinedLetters.flatMap(l => istintak(getBastLevelFn(l, bastLevel) || 0));
         const expandedCount = allExpanded.length;
         const isExpandedFerd = expandedCount % 2 !== 0;
         const groupSize = isExpandedFerd ? 5 : 4;
@@ -593,7 +593,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
               <span style={{ color: G.goldDim }}>+</span>
               <span className="tabular-nums" style={{ color: G.gold }}>{kitabetTotal.toLocaleString()}</span>
               <span style={{ color: G.goldDim }}>=</span>
-              <span className="tabular-nums text-3xl" style={{ color: G.gold }}>{calcTotal.toLocaleString()}</span>
+              <span className="tabular-nums text-3xl" style={{ color: G.gold }}>{avanCalcTotal.toLocaleString()}</span>
             </div>
             <div className="text-[7px]" style={{ color: G.dim }}>Remainder B1 + Dominant B1 + Kitabet Total = A'van Total</div>
           </div>
@@ -608,7 +608,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
         
         {/* Calculation */}
         <div className="mb-4 text-center">
-          <div className="text-[7px] mb-2" style={{ color: G.dim }}>A'van Total: <span className="font-bold tabular-nums" style={{ color: G.gold }}>{calcTotal.toLocaleString()}</span></div>
+          <div className="text-[7px] mb-2" style={{ color: G.dim }}>A'van Total: <span className="font-bold tabular-nums" style={{ color: G.gold }}>{avanCalcTotal.toLocaleString()}</span></div>
           <div className="text-[7px]" style={{ color: G.dim }}>Istintaq → {kasemSeedLetters.length} Letters</div>
         </div>
         
@@ -804,7 +804,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
       {/* A'van Total Summary */}
       <div className="rounded-lg border p-4 text-center" style={{ background: G.bg, borderColor: elementMeta.color + "55" }}>
         <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Esma-i A'van Total</div>
-        <div className="text-3xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{calcTotal.toLocaleString()}</div>
+        <div className="text-3xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{avanCalcTotal.toLocaleString()}</div>
         <CollapsibleSource title="Complete Formula Breakdown">
           <div className="text-[6px] space-y-1 pt-2">
             <div>Remainder from Kitabet: {safe.remainder.length} letters</div>
@@ -812,7 +812,7 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
             <div>Dominant Element B1 ({dominant}): {dominantB1.toLocaleString()}</div>
             <div>Kitabet Total: {kitabetTotal.toLocaleString()}</div>
             <div className="font-bold pt-1 border-t" style={{ borderColor: G.goldBorder + "40" }}>
-              Formula: {remainderB1.toLocaleString()} + {dominantB1.toLocaleString()} + {kitabetTotal.toLocaleString()} = {calcTotal.toLocaleString()}
+              Formula: {remainderB1.toLocaleString()} + {dominantB1.toLocaleString()} + {kitabetTotal.toLocaleString()} = {avanCalcTotal.toLocaleString()}
             </div>
           </div>
         </CollapsibleSource>
@@ -881,7 +881,7 @@ function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avan
   
   // Combined letters for Bast calculations (remainder + Anasir)
   const safeAvanRemainder = Array.isArray(avanRemainder) ? avanRemainder : [];
-  const combinedLetters = [...safeAvanRemainder, ...anasirLetters];
+  const kasemCombinedLetters = [...safeAvanRemainder, ...anasirLetters];
 
   return (
     <Card accent={elementMeta.color}>
@@ -975,7 +975,7 @@ function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avan
           Step 2 — Individual {bastLevel}th Bast Calculations (Every Letter)
         </div>
         <div className="space-y-3">
-          {combinedLetters.map((letter, idx) => {
+          {kasemCombinedLetters.map((letter, idx) => {
             const bastValue = getBastLevelFn(letter, bastLevel) || 0;
             const expanded = istintak(bastValue);
             return (
@@ -983,7 +983,7 @@ function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avan
                 key={idx}
                 derivation={{ originalLetter: letter, bastValue, expandedLetters: expanded, bastLevel }}
                 idx={idx}
-                totalLetters={combinedLetters.length}
+                totalLetters={kasemCombinedLetters.length}
                 elementColor={elementMeta.color}
                 bastLevel={bastLevel}
               />
@@ -994,7 +994,7 @@ function EsmaKasemSection({ kasemData, dominant, getBastLevelFn, avanTotal, avan
       
       {/* STEP 3-5: All Expanded Letters, Group Formation, Remainder */}
       {(() => {
-        const allExpanded = combinedLetters.flatMap(l => istintak(getBastLevelFn(l, bastLevel) || 0));
+        const allExpanded = kasemCombinedLetters.flatMap(l => istintak(getBastLevelFn(l, bastLevel) || 0));
         const expandedCount = allExpanded.length;
         const isExpandedFerd = expandedCount % 2 !== 0;
         const groupSize = isExpandedFerd ? 5 : 4;
