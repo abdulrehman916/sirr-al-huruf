@@ -115,33 +115,33 @@ export function categorizePages() {
   };
 }
 
-// Register core pages
-registerPage('/', { name: 'Home', icon: '🏠', category: 'System', pageType: 'content', visible: true });
+// Register core pages — all public by default
+registerPage('/', { name: 'Home', icon: '🏠', category: 'System', pageType: 'content', visible: true, requiresPermission: false });
 registerPage('/onboarding', { requiresPermission: false, pageType: 'system' });
 registerPage('/otp-login', { requiresPermission: false, pageType: 'system' });
 
-// Content pages
-registerPage('/abjad', { name: 'Abjad Calculator', icon: '🔢', category: 'Calculators', pageType: 'content', visible: true });
-registerPage('/anasir', { name: 'Anasir Calculator', icon: '🌊', category: 'Calculators', pageType: 'content', visible: true });
-registerPage('/hadim', { name: 'Hadim Calculator', icon: '👑', category: 'Calculators', pageType: 'content', visible: true });
+// Content pages — requiresPermission: true means they need a reading code
+registerPage('/abjad', { name: 'Abjad Calculator', icon: '🔢', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: false });
+registerPage('/anasir', { name: 'Anasir Calculator', icon: '🌊', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: false });
+registerPage('/hadim', { name: 'Hadim Calculator', icon: '👑', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: false });
 registerPage('/mizaan9', { name: 'Mizan 9', icon: '⚖️', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: true });
-registerPage('/magic-sqayer', { name: 'Magic Sqayer', icon: '✨', category: 'Vefk Systems', pageType: 'content', visible: true });
-registerPage('/vefkin-yapilisi', { name: 'Vefkin Yapılışı', icon: '📜', category: 'Vefk Systems', pageType: 'content', visible: true });
-registerPage('/basthul-huroof-2', { name: 'Basthul Huroof 2', icon: '٢', category: 'Calculators', pageType: 'content', visible: true });
-registerPage('/faal-hasrath', { name: 'Faal Hasrath', icon: '🔮', category: 'Divination', pageType: 'content', visible: true });
-registerPage('/plants', { name: 'Plants Dictionary', icon: '🌿', category: 'Reference', pageType: 'content', visible: true });
-registerPage('/plants/:id', { pageType: 'content', visible: false });
-registerPage('/evil-jinn', { name: 'Evil Jinn Names', icon: '👁️', category: 'Reference', pageType: 'content', visible: true });
-registerPage('/holy-names', { name: 'Magical Holy Names', icon: '✦', category: 'Reference', pageType: 'content', visible: true });
-registerPage('/astro-clock', { name: 'Astro Clock', icon: '🕰️', category: 'Timings', pageType: 'content', visible: true });
-registerPage('/astro-clock/search', { pageType: 'content', visible: false });
+registerPage('/magic-sqayer', { name: 'Magic Sqayer', icon: '✨', category: 'Vefk Systems', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/vefkin-yapilisi', { name: 'Vefkin Yapılışı', icon: '📜', category: 'Vefk Systems', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/basthul-huroof-2', { name: 'Basthul Huroof 2', icon: '٢', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/faal-hasrath', { name: 'Faal Hasrath', icon: '🔮', category: 'Divination', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/plants', { name: 'Plants Dictionary', icon: '🌿', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/plants/:id', { pageType: 'content', visible: false, requiresPermission: true });
+registerPage('/evil-jinn', { name: 'Evil Jinn Names', icon: '👁️', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/holy-names', { name: 'Magical Holy Names', icon: '✦', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/astro-clock', { name: 'Astro Clock', icon: '🕰️', category: 'Timings', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/astro-clock/search', { pageType: 'content', visible: false, requiresPermission: true });
 
-// Support pages
-registerPage('/support', { name: 'Support Hub', icon: '🛡️', category: 'System', pageType: 'content', visible: true });
-registerPage('/support/hub', { pageType: 'content', visible: true });
-registerPage('/support/chat', { pageType: 'content', visible: false });
-registerPage('/support/voice', { pageType: 'content', visible: false });
-registerPage('/support/ticket', { pageType: 'content', visible: false });
+// Support pages — all public
+registerPage('/support', { name: 'Support Hub', icon: '🛡️', category: 'System', pageType: 'content', visible: true, requiresPermission: false });
+registerPage('/support/hub', { pageType: 'content', visible: true, requiresPermission: false });
+registerPage('/support/chat', { pageType: 'content', visible: false, requiresPermission: false });
+registerPage('/support/voice', { pageType: 'content', visible: false, requiresPermission: false });
+registerPage('/support/ticket', { pageType: 'content', visible: false, requiresPermission: false });
 
 // Subscription pages
 registerPage('/subscription/expired', { pageType: 'system', visible: false });

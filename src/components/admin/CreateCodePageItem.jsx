@@ -10,14 +10,19 @@ const G = {
 };
 
 const DURATION_OPTIONS = [
-    { value: "1_DAY",      label: "1 Day",      days: 1 },
-    { value: "7_DAYS",     label: "7 Days",     days: 7 },
-    { value: "30_DAYS",    label: "30 Days",    days: 30 },
-    { value: "3_MONTHS",   label: "90 Days",   days: 90 },
-    { value: "6_MONTHS",   label: "180 Days",   days: 180 },
-    { value: "1_YEAR",     label: "1 Year",     days: 365 },
-    { value: "LIFETIME",   label: "Lifetime",   days: null },
-    { value: "CUSTOM",     label: "Custom",     days: null },
+  { value: "1_DAY",     label: "1 Day",      days: 1 },
+  { value: "2_DAYS",    label: "2 Days",     days: 2 },
+  { value: "3_DAYS",    label: "3 Days",     days: 3 },
+  { value: "7_DAYS",    label: "7 Days",     days: 7 },
+  { value: "15_DAYS",   label: "15 Days",    days: 15 },
+  { value: "30_DAYS",   label: "30 Days",    days: 30 },
+  { value: "2_MONTHS",  label: "2 Months",   days: 60 },
+  { value: "3_MONTHS",  label: "3 Months",   days: 90 },
+  { value: "6_MONTHS",  label: "6 Months",   days: 180 },
+  { value: "9_MONTHS",  label: "9 Months",   days: 270 },
+  { value: "1_YEAR",    label: "1 Year",     days: 365 },
+  { value: "LIFETIME",  label: "Lifetime",   days: null },
+  { value: "CUSTOM",    label: "Custom",     days: null },
 ];
 
 export default function CreateCodePageItem({

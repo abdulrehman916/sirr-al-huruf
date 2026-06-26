@@ -1,13 +1,11 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect, useState, lazy, Suspense, useMemo } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { NavigationProvider } from './context/NavigationContext';
-import { getPageConfig } from '@/lib/pageRegistry';
 import { PageStateProvider } from './context/PageStateContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
@@ -100,9 +98,8 @@ const PageFallback = () => (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const { isLoadingPublicSettings } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const routeElements = useRouteElements();
 
   // Scroll to top on every route change
@@ -110,40 +107,15 @@ const AuthenticatedApp = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [location.pathname]);
 
-  // Redirect unauthenticated users to onboarding (except auth pages and public pages)
-  useEffect(() => {
-    if (!isLoadingAuth && !isAuthenticated && !authError) {
-      const publicAuthPaths = ['/onboarding', '/otp-login', '/login', '/register', '/forgot-password', '/reset-password'];
-      const isAuthPath = publicAuthPaths.some(p => location.pathname.startsWith(p));
-      const permConfig = getPageConfig(location.pathname);
-      const isPublicPage = permConfig && permConfig.requiresPermission === false;
-      const isSupportPath = location.pathname.startsWith('/support');
-      if (!isAuthPath && !isPublicPage && !isSupportPath) {
-        navigate('/onboarding', { replace: true });
-      }
-    }
-  }, [isLoadingAuth, isAuthenticated, authError, location.pathname, navigate]);
+  // No auth redirect — all pages are accessible without login.
+  // Premium pages are gated by ProtectedPage with reading codes.
 
-  useEffect(() => {
-    if (authError?.type === 'auth_required') {
-      navigate('/onboarding', { replace: true });
-    }
-  }, [authError, navigate]);
-
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if (isLoadingPublicSettings) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex items-center justify-center" style={{ background: "#020710" }}>
+        <div className="w-8 h-8 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin"></div>
       </div>
     );
-  }
-
-  if (authError?.type === 'user_not_registered') {
-    return <UserNotRegisteredError />;
-  }
-
-  if (authError?.type === 'auth_required') {
-    return null;
   }
 
   return (

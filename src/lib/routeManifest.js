@@ -5,15 +5,15 @@
  * flags: 'public' = no permission required, 'noauth' = no auth check
  */
 const ROUTE_MANIFEST = [
-  // Core & Auth
-  { path: '/', component: 'Home', chunk: 'Home' },
+  // Core & Auth — public (no auth, no permission check)
+  { path: '/', component: 'Home', chunk: 'Home', flags: ['public'] },
   { path: '/onboarding', component: 'Onboarding', chunk: 'Onboarding', flags: ['noauth'] },
   { path: '/otp-login', component: 'OTPLogin', chunk: 'OTPLogin', flags: ['noauth'] },
-  
-  // Content Pages
-  { path: '/abjad', component: 'AbjadKabirPage', chunk: 'AbjadKabirPage' },
-  { path: '/anasir', component: 'AnasirPage', chunk: 'AnasirPage' },
-  { path: '/hadim', component: 'HadimPage', chunk: 'HadimPage' },
+
+  // Free Content Pages
+  { path: '/abjad', component: 'AbjadKabirPage', chunk: 'AbjadKabirPage', flags: ['public'] },
+  { path: '/anasir', component: 'AnasirPage', chunk: 'AnasirPage', flags: ['public'] },
+  { path: '/hadim', component: 'HadimPage', chunk: 'HadimPage', flags: ['public'] },
   { path: '/mizaan9', component: 'Mizaan9Page', chunk: 'Mizaan9Page' },
   { path: '/magic-sqayer', component: 'MagicSqayerPage', chunk: 'MagicSqayerPage' },
   { path: '/vefkin-yapilisi', component: 'VefkinYapilisiPage', chunk: 'VefkinYapilisiPage' },
@@ -26,12 +26,12 @@ const ROUTE_MANIFEST = [
   { path: '/astro-clock', component: 'AstroClockPage', chunk: 'AstroClockPage' },
   { path: '/astro-clock/search', component: 'AstroClockSearch', chunk: 'AstroClockSearch' },
   
-  // Support
-  { path: '/support', component: 'CustomerService', chunk: 'CustomerService' },
-  { path: '/support/hub', component: 'SupportHub', chunk: 'SupportHub' },
-  { path: '/support/chat', component: 'SupportChat', chunk: 'SupportChat' },
-  { path: '/support/voice', component: 'SupportVoice', chunk: 'SupportVoice' },
-  { path: '/support/ticket', component: 'SupportTicket', chunk: 'SupportTicket' },
+  // Support — all public
+  { path: '/support', component: 'CustomerService', chunk: 'CustomerService', flags: ['public'] },
+  { path: '/support/hub', component: 'SupportHub', chunk: 'SupportHub', flags: ['public'] },
+  { path: '/support/chat', component: 'SupportChat', chunk: 'SupportChat', flags: ['public'] },
+  { path: '/support/voice', component: 'SupportVoice', chunk: 'SupportVoice', flags: ['public'] },
+  { path: '/support/ticket', component: 'SupportTicket', chunk: 'SupportTicket', flags: ['public'] },
   
   // Subscriptions
   { path: '/subscription/expired', component: 'SubscriptionExpired', chunk: 'SubscriptionExpired' },

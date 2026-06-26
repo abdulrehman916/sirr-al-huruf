@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, KeyRound, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { clearAllCache } from "@/lib/permissionCache";
+import { getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -20,7 +20,7 @@ function fmt(d) {
 export default function RedeemCodeModal({ onClose }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null); // { success, message, pages_granted, expiry_date, is_lifetime }
+  const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
   const handleRedeem = async () => {
@@ -29,13 +29,16 @@ export default function RedeemCodeModal({ onClose }) {
     setError("");
     setLoading(true);
     try {
-      const res = await base44.functions.invoke("redeemAccessCode", { code: trimmed });
+      const sessionId = getSessionId();
+      const res = await base44.functions.invoke("redeemCodeGuest", {
+        code: trimmed,
+        session_id: sessionId,
+      });
       const data = res.data;
-      setResult(data);
-      // Clear permission cache immediately so the page unlocks without waiting
-      if (data?.success) {
-        clearAllCache();
+      if (data?.success && data?.permissions) {
+        mergeGrantedPermissions(data.permissions);
       }
+      setResult(data);
     } catch (e) {
       setResult({ success: false, message: e.message || "Redemption failed. Please try again." });
     } finally {
@@ -70,7 +73,7 @@ export default function RedeemCodeModal({ onClose }) {
               <KeyRound className="w-4 h-4" style={{ color: G.text }} />
             </div>
             <div>
-              <h3 className="font-inter font-bold text-white text-sm">Redeem Access Code</h3>
+              <h3 className="font-inter font-bold text-white text-sm">Redeem Reading Code</h3>
               <p className="text-xs text-white/40">Enter your code to unlock pages</p>
             </div>
           </div>
@@ -98,11 +101,14 @@ export default function RedeemCodeModal({ onClose }) {
                   </p>
                 ))}
               </div>
-              <p className="text-xs text-white/40 pt-1">
-                Access until: <span className="text-white/70 font-semibold">
-                  {result.is_lifetime ? "♾ Lifetime" : fmt(result.expiry_date)}
-                </span>
-              </p>
+              {result.permissions?.[0] && (
+                <p className="text-xs text-white/40 pt-1">
+                  Access until:{" "}
+                  <span className="text-white/70 font-semibold">
+                    {result.permissions.every(p => !p.expiry_date) ? "♾ Lifetime" : fmt(result.permissions[0].expiry_date)}
+                  </span>
+                </p>
+              )}
             </div>
             <button
               onClick={() => { onClose(); window.location.reload(); }}
@@ -114,7 +120,6 @@ export default function RedeemCodeModal({ onClose }) {
           </div>
         ) : (
           <>
-            {/* Error result */}
             {result && !result.success && (
               <div className="rounded-xl border p-3 flex items-start gap-2"
                 style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.35)" }}>
@@ -123,10 +128,9 @@ export default function RedeemCodeModal({ onClose }) {
               </div>
             )}
 
-            {/* Code input */}
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-widest" style={{ color: G.text }}>
-                Access Code
+                Reading Code
               </label>
               <input
                 value={code}
@@ -134,7 +138,7 @@ export default function RedeemCodeModal({ onClose }) {
                 onKeyDown={e => e.key === "Enter" && !loading && handleRedeem()}
                 placeholder="e.g. ABDUL2026"
                 className="w-full px-4 py-3 rounded-xl text-white font-inter font-bold text-base text-center tracking-[0.15em] outline-none placeholder-white/20"
-                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${error ? "rgba(239,68,68,0.50)" : G.border}` }}
+                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${error ? "rgba(239,68,68,0.50)" : G.border}`, fontSize: "16px" }}
                 autoFocus
                 autoCapitalize="characters"
                 autoComplete="off"
@@ -143,7 +147,6 @@ export default function RedeemCodeModal({ onClose }) {
               {error && <p className="text-xs text-red-400">{error}</p>}
             </div>
 
-            {/* Submit */}
             <button
               onClick={handleRedeem}
               disabled={loading || !code.trim()}
