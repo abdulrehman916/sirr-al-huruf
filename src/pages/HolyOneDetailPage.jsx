@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronLeft, Heart, BookOpen, Star, Clock } from "lucide-react";
+import { ChevronLeft, Heart, BookOpen, Star, Clock, Calculator } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { ABJAD_VALUES } from "@/lib/abjadValues";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -73,6 +74,27 @@ export default function HolyOneDetailPage() {
       toast({ title: "Failed to update", description: e.message, variant: "destructive" });
     }
   };
+
+  // Calculate Abjad value for Section B names only
+  const abjadValue = useMemo(() => {
+    if (source !== "B" || !name.arabic_name) return null;
+    
+    // Remove harakat and spaces for calculation
+    const cleanArabic = name.arabic_name.replace(/[\u064B-\u0652\u0670]/g, '').replace(/\s+/g, '');
+    
+    let total = 0;
+    for (const char of cleanArabic) {
+      if (ABJAD_VALUES[char]) {
+        total += ABJAD_VALUES[char];
+      }
+    }
+    return total;
+  }, [name.arabic_name, source]);
+
+  const abjadSquare = useMemo(() => {
+    if (!abjadValue) return null;
+    return abjadValue * abjadValue;
+  }, [abjadValue]);
 
   if (loading || !name) {
     return (
@@ -152,6 +174,45 @@ export default function HolyOneDetailPage() {
             <span>{name.is_favorite ? "In Favorites" : "Add to Favorites"}</span>
           </button>
         </div>
+
+        {/* Abjad Calculation Cards - Section B Only */}
+        {source === "B" && abjadValue && (
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Card 1: Abjad Value */}
+            <div className="rounded-xl border p-5 text-center" style={{
+              background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
+              border: "1px solid rgba(212,175,55,0.40)",
+              boxShadow: "0 0 20px rgba(212,175,55,0.12)"
+            }}>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Calculator className="w-5 h-5" style={{ color: G.text }} />
+                <h3 className="font-inter font-semibold text-white text-sm">Abjad Value</h3>
+              </div>
+              <p className="font-amiri text-4xl font-bold" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
+                {abjadValue}
+              </p>
+              <p className="text-xs text-gray-400 mt-2">{name.arabic_name}</p>
+            </div>
+
+            {/* Card 2: Abjad Square */}
+            <div className="rounded-xl border p-5 text-center" style={{
+              background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
+              border: "1px solid rgba(212,175,55,0.40)",
+              boxShadow: "0 0 20px rgba(212,175,55,0.12)"
+            }}>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Calculator className="w-5 h-5" style={{ color: G.text }} />
+                <h3 className="font-inter font-semibold text-white text-sm">Abjad Square</h3>
+              </div>
+              <p className="font-amiri text-3xl font-bold" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
+                {abjadSquare}
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                {abjadValue} × {abjadValue} = {abjadSquare}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Content Sections */}
         <div className="space-y-4">
