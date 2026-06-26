@@ -9,12 +9,11 @@
 // - Keyword Subtraction alternative path (Ayil/Yushin)
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronRight, CheckCircle, AlertCircle } from "lucide-react";
-import { runMethod2Pipeline, calculateKeywordSubtraction } from "../../lib/mizaanMethod2Engine";
-import { istintak, getBastLevel } from "../../lib/mizaanPostEngine";
-import { getBastLevelB } from "../../lib/mizaan9DataB";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { runMethod2Pipeline } from "../../lib/mizaanMethod2Engine";
+import { getBastLevel } from "../../lib/mizaanPostEngine";
 
 // ── Design tokens ────────────────────────────────────────────────
 const G = {
@@ -278,7 +277,7 @@ function EsmaKitabetSection({ mizanulMevazin, dominant, getBastLevelFn, onVefkRe
 }
 
 // ── MAIN COMPONENT ──────────────────────────────────────────────
-export default function Method2Pipeline({ grandBast, grandLetters, dominant, onVefkReady, getBastLevelFn = getBastLevel }) {
+export default function Method2Pipeline({ grandBast, dominant, onVefkReady, getBastLevelFn = getBastLevel }) {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
 
