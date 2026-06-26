@@ -16,7 +16,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -318,13 +318,13 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     let seq = [...allExpanded];
     if (rem > 0) {
       const needed = gSize - rem;
-      const section2Supplement = allExpanded.slice(0, needed);
-      seq = [...seq, ...section2Supplement];
+      const supplement = allExpanded.slice(0, needed);
+      seq = [...seq, ...supplement];
     }
     const groups = [];
     for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
     return groups;
-  }, [pipeline, dominant]);
+  }, [pipeline, getBastLevelFn]);
 
   // Notify parent of vefk data for the Final Summary
   useEffect(() => {
