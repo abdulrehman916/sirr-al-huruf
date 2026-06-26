@@ -37,11 +37,6 @@ const PAGE_IMPORTS = {
   MagicalHolyNamesPage:     () => import('./pages/MagicalHolyNamesPage'),
   HolyOnePage:              () => import('./pages/HolyOnePage'),
   HolyOneDetailPage:        () => import('./pages/HolyOneDetailPage'),
-  // Section B - PDF Source
-  HolyOnePDFSectionB:       () => import('./pages/HolyOnePDFSectionB'),
-  HolyOnePDFDetailPage:     () => import('./pages/HolyOnePDFDetailPage'),
-  HolyOnePDFSectionB:       () => import('./pages/HolyOnePDFSectionB'),
-  HolyOnePDFDetailPage:     () => import('./pages/HolyOnePDFDetailPage'),
   AstroClockPage:           () => import('./pages/AstroClockPage'),
   AstroClockSearch:         () => import('./components/astroclock/AstroClockSearch'),
   // Support
