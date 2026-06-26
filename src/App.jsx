@@ -58,9 +58,10 @@ const PAGE_IMPORTS = {
   PagePermissions:          () => import('./pages/PagePermissions'),
   AdminAccessCodes:         () => import('./pages/AdminAccessCodes'),
   AdminAccessLogs:          () => import('./pages/AdminAccessLogs'),
-  AdminSettings:            () => import('./pages/AdminSettings'),
+  AdminSettings:           () => import('./pages/AdminSettings'),
   UserDetailPage:           () => import('./pages/UserDetailPage'),
-};
+  AdminPDFContentEditor:    () => import('./pages/AdminPDFContentEditor'),
+  };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────
 function useRouteElements() {

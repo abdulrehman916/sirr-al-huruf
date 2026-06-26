@@ -52,6 +52,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/access-logs', component: 'AdminAccessLogs', chunk: 'AdminAccessLogs' },
   { path: '/admin/settings', component: 'AdminSettings', chunk: 'AdminSettings' },
   { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' },
+  { path: '/admin/pdf-content-editor', component: 'AdminPDFContentEditor', chunk: 'AdminPDFContentEditor' },
 ];
 
 export default ROUTE_MANIFEST;
