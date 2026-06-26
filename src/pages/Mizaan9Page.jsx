@@ -188,8 +188,9 @@ export default function Mizaan9Page() {
   const [s1VefkData, setS1VefkData] = useState(null);
   const [s2VefkData, setS2VefkData] = useState(null);
   const [s3VefkData, setS3VefkData] = useState(null);
+  const [activeMethod, setActiveMethod] = useState(1);
   const [activeSection, setActiveSection] = useState(1);
-  const ds = getDataSet(activeSection);
+  const ds = activeMethod === 1 ? getDataSet(activeSection) : null;
   // Section 1 uses Section A Bast table; Section 2 uses Section B Bast table.
   // Section 3 uses Section A Bast table (only source values differ, not the expansion table).
   // Bast1 is shared (identical). Only Bast2–Bast5 differ.
@@ -231,7 +232,7 @@ export default function Mizaan9Page() {
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSection]);
+  }, [activeSection, activeMethod]);
 
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
@@ -256,7 +257,7 @@ export default function Mizaan9Page() {
       setSelections(buildDefaultSelections(r.dominant));
     }
     setLoading(false);
-  }, [input, activeSection]);
+  }, [input, activeSection, activeMethod]);
 
   const handleClear = () => {
     abortRef.current = true;
@@ -285,42 +286,45 @@ export default function Mizaan9Page() {
         {/* Method Navigation (NEW - Top Level) */}
         <div className="flex gap-2 mb-3">
           {[1, 2, 3, 4, 5].map((method) => (
-            <button key={method}
-              className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm"
+            <button key={method} onClick={() => setActiveMethod(method)}
+              className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
               style={{
-                background: 'rgba(212,175,55,0.18)',
-                border: '1.5px solid rgba(212,175,55,0.65)',
-                color: '#F5D060',
-                boxShadow: '0 0 20px rgba(212,175,55,0.20)',
+                background: activeMethod === method ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                border: `1.5px solid ${activeMethod === method ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                color: activeMethod === method ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                boxShadow: activeMethod === method ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
               }}>
-              <span className="font-inter text-[9px] uppercase tracking-widest block">METHOD</span>
+              <span className="font-inter text-[9px] uppercase tracking-widest">METHOD</span>
               <span className="font-amiri text-sm">{method}</span>
             </button>
           ))}
         </div>
 
-        {/* Section 1 / Section 2 / Section 3 Toggle (ORIGINAL - Restored) */}
-        <div className="flex gap-2">
-          {[
-            { s: 1, arabic: 'المجموعة الأولى' },
-            { s: 2, arabic: 'المجموعة الثانية' },
-            { s: 3, arabic: 'الأبجد الكبير' },
-          ].map(({ s, arabic }) => (
-            <button key={s} onClick={() => setActiveSection(s)}
-              className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
-              style={{
-                background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
-                border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
-                color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
-                boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
-              }}>
-              <span className="font-amiri text-sm">{arabic}</span>
-              <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
-            </button>
-          ))}
-        </div>
+        {/* Method 1 Content (ALL existing logic belongs here) */}
+        {activeMethod === 1 && (
+          <div>
+            {/* Section 1 / Section 2 / Section 3 Toggle (ORIGINAL) */}
+            <div className="flex gap-2">
+              {[
+                { s: 1, arabic: 'المجموعة الأولى' },
+                { s: 2, arabic: 'المجموعة الثانية' },
+                { s: 3, arabic: 'الأبجد الكبير' },
+              ].map(({ s, arabic }) => (
+                <button key={s} onClick={() => setActiveSection(s)}
+                  className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+                  style={{
+                    background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                    border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                    color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                    boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
+                  }}>
+                  <span className="font-amiri text-sm">{arabic}</span>
+                  <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
+                </button>
+              ))}
+            </div>
 
-        {/* Input card */}
+            {/* Input card */}
         <div className="rounded-2xl border p-5 relative overflow-hidden"
           style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
           <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
@@ -561,7 +565,27 @@ export default function Mizaan9Page() {
           )}
         </AnimatePresence>
 
-      </div>
+          </div>
+        </div>
+        )}
+
+      {/* Method 2-5 Placeholders (Reserved for future implementation) */}
+      {activeMethod !== 1 && (
+        <div className="rounded-2xl border p-8 text-center" style={{
+          background: "rgba(212,175,55,0.06)",
+          borderColor: "rgba(212,175,55,0.30)",
+        }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{
+            background: "rgba(212,175,55,0.14)",
+            border: "1px solid rgba(212,175,55,0.40)",
+          }}>
+            <span className="font-amiri text-2xl" style={{ color: "#F5D060" }}>⚖</span>
+          </div>
+          <h2 className="font-inter text-lg font-bold text-white mb-2">Method {activeMethod}</h2>
+          <p className="font-inter text-sm text-white/40 mb-4">Reserved for future Mizan calculation system</p>
+          <p className="font-inter text-xs text-white/30">This method will be implemented when rules are provided</p>
+        </div>
+      )}
     </PageLayout>
   );
 }
