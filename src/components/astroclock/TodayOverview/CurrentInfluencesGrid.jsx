@@ -18,48 +18,52 @@ const G = {
 export default function CurrentInfluencesGrid({ todayData, isMalayalam }) {
   if (!todayData) return null;
 
+  const unknown = isMalayalam ? "അജ്ഞാതം" : "Unknown";
+
   const influences = [
     {
       icon: Star,
       label: isMalayalam ? "ഗ്രഹം" : "Planet",
-      value: translateTurkishToMalayalam(todayData.currentPlanetaryHour?.planet || "Unknown"),
+      value: translateTurkishToMalayalam(todayData.currentPlanetaryHour?.planet || unknown),
       color: "#60a5fa",
       source: "p.51-52"
     },
     {
       icon: Moon,
       label: isMalayalam ? "മൻസിൽ" : "Mansion",
-      value: `${translateTurkishToMalayalam(todayData.currentMansion?.name || 'Unknown')}`,
-      subValue: `#${todayData.currentMansion?.no || ''}`,
+      value: `${translateTurkishToMalayalam(todayData.currentMansion?.name || unknown)}`,
+      subValue: todayData.currentMansion?.no ? `#${todayData.currentMansion.no}` : '',
       color: "#a855f7",
       source: "p.64-74"
     },
     {
       icon: Sparkles,
       label: isMalayalam ? "രാശി" : "Zodiac",
-      value: translateTurkishToMalayalam(todayData.zodiacSign),
+      value: translateTurkishToMalayalam(todayData.zodiacSign || unknown),
       color: "#c084fc",
       source: "p.64-74"
     },
     {
       icon: Sparkles,
       label: isMalayalam ? "മൂലകം" : "Element",
-      value: todayData.element?.name || "Unknown",
+      value: todayData.element?.name_ml || todayData.element?.name || unknown,
       color: "#4ade80",
       source: "p.76-80"
     },
     {
       icon: Clock,
       label: isMalayalam ? "ദിനം" : "Period",
-      value: todayData.isDaytime !== undefined ? (todayData.isDaytime ? "Day" : "Night") : "Unknown",
-      subValue: `Hour ${todayData.currentHour || ''}`,
+      value: todayData.isDaytime !== undefined
+        ? (todayData.isDaytime ? (isMalayalam ? "പകൽ" : "Day") : (isMalayalam ? "രാത്രി" : "Night"))
+        : unknown,
+      subValue: todayData.currentHour !== undefined ? (isMalayalam ? `മണിക്കൂർ ${todayData.currentHour}` : `Hour ${todayData.currentHour}`) : '',
       color: "#fbbf24",
       source: "p.54"
     },
     {
       icon: Sun,
       label: isMalayalam ? "ദിവസ നാഥൻ" : "Day Ruler",
-      value: translateTurkishToMalayalam(todayData.dayRuler?.planet_tr || "Unknown"),
+      value: translateTurkishToMalayalam(todayData.dayRuler?.planet_tr || unknown),
       color: "#fcd34d",
       source: "p.49-50"
     }

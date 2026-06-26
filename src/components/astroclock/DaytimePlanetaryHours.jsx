@@ -110,9 +110,7 @@ export default function DaytimePlanetaryHours() {
               {isMalayalam ? "സ്രോതസ്സ്" : "Source"}
             </p>
             <p className="font-malayalam-md text-white/70">
-              {isMalayalam 
-                ? "ഗ്രഹ മണിക്കൂറുകളുടെ സവിശേഷതകൾ ഹവാസ്സിൻ്റെ ഡെപ്ത്ലിക്ലറിൽ നിന്നും മറ്റ് അപ്‌ലോഡ് ചെയ്ത PDF പുസ്തകങ്ങളിൽ നിന്നും മാത്രം."
-                : "Planetary hour properties from Havâss'ın Derinlikleri and other uploaded PDF books only."}
+              ഗ്രഹ മണിക്കൂറുകളുടെ സവിശേഷതകൾ ഹവാസ്സിൻ്റെ ഡെപ്ത്ലിക്ലറിൽ നിന്നും മറ്റ് അപ്‌ലോഡ് ചെയ്ത PDF പുസ്തകങ്ങളിൽ നിന്നും മാത്രം.
             </p>
           </div>
         </div>

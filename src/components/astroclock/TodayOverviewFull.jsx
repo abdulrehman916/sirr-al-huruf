@@ -89,13 +89,14 @@ export default function TodayOverviewFull() {
     if (!mansion) return null;
     const zodiac = mansion?.zodiac_sign;
     if (!zodiac) return null;
-    const fireSigns = ["Koç", "Arslan", "Yay"];
-    const earthSigns = ["Boğa", "Başak", "Oğlak"];
-    const airSigns = ["İkizler", "Terazi", "Kova"];
-    if (fireSigns.includes(zodiac)) return { name: "Fire", name_ml: "അഗ്നി" };
-    if (earthSigns.includes(zodiac)) return { name: "Earth", name_ml: "ഭൂമി" };
-    if (airSigns.includes(zodiac)) return { name: "Air", name_ml: "വായു" };
-    return { name: "Water", name_ml: "ജലം" };
+    // Match both Turkish and English zodiac sign names
+    const fireSigns = ["Koç", "Arslan", "Yay", "Aries", "Leo", "Sagittarius"];
+    const earthSigns = ["Boğa", "Başak", "Oğlak", "Taurus", "Virgo", "Capricorn"];
+    const airSigns = ["İkizler", "Terazi", "Kova", "Gemini", "Libra", "Aquarius"];
+    if (fireSigns.includes(zodiac)) return { name: "അഗ്നി", name_ml: "അഗ്നി" };
+    if (earthSigns.includes(zodiac)) return { name: "ഭൂമി", name_ml: "ഭൂമി" };
+    if (airSigns.includes(zodiac)) return { name: "വായു", name_ml: "വായു" };
+    return { name: "ജലം", name_ml: "ജലം" };
   }
 
   function buildGoodForList(dayRuler, mansion) {
@@ -121,7 +122,7 @@ export default function TodayOverviewFull() {
       });
     }
     if (!dayRuler) {
-      items.push({ text: "Unknown day ruler", source: "System", page: "N/A" });
+      items.push({ text: "ദിവസ നാഥൻ അജ്ഞാതം", source: "System", page: "N/A" });
     }
     return items;
   }
@@ -137,16 +138,17 @@ export default function TodayOverviewFull() {
     }
     
     if (planetaryHour?.planet === "Mars" || planetaryHour?.planet === "Satürn") {
-      avoid.push({ text: "New beginnings", source: "Havâss'ın Derinlikleri", page: "p.53" });
-      avoid.push({ text: "Important meetings", source: "Havâss'ın Derinlikleri", page: "p.53" });
+      avoid.push({ text: "പുതിയ തുടക്കങ്ങൾ ഒഴിവാക്കുക", source: "Havâss'ın Derinlikleri", page: "p.53" });
+      avoid.push({ text: "പ്രധാന യോഗങ്ങൾ ഒഴിവാക്കുക", source: "Havâss'ın Derinlikleri", page: "p.53" });
     }
     
-    return { canDo: canDo.length > 0 ? canDo : [{ text: "Routine work", source: "General", page: "p.50" }], avoid };
+    return { canDo: canDo.length > 0 ? canDo : [{ text: "സാധാരണ ജോലികൾ", source: "General", page: "p.50" }], avoid };
   }
 
   function findNextGoodHour(now, dayRuler, currentPlanetaryHour) {
     const currentHour = now.getHours();
     const planetarySequence = ["Güneş", "Venüs", "Merkür", "Ay", "Satürn", "Jüpiter", "Mars"];
+    const planetML = { "Güneş": "സൂര്യൻ", "Venüs": "ശുക്രൻ", "Merkür": "ബുധൻ", "Ay": "ചന്ദ്രൻ", "Satürn": "ശനി", "Jüpiter": "ഗുരു", "Mars": "ചൊവ്വ" };
     const dayIndex = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(dayRuler?.day_name_en || "Sunday");
     
     for (let i = currentHour + 1; i < currentHour + 24; i++) {
@@ -155,34 +157,36 @@ export default function TodayOverviewFull() {
       if (planet === "Jüpiter" || planet === "Venüs" || planet === "Güneş") {
         return {
           hour: i % 24,
-          planet,
-          reason: `${planet} hour brings positive influence`,
+          planet: planetML[planet] || planet,
+          reason: `${planetML[planet] || planet} മണിക്കൂർ ഗുണകരമാണ്`,
           source: "Havâss'ın Derinlikleri",
           page: "p.51-52"
         };
       }
     }
-    return { hour: (currentHour + 1) % 24, planet: "Unknown", reason: "Next hour", source: "System", page: "N/A" };
+    return { hour: (currentHour + 1) % 24, planet: "അജ്ഞാതം", reason: "അടുത്ത മണിക്കൂർ", source: "System", page: "N/A" };
   }
 
   function findNextGoodDay(currentDayIndex, currentDayRuler) {
     const goodDays = ["Thursday", "Friday", "Sunday"];
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const dayRulers = ["Güneş", "Ay", "Mars", "Merkür", "Jüpiter", "Venüs", "Satürn"];
+    const planetML = { "Güneş": "സൂര്യൻ", "Venüs": "ശുക്രൻ", "Merkür": "ബുധൻ", "Ay": "ചന്ദ്രൻ", "Satürn": "ശനി", "Jüpiter": "ഗുരു", "Mars": "ചൊവ്വ" };
     
     for (let i = currentDayIndex + 1; i < currentDayIndex + 7; i++) {
       const nextIndex = i % 7;
       if (goodDays.includes(dayNames[nextIndex])) {
+        const rulerML = planetML[dayRulers[nextIndex]] || dayRulers[nextIndex];
         return {
           day: dayNames[nextIndex],
           ruler: dayRulers[nextIndex],
-          reason: `${dayRulers[nextIndex]} day is favorable`,
+          reason: `${rulerML} ദിനം അനുകൂലമാണ്`,
           source: "Havâss'ın Derinlikleri",
           page: "p.49-50"
         };
       }
     }
-    return { day: "Thursday", ruler: "Jüpiter", reason: "Jupiter day", source: "Havâss'ın Derinlikleri", page: "p.49" };
+    return { day: "Thursday", ruler: "Jüpiter", reason: "ഗുരു ദിനം അനുകൂലമാണ്", source: "Havâss'ın Derinlikleri", page: "p.49" };
   }
 
   if (loading) {
