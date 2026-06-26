@@ -30,9 +30,6 @@ import { runMizaanPostPipeline, istintak, FIRST_BAST, getBastLevel, expandAllSee
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
-import { registerPage } from "../lib/pageRegistry";
-
-// Page already registered in lib/pageRegistry.js
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -211,7 +208,8 @@ export default function Mizaan9Page() {
 
   // Re-analyze when section changes (if text is already entered)
   useEffect(() => {
-    if (!input.trim()) return;
+    // Only re-run if we have a previous result (user already analyzed something)
+    if (!input.trim() || !result) return;
     setS1VefkData(null);
     setS2VefkData(null);
     setS3VefkData(null);
