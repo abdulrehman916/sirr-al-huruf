@@ -40,15 +40,15 @@ const ROUTE_MANIFEST = [
   { path: '/my-subscription', component: 'MySubscription', chunk: 'MySubscription', flags: ['public'] },
   { path: '/payment', component: 'PaymentPage', chunk: 'PaymentPage', flags: ['public'] },
   
-  // Admin - Core 5 Sections Only
+  // Admin
   { path: '/admin/access-dashboard', component: 'AdminDashboard', chunk: 'AdminDashboard' },
   { path: '/admin/approved-users', component: 'ApprovedUsersPage', chunk: 'ApprovedUsersPage' },
   { path: '/admin/page-permissions', component: 'PagePermissions', chunk: 'PagePermissions' },
   { path: '/admin/access-codes', component: 'AdminAccessCodes', chunk: 'AdminAccessCodes' },
   { path: '/admin/support', component: 'AdminSupport', chunk: 'AdminSupport' },
-  
-  // Admin - Required by System Logic
-  { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' }, // Required by Users page
+  { path: '/admin/access-logs', component: 'AdminAccessLogs', chunk: 'AdminAccessLogs' },
+  { path: '/admin/settings', component: 'AdminSettings', chunk: 'AdminSettings' },
+  { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' },
 ];
 
 export default ROUTE_MANIFEST;

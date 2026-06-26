@@ -1,214 +1,134 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, Globe, Clock, Crown, KeyRound, UserCheck, Menu, X, Shield } from "lucide-react";
+import { Navigate } from "react-router-dom";
+import { Users, Globe, Clock, Crown, KeyRound, UserCheck, Shield, TrendingUp } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import PageLayout from "@/components/PageLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { useToast } from "@/components/ui/use-toast";
 
-function StatCard({ label, value, color, icon: Icon }) {
+const G = {
+  border: "rgba(212,175,55,0.40)",
+  text: "#F5D060",
+  dim: "rgba(212,175,55,0.55)",
+  bg: "rgba(212,175,55,0.07)",
+};
+
+function StatCard({ label, value, color, icon: Icon, sub }) {
   return (
-    <div
-      className="rounded-xl border p-3 text-center h-full flex flex-col justify-center"
-      style={{ 
-        background: "rgba(255,255,255,0.03)", 
-        borderColor: "rgba(212,175,55,0.30)",
-        minHeight: "80px"
-      }}
-    >
-      <div className="flex flex-col items-center justify-center gap-1">
-        <Icon className="w-4 h-4 flex-shrink-0 mb-1" style={{ color }} />
-        <p className="text-base font-bold text-white leading-tight break-words">{value.toLocaleString()}</p>
-        <p className="text-[10px] text-white/40 leading-tight break-words px-1">{label}</p>
+    <div className="rounded-xl border p-4 flex flex-col gap-2"
+      style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(212,175,55,0.20)" }}>
+      <div className="flex items-center justify-between">
+        <span className="font-inter text-xs font-semibold text-white/40 uppercase tracking-wider">{label}</span>
+        <Icon className="w-4 h-4 flex-shrink-0" style={{ color }} />
       </div>
+      <p className="font-inter text-2xl font-bold text-white">{(value ?? 0).toLocaleString()}</p>
+      {sub && <p className="font-inter text-[10px] text-white/30">{sub}</p>}
     </div>
   );
 }
 
-const G = {
-  border: "rgba(212,175,55,0.40)",
-  borderHi: "rgba(212,175,55,0.65)",
-  glow: "rgba(212,175,55,0.22)",
-  text: "#F5D060",
-  dim: "rgba(212,175,55,0.55)",
-  faint: "rgba(212,175,55,0.22)",
-  bg: "rgba(212,175,55,0.07)",
-  bgHi: "rgba(212,175,55,0.14)"
-};
-
-const SIDEBAR_ITEMS = [
-  { path: "/admin/approved-users", label: "Users", icon: UserCheck },
-  { path: "/admin/access-dashboard", label: "Dashboard", icon: Crown },
-  { path: "/admin/page-permissions", label: "Pages", icon: Globe },
-  { path: "/admin/access-codes", label: "Codes", icon: KeyRound },
-  { path: "/admin/support", label: "Messages", icon: Clock }
-];
-
 export default function AdminDashboard() {
   const { toast } = useToast();
-  const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
-  const [isOwner, setIsOwner] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(0);
 
   useEffect(() => {
     checkAdminAccess();
-    fetchStats();
-    fetchPendingRequests();
   }, []);
 
   const checkAdminAccess = async () => {
     try {
-      const currentUser = await base44.auth.me();
-      if (!currentUser || currentUser.role !== 'admin') {
+      const user = await base44.auth.me();
+      if (!user || user.role !== "admin") {
         setIsAdmin(false);
-        toast({
-          title: "Access Denied",
-          description: "Only administrators can access this page",
-          variant: "destructive"
-        });
+        toast({ title: "Access Denied", description: "Admins only", variant: "destructive" });
         return;
       }
-      setUser(currentUser);
       setIsAdmin(true);
-      setIsOwner(currentUser.role === 'admin');
-    } catch (error) {
+      fetchStats();
+      fetchPending();
+    } catch {
       setIsAdmin(false);
-      toast({
-        title: "Authentication Error",
-        description: "Please log in to continue",
-        variant: "destructive"
-      });
     }
   };
 
   const fetchStats = async () => {
     try {
-      const res = await base44.functions.invoke('getUserStats');
+      const res = await base44.functions.invoke("getUserStats");
       setStats(res.data.stats);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    }
+    } catch {}
   };
 
-  const fetchPendingRequests = async () => {
+  const fetchPending = async () => {
     try {
-      const [old, newReqs] = await Promise.all([
+      const [a, b] = await Promise.all([
         base44.entities.PremiumAccessRequest.filter({ status: "PENDING" }).then(r => r.length),
         base44.entities.AccessRequest.filter({ status: "PENDING" }).then(r => r.length),
       ]);
-      setPendingRequests(old + newReqs);
-    } catch (error) {
-      console.error('Failed to fetch pending requests:', error);
-    }
+      setPendingRequests(a + b);
+    } catch {}
   };
 
-  if (isAdmin === false) {
-    return <Navigate to="/" replace />;
-  }
+  if (isAdmin === false) return <Navigate to="/" replace />;
 
   if (isAdmin === null) {
     return (
-      <PageLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-t-gold border-r-transparent border-b-gold border-l-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-white/60">Loading dashboard...</p>
-          </div>
+      <AdminLayout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-t-yellow-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
         </div>
-      </PageLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <PageLayout>
-      <div className="min-h-screen flex" style={{ background: "linear-gradient(180deg, #020710 0%, #060c1c 100%)" }}>
-        {/* Mobile sidebar toggle - visible only on mobile (< 768px) */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg"
-          style={{
-            background: G.bg,
-            border: `1px solid ${G.border}`,
-            color: G.text
-          }}
-        >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+    <AdminLayout>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
 
-        {/* Sidebar - Compact 200px */}
-        <aside
-          className={`fixed md:sticky md:top-0 left-0 h-screen w-[200px] transition-transform duration-300 z-40 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0`}
-          style={{
-            background: "linear-gradient(180deg, rgba(8,16,40,0.98) 0%, rgba(3,8,22,0.99) 100%)",
-            borderRight: `1px solid ${G.border}`
-          }}
-        >
-          <div className="p-3">
-            {/* Header */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Crown className="w-5 h-5" style={{ color: G.text }} />
-                <h1 className="font-inter text-base font-bold text-white">Admin</h1>
-              </div>
-            </div>
+        {/* Title */}
+        <div>
+          <h1 className="font-inter text-xl font-bold text-white">Dashboard</h1>
+          <p className="font-inter text-xs text-white/40 mt-0.5">System overview at a glance</p>
+        </div>
 
-            {/* Navigation */}
-            <nav className="space-y-1">
-              {SIDEBAR_ITEMS.map((item) => {
-                const isActive = location.pathname === item.path;
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`block p-2.5 rounded-lg transition-all duration-200 ${
-                      isActive ? "bg-gold/10" : "hover:bg-white/5"
-                    }`}
-                    style={{
-                      background: isActive ? G.bgHi : "transparent",
-                      border: isActive ? `1px solid ${G.borderHi}` : `1px solid transparent`
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-gold" : "text-white/50"}`} />
-                      <p className={`font-inter text-xs font-semibold truncate ${isActive ? "text-white" : "text-white/70"}`}>
-                        {item.label}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </nav>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <StatCard label="Total Users"   value={stats?.total_users}       color="#F5D060" icon={Users}     />
+          <StatCard label="Active"        value={stats?.active_users}      color="#22c55e" icon={UserCheck}  />
+          <StatCard label="Expired"       value={stats?.expired_users}     color="#f59e0b" icon={Clock}      />
+          <StatCard label="Blocked"       value={stats?.blocked_users}     color="#ef4444" icon={Shield}     />
+          <StatCard label="Active Codes"  value={stats?.total_codes}       color="#3b82f6" icon={KeyRound}   />
+          <StatCard label="Permissions"   value={stats?.active_permissions} color="#8b5cf6" icon={Globe}     />
+          <StatCard label="Pending Req."  value={pendingRequests}          color="#f97316" icon={TrendingUp} sub="Access requests awaiting review" />
+        </div>
+
+        {/* Quick Links */}
+        <div>
+          <p className="font-inter text-xs font-semibold text-white/30 uppercase tracking-widest mb-3">Quick Actions</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {[
+              { to: "/admin/approved-users",   icon: "👥", label: "Manage Users" },
+              { to: "/admin/access-codes",      icon: "🔑", label: "Reading Codes" },
+              { to: "/admin/page-permissions",  icon: "🌐", label: "Page Access" },
+              { to: "/admin/support",           icon: "💬", label: "Support Messages" },
+              { to: "/admin/access-logs",       icon: "📋", label: "Access Logs" },
+              { to: "/admin/settings",          icon: "⚙️", label: "Settings" },
+            ].map(link => (
+              <a
+                key={link.to}
+                href={link.to}
+                className="rounded-xl border p-3 flex items-center gap-3 transition-all hover:bg-white/5"
+                style={{ background: G.bg, borderColor: G.border, textDecoration: "none" }}
+              >
+                <span className="text-base">{link.icon}</span>
+                <span className="font-inter text-xs font-semibold text-white/70">{link.label}</span>
+              </a>
+            ))}
           </div>
-        </aside>
+        </div>
 
-        {/* Main Content - Full width minus sidebar */}
-        <main className="flex-1 p-4 md:p-4 lg:p-5 overflow-auto md:ml-[200px]">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            {/* Stats Grid - 7 stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-              <StatCard label="Total Users" value={stats?.total_users || 0} color="#F5D060" icon={Users} />
-              <StatCard label="Active" value={stats?.active_users || 0} color="#22c55e" icon={UserCheck} />
-              <StatCard label="Expired" value={stats?.expired_users || 0} color="#f59e0b" icon={Clock} />
-              <StatCard label="Blocked" value={stats?.blocked_users || 0} color="#ef4444" icon={Shield} />
-              <StatCard label="Removed" value={Math.max(0, (stats?.total_users || 0) - (stats?.active_users || 0) - (stats?.expired_users || 0) - (stats?.blocked_users || 0))} color="#6b7280" icon={Users} />
-              <StatCard label="Active Codes" value={stats?.total_codes || 0} color="#3b82f6" icon={KeyRound} />
-              <StatCard label="Permissions" value={stats?.active_permissions || 0} color="#8b5cf6" icon={Globe} />
-            </div>
-          </motion.div>
-        </main>
-      </div>
-    </PageLayout>
+      </motion.div>
+    </AdminLayout>
   );
 }
