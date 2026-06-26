@@ -306,7 +306,7 @@ function SectionB() {
           {filteredNames.map((name) => (
             <Link
               key={name.id}
-              to={`/holy-names/${name.pdf_name_id}?tab=b`}
+              to={`/holy-names/one/${name.pdf_name_id}?tab=b`}
               className="card-dark p-4 hover:border-gold transition-all duration-200 group"
             >
               <div className="space-y-3">

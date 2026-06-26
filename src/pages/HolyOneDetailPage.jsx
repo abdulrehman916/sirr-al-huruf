@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, Heart, BookOpen, Star, Clock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 const G = {
@@ -16,24 +15,42 @@ const G = {
 
 export default function HolyOneDetailPage() {
   const { nameId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [name, setName] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState("A"); // A or B
 
   useEffect(() => {
     loadName();
-  }, [nameId]);
+  }, [nameId, searchParams.get('tab')]);
 
   const loadName = async () => {
     setLoading(true);
     try {
-      const result = await base44.entities.HolyOneName.filter({ name_id: nameId });
-      if (result && result.length > 0) {
-        setName(result[0]);
+      const tab = searchParams.get('tab');
+      
+      if (tab === 'b' || nameId.startsWith('PDF-')) {
+        // Section B: PDF Holy Names
+        const result = await base44.entities.HolyOnePDFName.filter({ pdf_name_id: nameId });
+        if (result && result.length > 0) {
+          setName(result[0]);
+          setSource("B");
+        } else {
+          toast({ title: "Name not found", variant: "destructive" });
+          navigate("/holy-names");
+        }
       } else {
-        toast({ title: "Name not found", variant: "destructive" });
-        navigate("/holy-names/one");
+        // Section A: Original Holy Names
+        const result = await base44.entities.HolyOneName.filter({ name_id: nameId });
+        if (result && result.length > 0) {
+          setName(result[0]);
+          setSource("A");
+        } else {
+          toast({ title: "Name not found", variant: "destructive" });
+          navigate("/holy-names/one");
+        }
       }
     } catch (e) {
       toast({ title: "Failed to load", description: e.message, variant: "destructive" });
@@ -45,7 +62,11 @@ export default function HolyOneDetailPage() {
   const toggleFavorite = async () => {
     if (!name) return;
     try {
-      await base44.entities.HolyOneName.update(name.id, { is_favorite: !name.is_favorite });
+      if (source === "A") {
+        await base44.entities.HolyOneName.update(name.id, { is_favorite: !name.is_favorite });
+      } else {
+        await base44.entities.HolyOnePDFName.update(name.id, { is_favorite: !name.is_favorite });
+      }
       loadName();
       toast({ title: name.is_favorite ? "Removed from favorites" : "Added to favorites" });
     } catch (e) {
@@ -82,17 +103,34 @@ export default function HolyOneDetailPage() {
           <span>Back to List</span>
         </button>
 
+        {/* Source Badge */}
+        <div className="flex justify-center mb-4">
+          <Badge style={{ 
+            background: source === "A" ? "rgba(34,197,94,0.15)" : "rgba(59,130,246,0.15)",
+            borderColor: source === "A" ? "rgba(34,197,94,0.40)" : "rgba(59,130,246,0.40)",
+            color: source === "A" ? "#4ade80" : "#60a5fa",
+            fontSize: 12
+          }}>
+            {source === "A" ? "Section A - Original" : "Section B - PDF"}
+          </Badge>
+        </div>
+
         {/* Arabic Name */}
         <div className="text-center mb-6">
-          <h1 className="font-amiri text-4xl font-bold text-gold mb-3">{name.arabic_name}</h1>
+          <h1 className="font-amiri text-4xl font-bold text-gold mb-3">{source === "A" ? name.arabic_name : name.arabic_name}</h1>
           <p className="text-lg text-white/60 mb-2">{name.malayalam_pronunciation}</p>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
             <Badge style={{ background: G.bg, borderColor: G.border, fontSize: 12 }}>
               {name.view_count || 0} views
             </Badge>
             {name.last_viewed && (
               <Badge style={{ background: G.bg, borderColor: G.border, fontSize: 12 }}>
                 Last viewed {new Date(name.last_viewed).toLocaleDateString()}
+              </Badge>
+            )}
+            {source === "B" && name.source_pdf_page && (
+              <Badge style={{ background: G.bg, borderColor: G.border, fontSize: 12 }}>
+                PDF Page {name.source_pdf_page}
               </Badge>
             )}
           </div>
@@ -174,12 +212,21 @@ export default function HolyOneDetailPage() {
           )}
 
           {/* Source Reference */}
-          {name.source_reference && (
-            <div className="text-center text-xs text-white/30 mt-6">
-              <p>Source: {name.source_reference}</p>
-              {name.source_page && <p>Page {name.source_page}</p>}
-            </div>
-          )}
+          <div className="text-center text-xs text-white/30 mt-6">
+            {source === "A" && name.source_reference && (
+              <>
+                <p>Source: {name.source_reference}</p>
+                {name.source_page && <p>Page {name.source_page}</p>}
+              </>
+            )}
+            {source === "B" && (
+              <>
+                <p>Source: {name.source_pdf_file || "PDF"}</p>
+                {name.source_pdf_page && <p>Page {name.source_pdf_page}</p>}
+                {name.surah_name && <p>Surah: {name.surah_name}</p>}
+              </>
+            )}
+          </div>
 
         </div>
 
