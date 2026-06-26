@@ -6,7 +6,7 @@ import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
 import { base44 } from "../api/base44Client";
-import { useScrollPersist } from "../context/PageStateContext";
+
 
 // ── Permanent brand navigation terms — Arabic + English, never translated ──
 const TAB_KEYS = [
@@ -119,7 +119,6 @@ export default function PageLayout({ children }) {
   const { startNav } = useNavigation();
   const [showAccount, setShowAccount] = useState(false);
   const [user, setUser] = useState(null);
-  useScrollPersist();
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -193,11 +192,7 @@ export default function PageLayout({ children }) {
       className="font-inter relative flex flex-col"
       style={{
         background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 65%, #0b1326 100%)",
-        height: "100dvh",
-        flex: "1 1 0",
-        overflow: "hidden",
-        overscrollBehaviorX: "none",
-        overscrollBehaviorY: "none",
+        minHeight: "100vh",
         width: "100%",
         maxWidth: "100vw",
         margin: 0,
