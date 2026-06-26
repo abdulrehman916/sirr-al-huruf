@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const { page_path, requires_permission } = await req.json();
+    const { page_path, requires_permission, price, description, default_duration, reading_code_required } = await req.json();
 
     if (!page_path || typeof requires_permission !== 'boolean') {
       return Response.json({ error: 'Invalid input: page_path and requires_permission (boolean) required' }, { status: 400 });
@@ -72,11 +72,12 @@ Deno.serve(async (req) => {
     
     if (existingConfigs && existingConfigs.length > 0) {
       // Update existing
-      await base44.entities.PageVisibilityConfig.update(existingConfigs[0].id, {
-        requires_permission: requires_permission,
-        updated_by: user.id,
-        updated_at: now
-      });
+      const updateData = { requires_permission, updated_by: user.id, updated_at: now };
+      if (price !== undefined) updateData.price = price;
+      if (description !== undefined) updateData.description = description;
+      if (default_duration !== undefined) updateData.default_duration = default_duration;
+      if (reading_code_required !== undefined) updateData.reading_code_required = reading_code_required;
+      await base44.entities.PageVisibilityConfig.update(existingConfigs[0].id, updateData);
       
       // Create audit log
       try {
@@ -100,14 +101,19 @@ Deno.serve(async (req) => {
       });
     } else {
       // Create new
-      await base44.entities.PageVisibilityConfig.create({
+      const createData = {
         page_path,
         page_name: pageName,
-        requires_permission: requires_permission,
+        requires_permission,
         admin_only: page_path.startsWith('/admin/'),
         updated_by: user.id,
         updated_at: now
-      });
+      };
+      if (price !== undefined) createData.price = price;
+      if (description !== undefined) createData.description = description;
+      if (default_duration !== undefined) createData.default_duration = default_duration;
+      if (reading_code_required !== undefined) createData.reading_code_required = reading_code_required;
+      await base44.entities.PageVisibilityConfig.create(createData);
       
       // Create audit log
       try {

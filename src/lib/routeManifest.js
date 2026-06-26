@@ -33,10 +33,9 @@ const ROUTE_MANIFEST = [
   { path: '/support/voice', component: 'SupportVoice', chunk: 'SupportVoice', flags: ['public'] },
   { path: '/support/ticket', component: 'SupportTicket', chunk: 'SupportTicket', flags: ['public'] },
   
-  // Subscriptions — public (no payment wall on these utility pages)
+  // Access & Subscription utility pages — all public
   { path: '/subscription/expired', component: 'SubscriptionExpired', chunk: 'SubscriptionExpired', flags: ['public'] },
   { path: '/subscription/pending', component: 'SubscriptionPending', chunk: 'SubscriptionPending', flags: ['public'] },
-  { path: '/payment/razorpay', component: 'RazorpayPayment', chunk: 'RazorpayPayment', flags: ['public'] },
   { path: '/premium/request', component: 'PremiumAccessRequest', chunk: 'PremiumAccessRequest', flags: ['public'] },
   { path: '/my-subscription', component: 'MySubscription', chunk: 'MySubscription', flags: ['public'] },
   { path: '/payment', component: 'PaymentPage', chunk: 'PaymentPage', flags: ['public'] },

@@ -39,7 +39,7 @@ const G = {
 const SIDEBAR_ITEMS = [
   { path: "/admin/approved-users", label: "Users", icon: UserCheck },
   { path: "/admin/access-dashboard", label: "Dashboard", icon: Crown },
-  { path: "/admin/page-permissions", label: "Permissions", icon: Globe },
+  { path: "/admin/page-permissions", label: "Pages", icon: Globe },
   { path: "/admin/access-codes", label: "Codes", icon: KeyRound },
   { path: "/admin/support", label: "Messages", icon: Clock }
 ];

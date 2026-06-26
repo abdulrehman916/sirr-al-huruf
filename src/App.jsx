@@ -46,7 +46,6 @@ const PAGE_IMPORTS = {
   // Subscriptions
   SubscriptionExpired:      () => import('./pages/SubscriptionExpired'),
   SubscriptionPending:      () => import('./pages/SubscriptionPending'),
-  RazorpayPayment:          () => import('./pages/RazorpayPayment'),
   PremiumAccessRequest:     () => import('./pages/PremiumAccessRequest'),
   MySubscription:           () => import('./pages/MySubscription'),
   PaymentPage:              () => import('./pages/PaymentPage'),
