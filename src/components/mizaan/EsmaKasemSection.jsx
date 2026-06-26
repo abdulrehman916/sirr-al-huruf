@@ -262,7 +262,8 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
   const seedLetters = useMemo(() => istintak(kasemSourceTotal), [kasemSourceTotal]);
 
   // ── STEP 2: Zevc/Ferd + Bast Level ──
-  const isSeedFerd = seedLetters.length % 2 !== 0;
+  // RULE: odd final number (kasemSourceTotal) → 5th Bast; even → 4th Bast
+  const isSeedFerd = kasemSourceTotal % 2 !== 0;
   const bastLevel  = isSeedFerd ? 5 : 4;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
