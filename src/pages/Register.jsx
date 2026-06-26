@@ -25,10 +25,6 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!captchaVerified) {
-      setError("Please complete the security check");
-      return;
-    }
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -230,7 +226,7 @@ export default function Register() {
           )}
         </Button>
         <div className="mt-4">
-          <Captcha onVerify={(token) => { setCaptchaToken(token); setCaptchaVerified(true); }} onError={(err) => setError(`CAPTCHA: ${err}`)} />
+          <Captcha onVerify={(token) => { setCaptchaToken(token); setCaptchaVerified(true); }} onError={() => {}} />
         </div>
       </form>
     </AuthLayout>

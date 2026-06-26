@@ -323,6 +323,45 @@
   to   { transform: translate(-50%, -50%) rotate(-360deg); }
 }
 
-/* ── REMOVED: Global utility classes (.card-dark, .card-gold, .btn-gold, .text-gold) ── */
-/* These classes caused cross-page CSS leakage. Pages must now define their own card/button styles via inline styles or page-scoped CSS. */
-/* Animation keyframes remain global as they are component-scoped (AtmosphericBackground, SacredWheel) and don't affect page layouts. */
+/* ── Global utility classes — used across pages and components ── */
+.card-dark {
+  background: linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%);
+  border: 1px solid rgba(212,175,55,0.22);
+  border-radius: 1rem;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(212,175,55,0.08);
+}
+
+.card-gold {
+  background: linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%);
+  border: 1px solid rgba(212,175,55,0.40);
+  border-radius: 1rem;
+  box-shadow: 0 0 28px rgba(212,175,55,0.18), inset 0 1px 0 rgba(212,175,55,0.15);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #f6d860 0%, #e0a820 50%, #c98a14 100%);
+  color: #0d1b2a;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 0 32px rgba(212,175,55,0.45);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.btn-gold:hover { opacity: 0.92; transform: scale(1.01); }
+.btn-gold:active { transform: scale(0.98); }
+.btn-gold:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+.text-gold {
+  color: #D4AF37 !important;
+}
+
+.border-gold {
+  border-color: rgba(212,175,55,0.55) !important;
+}
+
+.border-gold-dim {
+  border-color: rgba(212,175,55,0.30) !important;
+}
+
+.text-gold-dim {
+  color: rgba(212,175,55,0.70) !important;
+}

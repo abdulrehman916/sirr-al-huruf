@@ -14,6 +14,12 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			gold: {
+  				DEFAULT: '#D4AF37',
+  				dim: 'rgba(212,175,55,0.55)',
+  				muted: 'rgba(212,175,55,0.30)',
+  				glow: 'rgba(212,175,55,0.22)',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
