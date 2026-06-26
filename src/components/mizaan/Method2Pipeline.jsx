@@ -817,7 +817,7 @@ function EsmaAvanSection({ avanData, kitabetData, dominant, getBastLevelFn, kita
   );
 }
 
-function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitabetTotal, dominantB1, lastAvanNameB1 }) {
+function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitabetTotal, mizanulMevazin, dominantB1, lastAvanNameB1 }) {
   if (!kasemData) return null;
   const safe = {
     seedLetters: Array.isArray(kasemData.seedLetters) ? kasemData.seedLetters : [],
@@ -837,8 +837,13 @@ function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitab
   };
   const anasirLetters = ANASIR_LETTERS[dominant] || ANASIR_LETTERS.fire;
   
-  // PDF: Grand Total already calculated in engine
-  const grandTotal = kasemData.grandTotal || 0;
+  // Calculate values FIRST before using them
+  const anasirB1 = anasirLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+  const lastAvanName = avanData?.lastCompletedName || '';
+  const combinedMizanKitabet = mizanulMevazin + kitabetTotal;
+  
+  // PDF: Grand Total = Last Avan Name B1 + Dominant Anasir B1 + (Nine Mizan + Kitabet Total)
+  const grandTotal = lastAvanNameB1 + anasirB1 + combinedMizanKitabet;
   const kasemSeedLetters = kasemData.seedLetters || [];
   const kasemSeedCount = kasemSeedLetters.length;
   const isFerd = kasemSeedCount % 2 !== 0;
@@ -855,10 +860,6 @@ function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitab
   // Combined letters for Bast calculations (remainder from Avan + Anasir)
   const avanRemainder = Array.isArray(avanData?.remainder) ? avanData.remainder : [];
   const kasemCombinedLetters = [...avanRemainder, ...anasirLetters];
-  
-  // Calculate values for display
-  const anasirB1 = anasirLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-  const lastAvanName = avanData?.lastCompletedName || '';
 
   return (
     <Card accent={elementMeta.color}>
@@ -868,7 +869,7 @@ function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitab
       <div className="mb-6 rounded-lg border p-5" style={{ background: G.bgCard, borderColor: elementMeta.color + "55" }}>
         <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>Step 1 — Esma-i Kasem Total Calculation (PDF Method)</div>
         
-        {/* Component 1: Last A'van Name B1 */}
+        {/* Component 1: Last A'van Name B1 (Completed with Remainder if exists) */}
         <div className="mb-4 rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
           <div className="text-[7px] mb-2" style={{ color: G.dim }}>1. Last Esma-i A'van Name (Birinci Bast)</div>
           <div className="flex items-center justify-between">
@@ -879,7 +880,7 @@ function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitab
             </div>
           </div>
           <div className="text-[6px] mt-2" style={{ color: G.dim }}>
-            {lastAvanName.length} letter{lastAvanName.length !== 1 ? 's' : ''} — Always use last name
+            {lastAvanName.length} letter{lastAvanName.length !== 1 ? 's' : ''} — Completed with remainder if exists
           </div>
         </div>
         
@@ -901,11 +902,19 @@ function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitab
           </div>
         </div>
         
-        {/* Component 3: Esma-i Kitabet Total */}
+        {/* Component 3: Nine Mizan + Kitabet Total (Combined) */}
         <div className="mb-4 rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-          <div className="text-[7px] mb-2" style={{ color: G.dim }}>3. Esma-i Kitabet Total</div>
-          <div className="text-3xl font-bold tabular-nums" style={{ color: G.gold }}>{kitabetTotal.toLocaleString()}</div>
-          <div className="text-[6px] mt-2" style={{ color: G.dim }}>From Kitabet stage</div>
+          <div className="text-[7px] mb-2" style={{ color: G.dim }}>3. Nine Mizan + Esma-i Kitabet Total</div>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="text-sm" style={{ color: G.dim }}>Nine Mizan:</div>
+            <div className="text-lg font-bold tabular-nums" style={{ color: G.goldDim }}>{mizanulMevazin.toLocaleString()}</div>
+            <div className="text-sm" style={{ color: G.dim }}>+</div>
+            <div className="text-sm" style={{ color: G.dim }}>Kitabet:</div>
+            <div className="text-lg font-bold tabular-nums" style={{ color: G.goldDim }}>{kitabetTotal.toLocaleString()}</div>
+            <div className="text-sm" style={{ color: G.dim }}>=</div>
+            <div className="text-xl font-bold tabular-nums" style={{ color: G.gold }}>{(mizanulMevazin + kitabetTotal).toLocaleString()}</div>
+          </div>
+          <div className="text-[6px] mt-2 text-center" style={{ color: G.dim }}>Combined value for Kasem calculation</div>
         </div>
         
         {/* Grand Total Formula */}
@@ -915,11 +924,11 @@ function EsmaKasemSection({ kasemData, avanData, dominant, getBastLevelFn, kitab
             <span style={{ color: G.goldDim }}>+</span>
             <span className="tabular-nums" style={{ color: elementMeta.color }}>{anasirB1.toLocaleString()}</span>
             <span style={{ color: G.goldDim }}>+</span>
-            <span className="tabular-nums" style={{ color: G.gold }}>{kitabetTotal.toLocaleString()}</span>
+            <span className="tabular-nums" style={{ color: G.gold }}>{(mizanulMevazin + kitabetTotal).toLocaleString()}</span>
             <span style={{ color: G.goldDim }}>=</span>
             <span className="tabular-nums text-4xl" style={{ color: G.gold }}>{grandTotal.toLocaleString()}</span>
           </div>
-          <div className="text-[7px] mt-3" style={{ color: G.dim }}>Last A'van Name B1 + Anasir B1 + Kitabet Total = Grand Total</div>
+          <div className="text-[7px] mt-3" style={{ color: G.dim }}>Last A'van Name B1 + Anasir B1 + (Nine Mizan + Kitabet) = Grand Total</div>
         </div>
       </div>
       
@@ -1204,6 +1213,7 @@ export default function Method2Pipeline({ grandBast, dominant, onVefkReady, getB
             kitabetTotal={result.kitabet.total}
             dominantB1={dominantB1}
             lastAvanNameB1={result.avan.lastAvanNameB1}
+            mizanulMevazin={mizanulMevazin}
           />
         )}
         

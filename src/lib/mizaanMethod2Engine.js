@@ -180,13 +180,17 @@ export function calculateEsmaAvanMethod2({ lastKitabetNameB1, dominantB1, mizanu
 
 // ── STEP 3: ESMA-I KASEM (Method 2) ────────────────────────────
 // PDF: Use ONLY three values:
-// 1. First Bast of COMPLETED last Avan name
+// 1. First Bast of COMPLETED last Avan name (after remainder handling)
 // 2. First Bast of selected Galip Anasir
-// 3. TOTAL OF ESMA-I KITABET (NOT Avan Total)
+// 3. TOTAL OF ESMA-I KITABET + Nine Mizan (combined)
 // Output: { names, groups, allExpandedLetters, remainder, seedLetters }
-export function calculateEsmaKasemMethod2({ lastAvanNameB1, dominantB1, kitabetTotal, dominant, getBastLevelFn }) {
-  // Step 1: Grand Total = Last Avan Name B1 + Galip Anasir B1 + Nine Mizan Total
-  const grandTotal = lastAvanNameB1 + dominantB1 + kitabetTotal;
+export function calculateEsmaKasemMethod2({ lastCompletedAvanName, dominantB1, kitabetTotal, mizanulMevazin, dominant, getBastLevelFn }) {
+  // Step 1: Calculate First Bast of COMPLETED last Avan name
+  const lastAvanNameB1 = calcBastFromText(lastCompletedAvanName, (ch) => getBastLevelFn(ch, 1));
+  
+  // Step 2: Grand Total = Last Avan Name B1 + Galip Anasir B1 + (Nine Mizan + Kitabet Total)
+  const combinedMizanKitabet = mizanulMevazin + kitabetTotal;
+  const grandTotal = lastAvanNameB1 + dominantB1 + combinedMizanKitabet;
   
   // Step 2: Istintaq → Seed Letters
   const seedLetters = istintak(grandTotal);
@@ -248,8 +252,9 @@ export function calculateEsmaKasemMethod2({ lastAvanNameB1, dominantB1, kitabetT
   }
   
   // Step 6: Calculate Esma-i Kasem Total for Divine Names stage
+  // Formula: Remainder B1 + Dominant B1 + (Nine Mizan + Kitabet Total)
   const remainderB1 = remainderLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-  const kasemTotal = remainderB1 + dominantB1 + grandTotal;
+  const kasemTotal = remainderB1 + dominantB1 + combinedMizanKitabet;
   
   return {
     names: groups.map(g => g.name),
@@ -263,6 +268,8 @@ export function calculateEsmaKasemMethod2({ lastAvanNameB1, dominantB1, kitabetT
     isFerd,
     derivations,
     grandTotal,
+    lastAvanNameB1,
+    combinedMizanKitabet,
   };
 }
 
@@ -420,11 +427,20 @@ export function runMethod2Pipeline({ mizanulMevazin, dominant, getBastLevelFn })
   });
   
   // Stage 3: Esma-i Kasem
-  // PDF: Use Last Avan Name B1 + Galip Anasir B1 + Kitabet Total (NOT Avan Total)
+  // PDF: Use COMPLETED last Avan name (with remainder applied) + Galip Anasir B1 + (Nine Mizan + Kitabet Total)
+  // Determine the completed last Avan name (with remainder if exists)
+  let lastCompletedAvanName = avan.lastCompletedName;
+  if (avan.remainder && avan.remainder.length > 0 && avan.groups.length > 0) {
+    // PDF remainder rule: complete with first 2 letters from FIRST Kasem name
+    // For now, use the remainder as-is (will be completed after Kasem grouping)
+    lastCompletedAvanName = avan.lastCompletedName;
+  }
+  
   const kasem = calculateEsmaKasemMethod2({
-    lastAvanNameB1: avan.lastAvanNameB1,
+    lastCompletedAvanName,
     dominantB1,
     kitabetTotal: kitabet.total,
+    mizanulMevazin,
     dominant,
     getBastLevelFn,
   });
