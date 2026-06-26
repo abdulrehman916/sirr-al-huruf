@@ -7,6 +7,7 @@ import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ABJAD_VALUES } from "@/lib/abjadValues";
+import { usePageState } from "@/context/PageStateContext";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -19,9 +20,33 @@ export default function HolyOneDetailPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getPageState, setPageState, pushNavState, popNavState } = usePageState();
   const [name, setName] = useState(null);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState("A"); // A or B
+
+  // Save navigation state before navigating to detail
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const listKey = tab === 'b' || nameId?.startsWith('PDF-') 
+      ? 'magical-holy-names-section-b' 
+      : 'magical-holy-names-section-a';
+    
+    const currentState = getPageState(listKey, {});
+    pushNavState('holy-names', {
+      listKey,
+      ...currentState,
+      fromPage: '/holy-names'
+    });
+
+    // Cleanup on unmount - restore state when returning
+    return () => {
+      const savedState = popNavState('holy-names');
+      if (savedState && savedState.listKey) {
+        // State will be restored by the list page on mount
+      }
+    };
+  }, [nameId, searchParams.get('tab')]);
 
   useEffect(() => {
     loadName();

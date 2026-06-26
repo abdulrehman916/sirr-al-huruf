@@ -12,20 +12,22 @@ import { base44 } from "@/api/base44Client";
 // ── SECTION A COMPONENT ──────────────────────────────────────────
 function SectionA() {
   const { getPageState, setPageState, clearPageState } = usePageState();
-  const initial = getPageState("magical-holy-names", { query: "", category: "all", sortIdx: 0 });
+  const listKey = "magical-holy-names-section-a";
+  const initial = getPageState(listKey, { query: "", category: "all", sortIdx: 0, openId: null, scrollTop: 0 });
 
-  const [query, setQuery] = useState(initial.query);
-  const [category, setCategory] = useState(initial.category);
-  const [sortIdx, setSortIdx] = useState(initial.sortIdx);
-  const [openId, setOpenId] = useState(null);
+  const [query, setQuery] = useState(initial.query || "");
+  const [category, setCategory] = useState(initial.category || "all");
+  const [sortIdx, setSortIdx] = useState(initial.sortIdx || 0);
+  const [openId, setOpenId] = useState(initial.openId || null);
 
   const SORT_CYCLE = ["default", "az", "za", "value"];
   const SORT_LABELS = { default: "#", az: "A → Z", za: "Z → A", value: "Value ↑" };
   const sort = SORT_CYCLE[sortIdx];
 
+  // Save state on every change
   useEffect(() => {
-    setPageState("magical-holy-names", { query, category, sortIdx });
-  }, [query, category, sortIdx, setPageState]);
+    setPageState(listKey, { query, category, sortIdx, openId });
+  }, [query, category, sortIdx, openId, setPageState]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -42,7 +44,11 @@ function SectionA() {
     });
   }, [query, category, sort]);
 
-  const handleToggle = (id) => setOpenId(prev => prev === id ? null : id);
+  const handleToggle = (id) => {
+    const newOpenId = openId === id ? null : id;
+    setOpenId(newOpenId);
+    setPageState(listKey, { openId: newOpenId });
+  };
 
   const P = {
     border: "rgba(212,175,55,0.30)",
@@ -55,8 +61,40 @@ function SectionA() {
     bgHi: "rgba(212,175,55,0.14)",
   };
 
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (initial.scrollTop) {
+      const container = document.querySelector('[data-scroll-container="true"]');
+      if (container) {
+        requestAnimationFrame(() => {
+          container.scrollTop = initial.scrollTop || 0;
+        });
+      }
+    }
+  }, []);
+
+  // Save scroll position periodically
+  useEffect(() => {
+    const container = document.querySelector('[data-scroll-container="true"]');
+    if (!container) return;
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setPageState(listKey, { scrollTop: container.scrollTop });
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [listKey, setPageState]);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="section-a-container">
       <div className="flex items-center gap-2 rounded-2xl border px-3 py-2.5" style={{ background: P.bg, borderColor: P.border }}>
         <Search className="w-4 h-4 flex-shrink-0" style={{ color: P.dim }} />
         <input
@@ -211,11 +249,52 @@ function SectionA() {
 
 // ── SECTION B COMPONENT ──────────────────────────────────────────
 function SectionB() {
+  const { getPageState, setPageState } = usePageState();
+  const listKey = "magical-holy-names-section-b";
+  const initial = getPageState(listKey, { searchQuery: "", selectedSurah: "all", scrollTop: 0 });
+
   const [names, setNames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSurah, setSelectedSurah] = useState("all");
+  const [searchQuery, setSearchQuery] = useState(initial.searchQuery || "");
+  const [selectedSurah, setSelectedSurah] = useState(initial.selectedSurah || "all");
   const [surahList, setSurahList] = useState([]);
+
+  // Save state on every change
+  useEffect(() => {
+    setPageState(listKey, { searchQuery, selectedSurah });
+  }, [searchQuery, selectedSurah, setPageState]);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (initial.scrollTop) {
+      const container = document.querySelector('[data-scroll-container="true"]');
+      if (container) {
+        requestAnimationFrame(() => {
+          container.scrollTop = initial.scrollTop || 0;
+        });
+      }
+    }
+  }, []);
+
+  // Save scroll position periodically
+  useEffect(() => {
+    const container = document.querySelector('[data-scroll-container="true"]');
+    if (!container) return;
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setPageState(listKey, { scrollTop: container.scrollTop });
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [listKey, setPageState]);
 
   useEffect(() => {
     loadNames();
@@ -260,7 +339,7 @@ function SectionB() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="section-b-container">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -411,7 +490,24 @@ function TabSwitcher({ activeTab, onTabChange }) {
 
 // ── MAIN PAGE ────────────────────────────────────────────────────
 export default function MagicalHolyNamesPage() {
-  const [activeTab, setActiveTab] = useState("section-a");
+  const { getPageState, setPageState } = usePageState();
+  const pageKey = "magical-holy-names-page";
+  const initial = getPageState(pageKey, { activeTab: "section-a" });
+  const [activeTab, setActiveTab] = useState(initial.activeTab || "section-a");
+
+  // Save active tab on change
+  useEffect(() => {
+    setPageState(pageKey, { activeTab });
+  }, [activeTab, setPageState]);
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    // Reset scroll when switching tabs
+    const container = document.querySelector('[data-scroll-container="true"]');
+    if (container) {
+      container.scrollTop = 0;
+    }
+  };
 
   return (
     <PageLayout>
@@ -424,7 +520,7 @@ export default function MagicalHolyNamesPage() {
             icon="✦"
           />
 
-          <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+          <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
 
           <AnimatePresence mode="wait">
             <motion.div

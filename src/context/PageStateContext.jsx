@@ -1,16 +1,20 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 const PageStateContext = createContext(null);
+const STORAGE_KEY = 'app_navigation_state_v2';
 
 export function PageStateProvider({ children }) {
   const [pageStates, setPageStates] = useState({});
+  const [navStack, setNavStack] = useState([]);
 
   // Load from sessionStorage on mount
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('pageStates');
+      const saved = sessionStorage.getItem(STORAGE_KEY);
       if (saved) {
-        setPageStates(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setPageStates(parsed.pageStates || {});
+        setNavStack(parsed.navStack || []);
       }
     } catch (e) {
       console.warn('[PageState] Failed to load from sessionStorage:', e);
@@ -20,11 +24,15 @@ export function PageStateProvider({ children }) {
   // Save to sessionStorage on change
   useEffect(() => {
     try {
-      sessionStorage.setItem('pageStates', JSON.stringify(pageStates));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        pageStates,
+        navStack,
+        timestamp: Date.now()
+      }));
     } catch (e) {
       console.warn('[PageState] Failed to save to sessionStorage:', e);
     }
-  }, [pageStates]);
+  }, [pageStates, navStack]);
 
   const getPageState = useCallback((pageKey, defaultValue = {}) => {
     return pageStates[pageKey] ?? defaultValue;
@@ -35,7 +43,8 @@ export function PageStateProvider({ children }) {
       ...prev,
       [pageKey]: {
         ...prev[pageKey],
-        ...newState
+        ...newState,
+        _timestamp: Date.now()
       }
     }));
   }, []);
@@ -48,8 +57,56 @@ export function PageStateProvider({ children }) {
     });
   }, []);
 
+  // Push navigation state to stack before navigating to detail
+  const pushNavState = useCallback((pageKey, state) => {
+    setNavStack(prev => [...prev, {
+      pageKey,
+      state: { ...state },
+      timestamp: Date.now()
+    }]);
+  }, []);
+
+  // Pop navigation state from stack when returning
+  const popNavState = useCallback((pageKey) => {
+    let popped = null;
+    setNavStack(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      if (last.pageKey === pageKey || !pageKey) {
+        popped = last;
+        return prev.slice(0, -1);
+      }
+      return prev;
+    });
+    return popped;
+  }, []);
+
+  // Get last navigation state for a page
+  const getLastNavState = useCallback((pageKey) => {
+    for (let i = navStack.length - 1; i >= 0; i--) {
+      if (navStack[i].pageKey === pageKey) {
+        return navStack[i].state;
+      }
+    }
+    return null;
+  }, [navStack]);
+
+  // Clear navigation stack (when user intentionally resets)
+  const clearNavStack = useCallback(() => {
+    setNavStack([]);
+  }, []);
+
   return (
-    <PageStateContext.Provider value={{ getPageState, setPageState, clearPageState }}>
+    <PageStateContext.Provider value={{
+      getPageState,
+      setPageState,
+      clearPageState,
+      pushNavState,
+      popNavState,
+      getLastNavState,
+      clearNavStack,
+      navStack
+    }}>
       {children}
     </PageStateContext.Provider>
   );
@@ -63,26 +120,105 @@ export function usePageState() {
   return context;
 }
 
-// Hook for scroll position persistence
-export function useScrollPersist() {
+// Enhanced hook for scroll position persistence with pixel-perfect accuracy
+export function useScrollPersist(pageKey = null) {
+  const { getPageState, setPageState } = usePageState();
+  const scrollContainerRef = useRef(null);
+  const rafRef = useRef(null);
+
+  const key = pageKey || `scroll_${window.location.pathname}`;
+
   useEffect(() => {
-    const scrollKey = `scroll_${window.location.pathname}`;
+    const container = scrollContainerRef.current || document.querySelector('[data-scroll-container="true"]');
+    if (!container) return;
+
+    // Restore scroll position immediately
+    const savedState = getPageState(key, {});
+    const savedScroll = savedState.scrollPosition || savedState.scrollTop;
     
-    // Restore scroll position
-    const saved = sessionStorage.getItem(scrollKey);
-    if (saved) {
-      const scrollContainer = document.querySelector('[data-scroll-container="true"]');
-      if (scrollContainer) {
-        scrollContainer.scrollTop = parseInt(saved, 10);
-      }
+    if (typeof savedScroll === 'number' && !isNaN(savedScroll)) {
+      // Use requestAnimationFrame for smooth restoration
+      rafRef.current = requestAnimationFrame(() => {
+        container.scrollTop = savedScroll;
+      });
     }
 
-    // Save scroll position on unmount
-    return () => {
-      const scrollContainer = document.querySelector('[data-scroll-container="true"]');
-      if (scrollContainer) {
-        sessionStorage.setItem(scrollKey, scrollContainer.scrollTop.toString());
+    // Throttled scroll save using RAF
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const state = getPageState(key, {});
+          setPageState(key, {
+            scrollPosition: container.scrollTop,
+            scrollTop: container.scrollTop
+          });
+          ticking = false;
+        });
+        ticking = true;
       }
     };
-  }, []);
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Save on unmount
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      container.removeEventListener('scroll', handleScroll);
+      if (container) {
+        const state = getPageState(key, {});
+        setPageState(key, {
+          scrollPosition: container.scrollTop,
+          scrollTop: container.scrollTop
+        });
+      }
+    };
+  }, [key, getPageState, setPageState]);
+
+  return scrollContainerRef;
+}
+
+// Hook to preserve complete list state (search, filters, sort, expanded items)
+export function useListStatePersistence(listKey, initialState = {}) {
+  const { getPageState, setPageState } = usePageState();
+  
+  const state = getPageState(listKey, {
+    searchQuery: '',
+    filters: {},
+    sortField: null,
+    sortDirection: 'asc',
+    expandedItems: [],
+    selectedItems: [],
+    currentPage: 1,
+    scrollTop: 0,
+    ...initialState
+  });
+
+  const updateListState = useCallback((updates) => {
+    setPageState(listKey, {
+      ...state,
+      ...updates,
+      _lastUpdated: Date.now()
+    });
+  }, [listKey, state, setPageState]);
+
+  const resetListState = useCallback(() => {
+    setPageState(listKey, {
+      searchQuery: '',
+      filters: {},
+      sortField: null,
+      sortDirection: 'asc',
+      expandedItems: [],
+      selectedItems: [],
+      currentPage: 1,
+      scrollTop: 0,
+      _lastUpdated: Date.now()
+    });
+  }, [listKey, setPageState]);
+
+  return {
+    state,
+    updateListState,
+    resetListState
+  };
 }
