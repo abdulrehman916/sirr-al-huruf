@@ -1212,7 +1212,7 @@ export default function Method2Pipeline({ grandBast, dominant, onVefkReady, getB
             getBastLevelFn={getBastLevelFn} 
             kitabetTotal={result.kitabet.total}
             dominantB1={dominantB1}
-            lastAvanNameB1={result.avan.lastAvanNameB1}
+            lastAvanNameB1={result.kasem.lastAvanNameB1}
             mizanulMevazin={mizanulMevazin}
           />
         )}
