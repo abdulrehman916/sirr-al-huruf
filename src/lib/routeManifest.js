@@ -25,6 +25,11 @@ const ROUTE_MANIFEST = [
   { path: '/holy-names', component: 'MagicalHolyNamesPage', chunk: 'MagicalHolyNamesPage' },
   { path: '/holy-names/one', component: 'HolyOnePage', chunk: 'HolyOnePage', flags: ['public'] },
   { path: '/holy-names/one/:nameId', component: 'HolyOneDetailPage', chunk: 'HolyOneDetailPage', flags: ['public'] },
+  // Section B - PDF Source Holy Names
+  { path: '/holy-names-pdf', component: 'HolyOnePDFSectionB', chunk: 'HolyOnePDFSectionB', flags: ['public'] },
+  { path: '/holy-names-pdf/:nameId', component: 'HolyOnePDFDetailPage', chunk: 'HolyOnePDFDetailPage', flags: ['public'] },
+  { path: '/holy-names-pdf', component: 'HolyOnePDFSectionB', chunk: 'HolyOnePDFSectionB', flags: ['public'] },
+  { path: '/holy-names-pdf/:nameId', component: 'HolyOnePDFDetailPage', chunk: 'HolyOnePDFDetailPage', flags: ['public'] },
   { path: '/astro-clock', component: 'AstroClockPage', chunk: 'AstroClockPage' },
   { path: '/astro-clock/search', component: 'AstroClockSearch', chunk: 'AstroClockSearch' },
   

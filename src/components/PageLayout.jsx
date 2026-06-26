@@ -21,7 +21,8 @@ const TAB_KEYS = [
   { id: "faal-hasrath",     arabicTitle: "فال الحسرات",     englishSubtitle: "FAAL",    path: "/faal-hasrath" },
   { id: "plants",           arabicTitle: "النباتات",        englishSubtitle: "PLANTS",  path: "/plants" },
   { id: "evil-jinn",        arabicTitle: "الجن",            englishSubtitle: "JINN",    path: "/evil-jinn" },
-  { id: "holy-names",       arabicTitle: "الأسماء",         englishSubtitle: "NAMES",   path: "/holy-names" },
+  { id: "holy-names",       arabicTitle: "الأسماء أ",       englishSubtitle: "NAMES-A", path: "/holy-names" },
+  { id: "holy-names-pdf",   arabicTitle: "الأسماء ب",       englishSubtitle: "NAMES-B", path: "/holy-names-pdf" },
   { id: "astro-clock",      arabicTitle: "الساعة",          englishSubtitle: "ASTRO",   path: "/astro-clock" },
   { id: "support",          arabicTitle: "الدعم",           englishSubtitle: "SUPPORT", path: "/support" },
 ];
