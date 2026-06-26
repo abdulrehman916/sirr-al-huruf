@@ -79,8 +79,25 @@ function buildDefaultSelections(dominant) {
 
 const PAGE_KEY = 'mizaan9';
 
+// ── Helper: compute bast value of Arabic text using the correct table for the active section ──
+function calcCustomBastForSection(text, activeSection) {
+  if (!text) return 0;
+  if (activeSection === 3) {
+    // Section 3: Abjad Kebir values
+    const clean = text.replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '').replace(/\u0640/g, '').replace(/[^\u0600-\u06FF]/g, '');
+    const NORM = { 'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ئ':'ي','ؤ':'و','ة':'ه' };
+    const ABJAD = {'ا':1,'ب':2,'ج':3,'د':4,'ه':5,'و':6,'ز':7,'ح':8,'ط':9,'ي':10,'ك':20,'ل':30,'م':40,'ن':50,'س':60,'ع':70,'ف':80,'ص':90,'ق':100,'ر':200,'ش':300,'ت':400,'ث':500,'خ':600,'ذ':700,'ض':800,'ظ':900,'غ':1000};
+    let total = 0;
+    for (const ch of clean) { total += ABJAD[NORM[ch] || ch] || 0; }
+    return total;
+  }
+  // Section 1 & 2: Mizan Bast1 values
+  const { total } = mizaanCalcBast(text, 1);
+  return total;
+}
+
 // ── Helper: re-derive grand totals using same logic as MizaanFinalSummary ──
-function computeGrandTotals(result, selections, degreeSels, inputText, customPurpose, ds) {
+function computeGrandTotals(result, selections, degreeSels, inputText, customPurpose, ds, activeSection) {
   if (!result) return { grandBast: 0, grandLetters: 0 };
 
   function countArabicLetters(str) {
@@ -129,8 +146,7 @@ function computeGrandTotals(result, selections, degreeSels, inputText, customPur
   });
   const trimmedCustom = (customPurpose ?? "").trim();
   if (trimmedCustom) {
-    const { total: customBastVal } = mizaanCalcBast(trimmedCustom, 1);
-    grandBast   += customBastVal;
+    grandBast   += calcCustomBastForSection(trimmedCustom, activeSection);
     grandLetters += countArabicLetters(trimmedCustom);
   }
 
@@ -345,7 +361,7 @@ export default function Mizaan9Page() {
         {/* 9 Mizaans */}
         <AnimatePresence mode="wait">
           {result && (
-            <motion.div key="mizaan-9-flow"
+            <motion.div key={`mizaan-9-flow-s${activeSection}`}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="space-y-2">
 
@@ -402,14 +418,14 @@ export default function Mizaan9Page() {
               <MizaanDivider />
               <Mizaan9Final               result={result} selections={selections} degreeSels={degreeSels} onDegreeSels={setDegreeSels} degrees9Data={ds.degrees} />
               <MizaanDivider />
-              <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} ds={ds} />
+              <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} ds={ds} calcCustomBast={(t) => calcCustomBastForSection(t, activeSection)} />
               <MizaanDivider />
 
               {/* ═══════════════════════════════════════════════════════════════ */}
               {/* SECTION 1: OPTION 1 — POST-PIPELINE RESULTS (LOCKED) */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               {(() => {
-                const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds);
+                const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds, activeSection);
                 const dominant = result?.dominant;
                 if (!grandBast || grandBast <= 0) return null;
 

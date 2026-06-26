@@ -100,7 +100,7 @@ function MizaanRow({ number, numberAR, label, entries, bast, letters, color }) {
 }
 
 // ─── Main Component ──────────────────────────────────────────────
-export default function MizaanFinalSummary({ result, selections, degreeSels = {}, inputText = "", customPurpose = "", ds }) {
+export default function MizaanFinalSummary({ result, selections, degreeSels = {}, inputText = "", customPurpose = "", ds, calcCustomBast }) {
   const { dominant, bast1Total: inputBast = 0, letterCount: inputLetterCount = 0 } = result ?? {};
 
   const mizaans = useMemo(() => {
@@ -203,7 +203,9 @@ export default function MizaanFinalSummary({ result, selections, degreeSels = {}
     });
     const trimmedCustom = (customPurpose ?? "").trim();
     if (trimmedCustom) {
-      const { total: customBast } = calcBast(trimmedCustom, 1);
+      const customBast = calcCustomBast
+        ? calcCustomBast(trimmedCustom)
+        : calcBast(trimmedCustom, 1)?.total ?? 0;
       const customLetters = countArabicLetters(trimmedCustom);
       m7Entries.push({ arabic: trimmedCustom, icon: '✨', bast: customBast, color: G.text });
       m7Bast += customBast;
