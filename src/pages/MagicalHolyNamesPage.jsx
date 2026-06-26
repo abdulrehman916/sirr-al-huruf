@@ -307,22 +307,60 @@ function SectionB() {
             <Link
               key={name.id}
               to={`/holy-names/one/${name.pdf_name_id}?tab=b`}
-              className="card-dark p-4 hover:border-gold transition-all duration-200 group"
+              className="card-dark p-5 hover:border-gold transition-all duration-200 group"
+              style={{
+                background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+                border: "1px solid rgba(212,175,55,0.22)",
+                borderRadius: "1rem"
+              }}
             >
-              <div className="space-y-3">
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold font-amiri text-gold group-hover:text-gold-dim transition-colors">
+              <div className="space-y-4">
+                {/* Arabic Name - Large, Clear, Elegant */}
+                <div className="text-center py-3 px-2 rounded-xl" style={{
+                  background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
+                  border: "1px solid rgba(212,175,55,0.30)"
+                }}>
+                  <h3 className="font-amiri font-bold leading-[2.6]" style={{
+                    fontSize: "clamp(2rem, 5vw, 2.8rem)",
+                    color: "#F5D060",
+                    textShadow: "0 0 24px rgba(212,175,55,0.35)",
+                    letterSpacing: "0.03em"
+                  }}>
                     {name.arabic_name}
                   </h3>
-                  <p className="text-xs text-gray-400 mt-1">{name.arabic_transliteration}</p>
+                  <p className="text-[10px] text-gray-400 mt-2 tracking-widest uppercase">{name.arabic_transliteration}</p>
                 </div>
-                <div className="text-center space-y-1">
-                  <p className="text-sm font-malayalam text-gray-300">{name.malayalam_pronunciation}</p>
-                  <p className="text-xs text-gray-400">{name.meaning_malayalam}</p>
+                
+                {/* Malayalam Pronunciation */}
+                <div className="text-center">
+                  <p className="font-malayalam text-base" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    {name.malayalam_pronunciation}
+                  </p>
                 </div>
-                <div className="flex justify-between items-center text-xs text-gray-500 pt-2 border-t border-gold-dim/20">
-                  <span>{name.surah_name || "PDF"}</span>
-                  <span>Page {name.source_pdf_page}</span>
+                
+                {/* Meaning - Highlighted, Immediate Identification */}
+                <div className="rounded-xl p-4 text-center" style={{
+                  background: "rgba(212,175,55,0.10)",
+                  border: "1px solid rgba(212,175,55,0.40)",
+                  boxShadow: "0 0 20px rgba(212,175,55,0.12)"
+                }}>
+                  <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: "rgba(245,208,96,0.55)" }}>
+                    അർത്ഥം / Meaning
+                  </p>
+                  <p className="font-malayalam font-semibold leading-relaxed" style={{
+                    fontSize: "clamp(0.95rem, 2.2vw, 1.1rem)",
+                    color: "#F5D060"
+                  }}>
+                    {name.meaning_malayalam}
+                  </p>
+                </div>
+                
+                {/* Source Reference */}
+                <div className="flex justify-between items-center text-xs pt-2 border-t" style={{
+                  borderColor: "rgba(212,175,55,0.20)"
+                }}>
+                  <span style={{ color: "rgba(255,255,255,0.50)" }}>{name.surah_name || "PDF"}</span>
+                  <span style={{ color: "rgba(212,175,55,0.60)" }}>Page {name.source_pdf_page}</span>
                 </div>
               </div>
             </Link>
