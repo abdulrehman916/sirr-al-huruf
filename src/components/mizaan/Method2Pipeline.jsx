@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { runMethod2Pipeline } from "../../lib/mizaanMethod2Engine";
-import { getBastLevel } from "../../lib/mizaanPostEngine";
+import { getBastLevel, istintak } from "../../lib/mizaanPostEngine";
 
 const G = {
   gold: "#F5D060", goldDim: "rgba(245,208,96,0.55)", goldFaint: "rgba(212,175,55,0.07)",
