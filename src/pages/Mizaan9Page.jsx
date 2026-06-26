@@ -282,14 +282,29 @@ export default function Mizaan9Page() {
         {/* Header */}
         <PageTitle arabic="ميزان الأعداد" latin="9 Mizan" subtitle="Complete Occult Analysis System" icon="٩" />
 
-        {/* Method 1 / Method 2 / Method 3 / Method 4 / Method 5 Toggle */}
+        {/* Method Navigation (NEW - Top Level) */}
+        <div className="flex gap-2 mb-3">
+          {[1, 2, 3, 4, 5].map((method) => (
+            <button key={method}
+              className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm"
+              style={{
+                background: 'rgba(212,175,55,0.18)',
+                border: '1.5px solid rgba(212,175,55,0.65)',
+                color: '#F5D060',
+                boxShadow: '0 0 20px rgba(212,175,55,0.20)',
+              }}>
+              <span className="font-inter text-[9px] uppercase tracking-widest block">METHOD</span>
+              <span className="font-amiri text-sm">{method}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Section 1 / Section 2 / Section 3 Toggle (ORIGINAL - Restored) */}
         <div className="flex gap-2">
           {[
             { s: 1, arabic: 'المجموعة الأولى' },
             { s: 2, arabic: 'المجموعة الثانية' },
             { s: 3, arabic: 'الأبجد الكبير' },
-            { s: 4, arabic: 'الطريقة الرابعة' },
-            { s: 5, arabic: 'الطريقة الخامسة' },
           ].map(({ s, arabic }) => (
             <button key={s} onClick={() => setActiveSection(s)}
               className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
@@ -300,7 +315,7 @@ export default function Mizaan9Page() {
                 boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
               }}>
               <span className="font-amiri text-sm">{arabic}</span>
-              <span className="font-inter text-[9px] uppercase tracking-widest">METHOD {s}</span>
+              <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
             </button>
           ))}
         </div>
