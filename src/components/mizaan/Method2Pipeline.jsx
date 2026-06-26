@@ -283,7 +283,7 @@ function EsmaKitabetSection({ kitabetData, dominant, getBastLevelFn, mizanulMeva
   );
 }
 
-function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, mizanulMevazin, dominantB1, kitabetRemainder }) {
+function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, mizanulMevazin, dominantB1, kitabetRemainder, kitabetNames }) {
   if (!avanData) return null;
   const safe = {
     seedLetters: Array.isArray(avanData.seedLetters) ? avanData.seedLetters : [],
@@ -303,19 +303,30 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
   };
   const anasirLetters = ANASIR_LETTERS[dominant] || ANASIR_LETTERS.fire;
   
-  // Combine remainder from Kitabet + Anasir letters
-  const safeKitabetRemainder = Array.isArray(kitabetRemainder) ? kitabetRemainder : [];
-  const combinedLetters = [...safeKitabetRemainder, ...anasirLetters];
-  const combinedCount = combinedLetters.length;
+  // PDF Algorithm: Last Kitabet Name + Dominant Anasir + Nine Mizan Total
+  const safeKitabetNames = Array.isArray(kitabetNames) ? kitabetNames : [];
+  const lastKitabetName = safeKitabetNames.length > 0 ? safeKitabetNames[safeKitabetNames.length - 1] : '';
   
-  // Calculate Bast total for combined letters
-  const combinedBastTotal = combinedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+  // Calculate First Bast of Last Kitabet Name
+  const lastKitabetNameB1 = lastKitabetName.split('').reduce((s, ch) => s + (getBastLevelFn(ch, 1) || 0), 0);
+  
+  // Calculate First Bast of Dominant Anasir (all 7 letters)
+  const anasirB1 = anasirLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+  
+  // Grand Total = Last Kitabet Name B1 + Dominant Anasir B1 + Nine Mizan Total
+  const grandTotal = lastKitabetNameB1 + anasirB1 + mizanulMevazin;
+  
+  // Istintaq of Grand Total → Seed Letters for A'van
+  const avanSeedLetters = istintak(grandTotal);
+  const avanSeedCount = avanSeedLetters.length;
   
   // Determine Bast level based on even/odd
-  const isFerd = combinedCount % 2 !== 0;
+  const isFerd = avanSeedCount % 2 !== 0;
   const bastLevel = isFerd ? 5 : 4;
   
-  const remainderB1 = safe.remainder.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+  // Calculate A'van Total using PDF algorithm (remainder from Kitabet + Anasir + Kitabet Total)
+  const safeKitabetRemainder = Array.isArray(kitabetRemainder) ? kitabetRemainder : [];
+  const remainderB1 = safeKitabetRemainder.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
   const calcTotal = remainderB1 + dominantB1 + kitabetTotal;
   
   // Calculate seed letters for Kasem stage (Istintaq of A'van Total)
@@ -327,42 +338,81 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
     'ض': 'Dat', 'ط': 'Tı', 'ظ': 'Zı', 'ف': 'Fe', 'ق': 'Kaf', 'ل': 'Lam',
     'م': 'Mim', 'ن': 'Nun', 'و': 'Vav', 'ه': 'He', 'ي': 'Ye'
   };
+  
+  // Combined letters for Bast calculations (remainder + Anasir)
+  const combinedLetters = [...safeKitabetRemainder, ...anasirLetters];
 
   return (
     <Card accent={elementMeta.color}>
       <SectionHeader step="2" label="Esma-i A'van" arabic="أسماء الأعوان" color={elementMeta.color} />
       
-      {/* STEP 1: Remainder from Kitabet + Anasir Letters */}
+      {/* STEP 1: Three Components for A'van Total (PDF Algorithm) */}
       <div className="mb-6 rounded-lg border p-5" style={{ background: G.bgCard, borderColor: elementMeta.color + "55" }}>
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>Step 1 — Remainder from Kitabet + Dominant Anasir Letters</div>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>Step 1 — Esma-i A'van Total Calculation (PDF Method)</div>
         
-        {/* Kitabet Remainder */}
-        <div className="mb-4">
-          <div className="text-[7px] mb-2" style={{ color: G.dim }}>Remainder from Esma-i Kitabet:</div>
-          {safeKitabetRemainder.length > 0 ? (
-            <LetterRow letters={safeKitabetRemainder} color={G.goldDim} size="xl" rtl />
-          ) : (
-            <span className="font-inter text-xs italic" style={{ color: G.dim }}>No remainder</span>
-          )}
-          <div className="text-[6px] mt-1" style={{ color: G.dim }}>{safeKitabetRemainder.length} letters</div>
+        {/* Component 1: Last Kitabet Name B1 */}
+        <div className="mb-4 rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+          <div className="text-[7px] mb-2" style={{ color: G.dim }}>1. Last Esma-i Kitabet Name (Birinci Bast)</div>
+          <div className="flex items-center justify-between">
+            <div className="font-amiri text-3xl font-bold" style={{ color: G.gold }} dir="rtl">{lastKitabetName}</div>
+            <div className="text-right">
+              <div className="text-[6px]" style={{ color: G.dim }}>B1 Value</div>
+              <div className="text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{lastKitabetNameB1.toLocaleString()}</div>
+            </div>
+          </div>
         </div>
         
-        {/* Anasir Letters */}
-        <div className="mb-4">
-          <div className="text-[7px] mb-2" style={{ color: G.dim }}>Dominant Anasir Letters ({dominant}):</div>
-          <LetterRow letters={anasirLetters} color={elementMeta.color} size="xl" rtl />
-          <div className="text-[6px] mt-1" style={{ color: G.dim }}>{anasirLetters.length} letters</div>
+        {/* Component 2: Dominant Anasir B1 */}
+        <div className="mb-4 rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+          <div className="text-[7px] mb-2" style={{ color: G.dim }}>2. Dominant Anasir Letters (Birinci Bast)</div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="font-amiri text-xl" style={{ color: elementMeta.color }}>{elementMeta.arabic}</span>
+              <span className="font-inter text-xs" style={{ color: G.dim }}>({dominant})</span>
+            </div>
+            <div className="text-right">
+              <div className="text-[6px]" style={{ color: G.dim }}>B1 Value</div>
+              <div className="text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{anasirB1.toLocaleString()}</div>
+            </div>
+          </div>
+          <div className="mt-2">
+            <LetterRow letters={anasirLetters} color={elementMeta.color} size="sm" rtl />
+          </div>
         </div>
         
-        {/* Combined Total */}
-        <div className="rounded-lg border p-4 text-center" style={{ background: G.bgInner, borderColor: elementMeta.color + "55" }}>
-          <div className="text-[7px] mb-2" style={{ color: G.dim }}>Combined Total Letters:</div>
-          <div className="flex items-center justify-center gap-3 text-xl font-bold">
-            <span className="tabular-nums" style={{ color: G.goldDim }}>{safeKitabetRemainder.length}</span>
+        {/* Component 3: Nine Mizan Total */}
+        <div className="mb-4 rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+          <div className="text-[7px] mb-2" style={{ color: G.dim }}>3. Nine Mizan Total (Mizanül Mevazin)</div>
+          <div className="text-3xl font-bold tabular-nums" style={{ color: G.gold }}>{mizanulMevazin.toLocaleString()}</div>
+        </div>
+        
+        {/* Grand Total Formula */}
+        <div className="rounded-xl border p-5 text-center" style={{ background: G.bg, borderColor: elementMeta.color }}>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xl font-bold">
+            <span className="tabular-nums" style={{ color: elementMeta.color }}>{lastKitabetNameB1.toLocaleString()}</span>
             <span style={{ color: G.goldDim }}>+</span>
-            <span className="tabular-nums" style={{ color: elementMeta.color }}>{anasirLetters.length}</span>
+            <span className="tabular-nums" style={{ color: elementMeta.color }}>{anasirB1.toLocaleString()}</span>
+            <span style={{ color: G.goldDim }}>+</span>
+            <span className="tabular-nums" style={{ color: G.gold }}>{mizanulMevazin.toLocaleString()}</span>
             <span style={{ color: G.goldDim }}>=</span>
-            <span className="tabular-nums text-3xl" style={{ color: G.gold }}>{combinedCount}</span>
+            <span className="tabular-nums text-4xl" style={{ color: G.gold }}>{grandTotal.toLocaleString()}</span>
+          </div>
+          <div className="text-[7px] mt-3" style={{ color: G.dim }}>Last Kitabet Name B1 + Dominant Anasir B1 + Nine Mizan Total = Grand Total</div>
+        </div>
+      </div>
+      
+      {/* STEP 2: Istintaq of Grand Total → Seed Letters */}
+      <div className="mb-6 rounded-lg border p-5" style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>Step 2 — Istintaq of Grand Total → Seed Letters</div>
+        <div className="text-center mb-3">
+          <div className="text-[7px]" style={{ color: G.dim }}>Grand Total: <span className="font-bold tabular-nums" style={{ color: G.gold }}>{grandTotal.toLocaleString()}</span></div>
+          <div className="text-[7px]" style={{ color: G.dim }}>Istintaq → {avanSeedCount} Letters</div>
+        </div>
+        <LetterRow letters={avanSeedLetters} color={elementMeta.color} size="xl" rtl />
+        <div className="text-center mt-3">
+          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-xl border" style={{ background: G.bg, borderColor: elementMeta.color + "55" }}>
+            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Letter Count</span>
+            <span className="font-inter text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{avanSeedCount}</span>
           </div>
           <div className="text-[7px] mt-2" style={{ color: G.dim }}>
             {isFerd ? (
