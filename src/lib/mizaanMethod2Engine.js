@@ -296,9 +296,87 @@ export function calculateKeywordSubtraction({ baseTotal, keyword, keywordValue, 
   };
 }
 
+// ── STEP 6: FINAL AVAN NAME (Keyword Subtraction + Remainder) ──
+// PDF: After Esma-i A'van, use keyword subtraction (Ayil = 51) to get final A'van name
+export function calculateFinalAvanName({ avanTotal, remainder: avanRemainder, firstAvanName, getBastLevelFn }) {
+  // Keyword subtraction: Ayil (51)
+  const ayilValue = 51;
+  const adjustedTotal = avanTotal - ayilValue;
+  const letters = istintak(adjustedTotal);
+  const name = letters.join('');
+  
+  // Combine with remainder from A'van stage
+  const safeRemainder = Array.isArray(avanRemainder) ? avanRemainder : [];
+  const finalLetters = safeRemainder.length > 0 ? [...letters, ...safeRemainder] : letters;
+  const finalName = finalLetters.join('');
+  
+  return {
+    avanTotal,
+    keyword: 'Ayil',
+    keywordValue: ayilValue,
+    adjustedTotal,
+    istintaqLetters: letters,
+    baseName: name,
+    remainder: safeRemainder,
+    finalName,
+    finalNameWithRemainder: finalName,
+  };
+}
+
+// ── STEP 7: FINAL KASEM NAME (Keyword Subtraction + Remainder) ─
+// PDF: After Esma-i Kasem, use keyword subtraction (Yushin = 316) to get final Kasem name
+export function calculateFinalKasemName({ kasemTotal, remainder: kasemRemainder, firstKasemName, getBastLevelFn }) {
+  // Keyword subtraction: Yushin (316)
+  const yushinValue = 316;
+  const adjustedTotal = kasemTotal - yushinValue;
+  const letters = istintak(adjustedTotal);
+  const name = letters.join('');
+  
+  // Combine with remainder from Kasem stage
+  const safeRemainder = Array.isArray(kasemRemainder) ? kasemRemainder : [];
+  const finalLetters = safeRemainder.length > 0 ? [...letters, ...safeRemainder] : letters;
+  const finalName = finalLetters.join('');
+  
+  return {
+    kasemTotal,
+    keyword: 'Yushin',
+    keywordValue: yushinValue,
+    adjustedTotal,
+    istintaqLetters: letters,
+    baseName: name,
+    remainder: safeRemainder,
+    finalName,
+    finalNameWithRemainder: finalName,
+  };
+}
+
+// ── STEP 8: FINAL COMBINED TOTAL & DIVINE NAMES ────────────────
+// PDF: Sum of Mizanül Mevazin + Kitabet Total + A'van Total + Kasem Total
+export function calculateFinalDivineNames({ mizanulMevazin, kitabetTotal, avanTotal, kasemTotal, getBastLevelFn }) {
+  const finalSum = mizanulMevazin + kitabetTotal + avanTotal + kasemTotal;
+  const istintaqLetters = istintak(finalSum);
+  const ebcedValues = istintaqLetters.map(letter => ({
+    letter,
+    value: getBastLevelFn(letter, 1) || 0,
+  }));
+  const ebcedTotal = ebcedValues.reduce((s, v) => s + v.value, 0);
+  
+  return {
+    mizanulMevazin,
+    kitabetTotal,
+    avanTotal,
+    kasemTotal,
+    finalSum,
+    istintaqLetters,
+    ebcedValues,
+    ebcedTotal,
+    matchedNames: [],
+  };
+}
+
 // ── MAIN PIPELINE: Complete Method 2 Workflow ──────────────────
 // Input: { mizanulMevazin, dominant, getBastLevelFn }
-// Output: Complete Method 2 results for all three Esma stages
+// Output: Complete Method 2 results for all stages per PDF
 export function runMethod2Pipeline({ mizanulMevazin, dominant, getBastLevelFn }) {
   // Stage 1: Esma-i Kitabet
   const kitabet = calculateEsmaKitabetMethod2({ mizanulMevazin, dominant, getBastLevelFn });
@@ -319,7 +397,24 @@ export function runMethod2Pipeline({ mizanulMevazin, dominant, getBastLevelFn })
     getBastLevelFn,
   });
   
-  // Stage 4: Divine Names
+  // Stage 4: Keyword Subtraction — Final A'van Name (Ayil = 51)
+  const finalAvan = calculateFinalAvanName({
+    avanTotal: avan.total,
+    remainder: avan.remainder,
+    firstAvanName,
+    getBastLevelFn,
+  });
+  
+  // Stage 5: Keyword Subtraction — Final Kasem Name (Yushin = 316)
+  const firstKasemName = kasem.names.length > 0 ? kasem.names[0] : '';
+  const finalKasem = calculateFinalKasemName({
+    kasemTotal: kasem.total,
+    remainder: kasem.remainder,
+    firstKasemName,
+    getBastLevelFn,
+  });
+  
+  // Stage 6: Divine Names (using all three totals)
   const divineNames = calculateDivineNamesMethod2({
     mizanulMevazin,
     kitabetTotal: kitabet.total,
@@ -327,11 +422,23 @@ export function runMethod2Pipeline({ mizanulMevazin, dominant, getBastLevelFn })
     getBastLevelFn,
   });
   
+  // Stage 7: Final Combined Total & Divine Names (all four totals)
+  const finalDivineNames = calculateFinalDivineNames({
+    mizanulMevazin,
+    kitabetTotal: kitabet.total,
+    avanTotal: avan.total,
+    kasemTotal: kasem.total,
+    getBastLevelFn,
+  });
+  
   return {
     kitabet,
     avan,
     kasem,
+    finalAvan,
+    finalKasem,
     divineNames,
+    finalDivineNames,
     workflow: 'method2',
   };
 }
