@@ -33,13 +33,13 @@ const ROUTE_MANIFEST = [
   { path: '/support/voice', component: 'SupportVoice', chunk: 'SupportVoice', flags: ['public'] },
   { path: '/support/ticket', component: 'SupportTicket', chunk: 'SupportTicket', flags: ['public'] },
   
-  // Subscriptions
-  { path: '/subscription/expired', component: 'SubscriptionExpired', chunk: 'SubscriptionExpired' },
-  { path: '/subscription/pending', component: 'SubscriptionPending', chunk: 'SubscriptionPending' },
-  { path: '/payment/razorpay', component: 'RazorpayPayment', chunk: 'RazorpayPayment' },
-  { path: '/premium/request', component: 'PremiumAccessRequest', chunk: 'PremiumAccessRequest' },
-  { path: '/my-subscription', component: 'MySubscription', chunk: 'MySubscription' },
-  { path: '/payment', component: 'PaymentPage', chunk: 'PaymentPage' },
+  // Subscriptions — public (no payment wall on these utility pages)
+  { path: '/subscription/expired', component: 'SubscriptionExpired', chunk: 'SubscriptionExpired', flags: ['public'] },
+  { path: '/subscription/pending', component: 'SubscriptionPending', chunk: 'SubscriptionPending', flags: ['public'] },
+  { path: '/payment/razorpay', component: 'RazorpayPayment', chunk: 'RazorpayPayment', flags: ['public'] },
+  { path: '/premium/request', component: 'PremiumAccessRequest', chunk: 'PremiumAccessRequest', flags: ['public'] },
+  { path: '/my-subscription', component: 'MySubscription', chunk: 'MySubscription', flags: ['public'] },
+  { path: '/payment', component: 'PaymentPage', chunk: 'PaymentPage', flags: ['public'] },
   
   // Admin - Core 5 Sections Only
   { path: '/admin/access-dashboard', component: 'AdminDashboard', chunk: 'AdminDashboard' },

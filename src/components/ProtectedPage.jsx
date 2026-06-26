@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
-import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle, Shield } from "lucide-react";
 import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
 import { checkLocalPermission, getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
@@ -20,19 +20,33 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
   const [pageName, setPageName] = useState("");
 
   const checkAccess = useCallback(async () => {
-    // 1. Explicit public override
+    // 1. Explicit public override from routeManifest flag
     if (requiresPermission === false) {
       setAccessStatus("granted");
       return;
     }
 
-    // 2. Static registry — public page
+    // 2. Static registry — public page (requiresPermission: false)
     if (isPublicPage(routePath)) {
       setAccessStatus("granted");
       return;
     }
 
-    // 3. DB visibility config (cached)
+    // 3. Admin-only pages — require admin login
+    const config = getPageConfig(routePath);
+    if (config?.adminOnly || routePath.startsWith("/admin/")) {
+      try {
+        const user = await base44.auth.me();
+        if (user?.role === "admin") {
+          setAccessStatus("granted");
+          return;
+        }
+      } catch {}
+      setAccessStatus("admin_only");
+      return;
+    }
+
+    // 4. DB visibility config (cached 2 min)
     const visKey = visibilityKey(routePath);
     let isPublicByDb = getCached(visKey);
     if (isPublicByDb === undefined || isPublicByDb === null) {
@@ -52,29 +66,28 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
-    // 4. Check if user is an authenticated admin (bypass)
+    // 5. Authenticated admin bypass (content pages too)
     try {
       const user = await base44.auth.me();
       if (user?.role === "admin") {
         setAccessStatus("granted");
         return;
       }
-    } catch { /* not logged in — that's fine */ }
+    } catch {}
 
-    // 5. Check local (localStorage) permissions — no auth needed
+    // 6. Local permission check (localStorage — no auth needed)
     const localCheck = checkLocalPermission(routePath);
     if (localCheck.granted) {
       setAccessStatus("granted");
       return;
     }
 
-    // No access
     setAccessStatus("locked");
   }, [routePath, requiresPermission]);
 
   useEffect(() => {
     const config = getPageConfig(routePath);
-    setPageName(config?.name || routePath);
+    setPageName(config?.name || routePath.replace(/^\//, "").replace(/-/g, " "));
     checkAccess();
   }, [routePath, checkAccess]);
 
@@ -82,6 +95,32 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-t-yellow-400 border-r-transparent border-b-yellow-400 border-l-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (accessStatus === "admin_only") {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4"
+        style={{ background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 100%)" }}>
+        <div className="w-full max-w-sm space-y-4 text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+            style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+            <Shield className="w-8 h-8" style={{ color: G.text }} />
+          </div>
+          <h2 className="font-inter font-bold text-white text-lg">Admin Access Required</h2>
+          <p className="font-inter text-sm text-white/40">This page is restricted to administrators only.</p>
+          <a href="/otp-login"
+            className="block w-full py-3 rounded-xl font-inter font-bold text-sm text-center"
+            style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
+            Admin Login
+          </a>
+          <button onClick={() => window.location.href = "/"}
+            className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
+            style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
+            ← Back to Home
+          </button>
+        </div>
       </div>
     );
   }
@@ -119,7 +158,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
       const data = res.data;
       if (data?.success && data?.permissions) {
         mergeGrantedPermissions(data.permissions);
-        setCodeResult({ success: true, message: data.message, pages: data.pages_granted });
+        setCodeResult({ success: true, message: data.message });
         setTimeout(() => onUnlocked(), 1200);
       } else {
         setCodeResult({ success: false, message: data?.message || "Invalid code." });
@@ -134,10 +173,9 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
   const handleWhatsApp = () => {
     const message =
       `السلام عليكم\n\n` +
-      `*Access Request — Sirr al-Huruf*\n\n` +
-      `📄 Page: ${pageName}\n` +
-      `🔗 Path: ${routePath}\n\n` +
-      `Please send me the reading code for this page.`;
+      `*طلب وصول — سر الحروف*\n\n` +
+      `📄 الصفحة: ${pageName}\n\n` +
+      `أرجو إرسال رمز القراءة لهذه الصفحة.`;
     const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
     setWhatsappSent(true);
@@ -157,7 +195,6 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
           borderColor: G.border,
           boxShadow: "0 0 48px rgba(212,175,55,0.10)",
         }}>
-          {/* Lock icon */}
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
             style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
             <Lock className="w-8 h-8" style={{ color: G.text }} />
@@ -169,9 +206,9 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
           <p className="font-inter text-xs text-white/30 uppercase tracking-widest mb-2">
             Premium Content
           </p>
-          <p className="font-inter text-sm text-white/50 mb-1">{pageName}</p>
+          <p className="font-inter text-sm text-white/60 font-semibold mb-1">{pageName}</p>
           <p className="font-inter text-xs text-white/35 mb-7">
-            This page requires a reading code. Contact us via WhatsApp to get access.
+            هذه الصفحة تتطلب رمز قراءة. تواصل معنا عبر واتساب للحصول على الوصول.
           </p>
 
           {/* WhatsApp button */}
@@ -179,28 +216,30 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             onClick={handleWhatsApp}
             className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
             style={{
-              background: whatsappSent ? "rgba(37,211,102,0.12)" : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+              background: whatsappSent
+                ? "rgba(37,211,102,0.12)"
+                : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
               color: whatsappSent ? "#25D366" : "#ffffff",
               border: whatsappSent ? "1px solid rgba(37,211,102,0.40)" : "none",
               boxShadow: whatsappSent ? "none" : "0 0 24px rgba(37,211,102,0.30)",
             }}
           >
-            {whatsappSent ? <CheckCircle className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
-            {whatsappSent ? "Request Sent!" : "Request via WhatsApp"}
+            {whatsappSent
+              ? <CheckCircle className="w-4 h-4" />
+              : <MessageCircle className="w-4 h-4" />}
+            {whatsappSent ? "تم الإرسال!" : "تواصل عبر واتساب"}
           </button>
+
+          <p className="font-inter text-xs text-white/25 mb-4">{ADMIN_CONFIG.WHATSAPP_DISPLAY}</p>
 
           {/* Code entry toggle */}
           <button
             onClick={() => setShowCodeEntry(v => !v)}
             className="w-full py-3 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2"
-            style={{
-              background: "rgba(212,175,55,0.07)",
-              border: `1px solid ${G.border}`,
-              color: G.text,
-            }}
+            style={{ background: "rgba(212,175,55,0.07)", border: `1px solid ${G.border}`, color: G.text }}
           >
             <KeyRound className="w-4 h-4" />
-            {showCodeEntry ? "Hide Code Entry" : "I Have a Code"}
+            {showCodeEntry ? "إخفاء إدخال الرمز" : "لدي رمز قراءة"}
           </button>
         </div>
 
@@ -219,7 +258,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
               }}>
                 <h3 className="font-inter font-bold text-white text-sm flex items-center gap-2">
                   <KeyRound className="w-4 h-4" style={{ color: G.text }} />
-                  Enter Reading Code
+                  أدخل رمز القراءة
                 </h3>
 
                 {codeResult && (
@@ -256,7 +295,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
                   style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                  {loading ? "Validating…" : "Redeem Code"}
+                  {loading ? "جاري التحقق…" : "تفعيل الرمز"}
                 </button>
               </div>
             </motion.div>
@@ -269,7 +308,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
           className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
           style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}
         >
-          ← Back to Home
+          ← العودة للرئيسية
         </button>
       </motion.div>
     </div>
