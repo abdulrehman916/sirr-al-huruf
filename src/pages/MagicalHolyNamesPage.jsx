@@ -307,7 +307,7 @@ function SectionB() {
       const uniqueSurahs = [...new Set(allNames.map(n => n.surah_name))].filter(Boolean);
       setSurahList(uniqueSurahs);
     } catch (error) {
-      console.error("Error loading PDF Holy Names:", error);
+      // Silently handle error - will show empty state
     } finally {
       setLoading(false);
     }
