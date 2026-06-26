@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { runMethod2Pipeline } from "../../lib/mizaanMethod2Engine";
 import { getBastLevel, istintak } from "../../lib/mizaanPostEngine";
+import AlternativePDFExample from "./AlternativePDFExample";
 
 const G = {
   gold: "#F5D060", goldDim: "rgba(245,208,96,0.55)", goldFaint: "rgba(212,175,55,0.07)",
@@ -654,6 +655,9 @@ export default function Method2Pipeline({ grandBast, dominant, onVefkReady, getB
         
         {/* STAGE 4: Divine Names */}
         {result?.divineNames && <DivineNamesSection divineData={result.divineNames} dominant={dominant} getBastLevelFn={getBastLevelFn} />}
+        
+        {/* ALTERNATIVE PDF EXAMPLE (Pages 101-105) — Read-only educational */}
+        <AlternativePDFExample />
       </div>
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
     </motion.div>
