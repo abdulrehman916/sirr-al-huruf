@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose } from "lucide-react";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -159,6 +158,16 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
 
   const closeSidebar = () => setSidebarOpen(false);
 
+  // Derive current page label from sidebar sections for the top bar
+  const currentPageLabel = useMemo(() => {
+    for (const section of SIDEBAR_SECTIONS) {
+      for (const item of section.items) {
+        if (location.pathname === item.path) return item.label;
+      }
+    }
+    return title || "Admin";
+  }, [location.pathname, title]);
+
   return (
     <div style={{
       display: "flex",
@@ -186,64 +195,6 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
         )}
       </AnimatePresence>
 
-      {/* ── Mobile Hamburger ── */}
-      <button
-        onClick={() => setSidebarOpen(v => !v)}
-        className="admin-mobile-toggle"
-        aria-label="Toggle navigation"
-        style={{
-          display: "none",
-          position: "fixed",
-          top: 12,
-          left: 12,
-          zIndex: 1001,
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          background: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
-          border: `1px solid ${G.borderHi}`,
-          boxShadow: "0 0 18px rgba(212,175,55,0.20), inset 0 1px 0 rgba(212,175,55,0.15)",
-          color: G.text,
-          cursor: "pointer",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 4,
-          padding: 0,
-          transition: "all 0.2s ease",
-        }}
-      >
-        <motion.div
-          animate={sidebarOpen ? "open" : "closed"}
-          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
-        >
-          <motion.span
-            variants={{
-              closed: { rotate: 0, y: 0, opacity: 1 },
-              open:   { rotate: 45, y: 8, opacity: 1 },
-            }}
-            transition={{ duration: 0.22 }}
-            style={{ display: "block", width: 18, height: 2, borderRadius: 2, background: G.text, transformOrigin: "center" }}
-          />
-          <motion.span
-            variants={{
-              closed: { opacity: 1, scaleX: 1 },
-              open:   { opacity: 0, scaleX: 0 },
-            }}
-            transition={{ duration: 0.18 }}
-            style={{ display: "block", width: 12, height: 2, borderRadius: 2, background: G.text, transformOrigin: "center" }}
-          />
-          <motion.span
-            variants={{
-              closed: { rotate: 0, y: 0, opacity: 1 },
-              open:   { rotate: -45, y: -8, opacity: 1 },
-            }}
-            transition={{ duration: 0.22 }}
-            style={{ display: "block", width: 18, height: 2, borderRadius: 2, background: G.text, transformOrigin: "center" }}
-          />
-        </motion.div>
-      </button>
-
       {/* ── Sidebar ── */}
       <aside
         className={`admin-sidebar${sidebarOpen ? " open" : ""}`}
@@ -258,64 +209,160 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
         <SidebarContent location={location} onNavigate={closeSidebar} />
       </aside>
 
-      {/* ── Main content ── */}
-      <main
+      {/* ── Main content column ── */}
+      <div
         className="admin-main-content"
         style={{
           flex: 1,
           height: "100%",
-          overflowY: "auto",
-          overflowX: "hidden",
+          display: "flex",
+          flexDirection: "column",
           minWidth: 0,
-          WebkitOverflowScrolling: "touch",
+          overflow: "hidden",
         }}
       >
-        {showBackButton && title && (
-          <div style={{
+        {/* ── Top bar — contains toggle + breadcrumb, never overlaps content ── */}
+        <div
+          className="admin-topbar"
+          style={{
+            flexShrink: 0,
             display: "flex",
             alignItems: "center",
             gap: 12,
-            padding: "16px 20px",
+            padding: "0 24px",
+            height: 52,
+            minHeight: 52,
+            background: "rgba(2,7,16,0.95)",
             borderBottom: `1px solid ${G.border}`,
-            marginBottom: 0,
-          }}>
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+          }}
+        >
+          {/* Sidebar toggle button — always in flow, never fixed */}
+          <button
+            onClick={() => setSidebarOpen(v => !v)}
+            className="admin-sidebar-toggle"
+            aria-label="Toggle sidebar"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              background: sidebarOpen
+                ? "rgba(212,175,55,0.18)"
+                : "rgba(255,255,255,0.04)",
+              border: `1px solid ${sidebarOpen ? G.borderHi : "rgba(255,255,255,0.08)"}`,
+              color: sidebarOpen ? G.text : "rgba(255,255,255,0.50)",
+              cursor: "pointer",
+              flexShrink: 0,
+              transition: "all 0.2s ease",
+              padding: 0,
+            }}
+          >
+            <motion.div
+              animate={{ rotate: sidebarOpen ? 180 : 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              {sidebarOpen
+                ? <PanelLeftClose style={{ width: 16, height: 16 }} />
+                : <PanelLeftOpen style={{ width: 16, height: 16 }} />
+              }
+            </motion.div>
+          </button>
+
+          {/* Divider */}
+          <div style={{ width: 1, height: 22, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
+
+          {/* Back button when showBackButton */}
+          {showBackButton && (
             <button
               onClick={() => navigate(-1)}
               style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "7px 14px", borderRadius: 9,
+                display: "flex", alignItems: "center", gap: 5,
+                padding: "5px 12px", borderRadius: 7,
                 background: G.bg, border: `1px solid ${G.border}`,
-                color: G.text, cursor: "pointer", fontSize: 13, fontWeight: 600,
+                color: G.text, cursor: "pointer", fontSize: 12, fontWeight: 600,
+                fontFamily: "Inter, sans-serif", flexShrink: 0,
               }}
             >
-              <ChevronLeft style={{ width: 15, height: 15 }} />
+              <ChevronLeft style={{ width: 13, height: 13 }} />
               Back
             </button>
-            <div>
-              <h2 style={{ fontFamily: "Inter, sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", margin: 0 }}>{title}</h2>
-              {subtitle && <p style={{ fontFamily: "var(--font-amiri)", fontSize: 13, color: G.dim, margin: 0 }}>{subtitle}</p>}
-            </div>
-          </div>
-        )}
+          )}
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.14 }}
-            style={{ padding: "20px" }}
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+          {/* Breadcrumb / Page title */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+            <Shield style={{ width: 13, height: 13, color: G.dim, flexShrink: 0 }} />
+            <span style={{
+              fontFamily: "Inter, sans-serif",
+              fontSize: 10,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.30)",
+              flexShrink: 0,
+            }}>
+              Admin
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 11, flexShrink: 0 }}>/</span>
+            <span style={{
+              fontFamily: "Inter, sans-serif",
+              fontSize: 12,
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.80)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}>
+              {currentPageLabel}
+            </span>
+          </div>
+
+          {/* Subtitle if provided */}
+          {subtitle && (
+            <>
+              <span style={{ color: "rgba(255,255,255,0.10)", fontSize: 11, flexShrink: 0 }}>—</span>
+              <span style={{
+                fontFamily: "var(--font-amiri)",
+                fontSize: 12,
+                color: G.dim,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}>
+                {subtitle}
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* ── Scrollable content area ── */}
+        <main
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.14 }}
+              style={{ padding: "24px" }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
 
       {/* Responsive CSS */}
       <style>{`
-        .admin-mobile-toggle { display: none !important; }
-
         .admin-sidebar {
           width: 210px;
           min-width: 210px;
@@ -326,20 +373,41 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
           z-index: 50;
         }
 
-        .admin-main-content {
-          padding: 0;
-        }
+        /* Desktop: toggle hidden (sidebar always visible) */
+        .admin-sidebar-toggle { display: flex; }
+
+        /* On desktop, sidebar is always visible — toggle hides it */
 
         @media (max-width: 767px) {
-          .admin-mobile-toggle { display: flex !important; }
           .admin-sidebar {
             position: fixed !important;
             top: 0 !important; left: 0 !important;
-            width: 260px !important; min-width: 260px !important;
+            width: 270px !important; min-width: 270px !important;
             height: 100dvh !important;
             z-index: 999 !important;
             transform: translateX(-100%) !important;
-            transition: transform 0.28s ease !important;
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1) !important;
+          }
+          .admin-sidebar.open {
+            transform: translateX(0) !important;
+          }
+          .admin-main-content {
+            width: 100% !important;
+          }
+          .admin-topbar {
+            padding: 0 16px !important;
+          }
+        }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+          .admin-sidebar {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 210px !important; min-width: 210px !important;
+            height: 100dvh !important;
+            z-index: 100 !important;
+            transform: translateX(-100%) !important;
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1) !important;
           }
           .admin-sidebar.open {
             transform: translateX(0) !important;
@@ -349,18 +417,18 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
           }
         }
 
-        @media (min-width: 768px) and (max-width: 1024px) {
+        @media (min-width: 1025px) {
           .admin-sidebar {
-            position: fixed !important;
-            top: 0 !important; left: 0 !important;
-            width: 190px !important; min-width: 190px !important;
-            height: 100dvh !important;
-            z-index: 100 !important;
             transform: translateX(0) !important;
+            transition: none !important;
           }
-          .admin-main-content {
-            margin-left: 190px !important;
-          }
+        }
+
+        /* Toggle button hover */
+        .admin-sidebar-toggle:hover {
+          background: rgba(212,175,55,0.14) !important;
+          border-color: ${G.borderHi} !important;
+          color: ${G.text} !important;
         }
       `}</style>
     </div>
