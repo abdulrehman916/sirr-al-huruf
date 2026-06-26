@@ -17,6 +17,7 @@ import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
+import Method2Pipeline from "../components/mizaan/Method2Pipeline";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
@@ -568,8 +569,175 @@ export default function Mizaan9Page() {
         </div>
         )}
 
-      {/* Method 2-5 Placeholders (Reserved for future implementation) */}
-      {activeMethod !== 1 && (
+      {/* Method 2 Content */}
+      {activeMethod === 2 && (
+        <div>
+          {/* Section 1 / Section 2 / Section 3 Toggle */}
+          <div className="flex gap-2">
+            {[
+              { s: 1, arabic: 'المجموعة الأولى' },
+              { s: 2, arabic: 'المجموعة الثانية' },
+              { s: 3, arabic: 'الأبجد الكبير' },
+            ].map(({ s, arabic }) => (
+              <button key={s} onClick={() => setActiveSection(s)}
+                className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+                style={{
+                  background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                  color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                  boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
+                }}>
+                <span className="font-amiri text-sm">{arabic}</span>
+                <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Input card (same as Method 1) */}
+          <div className="rounded-2xl border p-5 relative overflow-hidden"
+            style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
+            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
+            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
+              Arabic Text — Surah · Ayah · Talib · Matloob
+            </label>
+            <textarea
+              dir="rtl"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="أدخل النص العربي هنا — السورة، الآية، الاسم..."
+              rows={5}
+              className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
+              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
+            />
+
+            {loading && (
+              <div className="mb-3">
+                <div className="flex justify-between mb-1.5">
+                  <span className="font-inter text-[10px] text-white/40 animate-pulse">✦ Analyzing 9 Mizaans…</span>
+                  <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>{progress}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }}
+                    className="h-full rounded-full" style={{ background: `linear-gradient(90deg,${G.text},#d97706)` }} />
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <motion.button
+                onClick={handleAnalyze}
+                disabled={!input.trim() || loading}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
+                style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow: `0 0 36px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}>
+                {loading
+                  ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  : <span className="font-amiri text-base">⚖</span>}
+                {loading ? "Analyzing…" : "Analyze — 9 Mizan"}
+              </motion.button>
+              <motion.button
+                onClick={handleClear}
+                disabled={!input && !result}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)", width: "auto", flexShrink: 0 }}>
+                <Trash2 className="w-3.5 h-3.5" /> Clear
+              </motion.button>
+            </div>
+          </div>
+
+          {/* 9 Mizaans (same as Method 1) */}
+          <AnimatePresence mode="wait">
+            {result && (
+              <motion.div key={`mizaan-9-method2-s${activeSection}`}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="space-y-2">
+
+                <Mizaan1 result={result} />
+                <MizaanDivider />
+                <Mizaan2
+                  dominant={result.dominant}
+                  tiebreak={result.tiebreak}
+                  selected={selections.elements}
+                  onChange={updateSel("elements")}
+                  elementsData={ds.elements}
+                />
+                <MizaanDivider />
+                <Mizaan3
+                  dominant={result.dominant}
+                  selected={selections.dayNight}
+                  onChange={updateSel("dayNight")}
+                  dayNightData={ds.dayNight}
+                />
+                <MizaanDivider />
+                <Mizaan4
+                  selected={selections.hour}
+                  onChange={updateSel("hour")}
+                  hoursData={ds.hours}
+                />
+                <MizaanDivider />
+                <Mizaan5
+                  selected={selections.days}
+                  onChange={updateSel("days")}
+                  daysData={ds.days}
+                />
+                <MizaanDivider />
+                <Mizaan6
+                  selectedDay={selections.days}
+                  selected={selections.planet}
+                  onChange={updateSel("planet")}
+                  planetsData={ds.planets}
+                />
+                <MizaanDivider />
+                <Mizaan7
+                  selected={selections.purposes}
+                  onChange={updateSel("purposes")}
+                  customPurpose={customPurpose}
+                  onCustomPurpose={setCustomPurpose}
+                  purposesData={ds.purposes}
+                />
+                <MizaanDivider />
+                <Mizaan8
+                  selected={selections.khayrSharr8}
+                  onChange={updateSel("khayrSharr8")}
+                  selectedPurpose={selections.purposes}
+                  khayrSharr8Data={ds.khayrSharr8}
+                />
+                <MizaanDivider />
+                <Mizaan9Final result={result} selections={selections} degreeSels={degreeSels} onDegreeSels={setDegreeSels} degrees9Data={ds.degrees} />
+                <MizaanDivider />
+                <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} ds={ds} calcCustomBast={(t) => calcCustomBastForSection(t, activeSection)} />
+                <MizaanDivider />
+
+                {/* Method 2 Pipeline with Mahrac Addition */}
+                {(() => {
+                  const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds, activeSection);
+                  const dominant = result?.dominant;
+                  if (!grandBast || grandBast <= 0) return null;
+
+                  return (
+                    <>
+                      <Method2Pipeline
+                        grandBast={grandBast}
+                        grandLetters={grandLetters}
+                        dominant={dominant}
+                        onVefkReady={setS1VefkData}
+                        getBastLevelFn={getBastLevelFn}
+                      />
+                      <MizaanDivider />
+                      <ConclusionRulesPanel />
+                    </>
+                  );
+                })()}
+
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Method 3-5 Placeholders */}
+      {activeMethod >= 3 && (
         <div className="rounded-2xl border p-8 text-center" style={{
           background: "rgba(212,175,55,0.06)",
           borderColor: "rgba(212,175,55,0.30)",
