@@ -23,6 +23,8 @@ const ROUTE_MANIFEST = [
   { path: '/plants/:id', component: 'PlantDetailPage', chunk: 'PlantDetailPage' },
   { path: '/evil-jinn', component: 'EvilJinnPage', chunk: 'EvilJinnPage' },
   { path: '/holy-names', component: 'MagicalHolyNamesPage', chunk: 'MagicalHolyNamesPage' },
+  { path: '/holy-names/one', component: 'HolyOnePage', chunk: 'HolyOnePage', flags: ['public'] },
+  { path: '/holy-names/one/:nameId', component: 'HolyOneDetailPage', chunk: 'HolyOneDetailPage', flags: ['public'] },
   { path: '/astro-clock', component: 'AstroClockPage', chunk: 'AstroClockPage' },
   { path: '/astro-clock/search', component: 'AstroClockSearch', chunk: 'AstroClockSearch' },
   

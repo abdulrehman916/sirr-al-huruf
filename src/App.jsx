@@ -35,6 +35,8 @@ const PAGE_IMPORTS = {
   PlantDetailPage:          () => import('./pages/PlantDetailPage'),
   EvilJinnPage:             () => import('./pages/EvilJinnPage'),
   MagicalHolyNamesPage:     () => import('./pages/MagicalHolyNamesPage'),
+  HolyOnePage:              () => import('./pages/HolyOnePage'),
+  HolyOneDetailPage:        () => import('./pages/HolyOneDetailPage'),
   AstroClockPage:           () => import('./pages/AstroClockPage'),
   AstroClockSearch:         () => import('./components/astroclock/AstroClockSearch'),
   // Support
