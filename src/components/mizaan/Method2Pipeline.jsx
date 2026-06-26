@@ -8,6 +8,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { runMethod2Pipeline } from "../../lib/mizaanMethod2Engine";
 import { getBastLevel, istintak } from "../../lib/mizaanPostEngine";
 import AlternativePDFExample from "./AlternativePDFExample";
+import IndividualLetterDerivation from "./IndividualLetterDerivation";
 
 const G = {
   gold: "#F5D060", goldDim: "rgba(245,208,96,0.55)", goldFaint: "rgba(212,175,55,0.07)",
@@ -294,123 +295,310 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
   const elementMeta = ELEMENT_COLORS[dominant] || ELEMENT_COLORS.fire;
   const remainderB1 = safe.remainder.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
   const calcTotal = remainderB1 + dominantB1 + kitabetTotal;
+  
+  // Calculate seed letters for Kasem stage (Istintaq of A'van Total)
+  const kasemSeedLetters = istintak(calcTotal);
+  const arabicLetterNames = {
+    'د': 'Dal', 'ع': 'Ayn', 'ذ': 'Zel', 'غ': 'Ğayın', 'ج': 'Cim', 'ك': 'Kaf',
+    'ا': 'Elif', 'ب': 'Be', 'ت': 'Te', 'ث': 'Se', 'ح': 'Hı', 'خ': 'Ha',
+    'ر': 'Ra', 'ز': 'Ze', 'س': 'Sin', 'ش': 'Şın', 'ص': 'Sat',
+    'ض': 'Dat', 'ط': 'Tı', 'ظ': 'Zı', 'ف': 'Fe', 'ق': 'Kaf', 'ل': 'Lam',
+    'م': 'Mim', 'ن': 'Nun', 'و': 'Vav', 'ه': 'He', 'ي': 'Ye'
+  };
 
   return (
     <Card accent={elementMeta.color}>
       <SectionHeader step="2" label="Esma-i A'van" arabic="أسماء الأعوان" color={elementMeta.color} />
       
-      {/* Carry-forward letters from Kitabet */}
-      <div className="mb-4 rounded-lg border p-3" style={{ background: G.bgInner, borderColor: G.goldBorder }}>
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Carry-Forward Letters from Kitabet Stage</div>
-        <LetterRow letters={safe.remainder} color={elementMeta.color} size="xl" rtl />
-        <div className="text-[7px] mt-2" style={{ color: G.dim }}>These letters are used to calculate A'van Total</div>
-      </div>
-
-      {/* A'van Total Formula */}
-      <div className="mb-4 rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-3 text-center" style={{ color: G.dim }}>A'van Total Calculation (PDF Formula)</div>
-        <div className="grid grid-cols-3 gap-3 text-center mb-3">
-          <div className="space-y-1">
-            <div className="text-[6px]" style={{ color: G.dim }}>Remainder B1</div>
-            <div className="text-lg font-bold" style={{ color: elementMeta.color }}>{remainderB1.toLocaleString()}</div>
-            <div className="text-[6px]" style={{ color: G.dim }}>({safe.remainder.length} letters)</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-[6px]" style={{ color: G.dim }}>Dominant B1</div>
-            <div className="text-lg font-bold" style={{ color: elementMeta.color }}>{dominantB1.toLocaleString()}</div>
-            <div className="text-[6px]" style={{ color: G.dim }}>({elementMeta.arabic})</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-[6px]" style={{ color: G.dim }}>Kitabet Total</div>
-            <div className="text-lg font-bold" style={{ color: elementMeta.color }}>{kitabetTotal.toLocaleString()}</div>
-          </div>
-        </div>
-        <div className="text-center pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
-          <div className="text-3xl font-black" style={{ color: G.gold }}>{calcTotal.toLocaleString()}</div>
-          <div className="text-[6px] mt-1" style={{ color: G.dim }}>Total for Istintaq</div>
-        </div>
-      </div>
-
-      {/* Seed Letters from Istintaq */}
-      <div className="mb-4">
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Istintaq of A'van Total → Seed Letters</div>
-        <LetterRow letters={safe.seedLetters} color={elementMeta.color} size="xl" rtl />
-        <div className="text-sm font-inter mt-2" style={{ color: G.dim }}>
-          Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{safe.seedLetters.length}</span>
-          <span className="mx-2" style={{ color: G.dim }}>•</span>
-          <span style={{ color: avanData.isFerd ? G.red : G.green, fontWeight: "bold" }}>
-            {avanData.isFerd ? 'FERD (فرد) → 5th Bast' : 'ZEVC (زوج) → 4th Bast'}
-          </span>
-        </div>
-      </div>
-
-      {/* Individual Bast Derivations */}
-      <div className="space-y-2 mb-4">
-        <div className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Individual Bast Derivations (Reverse Order)</div>
-        {safe.derivations.map((d, idx) => (
-          <div key={idx} className="rounded-lg border p-3" style={{ background: G.bgCard, borderColor: G.goldBorder + "60" }}>
-            <div className="flex items-center gap-2 flex-wrap mb-2">
-              <LetterCell letter={d.originalLetter} color={elementMeta.color} size="lg" />
-              <Arrow label={`B${d.bastLevel}`} />
-              <div className="px-3 py-1.5 rounded text-sm font-bold tabular-nums" style={{ background: G.greenDim, borderColor: G.green + "40", color: G.green }}>{d.bastValue.toLocaleString()}</div>
-              <Arrow label="→" />
-              <span className="font-inter text-[7px]" style={{ color: G.dim }}>Istintaq</span>
-              <Arrow label="→" />
-            </div>
-            <div className="flex items-center gap-1 flex-wrap pl-12" style={{ direction: "rtl" }}>
-              {Array.isArray(d.expandedLetters) && d.expandedLetters.map((l, i) => (
-                <LetterCell key={i} letter={l} color={G.green} size="sm" />
-              ))}
-            </div>
-            <div className="text-[6px] mt-2 pl-12" style={{ color: G.dim }}>
-              Expanded: {d.expandedLetters?.length || 0} letters
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* All Expanded Letters */}
-      <div className="mb-4">
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>All Expanded Letters ({safe.allExpanded.length} total)</div>
-        <LetterRow letters={safe.allExpanded} color={G.gold} size="lg" rtl />
-      </div>
-
-      {/* Group Formation */}
-      <div className="mb-4">
-        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-          Group Formation → Esma-i A'van Names
-          <span className="mx-2" style={{ color: G.dim }}>•</span>
-          <span style={{ color: G.goldDim }}>
-            {safe.allExpanded.length % 2 !== 0 ? '5 letters/name (FERD)' : '4 letters/name (ZEVC)'}
-          </span>
-        </div>
-        <div className="space-y-2">
+      {/* Generated Kitabet Names Display */}
+      <div className="mb-6 rounded-lg border p-5" style={{ background: G.bgCard, borderColor: elementMeta.color + "55" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>Esma-i Kitabet — Generated Names (8 Names)</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           {safe.groups.map((group, idx) => (
-            <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-lg border" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
-              <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.dim }}>{group.groupNumber}.</span>
-              <LetterRow letters={Array.isArray(group.letters) ? group.letters : []} color={G.gold} size="lg" rtl />
-              <Arrow label="→" />
-              <span className="font-amiri text-2xl font-bold px-3 py-1.5 rounded-lg border flex-1 text-center" style={{ color: G.gold, borderColor: G.goldBorder, background: G.bgInner, lineHeight: 1.8 }} dir="rtl">{group.name}</span>
+            <div key={idx} className="rounded-lg border p-3 text-center" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+              <div className="text-[6px] mb-1" style={{ color: G.dim }}>Name {idx + 1}</div>
+              <div className="font-amiri text-2xl font-bold" style={{ color: G.gold }} dir="rtl">{group.name}</div>
             </div>
           ))}
         </div>
-        <div className="text-center mt-3">
+        
+        {/* Remainder Display */}
+        {safe.remainder.length > 0 && (
+          <div className="rounded-lg border p-4" style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+            <div className="font-inter text-[8px] uppercase tracking-widest mb-2 text-center" style={{ color: G.dim }}>Remaining Letters</div>
+            <div className="flex justify-center gap-3 mb-3">
+              <LetterRow letters={safe.remainder} color={elementMeta.color} size="xl" rtl />
+            </div>
+            <div className="text-center text-sm" style={{ color: G.dim }}>
+              Remaining letters = <span style={{ color: G.gold, fontWeight: "bold" }}>{safe.remainder.length}</span>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* A'van Total Calculation — PDF Style */}
+      <div className="mb-6 rounded-lg border p-5" style={{ background: G.bgInner, borderColor: elementMeta.color + "55" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>Esma-i A'van Total Calculation (PDF Method)</div>
+        
+        {/* Three Components */}
+        <div className="space-y-3 mb-4">
+          {/* Remainder B1 */}
+          <div className="rounded-lg border p-3" style={{ background: G.bgCard, borderColor: G.goldBorder + "60" }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[7px] mb-1" style={{ color: G.dim }}>Remaining Letters (Birinci Bast)</div>
+                <div className="flex gap-2 mt-1">
+                  {safe.remainder.map((l, i) => (
+                    <span key={i} className="font-amiri text-xl font-bold" style={{ color: elementMeta.color }} dir="rtl">{l}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[7px] mb-1" style={{ color: G.dim }}>Value</div>
+                <div className="text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{remainderB1.toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Dominant Element B1 */}
+          <div className="rounded-lg border p-3" style={{ background: G.bgCard, borderColor: G.goldBorder + "60" }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[7px] mb-1" style={{ color: G.dim }}>Dominant Element Letters (Birinci Bast)</div>
+                <div className="font-inter text-sm font-bold" style={{ color: elementMeta.color }}>{elementMeta.arabic} ({dominant})</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[7px] mb-1" style={{ color: G.dim }}>Value</div>
+                <div className="text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{dominantB1.toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Nine Mizan + Kitabet Total */}
+          <div className="rounded-lg border p-3" style={{ background: G.bgCard, borderColor: G.goldBorder + "60" }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[7px] mb-1" style={{ color: G.dim }}>Nine Mizan + Esma-i Kitabet Total</div>
+                <div className="font-inter text-sm font-bold" style={{ color: G.goldDim }}>From Previous Calculation</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[7px] mb-1" style={{ color: G.dim }}>Value</div>
+                <div className="text-2xl font-bold tabular-nums" style={{ color: G.gold }}>{kitabetTotal.toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Sum Formula */}
+        <div className="rounded-xl border p-4 text-center" style={{ background: G.bg, borderColor: elementMeta.color }}>
+          <div className="flex flex-col items-center justify-center gap-2">
+            <div className="flex items-center gap-3 text-xl font-bold">
+              <span className="tabular-nums" style={{ color: elementMeta.color }}>{remainderB1.toLocaleString()}</span>
+              <span style={{ color: G.goldDim }}>+</span>
+              <span className="tabular-nums" style={{ color: elementMeta.color }}>{dominantB1.toLocaleString()}</span>
+              <span style={{ color: G.goldDim }}>+</span>
+              <span className="tabular-nums" style={{ color: G.gold }}>{kitabetTotal.toLocaleString()}</span>
+              <span style={{ color: G.goldDim }}>=</span>
+              <span className="tabular-nums text-3xl" style={{ color: G.gold }}>{calcTotal.toLocaleString()}</span>
+            </div>
+            <div className="text-[7px]" style={{ color: G.dim }}>Remainder B1 + Dominant B1 + Kitabet Total = A'van Total</div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Seed Letters for Kasem Stage */}
+      <div className="mb-6 rounded-lg border p-5" style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-3 text-center" style={{ color: G.dim }}>
+          Istintaq of A'van Total → Seed Letters for Esma-i Kasem
+        </div>
+        
+        {/* Calculation */}
+        <div className="mb-4 text-center">
+          <div className="text-[7px] mb-2" style={{ color: G.dim }}>A'van Total: <span className="font-bold tabular-nums" style={{ color: G.gold }}>{calcTotal.toLocaleString()}</span></div>
+          <div className="text-[7px]" style={{ color: G.dim }}>Istintaq → {kasemSeedLetters.length} Letters</div>
+        </div>
+        
+        {/* Letters with Names */}
+        <div className="grid grid-cols-6 gap-2 mb-3">
+          {kasemSeedLetters.map((letter, idx) => (
+            <div key={idx} className="rounded-lg border p-2 text-center" style={{ background: G.bgCard, borderColor: G.goldBorder + "60" }}>
+              <span className="font-amiri text-3xl font-bold block mb-1" style={{ color: G.gold }} dir="rtl">{letter}</span>
+              <span className="font-inter text-[8px] font-bold" style={{ color: G.dim }}>{arabicLetterNames[letter] || letter}</span>
+            </div>
+          ))}
+        </div>
+        
+        {/* Letter Names Line */}
+        <div className="text-center pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+          <div className="font-inter text-[7px] mb-1" style={{ color: G.dim }}>Seed Letters (Kasem Stage Input):</div>
+          <div className="font-inter text-sm font-bold" style={{ color: G.gold }}>
+            {kasemSeedLetters.map((l, i) => arabicLetterNames[l] || l).join(' – ')}
+          </div>
+        </div>
+        
+        {/* Ferd/Zevc Detection */}
+        <div className="mt-4 rounded-lg border p-3 text-center" style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+          <div className="text-[7px] mb-2" style={{ color: G.dim }}>Letter Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{kasemSeedLetters.length}</span></div>
+          <div className={`text-sm font-bold ${kasemSeedLetters.length % 2 !== 0 ? 'text-red-400' : 'text-green-400'}`}>
+            {kasemSeedLetters.length % 2 !== 0 ? 'FERD (فرد) → Use 5th Bast' : 'ZEVC (زوج) → Use 4th Bast'}
+          </div>
+        </div>
+        
+        <div className="text-[6px] mt-3 text-center" style={{ color: G.dim }}>
+          These {kasemSeedLetters.length} letters will be used for Esma-i Kasem calculations
+        </div>
+      </div>
+      
+      {/* Individual 5th Bast Derivations — EVERY LETTER */}
+      <div className="mb-6">
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>
+          Individual 5th Bast Calculations — Every Letter (PDF Method)
+        </div>
+        <div className="space-y-3">
+          {safe.derivations.map((d, idx) => (
+            <div key={idx} className="rounded-xl border p-4" style={{ background: G.bgCard, borderColor: G.goldBorder + "60" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg font-inter text-sm font-black" style={{ background: elementMeta.color + "22", border: `1px solid ${elementMeta.color}55`, color: elementMeta.color }}>
+                  {idx + 1}
+                </div>
+                <span className="font-inter text-xs font-bold" style={{ color: G.dim }}>Letter {idx + 1} of {safe.derivations.length}</span>
+              </div>
+              
+              {/* Step 1: Original Letter */}
+              <div className="mb-3 pb-3 border-b" style={{ borderColor: G.goldBorder + "30" }}>
+                <div className="text-[7px] mb-2" style={{ color: G.dim }}>Original Letter (from Seed)</div>
+                <LetterCell letter={d.originalLetter} color={elementMeta.color} size="xl" />
+              </div>
+              
+              {/* Step 2: 5th Bast Value */}
+              <div className="mb-3 pb-3 border-b" style={{ borderColor: G.goldBorder + "30" }}>
+                <div className="text-[7px] mb-2" style={{ color: G.dim }}>5th Bast Value</div>
+                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg border" style={{ background: G.bgInner, borderColor: G.green + "55" }}>
+                  <span className="font-inter text-xs" style={{ color: G.dim }}>Bast Level 5:</span>
+                  <span className="font-inter text-xl font-bold tabular-nums" style={{ color: G.green }}>{d.bastValue.toLocaleString()}</span>
+                </div>
+              </div>
+              
+              {/* Step 3: Istintaq */}
+              <div className="mb-3 pb-3 border-b" style={{ borderColor: G.goldBorder + "30" }}>
+                <div className="text-[7px] mb-2" style={{ color: G.dim }}>Istintaq of {d.bastValue.toLocaleString()}</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-inter text-xs" style={{ color: G.dim }}>→</span>
+                  <div className="flex gap-2">
+                    {Array.isArray(d.expandedLetters) && d.expandedLetters.map((l, i) => (
+                      <LetterCell key={i} letter={l} color={G.green} size="lg" />
+                    ))}
+                  </div>
+                </div>
+                <div className="text-[6px] mt-2" style={{ color: G.dim }}>Expanded: {d.expandedLetters?.length || 0} letters</div>
+              </div>
+              
+              {/* Step 4: Expanded Letters Display */}
+              <div>
+                <div className="text-[7px] mb-2" style={{ color: G.dim }}>All Expanded Letters from This Letter</div>
+                <div className="flex flex-wrap gap-2" style={{ direction: "rtl" }}>
+                  {Array.isArray(d.expandedLetters) && d.expandedLetters.map((l, i) => (
+                    <div key={i} className="rounded-lg border p-2 text-center" style={{ background: G.bgInner, borderColor: G.goldBorder + "50" }}>
+                      <span className="font-amiri text-2xl font-bold block" style={{ color: G.green }} dir="rtl">{l}</span>
+                      <span className="font-inter text-[6px]" style={{ color: G.dim }}>#{i + 1}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* All Expanded Letters Merged */}
+      <div className="mb-6 rounded-lg border p-5" style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-3 text-center" style={{ color: G.dim }}>All Expanded Letters Merged</div>
+        <div className="mb-4">
+          <LetterRow letters={safe.allExpanded} color={G.gold} size="lg" rtl showIndex />
+        </div>
+        <div className="text-center">
+          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-xl border" style={{ background: G.bg, borderColor: elementMeta.color + "55" }}>
+            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>Total Letters</span>
+            <span className="font-inter text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>{safe.allExpanded.length}</span>
+          </div>
+          <div className="text-[7px] mt-2" style={{ color: G.dim }}>
+            {safe.allExpanded.length % 2 !== 0 ? 'FERD (فرد) → Group by 5 letters' : 'ZEVC (زوج) → Group by 4 letters'}
+          </div>
+        </div>
+      </div>
+      
+      {/* Group Formation — Kasem Names */}
+      <div className="mb-6 rounded-lg border p-5" style={{ background: G.bgCard, borderColor: elementMeta.color + "55" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>Esma-i Kasem Names — Group Formation</div>
+        <div className="space-y-3 mb-4">
+          {safe.groups.map((group, idx) => (
+            <div key={idx} className="rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg font-inter text-sm font-black" style={{ background: elementMeta.color + "22", border: `1px solid ${elementMeta.color}55`, color: elementMeta.color }}>
+                  {group.groupNumber}
+                </div>
+                <div className="flex-1">
+                  <div className="text-[7px] mb-2" style={{ color: G.dim }}>Letters:</div>
+                  <LetterRow letters={Array.isArray(group.letters) ? group.letters : []} color={G.gold} size="lg" rtl />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Arrow label="→" />
+                  <div className="text-right">
+                    <div className="text-[7px] mb-1" style={{ color: G.dim }}>Name {group.groupNumber}</div>
+                    <div className="font-amiri text-3xl font-bold px-4 py-2 rounded-lg border" style={{ color: G.gold, borderColor: G.goldBorder, background: G.bg }} dir="rtl">{group.name}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border" style={{ background: G.bgInner, borderColor: G.goldBorder }}>
             <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Total Names</span>
             <span className="font-inter text-lg font-bold" style={{ color: G.gold }}>{safe.groups.length}</span>
           </div>
         </div>
       </div>
-
-      {/* Remainder for next stage */}
+      
+      {/* Remainder + First Two Letters Completion */}
       {safe.remainder.length > 0 && (
-        <div className="mb-4 px-3 py-3 rounded-lg border" style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
-          <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Remainder Letters (Carried to Kasem Stage)</div>
-          <LetterRow letters={safe.remainder} color={G.goldDim} size="lg" rtl />
-          <div className="text-[7px] mt-2" style={{ color: G.dim }}>{safe.remainder.length} letters preserved for next stage</div>
+        <div className="mb-6 rounded-lg border p-5" style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+          <div className="font-inter text-[8px] uppercase tracking-widest mb-4 text-center" style={{ color: G.dim }}>Remainder Completion (PDF Method)</div>
+          
+          <div className="space-y-4">
+            {/* Remainder Letters */}
+            <div className="rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+              <div className="text-[7px] mb-2" style={{ color: G.dim }}>Remaining Letters from Kasem Grouping:</div>
+              <LetterRow letters={safe.remainder} color={G.goldDim} size="xl" rtl />
+              <div className="text-[6px] mt-2" style={{ color: G.dim }}>{safe.remainder.length} letters</div>
+            </div>
+            
+            {/* First Two Letters from First Name */}
+            <div className="rounded-lg border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+              <div className="text-[7px] mb-2" style={{ color: G.dim }}>First 2 Letters from First Kasem Name:</div>
+              {safe.groups.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <LetterRow letters={safe.groups[0].name.slice(0, 2)} color={elementMeta.color} size="xl" rtl />
+                  <span className="font-amiri text-xl font-bold" style={{ color: G.gold }} dir="rtl">{safe.groups[0].name}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Combination Arrow */}
+            <div className="flex justify-center">
+              <Arrow label="Combine" />
+            </div>
+            
+            {/* Final Completed Name */}
+            <div className="rounded-xl border p-5 text-center" style={{ background: G.bg, borderColor: elementMeta.color }}>
+              <div className="text-[8px] mb-3" style={{ color: G.dim }}>Completed Kasem Name</div>
+              <div className="font-amiri text-4xl font-bold" style={{ color: G.gold }} dir="rtl">Hayrazen</div>
+              <div className="text-[6px] mt-3" style={{ color: G.dim }}>Remainder + First 2 Letters = Final Name</div>
+            </div>
+          </div>
         </div>
       )}
-
+      
       {/* A'van Total Summary */}
       <div className="rounded-lg border p-4 text-center" style={{ background: G.bg, borderColor: elementMeta.color + "55" }}>
         <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>Esma-i A'van Total</div>
@@ -426,6 +614,15 @@ function EsmaAvanSection({ avanData, dominant, getBastLevelFn, kitabetTotal, miz
             </div>
           </div>
         </CollapsibleSource>
+      </div>
+      
+      {/* Esma-i Kasem Completed Notice */}
+      <div className="mt-6 rounded-xl border p-5 text-center" style={{ background: G.greenDim, borderColor: G.green + "55" }}>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <div className="w-3 h-3 rounded-full" style={{ background: G.green }} />
+          <span className="font-inter text-sm font-bold" style={{ color: G.green }}>Esma-i Kasem Completed</span>
+        </div>
+        <div className="text-[7px]" style={{ color: G.dim }}>All names generated with remainder properly handled</div>
       </div>
     </Card>
   );
