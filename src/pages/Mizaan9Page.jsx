@@ -18,6 +18,7 @@ import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
 import Method2Pipeline from "../components/mizaan/Method2Pipeline";
+import { runMethod2Pipeline } from "../lib/mizaanMethod2Engine";
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
@@ -709,7 +710,7 @@ export default function Mizaan9Page() {
                 <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} ds={ds} calcCustomBast={(t) => calcCustomBastForSection(t, activeSection)} />
                 <MizaanDivider />
 
-                {/* Method 2 Pipeline with Mahrac Addition */}
+                {/* Method 2 Pipeline */}
                 {(() => {
                   const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds, activeSection);
                   const dominant = result?.dominant;

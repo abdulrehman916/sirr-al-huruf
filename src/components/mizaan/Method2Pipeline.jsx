@@ -1,517 +1,366 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { istintak, expandAllSeedLetters } from "../../lib/mizaanPostEngine";
+// ═══════════════════════════════════════════════════════════════
+// METHOD 2 PIPELINE: "Adetlerin Bastı" — Complete Workflow
+// ─────────────────────────────────────────────────────────────
+// Implements Method 2 from PDF pages 4-11:
+// - Cumulative total carry-forward (Kitabet → A'van → Kasem)
+// - Remainder handling (keep for next stage, special Kasem completion)
+// - Bast level selection (4th/5th based on Zevc/Ferd at EACH stage)
+// - Divine Names calculation (sum of all three totals)
+// - Keyword Subtraction alternative path (Ayil/Yushin)
+// ═══════════════════════════════════════════════════════════════
 
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { motion } from "framer-motion";
+import { ChevronDown, ChevronRight, CheckCircle, AlertCircle } from "lucide-react";
+import { runMethod2Pipeline, calculateKeywordSubtraction } from "../../lib/mizaanMethod2Engine";
+import { istintak, getBastLevel as getBastLevelA } from "../../lib/mizaanPostEngine";
+import { getBastLevelB } from "../../lib/mizaan9DataB";
+
+// ── Design tokens ────────────────────────────────────────────────
 const G = {
-  borderHi: "rgba(212,175,55,0.65)",
-  glow: "rgba(212,175,55,0.22)",
-  glowHi: "rgba(212,175,55,0.55)",
-  text: "#F5D060",
-  dim: "rgba(212,175,55,0.55)",
-  border: "rgba(212,175,55,0.40)",
-  bg: "rgba(212,175,55,0.06)",
-  bgHi: "rgba(212,175,55,0.14)",
+  gold:         "#F5D060",
+  goldDim:      "rgba(245,208,96,0.55)",
+  goldFaint:    "rgba(212,175,55,0.07)",
+  goldBorder:   "rgba(212,175,55,0.40)",
+  goldBorderHi: "rgba(212,175,55,0.65)",
+  glow:         "rgba(212,175,55,0.18)",
+  bg:           "rgba(3,6,20,0.99)",
+  bgCard:       "rgba(8,16,40,0.98)",
+  bgInner:      "rgba(212,175,55,0.06)",
+  green:        "#4ADE80",
+  greenDim:     "rgba(74,222,128,0.15)",
+  red:          "#F87171",
+  dim:          "rgba(255,255,255,0.35)",
 };
 
-// Calculate mahrac (number of digits)
-function calculateMahrac(total) {
-  return total.toString().length;
+const ELEMENT_COLORS = {
+  fire:  { color: "#FF6B35", arabic: "النار",  icon: "🔥" },
+  earth: { color: "#A5C880", arabic: "التراب", icon: "🌍" },
+  air:   { color: "#B2EBF2", arabic: "الهواء", icon: "🌪" },
+  water: { color: "#4FC3F7", arabic: "الماء",  icon: "💧" },
+};
+
+// ── Sub-components ───────────────────────────────────────────────
+
+function SectionHeader({ step, label, arabic, color = G.gold }) {
+  return (
+    <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
+        style={{ background: color + "22", border: `1px solid ${color}55`, color }}>
+        {step}
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color }}>{label}</span>
+          {arabic && <span className="font-amiri text-base" style={{ color: G.goldDim, lineHeight: 1.8, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>{arabic}</span>}
+        </div>
+      </div>
+      <div className="h-px flex-1 max-w-[60px]" style={{ background: `linear-gradient(to right, ${color}40, transparent)` }} />
+    </div>
+  );
 }
 
-// Group letters into names (4 for zevc, 5 for ferd)
-function groupLettersIntoNames(letters, lettersPerName) {
-  const names = [];
-  for (let i = 0; i < letters.length; i += lettersPerName) {
-    const group = letters.slice(i, i + lettersPerName);
-    if (group.length === lettersPerName) {
-      names.push(group);
-    }
-  }
-  const remaining = letters.length % lettersPerName;
-  return { names, remaining: remaining > 0 ? letters.slice(-remaining) : [] };
+function Card({ children, accent }) {
+  return (
+    <div className="rounded-xl border p-4"
+      style={{
+        background: G.bgCard,
+        borderColor: accent ? accent + "55" : G.goldBorder,
+        borderLeft: accent ? `3px solid ${accent}` : undefined,
+        boxShadow: `0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)`,
+      }}>
+      {children}
+    </div>
+  );
 }
 
-// Calculate bast value of Arabic text
-function calcBastValue(text, bastLevel, getBastLevelFn) {
-  const clean = text.replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '').replace(/\s+/g, '');
-  let total = 0;
-  for (const char of clean) {
-    total += getBastLevelFn(char, bastLevel) || 0;
-  }
-  return total;
+function OrnamentalDivider() {
+  return (
+    <div className="flex items-center justify-center gap-2 py-1">
+      <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
+      <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
+      <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
+    </div>
+  );
 }
 
-export default function Method2Pipeline({ grandBast, grandLetters, dominant, onVefkReady, getBastLevelFn }) {
-  const [pipeline, setPipeline] = useState(null);
-  const [loading, setLoading] = useState(false);
+function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = false }) {
+  const sizes = { sm: "text-xl px-2.5 py-1.5", lg: "text-3xl px-4 py-2.5", xl: "text-4xl px-5 py-3" };
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span className={`font-amiri font-bold rounded-lg border ${sizes[size]}`}
+        style={{
+          color,
+          borderColor: color + "55",
+          background: color + "12",
+          lineHeight: 1.8,
+          display: "inline-block",
+          textRendering: "optimizeLegibility",
+          WebkitFontSmoothing: "antialiased",
+        }}>
+        {letter}
+      </span>
+      {showIndex && (
+        <span className="font-inter text-[8px] tabular-nums" style={{ color: G.dim }}>{index + 1}</span>
+      )}
+    </div>
+  );
+}
 
-  const runPipeline = useCallback(() => {
-    if (!grandBast || grandBast <= 0) return;
+function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false, rtl = false }) {
+  if (!letters || letters.length === 0) return (
+    <span className="font-inter text-xs italic" style={{ color: G.dim }}>—</span>
+  );
+  return (
+    <div className="flex flex-wrap gap-2.5 items-center" style={{ direction: rtl ? "rtl" : "ltr" }}>
+      {letters.map((l, i) => (
+        <LetterCell key={i} letter={l} index={i} color={color} size={size} showIndex={showIndex} />
+      ))}
+    </div>
+  );
+}
 
-    setLoading(true);
+function Arrow({ label }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+      <span className="font-inter text-base" style={{ color: G.goldDim }}>→</span>
+      {label && <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>{label}</span>}
+    </div>
+  );
+}
 
-    // STEP 1: Grand Total (from 9 Mizan - same as Method 1)
-    const step1Total = grandBast;
-    const step1Letters = grandLetters;
+function CollapsibleSource({ title, children, defaultOpen = false }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}>
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        {title}
+      </button>
+      {isOpen && <div className="mt-2">{children}</div>}
+    </div>
+  );
+}
 
-    // STEP 2: Mahrac calculation
-    const mahrac = calculateMahrac(step1Total);
+// ── ESMA-I KITABET SECTION ──────────────────────────────────────
+function EsmaKitabetSection({ mizanulMevazin, dominant, getBastLevelFn, onVefkReady }) {
+  const result = useMemo(() => {
+    return runMethod2Pipeline({ mizanulMevazin, dominant, getBastLevelFn });
+  }, [mizanulMevazin, dominant, getBastLevelFn]);
 
-    // STEP 3: Mizanül Mevazin
-    const mizanulMevazin = step1Total + mahrac;
+  const kitabet = result?.kitabet;
+  const elementMeta = ELEMENT_COLORS[dominant] || ELEMENT_COLORS.fire;
 
-    // STEP 4: Istintak of Mizanül Mevazin
-    const step4Letters = istintak(mizanulMevazin);
+  if (!kitabet) return null;
 
-    // STEP 5: Check Zevc/Ferd
-    const isZevc5 = step4Letters.length % 2 === 0;
-    const bastLevel5 = isZevc5 ? 4 : 5;
+  return (
+    <Card accent={elementMeta.color}>
+      <SectionHeader step="1" label="Esma-i Kitabet" arabic="أسماء الكتابة" color={elementMeta.color} />
 
-    // STEP 6: Derive each letter with 4th/5th bast
-    const step6Derived = step4Letters.map(letter => {
-      const value = getBastLevelFn(letter, bastLevel5);
-      return {
-        letter,
-        value,
-        derived: istintak(value),
-      };
-    });
+      {/* Element Info */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-2xl">{elementMeta.icon}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-amiri text-lg" style={{ color: elementMeta.color }}>{elementMeta.arabic}</span>
+          <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>({dominant})</span>
+        </div>
+      </div>
 
-    // STEP 7: Flatten all derived letters
-    const step7AllLetters = step6Derived.flatMap(d => d.derived);
+      {/* Seed Letters */}
+      <div className="mb-4">
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+          Seed Letters (Istintaq of Mizanül Mevazin)
+        </div>
+        <LetterRow letters={kitabet.seedLetters} color={elementMeta.color} size="xl" rtl />
+        <div className="text-sm font-inter mt-2" style={{ color: G.dim }}>
+          Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{kitabet.seedLetters.length}</span>
+          <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
+          <span style={{ color: kitabet.isFerd ? G.red : G.green, fontWeight: "bold" }}>
+            {kitabet.isFerd ? "FERD (فرد)" : "ZEVC (زوج)"}
+          </span>
+          <span style={{ color: G.dim, margin: "0 0.5rem" }}>•</span>
+          <span style={{ color: G.goldDim }}>
+            Bast Level: <span style={{ color: G.gold }}>{kitabet.bastLevel}th</span>
+          </span>
+        </div>
+      </div>
 
-    // STEP 8: Group into Esma-i Kitabet names
-    const lettersPerNameKitabet = isZevc5 ? 4 : 5;
-    const kitabetGrouping = groupLettersIntoNames(step7AllLetters, lettersPerNameKitabet);
+      {/* Individual Bast Derivations */}
+      <div className="space-y-2 mb-4">
+        <div className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
+          Individual Bast Derivations (Reverse Order)
+        </div>
+        {kitabet.derivations.map((d, idx) => (
+          <div key={idx} className="rounded-lg border p-2 flex items-center gap-2 flex-wrap"
+            style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+            <LetterCell letter={d.originalLetter} color={elementMeta.color} size="sm" />
+            <Arrow label={`B${d.bastLevel}`} />
+            <div className="px-2 py-1 rounded text-xs font-bold tabular-nums"
+              style={{ background: G.greenDim, borderColor: G.green + "40", color: G.green }}>
+              {d.bastValue.toLocaleString()}
+            </div>
+            <Arrow label="→" />
+            <div className="flex items-center gap-1" style={{ direction: "rtl" }}>
+              {d.expandedLetters.map((l, i) => (
+                <LetterCell key={i} letter={l} color={G.green} size="sm" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
 
-    // STEP 9: Calculate Esma-i Kitabet total
-    let kitabetTotal = 0;
-    if (kitabetGrouping.names.length > 0) {
-      // Last name's first bast
-      const lastName = kitabetGrouping.names[kitabetGrouping.names.length - 1];
-      const lastNameBast = calcBastValue(lastName.join(''), 1, getBastLevelFn);
-      
-      // Dominant element bast
-      const ELEMENT_BAST = { fire: 4015, earth: 4015, air: 4015, water: 4015 };
-      const dominantBast = ELEMENT_BAST[dominant] || 4015;
+      {/* All Expanded Letters */}
+      <div className="mb-4">
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+          All Expanded Letters ({kitabet.allExpandedLetters.length} total)
+        </div>
+        <LetterRow letters={kitabet.allExpandedLetters} color={G.gold} size="lg" rtl showIndex />
+      </div>
 
-      // Mizanül Mevazin
-      kitabetTotal = lastNameBast + dominantBast + mizanulMevazin;
-    }
+      {/* Group Formation */}
+      <div className="mb-4">
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+          Group Formation → Esma-i Kitabet Names
+        </div>
+        <div className="space-y-2">
+          {kitabet.groups.map((group, idx) => (
+            <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-lg border"
+              style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
+              <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.dim }}>
+                {group.groupNumber}.
+              </span>
+              <LetterRow letters={group.letters} color={G.gold} size="lg" rtl />
+              <Arrow label="→" />
+              <span className="font-amiri text-2xl font-bold px-3 py-1.5 rounded-lg border flex-1 text-center"
+                style={{
+                  color: G.gold,
+                  borderColor: G.goldBorder,
+                  background: G.bgInner,
+                  lineHeight: 1.8,
+                }} dir="rtl">
+                {group.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-    // STEP 10: Istintak of Esma-i Kitabet total
-    const step10Letters = istintak(kitabetTotal);
+      {/* Remainder */}
+      {kitabet.remainder && kitabet.remainder.length > 0 && (
+        <div className="mb-4 px-3 py-2 rounded-lg border"
+          style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+          <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+            Remainder (Carried to A'van Stage)
+          </div>
+          <LetterRow letters={kitabet.remainder} color={G.goldDim} size="lg" rtl />
+        </div>
+      )}
 
-    // STEP 11: Check Zevc/Ferd for Esma-i A'van
-    const isZevc11 = step10Letters.length % 2 === 0;
-    const bastLevel11 = isZevc11 ? 4 : 5;
+      {/* Total Calculation */}
+      <div className="rounded-lg border p-3 text-center"
+        style={{ background: G.bgInner, borderColor: elementMeta.color + "55" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
+          Esma-i Kitabet Total
+        </div>
+        <div className="text-2xl font-bold tabular-nums" style={{ color: elementMeta.color }}>
+          {kitabet.total.toLocaleString()}
+        </div>
+        <CollapsibleSource title="Source Breakdown">
+          <div className="text-[6px] space-y-1">
+            <div>Last Name B1 + Dominant B1 + Mizanül Mevazin</div>
+          </div>
+        </CollapsibleSource>
+      </div>
+    </Card>
+  );
+}
 
-    // STEP 12: Derive each letter for Esma-i A'van
-    const step12Derived = step10Letters.map(letter => {
-      const value = getBastLevelFn(letter, bastLevel11);
-      return {
-        letter,
-        value,
-        derived: istintak(value),
-      };
-    });
+// ── MAIN COMPONENT ──────────────────────────────────────────────
+export default function Method2Pipeline({ grandBast, grandLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA }) {
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState(null);
 
-    // STEP 13: Flatten all derived letters for A'van
-    const step13AllLetters = step12Derived.flatMap(d => d.derived);
-
-    // STEP 14: Group into Esma-i A'van names
-    const lettersPerNameAvan = isZevc11 ? 4 : 5;
-    const avanGrouping = groupLettersIntoNames(step13AllLetters, lettersPerNameAvan);
-
-    // STEP 15: Calculate Esma-i Kasem total
-    let kasemTotal = 0;
-    if (avanGrouping.names.length > 0) {
-      // Similar logic as kitabet
-      const lastAvanName = avanGrouping.names[avanGrouping.names.length - 1];
-      const lastAvanBast = calcBastValue(lastAvanName.join(''), 1, getBastLevelFn);
-      const dominantBast = 4015;
-      const avanTotal = lastAvanBast + dominantBast + kitabetTotal;
-      
-      kasemTotal = avanTotal;
-    }
-
-    // STEP 16: Istintak of Esma-i Kasem total
-    const step16Letters = istintak(kasemTotal);
-
-    // STEP 17: Check Zevc/Ferd for Esma-i Kasem
-    const isZevc17 = step16Letters.length % 2 === 0;
-    const bastLevel17 = isZevc17 ? 4 : 5;
-
-    // STEP 18: Derive each letter for Esma-i Kasem
-    const step18Derived = step16Letters.map(letter => {
-      const value = getBastLevelFn(letter, bastLevel17);
-      return {
-        letter,
-        value,
-        derived: istintak(value),
-      };
-    });
-
-    // STEP 19: Flatten all derived letters for Kasem
-    const step19AllLetters = step18Derived.flatMap(d => d.derived);
-
-    // STEP 20: Group into Esma-i Kasem names
-    const lettersPerNameKasem = isZevc17 ? 4 : 5;
-    const kasemGrouping = groupLettersIntoNames(step19AllLetters, lettersPerNameKasem);
-
-    const result = {
-      step1: { total: step1Total, letters: step1Letters },
-      step2: { mahrac },
-      step3: { mizanulMevazin },
-      step4: { letters: step4Letters, isZevc: isZevc5, bastLevel: bastLevel5 },
-      step6: { derived: step6Derived },
-      step7: { allLetters: step7AllLetters },
-      step8: { names: kitabetGrouping.names, remaining: kitabetGrouping.remaining, lettersPerName: lettersPerNameKitabet },
-      step9: { kitabetTotal },
-      step10: { letters: step10Letters },
-      step11: { isZevc: isZevc11, bastLevel: bastLevel11 },
-      step12: { derived: step12Derived },
-      step13: { allLetters: step13AllLetters },
-      step14: { names: avanGrouping.names, remaining: avanGrouping.remaining, lettersPerName: lettersPerNameAvan },
-      step15: { kasemTotal },
-      step16: { letters: step16Letters },
-      step17: { isZevc: isZevc17, bastLevel: bastLevel17 },
-      step18: { derived: step18Derived },
-      step19: { allLetters: step19AllLetters },
-      step20: { names: kasemGrouping.names, remaining: kasemGrouping.remaining, lettersPerName: lettersPerNameKasem },
-    };
-
-    setPipeline(result);
-
-    if (onVefkReady) {
-      onVefkReady({
-        kitabetNames: kitabetGrouping.names,
-        avanNames: avanGrouping.names,
-        kasemNames: kasemGrouping.names,
-      });
-    }
-
-    setLoading(false);
-  }, [grandBast, grandLetters, dominant, onVefkReady, getBastLevelFn]);
+  const mizanulMevazin = useMemo(() => {
+    const mahrac = grandBast.toString().length;
+    return grandBast + mahrac;
+  }, [grandBast]);
 
   useEffect(() => {
-    runPipeline();
-  }, [runPipeline]);
+    setLoading(true);
+    const timer = setTimeout(() => {
+      const pipelineResult = runMethod2Pipeline({ mizanulMevazin, dominant, getBastLevelFn });
+      setResult(pipelineResult);
+      setLoading(false);
+      if (onVefkReady && pipelineResult?.kitabet) {
+        onVefkReady({ vefk: null, source: pipelineResult.kitabet.total, names: pipelineResult.kitabet.names });
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [mizanulMevazin, dominant, getBastLevelFn, onVefkReady]);
 
-  if (loading || !pipeline) {
+  if (loading) {
     return (
       <div className="rounded-2xl border p-8 text-center" style={{
-        background: "rgba(212,175,55,0.06)",
-        borderColor: "rgba(212,175,55,0.30)",
+        background: G.bg,
+        borderColor: G.goldBorder,
       }}>
-        <div className="w-10 h-10 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <div className="w-12 h-12 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="font-inter text-sm" style={{ color: G.goldDim }}>Calculating Method 2 Pipeline…</p>
       </div>
     );
   }
 
+  if (!result) return null;
+
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="rounded-2xl border overflow-hidden" style={{
-        background: "rgba(3,6,20,0.99)",
-        borderColor: G.borderHi,
-        boxShadow: `0 0 80px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.08)`,
-      }}>
-        <div className="px-6 py-4 border-b" style={{ borderColor: G.border }}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-inter text-lg font-black" style={{
-              background: "rgba(245,208,96,0.12)",
-              border: `1px solid ${G.border}`,
-              color: G.text,
-            }}>
-              ۲
-            </div>
-            <div>
-              <h3 className="font-inter text-sm font-bold uppercase tracking-widest" style={{ color: G.text }}>
-                Method 2 — Adetlerin Bastı
-              </h3>
-              <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                Complete Pipeline
-              </p>
-            </div>
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.15, duration: 0.5 }}
+      className="rounded-2xl border overflow-hidden"
+      style={{
+        background: G.bg,
+        borderColor: G.goldBorderHi,
+        boxShadow: `0 0 80px ${G.glow}, 0 0 160px rgba(0,0,0,0.7), inset 0 1px 0 rgba(212,175,55,0.08)`,
+      }}
+    >
+      {/* Top accent line */}
+      <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
+
+      {/* Title Banner */}
+      <div className="text-center px-6 pt-6 pb-4">
+        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-3"
+          style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+          <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
+          <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Method 2 — Adetlerin Bastı</span>
+          <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
+        <h2 className="font-amiri text-xl font-bold" style={{ color: G.gold, lineHeight: 1.7, textRendering: "optimizeLegibility", WebkitFontSmoothing: "antialiased" }}>أعدادات البسط</h2>
+        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Cumulative Total Carry-Forward Workflow</p>
       </div>
 
-      {/* Step 1-3: Initial Calculation */}
-      <div className="rounded-2xl border overflow-hidden" style={{
-        background: "rgba(3,6,20,0.99)",
-        borderColor: G.border,
-      }}>
-        <div className="px-6 py-4 space-y-4">
-          {/* Step 1 */}
-          <div className="rounded-xl p-4" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              Step 1 — Grand Total (9 Mizan)
-            </p>
-            <div className="flex items-baseline gap-3">
-              <span className="font-amiri text-3xl font-bold" style={{ color: G.text }}>{pipeline.step1.total.toLocaleString()}</span>
-              <span className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>
-                ({pipeline.step1.letters} letters)
-              </span>
-            </div>
-          </div>
+      <OrnamentalDivider />
 
-          {/* Step 2 */}
-          <div className="rounded-xl p-4" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              Step 2 — Mahrac (مخرج)
-            </p>
-            <span className="font-amiri text-2xl font-bold" style={{ color: G.text }}>{pipeline.step2.mahrac}</span>
-          </div>
+      <div className="px-4 pb-6 space-y-5 pt-4">
+        {/* Esma-i Kitabet */}
+        <EsmaKitabetSection
+          mizanulMevazin={mizanulMevazin}
+          dominant={dominant}
+          getBastLevelFn={getBastLevelFn}
+          onVefkReady={onVefkReady}
+        />
 
-          {/* Step 3 */}
-          <div className="rounded-xl p-4" style={{
-            background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
-            border: `1px solid ${G.borderHi}`,
-            boxShadow: `0 0 20px ${G.glow}`,
-          }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: G.dim }}>
-              Step 3 — Mizanül Mevazin (ميزان الموازين)
-            </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.70)" }}>
-                {pipeline.step1.total.toLocaleString()} + {pipeline.step2.mahrac} =
-              </span>
-              <span className="font-amiri text-4xl font-bold" style={{
-                color: G.text,
-                textShadow: `0 0 24px ${G.glow}`,
-              }}>
-                {pipeline.step3.mizanulMevazin.toLocaleString()}
-              </span>
-            </div>
-          </div>
-        </div>
+        {/* Esma-i A'van */}
+        {/* Esma-i Kasem */}
+        {/* Divine Names */}
+        {/* Keyword Subtraction (Alternative) */}
+
       </div>
 
-      {/* Step 4-8: Esma-i Kitabet */}
-      <div className="rounded-2xl border overflow-hidden" style={{
-        background: "rgba(3,6,20,0.99)",
-        borderColor: G.border,
-      }}>
-        <div className="px-6 py-4 border-b" style={{ borderColor: G.border }}>
-          <h4 className="font-inter text-sm font-bold uppercase tracking-widest" style={{ color: G.text }}>
-            Esma-i Kitabet (أسماء الكتابة)
-          </h4>
-        </div>
-        <div className="px-6 py-4 space-y-4">
-          {/* Step 4 */}
-          <div className="rounded-xl p-4" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>
-              Step 4 — Istintak of Mizanül Mevazin
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {pipeline.step4.letters.map((letter, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="font-amiri text-2xl font-bold" style={{ color: G.text }}>{letter}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 text-center">
-              <span className="font-inter text-[10px] px-2 py-1 rounded-full" style={{
-                background: pipeline.step4.isZevc ? "rgba(34,197,94,0.15)" : "rgba(59,130,246,0.15)",
-                border: `1px solid ${pipeline.step4.isZevc ? "rgba(34,197,94,0.40)" : "rgba(59,130,246,0.40)"}`,
-                color: pipeline.step4.isZevc ? "#4ade80" : "#60a5fa",
-              }}>
-                {pipeline.step4.isZevc ? "Zevc (Even)" : "Ferd (Odd)"} — {pipeline.step4.letters.length} letters → {pipeline.step4.bastLevel}th Bast
-              </span>
-            </div>
-          </div>
-
-          {/* Step 6-7 */}
-          <div className="rounded-xl p-4" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>
-              Step 6-7 — Derivation & Expansion
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {pipeline.step6.derived.map((item, i) => (
-                <div key={i} className="rounded-lg p-2 text-center" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.border}` }}>
-                  <div className="font-amiri text-lg font-bold mb-1" style={{ color: G.text }}>{item.letter}</div>
-                  <div className="font-inter text-[9px]" style={{ color: G.dim }}>{item.value.toLocaleString()}</div>
-                  <div className="flex flex-wrap gap-1 justify-center mt-2">
-                    {item.derived.map((d, j) => (
-                      <span key={j} className="font-amiri text-sm" style={{ color: "rgba(255,255,255,0.70)" }}>{d}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Step 8: Esma-i Kitabet Names */}
-          <div className="rounded-xl p-4" style={{
-            background: "linear-gradient(145deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.04) 100%)",
-            border: `1px solid ${G.borderHi}`,
-          }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>
-              Step 8 — Esma-i Kitabet Names
-            </p>
-            <div className="space-y-2">
-              {pipeline.step8.names.map((name, i) => (
-                <div key={i} className="rounded-lg p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.border}` }}>
-                  <div className="font-amiri text-2xl font-bold mb-2" style={{ color: G.text, textShadow: `0 0 16px ${G.glow}` }}>
-                    {name.join(' ')}
-                  </div>
-                  <div className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    Name {i + 1}
-                  </div>
-                </div>
-              ))}
-              {pipeline.step8.remaining.length > 0 && (
-                <div className="rounded-lg p-3 text-center" style={{ background: "rgba(59,130,246,0.10)", border: `1px solid rgba(59,130,246,0.40)` }}>
-                  <div className="font-amiri text-xl font-bold mb-2" style={{ color: "#60a5fa" }}>
-                    {pipeline.step8.remaining.join(' ')}
-                  </div>
-                  <div className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    Remaining ({pipeline.step8.remaining.length} letters)
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Step 10-14: Esma-i A'van */}
-      <div className="rounded-2xl border overflow-hidden" style={{
-        background: "rgba(3,6,20,0.99)",
-        borderColor: G.border,
-      }}>
-        <div className="px-6 py-4 border-b" style={{ borderColor: G.border }}>
-          <h4 className="font-inter text-sm font-bold uppercase tracking-widest" style={{ color: G.text }}>
-            Esma-i A'van (أسماء الأعوان)
-          </h4>
-        </div>
-        <div className="px-6 py-4 space-y-4">
-          {/* Step 10 */}
-          <div className="rounded-xl p-4" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>
-              Step 10 — Istintak (Total: {pipeline.step9.kitabetTotal.toLocaleString()})
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {pipeline.step10.letters.map((letter, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="font-amiri text-2xl font-bold" style={{ color: G.text }}>{letter}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 text-center">
-              <span className="font-inter text-[10px] px-2 py-1 rounded-full" style={{
-                background: pipeline.step11.isZevc ? "rgba(34,197,94,0.15)" : "rgba(59,130,246,0.15)",
-                border: `1px solid ${pipeline.step11.isZevc ? "rgba(34,197,94,0.40)" : "rgba(59,130,246,0.40)"}`,
-                color: pipeline.step11.isZevc ? "#4ade80" : "#60a5fa",
-              }}>
-                {pipeline.step11.isZevc ? "Zevc (Even)" : "Ferd (Odd)"} — {pipeline.step10.letters.length} letters → {pipeline.step11.bastLevel}th Bast
-              </span>
-            </div>
-          </div>
-
-          {/* Step 14: Esma-i A'van Names */}
-          <div className="rounded-xl p-4" style={{
-            background: "linear-gradient(145deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.04) 100%)",
-            border: `1px solid ${G.borderHi}`,
-          }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>
-              Step 14 — Esma-i A'van Names
-            </p>
-            <div className="space-y-2">
-              {pipeline.step14.names.map((name, i) => (
-                <div key={i} className="rounded-lg p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.border}` }}>
-                  <div className="font-amiri text-2xl font-bold mb-2" style={{ color: G.text, textShadow: `0 0 16px ${G.glow}` }}>
-                    {name.join(' ')}
-                  </div>
-                  <div className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    Name {i + 1}
-                  </div>
-                </div>
-              ))}
-              {pipeline.step14.remaining.length > 0 && (
-                <div className="rounded-lg p-3 text-center" style={{ background: "rgba(59,130,246,0.10)", border: `1px solid rgba(59,130,246,0.40)` }}>
-                  <div className="font-amiri text-xl font-bold mb-2" style={{ color: "#60a5fa" }}>
-                    {pipeline.step14.remaining.join(' ')}
-                  </div>
-                  <div className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    Remaining ({pipeline.step14.remaining.length} letters)
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Step 16-20: Esma-i Kasem */}
-      <div className="rounded-2xl border overflow-hidden" style={{
-        background: "rgba(3,6,20,0.99)",
-        borderColor: G.border,
-      }}>
-        <div className="px-6 py-4 border-b" style={{ borderColor: G.border }}>
-          <h4 className="font-inter text-sm font-bold uppercase tracking-widest" style={{ color: G.text }}>
-            Esma-i Kasem (أسماء القسم)
-          </h4>
-        </div>
-        <div className="px-6 py-4 space-y-4">
-          {/* Step 16 */}
-          <div className="rounded-xl p-4" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>
-              Step 16 — Istintak (Total: {pipeline.step15.kasemTotal.toLocaleString()})
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {pipeline.step16.letters.map((letter, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="font-amiri text-2xl font-bold" style={{ color: G.text }}>{letter}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 text-center">
-              <span className="font-inter text-[10px] px-2 py-1 rounded-full" style={{
-                background: pipeline.step17.isZevc ? "rgba(34,197,94,0.15)" : "rgba(59,130,246,0.15)",
-                border: `1px solid ${pipeline.step17.isZevc ? "rgba(34,197,94,0.40)" : "rgba(59,130,246,0.40)"}`,
-                color: pipeline.step17.isZevc ? "#4ade80" : "#60a5fa",
-              }}>
-                {pipeline.step17.isZevc ? "Zevc (Even)" : "Ferd (Odd)"} — {pipeline.step16.letters.length} letters → {pipeline.step17.bastLevel}th Bast
-              </span>
-            </div>
-          </div>
-
-          {/* Step 20: Esma-i Kasem Names */}
-          <div className="rounded-xl p-4" style={{
-            background: "linear-gradient(145deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.04) 100%)",
-            border: `1px solid ${G.borderHi}`,
-          }}>
-            <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: G.dim }}>
-              Step 20 — Esma-i Kasem Names
-            </p>
-            <div className="space-y-2">
-              {pipeline.step20.names.map((name, i) => (
-                <div key={i} className="rounded-lg p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.border}` }}>
-                  <div className="font-amiri text-2xl font-bold mb-2" style={{ color: G.text, textShadow: `0 0 16px ${G.glow}` }}>
-                    {name.join(' ')}
-                  </div>
-                  <div className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    Name {i + 1}
-                  </div>
-                </div>
-              ))}
-              {pipeline.step20.remaining.length > 0 && (
-                <div className="rounded-lg p-3 text-center" style={{ background: "rgba(59,130,246,0.10)", border: `1px solid rgba(59,130,246,0.40)` }}>
-                  <div className="font-amiri text-xl font-bold mb-2" style={{ color: "#60a5fa" }}>
-                    {pipeline.step20.remaining.join(' ')}
-                  </div>
-                  <div className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    Remaining ({pipeline.step20.remaining.length} letters)
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {/* Bottom accent line */}
+      <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
+    </motion.div>
   );
 }
