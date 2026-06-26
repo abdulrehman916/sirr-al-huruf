@@ -31,7 +31,7 @@ function CustomPurposePanel({ customPurpose, onCustomPurpose }) {
         placeholder="اكتب نيتك أو مقصدك الخاص هنا..."
         rows={2}
         className="w-full rounded-xl px-4 py-2.5 font-amiri text-base text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/25"
-        style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${active ? G.borderHi : G.border}` }}
+        style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${active ? G.borderHi : G.border}`, fontSize: "16px" }}
       />
       {active && (
         <motion.div

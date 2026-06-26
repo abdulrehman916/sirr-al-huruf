@@ -265,7 +265,7 @@ export default function Mizaan9Page() {
             placeholder="أدخل النص العربي هنا — السورة، الآية، الاسم..."
             rows={5}
             className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
-            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
+            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
           />
 
           {loading && (

@@ -256,7 +256,7 @@ export default function HadimPage() {
             <input dir="rtl" type="text" value={talib} onChange={(e) => setTalib(e.target.value)}
               placeholder="اسمك..."
               className="w-full rounded-xl px-4 py-3 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
-              style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)" }} />
+              style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", fontSize: "16px" }} />
           </div>
 
           <div>
@@ -264,7 +264,7 @@ export default function HadimPage() {
             <input dir="rtl" type="text" value={matloob} onChange={(e) => setMatloob(e.target.value)}
               placeholder="رزق، محبة، فتح، اسم شخص..."
               className="w-full rounded-xl px-4 py-3 font-amiri text-lg text-white focus:outline-none caret-white placeholder:text-white/30"
-              style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)" }} />
+              style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.40)", fontSize: "16px" }} />
           </div>
 
           <div>
@@ -277,7 +277,7 @@ export default function HadimPage() {
                     <textarea dir="rtl" value={val} onChange={(e) => updateIsm(i, e.target.value)}
                       placeholder="اسم، آية، سورة..." rows={2}
                       className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white placeholder:text-white/30"
-                      style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)" }} />
+                      style={{ background: "rgba(8,25,48,0.95)", border: "1px solid rgba(168,85,247,0.35)", fontSize: "16px" }} />
                   </div>
                   {isms.length > 1 && (
                     <button onClick={() => removeIsm(i)}

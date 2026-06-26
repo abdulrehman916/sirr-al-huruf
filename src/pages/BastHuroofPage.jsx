@@ -380,7 +380,7 @@ export default function BastHuroofPage() {
               placeholder="أدخل النص العربي هنا..."
               rows={4}
               className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
-              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
+              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
             />
 
             <div className="flex gap-2">
@@ -443,7 +443,7 @@ export default function BastHuroofPage() {
               }}
               placeholder="e.g., 4282, 1095, 991"
               className="w-full rounded-xl px-4 py-3 font-inter text-xl text-white leading-relaxed focus:outline-none caret-white mb-3 placeholder:text-white/30"
-              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}` }}
+              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
             />
 
             <div className="flex gap-2">

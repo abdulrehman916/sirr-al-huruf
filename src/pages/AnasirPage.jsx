@@ -210,7 +210,7 @@ function InputCard({ value, onChange, onAnalyze, onClear, hasResult, loading, pr
       <textarea dir="rtl" value={value} onChange={(e) => onChange(e.target.value)}
         placeholder="أدخل النص العربي هنا..." rows={4}
         className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/35"
-        style={{ background: "rgba(4,16,32,0.98)", border: "1px solid rgba(56,189,248,0.40)" }} />
+        style={{ background: "rgba(4,16,32,0.98)", border: "1px solid rgba(56,189,248,0.40)", fontSize: "16px" }} />
       {loading && (
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1.5">

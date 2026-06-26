@@ -282,6 +282,7 @@ export default function AbjadKabirPage() {
                 style={{
                   borderColor: "rgba(212,175,55,0.25)",
                   boxShadow: "inset 0 2px 12px rgba(0,0,0,0.40)",
+                  fontSize: "16px",
                 }}
                 rows={4}
                 dir="rtl"

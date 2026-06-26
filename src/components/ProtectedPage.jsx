@@ -93,7 +93,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 
   if (accessStatus === "checking") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center" style={{ minHeight: "60vh" }}>
         <div className="w-10 h-10 border-4 border-t-yellow-400 border-r-transparent border-b-yellow-400 border-l-transparent rounded-full animate-spin" />
       </div>
     );

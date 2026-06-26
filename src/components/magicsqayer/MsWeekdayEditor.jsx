@@ -111,6 +111,7 @@ export default function MsWeekdayEditor({ open, onClose, overrides, onSave, sele
                     background: "rgba(4,12,34,0.97)",
                     border: "1px solid rgba(255,255,255,0.10)",
                     color: "rgba(245,235,210,0.85)",
+                    fontSize: "16px",
                   }}
                 />
               </div>
@@ -134,6 +135,7 @@ export default function MsWeekdayEditor({ open, onClose, overrides, onSave, sele
                     background: "rgba(4,12,34,0.97)",
                     border: "1px solid rgba(255,255,255,0.10)",
                     color: "rgba(255,159,90,0.85)",
+                    fontSize: "16px",
                   }}
                 />
               </div>
