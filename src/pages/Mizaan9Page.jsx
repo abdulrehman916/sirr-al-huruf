@@ -282,12 +282,14 @@ export default function Mizaan9Page() {
         {/* Header */}
         <PageTitle arabic="ميزان الأعداد" latin="9 Mizan" subtitle="Complete Occult Analysis System" icon="٩" />
 
-        {/* Section 1 / Section 2 / Section 3 Toggle */}
+        {/* Method 1 / Method 2 / Method 3 / Method 4 / Method 5 Toggle */}
         <div className="flex gap-2">
           {[
             { s: 1, arabic: 'المجموعة الأولى' },
             { s: 2, arabic: 'المجموعة الثانية' },
             { s: 3, arabic: 'الأبجد الكبير' },
+            { s: 4, arabic: 'الطريقة الرابعة' },
+            { s: 5, arabic: 'الطريقة الخامسة' },
           ].map(({ s, arabic }) => (
             <button key={s} onClick={() => setActiveSection(s)}
               className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
@@ -298,7 +300,7 @@ export default function Mizaan9Page() {
                 boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
               }}>
               <span className="font-amiri text-sm">{arabic}</span>
-              <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
+              <span className="font-inter text-[9px] uppercase tracking-widest">METHOD {s}</span>
             </button>
           ))}
         </div>
