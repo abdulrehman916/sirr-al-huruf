@@ -77,7 +77,7 @@ export default function HolyOneDetailPage() {
 
   // Calculate Abjad value for Section B names only
   const abjadValue = useMemo(() => {
-    if (source !== "B" || !name.arabic_name) return null;
+    if (source !== "B" || !name || !name.arabic_name) return null;
     
     // Remove harakat and spaces for calculation
     const cleanArabic = name.arabic_name.replace(/[\u064B-\u0652\u0670]/g, '').replace(/\s+/g, '');
@@ -89,18 +89,38 @@ export default function HolyOneDetailPage() {
       }
     }
     return total;
-  }, [name.arabic_name, source]);
+  }, [name?.arabic_name, source]);
 
   const abjadSquare = useMemo(() => {
     if (!abjadValue) return null;
     return abjadValue * abjadValue;
   }, [abjadValue]);
 
-  if (loading || !name) {
+  if (loading) {
     return (
       <PageLayout>
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-t-yellow-400 rounded-full animate-spin" />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  if (!name) {
+    return (
+      <PageLayout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+            <ChevronLeft className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="font-inter text-xl font-bold text-white mb-2">Record Not Found</h2>
+          <p className="text-gray-400 text-sm mb-6">This Holy Name record does not exist in the database.</p>
+          <button
+            onClick={() => navigate("/holy-names")}
+            className="px-6 py-3 rounded-xl border border-gold-dim text-gold hover:bg-gold/10 transition-colors"
+          >
+            Back to Holy Names
+          </button>
         </div>
       </PageLayout>
     );
@@ -139,8 +159,8 @@ export default function HolyOneDetailPage() {
 
         {/* Arabic Name */}
         <div className="text-center mb-6">
-          <h1 className="font-amiri text-4xl font-bold text-gold mb-3">{source === "A" ? name.arabic_name : name.arabic_name}</h1>
-          <p className="text-lg text-white/60 mb-2">{name.malayalam_pronunciation}</p>
+          <h1 className="font-amiri text-4xl font-bold text-gold mb-3">{name.arabic_name || "Unknown"}</h1>
+          <p className="text-lg text-white/60 mb-2">{name.malayalam_pronunciation || ""}</p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Badge style={{ background: G.bg, borderColor: G.border, fontSize: 12 }}>
               {name.view_count || 0} views
@@ -218,7 +238,7 @@ export default function HolyOneDetailPage() {
         <div className="space-y-4">
           
           {/* Meaning */}
-          {name.meaning_malayalam && (
+          {name.meaning_malayalam ? (
             <div className="rounded-xl border p-4" style={{ background: "rgba(255,255,255,0.03)", borderColor: G.border }}>
               <div className="flex items-center gap-2 mb-3">
                 <BookOpen className="w-5 h-5" style={{ color: G.text }} />
@@ -226,10 +246,10 @@ export default function HolyOneDetailPage() {
               </div>
               <p className="text-white/80 leading-relaxed">{name.meaning_malayalam}</p>
             </div>
-          )}
+          ) : null}
 
           {/* Explanation */}
-          {name.explanation_malayalam && (
+          {name.explanation_malayalam ? (
             <div className="rounded-xl border p-4" style={{ background: "rgba(255,255,255,0.03)", borderColor: G.border }}>
               <div className="flex items-center gap-2 mb-3">
                 <Star className="w-5 h-5" style={{ color: G.text }} />
@@ -237,10 +257,10 @@ export default function HolyOneDetailPage() {
               </div>
               <p className="text-white/80 leading-relaxed whitespace-pre-wrap">{name.explanation_malayalam}</p>
             </div>
-          )}
+          ) : null}
 
           {/* Virtues & Benefits */}
-          {name.virtues_benefits && (
+          {name.virtues_benefits ? (
             <div className="rounded-xl border p-4" style={{ background: "rgba(255,255,255,0.03)", borderColor: G.border }}>
               <div className="flex items-center gap-2 mb-3">
                 <Star className="w-5 h-5" style={{ color: G.text }} />
@@ -248,10 +268,10 @@ export default function HolyOneDetailPage() {
               </div>
               <p className="text-white/80 leading-relaxed whitespace-pre-wrap">{name.virtues_benefits}</p>
             </div>
-          )}
+          ) : null}
 
           {/* Islamic Information */}
-          {name.islamic_information && (
+          {name.islamic_information ? (
             <div className="rounded-xl border p-4" style={{ background: "rgba(255,255,255,0.03)", borderColor: G.border }}>
               <div className="flex items-center gap-2 mb-3">
                 <BookOpen className="w-5 h-5" style={{ color: G.text }} />
@@ -259,10 +279,10 @@ export default function HolyOneDetailPage() {
               </div>
               <p className="text-white/80 leading-relaxed whitespace-pre-wrap">{name.islamic_information}</p>
             </div>
-          )}
+          ) : null}
 
           {/* Authentic Notes */}
-          {name.authentic_notes && (
+          {name.authentic_notes ? (
             <div className="rounded-xl border p-4" style={{ background: "rgba(255,255,255,0.03)", borderColor: G.border }}>
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="w-5 h-5" style={{ color: G.text }} />
@@ -270,7 +290,7 @@ export default function HolyOneDetailPage() {
               </div>
               <p className="text-white/80 leading-relaxed whitespace-pre-wrap">{name.authentic_notes}</p>
             </div>
-          )}
+          ) : null}
 
           {/* Source Reference */}
           <div className="text-center text-xs text-white/30 mt-6">
