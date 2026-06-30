@@ -310,7 +310,6 @@ export default function Mizaan9Page() {
               {[
                 { s: 1, arabic: 'المجموعة الأولى' },
                 { s: 2, arabic: 'المجموعة الثانية' },
-                { s: 3, arabic: 'الأبجد الكبير' },
               ].map(({ s, arabic }) => (
                 <button key={s} onClick={() => setActiveSection(s)}
                   className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
