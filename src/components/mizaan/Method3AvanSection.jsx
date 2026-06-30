@@ -8,22 +8,22 @@ import { GALIB_ANASIR_VALUES, getBastLevel as getBastLevelA } from "../../lib/mi
 // Formula (per book instructions):
 //   1. First Bast of the LAST (remainder-completed) Esma-i Kitabet name
 //   2. + First Bast of the selected Galib Anasir
-//   3. + Total value of the Nine Mizan (grandBast + grandLetters)
+//   3. + Kitabet Input Total (the Result of the Esma-i Kitabet formula box)
 // The resulting total replaces the normal Section-1-based A'van source.
 // Everything downstream (Istintak, odd/even, 4th/5th Bast, expansion,
 // grouping) reuses the EXACT SAME EsmaAvanSection engine — unchanged.
 // ═══════════════════════════════════════════════════════════════
-export default function Method3AvanSection({ kitabetNames, dominant, nineMizanTotal, onVefkReady, getBastLevelFn = getBastLevelA }) {
+export default function Method3AvanSection({ kitabetNames, dominant, kitabetInputTotal, onVefkReady, getBastLevelFn = getBastLevelA }) {
   const { sourceTotal, breakdown } = useMemo(() => {
     const lastName = Array.isArray(kitabetNames) && kitabetNames.length ? kitabetNames[kitabetNames.length - 1] : "";
     const lastNameBast = [...lastName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
     const galibAnasirBast = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
-    const total = lastNameBast + galibAnasirBast + (nineMizanTotal || 0);
+    const total = lastNameBast + galibAnasirBast + (kitabetInputTotal || 0);
     return {
       sourceTotal: total,
-      breakdown: { lastName, lastNameBast, galibAnasirBast, nineMizanTotal: nineMizanTotal || 0 },
+      breakdown: { lastName, lastNameBast, galibAnasirBast, kitabetInputTotal: kitabetInputTotal || 0 },
     };
-  }, [kitabetNames, dominant, nineMizanTotal, getBastLevelFn]);
+  }, [kitabetNames, dominant, kitabetInputTotal, getBastLevelFn]);
 
   if (!sourceTotal || sourceTotal <= 0) return null;
 

@@ -284,7 +284,7 @@ function AvanSourceDerivation({ section1Letters, bastTotal, letterCount, sourceT
 
 // ── Method 3 source derivation display — sourceBreakdown-driven (no calc here) ──
 function Method3SourceDerivation({ breakdown, sourceTotal, seedLetters, elementColor }) {
-  const { lastName, lastNameBast, galibAnasirBast, nineMizanTotal } = breakdown;
+  const { lastName, lastNameBast, galibAnasirBast, kitabetInputTotal } = breakdown;
   return (
     <div className="rounded-xl border p-4 space-y-4"
       style={{
@@ -314,8 +314,8 @@ function Method3SourceDerivation({ breakdown, sourceTotal, seedLetters, elementC
             <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{galibAnasirBast.toLocaleString()}</div>
           </div>
           <div className="space-y-1">
-            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Nine Mizan Total</div>
-            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{nineMizanTotal.toLocaleString()}</div>
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Kitabet Input Total</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{kitabetInputTotal.toLocaleString()}</div>
           </div>
         </div>
         <div className="text-center pt-1 border-t" style={{ borderColor: G.goldBorder + "30" }}>

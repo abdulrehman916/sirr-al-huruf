@@ -931,31 +931,37 @@ export default function Mizaan9Page() {
                   const lastNameBast    = [...lastKitabetName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
                   const galibAnasirBast = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
                   const nineMizanTotal  = grandBast + grandLetters;
-                  const method3AvanSource = lastNameBast + galibAnasirBast + nineMizanTotal;
+                  // SECTION 1 — Esma-i Kitabet formula box Result
+                  const kitabetInputTotal = lastNameBast + galibAnasirBast + nineMizanTotal;
+                  // SECTION 2 — Esma-i A'van formula box Result (uses Kitabet Input Total, NOT Nine Mizan Total)
+                  const avanInputTotal = lastNameBast + galibAnasirBast + kitabetInputTotal;
 
-                  // Method 3 A'van pipeline — same engine as Method 2, seeded by the Method 3 formula
-                  const avanPipeline = method3AvanSource > 0
-                    ? runMizaanPostPipeline({ grandBast: method3AvanSource, grandLetters: 0, dominant })
+                  // Method 3 A'van pipeline — same engine as Method 2, seeded by the A'van Input Total
+                  const avanPipeline = avanInputTotal > 0
+                    ? runMizaanPostPipeline({ grandBast: avanInputTotal, grandLetters: 0, dominant })
                     : null;
                   const avanExpandedLetters = avanPipeline?.allExpandedLetters || [];
 
-                  // Method 3 Esma-i Kasem input — per book formula (NOT the Method 2 derivation):
-                  // Last Esma-i A'van name's First Bast + Galib Anasir First Bast + Previous A'van Input Total
+                  // SECTION 3 — Esma-i Kasem input: Last A'van Name First Bast + Galib Anasir First Bast + A'van Input Total
                   const avanNames        = deriveAvanNames(avanPipeline?.initialSeedLetters, getBastLevelFn);
                   const lastAvanName     = avanNames.length ? avanNames[avanNames.length - 1] : "";
                   const lastAvanNameBast = [...lastAvanName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-                  const kasemInputTotal  = lastAvanNameBast + galibAnasirBast + method3AvanSource;
+                  const kasemInputTotal  = lastAvanNameBast + galibAnasirBast + avanInputTotal;
 
                   return (
                     <>
-                      {/* ═══ SAME AS METHOD 1/2: Esma-i Kitabet ═══ */}
-                      <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} onVefkReady={setS1VefkData} getBastLevelFn={getBastLevelFn} />
+                      {/* ═══ SAME AS METHOD 1/2: Esma-i Kitabet — plus Method 3 source formula box ═══ */}
+                      <MizaanPipelineFull
+                        grandBast={grandBast} grandLetters={grandLetters} dominant={dominant}
+                        onVefkReady={setS1VefkData} getBastLevelFn={getBastLevelFn}
+                        sourceBreakdown={{ lastName: lastKitabetName, lastNameBast, galibAnasirBast, nineMizanTotal }}
+                      />
 
                       {/* ═══ METHOD 3 FORMULA: Esma-i A'van starting value replaced ═══ */}
                       <Method3AvanSection
                         kitabetNames={kitabetNames}
                         dominant={dominant}
-                        nineMizanTotal={nineMizanTotal}
+                        kitabetInputTotal={kitabetInputTotal}
                         onVefkReady={setS2VefkData}
                         getBastLevelFn={getBastLevelFn}
                       />
@@ -965,7 +971,7 @@ export default function Mizaan9Page() {
                         <EsmaKasemSection
                           section2ExpandedLetters={[]}
                           sourceOverride={kasemInputTotal}
-                          sourceBreakdown={{ lastName: lastAvanName, lastNameBast: lastAvanNameBast, galibAnasirBast, previousAvanInputTotal: method3AvanSource }}
+                          sourceBreakdown={{ lastName: lastAvanName, lastNameBast: lastAvanNameBast, galibAnasirBast, previousAvanInputTotal: avanInputTotal }}
                           dominant={dominant}
                           onVefkReady={setS3VefkData}
                           getBastLevelFn={getBastLevelFn}
