@@ -22,7 +22,6 @@ import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
 import FinalVefkSummary from "../components/mizaan/FinalVefkSummary";
-import ConclusionRulesPanel from "../components/mizaan/ConclusionRulesPanel.jsx";
 import KasamSection from "../components/mizaan/KasamSection.jsx";
 import MizaanConclusionAccordion from "../components/mizaan/MizaanConclusionAccordion.jsx";
 import MizaanConclusionAccordionMethod2 from "../components/mizaan/MizaanConclusionAccordionMethod2.jsx";
@@ -485,15 +484,6 @@ export default function Mizaan9Page() {
                       s2Names={s2VefkData?.names || []}
                       dominant={dominant}
                     />
-                    {/* ═══ SECTION 4: KASAM (ISOLATED PLACEHOLDER) ═══ */}
-                    <MizaanDivider />
-                    <KasamSection
-                      avanNames={s2VefkData?.names || []}
-                      kasemNames={[]}
-                    />
-
-                    <MizaanDivider />
-                    <ConclusionRulesPanel />
                     <MizaanDivider />
 
                     {/* ═══ CONCLUSION — Method 1 only, accordion ═══ */}
@@ -710,6 +700,23 @@ export default function Mizaan9Page() {
                         s3Names={s3VefkData?.names || []}
                         s3BorderLetters={s3VefkData?.borderLetters || ""}
                         dominant={dominant}
+                      />
+
+                      <MizaanDivider />
+
+                      {/* ═══ COMMON KASEM — Method 2 only, moved from Method 1 ═══ */}
+                      <div className="text-center px-2">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl border"
+                          style={{ background: "rgba(212,175,55,0.07)", borderColor: "rgba(212,175,55,0.50)" }}>
+                          <span className="text-base">📜</span>
+                          <span className="font-inter text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: "#F5D060" }}>
+                            Common Kasem
+                          </span>
+                        </div>
+                      </div>
+                      <KasamSection
+                        avanNames={s2VefkData?.names || []}
+                        kasemNames={s3VefkData?.names || []}
                       />
 
                       <MizaanDivider />
