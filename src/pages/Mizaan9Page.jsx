@@ -22,7 +22,6 @@ import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
 import FinalVefkSummary from "../components/mizaan/FinalVefkSummary";
-import FinalDivineNamesSection from "../components/mizaan/FinalDivineNamesSection";
 import ConclusionRulesPanel from "../components/mizaan/ConclusionRulesPanel.jsx";
 import KasamSection from "../components/mizaan/KasamSection.jsx";
 
@@ -708,7 +707,6 @@ export default function Mizaan9Page() {
 
                   const s1Vefk   = section1?.vefk || null;
                   const s1Source = section1?.vefkSourceNumber || null;
-                  const mizanulMevazin = grandBast + grandLetters;
 
                   return (
                     <>
@@ -748,18 +746,6 @@ export default function Mizaan9Page() {
                         s3Names={s3VefkData?.names || []}
                         s3BorderLetters={s3VefkData?.borderLetters || ""}
                         dominant={dominant}
-                      />
-
-                      <MizaanDivider />
-
-                      {/* ═══ FINAL DIVINE NAMES — Method 2 only, per PDF ═══ */}
-                      <FinalDivineNamesSection
-                        mizanulMevazin={mizanulMevazin}
-                        kitabetTotal={s1VefkData?.source || s1Source || 0}
-                        avanTotal={s2VefkData?.source || 0}
-                        kasemTotal={s3VefkData?.source || 0}
-                        dominant={dominant}
-                        getBastLevelFn={getBastLevelFn}
                       />
 
                       <MizaanDivider />
