@@ -25,6 +25,7 @@ import FinalVefkSummary from "../components/mizaan/FinalVefkSummary";
 import ConclusionRulesPanel from "../components/mizaan/ConclusionRulesPanel.jsx";
 import KasamSection from "../components/mizaan/KasamSection.jsx";
 import MizaanConclusionAccordion from "../components/mizaan/MizaanConclusionAccordion.jsx";
+import MizaanConclusionAccordionMethod2 from "../components/mizaan/MizaanConclusionAccordionMethod2.jsx";
 
 
 import { getDataSet } from "../lib/mizaanDataSets";
@@ -712,7 +713,7 @@ export default function Mizaan9Page() {
                       />
 
                       <MizaanDivider />
-                      <ConclusionRulesPanel />
+                      <MizaanConclusionAccordionMethod2 />
                     </>
                   );
                 })()}
