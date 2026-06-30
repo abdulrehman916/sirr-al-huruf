@@ -30,6 +30,7 @@ import MizaanConclusionAccordionMethod2 from "../components/mizaan/MizaanConclus
 import { getDataSet } from "../lib/mizaanDataSets";
 import { runMizaanPostPipeline, getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../lib/mizaanPostEngine";
 import Method3AvanSection from "../components/mizaan/Method3AvanSection";
+import Method3FinalTotalSection from "../components/mizaan/Method3FinalTotalSection";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
@@ -977,6 +978,15 @@ export default function Mizaan9Page() {
                           getBastLevelFn={getBastLevelFn}
                         />
                       )}
+
+                      {/* ═══ SECTION 4 — Final Total Derivation ═══ */}
+                      <Method3FinalTotalSection
+                        nineMizanTotal={nineMizanTotal}
+                        kitabetInputTotal={kitabetInputTotal}
+                        avanInputTotal={avanInputTotal}
+                      />
+
+                      <MizaanDivider />
 
                       {/* ═══ FINAL SUMMARY: THREE VEFKS (display only) ═══ */}
                       <FinalVefkSummary
