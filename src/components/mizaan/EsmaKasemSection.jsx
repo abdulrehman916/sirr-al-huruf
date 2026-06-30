@@ -246,17 +246,85 @@ function KasemSourceDerivation({ section2Letters, bastTotal, letterCount, source
   );
 }
 
+// ── Method 3 Kasem source derivation display — sourceBreakdown-driven (no calc here) ──
+function Method3KasemSourceDerivation({ breakdown, sourceTotal, seedLetters, elementColor }) {
+  const { lastName, lastNameBast, galibAnasirBast, previousAvanInputTotal } = breakdown;
+  return (
+    <div className="rounded-xl border p-4 space-y-4"
+      style={{
+        background: "rgba(6,14,36,0.98)",
+        borderColor: elementColor + "55",
+        borderLeft: `3px solid ${elementColor}`,
+        boxShadow: `0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)`,
+      }}>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
+          style={{ background: elementColor + "22", border: `1px solid ${elementColor}55`, color: elementColor }}>S</div>
+        <span className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color: elementColor }}>
+          Method 3 Source — Kasem Input Derivation
+        </span>
+      </div>
+
+      <div className="rounded-xl border p-3 space-y-3" style={{ background: G.bgInner, borderColor: G.goldBorder + "40" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest font-bold text-center" style={{ color: G.dim }}>Formula</div>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Last A'van Name — Bast</div>
+            <div className="font-amiri text-sm" style={{ color: elementColor }} dir="rtl">{lastName}</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: elementColor }}>{lastNameBast.toLocaleString()}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Galib Anasir Bast</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{galibAnasirBast.toLocaleString()}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Previous A'van Input Total</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{previousAvanInputTotal.toLocaleString()}</div>
+          </div>
+        </div>
+        <div className="text-center pt-1 border-t" style={{ borderColor: G.goldBorder + "30" }}>
+          <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Result</span>
+          <div className="font-inter text-lg font-black tabular-nums" style={{ color: G.gold }}>{sourceTotal.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-0.5">
+        <div className="h-4 w-px" style={{ background: G.goldBorder }} />
+        <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Istintak</span>
+        <span className="font-inter text-base" style={{ color: G.goldDim }}>↓</span>
+      </div>
+
+      <div className="space-y-2">
+        <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
+          Istintak Result → Seed Letters for Method 3 Kasem
+        </div>
+        <div className="flex flex-wrap gap-3 justify-center" style={{ direction: "rtl" }}>
+          {(Array.isArray(seedLetters) ? seedLetters : []).map((l, i) => (
+            <span key={i} className="font-amiri font-bold rounded-lg border px-4 py-3 text-3xl leading-relaxed"
+              style={{ color: G.gold, borderColor: G.goldBorderHi, background: G.goldFaint, lineHeight: 1.8 }}>
+              {l}
+            </span>
+          ))}
+        </div>
+        <div className="text-center font-inter text-[8px]" style={{ color: G.dim }}>
+          Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{seedLetters?.length || 0}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main exported component ──────────────────────────────────────
 // Props:
 //   section2ExpandedLetters — Section 2's allExpandedLetters (read-only)
 //   dominant                — Galib Anasir key
-export default function EsmaKasemSection({ section2ExpandedLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA }) {
+export default function EsmaKasemSection({ section2ExpandedLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA, sourceOverride = null, sourceBreakdown = null }) {
   const safe2 = Array.isArray(section2ExpandedLetters) ? section2ExpandedLetters : [];
 
   // ── STEP 0: Derive Section 3 source from Section 2 expanded letters ──
   const kasemBastTotal   = useMemo(() => safe2.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0), [safe2, getBastLevelFn]);
   const kasemLetterCount = safe2.length;
-  const kasemSourceTotal = kasemBastTotal + kasemLetterCount;
+  const kasemSourceTotal = (sourceOverride != null && sourceOverride > 0) ? sourceOverride : (kasemBastTotal + kasemLetterCount);
 
   // ── STEP 1: Istintak → Seed Letters ──
   const seedLetters = useMemo(() => istintak(kasemSourceTotal), [kasemSourceTotal]);
@@ -342,7 +410,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     }
   }, [s3Vefk, s3VefkSourceNumber, s3BorderLetters, names, onVefkReady]);
 
-  if (safe2.length === 0) return null;
+  if (safe2.length === 0 && !(sourceOverride > 0)) return null;
 
   return (
     <motion.div
@@ -375,15 +443,24 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* ── STEP 0: Source Derivation from Section 2 ── */}
-        <KasemSourceDerivation
-          section2Letters={safe2}
-          bastTotal={kasemBastTotal}
-          letterCount={kasemLetterCount}
-          sourceTotal={kasemSourceTotal}
-          seedLetters={seedLetters}
-          elementColor={elementColor}
-        />
+        {/* ── STEP 0: Source Derivation ── */}
+        {sourceBreakdown ? (
+          <Method3KasemSourceDerivation
+            breakdown={sourceBreakdown}
+            sourceTotal={kasemSourceTotal}
+            seedLetters={seedLetters}
+            elementColor={elementColor}
+          />
+        ) : (
+          <KasemSourceDerivation
+            section2Letters={safe2}
+            bastTotal={kasemBastTotal}
+            letterCount={kasemLetterCount}
+            sourceTotal={kasemSourceTotal}
+            seedLetters={seedLetters}
+            elementColor={elementColor}
+          />
+        )}
 
         {/* ── STEP 1: Seed Letters ── */}
         <Card accent={G.gold}>

@@ -117,6 +117,29 @@ function deriveKitabetNames(initialSeedLetters, dominant, getBastLevelFn) {
   return groups;
 }
 
+// ── Helper: derive Esma-i A'van names — SAME algorithm as EsmaAvanSection (self-supplement remainder rule) ──
+function deriveAvanNames(initialSeedLetters, getBastLevelFn) {
+  if (!initialSeedLetters?.length) return [];
+  const seed = initialSeedLetters;
+  const isFerd = seed.length % 2 !== 0;
+  const bastLevel = isFerd ? 5 : 4;
+  let allExpanded = [];
+  for (let i = seed.length - 1; i >= 0; i--) {
+    allExpanded = [...allExpanded, ...istintak(getBastLevelFn(seed[i], bastLevel))];
+  }
+  const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
+  const rem = allExpanded.length % gSize;
+  let seq = [...allExpanded];
+  if (rem > 0) {
+    const needed = gSize - rem;
+    const supplement = allExpanded.slice(0, needed);
+    seq = [...seq, ...supplement];
+  }
+  const groups = [];
+  for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
+  return groups;
+}
+
 // ── Helper: re-derive grand totals using same logic as MizaanFinalSummary ──
 function computeGrandTotals(result, selections, degreeSels, inputText, customPurpose, ds, activeSection) {
   if (!result) return { grandBast: 0, grandLetters: 0 };
@@ -916,14 +939,12 @@ export default function Mizaan9Page() {
                     : null;
                   const avanExpandedLetters = avanPipeline?.allExpandedLetters || [];
 
-                  // Esma-i Kasem input — identical derivation to Method 2 (Section 2 → Section 3)
-                  const section2ExpandedLetters = (() => {
-                    if (!avanExpandedLetters.length) return [];
-                    const s2GrandBast    = avanExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-                    const s2GrandLetters = avanExpandedLetters.length;
-                    const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant });
-                    return s2Pipeline?.allExpandedLetters || [];
-                  })();
+                  // Method 3 Esma-i Kasem input — per book formula (NOT the Method 2 derivation):
+                  // Last Esma-i A'van name's First Bast + Galib Anasir First Bast + Previous A'van Input Total
+                  const avanNames        = deriveAvanNames(avanPipeline?.initialSeedLetters, getBastLevelFn);
+                  const lastAvanName     = avanNames.length ? avanNames[avanNames.length - 1] : "";
+                  const lastAvanNameBast = [...lastAvanName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+                  const kasemInputTotal  = lastAvanNameBast + galibAnasirBast + method3AvanSource;
 
                   return (
                     <>
@@ -939,10 +960,12 @@ export default function Mizaan9Page() {
                         getBastLevelFn={getBastLevelFn}
                       />
 
-                      {/* ═══ SAME AS METHOD 2: Esma-i Kasem ═══ */}
-                      {section2ExpandedLetters.length > 0 && (
+                      {/* ═══ METHOD 3 FORMULA: Esma-i Kasem starting value replaced ═══ */}
+                      {kasemInputTotal > 0 && (
                         <EsmaKasemSection
-                          section2ExpandedLetters={section2ExpandedLetters}
+                          section2ExpandedLetters={[]}
+                          sourceOverride={kasemInputTotal}
+                          sourceBreakdown={{ lastName: lastAvanName, lastNameBast: lastAvanNameBast, galibAnasirBast, previousAvanInputTotal: method3AvanSource }}
                           dominant={dominant}
                           onVefkReady={setS3VefkData}
                           getBastLevelFn={getBastLevelFn}
