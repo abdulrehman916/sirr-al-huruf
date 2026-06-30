@@ -283,17 +283,17 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* ── METHOD 3 ONLY: Source Derivation ── */}
-        {sourceBreakdown && (
-          <Method3KitabetSourceDerivation breakdown={sourceBreakdown} elementColor={elementMeta.color} />
-        )}
-
-        {/* COMPLETE MANUSCRIPT DERIVATION CHAIN */}
+        {/* COMPLETE MANUSCRIPT DERIVATION CHAIN — seed letters first, then full Kitabet workflow */}
         <SatrVahidGrouping
           satrVahidLetters={initialSeedLetters}
           dominant={dominant}
           getBastLevelFn={getBastLevelFn}
         />
+
+        {/* ── METHOD 3 ONLY: Source Derivation — shown only after the Kitabet workflow has produced its names ── */}
+        {sourceBreakdown && (
+          <Method3KitabetSourceDerivation breakdown={sourceBreakdown} elementColor={elementMeta.color} />
+        )}
 
         {/* VEFK MAGIC SQUARE */}
         {vefk && (
