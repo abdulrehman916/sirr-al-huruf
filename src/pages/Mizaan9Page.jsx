@@ -302,8 +302,8 @@ export default function Mizaan9Page() {
           ))}
         </div>
 
-        {/* Method 1 Content (ALL existing logic belongs here) */}
-        {activeMethod === 1 && (
+        {/* Method 1 Content (ALL existing logic belongs here) — Method 3 temporarily mirrors Method 1 identically */}
+        {(activeMethod === 1 || activeMethod === 3) && (
           <div>
             {/* Section 1 / Section 2 / Section 3 Toggle (ORIGINAL) */}
             <div className="flex gap-2">
@@ -730,8 +730,8 @@ export default function Mizaan9Page() {
         </div>
       )}
 
-      {/* Method 3-5 Placeholders */}
-      {activeMethod >= 3 && (
+      {/* Method 4-5 Placeholders */}
+      {activeMethod >= 4 && (
         <div className="rounded-2xl border p-8 text-center" style={{
           background: "rgba(212,175,55,0.06)",
           borderColor: "rgba(212,175,55,0.30)",
