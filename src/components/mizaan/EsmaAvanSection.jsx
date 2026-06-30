@@ -282,15 +282,90 @@ function AvanSourceDerivation({ section1Letters, bastTotal, letterCount, sourceT
   );
 }
 
+// ── Method 3 source derivation display — sourceBreakdown-driven (no calc here) ──
+function Method3SourceDerivation({ breakdown, sourceTotal, seedLetters, elementColor }) {
+  const { lastName, lastNameBast, galibAnasirBast, nineMizanTotal } = breakdown;
+  return (
+    <div className="rounded-xl border p-4 space-y-4"
+      style={{
+        background: "rgba(6,14,36,0.98)",
+        borderColor: elementColor + "55",
+        borderLeft: `3px solid ${elementColor}`,
+        boxShadow: `0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)`,
+      }}>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
+          style={{ background: elementColor + "22", border: `1px solid ${elementColor}55`, color: elementColor }}>S</div>
+        <span className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color: elementColor }}>
+          Method 3 Source — A'van Input Derivation
+        </span>
+      </div>
+
+      <div className="rounded-xl border p-3 space-y-3" style={{ background: G.bgInner, borderColor: G.goldBorder + "40" }}>
+        <div className="font-inter text-[8px] uppercase tracking-widest font-bold text-center" style={{ color: G.dim }}>Formula</div>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Last Kitabet Name — Bast</div>
+            <div className="font-amiri text-sm" style={{ color: elementColor }} dir="rtl">{lastName}</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: elementColor }}>{lastNameBast.toLocaleString()}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Galib Anasir Bast</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{galibAnasirBast.toLocaleString()}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Nine Mizan Total</div>
+            <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{nineMizanTotal.toLocaleString()}</div>
+          </div>
+        </div>
+        <div className="text-center pt-1 border-t" style={{ borderColor: G.goldBorder + "30" }}>
+          <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Result</span>
+          <div className="font-inter text-lg font-black tabular-nums" style={{ color: G.gold }}>{sourceTotal.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-0.5">
+        <div className="h-4 w-px" style={{ background: G.goldBorder }} />
+        <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Istintak</span>
+        <span className="font-inter text-base" style={{ color: G.goldDim }}>↓</span>
+      </div>
+
+      <div className="space-y-2">
+        <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
+          Istintak Result → Seed Letters for Method 3 A'van
+        </div>
+        <div className="flex flex-wrap gap-3 justify-center" style={{ direction: "rtl" }}>
+          {(Array.isArray(seedLetters) ? seedLetters : []).map((l, i) => (
+            <span key={i} className="font-amiri font-bold rounded-lg border px-4 py-3 text-3xl leading-relaxed"
+              style={{ color: G.gold, borderColor: G.goldBorderHi, background: G.goldFaint, lineHeight: 1.8 }}>
+              {l}
+            </span>
+          ))}
+        </div>
+        <div className="text-center font-inter text-[8px]" style={{ color: G.dim }}>
+          Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{seedLetters?.length || 0}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main exported component ──────────────────────────────────────
 // Props:
 //   allExpandedLetters — Section 1 output (read-only, never modified)
 //   dominant           — Galib Anasir key from Section 1
-export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA }) {
+export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA, sourceOverride = null, sourceBreakdown = null }) {
   const pipeline = useMemo(() => {
-    if (!allExpandedLetters || allExpandedLetters.length === 0) return null;
-    const grandBast    = allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-    const grandLetters = allExpandedLetters.length;
+    let grandBast, grandLetters;
+    if (sourceOverride != null && sourceOverride > 0) {
+      // Method 3: starting value already computed upstream — skip Section 1 letters basis
+      grandBast = sourceOverride;
+      grandLetters = 0;
+    } else {
+      if (!allExpandedLetters || allExpandedLetters.length === 0) return null;
+      grandBast = allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+      grandLetters = allExpandedLetters.length;
+    }
     if (grandBast <= 0) return null;
     // Re-use EXACTLY the same engine as Section 1 — only the input numbers differ
     const result = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
@@ -301,7 +376,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
       avanLetterCount: grandLetters,
       avanSourceTotal: grandBast + grandLetters,
     };
-  }, [allExpandedLetters, dominant]);
+  }, [allExpandedLetters, dominant, sourceOverride, getBastLevelFn]);
 
   // Derive names from group-formation (same logic as SatrVahidGrouping)
   const names = useMemo(() => {
@@ -380,15 +455,24 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* ── STEP 0: A'VAN SOURCE DERIVATION from Section 1 ── */}
-        <AvanSourceDerivation
-          section1Letters={allExpandedLetters}
-          bastTotal={avanBastTotal}
-          letterCount={avanLetterCount}
-          sourceTotal={avanSourceTotal}
-          seedLetters={initialSeedLetters}
-          elementColor={elementMeta.color}
-        />
+        {/* ── STEP 0: A'VAN SOURCE DERIVATION ── */}
+        {sourceBreakdown ? (
+          <Method3SourceDerivation
+            breakdown={sourceBreakdown}
+            sourceTotal={avanSourceTotal}
+            seedLetters={initialSeedLetters}
+            elementColor={elementMeta.color}
+          />
+        ) : (
+          <AvanSourceDerivation
+            section1Letters={allExpandedLetters}
+            bastTotal={avanBastTotal}
+            letterCount={avanLetterCount}
+            sourceTotal={avanSourceTotal}
+            seedLetters={initialSeedLetters}
+            elementColor={elementMeta.color}
+          />
+        )}
 
         {/* ── COMPLETE DERIVATION CHAIN (Steps 1–4 + Names) ── */}
         {/* SatrVahidGrouping contains:                         */}

@@ -28,7 +28,8 @@ import MizaanConclusionAccordionMethod2 from "../components/mizaan/MizaanConclus
 
 
 import { getDataSet } from "../lib/mizaanDataSets";
-import { runMizaanPostPipeline, getBastLevel } from "../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../lib/mizaanPostEngine";
+import Method3AvanSection from "../components/mizaan/Method3AvanSection";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
@@ -93,6 +94,27 @@ function calcCustomBastForSection(text, activeSection) {
   // Section 1 & 2: Mizan Bast1 values
   const { total } = mizaanCalcBast(text, 1);
   return total;
+}
+
+// ── Helper: derive Esma-i Kitabet names — SAME algorithm as MizaanPipelineFull ──
+function deriveKitabetNames(initialSeedLetters, dominant, getBastLevelFn) {
+  if (!initialSeedLetters?.length) return [];
+  const isFerd = initialSeedLetters.length % 2 !== 0;
+  const bastLevel = isFerd ? 5 : 4;
+  let allExpanded = [];
+  for (let i = initialSeedLetters.length - 1; i >= 0; i--) {
+    allExpanded = [...allExpanded, ...istintak(getBastLevelFn(initialSeedLetters[i], bastLevel))];
+  }
+  const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
+  const rem = allExpanded.length % gSize;
+  let seq = [...allExpanded];
+  if (rem > 0) {
+    const supp = istintak(GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire).slice(0, gSize - rem);
+    seq = [...seq, ...supp];
+  }
+  const groups = [];
+  for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
+  return groups;
 }
 
 // ── Helper: re-derive grand totals using same logic as MizaanFinalSummary ──
@@ -302,8 +324,8 @@ export default function Mizaan9Page() {
           ))}
         </div>
 
-        {/* Method 1 Content (ALL existing logic belongs here) — Method 3 temporarily mirrors Method 1 identically */}
-        {(activeMethod === 1 || activeMethod === 3) && (
+        {/* Method 1 Content (ALL existing logic belongs here) */}
+        {activeMethod === 1 && (
           <div>
             {/* Section 1 / Section 2 / Section 3 Toggle (ORIGINAL) */}
             <div className="flex gap-2">
@@ -704,6 +726,247 @@ export default function Mizaan9Page() {
                       <MizaanDivider />
 
                       {/* ═══ COMMON KASEM — Method 2 only, moved from Method 1 ═══ */}
+                      <div className="text-center px-2">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl border"
+                          style={{ background: "rgba(212,175,55,0.07)", borderColor: "rgba(212,175,55,0.50)" }}>
+                          <span className="text-base">📜</span>
+                          <span className="font-inter text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: "#F5D060" }}>
+                            Common Kasem
+                          </span>
+                        </div>
+                      </div>
+                      <KasamSection
+                        avanNames={s2VefkData?.names || []}
+                        kasemNames={s3VefkData?.names || []}
+                      />
+
+                      <MizaanDivider />
+                      <MizaanConclusionAccordionMethod2 />
+                    </>
+                  );
+                })()}
+
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Method 3 Content — Esma-i Kitabet identical to Method 1/2; A'van onward uses Method 3 formula */}
+      {activeMethod === 3 && (
+        <div>
+          {/* Section 1 / Section 2 Toggle */}
+          <div className="flex gap-2">
+            {[
+              { s: 1, arabic: 'المجموعة الأولى' },
+              { s: 2, arabic: 'المجموعة الثانية' },
+            ].map(({ s, arabic }) => (
+              <button key={s} onClick={() => setActiveSection(s)}
+                className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+                style={{
+                  background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                  color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                  boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
+                }}>
+                <span className="font-amiri text-sm">{arabic}</span>
+                <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Input card (same as Method 1/2) */}
+          <div className="rounded-2xl border p-5 relative overflow-hidden"
+            style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
+            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
+            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
+              Arabic Text — Surah · Ayah · Talib · Matloob
+            </label>
+            <textarea
+              dir="rtl"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="أدخل النص العربي هنا — السورة، الآية، الاسم..."
+              rows={5}
+              className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
+              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
+            />
+
+            {loading && (
+              <div className="mb-3">
+                <div className="flex justify-between mb-1.5">
+                  <span className="font-inter text-[10px] text-white/40 animate-pulse">✦ Analyzing 9 Mizaans…</span>
+                  <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>{progress}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }}
+                    className="h-full rounded-full" style={{ background: `linear-gradient(90deg,${G.text},#d97706)` }} />
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <motion.button
+                onClick={handleAnalyze}
+                disabled={!input.trim() || loading}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
+                style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow: `0 0 36px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}>
+                {loading
+                  ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  : <span className="font-amiri text-base">⚖</span>}
+                {loading ? "Analyzing…" : "Analyze — 9 Mizan"}
+              </motion.button>
+              <motion.button
+                onClick={handleClear}
+                disabled={!input && !result}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)", width: "auto", flexShrink: 0 }}>
+                <Trash2 className="w-3.5 h-3.5" /> Clear
+              </motion.button>
+            </div>
+          </div>
+
+          {/* 9 Mizaans (same as Method 1/2) */}
+          <AnimatePresence mode="wait">
+            {result && (
+              <motion.div key={`mizaan-9-method3-s${activeSection}`}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="space-y-2">
+
+                <Mizaan1 result={result} />
+                <MizaanDivider />
+                <Mizaan2
+                  dominant={result.dominant}
+                  tiebreak={result.tiebreak}
+                  selected={selections.elements}
+                  onChange={updateSel("elements")}
+                  elementsData={ds.elements}
+                />
+                <MizaanDivider />
+                <Mizaan3
+                  dominant={result.dominant}
+                  selected={selections.dayNight}
+                  onChange={updateSel("dayNight")}
+                  dayNightData={ds.dayNight}
+                />
+                <MizaanDivider />
+                <Mizaan4
+                  selected={selections.hour}
+                  onChange={updateSel("hour")}
+                  hoursData={ds.hours}
+                />
+                <MizaanDivider />
+                <Mizaan5
+                  selected={selections.days}
+                  onChange={updateSel("days")}
+                  daysData={ds.days}
+                />
+                <MizaanDivider />
+                <Mizaan6
+                  selectedDay={selections.days}
+                  selected={selections.planet}
+                  onChange={updateSel("planet")}
+                  planetsData={ds.planets}
+                />
+                <MizaanDivider />
+                <Mizaan7
+                  selected={selections.purposes}
+                  onChange={updateSel("purposes")}
+                  customPurpose={customPurpose}
+                  onCustomPurpose={setCustomPurpose}
+                  purposesData={ds.purposes}
+                />
+                <MizaanDivider />
+                <Mizaan8
+                  selected={selections.khayrSharr8}
+                  onChange={updateSel("khayrSharr8")}
+                  selectedPurpose={selections.purposes}
+                  khayrSharr8Data={ds.khayrSharr8}
+                />
+                <MizaanDivider />
+                <Mizaan9Final result={result} selections={selections} degreeSels={degreeSels} onDegreeSels={setDegreeSels} degrees9Data={ds.degrees} />
+                <MizaanDivider />
+                <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} ds={ds} calcCustomBast={(t) => calcCustomBastForSection(t, activeSection)} />
+                <MizaanDivider />
+
+                {/* Method 3: Esma-i Kitabet identical to Method 1/2 — A'van onward uses the Method 3 formula */}
+                {(() => {
+                  const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds, activeSection);
+                  const dominant = result?.dominant;
+                  if (!grandBast || grandBast <= 0) return null;
+
+                  // Identical pipeline call as Method 1/2 Section 1 — Esma-i Kitabet
+                  const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+                  const s1Vefk   = section1?.vefk || null;
+                  const s1Source = section1?.vefkSourceNumber || null;
+
+                  // Last (remainder-completed) Esma-i Kitabet name — same algorithm as MizaanPipelineFull
+                  const kitabetNames    = deriveKitabetNames(section1?.initialSeedLetters, dominant, getBastLevelFn);
+                  const lastKitabetName = kitabetNames.length ? kitabetNames[kitabetNames.length - 1] : "";
+                  const lastNameBast    = [...lastKitabetName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+                  const galibAnasirBast = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
+                  const nineMizanTotal  = grandBast + grandLetters;
+                  const method3AvanSource = lastNameBast + galibAnasirBast + nineMizanTotal;
+
+                  // Method 3 A'van pipeline — same engine as Method 2, seeded by the Method 3 formula
+                  const avanPipeline = method3AvanSource > 0
+                    ? runMizaanPostPipeline({ grandBast: method3AvanSource, grandLetters: 0, dominant })
+                    : null;
+                  const avanExpandedLetters = avanPipeline?.allExpandedLetters || [];
+
+                  // Esma-i Kasem input — identical derivation to Method 2 (Section 2 → Section 3)
+                  const section2ExpandedLetters = (() => {
+                    if (!avanExpandedLetters.length) return [];
+                    const s2GrandBast    = avanExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+                    const s2GrandLetters = avanExpandedLetters.length;
+                    const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant });
+                    return s2Pipeline?.allExpandedLetters || [];
+                  })();
+
+                  return (
+                    <>
+                      {/* ═══ SAME AS METHOD 1/2: Esma-i Kitabet ═══ */}
+                      <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} onVefkReady={setS1VefkData} getBastLevelFn={getBastLevelFn} />
+
+                      {/* ═══ METHOD 3 FORMULA: Esma-i A'van starting value replaced ═══ */}
+                      <Method3AvanSection
+                        kitabetNames={kitabetNames}
+                        dominant={dominant}
+                        nineMizanTotal={nineMizanTotal}
+                        onVefkReady={setS2VefkData}
+                        getBastLevelFn={getBastLevelFn}
+                      />
+
+                      {/* ═══ SAME AS METHOD 2: Esma-i Kasem ═══ */}
+                      {section2ExpandedLetters.length > 0 && (
+                        <EsmaKasemSection
+                          section2ExpandedLetters={section2ExpandedLetters}
+                          dominant={dominant}
+                          onVefkReady={setS3VefkData}
+                          getBastLevelFn={getBastLevelFn}
+                        />
+                      )}
+
+                      {/* ═══ FINAL SUMMARY: THREE VEFKS (display only) ═══ */}
+                      <FinalVefkSummary
+                        s1Vefk={s1VefkData?.vefk || s1Vefk}
+                        s1Source={s1VefkData?.source || s1Source}
+                        s1Names={s1VefkData?.names || []}
+                        s2Vefk={s2VefkData?.vefk || null}
+                        s2Source={s2VefkData?.source || null}
+                        s2Names={s2VefkData?.names || []}
+                        s3Vefk={s3VefkData?.vefk || null}
+                        s3Source={s3VefkData?.source || null}
+                        s3Names={s3VefkData?.names || []}
+                        s3BorderLetters={s3VefkData?.borderLetters || ""}
+                        dominant={dominant}
+                      />
+
+                      <MizaanDivider />
+
+                      {/* ═══ COMMON KASEM — same as Method 2 ═══ */}
                       <div className="text-center px-2">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl border"
                           style={{ background: "rgba(212,175,55,0.07)", borderColor: "rgba(212,175,55,0.50)" }}>
