@@ -951,12 +951,8 @@ export default function Mizaan9Page() {
 
                   return (
                     <>
-                      {/* ═══ SAME AS METHOD 1/2: Esma-i Kitabet — plus Method 3 source formula box ═══ */}
-                      <MizaanPipelineFull
-                        grandBast={grandBast} grandLetters={grandLetters} dominant={dominant}
-                        onVefkReady={setS1VefkData} getBastLevelFn={getBastLevelFn}
-                        sourceBreakdown={{ lastName: lastKitabetName, lastNameBast, galibAnasirBast, nineMizanTotal }}
-                      />
+                      {/* ═══ SAME AS METHOD 1/2: Esma-i Kitabet — identical pipeline, no extra formula box ═══ */}
+                      <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} onVefkReady={setS1VefkData} getBastLevelFn={getBastLevelFn} />
 
                       {/* ═══ METHOD 3 FORMULA: Esma-i A'van starting value replaced ═══ */}
                       <Method3AvanSection
