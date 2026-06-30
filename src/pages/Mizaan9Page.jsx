@@ -214,7 +214,7 @@ export default function Mizaan9Page() {
   const [s3VefkData, setS3VefkData] = useState(null);
   const [activeMethod, setActiveMethod] = useState(1);
   const [activeSection, setActiveSection] = useState(1);
-  const ds = activeMethod === 1 || activeMethod === 2 ? getDataSet(activeSection) : null;
+  const ds = activeMethod === 1 || activeMethod === 2 || activeMethod === 3 ? getDataSet(activeSection) : null;
   // Section 1 uses Section A Bast table; Section 2 uses Section B Bast table.
   // Section 3 uses Section A Bast table (only source values differ, not the expansion table).
   // Bast1 is shared (identical). Only Bast2–Bast5 differ.
