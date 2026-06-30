@@ -17,12 +17,12 @@ import Mizaan8      from "../components/mizaan/Mizaan8";
 import Mizaan9Final from "../components/mizaan/Mizaan9Final";
 import MizaanFinalSummary from "../components/mizaan/MizaanFinalSummary";
 import MizaanPipelineFull from "../components/mizaan/MizaanPipelineFull";
-import Method2Pipeline from "../components/mizaan/Method2Pipeline";
 
 import SatrVahidGrouping from "../components/mizaan/SatrVahidGrouping";
 import EsmaAvanSection from "../components/mizaan/EsmaAvanSection";
 import EsmaKasemSection from "../components/mizaan/EsmaKasemSection";
 import FinalVefkSummary from "../components/mizaan/FinalVefkSummary";
+import FinalDivineNamesSection from "../components/mizaan/FinalDivineNamesSection";
 import ConclusionRulesPanel from "../components/mizaan/ConclusionRulesPanel.jsx";
 import KasamSection from "../components/mizaan/KasamSection.jsx";
 
@@ -453,16 +453,6 @@ export default function Mizaan9Page() {
                 // Section 1 pipeline result — read-only source for Section 2
                 const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
 
-                // Section 2 expanded letters — derived independently for Section 3 input
-                // Pure function call: no state, no mutation of Section 1 or Section 2
-                const section2ExpandedLetters = (() => {
-                  if (!section1?.allExpandedLetters?.length) return [];
-                  const s2GrandBast    = section1.allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
-                  const s2GrandLetters = section1.allExpandedLetters.length;
-                  const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant });
-                  return s2Pipeline?.allExpandedLetters || [];
-                })();
-
                 // Section 1 vefk (directly available from pipeline)
                 const s1Vefk   = section1?.vefk || null;
                 const s1Source = section1?.vefkSourceNumber || null;
@@ -482,17 +472,9 @@ export default function Mizaan9Page() {
                       />
                     )}
 
-                    {/* ═══ SECTION 3: ESMA-I KASEM ═══ */}
-                    {section2ExpandedLetters.length > 0 && (
-                      <EsmaKasemSection
-                        section2ExpandedLetters={section2ExpandedLetters}
-                        dominant={dominant}
-                        onVefkReady={setS3VefkData}
-                        getBastLevelFn={getBastLevelFn}
-                      />
-                    )}
+                    {/* ═══ ESMA-I KASEM REMOVED FROM METHOD 1 (moved to Method 2) ═══ */}
 
-                    {/* ═══ FINAL SUMMARY: THREE VEFKS (display only) ═══ */}
+                    {/* ═══ FINAL SUMMARY: TWO VEFKS (display only) ═══ */}
                     <FinalVefkSummary
                       s1Vefk={s1VefkData?.vefk || s1Vefk}
                       s1Source={s1VefkData?.source || s1Source}
@@ -500,17 +482,13 @@ export default function Mizaan9Page() {
                       s2Vefk={s2VefkData?.vefk || null}
                       s2Source={s2VefkData?.source || null}
                       s2Names={s2VefkData?.names || []}
-                      s3Vefk={s3VefkData?.vefk || null}
-                      s3Source={s3VefkData?.source || null}
-                      s3Names={s3VefkData?.names || []}
-                      s3BorderLetters={s3VefkData?.borderLetters || ""}
                       dominant={dominant}
                     />
                     {/* ═══ SECTION 4: KASAM (ISOLATED PLACEHOLDER) ═══ */}
                     <MizaanDivider />
                     <KasamSection
                       avanNames={s2VefkData?.names || []}
-                      kasemNames={s3VefkData?.names || []}
+                      kasemNames={[]}
                     />
 
                     <MizaanDivider />
@@ -710,21 +688,80 @@ export default function Mizaan9Page() {
                 <MizaanFinalSummary result={result} selections={selections} degreeSels={degreeSels} inputText={input} customPurpose={customPurpose} ds={ds} calcCustomBast={(t) => calcCustomBastForSection(t, activeSection)} />
                 <MizaanDivider />
 
-                {/* Method 2 Pipeline */}
+                {/* Method 2: SAME shared pipeline as Method 1 (Kitabet → A'van → Kasem), then Final Divine Names */}
                 {(() => {
                   const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds, activeSection);
                   const dominant = result?.dominant;
                   if (!grandBast || grandBast <= 0) return null;
 
+                  // Identical pipeline call as Method 1 Section 1
+                  const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+
+                  // Identical derivation as Method 1 Section 2 → Section 3 input
+                  const section2ExpandedLetters = (() => {
+                    if (!section1?.allExpandedLetters?.length) return [];
+                    const s2GrandBast    = section1.allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+                    const s2GrandLetters = section1.allExpandedLetters.length;
+                    const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant });
+                    return s2Pipeline?.allExpandedLetters || [];
+                  })();
+
+                  const s1Vefk   = section1?.vefk || null;
+                  const s1Source = section1?.vefkSourceNumber || null;
+                  const mizanulMevazin = grandBast + grandLetters;
+
                   return (
                     <>
-                      <Method2Pipeline
-                        grandBast={grandBast}
-                        grandLetters={grandLetters}
+                      {/* ═══ SAME AS METHOD 1: Esma-i Kitabet ═══ */}
+                      <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} onVefkReady={setS1VefkData} getBastLevelFn={getBastLevelFn} />
+
+                      {/* ═══ SAME AS METHOD 1: Esma-i A'van ═══ */}
+                      {section1?.allExpandedLetters?.length > 0 && (
+                        <EsmaAvanSection
+                          allExpandedLetters={section1.allExpandedLetters}
+                          dominant={dominant}
+                          onVefkReady={setS2VefkData}
+                          getBastLevelFn={getBastLevelFn}
+                        />
+                      )}
+
+                      {/* ═══ MOVED HERE FROM METHOD 1: Esma-i Kasem ═══ */}
+                      {section2ExpandedLetters.length > 0 && (
+                        <EsmaKasemSection
+                          section2ExpandedLetters={section2ExpandedLetters}
+                          dominant={dominant}
+                          onVefkReady={setS3VefkData}
+                          getBastLevelFn={getBastLevelFn}
+                        />
+                      )}
+
+                      {/* ═══ FINAL SUMMARY: THREE VEFKS (display only) ═══ */}
+                      <FinalVefkSummary
+                        s1Vefk={s1VefkData?.vefk || s1Vefk}
+                        s1Source={s1VefkData?.source || s1Source}
+                        s1Names={s1VefkData?.names || []}
+                        s2Vefk={s2VefkData?.vefk || null}
+                        s2Source={s2VefkData?.source || null}
+                        s2Names={s2VefkData?.names || []}
+                        s3Vefk={s3VefkData?.vefk || null}
+                        s3Source={s3VefkData?.source || null}
+                        s3Names={s3VefkData?.names || []}
+                        s3BorderLetters={s3VefkData?.borderLetters || ""}
                         dominant={dominant}
-                        onVefkReady={setS1VefkData}
+                      />
+
+                      <MizaanDivider />
+
+                      {/* ═══ FINAL DIVINE NAMES — Method 2 only, per PDF ═══ */}
+                      <FinalDivineNamesSection
+                        mizanulMevazin={mizanulMevazin}
+                        kitabetTotal={s1VefkData?.source || s1Source || 0}
+                        avanTotal={s2VefkData?.source || 0}
+                        kasemTotal={s3VefkData?.source || 0}
+                        dominant={dominant}
                         getBastLevelFn={getBastLevelFn}
                       />
+
                       <MizaanDivider />
                       <ConclusionRulesPanel />
                     </>
