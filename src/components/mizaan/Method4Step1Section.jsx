@@ -243,6 +243,27 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     const nextNumber3 = expandedTotal3 + allExpandedLetters3.length;
     const nextLetters3 = istintak(nextNumber3);
 
+    // ── STEP 21: Esma-i Kasem Name Grouping — Step 20 letters ARE the Kasem letters ──
+    // Same rule as Methods 1/2 (KASEM completion): FERD→groups of 5, ZEVC→groups of 4,
+    // incomplete last name completed from the FRONT of its own sequence (display only, never carried).
+    const kasemLetters = nextLetters3;
+    const kasemCount = kasemLetters.length;
+    const kasemIsFerd = kasemCount % 2 !== 0;
+    const kasemGroupSize = kasemIsFerd ? 5 : 4;
+    const kasemRemainder = kasemCount % kasemGroupSize;
+    let kasemSupplementLetters = [];
+    let kasemSeq = [...kasemLetters];
+    if (kasemRemainder > 0) {
+      const needed = kasemGroupSize - kasemRemainder;
+      kasemSupplementLetters = kasemLetters.slice(0, needed);
+      kasemSeq = [...kasemSeq, ...kasemSupplementLetters];
+    }
+    const kasemNameGroups = [];
+    for (let i = 0; i < kasemSeq.length; i += kasemGroupSize) {
+      const g = kasemSeq.slice(i, i + kasemGroupSize);
+      kasemNameGroups.push({ letters: g, name: g.join("") });
+    }
+
     return {
       seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
       isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
@@ -251,6 +272,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
       avanLetters, avanCount, avanIsFerd, avanGroupSize, avanRemainder, avanSupplementLetters, avanNameGroups,
       avanLeftoverLetters, avanLastCompleteName, avanCarryBase, avanCarryLetters, avanCarryCount, avanCarryIsFerd, avanCarryBastLevel,
       derivations3, allExpandedLetters3, expandedTotal3, nextNumber3, nextLetters3,
+      kasemLetters, kasemCount, kasemIsFerd, kasemGroupSize, kasemRemainder, kasemSupplementLetters, kasemNameGroups,
     };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
 
@@ -264,6 +286,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     avanLetters, avanCount, avanIsFerd, avanGroupSize, avanRemainder, avanSupplementLetters, avanNameGroups,
     avanLeftoverLetters, avanLastCompleteName, avanCarryBase, avanCarryLetters, avanCarryCount, avanCarryIsFerd, avanCarryBastLevel,
     derivations3, allExpandedLetters3, expandedTotal3, nextNumber3, nextLetters3,
+    kasemLetters, kasemCount, kasemIsFerd, kasemGroupSize, kasemRemainder, kasemSupplementLetters, kasemNameGroups,
   } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
@@ -717,12 +740,47 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           </div>
         </Card>
 
-        {/* STEP 20: Istintak of Next Number (A'van Pipeline) */}
+        {/* STEP 20: Istintak of Next Number — these ARE the Esma-i Kasem letters */}
         <Card accent={G.gold}>
-          <SectionHeader step="20" label="Istintak of Next Number (A'van Pipeline)" arabic="حروف الاستنطاق" color={G.gold} />
+          <SectionHeader step="20" label="Istintak of Next Number — Esma-i Kasem Letters" arabic="حروف أسماء القسم" color={G.gold} />
           <LetterRow letters={nextLetters3} color={G.gold} size="xl" showIndex />
           <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
             Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{nextLetters3.length}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: kasemIsFerd ? G.red : G.green, fontWeight: "bold" }}>{kasemIsFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>Group Size: <span style={{ color: G.gold }}>{kasemGroupSize}</span></span>
+          </div>
+        </Card>
+
+        {/* STEP 21: Esma-i Kasem Name Grouping (same completion rule as Methods 1/2) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="21" label="Esma-i Kasem Name Grouping" arabic="تكوين أسماء القسم" color={G.gold} />
+          {kasemRemainder > 0 && (
+            <div className="mb-3 px-3 py-2 rounded-lg border text-[10px] font-inter" style={{ background: G.bgInner, borderColor: G.goldBorder + "55", color: G.dim }}>
+              Remainder: <span style={{ color: G.gold, fontWeight: "bold" }}>{kasemRemainder}</span> — completed from the FRONT of the Kasem sequence (display only, never carried):
+              <span className="ml-2" dir="rtl" style={{ color: G.gold }}>{kasemSupplementLetters.join("")}</span>
+            </div>
+          )}
+          <div className="space-y-3">
+            {kasemNameGroups.map((group, gi) => (
+              <motion.div key={gi}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: gi * 0.06 }}
+                className="rounded-xl border p-3"
+                style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <LetterRow letters={group.letters} color={G.gold} size="lg" />
+                  <Arrow label="→" />
+                  <span className="font-amiri text-2xl font-bold px-5 py-3 rounded-xl border"
+                    style={{ color: G.gold, borderColor: G.goldBorder + "55", background: G.goldFaint, lineHeight: 1.7 }}
+                    dir="rtl">
+                    {group.name}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </Card>
 
