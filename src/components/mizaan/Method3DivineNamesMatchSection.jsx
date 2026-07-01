@@ -92,11 +92,6 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="text-center pb-1">
-                <span className="font-inter text-[11px]" style={{ color: G.dim }}>
-                  No exact Divine Name match found.
-                </span>
-              </div>
               {nearestLower && (
                 <div>
                   <div className="font-inter text-[8px] uppercase tracking-widest mb-1.5 text-center" style={{ color: G.dim }}>Nearest Lower</div>
