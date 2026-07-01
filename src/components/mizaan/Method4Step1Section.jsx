@@ -22,6 +22,7 @@ import Method4FinalSummary from "./Method4FinalSummary";
 import Method4VefkCard from "./Method4VefkCard";
 import Method4AlternativeReading from "./Method4AlternativeReading";
 import Method4NextOption from "./Method4NextOption";
+import Method4BookMethodSection from "./Method4BookMethodSection";
 
 const G = {
   gold:         "#F5D060",
@@ -840,6 +841,8 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           nineMizanTotal={nineMizanTotal}
           seedLetters={seedLetters}
         />
+
+        <Method4BookMethodSection nextNumber={nextNumber} dominant={dominant} />
 
       </div>
 
