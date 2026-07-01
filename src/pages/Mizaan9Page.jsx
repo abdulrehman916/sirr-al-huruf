@@ -146,9 +146,12 @@ function deriveAvanNames(initialSeedLetters, getBastLevelFn) {
   // Group ORIGINAL letters first (before supplementation) — for calculation
   const originalGroups = [];
   for (let i = 0; i < allExpanded.length; i += gSize) {
-    originalGroups.push(allExpanded.slice(i, Math.min(i + gSize, allExpanded.length)).join(""));
+    const group = allExpanded.slice(i, Math.min(i + gSize, allExpanded.length));
+    if (group.length === gSize) {
+      originalGroups.push(group.join(""));
+    }
   }
-  // Then supplement for display
+  // Then supplement for display — A'VAN RULE: use own expanded letters
   if (rem > 0) {
     const needed = gSize - rem;
     const supplement = allExpanded.slice(0, needed);
