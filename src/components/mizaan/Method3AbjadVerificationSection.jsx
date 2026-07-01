@@ -8,7 +8,7 @@
 
 import { motion } from "framer-motion";
 import { istintak } from "../../lib/mizaanPostEngine";
-import { calculateAbjad } from "../../lib/abjadValues";
+import { calculateAbjad, getAbjadValue } from "../../lib/abjadValues";
 
 const G = {
   gold:         "#F5D060",
@@ -80,7 +80,7 @@ export default function Method3AbjadVerificationSection({ finalTotal, elementCol
           {/* Step 2: Letters */}
           <div className="space-y-2">
             <div className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>
-              Letters
+              Letters (Istintak of {safeFinalTotal.toLocaleString()})
             </div>
             <div className="flex flex-wrap gap-3 justify-center" style={{ direction: "rtl" }}>
               {letters.map((l, i) => (
@@ -91,15 +91,47 @@ export default function Method3AbjadVerificationSection({ finalTotal, elementCol
                 </span>
               ))}
             </div>
+            <div className="text-center font-inter text-[8px]" style={{ color: G.dim }}>
+              Letter Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{letters.length}</span> — Order: <span style={{ color: G.gold }} dir="rtl">{lettersStr}</span>
+            </div>
           </div>
 
           <div className="flex flex-col items-center gap-0.5">
             <div className="h-4 w-px" style={{ background: G.goldBorder }} />
-            <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Abjad Kabir</span>
+            <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: G.dim }}>Abjad Kabir — letter by letter</span>
             <span className="font-inter text-base" style={{ color: G.goldDim }}>↓</span>
           </div>
 
-          {/* Step 3: Final Abjad Kabir Total */}
+          {/* Step 3: Per-letter Abjad Kabir values — full line-by-line calculation */}
+          <div className="space-y-1.5">
+            <div className="font-inter text-[8px] uppercase tracking-widest font-bold text-center" style={{ color: G.dim }}>
+              Line-by-Line Calculation
+            </div>
+            <div className="rounded-lg border overflow-hidden" style={{ borderColor: G.goldBorder + "40" }}>
+              {letters.map((l, i) => {
+                const val = getAbjadValue(l);
+                const runningSum = letters.slice(0, i + 1).reduce((s, ltr) => s + getAbjadValue(ltr), 0);
+                return (
+                  <div key={i} className="flex items-center justify-between px-3 py-1.5"
+                    style={{ background: i % 2 === 0 ? G.bgInner : "transparent", borderBottom: i < letters.length - 1 ? `1px solid ${G.goldBorder}25` : "none" }}>
+                    <span className="font-inter text-[9px]" style={{ color: G.dim }}>
+                      Letter {i + 1} of {letters.length}
+                    </span>
+                    <span className="font-amiri text-lg" dir="rtl" style={{ color: elementColor }}>{l}</span>
+                    <span className="font-inter text-[10px] tabular-nums" style={{ color: G.gold }}>= {val.toLocaleString()}</span>
+                    <span className="font-inter text-[9px] tabular-nums" style={{ color: G.dim }}>
+                      running total: <span style={{ color: G.gold, fontWeight: "bold" }}>{runningSum.toLocaleString()}</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="text-center font-inter text-[8px]" style={{ color: G.dim }}>
+              Formula: {letters.map(l => getAbjadValue(l)).join(' + ')} = {abjadTotal.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Step 4: Final Abjad Kabir Total */}
           <div className="text-center pt-1 border-t" style={{ borderColor: G.goldBorder + "30" }}>
             <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Final Abjad Kabir Total</span>
             <div className="font-inter text-lg font-black tabular-nums" style={{ color: G.gold }}>{abjadTotal.toLocaleString()}</div>
