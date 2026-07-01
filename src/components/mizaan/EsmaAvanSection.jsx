@@ -18,6 +18,7 @@ import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
+import SourceCalculationPanel from "./SourceCalculationPanel";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 // ── Same design tokens as MizaanPipelineFull ────────────────────
@@ -421,6 +422,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     avanLetterCount,
     avanSourceTotal,
     expandedLettersTotal,
+    bastLevel,
   } = pipeline;
 
   const element     = dominant || "fire";
@@ -650,6 +652,27 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
                 elementColor={elementMeta.color}
               />
             </div>
+
+            <SourceCalculationPanel
+              stageFlow={sourceBreakdown ? "Nine Mizan + Kitabet Name → Method 3 A'van" : "Esma-i Kitabet → Esma-i A'van"}
+              inheritedFrom={sourceBreakdown
+                ? "Method 3 custom formula (last Kitabet name Bast + Galib Anasir Bast + Nine Mizan Total)"
+                : "Section 1's All Expanded Letters (Kitabet stage output)"}
+              formulaSteps={sourceBreakdown ? [
+                { label: "Last Kitabet Name Bast", value: sourceBreakdown.lastNameBast },
+                { label: "Galib Anasir Bast", value: sourceBreakdown.galibAnasirBast },
+                { label: "Nine Mizan Total", value: sourceBreakdown.nineMizanTotal },
+                { label: "A'van Source Total", value: avanSourceTotal, isResult: true },
+              ] : [
+                { label: "Kitabet Expanded Letters Bast Total", value: avanBastTotal },
+                { label: "Kitabet Expanded Letters Count", value: avanLetterCount },
+                { label: "A'van Source Total", value: avanSourceTotal, isResult: true },
+              ]}
+              letterRows={initialSeedLetters.map(l => ({ letter: l, bastValue: getBastLevelFn(l, bastLevel) }))}
+              finalLabel="Vefk Source Number (A'van)"
+              finalValue={vefkSource}
+              accentColor={elementMeta.color}
+            />
           </Card>
         )}
 

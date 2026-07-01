@@ -21,6 +21,7 @@
 import { useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES, buildVefk } from "../../lib/mizaanPostEngine";
+import SourceCalculationPanel from "./SourceCalculationPanel";
 
 // ── Design tokens ────────────────────────────────────────────────
 const G = {
@@ -717,6 +718,27 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
             </>
           );
         })()}
+
+        <SourceCalculationPanel
+          stageFlow={sourceBreakdown ? "A'van + Galib Anasir → Method 3 Kasem" : "Esma-i A'van → Esma-i Kasem"}
+          inheritedFrom={sourceBreakdown
+            ? "Method 3 custom formula (last A'van name Bast + Galib Anasir Bast + A'van Input Total)"
+            : "Section 2's All Expanded Letters (A'van stage output)"}
+          formulaSteps={sourceBreakdown ? [
+            { label: "Last A'van Name Bast", value: sourceBreakdown.lastNameBast },
+            { label: "Galib Anasir Bast", value: sourceBreakdown.galibAnasirBast },
+            { label: "Previous A'van Input Total", value: sourceBreakdown.previousAvanInputTotal },
+            { label: "Kasem Source Total", value: kasemSourceTotal, isResult: true },
+          ] : [
+            { label: "A'van Expanded Letters Bast Total", value: kasemBastTotal },
+            { label: "A'van Expanded Letters Count", value: kasemLetterCount },
+            { label: "Kasem Source Total", value: kasemSourceTotal, isResult: true },
+          ]}
+          letterRows={seedLetters.map(l => ({ letter: l, bastValue: getBastLevelFn(l, bastLevel) }))}
+          finalLabel="Vefk Source Number (Kasem)"
+          finalValue={s3VefkSourceNumber}
+          accentColor={elementColor}
+        />
 
       </div>
 

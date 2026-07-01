@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
+import SourceCalculationPanel from "./SourceCalculationPanel";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 const G = {
@@ -185,7 +186,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
 
   if (!pipeline) return null;
 
-  const { initialSeedLetters, vefk, vefkSourceNumber, allExpandedLetters } = pipeline;
+  const { initialSeedLetters, vefk, vefkSourceNumber, allExpandedLetters, bastLevel } = pipeline;
   const element = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
 
@@ -357,6 +358,20 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
               {/* Source Explanation */}
               <SourceSection grandBast={grandBast} expandedLettersTotal={allExpandedLetters.reduce((sum, letter) => sum + (getBastLevelFn(letter, 1) || 0), 0)} elementColor={elementMeta.color} />
             </div>
+
+            <SourceCalculationPanel
+              stageFlow="Nine Mizan → Esma-i Kitabet"
+              inheritedFrom="Nine Mizan Grand Total — shared identically across Section 1 & Section 2"
+              formulaSteps={[
+                { label: "9 Mizan Grand Bast Total", value: grandBast },
+                { label: "9 Mizan Letter Count", value: grandLetters },
+                { label: "Satır Vahid Total (Bast + Letters)", value: grandBast + grandLetters, isResult: true },
+              ]}
+              letterRows={initialSeedLetters.map(l => ({ letter: l, bastValue: getBastLevelFn(l, bastLevel) }))}
+              finalLabel="Vefk Source Number (Kitabet)"
+              finalValue={vefkSourceNumber}
+              accentColor={elementMeta.color}
+            />
           </Card>
         )}
 

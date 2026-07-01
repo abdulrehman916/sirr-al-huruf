@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { motion } from "framer-motion";
+import SourceCalculationPanel from "./SourceCalculationPanel";
 
 const G = {
   gold:         "#F5D060",
@@ -102,9 +103,24 @@ export default function Method3FinalTotalSection({ nineMizanTotal, kitabetInputT
             <div className="text-center pt-1 border-t" style={{ borderColor: G.goldBorder + "30" }}>
               <span className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Final Total</span>
               <div className="font-inter text-lg font-black tabular-nums" style={{ color: G.gold }}>{finalTotal.toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
+              </div>
+              </div>
+
+              <SourceCalculationPanel
+              stageFlow="Nine Mizan + Esma-i Kitabet + Esma-i Kasem → Final Total"
+              inheritedFrom="Sum of all three Method 3 stage totals"
+              formulaSteps={[
+              { label: "Nine Mizan Total", value: safeNineMizan },
+              { label: "Esma-i Kitabet Input Total", value: safeKitabet },
+              { label: "Esma-i Kasem Input Total", value: safeKasem },
+              { label: "Final Total", value: finalTotal, isResult: true },
+              ]}
+              finalLabel="Final Total"
+              finalValue={finalTotal}
+              accentColor={elementColor}
+              />
+
+              </div>
 
       </div>
 
