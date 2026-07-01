@@ -537,9 +537,17 @@ export default function Mizaan9Page() {
                       />
                     )}
 
-                    {/* ═══ ESMA-I KASEM REMOVED FROM METHOD 1 (moved to Method 2) ═══ */}
+                    {/* ═══ ESMA-I KASEM — Method 1 includes full Kasem pipeline (only conclusion omitted) ═══ */}
+                    {section1?.allExpandedLetters?.length > 0 && (
+                      <EsmaKasemSection
+                        section2ExpandedLetters={section1.allExpandedLetters}
+                        dominant={dominant}
+                        onVefkReady={setS3VefkData}
+                        getBastLevelFn={getBastLevelFn}
+                      />
+                    )}
 
-                    {/* ═══ FINAL SUMMARY: TWO VEFKS (display only) ═══ */}
+                    {/* ═══ FINAL SUMMARY: THREE VEFKS (display only) ═══ */}
                     <FinalVefkSummary
                       s1Vefk={s1VefkData?.vefk || s1Vefk}
                       s1Source={s1VefkData?.source || s1Source}
@@ -547,15 +555,19 @@ export default function Mizaan9Page() {
                       s2Vefk={s2VefkData?.vefk || null}
                       s2Source={s2VefkData?.source || null}
                       s2Names={s2VefkData?.names || []}
+                      s3Vefk={s3VefkData?.vefk || null}
+                      s3Source={s3VefkData?.source || null}
+                      s3Names={s3VefkData?.names || []}
+                      s3BorderLetters={s3VefkData?.borderLetters || ""}
                       dominant={dominant}
                     />
                     <MizaanDivider />
 
-                    {/* ═══ CONCLUSION — Method 1 only, accordion ═══ */}
+                    {/* ═══ CONCLUSION — Method 1 only, accordion (NO Kasem Dua) ═══ */}
                     <MizaanConclusionAccordion />
-                  </>
-                );
-              })()}
+                    </>
+                    );
+                    })()}
 
 
 
