@@ -18,10 +18,10 @@
 //   - Nothing writes back to Section 1 or Section 2.
 // ═══════════════════════════════════════════════════════════════
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES, buildVefk } from "../../lib/mizaanPostEngine";
-import SourceCalculationPanel from "./SourceCalculationPanel";
 
 // ── Design tokens ────────────────────────────────────────────────
 const G = {
@@ -125,6 +125,92 @@ function OrnamentalDivider() {
       <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${G.goldBorder})` }} />
       <span style={{ color: G.goldDim, fontSize: 10 }}>✦</span>
       <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.goldBorder})` }} />
+    </div>
+  );
+}
+
+// Collapsible expanded letter values — same pattern as Method 1 (Kasem's Vefk source uses B5)
+function ExpandedLetterValues({ letters, elementColor, getBastLevelFn }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const safe = Array.isArray(letters) ? letters : [];
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}>
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        Expanded Letter Values
+      </button>
+      {isOpen && (
+        <div className="mt-2 space-y-1">
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[6px] font-inter">
+            {safe.map((letter, idx) => {
+              const bast = getBastLevelFn(letter, 5) || 0;
+              return (
+                <div key={idx} className="contents">
+                  <span className="text-right font-amiri" style={{ color: elementColor }}>{letter}</span>
+                  <span className="tabular-nums" style={{ color: G.dim }}>{bast.toLocaleString()}</span>
+                </div>
+              );
+            })}
+          </div>
+          {safe.length > 0 && (
+            <div className="mt-1.5 pt-1.5 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
+              <span className="text-[6px]" style={{ color: G.dim }}>Total: </span>
+              <span className="text-[8px] font-bold tabular-nums" style={{ color: elementColor }}>
+                {safe.reduce((s, l) => s + (getBastLevelFn(l, 5) || 0), 0).toLocaleString()}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Collapsible source section showing the Kasem derivation
+function KasemDerivationSource({ kasemBastTotal, kasemLetterCount, kasemSourceTotal, vefkSourceTotal, elementColor, sourceBreakdown }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}>
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        Source
+      </button>
+      {isOpen && (
+        <div className="mt-2 text-center space-y-1.5">
+          <div className="text-[7px]" style={{ color: G.dim }}>Kasem Pipeline</div>
+          {sourceBreakdown ? (
+            <>
+              <div className="text-[6px] px-2" style={{ color: G.dim }}>Last A'van Name Bast = {(sourceBreakdown.lastNameBast || 0).toLocaleString()}</div>
+              <div className="text-[6px]" style={{ color: G.dim }}>+</div>
+              <div className="text-[6px] px-2" style={{ color: G.dim }}>Galib Anasir Bast = {(sourceBreakdown.galibAnasirBast || 0).toLocaleString()}</div>
+              <div className="text-[6px]" style={{ color: G.dim }}>+</div>
+              <div className="text-[6px] px-2" style={{ color: G.dim }}>Previous A'van Input Total = {(sourceBreakdown.previousAvanInputTotal || 0).toLocaleString()}</div>
+            </>
+          ) : (
+            <>
+              <div className="text-[6px] px-2" style={{ color: G.dim }}>A'van Expanded Letters Bast Total = {(kasemBastTotal || 0).toLocaleString()}</div>
+              <div className="text-[6px]" style={{ color: G.dim }}>+</div>
+              <div className="text-[6px] px-2" style={{ color: G.dim }}>A'van Expanded Letters Count = {kasemLetterCount || 0}</div>
+            </>
+          )}
+          <div className="text-[6px]" style={{ color: G.dim }}>↓</div>
+          <div className="text-[7px] px-2 py-1.5 rounded font-bold" style={{ background: G.bgInner, color: elementColor }}>
+            Kasem Source Total = {(kasemSourceTotal || 0).toLocaleString()}
+          </div>
+          <div className="text-[6px]" style={{ color: G.dim }}>→ Istintak → Seed Letters → Full Pipeline</div>
+          <div className="text-[6px]" style={{ color: G.dim }}>↓</div>
+          <div className="text-[7px] px-2 py-1.5 rounded font-bold" style={{ background: G.bgInner, color: elementColor }}>
+            Vefk Source (B5 Expanded Total) = {(vefkSourceTotal || 0).toLocaleString()}
+          </div>
+          <div className="text-[6px] px-2" style={{ color: G.dim }}>
+            Sum of all Kasem expanded letters' B5 values
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -713,32 +799,24 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
                     style={{ background: allOk ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)", color: allOk ? G.green : G.red }}>
                     {allOk ? "✓ Valid Magic Square — all lines equal MC" : "✗ Invalid Magic Square"}
                   </div>
+
+                  {/* Collapsible: Expanded Letter Values */}
+                  <ExpandedLetterValues letters={allExpandedLetters} elementColor={elementColor} getBastLevelFn={getBastLevelFn} />
+
+                  {/* Collapsible: Source derivation */}
+                  <KasemDerivationSource
+                    kasemBastTotal={kasemBastTotal}
+                    kasemLetterCount={kasemLetterCount}
+                    kasemSourceTotal={kasemSourceTotal}
+                    vefkSourceTotal={s3VefkSourceNumber}
+                    elementColor={elementColor}
+                    sourceBreakdown={sourceBreakdown}
+                  />
                 </div>
               </Card>
             </>
           );
         })()}
-
-        <SourceCalculationPanel
-          stageFlow={sourceBreakdown ? "A'van + Galib Anasir → Method 3 Kasem" : "Esma-i A'van → Esma-i Kasem"}
-          inheritedFrom={sourceBreakdown
-            ? "Method 3 custom formula (last A'van name Bast + Galib Anasir Bast + A'van Input Total)"
-            : "Section 2's All Expanded Letters (A'van stage output)"}
-          formulaSteps={sourceBreakdown ? [
-            { label: "Last A'van Name Bast", value: sourceBreakdown.lastNameBast },
-            { label: "Galib Anasir Bast", value: sourceBreakdown.galibAnasirBast },
-            { label: "Previous A'van Input Total", value: sourceBreakdown.previousAvanInputTotal },
-            { label: "Kasem Source Total", value: kasemSourceTotal, isResult: true },
-          ] : [
-            { label: "A'van Expanded Letters Bast Total", value: kasemBastTotal },
-            { label: "A'van Expanded Letters Count", value: kasemLetterCount },
-            { label: "Kasem Source Total", value: kasemSourceTotal, isResult: true },
-          ]}
-          letterRows={seedLetters.map(l => ({ letter: l, bastValue: getBastLevelFn(l, bastLevel) }))}
-          finalLabel="Vefk Source Number (Kasem)"
-          finalValue={s3VefkSourceNumber}
-          accentColor={elementColor}
-        />
 
       </div>
 
