@@ -163,12 +163,33 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
       nameGroups.push({ letters: g, name: g.join("") });
     }
 
-    return { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters, isNextFerd, groupSize, remainder, supplementLetters, nameGroups };
+    // Step 8 (Method 4 next stage): Carry-Forward Letters for the NEXT calculation.
+    // Display-completion letters (the Galib Anasir slice used only to finish the Esma-i Kitabet
+    // names above) are NEVER carried forward. Only the ORIGINAL remaining letters (before that
+    // completion) continue — with the FULL Galib Anasir Istintak sequence appended to them.
+    const fullGroupsCount = Math.floor(nextLettersCount / groupSize);
+    const originalRemainingLetters = remainder > 0 ? nextLetters.slice(fullGroupsCount * groupSize) : [];
+    const galibValueForCarry = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
+    const galibFullIstintakLetters = istintak(galibValueForCarry);
+    const carryLetters = remainder > 0 ? [...originalRemainingLetters, ...galibFullIstintakLetters] : [...nextLetters];
+    const carryCount = carryLetters.length;
+    const carryIsFerd = carryCount % 2 !== 0;
+    const carryBastLevel = carryIsFerd ? 5 : 4;
+
+    return {
+      seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
+      isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
+      originalRemainingLetters, galibFullIstintakLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
+    };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
 
   if (!pipeline) return null;
 
-  const { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters, isNextFerd, groupSize, remainder, supplementLetters, nameGroups } = pipeline;
+  const {
+    seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
+    isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
+    originalRemainingLetters, galibFullIstintakLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
+  } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
   return (
@@ -334,6 +355,47 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
                 </div>
               </motion.div>
             ))}
+          </div>
+        </Card>
+
+        {/* STEP 8: Carry-Forward Letters for Next Calculation (display-completion letters excluded) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="8" label="Next Calculation Input" arabic="حروف الحساب التالي" color={G.gold} />
+          <div className="text-[10px] font-inter mb-3" style={{ color: G.dim }}>
+            Display-completion letters used above are excluded. Only the original remaining letters carry forward.
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Original Remaining Letters</div>
+              <LetterRow letters={originalRemainingLetters} color={G.gold} size="sm" />
+            </div>
+
+            <div className="flex justify-center">
+              <span className="font-inter text-base font-bold" style={{ color: G.goldDim }}>+</span>
+            </div>
+
+            <div>
+              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Galib Anasir — Full Istintak Sequence</div>
+              <LetterRow letters={galibFullIstintakLetters} color={G.green} size="sm" />
+            </div>
+
+            <div className="flex justify-center">
+              <span className="font-inter text-base font-bold" style={{ color: G.goldDim }}>=</span>
+            </div>
+
+            <div>
+              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Carry-Forward Letters</div>
+              <LetterRow letters={carryLetters} color={G.gold} size="lg" showIndex />
+            </div>
+          </div>
+
+          <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{carryCount}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: carryIsFerd ? G.red : G.green, fontWeight: "bold" }}>{carryIsFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>Bast Level: <span style={{ color: G.gold }}>{carryBastLevel === 5 ? "البسط الخامس" : "البسط الرابع"}</span></span>
           </div>
         </Card>
 
