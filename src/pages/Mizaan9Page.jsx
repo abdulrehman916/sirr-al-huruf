@@ -934,8 +934,8 @@ export default function Mizaan9Page() {
                   const nineMizanTotal  = grandBast + grandLetters;
                   // SECTION 1 — Esma-i Kitabet formula box Result
                   const kitabetInputTotal = lastNameBast + galibAnasirBast + nineMizanTotal;
-                  // SECTION 2 — Esma-i A'van formula box Result (uses Kitabet Input Total, NOT Nine Mizan Total)
-                  const avanInputTotal = lastNameBast + galibAnasirBast + kitabetInputTotal;
+                  // SECTION 2 — Esma-i A'van formula box Result (uses the original Nine Mizan Total)
+                  const avanInputTotal = lastNameBast + galibAnasirBast + nineMizanTotal;
 
                   // Method 3 A'van pipeline — same engine as Method 2, seeded by the A'van Input Total
                   const avanPipeline = avanInputTotal > 0
@@ -958,7 +958,7 @@ export default function Mizaan9Page() {
                       <Method3AvanSection
                         kitabetNames={kitabetNames}
                         dominant={dominant}
-                        kitabetInputTotal={kitabetInputTotal}
+                        nineMizanTotal={nineMizanTotal}
                         onVefkReady={setS2VefkData}
                         getBastLevelFn={getBastLevelFn}
                       />
