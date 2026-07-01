@@ -355,8 +355,8 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     return { derivations: derivs, allExpandedLetters: allExpanded };
   }, [seedLetters, bastLevel, getBastLevelFn]);
 
-  // ── STEP 4: Group Formation with Galib Anasir remainder supplement ──
-  // REMAINDER RULE: Same as Kitabet and A'van — Galib Anasir istintak supplement
+  // ── STEP 4: Group Formation with self-supplement remainder ──
+  // REMAINDER RULE: Self-supplement from beginning of Kasem's own expanded letters
   const groupFormation = useMemo(() => {
     const totalExpanded = allExpandedLetters.length;
     const isFerd        = totalExpanded % 2 !== 0;
@@ -367,9 +367,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
 
     if (rem > 0) {
       const needed = gSize - rem;
-      const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
-      const galibIstintakLetters = istintak(galibValue);
-      supp = galibIstintakLetters.slice(0, needed);
+      supp = allExpandedLetters.slice(0, needed);
       seq  = [...allExpandedLetters, ...supp];
     }
 
@@ -380,7 +378,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     }
 
     return { groups: grps, supplement: supp, remainder: rem, groupSize: gSize, isFerd, totalExpanded };
-  }, [allExpandedLetters, dominant]);
+  }, [allExpandedLetters]);
 
   const elementColors = { fire: "#FF6B35", earth: "#A5C880", air: "#B2EBF2", water: "#4FC3F7" };
   const elementColor  = elementColors[dominant] || elementColors.fire;

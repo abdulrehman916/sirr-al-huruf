@@ -378,7 +378,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     };
   }, [allExpandedLetters, dominant, sourceOverride, getBastLevelFn]);
 
-  // Derive names from group-formation (same logic as SatrVahidGrouping)
+  // Derive names from group-formation
   const names = useMemo(() => {
     if (!pipeline?.initialSeedLetters?.length) return [];
     const seed = pipeline.initialSeedLetters;
@@ -392,17 +392,15 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     const rem = allExpanded.length % gSize;
     let seq = [...allExpanded];
     if (rem > 0) {
-      // REMAINDER RULE: Galib Anasir istintak supplement (same as Kitabet)
+      // REMAINDER RULE: Self-supplement from beginning of A'van's own expanded letters
       const needed = gSize - rem;
-      const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
-      const galibIstintakLetters = istintak(galibValue);
-      const supplement = galibIstintakLetters.slice(0, needed);
+      const supplement = allExpanded.slice(0, needed);
       seq = [...seq, ...supplement];
     }
     const groups = [];
     for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
     return groups;
-  }, [pipeline, dominant, getBastLevelFn]);
+  }, [pipeline, getBastLevelFn]);
 
   // Notify parent of vefk data for the Final Summary
   useEffect(() => {
