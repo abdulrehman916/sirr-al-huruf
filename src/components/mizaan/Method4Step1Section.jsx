@@ -194,11 +194,63 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     const nextNumber2 = expandedTotal2 + allExpandedLetters2.length;
     const nextLetters2 = istintak(nextNumber2);
 
+    // ── STEP 14: Esma-i A'van Name Grouping — Step 13 letters ARE the A'van letters ──
+    // Same rule as Methods 1/2 (A'VAN completion): FERD→groups of 5, ZEVC→groups of 4,
+    // incomplete last name completed from the FRONT of its own sequence (display only).
+    const avanLetters = nextLetters2;
+    const avanCount = avanLetters.length;
+    const avanIsFerd = avanCount % 2 !== 0;
+    const avanGroupSize = avanIsFerd ? 5 : 4;
+    const avanRemainder = avanCount % avanGroupSize;
+    let avanSupplementLetters = [];
+    let avanSeq = [...avanLetters];
+    if (avanRemainder > 0) {
+      const needed = avanGroupSize - avanRemainder;
+      avanSupplementLetters = avanLetters.slice(0, needed);
+      avanSeq = [...avanSeq, ...avanSupplementLetters];
+    }
+    const avanNameGroups = [];
+    for (let i = 0; i < avanSeq.length; i += avanGroupSize) {
+      const g = avanSeq.slice(i, i + avanGroupSize);
+      avanNameGroups.push({ letters: g, name: g.join("") });
+    }
+
+    // ── STEP 15: Carry-Forward for Next Calculation ──
+    // Display-completion letters are NEVER carried. If genuine leftover letters exist, carry
+    // ONLY those. If none (all letters formed complete names), carry the LAST complete name.
+    const avanFullGroupsCount = Math.floor(avanCount / avanGroupSize);
+    const avanLeftoverLetters = avanRemainder > 0 ? avanLetters.slice(avanFullGroupsCount * avanGroupSize) : [];
+    const avanLastCompleteName = avanRemainder === 0 && avanNameGroups.length > 0
+      ? avanNameGroups[avanNameGroups.length - 1].letters
+      : [];
+    const avanCarryBase = avanRemainder > 0 ? avanLeftoverLetters : avanLastCompleteName;
+    const avanCarryLetters = [...avanCarryBase, ...anasirOriginalLetters];
+    const avanCarryCount = avanCarryLetters.length;
+    const avanCarryIsFerd = avanCarryCount % 2 !== 0;
+    const avanCarryBastLevel = avanCarryIsFerd ? 5 : 4;
+
+    // ── THIRD PIPELINE PASS — identical structure, seeded by avanCarryLetters ──
+    const derivations3 = [];
+    let allExpandedLetters3 = [];
+    for (let i = avanCarryLetters.length - 1; i >= 0; i--) {
+      const letter = avanCarryLetters[i];
+      const bastValue = getBastLevelFn(letter, avanCarryBastLevel);
+      const expanded = istintak(bastValue);
+      allExpandedLetters3 = [...allExpandedLetters3, ...expanded];
+      derivations3.push({ originalLetter: letter, bastValue, expandedLetters: expanded });
+    }
+    const expandedTotal3 = allExpandedLetters3.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+    const nextNumber3 = expandedTotal3 + allExpandedLetters3.length;
+    const nextLetters3 = istintak(nextNumber3);
+
     return {
       seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
       isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
       kitabetInputLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
       derivations2, allExpandedLetters2, expandedTotal2, nextNumber2, nextLetters2,
+      avanLetters, avanCount, avanIsFerd, avanGroupSize, avanRemainder, avanSupplementLetters, avanNameGroups,
+      avanLeftoverLetters, avanLastCompleteName, avanCarryBase, avanCarryLetters, avanCarryCount, avanCarryIsFerd, avanCarryBastLevel,
+      derivations3, allExpandedLetters3, expandedTotal3, nextNumber3, nextLetters3,
     };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
 
@@ -209,6 +261,9 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
     kitabetInputLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
     derivations2, allExpandedLetters2, expandedTotal2, nextNumber2, nextLetters2,
+    avanLetters, avanCount, avanIsFerd, avanGroupSize, avanRemainder, avanSupplementLetters, avanNameGroups,
+    avanLeftoverLetters, avanLastCompleteName, avanCarryBase, avanCarryLetters, avanCarryCount, avanCarryIsFerd, avanCarryBastLevel,
+    derivations3, allExpandedLetters3, expandedTotal3, nextNumber3, nextLetters3,
   } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
@@ -497,12 +552,177 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           </div>
         </Card>
 
-        {/* STEP 13: Istintak of Next Number (Next Pipeline) */}
+        {/* STEP 13: Istintak of Next Number (Next Pipeline) — these ARE the Esma-i A'van letters */}
         <Card accent={G.gold}>
-          <SectionHeader step="13" label="Istintak of Next Number (Next Pipeline)" arabic="حروف الاستنطاق" color={G.gold} />
+          <SectionHeader step="13" label="Istintak of Next Number — Esma-i A'van Letters" arabic="حروف أسماء الأعوان" color={G.gold} />
           <LetterRow letters={nextLetters2} color={G.gold} size="xl" showIndex />
           <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
             Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{nextLetters2.length}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: avanIsFerd ? G.red : G.green, fontWeight: "bold" }}>{avanIsFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>Group Size: <span style={{ color: G.gold }}>{avanGroupSize}</span></span>
+          </div>
+        </Card>
+
+        {/* STEP 14: Esma-i A'van Name Grouping (same completion rule as Methods 1/2) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="14" label="Esma-i A'van Name Grouping" arabic="تكوين أسماء الأعوان" color={G.gold} />
+          {avanRemainder > 0 && (
+            <div className="mb-3 px-3 py-2 rounded-lg border text-[10px] font-inter" style={{ background: G.bgInner, borderColor: G.goldBorder + "55", color: G.dim }}>
+              Remainder: <span style={{ color: G.gold, fontWeight: "bold" }}>{avanRemainder}</span> — completed from the FRONT of the A'van sequence (display only):
+              <span className="ml-2" dir="rtl" style={{ color: G.gold }}>{avanSupplementLetters.join("")}</span>
+            </div>
+          )}
+          <div className="space-y-3">
+            {avanNameGroups.map((group, gi) => (
+              <motion.div key={gi}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: gi * 0.06 }}
+                className="rounded-xl border p-3"
+                style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <LetterRow letters={group.letters} color={G.gold} size="lg" />
+                  <Arrow label="→" />
+                  <span className="font-amiri text-2xl font-bold px-5 py-3 rounded-xl border"
+                    style={{ color: G.gold, borderColor: G.goldBorder + "55", background: G.goldFaint, lineHeight: 1.7 }}
+                    dir="rtl">
+                    {group.name}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </Card>
+
+        {/* STEP 15: Carry-Forward for Next Calculation */}
+        <Card accent={G.gold}>
+          <SectionHeader step="15" label="Next Calculation Input" arabic="حروف الحساب التالي" color={G.gold} />
+          <div className="text-[10px] font-inter mb-3" style={{ color: G.dim }}>
+            {avanRemainder > 0
+              ? "Genuine leftover A'van letters carry forward — display-completion letters excluded."
+              : "No leftover letters — the LAST complete Esma-i A'van name carries forward."}
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                {avanRemainder > 0 ? "Leftover A'van Letters" : "Last Complete A'van Name"}
+              </div>
+              <LetterRow letters={avanCarryBase} color={G.gold} size="sm" />
+            </div>
+
+            <div className="flex justify-center">
+              <span className="font-inter text-base font-bold" style={{ color: G.goldDim }}>+</span>
+            </div>
+
+            <div>
+              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Galib Anasir — Original Letters (Mizan 2)</div>
+              <LetterRow letters={anasirOriginalLetters} color={G.green} size="sm" />
+            </div>
+
+            <div className="flex justify-center">
+              <span className="font-inter text-base font-bold" style={{ color: G.goldDim }}>=</span>
+            </div>
+
+            <div>
+              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Carry-Forward Letters</div>
+              <LetterRow letters={avanCarryLetters} color={G.gold} size="lg" showIndex />
+            </div>
+          </div>
+
+          <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{avanCarryCount}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: avanCarryIsFerd ? G.red : G.green, fontWeight: "bold" }}>{avanCarryIsFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>Bast Level: <span style={{ color: G.gold }}>{avanCarryBastLevel === 5 ? "البسط الخامس" : "البسط الرابع"}</span></span>
+          </div>
+        </Card>
+
+        <OrnamentalDivider />
+
+        {/* STEP 16: Individual Bast Derivations — Third Pipeline Pass (seeded by A'van Carry-Forward Letters) */}
+        <Card accent={G.green}>
+          <SectionHeader step="16" label="Individual Bast Derivations (A'van Pipeline)" arabic="اشتقاق البسط" color={G.green} />
+          <div className="space-y-3">
+            {derivations3.map((d, idx) => (
+              <motion.div key={idx}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="rounded-xl border p-3"
+                style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <LetterCell letter={d.originalLetter} color={G.gold} size="lg" />
+                  <Arrow label={`B${avanCarryBastLevel}`} />
+                  <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
+                    style={{ background: G.greenDim, borderColor: G.green + "40" }}>
+                    <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
+                      {d.bastValue.toLocaleString()}
+                    </span>
+                  </div>
+                  <Arrow label="→" />
+                  <div className="flex items-center gap-1 flex-wrap" style={{ direction: "rtl" }}>
+                    {d.expandedLetters.map((l, i) => <LetterCell key={i} letter={l} color={G.green} size="sm" />)}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </Card>
+
+        {/* STEP 17: All Expanded Letters (A'van Pipeline) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="17" label="All Expanded Letters (A'van Pipeline)" arabic="الحروف الموسعة" color={G.gold} />
+          <div className="mb-3">
+            <LetterRow letters={allExpandedLetters3} color={G.gold} size="lg" showIndex />
+          </div>
+          <div className="text-sm font-inter" style={{ color: G.dim }}>
+            Total Expanded: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{allExpandedLetters3.length}</span>
+          </div>
+        </Card>
+
+        {/* STEP 18: Expanded Total (A'van Pipeline) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="18" label="Expanded Total (A'van Pipeline)" arabic="المجموع الموسع" color={G.gold} />
+          <div className="text-center px-3 py-3 rounded-lg border"
+            style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+            <span className="font-inter text-2xl font-black tabular-nums" style={{ color: G.gold }}>{expandedTotal3.toLocaleString()}</span>
+          </div>
+          <div className="text-[10px] font-inter text-center mt-2" style={{ color: G.dim }}>
+            Sum of First Bast (Bast 1) values of all expanded letters
+          </div>
+        </Card>
+
+        {/* STEP 19: Next Number (A'van Pipeline) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="19" label="Next Number (A'van Pipeline)" arabic="العدد التالي" color={G.gold} />
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center mb-3">
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Expanded Total</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{expandedTotal3.toLocaleString()}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>+</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Expanded Letter Count</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{allExpandedLetters3.length}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>=</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Next Number</div>
+              <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{nextNumber3.toLocaleString()}</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* STEP 20: Istintak of Next Number (A'van Pipeline) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="20" label="Istintak of Next Number (A'van Pipeline)" arabic="حروف الاستنطاق" color={G.gold} />
+          <LetterRow letters={nextLetters3} color={G.gold} size="xl" showIndex />
+          <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{nextLetters3.length}</span>
           </div>
         </Card>
 
