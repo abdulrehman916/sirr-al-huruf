@@ -61,6 +61,7 @@ const PAGE_IMPORTS = {
   AdminSettings:           () => import('./pages/AdminSettings'),
   UserDetailPage:           () => import('./pages/UserDetailPage'),
   AdminPDFContentEditor:    () => import('./pages/AdminPDFContentEditor'),
+  MizanCompletionTest:      () => import('./pages/MizanCompletionTest'),
   };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────
