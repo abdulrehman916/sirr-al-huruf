@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { istintak, GALIB_ANASIR_VALUES, getBastLevel as getBastLevelA } from "@/lib/mizaanPostEngine";
-import PageLayout from "../PageLayout";
-import PageTitle from "../PageTitle";
+import { istintak, GALIB_ANASIR_VALUES } from "../lib/mizaanPostEngine";
+import { getBastLevel as getBastLevelA } from "../lib/mizaanPostEngine";
+import PageLayout from "../components/PageLayout";
+import PageTitle from "../components/PageTitle";
 
 const G = {
   gold: "#F5D060",
