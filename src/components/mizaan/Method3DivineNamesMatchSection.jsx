@@ -26,6 +26,14 @@ import { METHOD3_ASMA_UL_HUSNA_ADAD } from "../../lib/method3AsmaUlHusnaAdad";
 
 const MAX_COMBINATION_SIZE = 7;
 
+// ── Presentation-only helpers (no calculation/lookup logic) ──
+function buildCombinedMeaning(combo) {
+  const meanings = combo.map(m => m.malayalam).filter(Boolean);
+  if (meanings.length === 0) return "";
+  if (meanings.length === 1) return `ഈ നാമം ${meanings[0]} എന്നതിനെ സൂചിപ്പിക്കുന്നു.`;
+  return `ഈ നാമങ്ങളുടെ സംയോജനം ${meanings.join('ഉം ')} ഉം ഒരുമിച്ച് സാക്ഷാത്കരിക്കുന്നതിനെ സൂചിപ്പിക്കുന്നു.`;
+}
+
 const G = {
   gold:         "#F5D060",
   goldDim:      "rgba(245,208,96,0.55)",
@@ -209,6 +217,7 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
             </div>
             {displayedCombinations.map((combo, ci) => {
               const finalSum = combo.reduce((s, m) => s + m.adad, 0);
+              const combinedMeaning = buildCombinedMeaning(combo);
               return (
                 <div key={ci} className="rounded-xl border p-4"
                   style={{
@@ -219,22 +228,53 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
                   <div className="font-inter text-[8px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
                     Combination {ci + 1}
                   </div>
-                  <div className="space-y-2">
+
+                  {/* Divine Name cards — clean hierarchy: Arabic → Transliteration → Malayalam meaning → Abjad value */}
+                  <div className="space-y-3">
                     {combo.map((m, i) => (
-                      <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg border"
+                      <div key={i} className="flex flex-col gap-1 px-3 py-3 rounded-lg border text-center"
                         style={{ background: G.bgInner, borderColor: G.goldBorder + "40" }}>
-                        <div className="flex flex-col">
-                          <span className="font-amiri text-xl" dir="rtl" style={{ color: G.gold, lineHeight: 1.8 }}>{m.name}</span>
-                          <span className="font-inter text-[10px]" style={{ color: G.goldDim }}>{m.translit}</span>
-                        </div>
-                        <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.green }}>{m.adad.toLocaleString()}</span>
+                        <span className="font-quranic" dir="rtl" style={{ color: G.gold, fontSize: "1.7rem" }}>{m.vocalized || m.name}</span>
+                        <span className="font-inter text-[11px] font-semibold" style={{ color: G.goldDim }}>{m.translit}</span>
+                        <span className="font-malayalam text-[12px]" style={{ color: "rgba(255,255,255,0.75)" }}>{m.malayalam}</span>
+                        <span className="font-inter text-[11px] font-bold tabular-nums" style={{ color: G.green }}>Abjad: {m.adad.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
+
+                  {/* Exact addition formula — unchanged */}
                   <div className="mt-3 pt-3 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
                     <div className="font-inter text-[9px] tabular-nums" style={{ color: G.goldDim }}>
                       {combo.map(m => m.adad.toLocaleString()).join(" + ")} = <span className="font-bold" style={{ color: G.gold }}>{finalSum.toLocaleString()}</span>
                     </div>
+                  </div>
+
+                  {/* Combined spiritual meaning — dynamic, from this combo's names only */}
+                  {combinedMeaning && (
+                    <div className="mt-3 pt-3 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
+                      <p className="font-malayalam text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
+                        {combinedMeaning}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Practical recitation instruction — only for the final selected names */}
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "30" }}>
+                    <div className="font-inter text-[8px] uppercase tracking-widest mb-2 text-center" style={{ color: G.dim }}>
+                      Recitation — Daily Count per Name
+                    </div>
+                    <div className="space-y-1">
+                      {combo.map((m, i) => (
+                        <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-lg border"
+                          style={{ background: G.bgInner, borderColor: G.goldBorder + "30" }}>
+                          <span className="font-inter text-[10px]" style={{ color: G.goldDim }}>{m.translit}</span>
+                          <span className="font-inter text-[10px] font-bold tabular-nums" style={{ color: G.gold }}>{m.adad.toLocaleString()} തവണ / ദിവസം</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="font-malayalam text-[11px] text-center mt-2" style={{ color: "rgba(255,255,255,0.55)" }}>
+                      ഈ എണ്ണം അതേപടി 7 ദിവസം തുടർച്ചയായി ആവർത്തിക്കുക. ആവശ്യമെങ്കിൽ ദിവസങ്ങളുടെ എണ്ണം മാത്രം വർദ്ധിപ്പിക്കാം — ഓരോ നാമത്തിന്റെയും എബ്ജദ് എണ്ണം മാറ്റരുത്.
+                    </p>
                   </div>
                 </div>
               );

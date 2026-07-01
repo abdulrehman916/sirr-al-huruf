@@ -1019,23 +1019,6 @@ export default function Mizaan9Page() {
                       />
 
                       <MizaanDivider />
-
-                      {/* ═══ COMMON KASEM — same as Method 2 ═══ */}
-                      <div className="text-center px-2">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl border"
-                          style={{ background: "rgba(212,175,55,0.07)", borderColor: "rgba(212,175,55,0.50)" }}>
-                          <span className="text-base">📜</span>
-                          <span className="font-inter text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: "#F5D060" }}>
-                            Common Kasem
-                          </span>
-                        </div>
-                      </div>
-                      <KasamSection
-                        avanNames={s2VefkData?.names || []}
-                        kasemNames={s3VefkData?.names || []}
-                      />
-
-                      <MizaanDivider />
                       <Method3ConclusionAccordion />
                     </>
                   );
