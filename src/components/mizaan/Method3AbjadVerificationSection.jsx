@@ -6,6 +6,7 @@
 //       Abjad Kabir calculation → Final Abjad Kabir Total
 // ═══════════════════════════════════════════════════════════════
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { istintak } from "../../lib/mizaanPostEngine";
 import { calculateAbjad, getAbjadValue } from "../../lib/abjadValues";
@@ -22,13 +23,22 @@ const G = {
   dim:          "rgba(255,255,255,0.35)",
 };
 
-export default function Method3AbjadVerificationSection({ finalTotal, elementColor = G.gold }) {
+export default function Method3AbjadVerificationSection({ finalTotal, elementColor = G.gold, onAbjadTotalReady }) {
   const safeFinalTotal = finalTotal || 0;
-  if (!safeFinalTotal) return null;
 
-  const letters    = istintak(safeFinalTotal);
+  // Same deterministic functions used for the Divine Name lookup — computed here ONCE
+  // and reported upward so the lookup section uses this exact same value (no recomputation drift).
+  const letters    = safeFinalTotal ? istintak(safeFinalTotal) : [];
   const lettersStr  = Array.isArray(letters) ? letters.join('') : '';
-  const abjadTotal  = calculateAbjad(lettersStr);
+  const abjadTotal  = safeFinalTotal ? calculateAbjad(lettersStr) : 0;
+
+  // Report this exact value upward so the Divine Name lookup uses this same computed
+  // value — not a separately recomputed one — guaranteeing the two never drift apart.
+  useEffect(() => {
+    if (onAbjadTotalReady) onAbjadTotalReady(abjadTotal);
+  }, [abjadTotal, onAbjadTotalReady]);
+
+  if (!safeFinalTotal) return null;
 
   return (
     <motion.div

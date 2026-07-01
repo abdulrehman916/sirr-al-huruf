@@ -70,6 +70,15 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
         </p>
       </div>
 
+      <div className="px-4 pt-1 pb-3">
+        <div className="rounded-lg border px-3 py-2 text-center" style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+          <div className="font-inter text-[7px] uppercase tracking-widest mb-0.5" style={{ color: G.dim }}>Exact Value Sent Into Lookup</div>
+          <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{safeTotal.toLocaleString()}</div>
+          <div className="font-inter text-[7px] uppercase tracking-widest mt-1.5 mb-0.5" style={{ color: G.dim }}>Filter Applied to Method 3 Database</div>
+          <div className="font-inter text-[9px] tabular-nums" style={{ color: G.goldDim }}>n.adad === {safeTotal.toLocaleString()}</div>
+        </div>
+      </div>
+
       <div className="px-4 pb-6 pt-2">
         <div className="rounded-xl border p-4"
           style={{

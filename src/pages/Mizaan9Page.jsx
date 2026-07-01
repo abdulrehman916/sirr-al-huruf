@@ -33,7 +33,6 @@ import Method3AvanSection from "../components/mizaan/Method3AvanSection";
 import Method3FinalTotalSection from "../components/mizaan/Method3FinalTotalSection";
 import Method3AbjadVerificationSection from "../components/mizaan/Method3AbjadVerificationSection";
 import Method3DivineNamesMatchSection from "../components/mizaan/Method3DivineNamesMatchSection";
-import { calculateAbjad } from "../lib/abjadValues";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
@@ -239,6 +238,7 @@ export default function Mizaan9Page() {
   const [s1VefkData, setS1VefkData] = useState(null);
   const [s2VefkData, setS2VefkData] = useState(null);
   const [s3VefkData, setS3VefkData] = useState(null);
+  const [method3AbjadTotal, setMethod3AbjadTotal] = useState(0);
   const [activeMethod, setActiveMethod] = useState(1);
   const [activeSection, setActiveSection] = useState(1);
   const ds = activeMethod === 1 || activeMethod === 2 || activeMethod === 3 ? getDataSet(activeSection) : null;
@@ -986,18 +986,17 @@ export default function Mizaan9Page() {
                       />
 
                       {/* ═══ FINAL VERIFICATION — Abjad Kabir (no further pipeline) ═══ */}
+                      {/* Reports its computed Abjad Kabir total upward via onAbjadTotalReady —      */}
+                      {/* the lookup below uses THIS SAME reported value, never a recomputed one,     */}
+                      {/* so the verification display and the search filter are structurally identical. */}
                       <Method3AbjadVerificationSection
                         finalTotal={nineMizanTotal + kitabetInputTotal + kasemInputTotal}
+                        onAbjadTotalReady={setMethod3AbjadTotal}
                       />
 
                       {/* ═══ DIVINE NAMES LOOKUP — Asma-ul Husna match by Abjad Kabir (lookup only) ═══ */}
                       <Method3DivineNamesMatchSection
-                        abjadTotal={calculateAbjad(
-                          (() => {
-                            const total = nineMizanTotal + kitabetInputTotal + kasemInputTotal;
-                            return total > 0 ? istintak(total).join('') : '';
-                          })()
-                        )}
+                        abjadTotal={method3AbjadTotal}
                       />
 
                       <MizaanDivider />
