@@ -471,11 +471,12 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
   const elementColors = { fire: "#FF6B35", earth: "#A5C880", air: "#B2EBF2", water: "#4FC3F7" };
   const elementColor  = elementColors[dominant] || elementColors.fire;
 
-  // ── SECTION 3 VEFK SOURCE: Sum of the SAME Bast level used for Kasem derivation ──
-  // RULE: FERD (odd) Kasem → 5th Bast; ZEVC (even) Kasem → 4th Bast — uses `bastLevel` from Step 2
+  // ── SECTION 3 VEFK SOURCE: Sum using the Bast level chosen from the FINAL Esma-i Kasem letter count ──
+  // RULE: FERD (odd) final Kasem letter count → 5th Bast; ZEVC (even) → 4th Bast
+  const vefkBastLevel = groupFormation.isFerd ? 5 : 4;
   const s3VefkSourceNumber = useMemo(
-    () => allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, bastLevel) || 0), 0),
-    [allExpandedLetters, getBastLevelFn, bastLevel]
+    () => allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, vefkBastLevel) || 0), 0),
+    [allExpandedLetters, getBastLevelFn, vefkBastLevel]
   );
 
   const s3Vefk = useMemo(() => {
@@ -709,7 +710,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
                 <div className="flex items-center justify-between px-3 py-2 rounded-lg border mb-4"
                   style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
                   <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>
-                    Square Source (B{bastLevel} Expanded Total)
+                    Square Source (B{vefkBastLevel} Expanded Total)
                   </span>
                   <span className="font-inter text-base font-bold tabular-nums" style={{ color: elementColor }}>
                     {s3VefkSourceNumber.toLocaleString()}
@@ -801,7 +802,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
                   </div>
 
                   {/* Collapsible: Expanded Letter Values */}
-                  <ExpandedLetterValues letters={allExpandedLetters} elementColor={elementColor} getBastLevelFn={getBastLevelFn} bastLevel={bastLevel} />
+                  <ExpandedLetterValues letters={allExpandedLetters} elementColor={elementColor} getBastLevelFn={getBastLevelFn} bastLevel={vefkBastLevel} />
 
                   {/* Collapsible: Source derivation */}
                   <KasemDerivationSource
@@ -811,7 +812,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
                     vefkSourceTotal={s3VefkSourceNumber}
                     elementColor={elementColor}
                     sourceBreakdown={sourceBreakdown}
-                    bastLevel={bastLevel}
+                    bastLevel={vefkBastLevel}
                   />
                 </div>
               </Card>
