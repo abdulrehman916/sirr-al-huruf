@@ -478,7 +478,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         </Card>
 
         {/* ESMA-I KITABET WAFQ (KALAM) — same buildVefk engine as Methods 1/2 */}
-        <Method4VefkCard step="7v" title="Esma-i Kitabet Wafq" sourceLabel="Vefk Source (Expanded Letters B1 Total)" sourceNumber={kitabetVefkSource} vefk={kitabetVefk} dominant={dominant} />
+        <Method4VefkCard step="7v" title="Esma-i Kitabet Wafq" sourceLabel="Vefk Source (Expanded Letters B1 Total)" sourceNumber={kitabetVefkSource} vefk={kitabetVefk} dominant={dominant} sourceLetters={allExpandedLetters} bastLevel={1} />
 
         {/* STEP 8: Carry-Forward Letters for Next Calculation (display-completion letters excluded) */}
         <Card accent={G.gold}>
@@ -644,7 +644,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         </Card>
 
         {/* ESMA-I A'VAN WAFQ (KALAM) — same buildVefk engine as Methods 1/2 */}
-        <Method4VefkCard step="14v" title="Esma-i A'van Wafq" sourceLabel="Vefk Source (Expanded Letters B1 Total)" sourceNumber={avanVefkSource} vefk={avanVefk} dominant={dominant} />
+        <Method4VefkCard step="14v" title="Esma-i A'van Wafq" sourceLabel="Vefk Source (Expanded Letters B1 Total)" sourceNumber={avanVefkSource} vefk={avanVefk} dominant={dominant} sourceLetters={allExpandedLetters2} bastLevel={1} />
 
         {/* STEP 15: Carry-Forward for Next Calculation */}
         <Card accent={G.gold}>
@@ -812,7 +812,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         </Card>
 
         {/* ESMA-I KASEM WAFQ (KALAM) — FERD→B5, ZEVC→B4 of the Kasem letters, same buildVefk engine */}
-        <Method4VefkCard step="21v" title="Esma-i Kasem Wafq" sourceLabel={`Vefk Source (B${kasemVefkBastLevel} Total)`} sourceNumber={kasemVefkSource} vefk={kasemVefk} dominant={dominant} />
+        <Method4VefkCard step="21v" title="Esma-i Kasem Wafq" sourceLabel={`Vefk Source (B${kasemVefkBastLevel} Total)`} sourceNumber={kasemVefkSource} vefk={kasemVefk} dominant={dominant} sourceLetters={kasemLetters} bastLevel={kasemVefkBastLevel} />
 
         <OrnamentalDivider />
 

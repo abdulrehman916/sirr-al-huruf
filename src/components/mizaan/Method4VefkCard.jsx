@@ -4,7 +4,10 @@
 // Display-only — receives an already-built vefk object (from buildVefk).
 // ═══════════════════════════════════════════════════════════════
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { getBastLevel as getBastLevelDefault } from "../../lib/mizaanPostEngine";
 
 const G = {
   gold:         "#F5D060",
@@ -44,7 +47,76 @@ function SectionHeader({ step, label, arabic, color = G.gold }) {
   );
 }
 
-export default function Method4VefkCard({ step, title, sourceNumber, sourceLabel, vefk, dominant = "fire" }) {
+// Collapsible expanded letter values — identical pattern to Methods 1–3
+function ExpandedLetterValues({ letters, elementColor, bastLevel }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const safe = Array.isArray(letters) ? letters : [];
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}>
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        Expanded Letter Values
+      </button>
+      {isOpen && (
+        <div className="mt-2 space-y-1">
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[6px] font-inter">
+            {safe.map((letter, idx) => {
+              const bast = getBastLevelDefault(letter, bastLevel) || 0;
+              return (
+                <div key={idx} className="contents">
+                  <span className="text-right font-amiri" style={{ color: elementColor }}>{letter}</span>
+                  <span className="tabular-nums" style={{ color: G.dim }}>{bast.toLocaleString()}</span>
+                </div>
+              );
+            })}
+          </div>
+          {safe.length > 0 && (
+            <div className="mt-1.5 pt-1.5 border-t text-center" style={{ borderColor: G.goldBorder + "30" }}>
+              <span className="text-[6px]" style={{ color: G.dim }}>Total: </span>
+              <span className="text-[8px] font-bold tabular-nums" style={{ color: elementColor }}>
+                {safe.reduce((s, l) => s + (getBastLevelDefault(l, bastLevel) || 0), 0).toLocaleString()}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Collapsible source section — identical pattern to Methods 1–3
+function SourceSection({ letters, sourceTotal, elementColor }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const safe = Array.isArray(letters) ? letters : [];
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "40" }}>
+      <button onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-center gap-1.5 text-[7px] uppercase tracking-wider font-bold hover:opacity-70 transition-opacity"
+        style={{ color: G.dim }}>
+        {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+        Source
+      </button>
+      {isOpen && (
+        <div className="mt-2 text-center space-y-1.5">
+          <div className="text-[7px]" style={{ color: G.dim }}>Source Letters</div>
+          <div className="flex flex-wrap gap-1 justify-center" style={{ direction: "rtl" }}>
+            {safe.map((l, i) => (
+              <span key={i} className="font-amiri" style={{ color: elementColor, fontSize: "0.7rem" }}>{l}</span>
+            ))}
+          </div>
+          <div className="text-[6px]" style={{ color: G.dim }}>↓</div>
+          <div className="text-[7px] px-2 py-1.5 rounded font-bold" style={{ background: G.bgInner, color: elementColor }}>
+            Source Total = {(sourceTotal || 0).toLocaleString()}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Method4VefkCard({ step, title, sourceNumber, sourceLabel, vefk, dominant = "fire", sourceLetters = [], bastLevel = 1 }) {
   if (!vefk) return null;
   const elementMeta = ELEMENT_META[dominant] || ELEMENT_META.fire;
   const g = vefk.grid;
@@ -142,6 +214,9 @@ export default function Method4VefkCard({ step, title, sourceNumber, sourceLabel
         <div className="pt-2 border-t text-[7px]" style={{ borderColor: G.goldBorder + "30", color: G.dim }}>
           {sourceLabel}: <span className="font-bold tabular-nums" style={{ color: elementMeta.color }}>{sourceNumber?.toLocaleString()}</span>
         </div>
+
+        <ExpandedLetterValues letters={sourceLetters} elementColor={elementMeta.color} bastLevel={bastLevel} />
+        <SourceSection letters={sourceLetters} sourceTotal={sourceNumber} elementColor={elementMeta.color} />
       </div>
     </div>
   );
