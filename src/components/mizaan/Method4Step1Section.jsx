@@ -1,15 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// METHOD 4 — STEP 1 (Nine Mizan → Istintak → Bast Expansion)
+// METHOD 4 — SHARED PIPELINE (identical to Methods 1, 2, 3)
 // ─────────────────────────────────────────────────────────────
 // Nine Mizan stage is shared/identical with Methods 1-3 (computed upstream).
-// This component ONLY implements what was explicitly instructed:
-//   1. Convert Nine Mizan total → Istintak seed letters
-//   2. Display letters, count, FERD/ZEVC
-//   3. FERD → 5th Bast, ZEVC → 4th Bast (section-specific Bast table via getBastLevelFn)
-//   4. Apply Bast to every seed letter, display each expanded value
-//   5. Sum expanded values → display total
-//   6. Convert expanded total → new Istintak letters → display
-// STOPS HERE — no Esma-i Kitabet/A'van/Kasem, no Vefk.
+// This component reuses the EXACT same steps as SatrVahidGrouping /
+// MizaanPipelineFull, up to and including the Expanded Total:
+//   1. Nine Mizan Total → Istintak → Seed Letters
+//   2. Count seed letters → FERD (odd, 5th Bast) / ZEVC (even, 4th Bast)
+//   3. Individual Bast Derivations (reverse order: last seed → first),
+//      each seed letter's Bast value → istintak → expanded letters
+//   4. All Expanded Letters (concatenation of every derivation)
+//   5. Expanded Total = sum of First Bast (Bast 1) of all expanded letters
+//      — identical to vefkSourceNumber/expandedLettersTotal in runMizaanPostPipeline
+// STOPS HERE — Method 4 has not been defined past this point yet.
+// No grouping into names, no Vefk, no Method-4-specific logic.
 // ═══════════════════════════════════════════════════════════════
 
 import { useMemo } from "react";
@@ -19,7 +22,7 @@ import { istintak, getBastLevel as getBastLevelDefault } from "../../lib/mizaanP
 const G = {
   gold:         "#F5D060",
   goldDim:      "rgba(245,208,96,0.55)",
-  goldFaint:    "rgba(212,175,55,0.07)",
+  goldFaint:    "rgba(245,208,96,0.12)",
   goldBorder:   "rgba(212,175,55,0.40)",
   goldBorderHi: "rgba(212,175,55,0.65)",
   glow:         "rgba(212,175,55,0.18)",
@@ -27,6 +30,7 @@ const G = {
   bgCard:       "rgba(8,16,40,0.98)",
   bgInner:      "rgba(212,175,55,0.06)",
   green:        "#4ADE80",
+  greenDim:     "rgba(74,222,128,0.15)",
   red:          "#F87171",
   dim:          "rgba(255,255,255,0.35)",
 };
@@ -34,14 +38,14 @@ const G = {
 function SectionHeader({ step, label, arabic, color = G.gold }) {
   return (
     <div className="flex items-center gap-3 mb-3">
-      <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-xs font-black flex-shrink-0"
+      <div className="flex items-center justify-center w-7 h-7 rounded-lg font-inter text-sm font-black flex-shrink-0"
         style={{ background: color + "22", border: `1px solid ${color}55`, color }}>
         {step}
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color }}>{label}</span>
-          {arabic && <span className="font-amiri text-base" style={{ color: G.goldDim, lineHeight: 1.8 }}>{arabic}</span>}
+          <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color }}>{label}</span>
+          {arabic && <span className="font-amiri text-sm" style={{ color: G.goldDim, lineHeight: 1.7 }}>{arabic}</span>}
         </div>
       </div>
       <div className="h-px flex-1 max-w-[60px]" style={{ background: `linear-gradient(to right, ${color}40, transparent)` }} />
@@ -51,39 +55,45 @@ function SectionHeader({ step, label, arabic, color = G.gold }) {
 
 function Card({ children, accent }) {
   return (
-    <div className="rounded-xl border p-4"
+    <div className="rounded-xl border p-5"
       style={{
         background: G.bgCard,
         borderColor: accent ? accent + "55" : G.goldBorder,
         borderLeft: accent ? `3px solid ${accent}` : undefined,
-        boxShadow: `0 2px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.05)`,
+        boxShadow: `0 2px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(212,175,55,0.05)`,
       }}>
       {children}
     </div>
   );
 }
 
-function LetterCell({ letter, color = G.gold }) {
+function LetterCell({ letter, index, color = G.gold, size = "lg", showIndex = false }) {
+  const sizes = { sm: "text-lg px-2.5 py-1.5", lg: "text-2xl px-4 py-2.5", xl: "text-3xl px-5 py-3" };
   return (
-    <span className="font-amiri font-bold rounded-lg border px-4 py-2.5 text-3xl leading-relaxed"
-      style={{
-        color,
-        borderColor: color + "55",
-        background: color + "12",
-        lineHeight: 1.8,
-        textRendering: "optimizeLegibility",
-        WebkitFontSmoothing: "antialiased",
-      }}>
-      {letter}
-    </span>
+    <div className="flex flex-col items-center gap-1">
+      <span className={`font-amiri font-bold rounded-lg border ${sizes[size]}`}
+        style={{ color, borderColor: color + "55", background: color + "12", lineHeight: 1.8, display: "inline-block" }}>
+        {letter}
+      </span>
+      {showIndex && <span className="font-inter text-[9px] tabular-nums" style={{ color: G.dim }}>{index + 1}</span>}
+    </div>
   );
 }
 
-function LetterRow({ letters, color = G.gold }) {
-  if (!letters || letters.length === 0) return <span className="font-inter text-xs italic" style={{ color: G.dim }}>—</span>;
+function LetterRow({ letters, color = G.gold, size = "lg", showIndex = false }) {
+  if (!letters || letters.length === 0) return <span className="font-inter text-sm italic" style={{ color: G.dim }}>—</span>;
   return (
-    <div className="flex flex-wrap gap-2.5" style={{ direction: "rtl" }}>
-      {letters.map((l, i) => <LetterCell key={i} letter={l} color={color} />)}
+    <div className="flex flex-wrap gap-2.5 items-center" style={{ direction: "rtl" }}>
+      {letters.map((l, i) => <LetterCell key={i} letter={l} index={i} color={color} size={size} showIndex={showIndex} />)}
+    </div>
+  );
+}
+
+function Arrow({ label }) {
+  return (
+    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+      <span className="font-inter text-lg" style={{ color: G.goldDim }}>→</span>
+      {label && <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{label}</span>}
     </div>
   );
 }
@@ -102,25 +112,35 @@ export default function Method4Step1Section({ nineMizanTotal, getBastLevelFn = g
   const pipeline = useMemo(() => {
     if (!nineMizanTotal || nineMizanTotal <= 0) return null;
 
-    // Step 1: Nine Mizan total → Istintak seed letters
+    // Step 1: Nine Mizan Total → Istintak → Seed Letters
     const seedLetters = istintak(nineMizanTotal);
-    const letterCount = seedLetters.length;
-    const isFerd = letterCount % 2 !== 0;
-    const bastLevel = isFerd ? 5 : 4;
+    const totalSeed = seedLetters.length;
+    const isSeedFerd = totalSeed % 2 !== 0;
+    const bastLevel = isSeedFerd ? 5 : 4;
 
-    // Step 2: Apply selected Bast to every seed letter
-    const expandedValues = seedLetters.map(l => getBastLevelFn(l, bastLevel) || 0);
-    const expandedTotal = expandedValues.reduce((s, v) => s + v, 0);
+    // Step 2: Individual Bast Derivations — REVERSE ORDER (last seed → first),
+    // identical to SatrVahidGrouping / expandAllSeedLetters in mizaanPostEngine.js
+    const derivations = [];
+    let allExpandedLetters = [];
+    for (let i = seedLetters.length - 1; i >= 0; i--) {
+      const letter = seedLetters[i];
+      const bastValue = getBastLevelFn(letter, bastLevel);
+      const expanded = istintak(bastValue);
+      allExpandedLetters = [...allExpandedLetters, ...expanded];
+      derivations.push({ originalLetter: letter, bastValue, expandedLetters: expanded });
+    }
 
-    // Step 3: Convert expanded total → new Istintak letters
-    const newSeedLetters = istintak(expandedTotal);
+    // Step 3: Expanded Total = sum of First Bast (Bast 1) of all expanded letters
+    // — identical formula to vefkSourceNumber/expandedLettersTotal in runMizaanPostPipeline
+    const expandedTotal = allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
 
-    return { seedLetters, letterCount, isFerd, bastLevel, expandedValues, expandedTotal, newSeedLetters };
+    return { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal };
   }, [nineMizanTotal, getBastLevelFn]);
 
   if (!pipeline) return null;
 
-  const { seedLetters, letterCount, isFerd, bastLevel, expandedValues, expandedTotal, newSeedLetters } = pipeline;
+  const { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal } = pipeline;
+  const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
   return (
     <motion.div
@@ -140,64 +160,86 @@ export default function Method4Step1Section({ nineMizanTotal, getBastLevelFn = g
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-xl border mb-3"
           style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
-          <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Method 4 — Step 1</span>
+          <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: G.goldDim }}>Method 4 — Shared Pipeline</span>
           <span className="font-amiri text-base" style={{ color: G.goldDim }}>✦</span>
         </div>
-        <p className="font-inter text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: G.goldDim }}>Nine Mizan → Istintak → Bast Expansion</p>
+        <p className="font-inter text-[10px] uppercase tracking-[0.2em] mt-1.5" style={{ color: G.goldDim }}>Nine Mizan Total → Bast Expansion (identical to Methods 1–3)</p>
       </div>
 
       <OrnamentalDivider />
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* Step 1: Seed Letters from Nine Mizan Total */}
+        {/* STEP 1: Original Seed Letters */}
         <Card accent={G.gold}>
-          <SectionHeader step="1" label="Istintak of Nine Mizan Total" arabic="الحروف البذرية" color={G.gold} />
+          <SectionHeader step="1" label="Original Seed Letters (Istintak)" arabic="الحروف البذرية" color={G.gold} />
           <div className="flex items-center justify-between px-3 py-2 rounded-lg border mb-3"
             style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
-            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: G.dim }}>Nine Mizan Total</span>
+            <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>Nine Mizan Total</span>
             <span className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{nineMizanTotal.toLocaleString()}</span>
           </div>
-          <LetterRow letters={seedLetters} color={G.gold} />
-          <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
-            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{letterCount}</span>
+          <div className="flex flex-wrap gap-2 justify-center mb-3">
+            <LetterRow letters={seedLetters} color={G.gold} size="xl" showIndex />
+          </div>
+          <div className="text-[15px] font-inter" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1.1rem" }}>{totalSeed}</span>
             <span style={{ margin: "0 0.5rem" }}>•</span>
-            <span style={{ color: isFerd ? G.red : G.green, fontWeight: "bold" }}>{isFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
+            <span style={{ color: isSeedFerd ? G.red : G.green, fontWeight: "bold" }}>{isSeedFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
             <span style={{ margin: "0 0.5rem" }}>•</span>
-            <span style={{ color: G.goldDim }}>Bast Level: <span style={{ color: G.gold }}>{bastLevel === 5 ? "البسط الخامس" : "البسط الرابع"}</span></span>
+            <span style={{ color: G.goldDim }}>Bast Level: <span style={{ color: G.gold }}>{bastLabelAr}</span></span>
           </div>
         </Card>
 
-        {/* Step 2: Individual Expanded Bast Values */}
+        {/* STEP 2: Individual Bast Derivations */}
         <Card accent={G.green}>
-          <SectionHeader step="2" label={`Expanded Bast Values (B${bastLevel})`} arabic="قيم البسط" color={G.green} />
-          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-            {seedLetters.map((l, i) => (
-              <div key={i} className="contents">
-                <LetterCell letter={l} color={G.green} />
-                <div className="flex items-center font-inter text-sm font-bold tabular-nums" style={{ color: G.green }}>
-                  {expandedValues[i].toLocaleString()}
+          <SectionHeader step="2" label="Individual Bast Derivations" arabic="اشتقاق البسط" color={G.green} />
+          <div className="space-y-3">
+            {derivations.map((d, idx) => (
+              <motion.div key={idx}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="rounded-xl border p-3"
+                style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <LetterCell letter={d.originalLetter} color={G.gold} size="lg" />
+                  <Arrow label={`B${bastLevel}`} />
+                  <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
+                    style={{ background: G.greenDim, borderColor: G.green + "40" }}>
+                    <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
+                      {d.bastValue.toLocaleString()}
+                    </span>
+                  </div>
+                  <Arrow label="→" />
+                  <div className="flex items-center gap-1 flex-wrap" style={{ direction: "rtl" }}>
+                    {d.expandedLetters.map((l, i) => <LetterCell key={i} letter={l} color={G.green} size="sm" />)}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </Card>
 
-        {/* Step 3: Expanded Total */}
+        {/* STEP 3: All Expanded Letters */}
         <Card accent={G.gold}>
-          <SectionHeader step="3" label="Expanded Total" arabic="المجموع الموسع" color={G.gold} />
+          <SectionHeader step="3" label="All Expanded Letters" arabic="الحروف الموسعة" color={G.gold} />
+          <div className="mb-3">
+            <LetterRow letters={allExpandedLetters} color={G.gold} size="lg" showIndex />
+          </div>
+          <div className="text-sm font-inter" style={{ color: G.dim }}>
+            Total Expanded: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{allExpandedLetters.length}</span>
+          </div>
+        </Card>
+
+        {/* STEP 4: Expanded Total */}
+        <Card accent={G.gold}>
+          <SectionHeader step="4" label="Expanded Total" arabic="المجموع الموسع" color={G.gold} />
           <div className="text-center px-3 py-3 rounded-lg border"
             style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
             <span className="font-inter text-2xl font-black tabular-nums" style={{ color: G.gold }}>{expandedTotal.toLocaleString()}</span>
           </div>
-        </Card>
-
-        {/* Step 4: New Istintak Letters from Expanded Total */}
-        <Card accent={G.gold}>
-          <SectionHeader step="4" label="Istintak of Expanded Total" arabic="الحروف الجديدة" color={G.gold} />
-          <LetterRow letters={newSeedLetters} color={G.gold} />
-          <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
-            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{newSeedLetters.length}</span>
+          <div className="text-[10px] font-inter text-center mt-2" style={{ color: G.dim }}>
+            Sum of First Bast (Bast 1) values of all expanded letters
           </div>
         </Card>
 
