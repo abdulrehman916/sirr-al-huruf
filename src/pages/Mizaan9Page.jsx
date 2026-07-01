@@ -261,9 +261,11 @@ export default function Mizaan9Page() {
   const [method3AbjadTotal, setMethod3AbjadTotal] = useState(0);
   const [activeMethod, setActiveMethod] = useState(1);
   const [activeSection, setActiveSection] = useState(1);
-  // Nine Mizan (Mizan 1–9 + Final Summary) uses the dataset matching the active Section —
-  // Section 1 uses DATASET_A, Section 2 uses DATASET_B, Section 3 (Abjad) uses DATASET_C.
-  const ds = activeMethod === 1 || activeMethod === 2 || activeMethod === 3 ? getDataSet(activeSection) : null;
+  // Nine Mizan (Mizan 1–9 + Final Summary) is IDENTICAL for Section 1 and Section 2 — it always uses
+  // the Section 1 dataset so selections/values never go blank when switching sections. Only the
+  // post-Nine-Mizan pipeline (Kitabet/A'van/Kasem via getBastLevelFn below) is section-specific.
+  // Section 3 (Abjad) is a separate system entirely and uses its own dataset.
+  const ds = activeMethod === 1 || activeMethod === 2 || activeMethod === 3 ? getDataSet(activeSection === 3 ? 3 : 1) : null;
   // Section-specific rules apply ONLY to the post-pipeline (Esma-i Kitabet/A'van/Kasem):
   // Section 1 uses Section A Bast table; Section 2 uses Section B Bast table.
   // Bast1 is shared (identical). Only Bast2–Bast5 differ.
