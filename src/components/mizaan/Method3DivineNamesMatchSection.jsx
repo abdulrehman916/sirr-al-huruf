@@ -32,6 +32,16 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
     return METHOD3_ASMA_UL_HUSNA_ADAD.filter(n => n.adad === safeTotal);
   }, [safeTotal]);
 
+  const { nearestLower, nearestHigher } = useMemo(() => {
+    if (!safeTotal || matches.length > 0) return { nearestLower: null, nearestHigher: null };
+    let lower = null, higher = null;
+    for (const n of METHOD3_ASMA_UL_HUSNA_ADAD) {
+      if (n.adad < safeTotal && (!lower || n.adad > lower.adad)) lower = n;
+      if (n.adad > safeTotal && (!higher || n.adad < higher.adad)) higher = n;
+    }
+    return { nearestLower: lower, nearestHigher: higher };
+  }, [safeTotal, matches]);
+
   if (!safeTotal) return null;
 
   return (
@@ -72,16 +82,53 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
               {matches.map((m, i) => (
                 <div key={i} className="flex items-center justify-between px-3 py-2.5 rounded-lg border"
                   style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
-                  <span className="font-amiri text-2xl" dir="rtl" style={{ color: G.gold, lineHeight: 1.8 }}>{m.name}</span>
+                  <div className="flex flex-col">
+                    <span className="font-amiri text-2xl" dir="rtl" style={{ color: G.gold, lineHeight: 1.8 }}>{m.name}</span>
+                    <span className="font-inter text-[10px]" style={{ color: G.goldDim }}>{m.translit}</span>
+                  </div>
                   <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.green }}>{m.adad.toLocaleString()}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-4">
-              <span className="font-inter text-[11px]" style={{ color: G.dim }}>
-                No exact Divine Name match found.
-              </span>
+            <div className="space-y-3">
+              <div className="text-center pb-1">
+                <span className="font-inter text-[11px]" style={{ color: G.dim }}>
+                  No exact Divine Name match found.
+                </span>
+              </div>
+              {nearestLower && (
+                <div>
+                  <div className="font-inter text-[8px] uppercase tracking-widest mb-1.5 text-center" style={{ color: G.dim }}>Nearest Lower</div>
+                  <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border"
+                    style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+                    <div className="flex flex-col">
+                      <span className="font-amiri text-2xl" dir="rtl" style={{ color: G.gold, lineHeight: 1.8 }}>{nearestLower.name}</span>
+                      <span className="font-inter text-[10px]" style={{ color: G.goldDim }}>{nearestLower.translit}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.green }}>{nearestLower.adad.toLocaleString()}</div>
+                      <div className="font-inter text-[9px] tabular-nums" style={{ color: G.dim }}>Difference: {(safeTotal - nearestLower.adad).toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {nearestHigher && (
+                <div>
+                  <div className="font-inter text-[8px] uppercase tracking-widest mb-1.5 text-center" style={{ color: G.dim }}>Nearest Higher</div>
+                  <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border"
+                    style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
+                    <div className="flex flex-col">
+                      <span className="font-amiri text-2xl" dir="rtl" style={{ color: G.gold, lineHeight: 1.8 }}>{nearestHigher.name}</span>
+                      <span className="font-inter text-[10px]" style={{ color: G.goldDim }}>{nearestHigher.translit}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.green }}>{nearestHigher.adad.toLocaleString()}</div>
+                      <div className="font-inter text-[9px] tabular-nums" style={{ color: G.dim }}>Difference: {(nearestHigher.adad - safeTotal).toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
