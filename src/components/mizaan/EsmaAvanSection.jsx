@@ -491,6 +491,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
           sectionArabic="أسماء الأعوان"
           sectionSubtitle="A'van Derivation Workflow"
           getBastLevelFn={getBastLevelFn}
+          completionRule="self-recycle"
         />
 
         {/* ── VEFK MAGIC SQUARE (Step 5) ── */}

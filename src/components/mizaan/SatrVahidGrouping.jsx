@@ -135,6 +135,7 @@ export default function SatrVahidGrouping({
   sectionArabic = "أسماء الكتابة",
   sectionSubtitle = "Complete Manuscript Workflow",
   getBastLevelFn = getBastLevelA,
+  completionRule = "galib", // "galib" | "self-recycle"
 }) {
   const safeSeed = Array.isArray(satrVahidLetters) ? satrVahidLetters : [];
   const totalSeed = safeSeed.length;
@@ -184,13 +185,18 @@ export default function SatrVahidGrouping({
     let seq = [...allExpandedLetters];
     let supp = [];
     
-    // MANUSCRIPT RULE: Istintak of the Galib Anasir's 1st Bast value → take only needed letters
-    // This is the same method used in generateEsmaLevel (mizaanPostEngine.js)
+    // COMPLETION RULE: Kitabet uses Galib Anasir; A'van/Kasem use self-recycle
     if (rem > 0) {
       const needed = gSize - rem;
-      const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
-      const galibIstintakLetters = istintak(galibValue);
-      supp = galibIstintakLetters.slice(0, needed);
+      if (completionRule === "self-recycle") {
+        // A'VAN/KASEM RULE: Recycle from BEGINNING of own expanded sequence
+        supp = allExpandedLetters.slice(0, needed);
+      } else {
+        // KITABET RULE: Istintak of Galib Anasir's 1st Bast value
+        const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
+        const galibIstintakLetters = istintak(galibValue);
+        supp = galibIstintakLetters.slice(0, needed);
+      }
       seq = [...allExpandedLetters, ...supp];
     }
     
@@ -214,7 +220,7 @@ export default function SatrVahidGrouping({
       isFerd,
       totalExpanded,
     };
-  }, [allExpandedLetters, dominant]);
+  }, [allExpandedLetters, dominant, completionRule]);
 
   const dominantLabel = { fire: "النار", earth: "التراب", air: "الهواء", water: "الماء" }[dominant] || dominant;
 
