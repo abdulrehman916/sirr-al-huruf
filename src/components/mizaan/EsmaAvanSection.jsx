@@ -16,7 +16,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak } from "../../lib/mizaanPostEngine";
+import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -392,14 +392,17 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     const rem = allExpanded.length % gSize;
     let seq = [...allExpanded];
     if (rem > 0) {
+      // REMAINDER RULE: Galib Anasir istintak supplement (same as Kitabet)
       const needed = gSize - rem;
-      const supplement = allExpanded.slice(0, needed);
+      const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
+      const galibIstintakLetters = istintak(galibValue);
+      const supplement = galibIstintakLetters.slice(0, needed);
       seq = [...seq, ...supplement];
     }
     const groups = [];
     for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
     return groups;
-  }, [pipeline, getBastLevelFn]);
+  }, [pipeline, dominant, getBastLevelFn]);
 
   // Notify parent of vefk data for the Final Summary
   useEffect(() => {
