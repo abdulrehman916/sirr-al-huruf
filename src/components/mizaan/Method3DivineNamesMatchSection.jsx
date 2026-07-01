@@ -8,13 +8,20 @@
 //
 // Rule: start with single names (k=1). If none match, try 2-name
 // combinations, then 3, 4, 5, 6, 7 (MAX_COMBINATION_SIZE). Stop at
-// the first k where at least one exact combination is found, and
-// display ALL exact combinations of that size. No nearest-match
-// fallback — only exact sums are ever shown.
+// the first k where at least one exact combination is found — this
+// numeric equality step is untouched and never skipped.
+//
+// SEMANTIC SELECTION (2nd, final step): when more than one exact
+// combination is found, the user's original Method 1 intention text
+// is classified and every exact combination is ranked by relevance
+// to that intention. Only the single best (or a genuine tie) is
+// shown. Numeric equality always comes first — semantics only
+// choose AMONG already-exact combinations, never replace the sum check.
 // ═══════════════════════════════════════════════════════════════
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { base44 } from "@/api/base44Client";
 import { METHOD3_ASMA_UL_HUSNA_ADAD } from "../../lib/method3AsmaUlHusnaAdad";
 
 const MAX_COMBINATION_SIZE = 7;
@@ -75,7 +82,7 @@ function findExactCombinations(sortedValues, target, size) {
   return results;
 }
 
-export default function Method3DivineNamesMatchSection({ abjadTotal, elementColor = G.gold }) {
+export default function Method3DivineNamesMatchSection({ abjadTotal, elementColor = G.gold, intentionText = "" }) {
   const safeTotal = abjadTotal || 0;
 
   const { combinations, matchedSize } = useMemo(() => {
@@ -97,6 +104,58 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
     }
     return { combinations: [], matchedSize: 0 };
   }, [safeTotal]);
+
+  // ── Semantic selection — only runs when numeric equality already produced 2+ candidates ──
+  const [ranking, setRanking] = useState({ loading: false, category: null, bestIndices: null });
+
+  useEffect(() => {
+    setRanking({ loading: false, category: null, bestIndices: null });
+    const trimmedIntention = (intentionText || "").trim();
+    if (combinations.length <= 1 || !trimmedIntention) return;
+
+    let cancelled = false;
+    setRanking({ loading: true, category: null, bestIndices: null });
+
+    const combosDescription = combinations
+      .map((combo, i) => `Combination ${i}: ${combo.map(m => `${m.translit} (${m.name})`).join(" + ")}`)
+      .join("\n");
+
+    base44.integrations.Core.InvokeLLM({
+      prompt: `A user entered this original Arabic intention/request: "${trimmedIntention}"\n\n` +
+        `First, understand the meaning of this intention and classify it into a category ` +
+        `(e.g. Healing, Protection, Rizq, Knowledge, Victory, Guidance, Repentance, Mercy, Love, Blessing, or another fitting category).\n\n` +
+        `Then, here are several exact combinations of Divine Names (Asma-ul Husna) that are numerically equal candidates:\n${combosDescription}\n\n` +
+        `Rank these combinations by how semantically relevant their combined meanings are to the user's intention. ` +
+        `Return only the index (or indices, if there is a genuine tie) of the single best matching combination(s).`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          category: { type: "string" },
+          bestIndices: { type: "array", items: { type: "integer" } },
+        },
+        required: ["category", "bestIndices"],
+      },
+    }).then(res => {
+      if (cancelled) return;
+      const valid = Array.isArray(res?.bestIndices)
+        ? res.bestIndices.filter(i => Number.isInteger(i) && i >= 0 && i < combinations.length)
+        : [];
+      setRanking({
+        loading: false,
+        category: res?.category || null,
+        bestIndices: valid.length > 0 ? valid : null,
+      });
+    }).catch(() => {
+      if (!cancelled) setRanking({ loading: false, category: null, bestIndices: null });
+    });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [combinations, intentionText]);
+
+  const displayedCombinations = ranking.bestIndices
+    ? ranking.bestIndices.map(i => combinations[i])
+    : combinations;
 
   if (!safeTotal) return null;
 
@@ -133,12 +192,22 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
       <div className="px-4 pb-6 pt-2 space-y-3">
         {combinations.length > 0 ? (
           <>
-            <div className="text-center">
-              <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
+            <div className="text-center space-y-1">
+              <span className="font-inter text-[9px] uppercase tracking-widest block" style={{ color: G.dim }}>
                 {matchedSize === 1 ? "Single Name Match" : `${matchedSize}-Name Combinations`} — {combinations.length} exact result{combinations.length > 1 ? "s" : ""}
               </span>
+              {ranking.loading && (
+                <span className="font-inter text-[9px] italic animate-pulse block" style={{ color: G.goldDim }}>
+                  Classifying intention & ranking by relevance…
+                </span>
+              )}
+              {!ranking.loading && ranking.category && (
+                <span className="font-inter text-[9px] uppercase tracking-widest block" style={{ color: G.goldDim }}>
+                  Intention Category: <span className="font-bold" style={{ color: G.gold }}>{ranking.category}</span> — showing best match
+                </span>
+              )}
             </div>
-            {combinations.map((combo, ci) => {
+            {displayedCombinations.map((combo, ci) => {
               const finalSum = combo.reduce((s, m) => s + m.adad, 0);
               return (
                 <div key={ci} className="rounded-xl border p-4"

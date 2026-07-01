@@ -997,6 +997,7 @@ export default function Mizaan9Page() {
                       {/* ═══ DIVINE NAMES LOOKUP — Asma-ul Husna match by Abjad Kabir (lookup only) ═══ */}
                       <Method3DivineNamesMatchSection
                         abjadTotal={method3AbjadTotal}
+                        intentionText={input}
                       />
 
                       <MizaanDivider />
