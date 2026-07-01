@@ -134,12 +134,18 @@ export default function Method4Step1Section({ nineMizanTotal, getBastLevelFn = g
     // — identical formula to vefkSourceNumber/expandedLettersTotal in runMizaanPostPipeline
     const expandedTotal = allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
 
-    return { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal };
+    // Step 4 (Method 4 next stage): Next Number = Expanded Total + Expanded Letter Count
+    const nextNumber = expandedTotal + allExpandedLetters.length;
+
+    // Step 5: Istintak of the Next Number
+    const nextLetters = istintak(nextNumber);
+
+    return { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters };
   }, [nineMizanTotal, getBastLevelFn]);
 
   if (!pipeline) return null;
 
-  const { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal } = pipeline;
+  const { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
   return (
@@ -240,6 +246,36 @@ export default function Method4Step1Section({ nineMizanTotal, getBastLevelFn = g
           </div>
           <div className="text-[10px] font-inter text-center mt-2" style={{ color: G.dim }}>
             Sum of First Bast (Bast 1) values of all expanded letters
+          </div>
+        </Card>
+
+        {/* STEP 5: Next Number = Expanded Total + Expanded Letter Count */}
+        <Card accent={G.gold}>
+          <SectionHeader step="5" label="Next Number" arabic="العدد التالي" color={G.gold} />
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center mb-3">
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Expanded Total</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{expandedTotal.toLocaleString()}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>+</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Expanded Letter Count</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{allExpandedLetters.length}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>=</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Next Number</div>
+              <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{nextNumber.toLocaleString()}</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* STEP 6: Istintak of Next Number */}
+        <Card accent={G.gold}>
+          <SectionHeader step="6" label="Istintak of Next Number" arabic="حروف الاستنطاق" color={G.gold} />
+          <LetterRow letters={nextLetters} color={G.gold} size="xl" showIndex />
+          <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{nextLetters.length}</span>
           </div>
         </Card>
 
