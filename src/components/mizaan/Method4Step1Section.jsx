@@ -164,14 +164,16 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     }
 
     // Step 8 (Method 4 next stage): Carry-Forward Letters for the NEXT calculation.
-    // Display-completion letters (the Galib Anasir 3550/4015/3757/3342 Istintak slice used only
-    // to finish the Esma-i Kitabet names above) are NEVER carried forward.
-    // The next calculation uses ONLY the original remaining letters PLUS the ORIGINAL Anasir
-    // letter set of the dominant element from Mizan 2 (NOT the Istintak of 3550/4015/3757/3342).
+    // ONE continuous sequence, in this order:
+    //   1. The complete Esma-i Kitabet name letters (nextLetters) — or, if there was a
+    //      remainder, only the leftover letters instead of a completed name.
+    //   2. Immediately followed by the complete ORIGINAL Anasir letters of the dominant
+    //      element (Page 44, from Mizan 2) — never the Istintak of the Galib Anasir value.
     const fullGroupsCount = Math.floor(nextLettersCount / groupSize);
     const originalRemainingLetters = remainder > 0 ? nextLetters.slice(fullGroupsCount * groupSize) : [];
+    const kitabetInputLetters = remainder > 0 ? originalRemainingLetters : [...nextLetters];
     const anasirOriginalLetters = ELEMENT_LETTERS[dominant] || ELEMENT_LETTERS.fire;
-    const carryLetters = remainder > 0 ? [...originalRemainingLetters, ...anasirOriginalLetters] : [...nextLetters];
+    const carryLetters = [...kitabetInputLetters, ...anasirOriginalLetters];
     const carryCount = carryLetters.length;
     const carryIsFerd = carryCount % 2 !== 0;
     const carryBastLevel = carryIsFerd ? 5 : 4;
@@ -195,7 +197,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     return {
       seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
       isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
-      originalRemainingLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
+      kitabetInputLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
       derivations2, allExpandedLetters2, expandedTotal2, nextNumber2, nextLetters2,
     };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
@@ -205,7 +207,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
   const {
     seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
     isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
-    originalRemainingLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
+    kitabetInputLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
     derivations2, allExpandedLetters2, expandedTotal2, nextNumber2, nextLetters2,
   } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
@@ -380,13 +382,15 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         <Card accent={G.gold}>
           <SectionHeader step="8" label="Next Calculation Input" arabic="حروف الحساب التالي" color={G.gold} />
           <div className="text-[10px] font-inter mb-3" style={{ color: G.dim }}>
-            Display-completion letters used above are excluded. Only the original remaining letters carry forward.
+            One continuous sequence: the complete Esma-i Kitabet name{remainder > 0 ? "'s leftover letters" : ""}, immediately followed by the Original Dominant Anasir letters.
           </div>
 
           <div className="space-y-3">
             <div>
-              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Original Remaining Letters</div>
-              <LetterRow letters={originalRemainingLetters} color={G.gold} size="sm" />
+              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
+                {remainder > 0 ? "Esma-i Kitabet — Leftover Letters" : "Esma-i Kitabet — Complete Name"}
+              </div>
+              <LetterRow letters={kitabetInputLetters} color={G.gold} size="sm" />
             </div>
 
             <div className="flex justify-center">
