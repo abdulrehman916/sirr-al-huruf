@@ -374,6 +374,26 @@ export default function Mizaan9Page() {
         {/* Method 1 Content (ALL existing logic belongs here) */}
         {activeMethod === 1 && (
           <div>
+            {/* Section 1 / Section 2 Toggle (Section 3 hidden - internal engine only) */}
+            <div className="flex gap-2">
+              {[
+                { s: 1, arabic: 'المجموعة الأولى' },
+                { s: 2, arabic: 'المجموعة الثانية' },
+              ].map(({ s, arabic }) => (
+                <button key={s} onClick={() => setActiveSection(s)}
+                  className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+                  style={{
+                    background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                    border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                    color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                    boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
+                  }}>
+                  <span className="font-amiri text-sm">{arabic}</span>
+                  <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
+                </button>
+              ))}
+            </div>
+
             {/* Input card */}
         <div className="rounded-2xl border p-5 relative overflow-hidden"
           style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
@@ -564,6 +584,26 @@ export default function Mizaan9Page() {
       {/* Method 2 Content */}
       {activeMethod === 2 && (
         <div>
+          {/* Section 1 / Section 2 Toggle (Section 3 hidden - internal engine only) */}
+          <div className="flex gap-2">
+            {[
+              { s: 1, arabic: 'المجموعة الأولى' },
+              { s: 2, arabic: 'المجموعة الثانية' },
+            ].map(({ s, arabic }) => (
+              <button key={s} onClick={() => setActiveSection(s)}
+                className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+                style={{
+                  background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                  color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                  boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
+                }}>
+                <span className="font-amiri text-sm">{arabic}</span>
+                <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
+              </button>
+            ))}
+          </div>
+
           {/* Input card (same as Method 1) */}
           <div className="rounded-2xl border p-5 relative overflow-hidden"
             style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
@@ -773,6 +813,26 @@ export default function Mizaan9Page() {
       {/* Method 3 Content — Esma-i Kitabet identical to Method 1/2; A'van onward uses Method 3 formula */}
       {activeMethod === 3 && (
         <div>
+          {/* Section 1 / Section 2 Toggle (Section 3 hidden - internal engine only) */}
+          <div className="flex gap-2">
+            {[
+              { s: 1, arabic: 'المجموعة الأولى' },
+              { s: 2, arabic: 'المجموعة الثانية' },
+            ].map(({ s, arabic }) => (
+              <button key={s} onClick={() => setActiveSection(s)}
+                className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+                style={{
+                  background: activeSection === s ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${activeSection === s ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                  color: activeSection === s ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                  boxShadow: activeSection === s ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
+                }}>
+                <span className="font-amiri text-sm">{arabic}</span>
+                <span className="font-inter text-[9px] uppercase tracking-widest">SECTION {s}</span>
+              </button>
+            ))}
+          </div>
+
           {/* Input card (same as Method 1/2) */}
           <div className="rounded-2xl border p-5 relative overflow-hidden"
             style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
