@@ -32,6 +32,8 @@ import { runMizaanPostPipeline, getBastLevel, istintak, GALIB_ANASIR_VALUES } fr
 import Method3AvanSection from "../components/mizaan/Method3AvanSection";
 import Method3FinalTotalSection from "../components/mizaan/Method3FinalTotalSection";
 import Method3AbjadVerificationSection from "../components/mizaan/Method3AbjadVerificationSection";
+import Method3DivineNamesMatchSection from "../components/mizaan/Method3DivineNamesMatchSection";
+import { calculateAbjad } from "../lib/abjadValues";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
@@ -986,6 +988,16 @@ export default function Mizaan9Page() {
                       {/* ═══ FINAL VERIFICATION — Abjad Kabir (no further pipeline) ═══ */}
                       <Method3AbjadVerificationSection
                         finalTotal={nineMizanTotal + kitabetInputTotal + kasemInputTotal}
+                      />
+
+                      {/* ═══ DIVINE NAMES LOOKUP — Asma-ul Husna match by Abjad Kabir (lookup only) ═══ */}
+                      <Method3DivineNamesMatchSection
+                        abjadTotal={calculateAbjad(
+                          (() => {
+                            const total = nineMizanTotal + kitabetInputTotal + kasemInputTotal;
+                            return total > 0 ? istintak(total).join('') : '';
+                          })()
+                        )}
                       />
 
                       <MizaanDivider />
