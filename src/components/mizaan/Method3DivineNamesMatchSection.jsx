@@ -9,8 +9,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { calculateAbjad } from "../../lib/abjadValues";
-import { ASMA_UL_HUSNA_NAMES } from "../../lib/asmaUlHusnaNames";
+import { METHOD3_ASMA_UL_HUSNA_ADAD } from "../../lib/method3AsmaUlHusnaAdad";
 
 const G = {
   gold:         "#F5D060",
@@ -30,9 +29,7 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
 
   const matches = useMemo(() => {
     if (!safeTotal) return [];
-    return ASMA_UL_HUSNA_NAMES
-      .map(name => ({ name, value: calculateAbjad(name) }))
-      .filter(n => n.value === safeTotal);
+    return METHOD3_ASMA_UL_HUSNA_ADAD.filter(n => n.adad === safeTotal);
   }, [safeTotal]);
 
   if (!safeTotal) return null;
@@ -76,14 +73,14 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
                 <div key={i} className="flex items-center justify-between px-3 py-2.5 rounded-lg border"
                   style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
                   <span className="font-amiri text-2xl" dir="rtl" style={{ color: G.gold, lineHeight: 1.8 }}>{m.name}</span>
-                  <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.green }}>{m.value.toLocaleString()}</span>
+                  <span className="font-inter text-sm font-bold tabular-nums" style={{ color: G.green }}>{m.adad.toLocaleString()}</span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-4">
-              <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>
-                No exact match found in the 99 Names
+              <span className="font-inter text-[11px]" style={{ color: G.dim }}>
+                No exact Divine Name match found.
               </span>
             </div>
           )}
