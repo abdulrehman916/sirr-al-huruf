@@ -176,10 +176,27 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     const carryIsFerd = carryCount % 2 !== 0;
     const carryBastLevel = carryIsFerd ? 5 : 4;
 
+    // ── SECOND PIPELINE PASS — identical structure to Steps 1–6, seeded by carryLetters ──
+    // (Same rules as Methods 1–3: reverse-order Bast derivation → expanded letters →
+    // Expanded Total → + Expanded Letter Count → Next Number → Istintak.)
+    const derivations2 = [];
+    let allExpandedLetters2 = [];
+    for (let i = carryLetters.length - 1; i >= 0; i--) {
+      const letter = carryLetters[i];
+      const bastValue = getBastLevelFn(letter, carryBastLevel);
+      const expanded = istintak(bastValue);
+      allExpandedLetters2 = [...allExpandedLetters2, ...expanded];
+      derivations2.push({ originalLetter: letter, bastValue, expandedLetters: expanded });
+    }
+    const expandedTotal2 = allExpandedLetters2.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+    const nextNumber2 = expandedTotal2 + allExpandedLetters2.length;
+    const nextLetters2 = istintak(nextNumber2);
+
     return {
       seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
       isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
       originalRemainingLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
+      derivations2, allExpandedLetters2, expandedTotal2, nextNumber2, nextLetters2,
     };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
 
@@ -189,6 +206,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
     isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
     originalRemainingLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
+    derivations2, allExpandedLetters2, expandedTotal2, nextNumber2, nextLetters2,
   } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
@@ -396,6 +414,91 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
             <span style={{ color: carryIsFerd ? G.red : G.green, fontWeight: "bold" }}>{carryIsFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
             <span style={{ margin: "0 0.5rem" }}>•</span>
             <span style={{ color: G.goldDim }}>Bast Level: <span style={{ color: G.gold }}>{carryBastLevel === 5 ? "البسط الخامس" : "البسط الرابع"}</span></span>
+          </div>
+        </Card>
+
+        <OrnamentalDivider />
+
+        {/* STEP 9: Individual Bast Derivations — Second Pipeline Pass (seeded by Carry-Forward Letters) */}
+        <Card accent={G.green}>
+          <SectionHeader step="9" label="Individual Bast Derivations (Next Pipeline)" arabic="اشتقاق البسط" color={G.green} />
+          <div className="space-y-3">
+            {derivations2.map((d, idx) => (
+              <motion.div key={idx}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="rounded-xl border p-3"
+                style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <LetterCell letter={d.originalLetter} color={G.gold} size="lg" />
+                  <Arrow label={`B${carryBastLevel}`} />
+                  <div className="px-3 py-1.5 rounded-lg border flex-shrink-0"
+                    style={{ background: G.greenDim, borderColor: G.green + "40" }}>
+                    <span className="font-inter text-xs font-bold tabular-nums" style={{ color: G.green }}>
+                      {d.bastValue.toLocaleString()}
+                    </span>
+                  </div>
+                  <Arrow label="→" />
+                  <div className="flex items-center gap-1 flex-wrap" style={{ direction: "rtl" }}>
+                    {d.expandedLetters.map((l, i) => <LetterCell key={i} letter={l} color={G.green} size="sm" />)}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </Card>
+
+        {/* STEP 10: All Expanded Letters (Next Pipeline) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="10" label="All Expanded Letters (Next Pipeline)" arabic="الحروف الموسعة" color={G.gold} />
+          <div className="mb-3">
+            <LetterRow letters={allExpandedLetters2} color={G.gold} size="lg" showIndex />
+          </div>
+          <div className="text-sm font-inter" style={{ color: G.dim }}>
+            Total Expanded: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{allExpandedLetters2.length}</span>
+          </div>
+        </Card>
+
+        {/* STEP 11: Expanded Total (Next Pipeline) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="11" label="Expanded Total (Next Pipeline)" arabic="المجموع الموسع" color={G.gold} />
+          <div className="text-center px-3 py-3 rounded-lg border"
+            style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+            <span className="font-inter text-2xl font-black tabular-nums" style={{ color: G.gold }}>{expandedTotal2.toLocaleString()}</span>
+          </div>
+          <div className="text-[10px] font-inter text-center mt-2" style={{ color: G.dim }}>
+            Sum of First Bast (Bast 1) values of all expanded letters
+          </div>
+        </Card>
+
+        {/* STEP 12: Next Number (Next Pipeline) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="12" label="Next Number (Next Pipeline)" arabic="العدد التالي" color={G.gold} />
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center mb-3">
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Expanded Total</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{expandedTotal2.toLocaleString()}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>+</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Expanded Letter Count</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{allExpandedLetters2.length}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>=</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Next Number</div>
+              <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{nextNumber2.toLocaleString()}</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* STEP 13: Istintak of Next Number (Next Pipeline) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="13" label="Istintak of Next Number (Next Pipeline)" arabic="حروف الاستنطاق" color={G.gold} />
+          <LetterRow letters={nextLetters2} color={G.gold} size="xl" showIndex />
+          <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{nextLetters2.length}</span>
           </div>
         </Card>
 
