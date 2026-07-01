@@ -374,8 +374,6 @@ export default function Mizaan9Page() {
         {/* Method 1 Content (ALL existing logic belongs here) */}
         {activeMethod === 1 && (
           <div>
-            {/* Section 1 / Section 2 / Section 3 Toggle (HIDDEN - UI visibility change only) */}
-
             {/* Input card */}
         <div className="rounded-2xl border p-5 relative overflow-hidden"
           style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
@@ -566,8 +564,6 @@ export default function Mizaan9Page() {
       {/* Method 2 Content */}
       {activeMethod === 2 && (
         <div>
-          {/* Section 1 / Section 2 / Section 3 Toggle (HIDDEN - UI visibility change only) */}
-
           {/* Input card (same as Method 1) */}
           <div className="rounded-2xl border p-5 relative overflow-hidden"
             style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
@@ -777,8 +773,6 @@ export default function Mizaan9Page() {
       {/* Method 3 Content — Esma-i Kitabet identical to Method 1/2; A'van onward uses Method 3 formula */}
       {activeMethod === 3 && (
         <div>
-          {/* Section 1 / Section 2 Toggle (HIDDEN - UI visibility change only) */}
-
           {/* Input card (same as Method 1/2) */}
           <div className="rounded-2xl border p-5 relative overflow-hidden"
             style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
