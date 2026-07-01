@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES, ELEMENT_LETTERS, buildVefk } from "../../lib/mizaanPostEngine";
 import Method4FinalSummary from "./Method4FinalSummary";
 import Method4VefkCard from "./Method4VefkCard";
+import Method4AlternativeReading from "./Method4AlternativeReading";
 
 const G = {
   gold:         "#F5D060",
@@ -292,6 +293,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         const src = kasemLetters.reduce((s, l) => s + (getBastLevelFn(l, kasemIsFerd ? 5 : 4) || 0), 0);
         return src > 0 ? buildVefk(src, dominant) : null;
       })(),
+      seedAdad: seedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0),
     };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
 
@@ -308,6 +310,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     kasemLetters, kasemCount, kasemIsFerd, kasemGroupSize, kasemRemainder, kasemSupplementLetters, kasemNameGroups,
     kitabetNamesList, kitabetAdad, avanNamesList, avanAdad, kasemNamesList, kasemAdad,
     kitabetVefk, kitabetVefkSource, avanVefk, avanVefkSource, kasemVefkBastLevel, kasemVefkSource, kasemVefk,
+    seedAdad,
   } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
@@ -823,6 +826,13 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           avanAdad={avanAdad}
           kasemNames={kasemNamesList}
           kasemAdad={kasemAdad}
+        />
+
+        <Method4AlternativeReading
+          nineMizanTotal={nineMizanTotal}
+          seedLetters={seedLetters}
+          totalSeed={totalSeed}
+          seedAdad={seedAdad}
         />
 
       </div>
