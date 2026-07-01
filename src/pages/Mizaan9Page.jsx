@@ -31,6 +31,7 @@ import { getDataSet } from "../lib/mizaanDataSets";
 import { runMizaanPostPipeline, getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../lib/mizaanPostEngine";
 import Method3AvanSection from "../components/mizaan/Method3AvanSection";
 import Method3FinalTotalSection from "../components/mizaan/Method3FinalTotalSection";
+import Method3AbjadVerificationSection from "../components/mizaan/Method3AbjadVerificationSection";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
@@ -980,6 +981,11 @@ export default function Mizaan9Page() {
                         nineMizanTotal={nineMizanTotal}
                         kitabetInputTotal={kitabetInputTotal}
                         kasemInputTotal={kasemInputTotal}
+                      />
+
+                      {/* ═══ FINAL VERIFICATION — Abjad Kabir (no further pipeline) ═══ */}
+                      <Method3AbjadVerificationSection
+                        finalTotal={nineMizanTotal + kitabetInputTotal + kasemInputTotal}
                       />
 
                       <MizaanDivider />
