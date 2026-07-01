@@ -185,6 +185,13 @@
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
 
+  /* Mizaan page — improve legibility of generated Arabic words (spacing only, same font/text) */
+  .mizaan-page .font-amiri {
+    letter-spacing: 0.14em;
+    word-spacing: 0.2em;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
+  }
+
   /* Large Arabic display text */
   .font-amiri-display {
     font-size: clamp(2.5rem, 5vw, 4rem);

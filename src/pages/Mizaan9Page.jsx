@@ -362,7 +362,7 @@ export default function Mizaan9Page() {
 
   return (
     <PageLayout>
-      <div className="space-y-4">
+      <div className="space-y-4 mizaan-page">
 
         {/* Header */}
         <PageTitle arabic="ميزان الأعداد" latin="9 Mizan" subtitle="Complete Occult Analysis System" icon="٩" />
