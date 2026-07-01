@@ -129,7 +129,7 @@ function deriveKitabetNames(initialSeedLetters, dominant, getBastLevelFn) {
   return { names: groups, originalNames: originalGroups };
 }
 
-// ── Helper: derive Esma-i A'van names — SAME algorithm as EsmaAvanSection (self-supplement remainder rule) ──
+// ── Helper: derive Esma-i A'van names — A'VAN completion rule (self-recycle, NOT Galib Anasir) ──
 // Returns both original names (for calculation) and supplemented names (for display)
 function deriveAvanNames(initialSeedLetters, getBastLevelFn) {
   if (!initialSeedLetters?.length) return { names: [], originalNames: [] };
@@ -143,7 +143,7 @@ function deriveAvanNames(initialSeedLetters, getBastLevelFn) {
   const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
   const rem = allExpanded.length % gSize;
   let seq = [...allExpanded];
-  // Group ORIGINAL letters first (before supplementation) — for calculation
+  // Group ORIGINAL letters only (before supplementation) — for calculation
   const originalGroups = [];
   for (let i = 0; i < allExpanded.length; i += gSize) {
     const group = allExpanded.slice(i, Math.min(i + gSize, allExpanded.length));
@@ -151,13 +151,13 @@ function deriveAvanNames(initialSeedLetters, getBastLevelFn) {
       originalGroups.push(group.join(""));
     }
   }
-  // Then supplement for display — A'VAN RULE: use own expanded letters
+  // Then supplement for display — A'VAN RULE: Recycle from BEGINNING of own expanded sequence (NOT Galib Anasir)
   if (rem > 0) {
     const needed = gSize - rem;
     const supplement = allExpanded.slice(0, needed);
     seq = [...seq, ...supplement];
   }
-  // Group FINAL letters (after supplementation) — for display
+  // Group FINAL letters (after supplementation) — for display only
   const groups = [];
   for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
   return { names: groups, originalNames: originalGroups };

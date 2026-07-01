@@ -378,7 +378,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     };
   }, [allExpandedLetters, dominant, sourceOverride, getBastLevelFn]);
 
-  // Derive names from group-formation
+  // Derive names from group-formation with A'VAN completion rule (self-recycle, NOT Galib Anasir)
   const names = useMemo(() => {
     if (!pipeline?.initialSeedLetters?.length) return [];
     const seed = pipeline.initialSeedLetters;
@@ -392,13 +392,15 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     const rem = allExpanded.length % gSize;
     let seq = [...allExpanded];
     if (rem > 0) {
-      // REMAINDER RULE: Self-supplement from beginning of A'van's own expanded letters
+      // A'VAN RULE: Recycle from BEGINNING of own expanded sequence (NOT Galib Anasir)
       const needed = gSize - rem;
       const supplement = allExpanded.slice(0, needed);
       seq = [...seq, ...supplement];
     }
     const groups = [];
-    for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
+    for (let i = 0; i < seq.length; i += gSize) {
+      groups.push(seq.slice(i, i + gSize).join(""));
+    }
     return groups;
   }, [pipeline, getBastLevelFn]);
 

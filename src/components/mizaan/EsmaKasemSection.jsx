@@ -355,8 +355,8 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     return { derivations: derivs, allExpandedLetters: allExpanded };
   }, [seedLetters, bastLevel, getBastLevelFn]);
 
-  // ── STEP 4: Group Formation with self-supplement remainder ──
-  // REMAINDER RULE: Self-supplement from beginning of Kasem's own expanded letters
+  // ── STEP 4: Group Formation with KASEM completion rule (self-recycle, NOT Galib Anasir)
+  // REMAINDER RULE: Recycle from BEGINNING of Kasem's own expanded sequence (NOT Galib Anasir)
   const groupFormation = useMemo(() => {
     const totalExpanded = allExpandedLetters.length;
     const isFerd        = totalExpanded % 2 !== 0;
@@ -366,6 +366,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
     let supp = [];
 
     if (rem > 0) {
+      // KASEM RULE: Recycle from BEGINNING of own expanded sequence (NOT Galib Anasir)
       const needed = gSize - rem;
       supp = allExpandedLetters.slice(0, needed);
       seq  = [...allExpandedLetters, ...supp];
