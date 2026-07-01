@@ -261,9 +261,11 @@ export default function Mizaan9Page() {
   const [method3AbjadTotal, setMethod3AbjadTotal] = useState(0);
   const [activeMethod, setActiveMethod] = useState(1);
   const [activeSection, setActiveSection] = useState(1);
-  const ds = activeMethod === 1 || activeMethod === 2 || activeMethod === 3 ? getDataSet(activeSection) : null;
+  // Nine Mizan (Mizan 1–9 + Final Summary) is a SHARED calculation system — it always uses the
+  // Section 1 dataset regardless of the Section 1/2 toggle. Only Section 3 (Abjad) swaps the dataset.
+  const ds = activeMethod === 1 || activeMethod === 2 || activeMethod === 3 ? getDataSet(activeSection === 3 ? 3 : 1) : null;
+  // Section-specific rules apply ONLY to the post-pipeline (Esma-i Kitabet/A'van/Kasem):
   // Section 1 uses Section A Bast table; Section 2 uses Section B Bast table.
-  // Section 3 uses Section A Bast table (only source values differ, not the expansion table).
   // Bast1 is shared (identical). Only Bast2–Bast5 differ.
   const getBastLevelFn = activeSection === 2 ? getBastLevelB : getBastLevel;
   const abortRef = useRef(false);
@@ -278,21 +280,28 @@ export default function Mizaan9Page() {
     setOption2State(null);
   }, []);
 
-  // Re-analyze when section changes (if text is already entered)
+  // Reset the (display-only) vefk summary data when method or section changes — no recalculation.
   useEffect(() => {
-    // Only re-run if we have a previous result (user already analyzed something)
-    if (!input.trim() || !result) return;
     setS1VefkData(null);
     setS2VefkData(null);
     setS3VefkData(null);
-    // Clear result FIRST to force full re-render with new section's data
-    setResult(null);
+  }, [activeMethod, activeSection]);
+
+  // The Nine Mizan (Mizan 1–9) is SHARED between Section 1 and Section 2 — switching between them
+  // must NOT touch `result`. Only re-analyze when crossing the Section 3 (Abjad) boundary.
+  const prevSectionRef = useRef(activeSection);
+  useEffect(() => {
+    const prevSection = prevSectionRef.current;
+    prevSectionRef.current = activeSection;
+    if (!input.trim() || !result) return;
+    const enteringAbjad = activeSection === 3 && prevSection !== 3;
+    const leavingAbjad  = activeSection !== 3 && prevSection === 3;
+    if (!enteringAbjad && !leavingAbjad) return;
     if (activeSection === 3) {
       const r = mizaanAnalyzeAbjad(input);
       setResult(r);
       setSelections(buildDefaultSelections(r.dominant));
     } else {
-      // Re-run async analysis for Section 1 or 2
       abortRef.current = false;
       setLoading(true);
       setProgress(0);
@@ -305,7 +314,7 @@ export default function Mizaan9Page() {
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSection, activeMethod]);
+  }, [activeSection]);
 
   const handleAnalyze = useCallback(async () => {
     if (!input.trim()) return;
@@ -452,7 +461,7 @@ export default function Mizaan9Page() {
         {/* 9 Mizaans */}
         <AnimatePresence mode="wait">
           {result && (
-            <motion.div key={`mizaan-9-method${activeMethod}-section${activeSection}`}
+            <motion.div key={`mizaan-9-flow`}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="space-y-2">
 
@@ -662,7 +671,7 @@ export default function Mizaan9Page() {
           {/* 9 Mizaans (same as Method 1) */}
           <AnimatePresence mode="wait">
             {result && (
-              <motion.div key={`mizaan-9-method2-section${activeSection}`}
+              <motion.div key={`mizaan-9-method2`}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="space-y-2">
 
@@ -891,7 +900,7 @@ export default function Mizaan9Page() {
           {/* 9 Mizaans (same as Method 1/2) */}
           <AnimatePresence mode="wait">
             {result && (
-              <motion.div key={`mizaan-9-method3-section${activeSection}`}
+              <motion.div key={`mizaan-9-method3`}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="space-y-2">
 
