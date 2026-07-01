@@ -17,8 +17,9 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES, ELEMENT_LETTERS } from "../../lib/mizaanPostEngine";
+import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES, ELEMENT_LETTERS, buildVefk } from "../../lib/mizaanPostEngine";
 import Method4FinalSummary from "./Method4FinalSummary";
+import Method4VefkCard from "./Method4VefkCard";
 
 const G = {
   gold:         "#F5D060",
@@ -280,6 +281,17 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
       avanAdad: avanNameGroups.reduce((s, g) => s + g.letters.reduce((s2, l) => s2 + (getBastLevelFn(l, 1) || 0), 0), 0),
       kasemNamesList: kasemNameGroups.map(g => g.name),
       kasemAdad: kasemNameGroups.reduce((s, g) => s + g.letters.reduce((s2, l) => s2 + (getBastLevelFn(l, 1) || 0), 0), 0),
+      // ── Wafq (Kalam) sources — same engine as Methods 1/2 ──
+      kitabetVefk: expandedTotal > 0 ? buildVefk(expandedTotal, dominant) : null,
+      kitabetVefkSource: expandedTotal,
+      avanVefk: expandedTotal2 > 0 ? buildVefk(expandedTotal2, dominant) : null,
+      avanVefkSource: expandedTotal2,
+      kasemVefkBastLevel: kasemIsFerd ? 5 : 4,
+      kasemVefkSource: kasemLetters.reduce((s, l) => s + (getBastLevelFn(l, kasemIsFerd ? 5 : 4) || 0), 0),
+      kasemVefk: (() => {
+        const src = kasemLetters.reduce((s, l) => s + (getBastLevelFn(l, kasemIsFerd ? 5 : 4) || 0), 0);
+        return src > 0 ? buildVefk(src, dominant) : null;
+      })(),
     };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
 
@@ -295,6 +307,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     derivations3, allExpandedLetters3, expandedTotal3, nextNumber3, nextLetters3,
     kasemLetters, kasemCount, kasemIsFerd, kasemGroupSize, kasemRemainder, kasemSupplementLetters, kasemNameGroups,
     kitabetNamesList, kitabetAdad, avanNamesList, avanAdad, kasemNamesList, kasemAdad,
+    kitabetVefk, kitabetVefkSource, avanVefk, avanVefkSource, kasemVefkBastLevel, kasemVefkSource, kasemVefk,
   } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
@@ -464,6 +477,9 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           </div>
         </Card>
 
+        {/* ESMA-I KITABET WAFQ (KALAM) — same buildVefk engine as Methods 1/2 */}
+        <Method4VefkCard step="7v" title="Esma-i Kitabet Wafq" sourceLabel="Vefk Source (Expanded Letters B1 Total)" sourceNumber={kitabetVefkSource} vefk={kitabetVefk} dominant={dominant} />
+
         {/* STEP 8: Carry-Forward Letters for Next Calculation (display-completion letters excluded) */}
         <Card accent={G.gold}>
           <SectionHeader step="8" label="Next Calculation Input" arabic="حروف الحساب التالي" color={G.gold} />
@@ -626,6 +642,9 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
             ))}
           </div>
         </Card>
+
+        {/* ESMA-I A'VAN WAFQ (KALAM) — same buildVefk engine as Methods 1/2 */}
+        <Method4VefkCard step="14v" title="Esma-i A'van Wafq" sourceLabel="Vefk Source (Expanded Letters B1 Total)" sourceNumber={avanVefkSource} vefk={avanVefk} dominant={dominant} />
 
         {/* STEP 15: Carry-Forward for Next Calculation */}
         <Card accent={G.gold}>
@@ -791,6 +810,9 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
             ))}
           </div>
         </Card>
+
+        {/* ESMA-I KASEM WAFQ (KALAM) — FERD→B5, ZEVC→B4 of the Kasem letters, same buildVefk engine */}
+        <Method4VefkCard step="21v" title="Esma-i Kasem Wafq" sourceLabel={`Vefk Source (B${kasemVefkBastLevel} Total)`} sourceNumber={kasemVefkSource} vefk={kasemVefk} dominant={dominant} />
 
         <OrnamentalDivider />
 
