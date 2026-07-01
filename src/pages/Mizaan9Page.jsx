@@ -1222,7 +1222,7 @@ export default function Mizaan9Page() {
                   if (!grandBast || grandBast <= 0) return null;
                   const nineMizanTotal = grandBast + grandLetters;
                   return (
-                    <Method4Step1Section nineMizanTotal={nineMizanTotal} getBastLevelFn={getBastLevelFn} />
+                    <Method4Step1Section nineMizanTotal={nineMizanTotal} dominant={result?.dominant} getBastLevelFn={getBastLevelFn} />
                   );
                 })()}
 

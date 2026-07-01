@@ -17,7 +17,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { istintak, getBastLevel as getBastLevelDefault } from "../../lib/mizaanPostEngine";
+import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 
 const G = {
   gold:         "#F5D060",
@@ -108,7 +108,7 @@ function OrnamentalDivider() {
   );
 }
 
-export default function Method4Step1Section({ nineMizanTotal, getBastLevelFn = getBastLevelDefault }) {
+export default function Method4Step1Section({ nineMizanTotal, dominant = "fire", getBastLevelFn = getBastLevelDefault }) {
   const pipeline = useMemo(() => {
     if (!nineMizanTotal || nineMizanTotal <= 0) return null;
 
@@ -140,12 +140,35 @@ export default function Method4Step1Section({ nineMizanTotal, getBastLevelFn = g
     // Step 5: Istintak of the Next Number
     const nextLetters = istintak(nextNumber);
 
-    return { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters };
-  }, [nineMizanTotal, getBastLevelFn]);
+    // Step 6 (Method 4 next stage): Name Grouping — FERD (odd) → groups of 5, ZEVC (even) → groups of 4.
+    // Remaining-letter completion reuses the EXACT same rule already used for Esma-i Kitabet
+    // in Method 1 (see SatrVahidGrouping.jsx completionRule="galib"): supplement with the
+    // Istintak letters of the Galib Anasir value, appended to the end.
+    const nextLettersCount = nextLetters.length;
+    const isNextFerd = nextLettersCount % 2 !== 0;
+    const groupSize = isNextFerd ? 5 : 4;
+    const remainder = nextLettersCount % groupSize;
+    let supplementLetters = [];
+    let finalSequence = [...nextLetters];
+    if (remainder > 0) {
+      const needed = groupSize - remainder;
+      const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
+      const galibIstintakLetters = istintak(galibValue);
+      supplementLetters = galibIstintakLetters.slice(0, needed);
+      finalSequence = [...nextLetters, ...supplementLetters];
+    }
+    const nameGroups = [];
+    for (let i = 0; i < finalSequence.length; i += groupSize) {
+      const g = finalSequence.slice(i, i + groupSize);
+      nameGroups.push({ letters: g, name: g.join("") });
+    }
+
+    return { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters, isNextFerd, groupSize, remainder, supplementLetters, nameGroups };
+  }, [nineMizanTotal, dominant, getBastLevelFn]);
 
   if (!pipeline) return null;
 
-  const { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters } = pipeline;
+  const { seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters, isNextFerd, groupSize, remainder, supplementLetters, nameGroups } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
   return (
@@ -276,6 +299,41 @@ export default function Method4Step1Section({ nineMizanTotal, getBastLevelFn = g
           <LetterRow letters={nextLetters} color={G.gold} size="xl" showIndex />
           <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
             Count: <span style={{ color: G.gold, fontWeight: "bold", fontSize: "1rem" }}>{nextLetters.length}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: isNextFerd ? G.red : G.green, fontWeight: "bold" }}>{isNextFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>Group Size: <span style={{ color: G.gold }}>{groupSize}</span></span>
+          </div>
+        </Card>
+
+        {/* STEP 7: Name Grouping (Galib Anasir completion rule — same as Esma-i Kitabet) */}
+        <Card accent={G.gold}>
+          <SectionHeader step="7" label="Name Grouping" arabic="تكوين الأسماء" color={G.gold} />
+          {remainder > 0 && (
+            <div className="mb-3 px-3 py-2 rounded-lg border text-[10px] font-inter" style={{ background: G.bgInner, borderColor: G.goldBorder + "55", color: G.dim }}>
+              Remainder: <span style={{ color: G.gold, fontWeight: "bold" }}>{remainder}</span> — completed with Galib Anasir Istintak letters:
+              <span className="ml-2" dir="rtl" style={{ color: G.gold }}>{supplementLetters.join("")}</span>
+            </div>
+          )}
+          <div className="space-y-3">
+            {nameGroups.map((group, gi) => (
+              <motion.div key={gi}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: gi * 0.06 }}
+                className="rounded-xl border p-3"
+                style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <LetterRow letters={group.letters} color={G.gold} size="lg" />
+                  <Arrow label="→" />
+                  <span className="font-amiri text-2xl font-bold px-5 py-3 rounded-xl border"
+                    style={{ color: G.gold, borderColor: G.goldBorder + "55", background: G.goldFaint, lineHeight: 1.7 }}
+                    dir="rtl">
+                    {group.name}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </Card>
 
