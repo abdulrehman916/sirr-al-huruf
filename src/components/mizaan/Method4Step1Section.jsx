@@ -21,6 +21,7 @@ import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES, ELE
 import Method4FinalSummary from "./Method4FinalSummary";
 import Method4VefkCard from "./Method4VefkCard";
 import Method4AlternativeReading from "./Method4AlternativeReading";
+import Method4NextOption from "./Method4NextOption";
 
 const G = {
   gold:         "#F5D060",
@@ -833,6 +834,11 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           seedLetters={seedLetters}
           totalSeed={totalSeed}
           seedAdad={seedAdad}
+        />
+
+        <Method4NextOption
+          nineMizanTotal={nineMizanTotal}
+          seedLetters={seedLetters}
         />
 
       </div>
