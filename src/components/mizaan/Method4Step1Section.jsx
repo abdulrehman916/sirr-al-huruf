@@ -17,7 +17,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES, ELEMENT_LETTERS } from "../../lib/mizaanPostEngine";
 
 const G = {
   gold:         "#F5D060",
@@ -164,14 +164,14 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     }
 
     // Step 8 (Method 4 next stage): Carry-Forward Letters for the NEXT calculation.
-    // Display-completion letters (the Galib Anasir slice used only to finish the Esma-i Kitabet
-    // names above) are NEVER carried forward. Only the ORIGINAL remaining letters (before that
-    // completion) continue — with the FULL Galib Anasir Istintak sequence appended to them.
+    // Display-completion letters (the Galib Anasir 3550/4015/3757/3342 Istintak slice used only
+    // to finish the Esma-i Kitabet names above) are NEVER carried forward.
+    // The next calculation uses ONLY the original remaining letters PLUS the ORIGINAL Anasir
+    // letter set of the dominant element from Mizan 2 (NOT the Istintak of 3550/4015/3757/3342).
     const fullGroupsCount = Math.floor(nextLettersCount / groupSize);
     const originalRemainingLetters = remainder > 0 ? nextLetters.slice(fullGroupsCount * groupSize) : [];
-    const galibValueForCarry = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
-    const galibFullIstintakLetters = istintak(galibValueForCarry);
-    const carryLetters = remainder > 0 ? [...originalRemainingLetters, ...galibFullIstintakLetters] : [...nextLetters];
+    const anasirOriginalLetters = ELEMENT_LETTERS[dominant] || ELEMENT_LETTERS.fire;
+    const carryLetters = remainder > 0 ? [...originalRemainingLetters, ...anasirOriginalLetters] : [...nextLetters];
     const carryCount = carryLetters.length;
     const carryIsFerd = carryCount % 2 !== 0;
     const carryBastLevel = carryIsFerd ? 5 : 4;
@@ -179,7 +179,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     return {
       seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
       isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
-      originalRemainingLetters, galibFullIstintakLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
+      originalRemainingLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
     };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
 
@@ -188,7 +188,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
   const {
     seedLetters, totalSeed, isSeedFerd, bastLevel, derivations, allExpandedLetters, expandedTotal, nextNumber, nextLetters,
     isNextFerd, groupSize, remainder, supplementLetters, nameGroups,
-    originalRemainingLetters, galibFullIstintakLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
+    originalRemainingLetters, anasirOriginalLetters, carryLetters, carryCount, carryIsFerd, carryBastLevel,
   } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
@@ -376,8 +376,8 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
             </div>
 
             <div>
-              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Galib Anasir — Full Istintak Sequence</div>
-              <LetterRow letters={galibFullIstintakLetters} color={G.green} size="sm" />
+              <div className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>Galib Anasir — Original Letters (Mizan 2)</div>
+              <LetterRow letters={anasirOriginalLetters} color={G.green} size="sm" />
             </div>
 
             <div className="flex justify-center">
