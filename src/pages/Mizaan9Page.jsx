@@ -285,6 +285,8 @@ export default function Mizaan9Page() {
     setS1VefkData(null);
     setS2VefkData(null);
     setS3VefkData(null);
+    // Clear result FIRST to force full re-render with new section's data
+    setResult(null);
     if (activeSection === 3) {
       const r = mizaanAnalyzeAbjad(input);
       setResult(r);
@@ -450,7 +452,7 @@ export default function Mizaan9Page() {
         {/* 9 Mizaans */}
         <AnimatePresence mode="wait">
           {result && (
-            <motion.div key={`mizaan-9-flow-s${activeSection}`}
+            <motion.div key={`mizaan-9-method${activeMethod}-section${activeSection}`}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="space-y-2">
 
@@ -660,7 +662,7 @@ export default function Mizaan9Page() {
           {/* 9 Mizaans (same as Method 1) */}
           <AnimatePresence mode="wait">
             {result && (
-              <motion.div key={`mizaan-9-method2-s${activeSection}`}
+              <motion.div key={`mizaan-9-method2-section${activeSection}`}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="space-y-2">
 
@@ -889,7 +891,7 @@ export default function Mizaan9Page() {
           {/* 9 Mizaans (same as Method 1/2) */}
           <AnimatePresence mode="wait">
             {result && (
-              <motion.div key={`mizaan-9-method3-s${activeSection}`}
+              <motion.div key={`mizaan-9-method3-section${activeSection}`}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="space-y-2">
 
