@@ -149,8 +149,8 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
   }, [grandBast, grandLetters, dominant]);
 
   // Derive names from the same group-formation logic as SatrVahidGrouping
-  const names = useMemo(() => {
-    if (!pipeline?.initialSeedLetters?.length) return [];
+  const { names, originalNames } = useMemo(() => {
+    if (!pipeline?.initialSeedLetters?.length) return { names: [], originalNames: [] };
     const seed = pipeline.initialSeedLetters;
     const isFerd = seed.length % 2 !== 0;
     const bastLevel = isFerd ? 5 : 4;
@@ -161,20 +161,27 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
     const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
     const rem = allExpanded.length % gSize;
     let seq = [...allExpanded];
+    // Group ORIGINAL letters first (before supplementation) — for calculation
+    const originalGroups = [];
+    for (let i = 0; i < allExpanded.length; i += gSize) {
+      originalGroups.push(allExpanded.slice(i, Math.min(i + gSize, allExpanded.length)).join(""));
+    }
+    // Then supplement for display
     if (rem > 0) {
       const supp = istintak(GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire).slice(0, gSize - rem);
       seq = [...seq, ...supp];
     }
+    // Group FINAL letters (after supplementation) — for display
     const groups = [];
     for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
-    return groups;
+    return { names: groups, originalNames: originalGroups };
   }, [pipeline, dominant]);
 
   useEffect(() => {
     if (onVefkReady && pipeline?.vefk) {
-      onVefkReady({ vefk: pipeline.vefk, source: pipeline.vefkSourceNumber, names });
+      onVefkReady({ vefk: pipeline.vefk, source: pipeline.vefkSourceNumber, names, originalNames });
     }
-  }, [pipeline, names, onVefkReady]);
+  }, [pipeline, names, originalNames, onVefkReady]);
 
   if (!pipeline) return null;
 

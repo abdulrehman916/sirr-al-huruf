@@ -101,8 +101,9 @@ function calcCustomBastForSection(text, activeSection) {
 }
 
 // ── Helper: derive Esma-i Kitabet names — SAME algorithm as MizaanPipelineFull ──
+// Returns both original names (for calculation) and supplemented names (for display)
 function deriveKitabetNames(initialSeedLetters, dominant, getBastLevelFn) {
-  if (!initialSeedLetters?.length) return [];
+  if (!initialSeedLetters?.length) return { names: [], originalNames: [] };
   const isFerd = initialSeedLetters.length % 2 !== 0;
   const bastLevel = isFerd ? 5 : 4;
   let allExpanded = [];
@@ -112,18 +113,26 @@ function deriveKitabetNames(initialSeedLetters, dominant, getBastLevelFn) {
   const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
   const rem = allExpanded.length % gSize;
   let seq = [...allExpanded];
+  // Group ORIGINAL letters first (before supplementation) — for calculation
+  const originalGroups = [];
+  for (let i = 0; i < allExpanded.length; i += gSize) {
+    originalGroups.push(allExpanded.slice(i, Math.min(i + gSize, allExpanded.length)).join(""));
+  }
+  // Then supplement for display
   if (rem > 0) {
     const supp = istintak(GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire).slice(0, gSize - rem);
     seq = [...seq, ...supp];
   }
+  // Group FINAL letters (after supplementation) — for display
   const groups = [];
   for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
-  return groups;
+  return { names: groups, originalNames: originalGroups };
 }
 
 // ── Helper: derive Esma-i A'van names — SAME algorithm as EsmaAvanSection (self-supplement remainder rule) ──
+// Returns both original names (for calculation) and supplemented names (for display)
 function deriveAvanNames(initialSeedLetters, getBastLevelFn) {
-  if (!initialSeedLetters?.length) return [];
+  if (!initialSeedLetters?.length) return { names: [], originalNames: [] };
   const seed = initialSeedLetters;
   const isFerd = seed.length % 2 !== 0;
   const bastLevel = isFerd ? 5 : 4;
@@ -134,14 +143,21 @@ function deriveAvanNames(initialSeedLetters, getBastLevelFn) {
   const gSize = allExpanded.length % 2 !== 0 ? 5 : 4;
   const rem = allExpanded.length % gSize;
   let seq = [...allExpanded];
+  // Group ORIGINAL letters first (before supplementation) — for calculation
+  const originalGroups = [];
+  for (let i = 0; i < allExpanded.length; i += gSize) {
+    originalGroups.push(allExpanded.slice(i, Math.min(i + gSize, allExpanded.length)).join(""));
+  }
+  // Then supplement for display
   if (rem > 0) {
     const needed = gSize - rem;
     const supplement = allExpanded.slice(0, needed);
     seq = [...seq, ...supplement];
   }
+  // Group FINAL letters (after supplementation) — for display
   const groups = [];
   for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
-  return groups;
+  return { names: groups, originalNames: originalGroups };
 }
 
 // ── Helper: re-derive grand totals using same logic as MizaanFinalSummary ──
@@ -931,9 +947,10 @@ export default function Mizaan9Page() {
                   const s1Source = section1?.vefkSourceNumber || null;
 
                   // Last (remainder-completed) Esma-i Kitabet name — same algorithm as MizaanPipelineFull
-                  const kitabetNames    = deriveKitabetNames(section1?.initialSeedLetters, dominant, getBastLevelFn);
-                  const lastKitabetName = kitabetNames.length ? kitabetNames[kitabetNames.length - 1] : "";
-                  const lastNameBast    = [...lastKitabetName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+                  const { names: kitabetNames, originalNames: kitabetOriginalNames } = deriveKitabetNames(section1?.initialSeedLetters, dominant, getBastLevelFn);
+                  // METHOD 3 RULE: Use ORIGINAL name (before supplementation) for calculation
+                  const lastOriginalKitabetName = kitabetOriginalNames.length ? kitabetOriginalNames[kitabetOriginalNames.length - 1] : "";
+                  const lastNameBast    = [...lastOriginalKitabetName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
                   const galibAnasirBast = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
                   const nineMizanTotal  = grandBast + grandLetters;
                   // SECTION 1 — Esma-i Kitabet formula box Result
@@ -948,9 +965,10 @@ export default function Mizaan9Page() {
                   const avanExpandedLetters = avanPipeline?.allExpandedLetters || [];
 
                   // SECTION 3 — Esma-i Kasem input: Last A'van Name First Bast + Galib Anasir First Bast + A'van Input Total
-                  const avanNames        = deriveAvanNames(avanPipeline?.initialSeedLetters, getBastLevelFn);
-                  const lastAvanName     = avanNames.length ? avanNames[avanNames.length - 1] : "";
-                  const lastAvanNameBast = [...lastAvanName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+                  const { names: avanNames, originalNames: avanOriginalNames } = deriveAvanNames(avanPipeline?.initialSeedLetters, getBastLevelFn);
+                  // METHOD 3 RULE: Use ORIGINAL name (before supplementation) for calculation
+                  const lastOriginalAvanName = avanOriginalNames.length ? avanOriginalNames[avanOriginalNames.length - 1] : "";
+                  const lastAvanNameBast = [...lastOriginalAvanName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
                   const kasemInputTotal  = lastAvanNameBast + galibAnasirBast + avanInputTotal;
 
                   return (
@@ -961,6 +979,7 @@ export default function Mizaan9Page() {
                       {/* ═══ METHOD 3 FORMULA: Esma-i A'van starting value replaced ═══ */}
                       <Method3AvanSection
                         kitabetNames={kitabetNames}
+                        kitabetOriginalNames={kitabetOriginalNames}
                         dominant={dominant}
                         nineMizanTotal={nineMizanTotal}
                         onVefkReady={setS2VefkData}
@@ -972,7 +991,7 @@ export default function Mizaan9Page() {
                         <EsmaKasemSection
                           section2ExpandedLetters={[]}
                           sourceOverride={kasemInputTotal}
-                          sourceBreakdown={{ lastName: lastAvanName, lastNameBast: lastAvanNameBast, galibAnasirBast, previousAvanInputTotal: avanInputTotal }}
+                          sourceBreakdown={{ lastName: lastOriginalAvanName, lastNameBast: lastAvanNameBast, galibAnasirBast, previousAvanInputTotal: avanInputTotal }}
                           dominant={dominant}
                           onVefkReady={setS3VefkData}
                           getBastLevelFn={getBastLevelFn}

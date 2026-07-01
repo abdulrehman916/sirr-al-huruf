@@ -13,9 +13,10 @@ import { GALIB_ANASIR_VALUES, getBastLevel as getBastLevelA } from "../../lib/mi
 // Everything downstream (Istintak, odd/even, 4th/5th Bast, expansion,
 // grouping) reuses the EXACT SAME EsmaAvanSection engine — unchanged.
 // ═══════════════════════════════════════════════════════════════
-export default function Method3AvanSection({ kitabetNames, dominant, nineMizanTotal, onVefkReady, getBastLevelFn = getBastLevelA }) {
+export default function Method3AvanSection({ kitabetNames, kitabetOriginalNames, dominant, nineMizanTotal, onVefkReady, getBastLevelFn = getBastLevelA }) {
   const { sourceTotal, breakdown } = useMemo(() => {
-    const lastName = Array.isArray(kitabetNames) && kitabetNames.length ? kitabetNames[kitabetNames.length - 1] : "";
+    // METHOD 3 RULE: Use ORIGINAL name (before supplementation) for calculation
+    const lastName = Array.isArray(kitabetOriginalNames) && kitabetOriginalNames.length ? kitabetOriginalNames[kitabetOriginalNames.length - 1] : "";
     const lastNameBast = [...lastName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
     const galibAnasirBast = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
     const total = lastNameBast + galibAnasirBast + (nineMizanTotal || 0);
@@ -23,7 +24,7 @@ export default function Method3AvanSection({ kitabetNames, dominant, nineMizanTo
       sourceTotal: total,
       breakdown: { lastName, lastNameBast, galibAnasirBast, nineMizanTotal: nineMizanTotal || 0 },
     };
-  }, [kitabetNames, dominant, nineMizanTotal, getBastLevelFn]);
+  }, [kitabetOriginalNames, dominant, nineMizanTotal, getBastLevelFn]);
 
   if (!sourceTotal || sourceTotal <= 0) return null;
 
