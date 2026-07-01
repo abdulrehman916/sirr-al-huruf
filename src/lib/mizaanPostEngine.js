@@ -568,14 +568,14 @@ export function generateEsmaLevel(inputLetters, alwaysFifth = false, supplementE
  * 
  * This is the TRUE source for Vefk calculation per manuscript rules.
  */
-export function expandAllSeedLetters(seedLetters, bastLevel) {
+export function expandAllSeedLetters(seedLetters, bastLevel, getBastLevelFn = getBastLevel) {
   const safeSeed = Array.isArray(seedLetters) ? seedLetters : [];
   const allExpanded = [];
   
   // CRITICAL: Process in REVERSE order - last seed → first seed
   for (let i = safeSeed.length - 1; i >= 0; i--) {
     const letter = safeSeed[i];
-    const bastValue = getBastLevel(letter, bastLevel);
+    const bastValue = getBastLevelFn(letter, bastLevel);
     const expanded = istintak(bastValue);
     allExpanded.push(...expanded);
   }
@@ -628,7 +628,7 @@ _runVefkSelfTest();
  *
  * Returns the complete pipeline result.
  */
-export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
+export function runMizaanPostPipeline({ grandBast, grandLetters, dominant, getBastLevelFn = getBastLevel }) {
   if (!grandBast || grandBast <= 0) return null;
 
   const element = resolveGalipAnasir(dominant);
@@ -650,7 +650,7 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // CRITICAL: expandAllSeedLetters preserves EXACT seed letter order - NO reversal
   // This gives us the TRUE "ALL EXPANDED LETTERS" set shown in Step 3
   const bastLevel = initialSeedLetters.length % 2 !== 0 ? 5 : 4;
-  const allExpandedLetters = expandAllSeedLetters(initialSeedLetters, bastLevel);
+  const allExpandedLetters = expandAllSeedLetters(initialSeedLetters, bastLevel, getBastLevelFn);
 
   // Generate Esma-i Kitabet using simplified manuscript workflow
   const kitabet = generateEsmaLevel(initialSeedLetters, false, element);
@@ -664,7 +664,7 @@ export function runMizaanPostPipeline({ grandBast, grandLetters, dominant }) {
   // MIZAN OPTION 1 RULE: Vefk Source Number = Sum of ALL Expanded Letters' First Bast values
   // This is the TRUE sacred source per manuscript workflow:
   // Original Seed Letters → Bast Derivations → All Expanded Letters → Sum their Bast values → Vefk
-  const expandedLettersTotal = allExpandedLetters.reduce((sum, letter) => sum + (getBastLevel(letter, 1) || 0), 0);
+  const expandedLettersTotal = allExpandedLetters.reduce((sum, letter) => sum + (getBastLevelFn(letter, 1) || 0), 0);
   const vefkSourceNumber = expandedLettersTotal;
   const vefk = buildVefk(vefkSourceNumber, element);
 

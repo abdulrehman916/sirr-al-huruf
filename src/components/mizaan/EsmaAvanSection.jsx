@@ -368,7 +368,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
     }
     if (grandBast <= 0) return null;
     // Re-use EXACTLY the same engine as Section 1 — only the input numbers differ
-    const result = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+    const result = runMizaanPostPipeline({ grandBast, grandLetters, dominant, getBastLevelFn });
     if (!result) return null;
     return {
       ...result,

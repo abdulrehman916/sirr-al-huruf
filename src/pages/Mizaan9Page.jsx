@@ -532,7 +532,7 @@ export default function Mizaan9Page() {
                 if (!grandBast || grandBast <= 0) return null;
 
                 // Section 1 pipeline result — read-only source for Section 2
-                const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+                const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant, getBastLevelFn });
 
                 // Section 1 vefk (directly available from pipeline)
                 const s1Vefk   = section1?.vefk || null;
@@ -740,14 +740,14 @@ export default function Mizaan9Page() {
                   if (!grandBast || grandBast <= 0) return null;
 
                   // Identical pipeline call as Method 1 Section 1
-                  const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+                  const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant, getBastLevelFn });
 
                   // Identical derivation as Method 1 Section 2 → Section 3 input
                   const section2ExpandedLetters = (() => {
                     if (!section1?.allExpandedLetters?.length) return [];
                     const s2GrandBast    = section1.allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
                     const s2GrandLetters = section1.allExpandedLetters.length;
-                    const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant });
+                    const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant, getBastLevelFn });
                     return s2Pipeline?.allExpandedLetters || [];
                   })();
 
@@ -969,7 +969,7 @@ export default function Mizaan9Page() {
                   if (!grandBast || grandBast <= 0) return null;
 
                   // Identical pipeline call as Method 1/2 Section 1 — Esma-i Kitabet
-                  const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant });
+                  const section1 = runMizaanPostPipeline({ grandBast, grandLetters, dominant, getBastLevelFn });
                   const s1Vefk   = section1?.vefk || null;
                   const s1Source = section1?.vefkSourceNumber || null;
 
@@ -987,7 +987,7 @@ export default function Mizaan9Page() {
 
                   // Method 3 A'van pipeline — same engine as Method 2, seeded by the A'van Input Total
                   const avanPipeline = avanInputTotal > 0
-                    ? runMizaanPostPipeline({ grandBast: avanInputTotal, grandLetters: 0, dominant })
+                    ? runMizaanPostPipeline({ grandBast: avanInputTotal, grandLetters: 0, dominant, getBastLevelFn })
                     : null;
                   const avanExpandedLetters = avanPipeline?.allExpandedLetters || [];
 

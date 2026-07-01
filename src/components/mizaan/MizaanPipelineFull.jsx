@@ -145,8 +145,8 @@ function SourceSection({ grandBast, expandedLettersTotal, elementColor }) {
 export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, onVefkReady, getBastLevelFn = getBastLevelA }) {
   const pipeline = useMemo(() => {
     if (!grandBast || grandBast <= 0) return null;
-    return runMizaanPostPipeline({ grandBast, grandLetters, dominant });
-  }, [grandBast, grandLetters, dominant]);
+    return runMizaanPostPipeline({ grandBast, grandLetters, dominant, getBastLevelFn });
+  }, [grandBast, grandLetters, dominant, getBastLevelFn]);
 
   // Derive names from the same group-formation logic as SatrVahidGrouping
   const { names, originalNames } = useMemo(() => {
