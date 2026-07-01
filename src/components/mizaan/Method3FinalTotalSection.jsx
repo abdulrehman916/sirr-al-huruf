@@ -2,8 +2,7 @@
 // METHOD 3 — SECTION 4: FINAL TOTAL DERIVATION
 // ─────────────────────────────────────────────────────────────
 // Pure summary box — same Formula Box design as Sections 1–3.
-// Final Total = Nine Mizan Total + Esma-i Kitabet Total + Esma-i A'van Total
-// (Esma-i Kasem Total is intentionally excluded.)
+// Final Total = Nine Mizan Total + Esma-i Kitabet Total + Esma-i Kasem Total
 // ═══════════════════════════════════════════════════════════════
 
 import { motion } from "framer-motion";
@@ -30,11 +29,11 @@ function OrnamentalDivider() {
   );
 }
 
-export default function Method3FinalTotalSection({ nineMizanTotal, kitabetInputTotal, avanInputTotal, elementColor = G.gold }) {
+export default function Method3FinalTotalSection({ nineMizanTotal, kitabetInputTotal, kasemInputTotal, elementColor = G.gold }) {
   const safeNineMizan = nineMizanTotal || 0;
   const safeKitabet   = kitabetInputTotal || 0;
-  const safeAvan      = avanInputTotal || 0;
-  const finalTotal    = safeNineMizan + safeKitabet + safeAvan;
+  const safeKasem     = kasemInputTotal || 0;
+  const finalTotal    = safeNineMizan + safeKitabet + safeKasem;
 
   if (!finalTotal) return null;
 
@@ -96,8 +95,8 @@ export default function Method3FinalTotalSection({ nineMizanTotal, kitabetInputT
                 <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{safeKitabet.toLocaleString()}</div>
               </div>
               <div className="space-y-1">
-                <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Esma-i A'van Total</div>
-                <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{safeAvan.toLocaleString()}</div>
+                <div className="font-inter text-[7px] uppercase tracking-wider" style={{ color: G.dim }}>Esma-i Kasem Total</div>
+                <div className="font-inter text-sm font-bold tabular-nums" style={{ color: G.gold }}>{safeKasem.toLocaleString()}</div>
               </div>
             </div>
             <div className="text-center pt-1 border-t" style={{ borderColor: G.goldBorder + "30" }}>

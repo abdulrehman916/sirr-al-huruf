@@ -979,7 +979,7 @@ export default function Mizaan9Page() {
                       <Method3FinalTotalSection
                         nineMizanTotal={nineMizanTotal}
                         kitabetInputTotal={kitabetInputTotal}
-                        avanInputTotal={avanInputTotal}
+                        kasemInputTotal={kasemInputTotal}
                       />
 
                       <MizaanDivider />
