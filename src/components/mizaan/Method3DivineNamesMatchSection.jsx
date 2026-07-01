@@ -258,22 +258,20 @@ export default function Method3DivineNamesMatchSection({ abjadTotal, elementColo
                     </div>
                   )}
 
-                  {/* Practical recitation instruction — only for the final selected names */}
+                  {/* Practical recitation instruction — uses the COMBINED TOTAL Abjad value of all final Ism in this combination, not each Ism individually */}
                   <div className="mt-3 pt-3 border-t" style={{ borderColor: G.goldBorder + "30" }}>
                     <div className="font-inter text-[8px] uppercase tracking-widest mb-2 text-center" style={{ color: G.dim }}>
-                      Recitation — Daily Count per Name
+                      Recitation — Combined Daily Count (All Names Together)
                     </div>
-                    <div className="space-y-1">
-                      {combo.map((m, i) => (
-                        <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-lg border"
-                          style={{ background: G.bgInner, borderColor: G.goldBorder + "30" }}>
-                          <span className="font-inter text-[10px]" style={{ color: G.goldDim }}>{m.translit}</span>
-                          <span className="font-inter text-[10px] font-bold tabular-nums" style={{ color: G.gold }}>{m.adad.toLocaleString()} തവണ / ദിവസം</span>
-                        </div>
-                      ))}
+                    <div className="flex items-center justify-between px-3 py-1.5 rounded-lg border"
+                      style={{ background: G.bgInner, borderColor: G.goldBorder + "30" }}>
+                      <span className="font-inter text-[10px]" style={{ color: G.goldDim }}>
+                        {combo.map(m => m.translit).join(" + ")}
+                      </span>
+                      <span className="font-inter text-[10px] font-bold tabular-nums" style={{ color: G.gold }}>{finalSum.toLocaleString()} തവണ / ദിവസം</span>
                     </div>
                     <p className="font-malayalam text-[11px] text-center mt-2" style={{ color: "rgba(255,255,255,0.55)" }}>
-                      ഈ എണ്ണം അതേപടി 7 ദിവസം തുടർച്ചയായി ആവർത്തിക്കുക. ആവശ്യമെങ്കിൽ ദിവസങ്ങളുടെ എണ്ണം മാത്രം വർദ്ധിപ്പിക്കാം — ഓരോ നാമത്തിന്റെയും എബ്ജദ് എണ്ണം മാറ്റരുത്.
+                      ഈ നാമങ്ങൾ എല്ലാം ചേർത്ത് സംയോജിത എണ്ണം ({finalSum.toLocaleString()}) അതേപടി 7 ദിവസം തുടർച്ചയായി ആവർത്തിക്കുക. ആവശ്യമെങ്കിൽ ദിവസങ്ങളുടെ എണ്ണം മാത്രം വർദ്ധിപ്പിക്കാം — സംയോജിത എബ്ജദ് എണ്ണം മാറ്റരുത്.
                     </p>
                   </div>
                 </div>
