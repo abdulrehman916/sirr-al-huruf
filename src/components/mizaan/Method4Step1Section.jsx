@@ -18,6 +18,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES, ELEMENT_LETTERS } from "../../lib/mizaanPostEngine";
+import Method4FinalSummary from "./Method4FinalSummary";
 
 const G = {
   gold:         "#F5D060",
@@ -273,6 +274,12 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
       avanLeftoverLetters, avanLastCompleteName, avanCarryBase, avanCarryLetters, avanCarryCount, avanCarryIsFerd, avanCarryBastLevel,
       derivations3, allExpandedLetters3, expandedTotal3, nextNumber3, nextLetters3,
       kasemLetters, kasemCount, kasemIsFerd, kasemGroupSize, kasemRemainder, kasemSupplementLetters, kasemNameGroups,
+      kitabetNamesList: nameGroups.map(g => g.name),
+      kitabetAdad: nameGroups.reduce((s, g) => s + g.letters.reduce((s2, l) => s2 + (getBastLevelFn(l, 1) || 0), 0), 0),
+      avanNamesList: avanNameGroups.map(g => g.name),
+      avanAdad: avanNameGroups.reduce((s, g) => s + g.letters.reduce((s2, l) => s2 + (getBastLevelFn(l, 1) || 0), 0), 0),
+      kasemNamesList: kasemNameGroups.map(g => g.name),
+      kasemAdad: kasemNameGroups.reduce((s, g) => s + g.letters.reduce((s2, l) => s2 + (getBastLevelFn(l, 1) || 0), 0), 0),
     };
   }, [nineMizanTotal, dominant, getBastLevelFn]);
 
@@ -287,6 +294,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
     avanLeftoverLetters, avanLastCompleteName, avanCarryBase, avanCarryLetters, avanCarryCount, avanCarryIsFerd, avanCarryBastLevel,
     derivations3, allExpandedLetters3, expandedTotal3, nextNumber3, nextLetters3,
     kasemLetters, kasemCount, kasemIsFerd, kasemGroupSize, kasemRemainder, kasemSupplementLetters, kasemNameGroups,
+    kitabetNamesList, kitabetAdad, avanNamesList, avanAdad, kasemNamesList, kasemAdad,
   } = pipeline;
   const bastLabelAr = bastLevel === 5 ? "البسط الخامس" : "البسط الرابع";
 
@@ -783,6 +791,17 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
             ))}
           </div>
         </Card>
+
+        <OrnamentalDivider />
+
+        <Method4FinalSummary
+          kitabetNames={kitabetNamesList}
+          kitabetAdad={kitabetAdad}
+          avanNames={avanNamesList}
+          avanAdad={avanAdad}
+          kasemNames={kasemNamesList}
+          kasemAdad={kasemAdad}
+        />
 
       </div>
 
