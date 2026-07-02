@@ -31,6 +31,7 @@ import Method3ConclusionAccordion from "../components/mizaan/Method3ConclusionAc
 import { getDataSet } from "../lib/mizaanDataSets";
 import { runMizaanPostPipeline, getBastLevel, istintak, GALIB_ANASIR_VALUES } from "../lib/mizaanPostEngine";
 import Method3AvanSection from "../components/mizaan/Method3AvanSection";
+import Method3KitabetSummary from "../components/mizaan/Method3KitabetSummary";
 import Method3FinalTotalSection from "../components/mizaan/Method3FinalTotalSection";
 import Method3AbjadVerificationSection from "../components/mizaan/Method3AbjadVerificationSection";
 import Method3DivineNamesMatchSection from "../components/mizaan/Method3DivineNamesMatchSection";
@@ -1012,6 +1013,16 @@ export default function Mizaan9Page() {
                     <>
                       {/* ═══ SAME AS METHOD 1/2: Esma-i Kitabet — identical pipeline, no extra formula box ═══ */}
                       <MizaanPipelineFull grandBast={grandBast} grandLetters={grandLetters} dominant={dominant} onVefkReady={setS1VefkData} getBastLevelFn={getBastLevelFn} />
+
+                      {/* ═══ METHOD 3 — Esma-i Kitabet completed output (display only, feeds A'van below) ═══ */}
+                      <Method3KitabetSummary
+                        kitabetName={lastOriginalKitabetName}
+                        lastNameBast={lastNameBast}
+                        galibAnasirBast={galibAnasirBast}
+                        nineMizanTotal={nineMizanTotal}
+                        resultTotal={kitabetInputTotal}
+                        elementColor={{ fire: "#FF6B35", earth: "#A5C880", air: "#B2EBF2", water: "#4FC3F7" }[dominant] || "#FF6B35"}
+                      />
 
                       {/* ═══ METHOD 3 FORMULA: Esma-i A'van starting value replaced ═══ */}
                       <Method3AvanSection
