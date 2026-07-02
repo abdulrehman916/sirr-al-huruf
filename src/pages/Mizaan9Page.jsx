@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
@@ -288,7 +288,13 @@ export default function Mizaan9Page() {
   }, []);
 
   // Reset the (display-only) vefk summary data when method or section changes — no recalculation.
-  useEffect(() => {
+  // CRITICAL: useLayoutEffect (not useEffect) so this reset fires BEFORE the
+  // child pipeline components' onVefkReady useEffect hooks. With useEffect the
+  // parent reset runs last and nullifies s2/s3 data permanently (children's
+  // memo deps don't change afterward, so their callbacks never re-fire).
+  // useLayoutEffect runs first → reset clears → then children's useEffect
+  // callbacks re-populate s1/s2/s3 with fresh data.
+  useLayoutEffect(() => {
     setS1VefkData(null);
     setS2VefkData(null);
     setS3VefkData(null);
