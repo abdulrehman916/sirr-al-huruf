@@ -409,7 +409,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
   const safe2 = Array.isArray(section2ExpandedLetters) ? section2ExpandedLetters : [];
 
   // ── STEP 0: Derive Section 3 source from Section 2 expanded letters ──
-  const kasemBastTotal   = useMemo(() => safe2.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0), [safe2, getBastLevelFn]);
+  const kasemBastTotal   = useMemo(() => (Array.isArray(safe2) ? safe2 : []).reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0), [safe2, getBastLevelFn]);
   const kasemLetterCount = safe2.length;
   const kasemSourceTotal = (sourceOverride != null && sourceOverride > 0) ? sourceOverride : (kasemBastTotal + kasemLetterCount);
 
@@ -475,7 +475,7 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
   // RULE: FERD (odd) final Kasem letter count → 5th Bast; ZEVC (even) → 4th Bast
   const vefkBastLevel = groupFormation.isFerd ? 5 : 4;
   const s3VefkSourceNumber = useMemo(
-    () => allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, vefkBastLevel) || 0), 0),
+    () => (Array.isArray(allExpandedLetters) ? allExpandedLetters : []).reduce((s, l) => s + (getBastLevelFn(l, vefkBastLevel) || 0), 0),
     [allExpandedLetters, getBastLevelFn, vefkBastLevel]
   );
 

@@ -425,7 +425,7 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
 
   const element     = dominant || "fire";
   const elementMeta = ELEMENT_META[element] || ELEMENT_META.fire;
-  const vefkSource  = avanExpanded.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+  const vefkSource  = (Array.isArray(avanExpanded) ? avanExpanded : []).reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
 
   return (
     <motion.div

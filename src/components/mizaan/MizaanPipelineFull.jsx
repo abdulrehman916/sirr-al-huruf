@@ -355,7 +355,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
               <ExpandedLetterValues allExpandedLetters={allExpandedLetters} elementColor={elementMeta.color} getBastLevelFn={getBastLevelFn} />
               
               {/* Source Explanation */}
-              <SourceSection grandBast={grandBast} expandedLettersTotal={allExpandedLetters.reduce((sum, letter) => sum + (getBastLevelFn(letter, 1) || 0), 0)} elementColor={elementMeta.color} />
+              <SourceSection grandBast={grandBast} expandedLettersTotal={(Array.isArray(allExpandedLetters) ? allExpandedLetters : []).reduce((sum, letter) => sum + (getBastLevelFn(letter, 1) || 0), 0)} elementColor={elementMeta.color} />
             </div>
           </Card>
         )}
