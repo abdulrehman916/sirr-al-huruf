@@ -169,6 +169,10 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
       nameGroups.push({ letters: g, name: g.join("") });
     }
 
+    // Kitabet Wafq source: Bast-1 sum of the ORIGINAL Esma-i Kitabet letters (nextLetters), never the
+    // internal pipeline expansion letters (allExpandedLetters) and never supplement letters.
+    const kitabetVefkSourceTotal = nextLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+
     // Step 8 (Method 4 next stage): Carry-Forward Letters for the NEXT calculation.
     // ONE continuous sequence, in this order:
     //   1. The complete Esma-i Kitabet name letters (nextLetters) — or, if there was a
@@ -290,8 +294,10 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
       kasemNamesList: kasemNameGroups.map(g => g.name),
       kasemAdad: kasemNameGroups.reduce((s, g) => s + g.letters.reduce((s2, l) => s2 + (getBastLevelFn(l, 1) || 0), 0), 0),
       // ── Wafq (Kalam) sources — same engine as Methods 1/2 ──
-      kitabetVefk: expandedTotal > 0 ? buildVefk(expandedTotal, dominant) : null,
-      kitabetVefkSource: expandedTotal,
+      // Kitabet Wafq: built ONLY from the original Esma-i Kitabet letters (nextLetters),
+      // before any supplement/completion letters) — NOT the internal pipeline expansion letters.
+      kitabetVefk: kitabetVefkSourceTotal > 0 ? buildVefk(kitabetVefkSourceTotal, dominant) : null,
+      kitabetVefkSource: kitabetVefkSourceTotal,
       // A'van Wafq: built ONLY from the original Esma-i A'van letters (avanLetters = nextLetters2,
       // before any supplement/completion letters) — NOT the internal pipeline expansion letters.
       avanVefk: avanVefkSourceTotal > 0 ? buildVefk(avanVefkSourceTotal, dominant) : null,
@@ -490,7 +496,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         </Card>
 
         {/* ESMA-I KITABET WAFQ (KALAM) — same buildVefk engine as Methods 1/2 */}
-        <Method4VefkCard step="7v" title="Esma-i Kitabet Wafq" sourceLabel="Vefk Source (Expanded Letters B1 Total)" sourceNumber={kitabetVefkSource} vefk={kitabetVefk} dominant={dominant} sourceLetters={allExpandedLetters} bastLevel={1} />
+        <Method4VefkCard step="7v" title="Esma-i Kitabet Wafq" sourceLabel="Vefk Source (Original Kitabet Letters B1 Total)" sourceNumber={kitabetVefkSource} vefk={kitabetVefk} dominant={dominant} sourceLetters={nextLetters} bastLevel={1} />
 
         {/* STEP 8: Carry-Forward Letters for Next Calculation (display-completion letters excluded) */}
         <Card accent={G.gold}>
@@ -850,7 +856,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           kitabetVefk={kitabetVefk}
           kitabetVefkSource={kitabetVefkSource}
           kitabetNames={kitabetNamesList}
-          kitabetLetters={allExpandedLetters}
+          kitabetLetters={nextLetters}
           avanVefk={avanVefk}
           avanVefkSource={avanVefkSource}
           avanNames={avanNamesList}
