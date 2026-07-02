@@ -340,7 +340,7 @@ export default function HadimPage() {
                     <span className="font-inter text-[10px] font-bold" style={{ color: "rgba(168,85,247,0.70)" }}>{item.abjad}</span>
                   </div>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    {['ulvi', 'sufli', 'sherli'].map(key => (
+                    {[hadimMode.toLowerCase()].map(key => (
                       <HadimTypePanel key={key} typeData={item.types[key]} />
                     ))}
                   </div>
@@ -356,7 +356,7 @@ export default function HadimPage() {
                   <span className="font-inter text-[10px] font-bold" style={{ color: "#D8B4FE" }}>{result.grandSum}</span>
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {['ulvi', 'sufli', 'sherli'].map(key => (
+                  {[hadimMode.toLowerCase()].map(key => (
                     <HadimTypePanel key={key} typeData={result.grandTypes[key]} isGrand />
                   ))}
                 </div>

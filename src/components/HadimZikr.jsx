@@ -44,7 +44,7 @@ export default function HadimZikr({ hadimMode, individuals, grandTypes }) {
             {item.label}
           </p>
           <div className="grid grid-cols-3 gap-1.5">
-            {TYPE_KEYS.map(key => {
+            {[hadimMode.toLowerCase()].map(key => {
               const a = ACCENTS[key.toUpperCase()] || ACCENTS.ULVI;
               return (
                 <div key={key} className="rounded-lg p-2 text-center"
@@ -66,7 +66,7 @@ export default function HadimZikr({ hadimMode, individuals, grandTypes }) {
           Grand Zikr
         </p>
         <div className="grid grid-cols-3 gap-1.5">
-          {TYPE_KEYS.map(key => {
+          {[hadimMode.toLowerCase()].map(key => {
             const a = ACCENTS[key.toUpperCase()] || ACCENTS.ULVI;
             return (
               <div key={key} className="rounded-lg p-2.5 text-center"
