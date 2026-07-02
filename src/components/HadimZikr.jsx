@@ -43,7 +43,7 @@ export default function HadimZikr({ hadimMode, individuals, grandTypes }) {
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: accent.dim }}>
             {item.label}
           </p>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-1 gap-1.5">
             {[hadimMode.toLowerCase()].map(key => {
               const a = ACCENTS[key.toUpperCase()] || ACCENTS.ULVI;
               return (
@@ -65,7 +65,7 @@ export default function HadimZikr({ hadimMode, individuals, grandTypes }) {
         <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: accent.dim }}>
           Grand Zikr
         </p>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-1 gap-1.5">
           {[hadimMode.toLowerCase()].map(key => {
             const a = ACCENTS[key.toUpperCase()] || ACCENTS.ULVI;
             return (

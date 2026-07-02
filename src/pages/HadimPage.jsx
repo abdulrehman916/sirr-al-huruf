@@ -339,7 +339,7 @@ export default function HadimPage() {
                     <div className="h-px flex-1" style={{ background: "rgba(168,85,247,0.15)" }} />
                     <span className="font-inter text-[10px] font-bold" style={{ color: "rgba(168,85,247,0.70)" }}>{item.abjad}</span>
                   </div>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-2">
                     {[hadimMode.toLowerCase()].map(key => (
                       <HadimTypePanel key={key} typeData={item.types[key]} />
                     ))}
@@ -355,7 +355,7 @@ export default function HadimPage() {
                   <div className="h-px flex-1" style={{ background: "rgba(168,85,247,0.20)" }} />
                   <span className="font-inter text-[10px] font-bold" style={{ color: "#D8B4FE" }}>{result.grandSum}</span>
                 </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2">
                   {[hadimMode.toLowerCase()].map(key => (
                     <HadimTypePanel key={key} typeData={result.grandTypes[key]} isGrand />
                   ))}
