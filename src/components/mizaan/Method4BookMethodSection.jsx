@@ -116,6 +116,7 @@ function groupLetters(letters, completionSource) {
 }
 
 export default function Method4BookMethodSection({ nextNumber, dominant = "fire", onDerived }) {
+  // Hooks must be called unconditionally at the top level — before any early return.
   const pipeline = useMemo(() => {
     if (!nextNumber || nextNumber <= 0) return null;
 
