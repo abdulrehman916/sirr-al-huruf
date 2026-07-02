@@ -170,9 +170,12 @@ function mResolveTie(tiedKeys, letterDetails) {
 }
 
 // ── Result builder (shared by sync + async paths) ──
-function mBuildResult(text, letters, counts) {
+// bast1TotalAccum is an optional pre-accumulated sum — when provided (by the
+// scan loops below), it avoids a second O(n) pass over the letters array,
+// enabling efficient handling of very large Arabic inputs (full Surahs).
+function mBuildResult(text, letters, counts, bast1TotalAccum) {
   const letterCount  = letters.length;
-  const bast1Total   = letters.reduce((s, l) => s + l.bast1, 0);
+  const bast1Total   = (typeof bast1TotalAccum === 'number') ? bast1TotalAccum : letters.reduce((s, l) => s + l.bast1, 0);
 
   const elementTotal = Object.values(counts).reduce((a, b) => a + b, 0);
   const percentages  = {};
@@ -208,6 +211,7 @@ export function mizaanAnalyze(text) {
   const clean   = mClean(text);
   const counts  = { fire: 0, water: 0, air: 0, earth: 0 };
   const letters = [];
+  let bast1Total = 0;
 
   for (const ch of clean) {
     const norm    = mNorm(ch);
@@ -215,11 +219,12 @@ export function mizaanAnalyze(text) {
     const element = M_LETTER_TO_ELEMENT[norm] ?? null;
     if (norm in MIZAAN_BAST1) {
       letters.push({ original: ch, norm, bast1, element });
+      bast1Total += bast1;
       if (element) counts[element]++;
     }
   }
 
-  return mBuildResult(text, letters, counts);
+  return mBuildResult(text, letters, counts, bast1Total);
 }
 
 // ── Mizan's own Bast calculation (isolated from Abjad modules) ──
@@ -241,12 +246,21 @@ export function mizaanCalcBast(text, bastLevel = 1) {
 }
 
 // ── Async chunked analysis (non-blocking for long Quranic texts) ──
-const CHUNK = 500;
+// Chunk size scales with input length: small inputs process in a single pass,
+// very large inputs (full Surahs) use larger chunks to minimise setTimeout
+// overhead while still yielding to keep the UI responsive.
+function getChunkSize(len) {
+  if (len <= 2000) return len;           // small: single pass
+  if (len <= 20000) return 2000;         // medium: 2K chunks
+  return 5000;                            // large (full Surahs): 5K chunks
+}
 
 export async function mizaanAnalyzeAsync(text, onProgress) {
-  const clean   = mClean(text);
-  const counts  = { fire: 0, water: 0, air: 0, earth: 0 };
-  const letters = [];
+  const clean     = mClean(text);
+  const counts    = { fire: 0, water: 0, air: 0, earth: 0 };
+  const letters   = [];
+  let bast1Total  = 0;
+  const CHUNK     = getChunkSize(clean.length);
 
   for (let i = 0; i < clean.length; i += CHUNK) {
     const chunk = clean.slice(i, i + CHUNK);
@@ -256,6 +270,7 @@ export async function mizaanAnalyzeAsync(text, onProgress) {
       const element = M_LETTER_TO_ELEMENT[norm] ?? null;
       if (norm in MIZAAN_BAST1) {
         letters.push({ original: ch, norm, bast1, element });
+        bast1Total += bast1;
         if (element) counts[element]++;
       }
     }
@@ -264,5 +279,5 @@ export async function mizaanAnalyzeAsync(text, onProgress) {
   }
 
   onProgress?.(100);
-  return mBuildResult(text, letters, counts);
+  return mBuildResult(text, letters, counts, bast1Total);
 }
