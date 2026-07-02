@@ -23,6 +23,7 @@ import Method4VefkCard from "./Method4VefkCard";
 import Method4AlternativeReading from "./Method4AlternativeReading";
 import Method4BookMethodSection from "./Method4BookMethodSection";
 import Method4FinalVefkSummary from "./Method4FinalVefkSummary";
+import Method4Conclusion from "./Method4Conclusion";
 
 const G = {
   gold:         "#F5D060",
@@ -855,6 +856,8 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           kasemBastLevel={kasemVefkBastLevel}
           dominant={dominant}
         />
+
+        <Method4Conclusion />
 
       </div>
 
