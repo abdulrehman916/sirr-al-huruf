@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 import { istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 
 const SUBTRACT_VALUE = 41;
+const YUSHIN_VALUE = 316;
 
 const G = {
   gold:         "#F5D060",
@@ -131,15 +132,34 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
     const derivedName = grouping.groups.length > 0 ? grouping.groups[grouping.groups.length - 1].name : "";
 
     // ── STEP 4: Final invocation: يا + [derived name] + ئيل ──
-    // The ONLY source is the number obtained after subtracting 41.
+    // The ONLY source for this invocation is the number obtained after subtracting 41.
     const invocation = `يا${derivedName}ئيل`;
 
-    return { reducedNumber, reducedLetters, grouping, derivedName, invocation };
+    // ── STEP 5: Subtract Yuşin (316) from the reduced number → reduced number 2 ──
+    const reducedNumber2 = reducedNumber - YUSHIN_VALUE;
+
+    // ── STEP 6: Istintak(reduced number 2) → Kasem letters ──
+    const kasemLetters = reducedNumber2 > 0 ? istintak(reducedNumber2) : [];
+
+    // ── STEP 7: Group Kasem letters (self-recycle from front — Esma-i Kasem completion rule) ──
+    const kasemGrouping = groupLetters(kasemLetters, kasemLetters);
+    const kasemName = kasemGrouping.groups.length > 0 ? kasemGrouping.groups[kasemGrouping.groups.length - 1].name : "";
+
+    // ── STEP 7b: Kasem invocation: بحق + [kasem name] + يوش ──
+    const invocationKasem = `بحق${kasemName}يوش`;
+
+    return {
+      reducedNumber, reducedLetters, grouping, derivedName, invocation,
+      reducedNumber2, kasemLetters, kasemGrouping, kasemName, invocationKasem,
+    };
   }, [nextNumber, dominant]);
 
   if (!pipeline) return null;
 
-  const { reducedNumber, reducedLetters, grouping, derivedName, invocation } = pipeline;
+  const {
+    reducedNumber, reducedLetters, grouping, derivedName, invocation,
+    reducedNumber2, kasemLetters, kasemGrouping, kasemName, invocationKasem,
+  } = pipeline;
 
   return (
     <motion.div
@@ -239,6 +259,78 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
           </div>
           <div className="text-[10px] font-inter text-center mt-2" style={{ color: G.dim }}>
             يا + [derived name from (Next Number − 41)] + ئيل
+          </div>
+        </Card>
+
+        <OrnamentalDivider />
+
+        {/* STEP 5: Reduced Number − Yuşin (316) = Reduced Number 2 */}
+        <Card accent={G.gold}>
+          <SectionHeader step="4" label="Reduced Number − Value of Yuşin" arabic="العدد الناتج" color={G.gold} />
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center">
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Reduced Number</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{reducedNumber.toLocaleString()}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>−</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Yuşin (يوش)</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{YUSHIN_VALUE}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>=</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Result</div>
+              <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{reducedNumber2.toLocaleString()}</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* STEP 6: Istintak → Kasem Name Grouping */}
+        <Card accent={G.green}>
+          <SectionHeader step="5" label="Istintak → Kasem Name Grouping" arabic="حروف أسماء القسم" color={G.green} />
+          <div className="mb-3">
+            <LetterRow letters={kasemLetters} color={G.gold} size="lg" />
+          </div>
+          <div className="text-sm font-inter mb-3" style={{ color: G.dim }}>
+            Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{kasemGrouping.count}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: kasemGrouping.isFerd ? G.red : G.green, fontWeight: "bold" }}>{kasemGrouping.isFerd ? "FERD (فرد)" : "ZEVC (زوج)"}</span>
+            <span style={{ margin: "0 0.5rem" }}>•</span>
+            <span style={{ color: G.goldDim }}>Group Size: <span style={{ color: G.gold }}>{kasemGrouping.groupSize}</span></span>
+          </div>
+          {kasemGrouping.remainder > 0 && (
+            <div className="mb-3 px-3 py-2 rounded-lg border text-[10px] font-inter" style={{ background: G.bgInner, borderColor: G.goldBorder + "55", color: G.dim }}>
+              Completed by self-recycling from the front of its own sequence:
+              <span className="ml-2" dir="rtl" style={{ color: G.gold }}>{kasemGrouping.supplement.join("")}</span>
+            </div>
+          )}
+          <div className="space-y-3">
+            {kasemGrouping.groups.map((group, gi) => (
+              <div key={gi} className="rounded-xl border p-3" style={{ background: G.bgInner, borderColor: G.goldBorder + "60" }}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <LetterRow letters={group.letters} color={G.gold} size="sm" />
+                  <span className="font-inter text-lg" style={{ color: G.goldDim }}>→</span>
+                  <span className="font-amiri text-2xl font-bold px-5 py-3 rounded-xl border"
+                    style={{ color: G.gold, borderColor: G.goldBorder + "55", background: G.goldFaint, lineHeight: 1.7 }}
+                    dir="rtl">
+                    {group.name}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* STEP 7: Kasem Invocation — بحق + [kasem name] + يوش */}
+        <Card accent={G.gold}>
+          <SectionHeader step="6" label="Esma-i Kasem Invocation" arabic="دعوة أسماء القسم" color={G.gold} />
+          <div className="text-center px-3 py-3 rounded-lg border mb-3"
+            style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
+            <span className="font-amiri text-2xl font-bold" style={{ color: G.gold, lineHeight: 1.8 }} dir="rtl">{kasemName || "—"}</span>
+          </div>
+          <div className="text-center px-3 py-4 rounded-lg border"
+            style={{ background: G.bgInner, borderColor: G.goldBorderHi }}>
+            <span className="font-amiri text-3xl font-bold" style={{ color: G.gold, lineHeight: 2 }} dir="rtl">{invocationKasem}</span>
           </div>
         </Card>
 
