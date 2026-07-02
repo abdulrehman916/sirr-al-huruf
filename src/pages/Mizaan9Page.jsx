@@ -162,7 +162,10 @@ function deriveAvanNames(initialSeedLetters, getBastLevelFn) {
   // Group FINAL letters (after supplementation) — for display only
   const groups = [];
   for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
-  return { names: groups, originalNames: originalGroups };
+  // Leftover original letters (before display completion) — used by Method 3 A'van → Kasem handoff
+  const fullGroupsCount = Math.floor(allExpanded.length / gSize);
+  const leftoverLetters = rem > 0 ? allExpanded.slice(fullGroupsCount * gSize) : [];
+  return { names: groups, originalNames: originalGroups, leftoverLetters, hasRemainder: rem > 0 };
 }
 
 // ── Helper: re-derive grand totals using same logic as MizaanFinalSummary ──
@@ -1003,10 +1006,16 @@ export default function Mizaan9Page() {
                   const avanExpandedLetters = avanPipeline?.allExpandedLetters || [];
 
                   // SECTION 3 — Esma-i Kasem input: Last A'van Name First Bast + Galib Anasir First Bast + A'van Input Total
-                  const { names: avanNames, originalNames: avanOriginalNames } = deriveAvanNames(avanPipeline?.initialSeedLetters, getBastLevelFn);
-                  // METHOD 3 RULE: Use ORIGINAL name (before supplementation) for calculation
-                  const lastOriginalAvanName = avanOriginalNames.length ? avanOriginalNames[avanOriginalNames.length - 1] : "";
-                  const lastAvanNameBast = [...lastOriginalAvanName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+                  const { names: avanNames, originalNames: avanOriginalNames, leftoverLetters: avanLeftoverLetters, hasRemainder: avanHasRemainder } = deriveAvanNames(avanPipeline?.initialSeedLetters, getBastLevelFn);
+                  // METHOD 3 RULE (A'van → Kasem handoff):
+                  // - Final group COMPLETE (no remainder) → use that final complete original name.
+                  // - Incomplete remainder → use ONLY the leftover original letters (before display
+                  //   completion). The padded display name is NEVER used as Kasem input.
+                  const kasemSourceName = avanHasRemainder
+                    ? avanLeftoverLetters.join("")
+                    : (avanOriginalNames.length ? avanOriginalNames[avanOriginalNames.length - 1] : "");
+                  const lastOriginalAvanName = kasemSourceName;
+                  const lastAvanNameBast = [...kasemSourceName].reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
                   const kasemInputTotal  = lastAvanNameBast + galibAnasirBast + avanInputTotal;
 
                   return (
