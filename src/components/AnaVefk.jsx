@@ -2,6 +2,7 @@ import { useState, useMemo, memo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useVefkSession } from "../context/VefkSessionContext";
 import { VefkActionButtons } from "./VefkSessionManager";
+import VefkWritingGuide from "./vefk/VefkWritingGuide";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -86,30 +87,32 @@ function GoldDivider() {
 }
 
 // ── Grid — memoized to prevent zoom-triggered rerenders ──────────
+// Fully responsive: percentage-based grid + clamp() font sizing so any
+// number size stays inside its cell without ever overflowing.
 const VefkGrid = memo(function VefkGrid({ cells, centerText, esmaRaw }) {
-  const cellW = 58;
   const displayText = centerText?.trim() || null;
   const esmaDisplay = esmaRaw?.trim() || null;
 
   return (
-    <div className="flex justify-center overflow-x-auto">
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(5, ${cellW}px)`, gap: "4px" }}>
+    <div className="w-full max-w-[420px] mx-auto" style={{ containerType: "inline-size" }}>
+      <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
         {LAYOUT.flat().map((pos, idx) => {
           const isEmpty = pos === null;
           const val = isEmpty ? null : cells[pos];
           const display = val != null ? val.toLocaleString() : null;
-          const fontSize = display && display.length > 9 ? "7px"
-            : display && display.length > 6 ? "9px"
-            : display && display.length > 4 ? "11px" : "13px";
+          const fontSize = display && display.length > 12 ? "clamp(5px, 2.1cqw, 8px)"
+            : display && display.length > 9 ? "clamp(6px, 2.4cqw, 9px)"
+            : display && display.length > 6 ? "clamp(7px, 2.8cqw, 11px)"
+            : display && display.length > 4 ? "clamp(8px, 3.2cqw, 12px)"
+            : "clamp(9px, 3.6cqw, 14px)";
           return (
             <motion.div
               key={idx}
               initial={{ opacity: 0, scale: 0.75 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.018, duration: 0.22 }}
-              className="rounded-lg border flex flex-col items-center justify-center overflow-hidden"
+              className="relative aspect-square rounded-lg border flex flex-col items-center justify-center overflow-hidden p-0.5"
               style={{
-                width: cellW, height: cellW,
                 background: isEmpty ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.10)",
                 borderColor: isEmpty ? "rgba(212,175,55,0.35)" : "rgba(212,175,55,0.45)",
                 boxShadow: isEmpty ? "none" : "inset 0 0 8px rgba(212,175,55,0.12)",
@@ -118,34 +121,34 @@ const VefkGrid = memo(function VefkGrid({ cells, centerText, esmaRaw }) {
               {isEmpty ? (
                 <div className="flex flex-col w-full h-full">
                   {/* top half: center text */}
-                  <div className="flex items-center justify-center w-full px-0.5 flex-1"
+                  <div className="flex items-center justify-center w-full px-0.5 flex-1 overflow-hidden"
                     style={{ borderBottom: "1px solid rgba(212,175,55,0.20)" }}>
                     {displayText ? (
-                      <p className="font-amiri text-center leading-none"
-                        style={{ color: G.text, fontSize: displayText.length > 10 ? "6px" : "7px" }}
+                      <p className="font-amiri text-center leading-none break-all"
+                        style={{ color: G.text, fontSize: "clamp(5px, 2.4cqw, 7px)" }}
                         dir="rtl">{displayText}</p>
                     ) : (
-                      <span style={{ fontSize: "7px", color: "rgba(212,175,55,0.15)" }}>—</span>
+                      <span style={{ fontSize: "clamp(5px, 2cqw, 7px)", color: "rgba(212,175,55,0.15)" }}>—</span>
                     )}
                   </div>
                   {/* bottom half: esma */}
-                  <div className="flex items-center justify-center w-full px-0.5 flex-1">
+                  <div className="flex items-center justify-center w-full px-0.5 flex-1 overflow-hidden">
                     {esmaDisplay ? (
-                      <p className="font-amiri font-bold text-center leading-none"
-                        style={{ color: G.text, fontSize: esmaDisplay.length > 8 ? "7px" : "9px" }}
+                      <p className="font-amiri font-bold text-center leading-none break-all"
+                        style={{ color: G.text, fontSize: "clamp(5px, 2.6cqw, 9px)" }}
                         dir="rtl">{esmaDisplay}</p>
                     ) : (
-                      <span style={{ fontSize: "7px", color: "rgba(212,175,55,0.15)" }}>—</span>
+                      <span style={{ fontSize: "clamp(5px, 2cqw, 7px)", color: "rgba(212,175,55,0.15)" }}>—</span>
                     )}
                   </div>
                 </div>
               ) : (
                 <>
-                  <p className="font-amiri font-bold tabular-nums leading-tight"
+                  <p className="font-amiri font-bold tabular-nums leading-tight text-center break-all"
                     style={{ color: G.text, fontSize, textShadow: "0 0 6px rgba(212,175,55,0.35)" }}>
                     {display}
                   </p>
-                  <p className="font-inter" style={{ fontSize: "7px", color: "rgba(212,175,55,0.28)", marginTop: "1px" }}>
+                  <p className="font-inter leading-none" style={{ fontSize: "clamp(5px, 1.6cqw, 7px)", color: "rgba(212,175,55,0.28)", marginTop: "1px" }}>
                     ×{pos}
                   </p>
                 </>
@@ -386,11 +389,12 @@ export default function AnaVefk() {
               </div>
             )}
 
-            <div className="rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
-              <div className="flex justify-center overflow-x-auto">
-                <VefkGrid cells={result.cells} centerText={result.centerText} esmaRaw={result.esmaRaw} />
-              </div>
+            <div className="rounded-xl border overflow-hidden p-2" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
+              <VefkGrid cells={result.cells} centerText={result.centerText} esmaRaw={result.esmaRaw} />
             </div>
+
+            {/* Demo Writing Grid — learning aid only, never affects calculations */}
+            <VefkWritingGuide title="Ana Vefk — Yazım Sırası Demo Rehberi" />
 
             {/* Action Buttons */}
             <VefkActionButtons gridId="ana-vefk-grid-export-content" mode="ana" hasResult={!!result} />

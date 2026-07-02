@@ -1,6 +1,7 @@
 import { useState, memo, useEffect } from "react";
 import { useVefkSession } from "../context/VefkSessionContext";
 import { VefkActionButtons } from "./VefkSessionManager";
+import VefkWritingGuide from "./vefk/VefkWritingGuide";
 import { motion, AnimatePresence } from "framer-motion";
 
 const G = {
@@ -64,50 +65,50 @@ function GoldDivider() {
 }
 
 const TanzimGrid = memo(function TanzimGrid({ cells, esmaText }) {
-  const cellW = 58;
   return (
-    <div className="flex justify-center overflow-x-auto">
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(5, ${cellW}px)`, gap: "4px" }}>
+    <div className="w-full max-w-[420px] mx-auto" style={{ containerType: "inline-size" }}>
+      <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
         {LAYOUT.flat().map((pos, idx) => {
           const isEmpty = pos === null;
           const val = isEmpty ? null : cells[pos];
           const display = val != null ? val.toLocaleString() : null;
-          const fontSize = display && display.length > 9 ? "7px"
-            : display && display.length > 6 ? "9px"
-            : display && display.length > 4 ? "11px" : "13px";
+          const fontSize = display && display.length > 12 ? "clamp(5px, 2.1cqw, 8px)"
+            : display && display.length > 9 ? "clamp(6px, 2.4cqw, 9px)"
+            : display && display.length > 6 ? "clamp(7px, 2.8cqw, 11px)"
+            : display && display.length > 4 ? "clamp(8px, 3.2cqw, 12px)"
+            : "clamp(9px, 3.6cqw, 14px)";
           return (
             <motion.div
               key={idx}
               initial={{ opacity: 0, scale: 0.75 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.018, duration: 0.22 }}
-              className="rounded-lg border flex flex-col items-center justify-center"
+              className="relative aspect-square rounded-lg border flex flex-col items-center justify-center overflow-hidden p-0.5"
               style={{
-                width: cellW, height: cellW,
                 background: isEmpty ? "rgba(212,175,55,0.04)" : "rgba(212,175,55,0.10)",
                 borderColor: isEmpty ? "rgba(212,175,55,0.18)" : "rgba(212,175,55,0.45)",
                 boxShadow: isEmpty ? "none" : "inset 0 0 8px rgba(212,175,55,0.12)",
               }}
             >
               {isEmpty ? (
-                <div className="flex items-center justify-center w-full h-full px-1">
+                <div className="flex items-center justify-center w-full h-full px-1 overflow-hidden">
                   {esmaText ? (
-                    <p className="font-amiri text-center leading-tight"
-                      style={{ color: G.text, fontSize: esmaText.length > 8 ? "8px" : "10px" }}
+                    <p className="font-amiri text-center leading-tight break-all"
+                      style={{ color: G.text, fontSize: "clamp(6px, 3cqw, 10px)" }}
                       dir="rtl">{esmaText}</p>
                   ) : (
-                    <motion.span style={{ fontSize: "1.1rem", color: "rgba(212,175,55,0.18)" }}
+                    <motion.span style={{ fontSize: "clamp(14px, 6cqw, 1.1rem)", color: "rgba(212,175,55,0.18)" }}
                       animate={{ opacity: [0.1, 0.35, 0.1] }}
                       transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>□</motion.span>
                   )}
                 </div>
               ) : (
                 <>
-                  <p className="font-amiri font-bold tabular-nums leading-tight"
+                  <p className="font-amiri font-bold tabular-nums leading-tight text-center break-all"
                     style={{ color: G.text, fontSize, textShadow: "0 0 6px rgba(212,175,55,0.35)" }}>
                     {display}
                   </p>
-                  <p className="font-inter" style={{ fontSize: "7px", color: "rgba(212,175,55,0.28)", marginTop: "1px" }}>
+                  <p className="font-inter leading-none" style={{ fontSize: "clamp(5px, 1.6cqw, 7px)", color: "rgba(212,175,55,0.28)", marginTop: "1px" }}>
                     [{pos}]
                   </p>
                 </>
@@ -310,11 +311,12 @@ export default function TanzimVefki() {
                 </div>
               )}
 
-              <div className="rounded-xl border overflow-hidden" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
-                <div className="flex justify-center overflow-x-auto">
-                  <TanzimGrid cells={cells} esmaText={esmaText} />
-                </div>
+              <div className="rounded-xl border overflow-hidden p-2" style={{ background: "rgba(4,12,34,0.97)", borderColor: "rgba(212,175,55,0.15)" }}>
+                <TanzimGrid cells={cells} esmaText={esmaText} />
               </div>
+
+              {/* Demo Writing Grid — learning aid only, never affects calculations */}
+              <VefkWritingGuide title="Tanzim Vefki — Yazım Sırası Demo Rehberi" />
 
               {/* Action Buttons */}
               <VefkActionButtons gridId="tanzim-vefk-grid-export-content" mode="tanzim" hasResult={!!cells} />
