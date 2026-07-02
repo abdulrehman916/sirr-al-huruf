@@ -15,8 +15,9 @@ const EL = {
   water: { color: "#4FC3F7", glow: "rgba(79,195,247,0.35)",  bg: "rgba(79,195,247,0.10)",  border: "rgba(79,195,247,0.40)" },
 };
 
-export default function Mizaan1({ result }) {
+export default function Mizaan1({ result, inputMode = "text" }) {
   const { bast1Total, letterCount, counts, percentages, dominant } = result;
+  const isDirectNumber = inputMode === "number";
   const sorted = Object.entries(MIZAAN_ELEMENTS)
     .map(([k, el]) => ({ k, el, pct: percentages[k] ?? 0, cnt: counts[k] ?? 0 }))
     .sort((a, b) => b.pct - a.pct);
@@ -42,8 +43,12 @@ export default function Mizaan1({ result }) {
         <div className="rounded-xl border p-4 text-center"
           style={{ background: "rgba(4,10,28,0.95)", borderColor: G.border }}>
           <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>Harf Sayısı</p>
-          <p className="font-inter font-bold text-white tabular-nums"
-            style={{ fontSize: "clamp(1.8rem,8vw,2.8rem)" }}>{letterCount}</p>
+          {isDirectNumber ? (
+            <p className="font-inter font-bold" style={{ fontSize: "clamp(1.2rem,5vw,1.8rem)", color: G.dim }}>N/A</p>
+          ) : (
+            <p className="font-inter font-bold text-white tabular-nums"
+              style={{ fontSize: "clamp(1.8rem,8vw,2.8rem)" }}>{letterCount}</p>
+          )}
         </div>
       </div>
 

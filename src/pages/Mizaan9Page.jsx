@@ -463,7 +463,7 @@ export default function Mizaan9Page() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="space-y-2">
 
-              <Mizaan1 result={result} />
+              <Mizaan1 result={result} inputMode={inputMode} />
               <MizaanDivider />
               <Mizaan2
                 dominant={result.dominant}
@@ -638,7 +638,7 @@ export default function Mizaan9Page() {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="space-y-2">
 
-                <Mizaan1 result={result} />
+                <Mizaan1 result={result} inputMode={inputMode} />
                 <MizaanDivider />
                 <Mizaan2
                   dominant={result.dominant}
@@ -823,7 +823,7 @@ export default function Mizaan9Page() {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="space-y-2">
 
-                <Mizaan1 result={result} />
+                <Mizaan1 result={result} inputMode={inputMode} />
                 <MizaanDivider />
                 <Mizaan2
                   dominant={result.dominant}
@@ -1048,7 +1048,7 @@ export default function Mizaan9Page() {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="space-y-2">
 
-                <Mizaan1 result={result} />
+                <Mizaan1 result={result} inputMode={inputMode} />
                 <MizaanDivider />
                 <Mizaan2
                   dominant={result.dominant}
