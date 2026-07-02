@@ -135,8 +135,8 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
     // The ONLY source for this invocation is the number obtained after subtracting 41.
     const invocation = `يا${derivedName}ئيل`;
 
-    // ── STEP 5: Subtract Yuşin (316) from the reduced number → reduced number 2 ──
-    const reducedNumber2 = reducedNumber - YUSHIN_VALUE;
+    // ── STEP 5: Subtract Yuşin (316) from the ORIGINAL Next Number (independent branch) ──
+    const reducedNumber2 = nextNumber - YUSHIN_VALUE;
 
     // ── STEP 6: Istintak(reduced number 2) → Kasem letters ──
     const kasemLetters = reducedNumber2 > 0 ? istintak(reducedNumber2) : [];
@@ -266,11 +266,11 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
 
         {/* STEP 5: Reduced Number − Yuşin (316) = Reduced Number 2 */}
         <Card accent={G.gold}>
-          <SectionHeader step="4" label="Reduced Number − Value of Yuşin" arabic="العدد الناتج" color={G.gold} />
+          <SectionHeader step="4" label="Next Number − Value of Yuşin" arabic="العدد الناتج" color={G.gold} />
           <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center">
             <div className="space-y-1">
-              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Reduced Number</div>
-              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{reducedNumber.toLocaleString()}</div>
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Next Number</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{nextNumber.toLocaleString()}</div>
             </div>
             <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>−</span>
             <div className="space-y-1">
