@@ -15,7 +15,7 @@
 // No grouping into names, no Vefk, no Method-4-specific logic.
 // ═══════════════════════════════════════════════════════════════
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { istintak, getBastLevel as getBastLevelDefault, GALIB_ANASIR_VALUES, ELEMENT_LETTERS, buildVefk } from "../../lib/mizaanPostEngine";
 import Method4FinalSummary from "./Method4FinalSummary";
@@ -115,6 +115,7 @@ function OrnamentalDivider() {
 }
 
 export default function Method4Step1Section({ nineMizanTotal, dominant = "fire", getBastLevelFn = getBastLevelDefault }) {
+  const [bookMethodValues, setBookMethodValues] = useState(null);
   const pipeline = useMemo(() => {
     if (!nineMizanTotal || nineMizanTotal <= 0) return null;
 
@@ -850,7 +851,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           seedAdad={seedAdad}
         />
 
-        <Method4BookMethodSection nextNumber={nextNumber} dominant={dominant} />
+        <Method4BookMethodSection nextNumber={nextNumber} dominant={dominant} onDerived={setBookMethodValues} />
 
         <Method4FinalVefkSummary
           kitabetVefk={kitabetVefk}
@@ -869,7 +870,12 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           dominant={dominant}
         />
 
-        <Method4Conclusion />
+        <Method4Conclusion
+          avanName={bookMethodValues?.derivedName || ""}
+          avanValue={bookMethodValues?.reducedNumber || 0}
+          kasemName={bookMethodValues?.kasemName || ""}
+          kasemValue={bookMethodValues?.reducedNumber2 || 0}
+        />
 
       </div>
 

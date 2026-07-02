@@ -14,7 +14,7 @@
 // pipeline letters, no other source.
 // ═══════════════════════════════════════════════════════════════
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 
@@ -115,7 +115,7 @@ function groupLetters(letters, completionSource) {
   return { count, isFerd, groupSize, remainder, supplement, groups };
 }
 
-export default function Method4BookMethodSection({ nextNumber, dominant = "fire" }) {
+export default function Method4BookMethodSection({ nextNumber, dominant = "fire", onDerived }) {
   const pipeline = useMemo(() => {
     if (!nextNumber || nextNumber <= 0) return null;
 
@@ -153,6 +153,17 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
       reducedNumber2, kasemLetters, kasemGrouping, kasemName, invocationKasem,
     };
   }, [nextNumber, dominant]);
+
+  useEffect(() => {
+    if (onDerived && pipeline) {
+      onDerived({
+        derivedName: pipeline.derivedName,
+        kasemName: pipeline.kasemName,
+        reducedNumber: pipeline.reducedNumber,
+        reducedNumber2: pipeline.reducedNumber2,
+      });
+    }
+  }, [pipeline, onDerived]);
 
   if (!pipeline) return null;
 
@@ -246,19 +257,16 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
           </div>
         </Card>
 
-        {/* STEP 3: FINAL INVOCATION — يا + [derived name] + ئيل */}
+        {/* STEP 3: ASMA-UL A'VAN — يا + [derived name] + ئيل */}
         <Card accent={G.gold}>
-          <SectionHeader step="3" label="Final Invocation" arabic="الدعوة النهائية" color={G.gold} />
-          <div className="text-center px-3 py-2 rounded-lg border mb-3"
-            style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
-            <span className="font-amiri text-2xl font-bold" style={{ color: G.gold, lineHeight: 1.8 }} dir="rtl">{derivedName || "—"}</span>
-          </div>
+          <SectionHeader step="3" label="Asma-ul A'van" arabic="أسماء الأعوان" color={G.gold} />
           <div className="text-center px-3 py-4 rounded-lg border"
             style={{ background: G.bgInner, borderColor: G.goldBorderHi }}>
             <span className="font-amiri text-3xl font-bold" style={{ color: G.gold, lineHeight: 2 }} dir="rtl">{invocation}</span>
           </div>
-          <div className="text-[10px] font-inter text-center mt-2" style={{ color: G.dim }}>
-            يا + [derived name from (Next Number − 41)] + ئيل
+          <div className="text-center mt-3">
+            <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Value (Next Number − 41)</span>
+            <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{reducedNumber.toLocaleString()}</div>
           </div>
         </Card>
 
@@ -321,16 +329,16 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
           </div>
         </Card>
 
-        {/* STEP 7: Kasem Invocation — بحق + [kasem name] + يوش */}
+        {/* STEP 7: ASMA-UL KASEM — بحق + [kasem name] + يوش */}
         <Card accent={G.gold}>
-          <SectionHeader step="6" label="Esma-i Kasem Invocation" arabic="دعوة أسماء القسم" color={G.gold} />
-          <div className="text-center px-3 py-3 rounded-lg border mb-3"
-            style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
-            <span className="font-amiri text-2xl font-bold" style={{ color: G.gold, lineHeight: 1.8 }} dir="rtl">{kasemName || "—"}</span>
-          </div>
+          <SectionHeader step="6" label="Asma-ul Kasem" arabic="أسماء القسم" color={G.gold} />
           <div className="text-center px-3 py-4 rounded-lg border"
             style={{ background: G.bgInner, borderColor: G.goldBorderHi }}>
             <span className="font-amiri text-3xl font-bold" style={{ color: G.gold, lineHeight: 2 }} dir="rtl">{invocationKasem}</span>
+          </div>
+          <div className="text-center mt-3">
+            <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Value (Next Number − 316)</span>
+            <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{reducedNumber2.toLocaleString()}</div>
           </div>
         </Card>
 

@@ -24,7 +24,7 @@ const PARAGRAPHS = [
   `തുടർന്ന്, ആ അസീമത്ത് നിങ്ങളുടെ ആവശ്യത്തിന്റെ (മത്ലൂബ്) പേരിന്റെ അബ്ജദ് സംഖ്യയ്ക്ക് തുല്യമായ എണ്ണത്തിൽ, ഏഴ് ദിവസം പാരായണം ചെയ്യുക.`,
 ];
 
-export default function Method4Conclusion() {
+export default function Method4Conclusion({ avanName = "", avanValue = 0, kasemName = "", kasemValue = 0 }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -54,6 +54,24 @@ export default function Method4Conclusion() {
           >
             <div className="h-px w-full" style={{ background: G.goldBorder }} />
             <div className="px-5 py-4 space-y-3">
+              {(avanName || kasemName) && (
+                <div className="space-y-2 mb-3 pb-3 border-b" style={{ borderColor: G.goldBorder + "40" }}>
+                  {avanName && (
+                    <div className="rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
+                      <div className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold mb-1" style={{ color: G.gold }}>ASMA-UL A'VAN</div>
+                      <div className="font-amiri text-xl font-bold mb-1" style={{ color: G.gold, lineHeight: 1.8 }} dir="rtl">{avanName}</div>
+                      <div className="font-inter text-xs" style={{ color: G.dim }}>Value: <span className="font-bold tabular-nums" style={{ color: G.gold }}>{avanValue.toLocaleString()}</span></div>
+                    </div>
+                  )}
+                  {kasemName && (
+                    <div className="rounded-lg border p-3" style={{ background: G.goldFaint, borderColor: G.goldBorder }}>
+                      <div className="font-inter text-[9px] uppercase tracking-[0.2em] font-bold mb-1" style={{ color: G.gold }}>ASMA-UL KASEM</div>
+                      <div className="font-amiri text-xl font-bold mb-1" style={{ color: G.gold, lineHeight: 1.8 }} dir="rtl">{kasemName}</div>
+                      <div className="font-inter text-xs" style={{ color: G.dim }}>Value: <span className="font-bold tabular-nums" style={{ color: G.gold }}>{kasemValue.toLocaleString()}</span></div>
+                    </div>
+                  )}
+                </div>
+              )}
               {PARAGRAPHS.map((p, i) => (
                 <p key={i} className="font-malayalam text-sm leading-relaxed" style={{ color: G.dim }}>{p}</p>
               ))}
