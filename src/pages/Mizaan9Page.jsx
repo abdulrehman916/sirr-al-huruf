@@ -36,6 +36,7 @@ import Method3FinalTotalSection from "../components/mizaan/Method3FinalTotalSect
 import Method3AbjadVerificationSection from "../components/mizaan/Method3AbjadVerificationSection";
 import Method3DivineNamesMatchSection from "../components/mizaan/Method3DivineNamesMatchSection";
 import Method4Step1Section from "../components/mizaan/Method4Step1Section";
+import MizaanInputCard from "../components/mizaan/MizaanInputCard";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
@@ -244,6 +245,8 @@ export default function Mizaan9Page() {
   const { getPageState, setPageState, clearPageState } = usePageState();
   const initialState = getPageState(PAGE_KEY, {
     input: "",
+    inputMode: "text",
+    directNumber: "",
     result: null,
     selections: buildDefaultSelections(null),
     customPurpose: "",
@@ -251,6 +254,8 @@ export default function Mizaan9Page() {
   });
   
   const [input, setInput] = useState(initialState.input);
+  const [inputMode, setInputMode] = useState(initialState.inputMode || "text");
+  const [directNumber, setDirectNumber] = useState(initialState.directNumber || "");
   const [result, setResult] = useState(initialState.result);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -277,9 +282,13 @@ export default function Mizaan9Page() {
   const getBastLevelFn = activeSection === 2 ? getBastLevelB : getBastLevel;
   const abortRef = useRef(false);
 
+  // Dominant element: from Arabic text analysis, or from user's Mizaan2 selection (Direct Number mode)
+  const effectiveDominant = result?.dominant
+    || (Array.isArray(selections?.elements) && selections.elements.length > 0 ? selections.elements[0] : null);
+
   useEffect(() => {
-    setPageState(PAGE_KEY, { input, result, selections, customPurpose, degreeSels });
-  }, [input, result, selections, customPurpose, degreeSels, setPageState]);
+    setPageState(PAGE_KEY, { input, inputMode, directNumber, result, selections, customPurpose, degreeSels });
+  }, [input, inputMode, directNumber, result, selections, customPurpose, degreeSels, setPageState]);
 
   // ══ OPTION 2 — DISABLED FOR NOW ═══════════════════════════════════
   // Option 2 calculation is temporarily disabled to prioritize Option 1 restoration
@@ -330,7 +339,6 @@ export default function Mizaan9Page() {
   }, [activeSection]);
 
   const handleAnalyze = useCallback(async () => {
-    if (!input.trim()) return;
     abortRef.current = false;
     setLoading(true);
     setProgress(0);
@@ -340,6 +348,26 @@ export default function Mizaan9Page() {
     setS1VefkData(null);
     setS2VefkData(null);
     setS3VefkData(null);
+
+    // ── Direct Number mode: skip Arabic text analysis, use the number directly as First Mizan value ──
+    if (inputMode === 'number') {
+      const num = parseInt(directNumber, 10);
+      if (!num || num <= 0) { setLoading(false); return; }
+      setProgress(100);
+      const r = {
+        text: '', letters: [], letterCount: 0,
+        bast1Total: num,
+        counts: { fire: 0, water: 0, air: 0, earth: 0 },
+        percentages: { fire: 0, water: 0, air: 0, earth: 0 },
+        dominant: null, tiebreak: null, bast2Value: null, planet: null, daynight: null, suitability: null,
+      };
+      if (!abortRef.current) { setResult(r); setSelections(buildDefaultSelections(null)); }
+      setLoading(false);
+      return;
+    }
+
+    // ── Arabic Text mode: existing behavior (unchanged) ──
+    if (!input.trim()) { setLoading(false); return; }
     let r;
     if (activeSection === 3) {
       r = mizaanAnalyzeAbjad(input);
@@ -352,11 +380,12 @@ export default function Mizaan9Page() {
       setSelections(buildDefaultSelections(r.dominant));
     }
     setLoading(false);
-  }, [input, activeSection, activeMethod]);
+  }, [input, directNumber, inputMode, activeSection, activeMethod]);
 
   const handleClear = () => {
     abortRef.current = true;
     setInput("");
+    setDirectNumber("");
     setResult(null);
     setLoading(false);
     setProgress(0);
@@ -418,58 +447,14 @@ export default function Mizaan9Page() {
               ))}
             </div>
 
-            {/* Input card */}
-        <div className="rounded-2xl border p-5 relative overflow-hidden"
-          style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
-          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
-          <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
-            Arabic Text — Surah · Ayah · Talib · Matloob
-          </label>
-          <textarea
-            dir="rtl"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            placeholder="أدخل النص العربي هنا — السورة، الآية، الاسم..."
-            rows={5}
-            className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
-            style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
-          />
-
-          {loading && (
-            <div className="mb-3">
-              <div className="flex justify-between mb-1.5">
-                <span className="font-inter text-[10px] text-white/40 animate-pulse">✦ Analyzing 9 Mizaans…</span>
-                <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>{progress}%</span>
-              </div>
-              <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }}
-                  className="h-full rounded-full" style={{ background: `linear-gradient(90deg,${G.text},#d97706)` }} />
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <motion.button
-              onClick={handleAnalyze}
-              disabled={!input.trim() || loading}
-              whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
-              style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow: `0 0 36px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}>
-              {loading
-                ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                : <span className="font-amiri text-base">⚖</span>}
-              {loading ? "Analyzing…" : "Analyze — 9 Mizan"}
-            </motion.button>
-            <motion.button
-              onClick={handleClear}
-              disabled={!input && !result}
-              whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)", width: "auto", flexShrink: 0 }}>
-              <Trash2 className="w-3.5 h-3.5" /> Clear
-            </motion.button>
-          </div>
-        </div>
+            <MizaanInputCard
+          inputMode={inputMode} setInputMode={setInputMode}
+          input={input} setInput={setInput}
+          directNumber={directNumber} setDirectNumber={setDirectNumber}
+          loading={loading} progress={progress}
+          onAnalyze={handleAnalyze} onClear={handleClear}
+          hasResult={!!result}
+        />
 
         {/* 9 Mizaans */}
         <AnimatePresence mode="wait">
@@ -539,7 +524,7 @@ export default function Mizaan9Page() {
               {/* ═══════════════════════════════════════════════════════════════ */}
               {(() => {
                 const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds, activeSection);
-                const dominant = result?.dominant;
+                const dominant = effectiveDominant;
                 if (!grandBast || grandBast <= 0) return null;
 
                 // Section 1 pipeline result — read-only source for Section 2
@@ -637,58 +622,14 @@ export default function Mizaan9Page() {
             ))}
           </div>
 
-          {/* Input card (same as Method 1) */}
-          <div className="rounded-2xl border p-5 relative overflow-hidden"
-            style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
-            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
-            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
-              Arabic Text — Surah · Ayah · Talib · Matloob
-            </label>
-            <textarea
-              dir="rtl"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="أدخل النص العربي هنا — السورة، الآية، الاسم..."
-              rows={5}
-              className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
-              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
-            />
-
-            {loading && (
-              <div className="mb-3">
-                <div className="flex justify-between mb-1.5">
-                  <span className="font-inter text-[10px] text-white/40 animate-pulse">✦ Analyzing 9 Mizaans…</span>
-                  <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>{progress}%</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }}
-                    className="h-full rounded-full" style={{ background: `linear-gradient(90deg,${G.text},#d97706)` }} />
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <motion.button
-                onClick={handleAnalyze}
-                disabled={!input.trim() || loading}
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
-                style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow: `0 0 36px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}>
-                {loading
-                  ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  : <span className="font-amiri text-base">⚖</span>}
-                {loading ? "Analyzing…" : "Analyze — 9 Mizan"}
-              </motion.button>
-              <motion.button
-                onClick={handleClear}
-                disabled={!input && !result}
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)", width: "auto", flexShrink: 0 }}>
-                <Trash2 className="w-3.5 h-3.5" /> Clear
-              </motion.button>
-            </div>
-          </div>
+          <MizaanInputCard
+            inputMode={inputMode} setInputMode={setInputMode}
+            input={input} setInput={setInput}
+            directNumber={directNumber} setDirectNumber={setDirectNumber}
+            loading={loading} progress={progress}
+            onAnalyze={handleAnalyze} onClear={handleClear}
+            hasResult={!!result}
+          />
 
           {/* 9 Mizaans (same as Method 1) */}
           <AnimatePresence mode="wait">
@@ -756,7 +697,7 @@ export default function Mizaan9Page() {
                 {/* Method 2: SAME shared pipeline as Method 1 (Kitabet → A'van → Kasem), then Final Divine Names */}
                 {(() => {
                   const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds, activeSection);
-                  const dominant = result?.dominant;
+                  const dominant = effectiveDominant;
                   if (!grandBast || grandBast <= 0) return null;
 
                   // Identical pipeline call as Method 1 Section 1
@@ -866,58 +807,14 @@ export default function Mizaan9Page() {
             ))}
           </div>
 
-          {/* Input card (same as Method 1/2) */}
-          <div className="rounded-2xl border p-5 relative overflow-hidden"
-            style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
-            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
-            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
-              Arabic Text — Surah · Ayah · Talib · Matloob
-            </label>
-            <textarea
-              dir="rtl"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="أدخل النص العربي هنا — السورة، الآية، الاسم..."
-              rows={5}
-              className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
-              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
-            />
-
-            {loading && (
-              <div className="mb-3">
-                <div className="flex justify-between mb-1.5">
-                  <span className="font-inter text-[10px] text-white/40 animate-pulse">✦ Analyzing 9 Mizaans…</span>
-                  <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>{progress}%</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }}
-                    className="h-full rounded-full" style={{ background: `linear-gradient(90deg,${G.text},#d97706)` }} />
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <motion.button
-                onClick={handleAnalyze}
-                disabled={!input.trim() || loading}
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
-                style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow: `0 0 36px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}>
-                {loading
-                  ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  : <span className="font-amiri text-base">⚖</span>}
-                {loading ? "Analyzing…" : "Analyze — 9 Mizan"}
-              </motion.button>
-              <motion.button
-                onClick={handleClear}
-                disabled={!input && !result}
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)", width: "auto", flexShrink: 0 }}>
-                <Trash2 className="w-3.5 h-3.5" /> Clear
-              </motion.button>
-            </div>
-          </div>
+          <MizaanInputCard
+            inputMode={inputMode} setInputMode={setInputMode}
+            input={input} setInput={setInput}
+            directNumber={directNumber} setDirectNumber={setDirectNumber}
+            loading={loading} progress={progress}
+            onAnalyze={handleAnalyze} onClear={handleClear}
+            hasResult={!!result}
+          />
 
           {/* 9 Mizaans (same as Method 1/2) */}
           <AnimatePresence mode="wait">
@@ -985,7 +882,7 @@ export default function Mizaan9Page() {
                 {/* Method 3: Esma-i Kitabet identical to Method 1/2 — A'van onward uses the Method 3 formula */}
                 {(() => {
                   const { grandBast, grandLetters } = computeGrandTotals(result, selections, degreeSels, input, customPurpose, ds, activeSection);
-                  const dominant = result?.dominant;
+                  const dominant = effectiveDominant;
                   if (!grandBast || grandBast <= 0) return null;
 
                   // Identical pipeline call as Method 1/2 Section 1 — Esma-i Kitabet
@@ -1135,58 +1032,14 @@ export default function Mizaan9Page() {
             ))}
           </div>
 
-          {/* Input card (same as Method 1/2/3) */}
-          <div className="rounded-2xl border p-5 relative overflow-hidden"
-            style={{ background: "linear-gradient(145deg, rgba(8,20,52,0.98) 0%, rgba(4,12,34,0.99) 100%)", borderColor: G.borderHi, boxShadow: `0 0 40px ${G.glow}, 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(212,175,55,0.10)` }}>
-            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)` }} />
-            <label className="block font-inter text-[10px] uppercase tracking-widest mb-2.5" style={{ color: G.dim }}>
-              Arabic Text — Surah · Ayah · Talib · Matloob
-            </label>
-            <textarea
-              dir="rtl"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="أدخل النص العربي هنا — السورة، الآية، الاسم..."
-              rows={5}
-              className="w-full rounded-xl px-4 py-3 font-amiri text-xl text-white leading-relaxed resize-none focus:outline-none caret-white mb-3 placeholder:text-white/30"
-              style={{ background: "rgba(4,12,34,0.97)", border: `1px solid ${G.border}`, fontSize: "16px" }}
-            />
-
-            {loading && (
-              <div className="mb-3">
-                <div className="flex justify-between mb-1.5">
-                  <span className="font-inter text-[10px] text-white/40 animate-pulse">✦ Analyzing 9 Mizaans…</span>
-                  <span className="font-inter text-[10px] tabular-nums font-bold" style={{ color: G.dim }}>{progress}%</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.15 }}
-                    className="h-full rounded-full" style={{ background: `linear-gradient(90deg,${G.text},#d97706)` }} />
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <motion.button
-                onClick={handleAnalyze}
-                disabled={!input.trim() || loading}
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-inter font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed text-[#0d1b2a] tracking-wide"
-                style={{ background: "linear-gradient(135deg,#f6d860 0%,#e0a820 50%,#c98a14 100%)", boxShadow: `0 0 36px ${G.glowHi}, 0 2px 12px rgba(0,0,0,0.40)` }}>
-                {loading
-                  ? <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  : <span className="font-amiri text-base">⚖</span>}
-                {loading ? "Analyzing…" : "Analyze — 9 Mizan"}
-              </motion.button>
-              <motion.button
-                onClick={handleClear}
-                disabled={!input && !result}
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-1.5 py-3 px-4 rounded-xl text-white/55 hover:text-white font-inter text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.12)", width: "auto", flexShrink: 0 }}>
-                <Trash2 className="w-3.5 h-3.5" /> Clear
-              </motion.button>
-            </div>
-          </div>
+          <MizaanInputCard
+            inputMode={inputMode} setInputMode={setInputMode}
+            input={input} setInput={setInput}
+            directNumber={directNumber} setDirectNumber={setDirectNumber}
+            loading={loading} progress={progress}
+            onAnalyze={handleAnalyze} onClear={handleClear}
+            hasResult={!!result}
+          />
 
           {/* 9 Mizaans (same as Method 1/2/3) */}
           <AnimatePresence mode="wait">
@@ -1257,7 +1110,7 @@ export default function Mizaan9Page() {
                   if (!grandBast || grandBast <= 0) return null;
                   const nineMizanTotal = grandBast + grandLetters;
                   return (
-                    <Method4Step1Section nineMizanTotal={nineMizanTotal} dominant={result?.dominant} getBastLevelFn={getBastLevelFn} />
+                    <Method4Step1Section nineMizanTotal={nineMizanTotal} dominant={effectiveDominant} getBastLevelFn={getBastLevelFn} />
                   );
                 })()}
 
