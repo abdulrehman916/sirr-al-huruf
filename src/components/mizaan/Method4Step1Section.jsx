@@ -842,7 +842,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           seedLetters={seedLetters}
         />
 
-        <Method4BookMethodSection nextNumber={nextNumber} dominant={dominant} />
+        <Method4BookMethodSection nextNumber={nextNumber} nextLetters={nextLetters} dominant={dominant} />
 
       </div>
 

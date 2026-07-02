@@ -1,27 +1,29 @@
 // ═══════════════════════════════════════════════════════════════
 // METHOD 4 — ALTERNATIVE METHOD (BOOK METHOD)
 // ─────────────────────────────────────────────────────────────
-// Reuses the existing "Next Number" (Expanded Total + Expanded Letter
-// Count) already generated earlier in Method 4. Does NOT touch or
-// recompute any prior Method 4 pipeline, names, or Wafq.
+// Reuses the existing "Next Number" AND its already-generated
+// Istintak letters from earlier in Method 4. Does NOT recompute
+// Istintak on the Next Number, and does NOT touch any prior
+// Method 4 pipeline, names, or Wafq.
 //
-// WORKFLOW:
-//   1. Istintak(Next Number) → letters
-//   2. Group FERD(5)/ZEVC(4) — same rule as rest of Method 4
-//   3. Complete unfinished name with Galib Anasir Istintak letters
-//      (identical rule to Esma-i Kitabet completion)
-//   4. Completed last name = Esma-i A'van
-//   5. Invocation = يا + Esma-i A'van + ايل
-//   6. Next Number − value(يوشن) → Istintak → letters
-//   7. Group FERD/ZEVC, complete unfinished name by self-recycling
-//      from the FRONT of its own sequence (Esma-i A'van completion rule)
-//   8. Completed last name = Esma-i Kasem
-//   9. Final = بحق + Esma-i Kasem + يوشن
+// CORRECTED WORKFLOW (per book):
+//   1. Reuse existing Next Number + its existing letters
+//   2. Build the name normally (FERD/ZEVC grouping + Galib Anasir
+//      completion — same rule as Esma-i Kitabet completion)
+//   3. Subtract value of "Ayil" (51) from Next Number → reduced number 1
+//   4. Display: يا + [Generated Name] + ايل
+//   5. Subtract value of "Yuşin" (316) from reduced number 1 → reduced number 2
+//   6. Istintak(reduced number 2) → FERD/ZEVC grouping + completion
+//      (self-recycle from front — Esma-i A'van completion rule) → Esma-i Kasem
+//   7. Display: بحق + [Esma-i Kasem] + يوشن
 // ═══════════════════════════════════════════════════════════════
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { istintak, GALIB_ANASIR_VALUES, FIRST_BAST } from "../../lib/mizaanPostEngine";
+import { istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
+
+const AYIL_VALUE = 51;
+const YUSHIN_VALUE = 316;
 
 const G = {
   gold:         "#F5D060",
@@ -37,9 +39,6 @@ const G = {
   red:          "#F87171",
   dim:          "rgba(255,255,255,0.35)",
 };
-
-const YUSHUN_LETTERS = ['ي', 'و', 'ش', 'ن'];
-const yushunValue = YUSHUN_LETTERS.reduce((s, l) => s + (FIRST_BAST[l] || 0), 0);
 
 function OrnamentalDivider() {
   return (
@@ -119,41 +118,44 @@ function groupLetters(letters, completionSource) {
   return { count, isFerd, groupSize, remainder, supplement, groups };
 }
 
-export default function Method4BookMethodSection({ nextNumber, dominant = "fire" }) {
+export default function Method4BookMethodSection({ nextNumber, nextLetters, dominant = "fire" }) {
   const pipeline = useMemo(() => {
-    if (!nextNumber || nextNumber <= 0) return null;
+    if (!nextNumber || nextNumber <= 0 || !Array.isArray(nextLetters) || nextLetters.length === 0) return null;
 
-    // ── STEP 1-2: Istintak Next Number → letters → FERD/ZEVC grouping ──
-    const avanLetters = istintak(nextNumber);
+    // ── STEP 1-2: Reuse existing Next Number letters → build name normally ──
     const galibValue = GALIB_ANASIR_VALUES[dominant] || GALIB_ANASIR_VALUES.fire;
     const galibIstintakLetters = istintak(galibValue);
-    // STEP 3: Complete with Galib Anasir Istintak letters (Esma-i Kitabet completion rule)
-    const avanGrouping = groupLetters(avanLetters, galibIstintakLetters);
-    // STEP 4-5: Completed last name = Esma-i A'van
+    const avanGrouping = groupLetters(nextLetters, galibIstintakLetters);
     const avanName = avanGrouping.groups.length > 0 ? avanGrouping.groups[avanGrouping.groups.length - 1].name : "";
+
+    // ── STEP 3: Subtract value of Ayil (51) from Next Number ──
+    const reducedNumber1 = nextNumber - AYIL_VALUE;
+
+    // ── STEP 4: Display invocation using reduced number 1 as the invocation number ──
     const invocationAvan = `يا${avanName}ايل`;
 
-    // ── STEP 8: Next Number − value(يوشن) ──
-    const kasemSourceNumber = nextNumber - yushunValue;
-    // STEP 9: Istintak of the resulting number
-    const kasemLetters = kasemSourceNumber > 0 ? istintak(kasemSourceNumber) : [];
-    // STEP 10-11: Group FERD/ZEVC, complete via self-recycle from FRONT (Esma-i A'van completion rule)
+    // ── STEP 5: Subtract value of Yuşin (316) from reduced number 1 ──
+    const reducedNumber2 = reducedNumber1 - YUSHIN_VALUE;
+
+    // ── STEP 6: Generate Esma-i Kasem from reducedNumber2 (normal grouping rules) ──
+    const kasemLetters = reducedNumber2 > 0 ? istintak(reducedNumber2) : [];
     const kasemGrouping = groupLetters(kasemLetters, kasemLetters);
-    // STEP 11-12: Completed last name = Esma-i Kasem
     const kasemName = kasemGrouping.groups.length > 0 ? kasemGrouping.groups[kasemGrouping.groups.length - 1].name : "";
+
+    // ── STEP 7: Final invocation ──
     const invocationKasem = `بحق${kasemName}يوشن`;
 
     return {
-      avanLetters, galibIstintakLetters, avanGrouping, avanName, invocationAvan,
-      kasemSourceNumber, kasemLetters, kasemGrouping, kasemName, invocationKasem,
+      avanGrouping, avanName, reducedNumber1, invocationAvan,
+      reducedNumber2, kasemLetters, kasemGrouping, kasemName, invocationKasem,
     };
-  }, [nextNumber, dominant]);
+  }, [nextNumber, nextLetters, dominant]);
 
   if (!pipeline) return null;
 
   const {
-    avanLetters, galibIstintakLetters, avanGrouping, avanName, invocationAvan,
-    kasemSourceNumber, kasemLetters, kasemGrouping, kasemName, invocationKasem,
+    avanGrouping, avanName, reducedNumber1, invocationAvan,
+    reducedNumber2, kasemLetters, kasemGrouping, kasemName, invocationKasem,
   } = pipeline;
 
   return (
@@ -184,20 +186,15 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
 
       <div className="px-4 pb-6 space-y-5 pt-4">
 
-        {/* STEP 1: Next Number reused */}
-        <Card accent={G.gold}>
-          <SectionHeader step="1" label="Next Number (Reused)" arabic="العدد التالي" color={G.gold} />
-          <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
+        {/* STEP 1-2: Reused Next Number + Name Grouping */}
+        <Card accent={G.green}>
+          <SectionHeader step="1" label="Next Number (Reused) → Name Grouping" arabic="العدد التالي" color={G.green} />
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg border mb-3"
             style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
-            <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>Expanded Total + Expanded Letter Count</span>
+            <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>Next Number</span>
             <span className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{nextNumber.toLocaleString()}</span>
           </div>
-        </Card>
-
-        {/* STEP 2-3: Istintak + Grouping + Completion */}
-        <Card accent={G.green}>
-          <SectionHeader step="2" label="Istintak → FERD/ZEVC Grouping" arabic="حروف الاستنطاق" color={G.green} />
-          <LetterRow letters={avanLetters} color={G.gold} />
+          <LetterRow letters={nextLetters} color={G.gold} />
           <div className="text-sm font-inter mt-3" style={{ color: G.dim }}>
             Count: <span style={{ color: G.gold, fontWeight: "bold" }}>{avanGrouping.count}</span>
             <span style={{ margin: "0 0.5rem" }}>•</span>
@@ -228,13 +225,30 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
           </div>
         </Card>
 
-        {/* Esma-i A'van + Invocation */}
+        {/* STEP 3: Subtract Ayil */}
         <Card accent={G.gold}>
-          <SectionHeader step="3" label="Esma-i A'van & Invocation" arabic="أسماء الأعوان" color={G.gold} />
-          <div className="text-center px-3 py-3 rounded-lg border mb-3"
-            style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
-            <span className="font-amiri text-2xl font-bold" style={{ color: G.gold, lineHeight: 1.8 }} dir="rtl">{avanName}</span>
+          <SectionHeader step="2" label="Next Number − Value of Ayil" arabic="العدد المخفض" color={G.gold} />
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center">
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Next Number</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{nextNumber.toLocaleString()}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>−</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Ayil (ايل)</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{AYIL_VALUE}</div>
+            </div>
+            <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>=</span>
+            <div className="space-y-1">
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Reduced Number</div>
+              <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{reducedNumber1.toLocaleString()}</div>
+            </div>
           </div>
+        </Card>
+
+        {/* STEP 4: Esma-i A'van Invocation */}
+        <Card accent={G.gold}>
+          <SectionHeader step="3" label="Esma-i A'van Invocation" arabic="دعوة أسماء الأعوان" color={G.gold} />
           <div className="text-center px-3 py-4 rounded-lg border"
             style={{ background: G.bgInner, borderColor: G.goldBorderHi }}>
             <span className="font-amiri text-3xl font-bold" style={{ color: G.gold, lineHeight: 2 }} dir="rtl">{invocationAvan}</span>
@@ -243,28 +257,28 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
 
         <OrnamentalDivider />
 
-        {/* STEP 8: Kasem source number */}
+        {/* STEP 5: Subtract Yuşin */}
         <Card accent={G.gold}>
-          <SectionHeader step="4" label="Next Number − Value of يوشن" arabic="العدد الناتج" color={G.gold} />
+          <SectionHeader step="4" label="Reduced Number − Value of Yuşin" arabic="العدد الناتج" color={G.gold} />
           <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center">
             <div className="space-y-1">
-              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Next Number</div>
-              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{nextNumber.toLocaleString()}</div>
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Reduced Number</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{reducedNumber1.toLocaleString()}</div>
             </div>
             <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>−</span>
             <div className="space-y-1">
-              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>يوشن Value</div>
-              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{yushunValue.toLocaleString()}</div>
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Yuşin (يوشن)</div>
+              <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{YUSHIN_VALUE}</div>
             </div>
             <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>=</span>
             <div className="space-y-1">
               <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Result</div>
-              <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{kasemSourceNumber.toLocaleString()}</div>
+              <div className="font-inter text-xl font-black tabular-nums" style={{ color: G.gold }}>{reducedNumber2.toLocaleString()}</div>
             </div>
           </div>
         </Card>
 
-        {/* STEP 9-11: Istintak + Grouping + Completion */}
+        {/* STEP 6: Istintak + Grouping → Esma-i Kasem */}
         <Card accent={G.green}>
           <SectionHeader step="5" label="Istintak → FERD/ZEVC Grouping" arabic="حروف الاستنطاق" color={G.green} />
           <LetterRow letters={kasemLetters} color={G.gold} />
@@ -298,9 +312,9 @@ export default function Method4BookMethodSection({ nextNumber, dominant = "fire"
           </div>
         </Card>
 
-        {/* Esma-i Kasem + Final Invocation */}
+        {/* STEP 7: Final Kasem Invocation */}
         <Card accent={G.gold}>
-          <SectionHeader step="6" label="Esma-i Kasem & Final Invocation" arabic="أسماء القسم" color={G.gold} />
+          <SectionHeader step="6" label="Esma-i Kasem Invocation" arabic="دعوة أسماء القسم" color={G.gold} />
           <div className="text-center px-3 py-3 rounded-lg border mb-3"
             style={{ background: G.goldFaint, borderColor: G.goldBorderHi }}>
             <span className="font-amiri text-2xl font-bold" style={{ color: G.gold, lineHeight: 1.8 }} dir="rtl">{kasemName}</span>
