@@ -195,6 +195,27 @@
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1, "mkmk" 1, "mark" 1;
   }
 
+  /* Hadim page — premium Arabic rendering for generated names (Hadim Name, Joined
+     Ceremonial, Final Grand Name, Kasem invocations). Uses Noto Naskh Arabic for
+     sharper display, adds mkmk/mark for proper diacritic stacking, and modest
+     word-spacing for readability. Letter-spacing kept minimal to preserve cursive
+     joining. Input fields excluded from line-height/word-spacing changes. */
+  .hadim-page .font-amiri {
+    font-family: 'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif;
+    letter-spacing: 0.03em;
+    word-spacing: 0.10em;
+    line-height: 2.2;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1, "mkmk" 1, "mark" 1;
+  }
+  .hadim-page input.font-amiri,
+  .hadim-page textarea.font-amiri {
+    line-height: 1.6;
+    word-spacing: normal;
+  }
+
   /* Large Arabic display text */
   .font-amiri-display {
     font-size: clamp(2.5rem, 5vw, 4rem);

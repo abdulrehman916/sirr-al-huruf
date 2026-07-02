@@ -204,7 +204,7 @@ export default function HadimPage() {
 
   return (
     <PageLayout>
-      <div className="space-y-4">
+      <div className="space-y-4 hadim-page">
         {/* Header */}
         <PageTitle arabic="مولّد الخادم" latin="Hadim Generator" subtitle="Ottoman Name Construction" icon="✦" />
 
