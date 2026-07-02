@@ -111,7 +111,7 @@ export default function VefkWritingGuide({ title = "Yazım Sırası Rehberi", ce
           className="flex-1 max-w-[160px] py-2 rounded-lg font-inter text-[11px] font-bold text-[#0d1b2a] disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)" }}
         >
-          İleri ({revealedCount}/{total})
+          Next ({revealedCount}/{total})
         </motion.button>
         <motion.button
           onClick={handleReset}
@@ -121,7 +121,7 @@ export default function VefkWritingGuide({ title = "Yazım Sırası Rehberi", ce
           className="flex-1 max-w-[160px] py-2 rounded-lg font-inter text-[11px] font-bold border disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ color: G.text, borderColor: "rgba(212,175,55,0.40)", background: "rgba(212,175,55,0.06)" }}
         >
-          Temizle
+          Clear
         </motion.button>
       </div>
     </div>

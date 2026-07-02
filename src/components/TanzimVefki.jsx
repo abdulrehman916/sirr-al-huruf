@@ -1,4 +1,4 @@
-import { useState, memo, useEffect } from "react";
+import { useState, useMemo, memo, useEffect } from "react";
 import { useVefkSession } from "../context/VefkSessionContext";
 import { VefkActionButtons } from "./VefkSessionManager";
 import VefkWritingGuide from "./vefk/VefkWritingGuide";
@@ -148,7 +148,10 @@ export default function TanzimVefki() {
   const canGenerate = esmaValue && esmaValue > 0;
   const base        = canGenerate ? resolveBase(esmaValue) : null;
   const wasSquared  = canGenerate && esmaValue < 40;
-  const cells       = canGenerate ? computeTanzimCells(esmaValue) : null;
+  // Memoized so the cells object reference stays stable across unrelated
+  // re-renders — this is required for the Demo Writing Grid to keep its
+  // revealed progress instead of resetting on every render.
+  const cells       = useMemo(() => (canGenerate ? computeTanzimCells(esmaValue) : null), [canGenerate, esmaValue]);
   const magicConst  = base ? base * base : null;
 
   // Auto-save to context when cells are generated (only if inputs exist)
