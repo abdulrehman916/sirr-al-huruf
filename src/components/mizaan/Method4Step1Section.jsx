@@ -22,6 +22,7 @@ import Method4FinalSummary from "./Method4FinalSummary";
 import Method4VefkCard from "./Method4VefkCard";
 import Method4AlternativeReading from "./Method4AlternativeReading";
 import Method4BookMethodSection from "./Method4BookMethodSection";
+import Method4FinalVefkSummary from "./Method4FinalVefkSummary";
 
 const G = {
   gold:         "#F5D060",
@@ -837,6 +838,23 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         />
 
         <Method4BookMethodSection nextNumber={nextNumber} nextLetters={nextLetters} dominant={dominant} />
+
+        <Method4FinalVefkSummary
+          kitabetVefk={kitabetVefk}
+          kitabetVefkSource={kitabetVefkSource}
+          kitabetNames={kitabetNamesList}
+          kitabetLetters={allExpandedLetters}
+          avanVefk={avanVefk}
+          avanVefkSource={avanVefkSource}
+          avanNames={avanNamesList}
+          avanLetters={allExpandedLetters2}
+          kasemVefk={kasemVefk}
+          kasemVefkSource={kasemVefkSource}
+          kasemNames={kasemNamesList}
+          kasemLetters={kasemLetters}
+          kasemBastLevel={kasemVefkBastLevel}
+          dominant={dominant}
+        />
 
       </div>
 
