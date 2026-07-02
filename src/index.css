@@ -179,17 +179,20 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    letter-spacing: 0.03em;
-    line-height: 1.8;
+    letter-spacing: 0.04em;
+    line-height: 2;
     font-weight: 600;
-    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
   }
 
   /* Mizaan page — improve legibility of generated Arabic words (spacing only, same font/text) */
   .mizaan-page .font-amiri {
-    letter-spacing: 0.14em;
-    word-spacing: 0.2em;
-    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
+    font-family: 'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif;
+    letter-spacing: 0.06em;
+    word-spacing: 0.18em;
+    line-height: 2.2;
+    font-weight: 600;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1, "mkmk" 1, "mark" 1;
   }
 
   /* Large Arabic display text */
