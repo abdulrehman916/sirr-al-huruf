@@ -70,42 +70,6 @@ export default function Method4AlternativeReading({ nineMizanTotal, seedLetters,
             ഒൻപത് മീസാനുകളുടെ മൊത്തം സംഖ്യയിൽ നിന്ന് ഇസ്തിന്താഖ് ചെയ്തപ്പോൾ ലഭിച്ച അക്ഷരങ്ങൾ മാത്രം അവയുടെ അദദ് അനുസരിച്ച് പാരായണം ചെയ്യാവുന്നതാണ്.
           </p>
         </div>
-
-        <div className="rounded-xl border p-4" style={{ background: G.bgInner, borderColor: G.goldBorder + "55" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="font-inter text-[11px] font-bold" style={{ color: G.gold }}>Nine Mizan Total Istintak Letters</span>
-          </div>
-
-          <div className="space-y-3 pl-1">
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg border"
-              style={{ background: G.goldFaint, borderColor: G.goldBorder + "55" }}>
-              <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>Total Number</span>
-              <span className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{(nineMizanTotal || 0).toLocaleString()}</span>
-            </div>
-
-            <div>
-              <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>Original Istintak Letters:</span>
-              <div className="flex flex-wrap gap-2 mt-2" dir="rtl">
-                {(safeLetters.length > 0 ? safeLetters : ["—"]).map((l, i) => (
-                  <span key={i} className="font-amiri text-lg font-bold px-3 py-1 rounded-lg border"
-                    style={{ color: G.gold, borderColor: G.goldBorder + "55", background: G.goldFaint, lineHeight: 1.7 }}>
-                    {l}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>Total Letter Count:</span>
-              <span className="font-inter text-base font-black tabular-nums" style={{ color: G.gold }}>{totalSeed || 0}</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>Adad (Count):</span>
-              <span className="font-inter text-base font-black tabular-nums" style={{ color: G.gold }}>{(seedAdad || 0).toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent 5%, ${G.goldBorderHi} 40%, ${G.gold}88 50%, ${G.goldBorderHi} 60%, transparent 95%)` }} />
