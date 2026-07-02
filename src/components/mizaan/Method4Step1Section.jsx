@@ -221,6 +221,10 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
       avanNameGroups.push({ letters: g, name: g.join("") });
     }
 
+    // A'van Wafq source: Bast-1 sum of the ORIGINAL Esma-i A'van letters (avanLetters), never the
+    // internal pipeline expansion letters (allExpandedLetters2) and never supplement letters.
+    const avanVefkSourceTotal = avanLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+
     // ── STEP 15: Carry-Forward for Next Calculation ──
     // Display-completion letters are NEVER carried. If genuine leftover letters exist, carry
     // ONLY those. If none (all letters formed complete names), carry the LAST complete name.
@@ -288,8 +292,10 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
       // ── Wafq (Kalam) sources — same engine as Methods 1/2 ──
       kitabetVefk: expandedTotal > 0 ? buildVefk(expandedTotal, dominant) : null,
       kitabetVefkSource: expandedTotal,
-      avanVefk: expandedTotal2 > 0 ? buildVefk(expandedTotal2, dominant) : null,
-      avanVefkSource: expandedTotal2,
+      // A'van Wafq: built ONLY from the original Esma-i A'van letters (avanLetters = nextLetters2,
+      // before any supplement/completion letters) — NOT the internal pipeline expansion letters.
+      avanVefk: avanVefkSourceTotal > 0 ? buildVefk(avanVefkSourceTotal, dominant) : null,
+      avanVefkSource: avanVefkSourceTotal,
       kasemVefkBastLevel: kasemIsFerd ? 5 : 4,
       kasemVefkSource: kasemLetters.reduce((s, l) => s + (getBastLevelFn(l, kasemIsFerd ? 5 : 4) || 0), 0),
       kasemVefk: (() => {
@@ -650,7 +656,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         </Card>
 
         {/* ESMA-I A'VAN WAFQ (KALAM) — same buildVefk engine as Methods 1/2 */}
-        <Method4VefkCard step="14v" title="Esma-i A'van Wafq" sourceLabel="Vefk Source (Expanded Letters B1 Total)" sourceNumber={avanVefkSource} vefk={avanVefk} dominant={dominant} sourceLetters={allExpandedLetters2} bastLevel={1} />
+        <Method4VefkCard step="14v" title="Esma-i A'van Wafq" sourceLabel="Vefk Source (Original A'van Letters B1 Total)" sourceNumber={avanVefkSource} vefk={avanVefk} dominant={dominant} sourceLetters={avanLetters} bastLevel={1} />
 
         {/* STEP 15: Carry-Forward for Next Calculation */}
         <Card accent={G.gold}>
@@ -848,7 +854,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           avanVefk={avanVefk}
           avanVefkSource={avanVefkSource}
           avanNames={avanNamesList}
-          avanLetters={allExpandedLetters2}
+          avanLetters={avanLetters}
           kasemVefk={kasemVefk}
           kasemVefkSource={kasemVefkSource}
           kasemNames={kasemNamesList}
