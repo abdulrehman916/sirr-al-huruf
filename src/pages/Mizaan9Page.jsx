@@ -539,6 +539,15 @@ export default function Mizaan9Page() {
                 const s1Vefk   = section1?.vefk || null;
                 const s1Source = section1?.vefkSourceNumber || null;
 
+                // A'van's own completed-pipeline output — this (NOT section1.allExpandedLetters) is Kasem's input
+                const section2ExpandedLetters = (() => {
+                  if (!section1?.allExpandedLetters?.length) return [];
+                  const s2GrandBast    = section1.allExpandedLetters.reduce((s, l) => s + (getBastLevelFn(l, 1) || 0), 0);
+                  const s2GrandLetters = section1.allExpandedLetters.length;
+                  const s2Pipeline     = runMizaanPostPipeline({ grandBast: s2GrandBast, grandLetters: s2GrandLetters, dominant, getBastLevelFn });
+                  return s2Pipeline?.allExpandedLetters || [];
+                })();
+
                 return (
                   <>
                     {/* ═══ SECTION 1: LOCKED ═══ */}
@@ -555,9 +564,9 @@ export default function Mizaan9Page() {
                     )}
 
                     {/* ═══ ESMA-I KASEM — Method 1 includes full Kasem pipeline (only conclusion omitted) ═══ */}
-                    {section1?.allExpandedLetters?.length > 0 && (
+                    {section2ExpandedLetters.length > 0 && (
                       <EsmaKasemSection
-                        section2ExpandedLetters={section1.allExpandedLetters}
+                        section2ExpandedLetters={section2ExpandedLetters}
                         dominant={dominant}
                         onVefkReady={setS3VefkData}
                         getBastLevelFn={getBastLevelFn}
