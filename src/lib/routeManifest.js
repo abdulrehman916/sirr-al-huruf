@@ -53,6 +53,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/settings', component: 'AdminSettings', chunk: 'AdminSettings' },
   { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' },
   { path: '/admin/pdf-content-editor', component: 'AdminPDFContentEditor', chunk: 'AdminPDFContentEditor' },
+  { path: '/admin/holy-names-translator', component: 'AdminHolyNamesTranslator', chunk: 'AdminHolyNamesTranslator' },
   
   // Test & Debug
   { path: '/mizan-completion-test', component: 'MizanCompletionTest', chunk: 'MizanCompletionTest', flags: ['public'] },

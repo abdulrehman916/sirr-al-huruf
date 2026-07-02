@@ -61,6 +61,7 @@ const PAGE_IMPORTS = {
   AdminSettings:           () => import('./pages/AdminSettings'),
   UserDetailPage:           () => import('./pages/UserDetailPage'),
   AdminPDFContentEditor:    () => import('./pages/AdminPDFContentEditor'),
+  AdminHolyNamesTranslator: () => import('./pages/AdminHolyNamesTranslator'),
   MizanCompletionTest:      () => import('./pages/MizanCompletionTest'),
   };
 

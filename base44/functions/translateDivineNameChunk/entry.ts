@@ -64,7 +64,7 @@ Return valid JSON only:
   "islamic_information": "...",
   "authentic_notes": "..."
 }`,
-      model: "gpt_5_4",
+      model: "gpt_5_mini",
       response_json_schema: {
         type: "object",
         properties: {
