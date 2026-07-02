@@ -175,7 +175,7 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
     const groups = [];
     for (let i = 0; i < seq.length; i += gSize) groups.push(seq.slice(i, i + gSize).join(""));
     return { names: groups, originalNames: originalGroups };
-  }, [pipeline, dominant]);
+  }, [pipeline, dominant, getBastLevelFn]);
 
   useEffect(() => {
     if (onVefkReady && pipeline?.vefk) {

@@ -174,7 +174,7 @@ export default function SatrVahidGrouping({
       derivations: derivs,
       allExpandedLetters: allExpanded,
     };
-  }, [safeSeed, bastLevel]);
+  }, [safeSeed, bastLevel, getBastLevelFn]);
 
   // ── STEP 2: Group Formation from Expanded Letters ──
   const groupFormation = useMemo(() => {
