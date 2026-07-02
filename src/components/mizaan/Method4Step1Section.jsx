@@ -850,7 +850,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
           seedAdad={seedAdad}
         />
 
-        <Method4BookMethodSection nextNumber={nextNumber} nextLetters={nextLetters} dominant={dominant} />
+        <Method4BookMethodSection nextNumber={nextNumber} dominant={dominant} />
 
         <Method4FinalVefkSummary
           kitabetVefk={kitabetVefk}
