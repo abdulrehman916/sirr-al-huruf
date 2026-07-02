@@ -316,7 +316,7 @@ export default function TanzimVefki() {
               </div>
 
               {/* Demo Writing Grid — learning aid only, never affects calculations */}
-              <VefkWritingGuide title="Tanzim Vefki — Yazım Sırası Demo Rehberi" />
+              <VefkWritingGuide title="Tanzim Vefki — Yazım Sırası Demo Rehberi" cells={cells} />
 
               {/* Action Buttons */}
               <VefkActionButtons gridId="tanzim-vefk-grid-export-content" mode="tanzim" hasResult={!!cells} />

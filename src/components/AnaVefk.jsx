@@ -394,7 +394,7 @@ export default function AnaVefk() {
             </div>
 
             {/* Demo Writing Grid — learning aid only, never affects calculations */}
-            <VefkWritingGuide title="Ana Vefk — Yazım Sırası Demo Rehberi" />
+            <VefkWritingGuide title="Ana Vefk — Yazım Sırası Demo Rehberi" cells={result.cells} />
 
             {/* Action Buttons */}
             <VefkActionButtons gridId="ana-vefk-grid-export-content" mode="ana" hasResult={!!result} />
