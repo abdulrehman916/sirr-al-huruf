@@ -132,7 +132,7 @@ export default function Method4BookMethodSection({ nextNumber, nextLetters, domi
     const reducedNumber1 = nextNumber - AYIL_VALUE;
 
     // ── STEP 4: Display invocation using reduced number 1 as the invocation number ──
-    const invocationAvan = `يا${avanName}ايل`;
+    const invocationAvan = `يا${avanName}آييل`;
 
     // ── STEP 5: Subtract value of Yuşin (316) from reduced number 1 ──
     const reducedNumber2 = reducedNumber1 - YUSHIN_VALUE;
@@ -235,7 +235,7 @@ export default function Method4BookMethodSection({ nextNumber, nextLetters, domi
             </div>
             <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>−</span>
             <div className="space-y-1">
-              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Ayil (ايل)</div>
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Ayil (آييل)</div>
               <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{AYIL_VALUE}</div>
             </div>
             <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>=</span>
