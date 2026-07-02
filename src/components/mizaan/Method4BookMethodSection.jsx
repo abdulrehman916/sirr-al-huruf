@@ -143,7 +143,7 @@ export default function Method4BookMethodSection({ nextNumber, nextLetters, domi
     const kasemName = kasemGrouping.groups.length > 0 ? kasemGrouping.groups[kasemGrouping.groups.length - 1].name : "";
 
     // ── STEP 7: Final invocation ──
-    const invocationKasem = `بحق${kasemName}يوشن`;
+    const invocationKasem = `بحق${kasemName}يوش`;
 
     return {
       avanGrouping, avanName, reducedNumber1, invocationAvan,
@@ -267,7 +267,7 @@ export default function Method4BookMethodSection({ nextNumber, nextLetters, domi
             </div>
             <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>−</span>
             <div className="space-y-1">
-              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Yuşin (يوشن)</div>
+              <div className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Yuşin (يوش)</div>
               <div className="font-inter text-base font-bold tabular-nums" style={{ color: G.gold }}>{YUSHIN_VALUE}</div>
             </div>
             <span className="font-inter text-lg font-bold" style={{ color: G.goldDim }}>=</span>
