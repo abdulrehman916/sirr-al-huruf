@@ -69,6 +69,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/holy-names-translator', component: 'AdminHolyNamesTranslator', chunk: 'AdminHolyNamesTranslator' },
   { path: '/admin/feature-pricing', component: 'AdminFeaturePricing', chunk: 'AdminFeaturePricing' },
   { path: '/admin/products', component: 'AdminProducts', chunk: 'AdminProducts' },
+  { path: '/admin/shop', component: 'AdminShopDashboard', chunk: 'AdminShopDashboard' },
   
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },

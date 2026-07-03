@@ -10,6 +10,7 @@ import ProductCard from "../components/shop/ProductCard";
 import { ProductGridSkeleton } from "../components/shop/ProductSkeleton";
 import { EmptySearchState, EmptyShopState, EmptyWishlistState } from "../components/shop/EmptyState";
 import { base44 } from "../api/base44Client";
+import { setSelectedCountry } from "@/lib/shopCurrency";
 import { getWishlist, isInWishlist, toggleWishlist, extractBrands, parsePrice, getRecentlyViewed, getBrand } from "@/lib/shopUtils";
 import RelatedProducts from "../components/shop/RelatedProducts";
 import CompareBar from "../components/shop/CompareBar";
@@ -55,10 +56,30 @@ export default function ShopPage() {
   const [minRating, setMinRating] = useState(0);
   const [wishlistIds, setWishlistIds] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
+  const [shopCategories, setShopCategories] = useState([]);
 
   useEffect(() => {
     loadProducts();
     refreshWishlist();
+  }, []);
+
+  // Load dynamic categories and apply owner country override
+  useEffect(() => {
+    (async () => {
+      try {
+        const cats = await base44.entities.ShopCategory.list("display_order", 200);
+        const active = (cats || []).filter(c => c.is_active !== false).map(c => c.name);
+        if (active.length > 0) setShopCategories(active);
+      } catch { /* fallback to product-derived */ }
+
+      try {
+        const settings = await base44.entities.ShopSettings.list();
+        const s = settings?.[0];
+        if (s && s.auto_detect_country === false && s.active_country) {
+          setSelectedCountry(s.active_country);
+        }
+      } catch { /* ignore */ }
+    })();
   }, []);
 
   // Listen for wishlist changes
@@ -99,10 +120,11 @@ export default function ShopPage() {
   };
 
   const categories = useMemo(() => {
+    if (shopCategories.length > 0) return ["all", ...shopCategories];
     const set = new Set();
     products.forEach(p => { if (p.category) set.add(p.category); });
     return ["all", ...Array.from(set).sort()];
-  }, [products]);
+  }, [products, shopCategories]);
 
   const brands = useMemo(() => extractBrands(products), [products]);
 

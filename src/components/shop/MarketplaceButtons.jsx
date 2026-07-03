@@ -2,6 +2,7 @@ import {
   ShoppingBag, ExternalLink, MessageCircle, Mail, Sun,
 } from "lucide-react";
 import { useCountryProfile } from "@/hooks/useCountryProfile";
+import { openMarketplaceLink } from "@/lib/marketplaceDeepLinks";
 
 const G = {
   text: "#F5D060", dim: "rgba(212,175,55,0.55)",
@@ -16,7 +17,7 @@ function getIcon(mp) {
 
 function handleClick(btn, product) {
   if (btn.type === "affiliate") {
-    window.open(btn.link.url, "_blank", "noopener,noreferrer");
+    openMarketplaceLink(btn.mp.id, btn.link.url);
   } else if (btn.type === "whatsapp") {
     const num = String(btn.value).replace(/[^0-9]/g, "");
     const msg = `Hi, I'm interested in: ${product.name}`;
