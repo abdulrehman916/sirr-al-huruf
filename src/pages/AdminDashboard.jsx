@@ -113,6 +113,7 @@ export default function AdminDashboard() {
               { to: "/admin/page-permissions",  icon: "🌐", label: "Page Access" },
               { to: "/admin/support",           icon: "💬", label: "Support Messages" },
               { to: "/admin/access-logs",       icon: "📋", label: "Access Logs" },
+              { to: "/admin/feature-pricing",   icon: "💰", label: "Feature Pricing" },
               { to: "/admin/settings",          icon: "⚙️", label: "Settings" },
             ].map(link => (
               <a
