@@ -3,6 +3,7 @@ import {
 } from "lucide-react";
 import { useCountryProfile } from "@/hooks/useCountryProfile";
 import { openMarketplaceLink } from "@/lib/marketplaceDeepLinks";
+import { trackMarketplaceClick } from "@/lib/shopAnalytics";
 
 const G = {
   text: "#F5D060", dim: "rgba(212,175,55,0.55)",
@@ -16,13 +17,22 @@ function getIcon(mp) {
 }
 
 function handleClick(btn, product) {
+  const pid = product.product_id || product.id;
+  const pname = product.name || "";
   if (btn.type === "affiliate") {
+    const clickType = btn.isAmazon ? "amazon_click"
+      : btn.mp?.id === "noon" ? "noon_click"
+      : btn.mp?.id === "flipkart" ? "flipkart_click"
+      : "custom_click";
+    trackMarketplaceClick(pid, pname, btn.mp?.id || "custom", clickType);
     openMarketplaceLink(btn.mp.id, btn.link.url);
   } else if (btn.type === "whatsapp") {
+    trackMarketplaceClick(pid, pname, "whatsapp", "whatsapp_click");
     const num = String(btn.value).replace(/[^0-9]/g, "");
     const msg = `Hi, I'm interested in: ${product.name}`;
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
   } else if (btn.type === "email") {
+    trackMarketplaceClick(pid, pname, "email", "email_click");
     const subject = `Inquiry: ${product.name}`;
     window.open(`mailto:${btn.value}?subject=${encodeURIComponent(subject)}`, "_blank");
   }

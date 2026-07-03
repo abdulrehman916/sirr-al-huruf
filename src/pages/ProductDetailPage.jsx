@@ -21,6 +21,7 @@ import ProductInfoSection from "../components/shop/ProductInfoSection";
 import PriceDisplay from "../components/shop/PriceDisplay";
 import MarketplaceButtons from "../components/shop/MarketplaceButtons";
 import ShopBadges from "../components/shop/ShopBadges";
+import { trackDetailView } from "@/lib/shopAnalytics";
 import ShippingInfo from "../components/shop/ShippingInfo";
 import PremiumGallery from "../components/shop/PremiumGallery";
 import ProductInfoAccordion from "../components/shop/ProductInfoAccordion";
@@ -109,6 +110,7 @@ export default function ProductDetailPage() {
         const p = list[0];
         setProduct(p);
         setActiveImageIdx(p.thumbnail_index || 0);
+        trackDetailView(p.product_id || p.id, p.name);
         loadReviews(p.product_id);
       }
     } catch (err) {

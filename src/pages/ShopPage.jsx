@@ -11,6 +11,7 @@ import { ProductGridSkeleton } from "../components/shop/ProductSkeleton";
 import { EmptySearchState, EmptyShopState, EmptyWishlistState } from "../components/shop/EmptyState";
 import { base44 } from "../api/base44Client";
 import { setSelectedCountry } from "@/lib/shopCurrency";
+import { trackSearch, trackCategoryFilter } from "@/lib/shopAnalytics";
 import { getWishlist, isInWishlist, toggleWishlist, extractBrands, parsePrice, getRecentlyViewed, getBrand } from "@/lib/shopUtils";
 import RelatedProducts from "../components/shop/RelatedProducts";
 import CompareBar from "../components/shop/CompareBar";
@@ -229,6 +230,19 @@ export default function ShopPage() {
     }
     return sorted;
   }, [products, activeCategory, activeBrand, search, sort, priceMin, priceMax, showWishlistOnly, wishlistIds]);
+
+  // ── Anonymous analytics tracking (fire-and-forget, no UI impact) ──
+  useEffect(() => {
+    if (search.trim()) {
+      trackSearch(search.trim(), filtered.length);
+    }
+  }, [search]);
+
+  useEffect(() => {
+    if (activeCategory !== "all") {
+      trackCategoryFilter(activeCategory);
+    }
+  }, [activeCategory]);
 
   const featuredProducts = useMemo(
     () => products.filter(p => p.is_featured && p.is_active !== false).slice(0, 6),

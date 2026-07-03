@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Share2, MessageCircle, Send, Link2, Check } from "lucide-react";
+import { trackShareClick } from "@/lib/shopAnalytics";
 
 const G = {
   text: "#F5D060",
@@ -100,7 +101,7 @@ export default function ShareMenu({ product }) {
                 return (
                   <button
                     key={item.key}
-                    onClick={() => { item.onClick(); if (item.key !== "native") setOpen(false); }}
+                    onClick={() => { trackShareClick(product.id, product.name); item.onClick(); if (item.key !== "native") setOpen(false); }}
                     className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-white/5"
                   >
                     <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: item.color }} />
@@ -115,7 +116,7 @@ export default function ShareMenu({ product }) {
               })}
               <div className="border-t" style={{ borderColor: G.faint }}>
                 <button
-                  onClick={() => { copyLink(); setOpen(false); }}
+                  onClick={() => { trackShareClick(product.id, product.name); copyLink(); setOpen(false); }}
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-white/5"
                 >
                   {copied ? (

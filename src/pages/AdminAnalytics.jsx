@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
 import {
   Users, UserCheck, Crown, Globe, Ticket, Clock, CheckCircle, XCircle,
-  DollarSign, Calendar, Shield, UserPlus, UserMinus, Download, BarChart3, History,
+  DollarSign, Calendar, Shield, UserPlus, UserMinus, Download, BarChart3, History, ShoppingBag,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -24,6 +24,7 @@ import { useToast } from "@/components/ui/use-toast";
 import AnalyticsStatCard from "@/components/admin/AnalyticsStatCard";
 import AnalyticsCharts from "@/components/admin/AnalyticsCharts";
 import AuditLogList from "@/components/admin/AuditLogList";
+import MarketplaceAnalyticsDashboard from "@/components/admin/shop/MarketplaceAnalyticsDashboard";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -98,9 +99,10 @@ export default function AdminAnalytics() {
     setActiveTab(tab);
     if (tab === "analytics") {
       loadAnalytics();
-    } else {
+    } else if (tab === "audit") {
       loadAuditLogs();
     }
+    // "shop" tab — dashboard loads its own data
   };
 
   const handleExport = async (exportType) => {
@@ -179,6 +181,18 @@ export default function AdminAnalytics() {
               <History className="w-3.5 h-3.5" />
               Audit Logs
             </button>
+            <button
+              onClick={() => handleTabChange("shop")}
+              className="px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2"
+              style={{
+                background: activeTab === "shop" ? "rgba(212,175,55,0.14)" : "rgba(255,255,255,0.03)",
+                border: activeTab === "shop" ? "1px solid rgba(212,175,55,0.50)" : "1px solid rgba(255,255,255,0.08)",
+                color: activeTab === "shop" ? G.text : "rgba(255,255,255,0.50)",
+              }}
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              Shop
+            </button>
           </div>
 
           {/* Export buttons (owner only) */}
@@ -248,6 +262,9 @@ export default function AdminAnalytics() {
             {/* Charts */}
             <AnalyticsCharts charts={charts} />
           </>
+        ) : activeTab === "shop" ? (
+          /* ── Shop Analytics Tab ── */
+          <MarketplaceAnalyticsDashboard />
         ) : (
           /* ── Audit Logs Tab ── */
           <AuditLogList logs={logs} isOwner={isOwner} />

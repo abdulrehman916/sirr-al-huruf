@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Star, ExternalLink, Heart, Share2, Check } from "lucide-react";
 import { isInWishlist, toggleWishlist, shareProduct, getBrand } from "@/lib/shopUtils";
+import { trackProductView, trackShareClick } from "@/lib/shopAnalytics";
 import { useToast } from "@/components/ui/use-toast";
 import { ProductBadgesOverlay } from "./ProductBadges";
 import { CompareButton } from "./CompareBar";
@@ -38,6 +39,7 @@ export default function ProductCard({ product, index = 0 }) {
   }, [product.id]);
 
   const handleClick = () => {
+    trackProductView(product.id, product.name);
     navigate(`/shop/${product.slug || product.id}`);
   };
 
@@ -58,6 +60,7 @@ export default function ProductCard({ product, index = 0 }) {
 
   const handleShare = (e) => {
     e.stopPropagation();
+    trackShareClick(product.id, product.name);
     shareProduct(product);
     toast({ title: "Share link copied", duration: 1800 });
   };

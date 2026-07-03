@@ -3,6 +3,8 @@
  * No backend changes. Wishlist + Recently Viewed + price parsing.
  */
 
+import { trackWishlistAdd } from "@/lib/shopAnalytics";
+
 const WISHLIST_KEY = "shop_wishlist";
 const RECENTLY_VIEWED_KEY = "shop_recently_viewed";
 const MAX_RECENT = 8;
@@ -27,6 +29,7 @@ export function toggleWishlist(productId) {
     list.splice(idx, 1);
   } else {
     list.push(productId);
+    trackWishlistAdd(productId, "");
   }
   localStorage.setItem(WISHLIST_KEY, JSON.stringify(list));
   // Dispatch event so other components can react
