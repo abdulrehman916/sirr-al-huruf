@@ -4,7 +4,7 @@ import { useNavigate, Navigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, FolderTree, Tag, Boxes, ShoppingCart,
   Users, Star, Ticket, Truck, ExternalLink, DollarSign, BarChart3, Settings,
-  Plus, Edit3, ArrowRight, PackageX, Eye,
+  Plus, Edit3, ArrowRight, PackageX, Eye, Globe, Image as ImageIcon,
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { base44 } from "@/api/base44Client";
@@ -19,8 +19,10 @@ import CouponsManager from "@/components/admin/shop/CouponsManager";
 import ShippingManager from "@/components/admin/shop/ShippingManager";
 import MarketplaceLinksManager from "@/components/admin/shop/MarketplaceLinksManager";
 import CurrencySettingsPanel from "@/components/admin/shop/CurrencySettingsPanel";
+import CountrySettingsPanel from "@/components/admin/shop/CountrySettingsPanel";
 import ShopAnalytics from "@/components/admin/shop/ShopAnalytics";
 import ShopSettingsPanel from "@/components/admin/shop/ShopSettingsPanel";
+import MediaLibrary from "@/components/admin/shop/MediaLibrary";
 
 const G = {
   border: "rgba(212,175,55,0.40)", borderHi: "rgba(212,175,55,0.65)",
@@ -39,9 +41,11 @@ const SECTIONS = [
   { id: "reviews", label: "Reviews", icon: Star },
   { id: "coupons", label: "Coupons", icon: Ticket },
   { id: "shipping", label: "Shipping", icon: Truck },
+  { id: "country", label: "Country", icon: Globe },
   { id: "marketplace-links", label: "Marketplace Links", icon: ExternalLink },
   { id: "currency", label: "Currency", icon: DollarSign },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
+  { id: "media", label: "Media Library", icon: ImageIcon },
   { id: "settings", label: "Shop Settings", icon: Settings },
 ];
 
@@ -85,8 +89,10 @@ export default function AdminShopDashboard() {
       case "coupons": return <CouponsManager />;
       case "shipping": return <ShippingManager />;
       case "marketplace-links": return <MarketplaceLinksManager />;
+      case "country": return <CountrySettingsPanel />;
       case "currency": return <CurrencySettingsPanel />;
       case "analytics": return <ShopAnalytics />;
+      case "media": return <MediaLibrary />;
       case "settings": return <ShopSettingsPanel />;
       default: return null;
     }
