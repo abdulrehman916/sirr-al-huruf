@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal } from "lucide-react";
+import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, Database } from "lucide-react";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -53,6 +53,7 @@ const SIDEBAR_SECTIONS = [
     items: [
       { path: "/admin/settings", label: "Settings", icon: Settings },
       { path: "/admin/system-settings", label: "System Settings", icon: SlidersHorizontal },
+      { path: "/admin/entity-manager", label: "Entity Manager", icon: Database },
     ]
   },
 ];

@@ -64,6 +64,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/pdf-content-editor', component: 'AdminPDFContentEditor', chunk: 'AdminPDFContentEditor' },
   { path: '/admin/holy-names-translator', component: 'AdminHolyNamesTranslator', chunk: 'AdminHolyNamesTranslator' },
   { path: '/admin/feature-pricing', component: 'AdminFeaturePricing', chunk: 'AdminFeaturePricing' },
+  { path: '/admin/entity-manager', component: 'AdminEntityManager', chunk: 'AdminEntityManager' },
   
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },
