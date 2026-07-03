@@ -37,6 +37,7 @@ import Method3AbjadVerificationSection from "../components/mizaan/Method3AbjadVe
 import Method3DivineNamesMatchSection from "../components/mizaan/Method3DivineNamesMatchSection";
 import Method4Step1Section from "../components/mizaan/Method4Step1Section";
 import MizaanInputCard from "../components/mizaan/MizaanInputCard";
+import RitualTimingAnalysis from "../components/mizaan/RitualTimingAnalysis";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
@@ -1148,6 +1149,16 @@ export default function Mizaan9Page() {
             )}
           </AnimatePresence>
         </div>
+      )}
+
+      {/* ── RITUAL TIMING ANALYSIS — Read-only, appended below all methods ── */}
+      {result && activeMethod !== 5 && (
+        <RitualTimingAnalysis
+          result={result}
+          selections={selections}
+          customPurpose={customPurpose}
+          activeMethod={activeMethod}
+        />
       )}
 
       {/* Method 5 Placeholder */}
