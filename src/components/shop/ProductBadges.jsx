@@ -1,4 +1,4 @@
-import { Star, Flame, Sparkles, X, TrendingDown } from "lucide-react";
+import { Star, Flame, Sparkles, X, TrendingDown, TrendingUp } from "lucide-react";
 
 const G = {
   text: "#F5D060",
@@ -46,6 +46,9 @@ export function getProductBadges(product) {
   }
   if (product.is_best_seller) {
     badges.push({ key: "best", label: "Best Seller", icon: Flame, bg: "rgba(251,146,60,0.15)", border: "rgba(251,146,60,0.45)", color: "#FB923C" });
+  }
+  if (product.is_trending) {
+    badges.push({ key: "trending", label: "Trending", icon: TrendingUp, bg: "rgba(168,85,247,0.15)", border: "rgba(168,85,247,0.45)", color: "#C084FC" });
   }
   if (product.is_new_arrival) {
     badges.push({ key: "new", label: "New Arrival", icon: Sparkles, bg: "rgba(96,165,250,0.15)", border: "rgba(96,165,250,0.45)", color: "#60A5FA" });

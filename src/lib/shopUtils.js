@@ -165,13 +165,23 @@ export function clearCompare() {
 }
 
 // ── Brand Extraction ──
-// Derives "brands" from tags (first tag treated as brand) — no entity changes
+// Prefers the dedicated `brand` field; falls back to first tag for legacy records.
 export function extractBrands(products) {
   const brands = new Set();
   products.forEach(p => {
-    if (p.tags && p.tags.length > 0) {
+    if (p.brand) {
+      brands.add(p.brand);
+    } else if (p.tags && p.tags.length > 0) {
       brands.add(p.tags[0]);
     }
   });
   return Array.from(brands).sort();
+}
+
+// Returns the display brand for a single product (brand field > first tag)
+export function getBrand(product) {
+  if (!product) return null;
+  if (product.brand) return product.brand;
+  if (product.tags && product.tags.length > 0) return product.tags[0];
+  return null;
 }

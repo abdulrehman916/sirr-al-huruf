@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Star, ExternalLink, Heart, Share2, Check } from "lucide-react";
-import { isInWishlist, toggleWishlist, shareProduct } from "@/lib/shopUtils";
+import { isInWishlist, toggleWishlist, shareProduct, getBrand } from "@/lib/shopUtils";
 import { useToast } from "@/components/ui/use-toast";
 import { ProductBadgesOverlay } from "./ProductBadges";
 import { CompareButton } from "./CompareBar";
@@ -161,6 +161,12 @@ export default function ProductCard({ product, index = 0 }) {
         >
           {product.name}
         </h3>
+
+        {getBrand(product) && (
+          <p className="font-inter text-[10px] font-semibold uppercase tracking-wider" style={{ color: G.dim }}>
+            {getBrand(product)}
+          </p>
+        )}
 
         {product.short_description && (
           <p

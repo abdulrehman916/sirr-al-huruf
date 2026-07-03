@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Plus, Search, X, Edit3, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
-  Star, ExternalLink, Upload, Save, Flame, Sparkles, PackageX, Play
+  Star, ExternalLink, Upload, Save, Flame, Sparkles, PackageX, Play, TrendingUp
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
@@ -47,6 +47,16 @@ const EMPTY_FORM = {
   seller_email: "",
   tags: [],
   faqs: [],
+  brand: "",
+  sku: "",
+  malayalam_description: "",
+  usage_instructions: "",
+  ingredients: "",
+  benefits: "",
+  warnings: "",
+  rules_precautions: "",
+  storage_instructions: "",
+  is_trending: false,
 };
 
 export default function AdminProducts() {
@@ -188,6 +198,16 @@ export default function AdminProducts() {
         seller_email: form.seller_email,
         tags: form.tags,
         faqs: form.faqs,
+        brand: form.brand,
+        sku: form.sku,
+        malayalam_description: form.malayalam_description,
+        usage_instructions: form.usage_instructions,
+        ingredients: form.ingredients,
+        benefits: form.benefits,
+        warnings: form.warnings,
+        rules_precautions: form.rules_precautions,
+        storage_instructions: form.storage_instructions,
+        is_trending: form.is_trending,
         updated_at: new Date().toISOString(),
       };
 
@@ -328,6 +348,15 @@ export default function AdminProducts() {
   const toggleNewArrival = async (product) => {
     try {
       await base44.entities.Product.update(product.id, { is_new_arrival: !product.is_new_arrival, updated_at: new Date().toISOString() });
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const toggleTrending = async (product) => {
+    try {
+      await base44.entities.Product.update(product.id, { is_trending: !product.is_trending, updated_at: new Date().toISOString() });
       loadProducts();
     } catch (err) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -477,6 +506,9 @@ export default function AdminProducts() {
                   {p.is_new_arrival && (
                     <Sparkles className="w-3.5 h-3.5" style={{ color: "#60A5FA", fill: "#60A5FA" }} />
                   )}
+                  {p.is_trending && (
+                    <TrendingUp className="w-3.5 h-3.5" style={{ color: "#C084FC" }} />
+                  )}
                   {p.is_out_of_stock && (
                     <PackageX className="w-3.5 h-3.5" style={{ color: "#F87171" }} />
                   )}
@@ -506,6 +538,9 @@ export default function AdminProducts() {
                   </button>
                   <button onClick={() => toggleNewArrival(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Toggle new arrival">
                     <Sparkles className="w-3.5 h-3.5" style={{ color: p.is_new_arrival ? "#60A5FA" : G.dim, fill: p.is_new_arrival ? "#60A5FA" : "transparent" }} />
+                  </button>
+                  <button onClick={() => toggleTrending(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Toggle trending">
+                    <TrendingUp className="w-3.5 h-3.5" style={{ color: p.is_trending ? "#C084FC" : G.dim }} />
                   </button>
                   <button onClick={() => toggleStock(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Toggle out of stock">
                     <PackageX className="w-3.5 h-3.5" style={{ color: p.is_out_of_stock ? "#F87171" : G.dim }} />
@@ -599,11 +634,40 @@ export default function AdminProducts() {
                 <FormField label="Category">
                   <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="form-input" placeholder="e.g. Books, Tools, Incense" />
                 </FormField>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Brand">
+                    <input value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} className="form-input" placeholder="e.g. Dabur, Hamdard" />
+                  </FormField>
+                  <FormField label="SKU">
+                    <input value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} className="form-input" placeholder="e.g. AYR-001" />
+                  </FormField>
+                </div>
                 <FormField label="Short Description">
                   <input value={form.short_description} onChange={e => setForm({ ...form, short_description: e.target.value })} className="form-input" />
                 </FormField>
-                <FormField label="Full Description">
+                <FormField label="Full Description (English)">
                   <textarea value={form.full_description} onChange={e => setForm({ ...form, full_description: e.target.value })} rows={4} className="form-input resize-none" />
+                </FormField>
+                <FormField label="Malayalam Description">
+                  <textarea value={form.malayalam_description} onChange={e => setForm({ ...form, malayalam_description: e.target.value })} rows={4} className="form-input resize-none" />
+                </FormField>
+                <FormField label="Usage Instructions">
+                  <textarea value={form.usage_instructions} onChange={e => setForm({ ...form, usage_instructions: e.target.value })} rows={3} className="form-input resize-none" />
+                </FormField>
+                <FormField label="Ingredients">
+                  <textarea value={form.ingredients} onChange={e => setForm({ ...form, ingredients: e.target.value })} rows={3} className="form-input resize-none" />
+                </FormField>
+                <FormField label="Benefits">
+                  <textarea value={form.benefits} onChange={e => setForm({ ...form, benefits: e.target.value })} rows={3} className="form-input resize-none" />
+                </FormField>
+                <FormField label="Warnings">
+                  <textarea value={form.warnings} onChange={e => setForm({ ...form, warnings: e.target.value })} rows={3} className="form-input resize-none" />
+                </FormField>
+                <FormField label="Rules & Precautions">
+                  <textarea value={form.rules_precautions} onChange={e => setForm({ ...form, rules_precautions: e.target.value })} rows={3} className="form-input resize-none" />
+                </FormField>
+                <FormField label="Storage Instructions">
+                  <textarea value={form.storage_instructions} onChange={e => setForm({ ...form, storage_instructions: e.target.value })} rows={3} className="form-input resize-none" />
                 </FormField>
                 <div className="grid grid-cols-2 gap-3">
                   <FormField label="Price Display">
@@ -661,6 +725,10 @@ export default function AdminProducts() {
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={form.is_out_of_stock} onChange={e => setForm({ ...form, is_out_of_stock: e.target.checked })} />
                       <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Out of Stock</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={form.is_trending} onChange={e => setForm({ ...form, is_trending: e.target.checked })} />
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Trending</span>
                     </label>
                   </div>
                 </div>

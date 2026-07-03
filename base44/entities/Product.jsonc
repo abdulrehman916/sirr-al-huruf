@@ -14,13 +14,49 @@
       "type": "string",
       "description": "URL-safe slug for detail page routing"
     },
+    "brand": {
+      "type": "string",
+      "description": "Product brand or manufacturer name"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Stock Keeping Unit \u2014 internal product code"
+    },
     "short_description": {
       "type": "string",
       "description": "One-line summary shown on product cards"
     },
     "full_description": {
       "type": "string",
-      "description": "Full product description shown on detail page"
+      "description": "Full English product description shown on detail page"
+    },
+    "malayalam_description": {
+      "type": "string",
+      "description": "Full product description in Malayalam script"
+    },
+    "usage_instructions": {
+      "type": "string",
+      "description": "How to use the product \u2014 dosage, method, frequency"
+    },
+    "ingredients": {
+      "type": "string",
+      "description": "Ingredients or composition of the product"
+    },
+    "benefits": {
+      "type": "string",
+      "description": "Key benefits and therapeutic/spiritual effects"
+    },
+    "warnings": {
+      "type": "string",
+      "description": "Safety warnings and contraindications"
+    },
+    "rules_precautions": {
+      "type": "string",
+      "description": "Rules and precautions for safe usage"
+    },
+    "storage_instructions": {
+      "type": "string",
+      "description": "How to store the product \u2014 temperature, shelf life"
     },
     "specifications": {
       "type": "object",
@@ -32,7 +68,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Array of image URLs (first image is the primary/thumbnail)"
+      "description": "Array of image URLs (first image is the primary/thumbnail). Supports unlimited high-resolution images."
     },
     "video_url": {
       "type": "string",
@@ -51,7 +87,7 @@
     },
     "category": {
       "type": "string",
-      "description": "Product category e.g. 'Books', 'Tools', 'Incense', 'Talismans'"
+      "description": "Product category e.g. 'Books', 'Tools', 'Incense', 'Ayurvedic', 'Herbal', 'Talismans'"
     },
     "affiliate_links": {
       "type": "array",
@@ -140,6 +176,11 @@
       "type": "boolean",
       "default": false,
       "description": "If true, a New Arrival badge is shown on the product card and detail page"
+    },
+    "is_trending": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, a Trending badge is shown and the product appears in the Trending section"
     },
     "is_out_of_stock": {
       "type": "boolean",

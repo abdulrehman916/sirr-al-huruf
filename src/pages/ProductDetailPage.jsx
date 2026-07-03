@@ -5,7 +5,8 @@ import {
   ArrowLeft, ShoppingBag, Star, ExternalLink, Play, X, ZoomIn,
   ChevronLeft, ChevronRight, CheckCircle, MessageSquare, Heart, Share2,
   Link2, Sparkles, Package, Shield, Truck, Award, ChevronDown, ChevronUp,
-  FileText, GitCompare
+  FileText, GitCompare, BookOpen, Leaf, HeartPulse, AlertTriangle, ShieldCheck,
+  Snowflake, Languages, Tag, Hash
 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { base44 } from "../api/base44Client";
@@ -16,6 +17,7 @@ import ProductBadgesInline, { getDiscountPercent } from "../components/shop/Prod
 import FaqSection from "../components/shop/FaqSection";
 import SellerContact from "../components/shop/SellerContact";
 import ShareMenu from "../components/shop/ShareMenu";
+import ProductInfoSection from "../components/shop/ProductInfoSection";
 import {
   isInWishlist, toggleWishlist, shareProduct, copyProductLink,
   addRecentlyViewed, extractFeatures, getRecentlyViewed as getRecentlyViewedList,
@@ -483,6 +485,27 @@ export default function ProductDetailPage() {
           </h1>
           {/* Badges */}
           <ProductBadgesInline product={product} />
+          {/* Brand + SKU */}
+          {(product.brand || product.sku) && (
+            <div className="flex items-center gap-3 flex-wrap">
+              {product.brand && (
+                <div className="flex items-center gap-1.5">
+                  <Tag className="w-3 h-3" style={{ color: G.dim }} />
+                  <span className="font-inter text-xs font-semibold" style={{ color: "rgba(255,255,255,0.70)" }}>
+                    {product.brand}
+                  </span>
+                </div>
+              )}
+              {product.sku && (
+                <div className="flex items-center gap-1.5">
+                  <Hash className="w-3 h-3" style={{ color: G.dim }} />
+                  <span className="font-inter text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.40)" }}>
+                    SKU: {product.sku}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
           {product.short_description && (
             <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
               {product.short_description}
@@ -729,6 +752,27 @@ export default function ProductDetailPage() {
             </div>
           </motion.div>
         )}
+
+        {/* Malayalam Description */}
+        <ProductInfoSection icon={Languages} title="Malayalam Description" content={product.malayalam_description} malayalam />
+
+        {/* Usage Instructions */}
+        <ProductInfoSection icon={BookOpen} title="Usage Instructions" content={product.usage_instructions} />
+
+        {/* Ingredients */}
+        <ProductInfoSection icon={Leaf} title="Ingredients" content={product.ingredients} />
+
+        {/* Benefits */}
+        <ProductInfoSection icon={HeartPulse} title="Benefits" content={product.benefits} />
+
+        {/* Warnings */}
+        <ProductInfoSection icon={AlertTriangle} title="Warnings" content={product.warnings} warning />
+
+        {/* Rules & Precautions */}
+        <ProductInfoSection icon={ShieldCheck} title="Rules & Precautions" content={product.rules_precautions} warning />
+
+        {/* Storage Instructions */}
+        <ProductInfoSection icon={Snowflake} title="Storage Instructions" content={product.storage_instructions} />
 
         {/* Specifications */}
         {specEntries.length > 0 && (

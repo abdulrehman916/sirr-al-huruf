@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, X, ShoppingBag, Star, ArrowUpDown, ChevronDown, SlidersHorizontal,
-  Heart, Check, Package, Clock
+  Heart, Check, Package, Clock, TrendingUp, Flame, Sparkles
 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
@@ -10,9 +10,10 @@ import ProductCard from "../components/shop/ProductCard";
 import { ProductGridSkeleton } from "../components/shop/ProductSkeleton";
 import { EmptySearchState, EmptyShopState, EmptyWishlistState } from "../components/shop/EmptyState";
 import { base44 } from "../api/base44Client";
-import { getWishlist, isInWishlist, toggleWishlist, extractBrands, parsePrice, getRecentlyViewed } from "@/lib/shopUtils";
+import { getWishlist, isInWishlist, toggleWishlist, extractBrands, parsePrice, getRecentlyViewed, getBrand } from "@/lib/shopUtils";
 import RelatedProducts from "../components/shop/RelatedProducts";
 import CompareBar from "../components/shop/CompareBar";
+import ShopSectionRow from "../components/shop/ShopSectionRow";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -48,6 +49,7 @@ export default function ShopPage() {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [showWishlistOnly, setShowWishlistOnly] = useState(false);
+  const [minRating, setMinRating] = useState(0);
   const [wishlistIds, setWishlistIds] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
 
@@ -127,9 +129,9 @@ export default function ShopPage() {
       list = list.filter(p => p.category === activeCategory);
     }
 
-    // Brand filter (derived from first tag)
+    // Brand filter (brand field > first tag fallback)
     if (activeBrand !== "all") {
-      list = list.filter(p => p.tags?.[0] === activeBrand);
+      list = list.filter(p => getBrand(p) === activeBrand);
     }
 
     // Price filter
@@ -142,6 +144,14 @@ export default function ShopPage() {
         if (minNum !== null && price < minNum) return false;
         if (maxNum !== null && price > maxNum) return false;
         return true;
+      });
+    }
+
+    // Rating filter
+    if (minRating > 0) {
+      list = list.filter(p => {
+        const rating = parseFloat(p.rating_display) || 0;
+        return rating >= minRating;
       });
     }
 
@@ -199,7 +209,28 @@ export default function ShopPage() {
     [products]
   );
 
-  const hasActiveFilters = activeCategory !== "all" || activeBrand !== "all" || search || priceMin || priceMax || showWishlistOnly;
+  const trendingProducts = useMemo(
+    () => products.filter(p => p.is_trending && p.is_active !== false).slice(0, 6),
+    [products]
+  );
+
+  const bestSellerProducts = useMemo(
+    () => products.filter(p => p.is_best_seller && p.is_active !== false).slice(0, 6),
+    [products]
+  );
+
+  const newArrivalProducts = useMemo(
+    () => products.filter(p => p.is_new_arrival && p.is_active !== false).slice(0, 6),
+    [products]
+  );
+
+  // Recommended: featured or best sellers not already in trending
+  const recommendedProducts = useMemo(
+    () => products.filter(p => p.is_active !== false && (p.is_featured || p.is_best_seller) && !p.is_trending).slice(0, 6),
+    [products]
+  );
+
+  const hasActiveFilters = activeCategory !== "all" || activeBrand !== "all" || search || priceMin || priceMax || showWishlistOnly || minRating > 0;
 
   const clearAllFilters = () => {
     setActiveCategory("all");
@@ -209,6 +240,7 @@ export default function ShopPage() {
     setPriceMin("");
     setPriceMax("");
     setShowWishlistOnly(false);
+    setMinRating(0);
     setSort("featured");
   };
 
@@ -394,6 +426,20 @@ export default function ShopPage() {
                     </div>
                   )}
 
+                  {/* Rating Filter */}
+                  <div className="space-y-1.5">
+                    <p className="font-inter text-[9px] font-bold uppercase tracking-widest" style={{ color: G.dim }}>
+                      Minimum Rating
+                    </p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {[0, 3, 3.5, 4, 4.5].map(r => (
+                        <FilterChip key={r} active={minRating === r} onClick={() => setMinRating(r)}>
+                          {r === 0 ? "All Ratings" : `${r}+ ★`}
+                        </FilterChip>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Clear All */}
                   {hasActiveFilters && (
                     <button
@@ -436,23 +482,24 @@ export default function ShopPage() {
           </div>
         )}
 
-        {/* Featured Section (only when no filters) */}
-        {featuredProducts.length > 0 && !hasActiveFilters && !showWishlistOnly && sort === "featured" && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4" style={{ color: G.text, fill: G.text }} />
-              <h2 className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
-                Featured Products
-              </h2>
-            </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
-              {featuredProducts.map((p, i) => (
-                <div key={p.id} className="flex-shrink-0 w-[260px]">
-                  <ProductCard product={p} index={i} />
-                </div>
-              ))}
-              <div className="flex-shrink-0 w-1" />
-            </div>
+        {/* Shop Sections (only when no filters) */}
+        {!hasActiveFilters && !showWishlistOnly && sort === "featured" && (
+          <div className="space-y-5">
+            {trendingProducts.length > 0 && (
+              <ShopSectionRow icon={TrendingUp} title="Trending Now" products={trendingProducts} />
+            )}
+            {featuredProducts.length > 0 && (
+              <ShopSectionRow icon={Star} title="Featured Products" products={featuredProducts} />
+            )}
+            {bestSellerProducts.length > 0 && (
+              <ShopSectionRow icon={Flame} title="Best Sellers" products={bestSellerProducts} />
+            )}
+            {newArrivalProducts.length > 0 && (
+              <ShopSectionRow icon={Sparkles} title="New Arrivals" products={newArrivalProducts} />
+            )}
+            {recommendedProducts.length > 0 && (
+              <ShopSectionRow icon={Sparkles} title="Recommended for You" products={recommendedProducts} />
+            )}
           </div>
         )}
 
