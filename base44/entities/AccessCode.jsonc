@@ -29,6 +29,11 @@
       "description": "Per-page duration settings. Keys are page paths, values are objects with {value, label, days, custom_date}",
       "additionalProperties": true
     },
+    "feature_durations": {
+      "type": "object",
+      "description": "Per-feature plan settings. Keys are 'page_path:feature_id', values are {plan_name, duration_days, is_lifetime}. When present, each feature gets its own expiry based on its plan. Overrides page_durations for that feature.",
+      "additionalProperties": true
+    },
     "sub_features": {
       "type": "object",
       "description": "Map of page_path to array of feature IDs unlocked by this code. Keys are page paths (e.g. '/abjad'), values are arrays of feature IDs (e.g. ['abjad_kabir', 'jumlat_kabir']). If a page path is absent from this map, ALL features on that page are unlocked (backward compatible with existing full-page codes).",

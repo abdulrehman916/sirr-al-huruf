@@ -1,54 +1,63 @@
 /**
- * AdminFeaturePricing — Dynamic per-feature pricing & description management.
+ * AdminFeaturePricing — Dynamic per-feature subscription plan management.
  *
  * Lists all features from the FeatureRegistry grouped by page.
- * Admin can set price, description, and display name for each feature.
- * Changes are stored in the FeatureConfig entity and appear on locked screens immediately.
+ * Admin can:
+ *   - Set display name and description per feature (FeatureConfig entity)
+ *   - Add unlimited subscription plans per feature (SubscriptionPlanConfig entity)
+ *   - Edit/delete any plan
+ *   - Change prices and durations anytime
+ *
+ * Changes appear on locked screens immediately — no code changes needed.
  */
 import { useState, useEffect, useMemo } from "react";
 import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AdminLayout from "@/components/admin/AdminLayout";
-import FeatureConfigEditor from "@/components/admin/FeatureConfigEditor";
+import FeaturePlansEditor from "@/components/admin/FeaturePlansEditor";
 import { FEATURE_REGISTRY } from "@/lib/featureRegistry";
 import { invalidateFeatureConfigCache } from "@/lib/featureConfigCache";
+import { invalidatePlanCache } from "@/lib/subscriptionPlanCache";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
   borderHi: "rgba(212,175,55,0.65)",
   text: "#F5D060",
   bg: "rgba(212,175,55,0.07)",
-  bgHi: "rgba(212,175,55,0.14)",
 };
 
 export default function AdminFeaturePricing() {
   const [isAdmin, setIsAdmin] = useState(null);
   const [configs, setConfigs] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAdmin();
-  }, []);
+  useEffect(() => { checkAdmin(); }, []);
 
   const checkAdmin = async () => {
     try {
       const user = await base44.auth.me();
       if (!user || user.role !== "admin") { setIsAdmin(false); return; }
       setIsAdmin(true);
-      loadConfigs();
+      loadData();
     } catch {
       setIsAdmin(false);
     }
   };
 
-  const loadConfigs = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const all = await base44.entities.FeatureConfig.list("-updated_at", 200);
-      setConfigs(all || []);
+      const [cfgs, allPlans] = await Promise.all([
+        base44.entities.FeatureConfig.list("-updated_at", 200),
+        base44.entities.SubscriptionPlanConfig.list("sort_order", 500),
+      ]);
+      setConfigs(cfgs || []);
+      setPlans(allPlans || []);
     } catch {
       setConfigs([]);
+      setPlans([]);
     } finally {
       setLoading(false);
     }
@@ -64,9 +73,20 @@ export default function AdminFeaturePricing() {
     return map;
   }, [configs]);
 
+  const plansMap = useMemo(() => {
+    const map = {};
+    (plans || []).forEach(p => {
+      const key = `${p.page_path}:${p.feature_id}`;
+      if (!map[key]) map[key] = [];
+      map[key].push(p);
+    });
+    return map;
+  }, [plans]);
+
   const handleSaved = (pagePath) => {
     invalidateFeatureConfigCache(pagePath);
-    loadConfigs();
+    invalidatePlanCache(pagePath);
+    loadData();
   };
 
   if (isAdmin === false) return <Navigate to="/" replace />;
@@ -82,14 +102,14 @@ export default function AdminFeaturePricing() {
   }
 
   return (
-    <AdminLayout title="Feature Pricing" subtitle="إدارة أسعار الميزات" showBackButton={true}>
+    <AdminLayout title="Feature Pricing & Plans" subtitle="إدارة الخطط والأسعار" showBackButton={true}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Info banner */}
         <div className="rounded-xl border p-4" style={{ background: G.bg, borderColor: G.border }}>
           <p className="text-sm text-white/70 leading-relaxed">
-            Configure the price and description for each feature. These values appear on the
-            locked screen when a user clicks a feature they don't have access to. Changes take
-            effect immediately — no code changes needed.
+            Configure subscription plans for each feature. Users see these plans on the locked
+            screen. When creating access codes, select which plan the user purchased — the feature
+            expires automatically based on the plan. Add unlimited plans per feature.
           </p>
         </div>
 
@@ -112,12 +132,13 @@ export default function AdminFeaturePricing() {
               </div>
               <div className="space-y-2">
                 {pageData.features.map(feature => (
-                  <FeatureConfigEditor
+                  <FeaturePlansEditor
                     key={feature.id}
                     pagePath={pagePath}
                     pageName={pageData.pageName}
                     feature={feature}
                     existingConfig={configMap[`${pagePath}:${feature.id}`]}
+                    plans={plansMap[`${pagePath}:${feature.id}`] || []}
                     onSaved={() => handleSaved(pagePath)}
                   />
                 ))}

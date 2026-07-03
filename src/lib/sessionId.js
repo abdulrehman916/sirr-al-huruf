@@ -44,7 +44,33 @@ export function mergeGrantedPermissions(newPerms) {
   const existing = getLocalPermissions();
   const map = {};
   existing.forEach(p => { map[p.page_path] = p; });
-  newPerms.forEach(p => { map[p.page_path] = p; });
+  newPerms.forEach(np => {
+    const prev = map[np.page_path];
+    if (prev) {
+      // Merge sub_features and feature_expiries (feature stacking)
+      const mergedSubFeatures = [...new Set([
+        ...(prev.sub_features || []),
+        ...(np.sub_features || [])
+      ])];
+      const mergedFeatureExpiries = {
+        ...(prev.feature_expiries || {}),
+        ...(np.feature_expiries || {})
+      };
+      // Use latest page-level expiry (or null if either is lifetime)
+      const prevExp = prev.expiry_date ? new Date(prev.expiry_date).getTime() : null;
+      const newExp = np.expiry_date ? new Date(np.expiry_date).getTime() : null;
+      const latestExpiry = (prevExp === null || newExp === null) ? null :
+        prevExp > newExp ? prev.expiry_date : np.expiry_date;
+      map[np.page_path] = {
+        ...np,
+        sub_features: mergedSubFeatures.length > 0 ? mergedSubFeatures : (np.sub_features || prev.sub_features),
+        feature_expiries: Object.keys(mergedFeatureExpiries).length > 0 ? mergedFeatureExpiries : null,
+        expiry_date: latestExpiry,
+      };
+    } else {
+      map[np.page_path] = np;
+    }
+  });
   setLocalPermissions(Object.values(map));
 }
 

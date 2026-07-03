@@ -2,8 +2,11 @@
  * FeatureLockedCard — Professional locked screen shown when a user clicks
  * a feature they don't have permission for.
  *
- * All displayed content (name, price, description) comes from the FeatureConfig
- * database entity — fully dynamic, admin-configurable, zero hardcoded values.
+ * All displayed content comes from the database:
+ * - Feature name & description: FeatureConfig entity
+ * - Subscription plans & prices: SubscriptionPlanConfig entity
+ *
+ * Fully dynamic — admin changes appear immediately, zero hardcoded values.
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +15,7 @@ import { base44 } from "@/api/base44Client";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
 import { getFeatureConfig } from "@/lib/featureConfigCache";
+import { getFeaturePlans, formatPlan } from "@/lib/subscriptionPlanCache";
 import { getFeatureById } from "@/lib/featureRegistry";
 
 const G = {
@@ -24,6 +28,7 @@ const G = {
 
 export default function FeatureLockedCard({ pagePath, featureId, featureLabel, onBack, onUnlocked }) {
   const [config, setConfig] = useState(null);
+  const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [code, setCode] = useState("");
@@ -31,12 +36,19 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
   const [codeResult, setCodeResult] = useState(null);
   const [whatsappSent, setWhatsappSent] = useState(false);
 
-  // Fetch dynamic config from FeatureConfig entity
+  // Fetch both FeatureConfig (description) and SubscriptionPlanConfig (plans) in parallel
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const cfg = await getFeatureConfig(pagePath, featureId);
-      if (!cancelled) { setConfig(cfg); setLoading(false); }
+      const [cfg, planList] = await Promise.all([
+        getFeatureConfig(pagePath, featureId),
+        getFeaturePlans(pagePath, featureId),
+      ]);
+      if (!cancelled) {
+        setConfig(cfg);
+        setPlans(planList);
+        setLoading(false);
+      }
     })();
     return () => { cancelled = true; };
   }, [pagePath, featureId]);
@@ -45,7 +57,6 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
   const registryFeat = getFeatureById(pagePath, featureId);
   const displayName = config?.feature_name || featureLabel || registryFeat?.label || featureId;
   const displayIcon = config?.icon || registryFeat?.icon || "🔒";
-  const displayPrice = config?.price || null;
   const displayDescription = config?.description || null;
 
   const handleRedeem = async () => {
@@ -78,12 +89,16 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
   };
 
   const handleWhatsApp = () => {
+    const planLines = plans.length > 0
+      ? plans.map(p => `• ${formatPlan(p)}`).join("\n")
+      : "Contact for pricing";
     const message =
       `السلام عليكم\n\n` +
       `*طلب وصول — سر الحروف*\n\n` +
       `🔒 الميزة: ${displayName}\n` +
-      (displayPrice ? `💰 السعر: ${displayPrice}\n` : "") +
-      `\nأرجو إرسال رمز القراءة لهذه الميزة.`;
+      (displayDescription ? `\n${displayDescription}\n` : "") +
+      `\nالخطط المتاحة:\n${planLines}\n` +
+      `\nأرجو إرسال رمز القراءة للخطة المطلوبة.`;
     const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
     setWhatsappSent(true);
@@ -107,15 +122,15 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
         </button>
       )}
 
-      <div className="rounded-2xl border p-8 text-center" style={{
+      <div className="rounded-2xl border p-6 text-center" style={{
         background: G.bg, borderColor: G.border, boxShadow: "0 0 48px rgba(212,175,55,0.10)",
       }}>
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+        <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
           style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
-          <Lock className="w-8 h-8" style={{ color: G.text }} />
+          <Lock className="w-7 h-7" style={{ color: G.text }} />
         </div>
 
-        <p className="font-inter text-xs text-white/30 uppercase tracking-widest mb-2">
+        <p className="font-inter text-xs text-white/30 uppercase tracking-widest mb-1">
           {displayIcon} {displayName}
         </p>
 
@@ -125,13 +140,25 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
           </p>
         )}
 
-        <div className="mb-6 mt-3">
+        {/* Plans List */}
+        <div className="mb-5 mt-3">
           {loading ? (
             <div className="w-6 h-6 border-2 border-t-yellow-400 border-r-transparent border-b-yellow-400 border-l-transparent rounded-full animate-spin mx-auto" />
-          ) : displayPrice ? (
-            <p className="font-inter text-lg font-bold" style={{ color: G.text }}>
-              {displayPrice}
-            </p>
+          ) : plans.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="font-inter text-[10px] text-white/30 uppercase tracking-widest mb-2">
+                Unlock this feature
+              </p>
+              {plans.map(plan => (
+                <div key={plan.plan_config_id} className="rounded-lg border py-2.5 px-3 flex items-center justify-between"
+                  style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.20)" }}>
+                  <span className="font-inter text-sm text-white/80 font-medium">{plan.plan_name}</span>
+                  <span className="font-inter text-sm font-bold" style={{ color: G.text }}>
+                    {plan.currency} {plan.price}
+                  </span>
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="font-inter text-xs text-white/35">Contact for pricing</p>
           )}

@@ -6,6 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages } from "@/lib/pageRegistry";
 import CreateCodePageItem from "./CreateCodePageItem";
+import EditCodeModal from "./EditCodeModal";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -67,6 +68,7 @@ function CreateCodeForm({ onCreated, onCancel }) {
   const [selectedPages, setSelectedPages] = useState([]);
   const [pageDurations, setPageDurations] = useState({});
   const [pageSubFeatures, setPageSubFeatures] = useState({});
+  const [featureDurations, setFeatureDurations] = useState({});
   const [maxUses, setMaxUses] = useState(1);
   const [notes, setNotes] = useState("");
   const [showSummary, setShowSummary] = useState(false);
@@ -104,6 +106,10 @@ function CreateCodeForm({ onCreated, onCancel }) {
 
   const updatePageSubFeatures = (path, features) => {
     setPageSubFeatures(prev => ({ ...prev, [path]: features }));
+  };
+
+  const updateFeatureDuration = (path, featureId, plan) => {
+    setFeatureDurations(prev => ({ ...prev, [`${path}:${featureId}`]: plan }));
   };
 
   const updatePageDuration = (path, durationValue) => {
@@ -182,6 +188,7 @@ function CreateCodeForm({ onCreated, onCancel }) {
         page_names: names,
         page_durations,
         sub_features,
+        feature_durations: featureDurations,
         duration: "CUSTOM",
         expiry_date: null,
         max_uses: maxUses,
@@ -314,16 +321,18 @@ function CreateCodeForm({ onCreated, onCancel }) {
             const dur = pageDurations[page.path];
             return (
                 <CreateCodePageItem
-                   key={page.path}
-                   page={page}
-                   isSelected={sel}
-                   duration={dur}
-                   onToggle={togglePage}
-                   onDurationChange={updatePageDuration}
-                   onCustomDateChange={updateCustomDate}
-                   subFeatures={pageSubFeatures[page.path]}
-                   onSubFeaturesChange={updatePageSubFeatures}
-                 />
+                    key={page.path}
+                    page={page}
+                    isSelected={sel}
+                    duration={dur}
+                    onToggle={togglePage}
+                    onDurationChange={updatePageDuration}
+                    onCustomDateChange={updateCustomDate}
+                    subFeatures={pageSubFeatures[page.path]}
+                    onSubFeaturesChange={updatePageSubFeatures}
+                    featureDurations={featureDurations}
+                    onFeatureDurationChange={updateFeatureDuration}
+                  />
             );
           })}
         </div>
@@ -373,6 +382,7 @@ export default function AccessCodesTab() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [showRedeemed, setShowRedeemed] = useState(false);
+  const [editCode, setEditCode] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -551,6 +561,12 @@ export default function AccessCodesTab() {
                       style={{ background: code.is_disabled ? "rgba(34,197,94,0.12)" : "rgba(107,114,128,0.12)", color: code.is_disabled ? "#4ade80" : "#9ca3af", border: `1px solid ${code.is_disabled ? "rgba(34,197,94,0.25)" : "rgba(107,114,128,0.25)"}` }}>
                       {code.is_disabled ? <ToggleLeft className="w-3.5 h-3.5" /> : <ToggleRight className="w-3.5 h-3.5" />}
                     </button>
+                    <button onClick={() => setEditCode(code)}
+                      title="Edit code — add features"
+                      className="w-7 h-7 rounded flex items-center justify-center"
+                      style={{ background: "rgba(212,175,55,0.10)", color: G.text, border: `1px solid ${G.border}` }}>
+                      <Plus className="w-3 h-3" />
+                    </button>
                     <button onClick={() => handleDelete(code)}
                       title="Delete code"
                       className="w-7 h-7 rounded flex items-center justify-center"
@@ -600,6 +616,12 @@ export default function AccessCodesTab() {
           })}
         </div>
       )}
+
+      <EditCodeModal
+        code={editCode}
+        onClose={() => setEditCode(null)}
+        onUpdated={() => { setEditCode(null); load(); }}
+      />
     </div>
   );
 }

@@ -51,7 +51,17 @@ export function checkFeatureAccess(pagePath, featureId) {
   }
 
   // Check if this specific feature is in the allowed list
-  return perm.sub_features.includes(featureId);
+  if (!perm.sub_features.includes(featureId)) return false;
+
+  // Check feature-specific expiry (per-plan duration)
+  const featureExpiry = perm.feature_expiries?.[featureId];
+  if (featureExpiry?.expiry_date) {
+    if (new Date(featureExpiry.expiry_date) < new Date()) {
+      return false; // feature expired
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -82,7 +92,14 @@ export function getUnlockedFeatureIds(pagePath) {
     return getFeatures(pagePath).map(f => f.id); // all features
   }
 
-  return perm.sub_features;
+  // Filter out individually expired features
+  return perm.sub_features.filter(featId => {
+    const featureExpiry = perm.feature_expiries?.[featId];
+    if (featureExpiry?.expiry_date) {
+      return new Date(featureExpiry.expiry_date) >= new Date();
+    }
+    return true; // no specific expiry = page-level (already checked above)
+  });
 }
 
 /**
