@@ -1,5 +1,6 @@
 /**
  * AdminPricingDashboard — Complete pricing & plan management system.
+ * @module AdminPricingDashboard
  *
  * Features:
  * - Lists ALL premium/multi-feature pages from pageRegistry

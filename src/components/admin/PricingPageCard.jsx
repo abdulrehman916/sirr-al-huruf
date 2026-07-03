@@ -1,5 +1,6 @@
 /**
  * PricingPageCard — Admin card for a single premium page.
+ * @module PricingPageCard
  * Shows page-level settings (title, description, price, show/hide, purchasable, order)
  * and all plans for the page (or per-feature if multi-feature page).
  *

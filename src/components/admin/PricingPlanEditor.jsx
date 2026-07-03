@@ -1,5 +1,6 @@
 /**
  * PricingPlanEditor — Enhanced inline editor for a single subscription plan.
+ * @module PricingPlanEditor
  * Supports: plan name, duration, price, currency, sale price, discount %,
  * sale start/end dates, recommended flag, active toggle.
  *
