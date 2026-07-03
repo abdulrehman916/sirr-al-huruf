@@ -346,7 +346,7 @@ export default function CodeDetailPage() {
       </motion.div>
 
       {/* Modals */}
-      <RenewCodeModal code={code} onClose={() => setShowRenew(false)} onRenewed={() => { setShowRenew(false); load(); }} />
+      <RenewCodeModal code={showRenew ? code : null} onClose={() => setShowRenew(false)} onRenewed={() => { setShowRenew(false); load(); }} />
       <EditCodeModal code={showEdit ? code : null} onClose={() => setShowEdit(false)} onUpdated={() => { setShowEdit(false); load(); }} />
     </AdminLayout>
   );

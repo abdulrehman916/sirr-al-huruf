@@ -3,8 +3,8 @@
  * Admin selects a new duration type, count, or custom date.
  * The same code continues working — no new code needed.
  */
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, RefreshCw, Loader2, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
@@ -27,6 +27,17 @@ export default function RenewCodeModal({ code, onClose, onRenewed }) {
   const [customDate, setCustomDate] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // ESC key closes modal; clean up body overflow on unmount
+  useEffect(() => {
+    if (!code) return;
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = '';
+    };
+  }, [code, onClose]);
 
   if (!code) return null;
 
@@ -66,15 +77,13 @@ export default function RenewCodeModal({ code, onClose, onRenewed }) {
     }
   };
 
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+  return createPortal(
+    <>
+      <div
         className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4"
         style={{ background: "rgba(0,0,0,0.70)" }} onClick={onClose}
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+        <div
           className="w-full max-w-lg my-8 rounded-2xl border p-5 space-y-4"
           style={{ background: "linear-gradient(145deg, #0c1630, #060c1c)", borderColor: G.borderHi }}
           onClick={e => e.stopPropagation()}
@@ -179,8 +188,9 @@ export default function RenewCodeModal({ code, onClose, onRenewed }) {
               {saving ? "Renewing…" : "Confirm Renewal"}
             </button>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+      </div>
+    </>,
+    document.body
   );
 }
