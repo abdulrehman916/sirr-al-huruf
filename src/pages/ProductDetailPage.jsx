@@ -19,6 +19,9 @@ import SellerContact from "../components/shop/SellerContact";
 import ShareMenu from "../components/shop/ShareMenu";
 import ProductInfoSection from "../components/shop/ProductInfoSection";
 import PriceDisplay from "../components/shop/PriceDisplay";
+import MarketplaceButtons from "../components/shop/MarketplaceButtons";
+import ShopBadges from "../components/shop/ShopBadges";
+import ShippingInfo from "../components/shop/ShippingInfo";
 import {
   isInWishlist, toggleWishlist, shareProduct, copyProductLink,
   addRecentlyViewed, extractFeatures, getRecentlyViewed as getRecentlyViewedList,
@@ -548,6 +551,15 @@ export default function ProductDetailPage() {
           </div>
         </motion.div>
 
+        {/* Shop Badges — country, currency, shipping, marketplace */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+        >
+          <ShopBadges product={product} variant="full" />
+        </motion.div>
+
         {/* Buy Buttons */}
         {affiliateLinks.length > 0 && (
           <motion.div
@@ -561,25 +573,7 @@ export default function ProductDetailPage() {
                 Out of Stock — check back soon
               </div>
             )}
-            {affiliateLinks.map((link, idx) => (
-              <button
-                key={idx}
-                onClick={() => product.is_out_of_stock ? null : handleBuy(link)}
-                disabled={product.is_out_of_stock}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-inter text-sm font-bold transition-all duration-200 hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{
-                  background: idx === 0
-                    ? "linear-gradient(135deg, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0.10) 100%)"
-                    : "rgba(8,16,38,0.60)",
-                  border: `1px solid ${idx === 0 ? G.borderHi : G.border}`,
-                  color: G.text,
-                  boxShadow: idx === 0 ? `0 0 24px ${G.glow}` : "none",
-                }}
-              >
-                <ExternalLink className="w-4 h-4" />
-                {product.is_out_of_stock ? "Unavailable" : (link.label || `Buy on ${link.platform}`)}
-              </button>
-            ))}
+            <MarketplaceButtons product={product} />
             {/* Trust badges */}
             <div className="flex items-center justify-center gap-4 pt-2">
               {TRUST_BADGES.map((badge, idx) => {
@@ -599,6 +593,9 @@ export default function ProductDetailPage() {
 
         {/* WhatsApp Inquiry + Contact Seller */}
         <SellerContact product={product} />
+
+        {/* Shipping & Delivery Info */}
+        <ShippingInfo />
 
         {/* Videos Gallery (multiple) */}
         {videoUrls.length > 0 && embedUrl && (

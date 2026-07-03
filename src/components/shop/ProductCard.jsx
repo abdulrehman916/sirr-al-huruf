@@ -7,6 +7,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { ProductBadgesOverlay } from "./ProductBadges";
 import { CompareButton } from "./CompareBar";
 import PriceDisplay from "./PriceDisplay";
+import MarketplaceButtons from "./MarketplaceButtons";
+import ShopBadges from "./ShopBadges";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -178,6 +180,9 @@ export default function ProductCard({ product, index = 0 }) {
           </p>
         )}
 
+        {/* Country-aware shop badges */}
+        <ShopBadges product={product} variant="compact" />
+
         {/* Rating + Price */}
         <div className="flex items-center justify-between pt-1">
           {product.rating_display ? (
@@ -212,22 +217,8 @@ export default function ProductCard({ product, index = 0 }) {
           />
         </div>
 
-        {/* Buy button */}
-        {hasAffiliate && (
-          <button
-            onClick={(e) => product.is_out_of_stock ? null : handleBuy(e, product.affiliate_links[0])}
-            disabled={product.is_out_of_stock}
-            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg font-inter text-[11px] font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              background: "linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.08) 100%)",
-              border: `1px solid ${G.border}`,
-              color: G.text,
-            }}
-          >
-            <ExternalLink className="w-3 h-3" />
-            {product.is_out_of_stock ? "Out of Stock" : (product.affiliate_links[0].label || `Buy on ${product.affiliate_links[0].platform}`)}
-          </button>
-        )}
+        {/* Buy button (country-aware) */}
+        <MarketplaceButtons product={product} compact />
       </div>
     </motion.div>
   );

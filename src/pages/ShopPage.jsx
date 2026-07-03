@@ -15,6 +15,7 @@ import RelatedProducts from "../components/shop/RelatedProducts";
 import CompareBar from "../components/shop/CompareBar";
 import ShopSectionRow from "../components/shop/ShopSectionRow";
 import CurrencySelector from "../components/shop/CurrencySelector";
+import ShopBadges from "../components/shop/ShopBadges";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -371,6 +372,9 @@ export default function ShopPage() {
             {/* Currency Selector */}
             <CurrencySelector />
           </div>
+
+          {/* Context badges — country, currency, shipping, languages */}
+          <ShopBadges variant="context" />
 
           {/* Expandable Filters */}
           <AnimatePresence>

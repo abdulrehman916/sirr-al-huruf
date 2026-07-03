@@ -5,6 +5,7 @@ import {
   ShoppingBag, Plus, Search, X, Edit3, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
   Star, ExternalLink, Upload, Save, Flame, Sparkles, PackageX, Play, TrendingUp
 } from "lucide-react";
+import { MARKETPLACE_OPTIONS } from "@/lib/countryProfiles";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -766,7 +767,12 @@ export default function AdminProducts() {
               <div className="space-y-2">
                 <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>Affiliate / Buy Links (External Link Mode)</p>
                 <div className="grid grid-cols-3 gap-2">
-                  <input value={affiliateInput.platform} onChange={e => setAffiliateInput({ ...affiliateInput, platform: e.target.value })} placeholder="Platform (Amazon)" className="form-input" />
+                  <select value={affiliateInput.platform} onChange={e => setAffiliateInput({ ...affiliateInput, platform: e.target.value })} className="form-input" style={{ background: "rgba(8,16,38,0.60)" }}>
+                    <option value="">Select marketplace...</option>
+                    {MARKETPLACE_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                   <input value={affiliateInput.url} onChange={e => setAffiliateInput({ ...affiliateInput, url: e.target.value })} placeholder="URL" className="form-input col-span-2" />
                 </div>
                 <input value={affiliateInput.label} onChange={e => setAffiliateInput({ ...affiliateInput, label: e.target.value })} placeholder="Button label (e.g. Buy on Amazon) — optional" className="form-input" />
