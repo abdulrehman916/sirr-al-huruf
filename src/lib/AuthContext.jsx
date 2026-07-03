@@ -30,13 +30,6 @@ export const AuthProvider = ({ children }) => {
     import('@/lib/moduleSync')
       .then(({ syncModules }) => syncModules().catch(() => {}))
       .catch(() => {});
-
-    // Auto-sync entity registry on app load (fire-and-forget, non-blocking).
-    // Ensures all entities from entityManifest are registered in EntityRegistry
-    // so they appear in Admin Entity Manager, Analytics, and Audit selectors.
-    import('@/lib/entitySync')
-      .then(({ syncEntities }) => syncEntities().catch(() => {}))
-      .catch(() => {});
   }, []);
 
   const logout = () => {
