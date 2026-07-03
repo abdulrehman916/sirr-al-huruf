@@ -55,6 +55,9 @@ const ROUTE_MANIFEST = [
   { path: '/admin/pdf-content-editor', component: 'AdminPDFContentEditor', chunk: 'AdminPDFContentEditor' },
   { path: '/admin/holy-names-translator', component: 'AdminHolyNamesTranslator', chunk: 'AdminHolyNamesTranslator' },
   
+  // Rules & Conditions — public
+  { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },
+
   // Test & Debug
   { path: '/mizan-completion-test', component: 'MizanCompletionTest', chunk: 'MizanCompletionTest', flags: ['public'] },
 ];

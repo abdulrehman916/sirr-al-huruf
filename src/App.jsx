@@ -15,6 +15,7 @@ import OfflineNotice from './components/OfflineNotice';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedPage from './components/ProtectedPage';
 import ROUTE_MANIFEST from '@/lib/routeManifest';
+import RulesGate from './components/RulesGate';
 
 // ── Lazy import map — Core pages only ──────
 const PAGE_IMPORTS = {
@@ -63,6 +64,7 @@ const PAGE_IMPORTS = {
   AdminPDFContentEditor:    () => import('./pages/AdminPDFContentEditor'),
   AdminHolyNamesTranslator: () => import('./pages/AdminHolyNamesTranslator'),
   MizanCompletionTest:      () => import('./pages/MizanCompletionTest'),
+  RulesConditions:          () => import('./pages/RulesConditions'),
   };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────
@@ -158,7 +160,9 @@ function App() {
             <Router>
               <PageStateProvider>
                 <NavigationProvider>
-                  <AuthenticatedApp />
+                  <RulesGate>
+                    <AuthenticatedApp />
+                  </RulesGate>
                 </NavigationProvider>
               </PageStateProvider>
             </Router>

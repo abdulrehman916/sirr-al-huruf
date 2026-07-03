@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { ScrollText } from "lucide-react";
 import MysticalBackground from "../components/MysticalBackground";
 import HeroSection from "../components/HeroSection";
 import CardsSection from "../components/CardsSection";
@@ -41,6 +43,20 @@ export default function Home() {
           {/* Cards section — CardsSection handles its own responsive padding */}
           <div style={{ width: "100%", margin: 0, padding: 0 }}>
             <CardsSection />
+          </div>
+
+          {/* Rules & Conditions — permanent access button */}
+          <div style={{ width: "100%", textAlign: "center", padding: "16px 16px 32px" }}>
+            <Link to="/rules-conditions"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-inter text-xs font-semibold tracking-wide transition-all"
+              style={{
+                background: "rgba(212,175,55,0.08)",
+                border: "1px solid rgba(212,175,55,0.25)",
+                color: "rgba(212,175,55,0.80)",
+              }}>
+              <ScrollText className="w-3.5 h-3.5" />
+              Rules & Conditions
+            </Link>
           </div>
         </div>
       </PullToRefresh>
