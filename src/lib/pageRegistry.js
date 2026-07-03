@@ -169,6 +169,7 @@ registerPage('/admin/user-permissions', { pageType: 'admin', adminOnly: true, vi
 registerPage('/admin/user/:userId', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/faal-chob-upload', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/access-requests', { pageType: 'admin', adminOnly: true, visible: false });
+registerPage('/admin/admins', { name: 'Admins', icon: '🛡️', category: 'Admin', pageType: 'admin', adminOnly: true, visible: false });
 
 // Audit pages
 registerPage('/admin/qa-report', { pageType: 'audit', adminOnly: true, visible: false });

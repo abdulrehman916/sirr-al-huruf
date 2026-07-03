@@ -63,6 +63,7 @@ const PAGE_IMPORTS = {
   AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
   AdminAccessLogs:          () => import('./pages/AdminAccessLogs'),
   AdminSettings:           () => import('./pages/AdminSettings'),
+  AdminAdmins:              () => import('./pages/AdminAdmins'),
   UserDetailPage:           () => import('./pages/UserDetailPage'),
   AdminPDFContentEditor:    () => import('./pages/AdminPDFContentEditor'),
   AdminHolyNamesTranslator: () => import('./pages/AdminHolyNamesTranslator'),

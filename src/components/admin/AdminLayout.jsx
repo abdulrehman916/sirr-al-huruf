@@ -20,9 +20,10 @@ const SIDEBAR_SECTIONS = [
     ]
   },
   {
-    label: "Users",
+    label: "User Management",
     items: [
       { path: "/admin/approved-users", label: "All Users", icon: Users },
+      { path: "/admin/admins", label: "Admins", icon: Shield },
     ]
   },
   {
@@ -40,9 +41,14 @@ const SIDEBAR_SECTIONS = [
     ]
   },
   {
-    label: "System",
+    label: "Reports",
     items: [
       { path: "/admin/access-logs", label: "Access Logs", icon: FileText },
+    ]
+  },
+  {
+    label: "System",
+    items: [
       { path: "/admin/settings", label: "Settings", icon: Settings },
     ]
   },
