@@ -354,6 +354,31 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     altHourPlanet = pdfRule.altHour || null;
   }
 
+  // ── Generate human-readable reasons for bestDay / bestHour from manuscript rules ──
+  // Dynamic: merges all contributing manuscript sources into one explanation.
+  const daySources = [];
+  const hourSources = [];
+  if (pdfRule) {
+    daySources.push(`${pdfRule.source}: ${pdfRule.pdfName} is prescribed for ${MIZAN_DAY_NAMES[pdfRule.bestDay]}`);
+    hourSources.push(`${pdfRule.source}: the ${pdfRule.bestHour} hour governs ${pdfRule.pdfName}${pdfRule.description ? ` (${pdfRule.description})` : ''}`);
+    if (altDay) daySources.push(`${pdfRule.source}: ${MIZAN_DAY_NAMES[altDay]} is an acceptable alternative`);
+    if (altHourPlanet) hourSources.push(`${pdfRule.source}: the ${altHourPlanet} hour is a secondary option`);
+  }
+
+  if (khayrSharr === 'khayr') {
+    hourSources.push(`Al-Shurut p.13 (LCK_001): Khayr works require a Sa'idat hour (1st or 8th) on Sun/Mon/Thu/Fri, or any benefic planet hour (Sun, Jupiter, Venus, Moon)`);
+    if (BENEFIC_PLANETS.includes(bestHourPlanet)) hourSources.push(`The ${bestHourPlanet} hour qualifies as a benefic planet, satisfying the Khayr restriction`);
+  }
+  if (khayrSharr === 'sharr') {
+    hourSources.push(`Al-Shurut p.13 (MN_002): Sharr works are strengthened when performed during the waning Moon, and the ${bestHourPlanet} hour provides the necessary planetary force`);
+  }
+  let bestDayReason = daySources.length > 0
+    ? daySources.join(' · ')
+    : `No specific day prescription found in the imported manuscripts for this purpose — any day may be used, guided by the planetary hour.`;
+  let bestHourReason = hourSources.length > 0
+    ? hourSources.join(' · ')
+    : `No specific hour prescription found in the imported manuscripts for this purpose.`;
+
   // ── STEP 5: Apply Khayr hour restriction (LCK_001–003) ──
   if (khayrSharr === 'khayr') {
     rulesApplied.push({ id: 'LCK_001', desc: 'Hayr works: restrict to Sa\'idat hours (1st & 8th of Sun/Mon/Thu/Fri) OR any benefic planet hour', source: 'Al-Shurut p.13' });
@@ -420,6 +445,16 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   // Avoid windows: hours of enemy planets (from existing ACTION_RULES)
   const actionRule = mapToActionRule(primaryPurpose);
+  // Extend bestDayReason / bestHourReason with action-rule manuscript sources now available
+  if (actionRule && actionRule.sources) {
+    for (const src of actionRule.sources) {
+      daySources.push(`${src.book} p.${src.page}: ${actionRule.category} works favor ${actionRule.beneficDays ? actionRule.beneficDays.join(', ') : 'the prescribed days'}`);
+      hourSources.push(`${src.book} p.${src.page}: ${actionRule.category} works favor ${actionRule.beneficPlanets ? actionRule.beneficPlanets.join(', ') : 'benefic planet'} hours`);
+    }
+  }
+  // Re-merge reasons now that actionRule sources are available
+  bestDayReason = daySources.length > 0 ? daySources.join(' · ') : bestDayReason;
+  bestHourReason = hourSources.length > 0 ? hourSources.join(' · ') : bestHourReason;
   if (actionRule?.enemyPlanets) {
     for (const enemy of actionRule.enemyPlanets) {
       const enemyHours = findHoursByPlanet(todayHours, enemy);
