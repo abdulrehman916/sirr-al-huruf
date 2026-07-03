@@ -18,6 +18,7 @@ export default defineConfig({
     react(),
   ],
   optimizeDeps: {
-    include: ['@hello-pangea/dnd']
+    include: ['@hello-pangea/dnd'],
+    force: true
   }
 });
