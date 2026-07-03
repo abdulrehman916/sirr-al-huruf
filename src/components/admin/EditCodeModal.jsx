@@ -4,6 +4,7 @@
  * User re-redeems the same code to get updated permissions.
  */
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 // framer-motion removed — plain divs for reliable modal close/unmount behavior
 import { X, Plus, Loader2, Check, KeyRound } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -181,7 +182,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
 
   const existingPageNames = localCode?.page_names || localCode?.page_paths || code.page_names || code.page_paths || [];
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4"
@@ -297,6 +298,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 }
