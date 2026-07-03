@@ -52,6 +52,7 @@ function AuditEntry({ entry }) {
     CREATED: "#22c55e", REDEEMED: "#3b82f6", RENEWED: "#f59e0b",
     DISABLED: "#ef4444", ENABLED: "#22c55e", DELETED: "#ef4444",
     RESET_DEVICE: "#a855f7", ADDED_FEATURES: "#3b82f6", REMOVED_FEATURES: "#ef4444",
+    REJECTED_ALREADY_REDEEMED: "#ef4444", REJECTED_EXPIRED: "#f59e0b",
   };
   const color = colors[entry.action] || "#9ca3af";
   return (

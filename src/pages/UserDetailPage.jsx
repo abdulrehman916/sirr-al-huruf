@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Mail, Phone, Calendar, Shield, KeyRound } from "lucide-react";
+import {
+  User, Mail, Phone, MessageCircle, Calendar, Shield, KeyRound,
+  Smartphone, Clock, LogIn, Hash, Loader2,
+} from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useToast } from "@/components/ui/use-toast";
+import UserCodeRow from "@/components/admin/UserCodeRow";
+import RenewCodeModal from "@/components/admin/RenewCodeModal";
+import { getCodeStatus, isLifetime } from "@/lib/codeDuration";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -20,13 +26,39 @@ const STATUS_COLORS = {
   ARCHIVED: { bg: "rgba(107,114,128,0.12)",text: "#6b7280",  border: "rgba(107,114,128,0.30)" },
 };
 
+function ProfileField({ icon, label, value }) {
+  return (
+    <div className="flex items-center gap-2 text-white/60 text-sm">
+      {icon}
+      <span className="truncate">{value || "—"}</span>
+    </div>
+  );
+}
+
+function CodeSection({ title, codes, onAction, emptyText }) {
+  if (!codes || codes.length === 0) return null;
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <h3 className="font-inter text-sm font-bold text-white">{title}</h3>
+        <span className="text-xs text-white/30">({codes.length})</span>
+      </div>
+      <div className="space-y-2">
+        {codes.map(c => <UserCodeRow key={c.id} code={c} onAction={onAction} />)}
+      </div>
+    </div>
+  );
+}
+
 export default function UserDetailPage() {
   const { userId } = useParams();
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(null);
   const [profile, setProfile] = useState(null);
   const [permissions, setPermissions] = useState([]);
+  const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [renewCode, setRenewCode] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(user => {
@@ -43,8 +75,28 @@ export default function UserDetailPage() {
         base44.entities.UserAccessProfile.filter({ user_id: userId }),
         base44.entities.PagePermission.filter({ user_id: userId }),
       ]);
-      setProfile(profiles[0] || null);
+      const prof = profiles[0] || null;
+      setProfile(prof);
       setPermissions(perms);
+
+      // Fetch codes by user_id or email
+      let userCodes = [];
+      try {
+        const byUserId = await base44.entities.AccessCode.filter({ used_by_user_id: userId });
+        userCodes = byUserId;
+      } catch {}
+      // Also try by email if available
+      if (prof?.email) {
+        try {
+          const byEmail = await base44.entities.AccessCode.filter({ used_by_email: prof.email });
+          // Merge unique by id
+          const existingIds = new Set(userCodes.map(c => c.id));
+          byEmail.forEach(c => { if (!existingIds.has(c.id)) userCodes.push(c); });
+        } catch {}
+      }
+      // Sort by created_date descending
+      userCodes.sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
+      setCodes(userCodes);
     } catch (e) {
       toast({ title: "Failed to load user", description: e.message, variant: "destructive" });
     } finally {
@@ -56,15 +108,26 @@ export default function UserDetailPage() {
   if (isAdmin === null || loading) return (
     <AdminLayout showBackButton title="User Detail">
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-t-yellow-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: G.text }} />
       </div>
     </AdminLayout>
   );
 
   const statusCfg = STATUS_COLORS[profile?.account_status] || STATUS_COLORS.ACTIVE;
 
+  // Categorize codes
+  const activeCodes = codes.filter(c => !c.is_disabled && getCodeStatus(c).value === 'active' && !isLifetime(c));
+  const lifetimeCodes = codes.filter(c => !c.is_disabled && isLifetime(c));
+  const expiredCodes = codes.filter(c => !c.is_disabled && getCodeStatus(c).value === 'expired');
+  const disabledCodes = codes.filter(c => c.is_disabled);
+
+  const handleCodeAction = (action, code) => {
+    if (action === "renew") setRenewCode(code);
+    else loadUser();
+  };
+
   return (
-    <AdminLayout showBackButton title="User Detail" subtitle="User profile & permissions">
+    <AdminLayout showBackButton title="User Detail" subtitle="User profile, codes & permissions">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5 max-w-2xl">
 
         {!profile ? (
@@ -90,30 +153,36 @@ export default function UserDetailPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2 text-white/60">
-                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="truncate">{profile.email || "—"}</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/60">
-                  <Phone className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{profile.mobile || "—"}</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/60">
-                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{profile.registration_date ? new Date(profile.registration_date).toLocaleDateString() : "—"}</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/60">
-                  <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{profile.role || "user"}</span>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <ProfileField icon={<Mail className="w-3.5 h-3.5 flex-shrink-0" />} label="Email" value={profile.email} />
+                <ProfileField icon={<Phone className="w-3.5 h-3.5 flex-shrink-0" />} label="Phone" value={profile.mobile} />
+                <ProfileField icon={<MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />} label="WhatsApp" value={profile.mobile} />
+                <ProfileField icon={<Hash className="w-3.5 h-3.5 flex-shrink-0" />} label="User ID" value={profile.user_id} />
+                <ProfileField icon={<Smartphone className="w-3.5 h-3.5 flex-shrink-0" />} label="Device Type" value={profile.device_type} />
+                <ProfileField icon={<Calendar className="w-3.5 h-3.5 flex-shrink-0" />} label="Join Date" value={profile.registration_date ? new Date(profile.registration_date).toLocaleDateString() : null} />
+                <ProfileField icon={<LogIn className="w-3.5 h-3.5 flex-shrink-0" />} label="Last Login" value={profile.last_login ? new Date(profile.last_login).toLocaleString() : null} />
+                <ProfileField icon={<Clock className="w-3.5 h-3.5 flex-shrink-0" />} label="Login Count" value={String(profile.login_count || 0)} />
               </div>
             </div>
+
+            {/* Reading Codes */}
+            {codes.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4" style={{ color: G.text }} />
+                  <h3 className="font-inter text-sm font-bold text-white">Reading Codes ({codes.length})</h3>
+                </div>
+                <CodeSection title="Active Codes" codes={activeCodes} onAction={handleCodeAction} />
+                <CodeSection title="Lifetime Codes" codes={lifetimeCodes} onAction={handleCodeAction} />
+                <CodeSection title="Expired Codes" codes={expiredCodes} onAction={handleCodeAction} />
+                <CodeSection title="Disabled Codes" codes={disabledCodes} onAction={handleCodeAction} />
+              </div>
+            )}
 
             {/* Permissions */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <KeyRound className="w-4 h-4" style={{ color: G.text }} />
+                <Shield className="w-4 h-4" style={{ color: G.text }} />
                 <h3 className="font-inter text-sm font-bold text-white">Page Permissions ({permissions.length})</h3>
               </div>
               {permissions.length === 0 ? (
@@ -154,6 +223,9 @@ export default function UserDetailPage() {
         )}
 
       </motion.div>
+
+      {/* Renew Modal */}
+      <RenewCodeModal code={renewCode} onClose={() => setRenewCode(null)} onRenewed={() => { setRenewCode(null); loadUser(); }} />
     </AdminLayout>
   );
 }

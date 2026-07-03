@@ -128,6 +128,16 @@ export default function AdminSupport() {
     }
   };
 
+  // Quick action buttons for Close / Reopen
+  const handleCloseTicket = async (e, ticketId) => {
+    e.stopPropagation();
+    await handleStatusChange(ticketId, "CLOSED");
+  };
+  const handleReopenTicket = async (e, ticketId) => {
+    e.stopPropagation();
+    await handleStatusChange(ticketId, "OPEN");
+  };
+
   const formatAudioDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -271,13 +281,29 @@ export default function AdminSupport() {
                     </div>
                   </div>
                   <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm"
-                        className="flex-shrink-0 text-xs border-gold/40 text-gold hover:bg-gold/10"
-                        onClick={() => setSelectedTicket(ticket)}>
-                        View
-                      </Button>
-                    </DialogTrigger>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {/* Quick Close / Reopen */}
+                      {ticket.status !== "CLOSED" ? (
+                        <Button variant="outline" size="sm"
+                          className="text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
+                          onClick={(e) => handleCloseTicket(e, ticket.id)} disabled={updatingStatus}>
+                          Close
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm"
+                          className="text-xs border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
+                          onClick={(e) => handleReopenTicket(e, ticket.id)} disabled={updatingStatus}>
+                          Reopen
+                        </Button>
+                      )}
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm"
+                          className="text-xs border-gold/40 text-gold hover:bg-gold/10"
+                          onClick={() => setSelectedTicket(ticket)}>
+                          View
+                        </Button>
+                      </DialogTrigger>
+                    </div>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
                       <DialogHeader>
                         <DialogTitle className="text-white text-sm">{ticket.ticket_id} — {ticket.subject}</DialogTitle>
