@@ -206,6 +206,7 @@ export default function AdminAdmins() {
   const [editProfile, setEditProfile] = useState(null);
   const [viewProfile, setViewProfile] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [assignmentStats, setAssignmentStats] = useState(null);
 
   useEffect(() => {
     checkAccess();
@@ -223,6 +224,16 @@ export default function AdminAdmins() {
       const res = await base44.functions.invoke("manageAdminProfile", { action: "GET_STATUS" });
       setIsOwner(res.data?.is_owner || false);
       setProfiles(res.data?.profiles || []);
+
+      // Fetch customer assignment stats if owner
+      if (res.data?.is_owner) {
+        try {
+          const statsRes = await base44.functions.invoke("manageCustomerAssignment", {
+            action: "GET_STATS",
+          });
+          setAssignmentStats(statsRes.data?.stats || null);
+        } catch {}
+      }
     } catch {
       setIsOwner(false);
     } finally {
@@ -344,6 +355,39 @@ export default function AdminAdmins() {
                 Owner permissions cannot be modified.
               </p>
             </div>
+
+            {/* Customer Assignment Stats */}
+            {assignmentStats && (
+              <div className="grid grid-cols-3 gap-3">
+                <div
+                  className="rounded-xl border p-3 text-center"
+                  style={{ background: "rgba(34,197,94,0.06)", borderColor: "rgba(34,197,94,0.25)" }}
+                >
+                  <p className="text-2xl font-bold text-green-400">
+                    {assignmentStats.assigned || 0}
+                  </p>
+                  <p className="text-xs text-white/45">Assigned</p>
+                </div>
+                <div
+                  className="rounded-xl border p-3 text-center"
+                  style={{ background: G.bg, borderColor: G.border }}
+                >
+                  <p className="text-2xl font-bold" style={{ color: G.text }}>
+                    {assignmentStats.active_assigned || 0}
+                  </p>
+                  <p className="text-xs text-white/45">Active Assigned</p>
+                </div>
+                <div
+                  className="rounded-xl border p-3 text-center"
+                  style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.25)" }}
+                >
+                  <p className="text-2xl font-bold text-amber-400">
+                    {assignmentStats.pending || 0}
+                  </p>
+                  <p className="text-xs text-white/45">Pending</p>
+                </div>
+              </div>
+            )}
 
             {/* Add button */}
             <button

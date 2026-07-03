@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
+import AssignAdminModal from "@/components/admin/AssignAdminModal";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { 
   Users, UserCheck, UserX, Shield, ShieldOff, Trash2, RotateCcw,
   Search, Calendar, LogIn, Mail, Phone, Clock, AlertCircle,
-  ChevronRight, X, FileText, KeyRound, MessageSquare, Lock, Unlock
+  ChevronRight, X, FileText, KeyRound, MessageSquare, Lock, Unlock, UserCog
 } from "lucide-react";
 
 const G = {
@@ -266,6 +267,11 @@ export default function ApprovedUsersTab() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [adminProfiles, setAdminProfiles] = useState([]);
+  const [isOwner, setIsOwner] = useState(false);
+  const [adminFilter, setAdminFilter] = useState("ALL");
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignTargetUser, setAssignTargetUser] = useState(null);
   // Pagination for scalability (10M users)
   const [page, setPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -317,16 +323,35 @@ export default function ApprovedUsersTab() {
       // SCALABILITY: Load only PAGE_SIZE users with pagination
       const skip = (page - 1) * PAGE_SIZE;
       
-      const [approvedUsers, allUsers] = await Promise.all([
-        base44.entities.ApprovedUser.list(null, PAGE_SIZE + 1), // Load one extra to check if more exist
-        base44.entities.User.list(null, 500).catch(() => []), // Limit to 500 for performance
+      const [approvedUsers, allUsers, accessProfiles, adminList, currentUser] = await Promise.all([
+        base44.entities.ApprovedUser.list(null, PAGE_SIZE + 1),
+        base44.entities.User.list(null, 500).catch(() => []),
+        base44.entities.UserAccessProfile.list(null, 500).catch(() => []),
+        base44.entities.AdminProfile.list(null, 500).catch(() => []),
+        base44.auth.me().catch(() => null),
       ]);
+      
+      // Set admin profiles for filter dropdown and assign modal
+      setAdminProfiles(adminList || []);
+      
+      // Determine owner status from AdminProfile
+      const myProfile = (adminList || []).find(
+        (p) => (p.user_id && currentUser && p.user_id === currentUser.id) ||
+               (p.email && currentUser && p.email.toLowerCase() === currentUser.email.toLowerCase())
+      );
+      setIsOwner(myProfile?.is_owner === true);
       
       const hasMore = approvedUsers.length > PAGE_SIZE;
       const paginatedUsers = hasMore ? approvedUsers.slice(0, PAGE_SIZE) : approvedUsers;
       
       const merged = paginatedUsers.map(approved => {
         const platformUser = allUsers.find(u => u.email === approved.email);
+        const accessProfile = (accessProfiles || []).find(
+          (p) => p.email && p.email.toLowerCase() === approved.email.toLowerCase()
+        );
+        const assignedAdmin = accessProfile?.assigned_admin_id
+          ? (adminList || []).find(a => a.admin_profile_id === accessProfile.assigned_admin_id)
+          : null;
         return {
           ...approved,
           full_name: approved.full_name || platformUser?.full_name || "—",
@@ -334,6 +359,8 @@ export default function ApprovedUsersTab() {
           registration_date: platformUser?.created_date || approved.approved_at,
           last_login: platformUser?.last_login || approved.last_login,
           login_count: platformUser?.login_count || approved.login_count || 0,
+          assigned_admin_id: accessProfile?.assigned_admin_id || null,
+          assigned_admin_name: assignedAdmin?.full_name || assignedAdmin?.email || null,
         };
       });
       
@@ -360,6 +387,11 @@ export default function ApprovedUsersTab() {
     }
     if (filter !== "ALL") {
       list = list.filter(u => u.status === filter);
+    }
+    if (adminFilter === "UNASSIGNED") {
+      list = list.filter(u => !u.assigned_admin_id);
+    } else if (adminFilter !== "ALL") {
+      list = list.filter(u => u.assigned_admin_id === adminFilter);
     }
     return list;
   }, [users, search, filter]);
@@ -410,6 +442,17 @@ export default function ApprovedUsersTab() {
           <option value="BLOCKED">Blocked</option>
           <option value="REMOVED">Removed</option>
         </select>
+        <select value={adminFilter} onChange={e => setAdminFilter(e.target.value)}
+          className="px-4 py-2.5 rounded-xl text-sm text-white outline-none"
+          style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}` }}>
+          <option value="ALL">All Admins</option>
+          <option value="UNASSIGNED">Unassigned</option>
+          {adminProfiles.filter(p => p.status === "ACTIVE" && !p.is_owner).map(admin => (
+            <option key={admin.admin_profile_id} value={admin.admin_profile_id}>
+              {admin.full_name || admin.email}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Users List */}
@@ -442,7 +485,7 @@ export default function ApprovedUsersTab() {
                           {status.label}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs text-white/45">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-x-4 gap-y-1 text-xs text-white/45">
                         <span className="flex items-center gap-1 truncate">
                           <Mail className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">{user.email}</span>
@@ -459,8 +502,26 @@ export default function ApprovedUsersTab() {
                           <LogIn className="w-3 h-3 flex-shrink-0" />
                           {user.login_count || 0} logins
                         </span>
+                        <span className="flex items-center gap-1 truncate" style={{ color: user.assigned_admin_name ? G.text : "rgba(255,255,255,0.30)" }}>
+                          <Shield className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{user.assigned_admin_name || "Unassigned"}</span>
+                        </span>
                       </div>
                     </div>
+                    {isOwner && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAssignTargetUser(user);
+                          setShowAssignModal(true);
+                        }}
+                        title="Assign Admin"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}
+                      >
+                        <UserCog className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     <ChevronRight className="w-5 h-5 flex-shrink-0" style={{ color: G.dim }} />
                   </div>
                 </div>
@@ -513,6 +574,24 @@ export default function ApprovedUsersTab() {
           />
         )}
       </AnimatePresence>
+
+      {/* Assign Admin Modal (Owner only) */}
+      {showAssignModal && assignTargetUser && (
+        <AssignAdminModal
+          customer={assignTargetUser}
+          adminProfiles={adminProfiles}
+          currentAssignment={assignTargetUser.assigned_admin_name}
+          onClose={() => {
+            setShowAssignModal(false);
+            setAssignTargetUser(null);
+          }}
+          onSaved={() => {
+            setShowAssignModal(false);
+            setAssignTargetUser(null);
+            loadUsers();
+          }}
+        />
+      )}
     </div>
   );
 }
