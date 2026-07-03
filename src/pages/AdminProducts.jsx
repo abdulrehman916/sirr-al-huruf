@@ -3,9 +3,10 @@ import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Plus, Search, X, Edit3, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
-  Star, ExternalLink, Upload, Save, Flame, Sparkles, PackageX, Play, TrendingUp
+  Star, ExternalLink, Upload, Save, Flame, Sparkles, PackageX, Play, TrendingUp, Copy
 } from "lucide-react";
 import { MARKETPLACE_OPTIONS } from "@/lib/countryProfiles";
+import ProductEditor from "@/components/admin/ProductEditor";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -79,6 +80,9 @@ export default function AdminProducts() {
   const [videoUrlInput, setVideoUrlInput] = useState("");
   const [faqInput, setFaqInput] = useState({ question: "", answer: "" });
   const [saving, setSaving] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [bulkBrand, setBulkBrand] = useState("");
 
   useEffect(() => {
     checkAdmin();
@@ -131,7 +135,20 @@ export default function AdminProducts() {
     if (filterCategory !== "all") list = list.filter(p => p.category === filterCategory);
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(p => p.name?.toLowerCase().includes(q) || p.product_id?.toLowerCase().includes(q));
+      list = list.filter(p =>
+        p.name?.toLowerCase().includes(q) ||
+        p.product_id?.toLowerCase().includes(q) ||
+        p.brand?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
+        p.sku?.toLowerCase().includes(q) ||
+        (p.tags || []).some(t => t.toLowerCase().includes(q)) ||
+        (p.is_active ? "active" : "hidden").includes(q) ||
+        (p.is_out_of_stock ? "out of stock" : "").includes(q) ||
+        (p.is_featured ? "featured" : "").includes(q) ||
+        (p.is_best_seller ? "best seller" : "").includes(q) ||
+        (p.is_new_arrival ? "new arrival" : "").includes(q) ||
+        (p.is_trending ? "trending" : "").includes(q)
+      );
     }
     return list;
   }, [products, search, filterCategory]);
@@ -393,6 +410,102 @@ export default function AdminProducts() {
     }
   };
 
+  const toggleSelect = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length && filtered.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(p => p.id)));
+    }
+  };
+
+  const duplicateProduct = async (product) => {
+    try {
+      const { id, created_date, updated_date, created_by_id, ...rest } = product;
+      await base44.entities.Product.create({
+        ...rest,
+        product_id: `PRD-${Date.now()}`,
+        name: `${product.name} (Copy)`,
+        slug: `${product.slug}-copy-${Date.now()}`,
+        is_featured: false,
+        is_best_seller: false,
+        is_new_arrival: false,
+        is_trending: false,
+        updated_at: new Date().toISOString(),
+      });
+      toast({ title: "Product duplicated" });
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error duplicating", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} products? This cannot be undone.`)) return;
+    try {
+      const ids = Array.from(selectedIds);
+      await Promise.all(ids.map(id => base44.entities.Product.delete(id)));
+      toast({ title: `${ids.length} products deleted` });
+      setSelectedIds(new Set());
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const bulkPublish = async (publish) => {
+    if (selectedIds.size === 0) return;
+    try {
+      const ids = Array.from(selectedIds);
+      const now = new Date().toISOString();
+      await base44.entities.Product.bulkUpdate(ids.map(id => ({ id, is_active: publish, updated_at: now })));
+      toast({ title: `${ids.length} products ${publish ? "published" : "hidden"}` });
+      setSelectedIds(new Set());
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const bulkChangeCategory = async () => {
+    if (selectedIds.size === 0 || !bulkCategory.trim()) return;
+    try {
+      const ids = Array.from(selectedIds);
+      const now = new Date().toISOString();
+      const cat = bulkCategory.trim();
+      await base44.entities.Product.bulkUpdate(ids.map(id => ({ id, category: cat, updated_at: now })));
+      toast({ title: `${ids.length} products moved to ${cat}` });
+      setBulkCategory("");
+      setSelectedIds(new Set());
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const bulkChangeBrand = async () => {
+    if (selectedIds.size === 0 || !bulkBrand.trim()) return;
+    try {
+      const ids = Array.from(selectedIds);
+      const now = new Date().toISOString();
+      const brand = bulkBrand.trim();
+      await base44.entities.Product.bulkUpdate(ids.map(id => ({ id, brand, updated_at: now })));
+      toast({ title: `${ids.length} products brand set to ${brand}` });
+      setBulkBrand("");
+      setSelectedIds(new Set());
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
   const pendingReviews = reviews.filter(r => !r.is_approved);
 
   if (isAdmin === false) return <Navigate to="/" replace />;
@@ -439,7 +552,7 @@ export default function AdminProducts() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search products..."
+            placeholder="Search by name, brand, category, SKU, tags, status..."
             className="flex-1 bg-transparent outline-none font-inter text-sm"
             style={{ color: "rgba(255,255,255,0.90)" }}
           />
@@ -466,6 +579,51 @@ export default function AdminProducts() {
           </div>
         )}
 
+        {/* Bulk Actions Bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 flex-wrap p-3 rounded-xl" style={{ background: "rgba(8,16,38,0.80)", border: `1px solid ${G.border}` }}>
+            <span className="font-inter text-xs font-bold" style={{ color: G.text }}>
+              {selectedIds.size} selected
+            </span>
+            <button onClick={() => setSelectedIds(new Set())} className="px-2 py-1 rounded-lg font-inter text-[10px] font-bold" style={{ border: `1px solid ${G.faint}`, color: "rgba(255,255,255,0.50)" }}>
+              Clear
+            </button>
+            <div className="flex gap-1.5">
+              <button onClick={() => bulkPublish(true)} className="px-2.5 py-1 rounded-lg font-inter text-[10px] font-bold" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.40)", color: "#86EFAC" }}>
+                Publish All
+              </button>
+              <button onClick={() => bulkPublish(false)} className="px-2.5 py-1 rounded-lg font-inter text-[10px] font-bold" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.faint}`, color: "rgba(255,255,255,0.60)" }}>
+                Hide All
+              </button>
+              <button onClick={bulkDelete} className="px-2.5 py-1 rounded-lg font-inter text-[10px] font-bold" style={{ background: "rgba(248,113,113,0.10)", border: "1px solid rgba(248,113,113,0.30)", color: "#F87171" }}>
+                Delete All
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input value={bulkCategory} onChange={e => setBulkCategory(e.target.value)} placeholder="Set category..." className="px-2 py-1 rounded-lg bg-transparent outline-none font-inter text-[10px] w-28" style={{ border: `1px solid ${G.faint}`, color: "rgba(255,255,255,0.80)" }} />
+              <button onClick={bulkChangeCategory} disabled={!bulkCategory.trim()} className="px-2 py-1 rounded-lg font-inter text-[10px] font-bold disabled:opacity-30" style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}>
+                Apply
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input value={bulkBrand} onChange={e => setBulkBrand(e.target.value)} placeholder="Set brand..." className="px-2 py-1 rounded-lg bg-transparent outline-none font-inter text-[10px] w-28" style={{ border: `1px solid ${G.faint}`, color: "rgba(255,255,255,0.80)" }} />
+              <button onClick={bulkChangeBrand} disabled={!bulkBrand.trim()} className="px-2 py-1 rounded-lg font-inter text-[10px] font-bold disabled:opacity-30" style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}>
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Select All */}
+        {!loading && filtered.length > 0 && (
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleSelectAll} className="w-4 h-4 cursor-pointer" style={{ accentColor: "#D4AF37" }} />
+            <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+              Select All ({filtered.length})
+            </span>
+          </div>
+        )}
+
         {/* Products List */}
         {loading ? (
           <div className="flex justify-center py-12">
@@ -479,7 +637,9 @@ export default function AdminProducts() {
         ) : (
           <div className="space-y-2">
             {filtered.map(p => (
-              <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${G.faint}` }}>
+              <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: selectedIds.has(p.id) ? "rgba(212,175,55,0.08)" : "rgba(8,16,38,0.60)", border: `1px solid ${selectedIds.has(p.id) ? G.border : G.faint}` }}>
+                {/* Checkbox */}
+                <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} className="flex-shrink-0 w-4 h-4 cursor-pointer" style={{ accentColor: "#D4AF37" }} />
                 {/* Image */}
                 <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-black/40">
                   {p.images?.[0] ? (
@@ -555,6 +715,9 @@ export default function AdminProducts() {
                   <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Edit">
                     <Edit3 className="w-3.5 h-3.5" style={{ color: G.text }} />
                   </button>
+                  <button onClick={() => duplicateProduct(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Duplicate">
+                    <Copy className="w-3.5 h-3.5" style={{ color: G.dim }} />
+                  </button>
                   <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-lg hover:bg-white/5" title="Delete">
                     <Trash2 className="w-3.5 h-3.5" style={{ color: "#F87171" }} />
                   </button>
@@ -617,309 +780,15 @@ export default function AdminProducts() {
               className="w-full lg:w-[600px] max-h-[90vh] overflow-y-auto rounded-t-2xl lg:rounded-2xl p-5 space-y-4"
               style={{ background: "linear-gradient(180deg, rgba(5,10,28,0.99) 0%, rgba(2,5,16,1) 100%)", border: `1px solid ${G.border}` }}
             >
-              <div className="flex items-center justify-between sticky top-0" style={{ background: "rgba(5,10,28,0.95)" }}>
-                <h2 className="font-inter text-sm font-bold" style={{ color: G.text }}>
-                  {editId ? "Edit Product" : "New Product"}
-                </h2>
-                <button onClick={() => setShowForm(false)}><X className="w-4 h-4" style={{ color: G.dim }} /></button>
-              </div>
-
-              {/* Basic Fields */}
-              <div className="space-y-3">
-                <FormField label="Name *">
-                  <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="form-input" />
-                </FormField>
-                <FormField label="Slug *">
-                  <input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} className="form-input" />
-                </FormField>
-                <FormField label="Category">
-                  <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="form-input" placeholder="e.g. Books, Tools, Incense" />
-                </FormField>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Brand">
-                    <input value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} className="form-input" placeholder="e.g. Dabur, Hamdard" />
-                  </FormField>
-                  <FormField label="SKU">
-                    <input value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} className="form-input" placeholder="e.g. AYR-001" />
-                  </FormField>
-                </div>
-                <FormField label="Short Description">
-                  <input value={form.short_description} onChange={e => setForm({ ...form, short_description: e.target.value })} className="form-input" />
-                </FormField>
-                <FormField label="Full Description (English)">
-                  <textarea value={form.full_description} onChange={e => setForm({ ...form, full_description: e.target.value })} rows={4} className="form-input resize-none" />
-                </FormField>
-                <FormField label="Malayalam Description">
-                  <textarea value={form.malayalam_description} onChange={e => setForm({ ...form, malayalam_description: e.target.value })} rows={4} className="form-input resize-none" />
-                </FormField>
-                <FormField label="Usage Instructions">
-                  <textarea value={form.usage_instructions} onChange={e => setForm({ ...form, usage_instructions: e.target.value })} rows={3} className="form-input resize-none" />
-                </FormField>
-                <FormField label="Ingredients">
-                  <textarea value={form.ingredients} onChange={e => setForm({ ...form, ingredients: e.target.value })} rows={3} className="form-input resize-none" />
-                </FormField>
-                <FormField label="Benefits">
-                  <textarea value={form.benefits} onChange={e => setForm({ ...form, benefits: e.target.value })} rows={3} className="form-input resize-none" />
-                </FormField>
-                <FormField label="Warnings">
-                  <textarea value={form.warnings} onChange={e => setForm({ ...form, warnings: e.target.value })} rows={3} className="form-input resize-none" />
-                </FormField>
-                <FormField label="Rules & Precautions">
-                  <textarea value={form.rules_precautions} onChange={e => setForm({ ...form, rules_precautions: e.target.value })} rows={3} className="form-input resize-none" />
-                </FormField>
-                <FormField label="Storage Instructions">
-                  <textarea value={form.storage_instructions} onChange={e => setForm({ ...form, storage_instructions: e.target.value })} rows={3} className="form-input resize-none" />
-                </FormField>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Price Display">
-                    <input value={form.price_display} onChange={e => setForm({ ...form, price_display: e.target.value })} className="form-input" placeholder="e.g. AED 50" />
-                  </FormField>
-                  <FormField label="Compare Price (original, for discount)">
-                    <input value={form.compare_price_display} onChange={e => setForm({ ...form, compare_price_display: e.target.value })} className="form-input" placeholder="e.g. AED 80" />
-                  </FormField>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Rating Display">
-                    <input value={form.rating_display} onChange={e => setForm({ ...form, rating_display: e.target.value })} className="form-input" placeholder="e.g. 4.5/5" />
-                  </FormField>
-                  <FormField label="Discount % (optional, overrides auto-calc)">
-                    <input type="number" value={form.discount_percentage} onChange={e => setForm({ ...form, discount_percentage: e.target.value })} className="form-input" placeholder="e.g. 25" />
-                  </FormField>
-                </div>
-                <FormField label="Video URL (single, legacy)">
-                  <input value={form.video_url} onChange={e => setForm({ ...form, video_url: e.target.value })} className="form-input" placeholder="https://youtube.com/watch?v=..." />
-                </FormField>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="PDF Attachment URL">
-                    <input value={form.pdf_url} onChange={e => setForm({ ...form, pdf_url: e.target.value })} className="form-input" placeholder="https://.../datasheet.pdf" />
-                  </FormField>
-                  <div className="flex items-end gap-3 pb-2">
-                    <FormField label="Seller WhatsApp">
-                      <input value={form.seller_whatsapp} onChange={e => setForm({ ...form, seller_whatsapp: e.target.value })} className="form-input" placeholder="97150XXXXXXX" />
-                    </FormField>
-                  </div>
-                </div>
-                <FormField label="Seller Email">
-                  <input value={form.seller_email} onChange={e => setForm({ ...form, seller_email: e.target.value })} className="form-input" placeholder="seller@example.com" />
-                </FormField>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Sort Order">
-                    <input type="number" value={form.sort_order} onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} className="form-input" />
-                  </FormField>
-                  <div className="flex items-end gap-2 pb-2 flex-wrap">
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.is_active} onChange={e => setForm({ ...form, is_active: e.target.checked })} />
-                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Active</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.is_featured} onChange={e => setForm({ ...form, is_featured: e.target.checked })} />
-                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Featured</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.is_best_seller} onChange={e => setForm({ ...form, is_best_seller: e.target.checked })} />
-                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Best Seller</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.is_new_arrival} onChange={e => setForm({ ...form, is_new_arrival: e.target.checked })} />
-                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>New Arrival</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.is_out_of_stock} onChange={e => setForm({ ...form, is_out_of_stock: e.target.checked })} />
-                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Out of Stock</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.is_trending} onChange={e => setForm({ ...form, is_trending: e.target.checked })} />
-                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Trending</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Images */}
-              <div className="space-y-2">
-                <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>Images</p>
-                <div className="flex gap-2">
-                  <input
-                    value={imageUrlInput}
-                    onChange={e => setImageUrlInput(e.target.value)}
-                    placeholder="Paste image URL..."
-                    className="form-input flex-1"
-                  />
-                  <button onClick={addImage} className="px-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                    <Plus className="w-4 h-4" style={{ color: G.text }} />
-                  </button>
-                </div>
-                {form.images.length > 0 && (
-                  <div className="flex gap-2 flex-wrap">
-                    {form.images.map((img, idx) => (
-                      <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden" style={{ border: `1px solid ${G.faint}` }}>
-                        <img src={img} alt="" className="w-full h-full object-cover" />
-                        <button onClick={() => removeImage(idx)} className="absolute top-0 right-0 p-0.5" style={{ background: "rgba(0,0,0,0.70)" }}>
-                          <X className="w-2.5 h-2.5" style={{ color: "#F87171" }} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Affiliate Links */}
-              <div className="space-y-2">
-                <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>Affiliate / Buy Links (External Link Mode)</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <select value={affiliateInput.platform} onChange={e => setAffiliateInput({ ...affiliateInput, platform: e.target.value })} className="form-input" style={{ background: "rgba(8,16,38,0.60)" }}>
-                    <option value="">Select marketplace...</option>
-                    {MARKETPLACE_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                  <input value={affiliateInput.url} onChange={e => setAffiliateInput({ ...affiliateInput, url: e.target.value })} placeholder="URL" className="form-input col-span-2" />
-                </div>
-                <input value={affiliateInput.label} onChange={e => setAffiliateInput({ ...affiliateInput, label: e.target.value })} placeholder="Button label (e.g. Buy on Amazon) — optional" className="form-input" />
-                <button onClick={addAffiliate} className="px-3 py-1.5 rounded-lg font-inter text-[10px] font-bold" style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}>
-                  + Add Link
-                </button>
-                {form.affiliate_links.length > 0 && (
-                  <div className="space-y-1">
-                    {form.affiliate_links.map((link, idx) => (
-                      <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.faint}` }}>
-                        <ExternalLink className="w-3 h-3 flex-shrink-0" style={{ color: G.dim }} />
-                        <span className="font-inter text-[11px] font-bold" style={{ color: G.text }}>{link.platform}</span>
-                        <span className="font-inter text-[10px] truncate flex-1" style={{ color: "rgba(255,255,255,0.45)" }}>{link.url}</span>
-                        <button onClick={() => removeAffiliate(idx)}><X className="w-3 h-3" style={{ color: "#F87171" }} /></button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Specifications */}
-              <div className="space-y-2">
-                <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>Specifications</p>
-                <div className="flex gap-2">
-                  <input value={specKey} onChange={e => setSpecKey(e.target.value)} placeholder="Key (e.g. Material)" className="form-input flex-1" />
-                  <input value={specValue} onChange={e => setSpecValue(e.target.value)} placeholder="Value (e.g. Brass)" className="form-input flex-1" />
-                  <button onClick={addSpec} className="px-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                    <Plus className="w-4 h-4" style={{ color: G.text }} />
-                  </button>
-                </div>
-                <textarea value={form.specifications} onChange={e => setForm({ ...form, specifications: e.target.value })} rows={3} className="form-input resize-none font-mono text-[10px]" />
-              </div>
-
-              {/* Tags */}
-              <div className="space-y-2">
-                <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>Tags</p>
-                <div className="flex gap-2">
-                  <input value={tagInput} onChange={e => setTagInput(e.target.value)} placeholder="Add tag..." className="form-input flex-1" onKeyDown={e => e.key === "Enter" && addTag()} />
-                  <button onClick={addTag} className="px-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                    <Plus className="w-4 h-4" style={{ color: G.text }} />
-                  </button>
-                </div>
-                {form.tags.length > 0 && (
-                  <div className="flex gap-1.5 flex-wrap">
-                    {form.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded-md flex items-center gap-1 font-inter text-[10px]" style={{ background: G.bg, border: `1px solid ${G.faint}`, color: G.text }}>
-                        {tag}
-                        <button onClick={() => removeTag(idx)}><X className="w-2.5 h-2.5" /></button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Additional Videos */}
-              <div className="space-y-2">
-                <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>Additional Videos (multiple)</p>
-                <div className="flex gap-2">
-                  <input
-                    value={videoUrlInput}
-                    onChange={e => setVideoUrlInput(e.target.value)}
-                    placeholder="Paste video URL..."
-                    className="form-input flex-1"
-                    onKeyDown={e => e.key === "Enter" && addVideoUrl()}
-                  />
-                  <button onClick={addVideoUrl} className="px-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                    <Plus className="w-4 h-4" style={{ color: G.text }} />
-                  </button>
-                </div>
-                {form.video_urls.length > 0 && (
-                  <div className="space-y-1">
-                    {form.video_urls.map((url, idx) => (
-                      <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.faint}` }}>
-                        <Play className="w-3 h-3 flex-shrink-0" style={{ color: G.dim }} />
-                        <span className="font-inter text-[10px] truncate flex-1" style={{ color: "rgba(255,255,255,0.45)" }}>{url}</span>
-                        <button onClick={() => removeVideoUrl(idx)}><X className="w-3 h-3" style={{ color: "#F87171" }} /></button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* FAQs */}
-              <div className="space-y-2">
-                <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>FAQs</p>
-                <input
-                  value={faqInput.question}
-                  onChange={e => setFaqInput({ ...faqInput, question: e.target.value })}
-                  placeholder="Question..."
-                  className="form-input"
-                />
-                <textarea
-                  value={faqInput.answer}
-                  onChange={e => setFaqInput({ ...faqInput, answer: e.target.value })}
-                  placeholder="Answer..."
-                  rows={2}
-                  className="form-input resize-none"
-                />
-                <button onClick={addFaq} className="px-3 py-1.5 rounded-lg font-inter text-[10px] font-bold" style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}>
-                  + Add FAQ
-                </button>
-                {form.faqs.length > 0 && (
-                  <div className="space-y-1">
-                    {form.faqs.map((faq, idx) => (
-                      <div key={idx} className="px-2 py-1.5 rounded-lg space-y-0.5" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.faint}` }}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-inter text-[11px] font-bold flex-1" style={{ color: G.text }}>{faq.question}</span>
-                          <button onClick={() => removeFaq(idx)}><X className="w-3 h-3" style={{ color: "#F87171" }} /></button>
-                        </div>
-                        <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>{faq.answer}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Save */}
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-inter text-xs font-bold disabled:opacity-40"
-                  style={{ background: G.bgHi, border: `1px solid ${G.borderHi}`, color: G.text }}
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  {saving ? "Saving..." : editId ? "Update Product" : "Create Product"}
-                </button>
-                <button onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl font-inter text-xs font-bold" style={{ border: `1px solid ${G.faint}`, color: "rgba(255,255,255,0.50)" }}>
-                  Cancel
-                </button>
-              </div>
-
-              <style>{`
-                .form-input {
-                  width: 100%;
-                  padding: 8px 12px;
-                  border-radius: 8px;
-                  background: rgba(255,255,255,0.04);
-                  border: 1px solid rgba(212,175,55,0.22);
-                  color: rgba(255,255,255,0.90);
-                  font-family: Inter, sans-serif;
-                  font-size: 13px;
-                  outline: none;
-                }
-                .form-input:focus { border-color: rgba(212,175,55,0.55); }
-                .form-input::placeholder { color: rgba(255,255,255,0.25); }
-              `}</style>
+              <ProductEditor
+                form={form}
+                setForm={setForm}
+                editId={editId}
+                saving={saving}
+                handleSave={handleSave}
+                onClose={() => setShowForm(false)}
+                allProducts={products}
+              />
             </motion.div>
           </motion.div>
         )}
