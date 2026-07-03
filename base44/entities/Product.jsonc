@@ -22,6 +22,10 @@
       "type": "string",
       "description": "Stock Keeping Unit \u2014 internal product code"
     },
+    "barcode": {
+      "type": "string",
+      "description": "Product barcode (EAN/UPC/ISBN) for scanning and marketplace sync"
+    },
     "short_description": {
       "type": "string",
       "description": "One-line summary shown on product cards"
@@ -33,6 +37,10 @@
     "malayalam_description": {
       "type": "string",
       "description": "Full product description in Malayalam script"
+    },
+    "arabic_description": {
+      "type": "string",
+      "description": "Full product description in Arabic"
     },
     "usage_instructions": {
       "type": "string",
@@ -60,7 +68,7 @@
     },
     "specifications": {
       "type": "object",
-      "description": "Key-value specification pairs e.g. { 'Material': 'Brass', 'Weight': '250g' }",
+      "description": "Key-value specification pairs",
       "additionalProperties": true
     },
     "images": {
@@ -68,26 +76,46 @@
       "items": {
         "type": "string"
       },
-      "description": "Array of image URLs (first image is the primary/thumbnail). Supports unlimited high-resolution images."
+      "description": "Array of image URLs (first image is the primary/thumbnail unless thumbnail_index is set). Supports unlimited high-resolution images."
+    },
+    "thumbnail_index": {
+      "type": "integer",
+      "default": 0,
+      "description": "Index of the thumbnail image in the images array. 0 = first image."
     },
     "video_url": {
       "type": "string",
-      "description": "Single YouTube/Vimeo embed URL or uploaded file URL (legacy, kept for backward compat)"
+      "description": "Single YouTube/Vimeo embed URL or uploaded file URL (legacy)"
     },
     "video_urls": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Multiple video URLs (YouTube/Vimeo/uploaded). Displayed as a gallery on the detail page."
+      "description": "Multiple video URLs (YouTube/Vimeo/uploaded)"
     },
     "pdf_url": {
       "type": "string",
-      "description": "PDF attachment URL (datasheet, brochure, manual). Downloadable from detail page."
+      "description": "PDF attachment URL (datasheet, brochure, manual)"
     },
     "category": {
       "type": "string",
       "description": "Product category e.g. 'Books', 'Tools', 'Incense', 'Ayurvedic', 'Herbal', 'Talismans'"
+    },
+    "sub_category": {
+      "type": "string",
+      "description": "Sub-category name for finer classification"
+    },
+    "product_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "draft",
+        "archived",
+        "pending_review"
+      ],
+      "default": "active",
+      "description": "Product lifecycle status"
     },
     "affiliate_links": {
       "type": "array",
@@ -95,16 +123,20 @@
         "type": "object",
         "properties": {
           "platform": {
-            "type": "string",
-            "description": "Platform name e.g. 'Amazon', 'Flipkart', 'Etsy'"
+            "type": "string"
           },
           "url": {
-            "type": "string",
-            "description": "Full affiliate/product URL"
+            "type": "string"
           },
           "label": {
-            "type": "string",
-            "description": "Button label e.g. 'Buy on Amazon'"
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "visible": {
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -116,11 +148,16 @@
     },
     "compare_price_display": {
       "type": "string",
-      "description": "Original/strike-through price for discount display e.g. 'AED 80'. When set alongside price_display, a discount badge is shown."
+      "description": "Original/strike-through price for discount display"
+    },
+    "country_price_overrides": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Map of country code to {price, compare_price} for country-specific pricing overrides. e.g. { 'IN': {price: '\u20b9999'}, 'US': {price: '$15'} }"
     },
     "rating_display": {
       "type": "string",
-      "description": "Optional rating display e.g. '4.5/5' (manually entered, not live-synced)"
+      "description": "Optional rating display e.g. '4.5/5'"
     },
     "tags": {
       "type": "array",
@@ -146,11 +183,25 @@
     },
     "seller_whatsapp": {
       "type": "string",
-      "description": "WhatsApp number for product inquiries (with country code, no +). If set, WhatsApp Inquiry button is shown."
+      "description": "WhatsApp number for product inquiries"
     },
     "seller_email": {
       "type": "string",
-      "description": "Contact email for the seller. If set, Contact Seller button is shown."
+      "description": "Contact email for the seller"
+    },
+    "stock_quantity": {
+      "type": "integer",
+      "default": -1,
+      "description": "Stock quantity. -1 = unlimited stock. 0 = out of stock."
+    },
+    "low_stock_threshold": {
+      "type": "integer",
+      "default": 10,
+      "description": "Threshold below which a product is flagged as low stock"
+    },
+    "warehouse_location": {
+      "type": "string",
+      "description": "Warehouse location code or name for inventory management"
     },
     "sort_order": {
       "type": "integer",
@@ -169,35 +220,30 @@
     },
     "is_best_seller": {
       "type": "boolean",
-      "default": false,
-      "description": "If true, a Best Seller badge is shown on the product card and detail page"
+      "default": false
     },
     "is_new_arrival": {
       "type": "boolean",
-      "default": false,
-      "description": "If true, a New Arrival badge is shown on the product card and detail page"
+      "default": false
     },
     "is_trending": {
       "type": "boolean",
-      "default": false,
-      "description": "If true, a Trending badge is shown and the product appears in the Trending section"
+      "default": false
     },
     "is_out_of_stock": {
       "type": "boolean",
       "default": false,
-      "description": "If true, an Out of Stock badge is shown and buy buttons are disabled"
+      "description": "Manual out-of-stock override. If true, buy buttons are disabled."
     },
     "discount_percentage": {
       "type": "number",
-      "description": "Discount percentage (0-100). When > 0, a discount badge is shown. Optional \u2014 can be auto-derived from compare_price_display vs price_display."
+      "description": "Discount percentage (0-100)"
     },
     "updated_by": {
-      "type": "string",
-      "description": "Admin user ID who last updated"
+      "type": "string"
     },
     "updated_at": {
-      "type": "string",
-      "description": "ISO 8601 timestamp of last update"
+      "type": "string"
     }
   },
   "required": [

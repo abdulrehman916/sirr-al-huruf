@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Package, Images, DollarSign, ShoppingBag, FileText, ListChecks,
   Leaf, BookOpen, AlertTriangle, Truck, HelpCircle, Tag, Link2,
-  Send, Save, X, Plus,
+  Send, Save, X, Plus, Boxes,
 } from "lucide-react";
 import MediaTab from "./editor/MediaTab";
 import MarketplaceTab from "./editor/MarketplaceTab";
@@ -33,6 +33,7 @@ const TABS = [
   { id: "faqs", label: "FAQs", icon: HelpCircle },
   { id: "seo", label: "SEO", icon: Tag },
   { id: "related", label: "Related", icon: Link2 },
+  { id: "inventory", label: "Inventory", icon: Boxes },
   { id: "publish", label: "Publish", icon: Send },
 ];
 
@@ -74,6 +75,9 @@ function GeneralTab({ form, setForm }) {
       <FormField label="Category">
         <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="form-input" placeholder="e.g. Books, Tools, Incense" />
       </FormField>
+      <FormField label="Sub Category">
+        <input value={form.sub_category || ""} onChange={e => setForm({ ...form, sub_category: e.target.value })} className="form-input" placeholder="e.g. Herbal Powders, Ayurvedic Oils" />
+      </FormField>
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Brand">
           <input value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} className="form-input" placeholder="e.g. Dabur, Hamdard" />
@@ -81,9 +85,20 @@ function GeneralTab({ form, setForm }) {
         <FormField label="SKU">
           <input value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} className="form-input" placeholder="e.g. AYR-001" />
         </FormField>
+        <FormField label="Barcode">
+          <input value={form.barcode || ""} onChange={e => setForm({ ...form, barcode: e.target.value })} className="form-input" placeholder="EAN/UPC/ISBN" />
+        </FormField>
       </div>
       <FormField label="Short Description">
         <input value={form.short_description} onChange={e => setForm({ ...form, short_description: e.target.value })} className="form-input" />
+      </FormField>
+      <FormField label="Product Status">
+        <select value={form.product_status || "active"} onChange={e => setForm({ ...form, product_status: e.target.value })} className="form-input" style={{ background: "rgba(8,16,38,0.60)" }}>
+          <option value="active">Active</option>
+          <option value="draft">Draft</option>
+          <option value="archived">Archived</option>
+          <option value="pending_review">Pending Review</option>
+        </select>
       </FormField>
       <FormField label="Sort Order">
         <input type="number" value={form.sort_order} onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} className="form-input" />
@@ -111,6 +126,30 @@ function PricingTab({ form, setForm }) {
           <input type="number" value={form.discount_percentage} onChange={e => setForm({ ...form, discount_percentage: e.target.value })} className="form-input" placeholder="e.g. 25" />
         </FormField>
       </div>
+      {/* Country Price Overrides */}
+      <div className="space-y-2">
+        <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.dim }}>Country Price Overrides</p>
+        <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>Override the base AED price for specific countries. Leave empty to use auto-converted price.</p>
+        {["AE", "IN", "SA", "US", "GB"].map(code => {
+          const overrides = (() => { try { return JSON.parse(form.country_price_overrides || "{}"); } catch { return {}; } })();
+          const o = overrides[code] || {};
+          return (
+            <div key={code} className="flex items-center gap-2">
+              <span className="font-inter text-[10px] font-bold w-8" style={{ color: G.text }}>{code}</span>
+              <input value={o.price || ""} onChange={e => {
+                const newO = { ...overrides, [code]: { ...o, price: e.target.value } };
+                if (!e.target.value) { delete newO[code].price; if (!newO[code].compare_price) delete newO[code]; }
+                setForm({ ...form, country_price_overrides: JSON.stringify(newO) });
+              }} className="form-input flex-1" placeholder={`Price for ${code}`} />
+              <input value={o.compare_price || ""} onChange={e => {
+                const newO = { ...overrides, [code]: { ...o, compare_price: e.target.value } };
+                if (!e.target.value) { delete newO[code].compare_price; if (!newO[code].price) delete newO[code]; }
+                setForm({ ...form, country_price_overrides: JSON.stringify(newO) });
+              }} className="form-input flex-1" placeholder="Compare price" />
+            </div>
+          );
+        })}
+      </div>
       <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
         All prices stored as AED base. Display strings are shown to customers as-is.
       </p>
@@ -126,6 +165,9 @@ function DescriptionsTab({ form, setForm }) {
       </FormField>
       <FormField label="Malayalam Description">
         <textarea value={form.malayalam_description} onChange={e => setForm({ ...form, malayalam_description: e.target.value })} rows={8} className="form-input resize-none font-malayalam" />
+      </FormField>
+      <FormField label="Arabic Description">
+        <textarea value={form.arabic_description || ""} onChange={e => setForm({ ...form, arabic_description: e.target.value })} rows={8} className="form-input resize-none font-amiri" dir="rtl" />
       </FormField>
     </div>
   );
@@ -278,6 +320,27 @@ function RelatedProductsTab({ form, allProducts }) {
   );
 }
 
+function InventoryTab({ form, setForm }) {
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Stock Quantity (-1 = Unlimited)">
+          <input type="number" value={form.stock_quantity ?? -1} onChange={e => setForm({ ...form, stock_quantity: parseInt(e.target.value) ?? -1 })} className="form-input" />
+        </FormField>
+        <FormField label="Low Stock Threshold">
+          <input type="number" value={form.low_stock_threshold ?? 10} onChange={e => setForm({ ...form, low_stock_threshold: parseInt(e.target.value) || 10 })} className="form-input" />
+        </FormField>
+      </div>
+      <FormField label="Warehouse Location">
+        <input value={form.warehouse_location || ""} onChange={e => setForm({ ...form, warehouse_location: e.target.value })} className="form-input" placeholder="e.g. WH-A, Dubai Storage, Shelf-12" />
+      </FormField>
+      <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+        Stock quantity of -1 means unlimited stock. When stock reaches 0, the product is automatically marked out of stock. Low stock alerts appear when stock falls below the threshold.
+      </p>
+    </div>
+  );
+}
+
 function PublishTab({ form, setForm }) {
   return (
     <div className="space-y-4">
@@ -321,6 +384,7 @@ export default function ProductEditor({ form, setForm, editId, saving, handleSav
       case "faqs": return <FAQsTab form={form} setForm={setForm} />;
       case "seo": return <SEOTab form={form} setForm={setForm} />;
       case "related": return <RelatedProductsTab form={form} allProducts={allProducts} />;
+      case "inventory": return <InventoryTab form={form} setForm={setForm} />;
       case "publish": return <PublishTab form={form} setForm={setForm} />;
       default: return null;
     }

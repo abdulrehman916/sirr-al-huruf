@@ -26,7 +26,7 @@ export default function CategoriesManager() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ name: "", slug: "", icon: "📦", description: "", is_active: true });
+  const [form, setForm] = useState({ name: "", slug: "", icon: "📦", description: "", is_active: true, parent_id: "" });
 
   const load = async () => {
     try {
@@ -43,13 +43,13 @@ export default function CategoriesManager() {
   useEffect(() => { load(); }, []);
 
   const openCreate = () => {
-    setForm({ name: "", slug: "", icon: "📦", description: "", is_active: true });
+    setForm({ name: "", slug: "", icon: "📦", description: "", is_active: true, parent_id: "" });
     setEditId(null);
     setShowForm(true);
   };
 
   const openEdit = (cat) => {
-    setForm({ name: cat.name, slug: cat.slug, icon: cat.icon || "📦", description: cat.description || "", is_active: cat.is_active !== false });
+    setForm({ name: cat.name, slug: cat.slug, icon: cat.icon || "📦", description: cat.description || "", is_active: cat.is_active !== false, parent_id: cat.parent_id || "" });
     setEditId(cat.id);
     setShowForm(true);
   };
@@ -131,14 +131,23 @@ export default function CategoriesManager() {
         </div>
       ) : (
         <div className="space-y-1.5">
-          {[...categories].sort((a, b) => (a.display_order || 0) - (b.display_order || 0)).map((cat) => (
+          {(() => {
+            const tops = categories.filter(c => !c.parent_id).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+            const childrenOf = (pid) => categories.filter(c => c.parent_id === pid).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+            const result = [];
+            const seen = new Set();
+            tops.forEach(parent => { result.push(parent); seen.add(parent.id); childrenOf(parent.id).forEach(child => { result.push(child); seen.add(child.id); }); });
+            categories.filter(c => !seen.has(c.id)).forEach(c => result.push(c));
+            return result;
+          })().map((cat) => (
             <motion.div
               key={cat.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-2 p-2.5 rounded-lg"
-              style={{ background: cat.is_active === false ? "rgba(255,255,255,0.02)" : "rgba(8,16,38,0.60)", border: `1px solid ${cat.is_active === false ? G.faint : G.faint}`, opacity: cat.is_active === false ? 0.5 : 1 }}
+              style={{ background: cat.is_active === false ? "rgba(255,255,255,0.02)" : "rgba(8,16,38,0.60)", border: `1px solid ${cat.is_active === false ? G.faint : G.faint}`, opacity: cat.is_active === false ? 0.5 : 1, marginLeft: cat.parent_id ? 20 : 0 }}
             >
+              {cat.parent_id && <span className="font-inter text-[10px] flex-shrink-0" style={{ color: G.dim }}>↳</span>}
               <span className="text-lg flex-shrink-0">{cat.icon || "📦"}</span>
               <div className="flex-1 min-w-0">
                 <p className="font-inter text-xs font-bold truncate" style={{ color: "rgba(255,255,255,0.90)" }}>{cat.name}</p>
@@ -204,6 +213,13 @@ export default function CategoriesManager() {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div>
+                <p className="font-inter text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: G.dim }}>Parent Category (optional)</p>
+                <select value={form.parent_id} onChange={e => setForm({ ...form, parent_id: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-white/5 outline-none font-inter text-xs" style={{ border: `1px solid ${G.faint}`, color: "rgba(255,255,255,0.90)", background: "rgba(8,16,38,0.60)" }}>
+                  <option value="">None (Top-level category)</option>
+                  {categories.filter(c => c.id !== editId).map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+                </select>
               </div>
               <div>
                 <p className="font-inter text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: G.dim }}>Description (optional)</p>

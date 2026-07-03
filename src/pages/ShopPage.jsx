@@ -18,6 +18,7 @@ import ShopSectionRow from "../components/shop/ShopSectionRow";
 import CurrencySelector from "../components/shop/CurrencySelector";
 import ShopBadges from "../components/shop/ShopBadges";
 import ShopHomeSections from "../components/shop/ShopHomeSections";
+import HeroBanner from "../components/shop/HeroBanner";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -280,8 +281,11 @@ export default function ShopPage() {
       />
 
       <div className="px-4 pb-8 space-y-5">
+        {/* Hero Banner */}
+        <HeroBanner products={products} />
+
         {/* Search Bar + Actions */}
-        <div className="space-y-2.5">
+        <div className="space-y-2.5" data-shop-search>
           <div
             className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl"
             style={{
