@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, FolderTree, Tag, Boxes, ShoppingCart,
   Users, Star, Ticket, Truck, ExternalLink, DollarSign, BarChart3, Settings,
@@ -50,6 +50,14 @@ export default function AdminShopDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(user => {
+      if (!user || user.role !== "admin") setIsAdmin(false);
+      else setIsAdmin(true);
+    }).catch(() => setIsAdmin(false));
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -83,6 +91,17 @@ export default function AdminShopDashboard() {
       default: return null;
     }
   };
+
+  if (isAdmin === false) return <Navigate to="/" replace />;
+  if (isAdmin === null) {
+    return (
+      <AdminLayout title="Loading...">
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-4 border-t-yellow-400 border-r-transparent rounded-full animate-spin" />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

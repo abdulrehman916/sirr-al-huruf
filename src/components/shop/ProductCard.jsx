@@ -27,7 +27,7 @@ export default function ProductCard({ product, index = 0 }) {
   const [wished, setWished] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  const primaryImage = product.images?.[0];
+  const primaryImage = product.images?.[product.thumbnail_index || 0];
   const hasAffiliate = product.affiliate_links?.length > 0;
 
   useEffect(() => {

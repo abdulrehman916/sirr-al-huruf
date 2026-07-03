@@ -112,7 +112,7 @@ export default function MarketplaceLinksManager() {
               <motion.div key={p.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${links.length === 0 ? "rgba(248,113,113,0.20)" : G.faint}` }}>
                 <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-black/40">
-                  {p.images?.[0] ? <img src={p.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ShoppingBag className="w-3 h-3" style={{ color: G.dim, opacity: 0.3 }} /></div>}
+                  {p.images?.[p.thumbnail_index || 0] ? <img src={p.images[p.thumbnail_index || 0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ShoppingBag className="w-3 h-3" style={{ color: G.dim, opacity: 0.3 }} /></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-inter text-xs font-bold truncate" style={{ color: "rgba(255,255,255,0.85)" }}>{p.name}</p>

@@ -59,6 +59,15 @@ const EMPTY_FORM = {
   rules_precautions: "",
   storage_instructions: "",
   is_trending: false,
+  barcode: "",
+  sub_category: "",
+  product_status: "active",
+  arabic_description: "",
+  country_price_overrides: "{}",
+  stock_quantity: -1,
+  low_stock_threshold: 10,
+  warehouse_location: "",
+  thumbnail_index: 0,
 };
 
 export default function AdminProducts() {
@@ -174,6 +183,7 @@ export default function AdminProducts() {
       tags: product.tags || [],
       faqs: product.faqs || [],
       discount_percentage: product.discount_percentage ?? "",
+      country_price_overrides: product.country_price_overrides ? JSON.stringify(product.country_price_overrides, null, 2) : "{}",
     });
     setEditId(product.id);
     setShowForm(true);
@@ -226,6 +236,15 @@ export default function AdminProducts() {
         rules_precautions: form.rules_precautions,
         storage_instructions: form.storage_instructions,
         is_trending: form.is_trending,
+        barcode: form.barcode,
+        sub_category: form.sub_category,
+        product_status: form.product_status,
+        arabic_description: form.arabic_description,
+        country_price_overrides: (() => { try { return JSON.parse(form.country_price_overrides || "{}"); } catch { return {}; } })(),
+        stock_quantity: form.stock_quantity ?? -1,
+        low_stock_threshold: form.low_stock_threshold ?? 10,
+        warehouse_location: form.warehouse_location,
+        thumbnail_index: form.thumbnail_index || 0,
         updated_at: new Date().toISOString(),
       };
 

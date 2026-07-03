@@ -101,7 +101,6 @@ export default function ProductDetailPage() {
   const loadProduct = async () => {
     try {
       setLoading(true);
-      setActiveImageIdx(0);
       let list = await base44.entities.Product.filter({ slug: productId });
       if (!list || list.length === 0) {
         list = await base44.entities.Product.filter({ product_id: productId });
@@ -109,6 +108,7 @@ export default function ProductDetailPage() {
       if (list && list.length > 0) {
         const p = list[0];
         setProduct(p);
+        setActiveImageIdx(p.thumbnail_index || 0);
         loadReviews(p.product_id);
       }
     } catch (err) {

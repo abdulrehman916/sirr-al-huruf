@@ -34,7 +34,7 @@ function MiniCard({ product, index, isRecent }) {
     setWished(toggleWishlist(product.id));
   };
 
-  const primaryImage = product.images?.[0];
+  const primaryImage = product.images?.[product.thumbnail_index || 0];
 
   return (
     <motion.div
