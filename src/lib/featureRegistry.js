@@ -1,55 +1,18 @@
 /**
- * Feature Registry — Central source of truth for feature-level permissions.
- * Each entry maps a page_path to its sub-features (independent permission units).
- * Pages not listed here use page-level permission only (backward compatible).
+ * Feature Registry — Re-exports from the central Module Manifest.
  *
- * Adding a new multi-feature page = add one entry here + wrap features in the page.
+ * This file preserves backward compatibility. All feature/module definitions
+ * now live in moduleManifest.js (the single source of truth).
+ *
+ * Adding a new feature/method/section/tool: edit moduleManifest.js only.
+ * This file's API (FEATURE_REGISTRY, getFeatures, hasSubFeatures, etc.)
+ * remains unchanged — all existing imports continue to work identically.
  */
 
-export const FEATURE_REGISTRY = {
-  '/abjad': {
-    pageName: 'Abjad Calculator',
-    features: [
-      { id: 'abjad_kabir',    label: 'Abjad Kabir',     icon: '🔢', mode: 'kebir'  },
-      { id: 'abjad_saghir',   label: 'Abjad Saghir',    icon: '🔢', mode: 'saghir' },
-      { id: 'jumlat_kabir',   label: 'Jumlat Kabir',    icon: '🔢', mode: 'cumeli' },
-      { id: 'bast_huroof',    label: 'Bastul Huroof',   icon: '🔢', mode: 'bast'   },
-      { id: 'bast_huroof_2',  label: 'Bastul Huroof 2', icon: '🔢', mode: 'bast2'  },
-    ],
-  },
-  '/mizaan9': {
-    pageName: 'Mizan 9',
-    features: [
-      { id: 'method_1', label: 'Method 1', icon: '⚖️', method: 1 },
-      { id: 'method_2', label: 'Method 2', icon: '⚖️', method: 2 },
-      { id: 'method_3', label: 'Method 3', icon: '⚖️', method: 3 },
-      { id: 'method_4', label: 'Method 4', icon: '⚖️', method: 4 },
-      { id: 'method_5', label: 'Method 5', icon: '⚖️', method: 5 },
-    ],
-  },
-  '/vefkin-yapilisi': {
-    pageName: 'Vefkin Yapılışı',
-    features: [
-      { id: 'ana_vefk',     label: 'Ana Vefk',     icon: '📜', tab: 'ana'    },
-      { id: 'tanzim_vefk',  label: 'Tanzim Vefki', icon: '✨', tab: 'tanzim' },
-    ],
-  },
-  '/faal-hasrath': {
-    pageName: 'Faal Hasrath',
-    features: [
-      { id: 'faal_ali',     label: 'Faal Ali',    icon: '✨', tab: 'ali'    },
-      { id: 'faal_luqman',  label: 'Faal Luqman', icon: '🌟', tab: 'luqman' },
-      { id: 'faal_chob',    label: 'Faal Chob',   icon: '🪵', tab: 'hikmah' },
-    ],
-  },
-  '/holy-names': {
-    pageName: 'Holy Names',
-    features: [
-      { id: 'section_a', label: 'Section A', icon: '✦', tab: 'section-a' },
-      { id: 'section_b', label: 'Section B', icon: '✦', tab: 'section-b' },
-    ],
-  },
-};
+import { FEATURE_REGISTRY } from '@/lib/moduleManifest';
+
+// Re-export for backward compatibility
+export { FEATURE_REGISTRY };
 
 /**
  * Get all sub-features for a page.

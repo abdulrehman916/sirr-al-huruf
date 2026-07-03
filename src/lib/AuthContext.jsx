@@ -23,6 +23,13 @@ export const AuthProvider = ({ children }) => {
     import('@/lib/pageSync')
       .then(({ syncPages }) => syncPages().catch(() => {}))
       .catch(() => {});
+
+    // Auto-sync module registry on app load (fire-and-forget, non-blocking).
+    // Ensures new features/methods/sections from moduleManifest are registered
+    // in FeatureConfig so they appear in all feature selectors without manual work.
+    import('@/lib/moduleSync')
+      .then(({ syncModules }) => syncModules().catch(() => {}))
+      .catch(() => {});
   }, []);
 
   const logout = () => {
