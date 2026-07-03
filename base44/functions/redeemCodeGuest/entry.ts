@@ -37,6 +37,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, message: "This code has been disabled." });
     }
 
+    // Device binding: once redeemed, only the original device/session can use this code
+    if (accessCode.used_by_user_id && accessCode.used_by_user_id !== session_id) {
+      return Response.json({ success: false, message: "This code is already bound to another device." });
+    }
+
     const maxUses = accessCode.max_uses || 1;
     const useCount = accessCode.use_count || 0;
 
@@ -59,6 +64,8 @@ Deno.serve(async (req) => {
             pageExpiry = null;
           } else if (pageDur.value === "CUSTOM" && pageDur.custom_date) {
             pageExpiry = new Date(pageDur.custom_date).toISOString();
+          } else if (pageDur.duration_ms) {
+            pageExpiry = new Date(baseTime.getTime() + pageDur.duration_ms).toISOString();
           } else if (pageDur.days) {
             pageExpiry = new Date(baseTime.getTime() + pageDur.days * 86400000).toISOString();
           }
@@ -76,6 +83,12 @@ Deno.serve(async (req) => {
             if (featDur.is_lifetime) {
               featureExpiries[featId] = { expiry_date: null, plan_name: featDur.plan_name || "Lifetime" };
               hasLifetimeFeature = true;
+            } else if (featDur.duration_ms) {
+              const featExpiry = new Date(baseTime.getTime() + featDur.duration_ms).toISOString();
+              featureExpiries[featId] = { expiry_date: featExpiry, plan_name: featDur.plan_name || "Plan" };
+              if (!latestFeatureExpiry || new Date(featExpiry) > new Date(latestFeatureExpiry)) {
+                latestFeatureExpiry = featExpiry;
+              }
             } else if (featDur.duration_days) {
               const featExpiry = new Date(baseTime.getTime() + featDur.duration_days * 86400000).toISOString();
               featureExpiries[featId] = { expiry_date: featExpiry, plan_name: featDur.plan_name || "Plan" };
@@ -127,12 +140,14 @@ Deno.serve(async (req) => {
     const nowISO = now.toISOString();
     const permissions = buildPermissions(now, nowISO);
 
-    // Mark code as used
+    // Mark code as used + bind to device
     await base44.asServiceRole.entities.AccessCode.update(accessCode.id, {
       use_count: useCount + 1,
       used_by_user_id: session_id,
       used_by_email: "guest:" + session_id.slice(0, 16),
       used_at: nowISO,
+      device_id: session_id,
+      audit_log: [...(accessCode.audit_log || []), { action: "REDEEMED", timestamp: nowISO, admin_id: "system", details: `Redeemed by device: ${session_id.slice(0, 16)}` }],
     });
 
     return Response.json({

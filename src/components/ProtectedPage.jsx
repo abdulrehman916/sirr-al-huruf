@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle, Shield } from "lucide-react";
 import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
-import { checkLocalPermission, getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
+import { checkLocalPermission, getSessionId, mergeGrantedPermissions, validateAndCleanPermissions } from "@/lib/sessionId";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { setAdminFlag } from "@/lib/featurePermission";
 import { hasSubFeatures } from "@/lib/featureRegistry";
@@ -100,6 +100,9 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     }
 
     setAccessStatus("locked");
+
+    // Background validation — removes permissions for revoked/disabled/expired codes
+    validateAndCleanPermissions();
   }, [routePath, requiresPermission]);
 
   useEffect(() => {

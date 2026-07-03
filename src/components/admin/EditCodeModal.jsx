@@ -9,6 +9,7 @@ import { X, Plus, Loader2, Check, KeyRound } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages } from "@/lib/pageRegistry";
+import { DURATION_OPTIONS } from "@/lib/codeDuration";
 import CreateCodePageItem from "./CreateCodePageItem";
 
 const G = {
@@ -19,16 +20,7 @@ const G = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
-const DURATION_OPTIONS = [
-  { value: "1_DAY", label: "1 Day", days: 1 },
-  { value: "7_DAYS", label: "7 Days", days: 7 },
-  { value: "30_DAYS", label: "30 Days", days: 30 },
-  { value: "3_MONTHS", label: "3 Months", days: 90 },
-  { value: "6_MONTHS", label: "6 Months", days: 180 },
-  { value: "1_YEAR", label: "1 Year", days: 365 },
-  { value: "LIFETIME", label: "Lifetime", days: null },
-  { value: "CUSTOM", label: "Custom", days: null },
-];
+
 
 export default function EditCodeModal({ code, onClose, onUpdated }) {
   const { toast } = useToast();
@@ -74,7 +66,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
 
   const updatePageDuration = (path, durationValue) => {
     const opt = DURATION_OPTIONS.find(d => d.value === durationValue);
-    setPageDurations(prev => ({ ...prev, [path]: { value: durationValue, label: opt?.label, days: opt?.days, custom_date: null } }));
+    setPageDurations(prev => ({ ...prev, [path]: { value: durationValue, label: opt?.label, days: opt?.days, duration_ms: opt?.duration_ms, custom_date: null } }));
   };
 
   const updateCustomDate = (path, customDate) => {

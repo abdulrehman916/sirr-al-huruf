@@ -10,12 +10,24 @@
       "type": "string",
       "description": "Admin label \u2014 who this code is intended for"
     },
+    "email": {
+      "type": "string",
+      "description": "Customer email address"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Customer phone number"
+    },
+    "whatsapp": {
+      "type": "string",
+      "description": "Customer WhatsApp number"
+    },
     "page_paths": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "List of page routes unlocked by this code e.g. [\"/holy-names\", \"/magic-sqayer\"]"
+      "description": "List of page routes unlocked by this code"
     },
     "page_names": {
       "type": "array",
@@ -26,17 +38,17 @@
     },
     "page_durations": {
       "type": "object",
-      "description": "Per-page duration settings. Keys are page paths, values are objects with {value, label, days, custom_date}",
+      "description": "Per-page duration settings. Keys are page paths, values are objects with {value, label, days, duration_ms, duration_type, duration_count, custom_date}",
       "additionalProperties": true
     },
     "feature_durations": {
       "type": "object",
-      "description": "Per-feature plan settings. Keys are 'page_path:feature_id', values are {plan_name, duration_days, is_lifetime}. When present, each feature gets its own expiry based on its plan. Overrides page_durations for that feature.",
+      "description": "Per-feature plan settings. Keys are 'page_path:feature_id', values are {plan_name, duration_days, is_lifetime}.",
       "additionalProperties": true
     },
     "sub_features": {
       "type": "object",
-      "description": "Map of page_path to array of feature IDs unlocked by this code. Keys are page paths (e.g. '/abjad'), values are arrays of feature IDs (e.g. ['abjad_kabir', 'jumlat_kabir']). If a page path is absent from this map, ALL features on that page are unlocked (backward compatible with existing full-page codes).",
+      "description": "Map of page_path to array of feature IDs unlocked by this code.",
       "additionalProperties": true
     },
     "duration": {
@@ -55,12 +67,12 @@
     },
     "expiry_date": {
       "type": "string",
-      "description": "ISO 8601 expiry timestamp. null = Lifetime (never expires). Legacy field for backward compatibility."
+      "description": "ISO 8601 expiry timestamp. null = Lifetime (never expires)."
     },
     "max_uses": {
       "type": "integer",
       "default": 1,
-      "description": "Maximum number of times this code can be redeemed. Default 1 = single-use."
+      "description": "Maximum number of times this code can be redeemed."
     },
     "use_count": {
       "type": "integer",
@@ -74,15 +86,75 @@
     },
     "used_by_user_id": {
       "type": "string",
-      "description": "User ID of the first user who redeemed this code (single-use binding)"
+      "description": "Session ID of the first user who redeemed this code (device binding)"
     },
     "used_by_email": {
       "type": "string",
-      "description": "Email of the first user who redeemed this code"
+      "description": "Email or guest identifier of the first user who redeemed"
+    },
+    "device_id": {
+      "type": "string",
+      "description": "Device/session ID that first redeemed this code. Permanently bound unless admin resets."
     },
     "used_at": {
       "type": "string",
       "description": "ISO 8601 timestamp of first redemption"
+    },
+    "reset_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Number of times device binding was reset by admin"
+    },
+    "renewal_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "renewed_at": {
+            "type": "string"
+          },
+          "renewed_by": {
+            "type": "string"
+          },
+          "old_expiry": {
+            "type": "string"
+          },
+          "new_expiry": {
+            "type": "string"
+          },
+          "duration_type": {
+            "type": "string"
+          },
+          "duration_count": {
+            "type": "integer"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "History of all renewals applied to this code"
+    },
+    "audit_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "admin_id": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Complete audit trail: CREATED, REDEEMED, RENEWED, DISABLED, ENABLED, DELETED, RESET_DEVICE, ADDED_FEATURES, REMOVED_FEATURES"
     },
     "created_by": {
       "type": "string",

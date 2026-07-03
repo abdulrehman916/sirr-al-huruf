@@ -88,3 +88,40 @@ export function checkLocalPermission(page_path) {
   }
   return { granted: true, expiry_date: perm.expiry_date };
 }
+
+/**
+ * Validate redeemed codes against the backend.
+ * Removes localStorage permissions for deleted/disabled/expired codes.
+ * Called on app load / page access to ensure revoked codes are enforced instantly.
+ * Best-effort: silently fails if backend is unreachable.
+ */
+export async function validateAndCleanPermissions() {
+  const sid = getSessionId();
+  try {
+    const { base44 } = await import("@/api/base44Client");
+    const res = await base44.functions.invoke("validateCodeStatus", { session_id: sid });
+    const data = res.data;
+    if (!data?.success || !data?.codes) return;
+
+    const perms = getLocalPermissions();
+    let changed = false;
+
+    data.codes.forEach(codeInfo => {
+      if (codeInfo.status === 'disabled' || codeInfo.status === 'expired') {
+        codeInfo.page_paths.forEach(path => {
+          const idx = perms.findIndex(p => p.page_path === path);
+          if (idx >= 0) {
+            perms.splice(idx, 1);
+            changed = true;
+          }
+        });
+      }
+    });
+
+    if (changed) {
+      setLocalPermissions(perms);
+    }
+  } catch {
+    // Best-effort validation — silently fail
+  }
+}
