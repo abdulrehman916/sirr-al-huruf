@@ -10,6 +10,14 @@
       "type": "string",
       "description": "Base44 User ID (if logged in)"
     },
+    "session_id": {
+      "type": "string",
+      "description": "Guest session ID (localStorage UUID) \u2014 used to find the user's existing Reading Code via AccessCode.device_id"
+    },
+    "existing_code": {
+      "type": "string",
+      "description": "The user's existing Reading Code string (if they already have one), passed from the client for admin reference"
+    },
     "name": {
       "type": "string",
       "description": "Full name of requester"

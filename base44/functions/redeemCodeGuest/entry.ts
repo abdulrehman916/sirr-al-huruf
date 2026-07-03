@@ -84,10 +84,13 @@ Deno.serve(async (req) => {
     const featureDurations = accessCode.feature_durations || {};
     const subFeaturesMap = accessCode.sub_features || {};
 
-    const buildPermissions = (baseTime: Date, grantedAt: string) => {
+    const buildPermissions = (baseTime: Date, grantedAt: string, isRedownload: boolean) => {
       return pagePaths.map((path: string, i: number) => {
         const pageDur = pageDurations[path];
         const pageSubFeats = subFeaturesMap[path] || [];
+
+        // Per-page base time: on re-download, use added_at if present (pages added after initial redemption)
+        const pageBaseTime = (isRedownload && pageDur?.added_at) ? new Date(pageDur.added_at) : baseTime;
 
         // Page-level expiry from page_durations
         let pageExpiry: string | null = null;
@@ -97,9 +100,9 @@ Deno.serve(async (req) => {
           } else if (pageDur.value === "CUSTOM" && pageDur.custom_date) {
             pageExpiry = new Date(pageDur.custom_date).toISOString();
           } else if (pageDur.duration_ms) {
-            pageExpiry = new Date(baseTime.getTime() + pageDur.duration_ms).toISOString();
+            pageExpiry = new Date(pageBaseTime.getTime() + pageDur.duration_ms).toISOString();
           } else if (pageDur.days) {
-            pageExpiry = new Date(baseTime.getTime() + pageDur.days * 86400000).toISOString();
+            pageExpiry = new Date(pageBaseTime.getTime() + pageDur.days * 86400000).toISOString();
           }
         }
 
@@ -112,17 +115,19 @@ Deno.serve(async (req) => {
           const featKey = `${path}:${featId}`;
           const featDur = featureDurations[featKey];
           if (featDur) {
+            // Per-feature base time: on re-download, use added_at if present (features added after initial redemption)
+            const featBaseTime = (isRedownload && featDur.added_at) ? new Date(featDur.added_at) : baseTime;
             if (featDur.is_lifetime) {
               featureExpiries[featId] = { expiry_date: null, plan_name: featDur.plan_name || "Lifetime" };
               hasLifetimeFeature = true;
             } else if (featDur.duration_ms) {
-              const featExpiry = new Date(baseTime.getTime() + featDur.duration_ms).toISOString();
+              const featExpiry = new Date(featBaseTime.getTime() + featDur.duration_ms).toISOString();
               featureExpiries[featId] = { expiry_date: featExpiry, plan_name: featDur.plan_name || "Plan" };
               if (!latestFeatureExpiry || new Date(featExpiry) > new Date(latestFeatureExpiry)) {
                 latestFeatureExpiry = featExpiry;
               }
             } else if (featDur.duration_days) {
-              const featExpiry = new Date(baseTime.getTime() + featDur.duration_days * 86400000).toISOString();
+              const featExpiry = new Date(featBaseTime.getTime() + featDur.duration_days * 86400000).toISOString();
               featureExpiries[featId] = { expiry_date: featExpiry, plan_name: featDur.plan_name || "Plan" };
               if (!latestFeatureExpiry || new Date(featExpiry) > new Date(latestFeatureExpiry)) {
                 latestFeatureExpiry = featExpiry;
@@ -158,7 +163,7 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, message: "This code has expired." });
       }
       const usedAt = accessCode.used_at ? new Date(accessCode.used_at) : new Date();
-      const permissions = buildPermissions(usedAt, accessCode.used_at || new Date().toISOString());
+      const permissions = buildPermissions(usedAt, accessCode.used_at || new Date().toISOString(), true);
       return Response.json({
         success: true,
         message: `Access restored to ${pagePaths.length} page(s)!`,
@@ -183,7 +188,7 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const nowISO = now.toISOString();
-    const permissions = buildPermissions(now, nowISO);
+    const permissions = buildPermissions(now, nowISO, false);
 
     // Mark code as used + bind to device
     await base44.asServiceRole.entities.AccessCode.update(accessCode.id, {

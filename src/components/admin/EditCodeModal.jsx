@@ -124,7 +124,12 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
   const handleSaveFeature = async (path, featId, plan) => {
     setSavingFeature({ path, featId });
     try {
-      const newFeatureDurations = { ...featureDurations, [`${path}:${featId}`]: plan };
+      const featKey = `${path}:${featId}`;
+      const origFeatureDurations = code.feature_durations || {};
+      // Stamp added_at on newly added features (not in original code)
+      const isFeatureNew = !origFeatureDurations[featKey] && !plan.added_at;
+      const stampedPlan = isFeatureNew ? { ...plan, added_at: new Date().toISOString() } : plan;
+      const newFeatureDurations = { ...featureDurations, [featKey]: stampedPlan };
       const currentSubFeats = pageSubFeatures[path] || [];
       const newSubFeats = currentSubFeats.includes(featId) ? currentSubFeats : [...currentSubFeats, featId];
       const newPageSubFeatures = { ...pageSubFeatures, [path]: newSubFeats };
@@ -161,12 +166,31 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
         if (feats && feats.length > 0) sub_features[path] = feats;
       });
 
+      // Stamp added_at on newly added feature/page durations (not in original code)
+      const nowISO = new Date().toISOString();
+      const origFeatureDurations = code.feature_durations || {};
+      const origPageDurations = code.page_durations || {};
+
+      const stampedFeatureDurations = {};
+      Object.keys(featureDurations).forEach(key => {
+        const fd = featureDurations[key];
+        stampedFeatureDurations[key] = (!origFeatureDurations[key] && !fd.added_at)
+          ? { ...fd, added_at: nowISO } : fd;
+      });
+
+      const stampedPageDurations = {};
+      Object.keys(pageDurations).forEach(path => {
+        const pd = pageDurations[path];
+        stampedPageDurations[path] = (!origPageDurations[path] && !pd.added_at)
+          ? { ...pd, added_at: nowISO } : pd;
+      });
+
       await base44.entities.AccessCode.update(code.id, {
         page_paths: selectedPages,
         page_names: names,
-        page_durations: pageDurations,
+        page_durations: stampedPageDurations,
         sub_features,
-        feature_durations: featureDurations,
+        feature_durations: stampedFeatureDurations,
       });
 
       toast({ title: `✓ Code "${code.code}" updated` });

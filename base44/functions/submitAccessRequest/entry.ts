@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
     let user = null;
     try { user = await base44.auth.me(); } catch (e) { /* guest user */ }
 
-    const { name, phone, email, page_path, page_name, message } = await req.json();
+    const { name, phone, email, page_path, page_name, message, session_id, existing_code } = await req.json();
 
     if (!page_path) {
       return Response.json({ success: false, error: "Missing page_path" }, { status: 400 });
@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.AccessRequest.create({
       request_id: requestId,
       user_id: user?.id || null,
+      session_id: session_id || null,
+      existing_code: existing_code || null,
       name: name || (user?.full_name || "Guest User"),
       phone: phone || "",
       email: email || (user?.email || ""),
