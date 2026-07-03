@@ -18,8 +18,9 @@ const G = {
  * - Image counter (1/N)
  * - Smooth cross-fade transitions
  */
-export default function PremiumGallery({ images = [], productName = "" }) {
-  const [activeIdx, setActiveIdx] = useState(0);
+export default function PremiumGallery({ images = [], productName = "", initialIndex = 0 }) {
+  const safeInitial = images.length > 0 ? Math.min(initialIndex, images.length - 1) : 0;
+  const [activeIdx, setActiveIdx] = useState(safeInitial);
   const [zoomed, setZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [fullscreen, setFullscreen] = useState(false);

@@ -93,6 +93,15 @@ export default function ProductInfoAccordion({ product, features = [] }) {
               {product.malayalam_description}
             </p>
           )}
+          {product.arabic_description && (
+            <p
+              className="font-amiri text-sm leading-relaxed mt-3 pt-3"
+              dir="rtl"
+              style={{ color: "rgba(255,255,255,0.65)", borderTop: `1px solid ${G.faint}` }}
+            >
+              {product.arabic_description}
+            </p>
+          )}
         </AccordionItem>
       )}
 
@@ -104,6 +113,19 @@ export default function ProductInfoAccordion({ product, features = [] }) {
             style={{ color: "rgba(255,255,255,0.75)" }}
           >
             {product.malayalam_description}
+          </p>
+        </AccordionItem>
+      )}
+
+      {/* Arabic Description (standalone if no English description) */}
+      {!product.full_description && product.arabic_description && (
+        <AccordionItem icon={Languages} title="Arabic Description" defaultOpen>
+          <p
+            className="font-amiri text-sm leading-relaxed"
+            dir="rtl"
+            style={{ color: "rgba(255,255,255,0.75)" }}
+          >
+            {product.arabic_description}
           </p>
         </AccordionItem>
       )}

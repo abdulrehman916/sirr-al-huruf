@@ -375,7 +375,7 @@ export default function ProductDetailPage() {
       <div className="px-4 pb-8 space-y-6">
         {/* Premium Image Gallery */}
         {images.length > 0 && (
-          <PremiumGallery images={images} productName={product.name} />
+          <PremiumGallery images={images} productName={product.name} initialIndex={product.thumbnail_index || 0} />
         )}
 
         {/* Product Info */}
