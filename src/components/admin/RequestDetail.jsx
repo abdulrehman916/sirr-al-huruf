@@ -67,15 +67,27 @@ export default function RequestDetail({ request, onUpdate }) {
         });
       }
 
-      if (statusChange) {
+      if (statusChange === "APPROVED") {
+        // Approval triggers automatic code delivery via backend function
+        const res = await base44.functions.invoke("approveAccessRequest", {
+          request_id: request.request_id,
+        });
+        if (!res.data?.success) {
+          toast({ title: "Approval error", description: res.data?.error || "Failed to deliver access", variant: "destructive" });
+          setSending(false);
+          return;
+        }
+        toast({ title: "✓ Approved & code delivered" });
+      } else if (statusChange) {
         await base44.entities.AccessRequest.update(request.id, {
           status: statusChange,
           approved_by: user?.id || "admin",
           approved_at: now,
         });
+        toast({ title: "✓ Message sent" });
+      } else {
+        toast({ title: "✓ Message sent" });
       }
-
-      toast({ title: "✓ Message sent" });
       setReply("");
       await loadMessages();
       if (onUpdate) onUpdate();
@@ -89,6 +101,13 @@ export default function RequestDetail({ request, onUpdate }) {
 
   // Quick actions — each sends a pre-filled message + changes status
   const quickActions = [
+    {
+      label: "Approve & Deliver",
+      icon: CheckCircle,
+      color: "#22c55e",
+      message: null,
+      status: "APPROVED",
+    },
     {
       label: "Payment Instructions",
       icon: DollarSign,
