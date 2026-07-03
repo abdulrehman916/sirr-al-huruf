@@ -48,6 +48,9 @@ export default function MarketplaceButtons({ product, compact = false }) {
       : first.type === "affiliate"
         ? (first.link.label || `Buy on ${first.mp.name}`)
         : first.mp.name;
+    // Amazon gold button (Sirr al-Huruf theme); other marketplaces use brand color
+    const gold = "#D4AF37";
+    const accent = first.isAmazon ? gold : first.mp.color;
 
     return (
       <button
@@ -55,18 +58,20 @@ export default function MarketplaceButtons({ product, compact = false }) {
         disabled={product.is_out_of_stock}
         className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg font-inter text-[11px] font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
         style={{
-          background: `linear-gradient(135deg, ${first.mp.color}22 0%, ${first.mp.color}08 100%)`,
-          border: `1px solid ${first.mp.color}55`,
+          background: `linear-gradient(135deg, ${accent}22 0%, ${accent}08 100%)`,
+          border: `1px solid ${accent}55`,
           color: G.text,
+          boxShadow: first.isAmazon ? `0 0 16px ${accent}33` : "none",
         }}
       >
-        <Icon className="w-3 h-3" style={{ color: first.mp.color }} />
+        <Icon className="w-3 h-3" style={{ color: accent }} />
         {label}
       </button>
     );
   }
 
   // Full mode — product detail page
+  const gold = "#D4AF37";
   return (
     <div className="space-y-2">
       {buttons.map((btn, i) => {
@@ -74,6 +79,8 @@ export default function MarketplaceButtons({ product, compact = false }) {
         const label = btn.type === "affiliate"
           ? (btn.link.label || `Buy on ${btn.mp.name}`)
           : btn.mp.name;
+        // Amazon gets gold styling; primary (first) non-Amazon gets its brand color highlight
+        const accent = btn.isAmazon ? gold : btn.mp.color;
         const isPrimary = i === 0;
 
         return (
@@ -83,15 +90,15 @@ export default function MarketplaceButtons({ product, compact = false }) {
             disabled={product.is_out_of_stock}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-inter text-sm font-bold transition-all duration-200 hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             style={{
-              background: isPrimary
-                ? `linear-gradient(135deg, ${btn.mp.color}28 0%, ${btn.mp.color}10 100%)`
+              background: (isPrimary || btn.isAmazon)
+                ? `linear-gradient(135deg, ${accent}28 0%, ${accent}10 100%)`
                 : "rgba(8,16,38,0.60)",
-              border: `1px solid ${isPrimary ? `${btn.mp.color}66` : G.border}`,
+              border: `1px solid ${(isPrimary || btn.isAmazon) ? `${accent}66` : G.border}`,
               color: G.text,
-              boxShadow: isPrimary ? `0 0 24px ${btn.mp.color}22` : "none",
+              boxShadow: (isPrimary || btn.isAmazon) ? `0 0 24px ${accent}22` : "none",
             }}
           >
-            <Icon className="w-4 h-4" style={{ color: btn.mp.color }} />
+            <Icon className="w-4 h-4" style={{ color: accent }} />
             {product.is_out_of_stock ? "Unavailable" : label}
           </button>
         );

@@ -47,6 +47,36 @@ export const MARKETPLACE_REGISTRY = {
     countries: ["AE", "SA", "QA", "KW", "BH", "OM", "EG"],
     icon: "Sun", color: "#FEEE00",
   },
+  etsy: {
+    id: "etsy", name: "Etsy", platform: "Etsy",
+    aliases: ["Etsy", "Etsy.com", "etsy"],
+    countries: null, icon: "ShoppingBag", color: "#F1641E",
+  },
+  ebay: {
+    id: "ebay", name: "eBay", platform: "eBay",
+    aliases: ["eBay", "eBay.com", "ebay"],
+    countries: null, icon: "ShoppingBag", color: "#E53238",
+  },
+  aliexpress: {
+    id: "aliexpress", name: "AliExpress", platform: "AliExpress",
+    aliases: ["AliExpress", "AliExpress.com", "aliexpress"],
+    countries: null, icon: "ShoppingBag", color: "#E62E04",
+  },
+  walmart: {
+    id: "walmart", name: "Walmart", platform: "Walmart",
+    aliases: ["Walmart", "Walmart.com", "walmart"],
+    countries: null, icon: "ShoppingBag", color: "#0071CE",
+  },
+  shopify: {
+    id: "shopify", name: "Shopify Store", platform: "Shopify",
+    aliases: ["Shopify", "Shopify Store", "shopify"],
+    countries: null, icon: "ShoppingBag", color: "#96BF47",
+  },
+  custom: {
+    id: "custom", name: "Custom Website", platform: "Custom",
+    aliases: ["Custom Website", "Custom"],
+    countries: null, icon: "ExternalLink", color: "#D4AF37",
+  },
   external: {
     id: "external", name: "External Website", platform: "External",
     aliases: ["External Website", "Website", "Official", "Official Website", "Direct"],
@@ -73,6 +103,12 @@ export const MARKETPLACE_OPTIONS = [
   { value: "Amazon UK", label: "Amazon UK", countries: ["GB"] },
   { value: "Flipkart", label: "Flipkart", countries: ["IN"] },
   { value: "Noon", label: "Noon", countries: ["AE", "SA", "QA", "KW", "BH", "OM", "EG"] },
+  { value: "Etsy", label: "Etsy", countries: null },
+  { value: "eBay", label: "eBay", countries: null },
+  { value: "AliExpress", label: "AliExpress", countries: null },
+  { value: "Walmart", label: "Walmart", countries: null },
+  { value: "Shopify", label: "Shopify Store", countries: null },
+  { value: "Custom", label: "Custom Website", countries: null },
   { value: "External", label: "External Website (All Countries)", countries: null },
   { value: "WhatsApp", label: "WhatsApp Inquiry (uses seller_whatsapp)", countries: null },
   { value: "Email", label: "Email Inquiry (uses seller_email)", countries: null },
@@ -255,52 +291,78 @@ function findLinkForMarketplace(links, mp) {
   });
 }
 
-/**
- * Returns marketplace buttons for a product, filtered by the user's country.
- * Falls back to External Website if no country-specific marketplace exists.
- */
-export function getMarketplaceButtons(product, countryCode) {
-  const profile = getCountryProfile(countryCode);
-  const links = product.affiliate_links || [];
-  const result = [];
+// Match a link's platform/label to a marketplace registry entry (for icon/color)
+function findMarketplaceForLink(link) {
+  if (!link) return MARKETPLACE_REGISTRY["external"];
+  const platform = (link.platform || "").toLowerCase().trim();
+  const label = (link.label || "").toLowerCase().trim();
 
-  for (const mpId of profile.marketplaces) {
-    const mp = MARKETPLACE_REGISTRY[mpId];
-    if (!mp) continue;
-
-    if (mpId === "whatsapp") {
-      if (product.seller_whatsapp) {
-        result.push({ mp, type: "whatsapp", value: product.seller_whatsapp, product });
-      }
-      continue;
-    }
-    if (mpId === "email") {
-      if (product.seller_email) {
-        result.push({ mp, type: "email", value: product.seller_email, product });
-      }
-      continue;
-    }
-
-    // Amazon: use dedicated amazon_url field (not affiliate_links)
-    if (mp.id.startsWith("amazon_")) {
-      if (product.amazon_url) {
-        result.push({ mp, type: "affiliate", link: { url: product.amazon_url, label: `Buy on ${mp.name}`, platform: mp.platform }, product });
-      }
-      continue;
-    }
-
-    const link = findLinkForMarketplace(links, mp);
-    if (link) {
-      result.push({ mp, type: "affiliate", link, product });
-    }
+  // Exact platform or alias match
+  for (const mp of Object.values(MARKETPLACE_REGISTRY)) {
+    if (mp.fallback || mp.id === "whatsapp" || mp.id === "email") continue;
+    if (mp.platform.toLowerCase() === platform) return mp;
+    if (mp.aliases && mp.aliases.some(a => a.toLowerCase() === platform)) return mp;
   }
 
-  // If no marketplace buttons at all but there are links, show all as external fallback
-  if (result.length === 0 && links.length > 0) {
-    const extMp = MARKETPLACE_REGISTRY["external"];
-    links.forEach(link => {
-      result.push({ mp: extMp, type: "affiliate", link, product });
+  // Generic "amazon" (no region) → Amazon US
+  if (platform === "amazon") return MARKETPLACE_REGISTRY["amazon_us"];
+
+  // Label contains marketplace name
+  for (const mp of Object.values(MARKETPLACE_REGISTRY)) {
+    if (mp.fallback || mp.id === "whatsapp" || mp.id === "email") continue;
+    if (label && mp.name && label.includes(mp.name.toLowerCase())) return mp;
+  }
+
+  return MARKETPLACE_REGISTRY["external"];
+}
+
+// Select the Amazon marketplace variant for the user's country
+function getAmazonMarketplaceForCountry(countryCode) {
+  const map = { AE: "amazon_ae", IN: "amazon_in", SA: "amazon_sa", US: "amazon_us", GB: "amazon_uk" };
+  return MARKETPLACE_REGISTRY[map[countryCode] || "amazon_us"];
+}
+
+/**
+ * Returns marketplace buttons for a product.
+ * - Amazon gold button from dedicated amazon_url (always first if set)
+ * - All visible affiliate_links as separate buttons (admin-controlled array order)
+ * - WhatsApp and Email inquiry buttons (if seller info exists)
+ * Empty/invisible links are filtered out automatically.
+ */
+export function getMarketplaceButtons(product, countryCode) {
+  const result = [];
+  const links = (product.affiliate_links || []).filter(
+    (l) => l.visible !== false && l.url && l.url.trim()
+  );
+
+  // 1. Amazon gold button from dedicated amazon_url field
+  if (product.amazon_url) {
+    const amazonMp = getAmazonMarketplaceForCountry(countryCode);
+    result.push({
+      mp: amazonMp,
+      type: "affiliate",
+      link: { url: product.amazon_url, label: `Buy on ${amazonMp.name}`, platform: amazonMp.platform },
+      product,
+      isAmazon: true,
     });
+  }
+
+  // 2. All visible affiliate links as separate buttons (in array order)
+  for (const link of links) {
+    const mp = findMarketplaceForLink(link);
+    // Skip Amazon affiliate links if dedicated amazon_url already shown (avoid duplicate)
+    if (product.amazon_url && mp.id.startsWith("amazon_")) continue;
+    result.push({ mp, type: "affiliate", link, product });
+  }
+
+  // 3. WhatsApp inquiry (if seller info exists)
+  if (product.seller_whatsapp) {
+    result.push({ mp: MARKETPLACE_REGISTRY["whatsapp"], type: "whatsapp", value: product.seller_whatsapp, product });
+  }
+
+  // 4. Email inquiry (if seller info exists)
+  if (product.seller_email) {
+    result.push({ mp: MARKETPLACE_REGISTRY["email"], type: "email", value: product.seller_email, product });
   }
 
   return result;
