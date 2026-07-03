@@ -21,19 +21,34 @@ Deno.serve(async (req) => {
     const code = await base44.asServiceRole.entities.AccessCode.get(code_id);
     if (!code) return Response.json({ error: 'Code not found' }, { status: 404 });
 
-    // Compute new expiry
+    // Compute new expiry + duration values for ALL types
+    const multipliers: Record<string, number> = {
+      MINUTES: 60000, HOURS: 3600000, DAYS: 86400000,
+      WEEKS: 604800000, MONTHS: 2592000000, YEARS: 31536000000,
+    };
+
     let newExpiry: string | null = null;
+    let durationMs: number | null = null;
+    let durationDays: number | null = null;
+    let isLifetime = false;
+    let label = '';
+
     if (duration_type === 'LIFETIME') {
+      isLifetime = true;
       newExpiry = null;
+      label = 'Lifetime';
     } else if (duration_type === 'CUSTOM' && custom_date) {
       newExpiry = new Date(custom_date).toISOString();
+      durationMs = new Date(custom_date).getTime() - Date.now();
+      durationDays = Math.ceil(durationMs / 86400000);
+      label = 'Custom';
     } else {
-      const multipliers: Record<string, number> = {
-        MINUTES: 60000, HOURS: 3600000, DAYS: 86400000,
-        WEEKS: 604800000, MONTHS: 2592000000, YEARS: 31536000000,
-      };
       const ms = multipliers[duration_type] || 86400000;
-      newExpiry = new Date(Date.now() + (parseInt(duration_count) || 0) * ms).toISOString();
+      durationMs = (parseInt(duration_count) || 0) * ms;
+      durationDays = Math.ceil(durationMs / 86400000);
+      newExpiry = new Date(Date.now() + durationMs).toISOString();
+      const typeLabel = duration_type.charAt(0) + duration_type.slice(1).toLowerCase();
+      label = `${duration_count} ${typeLabel}`;
     }
 
     const oldExpiry = code.expiry_date;
@@ -53,12 +68,40 @@ Deno.serve(async (req) => {
       action: 'RENEWED',
       timestamp: now,
       admin_id: user.id,
-      details: `Renewed: ${duration_type}${duration_count ? ' ' + duration_count : ''} → ${newExpiry || 'Lifetime'}`,
+      details: `Renewed: ${label} → ${newExpiry || 'Lifetime'}`,
     };
+
+    // Update page_durations — all pages get the new duration
+    const updatedPageDurations: Record<string, any> = {};
+    for (const path of (code.page_paths || [])) {
+      updatedPageDurations[path] = {
+        value: "RENEWED",
+        label: label,
+        days: isLifetime ? null : durationDays,
+        duration_ms: isLifetime ? null : durationMs,
+        custom_date: duration_type === 'CUSTOM' ? custom_date : null,
+      };
+    }
+
+    // Update feature_durations — all features get the new duration
+    const updatedFeatureDurations: Record<string, any> = {};
+    const subFeatures = code.sub_features || {};
+    for (const [pagePath, featIds] of Object.entries(subFeatures)) {
+      for (const featId of (featIds as string[] || [])) {
+        updatedFeatureDurations[`${pagePath}:${featId}`] = {
+          plan_name: label + ' (Renewed)',
+          duration_days: isLifetime ? null : durationDays,
+          duration_ms: isLifetime ? null : durationMs,
+          is_lifetime: isLifetime,
+        };
+      }
+    }
 
     await base44.asServiceRole.entities.AccessCode.update(code_id, {
       expiry_date: newExpiry,
       is_disabled: false, // Re-enable on renew
+      page_durations: updatedPageDurations,
+      feature_durations: updatedFeatureDurations,
       renewal_history: [...(code.renewal_history || []), renewalEntry],
       audit_log: [...(code.audit_log || []), auditEntry],
     });

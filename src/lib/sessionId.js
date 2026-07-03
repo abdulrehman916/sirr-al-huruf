@@ -107,11 +107,47 @@ export async function validateAndCleanPermissions() {
     let changed = false;
 
     data.codes.forEach(codeInfo => {
-      if (codeInfo.status === 'disabled' || codeInfo.status === 'expired') {
+      if (codeInfo.status === 'disabled') {
+        // Remove permissions for disabled codes (admin intentionally disabled)
         codeInfo.page_paths.forEach(path => {
           const idx = perms.findIndex(p => p.page_path === path);
           if (idx >= 0) {
             perms.splice(idx, 1);
+            changed = true;
+          }
+        });
+      } else {
+        // For active AND expired codes, sync the expiry with the backend.
+        // This ensures:
+        //  - Expired codes stay denied via checkLocalPermission (expiry in the past)
+        //  - Renewed codes automatically get the NEW expiry → access restored
+        //  - Re-constructs permissions if they were previously removed
+        codeInfo.page_paths.forEach((path, i) => {
+          const existing = perms.find(p => p.page_path === path);
+          const backendExpiry = codeInfo.expiry_date;
+
+          if (existing) {
+            if (backendExpiry !== existing.expiry_date) {
+              existing.expiry_date = backendExpiry;
+              changed = true;
+            }
+          } else if (codeInfo.status === 'active') {
+            // Re-construct permissions for renewed codes
+            // (was expired/removed, now active again after admin renewal)
+            const pageName = (codeInfo.page_names || [])[i] || path;
+            const subFeats = (codeInfo.sub_features || {})[path] || [];
+            const featureExpiries = {};
+            subFeats.forEach(featId => {
+              featureExpiries[featId] = { expiry_date: backendExpiry, plan_name: 'Renewed' };
+            });
+            perms.push({
+              page_path: path,
+              page_name: pageName,
+              expiry_date: backendExpiry,
+              granted_at: new Date().toISOString(),
+              sub_features: subFeats.length > 0 ? subFeats : undefined,
+              feature_expiries: Object.keys(featureExpiries).length > 0 ? featureExpiries : undefined,
+            });
             changed = true;
           }
         });

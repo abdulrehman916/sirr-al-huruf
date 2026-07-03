@@ -34,6 +34,8 @@ Deno.serve(async (req) => {
         status,
         expiry_date: c.expiry_date,
         page_paths: c.page_paths || [],
+        page_names: c.page_names || [],
+        sub_features: c.sub_features || {},
         is_disabled: c.is_disabled || false,
       };
     });
