@@ -64,12 +64,14 @@
         "PENDING",
         "AWAITING_PAYMENT",
         "PAYMENT_CONFIRMED",
+        "INFO_REQUESTED",
         "CODE_UPDATED",
         "APPROVED",
-        "REJECTED"
+        "REJECTED",
+        "CLOSED"
       ],
       "default": "PENDING",
-      "description": "Request status \u2014 PENDING=submitted, AWAITING_PAYMENT=admin sent payment instructions, PAYMENT_CONFIRMED=admin confirmed payment, CODE_UPDATED=admin updated reading code, APPROVED=completed, REJECTED=denied"
+      "description": "Request status \u2014 PENDING=submitted, AWAITING_PAYMENT=admin sent payment instructions, PAYMENT_CONFIRMED=admin confirmed payment, INFO_REQUESTED=admin needs more info, CODE_UPDATED=admin updated reading code, APPROVED=completed, REJECTED=denied, CLOSED=request closed"
     },
     "approved_by": {
       "type": "string",

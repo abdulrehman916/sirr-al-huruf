@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { CheckCircle, XCircle, RefreshCw, Clock, User, Mail, FileText, Calendar, KeyRound } from "lucide-react";
+import { CheckCircle, XCircle, RefreshCw, Clock, User, Mail, FileText, Calendar, KeyRound, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import RequestDetail from "@/components/admin/RequestDetail";
+import { REQUEST_STATUSES } from "@/lib/accessRequestStatus";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -13,11 +14,11 @@ const G = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
-const STATUS_COLORS = {
-  PENDING:  { bg: "rgba(234,179,8,0.12)",  border: "rgba(234,179,8,0.50)",  text: "#eab308" },
-  APPROVED: { bg: "rgba(34,197,94,0.10)",  border: "rgba(34,197,94,0.40)",  text: "#22c55e" },
-  REJECTED: { bg: "rgba(239,68,68,0.10)",  border: "rgba(239,68,68,0.40)",  text: "#ef4444" },
-};
+function getStatusColors(status) {
+  const cfg = REQUEST_STATUSES[status] || REQUEST_STATUSES.PENDING;
+  const hex = cfg.color;
+  return { bg: `${hex}1a`, border: `${hex}66`, text: hex };
+}
 
 function fmtDate(iso) {
   if (!iso) return "—";
@@ -33,6 +34,7 @@ export default function AdminAccessRequests() {
   const [user, setUser] = useState(null);
   const [rejectingReq, setRejectingReq] = useState(null);
   const [expandedReqId, setExpandedReqId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
@@ -53,9 +55,20 @@ export default function AdminAccessRequests() {
 
   useEffect(() => { loadRequests(); }, [loadRequests]);
 
-  const filtered = requests.filter(r =>
-    filter === "ALL" ? true : r.status === filter
-  );
+  const filtered = requests.filter(r => {
+    const statusMatch = filter === "ALL" ? true : r.status === filter;
+    if (!statusMatch) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (r.request_id || "").toLowerCase().includes(q) ||
+      (r.page_name || "").toLowerCase().includes(q) ||
+      (r.name || "").toLowerCase().includes(q) ||
+      (r.session_id || "").toLowerCase().includes(q) ||
+      (r.existing_code || "").toLowerCase().includes(q) ||
+      (r.plan_name || "").toLowerCase().includes(q)
+    );
+  });
 
   // Mark request as APPROVED — admin manually edits Reading Code to add the feature
   const handleApprove = async (req) => {
@@ -102,13 +115,11 @@ export default function AdminAccessRequests() {
 
   const cancelReject = () => setRejectingReq(null);
 
-  const TABS = ["PENDING", "APPROVED", "REJECTED", "ALL"];
-  const COUNTS = {
-    PENDING: requests.filter(r => r.status === "PENDING").length,
-    APPROVED: requests.filter(r => r.status === "APPROVED").length,
-    REJECTED: requests.filter(r => r.status === "REJECTED").length,
-    ALL: requests.length,
-  };
+  const TABS = ["ALL", "PENDING", "AWAITING_PAYMENT", "PAYMENT_CONFIRMED", "INFO_REQUESTED", "CODE_UPDATED", "APPROVED", "REJECTED", "CLOSED"];
+  const COUNTS = TABS.reduce((acc, t) => {
+    acc[t] = t === "ALL" ? requests.length : requests.filter(r => r.status === t).length;
+    return acc;
+  }, {});
 
   return (
     <AdminLayout title="Access Requests" subtitle="Review and process user access requests">
@@ -134,6 +145,18 @@ export default function AdminAccessRequests() {
           </button>
         </div>
 
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search by Request ID, name, page, code..."
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-white outline-none placeholder-white/30"
+            style={{ background: G.bg, border: `1px solid ${G.border}`, fontSize: "16px" }}
+          />
+        </div>
+
         {/* Filter Tabs */}
         <div className="flex gap-2 flex-wrap">
           {TABS.map(tab => (
@@ -147,7 +170,7 @@ export default function AdminAccessRequests() {
                 color: filter === tab ? G.text : "rgba(255,255,255,0.50)",
               }}
             >
-              {tab} {COUNTS[tab] > 0 && <span className="ml-1 opacity-70">({COUNTS[tab]})</span>}
+              {REQUEST_STATUSES[tab]?.label || tab} {COUNTS[tab] > 0 && <span className="ml-1 opacity-70">({COUNTS[tab]})</span>}
             </button>
           ))}
         </div>
@@ -165,7 +188,7 @@ export default function AdminAccessRequests() {
         ) : (
           <div className="space-y-3">
             {filtered.map(req => {
-              const sc = STATUS_COLORS[req.status] || STATUS_COLORS.PENDING;
+              const sc = getStatusColors(req.status);
               const isProcessing = processing === req.id;
               return (
                 <div
@@ -181,7 +204,7 @@ export default function AdminAccessRequests() {
                           className="px-2 py-0.5 rounded-full font-inter text-[10px] font-bold uppercase tracking-wider"
                           style={{ background: sc.bg, border: `1px solid ${sc.border}`, color: sc.text }}
                         >
-                          {req.status}
+                          {(REQUEST_STATUSES[req.status]?.label || req.status).toUpperCase()}
                         </span>
                         <span className="font-inter text-[10px] text-white/40">{req.request_id}</span>
                       </div>
@@ -200,6 +223,13 @@ export default function AdminAccessRequests() {
                         <span className="text-white/30">·</span>
                         <span className="text-white/40 font-mono">{req.page_path}</span>
                       </div>
+                      {(req.plan_name || req.price != null) && (
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-white/30">Plan:</span>
+                          <span style={{ color: G.text }}>{req.plan_name || "—"}</span>
+                          {req.price != null && <span className="text-white/40">· {req.currency} {req.price}</span>}
+                        </div>
+                      )}
                       <div className="flex items-center gap-1.5 text-xs text-white/40">
                          <Calendar className="w-3 h-3 flex-shrink-0" />
                          {fmtDate(req.requested_at || req.created_date)}

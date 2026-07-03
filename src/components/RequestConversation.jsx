@@ -45,6 +45,11 @@ export default function RequestConversation({ messages }) {
                 )}
               </div>
               <p className="text-xs text-white/80 whitespace-pre-wrap break-words">{msg.message}</p>
+              {msg.attachment_url && (
+                <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="mt-2 block">
+                  <img src={msg.attachment_url} alt="Attachment" className="rounded-lg max-w-full max-h-40 object-cover" />
+                </a>
+              )}
               <p className="text-[9px] text-white/30 mt-1">
                 {new Date(msg.created_at).toLocaleString("en-GB", {
                   day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",

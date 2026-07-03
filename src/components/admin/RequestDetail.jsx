@@ -5,7 +5,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { Send, Loader2, CheckCircle, DollarSign, KeyRound, XCircle } from "lucide-react";
+import { Send, Loader2, CheckCircle, DollarSign, KeyRound, XCircle, HelpCircle } from "lucide-react";
+import { REQUEST_STATUSES } from "@/lib/accessRequestStatus";
 import RequestConversation from "@/components/RequestConversation";
 
 const G = {
@@ -110,11 +111,25 @@ export default function RequestDetail({ request, onUpdate }) {
       status: "CODE_UPDATED",
     },
     {
+      label: "Ask for Info",
+      icon: HelpCircle,
+      color: "#a855f7",
+      message: "Could you please provide additional information about your request? This will help us process it faster.",
+      status: "INFO_REQUESTED",
+    },
+    {
       label: "Reject",
       icon: XCircle,
       color: "#ef4444",
       message: "Your request has been rejected. Please contact us on WhatsApp for more information.",
       status: "REJECTED",
+    },
+    {
+      label: "Close Request",
+      icon: XCircle,
+      color: "#6b7280",
+      message: "This request has been closed. If you need further assistance, you can reply to reopen it.",
+      status: "CLOSED",
     },
   ];
 
@@ -130,6 +145,22 @@ export default function RequestDetail({ request, onUpdate }) {
         ) : (
           <RequestConversation messages={messages} />
         )}
+      </div>
+
+      {/* Manual status change */}
+      <div className="flex items-center gap-2">
+        <select
+          value={request.status}
+          onChange={(e) => sendAdminMessage(null, e.target.value)}
+          disabled={sending}
+          className="px-3 py-1.5 rounded-lg text-xs font-inter font-semibold outline-none"
+          style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}
+        >
+          {Object.entries(REQUEST_STATUSES).map(([value, cfg]) => (
+            <option key={value} value={value}>{cfg.label}</option>
+          ))}
+        </select>
+        <span className="text-[10px] text-white/30">Change status</span>
       </div>
 
       {/* Quick action buttons */}

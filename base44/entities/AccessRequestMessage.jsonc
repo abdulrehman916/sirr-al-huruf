@@ -30,6 +30,10 @@
       "type": "string",
       "description": "Message content"
     },
+    "attachment_url": {
+      "type": "string",
+      "description": "Optional file attachment URL (e.g. payment screenshot)"
+    },
     "status_change": {
       "type": "string",
       "description": "If this message changed the request status, the new status value"

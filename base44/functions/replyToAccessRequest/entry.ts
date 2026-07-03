@@ -3,9 +3,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { request_id, session_id, message } = await req.json();
+    const { request_id, session_id, message, attachment_url, reopen } = await req.json();
 
-    if (!request_id || !session_id || !message?.trim()) {
+    if (!request_id || !session_id || (!message?.trim() && !attachment_url)) {
       return Response.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -33,10 +33,18 @@ Deno.serve(async (req) => {
       sender_type: "USER",
       sender_id: session_id,
       sender_name: "User",
-      message: message.trim(),
+      message: message?.trim() || (attachment_url ? "📎 Attachment sent" : ""),
+      attachment_url: attachment_url || null,
       created_at: new Date().toISOString(),
       is_read: false,
     });
+
+    // Reopen closed request if requested
+    if (reopen && request.status === "CLOSED") {
+      await base44.asServiceRole.entities.AccessRequest.update(request.id, {
+        status: "PENDING",
+      });
+    }
 
     return Response.json({ success: true, message_id: messageId });
   } catch (error) {
