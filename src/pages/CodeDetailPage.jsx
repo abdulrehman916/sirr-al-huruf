@@ -52,7 +52,7 @@ function AuditEntry({ entry }) {
     CREATED: "#22c55e", REDEEMED: "#3b82f6", RENEWED: "#f59e0b",
     DISABLED: "#ef4444", ENABLED: "#22c55e", DELETED: "#ef4444",
     RESET_DEVICE: "#a855f7", ADDED_FEATURES: "#3b82f6", REMOVED_FEATURES: "#ef4444",
-    REJECTED_ALREADY_REDEEMED: "#ef4444", REJECTED_EXPIRED: "#f59e0b",
+    REJECTED_ALREADY_REDEEMED: "#ef4444", REJECTED_EXPIRED: "#f59e0b", REJECTED_DISABLED: "#ef4444",
   };
   const color = colors[entry.action] || "#9ca3af";
   return (
@@ -94,7 +94,15 @@ export default function CodeDetailPage() {
   const handleToggleDisable = async () => {
     setActionLoading(true);
     try {
-      await base44.entities.AccessCode.update(code.id, { is_disabled: !code.is_disabled });
+      const me = await base44.auth.me();
+      const now = new Date().toISOString();
+      await base44.entities.AccessCode.update(code.id, {
+        is_disabled: !code.is_disabled,
+        audit_log: [...(code.audit_log || []), {
+          action: code.is_disabled ? 'ENABLED' : 'DISABLED',
+          timestamp: now, admin_id: me?.id || '', details: code.is_disabled ? 'Code enabled' : 'Code disabled',
+        }],
+      });
       toast({ title: code.is_disabled ? "✓ Code enabled" : "✓ Code disabled" });
       load();
     } catch (e) {

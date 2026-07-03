@@ -34,6 +34,15 @@ Deno.serve(async (req) => {
     const accessCode = codes[0];
 
     if (accessCode.is_disabled) {
+      const nowISO = new Date().toISOString();
+      await base44.asServiceRole.entities.AccessCode.update(accessCode.id, {
+        audit_log: [...(accessCode.audit_log || []), {
+          action: "REJECTED_DISABLED",
+          timestamp: nowISO,
+          admin_id: "system",
+          details: `Attempt by User/Device: ${session_id.slice(0, 16)} — Result: Rejected — Code Disabled`,
+        }],
+      });
       return Response.json({ success: false, message: "This code has been disabled." });
     }
 

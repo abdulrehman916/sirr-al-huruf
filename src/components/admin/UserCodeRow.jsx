@@ -51,8 +51,8 @@ export default function UserCodeRow({ code, onAction }) {
       });
       toast({ title: code.is_disabled ? "✓ Code enabled" : "✓ Code disabled" });
       if (onAction) onAction();
-    } catch (e) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }

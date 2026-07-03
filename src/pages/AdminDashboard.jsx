@@ -5,6 +5,7 @@ import {
   Users, UserCheck, Clock, Shield, KeyRound, Globe, TrendingUp,
   RefreshCw, AlertCircle, Calendar, MessageSquare, CheckCircle2, XCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useToast } from "@/components/ui/use-toast";
@@ -151,15 +152,15 @@ export default function AdminDashboard() {
             { to: "/admin/feature-pricing",   icon: "💰", label: "Feature Pricing" },
             { to: "/admin/settings",          icon: "⚙️", label: "Settings" },
           ].map(link => (
-            <a
+            <Link
               key={link.to}
-              href={link.to}
+              to={link.to}
               className="rounded-xl border p-3 flex items-center gap-3 transition-all hover:bg-white/5"
               style={{ background: G.bg, borderColor: G.border, textDecoration: "none" }}
             >
               <span className="text-base">{link.icon}</span>
               <span className="font-inter text-xs font-semibold text-white/70">{link.label}</span>
-            </a>
+            </Link>
           ))}
         </div>
 

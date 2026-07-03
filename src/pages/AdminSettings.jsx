@@ -128,15 +128,19 @@ export default function AdminSettings() {
   const handleExport = async (type) => {
     setExportLoading(type);
     try {
-      const res = await base44.functions.invoke("exportData", { entity: type });
-      if (res.data?.url) {
-        window.open(res.data.url, "_blank");
-        toast({ title: `✓ ${type} exported` });
-      } else if (res.data?.success) {
-        toast({ title: `✓ ${type} export initiated` });
-      } else {
-        toast({ title: "Export completed", description: res.data?.message || "Data exported" });
-      }
+      const exportType = type === "users" ? "users" : type === "logs" ? "audit_logs" : "full";
+      const res = await base44.functions.invoke("exportData", { export_type: exportType });
+      // exportData returns JSON directly — download it as a file
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `export_${exportType}_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: `✓ ${type === "users" ? "Users" : type === "logs" ? "Audit Logs" : "Full Backup"} exported` });
     } catch (e) {
       toast({ title: "Export failed", description: e.message, variant: "destructive" });
     } finally {
@@ -227,11 +231,11 @@ export default function AdminSettings() {
           <p className="font-inter text-xs text-white/40">Export entity data to downloadable files.</p>
           <div className="flex flex-wrap gap-2">
             <ActionButton label="Export Users" icon={<Download className="w-3.5 h-3.5" />}
-              onClick={() => handleExport("ApprovedUser")} loading={exportLoading === "ApprovedUser"} />
-            <ActionButton label="Export Codes" icon={<Download className="w-3.5 h-3.5" />}
-              onClick={() => handleExport("AccessCode")} loading={exportLoading === "AccessCode"} />
-            <ActionButton label="Export Logs" icon={<Download className="w-3.5 h-3.5" />}
-              onClick={() => handleExport("AccessLog")} loading={exportLoading === "AccessLog"} />
+              onClick={() => handleExport("users")} loading={exportLoading === "users"} />
+            <ActionButton label="Export Audit Logs" icon={<Download className="w-3.5 h-3.5" />}
+              onClick={() => handleExport("logs")} loading={exportLoading === "logs"} />
+            <ActionButton label="Export Full Backup" icon={<Download className="w-3.5 h-3.5" />}
+              onClick={() => handleExport("full")} loading={exportLoading === "full"} />
           </div>
         </SettingsCard>
 
