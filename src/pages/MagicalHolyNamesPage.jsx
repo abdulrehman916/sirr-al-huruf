@@ -8,6 +8,13 @@ import PullToRefresh from "../components/PullToRefresh";
 import { usePageState } from "../context/PageStateContext";
 import { HOLY_NAMES, MHN_CATEGORIES } from "../lib/magicalHolyNamesData";
 import { base44 } from "@/api/base44Client";
+import { Lock } from "lucide-react";
+import FeatureLockedCard from "@/components/FeatureLockedCard";
+import { checkFeatureAccess } from "@/lib/featurePermission";
+import { getFeatures } from "@/lib/featureRegistry";
+
+const PAGE_PATH = "/holy-names";
+const FEATURES = getFeatures(PAGE_PATH);
 
 // ── SECTION A COMPONENT ──────────────────────────────────────────
 function SectionA() {
@@ -468,22 +475,29 @@ function TabSwitcher({ activeTab, onTabChange }) {
 
   return (
     <div className="flex gap-2 mb-4">
-      {TABS.map(tab => (
-        <button
-          key={tab.id}
-          onClick={() => onTabChange(tab.id)}
-          className="flex-1 py-3 px-4 rounded-xl border font-inter text-xs font-semibold transition-all"
-          style={{
-            background: activeTab === tab.id ? P.bgHi : P.bg,
-            borderColor: activeTab === tab.id ? P.borderHi : P.border,
-            color: activeTab === tab.id ? P.text : P.dim,
-            boxShadow: activeTab === tab.id ? `0 0 14px ${P.glow}` : "none",
-          }}
-        >
-          <span className="font-amiri text-sm block">{tab.arabic}</span>
-          <span className="text-[9px] uppercase tracking-widest">{tab.subtitle}</span>
-        </button>
-      ))}
+      {TABS.map(tab => {
+        const feat = FEATURES.find(f => f.tab === tab.id);
+        const isLocked = feat && !checkFeatureAccess(PAGE_PATH, feat.id);
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className="flex-1 py-3 px-4 rounded-xl border font-inter text-xs font-semibold transition-all"
+            style={{
+              background: activeTab === tab.id ? P.bgHi : P.bg,
+              borderColor: activeTab === tab.id ? P.borderHi : P.border,
+              color: activeTab === tab.id ? P.text : P.dim,
+              boxShadow: activeTab === tab.id ? `0 0 14px ${P.glow}` : "none",
+            }}
+          >
+            <span className="font-amiri text-sm block flex items-center justify-center gap-1">
+              {isLocked && <Lock className="w-3 h-3 opacity-60" />}
+              {tab.arabic}
+            </span>
+            <span className="text-[9px] uppercase tracking-widest">{tab.subtitle}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -494,6 +508,7 @@ export default function MagicalHolyNamesPage() {
   const pageKey = "magical-holy-names-page";
   const initial = getPageState(pageKey, { activeTab: "section-a" });
   const [activeTab, setActiveTab] = useState(initial.activeTab || "section-a");
+  const [lockedFeature, setLockedFeature] = useState(null);
 
   // Save active tab on change
   useEffect(() => {
@@ -501,6 +516,12 @@ export default function MagicalHolyNamesPage() {
   }, [activeTab, setPageState]);
 
   const handleTabChange = (tabId) => {
+    const feat = FEATURES.find(f => f.tab === tabId);
+    if (feat && !checkFeatureAccess(PAGE_PATH, feat.id)) {
+      setLockedFeature(feat);
+      return;
+    }
+    setLockedFeature(null);
     setActiveTab(tabId);
     // Reset scroll when switching tabs
     const container = document.querySelector('[data-scroll-container="true"]');
@@ -522,17 +543,27 @@ export default function MagicalHolyNamesPage() {
 
           <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15 }}
-            >
-              {activeTab === "section-a" ? <SectionA /> : <SectionB />}
-            </motion.div>
-          </AnimatePresence>
+          {lockedFeature ? (
+            <FeatureLockedCard
+              pagePath={PAGE_PATH}
+              featureId={lockedFeature.id}
+              featureLabel={lockedFeature.label}
+              onBack={() => setLockedFeature(null)}
+              onUnlocked={() => { setLockedFeature(null); window.location.reload(); }}
+            />
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+              >
+                {activeTab === "section-a" ? <SectionA /> : <SectionB />}
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
       </PullToRefresh>
     </PageLayout>

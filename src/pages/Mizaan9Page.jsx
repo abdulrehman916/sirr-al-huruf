@@ -40,6 +40,13 @@ import MizaanInputCard from "../components/mizaan/MizaanInputCard";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
+import { Lock } from "lucide-react";
+import FeatureLockedCard from "../components/FeatureLockedCard";
+import { checkFeatureAccess } from "../lib/featurePermission";
+import { getFeatures } from "../lib/featureRegistry";
+
+const PAGE_PATH = "/mizaan9";
+const FEATURES = getFeatures(PAGE_PATH);
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -271,6 +278,7 @@ export default function Mizaan9Page() {
   const [method3AbjadTotal, setMethod3AbjadTotal] = useState(0);
   const [activeMethod, setActiveMethod] = useState(1);
   const [activeSection, setActiveSection] = useState(1);
+  const [lockedFeature, setLockedFeature] = useState(null);
   // Nine Mizan (Mizan 1–9 + Final Summary) is IDENTICAL for Section 1 and Section 2 — it always uses
   // the Section 1 dataset so selections/values never go blank when switching sections. Only the
   // post-Nine-Mizan pipeline (Kitabet/A'van/Kasem via getBastLevelFn below) is section-specific.
@@ -409,21 +417,43 @@ export default function Mizaan9Page() {
 
         {/* Method Navigation (NEW - Top Level) */}
         <div className="flex gap-2 mb-3">
-          {[1, 2, 3, 4, 5].map((method) => (
-            <button key={method} onClick={() => setActiveMethod(method)}
-              className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
-              style={{
-                background: activeMethod === method ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
-                border: `1.5px solid ${activeMethod === method ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
-                color: activeMethod === method ? '#F5D060' : 'rgba(255,255,255,0.40)',
-                boxShadow: activeMethod === method ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
-              }}>
-              <span className="font-inter text-[9px] uppercase tracking-widest">METHOD</span>
-              <span className="font-amiri text-sm">{method}</span>
-            </button>
-          ))}
+          {[1, 2, 3, 4, 5].map((method) => {
+            const methodFeat = FEATURES.find(f => f.method === method);
+            const isMethodLocked = methodFeat && !checkFeatureAccess(PAGE_PATH, methodFeat.id);
+            const isActive = activeMethod === method && !lockedFeature;
+            return (
+              <button key={method} onClick={() => {
+                if (isMethodLocked) { setLockedFeature(methodFeat); return; }
+                setLockedFeature(null);
+                setActiveMethod(method);
+              }}
+                className="flex-1 py-2.5 px-2 rounded-xl font-inter font-bold text-sm flex flex-col items-center gap-0.5"
+                style={{
+                  background: isActive ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${isActive ? 'rgba(212,175,55,0.65)' : 'rgba(255,255,255,0.12)'}`,
+                  color: isActive ? '#F5D060' : 'rgba(255,255,255,0.40)',
+                  boxShadow: isActive ? '0 0 20px rgba(212,175,55,0.20)' : 'none',
+                }}>
+                <span className="font-inter text-[9px] uppercase tracking-widest flex items-center gap-1">
+                  {isMethodLocked && <Lock className="w-2.5 h-2.5 opacity-60" />}
+                  METHOD
+                </span>
+                <span className="font-amiri text-sm">{method}</span>
+              </button>
+            );
+          })}
         </div>
 
+        {lockedFeature ? (
+          <FeatureLockedCard
+            pagePath={PAGE_PATH}
+            featureId={lockedFeature.id}
+            featureLabel={lockedFeature.label}
+            onBack={() => setLockedFeature(null)}
+            onUnlocked={() => { setLockedFeature(null); window.location.reload(); }}
+          />
+        ) : (
+        <>
         {/* Method 1 Content (ALL existing logic belongs here) */}
         {activeMethod === 1 && (
           <div>
@@ -1137,6 +1167,8 @@ export default function Mizaan9Page() {
           <p className="font-inter text-xs text-white/30">This method will be implemented when rules are provided</p>
         </div>
       )}
+        </>
+        )}
       </div>
     </PageLayout>
   );

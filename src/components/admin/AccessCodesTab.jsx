@@ -66,6 +66,7 @@ function CreateCodeForm({ onCreated, onCancel }) {
   const [codeStr, setCodeStr] = useState("");
   const [selectedPages, setSelectedPages] = useState([]);
   const [pageDurations, setPageDurations] = useState({});
+  const [pageSubFeatures, setPageSubFeatures] = useState({});
   const [maxUses, setMaxUses] = useState(1);
   const [notes, setNotes] = useState("");
   const [showSummary, setShowSummary] = useState(false);
@@ -92,10 +93,17 @@ function CreateCodeForm({ onCreated, onCancel }) {
         const newDurations = { ...pageDurations };
         delete newDurations[path];
         setPageDurations(newDurations);
+        const newSubFeatures = { ...pageSubFeatures };
+        delete newSubFeatures[path];
+        setPageSubFeatures(newSubFeatures);
         return newPages;
       }
       return [...p, path];
     });
+  };
+
+  const updatePageSubFeatures = (path, features) => {
+    setPageSubFeatures(prev => ({ ...prev, [path]: features }));
   };
 
   const updatePageDuration = (path, durationValue) => {
@@ -158,12 +166,22 @@ function CreateCodeForm({ onCreated, onCancel }) {
         }
       });
 
+      // Build sub_features map — only include pages with specific feature selections
+      const sub_features = {};
+      selectedPages.forEach(path => {
+        const feats = pageSubFeatures[path];
+        if (feats && feats.length > 0) {
+          sub_features[path] = feats;
+        }
+      });
+
       await base44.entities.AccessCode.create({
         code: normalizedCode,
         customer_name: customerName.trim(),
         page_paths: selectedPages,
         page_names: names,
         page_durations,
+        sub_features,
         duration: "CUSTOM",
         expiry_date: null,
         max_uses: maxUses,
@@ -296,14 +314,16 @@ function CreateCodeForm({ onCreated, onCancel }) {
             const dur = pageDurations[page.path];
             return (
                 <CreateCodePageItem
-                  key={page.path}
-                  page={page}
-                  isSelected={sel}
-                  duration={dur}
-                  onToggle={togglePage}
-                  onDurationChange={updatePageDuration}
-                  onCustomDateChange={updateCustomDate}
-                />
+                   key={page.path}
+                   page={page}
+                   isSelected={sel}
+                   duration={dur}
+                   onToggle={togglePage}
+                   onDurationChange={updatePageDuration}
+                   onCustomDateChange={updateCustomDate}
+                   subFeatures={pageSubFeatures[page.path]}
+                   onSubFeaturesChange={updatePageSubFeatures}
+                 />
             );
           })}
         </div>

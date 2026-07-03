@@ -5,6 +5,13 @@ import { calcKebir, calcSaghir, calcCumeli, calcBast, calcBast2 } from "../lib/a
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { usePageState } from "../context/PageStateContext";
+import { Lock } from "lucide-react";
+import FeatureLockedCard from "../components/FeatureLockedCard";
+import { checkFeatureAccess } from "../lib/featurePermission";
+import { getFeatures } from "../lib/featureRegistry";
+
+const PAGE_PATH = "/abjad";
+const FEATURES = getFeatures(PAGE_PATH);
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -37,6 +44,7 @@ export default function AbjadKabirPage() {
   const [results, setResults] = useState(initialState.results);
   const [showModal, setShowModal] = useState(false);
   const [selectedResult, setSelectedResult] = useState(null);
+  const [lockedFeature, setLockedFeature] = useState(null);
 
   useEffect(() => {
     setPageState(PAGE_KEY, { mode, bastLevel, bastulLevel, history, input, results });
@@ -75,6 +83,12 @@ export default function AbjadKabirPage() {
   };
 
   const handleModeChange = (newMode) => {
+    const feat = FEATURES.find(f => f.mode === newMode);
+    if (feat && !checkFeatureAccess(PAGE_PATH, feat.id)) {
+      setLockedFeature(feat);
+      return;
+    }
+    setLockedFeature(null);
     setMode(newMode);
     if (input.trim()) {
       calculateResults(input, bastLevel);
@@ -178,7 +192,9 @@ export default function AbjadKabirPage() {
             <div className="grid grid-cols-3 gap-1.5 mt-2">
               {['kebir', 'saghir', 'cumeli', 'bast', 'bast2'].map((modeId) => {
                 const labels = getModeLabel(modeId);
-                const isActive = mode === modeId;
+                const isActive = mode === modeId && !lockedFeature;
+                const modeFeat = FEATURES.find(f => f.mode === modeId);
+                const isModeLocked = modeFeat && !checkFeatureAccess(PAGE_PATH, modeFeat.id);
                 
                 return (
                   <motion.button
@@ -198,7 +214,8 @@ export default function AbjadKabirPage() {
                     {isActive && (
                       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />
                     )}
-                    <span className="block font-inter font-bold text-[10px] tracking-wide" style={{ color: isActive ? G.text : "rgba(255,255,255,0.40)" }}>
+                    <span className="block font-inter font-bold text-[10px] tracking-wide flex items-center justify-center gap-1" style={{ color: isActive ? G.text : "rgba(255,255,255,0.40)" }}>
+                      {isModeLocked && <Lock className="w-2.5 h-2.5 opacity-60" />}
                       {labels.en}
                     </span>
                     <span className="block font-amiri text-xs font-bold mt-0.5" style={{ color: isActive ? "rgba(212,175,55,0.75)" : "rgba(212,175,55,0.45)" }}>
@@ -213,8 +230,18 @@ export default function AbjadKabirPage() {
             </div>
           </SectionCard>
 
+          {lockedFeature && (
+            <FeatureLockedCard
+              pagePath={PAGE_PATH}
+              featureId={lockedFeature.id}
+              featureLabel={lockedFeature.label}
+              onBack={() => setLockedFeature(null)}
+              onUnlocked={() => { setLockedFeature(null); window.location.reload(); }}
+            />
+          )}
+
           {/* Bast Level Selection - BAST-I HURUF */}
-          {mode === 'bast' && (
+          {mode === 'bast' && !lockedFeature && (
             <SectionCard>
               <SectionLabel>BAST-I HURUF LEVEL</SectionLabel>
               <div className="grid grid-cols-5 gap-1 mt-1.5">
@@ -242,7 +269,7 @@ export default function AbjadKabirPage() {
           )}
 
           {/* Bastul Level Selection - BASTUL HURUF 2 */}
-          {mode === 'bast2' && (
+          {mode === 'bast2' && !lockedFeature && (
             <SectionCard>
               <SectionLabel>BASTUL HURUF 2 LEVEL</SectionLabel>
               <div className="grid grid-cols-5 gap-1 mt-1.5">

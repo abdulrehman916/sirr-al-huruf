@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import { getFeatures, hasSubFeatures } from "@/lib/featureRegistry";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -32,7 +33,26 @@ export default function CreateCodePageItem({
   onToggle,
   onDurationChange,
   onCustomDateChange,
+  subFeatures,
+  onSubFeaturesChange,
 }) {
+  const features = getFeatures(page.path);
+  const isMultiFeature = hasSubFeatures(page.path);
+  const selectedFeatures = subFeatures || []; // empty = all features (backward compat)
+
+  const toggleFeature = (featId) => {
+    if (!onSubFeaturesChange) return;
+    if (selectedFeatures.includes(featId)) {
+      onSubFeaturesChange(page.path, selectedFeatures.filter(f => f !== featId));
+    } else {
+      onSubFeaturesChange(page.path, [...selectedFeatures, featId]);
+    }
+  };
+
+  const selectAllFeatures = () => {
+    if (!onSubFeaturesChange) return;
+    onSubFeaturesChange(page.path, []); // empty = all features
+  };
   return (
     <div
       className="rounded-lg border p-3 transition-all"
@@ -102,6 +122,67 @@ export default function CreateCodePageItem({
                 border: `1px solid ${G.border}`,
               }}
             />
+          )}
+
+          {/* Feature-level permission checklist for multi-feature pages */}
+          {isMultiFeature && (
+            <div className="mt-3 pt-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs text-white/45 block">Features</label>
+                <button
+                  onClick={selectAllFeatures}
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded"
+                  style={{
+                    background: selectedFeatures.length === 0 ? G.bgHi : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${selectedFeatures.length === 0 ? G.borderHi : "rgba(255,255,255,0.08)"}`,
+                    color: selectedFeatures.length === 0 ? G.text : "rgba(255,255,255,0.50)",
+                  }}
+                >
+                  All Features
+                </button>
+              </div>
+              <div className="space-y-1">
+                {features.map(feat => {
+                  const isFeatSelected = selectedFeatures.includes(feat.id);
+                  const allMode = selectedFeatures.length === 0;
+                  return (
+                    <button
+                      key={feat.id}
+                      onClick={() => toggleFeature(feat.id)}
+                      disabled={allMode}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-all disabled:opacity-40"
+                      style={{
+                        background: isFeatSelected ? G.bgHi : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${isFeatSelected ? G.borderHi : "rgba(255,255,255,0.06)"}`,
+                      }}
+                    >
+                      <div
+                        className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                        style={{
+                          background: isFeatSelected ? G.text : "transparent",
+                          border: `1.5px solid ${isFeatSelected ? G.text : "rgba(255,255,255,0.20)"}`,
+                        }}
+                      >
+                        {isFeatSelected && <Check className="w-2.5 h-2.5 text-black" />}
+                      </div>
+                      <span className="text-xs font-medium" style={{ color: isFeatSelected ? "white" : "rgba(255,255,255,0.50)" }}>
+                        {feat.icon} {feat.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedFeatures.length === 0 && (
+                <p className="text-[10px] text-white/30 mt-1.5">
+                  All features unlocked (default). Click individual features to limit access.
+                </p>
+              )}
+              {selectedFeatures.length > 0 && (
+                <p className="text-[10px] mt-1.5" style={{ color: G.text }}>
+                  {selectedFeatures.length} of {features.length} features selected
+                </p>
+              )}
+            </div>
           )}
         </motion.div>
       )}

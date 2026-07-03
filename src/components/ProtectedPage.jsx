@@ -6,6 +6,7 @@ import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
 import { checkLocalPermission, getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
+import { setAdminFlag } from "@/lib/featurePermission";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -20,6 +21,9 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
   const [pageName, setPageName] = useState("");
 
   const checkAccess = useCallback(async () => {
+    // Reset admin flag at start — will be set to true if admin is detected below
+    setAdminFlag(false);
+
     // 1. Explicit public override from routeManifest flag
     if (requiresPermission === false) {
       setAccessStatus("granted");
@@ -38,6 +42,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       try {
         const user = await base44.auth.me();
         if (user?.role === "admin") {
+          setAdminFlag(true);
           setAccessStatus("granted");
           return;
         }
@@ -70,6 +75,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     try {
       const user = await base44.auth.me();
       if (user?.role === "admin") {
+        setAdminFlag(true);
         setAccessStatus("granted");
         return;
       }
