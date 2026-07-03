@@ -18,7 +18,26 @@
  */
 
 import { base44 } from '@/api/base44Client';
-import { buildModuleSyncList } from '@/lib/moduleRegistry';
+import { MODULE_DEFINITIONS } from '@/lib/moduleManifest';
+
+// Build flat module list for backend sync (inlined — no separate registry file needed)
+function buildModuleSyncList() {
+  const list = [];
+  for (const [pagePath, def] of Object.entries(MODULE_DEFINITIONS)) {
+    for (const mod of def.modules) {
+      list.push({
+        page_path: pagePath,
+        page_name: def.pageName,
+        module_id: mod.id,
+        module_name: mod.label,
+        module_type: mod.module_type || 'FEATURE',
+        icon: mod.icon || '',
+        sort_order: mod.sort_order || 0,
+      });
+    }
+  }
+  return list;
+}
 
 let syncInProgress = false;
 let lastSyncResult = null;
