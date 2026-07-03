@@ -71,7 +71,7 @@ export default function ProductCard({ product, index = 0 }) {
         border: `1px solid ${G.border}`,
         boxShadow: "0 4px 24px rgba(0,0,0,0.45)",
       }}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -4, boxShadow: "0 8px 32px rgba(0,0,0,0.60), 0 0 24px rgba(212,175,55,0.15)" }}
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
@@ -85,7 +85,11 @@ export default function ProductCard({ product, index = 0 }) {
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
             onLoad={() => setImgLoaded(true)}
-            style={{ opacity: imgLoaded ? 1 : 0 }}
+            style={{
+              opacity: imgLoaded ? 1 : 0,
+              filter: imgLoaded ? "blur(0px)" : "blur(15px)",
+              transition: "opacity 0.5s ease, filter 0.5s ease, transform 0.7s ease",
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

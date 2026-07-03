@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,6 +15,7 @@ import RelatedProducts from "../components/shop/RelatedProducts";
 import ProductBadgesInline, { getDiscountPercent } from "../components/shop/ProductBadges";
 import FaqSection from "../components/shop/FaqSection";
 import SellerContact from "../components/shop/SellerContact";
+import ShareMenu from "../components/shop/ShareMenu";
 import {
   isInWishlist, toggleWishlist, shareProduct, copyProductLink,
   addRecentlyViewed, extractFeatures, getRecentlyViewed as getRecentlyViewedList,
@@ -210,6 +211,22 @@ export default function ProductDetailPage() {
     setZoomPos({ x, y });
   };
 
+  const touchStartX = useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null || !product?.images) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 50) {
+      if (dx > 0) prevImage();
+      else nextImage();
+    }
+    touchStartX.current = null;
+  };
+
   const submitReview = async () => {
     if (!reviewForm.reviewer_name.trim() || !reviewForm.comment.trim()) return;
     try {
@@ -327,13 +344,7 @@ export default function ProductDetailPage() {
           >
             <Link2 className="w-3.5 h-3.5" style={{ color: G.dim }} />
           </button>
-          <button
-            onClick={handleShare}
-            className="p-2 rounded-lg"
-            style={{ background: G.bg, border: `1px solid ${G.faint}` }}
-          >
-            <Share2 className="w-3.5 h-3.5" style={{ color: G.dim }} />
-          </button>
+          <ShareMenu product={product} />
           <button
             onClick={handleWish}
             className="p-2 rounded-lg"
@@ -357,27 +368,36 @@ export default function ProductDetailPage() {
         {/* Image Gallery */}
         {images.length > 0 && (
           <div className="space-y-2.5">
-            <motion.div
-              key={activeImageIdx}
-              initial={{ opacity: 0.5 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
+            <div
               className="relative aspect-square rounded-2xl overflow-hidden bg-black/40"
               style={{ border: `1px solid ${G.border}`, boxShadow: "0 8px 40px rgba(0,0,0,0.50)" }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
-              <img
-                src={images[activeImageIdx]}
-                alt={product.name}
-                className="w-full h-full object-cover cursor-zoom-in"
-                style={{
-                  transform: zoomed ? "scale(2.5)" : "scale(1)",
-                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                  transition: "transform 0.2s ease-out",
-                }}
-                onClick={() => setZoomed(!zoomed)}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={() => setZoomed(false)}
-              />
+              <AnimatePresence mode="sync">
+                <motion.div
+                  key={activeImageIdx}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0"
+                >
+                  <img
+                    src={images[activeImageIdx]}
+                    alt={product.name}
+                    className="w-full h-full object-cover cursor-zoom-in"
+                    style={{
+                      transform: zoomed ? "scale(2.5)" : "scale(1)",
+                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                      transition: "transform 0.2s ease-out",
+                    }}
+                    onClick={() => setZoomed(!zoomed)}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={() => setZoomed(false)}
+                  />
+                </motion.div>
+              </AnimatePresence>
               {/* Zoom hint */}
               {!zoomed && (
                 <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg flex items-center gap-1" style={{ background: "rgba(2,7,16,0.80)", backdropFilter: "blur(8px)", border: `1px solid ${G.faint}` }}>
@@ -421,7 +441,7 @@ export default function ProductDetailPage() {
                   ))}
                 </div>
               )}
-            </motion.div>
+            </div>
             {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -986,6 +1006,7 @@ export default function ProductDetailPage() {
               alt={product.name}
               className="max-w-[90vw] max-h-[85vh] object-contain"
               onClick={e => e.stopPropagation()}
+              style={{ touchAction: "pinch-zoom" }}
             />
             {images.length > 1 && (
               <>

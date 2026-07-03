@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, X, ShoppingBag, Star, ArrowUpDown, ChevronDown, SlidersHorizontal,
-  Heart, Check, Package
+  Heart, Check, Package, Clock
 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
@@ -10,7 +10,8 @@ import ProductCard from "../components/shop/ProductCard";
 import { ProductGridSkeleton } from "../components/shop/ProductSkeleton";
 import { EmptySearchState, EmptyShopState, EmptyWishlistState } from "../components/shop/EmptyState";
 import { base44 } from "../api/base44Client";
-import { getWishlist, isInWishlist, toggleWishlist, extractBrands, parsePrice } from "@/lib/shopUtils";
+import { getWishlist, isInWishlist, toggleWishlist, extractBrands, parsePrice, getRecentlyViewed } from "@/lib/shopUtils";
+import RelatedProducts from "../components/shop/RelatedProducts";
 import CompareBar from "../components/shop/CompareBar";
 
 const G = {
@@ -37,6 +38,7 @@ const SORT_OPTIONS = [
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeBrand, setActiveBrand] = useState("all");
@@ -47,6 +49,7 @@ export default function ShopPage() {
   const [priceMax, setPriceMax] = useState("");
   const [showWishlistOnly, setShowWishlistOnly] = useState(false);
   const [wishlistIds, setWishlistIds] = useState([]);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
 
   useEffect(() => {
     loadProducts();
@@ -58,6 +61,20 @@ export default function ShopPage() {
     const handler = () => refreshWishlist();
     window.addEventListener("shop-wishlist-changed", handler);
     return () => window.removeEventListener("shop-wishlist-changed", handler);
+  }, []);
+
+  // Debounce search input for smoother filtering
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Recently viewed products (localStorage, frontend-only)
+  useEffect(() => {
+    setRecentlyViewed(getRecentlyViewed());
+    const handler = () => setRecentlyViewed(getRecentlyViewed());
+    window.addEventListener("shop-recently-viewed-changed", handler);
+    return () => window.removeEventListener("shop-recently-viewed-changed", handler);
   }, []);
 
   const refreshWishlist = () => {
@@ -187,6 +204,7 @@ export default function ShopPage() {
   const clearAllFilters = () => {
     setActiveCategory("all");
     setActiveBrand("all");
+    setSearchInput("");
     setSearch("");
     setPriceMin("");
     setPriceMax("");
@@ -217,14 +235,14 @@ export default function ShopPage() {
             <Search className="w-4 h-4 flex-shrink-0" style={{ color: G.dim }} />
             <input
               type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
               placeholder="Search products, brands, categories..."
               className="flex-1 bg-transparent outline-none font-inter text-sm placeholder:text-white/25"
               style={{ color: "rgba(255,255,255,0.90)" }}
             />
-            {search && (
-              <button onClick={() => setSearch("")} className="flex-shrink-0">
+            {searchInput && (
+              <button onClick={() => { setSearchInput(""); setSearch(""); }} className="flex-shrink-0">
                 <X className="w-4 h-4" style={{ color: G.dim }} />
               </button>
             )}
@@ -457,6 +475,11 @@ export default function ShopPage() {
               ))}
             </AnimatePresence>
           </div>
+        )}
+
+        {/* Recently Viewed */}
+        {!loading && !showWishlistOnly && recentlyViewed.length > 0 && (
+          <RelatedProducts title="Recently Viewed" icon={Clock} products={recentlyViewed} isRecent />
         )}
       </div>
 

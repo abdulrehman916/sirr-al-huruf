@@ -39,7 +39,14 @@ export function ProductGridSkeleton({ count = 6 }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       {Array.from({ length: count }).map((_, i) => (
-        <ProductCardSkeleton key={i} />
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.06, duration: 0.3 }}
+        >
+          <ProductCardSkeleton />
+        </motion.div>
       ))}
     </div>
   );

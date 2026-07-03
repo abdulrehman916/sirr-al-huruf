@@ -15,7 +15,9 @@ export function EmptySearchState({ query, onClear }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-16 px-4 text-center"
     >
-      <div
+      <motion.div
+        animate={{ scale: [1, 1.04, 1] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         className="relative w-24 h-24 mb-5 rounded-full flex items-center justify-center"
         style={{
           background: `radial-gradient(circle, ${G.bg} 0%, transparent 70%)`,
@@ -26,7 +28,7 @@ export function EmptySearchState({ query, onClear }) {
           style={{ border: `2px dashed ${G.faint}` }}
         />
         <SearchX className="w-9 h-9" style={{ color: G.dim }} />
-      </div>
+      </motion.div>
       <h3 className="font-inter text-base font-bold mb-1.5" style={{ color: "rgba(255,255,255,0.80)" }}>
         No products found
       </h3>
@@ -55,7 +57,9 @@ export function EmptyShopState() {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-16 px-4 text-center"
     >
-      <div
+      <motion.div
+        animate={{ scale: [1, 1.04, 1] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         className="relative w-24 h-24 mb-5 rounded-full flex items-center justify-center"
         style={{
           background: `radial-gradient(circle, ${G.bg} 0%, transparent 70%)`,
@@ -66,7 +70,7 @@ export function EmptyShopState() {
           style={{ border: `2px dashed ${G.faint}` }}
         />
         <PackageOpen className="w-9 h-9" style={{ color: G.dim }} />
-      </div>
+      </motion.div>
       <h3 className="font-inter text-base font-bold mb-1.5" style={{ color: "rgba(255,255,255,0.80)" }}>
         Shop is coming soon
       </h3>
@@ -84,7 +88,9 @@ export function EmptyWishlistState() {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-12 px-4 text-center"
     >
-      <div
+      <motion.div
+        animate={{ scale: [1, 1.04, 1] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         className="relative w-20 h-20 mb-4 rounded-full flex items-center justify-center"
         style={{
           background: `radial-gradient(circle, ${G.bg} 0%, transparent 70%)`,
@@ -92,7 +98,7 @@ export function EmptyWishlistState() {
       >
         <div className="absolute inset-0 rounded-full" style={{ border: `2px dashed ${G.faint}` }} />
         <Heart className="w-7 h-7" style={{ color: G.dim }} />
-      </div>
+      </motion.div>
       <h3 className="font-inter text-sm font-bold mb-1" style={{ color: "rgba(255,255,255,0.70)" }}>
         Your wishlist is empty
       </h3>
