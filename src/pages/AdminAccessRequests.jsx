@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { CheckCircle, XCircle, RefreshCw, Clock, User, Mail, FileText, Calendar, KeyRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
+import RequestDetail from "@/components/admin/RequestDetail";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -31,6 +32,7 @@ export default function AdminAccessRequests() {
   const [processing, setProcessing] = useState(null);
   const [user, setUser] = useState(null);
   const [rejectingReq, setRejectingReq] = useState(null);
+  const [expandedReqId, setExpandedReqId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
@@ -231,6 +233,17 @@ export default function AdminAccessRequests() {
 
                     {/* Actions */}
                     <div className="flex flex-col gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => setExpandedReqId(expandedReqId === req.id ? null : req.id)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-inter text-xs font-bold transition-all"
+                        style={{
+                          background: expandedReqId === req.id ? G.bgHi : G.bg,
+                          border: `1px solid ${expandedReqId === req.id ? "rgba(212,175,55,0.60)" : G.border}`,
+                          color: G.text,
+                        }}
+                      >
+                        {expandedReqId === req.id ? "Hide" : "Open"} Conversation
+                      </button>
                       {req.status === "PENDING" && (
                         <>
                           <button
@@ -263,7 +276,7 @@ export default function AdminAccessRequests() {
                           </button>
                         </>
                       )}
-                      {req.status === "APPROVED" && (
+                      {["APPROVED", "PAYMENT_CONFIRMED", "CODE_UPDATED"].includes(req.status) && (
                         <Link
                           to="/admin/access-codes"
                           className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-inter text-xs font-bold transition-all"
@@ -278,6 +291,11 @@ export default function AdminAccessRequests() {
                       )}
                     </div>
                   </div>
+                  {expandedReqId === req.id && (
+                    <div className="mt-4 pt-4 border-t" style={{ borderColor: G.border }}>
+                      <RequestDetail request={req} onUpdate={loadRequests} />
+                    </div>
+                  )}
                 </div>
               );
             })}

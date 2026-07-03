@@ -51,6 +51,7 @@ const PAGE_IMPORTS = {
   SubscriptionPending:      () => import('./pages/SubscriptionPending'),
   PremiumAccessRequest:     () => import('./pages/PremiumAccessRequest'),
   MySubscription:           () => import('./pages/MySubscription'),
+  MyRequests:               () => import('./pages/MyRequests'),
 
   // Admin - Core 5 + Required
   AdminDashboard:           () => import('./pages/AdminDashboard'),

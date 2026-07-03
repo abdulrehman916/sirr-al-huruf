@@ -41,6 +41,7 @@ const ROUTE_MANIFEST = [
   { path: '/subscription/pending', component: 'SubscriptionPending', chunk: 'SubscriptionPending', flags: ['public'] },
   { path: '/premium/request', component: 'PremiumAccessRequest', chunk: 'PremiumAccessRequest', flags: ['public'] },
   { path: '/my-subscription', component: 'MySubscription', chunk: 'MySubscription', flags: ['public'] },
+  { path: '/my-requests', component: 'MyRequests', chunk: 'MyRequests', flags: ['public'] },
 
   
   // Admin

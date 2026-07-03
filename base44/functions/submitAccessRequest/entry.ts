@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
     let user = null;
     try { user = await base44.auth.me(); } catch (e) { /* guest user */ }
 
-    const { name, phone, email, page_path, page_name, message, session_id, existing_code } = await req.json();
+    const { name, phone, email, page_path, page_name, message, session_id, existing_code, feature_id, plan_name, price, currency } = await req.json();
 
     if (!page_path) {
       return Response.json({ success: false, error: "Missing page_path" }, { status: 400 });
@@ -26,6 +26,10 @@ Deno.serve(async (req) => {
       email: email || (user?.email || ""),
       page_path,
       page_name: page_name || page_path,
+      feature_id: feature_id || null,
+      plan_name: plan_name || null,
+      price: price || null,
+      currency: currency || null,
       message: message || "",
       status: "PENDING",
       requested_at: new Date().toISOString(),

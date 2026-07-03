@@ -38,19 +38,38 @@
       "type": "string",
       "description": "Human-readable page name"
     },
+    "feature_id": {
+      "type": "string",
+      "description": "Specific feature ID requested e.g. method_1, abjad_kabir. Null for page-level requests."
+    },
+    "plan_name": {
+      "type": "string",
+      "description": "Selected plan name e.g. '1 Month', 'Lifetime'"
+    },
+    "price": {
+      "type": "number",
+      "description": "Numeric price amount e.g. 25"
+    },
+    "currency": {
+      "type": "string",
+      "description": "Currency code e.g. AED, USD"
+    },
     "message": {
       "type": "string",
-      "description": "User's message or reason for access \u2014 includes selected plan and price info"
+      "description": "User's message or reason for access"
     },
     "status": {
       "type": "string",
       "enum": [
         "PENDING",
+        "AWAITING_PAYMENT",
+        "PAYMENT_CONFIRMED",
+        "CODE_UPDATED",
         "APPROVED",
         "REJECTED"
       ],
       "default": "PENDING",
-      "description": "Request status"
+      "description": "Request status \u2014 PENDING=submitted, AWAITING_PAYMENT=admin sent payment instructions, PAYMENT_CONFIRMED=admin confirmed payment, CODE_UPDATED=admin updated reading code, APPROVED=completed, REJECTED=denied"
     },
     "approved_by": {
       "type": "string",
