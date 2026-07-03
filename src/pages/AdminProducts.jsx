@@ -35,6 +35,7 @@ const EMPTY_FORM = {
   pdf_url: "",
   category: "",
   affiliate_links: [],
+  amazon_url: "",
   price_display: "",
   compare_price_display: "",
   rating_display: "",

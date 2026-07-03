@@ -69,6 +69,20 @@ export default function MarketplaceTab({ form, setForm }) {
 
   return (
     <div className="space-y-4">
+      {/* Amazon Product URL — dedicated field */}
+      <div className="space-y-2 p-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+        <SectionLabel>Amazon Product URL</SectionLabel>
+        <input
+          value={form.amazon_url || ""}
+          onChange={e => setForm({ ...form, amazon_url: e.target.value })}
+          className="form-input"
+          placeholder="https://www.amazon.ae/dp/BXXXXXXXX"
+        />
+        <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+          Paste this product's exact Amazon listing URL. The "Buy on Amazon" button opens this link. Leave empty to hide the Amazon button.
+        </p>
+      </div>
+
       {/* Existing Links */}
       {links.length > 0 && (
         <div className="space-y-2">

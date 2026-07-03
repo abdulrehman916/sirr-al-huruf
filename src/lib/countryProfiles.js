@@ -281,6 +281,14 @@ export function getMarketplaceButtons(product, countryCode) {
       continue;
     }
 
+    // Amazon: use dedicated amazon_url field (not affiliate_links)
+    if (mp.id.startsWith("amazon_")) {
+      if (product.amazon_url) {
+        result.push({ mp, type: "affiliate", link: { url: product.amazon_url, label: `Buy on ${mp.name}`, platform: mp.platform }, product });
+      }
+      continue;
+    }
+
     const link = findLinkForMarketplace(links, mp);
     if (link) {
       result.push({ mp, type: "affiliate", link, product });

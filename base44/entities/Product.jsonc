@@ -117,6 +117,10 @@
       "default": "active",
       "description": "Product lifecycle status"
     },
+    "amazon_url": {
+      "type": "string",
+      "description": "Direct Amazon product URL for this specific product. Used by the 'Buy on Amazon' button. If empty, the Amazon button is hidden."
+    },
     "affiliate_links": {
       "type": "array",
       "items": {
