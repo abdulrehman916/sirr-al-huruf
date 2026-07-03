@@ -11,7 +11,7 @@
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, MessageCircle, KeyRound, CheckCircle, AlertCircle, Loader2, ChevronLeft, Check, Inbox } from "lucide-react";
+import { Lock, MessageCircle, KeyRound, CheckCircle, AlertCircle, Loader2, ChevronLeft, Check, Inbox, Star, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
@@ -19,6 +19,7 @@ import { getSessionId, mergeGrantedPermissions, addRedeemedCode, getRedeemedCode
 import { getFeatureConfig } from "@/lib/featureConfigCache";
 import { getFeaturePlans, formatPlan } from "@/lib/subscriptionPlanCache";
 import { getFeatureById } from "@/lib/featureRegistry";
+import { getEffectivePrice, isSaleActive } from "@/lib/pricingUtils";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -117,7 +118,7 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
         page_name: displayName,
         feature_id: featureId || null,
         plan_name: selectedPlan?.plan_name || null,
-        price: selectedPlan?.price || null,
+        price: selectedPlan ? getEffectivePrice(selectedPlan) : null,
         currency: selectedPlan?.currency || null,
         message: messageParts.join("\n\n"),
         session_id: getSessionId(),
@@ -138,7 +139,7 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
   };
 
   const handleWhatsApp = () => {
-    const planLine = selectedPlan ? formatPlan(selectedPlan) : "Contact for pricing";
+    const planLine = selectedPlan ? `${selectedPlan.plan_name} — ${selectedPlan.currency} ${getEffectivePrice(selectedPlan)}` : "Contact for pricing";
     const text = `Hello, I'd like to request access to: ${displayName}\nPlan: ${planLine}\nPage: ${pagePath}`;
     const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
@@ -193,23 +194,53 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
                   </p>
                   {plans.map(plan => {
                     const isSelected = selectedPlan?.plan_config_id === plan.plan_config_id;
+                    const saleOn = isSaleActive(plan);
+                    const effectivePrice = getEffectivePrice(plan);
+                    const isRecommended = plan.is_recommended;
                     return (
                       <button
                         key={plan.plan_config_id}
                         onClick={() => setSelectedPlan(isSelected ? null : plan)}
-                        className="w-full rounded-lg border py-2.5 px-3 flex items-center justify-between transition-all"
+                        className="w-full rounded-lg border py-2.5 px-3 flex items-center justify-between transition-all relative"
                         style={{
-                          background: isSelected ? "rgba(212,175,55,0.18)" : "rgba(212,175,55,0.04)",
-                          borderColor: isSelected ? G.borderHi : "rgba(212,175,55,0.20)",
+                          background: isSelected
+                            ? "rgba(212,175,55,0.18)"
+                            : isRecommended
+                              ? "rgba(212,175,55,0.10)"
+                              : "rgba(212,175,55,0.04)",
+                          borderColor: isSelected
+                            ? G.borderHi
+                            : isRecommended
+                              ? "rgba(212,175,55,0.50)"
+                              : "rgba(212,175,55,0.20)",
                           boxShadow: isSelected ? "0 0 16px rgba(212,175,55,0.15)" : "none",
                         }}
                       >
-                        <span className="font-inter text-sm text-white/80 font-medium flex items-center gap-2">
-                          {isSelected && <Check className="w-3.5 h-3.5" style={{ color: G.text }} />}
-                          {plan.plan_name}
+                        <span className="font-inter text-sm text-white/80 font-medium flex items-center gap-1.5 min-w-0">
+                          {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: G.text }} />}
+                          <span className="truncate">{plan.plan_name}</span>
+                          {isRecommended && (
+                            <span className="flex items-center gap-0.5 px-1 py-0 rounded text-[8px] font-bold uppercase tracking-wider flex-shrink-0" style={{ background: "rgba(212,175,55,0.25)", color: G.text }}>
+                              <Star className="w-2 h-2" />
+                              Best
+                            </span>
+                          )}
+                          {saleOn && (
+                            <span className="flex items-center gap-0.5 px-1 py-0 rounded text-[8px] font-bold uppercase tracking-wider flex-shrink-0" style={{ background: "rgba(239,68,68,0.18)", color: "#f87171" }}>
+                              <Tag className="w-2 h-2" />
+                              Sale
+                            </span>
+                          )}
                         </span>
-                        <span className="font-inter text-sm font-bold" style={{ color: G.text }}>
-                          {plan.currency} {plan.price}
+                        <span className="font-inter text-sm font-bold flex items-center gap-1.5 flex-shrink-0">
+                          {saleOn && (
+                            <span className="text-xs line-through text-white/30 font-normal">
+                              {plan.currency} {plan.price}
+                            </span>
+                          )}
+                          <span style={{ color: saleOn ? "#f87171" : G.text }}>
+                            {plan.currency} {effectivePrice}
+                          </span>
                         </span>
                       </button>
                     );
@@ -301,7 +332,7 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
               <p className="font-inter text-sm text-white/80 font-semibold mb-0.5">{displayName}</p>
               {selectedPlan && (
                 <p className="font-inter text-xs" style={{ color: G.text }}>
-                  {selectedPlan.plan_name} — {selectedPlan.currency} {selectedPlan.price}
+                  {selectedPlan.plan_name} — {selectedPlan.currency} {getEffectivePrice(selectedPlan)}
                 </p>
               )}
             </div>

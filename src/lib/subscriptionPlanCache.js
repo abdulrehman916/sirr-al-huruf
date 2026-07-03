@@ -6,6 +6,7 @@
  */
 import { base44 } from "@/api/base44Client";
 import { getCached, setCached } from "@/lib/permissionCache";
+import { getEffectivePrice, isSaleActive } from "@/lib/pricingUtils";
 
 const CACHE_TTL = 120000;
 const PREFIX = "sub_plans";
@@ -46,10 +47,12 @@ export async function getPagePlans(pagePath) {
 
 /**
  * Format a plan for display: "1 Month — AED 25"
+ * Uses effective price (sale price if active).
  */
 export function formatPlan(plan) {
   if (!plan) return "";
-  const price = `${plan.currency || "AED"} ${plan.price}`;
+  const effectivePrice = getEffectivePrice(plan);
+  const price = `${plan.currency || "AED"} ${effectivePrice}`;
   return `${plan.plan_name} — ${price}`;
 }
 

@@ -27,6 +27,11 @@
       "default": true,
       "description": "Is this feature Premium (locked) or Public (free)? true=Premium, false=Public. Each child feature has its own independent setting."
     },
+    "is_purchasable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Can users purchase/request access to this feature? If false, the feature is locked but no plans or request buttons are shown \u2014 admin must grant manually."
+    },
     "price": {
       "type": "string",
       "description": "Price display string e.g. 'AED 50', 'Free', or empty for 'Contact for pricing'"

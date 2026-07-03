@@ -8,7 +8,7 @@
     },
     "page_name": {
       "type": "string",
-      "description": "Human-readable page name"
+      "description": "Human-readable page name (admin-editable title)"
     },
     "requires_permission": {
       "type": "boolean",
@@ -20,6 +20,11 @@
       "default": false,
       "description": "Is this page restricted to admins only?"
     },
+    "is_purchasable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Can users purchase/request access to this page? If false, no plans or request buttons are shown \u2014 admin must grant manually. Page is still locked (requires_permission still applies)."
+    },
     "price": {
       "type": "string",
       "description": "Display price for this page e.g. 'AED 50' or 'Free'"
@@ -27,6 +32,11 @@
     "description": {
       "type": "string",
       "description": "Description shown to users on the locked screen"
+    },
+    "display_order": {
+      "type": "integer",
+      "default": 0,
+      "description": "Display sort order for page listing on admin dashboard and home page (lower = first)"
     },
     "default_duration": {
       "type": "string",
