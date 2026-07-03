@@ -26,9 +26,9 @@ const ROUTE_MANIFEST = [
   { path: '/holy-names/one', component: 'HolyOnePage', chunk: 'HolyOnePage', flags: ['public'] },
   { path: '/holy-names/one/:nameId', component: 'HolyOneDetailPage', chunk: 'HolyOneDetailPage', flags: ['public'] },
 
-  // Shop
-  { path: '/shop', component: 'ShopPage', chunk: 'ShopPage' },
-  { path: '/shop/:productId', component: 'ProductDetailPage', chunk: 'ProductDetailPage' },
+  // Shop — public (user-facing storefront)
+  { path: '/shop', component: 'ShopPage', chunk: 'ShopPage', flags: ['public'] },
+  { path: '/shop/:productId', component: 'ProductDetailPage', chunk: 'ProductDetailPage', flags: ['public'] },
 
   { path: '/astro-clock', component: 'AstroClockPage', chunk: 'AstroClockPage' },
   { path: '/astro-clock/search', component: 'AstroClockSearch', chunk: 'AstroClockSearch' },

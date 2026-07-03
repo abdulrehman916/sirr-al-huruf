@@ -119,6 +119,13 @@ const CARD_ICONS = {
       <path d="M14 22 Q16 24 18 22" stroke={color} strokeWidth="0.8" strokeOpacity="0.7" fill="none"/>
     </svg>
   ),
+  shop: (color) => (
+    <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+      <path d="M9 11 L23 11 L22 27 L10 27 Z" stroke={color} strokeWidth="1" strokeOpacity="0.75" fill={color} fillOpacity="0.10"/>
+      <path d="M13 11 Q13 5 16 5 Q19 5 19 11" stroke={color} strokeWidth="1" strokeOpacity="0.7" fill="none"/>
+      <line x1="9" y1="16" x2="23" y2="16" stroke={color} strokeWidth="0.5" strokeOpacity="0.4"/>
+    </svg>
+  ),
 };
 
 const NAV_CARDS = [
@@ -135,6 +142,7 @@ const NAV_CARDS = [
   { path: "/evil-jinn",        arabic: "الجن الشرير",  label: "EVIL JINN",        subtitle: "Jinn Classification",       iconKey: "evilJinn",   accent: [239, 68, 68] },
   { path: "/astro-clock",      arabic: "الساعة الفلكية", label: "ASTRO CLOCK",      subtitle: "Celestial Time Engine",     iconKey: "astroClock", accent: [99, 179, 237] },
   { path: "/sirr",             arabic: "السر",           label: "SIRR",             subtitle: "PDF Knowledge Analysis",    iconKey: "sirr",   accent: [212, 175, 55] },
+  { path: "/shop",             arabic: "المتجر",         label: "SHOP",             subtitle: "Premium Products & Books",  iconKey: "shop",   accent: [212, 175, 55] },
 ];
 
 function IconOrb({ iconKey, accent }) {
