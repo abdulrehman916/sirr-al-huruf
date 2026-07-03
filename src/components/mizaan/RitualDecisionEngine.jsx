@@ -9,8 +9,9 @@ import {
   ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock, Calendar,
   Star, Sun, Sunset, Globe, CalendarClock, FileText, Scroll, Shield, Zap,
 } from "lucide-react";
-import { analyzeRitualTiming } from "../../lib/ritualTimingRuleEngine";
+import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingRuleEngine";
 import ReportWindowsList from "./ReportWindowsList";
+import ConfigurationAdvisor from "./ConfigurationAdvisor";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -42,12 +43,20 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
     return analyzeRitualTiming({ result, selections, customPurpose, activeMethod });
   }, [result, selections, customPurpose, activeMethod]);
 
+  const advice = useMemo(() => {
+    if (!result) return null;
+    return analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod });
+  }, [result, selections, customPurpose, activeMethod]);
+
   if (!analysis || !analysis.report) return null;
 
   const canPerformColor = analysis.canPerformToday === "Yes" ? "#4ADE80" : analysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 space-y-4">
+      {/* ── Configuration Advisor (primary) ── */}
+      <ConfigurationAdvisor advice={advice} />
+
       <div className="rounded-2xl overflow-hidden" style={{
         background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
         border: `1px solid ${G.border}`,

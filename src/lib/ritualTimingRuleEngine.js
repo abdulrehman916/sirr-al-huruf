@@ -889,3 +889,229 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     expertNarrative, reasoning,
   };
 }
+
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURATION ADVISOR — Compares current Mizan selections vs manuscript
+// recommendations and produces a per-field improvement list.
+// NEVER changes Mizan automatically — only explains what to change and why.
+// ═══════════════════════════════════════════════════════════════
+export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod }) {
+  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod });
+
+  const dominant = result?.dominant || (selections?.elements?.[0] || null);
+  const khayrSharrSelected = selections?.khayrSharr8 || null;
+  const selectedDay = selections?.days || null;
+  const selectedHour = selections?.hour || null;
+  const selectedPlanet = selections?.planet || null;
+  const dayNight = selections?.dayNight || null;
+  const purposes = selections?.purposes || [];
+  const primaryPurpose = purposes[0] || null;
+
+  // Re-derive pdfRule + bestDay/bestHour (same logic as main function)
+  let pdfRule = null;
+  if (primaryPurpose && PDF_PURPOSE_TABLE[primaryPurpose]) pdfRule = PDF_PURPOSE_TABLE[primaryPurpose];
+  const customMatch = matchCustomPurpose(customPurpose);
+  if (customMatch && !pdfRule) pdfRule = customMatch;
+  const khayrSharr = base.khayrSharr !== 'Not selected' ? base.khayrSharr : null;
+
+  const bestDay = pdfRule?.bestDay || null;
+  const altDay = pdfRule?.altDay || null;
+  const bestHourPlanet = pdfRule?.bestHour || null;
+  const altHourPlanet = pdfRule?.altHour || null;
+
+  // Find the recommended hour NUMBER for today (the hour ruled by bestHourPlanet)
+  const now = new Date();
+  const { hours: todayHours } = getTodayAllHours(now);
+  const recommendedHourNumbers = bestHourPlanet
+    ? findHoursByPlanet(todayHours, bestHourPlanet).map(h => h.hourNumber)
+    : [];
+
+  // Element recommendation based on purpose
+  const PURPOSE_ELEMENT = {
+    celb: 'water', tard: 'earth', sihhat: 'air', sekam: 'fire', tarfet: 'water',
+    ijlal: 'air', aqd: 'earth', rizq: 'earth', harb: 'fire', tahyij: 'fire',
+    hariq: 'fire', sultan: 'fire', haybah: 'fire', tashtit: 'earth',
+    knowledge: 'air', travel: 'water', success: 'fire', marriage: 'water',
+  };
+  const recommendedElement = primaryPurpose ? PURPOSE_ELEMENT[primaryPurpose] : null;
+
+  const recommendations = [];
+  let allOptimal = true;
+
+  // ── 1. Ritual Purpose ──
+  const purposeLabel = pdfRule?.pdfName || (customPurpose ? `"${customPurpose}"` : 'Not selected');
+  recommendations.push({
+    field: 'Ritual Purpose',
+    icon: 'target',
+    current: purposeLabel,
+    recommended: pdfRule?.pdfName || 'Select a purpose in Mizan 7 (or type a custom purpose)',
+    isOptimal: !!pdfRule,
+    reason: pdfRule
+      ? `Your purpose is recognized as ${pdfRule.pdfName} (${pdfRule.category}). The manuscripts prescribe specific timing for this work — see the fields below.`
+      : `No purpose was selected or matched. The engine cannot prescribe timing without knowing the ritual intent. Select a purpose in Mizan 7 or enter a custom purpose describing your goal (love, healing, wealth, protection, separation, etc.).`,
+  });
+  if (!pdfRule) allOptimal = false;
+
+  // ── 2. Khayr / Sharr ──
+  const khayrSharrCurrentLabel = khayrSharrSelected
+    ? (khayrSharrSelected === 'khayr' ? 'Khayr (Benevolent)' : 'Sharr (Banishment)')
+    : `Not selected (auto-inferred: ${khayrSharr === 'khayr' ? 'Khayr' : khayrSharr === 'sharr' ? 'Sharr' : 'unknown'})`;
+  const inferredPolarity = base.khayrSharrInferred ? (khayrSharr === 'khayr' ? 'Khayr (Benevolent)' : 'Sharr (Banishment)') : null;
+  const khayrOptimal = !base.khayrSharrInferred || (khayrSharrSelected && khayrSharrSelected === khayrSharr);
+  recommendations.push({
+    field: 'Khayr / Sharr (Mizan 8)',
+    icon: 'scale',
+    current: khayrSharrCurrentLabel,
+    recommended: inferredPolarity || (pdfRule ? (PURPOSE_POLARITY[primaryPurpose] === 'khayr' ? 'Khayr (Benevolent)' : 'Sharr (Banishment)') : 'Select Khayr or Sharr in Mizan 8'),
+    isOptimal: khayrOptimal,
+    reason: base.khayrSharrInferred
+      ? `You did not select Khayr or Sharr in Mizan 8, so the engine inferred ${khayrSharr === 'khayr' ? 'Khayr' : 'Sharr'} from the purpose category. To make this explicit and lock the timing rules, select ${khayrSharr === 'khayr' ? 'Khayr' : 'Sharr'} in Mizan 8. Al-Shurut p.13 applies different hour and moon restrictions to each polarity.`
+      : khayrSharrSelected
+        ? `You have explicitly selected ${khayrSharrSelected === 'khayr' ? 'Khayr' : 'Sharr'}, which matches the purpose category. This is optimal.`
+        : `Select Khayr or Sharr in Mizan 8 to activate the polarity-specific timing rules.`,
+  });
+  if (!khayrOptimal) allOptimal = false;
+
+  // ── 3. Selected Weekday ──
+  const currentDayLabel = selectedDay ? MIZAN_DAY_NAMES[selectedDay] : 'Not selected';
+  const recommendedDayKey = bestDay || null;
+  const dayOptimal = selectedDay && (selectedDay === bestDay || (altDay && selectedDay === altDay));
+  recommendations.push({
+    field: 'Selected Weekday (Mizan 5)',
+    icon: 'calendar',
+    current: currentDayLabel,
+    recommended: recommendedDayKey ? `${MIZAN_DAY_NAMES[recommendedDayKey]}${altDay ? ` or ${MIZAN_DAY_NAMES[altDay]} (alternative)` : ''}` : 'Any suitable day (no specific prescription)',
+    isOptimal: dayOptimal,
+    reason: !pdfRule
+      ? `No day prescription is available without a recognized purpose.`
+      : !selectedDay
+        ? `You have not selected a day in Mizan 5. The manuscripts prescribe ${MIZAN_DAY_NAMES[bestDay]}${altDay ? ` or ${MIZAN_DAY_NAMES[altDay]}` : ''} for ${pdfRule.pdfName} (${pdfRule.source}). Select this day to strengthen the ritual.`
+        : dayOptimal
+          ? `Your selected day (${MIZAN_DAY_NAMES[selectedDay]}) matches the manuscript prescription for ${pdfRule.pdfName}. This is optimal.`
+          : `Your selected day is ${MIZAN_DAY_NAMES[selectedDay]}, but the manuscripts prescribe ${MIZAN_DAY_NAMES[bestDay]}${altDay ? ` or ${MIZAN_DAY_NAMES[altDay]}` : ''} for ${pdfRule.pdfName} (${pdfRule.source}). The ruling planet of ${MIZAN_DAY_NAMES[selectedDay]} does not govern this type of work — changing to ${MIZAN_DAY_NAMES[bestDay]} aligns the day's planetary energy with your ritual purpose.`,
+  });
+  if (!dayOptimal) allOptimal = false;
+
+  // ── 4. Selected Planet (Mizan 6) ──
+  const currentPlanetLabel = selectedPlanet ? `${MIZAN_TO_EN_PLANET[selectedPlanet] || selectedPlanet}` : 'Not selected';
+  const planetOptimal = selectedPlanet && bestHourPlanet && MIZAN_TO_EN_PLANET[selectedPlanet] === bestHourPlanet;
+  recommendations.push({
+    field: 'Selected Planet (Mizan 6)',
+    icon: 'orbit',
+    current: currentPlanetLabel,
+    recommended: bestHourPlanet || 'Based on purpose prescription',
+    isOptimal: planetOptimal,
+    reason: !pdfRule
+      ? `No planet prescription is available without a recognized purpose.`
+      : !selectedPlanet
+        ? `You have not selected a planet in Mizan 6. The manuscripts prescribe the ${bestHourPlanet} planet for ${pdfRule.pdfName} (${pdfRule.source}). Select ${bestHourPlanet} to align the planetary ruler with your work.`
+        : planetOptimal
+          ? `Your selected planet (${MIZAN_TO_EN_PLANET[selectedPlanet]}) matches the prescribed planet (${bestHourPlanet}) for ${pdfRule.pdfName}. This is optimal.`
+          : `Your selected planet is ${MIZAN_TO_EN_PLANET[selectedPlanet]}, but the manuscripts prescribe ${bestHourPlanet} for ${pdfRule.pdfName} (${pdfRule.source}). The planetary ruler governs which spirits answer — selecting ${bestHourPlanet} ensures the correct spiritual domain is activated.`,
+  });
+  if (!planetOptimal) allOptimal = false;
+
+  // ── 5. Selected Planetary Hour (Mizan 4) ──
+  const currentHourLabel = selectedHour ? `Hour #${selectedHour}` : 'Not selected';
+  const bestWindow = base.bestWindowsToday?.[0];
+  const recommendedHourLabel = recommendedHourNumbers.length > 0 ? `Hour #${recommendedHourNumbers.join(' or #')}` : (bestWindow ? `Hour #${bestWindow.hourNumber}` : 'See live Astro Clock');
+  const hourOptimal = selectedHour && recommendedHourNumbers.includes(selectedHour);
+  recommendations.push({
+    field: 'Selected Planetary Hour (Mizan 4)',
+    icon: 'clock',
+    current: currentHourLabel,
+    recommended: recommendedHourLabel,
+    isOptimal: hourOptimal,
+    reason: !pdfRule
+      ? `No hour prescription is available without a recognized purpose.`
+      : !selectedHour
+        ? `You have not selected an hour in Mizan 4. The ${bestHourPlanet} hour is prescribed for ${pdfRule.pdfName}. Today, this hour occurs at: ${base.bestWindowsToday?.map(w => `${w.startTime}–${w.endTime}`).join(', ') || 'no instances remain today'}.`
+        : hourOptimal
+          ? `Your selected hour (#${selectedHour}) is ruled by ${bestHourPlanet}, the prescribed planet for ${pdfRule.pdfName}. This is optimal.`
+          : `Your selected hour is #${selectedHour}, but the ${bestHourPlanet} hour is prescribed for ${pdfRule.pdfName} (${pdfRule.source}). Today, the ${bestHourPlanet} hour occurs at: ${base.bestWindowsToday?.map(w => `${w.startTime}–${w.endTime} (Hour #${w.hourNumber})`).join(', ') || 'no instances remain today'}. Changing to the ${bestHourPlanet} hour aligns the planetary force with your ritual.`,
+  });
+  if (!hourOptimal) allOptimal = false;
+
+  // ── 6. Selected Element (Mizan 2) ──
+  const currentElementLabel = dominant || 'Not detected';
+  const elementOptimal = !recommendedElement || dominant === recommendedElement;
+  recommendations.push({
+    field: 'Selected Element (Mizan 2)',
+    icon: 'flame',
+    current: currentElementLabel,
+    recommended: recommendedElement ? recommendedElement : 'Based on your input text',
+    isOptimal: elementOptimal,
+    reason: !recommendedElement
+      ? `Your element is derived from the input text analysis (Mizan 1). No specific element recommendation applies without a recognized purpose.`
+      : !dominant
+        ? `No dominant element was detected in your input text. For ${pdfRule?.pdfName || 'this work'}, the ${recommendedElement} element is recommended. Enter Arabic text containing ${recommendedElement}-aligned letters, or select ${recommendedElement} in Mizan 2.`
+        : elementOptimal
+          ? `Your dominant element (${dominant}) aligns with the recommended element for ${pdfRule?.pdfName || 'this work'}. This is optimal.`
+          : `Your dominant element is ${dominant}, but ${recommendedElement} is recommended for ${pdfRule?.pdfName || 'this work'}. The element determines the talisman's spiritual nature, direction (Al-Shurut p.42), and placement (Al-Shurut p.37). Using ${recommendedElement} strengthens the ritual's resonance with its purpose.`,
+  });
+  if (!elementOptimal) allOptimal = false;
+
+  // ── 7. Day / Night (Mizan 3) ──
+  const currentDayNightLabel = dayNight ? (dayNight === 'gunduz' ? 'Day (Gunduz)' : 'Night (Gece)') : 'Not selected';
+  const recommendedDayNight = pdfRule?.isNightRequired ? 'Night (Gece)' : (dayNight === 'gece' ? 'Night (Gece) — preferred' : 'Either (Night preferred)');
+  const dayNightOptimal = !pdfRule?.isNightRequired || dayNight === 'gece';
+  recommendations.push({
+    field: 'Day / Night (Mizan 3)',
+    icon: 'sunset',
+    current: currentDayNightLabel,
+    recommended: recommendedDayNight,
+    isOptimal: dayNightOptimal,
+    reason: !pdfRule
+      ? `No day/night preference without a recognized purpose.`
+      : pdfRule?.isNightRequired
+        ? dayNight === 'gece'
+          ? `You selected Night, which is required for ${pdfRule.pdfName}. The Sun suppresses spirits during daylight (Al-Shurut p.39-40, NGT_002). This is optimal.`
+          : `You selected Day, but ${pdfRule.pdfName} MUST be performed at night — the Sun suppresses all spirits during daylight (Al-Shurut p.39-40, NGT_002). Change to Night (Gece) in Mizan 3.`
+        : dayNight === 'gece'
+          ? `You selected Night, which is preferred for all spiritual works (Al-Shurut p.39, NGT_001). This is optimal.`
+          : `You selected Day. While acceptable for ${pdfRule.pdfName}, the manuscripts state that night is superior to day for all spiritual works because the Sun no longer suppresses the spirits (Al-Shurut p.39). Consider Night (Gece) for a stronger result.`,
+  });
+  if (!dayNightOptimal) allOptimal = false;
+
+  // ── 8. Selected Time (live, today) ──
+  const currentClock = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Dubai', hour: '2-digit', minute: '2-digit' });
+  const recommendedTime = bestWindow ? `${bestWindow.startTime}–${bestWindow.endTime}` : (base.nextOpportunity ? `${base.nextOpportunity.startTime}–${base.nextOpportunity.endTime} (${base.nextOpportunity.dayName})` : 'No optimal time today');
+  const timeOptimal = bestWindow && base.currentMomentSuitable;
+  recommendations.push({
+    field: 'Best Time to Perform (Today)',
+    icon: 'timer',
+    current: `Now: ${currentClock}`,
+    recommended: recommendedTime,
+    isOptimal: timeOptimal,
+    reason: !pdfRule
+      ? `No time recommendation without a recognized purpose.`
+      : !bestWindow
+        ? `No optimal ${bestHourPlanet} hours remain today. The next opportunity is ${base.nextOpportunity ? `${base.nextOpportunity.startTime}–${base.nextOpportunity.endTime} on ${base.nextOpportunity.dayName}` : 'not within 7 days'}. Wait for this window before performing the ritual.`
+        : timeOptimal
+          ? `The current moment falls within an optimal ${bestWindow.planet} hour (${bestWindow.startTime}–${bestWindow.endTime}). You may perform the ritual now.`
+          : `The current time is ${currentClock}, but the optimal window today is ${bestWindow.startTime}–${bestWindow.endTime} (${bestWindow.planet} hour, ${pdfRule.source}). Wait until this time to perform the ritual for maximum planetary alignment. This is a live recommendation based on today's actual planetary hours and current moon phase.`,
+  });
+  if (!timeOptimal) allOptimal = false;
+
+  // ── 9. Zodiac (not in Mizan selections) ──
+  recommendations.push({
+    field: 'Zodiac Sign',
+    icon: 'sparkles',
+    current: 'Not selected in Mizan',
+    recommended: base.zodiacSuitability?.bestSigns?.length > 0 ? `Best for targets born under: ${base.zodiacSuitability.bestSigns.map(z => z.sign).join(', ')}` : 'No specific zodiac prescription for today',
+    isOptimal: true, // informational only — not a Mizan field
+    reason: `Zodiac sign is not part of the Mizan selections. Today (${base.astroClockStatus.day}) is optimal for rituals targeting people born under: ${base.zodiacSuitability?.bestSigns?.map(z => z.sign).join(', ') || 'no specific sign'}. If you know your target's natal sign, performing the ritual on a day that matches their sign amplifies the work (Al-Shurut p.18-19, Omani Systems A & B). This is informational — no Mizan change is required.`,
+  });
+
+  // ── 10. Star / Nakshatra (not in Mizan selections) ──
+  recommendations.push({
+    field: 'Star / Nakshatra',
+    icon: 'star',
+    current: 'Not available in Mizan',
+    recommended: 'Consult the Astro Clock module',
+    isOptimal: true, // informational only
+    reason: `Nakshatra (lunar mansion) selection is not part of the Nine Mizan. The Astro Clock module tracks the current lunar mansion in real time. For works requiring a specific nakshatra, consult the Astro Clock page and perform the ritual when the Moon enters the prescribed mansion. This is informational — no Mizan change is required.`,
+  });
+
+  return { recommendations, allOptimal, base };
+}
