@@ -16,6 +16,13 @@ export const AuthProvider = ({ children }) => {
     }).catch(() => {
       // No token / expired — that's fine, proceed as guest
     });
+
+    // Auto-sync page visibility on app load (fire-and-forget, non-blocking).
+    // Ensures new routes from routeManifest are registered in PageVisibilityConfig
+    // so they appear in all page selectors without manual admin work.
+    import('@/lib/pageSync')
+      .then(({ syncPages }) => syncPages().catch(() => {}))
+      .catch(() => {});
   }, []);
 
   const logout = () => {

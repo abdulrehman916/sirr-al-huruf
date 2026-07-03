@@ -1,3 +1,5 @@
+import ROUTE_MANIFEST from '@/lib/routeManifest';
+
 /**
  * Dynamic Page Registry
  * Decentralized page registration with O(1) config retrieval
@@ -217,3 +219,68 @@ registerPage('/admin/manuscript-rule-audit', { pageType: 'audit', adminOnly: tru
 registerPage('/admin/manuscript-advanced-search', { pageType: 'audit', adminOnly: true, visible: false });
 registerPage('/admin/manazil-quality', { pageType: 'audit', adminOnly: true, visible: false });
 registerPage('/admin/manuscript-completion', { pageType: 'audit', adminOnly: true, visible: false });
+
+// ── AUTO-REGISTRATION FROM ROUTE_MANIFEST ──────────────────────────
+// Any route not manually registered above is auto-registered with derived config.
+// This ensures new pages automatically appear in all page selectors (Access Codes,
+// Page Access admin, Redeem Approval, etc.) without any manual work.
+// Manual registrations above always take precedence (curated names/icons win).
+
+function derivePageName(path) {
+  if (path === '/') return 'Home';
+  const clean = path.replace(/^\/+/, '').replace(/\/+$/, '');
+  if (!clean) return 'Home';
+  const words = clean.split(/[-/]/).filter(Boolean);
+  return words
+    .map((w) => {
+      // Handle alphanumeric words like "mizaan9" → "Mizaan 9"
+      const match = w.match(/^([a-zA-Z]+)(\d+)$/);
+      if (match) {
+        return match[1].charAt(0).toUpperCase() + match[1].slice(1) + ' ' + match[2];
+      }
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    })
+    .join(' ');
+}
+
+function isSystemPath(path) {
+  return (
+    path.startsWith('/admin/') ||
+    path.startsWith('/support/') ||
+    path.startsWith('/subscription/') ||
+    path.startsWith('/my-') ||
+    path.startsWith('/redeem-') ||
+    path.startsWith('/premium/') ||
+    path.startsWith('/payment') ||
+    path.startsWith('/onboarding') ||
+    path.startsWith('/otp-') ||
+    path.startsWith('/rules-conditions') ||
+    path.includes(':') // dynamic routes like /plants/:id
+  );
+}
+
+// Auto-register every route from ROUTE_MANIFEST not already manually registered
+for (const entry of ROUTE_MANIFEST) {
+  if (pageRegistry.has(entry.path)) continue; // manual registration wins
+
+  if (isSystemPath(entry.path)) {
+    // System/admin paths → registered as hidden so getPageConfig() still works
+    // for ProtectedPage, but they don't appear in getContentPages() selectors
+    registerPage(entry.path, {
+      pageType: entry.path.startsWith('/admin/') ? 'admin' : 'system',
+      adminOnly: entry.path.startsWith('/admin/'),
+      visible: false,
+      requiresPermission: false,
+    });
+    continue;
+  }
+
+  // Content page → auto-register with derived name, visible in selectors
+  const isPublic = entry.flags?.includes('public');
+  registerPage(entry.path, {
+    name: derivePageName(entry.path),
+    pageType: 'content',
+    visible: true,
+    requiresPermission: !isPublic,
+  });
+}

@@ -26,6 +26,8 @@ import { getContentPages } from "@/lib/pageRegistry";
 import { FEATURE_REGISTRY, hasSubFeatures } from "@/lib/featureRegistry";
 import { invalidateFeatureConfigCache } from "@/lib/featureConfigCache";
 import { invalidatePlanCache } from "@/lib/subscriptionPlanCache";
+import { syncPages, isSyncInProgress } from "@/lib/pageSync";
+import { Zap } from "lucide-react";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -71,6 +73,8 @@ export default function PagePermissions() {
   const [isAdmin, setIsAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
 
   // Data
   const [visibilityConfigs, setVisibilityConfigs] = useState([]);
@@ -251,6 +255,29 @@ export default function PagePermissions() {
     loadData();
   };
 
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const result = await syncPages(true);
+      setSyncResult(result);
+      if (result.success && !result.skipped) {
+        toast({
+          title: "Pages synced",
+          description: `${result.created || 0} new, ${result.updated || 0} updated, ${result.archived || 0} archived`,
+        });
+        loadData(); // reload to show any new pages
+      } else if (result.skipped) {
+        toast({ title: "Sync already in progress" });
+      } else {
+        toast({ title: "Sync failed", description: result.error, variant: "destructive" });
+      }
+    } catch (e) {
+      toast({ title: "Sync failed", description: e.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   if (isAdmin === false) return <Navigate to="/" replace />;
 
   if (isAdmin === null) {
@@ -312,14 +339,30 @@ export default function PagePermissions() {
               Single source of truth — manage visibility, pricing, plans, and child features
             </p>
           </div>
-          <button
-            onClick={loadData}
-            disabled={loading}
-            className="p-2 rounded-xl"
-            style={{ border: `1px solid ${G.border}`, background: G.bg, color: G.text }}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-inter text-xs font-bold transition-all"
+              style={{
+                border: `1px solid ${syncing ? G.borderHi : G.border}`,
+                background: syncing ? G.bgHi : G.bg,
+                color: G.text,
+              }}
+              title="Auto-sync pages from route manifest"
+            >
+              <Zap className={`w-3.5 h-3.5 ${syncing ? "animate-pulse" : ""}`} />
+              {syncing ? "Syncing..." : "Sync Pages"}
+            </button>
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="p-2 rounded-xl"
+              style={{ border: `1px solid ${G.border}`, background: G.bg, color: G.text }}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
+          </div>
         </div>
 
         {/* Info banner */}
