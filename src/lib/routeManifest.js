@@ -70,6 +70,7 @@ const ROUTE_MANIFEST = [
 
   // Test & Debug
   { path: '/mizan-completion-test', component: 'MizanCompletionTest', chunk: 'MizanCompletionTest', flags: ['public'] },
+
 ];
 
 export default ROUTE_MANIFEST;
