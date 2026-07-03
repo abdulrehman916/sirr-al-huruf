@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Star, ExternalLink, Heart, Share2, Check } from "lucide-react";
 import { isInWishlist, toggleWishlist, shareProduct } from "@/lib/shopUtils";
 import { useToast } from "@/components/ui/use-toast";
+import { ProductBadgesOverlay } from "./ProductBadges";
+import { CompareButton } from "./CompareBar";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -108,8 +110,12 @@ export default function ProductCard({ product, index = 0 }) {
             </div>
           )}
 
-          {/* Action icons */}
+          {/* Badges (top-left) */}
+          <ProductBadgesOverlay product={product} />
+
+          {/* Action icons (top-right) */}
           <div className="flex items-center gap-1">
+            <CompareButton product={product} />
             <button
               onClick={handleShare}
               className="p-1.5 rounded-lg transition-opacity"
@@ -141,22 +147,6 @@ export default function ProductCard({ product, index = 0 }) {
             </button>
           </div>
         </div>
-
-        {/* Featured badge */}
-        {product.is_featured && (
-          <div
-            className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md font-inter text-[8px] font-bold uppercase tracking-wider flex items-center gap-1"
-            style={{
-              background: "linear-gradient(135deg, rgba(212,175,55,0.30) 0%, rgba(212,175,55,0.15) 100%)",
-              border: `1px solid ${G.borderHi}`,
-              color: G.text,
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            <Star className="w-2.5 h-2.5" style={{ fill: G.text }} />
-            Featured
-          </div>
-        )}
       </div>
 
       {/* Content */}
@@ -203,18 +193,26 @@ export default function ProductCard({ product, index = 0 }) {
           ) : (
             <span />
           )}
-          {product.price_display && (
-            <span className="font-inter text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.75)" }}>
-              {product.price_display}
-            </span>
-          )}
+          <div className="flex items-baseline gap-1.5">
+            {product.compare_price_display && (
+              <span className="font-inter text-[9px] line-through" style={{ color: "rgba(255,255,255,0.30)" }}>
+                {product.compare_price_display}
+              </span>
+            )}
+            {product.price_display && (
+              <span className="font-inter text-[11px] font-bold" style={{ color: product.is_out_of_stock ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.75)" }}>
+                {product.price_display}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Buy button */}
         {hasAffiliate && (
           <button
-            onClick={(e) => handleBuy(e, product.affiliate_links[0])}
-            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg font-inter text-[11px] font-bold transition-all duration-200"
+            onClick={(e) => product.is_out_of_stock ? null : handleBuy(e, product.affiliate_links[0])}
+            disabled={product.is_out_of_stock}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg font-inter text-[11px] font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               background: "linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.08) 100%)",
               border: `1px solid ${G.border}`,
@@ -222,7 +220,7 @@ export default function ProductCard({ product, index = 0 }) {
             }}
           >
             <ExternalLink className="w-3 h-3" />
-            {product.affiliate_links[0].label || `Buy on ${product.affiliate_links[0].platform}`}
+            {product.is_out_of_stock ? "Out of Stock" : (product.affiliate_links[0].label || `Buy on ${product.affiliate_links[0].platform}`)}
           </button>
         )}
       </div>

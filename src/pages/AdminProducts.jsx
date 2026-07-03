@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Plus, Search, X, Edit3, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
-  Star, ExternalLink, Upload, Save
+  Star, ExternalLink, Upload, Save, Flame, Sparkles, PackageX, Play
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
@@ -29,14 +29,24 @@ const EMPTY_FORM = {
   specifications: "{}",
   images: [],
   video_url: "",
+  video_urls: [],
+  pdf_url: "",
   category: "",
   affiliate_links: [],
   price_display: "",
+  compare_price_display: "",
   rating_display: "",
   sort_order: 0,
   is_active: true,
   is_featured: false,
+  is_best_seller: false,
+  is_new_arrival: false,
+  is_out_of_stock: false,
+  discount_percentage: "",
+  seller_whatsapp: "",
+  seller_email: "",
   tags: [],
+  faqs: [],
 };
 
 export default function AdminProducts() {
@@ -55,6 +65,8 @@ export default function AdminProducts() {
   const [specKey, setSpecKey] = useState("");
   const [specValue, setSpecValue] = useState("");
   const [tagInput, setTagInput] = useState("");
+  const [videoUrlInput, setVideoUrlInput] = useState("");
+  const [faqInput, setFaqInput] = useState({ question: "", answer: "" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -129,8 +141,11 @@ export default function AdminProducts() {
       ...product,
       specifications: product.specifications ? JSON.stringify(product.specifications, null, 2) : "{}",
       images: product.images || [],
+      video_urls: product.video_urls || [],
       affiliate_links: product.affiliate_links || [],
       tags: product.tags || [],
+      faqs: product.faqs || [],
+      discount_percentage: product.discount_percentage ?? "",
     });
     setEditId(product.id);
     setShowForm(true);
@@ -155,14 +170,24 @@ export default function AdminProducts() {
         specifications: specs,
         images: form.images,
         video_url: form.video_url,
+        video_urls: form.video_urls,
+        pdf_url: form.pdf_url,
         category: form.category,
         affiliate_links: form.affiliate_links,
         price_display: form.price_display,
+        compare_price_display: form.compare_price_display,
         rating_display: form.rating_display,
         sort_order: form.sort_order || 0,
         is_active: form.is_active,
         is_featured: form.is_featured,
+        is_best_seller: form.is_best_seller,
+        is_new_arrival: form.is_new_arrival,
+        is_out_of_stock: form.is_out_of_stock,
+        discount_percentage: form.discount_percentage ? Number(form.discount_percentage) : null,
+        seller_whatsapp: form.seller_whatsapp,
+        seller_email: form.seller_email,
         tags: form.tags,
+        faqs: form.faqs,
         updated_at: new Date().toISOString(),
       };
 
@@ -267,6 +292,55 @@ export default function AdminProducts() {
 
   const removeTag = (idx) => {
     setForm({ ...form, tags: form.tags.filter((_, i) => i !== idx) });
+  };
+
+  const addVideoUrl = () => {
+    if (!videoUrlInput.trim()) return;
+    if (!form.video_urls.includes(videoUrlInput.trim())) {
+      setForm({ ...form, video_urls: [...form.video_urls, videoUrlInput.trim()] });
+    }
+    setVideoUrlInput("");
+  };
+
+  const removeVideoUrl = (idx) => {
+    setForm({ ...form, video_urls: form.video_urls.filter((_, i) => i !== idx) });
+  };
+
+  const addFaq = () => {
+    if (!faqInput.question.trim() || !faqInput.answer.trim()) return;
+    setForm({ ...form, faqs: [...form.faqs, { ...faqInput }] });
+    setFaqInput({ question: "", answer: "" });
+  };
+
+  const removeFaq = (idx) => {
+    setForm({ ...form, faqs: form.faqs.filter((_, i) => i !== idx) });
+  };
+
+  const toggleBestSeller = async (product) => {
+    try {
+      await base44.entities.Product.update(product.id, { is_best_seller: !product.is_best_seller, updated_at: new Date().toISOString() });
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const toggleNewArrival = async (product) => {
+    try {
+      await base44.entities.Product.update(product.id, { is_new_arrival: !product.is_new_arrival, updated_at: new Date().toISOString() });
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const toggleStock = async (product) => {
+    try {
+      await base44.entities.Product.update(product.id, { is_out_of_stock: !product.is_out_of_stock, updated_at: new Date().toISOString() });
+      loadProducts();
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
   };
 
   const approveReview = async (review) => {
@@ -397,6 +471,15 @@ export default function AdminProducts() {
                 </div>
                 {/* Status badges */}
                 <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {p.is_best_seller && (
+                    <Flame className="w-3.5 h-3.5" style={{ color: "#FB923C", fill: "#FB923C" }} />
+                  )}
+                  {p.is_new_arrival && (
+                    <Sparkles className="w-3.5 h-3.5" style={{ color: "#60A5FA", fill: "#60A5FA" }} />
+                  )}
+                  {p.is_out_of_stock && (
+                    <PackageX className="w-3.5 h-3.5" style={{ color: "#F87171" }} />
+                  )}
                   {p.is_featured && (
                     <Star className="w-3.5 h-3.5" style={{ color: G.text, fill: G.text }} />
                   )}
@@ -417,6 +500,15 @@ export default function AdminProducts() {
                   </button>
                   <button onClick={() => moveOrder(p, 1)} className="p-1.5 rounded-lg hover:bg-white/5" title="Move down">
                     <ChevronDown className="w-3.5 h-3.5" style={{ color: G.dim }} />
+                  </button>
+                  <button onClick={() => toggleBestSeller(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Toggle best seller">
+                    <Flame className="w-3.5 h-3.5" style={{ color: p.is_best_seller ? "#FB923C" : G.dim, fill: p.is_best_seller ? "#FB923C" : "transparent" }} />
+                  </button>
+                  <button onClick={() => toggleNewArrival(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Toggle new arrival">
+                    <Sparkles className="w-3.5 h-3.5" style={{ color: p.is_new_arrival ? "#60A5FA" : G.dim, fill: p.is_new_arrival ? "#60A5FA" : "transparent" }} />
+                  </button>
+                  <button onClick={() => toggleStock(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Toggle out of stock">
+                    <PackageX className="w-3.5 h-3.5" style={{ color: p.is_out_of_stock ? "#F87171" : G.dim }} />
                   </button>
                   <button onClick={() => toggleFeatured(p)} className="p-1.5 rounded-lg hover:bg-white/5" title="Toggle featured">
                     <Star className="w-3.5 h-3.5" style={{ color: p.is_featured ? G.text : G.dim, fill: p.is_featured ? G.text : "transparent" }} />
@@ -517,25 +609,58 @@ export default function AdminProducts() {
                   <FormField label="Price Display">
                     <input value={form.price_display} onChange={e => setForm({ ...form, price_display: e.target.value })} className="form-input" placeholder="e.g. AED 50" />
                   </FormField>
+                  <FormField label="Compare Price (original, for discount)">
+                    <input value={form.compare_price_display} onChange={e => setForm({ ...form, compare_price_display: e.target.value })} className="form-input" placeholder="e.g. AED 80" />
+                  </FormField>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <FormField label="Rating Display">
                     <input value={form.rating_display} onChange={e => setForm({ ...form, rating_display: e.target.value })} className="form-input" placeholder="e.g. 4.5/5" />
                   </FormField>
+                  <FormField label="Discount % (optional, overrides auto-calc)">
+                    <input type="number" value={form.discount_percentage} onChange={e => setForm({ ...form, discount_percentage: e.target.value })} className="form-input" placeholder="e.g. 25" />
+                  </FormField>
                 </div>
-                <FormField label="Video URL (YouTube/Vimeo)">
+                <FormField label="Video URL (single, legacy)">
                   <input value={form.video_url} onChange={e => setForm({ ...form, video_url: e.target.value })} className="form-input" placeholder="https://youtube.com/watch?v=..." />
+                </FormField>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="PDF Attachment URL">
+                    <input value={form.pdf_url} onChange={e => setForm({ ...form, pdf_url: e.target.value })} className="form-input" placeholder="https://.../datasheet.pdf" />
+                  </FormField>
+                  <div className="flex items-end gap-3 pb-2">
+                    <FormField label="Seller WhatsApp">
+                      <input value={form.seller_whatsapp} onChange={e => setForm({ ...form, seller_whatsapp: e.target.value })} className="form-input" placeholder="97150XXXXXXX" />
+                    </FormField>
+                  </div>
+                </div>
+                <FormField label="Seller Email">
+                  <input value={form.seller_email} onChange={e => setForm({ ...form, seller_email: e.target.value })} className="form-input" placeholder="seller@example.com" />
                 </FormField>
                 <div className="grid grid-cols-2 gap-3">
                   <FormField label="Sort Order">
                     <input type="number" value={form.sort_order} onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} className="form-input" />
                   </FormField>
-                  <div className="flex items-end gap-3 pb-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                  <div className="flex items-end gap-2 pb-2 flex-wrap">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={form.is_active} onChange={e => setForm({ ...form, is_active: e.target.checked })} />
-                      <span className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>Active</span>
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Active</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={form.is_featured} onChange={e => setForm({ ...form, is_featured: e.target.checked })} />
-                      <span className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>Featured</span>
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Featured</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={form.is_best_seller} onChange={e => setForm({ ...form, is_best_seller: e.target.checked })} />
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Best Seller</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={form.is_new_arrival} onChange={e => setForm({ ...form, is_new_arrival: e.target.checked })} />
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>New Arrival</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={form.is_out_of_stock} onChange={e => setForm({ ...form, is_out_of_stock: e.target.checked })} />
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>Out of Stock</span>
                     </label>
                   </div>
                 </div>
@@ -623,6 +748,68 @@ export default function AdminProducts() {
                         {tag}
                         <button onClick={() => removeTag(idx)}><X className="w-2.5 h-2.5" /></button>
                       </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Videos */}
+              <div className="space-y-2">
+                <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>Additional Videos (multiple)</p>
+                <div className="flex gap-2">
+                  <input
+                    value={videoUrlInput}
+                    onChange={e => setVideoUrlInput(e.target.value)}
+                    placeholder="Paste video URL..."
+                    className="form-input flex-1"
+                    onKeyDown={e => e.key === "Enter" && addVideoUrl()}
+                  />
+                  <button onClick={addVideoUrl} className="px-3 rounded-lg" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+                    <Plus className="w-4 h-4" style={{ color: G.text }} />
+                  </button>
+                </div>
+                {form.video_urls.length > 0 && (
+                  <div className="space-y-1">
+                    {form.video_urls.map((url, idx) => (
+                      <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.faint}` }}>
+                        <Play className="w-3 h-3 flex-shrink-0" style={{ color: G.dim }} />
+                        <span className="font-inter text-[10px] truncate flex-1" style={{ color: "rgba(255,255,255,0.45)" }}>{url}</span>
+                        <button onClick={() => removeVideoUrl(idx)}><X className="w-3 h-3" style={{ color: "#F87171" }} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* FAQs */}
+              <div className="space-y-2">
+                <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>FAQs</p>
+                <input
+                  value={faqInput.question}
+                  onChange={e => setFaqInput({ ...faqInput, question: e.target.value })}
+                  placeholder="Question..."
+                  className="form-input"
+                />
+                <textarea
+                  value={faqInput.answer}
+                  onChange={e => setFaqInput({ ...faqInput, answer: e.target.value })}
+                  placeholder="Answer..."
+                  rows={2}
+                  className="form-input resize-none"
+                />
+                <button onClick={addFaq} className="px-3 py-1.5 rounded-lg font-inter text-[10px] font-bold" style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}>
+                  + Add FAQ
+                </button>
+                {form.faqs.length > 0 && (
+                  <div className="space-y-1">
+                    {form.faqs.map((faq, idx) => (
+                      <div key={idx} className="px-2 py-1.5 rounded-lg space-y-0.5" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.faint}` }}>
+                        <div className="flex items-center gap-2">
+                          <span className="font-inter text-[11px] font-bold flex-1" style={{ color: G.text }}>{faq.question}</span>
+                          <button onClick={() => removeFaq(idx)}><X className="w-3 h-3" style={{ color: "#F87171" }} /></button>
+                        </div>
+                        <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>{faq.answer}</p>
+                      </div>
                     ))}
                   </div>
                 )}

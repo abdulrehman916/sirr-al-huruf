@@ -11,6 +11,7 @@ import { ProductGridSkeleton } from "../components/shop/ProductSkeleton";
 import { EmptySearchState, EmptyShopState, EmptyWishlistState } from "../components/shop/EmptyState";
 import { base44 } from "../api/base44Client";
 import { getWishlist, isInWishlist, toggleWishlist, extractBrands, parsePrice } from "@/lib/shopUtils";
+import CompareBar from "../components/shop/CompareBar";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -458,6 +459,9 @@ export default function ShopPage() {
           </div>
         )}
       </div>
+
+      {/* Compare tray */}
+      <CompareBar products={products} />
     </PageLayout>
   );
 }

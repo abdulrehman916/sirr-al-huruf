@@ -129,6 +129,41 @@ export function extractFeatures(product) {
   return features;
 }
 
+// ── Compare Products ──
+const COMPARE_KEY = "shop_compare";
+const MAX_COMPARE = 4;
+
+export function getCompareList() {
+  try {
+    return JSON.parse(localStorage.getItem(COMPARE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+export function isInCompare(productId) {
+  return getCompareList().includes(productId);
+}
+
+export function toggleCompare(productId) {
+  let list = getCompareList();
+  const idx = list.indexOf(productId);
+  if (idx >= 0) {
+    list.splice(idx, 1);
+  } else {
+    if (list.length >= MAX_COMPARE) return false; // cap reached, do not add
+    list.push(productId);
+  }
+  localStorage.setItem(COMPARE_KEY, JSON.stringify(list));
+  window.dispatchEvent(new CustomEvent("shop-compare-changed"));
+  return idx < 0; // true if added, false if removed
+}
+
+export function clearCompare() {
+  localStorage.removeItem(COMPARE_KEY);
+  window.dispatchEvent(new CustomEvent("shop-compare-changed"));
+}
+
 // ── Brand Extraction ──
 // Derives "brands" from tags (first tag treated as brand) — no entity changes
 export function extractBrands(products) {

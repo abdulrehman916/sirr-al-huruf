@@ -36,7 +36,18 @@
     },
     "video_url": {
       "type": "string",
-      "description": "YouTube/Vimeo embed URL or uploaded file URL for product video"
+      "description": "Single YouTube/Vimeo embed URL or uploaded file URL (legacy, kept for backward compat)"
+    },
+    "video_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Multiple video URLs (YouTube/Vimeo/uploaded). Displayed as a gallery on the detail page."
+    },
+    "pdf_url": {
+      "type": "string",
+      "description": "PDF attachment URL (datasheet, brochure, manual). Downloadable from detail page."
     },
     "category": {
       "type": "string",
@@ -67,9 +78,43 @@
       "type": "string",
       "description": "Price display string e.g. 'AED 50', 'Check on Amazon', 'Varies'"
     },
+    "compare_price_display": {
+      "type": "string",
+      "description": "Original/strike-through price for discount display e.g. 'AED 80'. When set alongside price_display, a discount badge is shown."
+    },
     "rating_display": {
       "type": "string",
       "description": "Optional rating display e.g. '4.5/5' (manually entered, not live-synced)"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable tags for filtering"
+    },
+    "faqs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "FAQ entries shown in an accordion on the detail page"
+    },
+    "seller_whatsapp": {
+      "type": "string",
+      "description": "WhatsApp number for product inquiries (with country code, no +). If set, WhatsApp Inquiry button is shown."
+    },
+    "seller_email": {
+      "type": "string",
+      "description": "Contact email for the seller. If set, Contact Seller button is shown."
     },
     "sort_order": {
       "type": "integer",
@@ -86,12 +131,24 @@
       "default": false,
       "description": "If true, product appears in the featured section"
     },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Searchable tags for filtering"
+    "is_best_seller": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, a Best Seller badge is shown on the product card and detail page"
+    },
+    "is_new_arrival": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, a New Arrival badge is shown on the product card and detail page"
+    },
+    "is_out_of_stock": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, an Out of Stock badge is shown and buy buttons are disabled"
+    },
+    "discount_percentage": {
+      "type": "number",
+      "description": "Discount percentage (0-100). When > 0, a discount badge is shown. Optional \u2014 can be auto-derived from compare_price_display vs price_display."
     },
     "updated_by": {
       "type": "string",

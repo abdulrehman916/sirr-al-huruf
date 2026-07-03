@@ -4,16 +4,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ShoppingBag, Star, ExternalLink, Play, X, ZoomIn,
   ChevronLeft, ChevronRight, CheckCircle, MessageSquare, Heart, Share2,
-  Link2, Sparkles, Package, Shield, Truck, Award, ChevronDown, ChevronUp
+  Link2, Sparkles, Package, Shield, Truck, Award, ChevronDown, ChevronUp,
+  FileText, GitCompare
 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import { base44 } from "../api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { ProductDetailSkeleton } from "../components/shop/ProductSkeleton";
 import RelatedProducts from "../components/shop/RelatedProducts";
+import ProductBadgesInline, { getDiscountPercent } from "../components/shop/ProductBadges";
+import FaqSection from "../components/shop/FaqSection";
+import SellerContact from "../components/shop/SellerContact";
 import {
   isInWishlist, toggleWishlist, shareProduct, copyProductLink,
-  addRecentlyViewed, extractFeatures, getRecentlyViewed as getRecentlyViewedList
+  addRecentlyViewed, extractFeatures, getRecentlyViewed as getRecentlyViewedList,
+  isInCompare, toggleCompare as toggleCompareUtil
 } from "@/lib/shopUtils";
 
 const G = {
@@ -51,18 +56,22 @@ export default function ProductDetailPage() {
   const [reviewForm, setReviewForm] = useState({ reviewer_name: "", rating: 5, title: "", comment: "" });
   const [submittingReview, setSubmittingReview] = useState(false);
   const [wished, setWished] = useState(false);
+  const [inCompare, setInCompare] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [activeVideoIdx, setActiveVideoIdx] = useState(0);
 
   useEffect(() => {
     loadProduct();
     loadAllProducts();
     setRecentlyViewed(getRecentlyViewedList());
+    setActiveVideoIdx(0);
   }, [productId]);
 
   useEffect(() => {
     if (product) {
       setWished(isInWishlist(product.id));
+      setInCompare(isInCompare(product.id));
       addRecentlyViewed(product);
     }
   }, [product]);
@@ -173,6 +182,13 @@ export default function ProductDetailPage() {
     toast({ title: added ? "Added to wishlist" : "Removed from wishlist", duration: 1800 });
   };
 
+  const handleCompare = () => {
+    if (!product) return;
+    const added = toggleCompareUtil(product.id);
+    setInCompare(added);
+    toast({ title: added ? "Added to compare" : "Removed from compare", duration: 1800 });
+  };
+
   const handleShare = () => {
     if (!product) return;
     const shared = shareProduct(product);
@@ -264,8 +280,21 @@ export default function ProductDetailPage() {
   const specs = product.specifications || {};
   const specEntries = Object.entries(specs).filter(([, v]) => v);
   const affiliateLinks = product.affiliate_links || [];
-  const embedUrl = getEmbedUrl(product.video_url);
+  // Merge legacy single video_url + video_urls array (deduped)
+  const videoUrls = (() => {
+    const list = [];
+    if (product.video_urls && Array.isArray(product.video_urls)) {
+      list.push(...product.video_urls);
+    }
+    if (product.video_url && !list.includes(product.video_url)) {
+      list.unshift(product.video_url);
+    }
+    return list.filter(Boolean);
+  })();
+  const safeVideoIdx = Math.min(activeVideoIdx, Math.max(0, videoUrls.length - 1));
+  const embedUrl = videoUrls[safeVideoIdx] ? getEmbedUrl(videoUrls[safeVideoIdx]) : null;
   const isLongDesc = product.full_description && product.full_description.length > 300;
+  const faqs = product.faqs || [];
 
   return (
     <PageLayout>
@@ -280,6 +309,17 @@ export default function ProductDetailPage() {
           Back to Shop
         </button>
         <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleCompare}
+            className="p-2 rounded-lg"
+            style={{
+              background: inCompare ? "rgba(96,165,250,0.15)" : G.bg,
+              border: inCompare ? "1px solid rgba(96,165,250,0.40)" : `1px solid ${G.faint}`,
+            }}
+            title={inCompare ? "Remove from compare" : "Add to compare"}
+          >
+            <GitCompare className="w-3.5 h-3.5" style={{ color: inCompare ? "#60A5FA" : G.dim }} />
+          </button>
           <button
             onClick={handleCopyLink}
             className="p-2 rounded-lg"
@@ -421,6 +461,8 @@ export default function ProductDetailPage() {
           <h1 className="font-inter text-xl sm:text-2xl font-bold leading-tight" style={{ color: "rgba(255,255,255,0.95)" }}>
             {product.name}
           </h1>
+          {/* Badges */}
+          <ProductBadgesInline product={product} />
           {product.short_description && (
             <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
               {product.short_description}
@@ -446,11 +488,23 @@ export default function ProductDetailPage() {
                 <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>({approvedReviews.length} {approvedReviews.length === 1 ? "review" : "reviews"})</span>
               </div>
             )}
-            {product.price_display && (
-              <span className="font-inter text-lg font-bold" style={{ color: "rgba(255,255,255,0.90)" }}>
-                {product.price_display}
-              </span>
-            )}
+            <div className="flex items-baseline gap-2">
+              {product.compare_price_display && (
+                <span className="font-inter text-sm line-through" style={{ color: "rgba(255,255,255,0.30)" }}>
+                  {product.compare_price_display}
+                </span>
+              )}
+              {product.price_display && (
+                <span className="font-inter text-lg font-bold" style={{ color: product.is_out_of_stock ? "rgba(255,255,255,0.50)" : "rgba(255,255,255,0.90)" }}>
+                  {product.price_display}
+                </span>
+              )}
+              {getDiscountPercent(product) > 0 && (
+                <span className="font-inter text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.15)", color: "#86EFAC" }}>
+                  {getDiscountPercent(product)}% Off
+                </span>
+              )}
+            </div>
           </div>
         </motion.div>
 
@@ -462,11 +516,17 @@ export default function ProductDetailPage() {
             transition={{ delay: 0.1 }}
             className="space-y-2"
           >
+            {product.is_out_of_stock && (
+              <div className="text-center py-2 rounded-xl font-inter text-xs font-bold" style={{ background: "rgba(248,113,113,0.10)", border: "1px solid rgba(248,113,113,0.30)", color: "#F87171" }}>
+                Out of Stock — check back soon
+              </div>
+            )}
             {affiliateLinks.map((link, idx) => (
               <button
                 key={idx}
-                onClick={() => handleBuy(link)}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-inter text-sm font-bold transition-all duration-200 hover:scale-[1.02]"
+                onClick={() => product.is_out_of_stock ? null : handleBuy(link)}
+                disabled={product.is_out_of_stock}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-inter text-sm font-bold transition-all duration-200 hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                 style={{
                   background: idx === 0
                     ? "linear-gradient(135deg, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0.10) 100%)"
@@ -477,7 +537,7 @@ export default function ProductDetailPage() {
                 }}
               >
                 <ExternalLink className="w-4 h-4" />
-                {link.label || `Buy on ${link.platform}`}
+                {product.is_out_of_stock ? "Unavailable" : (link.label || `Buy on ${link.platform}`)}
               </button>
             ))}
             {/* Trust badges */}
@@ -497,8 +557,11 @@ export default function ProductDetailPage() {
           </motion.div>
         )}
 
-        {/* Video */}
-        {embedUrl && (
+        {/* WhatsApp Inquiry + Contact Seller */}
+        <SellerContact product={product} />
+
+        {/* Videos Gallery (multiple) */}
+        {videoUrls.length > 0 && embedUrl && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -507,11 +570,12 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-2">
               <Play className="w-4 h-4" style={{ color: G.text }} />
               <h2 className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
-                Product Video
+                {videoUrls.length > 1 ? `Product Videos (${videoUrls.length})` : "Product Video"}
               </h2>
             </div>
             <div className="relative aspect-video rounded-xl overflow-hidden bg-black" style={{ border: `1px solid ${G.border}`, boxShadow: "0 8px 32px rgba(0,0,0,0.40)" }}>
               <iframe
+                key={activeVideoIdx}
                 src={embedUrl}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -519,6 +583,60 @@ export default function ProductDetailPage() {
                 frameBorder="0"
               />
             </div>
+            {videoUrls.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {videoUrls.map((vUrl, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveVideoIdx(idx)}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
+                    style={{
+                      background: idx === activeVideoIdx ? "rgba(212,175,55,0.14)" : "rgba(8,16,38,0.60)",
+                      border: `1px solid ${idx === activeVideoIdx ? G.borderHi : G.faint}`,
+                    }}
+                  >
+                    <Play className="w-2.5 h-2.5" style={{ color: idx === activeVideoIdx ? G.text : G.dim }} />
+                    <span className="font-inter text-[10px] font-semibold" style={{ color: idx === activeVideoIdx ? G.text : "rgba(255,255,255,0.50)" }}>
+                      Video {idx + 1}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* PDF Attachment */}
+        {product.pdf_url && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-2"
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4" style={{ color: G.text }} />
+              <h2 className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
+                Document
+              </h2>
+            </div>
+            <a
+              href={product.pdf_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 rounded-xl transition-all hover:scale-[1.01]"
+              style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${G.border}`, cursor: "pointer" }}
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(248,113,113,0.10)", border: "1px solid rgba(248,113,113,0.30)" }}>
+                <FileText className="w-5 h-5" style={{ color: "#F87171" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-inter text-xs font-bold" style={{ color: G.text }}>Download PDF</p>
+                <p className="font-inter text-[10px] truncate" style={{ color: "rgba(255,255,255,0.40)" }}>
+                  Datasheet / brochure / manual
+                </p>
+              </div>
+              <ExternalLink className="w-4 h-4 flex-shrink-0" style={{ color: G.dim }} />
+            </a>
           </motion.div>
         )}
 
@@ -623,6 +741,9 @@ export default function ProductDetailPage() {
             </div>
           </motion.div>
         )}
+
+        {/* FAQ Section */}
+        <FaqSection faqs={faqs} />
 
         {/* Reviews Section */}
         <motion.div
