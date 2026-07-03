@@ -16,11 +16,16 @@
     },
     "feature_id": {
       "type": "string",
-      "description": "Feature ID e.g. abjad_kabir, method_1, section_a"
+      "description": "Feature ID e.g. abjad_kabir, method_1, section_a. Use 'FULL_PAGE' for page-level config on non-multi-feature pages."
     },
     "feature_name": {
       "type": "string",
       "description": "Display name shown on the locked screen"
+    },
+    "requires_permission": {
+      "type": "boolean",
+      "default": true,
+      "description": "Is this feature Premium (locked) or Public (free)? true=Premium, false=Public. Each child feature has its own independent setting."
     },
     "price": {
       "type": "string",

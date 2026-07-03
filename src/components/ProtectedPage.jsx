@@ -7,6 +7,8 @@ import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
 import { checkLocalPermission, getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { setAdminFlag } from "@/lib/featurePermission";
+import { hasSubFeatures } from "@/lib/featureRegistry";
+import { preloadPageFeatureConfigs } from "@/lib/featureConfigCache";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -51,7 +53,16 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
-    // 4. DB visibility config (cached 2 min)
+    // 4. Multi-feature pages are containers — always accessible.
+    //    Individual child features handle their own locking via checkFeatureAccess.
+    //    Preload feature configs so checkFeatureAccess has sync data on first render.
+    if (hasSubFeatures(routePath)) {
+      await preloadPageFeatureConfigs(routePath);
+      setAccessStatus("granted");
+      return;
+    }
+
+    // 5. DB visibility config (cached 2 min)
     const visKey = visibilityKey(routePath);
     let isPublicByDb = getCached(visKey);
     if (isPublicByDb === undefined || isPublicByDb === null) {
