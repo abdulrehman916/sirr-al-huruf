@@ -25,6 +25,8 @@ const G = {
 export default function EditCodeModal({ code, onClose, onUpdated }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [savingFeature, setSavingFeature] = useState(null);
+  const [localCode, setLocalCode] = useState(code);
   const [selectedPages, setSelectedPages] = useState([]);
   const [pageDurations, setPageDurations] = useState({});
   const [pageSubFeatures, setPageSubFeatures] = useState({});
@@ -38,6 +40,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
   // Initialize from existing code data
   useEffect(() => {
     if (!code) return;
+    setLocalCode(code);
     setSelectedPages(code.page_paths || []);
     setPageDurations(code.page_durations || {});
     setPageSubFeatures(code.sub_features || {});
@@ -77,6 +80,47 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
     setFeatureDurations(prev => ({ ...prev, [`${path}:${featureId}`]: plan }));
   };
 
+  // Re-fetch code from backend — updates "Currently Unlocked" without closing modal
+  const refreshCode = async () => {
+    try {
+      const updated = await base44.entities.AccessCode.get(code.id);
+      setLocalCode(updated);
+      setSelectedPages(updated.page_paths || []);
+      setPageDurations(updated.page_durations || {});
+      setPageSubFeatures(updated.sub_features || {});
+      setFeatureDurations(updated.feature_durations || {});
+    } catch {}
+  };
+
+  // Save a SINGLE feature's duration — does NOT close the modal
+  const handleSaveFeature = async (path, featId, plan) => {
+    setSavingFeature({ path, featId });
+    try {
+      const newFeatureDurations = { ...featureDurations, [`${path}:${featId}`]: plan };
+      const currentSubFeats = pageSubFeatures[path] || [];
+      const newSubFeats = currentSubFeats.includes(featId) ? currentSubFeats : [...currentSubFeats, featId];
+      const newPageSubFeatures = { ...pageSubFeatures, [path]: newSubFeats };
+      setFeatureDurations(newFeatureDurations);
+      setPageSubFeatures(newPageSubFeatures);
+      await base44.entities.AccessCode.update(code.id, {
+        feature_durations: newFeatureDurations,
+        sub_features: newPageSubFeatures,
+      });
+      toast({ title: `✓ ${featId} saved` });
+      refreshCode();
+    } catch (e) {
+      toast({ title: "Error saving feature", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingFeature(null);
+    }
+  };
+
+  // Close modal + refresh parent list
+  const handleClose = () => {
+    if (onUpdated) onUpdated();
+    else onClose();
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -98,7 +142,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
       });
 
       toast({ title: `✓ Code "${code.code}" updated` });
-      onUpdated();
+      refreshCode();
     } catch (e) {
       toast({ title: "Error updating code", description: e.message, variant: "destructive" });
     } finally {
@@ -106,7 +150,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
     }
   };
 
-  const existingPageNames = code.page_names || code.page_paths || [];
+  const existingPageNames = localCode?.page_names || localCode?.page_paths || code.page_names || code.page_paths || [];
 
   return (
     <AnimatePresence>
@@ -116,7 +160,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4"
         style={{ background: "rgba(0,0,0,0.70)" }}
-        onClick={onClose}
+        onClick={handleClose}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
@@ -135,7 +179,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
                 <p className="text-[10px] text-white/40">{code.customer_name} · Add or modify features</p>
               </div>
             </div>
-            <button onClick={onClose} className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/10"
+            <button onClick={handleClose} className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/10"
               style={{ color: "rgba(255,255,255,0.35)" }}>
               <X className="w-4 h-4" />
             </button>
@@ -176,6 +220,8 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
                     onSubFeaturesChange={updatePageSubFeatures}
                     featureDurations={featureDurations}
                     onFeatureDurationChange={updateFeatureDuration}
+                    onSaveFeature={handleSaveFeature}
+                    savingFeature={savingFeature}
                   />
                 );
               })}
@@ -184,7 +230,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose}
+            <button onClick={handleClose}
               className="flex-1 py-3 rounded-xl font-inter font-semibold text-sm"
               style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
               Cancel
