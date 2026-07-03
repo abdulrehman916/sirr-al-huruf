@@ -37,9 +37,32 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, message: "This code has been disabled." });
     }
 
+    // Expired code check — never unlock any page
+    if (accessCode.expiry_date && new Date(accessCode.expiry_date) < new Date()) {
+      const nowISOExp = new Date().toISOString();
+      await base44.asServiceRole.entities.AccessCode.update(accessCode.id, {
+        audit_log: [...(accessCode.audit_log || []), {
+          action: "REJECTED_EXPIRED",
+          timestamp: nowISOExp,
+          admin_id: "system",
+          details: `Attempt by User/Device: ${session_id.slice(0, 16)} — Result: Rejected — Code Expired`,
+        }],
+      });
+      return Response.json({ success: false, message: "This code has expired." });
+    }
+
     // Device binding: once redeemed, only the original device/session can use this code
-    if (accessCode.used_by_user_id && accessCode.used_by_user_id !== session_id) {
-      return Response.json({ success: false, message: "This code is already bound to another device." });
+    if (accessCode.device_id && accessCode.device_id !== session_id) {
+      const nowISORej = new Date().toISOString();
+      await base44.asServiceRole.entities.AccessCode.update(accessCode.id, {
+        audit_log: [...(accessCode.audit_log || []), {
+          action: "REJECTED_ALREADY_REDEEMED",
+          timestamp: nowISORej,
+          admin_id: "system",
+          details: `Attempt by User ID: ${session_id.slice(0, 16)}, Device ID: ${session_id.slice(0, 16)} — Result: Rejected - Already Redeemed`,
+        }],
+      });
+      return Response.json({ success: false, message: "This Access Code has already been redeemed and cannot be used again." });
     }
 
     const maxUses = accessCode.max_uses || 1;
@@ -121,6 +144,10 @@ Deno.serve(async (req) => {
 
     // Check if this session already used this code (re-download)
     if (accessCode.used_by_user_id === session_id) {
+      // Even for the original device, reject if the code-level expiry has passed
+      if (accessCode.expiry_date && new Date(accessCode.expiry_date) < new Date()) {
+        return Response.json({ success: false, message: "This code has expired." });
+      }
       const usedAt = accessCode.used_at ? new Date(accessCode.used_at) : new Date();
       const permissions = buildPermissions(usedAt, accessCode.used_at || new Date().toISOString());
       return Response.json({
@@ -133,7 +160,16 @@ Deno.serve(async (req) => {
     }
 
     if (useCount >= maxUses) {
-      return Response.json({ success: false, message: "This code has already been used." });
+      const nowISORej2 = new Date().toISOString();
+      await base44.asServiceRole.entities.AccessCode.update(accessCode.id, {
+        audit_log: [...(accessCode.audit_log || []), {
+          action: "REJECTED_ALREADY_REDEEMED",
+          timestamp: nowISORej2,
+          admin_id: "system",
+          details: `Attempt by User ID: ${session_id.slice(0, 16)}, Device ID: ${session_id.slice(0, 16)} — Result: Rejected - Already Redeemed`,
+        }],
+      });
+      return Response.json({ success: false, message: "This Access Code has already been redeemed and cannot be used again." });
     }
 
     const now = new Date();
