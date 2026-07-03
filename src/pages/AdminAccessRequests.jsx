@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { CheckCircle, XCircle, ShieldOff, RefreshCw, Clock, User, Mail, FileText, Calendar } from "lucide-react";
+import { CheckCircle, XCircle, RefreshCw, Clock, User, Mail, FileText, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 const G = {
@@ -22,14 +23,6 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-const APPROVE_DURATIONS = [
-  { key: "1_DAY",    label: "1 Day",    days: 1 },
-  { key: "1_MONTH",  label: "1 Month",  days: 30 },
-  { key: "6_MONTHS", label: "6 Months", days: 180 },
-  { key: "1_YEAR",   label: "1 Year",   days: 365 },
-  { key: "LIFETIME", label: "Lifetime", days: null },
-];
-
 export default function AdminAccessRequests() {
   const { toast } = useToast();
   const [requests, setRequests] = useState([]);
@@ -37,8 +30,6 @@ export default function AdminAccessRequests() {
   const [filter, setFilter] = useState("PENDING");
   const [processing, setProcessing] = useState(null);
   const [user, setUser] = useState(null);
-  const [approvingReq, setApprovingReq] = useState(null);
-  const [selectedDuration, setSelectedDuration] = useState("1_MONTH");
   const [rejectingReq, setRejectingReq] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -64,53 +55,23 @@ export default function AdminAccessRequests() {
     filter === "ALL" ? true : r.status === filter
   );
 
-  // Step 1: open duration picker
-  const handleApprove = (req) => {
-    setSelectedDuration("1_MONTH");
-    setApprovingReq(req);
-  };
-
-  // Step 2: execute approval with chosen duration
-  const confirmApprove = async () => {
-    const req = approvingReq;
-    setApprovingReq(null);
+  // Mark request as APPROVED — admin manually edits Reading Code to add the feature
+  const handleApprove = async (req) => {
     setProcessing(req.id);
     try {
-      const opt = APPROVE_DURATIONS.find(d => d.key === selectedDuration) || APPROVE_DURATIONS[1];
-      const now = new Date();
-      // null expiry_date = Lifetime (never expires, per BUG-05 fix in checkPageAccess.js)
-      const expiryDate = opt.days === null
-        ? null
-        : new Date(now.getTime() + opt.days * 86400000).toISOString();
-      const permCode = req.page_path.replace(/^\//, "").replace(/[\/\-:]/g, "_").toUpperCase() + "_ACCESS";
-
-      await base44.functions.invoke("grantPagePermission", {
-        user_id: req.user_id,
-        page_path: req.page_path,
-        page_name: req.page_name,
-        permission_code: permCode,
-        start_date: now.toISOString(),
-        expiry_date: expiryDate,
-      });
-
-      // Mark request as APPROVED
       await base44.entities.AccessRequest.update(req.id, {
         status: "APPROVED",
         approved_by: user?.id || "admin",
         approved_at: new Date().toISOString(),
       });
-
-      toast({ title: "✅ Access Granted", description: `${req.name} can now access ${req.page_name}` });
+      toast({ title: "✅ Request Approved", description: "Edit the user's Reading Code to add this feature." });
       loadRequests();
     } catch (e) {
-      toast({ title: "Error", description: e.message || "Failed to grant access", variant: "destructive" });
+      toast({ title: "Error", description: e.message || "Failed to approve", variant: "destructive" });
     } finally {
       setProcessing(null);
     }
   };
-
-  // Legacy inline handler still used for keyboard dismiss
-  const cancelApprove = () => setApprovingReq(null);
 
   const handleReject = (req) => {
     setRejectReason("");
@@ -139,39 +100,6 @@ export default function AdminAccessRequests() {
 
   const cancelReject = () => setRejectingReq(null);
 
-  const handleRevoke = async (req) => {
-    setProcessing(req.id);
-    try {
-      // Find the active permission
-      const perms = await base44.entities.PagePermission.filter({
-        user_id: req.user_id,
-        page_path: req.page_path,
-        is_active: true,
-        is_revoked: false,
-      }, null, 10);
-
-      if (perms.length > 0) {
-        await base44.functions.invoke("revokePagePermission", {
-          permission_id: perms[0].permission_id || perms[0].id,
-          reason: "Revoked by admin from access requests panel",
-        });
-      }
-
-      await base44.entities.AccessRequest.update(req.id, {
-        status: "REJECTED",
-        approved_by: user?.id || "admin",
-        approved_at: new Date().toISOString(),
-      });
-
-      toast({ title: "Access Revoked", description: `${req.name}'s access has been revoked.` });
-      loadRequests();
-    } catch (e) {
-      toast({ title: "Error", description: e.message || "Failed to revoke", variant: "destructive" });
-    } finally {
-      setProcessing(null);
-    }
-  };
-
   const TABS = ["PENDING", "APPROVED", "REJECTED", "ALL"];
   const COUNTS = {
     PENDING: requests.filter(r => r.status === "PENDING").length,
@@ -181,17 +109,17 @@ export default function AdminAccessRequests() {
   };
 
   return (
-    <AdminLayout title="Payment Requests" subtitle="Approve, reject, or revoke user access requests">
+    <AdminLayout title="Access Requests" subtitle="Review and process user access requests">
       <div className="max-w-4xl mx-auto space-y-4">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-amiri text-2xl font-bold" style={{ color: G.text }}>
-              WhatsApp Access Requests
+              Access Requests
             </h1>
             <p className="font-inter text-xs text-white/50 mt-0.5">
-              Approve, reject, or revoke user access requests
+              Review requests, then edit the user's Reading Code to add features
             </p>
           </div>
           <button
@@ -304,7 +232,7 @@ export default function AdminAccessRequests() {
                             }}
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
-                            {isProcessing ? "Granting…" : "Approve"}
+                            {isProcessing ? "Approving…" : "Approve"}
                           </button>
                           <button
                             onClick={() => handleReject(req)}
@@ -322,21 +250,18 @@ export default function AdminAccessRequests() {
                           </button>
                         </>
                       )}
-                      {req.status === "APPROVED" && req.user_id && (
-                        <button
-                          onClick={() => handleRevoke(req)}
-                          disabled={isProcessing}
+                      {req.status === "APPROVED" && (
+                        <Link
+                          to="/admin/access-codes"
                           className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-inter text-xs font-bold transition-all"
                           style={{
-                            background: "rgba(239,68,68,0.10)",
-                            border: "1px solid rgba(239,68,68,0.40)",
-                            color: "#ef4444",
-                            opacity: isProcessing ? 0.6 : 1,
+                            background: G.bgHi,
+                            border: `1px solid ${G.border}`,
+                            color: G.text,
                           }}
                         >
-                          <ShieldOff className="w-3.5 h-3.5" />
-                          {isProcessing ? "..." : "Revoke"}
-                        </button>
+                          Edit Reading Code →
+                        </Link>
                       )}
                     </div>
                   </div>
@@ -346,46 +271,6 @@ export default function AdminAccessRequests() {
           </div>
         )}
       </div>
-
-      {/* Duration picker modal */}
-      {approvingReq && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }}
-          onClick={cancelApprove}>
-          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4"
-            style={{ background: "linear-gradient(145deg,#0c1630,#060c1c)", border: "1px solid rgba(212,175,55,0.50)" }}
-            onClick={e => e.stopPropagation()}>
-            <div>
-              <h3 className="font-inter font-bold text-white text-sm">Select Access Duration</h3>
-              <p className="text-xs text-white/40 mt-0.5">{approvingReq.name} · {approvingReq.page_name}</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {APPROVE_DURATIONS.map(opt => (
-                <button key={opt.key} onClick={() => setSelectedDuration(opt.key)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                  style={{
-                    background: selectedDuration === opt.key ? "rgba(212,175,55,0.20)" : "rgba(255,255,255,0.05)",
-                    border: `1px solid ${selectedDuration === opt.key ? "rgba(212,175,55,0.60)" : "rgba(255,255,255,0.10)"}`,
-                    color: selectedDuration === opt.key ? "#F5D060" : "rgba(255,255,255,0.50)",
-                  }}>
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-3 pt-1">
-              <button onClick={cancelApprove}
-                className="flex-1 py-2.5 rounded-xl font-inter font-semibold text-sm"
-                style={{ background: "transparent", border: "1px solid rgba(212,175,55,0.35)", color: "#F5D060" }}>
-                Cancel
-              </button>
-              <button onClick={confirmApprove}
-                className="flex-1 py-2.5 rounded-xl font-inter font-bold text-sm"
-                style={{ background: "linear-gradient(135deg,#f6d860,#c98a14)", color: "#0d1b2a" }}>
-                Grant Access
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Rejection reason modal */}
       {rejectingReq && (

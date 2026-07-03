@@ -11,7 +11,7 @@
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, MessageCircle, KeyRound, CheckCircle, AlertCircle, Loader2, ChevronLeft, Check, Copy, Smartphone } from "lucide-react";
+import { Lock, MessageCircle, KeyRound, CheckCircle, AlertCircle, Loader2, ChevronLeft, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
@@ -36,11 +36,8 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
   const [code, setCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [codeResult, setCodeResult] = useState(null);
-  const [whatsappSent, setWhatsappSent] = useState(false);
-  const [copiedUpi, setCopiedUpi] = useState(false);
   const [creatingRequest, setCreatingRequest] = useState(false);
   const [requestCreated, setRequestCreated] = useState(false);
-  const [requestId, setRequestId] = useState(null);
 
   // Fetch both FeatureConfig (description) and SubscriptionPlanConfig (plans) in parallel
   useEffect(() => {
@@ -94,21 +91,15 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
     }
   };
 
-  const handleCopyUpi = () => {
-    navigator.clipboard?.writeText(ADMIN_CONFIG.UPI_ID).then(() => {
-      setCopiedUpi(true);
-      setTimeout(() => setCopiedUpi(false), 2000);
-    }).catch(() => {});
-  };
-
-  const handleCreateRequest = async () => {
+  const handleRequestAccess = async () => {
     setCreatingRequest(true);
+    setCodeResult(null);
     try {
       const planLine = selectedPlan ? formatPlan(selectedPlan) : "Contact for pricing";
       const priceLine = selectedPlan ? `${selectedPlan.currency} ${selectedPlan.price}` : "";
       const messageText = `Plan: ${planLine}${priceLine ? ` | Price: ${priceLine}` : ""}`;
 
-      const res = await base44.functions.invoke("submitAccessRequest", {
+      await base44.functions.invoke("submitAccessRequest", {
         name: "",
         phone: "",
         email: "",
@@ -117,44 +108,12 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
         message: messageText,
       });
 
-      const reqId = res.data?.request_id || null;
-      setRequestId(reqId);
       setRequestCreated(true);
-
-      // Open WhatsApp with pre-filled screenshot message
-      const waMessage =
-        `السلام عليكم\n\n` +
-        `*Payment Confirmation — Sirr al-Huruf*\n\n` +
-        `🔒 Feature: ${displayName}\n` +
-        `📋 Plan: ${planLine}\n` +
-        (reqId ? `📝 Request ID: ${reqId}\n` : "") +
-        `\nI have completed the payment. Please find the screenshot below.`;
-      const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
-      window.open(url, "_blank");
     } catch (e) {
-      // Fallback: open WhatsApp without creating request
-      const waMessage = `Payment for ${displayName}`;
-      const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
-      window.open(url, "_blank");
+      setCodeResult({ success: false, message: "Failed to send request. Please try again." });
     } finally {
       setCreatingRequest(false);
     }
-  };
-
-  const handleWhatsApp = () => {
-    const planLine = selectedPlan
-      ? formatPlan(selectedPlan)
-      : (plans.length > 0 ? plans.map(p => `• ${formatPlan(p)}`).join("\n") : "Contact for pricing");
-    const message =
-      `السلام عليكم\n\n` +
-      `*طلب وصول — سر الحروف*\n\n` +
-      `🔒 الميزة: ${displayName}\n` +
-      (displayDescription ? `\n${displayDescription}\n` : "") +
-      `\nالخطة المطلوبة:\n${planLine}\n` +
-      `\nأرجو إرسال رمز القراءة لهذه الخطة.`;
-    const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
-    setWhatsappSent(true);
   };
 
   return (
@@ -231,81 +190,46 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
           )}
         </div>
 
-        {/* Payment Instructions + Redeem — shown after plan selection (or immediately if no plans) */}
+        {/* Request Access + Redeem — shown after plan selection (or immediately if no plans) */}
         {(selectedPlan || plans.length === 0) && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             style={{ overflow: "hidden" }}
           >
-            {/* Payment Instructions Card */}
-            <div className="rounded-xl border p-4 mb-3 text-left" style={{ background: G.bg, borderColor: G.border }}>
-              <p className="font-inter text-[10px] text-white/40 uppercase tracking-widest mb-3 text-center">
-                Payment Instructions
-              </p>
-
-              {/* UPI ID Row */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
-                  <Smartphone className="w-4 h-4" style={{ color: G.text }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-inter text-[9px] text-white/35 uppercase tracking-wider">UPI ID</p>
-                  <p className="font-inter text-sm text-white font-medium truncate">{ADMIN_CONFIG.UPI_DISPLAY}</p>
-                </div>
-                <button onClick={handleCopyUpi}
-                  className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 flex-shrink-0"
-                  style={{
-                    background: copiedUpi ? "rgba(34,197,94,0.15)" : G.bgHi,
-                    border: `1px solid ${copiedUpi ? "rgba(34,197,94,0.40)" : G.border}`,
-                    color: copiedUpi ? "#22c55e" : G.text,
-                  }}>
-                  {copiedUpi ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {copiedUpi ? "Copied" : "Copy"}
-                </button>
-              </div>
-
-              {/* Screenshot Message */}
-              <div className="rounded-lg p-2.5 mb-3" style={{ background: "rgba(37,211,102,0.06)", border: "1px solid rgba(37,211,102,0.20)" }}>
-                <p className="font-inter text-[11px] text-white/60 leading-relaxed text-center">
-                  After completing payment, send the payment screenshot to WhatsApp.
-                </p>
-              </div>
-
-              {/* I've Paid Button */}
+            {!requestCreated ? (
               <button
-                onClick={handleCreateRequest}
+                onClick={handleRequestAccess}
                 disabled={creatingRequest}
-                className="w-full py-3 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3 disabled:opacity-50"
                 style={{
-                  background: requestCreated ? "rgba(37,211,102,0.12)" : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-                  color: requestCreated ? "#25D366" : "#ffffff",
-                  border: requestCreated ? "1px solid rgba(37,211,102,0.40)" : "none",
-                  boxShadow: requestCreated ? "none" : "0 0 24px rgba(37,211,102,0.30)",
+                  background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)",
+                  color: "#0d1b2a",
+                  boxShadow: "0 0 24px rgba(212,175,55,0.30)",
                 }}
               >
-                {creatingRequest ? <Loader2 className="w-4 h-4 animate-spin" /> : requestCreated ? <CheckCircle className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
-                {creatingRequest ? "Creating…" : requestCreated ? "Request Sent — Send Screenshot" : "I've Paid — Send Screenshot"}
+                {creatingRequest ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
+                {creatingRequest ? "Sending…" : "Request Access"}
               </button>
-
-              {requestCreated && requestId && (
-                <p className="font-inter text-[10px] text-white/30 text-center mt-2">
-                  Request ID: <span className="font-mono text-white/50">{requestId}</span>
+            ) : (
+              <div className="rounded-xl border p-4 mb-3" style={{ background: "rgba(34,197,94,0.06)", borderColor: "rgba(34,197,94,0.30)" }}>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                  <span className="font-inter font-bold text-sm text-green-400">Request Sent!</span>
+                </div>
+                <p className="font-inter text-xs text-white/50 text-center leading-relaxed">
+                  The admin will contact you on WhatsApp ({ADMIN_CONFIG.WHATSAPP_DISPLAY}) shortly with payment details and next steps.
                 </p>
-              )}
+              </div>
+            )}
 
-              <p className="font-inter text-xs text-white/25 mt-2 text-center">{ADMIN_CONFIG.WHATSAPP_DISPLAY}</p>
-            </div>
-
-            {/* Access Code Entry Toggle */}
             <button
               onClick={() => setShowCodeEntry(v => !v)}
               className="w-full py-3 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2"
               style={{ background: "rgba(212,175,55,0.07)", border: `1px solid ${G.border}`, color: G.text }}
             >
               <KeyRound className="w-4 h-4" />
-              {showCodeEntry ? "Hide Access Code Entry" : "I Have an Access Code"}
+              {showCodeEntry ? "Hide Code Entry" : "I Have a Reading Code"}
             </button>
           </motion.div>
         )}

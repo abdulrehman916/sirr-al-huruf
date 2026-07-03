@@ -10,9 +10,7 @@
 export const ADMIN_CONFIG = {
   WHATSAPP_NUMBER: "971522308926",
   WHATSAPP_DISPLAY: "+971 52 230 8926",
-  // UPI ID for receiving manual payments (update with your actual UPI ID)
-  UPI_ID: "sirralhuruf@okaxis",
-  UPI_DISPLAY: "sirralhuruf@okaxis",
+
   // Owner email — INTERNAL ONLY. Never shown to customers.
   // Used for: Admin authentication, system notifications
   // Customer-facing emails use: lib/emailBranding.js (SUPPORT_EMAIL, NOREPLY_EMAIL)
