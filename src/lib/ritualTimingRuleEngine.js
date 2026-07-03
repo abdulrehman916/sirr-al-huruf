@@ -665,9 +665,228 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // STEP 22: BUILD THE 23-POINT EXPERT CONSULTATION
+  // Each point: { n, title, body, citation, consequence }
+  // ═══════════════════════════════════════════════════════════════
+  const consultation = [];
+
+  consultation.push({
+    n: 1, title: `Whether Today Is Suitable`,
+    body: canPerformToday === `Yes`
+      ? `Yes — today is suitable. ${canPerformTodayReason} The heavens are aligned for this work, and you may proceed with confidence during the optimal hours listed below.`
+      : canPerformToday === `Limited`
+        ? `Today is only partially suitable. ${canPerformTodayReason} You may proceed, but the ritual will be weakened. If the matter is urgent, continue; otherwise, wait for the next fully aligned day.`
+        : `No — today is not suitable. ${canPerformTodayReason} Performing this ritual today would be working against the celestial current, which the manuscripts warn against.`,
+    citation: pdfRule?.source || `Al-Shurut p.12-13`,
+    consequence: canPerformToday === `Yes`
+      ? `No risk — proceed.`
+      : `Proceeding on the wrong day weakens the ritual and may cause the spirits to refuse the request, as the planetary ruler of the day does not govern this type of work.`,
+  });
+
+  const whyTodayParts = [];
+  if (dayMatch) whyTodayParts.push(`Today's weekday (${MIZAN_DAY_NAMES[currentDayKey]}) matches the prescription for ${pdfRule?.pdfName || `this work`}.`);
+  else if (bestDay) whyTodayParts.push(`Today is ${MIZAN_DAY_NAMES[currentDayKey]} but the prescribed day is ${MIZAN_DAY_NAMES[bestDay]}${altDay ? ` or ` + MIZAN_DAY_NAMES[altDay] : ``}.`);
+  if (bestHourPlanet) {
+    if (currentHourInfo.planet === bestHourPlanet.toLowerCase()) whyTodayParts.push(`The current planetary hour is ruled by ${currentHourInfo.planet}, which is the prescribed hour.`);
+    else whyTodayParts.push(`The current hour is ruled by ${currentHourInfo.planet}, not the prescribed ${bestHourPlanet}.`);
+  }
+  if (pdfRule?.isNightRequired) whyTodayParts.push(isNightTime ? `It is nighttime, which is required for this work.` : `It is daytime, but this work requires night.`);
+  if (khayrSharr === `khayr` && !moonPhase.isGoodForKhayr) whyTodayParts.push(`The Moon is waning, which weakens Khayr works.`);
+  if (khayrSharr === `sharr` && !moonPhase.isGoodForSharr) whyTodayParts.push(`The Moon is waxing, which weakens Sharr works.`);
+  consultation.push({
+    n: 2, title: `Why Today Is Suitable or Unsuitable`,
+    body: whyTodayParts.join(` `) || `No specific rule restricts or promotes today for this work.`,
+    citation: `Al-Shurut pp.12-13, 39-40`,
+    consequence: `Understanding the cause of unsuitability tells you exactly which condition to wait for — day, hour, or moon phase.`,
+  });
+
+  consultation.push({
+    n: 3, title: `Best Start Time`,
+    body: recommendedStart
+      ? `Begin at ${recommendedStart}. ${recommendedStartReason}`
+      : `No specific optimal start time was identified — consult the available hours below.`,
+    citation: pdfRule?.source || `Al-Shurut p.12`,
+    consequence: `Starting at the wrong hour means the planetary ruler does not govern the request, and the invocation may return unanswered.`,
+  });
+
+  consultation.push({
+    n: 4, title: `Best End Time`,
+    body: recommendedEnd
+      ? `Complete before ${recommendedEnd}, when the planetary hour changes. ${pdfRule ? `The ${bestHourPlanet} hour is the window in which the ${pdfRule.pdfName} must be performed.` : `Do not let the hour pass — each planetary hour governs a different spiritual domain.`}`
+      : `No specific end time identified.`,
+    citation: `Al-Shurut p.12 + Havâss p.50-56`,
+    consequence: `Continuing past the hour means entering a new planetary rulership, which may oppose the work and nullify what was built.`,
+  });
+
+  consultation.push({
+    n: 5, title: `Strongest Planetary Hour`,
+    body: bestHourPlanet
+      ? `The ${bestHourPlanet} hour is the strongest hour for this work. ${bestHourReason} ${bestWindowsToday.length > 0 ? `Today, this hour occurs at: ${bestWindowsToday.map(w => `${w.startTime}–${w.endTime}`).join(`, `)}.` : `No instances of this hour remain today.`}`
+      : `No specific strongest hour was identified from the manuscripts for this purpose.`,
+    citation: pdfRule?.source || `Havâss p.50-56`,
+    consequence: `A weak hour means the planetary spirit is not inclined to answer — the ritual becomes an empty recitation.`,
+  });
+
+  consultation.push({
+    n: 6, title: `Weak Planetary Hours to Avoid`,
+    body: avoidWindowsToday.length > 0
+      ? `Avoid the following hours today: ${avoidWindowsToday.map(w => `${w.startTime}–${w.endTime} (${w.planet} — ${w.reason})`).join(`; `)}. These hours are ruled by planets that oppose ${pdfRule?.pdfName || `this work`}, and performing the ritual during them can cause the work to rebound against the practitioner.`
+      : bestHourPlanet
+        ? `No specific enemy-planet hours were found for this work. However, avoid any hour that is not the ${bestHourPlanet} hour, as the manuscripts advise against performing spiritual works in hours not prescribed for them.`
+        : `No specific weak hours were identified.`,
+    citation: `Al-Shurut p.12 + Havâss p.50-56`,
+    consequence: `The manuscripts warn that performing a work in the hour of an enemy planet causes the ritual to reverse — harming the practitioner instead of the target.`,
+  });
+
+  consultation.push({
+    n: 7, title: `Best Moon Condition`,
+    body: khayrSharr === `khayr`
+      ? `The best moon condition is the waxing phase (first 14 lunar days), especially days 1–7, when the Moon is growing in light. Khayr (benevolent) works thrive on the increasing lunar energy. The Full Moon (days 13–16) is also powerful for works of majesty and attraction.`
+      : khayrSharr === `sharr`
+        ? `The best moon condition is the waning phase (days 15–29), especially the New Moon (محاق, days 27–2), when the Moon's light is smallest. Sharr (dark) works require the diminishing lunar energy to dissolve and banish.`
+        : `Select Khayr or Sharr in Mizan 8 to receive moon-specific guidance. Generally: waxing for attraction and growth, waning for banishment and removal.`,
+    citation: `Al-Shurut p.13 (MN_001-002)`,
+    consequence: `Wrong moon phase is like rowing against the tide — the ritual expends effort but achieves little, as the lunar current opposes the intention.`,
+  });
+
+  consultation.push({
+    n: 8, title: `Current Moon Condition vs Required`,
+    body: `The Moon is currently at Day ${moonPhase.lunarDay} (${moonPhase.phaseName}). ${khayrSharr === `khayr` ? (moonPhase.isGoodForKhayr ? `This is GOOD — the Moon is waxing, which supports Khayr works.` : `This is NOT ideal — the Moon is waning. Khayr works are weakened. Wait for the next waxing cycle.`) : khayrSharr === `sharr` ? (moonPhase.isGoodForSharr ? `This is GOOD — the Moon is waning, which supports Sharr works. ${moonPhase.isNewMoon ? `Today is near the New Moon — the most powerful time for dark works.` : ``}` : `This is NOT ideal — the Moon is waxing. Sharr works are weakened. Wait for the waning phase.`) : `Select Khayr or Sharr in Mizan 8 to receive a moon comparison.`}`,
+    citation: `Al-Shurut p.13 (MN_001-002)`,
+    consequence: `Proceeding with a mismatched moon means the lunar energy either amplifies or contradicts the work. Khayr in a waning moon withers; Sharr in a waxing moon rebounds.`,
+  });
+
+  consultation.push({
+    n: 9, title: `Best Weekday`,
+    body: bestDay
+      ? `${MIZAN_DAY_NAMES[bestDay]} is the best weekday for this work. ${bestDayReason}${altDay ? ` ${MIZAN_DAY_NAMES[altDay]} is an acceptable alternative.` : ``}`
+      : `No specific weekday restriction was found for this purpose. Consult the planetary hours for timing.`,
+    citation: pdfRule?.source || `Al-Shurut p.12`,
+    consequence: `The wrong weekday means the day's ruling planet does not govern this type of work, and the spirits of that day will not assist.`,
+  });
+
+  consultation.push({
+    n: 10, title: `Today's Weekday Analysis`,
+    body: `Today is ${MIZAN_DAY_NAMES[currentDayKey]}, ruled by ${dayRuler.planet}. ${PLANET_INFO[dayRuler.planet.toLowerCase()]?.nature_en || ``}. ${dayMatch ? `This matches the prescription for your work.` : bestDay ? `This does not match the prescribed day (${MIZAN_DAY_NAMES[bestDay]}), so the day's planetary energy does not support your ritual.` : `No specific day prescription exists for this work.`}`,
+    citation: `Havâss p.50-56 + Al-Shurut p.12`,
+    consequence: `Each weekday is governed by a specific planet. Performing a Venus work on a Mars day creates planetary conflict that the spirits recognize and refuse.`,
+  });
+
+  consultation.push({
+    n: 11, title: `Best Planetary Alignment`,
+    body: `The ideal alignment is: ${bestDay ? MIZAN_DAY_NAMES[bestDay] + ` (day)` : `any suitable day`} + ${bestHourPlanet || `correct`} hour${pdfRule?.isNightRequired ? ` + nighttime` : ``}${khayrSharr === `khayr` ? ` + waxing moon` : khayrSharr === `sharr` ? ` + waning/new moon` : ``}${dominant ? ` + ${dominant} element hour` : ``}. When all these align, the ritual has maximum power.`,
+    citation: `Al-Shurut pp.12-13, 39-40 + Havâss p.50-56`,
+    consequence: `Missing any alignment reduces the ritual's power. The more conditions met, the stronger the result; the more missed, the weaker.`,
+  });
+
+  consultation.push({
+    n: 12, title: `Current Planetary Condition`,
+    body: `Right now: ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}), Hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? `nighttime` : `daytime`}, Moon Day ${moonPhase.lunarDay} (${moonPhase.phaseName}). ${currentHourInfo.planet === (bestHourPlanet || ``).toLowerCase() ? `The current hour IS the prescribed hour — act now.` : `The current hour is ${currentHourInfo.planet}, not the prescribed ${bestHourPlanet || `—`}.`}`,
+    citation: `Live Astro Clock + Al-Shurut p.12`,
+    consequence: `The current condition is your window of opportunity. If it matches, act immediately; if not, wait for the alignment.`,
+  });
+
+  consultation.push({
+    n: 13, title: `Good Periods Today`,
+    body: bestWindowsToday.length > 0
+      ? `The following periods today are favorable: ${bestWindowsToday.map(w => `${w.startTime}–${w.endTime} (${w.planet} hour, Hour #${w.hourNumber}, ${w.period})`).join(`; `)}. These are the windows when the prescribed planet rules the hour.`
+      : `No favorable periods remain today — all prescribed hours have passed.`,
+    citation: pdfRule?.source || `Al-Shurut p.12`,
+    consequence: `These are your power windows. Missing them means waiting for the next occurrence (possibly a full week).`,
+  });
+
+  consultation.push({
+    n: 14, title: `Dangerous Periods Today`,
+    body: avoidWindowsToday.length > 0
+      ? `The following periods are dangerous: ${avoidWindowsToday.map(w => `${w.startTime}–${w.endTime} (${w.planet} — ${w.reason})`).join(`; `)}. In these hours, enemy planets rule, and the work can reverse or harm the practitioner.`
+      : `No specifically dangerous periods were identified, but avoid hours not prescribed for your work.`,
+    citation: `Al-Shurut p.12 + Havâss p.50-56`,
+    consequence: `Performing in a dangerous hour can cause the ritual to rebound — the manuscripts record cases of practitioners becoming ill or possessed after working in enemy hours.`,
+  });
+
+  consultation.push({
+    n: 15, title: `Forbidden Periods Today`,
+    body: pdfRule?.isNightRequired && !isNightTime
+      ? `The entire daytime period today is FORBIDDEN for this work. ${pdfRule.pdfName} must be performed at night only. Wait until after sunset.`
+      : `No periods are strictly forbidden today, but observe the dangerous hours listed above.`,
+    citation: `Al-Shurut p.39-40 (NGT_001-006)`,
+    consequence: `The manuscripts state that the Sun suppresses all spirits during daylight. Performing a nocturnal work during the day causes the spirits to refuse and may anger them.`,
+  });
+
+  consultation.push({
+    n: 16, title: `Day or Night Recommendation`,
+    body: dayNightSuitability.status === `optimal` ? `Perform at NIGHT. ${dayNightSuitability.reason}`
+      : dayNightSuitability.status === `forbidden` ? `You MUST wait for night. ${dayNightSuitability.reason}`
+      : dayNightSuitability.status === `good` ? `Night is strongly recommended. ${dayNightSuitability.reason}`
+      : `Daytime is acceptable but night is better. ${dayNightSuitability.reason}`,
+    citation: dayNightSuitability.citation,
+    consequence: `Night is when spirits are free to act. Daytime works risk the Sun's suppression, which weakens or nullifies the invocation.`,
+  });
+
+  consultation.push({
+    n: 17, title: `Element Compatibility`,
+    body: elementCompatibility.assessed
+      ? `${elementCompatibility.reason} ${dominant ? `Face ${elementDirection?.dir || `Qibla`} and place the talisman ${elementPlacement?.placement || `appropriately`}.` : ``}`
+      : `No element was detected in your Mizan analysis. Element compatibility cannot be assessed.`,
+    citation: elementCompatibility.citation || `Al-Shurut p.37, 42`,
+    consequence: `Wrong element alignment means the talisman's spiritual nature conflicts with the environment, reducing its effectiveness.`,
+  });
+
+  consultation.push({
+    n: 18, title: `Zodiac Compatibility`,
+    body: zodiacSuitability.assessed
+      ? `${zodiacSuitability.note} ${zodiacSuitability.bestSigns.length > 0 ? `If you know your target's natal sign, matching today strengthens the ritual.` : ``}`
+      : `Zodiac compatibility could not be assessed.`,
+    citation: `Al-Shurut p.18-19 (Omani Systems A & B)`,
+    consequence: `Zodiac mismatch is not fatal, but matching the target's sign to the correct day amplifies the ritual's reach into their life.`,
+  });
+
+  consultation.push({
+    n: 19, title: `Overall Ritual Strength`,
+    body: `The overall strength of this ritual at this moment is: ${verdict} (${score}%). ${verdictReason}`,
+    citation: `Composite of all manuscript rules`,
+    consequence: score >= 65 ? `The ritual is strong — proceed with confidence.` : score >= 45 ? `The ritual is moderate — proceed with extra focus and strict adherence to timing.` : `The ritual is weak — postpone if possible.`,
+  });
+
+  consultation.push({
+    n: 20, title: `Confidence Score`,
+    body: `Confidence: ${score}%. This score is computed from: ${scoreReasons.join(`; `)}. A score above 65% means the heavens support the work; below 45% means conditions are unfavorable.`,
+    citation: `Composite scoring from all sources`,
+    consequence: `Low confidence means multiple conditions are missed — the ritual will require more effort and may still fail.`,
+  });
+
+  consultation.push({
+    n: 21, title: `Warnings`,
+    body: warnings.length > 0
+      ? warnings.map(w => `⚠ ${w}`).join(` `)
+      : `No warnings — all checked conditions are favorable.`,
+    citation: `Al-Shurut pp.12-13, 39-40`,
+    consequence: `Each warning identifies a condition that, if ignored, reduces the ritual's power or reverses it.`,
+  });
+
+  consultation.push({
+    n: 22, title: `Conflicting Manuscript Rules`,
+    body: conflicts.length > 0
+      ? conflicts.map(c => `${c.rule1} vs ${c.rule2}. Resolution: ${c.resolution}`).join(` `)
+      : `No conflicts between manuscript rules were detected. All sources agree on the recommendation.`,
+    citation: `Multi-source rule merge`,
+    consequence: `When manuscripts conflict, the higher-priority source takes precedence. Ignoring the resolution means following a weaker rule.`,
+  });
+
+  consultation.push({
+    n: 23, title: `Next Best Available Time`,
+    body: nextOpportunity
+      ? `If today's opportunity has passed, the next best time is: ${nextOpportunity.dayName}${nextOpportunity.isToday ? ` (today)` : ` (${nextOpportunity.daysAhead} day${nextOpportunity.daysAhead > 1 ? `s` : ``} from now)`}, at ${nextOpportunity.startTime}–${nextOpportunity.endTime} (${nextOpportunity.planet} hour, Hour #${nextOpportunity.hour}).`
+      : `No future opportunity was found within the next 7 days. Consult the manuscripts for alternative days.`,
+    citation: pdfRule?.source || `Al-Shurut p.12`,
+    consequence: `Waiting for the next aligned time ensures the ritual has full power. Rushing on an unaligned day wastes effort.`,
+  });
+
+  // ═══════════════════════════════════════════════════════════════
   // BUILD RESULT — Enriched Expert Analysis
   // ═══════════════════════════════════════════════════════════════
   return {
+    consultation,
     // ── Verdict & Confidence ──
     verdict,
     verdictColor,
