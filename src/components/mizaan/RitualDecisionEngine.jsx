@@ -1,16 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
-// RITUAL DECISION ENGINE — Expert Consultation Panel (Read-only)
+// RITUAL DECISION ENGINE — Expert Decision Report (Read-only)
 // Attached below all four Mizan methods. NEVER modifies Mizan logic.
-// Renders a flowing expert spiritual consultation, not a data table.
+// Renders the 10-section expert spiritual decision report.
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock,
-  Moon, Compass, Star, Sun, Sunset, Zap, Shield, CheckCircle2,
-  XCircle, AlertCircle, FileText, Scroll,
+  ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock, Calendar,
+  Star, Sun, Sunset, Globe, CalendarClock, FileText, Scroll, Shield, Zap,
 } from "lucide-react";
 import { analyzeRitualTiming } from "../../lib/ritualTimingRuleEngine";
+import ReportWindowsList from "./ReportWindowsList";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -21,12 +21,17 @@ const G = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
-// Map consultation point number → icon
-const POINT_ICONS = {
-  1: CheckCircle2, 2: AlertCircle, 3: Clock, 4: Clock, 5: Star, 6: XCircle,
-  7: Moon, 8: Moon, 9: Sun, 10: Sun, 11: Sparkles, 12: Zap, 13: CheckCircle2,
-  14: AlertTriangle, 15: AlertTriangle, 16: Sunset, 17: Compass, 18: Star,
-  19: Sparkles, 20: Shield, 21: AlertTriangle, 22: Scroll, 23: Sunset,
+const SECTION_ICONS = {
+  calendar: Calendar,
+  clock: Clock,
+  windows: Clock,
+  star: Star,
+  alert: AlertTriangle,
+  "calendar-clock": CalendarClock,
+  globe: Globe,
+  book: BookOpen,
+  "alert-triangle": AlertTriangle,
+  sparkles: Sparkles,
 };
 
 export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod }) {
@@ -37,7 +42,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
     return analyzeRitualTiming({ result, selections, customPurpose, activeMethod });
   }, [result, selections, customPurpose, activeMethod]);
 
-  if (!analysis || !analysis.consultation) return null;
+  if (!analysis || !analysis.report) return null;
 
   const canPerformColor = analysis.canPerformToday === "Yes" ? "#4ADE80" : analysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";
 
@@ -65,10 +70,10 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
             </div>
             <div className="text-left">
               <h3 className="font-inter text-base font-bold tracking-wide" style={{ color: "#fff" }}>
-                Intelligent Ritual Decision Engine
+                Ritual Decision Engine
               </h3>
               <p className="font-amiri text-sm" style={{ color: G.dim }}>
-                محرك القرار الروحاني الذكي
+                محرك القرار الروحاني
               </p>
             </div>
           </div>
@@ -76,7 +81,9 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
               background: `${analysis.verdictColor}15`, border: `1px solid ${analysis.verdictColor}50`,
             }}>
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: analysis.verdictColor }} />
+              <span className="font-inter text-sm font-bold" style={{ color: analysis.verdictColor }}>
+                {analysis.verdictStarsString}
+              </span>
               <span className="font-inter text-sm font-bold" style={{ color: analysis.verdictColor }}>
                 {analysis.verdict}
               </span>
@@ -108,7 +115,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                   <div className="flex items-center gap-2 mb-2">
                     <Scroll className="w-4 h-4" style={{ color: G.text }} />
                     <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: G.text }}>
-                      The Consultation
+                      Understanding Your Ritual
                     </span>
                   </div>
                   <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)" }}>
@@ -124,55 +131,21 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                 {/* ── Quick Status Bar ── */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <StatusChip icon={<Zap className="w-3.5 h-3.5" />} label="Ritual" value={analysis.ritualType} />
-                  <StatusChip icon={<CheckCircle2 className="w-3.5 h-3.5" />} label="Today" value={analysis.canPerformToday} color={canPerformColor} />
+                  <StatusChip icon={<Star className="w-3.5 h-3.5" />} label="Today" value={analysis.canPerformToday} color={canPerformColor} />
                   <StatusChip icon={<Clock className="w-3.5 h-3.5" />} label="Hour" value={`#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} />
-                  <StatusChip icon={<Moon className="w-3.5 h-3.5" />} label="Moon" value={`Day ${analysis.moonPhase.lunarDay}`} />
+                  <StatusChip icon={<Sun className="w-3.5 h-3.5" />} label="Moon" value={`Day ${analysis.moonPhase.lunarDay}`} />
                 </div>
 
-                {/* ── 23-Point Consultation ── */}
+                {/* ── 10-Section Decision Report ── */}
                 <div className="space-y-2.5">
-                  {analysis.consultation.map((point) => {
-                    const Icon = POINT_ICONS[point.n] || BookOpen;
-                    return (
-                      <ConsultationPoint key={point.n} point={point} Icon={Icon} />
-                    );
-                  })}
+                  {analysis.report.map((sec, idx) => (
+                    <ReportSection key={idx} section={sec} />
+                  ))}
                 </div>
-
-                {/* ── Manuscript Rules Applied ── */}
-                {analysis.rulesApplied.length > 0 && (
-                  <div className="rounded-xl p-3" style={{
-                    background: "rgba(255,255,255,0.02)", border: `1px solid ${G.border}`,
-                  }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="w-4 h-4" style={{ color: G.text }} />
-                      <h4 className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: G.text }}>
-                        Manuscript Rules Applied ({analysis.rulesApplied.length})
-                      </h4>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                      {analysis.rulesApplied.map((r, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <span className="font-inter text-[9px] font-mono px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5" style={{
-                            background: G.bgHi, color: G.dim, border: `1px solid ${G.border}`,
-                          }}>
-                            {r.id}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.60)" }}>{r.desc}</p>
-                            <p className="font-inter text-[9px]" style={{ color: G.dim }}>{r.source}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* ── Manuscript References ── */}
                 {analysis.bookNotes.length > 0 && (
-                  <div className="rounded-xl p-3" style={{
-                    background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.20)",
-                  }}>
+                  <div className="rounded-xl p-3" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.20)" }}>
                     <div className="flex items-center gap-2 mb-2">
                       <FileText className="w-4 h-4" style={{ color: "rgba(74,222,128,0.70)" }} />
                       <h4 className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(74,222,128,0.70)" }}>
@@ -184,9 +157,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                         <div key={i} className="flex items-start gap-2">
                           <span className="font-inter text-[9px] px-1.5 py-0.5 rounded flex-shrink-0" style={{
                             background: "rgba(74,222,128,0.10)", color: "rgba(74,222,128,0.60)", border: "1px solid rgba(74,222,128,0.20)",
-                          }}>
-                            {n.source}
-                          </span>
+                          }}>{n.source}</span>
                           <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{n.text}</p>
                         </div>
                       ))}
@@ -225,7 +196,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
           <div className="px-4 pb-3 flex items-center gap-3 flex-wrap">
             <MiniBadge label="Ritual" value={analysis.ritualType} color={G.text} />
             <MiniBadge label="Today" value={analysis.canPerformToday} color={canPerformColor} />
-            <MiniBadge label="Verdict" value={analysis.verdict} color={analysis.verdictColor} />
+            <MiniBadge label="Verdict" value={`${analysis.verdictStarsString} ${analysis.verdict}`} color={analysis.verdictColor} />
             <MiniBadge label="Confidence" value={`${analysis.confidenceScore}%`} color={G.text} />
           </div>
         )}
@@ -234,38 +205,37 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
   );
 }
 
-// ── Single consultation point ──
-function ConsultationPoint({ point, Icon }) {
-  const [open, setOpen] = useState(false);
+// ── Report Section ──
+function ReportSection({ section }) {
+  const [open, setOpen] = useState(section.section === "FINAL DECISION");
+  const Icon = SECTION_ICONS[section.icon] || BookOpen;
+  const isFinal = section.section === "FINAL DECISION";
+  const statusColor = isFinal ? section.color : (section.status === "Yes" || section.status === "Suitable" ? "#4ADE80" : section.status === "Limited" || section.status === "Not suitable" ? "#FBBF24" : section.status === "No" ? "#F87171" : G.text);
+
   return (
     <div className="rounded-xl overflow-hidden" style={{
-      background: "rgba(255,255,255,0.02)", border: `1px solid rgba(212,175,55,0.20)`,
+      background: isFinal ? "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.03) 100%)" : "rgba(255,255,255,0.02)",
+      border: `1px solid ${isFinal ? G.borderHi : "rgba(212,175,55,0.20)"}`,
+      boxShadow: isFinal ? "0 0 24px rgba(212,175,55,0.15)" : "none",
     }}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 p-3 text-left"
-      >
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
-          background: G.bg, border: `1px solid ${G.border}`,
+          background: isFinal ? "linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.08))" : G.bg,
+          border: `1px solid ${isFinal ? G.borderHi : G.border}`,
         }}>
           <Icon className="w-4 h-4" style={{ color: G.text }} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-inter text-[9px] font-mono px-1.5 py-0.5 rounded" style={{
-              background: G.bgHi, color: G.dim, border: `1px solid ${G.border}`,
-            }}>
-              {String(point.n).padStart(2, "0")}
-            </span>
-            <h4 className="font-inter text-sm font-semibold" style={{ color: "#fff" }}>{point.title}</h4>
+            <h4 className="font-inter text-sm font-bold uppercase tracking-wide" style={{ color: isFinal ? G.text : "#fff" }}>
+              {section.section}
+            </h4>
           </div>
-          <p className="font-inter text-xs leading-snug mt-1 line-clamp-2" style={{ color: "rgba(255,255,255,0.55)" }}>
-            {point.body}
+          <p className="font-inter text-xs leading-snug mt-0.5" style={{ color: statusColor }}>
+            {isFinal ? `${section.stars} — ${section.status}` : section.status}
           </p>
         </div>
-        <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform" style={{
-          color: G.dim, transform: open ? "rotate(180deg)" : "none",
-        }} />
+        <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform" style={{ color: G.dim, transform: open ? "rotate(180deg)" : "none" }} />
       </button>
       <AnimatePresence>
         {open && (
@@ -276,22 +246,137 @@ function ConsultationPoint({ point, Icon }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 pl-14 space-y-2">
-              <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
-                {point.body}
+            <div className="px-3 pb-3 pl-14 space-y-2.5">
+              <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.78)" }}>
+                {section.body}
               </p>
+
+              {/* Today's Windows — star-rated list */}
+              {section.windows && section.windows.length > 0 && (
+                <ReportWindowsList windows={section.windows} />
+              )}
+
+              {/* Best Time — ranked 1st/2nd/3rd */}
+              {section.ranked && section.ranked.length > 0 && (
+                <div className="space-y-1.5">
+                  {section.ranked.map((w) => (
+                    <div key={w.rank} className="rounded-lg p-2.5" style={{
+                      background: w.rank === 1 ? "rgba(74,222,128,0.08)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${w.rank === 1 ? "rgba(74,222,128,0.30)" : "rgba(212,175,55,0.18)"}`,
+                    }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-inter text-[10px] font-bold uppercase tracking-wider" style={{ color: w.rank === 1 ? "#86EFAC" : G.dim }}>
+                          {w.rank === 1 ? "🥇 Best" : w.rank === 2 ? "🥈 Second" : "🥉 Third"}
+                        </span>
+                        <span className="font-inter text-sm font-bold" style={{ color: G.text }}>{w.stars}</span>
+                      </div>
+                      <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{w.time} · {w.planet}</p>
+                      <p className="font-inter text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.60)" }}>{w.reason}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Bad Times — avoid list */}
+              {section.avoid && section.avoid.length > 0 && (
+                <div className="space-y-1">
+                  {section.avoid.map((w, i) => (
+                    <div key={i} className="rounded-lg p-2 flex items-center gap-2" style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.20)" }}>
+                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "rgba(248,113,113,0.70)" }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-inter text-xs font-bold" style={{ color: "rgba(248,113,113,0.90)" }}>{w.time} · {w.planet}</p>
+                        <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>{w.reason}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Enemy analysis */}
+              {section.enemyAnalysis && section.enemyAnalysis.note && (
+                <div className="rounded-lg p-2.5" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
+                  <div className="grid grid-cols-2 gap-2 mt-1.5">
+                    <EnemyItem label="Enemy Hours" values={section.enemyAnalysis.enemyHours} />
+                    <EnemyItem label="Enemy Days" values={section.enemyAnalysis.enemyDays} />
+                    <EnemyItem label="Enemy Moon" values={section.enemyAnalysis.enemyMoonPhases} />
+                    <EnemyItem label="Enemy Rulers" values={section.enemyAnalysis.enemyRulers} />
+                  </div>
+                </div>
+              )}
+
+              {/* Next opportunity */}
+              {section.nextHour && (
+                <div className="rounded-lg p-2.5" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.20)" }}>
+                  <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
+                    <span className="font-bold" style={{ color: "#86EFAC" }}>Next hour:</span> {section.nextHour.day}{section.nextHour.isToday ? " (today)" : ` (${section.nextHour.daysAhead}d away)`} at {section.nextHour.time} ({section.nextHour.planet})
+                  </p>
+                </div>
+              )}
+              {section.nextMoonPhase && (
+                <div className="rounded-lg p-2.5" style={{ background: "rgba(96,165,250,0.06)", border: "1px solid rgba(96,165,250,0.20)" }}>
+                  <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
+                    <span className="font-bold" style={{ color: "rgba(96,165,250,0.90)" }}>Next moon:</span> {section.nextMoonPhase.phase}{section.nextMoonPhase.waitDays > 0 ? ` (~${section.nextMoonPhase.waitDays}d to wait)` : " (available now)"}
+                  </p>
+                  <p className="font-inter text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{section.nextMoonPhase.reason}</p>
+                </div>
+              )}
+
+              {/* Manuscript rules list */}
+              {section.rules && section.rules.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {section.rules.map((r, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="font-inter text-[9px] font-mono px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5" style={{
+                        background: G.bgHi, color: G.dim, border: `1px solid ${G.border}`,
+                      }}>{r.id}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.60)" }}>{r.desc}</p>
+                        <p className="font-inter text-[9px]" style={{ color: G.dim }}>{r.source}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Warnings list */}
+              {section.warnings && section.warnings.length > 0 && (
+                <div className="space-y-1">
+                  {section.warnings.map((w, i) => (
+                    <div key={i} className="flex items-start gap-2 rounded-lg p-2" style={{ background: "rgba(248,113,113,0.06)" }}>
+                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(248,113,113,0.70)" }} />
+                      <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>{w}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Conflicts */}
+              {section.conflicts && section.conflicts.length > 0 && (
+                <div className="space-y-1">
+                  {section.conflicts.map((c, i) => (
+                    <div key={i} className="rounded-lg p-2" style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.20)" }}>
+                      <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>
+                        <span className="font-bold" style={{ color: "#FBBF24" }}>Conflict:</span> {c.rule1} vs {c.rule2}
+                      </p>
+                      <p className="font-inter text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>Resolution: {c.resolution}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Citation + consequence */}
               <div className="flex items-start gap-2 pt-1">
                 <BookOpen className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(74,222,128,0.60)" }} />
                 <div>
                   <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(74,222,128,0.60)" }}>Source: </span>
-                  <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{point.citation}</span>
+                  <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{section.citation}</span>
                 </div>
               </div>
               <div className="flex items-start gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(248,113,113,0.60)" }} />
+                <Shield className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(248,113,113,0.60)" }} />
                 <div>
                   <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.60)" }}>If ignored: </span>
-                  <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{point.consequence}</span>
+                  <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{section.consequence}</span>
                 </div>
               </div>
             </div>
@@ -302,12 +387,19 @@ function ConsultationPoint({ point, Icon }) {
   );
 }
 
-// ── Status chip (quick glance) ──
+function EnemyItem({ label, values }) {
+  if (!values || values.length === 0) return null;
+  return (
+    <div>
+      <p className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.60)" }}>{label}</p>
+      <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>{values.join(', ')}</p>
+    </div>
+  );
+}
+
 function StatusChip({ icon, label, value, color }) {
   return (
-    <div className="rounded-lg px-2.5 py-2" style={{
-      background: "rgba(255,255,255,0.03)", border: `1px solid rgba(212,175,55,0.20)`,
-    }}>
+    <div className="rounded-lg px-2.5 py-2" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid rgba(212,175,55,0.20)` }}>
       <div className="flex items-center gap-1 mb-0.5">
         <div style={{ color: G.dim }}>{icon}</div>
         <p className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>{label}</p>

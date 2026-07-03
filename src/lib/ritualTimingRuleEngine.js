@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// RITUAL TIMING RULE ENGINE — READ-ONLY ANALYSIS LAYER
+// RITUAL DECISION ENGINE V2 — READ-ONLY EXPERT ANALYSIS LAYER
 // ═══════════════════════════════════════════════════════════════
 // PRIORITY ORDER (5-tier merge):
 //   1. Existing Sirr al-Huruf project rules
@@ -9,7 +9,10 @@
 //   5. Live Astrology Clock data (current day, planetary hour, moon phase)
 //
 // This module is READ-ONLY. It NEVER modifies Mizan calculations or Astro Clock logic.
-// It reads existing Mizan state + live time and produces a recommendation.
+// It reads existing Mizan state + live time and produces a COMPLETE DECISION REPORT.
+//
+// The engine FIRST fully understands the ritual (Khayr/Sharr, purpose, category)
+// from the existing Mizan selections — the user never enters this again.
 // ═══════════════════════════════════════════════════════════════
 
 import { getCurrentPlanetaryHour, getDayRuler, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from './astroClockLiveEngine.js';
@@ -21,7 +24,6 @@ const MIZAN_TO_EN_PLANET = {
   zuhre: 'Venus', utarid: 'Mercury', kamer: 'Moon',
 };
 
-// ── Mizan day key → day-of-week index (0=Sunday) ──
 const MIZAN_DAY_TO_INDEX = {
   sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
 };
@@ -31,55 +33,15 @@ const MIZAN_DAY_NAMES = {
   thu: 'Thursday', fri: 'Friday', sat: 'Saturday',
 };
 
-// ── English planet → Mizan planet key (reverse) ──
-const EN_TO_MIZAN_PLANET = {
-  Saturn: 'zuhal', Jupiter: 'mustari', Mars: 'merih', Sun: 'sems',
-  Venus: 'zuhre', Mercury: 'utarid', Moon: 'kamer',
-};
-
 // ═══════════════════════════════════════════════════════════════
 // SOURCE 3: PDF "الشروط" (Al-Shurut) — Purpose × Day × Hour Table
-// Pages 12–13, 26–27
 // ═══════════════════════════════════════════════════════════════
 const PDF_PURPOSE_TABLE = {
-  // Mizan purpose keys mapped to PDF rules
-  celb: { // جلب = attraction/love
-    pdfName: 'Mahabbah (محبة)',
-    bestDay: 'fri', bestHour: 'Venus',
-    altDay: 'tue', altHour: 'Venus',
-    description: 'Love and attraction to a specific person',
-    source: 'Al-Shurut p.12',
-    isNightRequired: true,
-  },
-  tard: { // طرد = banishment/separation
-    pdfName: 'Firqa (فرقة)',
-    bestDay: 'tue', bestHour: 'Saturn',
-    description: 'Separation, hatred, driving away an enemy',
-    source: 'Al-Shurut p.12',
-    isNightRequired: true,
-  },
-  sihhat: { // الصحة = health
-    pdfName: 'Sihhat (صحة)',
-    bestDay: 'mon', bestHour: 'Moon',
-    altDay: 'thu', altHour: 'Jupiter',
-    description: 'Healing, health, and recovery',
-    source: 'Al-Shurut p.12 + Havâss p.50-51',
-    isNightRequired: false,
-  },
-  sekam: { // السقم = illness/harm
-    pdfName: 'Taslit al-Dam / Hariq',
-    bestDay: 'tue', bestHour: 'Mars',
-    description: 'Causing harm, injury, or destruction (dark works)',
-    source: 'Al-Shurut p.12',
-    isNightRequired: true,
-  },
-  tarfet: { // طرفة العين = evil eye protection
-    pdfName: 'Kaff al-Adha (كف الضرر)',
-    bestDay: 'fri', bestHour: 'Saturn',
-    description: 'Stopping harm, protection, walking safely',
-    source: 'Al-Shurut p.12',
-    isNightRequired: false,
-  },
+  celb: { pdfName: 'Mahabbah (محبة)', bestDay: 'fri', bestHour: 'Venus', altDay: 'tue', altHour: 'Venus', description: 'Love and attraction to a specific person', source: 'Al-Shurut p.12', isNightRequired: true, category: 'Love & Attraction' },
+  tard: { pdfName: 'Firqa (فرقة)', bestDay: 'tue', bestHour: 'Saturn', description: 'Separation, hatred, driving away an enemy', source: 'Al-Shurut p.12', isNightRequired: true, category: 'Separation & Banishment' },
+  sihhat: { pdfName: 'Sihhat (صحة)', bestDay: 'mon', bestHour: 'Moon', altDay: 'thu', altHour: 'Jupiter', description: 'Healing, health, and recovery', source: 'Al-Shurut p.12 + Havâss p.50-51', isNightRequired: false, category: 'Healing & Health' },
+  sekam: { pdfName: 'Taslit al-Dam / Hariq', bestDay: 'tue', bestHour: 'Mars', description: 'Causing harm, injury, or destruction (dark works)', source: 'Al-Shurut p.12', isNightRequired: true, category: 'Harm & Destruction' },
+  tarfet: { pdfName: 'Kaff al-Adha (كف الضرر)', bestDay: 'fri', bestHour: 'Saturn', description: 'Stopping harm, protection, walking safely', source: 'Al-Shurut p.12', isNightRequired: false, category: 'Protection & Safety' },
 };
 
 // ── Custom purpose keyword → PDF purpose rule ──
@@ -89,19 +51,23 @@ const CUSTOM_PURPOSE_KEYWORDS = [
   { keywords: ['healing', 'شفاء', 'صحة', 'health', 'علاج', 'medicine'], rule: 'sihhat' },
   { keywords: ['harm', 'ضرر', 'injury', 'أذى', 'destruction', 'هلاك'], rule: 'sekam' },
   { keywords: ['protection', 'حماية', 'evil eye', 'عين', 'طرفة', 'safety', 'أمان'], rule: 'tarfet' },
-  { keywords: ['awe', 'هيبة', 'reverence', 'جلال', 'تعظيم'], rule: 'ijlal', custom: { pdfName: 'Ijlal (جلال)', bestDay: 'thu', bestHour: 'Mercury', source: 'Al-Shurut p.12' } },
-  { keywords: ['binding', 'عقد', 'tie', 'ربط'], rule: 'aqd', custom: { pdfName: 'Aqd (عقد)', bestDay: 'wed', bestHour: 'Saturn', source: 'Al-Shurut p.12' } },
-  { keywords: ['wealth', 'رزق', 'money', 'مال', 'livelihood', 'provision', 'sustenance'], rule: 'rizq', custom: { pdfName: 'Jalb al-Rizq (جلب الرزق)', bestDay: 'tue', bestHour: 'Jupiter', source: 'Al-Shurut p.13' } },
-  { keywords: ['war', 'حرب', 'strife', 'فتنة', 'conflict', 'نزاع'], rule: 'harb', custom: { pdfName: 'Iqa Harb (إيقاع حرب)', bestDay: 'tue', bestHour: 'Mercury', source: 'Al-Shurut p.12' } },
-  { keywords: ['agitation', 'تهييج', 'stir', 'إثارة'], rule: 'tahyij', custom: { pdfName: 'Tahyij (تهييج)', bestDay: 'fri', bestHour: 'Mars', source: 'Al-Shurut p.12' } },
-  { keywords: ['fire', 'حريق', 'burn'], rule: 'hariq', custom: { pdfName: 'Hariq (حريق)', bestDay: 'tue', bestHour: 'Mars', source: 'Al-Shurut p.12' } },
-  { keywords: ['authority', 'سلطان', 'ruler', 'حاكم', 'king', 'ملك', 'official'], rule: 'sultan', custom: { pdfName: 'Need with Authority', bestDay: 'sun', bestHour: 'Sun', source: 'Al-Shurut p.12' } },
-  { keywords: ['fear', 'خوف', 'haybah', 'هيبة'], rule: 'haybah', custom: { pdfName: 'Haybah (هيبة)', bestDay: 'tue', bestHour: 'Sun', source: 'Al-Shurut p.12' } },
-  { keywords: ['scatter', 'تشتيت', 'destabilize'], rule: 'tashtit', custom: { pdfName: 'Tashtit (تشتيت)', bestDay: 'wed', bestHour: 'Saturn', source: 'Al-Shurut p.13' } },
+  { keywords: ['awe', 'هيبة', 'reverence', 'جلال', 'تعظيم'], rule: 'ijlal', custom: { pdfName: 'Ijlal (جلال)', bestDay: 'thu', bestHour: 'Mercury', source: 'Al-Shurut p.12', isNightRequired: false, category: 'Awe & Reverence' } },
+  { keywords: ['binding', 'عقد', 'tie', 'ربط'], rule: 'aqd', custom: { pdfName: 'Aqd (عقد)', bestDay: 'wed', bestHour: 'Saturn', source: 'Al-Shurut p.12', isNightRequired: true, category: 'Binding & Restraint' } },
+  { keywords: ['wealth', 'رزق', 'money', 'مال', 'livelihood', 'provision', 'sustenance'], rule: 'rizq', custom: { pdfName: 'Jalb al-Rizq (جلب الرزق)', bestDay: 'tue', bestHour: 'Jupiter', source: 'Al-Shurut p.13', isNightRequired: false, category: 'Wealth & Provision' } },
+  { keywords: ['war', 'حرب', 'strife', 'فتنة', 'conflict', 'نزاع'], rule: 'harb', custom: { pdfName: 'Iqa Harb (إيقاع حرب)', bestDay: 'tue', bestHour: 'Mercury', source: 'Al-Shurut p.12', isNightRequired: true, category: 'Conflict & Strife' } },
+  { keywords: ['agitation', 'تهييج', 'stir', 'إثارة'], rule: 'tahyij', custom: { pdfName: 'Tahyij (تهييج)', bestDay: 'fri', bestHour: 'Mars', source: 'Al-Shurut p.12', isNightRequired: true, category: 'Agitation & Passion' } },
+  { keywords: ['fire', 'حريق', 'burn'], rule: 'hariq', custom: { pdfName: 'Hariq (حريق)', bestDay: 'tue', bestHour: 'Mars', source: 'Al-Shurut p.12', isNightRequired: true, category: 'Destruction & Fire' } },
+  { keywords: ['authority', 'سلطان', 'ruler', 'حاكم', 'king', 'ملك', 'official'], rule: 'sultan', custom: { pdfName: 'Need with Authority', bestDay: 'sun', bestHour: 'Sun', source: 'Al-Shurut p.12', isNightRequired: false, category: 'Authority & Power' } },
+  { keywords: ['fear', 'خوف', 'haybah', 'هيبة'], rule: 'haybah', custom: { pdfName: 'Haybah (هيبة)', bestDay: 'tue', bestHour: 'Sun', source: 'Al-Shurut p.12', isNightRequired: false, category: 'Awe & Fear' } },
+  { keywords: ['scatter', 'تشتيت', 'destabilize'], rule: 'tashtit', custom: { pdfName: 'Tashtit (تشتيت)', bestDay: 'wed', bestHour: 'Saturn', source: 'Al-Shurut p.13', isNightRequired: true, category: 'Scattering & Dispersion' } },
+  { keywords: ['knowledge', 'علم', 'wisdom', 'حكمة', 'learning', 'study'], rule: 'knowledge', custom: { pdfName: 'Ilm (علم)', bestDay: 'wed', bestHour: 'Mercury', source: 'Havâss p.51 (Mercury)', isNightRequired: false, category: 'Knowledge & Learning' } },
+  { keywords: ['travel', 'سفر', 'journey', 'رحلة'], rule: 'travel', custom: { pdfName: 'Safar (سفر)', bestDay: 'mon', bestHour: 'Moon', source: 'Havâss p.50 (Moon)', isNightRequired: false, category: 'Travel & Journeys' } },
+  { keywords: ['success', 'نجاح', 'victory', 'فوز', 'triumph'], rule: 'success', custom: { pdfName: 'Najah (نجاح)', bestDay: 'sun', bestHour: 'Sun', source: 'Havâss p.50 (Sun)', isNightRequired: false, category: 'Success & Victory' } },
+  { keywords: ['marriage', 'زواج', 'nikah', 'نكاح', 'wedding'], rule: 'marriage', custom: { pdfName: 'Zawaj (زواج)', bestDay: 'fri', bestHour: 'Venus', source: 'Havâss p.51 (Venus)', isNightRequired: false, category: 'Marriage & Union' } },
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// SOURCE 3: PDF Element → Direction & Placement (pages 37, 42)
+// ELEMENT DIRECTION & PLACEMENT (Al-Shurut p.37, 42)
 // ═══════════════════════════════════════════════════════════════
 const ELEMENT_DIRECTION = {
   fire: { dir: 'East (المشرق)', ar: 'المشرق', source: 'Al-Shurut p.42' },
@@ -118,22 +84,19 @@ const ELEMENT_PLACEMENT = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// SOURCE 3: PDF Hayr Hour Rules (page 13, LCK_001–004)
+// KHAYR / SHARR CONSTANTS (Al-Shurut p.13)
 // ═══════════════════════════════════════════════════════════════
-const HAYR_SIID_DAYS = ['sun', 'mon', 'thu', 'fri']; // Sa'idat days
-const HAYR_SIID_HOURS = [1, 8]; // 1st and 8th hours
+const HAYR_SIID_DAYS = ['sun', 'mon', 'thu', 'fri'];
+const HAYR_SIID_HOURS = [1, 8];
 const BENEFIC_PLANETS = ['Sun', 'Jupiter', 'Venus', 'Moon'];
+const MALEFIC_PLANETS = ['Saturn', 'Mars'];
+
+const NIGHT_REQUIRED_WORKS = ['celb', 'tard', 'sekam'];
 
 // ═══════════════════════════════════════════════════════════════
-// SOURCE 3: PDF Night Preference (pages 39–40, NGT_001–006)
+// ZODIAC TIMING TABLES (Al-Shurut p.18-19)
 // ═══════════════════════════════════════════════════════════════
-const NIGHT_REQUIRED_WORKS = ['celb', 'tard', 'sekam']; // love, separation, harm
-
-// ═══════════════════════════════════════════════════════════════
-// SOURCE 3: PDF Zodiac Timing Tables (pages 18–19, 24)
-// Two Omani scholar systems + Shaikh Zahir's table
-// ═══════════════════════════════════════════════════════════════
-const ZODIAC_TIMING_A = { // System A — Day + Hour (page 18)
+const ZODIAC_TIMING_A = {
   aries:       { day: ['sun', 'mon'],           hour: ['Mercury', 'Jupiter'], source: 'Al-Shurut p.18 (Omani System A)' },
   taurus:      { day: ['sat', 'sun', 'thu'],    hour: ['Moon', 'Jupiter'],     source: 'Al-Shurut p.18 (Omani System A)' },
   gemini:      { day: ['sat', 'sun', 'thu'],    hour: ['Jupiter'],             source: 'Al-Shurut p.18 (Omani System A)' },
@@ -148,21 +111,13 @@ const ZODIAC_TIMING_A = { // System A — Day + Hour (page 18)
   pisces:      { day: ['tue'],                  hour: ['Mars'],                source: 'Al-Shurut p.18 (Omani System A)' },
 };
 
-const ZODIAC_TIMING_B = { // System B — Hour only (page 19)
-  aries:       { hour: 'Jupiter', source: 'Al-Shurut p.19 (Omani System B)' },
-  taurus:      { hour: 'Jupiter', source: 'Al-Shurut p.19 (Omani System B)' },
-  gemini:      { hour: 'Sun', source: 'Al-Shurut p.19 (Omani System B)' },
-  cancer:      { hour: 'Saturn', source: 'Al-Shurut p.19 (Omani System B)' },
-  leo:         { hour: 'Sun', source: 'Al-Shurut p.19 (Omani System B)' },
-  virgo:       { hour: 'Jupiter', source: 'Al-Shurut p.19 (Omani System B)' },
-  libra:       { hour: 'Mercury', source: 'Al-Shurut p.19 (Omani System B)' },
-  scorpio:     { hour: 'Sun', source: 'Al-Shurut p.19 (Omani System B)' },
-  sagittarius: { hour: 'Moon', source: 'Al-Shurut p.19 (Omani System B)' },
-  capricorn:   { hour: 'Moon', source: 'Al-Shurut p.19 (Omani System B)' },
-  aquarius:    { hour: 'Moon', source: 'Al-Shurut p.19 (Omani System B)' },
+const ZODIAC_TIMING_B = {
+  aries: { hour: 'Jupiter' }, taurus: { hour: 'Jupiter' }, gemini: { hour: 'Sun' },
+  cancer: { hour: 'Saturn' }, leo: { hour: 'Sun' }, virgo: { hour: 'Jupiter' },
+  libra: { hour: 'Mercury' }, scorpio: { hour: 'Sun' }, sagittarius: { hour: 'Moon' },
+  capricorn: { hour: 'Moon' }, aquarius: { hour: 'Moon' },
 };
 
-// Element → planet affinity (for element compatibility assessment)
 const ELEMENT_PLANET_AFFINITY = {
   fire:  { planets: ['Mars', 'Sun'], nature: 'hot & dry', strengthens: ['passion', 'courage', 'authority', 'destruction'] },
   earth: { planets: ['Saturn', 'Mercury'], nature: 'cold & dry', strengthens: ['binding', 'stability', 'wealth', 'patience'] },
@@ -171,8 +126,20 @@ const ELEMENT_PLANET_AFFINITY = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// MOON PHASE CALCULATION
+// PURPOSE CATEGORY CLASSIFICATION
 // ═══════════════════════════════════════════════════════════════
+const PURPOSE_POLARITY = {
+  celb: 'khayr', sihhat: 'khayr', tarfet: 'khayr', ijlal: 'khayr',
+  rizq: 'khayr', sultan: 'khayr', haybah: 'khayr', knowledge: 'khayr',
+  travel: 'khayr', success: 'khayr', marriage: 'khayr',
+  tard: 'sharr', sekam: 'sharr', harb: 'sharr', tahyij: 'sharr',
+  hariq: 'sharr', tashtit: 'sharr', aqd: 'sharr',
+};
+
+// ═══════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
 function getMoonPhase(date) {
   const knownNewMoon = new Date('2000-01-06T18:14:00Z').getTime();
   const lunarCycleMs = 29.53059 * 24 * 60 * 60 * 1000;
@@ -185,27 +152,19 @@ function getMoonPhase(date) {
   const isNewMoon = lunarDay >= 28 || lunarDay <= 1;
   const isFullMoon = lunarDay >= 13 && lunarDay <= 16;
   return {
-    lunarDay,
-    phaseName: isWaxing ? 'Waxing (مقبل)' : 'Waning (مدبر)',
-    isWaxing,
-    isWaning,
-    isNewMoon,
-    isFullMoon,
-    isGoodForKhayr: isWaxing,
-    isGoodForSharr: isWaning || isNewMoon,
+    lunarDay, phaseName: isWaxing ? 'Waxing (مقبل)' : 'Waning (مدبر)',
+    isWaxing, isWaning, isNewMoon, isFullMoon,
+    isGoodForKhayr: isWaxing, isGoodForSharr: isWaning || isNewMoon,
   };
 }
 
-// ═══════════════════════════════════════════════════════════════
-// MATCH CUSTOM PURPOSE TEXT TO A RULE
-// ═══════════════════════════════════════════════════════════════
 function matchCustomPurpose(text) {
   if (!text) return null;
   const lower = text.toLowerCase();
   for (const entry of CUSTOM_PURPOSE_KEYWORDS) {
     for (const kw of entry.keywords) {
       if (lower.includes(kw.toLowerCase()) || text.includes(kw)) {
-        if (entry.custom) return { ...entry.custom, isNightRequired: ['love', 'separation', 'harm'].includes(entry.rule) };
+        if (entry.custom) return { ...entry.custom, isNightRequired: ['love', 'separation', 'harm', 'binding', 'agitation', 'fire', 'war'].includes(entry.rule) };
         return PDF_PURPOSE_TABLE[entry.rule];
       }
     }
@@ -213,35 +172,20 @@ function matchCustomPurpose(text) {
   return null;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// GET ALL PLANETARY HOURS FOR TODAY (day + night)
-// ═══════════════════════════════════════════════════════════════
 function getTodayAllHours(date) {
-  // Approximate sunrise/sunset for Asia/Dubai (can be refined with API later)
-  // Summer: ~5:30 AM / 19:00; Winter: ~7:00 AM / 17:40
-  const month = date.getMonth(); // 0-11
+  const month = date.getMonth();
   let sunrise, sunset;
-  if (month >= 4 && month <= 8) { // May–Sep: summer
-    sunrise = 5.5; sunset = 19.0;
-  } else if (month === 3 || month === 9) { // Apr, Oct: transitional
-    sunrise = 6.0; sunset = 18.25;
-  } else { // Nov–Mar: winter
-    sunrise = 6.83; sunset = 17.67;
-  }
+  if (month >= 4 && month <= 8) { sunrise = 5.5; sunset = 19.0; }
+  else if (month === 3 || month === 9) { sunrise = 6.0; sunset = 18.25; }
+  else { sunrise = 6.83; sunset = 17.67; }
   return { hours: getAllPlanetaryHours(date, sunrise, sunset), sunrise, sunset };
 }
 
-// ═══════════════════════════════════════════════════════════════
-// FIND BEST HOURS FOR A TARGET PLANET IN TODAY'S TABLE
-// ═══════════════════════════════════════════════════════════════
 function findHoursByPlanet(allHours, targetPlanetEn) {
   const target = targetPlanetEn.toLowerCase();
   return allHours.filter(h => h.planet === target);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// FIND NEXT VALID DAY + HOUR (within next 7 days)
-// ═══════════════════════════════════════════════════════════════
 function findNextValidDayHour(bestDayKey, bestHourPlanetEn) {
   const now = new Date();
   for (let i = 0; i < 7; i++) {
@@ -254,14 +198,10 @@ function findNextValidDayHour(bestDayKey, bestHourPlanetEn) {
       if (matching.length > 0) {
         const firstHour = matching[0];
         return {
-          dayName: MIZAN_DAY_NAMES[dayKey],
-          date: checkDate.toISOString().split('T')[0],
-          hour: firstHour.hourNumber,
-          planet: firstHour.planet,
-          startTime: firstHour.startTime,
-          endTime: firstHour.endTime,
-          isToday: i === 0,
-          daysAhead: i,
+          dayName: MIZAN_DAY_NAMES[dayKey], date: checkDate.toISOString().split('T')[0],
+          hour: firstHour.hourNumber, planet: firstHour.planet,
+          startTime: firstHour.startTime, endTime: firstHour.endTime,
+          isToday: i === 0, daysAhead: i,
         };
       }
     }
@@ -269,9 +209,6 @@ function findNextValidDayHour(bestDayKey, bestHourPlanetEn) {
   return null;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// MAP MIZAN PURPOSE TO EXISTING ACTION_RULES CATEGORY
-// ═══════════════════════════════════════════════════════════════
 function mapToActionRule(mizanPurposeKey) {
   const map = {
     celb: 'love', tard: 'spiritual', sihhat: 'healing', sekam: null, tarfet: 'spiritual',
@@ -279,8 +216,85 @@ function mapToActionRule(mizanPurposeKey) {
   return map[mizanPurposeKey] ? ACTION_RULES[map[mizanPurposeKey]] : null;
 }
 
+// ── Star rating helpers ──
+function scoreToStars(score) {
+  if (score >= 85) return 5;
+  if (score >= 70) return 4;
+  if (score >= 50) return 3;
+  if (score >= 30) return 2;
+  if (score >= 15) return 1;
+  return 0;
+}
+function starsToString(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+// ── Per-window strength (0-100) with explanation ──
+function windowStrength(win, khayrSharr, moonPhase, pdfRule) {
+  let s = 40;
+  const reasons = [];
+  if (win.isIdeal) { s += 25; reasons.push(`the ${win.planet} hour is the prescribed planetary hour for this work`); }
+  if (khayrSharr === 'khayr' && BENEFIC_PLANETS.map(p => p.toLowerCase()).includes(win.planet)) { s += 15; reasons.push(`${win.planet} is a benefic planet, satisfying the Khayr restriction`); }
+  if (khayrSharr === 'sharr' && MALEFIC_PLANETS.map(p => p.toLowerCase()).includes(win.planet)) { s += 12; reasons.push(`${win.planet} is a malefic planet, strengthening the Sharr work`); }
+  if (pdfRule?.isNightRequired && win.period === 'night') { s += 12; reasons.push(`this is a nighttime hour, as required by the manuscript`); }
+  if (moonPhase.isGoodForKhayr && khayrSharr === 'khayr') { s += 5; reasons.push(`the waxing Moon amplifies benevolent works`); }
+  if (moonPhase.isGoodForSharr && khayrSharr === 'sharr') { s += 5; reasons.push(`the waning Moon amplifies banishment works`); }
+  return { score: Math.min(100, s), stars: scoreToStars(Math.min(100, s)), reason: reasons.join('; ') || 'this hour is available but not optimally aligned' };
+}
+
+// ── Infer Khayr/Sharr from purpose when not explicitly selected ──
+function inferKhayrSharr(khayrSharrSelected, purposeKey, pdfRule) {
+  if (khayrSharrSelected) return { value: khayrSharrSelected, inferred: false };
+  if (purposeKey && PURPOSE_POLARITY[purposeKey]) {
+    return { value: PURPOSE_POLARITY[purposeKey], inferred: true };
+  }
+  if (pdfRule?.category) {
+    const sharrCats = ['Separation & Banishment', 'Harm & Destruction', 'Conflict & Strife', 'Agitation & Passion', 'Destruction & Fire', 'Scattering & Dispersion', 'Binding & Restraint'];
+    if (sharrCats.includes(pdfRule.category)) return { value: 'sharr', inferred: true };
+    return { value: 'khayr', inferred: true };
+  }
+  return { value: null, inferred: false };
+}
+
+// ── Wait time until next suitable hour today ──
+function computeWaitTime(todayHours, bestHourPlanet, khayrSharr, now) {
+  const candidates = todayHours.filter(h => h.status === 'current' || h.status === 'upcoming');
+  let next = candidates.find(h => h.planet === (bestHourPlanet || '').toLowerCase());
+  if (!next && khayrSharr === 'khayr') {
+    next = candidates.find(h => BENEFIC_PLANETS.map(p => p.toLowerCase()).includes(h.planet));
+  }
+  if (!next) next = candidates[0];
+  if (!next) return null;
+  const [timePart, ampm] = next.startTime.split(' ');
+  let [h, m] = timePart.split(':').map(Number);
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  let targetMin = h * 60 + m;
+  if (targetMin < nowMin) targetMin += 24 * 60;
+  const waitMin = targetMin - nowMin;
+  const waitH = Math.floor(waitMin / 60);
+  const waitM = waitMin % 60;
+  return { hour: next, waitHours: waitH, waitMinutes: waitM, waitText: waitH > 0 ? `${waitH}h ${waitM}m` : `${waitM}m` };
+}
+
+// ── Next best moon phase recommendation ──
+function nextBestMoonPhase(khayrSharr, currentMoonDay) {
+  if (!khayrSharr) return null;
+  if (khayrSharr === 'khayr') {
+    if (currentMoonDay <= 7) return { phase: 'Waxing — Days 1–7 (first crescent to first quarter)', reason: 'the Moon is growing in light, which amplifies all benevolent and attractive works', waitDays: 0 };
+    if (currentMoonDay > 14) {
+      const wait = 29 - currentMoonDay + 1;
+      return { phase: 'Next New Moon → Waxing Days 1–7', reason: 'the waning Moon must complete its cycle; the next waxing crescent begins the ideal window', waitDays: wait };
+    }
+    return { phase: 'Waxing — Days 8–14', reason: 'the Moon is still waxing, though the first 7 days are strongest for new beginnings', waitDays: 0 };
+  }
+  if (currentMoonDay >= 27 || currentMoonDay <= 2) return { phase: 'New Moon (محاق) — Days 27–2', reason: 'the Moon is at its darkest, the most powerful time for banishment and dissolution', waitDays: 0 };
+  if (currentMoonDay > 14) return { phase: 'Waning — Days 15–29', reason: 'the Moon is decreasing in light, which supports works of removal and separation', waitDays: 0 };
+  const wait = 15 - currentMoonDay;
+  return { phase: 'Next Waning phase (after Full Moon, Day 15)', reason: 'the Moon is still waxing; wait for the Full Moon to pass before the waning energy becomes available', waitDays: wait };
+}
+
 // ═══════════════════════════════════════════════════════════════
-// MAIN ANALYSIS FUNCTION
+// MAIN ANALYSIS FUNCTION — COMPLETE DECISION REPORT
 // ═══════════════════════════════════════════════════════════════
 export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod }) {
   const reasoning = [];
@@ -291,7 +305,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   // ── STEP 1: Extract Mizan state ──
   const dominant = result?.dominant || (selections?.elements?.[0] || null);
-  const khayrSharr = selections?.khayrSharr8 || null;
+  const khayrSharrSelected = selections?.khayrSharr8 || null;
   const selectedDay = selections?.days || null;
   const selectedHour = selections?.hour || null;
   const selectedPlanet = selections?.planet || null;
@@ -301,7 +315,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const suitability = result?.suitability || null;
 
   reasoning.push(`Mizan dominant element: ${dominant || 'unknown'}`);
-  reasoning.push(`Khayr/Sharr selection: ${khayrSharr || 'not selected'}`);
+  reasoning.push(`Khayr/Sharr selection: ${khayrSharrSelected || 'not selected'}`);
   reasoning.push(`Selected day: ${selectedDay ? MIZAN_DAY_NAMES[selectedDay] : 'not selected'}`);
   reasoning.push(`Selected planetary hour: #${selectedHour || 'not selected'}`);
   reasoning.push(`Selected planet: ${selectedPlanet ? MIZAN_TO_EN_PLANET[selectedPlanet] : 'not selected'}`);
@@ -310,24 +324,33 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   if (customPurpose) reasoning.push(`Custom purpose: "${customPurpose}"`);
   reasoning.push(`Active Method: ${activeMethod}`);
 
-  // ── STEP 2: Determine ritual intent (purpose) ──
+  // ── STEP 2: Determine ritual intent (purpose) — AUTO ──
   let pdfRule = null;
+  let purposeKey = primaryPurpose;
   if (primaryPurpose && PDF_PURPOSE_TABLE[primaryPurpose]) {
     pdfRule = PDF_PURPOSE_TABLE[primaryPurpose];
     rulesApplied.push({ id: `PDF_${primaryPurpose}`, desc: `Purpose "${pdfRule.pdfName}" → Day: ${MIZAN_DAY_NAMES[pdfRule.bestDay]}, Hour: ${pdfRule.bestHour}`, source: pdfRule.source });
   }
-  // If custom purpose text matches, use it as additional/override
   const customMatch = matchCustomPurpose(customPurpose);
   if (customMatch && !pdfRule) {
     pdfRule = customMatch;
+    purposeKey = Object.keys(PDF_PURPOSE_TABLE).find(k => PDF_PURPOSE_TABLE[k] === customMatch) || purposeKey;
     rulesApplied.push({ id: 'PDF_CUSTOM', desc: `Custom purpose matched "${pdfRule.pdfName}" → Day: ${MIZAN_DAY_NAMES[pdfRule.bestDay]}, Hour: ${pdfRule.bestHour}`, source: pdfRule.source });
   } else if (customMatch && pdfRule && customMatch.pdfName !== pdfRule.pdfName) {
-    // Conflict: Mizan purpose says one thing, custom says another
     conflicts.push({
       rule1: `Mizan purpose "${pdfRule.pdfName}" (${pdfRule.source})`,
       rule2: `Custom text matched "${customMatch.pdfName}" (${customMatch.source})`,
       resolution: `Mizan purpose takes priority (Tier 4). Custom purpose noted as secondary.`,
     });
+  }
+
+  // ── STEP 2b: AUTO-INFER Khayr/Sharr and category ──
+  const khayrSharrInferred = inferKhayrSharr(khayrSharrSelected, purposeKey, pdfRule);
+  const khayrSharr = khayrSharrInferred.value;
+  const ritualCategory = pdfRule?.category || (khayrSharr === 'sharr' ? 'Dark / Baneful Work' : 'General Spiritual Work');
+  if (khayrSharrInferred.inferred) {
+    reasoning.push(`Khayr/Sharr AUTO-INFERRED as ${khayrSharr} from purpose category "${ritualCategory}"`);
+    rulesApplied.push({ id: 'INFER_POLARITY', desc: `Polarity auto-inferred: ${khayrSharr} (from category: ${ritualCategory})`, source: 'Engine inference from manuscript purpose tables' });
   }
 
   // ── STEP 3: Read live time ──
@@ -345,17 +368,13 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   reasoning.push(`Moon phase: Day ${moonPhase.lunarDay} — ${moonPhase.phaseName}`);
   reasoning.push(`Currently ${isNightTime ? 'nighttime' : 'daytime'}`);
 
-  // ── STEP 4: Apply PDF rules — best day/hour from purpose table ──
+  // ── STEP 4: Apply PDF rules — best day/hour ──
   let bestDay = null, bestHourPlanet = null, altDay = null, altHourPlanet = null;
   if (pdfRule) {
-    bestDay = pdfRule.bestDay;
-    bestHourPlanet = pdfRule.bestHour;
-    altDay = pdfRule.altDay || null;
-    altHourPlanet = pdfRule.altHour || null;
+    bestDay = pdfRule.bestDay; bestHourPlanet = pdfRule.bestHour;
+    altDay = pdfRule.altDay || null; altHourPlanet = pdfRule.altHour || null;
   }
 
-  // ── Generate human-readable reasons for bestDay / bestHour from manuscript rules ──
-  // Dynamic: merges all contributing manuscript sources into one explanation.
   const daySources = [];
   const hourSources = [];
   if (pdfRule) {
@@ -364,25 +383,19 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     if (altDay) daySources.push(`${pdfRule.source}: ${MIZAN_DAY_NAMES[altDay]} is an acceptable alternative`);
     if (altHourPlanet) hourSources.push(`${pdfRule.source}: the ${altHourPlanet} hour is a secondary option`);
   }
-
   if (khayrSharr === 'khayr') {
     hourSources.push(`Al-Shurut p.13 (LCK_001): Khayr works require a Sa'idat hour (1st or 8th) on Sun/Mon/Thu/Fri, or any benefic planet hour (Sun, Jupiter, Venus, Moon)`);
-    if (BENEFIC_PLANETS.includes(bestHourPlanet)) hourSources.push(`The ${bestHourPlanet} hour qualifies as a benefic planet, satisfying the Khayr restriction`);
+    if (bestHourPlanet && BENEFIC_PLANETS.includes(bestHourPlanet)) hourSources.push(`The ${bestHourPlanet} hour qualifies as a benefic planet, satisfying the Khayr restriction`);
   }
   if (khayrSharr === 'sharr') {
-    hourSources.push(`Al-Shurut p.13 (MN_002): Sharr works are strengthened when performed during the waning Moon, and the ${bestHourPlanet} hour provides the necessary planetary force`);
+    hourSources.push(`Al-Shurut p.13 (MN_002): Sharr works are strengthened during the waning Moon, and the ${bestHourPlanet || 'prescribed'} hour provides the necessary planetary force`);
   }
-  let bestDayReason = daySources.length > 0
-    ? daySources.join(' · ')
-    : `No specific day prescription found in the imported manuscripts for this purpose — any day may be used, guided by the planetary hour.`;
-  let bestHourReason = hourSources.length > 0
-    ? hourSources.join(' · ')
-    : `No specific hour prescription found in the imported manuscripts for this purpose.`;
+  let bestDayReason = daySources.length > 0 ? daySources.join(' · ') : `No specific day prescription found in the imported manuscripts for this purpose — any day may be used, guided by the planetary hour.`;
+  let bestHourReason = hourSources.length > 0 ? hourSources.join(' · ') : `No specific hour prescription found in the imported manuscripts for this purpose.`;
 
-  // ── STEP 5: Apply Khayr hour restriction (LCK_001–003) ──
+  // ── STEP 5: Apply Khayr hour restriction ──
   if (khayrSharr === 'khayr') {
-    rulesApplied.push({ id: 'LCK_001', desc: 'Hayr works: restrict to Sa\'idat hours (1st & 8th of Sun/Mon/Thu/Fri) OR any benefic planet hour', source: 'Al-Shurut p.13' });
-    // Check: is current day a Sa'idat day?
+    rulesApplied.push({ id: 'LCK_001', desc: 'Khayr works: restrict to Sa\'idat hours (1st & 8th of Sun/Mon/Thu/Fri) OR any benefic planet hour', source: 'Al-Shurut p.13' });
     const isSiidDay = HAYR_SIID_DAYS.includes(currentDayKey);
     const isSiidHour = HAYR_SIID_HOURS.includes(currentHourInfo.hourNumber);
     const isBeneficHour = BENEFIC_PLANETS.includes(currentHourInfo.planet);
@@ -391,7 +404,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     }
   }
 
-  // ── STEP 6: Apply Moon phase rules (MN_001–002) ──
+  // ── STEP 6: Moon phase rules ──
   if (khayrSharr === 'khayr' && !moonPhase.isGoodForKhayr) {
     warnings.push(`Moon is in the waning phase (Day ${moonPhase.lunarDay}). Khayr works should be done in the waxing phase (MN_001)`);
     rulesApplied.push({ id: 'MN_001', desc: 'Khayr works require waxing moon (first half of lunar month)', source: 'Al-Shurut p.13' });
@@ -401,18 +414,16 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     rulesApplied.push({ id: 'MN_002', desc: 'Sharr works best in waning moon, especially New Moon (محاق)', source: 'Al-Shurut p.13' });
   }
 
-  // ── STEP 7: Apply Night preference (NGT_001–006) ──
-  let nightWarning = null;
+  // ── STEP 7: Night preference ──
   if (pdfRule?.isNightRequired && !isNightTime) {
-    nightWarning = `This work (${pdfRule.pdfName}) MUST be performed at night — spirits are suppressed by daylight (NGT_002)`;
-    warnings.push(nightWarning);
+    warnings.push(`This work (${pdfRule.pdfName}) MUST be performed at night — spirits are suppressed by daylight (NGT_002)`);
     rulesApplied.push({ id: 'NGT_006', desc: 'Love, enmity, separation, and binding works must be done at night', source: 'Al-Shurut p.39-40' });
   }
   if (!isNightTime) {
     rulesApplied.push({ id: 'NGT_001', desc: 'All scholars agree: night is superior to day for spiritual works (Sun suppresses spirits)', source: 'Al-Shurut p.39-40' });
   }
 
-  // ── STEP 8: Element direction & placement (Categories 10, 13) ──
+  // ── STEP 8: Element direction & placement ──
   let elementDirection = null, elementPlacement = null;
   if (dominant && ELEMENT_DIRECTION[dominant]) {
     elementDirection = ELEMENT_DIRECTION[dominant];
@@ -423,7 +434,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     rulesApplied.push({ id: `PLC_${dominant}`, desc: `Place talisman ${elementPlacement.placement}`, source: elementPlacement.source });
   }
 
-  // ── STEP 9: Find best hours today ──
+  // ── STEP 9: Find best hours today (with star ratings) ──
   let bestWindowsToday = [];
   let avoidWindowsToday = [];
 
@@ -431,48 +442,60 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     const matchingHours = findHoursByPlanet(todayHours, bestHourPlanet);
     for (const h of matchingHours) {
       if (h.status === 'past') continue;
-      bestWindowsToday.push({
-        startTime: h.startTime,
-        endTime: h.endTime,
-        planet: h.planet,
-        hourNumber: h.hourNumber,
-        period: h.period,
+      const w = {
+        startTime: h.startTime, endTime: h.endTime, planet: h.planet,
+        hourNumber: h.hourNumber, period: h.period,
         isIdeal: h.planet === bestHourPlanet.toLowerCase(),
         reason: `${bestHourPlanet} hour — ideal for ${pdfRule?.pdfName || 'this work'}`,
-      });
+      };
+      const strength = windowStrength(w, khayrSharr, moonPhase, pdfRule);
+      bestWindowsToday.push({ ...w, ...strength });
+    }
+  }
+  if (!bestHourPlanet && khayrSharr === 'khayr') {
+    for (const h of todayHours) {
+      if (h.status === 'past') continue;
+      if (BENEFIC_PLANETS.map(p => p.toLowerCase()).includes(h.planet)) {
+        const w = { startTime: h.startTime, endTime: h.endTime, planet: h.planet, hourNumber: h.hourNumber, period: h.period, isIdeal: false, reason: `${h.planet} hour — benefic planet, suitable for Khayr` };
+        const strength = windowStrength(w, khayrSharr, moonPhase, pdfRule);
+        bestWindowsToday.push({ ...w, ...strength });
+      }
     }
   }
 
-  // Avoid windows: hours of enemy planets (from existing ACTION_RULES)
+  // Avoid windows: hours of enemy planets
   const actionRule = mapToActionRule(primaryPurpose);
-  // Extend bestDayReason / bestHourReason with action-rule manuscript sources now available
   if (actionRule && actionRule.sources) {
     for (const src of actionRule.sources) {
       daySources.push(`${src.book} p.${src.page}: ${actionRule.category} works favor ${actionRule.beneficDays ? actionRule.beneficDays.join(', ') : 'the prescribed days'}`);
       hourSources.push(`${src.book} p.${src.page}: ${actionRule.category} works favor ${actionRule.beneficPlanets ? actionRule.beneficPlanets.join(', ') : 'benefic planet'} hours`);
     }
   }
-  // Re-merge reasons now that actionRule sources are available
   bestDayReason = daySources.length > 0 ? daySources.join(' · ') : bestDayReason;
   bestHourReason = hourSources.length > 0 ? hourSources.join(' · ') : bestHourReason;
+
   if (actionRule?.enemyPlanets) {
     for (const enemy of actionRule.enemyPlanets) {
       const enemyHours = findHoursByPlanet(todayHours, enemy);
       for (const h of enemyHours) {
         if (h.status === 'past') continue;
-        avoidWindowsToday.push({
-          startTime: h.startTime,
-          endTime: h.endTime,
-          planet: h.planet,
-          hourNumber: h.hourNumber,
-          reason: `${enemy} hour — enemy planet for ${actionRule.category}`,
-        });
+        avoidWindowsToday.push({ startTime: h.startTime, endTime: h.endTime, planet: h.planet, hourNumber: h.hourNumber, reason: `${enemy} hour — enemy planet for ${actionRule.category}` });
+      }
+    }
+  }
+  if (khayrSharr === 'khayr') {
+    for (const h of todayHours) {
+      if (h.status === 'past') continue;
+      if (MALEFIC_PLANETS.map(p => p.toLowerCase()).includes(h.planet)) {
+        if (!avoidWindowsToday.find(a => a.startTime === h.startTime)) {
+          avoidWindowsToday.push({ startTime: h.startTime, endTime: h.endTime, planet: h.planet, hourNumber: h.hourNumber, reason: `${h.planet} hour — malefic planet, weakens Khayr works (Havâss p.50-51)` });
+        }
       }
     }
   }
 
-  // ── STEP 10: Check if today is a valid day (Yes / No / Limited) ──
-  let canPerformToday = 'No'; // 'Yes' | 'No' | 'Limited'
+  // ── STEP 10: Can perform today? ──
+  let canPerformToday = 'No';
   let dayMatch = false;
   let canPerformTodayReason = '';
   if (bestDay) {
@@ -502,7 +525,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     canPerformTodayReason = `No specific day restriction found for this ritual type. Any day may work, but consult the planetary hours below for timing.`;
   }
 
-  // ── STEP 11: Find next valid opportunity ──
+  // ── STEP 11: Next best opportunity ──
   let nextOpportunity = null;
   if (bestDay && bestHourPlanet) {
     nextOpportunity = findNextValidDayHour(bestDay, bestHourPlanet);
@@ -512,495 +535,357 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   }
 
   // ── STEP 12: Compute suitability score ──
-  let score = 50; // base
+  let score = 50;
   const scoreReasons = [];
-
   if (dayMatch) { score += 20; scoreReasons.push('Correct day (+20)'); }
   else { score -= 15; scoreReasons.push('Wrong day (-15)'); }
-
-  // Current hour matches best hour planet?
   const currentHourMatches = bestHourPlanet && currentHourInfo.planet === bestHourPlanet.toLowerCase();
   if (currentHourMatches) { score += 25; scoreReasons.push('Current hour matches best planet (+25)'); }
   else if (bestHourPlanet) { score -= 10; scoreReasons.push('Current hour does not match best planet (-10)'); }
-
-  // Benefic hour for khayr?
-  if (khayrSharr === 'khayr' && BENEFIC_PLANETS.includes(currentHourInfo.planet)) {
-    score += 10; scoreReasons.push('Benefic hour for Khayr (+10)');
-  }
-
-  // Moon phase
+  if (khayrSharr === 'khayr' && BENEFIC_PLANETS.includes(currentHourInfo.planet)) { score += 10; scoreReasons.push('Benefic hour for Khayr (+10)'); }
   if (khayrSharr === 'khayr' && moonPhase.isGoodForKhayr) { score += 10; scoreReasons.push('Waxing moon for Khayr (+10)'); }
   if (khayrSharr === 'sharr' && moonPhase.isGoodForSharr) { score += 10; scoreReasons.push('Waning moon for Sharr (+10)'); }
-
-  // Night preference
   if (pdfRule?.isNightRequired && isNightTime) { score += 10; scoreReasons.push('Nighttime for nocturnal works (+10)'); }
   if (pdfRule?.isNightRequired && !isNightTime) { score -= 15; scoreReasons.push('Daytime but night required (-15)'); }
   if (!pdfRule?.isNightRequired && isNightTime) { score += 5; scoreReasons.push('Nighttime is generally superior (+5)'); }
-
-  // Dominant element alignment with purpose
   if (dominant && pdfRule) {
     const firePurposes = ['celb', 'sekam', 'tahyij', 'hariq', 'harb', 'haybah'];
     const earthPurposes = ['tard', 'aqd', 'tashtit'];
     const airPurposes = ['sihhat', 'ijlal'];
     const waterPurposes = ['tarfet', 'sultan'];
-    const purposeKey = primaryPurpose || '';
-    if (dominant === 'fire' && firePurposes.includes(purposeKey)) { score += 5; scoreReasons.push('Fire element aligns with purpose (+5)'); }
-    if (dominant === 'earth' && earthPurposes.includes(purposeKey)) { score += 5; scoreReasons.push('Earth element aligns with purpose (+5)'); }
-    if (dominant === 'air' && airPurposes.includes(purposeKey)) { score += 5; scoreReasons.push('Air element aligns with purpose (+5)'); }
-    if (dominant === 'water' && waterPurposes.includes(purposeKey)) { score += 5; scoreReasons.push('Water element aligns with purpose (+5)'); }
+    const pk = primaryPurpose || '';
+    if (dominant === 'fire' && firePurposes.includes(pk)) { score += 5; scoreReasons.push('Fire element aligns with purpose (+5)'); }
+    if (dominant === 'earth' && earthPurposes.includes(pk)) { score += 5; scoreReasons.push('Earth element aligns with purpose (+5)'); }
+    if (dominant === 'air' && airPurposes.includes(pk)) { score += 5; scoreReasons.push('Air element aligns with purpose (+5)'); }
+    if (dominant === 'water' && waterPurposes.includes(pk)) { score += 5; scoreReasons.push('Water element aligns with purpose (+5)'); }
   }
-
   score = Math.max(0, Math.min(100, score));
 
-  // ── STEP 13: Determine verdict (5 levels: Excellent / Strong / Moderate / Weak / Avoid) ──
+  // ── STEP 13: Verdict with star rating ──
+  const stars = scoreToStars(score);
   let verdict, verdictColor, verdictReason;
   if (score >= 85) { verdict = 'Excellent'; verdictColor = '#4ADE80'; verdictReason = 'All major conditions align perfectly — the heavens strongly support this ritual.'; }
-  else if (score >= 65) { verdict = 'Strong'; verdictColor = '#86EFAC'; verdictReason = 'Most conditions are favorable — proceed with confidence.'; }
-  else if (score >= 45) { verdict = 'Moderate'; verdictColor = '#FBBF24'; verdictReason = 'Mixed conditions — the ritual can succeed but requires extra focus and correct timing.'; }
-  else if (score >= 25) { verdict = 'Weak'; verdictColor = '#F59E0B'; verdictReason = 'Conditions are unfavorable — postpone to a better time if possible.'; }
+  else if (score >= 70) { verdict = 'Good'; verdictColor = '#86EFAC'; verdictReason = 'Most conditions are favorable — proceed with confidence.'; }
+  else if (score >= 50) { verdict = 'Moderate'; verdictColor = '#FBBF24'; verdictReason = 'Mixed conditions — the ritual can succeed but requires extra focus and correct timing.'; }
+  else if (score >= 30) { verdict = 'Weak'; verdictColor = '#F59E0B'; verdictReason = 'Conditions are unfavorable — postpone to a better time if possible.'; }
   else { verdict = 'Avoid'; verdictColor = '#F87171'; verdictReason = 'Multiple unfavorable conditions — do not proceed at this time.'; }
 
   // ── STEP 14: Book notes ──
-  if (pdfRule) {
-    bookNotes.push({ source: pdfRule.source, text: `${pdfRule.pdfName}: Day ${MIZAN_DAY_NAMES[pdfRule.bestDay]}, Hour ${pdfRule.bestHour}` });
-  }
+  if (pdfRule) bookNotes.push({ source: pdfRule.source, text: `${pdfRule.pdfName}: Day ${MIZAN_DAY_NAMES[pdfRule.bestDay]}, Hour ${pdfRule.bestHour}` });
   if (dominant) {
     bookNotes.push({ source: 'Al-Shurut p.37', text: `Dominant element ${dominant}: place talisman ${elementPlacement?.placement || 'appropriately'}` });
     bookNotes.push({ source: 'Al-Shurut p.42', text: `Face ${elementDirection?.dir || 'Qibla'} during ritual` });
   }
   if (actionRule) {
-    for (const src of (actionRule.sources || [])) {
-      bookNotes.push({ source: `${src.book} p.${src.page}`, text: `Existing manuscript: ${actionRule.category}` });
-    }
+    for (const src of (actionRule.sources || [])) bookNotes.push({ source: `${src.book} p.${src.page}`, text: `Existing manuscript: ${actionRule.category}` });
   }
 
-  // ── STEP 15: Recommended incense (INC_004) ──
+  // ── STEP 15: Incense ──
   const recommendedIncense = `${currentHourInfo.planet} incense (for the current ${currentHourInfo.planet} hour)`;
   rulesApplied.push({ id: 'INC_004', desc: 'Incense = incense of the SA\'AT (hour), NOT the day', source: 'Al-Shurut p.11, 20' });
 
-  // ── STEP 16: Zodiac suitability (from PDF Systems A + B) ──
-  // Note: Zodiac sign is not available from Mizan state directly; this is informational.
-  // We check if today's day/hour matches ANY zodiac timing as a general guidance.
+  // ── STEP 16: Zodiac suitability ──
   let zodiacSuitability = { assessed: false, bestSigns: [], note: '' };
   const todayDayMatchesZodiac = [];
   for (const [sign, rule] of Object.entries(ZODIAC_TIMING_A)) {
-    if (rule.day.includes(currentDayKey)) {
-      todayDayMatchesZodiac.push({ sign, system: 'A', hour: rule.hour, source: rule.source });
-    }
+    if (rule.day.includes(currentDayKey)) todayDayMatchesZodiac.push({ sign, system: 'A', hour: rule.hour, source: rule.source });
   }
   if (todayDayMatchesZodiac.length > 0) {
-    zodiacSuitability = {
-      assessed: true,
-      bestSigns: todayDayMatchesZodiac,
-      note: `Today's day (${MIZAN_DAY_NAMES[currentDayKey]}) is optimal for rituals targeting people born under: ${todayDayMatchesZodiac.map(z => z.sign).join(', ')}. If your target's natal sign is among these, today is especially powerful.`,
-    };
+    zodiacSuitability = { assessed: true, bestSigns: todayDayMatchesZodiac, note: `Today's day (${MIZAN_DAY_NAMES[currentDayKey]}) is optimal for rituals targeting people born under: ${todayDayMatchesZodiac.map(z => z.sign).join(', ')}.` };
     rulesApplied.push({ id: 'ZOD_A', desc: `Zodiac System A: ${MIZAN_DAY_NAMES[currentDayKey]} matches ${todayDayMatchesZodiac.map(z => z.sign).join(', ')}`, source: 'Al-Shurut p.18' });
   } else {
-    zodiacSuitability = {
-      assessed: true,
-      bestSigns: [],
-      note: `Today's day (${MIZAN_DAY_NAMES[currentDayKey]}) is not listed as optimal for any specific natal sign in the Omani zodiac timing tables. Proceed based on purpose and planetary hour rules.`,
-    };
+    zodiacSuitability = { assessed: true, bestSigns: [], note: `Today's day (${MIZAN_DAY_NAMES[currentDayKey]}) is not listed as optimal for any specific natal sign in the Omani zodiac timing tables.` };
   }
 
-  // ── STEP 17: Day/Night suitability assessment ──
+  // ── STEP 17: Day/Night suitability ──
   let dayNightSuitability = { status: 'neutral', reason: '', citation: '' };
   if (pdfRule?.isNightRequired) {
     if (isNightTime) {
-      dayNightSuitability = {
-        status: 'optimal',
-        reason: `It is currently nighttime, which is required for this type of work (${pdfRule.pdfName}). The Sun's suppression of spirits is lifted at night.`,
-        citation: 'Al-Shurut p.39-40 (NGT_001-006)',
-      };
+      dayNightSuitability = { status: 'optimal', reason: `It is currently nighttime, which is required for this work (${pdfRule.pdfName}). The Sun's suppression of spirits is lifted at night.`, citation: 'Al-Shurut p.39-40 (NGT_001-006)' };
     } else {
-      dayNightSuitability = {
-        status: 'forbidden',
-        reason: `It is currently daytime, but this work (${pdfRule.pdfName}) must be performed at night. The Sun's dominion suppresses all spirits during daylight.`,
-        citation: 'Al-Shurut p.39-40 (NGT_002)',
-      };
+      dayNightSuitability = { status: 'forbidden', reason: `It is currently daytime, but this work (${pdfRule.pdfName}) must be performed at night. The Sun's dominion suppresses all spirits during daylight.`, citation: 'Al-Shurut p.39-40 (NGT_002)' };
     }
   } else {
     if (isNightTime) {
-      dayNightSuitability = {
-        status: 'good',
-        reason: `It is nighttime — all scholars agree that night is superior to day for spiritual works because the Sun no longer suppresses the spirits.`,
-        citation: 'Al-Shurut p.39 (NGT_001)',
-      };
+      dayNightSuitability = { status: 'good', reason: `It is nighttime — all scholars agree that night is superior to day for spiritual works.`, citation: 'Al-Shurut p.39 (NGT_001)' };
     } else {
-      dayNightSuitability = {
-        status: 'acceptable',
-        reason: `It is daytime. While night is generally preferred for spiritual works, this type of work (healing, talismans, invocations) can be performed during the day if the planetary hour is correct.`,
-        citation: 'Al-Shurut p.39-40 (NGT_007)',
-      };
+      dayNightSuitability = { status: 'acceptable', reason: `It is daytime. While night is generally preferred, this type of work can be performed during the day if the planetary hour is correct.`, citation: 'Al-Shurut p.39-40 (NGT_007)' };
     }
   }
 
-  // ── STEP 18: Element compatibility assessment ──
+  // ── STEP 18: Element compatibility ──
   let elementCompatibility = { assessed: false, status: 'neutral', reason: '', citation: '' };
   if (dominant && ELEMENT_PLANET_AFFINITY[dominant]) {
     const elemInfo = ELEMENT_PLANET_AFFINITY[dominant];
     const currentPlanetLower = currentHourInfo.planet.toLowerCase();
     const isAligned = elemInfo.planets.map(p => p.toLowerCase()).includes(currentPlanetLower);
     elementCompatibility = {
-      assessed: true,
-      status: isAligned ? 'aligned' : 'neutral',
-      element: dominant,
-      elementNature: elemInfo.nature,
-      affinityPlanets: elemInfo.planets,
-      strengthens: elemInfo.strengthens,
+      assessed: true, status: isAligned ? 'aligned' : 'neutral', element: dominant,
+      elementNature: elemInfo.nature, affinityPlanets: elemInfo.planets, strengthens: elemInfo.strengthens,
       reason: isAligned
         ? `The dominant element from your Mizan analysis is ${dominant} (${elemInfo.nature}), and the current planetary hour is ruled by ${currentHourInfo.planet} — one of the planets naturally aligned with ${dominant}. This harmony amplifies the ritual's power.`
-        : `The dominant element is ${dominant} (${elemInfo.nature}), but the current hour is ruled by ${currentHourInfo.planet}, which is not the primary planet of ${dominant}. The ritual can still work, but wait for a ${elemInfo.planets.join(' or ')} hour for maximum alignment.`,
+        : `The dominant element is ${dominant} (${elemInfo.nature}), but the current hour is ruled by ${currentHourInfo.planet}, which is not the primary planet of ${dominant}. Wait for a ${elemInfo.planets.join(' or ')} hour for maximum alignment.`,
       citation: 'Al-Shurut p.37, 42 + Havâss p.50-56',
     };
     rulesApplied.push({ id: `ELEM_${dominant}`, desc: `Element ${dominant} affinity: ${elemInfo.planets.join(', ')} — current hour ${isAligned ? 'matches' : 'differs'}`, source: 'Al-Shurut p.37 + Havâss' });
   }
 
-  // ── STEP 19: Current Astro Clock status summary ──
+  // ── STEP 19: Astro Clock status ──
   const astroClockStatus = {
-    day: MIZAN_DAY_NAMES[currentDayKey],
-    dayRuler: dayRuler.planet,
+    day: MIZAN_DAY_NAMES[currentDayKey], dayRuler: dayRuler.planet,
     currentHour: { number: currentHourInfo.hourNumber, planet: currentHourInfo.planet, symbol: PLANET_INFO[currentHourInfo.planet]?.symbol || '' },
-    isDaytime: !isNightTime,
-    hourRemaining: currentHourInfo.remainingTime,
+    isDaytime: !isNightTime, hourRemaining: currentHourInfo.remainingTime,
     nextPlanet: PLANET_SEQUENCE[(PLANET_SEQUENCE.indexOf(currentHourInfo.planet) + 1) % 7] || '',
     moonPhase: `Day ${moonPhase.lunarDay} (${moonPhase.phaseName})`,
-    summary: `Today is ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}). The current planetary hour is #${currentHourInfo.hourNumber} (${currentHourInfo.planet} ${PLANET_INFO[currentHourInfo.planet]?.symbol || ''}), ${isNightTime ? 'nighttime' : 'daytime'}, with ${currentHourInfo.remainingTime} remaining. The Moon is at day ${moonPhase.lunarDay} (${moonPhase.phaseName}). The next planetary hour will be ruled by ${PLANET_SEQUENCE[(PLANET_SEQUENCE.indexOf(currentHourInfo.planet) + 1) % 7] || 'unknown'}.`,
+    summary: `Today is ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}). The current planetary hour is #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? 'nighttime' : 'daytime'}, with ${currentHourInfo.remainingTime} remaining. The Moon is at day ${moonPhase.lunarDay} (${moonPhase.phaseName}).`,
   };
 
-  // ── STEP 20: Recommended start/end times ──
-  let recommendedStart = null;
-  let recommendedEnd = null;
-  let recommendedStartReason = '';
-  if (bestWindowsToday.length > 0) {
-    const first = bestWindowsToday[0];
-    recommendedStart = first.startTime;
-    recommendedEnd = first.endTime;
-    recommendedStartReason = `Begin during the ${first.planet} hour — this is the optimal planetary hour for ${pdfRule?.pdfName || 'this work'}. ${pdfRule ? `The manuscript ${pdfRule.source} prescribes this hour for this purpose.` : ''}`;
-  } else if (nextOpportunity) {
-    recommendedStart = nextOpportunity.startTime;
-    recommendedEnd = nextOpportunity.endTime;
-    recommendedStartReason = `No optimal hours remain today. The next available ${nextOpportunity.planet} hour is on ${nextOpportunity.dayName} at ${nextOpportunity.startTime}.`;
+  // ── STEP 20: Wait time until next suitable hour ──
+  const waitTime = computeWaitTime(todayHours, bestHourPlanet, khayrSharr, now);
+
+  // ── STEP 21: Ranked best hours (1st, 2nd, 3rd) ──
+  const rankedWindows = [...bestWindowsToday].sort((a, b) => b.score - a.score);
+  const topThree = rankedWindows.slice(0, 3).map((w, i) => ({ ...w, rank: i + 1 }));
+
+  // ── STEP 22: Next best moon phase ──
+  const nextMoonPhase = nextBestMoonPhase(khayrSharr, moonPhase.lunarDay);
+
+  // ── STEP 23: Comprehensive enemy analysis ──
+  const enemyAnalysis = { enemyHours: [], enemyDays: [], enemyMoonPhases: [], enemyRulers: [], note: '' };
+  if (khayrSharr === 'khayr') {
+    enemyAnalysis.enemyHours = MALEFIC_PLANETS;
+    enemyAnalysis.enemyDays = ['sat', 'tue'];
+    enemyAnalysis.enemyMoonPhases = ['Waning (Days 15–29)', 'New Moon (محاق)'];
+    enemyAnalysis.enemyRulers = ['Saturn (Greater Malefic)', 'Mars (Lesser Malefic)'];
+    enemyAnalysis.note = `For Khayr (benevolent) works, the manuscripts identify Saturn and Mars as enemy planets — their hours and days drain benevolent energy. The waning Moon and New Moon are also unfavorable, as the decreasing lunar light withers all works of growth and attraction.`;
+  } else if (khayrSharr === 'sharr') {
+    enemyAnalysis.enemyHours = BENEFIC_PLANETS;
+    enemyAnalysis.enemyDays = ['sun', 'thu', 'fri'];
+    enemyAnalysis.enemyMoonPhases = ['Waxing (Days 1–14)', 'Full Moon'];
+    enemyAnalysis.enemyRulers = ['Sun (suppression of spirits)', 'Jupiter (protection & expansion)', 'Venus (harmony & love)'];
+    enemyAnalysis.note = `For Sharr (banishment) works, the benefic planets (Sun, Jupiter, Venus, Moon) are the enemies — they protect, heal, and harmonize, opposing all works of separation and harm. The waxing Moon and Full Moon amplify life and growth, working against dissolution. Perform Sharr works only in the waning phase.`;
   }
 
-  // ── STEP 21: Human-readable expert narrative ──
+  // ═══════════════════════════════════════════════════════════════
+  // BUILD THE 10-SECTION EXPERT DECISION REPORT
+  // ═══════════════════════════════════════════════════════════════
+  const report = [];
+
+  // ── SECTION 1: TODAY ANALYSIS ──
+  report.push({
+    section: 'TODAY ANALYSIS',
+    icon: 'calendar',
+    status: canPerformToday,
+    body: canPerformToday === 'Yes'
+      ? `Yes — today is suitable. ${canPerformTodayReason} The heavens are aligned for this work, and you may proceed with confidence during the optimal hours listed below.`
+      : canPerformToday === 'Limited'
+        ? `Today is only partially suitable. ${canPerformTodayReason} You may proceed, but the ritual will be weakened. If the matter is urgent, continue; otherwise, wait for the next fully aligned day.`
+        : `No — today is not suitable. ${canPerformTodayReason} Performing this ritual today would be working against the celestial current, which the manuscripts warn against.`,
+    citation: pdfRule?.source || 'Al-Shurut p.12-13',
+    consequence: canPerformToday === 'Yes' ? 'No risk — proceed.' : 'Proceeding on the wrong day weakens the ritual and may cause the spirits to refuse the request.',
+  });
+
+  // ── SECTION 2: CURRENT MOMENT ──
+  const currentIsBenefic = khayrSharr === 'khayr' && BENEFIC_PLANETS.includes(currentHourInfo.planet);
+  const currentIsMalefic = khayrSharr === 'sharr' && MALEFIC_PLANETS.includes(currentHourInfo.planet);
+  let currentMomentSuitable = currentHourMatches || currentIsBenefic || currentIsMalefic;
+  if (pdfRule?.isNightRequired && !isNightTime) currentMomentSuitable = false;
+
+  report.push({
+    section: 'CURRENT MOMENT',
+    icon: 'clock',
+    status: currentMomentSuitable ? 'Suitable' : 'Not suitable',
+    body: currentMomentSuitable
+      ? `Right now is a suitable moment. The current planetary hour is #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? 'nighttime' : 'daytime'}, with ${currentHourInfo.remainingTime} remaining. ${currentHourMatches ? `This IS the prescribed ${bestHourPlanet} hour for your work.` : currentIsBenefic ? `Although not the prescribed hour, ${currentHourInfo.planet} is a benefic planet, which supports your Khayr work.` : `The ${currentHourInfo.planet} hour provides the necessary malefic force for your Sharr work.`} Act now — this window will not remain open long.`
+      : `The current moment is not suitable. The current hour is #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? 'nighttime' : 'daytime'}. ${pdfRule?.isNightRequired && !isNightTime ? `This work requires nighttime, but it is currently daytime — the Sun suppresses all spirits.` : `The ${currentHourInfo.planet} hour does not carry the planetary force your work requires.`} ${waitTime ? `You must wait approximately ${waitTime.waitText} until the next suitable hour (${waitTime.hour.planet}, starting at ${waitTime.hour.startTime}).` : 'No suitable hours remain today — wait for the next recommended day.'}`,
+    citation: 'Live Astro Clock + Al-Shurut p.12',
+    consequence: currentMomentSuitable ? 'Act immediately — the window closes when the hour changes.' : 'Proceeding now wastes effort and may cause the ritual to fail or rebound.',
+    waitTime: waitTime ? waitTime.waitText : null,
+  });
+
+  // ── SECTION 3: TODAY'S WINDOWS ──
+  report.push({
+    section: "TODAY'S WINDOWS",
+    icon: 'windows',
+    status: bestWindowsToday.length > 0 ? `${bestWindowsToday.length} available` : 'None remaining',
+    windows: bestWindowsToday.sort((a, b) => a.startTime.localeCompare(b.startTime)).map(w => ({
+      time: `${w.startTime}–${w.endTime}`,
+      stars: starsToString(w.stars),
+      planet: w.planet,
+      hourNumber: w.hourNumber,
+      period: w.period,
+      reason: w.reason,
+      strengthReason: `${starsToString(w.stars)} — ${w.reason}`,
+    })),
+    body: bestWindowsToday.length > 0
+      ? `The following periods today are suitable for your work. Each window's strength is rated by stars (★★★★★ = perfect alignment, ★ = barely usable). The strength reflects whether the planetary hour matches the prescription, whether the Moon phase supports the work, and whether the time of day meets the manuscript's requirements.`
+      : `No favorable periods remain today — all prescribed hours have passed. Wait for the next recommended day and hour (see below).`,
+    citation: pdfRule?.source || 'Al-Shurut p.12-13',
+    consequence: 'These are your power windows. Missing them means waiting for the next occurrence.',
+  });
+
+  // ── SECTION 4: BEST TIME ──
+  report.push({
+    section: 'BEST TIME',
+    icon: 'star',
+    status: topThree.length > 0 ? `${topThree.length} ranked` : 'None',
+    ranked: topThree.map(w => ({
+      rank: w.rank,
+      time: `${w.startTime}–${w.endTime}`,
+      stars: starsToString(w.stars),
+      planet: w.planet,
+      reason: w.rank === 1 ? `This is the strongest window today. ${w.reason}. ${pdfRule ? `The manuscript ${pdfRule.source} prescribes this hour for ${pdfRule.pdfName}.` : ''}` : w.rank === 2 ? `This is the second-best window. ${w.reason}. It is slightly weaker than the first — use it only if the primary window is missed.` : `This is the third-best window. ${w.reason}. It is a fallback option if the first two are unavailable.`,
+    })),
+    body: topThree.length > 0
+      ? `The best, second-best, and third-best hours today are listed above. The ranking is based on the alignment of the planetary hour with your prescribed planet, the Moon phase, and the day/night requirement.`
+      : `No ranked windows are available today. Consult the "If Today Is Not Good" section below for the next opportunity.`,
+    citation: pdfRule?.source || 'Al-Shurut p.12',
+    consequence: 'Starting at the wrong hour means the planetary ruler does not govern the request.',
+  });
+
+  // ── SECTION 5: BAD TIMES ──
+  report.push({
+    section: 'BAD TIMES',
+    icon: 'alert',
+    status: avoidWindowsToday.length > 0 ? `${avoidWindowsToday.length} to avoid` : 'None identified',
+    avoid: avoidWindowsToday.map(w => ({ time: `${w.startTime}–${w.endTime}`, planet: w.planet, reason: w.reason })),
+    enemyAnalysis,
+    body: avoidWindowsToday.length > 0
+      ? `The following periods today must be avoided: ${avoidWindowsToday.map(w => `${w.startTime}–${w.endTime} (${w.planet} — ${w.reason})`).join('; ')}. ${enemyAnalysis.note} ${khayrSharr === 'khayr' ? `Since your work is Khayr (benevolent), the enemy planets are ${enemyAnalysis.enemyRulers.join(', ')}. Avoid their hours and days entirely.` : khayrSharr === 'sharr' ? `Since your work is Sharr (banishment), the enemy planets are the benefics: ${enemyAnalysis.enemyRulers.join(', ')}. Their hours and days protect and harmonize, opposing your work.` : 'The engine will infer Khayr or Sharr from your purpose category.'}`
+      : `No specifically dangerous hours were found today. However, ${enemyAnalysis.note}`,
+    citation: 'Al-Shurut p.12 + Havâss p.50-56',
+    consequence: 'Performing in a dangerous hour can cause the ritual to rebound — the manuscripts record cases of practitioners becoming ill after working in enemy hours.',
+  });
+
+  // ── SECTION 6: IF TODAY IS NOT GOOD ──
+  report.push({
+    section: 'IF TODAY IS NOT GOOD',
+    icon: 'calendar-clock',
+    status: nextOpportunity ? `Next: ${nextOpportunity.dayName}` : 'No future window found',
+    nextHour: nextOpportunity ? { day: nextOpportunity.dayName, time: `${nextOpportunity.startTime}–${nextOpportunity.endTime}`, planet: nextOpportunity.planet, isToday: nextOpportunity.isToday, daysAhead: nextOpportunity.daysAhead } : null,
+    nextMoonPhase,
+    body: nextOpportunity
+      ? `If today's opportunity has passed or is unsuitable, the next best time is: ${nextOpportunity.dayName}${nextOpportunity.isToday ? ' (today)' : ` (${nextOpportunity.daysAhead} day${nextOpportunity.daysAhead > 1 ? 's' : ''} from now)`}, at ${nextOpportunity.startTime}–${nextOpportunity.endTime} (${nextOpportunity.planet} hour, Hour #${nextOpportunity.hour}). ${nextMoonPhase ? `Regarding the Moon: ${nextMoonPhase.phase} — ${nextMoonPhase.reason}${nextMoonPhase.waitDays > 0 ? ` (approximately ${nextMoonPhase.waitDays} days to wait).` : ' (available now).'}` : ''}`
+      : `No future opportunity was found within the next 7 days. ${nextMoonPhase ? `For the Moon phase: ${nextMoonPhase.phase} — ${nextMoonPhase.reason}${nextMoonPhase.waitDays > 0 ? ` (approximately ${nextMoonPhase.waitDays} days to wait).` : ''}` : ''} Consult the manuscripts for alternative days.`,
+    citation: pdfRule?.source || 'Al-Shurut p.12-13',
+    consequence: 'Waiting for the next aligned time ensures the ritual has full power.',
+  });
+
+  // ── SECTION 7: ASTRO ANALYSIS ──
+  report.push({
+    section: 'ASTRO ANALYSIS',
+    icon: 'globe',
+    status: `${astroClockStatus.day} / ${astroClockStatus.currentHour.planet}`,
+    body: `Today is ${astroClockStatus.day}, ruled by ${dayRuler.planet} (${PLANET_INFO[dayRuler.planet.toLowerCase()]?.nature_en || ''}). The current planetary hour is #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? 'nighttime' : 'daytime'}, with ${currentHourInfo.remainingTime} remaining. The Moon is at Day ${moonPhase.lunarDay} (${moonPhase.phaseName}). ${elementCompatibility.assessed ? `Element compatibility: ${elementCompatibility.reason}` : ''} ${zodiacSuitability.note} Overall cosmic strength: ${verdict} (${score}%).`,
+    citation: 'Live Astro Clock + Al-Shurut p.18-19 + Havâss p.50-56',
+    consequence: 'The overall cosmic strength is the composite of all conditions — day, hour, Moon, element, and zodiac.',
+    details: { dayRuler: dayRuler.planet, currentHour: currentHourInfo, moonPhase, dayNightSuitability, elementCompatibility, zodiacSuitability, score, verdict },
+  });
+
+  // ── SECTION 8: MANUSCRIPT EXPLANATION ──
+  report.push({
+    section: 'MANUSCRIPT EXPLANATION',
+    icon: 'book',
+    status: `${rulesApplied.length} rules applied`,
+    rules: rulesApplied,
+    body: `Every recommendation above is grounded in the imported manuscripts. ${pdfRule ? `Your work is classified as ${pdfRule.pdfName} (${pdfRule.category}), and the manuscript ${pdfRule.source} prescribes Day ${MIZAN_DAY_NAMES[pdfRule.bestDay]} during the ${pdfRule.bestHour} hour.` : ''} ${khayrSharr === 'khayr' ? `Because this is a Khayr work, Al-Shurut p.13 restricts you to Sa'idat hours (1st & 8th of Sun/Mon/Thu/Fri) or any benefic planet hour (Sun, Jupiter, Venus, Moon).` : khayrSharr === 'sharr' ? `Because this is a Sharr work, Al-Shurut p.13 recommends the waning Moon, especially the New Moon (محاق), for maximum dissolution power.` : ''} ${dominant ? `Your dominant element is ${dominant}; Al-Shurut p.42 directs you to face ${elementDirection?.dir} and Al-Shurut p.37 to place the talisman ${elementPlacement?.placement}.` : ''} The full list of applied rules is shown below.`,
+    citation: 'All imported manuscripts (Al-Shurut, Havâss\'ın Derinlikleri, Ustad Taha)',
+    consequence: 'Each rule carries the authority of its source manuscript. Ignoring a rule means working against the tradition, which the scholars warn causes failure or rebound.',
+  });
+
+  // ── SECTION 9: WARNING SECTION ──
+  report.push({
+    section: 'WARNING SECTION',
+    icon: 'alert-triangle',
+    status: warnings.length > 0 ? `${warnings.length} warnings` : 'No warnings',
+    warnings,
+    conflicts,
+    body: warnings.length > 0
+      ? warnings.map(w => `⚠ ${w}`).join(' ')
+      : `No warnings — all checked conditions are favorable. ${conflicts.length > 0 ? `However, ${conflicts.length} manuscript conflict${conflicts.length > 1 ? 's' : ''} were detected and resolved.` : ''}`,
+    citation: 'Al-Shurut pp.12-13, 39-40 + Havâss p.50-56',
+    consequence: "Each warning identifies a condition that, if ignored, reduces the ritual's power or reverses it.",
+  });
+
+  // ── SECTION 10: FINAL DECISION ──
+  report.push({
+    section: 'FINAL DECISION',
+    icon: 'sparkles',
+    status: verdict,
+    stars: starsToString(stars),
+    starsCount: stars,
+    color: verdictColor,
+    score,
+    body: `${starsToString(stars)} ${verdict}. ${verdictReason} This verdict is the composite of ${scoreReasons.length} factors: ${scoreReasons.join('; ')}. ${canPerformToday === 'Yes' ? 'You may proceed today during the optimal hours listed above.' : canPerformToday === 'Limited' ? 'You may proceed today with caution, but the ritual will be weaker than at the ideal time.' : 'Postpone to the next recommended day and hour for full power.'} ${recommendedIncense ? `Burn ${recommendedIncense} during the work (Al-Shurut p.11, 20).` : ''}`,
+    citation: 'Composite of all manuscript rules',
+    consequence: score >= 70 ? 'The ritual is strong — proceed with confidence.' : score >= 50 ? 'The ritual is moderate — proceed with extra focus and strict adherence to timing.' : 'The ritual is weak — postpone if possible.',
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // EXPERT NARRATIVE (opening statement)
+  // ═══════════════════════════════════════════════════════════════
   const expertNarrative = [];
-  expertNarrative.push(`Based on your Mizan analysis, this ritual is classified as "${pdfRule?.pdfName || 'General spiritual work'}" — ${pdfRule?.description || 'a spiritual operation requiring proper timing.'}`);
-  if (khayrSharr) {
-    expertNarrative.push(`You have selected this as a ${khayrSharr === 'khayr' ? 'Khayr (good/benevolent)' : 'Sharr (powerful/banishment)'} work. ${khayrSharr === 'khayr' ? 'Khayr works are best performed during the waxing Moon and in Sa\'idat (auspicious) hours.' : 'Sharr works are best performed during the waning Moon, especially at the New Moon (محاق).'}`);
+  expertNarrative.push(`Based on your Mizan analysis, this ritual is classified as "${pdfRule?.pdfName || 'General spiritual work'}" — ${pdfRule?.description || 'a spiritual operation requiring proper timing.'} It belongs to the category of ${ritualCategory}.`);
+  if (khayrSharrInferred.inferred) {
+    expertNarrative.push(`You did not explicitly select Khayr or Sharr in Mizan 8, so the engine has inferred this as a ${khayrSharr === 'khayr' ? 'Khayr (benevolent)' : 'Sharr (banishment)'} work based on the purpose category. ${khayrSharr === 'khayr' ? 'Khayr works are best performed during the waxing Moon and in Sa\'idat (auspicious) hours.' : 'Sharr works are best performed during the waning Moon, especially at the New Moon (محاق).'}`);
+  } else if (khayrSharr) {
+    expertNarrative.push(`You have selected this as a ${khayrSharr === 'khayr' ? 'Khayr (benevolent)' : 'Sharr (powerful/banishment)'} work. ${khayrSharr === 'khayr' ? 'Khayr works are best performed during the waxing Moon and in Sa\'idat (auspicious) hours.' : 'Sharr works are best performed during the waning Moon, especially at the New Moon (محاق).'}`);
   }
   if (dominant) {
     expertNarrative.push(`The dominant element in your text is ${dominant}, which means you should face ${elementDirection?.dir || 'Qibla'} during the ritual and place the talisman ${elementPlacement?.placement || 'appropriately'}.`);
   }
-  expertNarrative.push(`The manuscripts recommend performing this work on ${bestDay ? MIZAN_DAY_NAMES[bestDay] : 'any suitable day'} during the ${bestHourPlanet || 'appropriate planetary'} hour. ${canPerformToday === 'Yes' ? 'Today meets this criteria and optimal hours are still available.' : canPerformToday === 'Limited' ? 'Today is the right day but the optimal hours have passed — you may proceed with caution or wait for the next occurrence.' : 'Today does not meet the day criteria — wait for the next recommended day.'}`);
-  if (isNightTime) {
-    expertNarrative.push(`It is currently nighttime, which is favorable — the Sun no longer dominates and spirits can act freely.`);
-  } else if (pdfRule?.isNightRequired) {
-    expertNarrative.push(`WARNING: This work must be performed at night, but it is currently daytime. Wait until after sunset.`);
-  }
+  expertNarrative.push(`The manuscripts recommend performing this work on ${bestDay ? MIZAN_DAY_NAMES[bestDay] : 'any suitable day'} during the ${bestHourPlanet || 'appropriate planetary'} hour. ${canPerformToday === 'Yes' ? 'Today meets this criteria and optimal hours are still available.' : canPerformToday === 'Limited' ? 'Today is the right day but the optimal hours have passed — proceed with caution or wait.' : 'Today does not meet the day criteria — wait for the next recommended day.'}`);
 
   // ═══════════════════════════════════════════════════════════════
-  // STEP 22: BUILD THE 23-POINT EXPERT CONSULTATION
-  // Each point: { n, title, body, citation, consequence }
-  // ═══════════════════════════════════════════════════════════════
-  const consultation = [];
-
-  consultation.push({
-    n: 1, title: `Whether Today Is Suitable`,
-    body: canPerformToday === `Yes`
-      ? `Yes — today is suitable. ${canPerformTodayReason} The heavens are aligned for this work, and you may proceed with confidence during the optimal hours listed below.`
-      : canPerformToday === `Limited`
-        ? `Today is only partially suitable. ${canPerformTodayReason} You may proceed, but the ritual will be weakened. If the matter is urgent, continue; otherwise, wait for the next fully aligned day.`
-        : `No — today is not suitable. ${canPerformTodayReason} Performing this ritual today would be working against the celestial current, which the manuscripts warn against.`,
-    citation: pdfRule?.source || `Al-Shurut p.12-13`,
-    consequence: canPerformToday === `Yes`
-      ? `No risk — proceed.`
-      : `Proceeding on the wrong day weakens the ritual and may cause the spirits to refuse the request, as the planetary ruler of the day does not govern this type of work.`,
-  });
-
-  const whyTodayParts = [];
-  if (dayMatch) whyTodayParts.push(`Today's weekday (${MIZAN_DAY_NAMES[currentDayKey]}) matches the prescription for ${pdfRule?.pdfName || `this work`}.`);
-  else if (bestDay) whyTodayParts.push(`Today is ${MIZAN_DAY_NAMES[currentDayKey]} but the prescribed day is ${MIZAN_DAY_NAMES[bestDay]}${altDay ? ` or ` + MIZAN_DAY_NAMES[altDay] : ``}.`);
-  if (bestHourPlanet) {
-    if (currentHourInfo.planet === bestHourPlanet.toLowerCase()) whyTodayParts.push(`The current planetary hour is ruled by ${currentHourInfo.planet}, which is the prescribed hour.`);
-    else whyTodayParts.push(`The current hour is ruled by ${currentHourInfo.planet}, not the prescribed ${bestHourPlanet}.`);
-  }
-  if (pdfRule?.isNightRequired) whyTodayParts.push(isNightTime ? `It is nighttime, which is required for this work.` : `It is daytime, but this work requires night.`);
-  if (khayrSharr === `khayr` && !moonPhase.isGoodForKhayr) whyTodayParts.push(`The Moon is waning, which weakens Khayr works.`);
-  if (khayrSharr === `sharr` && !moonPhase.isGoodForSharr) whyTodayParts.push(`The Moon is waxing, which weakens Sharr works.`);
-  consultation.push({
-    n: 2, title: `Why Today Is Suitable or Unsuitable`,
-    body: whyTodayParts.join(` `) || `No specific rule restricts or promotes today for this work.`,
-    citation: `Al-Shurut pp.12-13, 39-40`,
-    consequence: `Understanding the cause of unsuitability tells you exactly which condition to wait for — day, hour, or moon phase.`,
-  });
-
-  consultation.push({
-    n: 3, title: `Best Start Time`,
-    body: recommendedStart
-      ? `Begin at ${recommendedStart}. ${recommendedStartReason}`
-      : `No specific optimal start time was identified — consult the available hours below.`,
-    citation: pdfRule?.source || `Al-Shurut p.12`,
-    consequence: `Starting at the wrong hour means the planetary ruler does not govern the request, and the invocation may return unanswered.`,
-  });
-
-  consultation.push({
-    n: 4, title: `Best End Time`,
-    body: recommendedEnd
-      ? `Complete before ${recommendedEnd}, when the planetary hour changes. ${pdfRule ? `The ${bestHourPlanet} hour is the window in which the ${pdfRule.pdfName} must be performed.` : `Do not let the hour pass — each planetary hour governs a different spiritual domain.`}`
-      : `No specific end time identified.`,
-    citation: `Al-Shurut p.12 + Havâss p.50-56`,
-    consequence: `Continuing past the hour means entering a new planetary rulership, which may oppose the work and nullify what was built.`,
-  });
-
-  consultation.push({
-    n: 5, title: `Strongest Planetary Hour`,
-    body: bestHourPlanet
-      ? `The ${bestHourPlanet} hour is the strongest hour for this work. ${bestHourReason} ${bestWindowsToday.length > 0 ? `Today, this hour occurs at: ${bestWindowsToday.map(w => `${w.startTime}–${w.endTime}`).join(`, `)}.` : `No instances of this hour remain today.`}`
-      : `No specific strongest hour was identified from the manuscripts for this purpose.`,
-    citation: pdfRule?.source || `Havâss p.50-56`,
-    consequence: `A weak hour means the planetary spirit is not inclined to answer — the ritual becomes an empty recitation.`,
-  });
-
-  consultation.push({
-    n: 6, title: `Weak Planetary Hours to Avoid`,
-    body: avoidWindowsToday.length > 0
-      ? `Avoid the following hours today: ${avoidWindowsToday.map(w => `${w.startTime}–${w.endTime} (${w.planet} — ${w.reason})`).join(`; `)}. These hours are ruled by planets that oppose ${pdfRule?.pdfName || `this work`}, and performing the ritual during them can cause the work to rebound against the practitioner.`
-      : bestHourPlanet
-        ? `No specific enemy-planet hours were found for this work. However, avoid any hour that is not the ${bestHourPlanet} hour, as the manuscripts advise against performing spiritual works in hours not prescribed for them.`
-        : `No specific weak hours were identified.`,
-    citation: `Al-Shurut p.12 + Havâss p.50-56`,
-    consequence: `The manuscripts warn that performing a work in the hour of an enemy planet causes the ritual to reverse — harming the practitioner instead of the target.`,
-  });
-
-  consultation.push({
-    n: 7, title: `Best Moon Condition`,
-    body: khayrSharr === `khayr`
-      ? `The best moon condition is the waxing phase (first 14 lunar days), especially days 1–7, when the Moon is growing in light. Khayr (benevolent) works thrive on the increasing lunar energy. The Full Moon (days 13–16) is also powerful for works of majesty and attraction.`
-      : khayrSharr === `sharr`
-        ? `The best moon condition is the waning phase (days 15–29), especially the New Moon (محاق, days 27–2), when the Moon's light is smallest. Sharr (dark) works require the diminishing lunar energy to dissolve and banish.`
-        : `Select Khayr or Sharr in Mizan 8 to receive moon-specific guidance. Generally: waxing for attraction and growth, waning for banishment and removal.`,
-    citation: `Al-Shurut p.13 (MN_001-002)`,
-    consequence: `Wrong moon phase is like rowing against the tide — the ritual expends effort but achieves little, as the lunar current opposes the intention.`,
-  });
-
-  consultation.push({
-    n: 8, title: `Current Moon Condition vs Required`,
-    body: `The Moon is currently at Day ${moonPhase.lunarDay} (${moonPhase.phaseName}). ${khayrSharr === `khayr` ? (moonPhase.isGoodForKhayr ? `This is GOOD — the Moon is waxing, which supports Khayr works.` : `This is NOT ideal — the Moon is waning. Khayr works are weakened. Wait for the next waxing cycle.`) : khayrSharr === `sharr` ? (moonPhase.isGoodForSharr ? `This is GOOD — the Moon is waning, which supports Sharr works. ${moonPhase.isNewMoon ? `Today is near the New Moon — the most powerful time for dark works.` : ``}` : `This is NOT ideal — the Moon is waxing. Sharr works are weakened. Wait for the waning phase.`) : `Select Khayr or Sharr in Mizan 8 to receive a moon comparison.`}`,
-    citation: `Al-Shurut p.13 (MN_001-002)`,
-    consequence: `Proceeding with a mismatched moon means the lunar energy either amplifies or contradicts the work. Khayr in a waning moon withers; Sharr in a waxing moon rebounds.`,
-  });
-
-  consultation.push({
-    n: 9, title: `Best Weekday`,
-    body: bestDay
-      ? `${MIZAN_DAY_NAMES[bestDay]} is the best weekday for this work. ${bestDayReason}${altDay ? ` ${MIZAN_DAY_NAMES[altDay]} is an acceptable alternative.` : ``}`
-      : `No specific weekday restriction was found for this purpose. Consult the planetary hours for timing.`,
-    citation: pdfRule?.source || `Al-Shurut p.12`,
-    consequence: `The wrong weekday means the day's ruling planet does not govern this type of work, and the spirits of that day will not assist.`,
-  });
-
-  consultation.push({
-    n: 10, title: `Today's Weekday Analysis`,
-    body: `Today is ${MIZAN_DAY_NAMES[currentDayKey]}, ruled by ${dayRuler.planet}. ${PLANET_INFO[dayRuler.planet.toLowerCase()]?.nature_en || ``}. ${dayMatch ? `This matches the prescription for your work.` : bestDay ? `This does not match the prescribed day (${MIZAN_DAY_NAMES[bestDay]}), so the day's planetary energy does not support your ritual.` : `No specific day prescription exists for this work.`}`,
-    citation: `Havâss p.50-56 + Al-Shurut p.12`,
-    consequence: `Each weekday is governed by a specific planet. Performing a Venus work on a Mars day creates planetary conflict that the spirits recognize and refuse.`,
-  });
-
-  consultation.push({
-    n: 11, title: `Best Planetary Alignment`,
-    body: `The ideal alignment is: ${bestDay ? MIZAN_DAY_NAMES[bestDay] + ` (day)` : `any suitable day`} + ${bestHourPlanet || `correct`} hour${pdfRule?.isNightRequired ? ` + nighttime` : ``}${khayrSharr === `khayr` ? ` + waxing moon` : khayrSharr === `sharr` ? ` + waning/new moon` : ``}${dominant ? ` + ${dominant} element hour` : ``}. When all these align, the ritual has maximum power.`,
-    citation: `Al-Shurut pp.12-13, 39-40 + Havâss p.50-56`,
-    consequence: `Missing any alignment reduces the ritual's power. The more conditions met, the stronger the result; the more missed, the weaker.`,
-  });
-
-  consultation.push({
-    n: 12, title: `Current Planetary Condition`,
-    body: `Right now: ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}), Hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? `nighttime` : `daytime`}, Moon Day ${moonPhase.lunarDay} (${moonPhase.phaseName}). ${currentHourInfo.planet === (bestHourPlanet || ``).toLowerCase() ? `The current hour IS the prescribed hour — act now.` : `The current hour is ${currentHourInfo.planet}, not the prescribed ${bestHourPlanet || `—`}.`}`,
-    citation: `Live Astro Clock + Al-Shurut p.12`,
-    consequence: `The current condition is your window of opportunity. If it matches, act immediately; if not, wait for the alignment.`,
-  });
-
-  consultation.push({
-    n: 13, title: `Good Periods Today`,
-    body: bestWindowsToday.length > 0
-      ? `The following periods today are favorable: ${bestWindowsToday.map(w => `${w.startTime}–${w.endTime} (${w.planet} hour, Hour #${w.hourNumber}, ${w.period})`).join(`; `)}. These are the windows when the prescribed planet rules the hour.`
-      : `No favorable periods remain today — all prescribed hours have passed.`,
-    citation: pdfRule?.source || `Al-Shurut p.12`,
-    consequence: `These are your power windows. Missing them means waiting for the next occurrence (possibly a full week).`,
-  });
-
-  consultation.push({
-    n: 14, title: `Dangerous Periods Today`,
-    body: avoidWindowsToday.length > 0
-      ? `The following periods are dangerous: ${avoidWindowsToday.map(w => `${w.startTime}–${w.endTime} (${w.planet} — ${w.reason})`).join(`; `)}. In these hours, enemy planets rule, and the work can reverse or harm the practitioner.`
-      : `No specifically dangerous periods were identified, but avoid hours not prescribed for your work.`,
-    citation: `Al-Shurut p.12 + Havâss p.50-56`,
-    consequence: `Performing in a dangerous hour can cause the ritual to rebound — the manuscripts record cases of practitioners becoming ill or possessed after working in enemy hours.`,
-  });
-
-  consultation.push({
-    n: 15, title: `Forbidden Periods Today`,
-    body: pdfRule?.isNightRequired && !isNightTime
-      ? `The entire daytime period today is FORBIDDEN for this work. ${pdfRule.pdfName} must be performed at night only. Wait until after sunset.`
-      : `No periods are strictly forbidden today, but observe the dangerous hours listed above.`,
-    citation: `Al-Shurut p.39-40 (NGT_001-006)`,
-    consequence: `The manuscripts state that the Sun suppresses all spirits during daylight. Performing a nocturnal work during the day causes the spirits to refuse and may anger them.`,
-  });
-
-  consultation.push({
-    n: 16, title: `Day or Night Recommendation`,
-    body: dayNightSuitability.status === `optimal` ? `Perform at NIGHT. ${dayNightSuitability.reason}`
-      : dayNightSuitability.status === `forbidden` ? `You MUST wait for night. ${dayNightSuitability.reason}`
-      : dayNightSuitability.status === `good` ? `Night is strongly recommended. ${dayNightSuitability.reason}`
-      : `Daytime is acceptable but night is better. ${dayNightSuitability.reason}`,
-    citation: dayNightSuitability.citation,
-    consequence: `Night is when spirits are free to act. Daytime works risk the Sun's suppression, which weakens or nullifies the invocation.`,
-  });
-
-  consultation.push({
-    n: 17, title: `Element Compatibility`,
-    body: elementCompatibility.assessed
-      ? `${elementCompatibility.reason} ${dominant ? `Face ${elementDirection?.dir || `Qibla`} and place the talisman ${elementPlacement?.placement || `appropriately`}.` : ``}`
-      : `No element was detected in your Mizan analysis. Element compatibility cannot be assessed.`,
-    citation: elementCompatibility.citation || `Al-Shurut p.37, 42`,
-    consequence: `Wrong element alignment means the talisman's spiritual nature conflicts with the environment, reducing its effectiveness.`,
-  });
-
-  consultation.push({
-    n: 18, title: `Zodiac Compatibility`,
-    body: zodiacSuitability.assessed
-      ? `${zodiacSuitability.note} ${zodiacSuitability.bestSigns.length > 0 ? `If you know your target's natal sign, matching today strengthens the ritual.` : ``}`
-      : `Zodiac compatibility could not be assessed.`,
-    citation: `Al-Shurut p.18-19 (Omani Systems A & B)`,
-    consequence: `Zodiac mismatch is not fatal, but matching the target's sign to the correct day amplifies the ritual's reach into their life.`,
-  });
-
-  consultation.push({
-    n: 19, title: `Overall Ritual Strength`,
-    body: `The overall strength of this ritual at this moment is: ${verdict} (${score}%). ${verdictReason}`,
-    citation: `Composite of all manuscript rules`,
-    consequence: score >= 65 ? `The ritual is strong — proceed with confidence.` : score >= 45 ? `The ritual is moderate — proceed with extra focus and strict adherence to timing.` : `The ritual is weak — postpone if possible.`,
-  });
-
-  consultation.push({
-    n: 20, title: `Confidence Score`,
-    body: `Confidence: ${score}%. This score is computed from: ${scoreReasons.join(`; `)}. A score above 65% means the heavens support the work; below 45% means conditions are unfavorable.`,
-    citation: `Composite scoring from all sources`,
-    consequence: `Low confidence means multiple conditions are missed — the ritual will require more effort and may still fail.`,
-  });
-
-  consultation.push({
-    n: 21, title: `Warnings`,
-    body: warnings.length > 0
-      ? warnings.map(w => `⚠ ${w}`).join(` `)
-      : `No warnings — all checked conditions are favorable.`,
-    citation: `Al-Shurut pp.12-13, 39-40`,
-    consequence: `Each warning identifies a condition that, if ignored, reduces the ritual's power or reverses it.`,
-  });
-
-  consultation.push({
-    n: 22, title: `Conflicting Manuscript Rules`,
-    body: conflicts.length > 0
-      ? conflicts.map(c => `${c.rule1} vs ${c.rule2}. Resolution: ${c.resolution}`).join(` `)
-      : `No conflicts between manuscript rules were detected. All sources agree on the recommendation.`,
-    citation: `Multi-source rule merge`,
-    consequence: `When manuscripts conflict, the higher-priority source takes precedence. Ignoring the resolution means following a weaker rule.`,
-  });
-
-  consultation.push({
-    n: 23, title: `Next Best Available Time`,
-    body: nextOpportunity
-      ? `If today's opportunity has passed, the next best time is: ${nextOpportunity.dayName}${nextOpportunity.isToday ? ` (today)` : ` (${nextOpportunity.daysAhead} day${nextOpportunity.daysAhead > 1 ? `s` : ``} from now)`}, at ${nextOpportunity.startTime}–${nextOpportunity.endTime} (${nextOpportunity.planet} hour, Hour #${nextOpportunity.hour}).`
-      : `No future opportunity was found within the next 7 days. Consult the manuscripts for alternative days.`,
-    citation: pdfRule?.source || `Al-Shurut p.12`,
-    consequence: `Waiting for the next aligned time ensures the ritual has full power. Rushing on an unaligned day wastes effort.`,
-  });
-
-  // ═══════════════════════════════════════════════════════════════
-  // BUILD RESULT — Enriched Expert Analysis
+  // RETURN COMPLETE DECISION REPORT
   // ═══════════════════════════════════════════════════════════════
   return {
-    consultation,
-    // ── Verdict & Confidence ──
-    verdict,
-    verdictColor,
-    verdictReason,
-    confidenceScore: score,
-    scoreBreakdown: scoreReasons,
+    report,
+    consultation: report,
 
-    // ── Ritual Type (auto-inferred) ──
+    verdict, verdictColor, verdictReason, verdictStars: stars, verdictStarsString: starsToString(stars),
+    confidenceScore: score, scoreBreakdown: scoreReasons,
+
     ritualType: pdfRule?.pdfName || 'General spiritual work',
     ritualTypeDescription: pdfRule?.description || '',
+    ritualCategory,
     ritualIntent: pdfRule?.pdfName || 'General spiritual work',
     khayrSharr: khayrSharr || 'Not selected',
-    khayrSharrMeaning: khayrSharr === 'khayr' ? 'Benevolence & blessing (الخير)' : khayrSharr === 'sharr' ? 'Power & banishment (الشر)' : 'Not determined from Mizan selections',
+    khayrSharrInferred: khayrSharrInferred.inferred,
+    khayrSharrMeaning: khayrSharr === 'khayr' ? 'Benevolence & blessing (الخير)' : khayrSharr === 'sharr' ? 'Power & banishment (الشر)' : 'Not determined',
 
-    // ── Can perform today? (Yes / No / Limited) ──
-    canPerformToday,
-    canPerformTodayReason,
+    canPerformToday, canPerformTodayReason,
+    currentMomentSuitable, waitTime,
+    bestWindowsToday, rankedWindows, topThree,
+    avoidWindowsToday,
+    enemyAnalysis,
+    nextOpportunity, nextMoonPhase,
 
-    // ── Recommended start/end time ──
-    recommendedStart,
-    recommendedEnd,
-    recommendedStartReason,
-
-    // ── Best planetary hour & ruling planet ──
-    bestPlanetaryHour: bestHourPlanet,
-    bestRulingPlanet: bestHourPlanet,
-    bestDay: bestDay ? MIZAN_DAY_NAMES[bestDay] : null,
-    bestDayReason: pdfRule ? `The manuscript ${pdfRule.source} prescribes ${MIZAN_DAY_NAMES[pdfRule.bestDay]} for ${pdfRule.pdfName}.` : 'No specific day prescription found.',
-    bestHourReason: pdfRule ? `The ${pdfRule.bestHour} hour is the optimal planetary hour for ${pdfRule.pdfName}. The planets reach the position for this work during this hour.` : 'No specific hour prescription found.',
-    altDay: altDay ? MIZAN_DAY_NAMES[altDay] : null,
-    altHour: altHourPlanet,
-
-    // ── Moon phase ──
     moonPhase: {
-      lunarDay: moonPhase.lunarDay,
-      phaseName: moonPhase.phaseName,
-      isWaxing: moonPhase.isWaxing,
-      isNewMoon: moonPhase.isNewMoon,
-      isFullMoon: moonPhase.isFullMoon,
+      lunarDay: moonPhase.lunarDay, phaseName: moonPhase.phaseName,
+      isWaxing: moonPhase.isWaxing, isNewMoon: moonPhase.isNewMoon, isFullMoon: moonPhase.isFullMoon,
       assessment: khayrSharr === 'khayr'
-        ? (moonPhase.isGoodForKhayr ? `The Moon is waxing (Day ${moonPhase.lunarDay}), which is ideal for Khayr works. The growing lunar energy amplifies benevolent operations.` : `The Moon is waning (Day ${moonPhase.lunarDay}). Khayr works are weakened in the waning phase — wait for the next waxing cycle.`)
+        ? (moonPhase.isGoodForKhayr ? `The Moon is waxing (Day ${moonPhase.lunarDay}), ideal for Khayr works.` : `The Moon is waning (Day ${moonPhase.lunarDay}). Khayr works are weakened — wait for the next waxing cycle.`)
         : khayrSharr === 'sharr'
-          ? (moonPhase.isGoodForSharr ? `The Moon is waning (Day ${moonPhase.lunarDay}), which is ideal for Sharr works. ${moonPhase.isNewMoon ? 'Today is near the New Moon (محاق) — the most powerful time for banishment and dark works.' : ''}` : `The Moon is waxing (Day ${moonPhase.lunarDay}). Sharr works are better in the waning phase — wait for the Moon to begin decreasing.`)
-          : `The Moon is at Day ${moonPhase.lunarDay} (${moonPhase.phaseName}). Select Khayr or Sharr in Mizan 8 for specific moon phase guidance.`,
+          ? (moonPhase.isGoodForSharr ? `The Moon is waning (Day ${moonPhase.lunarDay}), ideal for Sharr works. ${moonPhase.isNewMoon ? 'Today is near the New Moon — the most powerful time.' : ''}` : `The Moon is waxing (Day ${moonPhase.lunarDay}). Sharr works are better in the waning phase.`)
+          : `The Moon is at Day ${moonPhase.lunarDay} (${moonPhase.phaseName}).`,
       citation: 'Al-Shurut p.13 (MN_001-002)',
     },
 
-    // ── Day/Night suitability ──
-    dayNightSuitability,
+    bestPlanetaryHour: bestHourPlanet, bestRulingPlanet: bestHourPlanet,
+    bestDay: bestDay ? MIZAN_DAY_NAMES[bestDay] : null, bestDayReason, bestHourReason,
+    altDay: altDay ? MIZAN_DAY_NAMES[altDay] : null, altHour: altHourPlanet,
 
-    // ── Zodiac suitability ──
-    zodiacSuitability,
-
-    // ── Element compatibility ──
-    elementCompatibility,
+    dayNightSuitability, zodiacSuitability, elementCompatibility,
     elementDirection: dominant ? { dir: elementDirection?.dir, ar: elementDirection?.ar } : null,
     elementPlacement: dominant ? { placement: elementPlacement?.placement, ar: elementPlacement?.ar } : null,
-
-    // ── Current Astro Clock status ──
     astroClockStatus,
 
-    // ── Best/avoid windows today ──
-    bestWindowsToday,
-    avoidWindowsToday,
-
-    // ── Next best opportunity ──
-    nextOpportunity,
-
-    // ── Recommended incense ──
+    recommendedStart: topThree[0]?.startTime || nextOpportunity?.startTime || null,
+    recommendedEnd: topThree[0]?.endTime || nextOpportunity?.endTime || null,
     recommendedIncense,
 
-    // ── Rules & citations ──
-    rulesApplied,
-    warnings,
-    bookNotes,
-    conflicts,
-
-    // ── Expert narrative (human-readable) ──
-    expertNarrative,
-    reasoning,
+    rulesApplied, warnings, bookNotes, conflicts,
+    expertNarrative, reasoning,
   };
 }
