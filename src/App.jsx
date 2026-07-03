@@ -53,6 +53,7 @@ const PAGE_IMPORTS = {
   PremiumAccessRequest:     () => import('./pages/PremiumAccessRequest'),
   MySubscription:           () => import('./pages/MySubscription'),
   MyRequests:               () => import('./pages/MyRequests'),
+  RedeemCodeApproval:       () => import('./pages/RedeemCodeApproval'),
 
   // Admin - Core 5 + Required
   AdminDashboard:           () => import('./pages/AdminDashboard'),
@@ -62,6 +63,7 @@ const PAGE_IMPORTS = {
   AdminAccessCodes:         () => import('./pages/AdminAccessCodes'),
   CodeDetailPage:           () => import('./pages/CodeDetailPage'),
   AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
+  AdminRedeemApprovals:     () => import('./pages/AdminRedeemApprovals'),
   AdminAccessLogs:          () => import('./pages/AdminAccessLogs'),
   AdminSettings:           () => import('./pages/AdminSettings'),
   AdminAdmins:              () => import('./pages/AdminAdmins'),

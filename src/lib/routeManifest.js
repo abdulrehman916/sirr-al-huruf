@@ -43,6 +43,7 @@ const ROUTE_MANIFEST = [
   { path: '/premium/request', component: 'PremiumAccessRequest', chunk: 'PremiumAccessRequest', flags: ['public'] },
   { path: '/my-subscription', component: 'MySubscription', chunk: 'MySubscription', flags: ['public'] },
   { path: '/my-requests', component: 'MyRequests', chunk: 'MyRequests', flags: ['public'] },
+  { path: '/redeem-approval', component: 'RedeemCodeApproval', chunk: 'RedeemCodeApproval', flags: ['public'] },
 
   
   // Admin
@@ -52,6 +53,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/access-codes', component: 'AdminAccessCodes', chunk: 'AdminAccessCodes' },
   { path: '/admin/access-codes/:codeId', component: 'CodeDetailPage', chunk: 'CodeDetailPage' },
   { path: '/admin/access-requests', component: 'AdminAccessRequests', chunk: 'AdminAccessRequests' },
+  { path: '/admin/redeem-approvals', component: 'AdminRedeemApprovals', chunk: 'AdminRedeemApprovals' },
   { path: '/admin/support', component: 'AdminSupport', chunk: 'AdminSupport' },
   { path: '/admin/access-logs', component: 'AdminAccessLogs', chunk: 'AdminAccessLogs' },
   { path: '/admin/settings', component: 'AdminSettings', chunk: 'AdminSettings' },
