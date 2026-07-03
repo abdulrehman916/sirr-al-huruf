@@ -52,7 +52,8 @@ Deno.serve(async (req) => {
         } else if (dur && dur.value === "CUSTOM" && dur.custom_date) {
           expiry_date = new Date(dur.custom_date).toISOString();
         }
-        return { page_path: path, page_name: pageNames[i] || path, expiry_date };
+        const subFeatures = accessCode.sub_features || {};
+      return { page_path: path, page_name: pageNames[i] || path, expiry_date, sub_features: subFeatures[path] || null };
       });
       return Response.json({
         success: true,
@@ -82,7 +83,8 @@ Deno.serve(async (req) => {
       } else if (dur && dur.value === "CUSTOM" && dur.custom_date) {
         expiry_date = new Date(dur.custom_date).toISOString();
       }
-      return { page_path: path, page_name: pageNames[i] || path, expiry_date, granted_at: nowISO };
+      const subFeatures = accessCode.sub_features || {};
+      return { page_path: path, page_name: pageNames[i] || path, expiry_date, granted_at: nowISO, sub_features: subFeatures[path] || null };
     });
 
     // Mark code as used

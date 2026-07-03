@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Lock } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import ErrorBoundary from "../components/ErrorBoundary";
 import FaalAli from "../components/faal/FaalAli";
 import FaalLuqman from "../components/faal/FaalLuqman";
 import FaalHikmah from "../components/faal/FaalHikmah";
+import FeatureLockedCard from "../components/FeatureLockedCard";
+import { checkFeatureAccess } from "../lib/featurePermission";
+import { getFeatures } from "../lib/featureRegistry";
 
 const G = {
   borderHi: "rgba(212,175,55,0.65)",
@@ -13,6 +17,8 @@ const G = {
   text:     "#F5D060",
 };
 
+const PAGE_PATH = "/faal-hasrath";
+const FEATURES = getFeatures(PAGE_PATH);
 const TABS = [
   { id: "ali",     label: "✨ Faal Ali",     arabic: "فأل علي" },
   { id: "luqman",  label: "🌟 Faal Luqman",  arabic: "فأل لقمان" },
@@ -21,6 +27,19 @@ const TABS = [
 
 function FaalHasrathContent() {
   const [activeTab, setActiveTab] = useState('ali');
+  const [lockedFeature, setLockedFeature] = useState(null);
+
+  const featureForTab = (tabId) => FEATURES.find(f => f.tab === tabId);
+
+  const handleTabChange = (tabId) => {
+    const feat = featureForTab(tabId);
+    if (feat && !checkFeatureAccess(PAGE_PATH, feat.id)) {
+      setLockedFeature(feat);
+      return;
+    }
+    setLockedFeature(null);
+    setActiveTab(tabId);
+  };
 
   return (
     <div className="space-y-4">
@@ -29,12 +48,14 @@ function FaalHasrathContent() {
       {/* Tab Navigation */}
       <div className="grid grid-cols-3 gap-2">
         {TABS.map(tab => {
-          const active = activeTab === tab.id;
+          const active = activeTab === tab.id && !lockedFeature;
+          const feat = featureForTab(tab.id);
+          const isLocked = feat && !checkFeatureAccess(PAGE_PATH, feat.id);
           return (
             <motion.button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               whileHover={{ scale: active ? 1 : 1.02 }}
               whileTap={{ scale: 0.97 }}
               className="rounded-xl py-3.5 px-3 flex flex-col items-center gap-1 border transition-all relative overflow-hidden"
@@ -49,7 +70,8 @@ function FaalHasrathContent() {
               {active && (
                 <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />
               )}
-              <span className="font-inter text-xs font-bold tracking-wide" style={{ color: active ? G.text : "rgba(255,255,255,0.40)" }}>
+              <span className="font-inter text-xs font-bold tracking-wide flex items-center gap-1" style={{ color: active ? G.text : "rgba(255,255,255,0.40)" }}>
+                {isLocked && <Lock className="w-3 h-3 opacity-60" />}
                 {tab.label}
               </span>
               <span className="font-amiri text-sm" style={{ color: active ? "rgba(212,175,55,0.75)" : "rgba(255,255,255,0.22)" }}>
@@ -60,17 +82,35 @@ function FaalHasrathContent() {
         })}
       </div>
 
-      {/* Tab Content */}
+      {/* Tab Content or Locked Card */}
       <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -16 }}
-          transition={{ duration: 0.25 }}
-        >
-          {activeTab === 'ali' ? <FaalAli /> : activeTab === 'luqman' ? <FaalLuqman /> : <FaalHikmah />}
-        </motion.div>
+        {lockedFeature ? (
+          <motion.div
+            key="locked"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.25 }}
+          >
+            <FeatureLockedCard
+              pagePath={PAGE_PATH}
+              featureId={lockedFeature.id}
+              featureLabel={lockedFeature.label}
+              onBack={() => setLockedFeature(null)}
+              onUnlocked={() => { setLockedFeature(null); window.location.reload(); }}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.25 }}
+          >
+            {activeTab === 'ali' ? <FaalAli /> : activeTab === 'luqman' ? <FaalLuqman /> : <FaalHikmah />}
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
