@@ -126,19 +126,29 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
     try {
       const featKey = `${path}:${featId}`;
       const origFeatureDurations = code.feature_durations || {};
-      // Stamp added_at on newly added features (not in original code)
       const isFeatureNew = !origFeatureDurations[featKey] && !plan.added_at;
-      const stampedPlan = isFeatureNew ? { ...plan, added_at: new Date().toISOString() } : plan;
+      const nowISO = new Date().toISOString();
+      const stampedPlan = isFeatureNew ? { ...plan, added_at: nowISO } : plan;
       const newFeatureDurations = { ...featureDurations, [featKey]: stampedPlan };
       const currentSubFeats = pageSubFeatures[path] || [];
       const newSubFeats = currentSubFeats.includes(featId) ? currentSubFeats : [...currentSubFeats, featId];
       const newPageSubFeatures = { ...pageSubFeatures, [path]: newSubFeats };
       setFeatureDurations(newFeatureDurations);
       setPageSubFeatures(newPageSubFeatures);
-      await base44.entities.AccessCode.update(code.id, {
+
+      const updateData = {
         feature_durations: newFeatureDurations,
         sub_features: newPageSubFeatures,
-      });
+      };
+      if (isFeatureNew) {
+        const me = await base44.auth.me();
+        const dl = stampedPlan.is_lifetime ? 'Lifetime' : stampedPlan.duration_days ? `${stampedPlan.duration_days} days` : 'N/A';
+        updateData.audit_log = [...(code.audit_log || []), {
+          action: "ADDED_FEATURE", timestamp: nowISO, admin_id: me?.id || "",
+          details: `Feature added: ${featKey} — Plan: ${stampedPlan.plan_name || 'N/A'} (${dl})`,
+        }];
+      }
+      await base44.entities.AccessCode.update(code.id, updateData);
       toast({ title: `✓ ${featId} saved` });
       refreshCode();
     } catch (e) {
@@ -185,12 +195,39 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
           ? { ...pd, added_at: nowISO } : pd;
       });
 
+      // Build audit entries for page/feature additions and removals
+      const me = await base44.auth.me();
+      const origPagePaths = code.page_paths || [];
+      const newFeatureKeys = Object.keys(stampedFeatureDurations);
+      const addedPages = selectedPages.filter(p => !origPagePaths.includes(p));
+      const removedPages = origPagePaths.filter(p => !selectedPages.includes(p));
+      const addedFeatureKeys = newFeatureKeys.filter(k => !origFeatureDurations[k]);
+      const removedFeatureKeys = Object.keys(origFeatureDurations).filter(k => !newFeatureKeys.includes(k));
+      const auditEntries = [];
+      addedPages.forEach(p => {
+        const pn = pageList.find(pg => pg.path === p)?.name || p;
+        auditEntries.push({ action: "ADDED_PAGE", timestamp: nowISO, admin_id: me?.id || "", details: `Page added: ${pn} (${p})` });
+      });
+      removedPages.forEach(p => {
+        const pn = pageList.find(pg => pg.path === p)?.name || p;
+        auditEntries.push({ action: "REMOVED_PAGE", timestamp: nowISO, admin_id: me?.id || "", details: `Page removed: ${pn} (${p})` });
+      });
+      addedFeatureKeys.forEach(k => {
+        const fd = stampedFeatureDurations[k];
+        const dl = fd.is_lifetime ? 'Lifetime' : fd.duration_days ? `${fd.duration_days} days` : 'N/A';
+        auditEntries.push({ action: "ADDED_FEATURE", timestamp: nowISO, admin_id: me?.id || "", details: `Feature added: ${k} — Plan: ${fd.plan_name || 'N/A'} (${dl})` });
+      });
+      removedFeatureKeys.forEach(k => {
+        auditEntries.push({ action: "REMOVED_FEATURE", timestamp: nowISO, admin_id: me?.id || "", details: `Feature removed: ${k}` });
+      });
+
       await base44.entities.AccessCode.update(code.id, {
         page_paths: selectedPages,
         page_names: names,
         page_durations: stampedPageDurations,
         sub_features,
         feature_durations: stampedFeatureDurations,
+        audit_log: [...(code.audit_log || []), ...auditEntries],
       });
 
       toast({ title: `✓ Code "${code.code}" updated` });

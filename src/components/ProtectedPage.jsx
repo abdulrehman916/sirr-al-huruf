@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle, Shield } from "lucide-react";
 import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
-import { checkLocalPermission, getSessionId, mergeGrantedPermissions, validateAndCleanPermissions } from "@/lib/sessionId";
+import { checkLocalPermission, getSessionId, mergeGrantedPermissions, validateAndCleanPermissions, addRedeemedCode } from "@/lib/sessionId";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { setAdminFlag } from "@/lib/featurePermission";
 import { hasSubFeatures } from "@/lib/featureRegistry";
@@ -59,6 +59,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     if (hasSubFeatures(routePath)) {
       await preloadPageFeatureConfigs(routePath);
       setAccessStatus("granted");
+      validateAndCleanPermissions();
       return;
     }
 
@@ -177,6 +178,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
       });
       const data = res.data;
       if (data?.success && data?.permissions) {
+        addRedeemedCode(trimmed);
         mergeGrantedPermissions(data.permissions);
         setCodeResult({ success: true, message: data.message });
         setTimeout(() => onUnlocked(), 1200);

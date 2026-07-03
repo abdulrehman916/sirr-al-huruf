@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Lock, MessageCircle, KeyRound, CheckCircle, AlertCircle, Loader2, ChevronLeft, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
-import { getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
+import { getSessionId, mergeGrantedPermissions, addRedeemedCode, getRedeemedCodes } from "@/lib/sessionId";
 import { getFeatureConfig } from "@/lib/featureConfigCache";
 import { getFeaturePlans, formatPlan } from "@/lib/subscriptionPlanCache";
 import { getFeatureById } from "@/lib/featureRegistry";
@@ -75,6 +75,7 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
       });
       const data = res.data;
       if (data?.success && data?.permissions) {
+        addRedeemedCode(trimmed);
         mergeGrantedPermissions(data.permissions);
         setCodeResult({ success: true, message: data.message });
         setTimeout(() => {
@@ -99,6 +100,7 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
       const priceLine = selectedPlan ? `${selectedPlan.currency} ${selectedPlan.price}` : "";
       const messageText = `Plan: ${planLine}${priceLine ? ` | Price: ${priceLine}` : ""}`;
 
+      const redeemedCodes = getRedeemedCodes();
       await base44.functions.invoke("submitAccessRequest", {
         name: "",
         phone: "",
@@ -106,6 +108,8 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
         page_path: pagePath,
         page_name: displayName,
         message: messageText,
+        session_id: getSessionId(),
+        existing_code: redeemedCodes.length > 0 ? redeemedCodes[redeemedCodes.length - 1] : null,
       });
 
       setRequestCreated(true);

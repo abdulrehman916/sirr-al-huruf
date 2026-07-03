@@ -161,3 +161,28 @@ export async function validateAndCleanPermissions() {
     // Best-effort validation — silently fail
   }
 }
+
+/**
+ * Store redeemed code strings for admin request correlation.
+ * Called when a code is successfully redeemed.
+ */
+const REDEEMED_CODES_KEY = "sirr_redeemed_codes";
+
+export function addRedeemedCode(code) {
+  try {
+    const codes = getRedeemedCodes();
+    if (!codes.includes(code)) {
+      codes.push(code);
+      localStorage.setItem(REDEEMED_CODES_KEY, JSON.stringify(codes));
+    }
+  } catch {}
+}
+
+export function getRedeemedCodes() {
+  try {
+    const raw = localStorage.getItem(REDEEMED_CODES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}

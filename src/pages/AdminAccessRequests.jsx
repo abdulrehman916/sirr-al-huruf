@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { CheckCircle, XCircle, RefreshCw, Clock, User, Mail, FileText, Calendar } from "lucide-react";
+import { CheckCircle, XCircle, RefreshCw, Clock, User, Mail, FileText, Calendar, KeyRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 
@@ -202,6 +202,19 @@ export default function AdminAccessRequests() {
                          <Calendar className="w-3 h-3 flex-shrink-0" />
                          {fmtDate(req.requested_at || req.created_date)}
                        </div>
+                       {req.session_id && (
+                         <div className="flex items-center gap-1.5 text-xs text-white/40">
+                           <span className="text-white/30">Session:</span>
+                           <span className="font-mono text-white/50">{req.session_id.slice(0, 20)}…</span>
+                         </div>
+                       )}
+                       {req.existing_code && (
+                         <div className="flex items-center gap-1.5 text-xs">
+                           <KeyRound className="w-3 h-3 flex-shrink-0" style={{ color: G.text }} />
+                           <span className="text-white/30">Existing Code:</span>
+                           <Link to="/admin/access-codes" className="font-bold tracking-widest" style={{ color: G.text }}>{req.existing_code}</Link>
+                         </div>
+                       )}
                        {req.message && (
                          <div className="rounded-lg p-2 mt-1" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                            <p className="font-inter text-[9px] text-white/30 uppercase tracking-wider mb-0.5">Request Details</p>
