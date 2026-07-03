@@ -1,7 +1,7 @@
 import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft, User } from "lucide-react";
+import { ChevronLeft, User, Shield } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
@@ -25,7 +25,6 @@ const TAB_KEYS = [
 
   { id: "astro-clock",      arabicTitle: "الساعة",          englishSubtitle: "ASTRO",   path: "/astro-clock" },
   { id: "shop",             arabicTitle: "المتجر",          englishSubtitle: "SHOP",    path: "/shop" },
-  { id: "admin-shop",       arabicTitle: "الإدارة",         englishSubtitle: "ADMIN",   path: "/admin/shop" },
   { id: "support",          arabicTitle: "الدعم",           englishSubtitle: "SUPPORT", path: "/support" },
 ];
 
@@ -250,58 +249,58 @@ export default function PageLayout({ children }) {
           </div>
         )}
 
-        {/* Horizontal navigation */}
-        <div
-          ref={navRef}
-          className="nav-scroll-container px-2 py-2 flex items-center gap-1 scrollbar-none"
-          style={{
-            width: "100%",
-            overflowX: "auto",
-            overflowY: "hidden",
-            WebkitOverflowScrolling: "touch",
-            scrollBehavior: "smooth",
-            overscrollBehaviorX: "none",
-            touchAction: "auto",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-            paddingLeft: "10px",
-            paddingRight: "10px",
-          }}
-        >
-          {/* Admin button */}
-          {user?.role === 'admin' && (
-            <Link
-              to="/admin/access-dashboard"
-              onClick={startNav}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
-              style={{
-                background: "linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.10))",
-                border: "1px solid rgba(212,175,55,0.40)",
-                color: "#E8C84A",
-                WebkitTapHighlightColor: "transparent",
-                userSelect: "none",
-                WebkitUserSelect: "none",
-                flexShrink: 0,
-                width: "auto",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span className="font-inter text-xs font-bold tracking-wide">Admin</span>
-            </Link>
-          )}
+        {/* Horizontal navigation — scroll tabs + fixed ADMIN button */}
+        <div className="flex items-center" style={{ width: "100%" }}>
+          <div
+            ref={navRef}
+            className="nav-scroll-container px-2 py-2 flex items-center gap-1 scrollbar-none"
+            style={{
+              flex: 1,
+              minWidth: 0,
+              overflowX: "auto",
+              overflowY: "hidden",
+              WebkitOverflowScrolling: "touch",
+              scrollBehavior: "smooth",
+              overscrollBehaviorX: "none",
+              touchAction: "auto",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              paddingLeft: "10px",
+              paddingRight: "10px",
+            }}
+          >
+            {TAB_KEYS.map((tab) => (
+              <NavTab
+                key={tab.id}
+                tab={tab}
+                isActive={activeId === tab.id}
+                onClick={startNav}
+                tabRef={(el) => (tabRefs.current[tab.id] = el)}
+              />
+            ))}
+          </div>
 
-          {TAB_KEYS.map((tab) => (
-            <NavTab
-              key={tab.id}
-              tab={tab}
-              isActive={activeId === tab.id}
-              onClick={startNav}
-              tabRef={(el) => (tabRefs.current[tab.id] = el)}
-            />
-          ))}
+          {/* Fixed ADMIN button — always visible, pinned to right edge */}
+          <Link
+            to="/admin/shop"
+            onClick={startNav}
+            className="flex-shrink-0 flex items-center gap-1.5 mr-2 px-3 rounded-xl"
+            style={{
+              background: "linear-gradient(135deg, rgba(212,175,55,0.30), rgba(212,175,55,0.12))",
+              border: "1px solid rgba(212,175,55,0.55)",
+              color: "#E8C84A",
+              WebkitTapHighlightColor: "transparent",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              whiteSpace: "nowrap",
+              minHeight: 36,
+            }}
+          >
+            <Shield className="w-3.5 h-3.5" />
+            <span className="font-inter text-xs font-bold tracking-wide">ADMIN</span>
+          </Link>
         </div>
       </div>
 
