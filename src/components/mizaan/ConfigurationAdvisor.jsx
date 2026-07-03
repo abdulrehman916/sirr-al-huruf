@@ -9,6 +9,7 @@ import {
   ChevronDown, CheckCircle2, AlertCircle, ArrowRight,
   Target, Scale, Calendar, Orbit, Clock, Flame, Sunset, Timer, Sparkles, Star,
 } from "lucide-react";
+import { tStr } from "../../lib/ritualTimingI18n";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -32,7 +33,7 @@ const FIELD_ICONS = {
   star: Star,
 };
 
-export default function ConfigurationAdvisor({ advice }) {
+export default function ConfigurationAdvisor({ advice, lang = "ml" }) {
   const [expanded, setExpanded] = useState(true);
 
   if (!advice || !advice.recommendations) return null;
@@ -58,7 +59,7 @@ export default function ConfigurationAdvisor({ advice }) {
           </div>
           <div className="text-left">
             <h3 className="font-inter text-base font-bold tracking-wide" style={{ color: "#fff" }}>
-              Mizan Configuration Advisor
+              {tStr("advisorTitle", lang)}
             </h3>
             <p className="font-amiri text-sm" style={{ color: G.dim }}>
               مراجع تكوين الميزان
@@ -69,12 +70,12 @@ export default function ConfigurationAdvisor({ advice }) {
           {allOptimal ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.40)" }}>
               <CheckCircle2 className="w-4 h-4" style={{ color: "#4ADE80" }} />
-              <span className="font-inter text-xs font-bold" style={{ color: "#4ADE80" }}>Optimal</span>
+              <span className="font-inter text-xs font-bold" style={{ color: "#4ADE80" }}>{tStr("optimal", lang)}</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.40)" }}>
               <AlertCircle className="w-4 h-4" style={{ color: "#FBBF24" }} />
-              <span className="font-inter text-xs font-bold" style={{ color: "#FBBF24" }}>{improvements.length} improvement{improvements.length > 1 ? 's' : ''}</span>
+              <span className="font-inter text-xs font-bold" style={{ color: "#FBBF24" }}>{improvements.length} {tStr("improvements", lang)}</span>
             </div>
           )}
           <ChevronDown className="w-4 h-4 transition-transform" style={{ color: G.dim, transform: expanded ? "rotate(180deg)" : "none" }} />
@@ -88,9 +89,7 @@ export default function ConfigurationAdvisor({ advice }) {
               {/* ── Intro statement ── */}
               <div className="rounded-xl p-3" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))", border: `1px solid ${G.border}` }}>
                 <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
-                  {allOptimal
-                    ? `Your current Mizan configuration is already optimal. No changes are recommended. Every selection aligns with the manuscript prescriptions for your ritual purpose.`
-                    : `This advisor compares your current Mizan selections against all imported manuscript rules. For each field where an improvement is possible, the recommended value and the manuscript reason are shown below. Go back to the Mizan selections above and adjust manually — the engine never changes Mizan for you.`}
+                  {allOptimal ? tStr("advisorIntroOptimal", lang) : tStr("advisorIntro", lang)}
                 </p>
               </div>
 
@@ -99,10 +98,10 @@ export default function ConfigurationAdvisor({ advice }) {
                 <div className="rounded-xl p-4 text-center" style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.30)" }}>
                   <CheckCircle2 className="w-8 h-8 mx-auto mb-2" style={{ color: "#4ADE80" }} />
                   <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>
-                    Your current Mizan configuration is already optimal.
+                    {tStr("optimalBanner", lang)}
                   </p>
                   <p className="font-inter text-xs mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    No changes are recommended — proceed with the full decision report below.
+                    {tStr("optimalSub", lang)}
                   </p>
                 </div>
               )}
@@ -110,7 +109,7 @@ export default function ConfigurationAdvisor({ advice }) {
               {/* ── Per-field recommendations ── */}
               <div className="space-y-2">
                 {recommendations.map((rec, idx) => (
-                  <AdvisorRow key={idx} rec={rec} />
+                  <AdvisorRow key={idx} rec={rec} lang={lang} />
                 ))}
               </div>
             </div>
@@ -122,7 +121,7 @@ export default function ConfigurationAdvisor({ advice }) {
 }
 
 // ── Single advisor row ──
-function AdvisorRow({ rec }) {
+function AdvisorRow({ rec, lang = "ml" }) {
   const Icon = FIELD_ICONS[rec.icon] || Target;
   const optimal = rec.isOptimal;
 
@@ -150,11 +149,11 @@ function AdvisorRow({ rec }) {
       {/* Current → Recommended */}
       <div className="p-3 space-y-2">
         <div className="flex items-start gap-2">
-          <span className="font-inter text-[9px] uppercase tracking-wider font-bold flex-shrink-0 mt-0.5" style={{ color: "rgba(255,255,255,0.40)", minWidth: 64 }}>Current</span>
+          <span className="font-inter text-[9px] uppercase tracking-wider font-bold flex-shrink-0 mt-0.5" style={{ color: "rgba(255,255,255,0.40)", minWidth: 64 }}>{tStr("current", lang)}</span>
           <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.80)" }}>{rec.current}</p>
         </div>
         <div className="flex items-start gap-2">
-          <span className="font-inter text-[9px] uppercase tracking-wider font-bold flex-shrink-0 mt-0.5" style={{ color: optimal ? "#4ADE80" : "#FBBF24", minWidth: 64 }}>Recommend</span>
+          <span className="font-inter text-[9px] uppercase tracking-wider font-bold flex-shrink-0 mt-0.5" style={{ color: optimal ? "#4ADE80" : "#FBBF24", minWidth: 64 }}>{tStr("recommend", lang)}</span>
           <div className="flex items-center gap-1.5 flex-1">
             {optimal && <ArrowRight className="w-3 h-3 flex-shrink-0" style={{ color: "#4ADE80" }} />}
             <p className="font-inter text-sm font-bold" style={{ color: optimal ? "#4ADE80" : "#FBBF24" }}>{rec.recommended}</p>

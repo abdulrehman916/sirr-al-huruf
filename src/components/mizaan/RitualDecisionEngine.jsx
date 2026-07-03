@@ -12,6 +12,7 @@ import {
 import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingRuleEngine";
 import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
+import { useRitualLang, localizeAnalysis, localizeAdvice, tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -37,25 +38,50 @@ const SECTION_ICONS = {
 
 export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod }) {
   const [expanded, setExpanded] = useState(true);
+  const [lang, setLang] = useRitualLang();
 
-  const analysis = useMemo(() => {
+  const rawAnalysis = useMemo(() => {
     if (!result) return null;
     return analyzeRitualTiming({ result, selections, customPurpose, activeMethod });
   }, [result, selections, customPurpose, activeMethod]);
 
-  const advice = useMemo(() => {
+  const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
+
+  const rawAdvice = useMemo(() => {
     if (!result) return null;
     return analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod });
   }, [result, selections, customPurpose, activeMethod]);
 
+  const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
+
   if (!analysis || !analysis.report) return null;
 
-  const canPerformColor = analysis.canPerformToday === "Yes" ? "#4ADE80" : analysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";
+  const canPerformColor = rawAnalysis.canPerformToday === "Yes" ? "#4ADE80" : rawAnalysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";
 
   return (
     <div className="mt-6 space-y-4">
+      {/* ── Language Selector ── */}
+      <div className="flex justify-end">
+        <div className="inline-flex rounded-lg overflow-hidden" style={{ background: "rgba(8,16,38,0.80)", border: "1px solid rgba(212,175,55,0.30)" }}>
+          {RITUAL_LANGS.map(l => (
+            <button
+              key={l.code}
+              onClick={() => setLang(l.code)}
+              className="px-3 py-1.5 font-inter text-xs font-bold transition-colors"
+              style={{
+                background: lang === l.code ? "linear-gradient(135deg, rgba(212,175,55,0.30), rgba(212,175,55,0.12))" : "transparent",
+                color: lang === l.code ? "#F5D060" : "rgba(255,255,255,0.55)",
+                border: lang === l.code ? "1px solid rgba(212,175,55,0.50)" : "1px solid transparent",
+              }}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Configuration Advisor (primary) ── */}
-      <ConfigurationAdvisor advice={advice} />
+      <ConfigurationAdvisor advice={advice} lang={lang} />
 
       <div className="rounded-2xl overflow-hidden" style={{
         background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
@@ -79,7 +105,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
             </div>
             <div className="text-left">
               <h3 className="font-inter text-base font-bold tracking-wide" style={{ color: "#fff" }}>
-                Ritual Decision Engine
+                {tStr("panelTitle", lang)}
               </h3>
               <p className="font-amiri text-sm" style={{ color: G.dim }}>
                 محرك القرار الروحاني
@@ -124,7 +150,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                   <div className="flex items-center gap-2 mb-2">
                     <Scroll className="w-4 h-4" style={{ color: G.text }} />
                     <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: G.text }}>
-                      Understanding Your Ritual
+                      {tStr("understanding", lang)}
                     </span>
                   </div>
                   <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)" }}>
@@ -139,16 +165,16 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
                 {/* ── Quick Status Bar ── */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <StatusChip icon={<Zap className="w-3.5 h-3.5" />} label="Ritual" value={analysis.ritualType} />
-                  <StatusChip icon={<Star className="w-3.5 h-3.5" />} label="Today" value={analysis.canPerformToday} color={canPerformColor} />
-                  <StatusChip icon={<Clock className="w-3.5 h-3.5" />} label="Hour" value={`#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} />
-                  <StatusChip icon={<Sun className="w-3.5 h-3.5" />} label="Moon" value={`Day ${analysis.moonPhase.lunarDay}`} />
+                  <StatusChip icon={<Zap className="w-3.5 h-3.5" />} label={tStr("ritual", lang)} value={analysis.ritualType} />
+                  <StatusChip icon={<Star className="w-3.5 h-3.5" />} label={tStr("today", lang)} value={analysis.canPerformToday} color={canPerformColor} />
+                  <StatusChip icon={<Clock className="w-3.5 h-3.5" />} label={tStr("hour", lang)} value={`#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} />
+                  <StatusChip icon={<Sun className="w-3.5 h-3.5" />} label={tStr("moon", lang)} value={lang === "ml" ? `ദിവസം ${analysis.moonPhase.lunarDay}` : `Day ${analysis.moonPhase.lunarDay}`} />
                 </div>
 
                 {/* ── 10-Section Decision Report ── */}
                 <div className="space-y-2.5">
                   {analysis.report.map((sec, idx) => (
-                    <ReportSection key={idx} section={sec} />
+                    <ReportSection key={idx} section={sec} lang={lang} />
                   ))}
                 </div>
 
@@ -158,7 +184,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                     <div className="flex items-center gap-2 mb-2">
                       <FileText className="w-4 h-4" style={{ color: "rgba(74,222,128,0.70)" }} />
                       <h4 className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(74,222,128,0.70)" }}>
-                        Manuscript References
+                        {tStr("msRefs", lang)}
                       </h4>
                     </div>
                     <div className="space-y-1">
@@ -177,7 +203,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                 {/* ── Reasoning Log (collapsible) ── */}
                 <details className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <summary className="cursor-pointer px-3 py-2 font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                    Full Reasoning Log ({analysis.reasoning.length} steps)
+                    {tStr("reasoningLog", lang)} ({analysis.reasoning.length} {tStr("steps", lang)})
                   </summary>
                   <div className="px-3 pb-3 space-y-0.5">
                     {analysis.reasoning.map((r, i) => (
@@ -191,7 +217,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                 {/* ── Footer ── */}
                 <div className="text-center pt-2">
                   <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>
-                    This analysis is read-only and does not modify any Mizan calculation. All recommendations are derived from existing manuscript rules and live astronomical data.
+                    {tStr("footerNote", lang)}
                   </p>
                 </div>
 
@@ -203,10 +229,10 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
         {/* ── Collapsed Summary ── */}
         {!expanded && (
           <div className="px-4 pb-3 flex items-center gap-3 flex-wrap">
-            <MiniBadge label="Ritual" value={analysis.ritualType} color={G.text} />
-            <MiniBadge label="Today" value={analysis.canPerformToday} color={canPerformColor} />
-            <MiniBadge label="Verdict" value={`${analysis.verdictStarsString} ${analysis.verdict}`} color={analysis.verdictColor} />
-            <MiniBadge label="Confidence" value={`${analysis.confidenceScore}%`} color={G.text} />
+            <MiniBadge label={tStr("ritual", lang)} value={analysis.ritualType} color={G.text} />
+            <MiniBadge label={tStr("today", lang)} value={analysis.canPerformToday} color={canPerformColor} />
+            <MiniBadge label={tStr("verdict", lang)} value={`${analysis.verdictStarsString} ${analysis.verdict}`} color={analysis.verdictColor} />
+            <MiniBadge label={tStr("confidence", lang)} value={`${analysis.confidenceScore}%`} color={G.text} />
           </div>
         )}
       </div>
@@ -215,11 +241,11 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 }
 
 // ── Report Section ──
-function ReportSection({ section }) {
-  const [open, setOpen] = useState(section.section === "FINAL DECISION");
+function ReportSection({ section, lang }) {
+  const [open, setOpen] = useState(section.section === "FINAL DECISION" || section.section === "അന്തിമ വിലയിരുത്തൽ");
   const Icon = SECTION_ICONS[section.icon] || BookOpen;
-  const isFinal = section.section === "FINAL DECISION";
-  const statusColor = isFinal ? section.color : (section.status === "Yes" || section.status === "Suitable" ? "#4ADE80" : section.status === "Limited" || section.status === "Not suitable" ? "#FBBF24" : section.status === "No" ? "#F87171" : G.text);
+  const isFinal = section.section === "FINAL DECISION" || section.section === "അന്തിമ വിലയിരുത്തൽ";
+  const statusColor = isFinal ? section.color : (section.status === "Yes" || section.status === "Suitable" || section.status === "അതെ" || section.status === "അനുയോജ്യം" ? "#4ADE80" : section.status === "Limited" || section.status === "Not suitable" || section.status === "പരിമിതം" || section.status === "അനുയോജ്യമല്ല" ? "#FBBF24" : section.status === "No" || section.status === "ഇല്ല" ? "#F87171" : G.text);
 
   return (
     <div className="rounded-xl overflow-hidden" style={{
@@ -275,7 +301,7 @@ function ReportSection({ section }) {
                     }}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-inter text-[10px] font-bold uppercase tracking-wider" style={{ color: w.rank === 1 ? "#86EFAC" : G.dim }}>
-                          {w.rank === 1 ? "🥇 Best" : w.rank === 2 ? "🥈 Second" : "🥉 Third"}
+                          {w.rank === 1 ? tStr("best", lang) : w.rank === 2 ? tStr("second", lang) : tStr("third", lang)}
                         </span>
                         <span className="font-inter text-sm font-bold" style={{ color: G.text }}>{w.stars}</span>
                       </div>
@@ -305,10 +331,10 @@ function ReportSection({ section }) {
               {section.enemyAnalysis && section.enemyAnalysis.note && (
                 <div className="rounded-lg p-2.5" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
                   <div className="grid grid-cols-2 gap-2 mt-1.5">
-                    <EnemyItem label="Enemy Hours" values={section.enemyAnalysis.enemyHours} />
-                    <EnemyItem label="Enemy Days" values={section.enemyAnalysis.enemyDays} />
-                    <EnemyItem label="Enemy Moon" values={section.enemyAnalysis.enemyMoonPhases} />
-                    <EnemyItem label="Enemy Rulers" values={section.enemyAnalysis.enemyRulers} />
+                    <EnemyItem label={tStr("enemyHours", lang)} values={section.enemyAnalysis.enemyHours} />
+                    <EnemyItem label={tStr("enemyDays", lang)} values={section.enemyAnalysis.enemyDays} />
+                    <EnemyItem label={tStr("enemyMoon", lang)} values={section.enemyAnalysis.enemyMoonPhases} />
+                    <EnemyItem label={tStr("enemyRulers", lang)} values={section.enemyAnalysis.enemyRulers} />
                   </div>
                 </div>
               )}
@@ -317,14 +343,14 @@ function ReportSection({ section }) {
               {section.nextHour && (
                 <div className="rounded-lg p-2.5" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.20)" }}>
                   <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
-                    <span className="font-bold" style={{ color: "#86EFAC" }}>Next hour:</span> {section.nextHour.day}{section.nextHour.isToday ? " (today)" : ` (${section.nextHour.daysAhead}d away)`} at {section.nextHour.time} ({section.nextHour.planet})
+                    <span className="font-bold" style={{ color: "#86EFAC" }}>{tStr("nextHour", lang)}:</span> {section.nextHour.day}{section.nextHour.isToday ? ` (${lang === "ml" ? "ഇന്ന്" : "today"})` : ` (${section.nextHour.daysAhead}${tStr("dAway", lang)})`} {lang === "ml" ? "സമയം" : "at"} {section.nextHour.time} ({section.nextHour.planet})
                   </p>
                 </div>
               )}
               {section.nextMoonPhase && (
                 <div className="rounded-lg p-2.5" style={{ background: "rgba(96,165,250,0.06)", border: "1px solid rgba(96,165,250,0.20)" }}>
                   <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
-                    <span className="font-bold" style={{ color: "rgba(96,165,250,0.90)" }}>Next moon:</span> {section.nextMoonPhase.phase}{section.nextMoonPhase.waitDays > 0 ? ` (~${section.nextMoonPhase.waitDays}d to wait)` : " (available now)"}
+                    <span className="font-bold" style={{ color: "rgba(96,165,250,0.90)" }}>{tStr("nextMoon", lang)}:</span> {section.nextMoonPhase.phase}{section.nextMoonPhase.waitDays > 0 ? ` (~${section.nextMoonPhase.waitDays} ${tStr("toWait", lang)})` : ` (${tStr("availableNow", lang)})`}
                   </p>
                   <p className="font-inter text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{section.nextMoonPhase.reason}</p>
                 </div>
@@ -365,9 +391,9 @@ function ReportSection({ section }) {
                   {section.conflicts.map((c, i) => (
                     <div key={i} className="rounded-lg p-2" style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.20)" }}>
                       <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>
-                        <span className="font-bold" style={{ color: "#FBBF24" }}>Conflict:</span> {c.rule1} vs {c.rule2}
+                        <span className="font-bold" style={{ color: "#FBBF24" }}>{tStr("conflict", lang)}:</span> {c.rule1} vs {c.rule2}
                       </p>
-                      <p className="font-inter text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>Resolution: {c.resolution}</p>
+                      <p className="font-inter text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{tStr("resolution", lang)}: {c.resolution}</p>
                     </div>
                   ))}
                 </div>
@@ -377,14 +403,14 @@ function ReportSection({ section }) {
               <div className="flex items-start gap-2 pt-1">
                 <BookOpen className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(74,222,128,0.60)" }} />
                 <div>
-                  <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(74,222,128,0.60)" }}>Source: </span>
+                  <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(74,222,128,0.60)" }}>{tStr("source", lang)}: </span>
                   <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{section.citation}</span>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <Shield className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(248,113,113,0.60)" }} />
                 <div>
-                  <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.60)" }}>If ignored: </span>
+                  <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.60)" }}>{tStr("ifIgnored", lang)}: </span>
                   <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{section.consequence}</span>
                 </div>
               </div>

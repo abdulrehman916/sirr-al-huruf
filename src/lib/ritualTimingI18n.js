@@ -1,0 +1,586 @@
+// ═══════════════════════════════════════════════════════════════
+// RITUAL TIMING I18N — Presentation-layer multilingual support
+// Malayalam (default) + English. NO engine/logic changes.
+// Translates the RitualDecisionEngine + ConfigurationAdvisor output.
+// ═══════════════════════════════════════════════════════════════
+import { useState, useEffect } from "react";
+
+export const RITUAL_LANGS = [
+  { code: "ml", label: "മലയാളം" },
+  { code: "en", label: "English" },
+];
+
+const STORAGE_KEY = "ritualTimingLang";
+
+export function useRitualLang() {
+  const [lang, setLang] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      return saved === "en" ? "en" : "ml";
+    } catch {
+      return "ml";
+    }
+  });
+
+  useEffect(() => {
+    try { sessionStorage.setItem(STORAGE_KEY, lang); } catch {}
+  }, [lang]);
+
+  return [lang, setLang];
+}
+
+// ── Day / planet / element Malayalam names ──
+const ML_DAY = {
+  Sunday: "ഞായർ", Monday: "തിങ്കൾ", Tuesday: "ചൊവ്വ",
+  Wednesday: "ബുധൻ", Thursday: "വ്യാഴം", Friday: "വെള്ളി", Saturday: "ശനി",
+};
+const ML_PLANET = {
+  sun: "സൂര്യൻ", moon: "ചന്ദ്രൻ", mars: "ചൊവ്വ", mercury: "ബുധൻ",
+  jupiter: "ഗുരു", venus: "ശുക്രൻ", saturn: "ശനി",
+  Sun: "സൂര്യൻ", Moon: "ചന്ദ്രൻ", Mars: "ചൊവ്വ", Mercury: "ബുധൻ",
+  Jupiter: "ഗുരു", Venus: "ശുക്രൻ", Saturn: "ശനി",
+};
+const ML_ELEMENT = { fire: "അഗ്നി", water: "ജലം", air: "വായു", earth: "ഭൂമി" };
+const ML_PERIOD = { day: "പകൽ", night: "രാത്രി" };
+
+const ML_STATUS = {
+  Yes: "അതെ", No: "ഇല്ല", Limited: "പരിമിതം",
+  Suitable: "അനുയോജ്യം", "Not suitable": "അനുയോജ്യമല്ല",
+  Excellent: "അത്യുത്തം", Good: "നല്ലത്", Moderate: "മിതമായത്",
+  Weak: "ദുർബലം", Avoid: "ഒഴിവാക്കുക",
+  "None remaining": "ബാക്കിയില്ല", "None identified": "ഒന്നുമില്ല",
+};
+
+const ML_VERDICT = {
+  Excellent: "അത്യുത്തം", Good: "നല്ലത്", Moderate: "മിതമായത്",
+  Weak: "ദുർബലം", Avoid: "ഒഴിവാക്കുക",
+};
+
+const ML_SECTION_TITLE = {
+  "TODAY ANALYSIS": "ഇന്നത്തെ അവസ്ഥ",
+  "CURRENT MOMENT": "നിലവിലെ സമയം",
+  "TODAY'S WINDOWS": "ഇന്നത്തെ അനുയോജ്യമായ സമയങ്ങൾ",
+  "BEST TIME": "ഏറ്റവും ഉത്തമമായ സമയം",
+  "BAD TIMES": "ഒഴിവാക്കേണ്ട സമയങ്ങൾ",
+  "IF TODAY IS NOT GOOD": "ഇന്ന് അനുയോജ്യമല്ലെങ്കിൽ",
+  "ASTRO ANALYSIS": "ജ്യോതിശാസ്ത്ര വിശകലനം",
+  "MANUSCRIPT EXPLANATION": "ഗ്രന്ഥനിയമങ്ങളുടെ വിശദീകരണം",
+  "WARNING SECTION": "മുന്നറിയിപ്പുകൾ",
+  "FINAL DECISION": "അന്തിമ വിലയിരുത്തൽ",
+};
+
+// ── Static UI strings ──
+export const STR = {
+  panelTitle: { en: "Ritual Decision Engine", ml: "ആചാര തീരുമാന യന്ത്രം" },
+  understanding: { en: "Understanding Your Ritual", ml: "നിങ്ങളുടെ ആചാരം മനസ്സിലാക്കൽ" },
+  ritual: { en: "Ritual", ml: "ആചാരം" },
+  today: { en: "Today", ml: "ഇന്ന്" },
+  hour: { en: "Hour", ml: "മണിക്കൂർ" },
+  moon: { en: "Moon", ml: "ചന്ദ്രൻ" },
+  msRefs: { en: "Manuscript References", ml: "ഗ്രന്ഥ റഫറൻസുകൾ" },
+  reasoningLog: { en: "Full Reasoning Log", ml: "പൂർണ്ണ വിശദീകരണ രേഖ" },
+  steps: { en: "steps", ml: "ഘട്ടങ്ങൾ" },
+  verdict: { en: "Verdict", ml: "വിധി" },
+  confidence: { en: "Confidence", ml: "ആത്മവിശ്വാസം" },
+  source: { en: "Source", ml: "ഉറവിടം" },
+  ifIgnored: { en: "If ignored", ml: "അവഗണിച്ചാൽ" },
+  conflict: { en: "Conflict", ml: "ഭിന്നത" },
+  resolution: { en: "Resolution", ml: "പരിഹാരം" },
+  nextHour: { en: "Next hour", ml: "അടുത്ത മണിക്കൂർ" },
+  nextMoon: { en: "Next moon", ml: "അടുത്ത ചന്ദ്രദശ" },
+  best: { en: "🥇 Best", ml: "🥇 മികച്ചത്" },
+  second: { en: "🥈 Second", ml: "🥈 രണ്ടാമത്" },
+  third: { en: "🥉 Third", ml: "🥉 മൂന്നാമത്" },
+  daytime: { en: "Daytime", ml: "പകൽ" },
+  nighttime: { en: "Nighttime", ml: "രാത്രി" },
+  enemyHours: { en: "Enemy Hours", ml: "ശത്രു മണിക്കൂറുകൾ" },
+  enemyDays: { en: "Enemy Days", ml: "ശത്രു ദിവസങ്ങൾ" },
+  enemyMoon: { en: "Enemy Moon", ml: "ശത്രു ചന്ദ്രദശകൾ" },
+  enemyRulers: { en: "Enemy Rulers", ml: "ശത്രു ഗ്രഹങ്ങൾ" },
+  availableNow: { en: "available now", ml: "ഇപ്പോൾ ലഭ്യം" },
+  dAway: { en: "d away", ml: "ദിവസം അകലെ" },
+  toWait: { en: "to wait", ml: "കാത്തിരിക്കാൻ" },
+  available: { en: "available", ml: "ലഭ്യം" },
+  ranked: { en: "ranked", ml: "റാങ്ക് ചെയ്തത്" },
+  rulesApplied: { en: "rules applied", ml: "നിയമങ്ങൾ പ്രയോഗിച്ചു" },
+  warningsCount: { en: "warnings", ml: "മുന്നറിയിപ്പുകൾ" },
+  noWarnings: { en: "No warnings", ml: "മുന്നറിയിപ്പുകളൊന്നുമില്ല" },
+  advisorTitle: { en: "Mizan Configuration Advisor", ml: "മിസാൻ ക്രമീകരണ ഉപദേഷ്ടാവ്" },
+  optimal: { en: "Optimal", ml: "ഏറ്റവും ഉത്തമം" },
+  improvements: { en: "improvements", ml: "മെച്ചപ്പെടുത്തലുകൾ" },
+  current: { en: "Current", ml: "നിലവിൽ" },
+  recommend: { en: "Recommend", ml: "ശുപാർശ" },
+  advisorIntroOptimal: { en: "Your current Mizan configuration is already optimal. No changes are recommended. Every selection aligns with the manuscript prescriptions for your ritual purpose.", ml: "നിങ്ങളുടെ നിലവിലെ മിസാൻ ക്രമീകരണം ഏറ്റവും ഉത്തമമാണ്. മാറ്റങ്ങളൊന്നും ആവശ്യമില്ല. ഓരോ തിരഞ്ഞെടുപ്പും നിങ്ങളുടെ ആചാര ലക്ഷ്യത്തിനുള്ള ഗ്രന്ഥ നിർദ്ദേശങ്ങളുമായി യോജിക്കുന്നു." },
+  advisorIntro: { en: "This advisor compares your current Mizan selections against all imported manuscript rules. For each field where an improvement is possible, the recommended value and the manuscript reason are shown below. Go back to the Mizan selections above and adjust manually — the engine never changes Mizan for you.", ml: "ഈ ഉപദേഷ്ടാവ് നിങ്ങളുടെ നിലവിലെ മിസാൻ തിരഞ്ഞെടുപ്പുകളെ ഇറക്കുമതി ചെയ്ത എല്ലാ ഗ്രന്ഥ നിയമങ്ങളുമായി താരതമ്യം ചെയ്യുന്നു. മെച്ചപ്പെടുത്താൻ കഴിയുന്ന ഓരോ മണ്ഡലത്തിലും, ശുപാർശ ചെയ്യുന്ന മൂല്യവും ഗ്രന്ഥ കാരണവും താഴെ കാണിക്കുന്നു. മുകളിലുള്ള മിസാൻ തിരഞ്ഞെടുപ്പുകളിലേക്ക് മടങ്ങി സ്വയം ക്രമീകരിക്കുക — യന്ത്രം മിസാന് മാറ്റങ്ങളൊന്നും വരുത്തുന്നില്ല." },
+  optimalBanner: { en: "Your current Mizan configuration is already optimal.", ml: "നിങ്ങളുടെ നിലവിലെ മിസാൻ ക്രമീകരണം ഏറ്റവും ഉത്തമമാണ്." },
+  optimalSub: { en: "No changes are recommended — proceed with the full decision report below.", ml: "മാറ്റങ്ങളൊന്നും ആവശ്യമില്ല — താഴെയുള്ള പൂർണ്ണ തീരുമാന റിപ്പോർട്ടിലൂടെ മുന്നോട്ടുപോകുക." },
+  langLabel: { en: "മലയാളം", ml: "English" },
+  footerNote: { en: "This analysis is read-only and does not modify any Mizan calculation. All recommendations are derived from existing manuscript rules and live astronomical data.", ml: "ഈ വിശകലനം റീഡ്-ഒൺലി ആണ്; മിസാൻ കണക്കുകളൊന്നും മാറ്റുന്നില്ല. എല്ലാ ശുപാർശകളും നിലവിലുള്ള ഗ്രന്ഥ നിയമങ്ങളിൽ നിന്നും തത്സമയ ജ്യോതിശാസ്ത്ര വിവരങ്ങളിൽ നിന്നും ഉരുത്തിരിച്ചതാണ്." },
+};
+
+// Advisor field labels
+const ML_FIELD_LABEL = {
+  "Ritual Purpose": "ആചാര ലക്ഷ്യം",
+  "Khayr / Sharr (Mizan 8)": "ഖൈർ / ശർ (മിസാൻ 8)",
+  "Selected Weekday (Mizan 5)": "തിരഞ്ഞെടുത്ത ദിവസം (മിസാൻ 5)",
+  "Selected Planet (Mizan 6)": "തിരഞ്ഞെടുത്ത ഗ്രഹം (മിസാൻ 6)",
+  "Selected Planetary Hour (Mizan 4)": "തിരഞ്ഞെടുത്ത ഗ്രഹ മണിക്കൂർ (മിസാൻ 4)",
+  "Selected Element (Mizan 2)": "തിരഞ്ഞെടുത്ത മൂലകം (മിസാൻ 2)",
+  "Day / Night (Mizan 3)": "പകൽ / രാത്രി (മിസാൻ 3)",
+  "Best Time to Perform (Today)": "അനുഷ്ഠിക്കാനുള്ള ഏറ്റവും ഉത്തമ സമയം (ഇന്ന്)",
+  "Zodiac Sign": "രാശി",
+  "Star / Nakshatra": "നക്ഷത്രം",
+};
+
+const ML_FIELD_VALUE = {
+  "Not selected": "തിരഞ്ഞെടുത്തിട്ടില്ല",
+  "Not selected in Mizan": "മിസാനിൽ തിരഞ്ഞെടുത്തിട്ടില്ല",
+  "Not available in Mizan": "മിസാനിൽ ലഭ്യമല്ല",
+  "Not detected": "കണ്ടെത്തിയിട്ടില്ല",
+  "Based on purpose prescription": "ലക്ഷ്യത്തിന്റെ നിർദ്ദേശത്തിലൂടെ",
+  "Based on your input text": "നിങ്ങളുടെ ഇൻപുട്ട് വാചകത്തിൽ നിന്ന്",
+  "Any suitable day (no specific prescription)": "ഏത് അനുയോജ്യ ദിവസവും (പ്രത്യേക നിർദ്ദേശമില്ല)",
+  "See live Astro Clock": "തത്സമയ ആസ്ട്രോ ക്ലോക്ക് കാണുക",
+  "Consult the Astro Clock module": "ആസ്ട്രോ ക്ലോക്ക് മൊഡ്യൂൾ കാണുക",
+  "No optimal time today": "ഇന്ന് ഉത്തമ സമയമില്ല",
+  "Either (Night preferred)": "രണ്ടും (രാത്രി മുൻഗണന)",
+  "Night (Gece) — preferred": "രാത്രി (ഗെസെ) — മുൻഗണന",
+  "Night (Gece)": "രാത്രി (ഗെസെ)",
+  "Day (Gunduz)": "പകൽ (ഗുൻദുസ്)",
+  "Khayr (Benevolent)": "ഖൈർ (ഐശ്വര്യം)",
+  "Sharr (Banishment)": "ശർ (നിരസനം)",
+  "Select Khayr or Sharr in Mizan 8": "മിസാൻ 8-ൽ ഖൈർ അല്ലെങ്കിൽ ശർ തിരഞ്ഞെടുക്കുക",
+  "Select a purpose in Mizan 7 (or type a custom purpose)": "മിസാൻ 7-ൽ ഒരു ലക്ഷ്യം തിരഞ്ഞെടുക്കുക (അല്ലെങ്കിൽ ഇഷ്ടാനുസൃത ലക്ഷ്യം ടൈപ്പ് ചെയ്യുക)",
+};
+
+// ── Helper translators ──
+export function tDay(name, lang) {
+  if (lang === "ml" && name && ML_DAY[name]) return ML_DAY[name];
+  return name;
+}
+export function tPlanet(name, lang) {
+  if (lang === "ml" && name && ML_PLANET[name]) return ML_PLANET[name];
+  return name;
+}
+export function tElement(name, lang) {
+  if (lang === "ml" && name && ML_ELEMENT[name]) return ML_ELEMENT[name];
+  return name;
+}
+export function tStatus(val, lang) {
+  if (lang !== "ml") return val;
+  if (ML_STATUS[val]) return ML_STATUS[val];
+  return val;
+}
+export function tVerdict(val, lang) {
+  if (lang !== "ml") return val;
+  return ML_VERDICT[val] || val;
+}
+export function tSection(val, lang) {
+  if (lang !== "ml") return val;
+  return ML_SECTION_TITLE[val] || val;
+}
+export function tFieldLabel(val, lang) {
+  if (lang !== "ml") return val;
+  return ML_FIELD_LABEL[val] || val;
+}
+export function tFieldValue(val, lang) {
+  if (lang !== "ml") return val;
+  if (ML_FIELD_VALUE[val]) return ML_FIELD_VALUE[val];
+  // Day names / planet names inside values
+  if (ML_DAY[val]) return ML_DAY[val];
+  if (ML_PLANET[val]) return ML_PLANET[val];
+  return val;
+}
+export function tStr(key, lang) {
+  const e = STR[key];
+  return e ? (e[lang] || e.en) : key;
+}
+
+// ── Translate a planetary-hour window reason (Today's Windows / Best Time) ──
+function tWindowReason(reason, planet, pdfName, lang) {
+  if (lang !== "ml" || !reason) return reason;
+  const p = tPlanet(planet, lang);
+  const base = `${p} മണിക്കൂർ —`;
+  if (/ideal for/.test(reason)) return `${base} ${pdfName || "ഈ കർമ്മത്തിന്"} ഏറ്റവും അനുയോജ്യം`;
+  if (/benefic planet, suitable for Khayr/.test(reason)) return `${base} ഉപകാര ഗ്രഹം; ഖൈർ കർമ്മത്തിന് അനുയോജ്യം`;
+  return reason;
+}
+
+// ── Translate ranked window reason ──
+function tRankedReason(reason, rank, lang) {
+  if (lang !== "ml" || !reason) return reason;
+  if (rank === 1) return "ഇന്നത്തെ ഏറ്റവും ശക്തമായ സമയാവസരം. ഗ്രന്ഥ നിർദ്ദേശപ്രകാരം ഈ മണിക്കൂറാണ് കർമ്മത്തിന് ഏറ്റവും അനുയോജ്യം.";
+  if (rank === 2) return "രണ്ടാമത്തെ മികച്ച സമയം. ഒന്നാമത്തേത് നഷ്ടപ്പെട്ടാൽ മാത്രം ഉപയോഗിക്കുക.";
+  return "മൂന്നാമത്തെ മികച്ച സമയം. ആദ്യത്തെ രണ്ടും ലഭ്യമല്ലെങ്കിൽ ഉപയോഗിക്കാവുന്ന ഒരു പിൻതിരിക്കൽ സമയം.";
+}
+
+// ── Translate avoid-window reason ──
+function tAvoidReason(reason, lang) {
+  if (lang !== "ml" || !reason) return reason;
+  if (/enemy planet for/.test(reason)) {
+    const m = reason.match(/enemy planet for (.+)/);
+    return `ശത്രു ഗ്രഹം — ${m ? m[1] : "ഈ കർമ്മത്തിന്"} പ്രതികൂലം`;
+  }
+  if (/malefic planet, weakens Khayr/.test(reason)) return "പാപഗ്രഹം — ഖൈർ കർമ്മങ്ങളെ ദുർബലമാക്കും";
+  return reason;
+}
+
+// ── Translate warning string (pattern-based) ──
+function tWarning(w, lang, analysis) {
+  if (lang !== "ml" || !w) return w;
+  const day = analysis?.astroClockStatus?.day;
+  const mlDay = tDay(day, lang);
+  const bestDay = analysis?.bestDay ? tDay(analysis.bestDay, lang) : "";
+  const altDay = analysis?.altDay ? tDay(analysis.altDay, lang) : "";
+  const planet = analysis?.astroClockStatus?.currentHour?.planet;
+  const mlPlanet = tPlanet(planet, lang);
+  const hourNum = analysis?.astroClockStatus?.currentHour?.number;
+
+  if (/NOT a Sa'idat hour/.test(w))
+    return `നിലവിലെ മണിക്കൂർ (#${hourNum}, ${mlPlanet}) സഅീദാത് മണിക്കൂറല്ല; ${mlPlanet} ഉപകാര ഗ്രഹവുമല്ല — ഖൈർ കർമ്മങ്ങൾക്ക് അനുയോജ്യമല്ല (LCK_003)`;
+  if (/Khayr works should be done in the waxing phase/.test(w)) {
+    const ld = analysis?.moonPhase?.lunarDay;
+    return `ചന്ദ്രൻ ക്ഷയദശയിലാണ് (ദിവസം ${ld}). ഖൈർ കർമ്മങ്ങൾ വർദ്ധമാന ദശയിൽ അനുഷ്ഠിക്കണം (MN_001)`;
+  }
+  if (/Sharr works are better in the waning phase/.test(w))
+    return "ചന്ദ്രൻ വർദ്ധമാന ദശയിലാണ്. ശർ കർമ്മങ്ങൾ ക്ഷയദശയിൽ, പ്രത്യേകിച്ച് അമാവാസയിൽ ചെയ്യുന്നതാണ് ഉത്തമം (MN_002)";
+  if (/MUST be performed at night/.test(w))
+    return "ഈ കർമ്മം രാത്രിയിൽ അനുഷ്ഠിക്കണം — പകലിൽ സൂര്യൻ ജ്വലനങ്ങളെ തടയുന്നു (NGT_002)";
+  if (/Today is .* but the recommended day is/.test(w))
+    return `ഇന്ന് ${mlDay} ആണ്, എന്നാൽ ശുപാർശ ചെയ്ത ദിവസം ${bestDay}${altDay ? ` അല്ലെങ്കിൽ ${altDay}` : ""} ആണ്`;
+  if (/Today is the correct day but all .* hours have passed/.test(w))
+    return `ഇന്ന് ശരിയായ ദിവസമാണെങ്കിലും ഉത്തമ മണിക്കൂറുകളെല്ലാം കഴിഞ്ഞു. ഭാഗികമായ മണിക്കൂറിൽ തുടരാമെങ്കിലും കർമ്മം ദുർബലമാകും.`;
+  return w;
+}
+
+// ── Translate conflict objects ──
+function tConflict(c, lang, analysis) {
+  if (lang !== "ml") return c;
+  return {
+    ...c,
+    rule1: c.rule1,
+    rule2: c.rule2,
+    resolution: "മിസാൻ ലക്ഷ്യത്തിന് മുൻഗണന (തലം 4). ഇഷ്ടാനുസൃത ലക്ഷ്യം ദ്വിതീയമായി രേഖപ്പെടുത്തി.",
+  };
+}
+
+// ── Translate manuscript rule desc (lightweight) ──
+function tRule(r, lang) {
+  if (lang !== "ml") return r;
+  // Keep id + source; translate common desc fragments minimally
+  return r;
+}
+
+// ── Malayalam body templates per section ──
+function mlBody(section, analysis) {
+  const a = analysis;
+  const day = tDay(a?.astroClockStatus?.day, "ml");
+  const dayRuler = tPlanet(a?.astroClockStatus?.dayRuler, "ml");
+  const curHour = a?.astroClockStatus?.currentHour?.number;
+  const curPlanet = tPlanet(a?.astroClockStatus?.currentHour?.planet, "ml");
+  const remaining = a?.astroClockStatus?.hourRemaining;
+  const moonDay = a?.moonPhase?.lunarDay;
+  const phaseName = a?.moonPhase?.phaseName === "Waxing (مقبل)" ? "വർദ്ധമാനം" : "ക്ഷയം";
+  const isNight = a?.astroClockStatus?.isDaytime === false;
+  const bestDay = a?.bestDay ? tDay(a.bestDay, "ml") : "";
+  const altDay = a?.altDay ? tDay(a.altDay, "ml") : "";
+  const bestPlanet = a?.bestPlanetaryHour ? tPlanet(a.bestPlanetaryHour, "ml") : "";
+  const ritualType = a?.ritualType || "";
+  const incense = a?.recommendedIncense ? tPlanet(a.astroClockStatus?.currentHour?.planet, "ml") + " ധൂപം" : "";
+  const windows = a?.bestWindowsToday || [];
+  const ranked = a?.rankedWindows || [];
+  const avoid = a?.avoidWindowsToday || [];
+  const nextOp = a?.nextOpportunity;
+  const nextMoon = a?.nextMoonPhase;
+  const verdict = tVerdict(a?.verdict, "ml");
+  const score = a?.confidenceScore;
+
+  switch (section.section) {
+    case "TODAY ANALYSIS": {
+      const r = a?.canPerformTodayReason || "";
+      if (a.canPerformToday === "Yes")
+        return `അതെ — ഇന്ന് അനുയോജ്യമാണ്. ആകാശം ഈ കർമ്മത്തിന് അനുകൂലമാണ്; താഴെ പറയുന്ന ഉത്തമ മണിക്കൂറുകളിൽ ആത്മവിശ്വാസത്തോടെ മുന്നോട്ടുപോകാം. (${r})`;
+      if (a.canPerformToday === "Limited")
+        return `ഇന്ന് ഭാഗികമായി മാത്രം അനുയോജ്യം. മുന്നോട്ടുപോകാമെങ്കിലും കർമ്മം ദുർബലമാകും. അത്യാവശ്യമെങ്കിൽ തുടരുക; അല്ലെങ്കിൽ അടുത്ത പൂർണ്ണ അനുകൂല ദിവസത്തിനായി കാത്തിരിക്കുക. (${r})`;
+      return `ഇല്ല — ഇന്ന് അനുയോജ്യമല്ല. ഇന്ന് ഈ കർമ്മം അനുഷ്ഠിക്കുന്നത് ഖഗോളധാരയ്ക്ക് വിരുദ്ധമായി പ്രവർത്തിക്കുന്നതായിരിക്കും; ഗ്രന്ഥങ്ങൾ ഇതിനെ മുന്നറിയിപ്പ് നൽകുന്നു. (${r})`;
+    }
+    case "CURRENT MOMENT": {
+      if (a.currentMomentSuitable)
+        return `നിലവിൽ അനുയോജ്യമായ സമയമാണ്. നിലവിലെ ഗ്രഹ മണിക്കൂർ #${curHour} (${curPlanet}), ${isNight ? "രാത്രി" : "പകൽ"}, ${remaining} ബാക്കി. ഉടനെ പ്രവർത്തിക്കുക — ഈ സന്ദർഭം അധികനേരം തുറന്നിരിക്കില്ല.`;
+      const wt = a?.waitTime?.waitText;
+      const waitPlanet = a?.waitTime?.hour ? tPlanet(a.waitTime.hour.planet, "ml") : "";
+      const waitStart = a?.waitTime?.hour?.startTime;
+      return `നിലവിലെ സമയം അനുയോജ്യമല്ല. നിലവിലെ മണിക്കൂർ #${curHour} (${curPlanet}), ${isNight ? "രാത്രി" : "പകൽ"}. ${wt ? `അടുത്ത അനുയോജ്യ മണിക്കൂറിനായി ഏകദേശം ${wt} കാത്തിരിക്കുക (${waitPlanet}, ${waitStart}-ൽ തുടങ്ങും).` : "ഇന്ന് അനുയോജ്യ മണിക്കൂറുകളൊന്നും ബാക്കിയില്ല — അടുത്ത ശുപാർശ ദിവസത്തിനായി കാത്തിരിക്കുക."}`;
+    }
+    case "TODAY'S WINDOWS":
+      return windows.length > 0
+        ? "താഴെ പറയുന്ന സമയങ്ങൾ ഇന്ന് ഈ കർമ്മത്തിന് അനുയോജ്യമാണ്. ഓരോ സമയത്തിന്റെയും ശക്തി നക്ഷത്രങ്ങളാൽ മൂല്യനിർണ്ണയം ചെയ്യുന്നു (★★★★★ = പൂർണ്ണ യോജനം, ★ = അതിവായന ഉപയോഗ്യം). ശക്തി എന്നത് ഗ്രഹ മണിക്കൂർ നിർദ്ദേശവുമായുള്ള യോജനം, ചന്ദ്രദശ, പകൽ/രാത്രി നിർബന്ധം എന്നിവ അടിസ്ഥാനമാക്കിയുള്ളതാണ്."
+        : "ഇന്ന് അനുകൂലമായ സമയങ്ങങ്ങളൊന്നും ബാക്കിയില്ല — നിർദ്ദേശിച്ച മണിക്കൂറുകളെല്ലാം കഴിഞ്ഞു. അടുത്ത അവസരത്തിനായി കാത്തിരിക്കുക.";
+    case "BEST TIME":
+      return ranked.length > 0
+        ? "ഇന്നത്തെ ഏറ്റവും മികച്ച, രണ്ടാമത്തെ, മൂന്നാമത്തെ മണിക്കൂറുകൾ മുകളിൽ കാണാം. റാങ്കിങ് ഗ്രഹ മണിക്കൂറിന്റെ നിർദ്ദേശിത ഗ്രഹവുമായുള്ള യോജനം, ചന്ദ്രദശ, പകൽ/രാത്രി നിർബന്ധം എന്നിവ അടിസ്ഥാനമാക്കിയുള്ളതാണ്."
+        : "ഇന്ന് റാങ്ക് ചെയ്ത സമയങ്ങങ്ങളൊന്നുമില്ല. അടുത്ത അവസരത്തിനായി താഴെയുള്ള \"ഇന്ന് അനുയോജ്യമല്ലെങ്കിൽ\" ഭാഗം കാണുക.";
+    case "BAD TIMES":
+      return avoid.length > 0
+        ? `താഴെ പറയുന്ന സമയങ്ങൾ ഒഴിവാക്കണം. ${avoid.map(w => `${w.startTime}–${w.endTime} (${tPlanet(w.planet, "ml")})`).join("; ")}. ${a.enemyAnalysis?.note ? a.enemyAnalysis.note : ""}`
+        : `ഇന്ന് പ്രത്യേകം അപകടകരമായ മണിക്കൂറുകളൊന്നും കണ്ടെത്തിയില്ല. എങ്കിലും, ${a.enemyAnalysis?.note || ""}`;
+    case "IF TODAY IS NOT GOOD":
+      return nextOp
+        ? `ഇന്നത്തെ അവസരം കഴിഞ്ഞതോ അനുയോജ്യമല്ലെങ്കിൽ, അടുത്ത ഉത്തമ സമയം: ${tDay(nextOp.dayName, "ml")}${nextOp.isToday ? " (ഇന്ന്)" : ` (${nextOp.daysAhead} ദിവസം അകലെ)`}, ${nextOp.startTime}–${nextOp.endTime} (${tPlanet(nextOp.planet, "ml")} മണിക്കൂർ, #${nextOp.hour}). ${nextMoon ? `ചന്ദ്രദശ: ${nextMoon.phase} — ${nextMoon.reason}${nextMoon.waitDays > 0 ? ` (ഏകദേശം ${nextMoon.waitDays} ദിവസം കാത്തിരിക്കാൻ).` : " (ഇപ്പോൾ ലഭ്യം)."}` : ""}`
+        : `അടുത്ത 7 ദിവസത്തിനുള്ളിൽ ഭാവി അവസരമൊന്നും കണ്ടെത്തിയില്ല. ${nextMoon ? `ചന്ദ്രദശ: ${nextMoon.phase} — ${nextMoon.reason}` : ""} ബദൽ ദിവസങ്ങൾക്കായി ഗ്രന്ഥങ്ങൾ കാണുക.`;
+    case "ASTRO ANALYSIS":
+      return `ഇന്ന് ${day}, ഭരണം ${dayRuler}. നിലവിലെ ഗ്രഹ മണിക്കൂർ #${curHour} (${curPlanet}), ${isNight ? "രാത്രി" : "പകൽ"}, ${remaining} ബാക്കി. ചന്ദ്രൻ ദിവസം ${moonDay} (${phaseName}). മൊത്തത്തിലുള്ള ഖഗോള ശക്തി: ${verdict} (${score}%).`;
+    case "MANUSCRIPT EXPLANATION":
+      return `മുകളിലുള്ള ഓരോ ശുപാർശയും ഇറക്കുമതി ചെയ്ത ഗ്രന്ഥങ്ങളിൽ അധിഷ്ഠിതമാണ്. ${a.ritualType ? `നിങ്ങളുടെ കർമ്മം ${a.ritualType} ആയി വർഗ്ഗീകരിച്ചിരിക്കുന്നു.` : ""} പ്രയോഗിച്ച നിയമങ്ങളുടെ പൂർണ്ണ പട്ടിക താഴെ കാണാം.`;
+    case "WARNING SECTION":
+      return (a.warnings?.length > 0)
+        ? a.warnings.map(w => "⚠ " + tWarning(w, "ml", a)).join(" ")
+        : `മുന്നറിയിപ്പുകളൊന്നുമില്ല — പരിശോധിച്ച എല്ലാ വ്യവസ്ഥകളും അനുകൂലമാണ്.${a.conflicts?.length > 0 ? ` എന്നാൽ ${a.conflicts.length} ഗ്രന്ഥ ഭിന്നത കണ്ടെത്തി പരിഹരിച്ചു.` : ""}`;
+    case "FINAL DECISION":
+      return `${a.verdictStarsString} ${verdict}. ഏത് സമയത്താണ് കർമ്മം അനുഷ്ഠിക്കേണ്ടതെന്നതിന്റെ ഖഗോള വിലയിരുത്തൽ ഇതാണ്. ${a.canPerformToday === "Yes" ? "ഇന്ന് മുകളിൽ പറഞ്ഞ ഉത്തമ മണിക്കൂറുകളിൽ മുന്നോട്ടുപോകാം." : a.canPerformToday === "Limited" ? "ശ്രദ്ധയോടെ മുന്നോട്ടുപോകാം, എന്നാൽ കർമ്മം ഉത്തമ സമയത്തേക്കാൾ ദുർബലമായിരിക്കും." : "പൂർണ്ണ ശക്തിക്കായി അടുത്ത ശുപാർശ ദിവസത്തിനും മണിക്കൂറിനുമായി കാത്തിരിക്കുക."} ${incense ? `കർമ്മത്തിനിടയിൽ ${incense} ധൂപിക്കുക (അൽ-ഷുരൂത് p.11, 20).` : ""}`;
+    default:
+      return section.body;
+  }
+}
+
+// ── Translate consequence (lightweight, common patterns) ──
+function tConsequence(c, section, analysis, lang) {
+  if (lang !== "ml" || !c) return c;
+  const sec = section.section;
+  const map = {
+    "TODAY ANALYSIS": analysis.canPerformToday === "Yes" ? "അപായമില്ല — മുന്നോട്ടുപോകുക." : "തെറ്റായ ദിവസം കർമ്മം ചെയ്യുന്നത് അതിനെ ദുർബലമാക്കും; ജ്വലനങ്ങൾ അപേക്ഷ നിരസിച്ചേക്കാം.",
+    "CURRENT MOMENT": "ഇപ്പോൾ പ്രവർത്തിക്കുന്നത് പരിശ്രമം പാഴാക്കും; കർമ്മം പരാജയപ്പെടുകയോ പ്രതിഫലിക്കുകയോ ചെയ്തേക്കാം.",
+    "TODAY'S WINDOWS": "ഇവയാണ് നിങ്ങളുടെ ശക്തി സന്ദർഭങ്ങൾ. നഷ്ടപ്പെടുത്തിയാൽ അടുത്ത അവസരത്തിനായി കാത്തിരിക്കണം.",
+    "BEST TIME": "തെറ്റായ മണിക്കൂറിൽ ആരംഭിച്ചാൽ ഗ്രഹാധിപൻ അപേക്ഷ ഭരിക്കില്ല.",
+    "BAD TIMES": "അപകടകരമായ മണിക്കൂറിൽ പ്രവർത്തിച്ചാൽ കർമ്മം പ്രതിഫലിച്ചേക്കാം — ശത്രു മണിക്കൂറുകളിൽ പ്രവർത്തിച്ചവർ രോഗബാധിതരായതായി ഗ്രന്ഥങ്ങൾ രേഖപ്പെടുത്തുന്നു.",
+    "IF TODAY IS NOT GOOD": "അടുത്ത അനുകൂല സമയത്തിനായി കാത്തിരിക്കുന്നത് കർമ്മത്തിന് പൂർണ്ണ ശക്തി ഉറപ്പാക്കും.",
+    "ASTRO ANALYSIS": "മൊത്തത്തിലുള്ള ഖഗോള ശക്തി എല്ലാ വ്യവസ്ഥകളുടെയും — ദിവസം, മണിക്കൂർ, ചന്ദ്രൻ, മൂലകം, രാശി — സംയോജനമാണ്.",
+    "MANUSCRIPT EXPLANATION": "ഓരോ നിയമവും അതിന്റെ ഉറവിട ഗ്രന്ഥത്തിന്റെ അധികാരം വഹിക്കുന്നു. അവഗണിക്കുന്നത് പാരമ്പര്യത്തിന് വിരുദ്ധമാണ്; പണ്ഡിതർ ഇത് പരാജയത്തിനോ പ്രതിഫലനത്തിനോ കാരണമാകുമെന്ന് മുന്നറിയിക്കുന്നു.",
+    "WARNING SECTION": "ഓരോ മുന്നറിയിപ്പും അവഗണിച്ചാൽ കർമ്മത്തിന്റെ ശക്തി കുറയ്ക്കുകയോ തിരിച്ചു വിടുകയോ ചെയ്യുന്ന ഒരു വ്യവസ്ഥയെ സൂചിപ്പിക്കുന്നു.",
+    "FINAL DECISION": a => a?.confidenceScore >= 70 ? "കർമ്മം ശക്തമാണ് — ആത്മവിശ്വാസത്തോടെ മുന്നോട്ടുപോകുക." : a?.confidenceScore >= 50 ? "കർമ്മം മിതമാണ് — അധിക ശ്രദ്ധയോടെയും കൃത്യമായ സമയപാലനത്തോടെയും മുന്നോട്ടുപോകുക." : "കർമ്മം ദുർബലമാണ് — സാധ്യമെങ്കിൽ മാറ്റിവെക്കുക.",
+  };
+  const v = map[sec];
+  if (typeof v === "function") return v(analysis);
+  return v || c;
+}
+
+// ── Localize the full analysis object's report + supporting fields ──
+export function localizeAnalysis(analysis, lang) {
+  if (lang !== "ml") return analysis;
+  const report = analysis.report.map(sec => {
+    const title = tSection(sec.section, lang);
+    let status = sec.status;
+    // regenerate count-bearing statuses from structured data
+    if (sec.section === "TODAY'S WINDOWS") status = sec.windows?.length > 0 ? `${sec.windows.length} ${tStr("available", lang)}` : tStatus("None remaining", lang);
+    if (sec.section === "BEST TIME") status = sec.ranked?.length > 0 ? `${sec.ranked.length} ${tStr("ranked", lang)}` : tStatus("None", lang);
+    if (sec.section === "BAD TIMES") status = sec.avoid?.length > 0 ? `${sec.avoid.length} ${lang === "ml" ? "ഒഴിവാക്കാൻ" : "to avoid"}` : tStatus("None identified", lang);
+    if (sec.section === "MANUSCRIPT EXPLANATION") status = `${analysis.rulesApplied?.length || 0} ${tStr("rulesApplied", lang)}`;
+    if (sec.section === "WARNING SECTION") status = analysis.warnings?.length > 0 ? `${analysis.warnings.length} ${tStr("warningsCount", lang)}` : tStr("noWarnings", lang);
+    if (sec.section === "FINAL DECISION") status = tVerdict(sec.status, lang);
+    if (sec.section === "ASTRO ANALYSIS") status = `${tDay(analysis.astroClockStatus?.day, lang)} / ${tPlanet(analysis.astroClockStatus?.currentHour?.planet, lang)}`;
+    if (sec.section === "IF TODAY IS NOT GOOD") status = analysis.nextOpportunity ? `${lang === "ml" ? "അടുത്തത്" : "Next"}: ${tDay(analysis.nextOpportunity.dayName, lang)}` : (lang === "ml" ? "ഭാവി സമയമില്ല" : "No future window found");
+    if (sec.section === "CURRENT MOMENT") status = tStatus(sec.status, lang);
+    if (sec.section === "TODAY ANALYSIS") status = tStatus(sec.status, lang);
+
+    const body = mlBody(sec, analysis);
+    const consequence = tConsequence(sec.consequence, sec, analysis, lang);
+
+    const windows = sec.windows ? sec.windows.map(w => ({
+      ...w,
+      reason: tWindowReason(w.reason, w.planet, analysis.ritualType, lang),
+      strengthReason: `${w.stars} — ${tWindowReason(w.reason, w.planet, analysis.ritualType, lang)}`,
+    })) : sec.windows;
+
+    const ranked = sec.ranked ? sec.ranked.map(w => ({
+      ...w,
+      planet: tPlanet(w.planet, lang),
+      reason: tRankedReason(w.reason, w.rank, lang),
+    })) : sec.ranked;
+
+    const avoid = sec.avoid ? sec.avoid.map(w => ({
+      ...w,
+      planet: tPlanet(w.planet, lang),
+      reason: tAvoidReason(w.reason, lang),
+    })) : sec.avoid;
+
+    const enemyAnalysis = sec.enemyAnalysis ? {
+      ...sec.enemyAnalysis,
+      enemyHours: sec.enemyAnalysis.enemyHours?.map(p => tPlanet(p, lang)),
+      enemyDays: sec.enemyAnalysis.enemyDays?.map(d => ML_DAY[Object.keys(ML_DAY).find(k => k.startsWith(d.charAt(0).toUpperCase() + d.slice(1))) || d] || d),
+    } : sec.enemyAnalysis;
+
+    const warnings = sec.warnings ? sec.warnings.map(w => tWarning(w, lang, analysis)) : sec.warnings;
+    const conflicts = sec.conflicts ? sec.conflicts.map(c => tConflict(c, lang, analysis)) : sec.conflicts;
+
+    const nextHour = sec.nextHour ? {
+      ...sec.nextHour,
+      day: tDay(sec.nextHour.day, lang),
+      planet: tPlanet(sec.nextHour.planet, lang),
+    } : sec.nextHour;
+
+    return { ...sec, section: title, status, body, consequence, windows, ranked, avoid, enemyAnalysis, warnings, conflicts, nextHour };
+  });
+
+  const expertNarrative = analysis.expertNarrative?.map((line, i) => mlNarrative(line, i, analysis, lang));
+
+  return {
+    ...analysis,
+    report,
+    expertNarrative,
+    verdict: tVerdict(analysis.verdict, lang),
+    ritualType: analysis.ritualType, // keep original (name)
+    canPerformToday: tStatus(analysis.canPerformToday, lang),
+    astroClockStatus: {
+      ...analysis.astroClockStatus,
+      day: tDay(analysis.astroClockStatus?.day, lang),
+      dayRuler: tPlanet(analysis.astroClockStatus?.dayRuler, lang),
+      currentHour: {
+        ...analysis.astroClockStatus?.currentHour,
+        planet: tPlanet(analysis.astroClockStatus?.currentHour?.planet, lang),
+      },
+      moonPhase: analysis.astroClockStatus?.moonPhase,
+    },
+    moonPhase: {
+      ...analysis.moonPhase,
+      phaseName: analysis.moonPhase?.phaseName === "Waxing (مقبل)" ? "വർദ്ധമാനം (مقبل)" : analysis.moonPhase?.phaseName === "Waning (مدبر)" ? "ക്ഷയം (مدبر)" : analysis.moonPhase?.phaseName,
+    },
+    bestDay: analysis.bestDay ? tDay(analysis.bestDay, lang) : null,
+    altDay: analysis.altDay ? tDay(analysis.altDay, lang) : null,
+    bestPlanetaryHour: analysis.bestPlanetaryHour ? tPlanet(analysis.bestPlanetaryHour, lang) : null,
+  };
+}
+
+// ── Malayalam expert narrative lines ──
+function mlNarrative(line, idx, analysis, lang) {
+  if (lang !== "ml") return line;
+  const a = analysis;
+  const ritualType = a?.ritualType || "പൊതുവായ ആധ്യാത്മിക കർമ്മം";
+  const dominant = a?.elementDirection ? a.elementDirection : null;
+  const elem = a?.elementCompatibility?.element;
+  const elemMl = tElement(elem, "ml");
+  const dir = a?.elementDirection?.dir;
+  const placement = a?.elementPlacement?.placement;
+  const bestDay = a?.bestDay;
+  const bestPlanet = a?.bestPlanetaryHour;
+  const canToday = a?.canPerformToday;
+
+  switch (idx) {
+    case 0:
+      return `നിങ്ങളുടെ മിസാൻ വിശകലനപ്രകാരം, ഈ കർമ്മം "${ritualType}" ആയി വർഗ്ഗീകരിച്ചിരിക്കുന്നു — ശരിയായ സമയത്ത് അനുഷ്ഠിക്കേണ്ട ഒരു ആധ്യാത്മിക പ്രവർത്തനം. ഇത് ${a?.ritualCategory || "പൊതുവായ ആധ്യാത്മിക കർമ്മം"} വിഭാഗത്തിൽ പെടുന്നു.`;
+    case 1:
+      if (a?.khayrSharrInferred) {
+        return a.khayrSharr === "khayr"
+          ? "മിസാൻ 8-ൽ ഖൈർ/ശർ സ്പഷ്ടമായി തിരഞ്ഞെടുത്തിട്ടില്ലാത്തതിനാൽ, ലക്ഷ്യ വിഭാഗത്തിൽ നിന്ന് യന്ത്രം ഇത് ഖൈർ (ഐശ്വര്യം) കർമ്മമായി അനുമാനിച്ചിരിക്കുന്നു. ഖൈർ കർമ്മങ്ങൾ വർദ്ധമാന ചന്ദ്രദശയിലും സഅീദാത് (അനുകൂല) മണിക്കൂറുകളിലും അനുഷ്ഠിക്കുന്നതാണ് ഉത്തമം."
+          : "മിസാൻ 8-ൽ ഖൈർ/ശർ സ്പഷ്ടമായി തിരഞ്ഞെടുത്തിട്ടില്ലാത്തതിനാൽ, ലക്ഷ്യ വിഭാഗത്തിൽ നിന്ന് യന്ത്രം ഇത് ശർ (നിരസനം) കർമ്മമായി അനുമാനിച്ചിരിക്കുന്നു. ശർ കർമ്മങ്ങൾ ക്ഷയദശയിലും, പ്രത്യേകിച്ച് അമാവാസയിലും (محاق) അനുഷ്ഠിക്കുന്നതാണ് ഉത്തമം.";
+      }
+      if (a?.khayrSharr === "khayr") return "നിങ്ങൾ ഇത് ഖൈർ (ഐശ്വര്യം) കർമ്മമായി തിരഞ്ഞെടുത്തിരിക്കുന്നു. ഖൈർ കർമ്മങ്ങൾ വർദ്ധമാന ചന്ദ്രദശയിലും സഅീദാത് (അനുകൂല) മണിക്കൂറുകളിലും അനുഷ്ഠിക്കുന്നതാണ് ഉത്തമം.";
+      if (a?.khayrSharr === "sharr") return "നിങ്ങൾ ഇത് ശർ (നിരസനം) കർമ്മമായി തിരഞ്ഞെടുത്തിരിക്കുന്നു. ശർ കർമ്മങ്ങൾ ക്ഷയദശയിലും, പ്രത്യേകിച്ച് അമാവാസയിലും (محاق) അനുഷ്ഠിക്കുന്നതാണ് ഉത്തമം.";
+      return "";
+    case 2:
+      if (elem) return `നിങ്ങളുടെ വാചകത്തിലെ പ്രധാന മൂലകം ${elemMl} ആയതിനാൽ, കർമ്മത്തിനിടയിൽ ${dir || "ഖിബ്ല"} ദിശയിലേക്ക് തിരിഞ്ഞ് ${placement ? `താൻത്രിക രേഖ ${placement}` : "ഉചിതമായി സ്ഥാപിക്കണം"}.`;
+      return "";
+    case 3: {
+      const dayPart = bestDay ? tDay(bestDay, "ml") : "ഏത് അനുയോജ്യ ദിവസവും";
+      const planetPart = bestPlanet ? tPlanet(bestPlanet, "ml") : "ഉചിതമായ ഗ്രഹ";
+      const todayPart = canToday === "Yes" ? "ഇന്ന് ഈ മാനദണ്ഡം പാലിക്കുകയും ഉത്തമ മണിക്കൂറുകൾ ലഭ്യവുമാണ്." : canToday === "Limited" ? "ഇന്ന് ശരിയായ ദിവസമാണെങ്കിലും ഉത്തമ മണിക്കൂറുകൾ കഴിഞ്ഞു — ശ്രദ്ധയോടെ മുന്നോട്ടുപോകുക അല്ലെങ്കിൽ കാത്തിരിക്കുക." : "ഇന്ന് ദിവസ മാനദണ്ഡം പാലിക്കുന്നില്ല — അടുത്ത ശുപാർശ ദിവസത്തിനായി കാത്തിരിക്കുക.";
+      return `ഗ്രന്ഥങ്ങൾ ഈ കർമ്മം ${dayPart} ${planetPart} മണിക്കൂറിൽ അനുഷ്ഠിക്കാൻ ശുപാർശ ചെയ്യുന്നു. ${todayPart}`;
+    }
+    default:
+      return line;
+  }
+}
+
+// ── Localize ConfigurationAdvisor recommendations ──
+export function localizeAdvice(advice, lang) {
+  if (lang !== "ml" || !advice) return advice;
+  const base = advice.base ? localizeAnalysis(advice.base, lang) : advice.base;
+  const recommendations = advice.recommendations.map(r => ({
+    ...r,
+    field: tFieldLabel(r.field, lang),
+    current: tAdvisorCurrent(r, lang),
+    recommended: tAdvisorRecommended(r, lang),
+    reason: tAdvisorReason(r, lang),
+  }));
+  return { ...advice, recommendations, base };
+}
+
+function tAdvisorCurrent(r, lang) {
+  if (lang !== "ml") return r.current;
+  const v = r.current;
+  if (ML_FIELD_VALUE[v]) return ML_FIELD_VALUE[v];
+  if (ML_DAY[v]) return ML_DAY[v];
+  if (ML_PLANET[v]) return ML_PLANET[v];
+  if (ML_ELEMENT[v]) return ML_ELEMENT[v];
+  if (/^Hour #/.test(v)) return v.replace("Hour #", "മണിക്കൂർ #");
+  if (/^Now:/.test(v)) return v.replace("Now:", "ഇപ്പോൾ:");
+  if (/^Not selected \(auto-inferred:/.test(v)) return v.replace("Not selected (auto-inferred:", "തിരഞ്ഞെടുത്തിട്ടില്ല (സ്വയമേവ നിർണ്ണയിച്ചത്:").replace("Khayr", "ഖൈർ").replace("Sharr", "ശർ");
+  if (/^"(.*)"$/.test(v)) return v; // custom purpose quoted
+  return v;
+}
+
+function tAdvisorRecommended(r, lang) {
+  if (lang !== "ml") return r.recommended;
+  const v = r.recommended;
+  if (ML_FIELD_VALUE[v]) return ML_FIELD_VALUE[v];
+  if (ML_DAY[v]) return ML_DAY[v];
+  if (ML_PLANET[v]) return ML_PLANET[v];
+  if (ML_ELEMENT[v]) return ML_ELEMENT[v];
+  // "Friday or Tuesday (alternative)" pattern
+  const orMatch = v.match(/^(\w+) or (\w+) \(alternative\)$/);
+  if (orMatch) return `${ML_DAY[orMatch[1]] || orMatch[1]} അല്ലെങ്കിൽ ${ML_DAY[orMatch[2]] || orMatch[2]} (ബദൽ)`;
+  if (/^Hour #/.test(v)) return v.replace(/Hour #(\d+)/g, "മണിക്കൂർ #$1").replace(/ or /g, " അല്ലെങ്കിൽ ");
+  if (/^Best for targets born under:/.test(v)) return v.replace("Best for targets born under:", "ലക്ഷ്യ വ്യക്തി ഈ രാശികളിൽ ജനിച്ചവരാണെങ്കിൽ ഉത്തമം:");
+  return v;
+}
+
+function tAdvisorReason(r, lang) {
+  if (lang !== "ml") return r.reason;
+  // Field-specific natural Malayalam reasons built from structured data
+  const f = r.field;
+  const optimal = r.isOptimal;
+  const cur = r.current;
+  const rec = r.recommended;
+
+  // Ritual Purpose
+  if (/Ritual Purpose|ആചാര ലക്ഷ്യം/.test(f)) {
+    return optimal
+      ? `നിങ്ങളുടെ ലക്ഷ്യം തിരിച്ചറിഞ്ഞിട്ടുണ്ട്. ഈ കർമ്മത്തിന് ഗ്രന്ഥങ്ങൾ നിർദ്ദിഷ്ട സമയങ്ങൾ നൽകുന്നു — താഴെയുള്ള മണ്ഡലങ്ങൾ കാണുക.`
+      : `ലക്ഷ്യം തിരഞ്ഞെടുത്തിട്ടില്ല അല്ലെങ്കിൽ പൊരുത്തപ്പെട്ടിട്ടില്ല. ആചാര ലക്ഷ്യം അറിയാതെ യന്ത്രത്തിന് സമയം നിർദ്ദേശിക്കാൻ കഴിയില്ല. മിസാൻ 7-ൽ ഒരു ലക്ഷ്യം തിരഞ്ഞെടുക്കുക അല്ലെങ്കിൽ പ്രണയം, രോഗശാന്തി, ഐശ്വര്യം, സംരക്ഷണം, വേർപിരിക്കൽ തുടങ്ങിയ ലക്ഷ്യം ടൈപ്പ് ചെയ്യുക.`;
+  }
+  if (/Khayr|ഖൈർ/.test(f)) {
+    if (/\(auto-inferred/.test(cur)) {
+      const pol = /Khayr/.test(cur) ? "ഖൈർ" : "ശർ";
+      return `മിസാൻ 8-ൽ ഖൈർ/ശർ തിരഞ്ഞെടുത്തിട്ടില്ലാത്തതിനാൽ യന്ത്രം ലക്ഷ്യ വിഭാഗത്തിൽ നിന്ന് ${pol} അനുമാനിച്ചു. ഇത് സ്പഷ്ടമാക്കി സമയ നിയമങ്ങൾ ഉറപ്പിക്കാൻ മിസാൻ 8-ൽ ${pol} തിരഞ്ഞെടുക്കുക. അൽ-ഷുരൂത് p.13 ഓരോ ധ്രുവതലത്തിനും വ്യത്യസ്ത മണിക്കൂർ-ചന്ദ്ര നിയന്ത്രണങ്ങൾ നൽകുന്നു.`;
+    }
+    return optimal ? `നിങ്ങൾ സ്പഷ്ടമായി ഖൈർ/ശർ തിരഞ്ഞെടുത്തിട്ടുണ്ട്, ഇത് ലക്ഷ്യ വിഭാഗവുമായി യോജിക്കുന്നു. ഇത് ഉത്തമമാണ്.` : `മിസാൻ 8-ൽ ഖൈർ അല്ലെങ്കിൽ ശർ തിരഞ്ഞെടുത്ത് ധ്രുവതല-നിർദ്ദിഷ്ട സമയ നിയമങ്ങൾ സജീവമാക്കുക.`;
+  }
+  if (/Weekday|ദിവസം/.test(f)) {
+    if (optimal) return `തിരഞ്ഞെടുത്ത ദിവസം ഈ കർമ്മത്തിനുള്ള ഗ്രന്ഥ നിർദ്ദേശവുമായി യോജിക്കുന്നു. ഇത് ഉത്തമമാണ്.`;
+    return `തിരഞ്ഞെടുത്ത ദിവസത്തിന്റെ ഭരണ ഗ്രഹം ഈ തരം കർമ്മത്തെ ഭരിക്കുന്നില്ല — ശുപാർശ ചെയ്ത ദിവസത്തിലേക്ക് മാറ്റുന്നത് ദിവസത്തിന്റെ ഗ്രഹോർജസ്സിനെ ആചാര ലക്ഷ്യവുമായി യോജിപ്പിക്കും.`;
+  }
+  if (/Planet|ഗ്രഹം/.test(f) && !/Hour/.test(f)) {
+    if (optimal) return `തിരഞ്ഞെടുത്ത ഗ്രഹം നിർദ്ദേശിത ഗ്രഹവുമായി യോജിക്കുന്നു. ഇത് ഉത്തമമാണ്.`;
+    return `ഗ്രഹാധിപൻ ഏത് ജ്വലനങ്ങൾക്കാണ് മറുപടി നൽകുന്നതെന്ന് നിയന്ത്രിക്കുന്നു — ശുപാർശ ചെയ്ത ഗ്രഹം തിരഞ്ഞെടുക്കുന്നത് ശരിയായ ആധ്യാത്മിക മണ്ഡലം സജീവമാക്കും.`;
+  }
+  if (/Planetary Hour|ഗ്രഹ മണിക്കൂർ/.test(f)) {
+    if (optimal) return `തിരഞ്ഞെടുത്ത മണിക്കൂർ നിർദ്ദേശിത ഗ്രഹത്താൽ ഭരിക്കപ്പെടുന്നു. ഇത് ഉത്തമമാണ്.`;
+    return `ശുപാർശ ചെയ്ത ഗ്രഹ മണിക്കൂറിലേക്ക് മാറുന്നത് ഗ്രഹ ശക്തിയെ ആചാരവുമായി യോജിപ്പിക്കും.`;
+  }
+  if (/Element|മൂലകം/.test(f)) {
+    if (optimal) return `പ്രധാന മൂലകം ഈ കർമ്മത്തിന് ശുപാർശ ചെയ്ത മൂലകവുമായി യോജിക്കുന്നു. ഇത് ഉത്തമമാണ്.`;
+    return `മൂലകം താൻത്രിക രേഖയുടെ ആധ്യാത്മിക സ്വഭാവം, ദിശ (അൽ-ഷുരൂത് p.42), സ്ഥാപനം (അൽ-ഷുരൂത് p.37) എന്നിവ നിർണ്ണയിക്കുന്നു. ശുപാർശ മൂലകം ഉപയോഗിക്കുന്നത് കർമ്മത്തിന്റെ ലക്ഷ്യവുമായുള്ള അനുരണനം ശക്തിപ്പെടുത്തും.`;
+  }
+  if (/Day \/ Night|പകൽ \/ രാത്രി/.test(f)) {
+    if (/MUST be performed at night|രാത്രിയിൽ അനുഷ്ഠിക്കണം/.test(r.reason) && !optimal)
+      return `ഈ കർമ്മം രാത്രിയിൽ അനുഷ്ഠിക്കണം — പകലിൽ സൂര്യൻ എല്ലാ ജ്വലനങ്ങളെയും തടയുന്നു (അൽ-ഷുരൂത് p.39-40, NGT_002). മിസാൻ 3-ൽ രാത്രി (ഗെസെ) ആയി മാറ്റുക.`;
+    if (optimal) return `പകൽ/രാത്രി തിരഞ്ഞെടുപ്പ് ഈ കർമ്മത്തിനുള്ള ഗ്രന്ഥ നിർബന്ധം പാലിക്കുന്നു. ഇത് ഉത്തമമാണ്.`;
+    return `എല്ലാ ആധ്യാത്മിക കർമ്മങ്ങൾക്കും രാത്രി പകലിനേക്കാൾ ഉത്തമമാണെന്ന് ഗ്രന്ഥങ്ങൾ പറയുന്നു, കാരണം പകലിൽ സൂര്യൻ ജ്വലനങ്ങളെ തടയുന്നു (അൽ-ഷുരൂത് p.39). ശക്തമായ ഫലത്തിനായി രാത്രി (ഗെസെ) പരിഗണിക്കുക.`;
+  }
+  if (/Best Time|ഏറ്റവും ഉത്തമ സമയം/.test(f)) {
+    if (optimal) return `നിലവിലെ സമയം ഒരു ഉത്തമ ഗ്രഹ മണിക്കൂറിനുള്ളിലാണ്. ഇപ്പോൾ കർമ്മം അനുഷ്ഠിക്കാം.`;
+    return `നിലവിലെ സമയം അനുയോജ്യമല്ല; ഇന്നത്തെ ഉത്തമ സമയത്തിനായി കാത്തിരിക്കുക. ഇത് ഇന്നത്തെ യഥാർത്ഥ ഗ്രഹ മണിക്കൂറുകളും നിലവിലെ ചന്ദ്രദശയും അടിസ്ഥാനമാക്കിയുള്ള തത്സമയ ശുപാർശയാണ്.`;
+  }
+  if (/Zodiac|രാശി/.test(f)) return `രാശി മിസാൻ തിരഞ്ഞെടുപ്പുകളുടെ ഭാഗമല്ല. ലക്ഷ്യ വ്യക്തിയുടെ ജന്മ രാശി അറിഞ്ഞാൽ, അവരുടെ രാശിയുമായി യോജിക്കുന്ന ദിവസത്തിൽ കർമ്മം അനുഷ്ഠിക്കുന്നത് ഫലം ശക്തിപ്പെടുത്തും (അൽ-ഷുരൂത് p.18-19). ഇത് വിവരപരമാണ് — മിസാൻ മാറ്റമൊന്നും ആവശ്യമില്ല.`;
+  if (/Nakshatra|നക്ഷത്രം/.test(f)) return `നക്ഷത്രം (ചാന്ദ്ര മാളിക) ഒമ്പത് മിസാനിൽ ഉൾപ്പെടുന്നില്ല. ആസ്ട്രോ ക്ലോക്ക് മൊഡ്യൂൾ നിലവിലെ ചാന്ദ്ര മാളിക തത്സമയം പിന്തുടരുന്നു. ഇത് വിവരപരമാണ് — മിസാൻ മാറ്റമൊന്നും ആവശ്യമില്ല.`;
+  return r.reason;
+}

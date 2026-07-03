@@ -3,6 +3,7 @@
 // Renders each suitable period with star rating + per-window strength reason.
 // ═══════════════════════════════════════════════════════════════
 import { Clock } from "lucide-react";
+import { tStr } from "../../lib/ritualTimingI18n";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -22,7 +23,7 @@ function starColor(starsStr) {
   return "#F87171";
 }
 
-export default function ReportWindowsList({ windows }) {
+export default function ReportWindowsList({ windows, lang = "ml" }) {
   if (!windows || windows.length === 0) return null;
   return (
     <div className="space-y-1.5">
