@@ -22,6 +22,8 @@ import PriceDisplay from "../components/shop/PriceDisplay";
 import MarketplaceButtons from "../components/shop/MarketplaceButtons";
 import ShopBadges from "../components/shop/ShopBadges";
 import ShippingInfo from "../components/shop/ShippingInfo";
+import PremiumGallery from "../components/shop/PremiumGallery";
+import ProductInfoAccordion from "../components/shop/ProductInfoAccordion";
 import {
   isInWishlist, toggleWishlist, shareProduct, copyProductLink,
   addRecentlyViewed, extractFeatures, getRecentlyViewed as getRecentlyViewedList,
@@ -371,103 +373,9 @@ export default function ProductDetailPage() {
       </div>
 
       <div className="px-4 pb-8 space-y-6">
-        {/* Image Gallery */}
+        {/* Premium Image Gallery */}
         {images.length > 0 && (
-          <div className="space-y-2.5">
-            <div
-              className="relative aspect-square rounded-2xl overflow-hidden bg-black/40"
-              style={{ border: `1px solid ${G.border}`, boxShadow: "0 8px 40px rgba(0,0,0,0.50)" }}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
-              <AnimatePresence mode="sync">
-                <motion.div
-                  key={activeImageIdx}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="absolute inset-0"
-                >
-                  <img
-                    src={images[activeImageIdx]}
-                    alt={product.name}
-                    className="w-full h-full object-cover cursor-zoom-in"
-                    style={{
-                      transform: zoomed ? "scale(2.5)" : "scale(1)",
-                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                      transition: "transform 0.2s ease-out",
-                    }}
-                    onClick={() => setZoomed(!zoomed)}
-                    onMouseMove={handleMouseMove}
-                    onMouseLeave={() => setZoomed(false)}
-                  />
-                </motion.div>
-              </AnimatePresence>
-              {/* Zoom hint */}
-              {!zoomed && (
-                <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg flex items-center gap-1" style={{ background: "rgba(2,7,16,0.80)", backdropFilter: "blur(8px)", border: `1px solid ${G.faint}` }}>
-                  <ZoomIn className="w-3 h-3" style={{ color: G.text }} />
-                  <span className="font-inter text-[9px] font-semibold" style={{ color: G.text }}>Tap to zoom</span>
-                </div>
-              )}
-              {/* Fullscreen button */}
-              <button
-                onClick={() => setLightboxOpen(true)}
-                className="absolute top-3 right-3 p-2 rounded-lg"
-                style={{ background: "rgba(2,7,16,0.80)", backdropFilter: "blur(8px)", border: `1px solid ${G.faint}` }}
-              >
-                <ExternalLink className="w-3.5 h-3.5" style={{ color: G.text }} />
-              </button>
-              {/* Nav arrows */}
-              {images.length > 1 && (
-                <>
-                  <button onClick={prevImage} className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full transition-transform hover:scale-110" style={{ background: "rgba(2,7,16,0.80)", backdropFilter: "blur(8px)" }}>
-                    <ChevronLeft className="w-4 h-4" style={{ color: "rgba(255,255,255,0.80)" }} />
-                  </button>
-                  <button onClick={nextImage} className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full transition-transform hover:scale-110" style={{ background: "rgba(2,7,16,0.80)", backdropFilter: "blur(8px)" }}>
-                    <ChevronRight className="w-4 h-4" style={{ color: "rgba(255,255,255,0.80)" }} />
-                  </button>
-                </>
-              )}
-              {/* Counter dots */}
-              {images.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {images.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveImageIdx(idx)}
-                      className="rounded-full transition-all"
-                      style={{
-                        width: idx === activeImageIdx ? 18 : 6,
-                        height: 6,
-                        background: idx === activeImageIdx ? G.text : "rgba(255,255,255,0.30)",
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImageIdx(idx)}
-                    className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden transition-all"
-                    style={{
-                      border: idx === activeImageIdx ? `2px solid ${G.borderHi}` : `1px solid ${G.faint}`,
-                      opacity: idx === activeImageIdx ? 1 : 0.5,
-                      transform: idx === activeImageIdx ? "scale(1.05)" : "scale(1)",
-                    }}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <PremiumGallery images={images} productName={product.name} />
         )}
 
         {/* Product Info */}
@@ -677,128 +585,8 @@ export default function ProductDetailPage() {
           </motion.div>
         )}
 
-        {/* Features & Benefits */}
-        {features.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-2"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" style={{ color: G.text }} />
-              <h2 className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
-                Features & Benefits
-              </h2>
-            </div>
-            <div className="rounded-xl p-4" style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${G.faint}` }}>
-              <div className="flex flex-wrap gap-2">
-                {features.map((feature, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-                    style={{ background: G.bg, border: `1px solid ${G.faint}` }}
-                  >
-                    <CheckCircle className="w-3 h-3 flex-shrink-0" style={{ color: G.text }} />
-                    <span className="font-inter text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.80)" }}>
-                      {feature}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Full Description (with expand/collapse for long text) */}
-        {product.full_description && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-2"
-          >
-            <h2 className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
-              Description
-            </h2>
-            <div className="rounded-xl p-4 space-y-2" style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${G.faint}` }}>
-              <p
-                className="font-inter text-sm leading-relaxed whitespace-pre-wrap"
-                style={{
-                  color: "rgba(255,255,255,0.75)",
-                  maxHeight: isLongDesc && !descExpanded ? "120px" : "none",
-                  overflow: "hidden",
-                }}
-              >
-                {product.full_description}
-              </p>
-              {isLongDesc && (
-                <button
-                  onClick={() => setDescExpanded(!descExpanded)}
-                  className="flex items-center gap-1 font-inter text-[11px] font-bold"
-                  style={{ color: G.text }}
-                >
-                  {descExpanded ? (
-                    <>Show less <ChevronUp className="w-3 h-3" /></>
-                  ) : (
-                    <>Read more <ChevronDown className="w-3 h-3" /></>
-                  )}
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Malayalam Description */}
-        <ProductInfoSection icon={Languages} title="Malayalam Description" content={product.malayalam_description} malayalam />
-
-        {/* Usage Instructions */}
-        <ProductInfoSection icon={BookOpen} title="Usage Instructions" content={product.usage_instructions} />
-
-        {/* Ingredients */}
-        <ProductInfoSection icon={Leaf} title="Ingredients" content={product.ingredients} />
-
-        {/* Benefits */}
-        <ProductInfoSection icon={HeartPulse} title="Benefits" content={product.benefits} />
-
-        {/* Warnings */}
-        <ProductInfoSection icon={AlertTriangle} title="Warnings" content={product.warnings} warning />
-
-        {/* Rules & Precautions */}
-        <ProductInfoSection icon={ShieldCheck} title="Rules & Precautions" content={product.rules_precautions} warning />
-
-        {/* Storage Instructions */}
-        <ProductInfoSection icon={Snowflake} title="Storage Instructions" content={product.storage_instructions} />
-
-        {/* Specifications */}
-        {specEntries.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-2"
-          >
-            <div className="flex items-center gap-2">
-              <Package className="w-4 h-4" style={{ color: G.text }} />
-              <h2 className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
-                Specifications
-              </h2>
-            </div>
-            <div className="rounded-xl overflow-hidden" style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${G.faint}` }}>
-              {specEntries.map(([key, value], idx) => (
-                <div
-                  key={key}
-                  className="flex items-start justify-between px-4 py-3"
-                  style={{ borderBottom: idx < specEntries.length - 1 ? `1px solid ${G.faint}` : "none" }}
-                >
-                  <span className="font-inter text-xs font-semibold" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    {key}
-                  </span>
-                  <span className="font-inter text-xs font-medium text-right ml-3" style={{ color: "rgba(255,255,255,0.85)" }}>
-                    {value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+        {/* Product Information Accordion */}
+        <ProductInfoAccordion product={product} features={features} />
 
         {/* FAQ Section */}
         <FaqSection faqs={faqs} />
@@ -1014,6 +802,20 @@ export default function ProductDetailPage() {
           />
         )}
 
+        {/* Customers also bought — best sellers from all categories */}
+        {(() => {
+          const alsoBought = allProducts
+            .filter(p => p.id !== product?.id && p.is_active !== false && p.is_best_seller)
+            .slice(0, 8);
+          return alsoBought.length > 0 ? (
+            <RelatedProducts
+              title="Customers also bought"
+              icon={ShoppingBag}
+              products={alsoBought}
+            />
+          ) : null;
+        })()}
+
         {/* Recently Viewed */}
         {recentlyViewedFiltered.length > 0 && (
           <RelatedProducts
@@ -1025,40 +827,6 @@ export default function ProductDetailPage() {
         )}
       </div>
 
-      {/* Lightbox */}
-      <AnimatePresence>
-        {lightboxOpen && images.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setLightboxOpen(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: "rgba(0,0,0,0.95)" }}
-          >
-            <button className="absolute top-4 right-4 p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.10)" }}>
-              <X className="w-6 h-6" style={{ color: "rgba(255,255,255,0.80)" }} />
-            </button>
-            <img
-              src={images[activeImageIdx]}
-              alt={product.name}
-              className="max-w-[90vw] max-h-[85vh] object-contain"
-              onClick={e => e.stopPropagation()}
-              style={{ touchAction: "pinch-zoom" }}
-            />
-            {images.length > 1 && (
-              <>
-                <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="absolute left-4 p-3 rounded-full" style={{ background: "rgba(255,255,255,0.10)" }}>
-                  <ChevronLeft className="w-5 h-5" style={{ color: "rgba(255,255,255,0.80)" }} />
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="absolute right-4 p-3 rounded-full" style={{ background: "rgba(255,255,255,0.10)" }}>
-                  <ChevronRight className="w-5 h-5" style={{ color: "rgba(255,255,255,0.80)" }} />
-                </button>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </PageLayout>
   );
 }

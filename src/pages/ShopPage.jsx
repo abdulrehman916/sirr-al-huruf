@@ -16,6 +16,7 @@ import CompareBar from "../components/shop/CompareBar";
 import ShopSectionRow from "../components/shop/ShopSectionRow";
 import CurrencySelector from "../components/shop/CurrencySelector";
 import ShopBadges from "../components/shop/ShopBadges";
+import ShopHomeSections from "../components/shop/ShopHomeSections";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -473,6 +474,14 @@ export default function ShopPage() {
               </FilterChip>
             ))}
           </div>
+        )}
+
+        {/* Home Sections — curated browsing (hidden when searching/filtering) */}
+        {!search && !hasActiveFilters && !showWishlistOnly && activeCategory === "all" && (
+          <ShopHomeSections
+            products={products}
+            onCategorySelect={(cat) => setActiveCategory(cat)}
+          />
         )}
 
         {/* Results count */}
