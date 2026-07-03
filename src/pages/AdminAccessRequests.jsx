@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { CheckCircle, XCircle, ShieldOff, RefreshCw, Clock, User, Mail, FileText, Calendar } from "lucide-react";
-import PageLayout from "@/components/PageLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -39,6 +39,8 @@ export default function AdminAccessRequests() {
   const [user, setUser] = useState(null);
   const [approvingReq, setApprovingReq] = useState(null);
   const [selectedDuration, setSelectedDuration] = useState("1_MONTH");
+  const [rejectingReq, setRejectingReq] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -110,13 +112,21 @@ export default function AdminAccessRequests() {
   // Legacy inline handler still used for keyboard dismiss
   const cancelApprove = () => setApprovingReq(null);
 
-  const handleReject = async (req) => {
+  const handleReject = (req) => {
+    setRejectReason("");
+    setRejectingReq(req);
+  };
+
+  const confirmReject = async () => {
+    const req = rejectingReq;
+    setRejectingReq(null);
     setProcessing(req.id);
     try {
       await base44.entities.AccessRequest.update(req.id, {
         status: "REJECTED",
         approved_by: user?.id || "admin",
         approved_at: new Date().toISOString(),
+        rejection_reason: rejectReason.trim() || "No reason provided",
       });
       toast({ title: "Request Rejected", description: `${req.name}'s request has been rejected.` });
       loadRequests();
@@ -126,6 +136,8 @@ export default function AdminAccessRequests() {
       setProcessing(null);
     }
   };
+
+  const cancelReject = () => setRejectingReq(null);
 
   const handleRevoke = async (req) => {
     setProcessing(req.id);
@@ -169,7 +181,7 @@ export default function AdminAccessRequests() {
   };
 
   return (
-    <PageLayout>
+    <AdminLayout title="Payment Requests" subtitle="Approve, reject, or revoke user access requests">
       <div className="max-w-4xl mx-auto space-y-4">
 
         {/* Header */}
@@ -259,9 +271,21 @@ export default function AdminAccessRequests() {
                         <span className="text-white/40 font-mono">{req.page_path}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-white/40">
-                        <Calendar className="w-3 h-3 flex-shrink-0" />
-                        {fmtDate(req.requested_at || req.created_date)}
-                      </div>
+                         <Calendar className="w-3 h-3 flex-shrink-0" />
+                         {fmtDate(req.requested_at || req.created_date)}
+                       </div>
+                       {req.message && (
+                         <div className="rounded-lg p-2 mt-1" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                           <p className="font-inter text-[9px] text-white/30 uppercase tracking-wider mb-0.5">Request Details</p>
+                           <p className="font-inter text-xs text-white/55">{req.message}</p>
+                         </div>
+                       )}
+                       {req.status === "REJECTED" && req.rejection_reason && (
+                         <div className="rounded-lg p-2 mt-1" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.20)" }}>
+                           <p className="font-inter text-[9px] text-red-400/60 uppercase tracking-wider mb-0.5">Rejection Reason</p>
+                           <p className="font-inter text-xs text-red-300/80">{req.rejection_reason}</p>
+                         </div>
+                       )}
                     </div>
 
                     {/* Actions */}
@@ -363,6 +387,41 @@ export default function AdminAccessRequests() {
         </div>
       )}
 
-    </PageLayout>
+      {/* Rejection reason modal */}
+      {rejectingReq && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }}
+          onClick={cancelReject}>
+          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4"
+            style={{ background: "linear-gradient(145deg,#0c1630,#060c1c)", border: "1px solid rgba(239,68,68,0.50)" }}
+            onClick={e => e.stopPropagation()}>
+            <div>
+              <h3 className="font-inter font-bold text-white text-sm">Reject Request</h3>
+              <p className="text-xs text-white/40 mt-0.5">{rejectingReq.name} · {rejectingReq.page_name}</p>
+            </div>
+            <textarea
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              placeholder="Enter rejection reason (will be visible to the user)..."
+              className="w-full px-3 py-2.5 rounded-xl text-sm text-white outline-none resize-none min-h-[80px]"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(239,68,68,0.30)" }}
+              autoFocus
+            />
+            <div className="flex gap-3 pt-1">
+              <button onClick={cancelReject}
+                className="flex-1 py-2.5 rounded-xl font-inter font-semibold text-sm"
+                style={{ background: "transparent", border: "1px solid rgba(212,175,55,0.35)", color: "#F5D060" }}>
+                Cancel
+              </button>
+              <button onClick={confirmReject}
+                className="flex-1 py-2.5 rounded-xl font-inter font-bold text-sm"
+                style={{ background: "linear-gradient(135deg,#ef4444,#b91c1c)", color: "#fff" }}>
+                Confirm Rejection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </AdminLayout>
   );
 }
