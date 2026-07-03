@@ -347,7 +347,7 @@ export default function CodeDetailPage() {
 
       {/* Modals */}
       <RenewCodeModal code={code} onClose={() => setShowRenew(false)} onRenewed={() => { setShowRenew(false); load(); }} />
-      <EditCodeModal code={code} onClose={() => setShowEdit(false)} onUpdated={() => { setShowEdit(false); load(); }} />
+      <EditCodeModal code={showEdit ? code : null} onClose={() => setShowEdit(false)} onUpdated={() => { setShowEdit(false); load(); }} />
     </AdminLayout>
   );
 }

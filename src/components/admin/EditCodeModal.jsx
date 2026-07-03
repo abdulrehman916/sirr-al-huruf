@@ -4,7 +4,7 @@
  * User re-redeems the same code to get updated permissions.
  */
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+// framer-motion removed — plain divs for reliable modal close/unmount behavior
 import { X, Plus, Loader2, Check, KeyRound } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
@@ -61,6 +61,12 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [code, dirty, onClose]);
+
+  // Clean up body overflow when modal unmounts
+  useEffect(() => {
+    if (!code) return;
+    return () => { document.body.style.overflow = ''; };
+  }, [code]);
 
   if (!code) return null;
 
@@ -176,19 +182,13 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
   const existingPageNames = localCode?.page_names || localCode?.page_paths || code.page_names || code.page_paths || [];
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+    <>
+      <div
         className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4"
         style={{ background: "rgba(0,0,0,0.70)" }}
         onClick={requestClose}
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
+        <div
           className="w-full max-w-2xl my-8 rounded-2xl border p-5 space-y-4"
           style={{ background: "linear-gradient(145deg, #0c1630, #060c1c)", borderColor: G.borderHi }}
           onClick={e => e.stopPropagation()}
@@ -265,46 +265,38 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
               {saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Discard unsaved changes confirmation */}
-      <AnimatePresence>
-        {showDiscardConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-            style={{ background: "rgba(0,0,0,0.80)" }}
-            onClick={() => setShowDiscardConfirm(false)}
+      {showDiscardConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.80)" }}
+          onClick={() => setShowDiscardConfirm(false)}
+        >
+          <div
+            className="w-full max-w-xs rounded-2xl border p-5 space-y-4 text-center"
+            style={{ background: "linear-gradient(145deg, #0c1630, #060c1c)", borderColor: G.borderHi }}
+            onClick={e => e.stopPropagation()}
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-xs rounded-2xl border p-5 space-y-4 text-center"
-              style={{ background: "linear-gradient(145deg, #0c1630, #060c1c)", borderColor: G.borderHi }}
-              onClick={e => e.stopPropagation()}
-            >
-              <h3 className="font-inter font-bold text-white text-sm">Discard unsaved changes?</h3>
-              <p className="text-xs text-white/50">You have unsaved modifications that will be lost.</p>
-              <div className="flex gap-2 pt-1">
-                <button onClick={() => setShowDiscardConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl font-inter font-semibold text-xs"
-                  style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
-                  No, Stay
-                </button>
-                <button onClick={() => { setShowDiscardConfirm(false); onClose(); }}
-                  className="flex-1 py-2.5 rounded-xl font-inter font-bold text-xs"
-                  style={{ background: "linear-gradient(135deg, #ef4444, #b91c1c)", color: "#fff" }}>
-                  Yes, Discard
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </AnimatePresence>
+            <h3 className="font-inter font-bold text-white text-sm">Discard unsaved changes?</h3>
+            <p className="text-xs text-white/50">You have unsaved modifications that will be lost.</p>
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setShowDiscardConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl font-inter font-semibold text-xs"
+                style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
+                No, Stay
+              </button>
+              <button onClick={() => { setShowDiscardConfirm(false); onClose(); }}
+                className="flex-1 py-2.5 rounded-xl font-inter font-bold text-xs"
+                style={{ background: "linear-gradient(135deg, #ef4444, #b91c1c)", color: "#fff" }}>
+                Yes, Discard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
