@@ -1,0 +1,130 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "Unique product ID e.g. PRD-000001"
+    },
+    "name": {
+      "type": "string",
+      "description": "Product display name"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-safe slug for detail page routing"
+    },
+    "short_description": {
+      "type": "string",
+      "description": "One-line summary shown on product cards"
+    },
+    "full_description": {
+      "type": "string",
+      "description": "Full product description shown on detail page"
+    },
+    "specifications": {
+      "type": "object",
+      "description": "Key-value specification pairs e.g. { 'Material': 'Brass', 'Weight': '250g' }",
+      "additionalProperties": true
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of image URLs (first image is the primary/thumbnail)"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "YouTube/Vimeo embed URL or uploaded file URL for product video"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category e.g. 'Books', 'Tools', 'Incense', 'Talismans'"
+    },
+    "affiliate_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "description": "Platform name e.g. 'Amazon', 'Flipkart', 'Etsy'"
+          },
+          "url": {
+            "type": "string",
+            "description": "Full affiliate/product URL"
+          },
+          "label": {
+            "type": "string",
+            "description": "Button label e.g. 'Buy on Amazon'"
+          }
+        }
+      },
+      "description": "External purchase links (External Link Mode \u2014 no live API sync)"
+    },
+    "price_display": {
+      "type": "string",
+      "description": "Price display string e.g. 'AED 50', 'Check on Amazon', 'Varies'"
+    },
+    "rating_display": {
+      "type": "string",
+      "description": "Optional rating display e.g. '4.5/5' (manually entered, not live-synced)"
+    },
+    "sort_order": {
+      "type": "integer",
+      "default": 0,
+      "description": "Display sort order (lower = first)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "If false, product is hidden from the shop page"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, product appears in the featured section"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable tags for filtering"
+    },
+    "updated_by": {
+      "type": "string",
+      "description": "Admin user ID who last updated"
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of last update"
+    }
+  },
+  "required": [
+    "product_id",
+    "name",
+    "slug",
+    "category",
+    "is_active"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

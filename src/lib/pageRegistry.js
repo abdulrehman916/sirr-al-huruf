@@ -133,6 +133,8 @@ registerPage('/basthul-huroof-2', { name: 'Basthul Huroof 2', icon: '٢', catego
 registerPage('/faal-hasrath', { name: 'Faal Hasrath', icon: '🔮', category: 'Divination', pageType: 'content', visible: true, requiresPermission: true });
 registerPage('/plants', { name: 'Plants Dictionary', icon: '🌿', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
 registerPage('/plants/:id', { pageType: 'content', visible: false, requiresPermission: true });
+registerPage('/shop', { name: 'Shop', icon: '🛍️', category: 'Shop', pageType: 'content', visible: true, requiresPermission: true });
+registerPage('/shop/:productId', { pageType: 'content', visible: false, requiresPermission: true });
 registerPage('/evil-jinn', { name: 'Evil Jinn Names', icon: '👁️', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
 registerPage('/holy-names', { name: 'Magical Holy Names', icon: '✦', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
 registerPage('/astro-clock', { name: 'Astro Clock', icon: '🕰️', category: 'Timings', pageType: 'content', visible: true, requiresPermission: true });

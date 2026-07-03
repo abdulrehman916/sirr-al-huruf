@@ -26,6 +26,10 @@ const ROUTE_MANIFEST = [
   { path: '/holy-names/one', component: 'HolyOnePage', chunk: 'HolyOnePage', flags: ['public'] },
   { path: '/holy-names/one/:nameId', component: 'HolyOneDetailPage', chunk: 'HolyOneDetailPage', flags: ['public'] },
 
+  // Shop
+  { path: '/shop', component: 'ShopPage', chunk: 'ShopPage' },
+  { path: '/shop/:productId', component: 'ProductDetailPage', chunk: 'ProductDetailPage' },
+
   { path: '/astro-clock', component: 'AstroClockPage', chunk: 'AstroClockPage' },
   { path: '/astro-clock/search', component: 'AstroClockSearch', chunk: 'AstroClockSearch' },
   
@@ -64,6 +68,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/pdf-content-editor', component: 'AdminPDFContentEditor', chunk: 'AdminPDFContentEditor' },
   { path: '/admin/holy-names-translator', component: 'AdminHolyNamesTranslator', chunk: 'AdminHolyNamesTranslator' },
   { path: '/admin/feature-pricing', component: 'AdminFeaturePricing', chunk: 'AdminFeaturePricing' },
+  { path: '/admin/products', component: 'AdminProducts', chunk: 'AdminProducts' },
   
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal } from "lucide-react";
+import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag } from "lucide-react";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -33,6 +33,12 @@ const SIDEBAR_SECTIONS = [
       { path: "/admin/access-requests", label: "Access Requests", icon: Inbox },
       { path: "/admin/redeem-approvals", label: "Redeem Approvals", icon: ClipboardCheck },
       { path: "/admin/page-permissions", label: "Page Access", icon: Globe },
+    ]
+  },
+  {
+    label: "Shop",
+    items: [
+      { path: "/admin/products", label: "Products", icon: ShoppingBag },
     ]
   },
   {

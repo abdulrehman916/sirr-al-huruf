@@ -75,6 +75,9 @@ const PAGE_IMPORTS = {
   AdminFeaturePricing:      () => import('./pages/AdminFeaturePricing'),
   MizanCompletionTest:      () => import('./pages/MizanCompletionTest'),
   RulesConditions:          () => import('./pages/RulesConditions'),
+  ShopPage:                 () => import('./pages/ShopPage'),
+  ProductDetailPage:        () => import('./pages/ProductDetailPage'),
+  AdminProducts:            () => import('./pages/AdminProducts'),
   };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────
