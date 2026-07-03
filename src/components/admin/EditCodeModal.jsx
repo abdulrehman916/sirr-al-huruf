@@ -27,6 +27,8 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
   const [saving, setSaving] = useState(false);
   const [savingFeature, setSavingFeature] = useState(null);
   const [localCode, setLocalCode] = useState(code);
+  const [dirty, setDirty] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [selectedPages, setSelectedPages] = useState([]);
   const [pageDurations, setPageDurations] = useState({});
   const [pageSubFeatures, setPageSubFeatures] = useState({});
@@ -47,9 +49,23 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
     setFeatureDurations(code.feature_durations || {});
   }, [code]);
 
+  // Escape key closes modal (with unsaved-changes check)
+  useEffect(() => {
+    if (!code) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        if (dirty) setShowDiscardConfirm(true);
+        else onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [code, dirty, onClose]);
+
   if (!code) return null;
 
   const togglePage = (path) => {
+    setDirty(true);
     setSelectedPages(p => {
       if (p.includes(path)) {
         const newPages = p.filter(x => x !== path);
@@ -64,19 +80,23 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
   };
 
   const updatePageSubFeatures = (path, features) => {
+    setDirty(true);
     setPageSubFeatures(prev => ({ ...prev, [path]: features }));
   };
 
   const updatePageDuration = (path, durationValue) => {
+    setDirty(true);
     const opt = DURATION_OPTIONS.find(d => d.value === durationValue);
     setPageDurations(prev => ({ ...prev, [path]: { value: durationValue, label: opt?.label, days: opt?.days, duration_ms: opt?.duration_ms, custom_date: null } }));
   };
 
   const updateCustomDate = (path, customDate) => {
+    setDirty(true);
     setPageDurations(prev => ({ ...prev, [path]: { ...prev[path], custom_date: customDate } }));
   };
 
   const updateFeatureDuration = (path, featureId, plan) => {
+    setDirty(true);
     setFeatureDurations(prev => ({ ...prev, [`${path}:${featureId}`]: plan }));
   };
 
@@ -89,6 +109,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
       setPageDurations(updated.page_durations || {});
       setPageSubFeatures(updated.sub_features || {});
       setFeatureDurations(updated.feature_durations || {});
+      setDirty(false);
     } catch {}
   };
 
@@ -115,9 +136,9 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
     }
   };
 
-  // Close modal + refresh parent list
-  const handleClose = () => {
-    if (onUpdated) onUpdated();
+  // Close request — checks for unsaved changes before closing
+  const requestClose = () => {
+    if (dirty) setShowDiscardConfirm(true);
     else onClose();
   };
 
@@ -142,7 +163,9 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
       });
 
       toast({ title: `✓ Code "${code.code}" updated` });
-      refreshCode();
+      setDirty(false);
+      if (onUpdated) onUpdated();
+      else onClose();
     } catch (e) {
       toast({ title: "Error updating code", description: e.message, variant: "destructive" });
     } finally {
@@ -160,7 +183,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4"
         style={{ background: "rgba(0,0,0,0.70)" }}
-        onClick={handleClose}
+        onClick={requestClose}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
@@ -179,7 +202,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
                 <p className="text-[10px] text-white/40">{code.customer_name} · Add or modify features</p>
               </div>
             </div>
-            <button onClick={handleClose} className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/10"
+            <button onClick={requestClose} className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/10"
               style={{ color: "rgba(255,255,255,0.35)" }}>
               <X className="w-4 h-4" />
             </button>
@@ -230,7 +253,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
-            <button onClick={handleClose}
+            <button onClick={() => onClose()}
               className="flex-1 py-3 rounded-xl font-inter font-semibold text-sm"
               style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
               Cancel
@@ -244,6 +267,44 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
           </div>
         </motion.div>
       </motion.div>
+
+      {/* Discard unsaved changes confirmation */}
+      <AnimatePresence>
+        {showDiscardConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.80)" }}
+            onClick={() => setShowDiscardConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-xs rounded-2xl border p-5 space-y-4 text-center"
+              style={{ background: "linear-gradient(145deg, #0c1630, #060c1c)", borderColor: G.borderHi }}
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="font-inter font-bold text-white text-sm">Discard unsaved changes?</h3>
+              <p className="text-xs text-white/50">You have unsaved modifications that will be lost.</p>
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => setShowDiscardConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl font-inter font-semibold text-xs"
+                  style={{ background: "transparent", border: `1px solid ${G.border}`, color: G.text }}>
+                  No, Stay
+                </button>
+                <button onClick={() => { setShowDiscardConfirm(false); onClose(); }}
+                  className="flex-1 py-2.5 rounded-xl font-inter font-bold text-xs"
+                  style={{ background: "linear-gradient(135deg, #ef4444, #b91c1c)", color: "#fff" }}>
+                  Yes, Discard
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }
