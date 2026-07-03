@@ -201,14 +201,14 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
           </div>
 
           <h1 className="font-amiri text-2xl font-bold mb-1" style={{ color: G.text }}>
-            المحتوى المميز
+            PREMIUM CONTENT
           </h1>
           <p className="font-inter text-xs text-white/30 uppercase tracking-widest mb-2">
             Premium Content
           </p>
           <p className="font-inter text-sm text-white/60 font-semibold mb-1">{pageName}</p>
           <p className="font-inter text-xs text-white/35 mb-7">
-            هذه الصفحة تتطلب رمز قراءة. تواصل معنا عبر واتساب للحصول على الوصول.
+            This page is protected. Contact us on WhatsApp to obtain an access code.
           </p>
 
           {/* WhatsApp button */}
@@ -227,7 +227,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             {whatsappSent
               ? <CheckCircle className="w-4 h-4" />
               : <MessageCircle className="w-4 h-4" />}
-            {whatsappSent ? "تم الإرسال!" : "تواصل عبر واتساب"}
+            {whatsappSent ? "Sent!" : "Contact on WhatsApp"}
           </button>
 
           <p className="font-inter text-xs text-white/25 mb-4">{ADMIN_CONFIG.WHATSAPP_DISPLAY}</p>
@@ -239,7 +239,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             style={{ background: "rgba(212,175,55,0.07)", border: `1px solid ${G.border}`, color: G.text }}
           >
             <KeyRound className="w-4 h-4" />
-            {showCodeEntry ? "إخفاء إدخال الرمز" : "لدي رمز قراءة"}
+            {showCodeEntry ? "Hide Access Code Entry" : "I Have an Access Code"}
           </button>
         </div>
 
@@ -258,7 +258,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
               }}>
                 <h3 className="font-inter font-bold text-white text-sm flex items-center gap-2">
                   <KeyRound className="w-4 h-4" style={{ color: G.text }} />
-                  أدخل رمز القراءة
+                  Enter Access Code
                 </h3>
 
                 {codeResult && (
@@ -280,7 +280,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
                   value={code}
                   onChange={e => { setCode(e.target.value.toUpperCase()); setCodeResult(null); }}
                   onKeyDown={e => e.key === "Enter" && !loading && handleRedeem()}
-                  placeholder="e.g. ABDUL2026"
+                  placeholder="e.g. ACCESS-1234"
                   className="w-full px-4 py-3 rounded-xl text-white font-bold text-base text-center tracking-[0.15em] outline-none placeholder-white/20"
                   style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: "16px" }}
                   autoCapitalize="characters"
@@ -295,7 +295,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
                   style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                  {loading ? "جاري التحقق…" : "تفعيل الرمز"}
+                  {loading ? "Verifying…" : "Activate Code"}
                 </button>
               </div>
             </motion.div>
@@ -308,7 +308,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
           className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
           style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}
         >
-          ← العودة للرئيسية
+          ← Back to Home
         </button>
       </motion.div>
     </div>
