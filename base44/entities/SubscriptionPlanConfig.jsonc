@@ -12,7 +12,7 @@
     },
     "feature_id": {
       "type": "string",
-      "description": "Feature ID e.g. abjad_kabir, method_1. Use 'FULL_PAGE' for page-level plans."
+      "description": "Feature ID e.g. abjad_kabir, method_1. Use 'FULL_PAGE' for page-level plans on non-multi-feature pages."
     },
     "plan_name": {
       "type": "string",
@@ -22,13 +22,19 @@
       "type": "string",
       "enum": [
         "DAYS",
+        "MONTHS",
+        "YEARS",
         "LIFETIME"
       ],
-      "description": "Duration type \u2014 DAYS = fixed number of days, LIFETIME = never expires"
+      "description": "Duration unit \u2014 DAYS, MONTHS, YEARS, or LIFETIME"
+    },
+    "duration_count": {
+      "type": "integer",
+      "description": "Count in the selected unit (e.g. 3 for 3 months). Null for LIFETIME."
     },
     "duration_days": {
       "type": "integer",
-      "description": "Number of days for DAYS type. Null for LIFETIME."
+      "description": "Total computed days for expiry calculation (count * unit multiplier). Null for LIFETIME. This is the field used by the redemption logic."
     },
     "price": {
       "type": "number",

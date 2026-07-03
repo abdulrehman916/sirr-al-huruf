@@ -6,11 +6,12 @@
  * - Feature name & description: FeatureConfig entity
  * - Subscription plans & prices: SubscriptionPlanConfig entity
  *
+ * User selects a plan card, then sees WhatsApp Contact + Redeem Access Code.
  * Fully dynamic — admin changes appear immediately, zero hardcoded values.
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, MessageCircle, KeyRound, CheckCircle, AlertCircle, Loader2, ChevronLeft } from "lucide-react";
+import { Lock, MessageCircle, KeyRound, CheckCircle, AlertCircle, Loader2, ChevronLeft, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
@@ -30,6 +31,7 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
   const [config, setConfig] = useState(null);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [code, setCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
@@ -89,16 +91,16 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
   };
 
   const handleWhatsApp = () => {
-    const planLines = plans.length > 0
-      ? plans.map(p => `• ${formatPlan(p)}`).join("\n")
-      : "Contact for pricing";
+    const planLine = selectedPlan
+      ? formatPlan(selectedPlan)
+      : (plans.length > 0 ? plans.map(p => `• ${formatPlan(p)}`).join("\n") : "Contact for pricing");
     const message =
       `السلام عليكم\n\n` +
       `*طلب وصول — سر الحروف*\n\n` +
       `🔒 الميزة: ${displayName}\n` +
       (displayDescription ? `\n${displayDescription}\n` : "") +
-      `\nالخطط المتاحة:\n${planLines}\n` +
-      `\nأرجو إرسال رمز القراءة للخطة المطلوبة.`;
+      `\nالخطة المطلوبة:\n${planLine}\n` +
+      `\nأرجو إرسال رمز القراءة لهذه الخطة.`;
     const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
     setWhatsappSent(true);
@@ -140,54 +142,77 @@ export default function FeatureLockedCard({ pagePath, featureId, featureLabel, o
           </p>
         )}
 
-        {/* Plans List */}
+        {/* Plans as selectable cards */}
         <div className="mb-5 mt-3">
           {loading ? (
             <div className="w-6 h-6 border-2 border-t-yellow-400 border-r-transparent border-b-yellow-400 border-l-transparent rounded-full animate-spin mx-auto" />
           ) : plans.length > 0 ? (
             <div className="space-y-1.5">
               <p className="font-inter text-[10px] text-white/30 uppercase tracking-widest mb-2">
-                Unlock this feature
+                {selectedPlan ? "Selected Plan" : "Select a plan to unlock"}
               </p>
-              {plans.map(plan => (
-                <div key={plan.plan_config_id} className="rounded-lg border py-2.5 px-3 flex items-center justify-between"
-                  style={{ background: "rgba(212,175,55,0.04)", borderColor: "rgba(212,175,55,0.20)" }}>
-                  <span className="font-inter text-sm text-white/80 font-medium">{plan.plan_name}</span>
-                  <span className="font-inter text-sm font-bold" style={{ color: G.text }}>
-                    {plan.currency} {plan.price}
-                  </span>
-                </div>
-              ))}
+              {plans.map(plan => {
+                const isSelected = selectedPlan?.plan_config_id === plan.plan_config_id;
+                return (
+                  <button
+                    key={plan.plan_config_id}
+                    onClick={() => setSelectedPlan(isSelected ? null : plan)}
+                    className="w-full rounded-lg border py-2.5 px-3 flex items-center justify-between transition-all"
+                    style={{
+                      background: isSelected ? "rgba(212,175,55,0.18)" : "rgba(212,175,55,0.04)",
+                      borderColor: isSelected ? G.borderHi : "rgba(212,175,55,0.20)",
+                      boxShadow: isSelected ? "0 0 16px rgba(212,175,55,0.15)" : "none",
+                    }}
+                  >
+                    <span className="font-inter text-sm text-white/80 font-medium flex items-center gap-2">
+                      {isSelected && <Check className="w-3.5 h-3.5" style={{ color: G.text }} />}
+                      {plan.plan_name}
+                    </span>
+                    <span className="font-inter text-sm font-bold" style={{ color: G.text }}>
+                      {plan.currency} {plan.price}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <p className="font-inter text-xs text-white/35">Contact for pricing</p>
           )}
         </div>
 
-        <button
-          onClick={handleWhatsApp}
-          className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
-          style={{
-            background: whatsappSent ? "rgba(37,211,102,0.12)" : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-            color: whatsappSent ? "#25D366" : "#ffffff",
-            border: whatsappSent ? "1px solid rgba(37,211,102,0.40)" : "none",
-            boxShadow: whatsappSent ? "none" : "0 0 24px rgba(37,211,102,0.30)",
-          }}
-        >
-          {whatsappSent ? <CheckCircle className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
-          {whatsappSent ? "Sent!" : "Contact on WhatsApp"}
-        </button>
+        {/* WhatsApp + Redeem — shown after plan selection (or immediately if no plans) */}
+        {(selectedPlan || plans.length === 0) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            style={{ overflow: "hidden" }}
+          >
+            <button
+              onClick={handleWhatsApp}
+              className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
+              style={{
+                background: whatsappSent ? "rgba(37,211,102,0.12)" : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                color: whatsappSent ? "#25D366" : "#ffffff",
+                border: whatsappSent ? "1px solid rgba(37,211,102,0.40)" : "none",
+                boxShadow: whatsappSent ? "none" : "0 0 24px rgba(37,211,102,0.30)",
+              }}
+            >
+              {whatsappSent ? <CheckCircle className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
+              {whatsappSent ? "Sent!" : "Contact on WhatsApp"}
+            </button>
 
-        <p className="font-inter text-xs text-white/25 mb-4">{ADMIN_CONFIG.WHATSAPP_DISPLAY}</p>
+            <p className="font-inter text-xs text-white/25 mb-4">{ADMIN_CONFIG.WHATSAPP_DISPLAY}</p>
 
-        <button
-          onClick={() => setShowCodeEntry(v => !v)}
-          className="w-full py-3 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2"
-          style={{ background: "rgba(212,175,55,0.07)", border: `1px solid ${G.border}`, color: G.text }}
-        >
-          <KeyRound className="w-4 h-4" />
-          {showCodeEntry ? "Hide Access Code Entry" : "I Have an Access Code"}
-        </button>
+            <button
+              onClick={() => setShowCodeEntry(v => !v)}
+              className="w-full py-3 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2"
+              style={{ background: "rgba(212,175,55,0.07)", border: `1px solid ${G.border}`, color: G.text }}
+            >
+              <KeyRound className="w-4 h-4" />
+              {showCodeEntry ? "Hide Access Code Entry" : "I Have an Access Code"}
+            </button>
+          </motion.div>
+        )}
       </div>
 
       <AnimatePresence>

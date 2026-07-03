@@ -7,6 +7,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages } from "@/lib/pageRegistry";
+import PagePlansSection from "@/components/admin/PagePlansSection";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -40,32 +41,7 @@ function PremiumSettings({ path, settings, onChange, saving }) {
       className="mt-3 pt-3 space-y-3 overflow-hidden"
       style={{ borderTop: `1px solid ${G.border}` }}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="text-xs text-white/45 block mb-1">Price (optional)</label>
-          <input
-            type="text"
-            value={s.price || ""}
-            onChange={e => set("price", e.target.value)}
-            placeholder="e.g. AED 50 / Free"
-            className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: 16 }}
-          />
-        </div>
-        <div>
-          <label className="text-xs text-white/45 block mb-1">Default Access Duration</label>
-          <select
-            value={s.duration || "LIFETIME"}
-            onChange={e => set("duration", e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-            style={{ background: "rgba(8,16,40,0.98)", border: `1px solid ${G.border}` }}
-          >
-            {DURATION_OPTIONS.map(d => (
-              <option key={d.value} value={d.value}>{d.label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <PagePlansSection pagePath={path} />
       <div>
         <label className="text-xs text-white/45 block mb-1">Description (shown to users)</label>
         <textarea

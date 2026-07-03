@@ -1,9 +1,11 @@
 /**
  * PlanEditor — Inline editor for a single subscription plan.
- * Creates/updates/deletes a SubscriptionPlanConfig record.
+ * Creates/updates/deletes a SubscriptionPlanConfig record (individual save).
+ * Used in AdminFeaturePricing page via FeaturePlansEditor.
+ *
+ * Supports 4 duration types: Days, Months, Years, Lifetime.
  */
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2, Edit3, Trash2, Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -15,18 +17,46 @@ const G = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
+const DURATION_TYPES = [
+  { value: "DAYS",     label: "Days",    multiplier: 1   },
+  { value: "MONTHS",   label: "Months",  multiplier: 30  },
+  { value: "YEARS",    label: "Years",   multiplier: 365 },
+  { value: "LIFETIME", label: "Lifetime",multiplier: null},
+];
+
+// Reverse-engineer display unit from stored duration_days (backward compat)
+function inferDurationType(plan) {
+  if (plan.duration_type === "LIFETIME") return { type: "LIFETIME", count: null };
+  if (plan.duration_type && plan.duration_type !== "DAYS") {
+    // Already has a non-DAYS type (MONTHS/YEARS) — use stored count
+    return { type: plan.duration_type, count: plan.duration_count || 1 };
+  }
+  // Backward compat: infer from duration_days
+  const days = plan.duration_days || 0;
+  if (days > 0 && days % 365 === 0) return { type: "YEARS", count: days / 365 };
+  if (days > 0 && days % 30 === 0) return { type: "MONTHS", count: days / 30 };
+  return { type: "DAYS", count: days };
+}
+
 export default function PlanEditor({ pagePath, featureId, plan, sortOrder, onSaved }) {
   const isExisting = !!plan;
+  const inferred = isExisting ? inferDurationType(plan) : { type: "MONTHS", count: 1 };
   const [editing, setEditing] = useState(!isExisting);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [planName, setPlanName] = useState(plan?.plan_name || "");
-  const [durationType, setDurationType] = useState(plan?.duration_type || "DAYS");
-  const [durationDays, setDurationDays] = useState(plan?.duration_days || 30);
+  const [durationType, setDurationType] = useState(inferred.type);
+  const [durationCount, setDurationCount] = useState(inferred.count || 1);
   const [price, setPrice] = useState(plan?.price || "");
   const [currency, setCurrency] = useState(plan?.currency || "AED");
 
   const planConfigId = plan?.plan_config_id || `PLAN-${featureId}-${Date.now()}`;
+
+  const computeDays = (type, count) => {
+    const meta = DURATION_TYPES.find(t => t.value === type);
+    if (!meta?.multiplier) return null;
+    return (parseInt(count) || 0) * meta.multiplier;
+  };
 
   const handleSave = async () => {
     if (!planName.trim() || !price) return;
@@ -39,7 +69,8 @@ export default function PlanEditor({ pagePath, featureId, plan, sortOrder, onSav
         feature_id: featureId,
         plan_name: planName.trim(),
         duration_type: durationType,
-        duration_days: durationType === "LIFETIME" ? null : parseInt(durationDays) || 0,
+        duration_count: durationType === "LIFETIME" ? null : (parseInt(durationCount) || 0),
+        duration_days: computeDays(durationType, durationCount),
         price: parseFloat(price) || 0,
         currency: currency.trim() || "AED",
         is_active: true,
@@ -75,8 +106,14 @@ export default function PlanEditor({ pagePath, featureId, plan, sortOrder, onSav
     }
   };
 
+  const isLifetime = durationType === 'LIFETIME';
+
   // Display mode (existing plan, not editing)
   if (isExisting && !editing) {
+    const dispType = inferred;
+    const durationLabel = dispType.type === "LIFETIME"
+      ? "Lifetime"
+      : `${dispType.count} ${dispType.type.toLowerCase().replace(/s$/, '')}${dispType.count > 1 ? 's' : ''}`;
     return (
       <div className="rounded-lg border p-2.5 flex items-center gap-3" style={{
         background: G.bg, borderColor: G.border,
@@ -84,8 +121,7 @@ export default function PlanEditor({ pagePath, featureId, plan, sortOrder, onSav
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-white truncate">{plan.plan_name}</p>
           <p className="text-[10px] text-white/40">
-            {plan.duration_type === "LIFETIME" ? "Lifetime" : `${plan.duration_days} days`}
-            {" · "}{plan.currency} {plan.price}
+            {durationLabel} · {plan.currency} {plan.price}
           </p>
         </div>
         <button onClick={() => setEditing(true)}
@@ -108,14 +144,8 @@ export default function PlanEditor({ pagePath, featureId, plan, sortOrder, onSav
       background: G.bgHi, borderColor: G.borderHi,
     }}>
       <div className="flex items-center gap-2 mb-1">
-        {isExisting ? (
-          <Edit3 className="w-3 h-3" style={{ color: G.text }} />
-        ) : (
-          <Plus className="w-3 h-3" style={{ color: G.text }} />
-        )}
-        <span className="text-xs font-semibold" style={{ color: G.text }}>
-          {isExisting ? "Edit Plan" : "New Plan"}
-        </span>
+        {isExisting ? <Edit3 className="w-3 h-3" style={{ color: G.text }} /> : <Plus className="w-3 h-3" style={{ color: G.text }} />}
+        <span className="text-xs font-semibold" style={{ color: G.text }}>{isExisting ? "Edit Plan" : "New Plan"}</span>
       </div>
 
       <div>
@@ -129,24 +159,16 @@ export default function PlanEditor({ pagePath, featureId, plan, sortOrder, onSav
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="text-[10px] text-white/40 block mb-1">Duration Type</label>
-          <div className="flex gap-1">
-            {["DAYS", "LIFETIME"].map(t => (
-              <button key={t} onClick={() => setDurationType(t)}
-                className="flex-1 py-1.5 rounded text-[10px] font-semibold"
-                style={{
-                  background: durationType === t ? G.bgHi : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${durationType === t ? G.borderHi : "rgba(255,255,255,0.08)"}`,
-                  color: durationType === t ? G.text : "rgba(255,255,255,0.50)",
-                }}>
-                {t === "DAYS" ? "Days" : "Lifetime"}
-              </button>
-            ))}
-          </div>
+          <select value={durationType} onChange={e => setDurationType(e.target.value)}
+            className="w-full px-2 py-1.5 rounded text-sm text-white outline-none"
+            style={{ background: "rgba(8,16,40,0.98)", border: `1px solid ${G.border}` }}>
+            {DURATION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
         </div>
-        {durationType === "DAYS" && (
+        {!isLifetime && (
           <div>
-            <label className="text-[10px] text-white/40 block mb-1">Days</label>
-            <input type="number" min={1} value={durationDays} onChange={e => setDurationDays(e.target.value)}
+            <label className="text-[10px] text-white/40 block mb-1">Duration</label>
+            <input type="number" min={1} value={durationCount} onChange={e => setDurationCount(e.target.value)}
               className="w-full px-2 py-1.5 rounded text-sm text-white outline-none text-center"
               style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }} />
           </div>
