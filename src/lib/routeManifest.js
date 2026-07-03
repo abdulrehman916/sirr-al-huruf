@@ -35,6 +35,7 @@ const ROUTE_MANIFEST = [
   { path: '/support/chat', component: 'SupportChat', chunk: 'SupportChat', flags: ['public'] },
   { path: '/support/voice', component: 'SupportVoice', chunk: 'SupportVoice', flags: ['public'] },
   { path: '/support/ticket', component: 'SupportTicket', chunk: 'SupportTicket', flags: ['public'] },
+  { path: '/support/whatsapp', component: 'WhatsAppSupport', chunk: 'WhatsAppSupport', flags: ['public'] },
   
   // Access & Subscription utility pages — all public
   { path: '/subscription/expired', component: 'SubscriptionExpired', chunk: 'SubscriptionExpired', flags: ['public'] },

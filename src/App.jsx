@@ -46,6 +46,7 @@ const PAGE_IMPORTS = {
   SupportChat:              () => import('./pages/SupportChat'),
   SupportVoice:             () => import('./pages/SupportVoice'),
   SupportTicket:            () => import('./pages/SupportTicket'),
+  WhatsAppSupport:          () => import('./pages/WhatsAppSupport'),
   // Subscriptions
   SubscriptionExpired:      () => import('./pages/SubscriptionExpired'),
   SubscriptionPending:      () => import('./pages/SubscriptionPending'),

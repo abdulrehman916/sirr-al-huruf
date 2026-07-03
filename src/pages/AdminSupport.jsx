@@ -50,6 +50,10 @@ export default function AdminSupport() {
   const [replyText, setReplyText] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [submittingReply, setSubmittingReply] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [adminProfiles, setAdminProfiles] = useState([]);
+  const [customerAdminMap, setCustomerAdminMap] = useState({});
+  const [adminFilter, setAdminFilter] = useState("all");
 
   useEffect(() => {
     checkAdminAccess();
@@ -82,8 +86,17 @@ export default function AdminSupport() {
   const loadTickets = async () => {
     setLoading(true);
     try {
-      const allTickets = await base44.entities.SupportTickets.list('-created_at', 500);
-      setTickets(allTickets);
+      const res = await base44.functions.invoke("manageSupportRouting", {
+        action: "GET_SCOPED_TICKETS",
+      });
+      if (res.data?.success) {
+        setTickets(res.data.tickets || []);
+        setIsOwner(res.data.is_owner || false);
+        setAdminProfiles(res.data.admin_profiles || []);
+        setCustomerAdminMap(res.data.customer_admin_map || {});
+      } else {
+        setTickets([]);
+      }
     } catch (error) {
       toast({
         title: "Error Loading Tickets",
@@ -105,7 +118,12 @@ export default function AdminSupport() {
     const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
     const matchesCategory = categoryFilter === "all" || ticket.category === categoryFilter;
 
-    return matchesSearch && matchesStatus && matchesCategory;
+    const matchesAdmin = !isOwner || adminFilter === "all" ||
+      (adminFilter === "unassigned"
+        ? !customerAdminMap[ticket.email?.toLowerCase()]
+        : customerAdminMap[ticket.email?.toLowerCase()] === adminFilter);
+
+    return matchesSearch && matchesStatus && matchesCategory && matchesAdmin;
   });
 
   const handleStatusChange = async (ticketId, newStatus) => {
@@ -214,7 +232,7 @@ export default function AdminSupport() {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className={`grid grid-cols-1 ${isOwner ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-3`}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <input
@@ -247,6 +265,22 @@ export default function AdminSupport() {
               ))}
             </SelectContent>
           </Select>
+          {isOwner && (
+            <Select value={adminFilter} onValueChange={setAdminFilter}>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Filter by admin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Admins</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {adminProfiles.map((admin) => (
+                  <SelectItem key={admin.admin_profile_id} value={admin.admin_profile_id}>
+                    {admin.full_name || admin.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Tickets List */}

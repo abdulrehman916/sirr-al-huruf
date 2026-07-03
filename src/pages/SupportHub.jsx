@@ -1,10 +1,20 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { MessageSquare, Mic, Ticket, ArrowRight } from "lucide-react";
+import { MessageSquare, Mic, Ticket, ArrowRight, MessageCircle } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
 
 const CARDS = [
+  {
+    id: "whatsapp",
+    title: "WhatsApp Support",
+    arabic: "دعم واتساب",
+    desc: "Chat with your assigned support representative on WhatsApp",
+    icon: MessageCircle,
+    path: "/support/whatsapp",
+    color: "rgba(34,197,94,0.18)",
+    border: "rgba(34,197,94,0.40)",
+  },
   {
     id: "chat",
     title: "Live Message Support",
