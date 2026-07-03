@@ -14,6 +14,7 @@ import { getWishlist, isInWishlist, toggleWishlist, extractBrands, parsePrice, g
 import RelatedProducts from "../components/shop/RelatedProducts";
 import CompareBar from "../components/shop/CompareBar";
 import ShopSectionRow from "../components/shop/ShopSectionRow";
+import CurrencySelector from "../components/shop/CurrencySelector";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -366,6 +367,9 @@ export default function ShopPage() {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Currency Selector */}
+            <CurrencySelector />
           </div>
 
           {/* Expandable Filters */}

@@ -6,6 +6,7 @@ import { isInWishlist, toggleWishlist, shareProduct, getBrand } from "@/lib/shop
 import { useToast } from "@/components/ui/use-toast";
 import { ProductBadgesOverlay } from "./ProductBadges";
 import { CompareButton } from "./CompareBar";
+import PriceDisplay from "./PriceDisplay";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -203,18 +204,12 @@ export default function ProductCard({ product, index = 0 }) {
           ) : (
             <span />
           )}
-          <div className="flex items-baseline gap-1.5">
-            {product.compare_price_display && (
-              <span className="font-inter text-[9px] line-through" style={{ color: "rgba(255,255,255,0.30)" }}>
-                {product.compare_price_display}
-              </span>
-            )}
-            {product.price_display && (
-              <span className="font-inter text-[11px] font-bold" style={{ color: product.is_out_of_stock ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.75)" }}>
-                {product.price_display}
-              </span>
-            )}
-          </div>
+          <PriceDisplay
+            priceDisplay={product.price_display}
+            comparePriceDisplay={product.compare_price_display}
+            outOfStock={product.is_out_of_stock}
+            size="sm"
+          />
         </div>
 
         {/* Buy button */}

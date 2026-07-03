@@ -18,6 +18,7 @@ import FaqSection from "../components/shop/FaqSection";
 import SellerContact from "../components/shop/SellerContact";
 import ShareMenu from "../components/shop/ShareMenu";
 import ProductInfoSection from "../components/shop/ProductInfoSection";
+import PriceDisplay from "../components/shop/PriceDisplay";
 import {
   isInWishlist, toggleWishlist, shareProduct, copyProductLink,
   addRecentlyViewed, extractFeatures, getRecentlyViewed as getRecentlyViewedList,
@@ -531,17 +532,13 @@ export default function ProductDetailPage() {
                 <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>({approvedReviews.length} {approvedReviews.length === 1 ? "review" : "reviews"})</span>
               </div>
             )}
-            <div className="flex items-baseline gap-2">
-              {product.compare_price_display && (
-                <span className="font-inter text-sm line-through" style={{ color: "rgba(255,255,255,0.30)" }}>
-                  {product.compare_price_display}
-                </span>
-              )}
-              {product.price_display && (
-                <span className="font-inter text-lg font-bold" style={{ color: product.is_out_of_stock ? "rgba(255,255,255,0.50)" : "rgba(255,255,255,0.90)" }}>
-                  {product.price_display}
-                </span>
-              )}
+            <div className="flex items-center gap-2">
+              <PriceDisplay
+                priceDisplay={product.price_display}
+                comparePriceDisplay={product.compare_price_display}
+                outOfStock={product.is_out_of_stock}
+                size="lg"
+              />
               {getDiscountPercent(product) > 0 && (
                 <span className="font-inter text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.15)", color: "#86EFAC" }}>
                   {getDiscountPercent(product)}% Off
