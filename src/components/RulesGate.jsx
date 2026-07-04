@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import RulesConditions from '@/pages/RulesConditions';
 import { RULES_STORAGE_KEY } from '@/lib/rulesContent';
 
@@ -13,9 +13,21 @@ export default function RulesGate({ children }) {
     }
   });
 
+  // [DIAG] Log RulesGate state on change
+  useEffect(() => {
+    let rulesAccepted = null;
+    try { rulesAccepted = localStorage.getItem(RULES_STORAGE_KEY); } catch { /* ignore */ }
+    console.log('[DIAG] RulesGate state:', { accepted, rulesAccepted });
+  }, [accepted]);
+
   if (!accepted) {
-    return <RulesConditions mode="gate" onAccept={() => setAccepted(true)} />;
+    console.log('[DIAG] Rules screen mounted (gate shown)');
+    return <RulesConditions mode="gate" onAccept={() => {
+      console.log('[DIAG] Rules accepted');
+      setAccepted(true);
+    }} />;
   }
 
+  console.log('[DIAG] Rules accepted — rendering app');
   return children;
 }

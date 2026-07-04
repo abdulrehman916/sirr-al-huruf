@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Loader2, ShieldCheck, X } from "lucide-react";
@@ -21,14 +21,26 @@ const GoogleMark = ({ className = "w-5 h-5" }) => (
 export default function GoogleSignInPrompt({ onSkip }) {
   const [loading, setLoading] = useState(false);
 
+  // [DIAG] rendered + mount/unmount + login button rendered
+  console.log('[DIAG] GoogleSignInPrompt rendered, loading=', loading);
+  useEffect(() => {
+    console.log('[DIAG] GoogleSignInPrompt MOUNTED — rendered on screen');
+    console.log('[DIAG] Login button rendered');
+    return () => console.log('[DIAG] GoogleSignInPrompt UNMOUNTED');
+  }, []);
+
   const handleGoogle = async () => {
+    console.log('[DIAG] Login button clicked — starting OAuth');
     setLoading(true);
     // Mark this session as an explicit sign-in so AuthContext allows role
     // elevation (Owner/Admin) after Google redirects back.
     try { sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+    console.log('[DIAG] OAuth request started — loginWithProvider("google")');
     try {
       await base44.auth.loginWithProvider("google", window.location.pathname || "/");
-    } catch {
+      console.log('[DIAG] OAuth success — redirecting to Google');
+    } catch (e) {
+      console.log('[DIAG] OAuth failure:', e?.message || e);
       setLoading(false);
       try { sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
     }
