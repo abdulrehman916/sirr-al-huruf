@@ -54,6 +54,7 @@ export default function OTPLogin() {
       }
 
       setSuccess("Login successful! Redirecting…");
+      try { sessionStorage.setItem('sirr_admin_session', 'true'); } catch { /* ignore */ }
       setTimeout(() => { window.location.href = "/admin/access-dashboard"; }, 1000);
     } catch (err) {
       setError(err?.message || "Verification failed. Please try again.");

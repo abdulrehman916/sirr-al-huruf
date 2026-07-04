@@ -14,33 +14,51 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
 
   useEffect(() => {
-    // Silently check if an admin token exists — never block the app
+    // ── Session-login gate (root fix) ──────────────────────────────
+    // The app ALWAYS starts as GUEST. Owner/Admin role is granted ONLY
+    // after an explicit login in the current session. A silent me()
+    // (from a persisted/stale token) must NEVER auto-restore OWNER/ADMIN.
+    // The flag is one-shot: consumed immediately on startup so a later
+    // reload (not a login) stays guest, and WebView storage persistence
+    // cannot resurrect an admin session after the app is closed.
+    const justLoggedIn = (() => {
+      try { return sessionStorage.getItem('sirr_admin_session') === 'true'; }
+      catch { return false; }
+    })();
+    if (justLoggedIn) {
+      try { sessionStorage.removeItem('sirr_admin_session'); } catch { /* ignore */ }
+    }
+
     base44.auth.me().then(u => {
-      if (u) {
-        setUser(u);
-        setIsAuthenticated(true);
-        // Interim role — owner is resolved instantly via the email safety net.
+      if (!u) return; // no token — stay guest
+      if (!justLoggedIn) {
+        // Token exists but no login happened this session → do NOT elevate.
+        // Stay guest; customer access uses reading codes, not this user.
+        return;
+      }
+      setUser(u);
+      setIsAuthenticated(true);
+      // Interim role — owner is resolved instantly via the email safety net.
+      setRole(resolveRole(u, null));
+      // Load AdminProfile to resolve RBAC role (admins only).
+      if (u.role === 'admin') {
+        setAdminProfileLoading(true);
+        base44.entities.AdminProfile.filter({ email: u.email })
+          .then((profiles) => {
+            const ap = Array.isArray(profiles) && profiles.length > 0
+              ? (profiles.find((p) => p.status === 'ACTIVE') || profiles[0])
+              : null;
+            setAdminProfile(ap);
+            setRole(resolveRole(u, ap));
+            setAdminProfileLoading(false);
+          })
+          .catch(() => {
+            setAdminProfile(null);
+            setRole(resolveRole(u, null));
+            setAdminProfileLoading(false);
+          });
+      } else {
         setRole(resolveRole(u, null));
-        // Load AdminProfile to resolve RBAC role (admins only).
-        if (u.role === 'admin') {
-          setAdminProfileLoading(true);
-          base44.entities.AdminProfile.filter({ email: u.email })
-            .then((profiles) => {
-              const ap = Array.isArray(profiles) && profiles.length > 0
-                ? (profiles.find((p) => p.status === 'ACTIVE') || profiles[0])
-                : null;
-              setAdminProfile(ap);
-              setRole(resolveRole(u, ap));
-              setAdminProfileLoading(false);
-            })
-            .catch(() => {
-              setAdminProfile(null);
-              setRole(resolveRole(u, null));
-              setAdminProfileLoading(false);
-            });
-        } else {
-          setRole(resolveRole(u, null));
-        }
       }
     }).catch(() => {
       // No token / expired — that's fine, proceed as guest
@@ -66,6 +84,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setAdminProfile(null);
     setRole('guest');
+    try { sessionStorage.removeItem('sirr_admin_session'); } catch { /* ignore */ }
     base44.auth.logout();
   };
 

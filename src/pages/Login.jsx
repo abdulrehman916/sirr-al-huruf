@@ -52,6 +52,7 @@ export default function Login() {
         setLoading(false);
       } else {
         // Admin / Customer — no 2FA required.
+        try { sessionStorage.setItem('sirr_admin_session', 'true'); } catch { /* ignore */ }
         window.location.href = "/";
       }
     } catch (err) {
@@ -78,6 +79,7 @@ export default function Login() {
       if (res.data && res.data.ok) {
         // Step 3 — re-authenticate now that 2FA passed; issues a fresh token.
         await base44.auth.loginViaEmailPassword(email, password);
+        try { sessionStorage.setItem('sirr_admin_session', 'true'); } catch { /* ignore */ }
         window.location.href = "/";
       } else {
         setTwofaError((res.data && res.data.error) || "Incorrect verification code");
