@@ -9,10 +9,11 @@ import {
   ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock, Calendar,
   Star, Sun, Sunset, Globe, CalendarClock, FileText, Scroll, Shield, Zap,
 } from "lucide-react";
-import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingRuleEngine";
+import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingEngineV3";
 import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
 import { useRitualLang, localizeAnalysis, localizeAdvice, tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
+import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -39,18 +40,19 @@ const SECTION_ICONS = {
 export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod }) {
   const [expanded, setExpanded] = useState(true);
   const [lang, setLang] = useRitualLang();
+  const { manuscriptRules } = useManuscriptRules();
 
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    return analyzeRitualTiming({ result, selections, customPurpose, activeMethod });
-  }, [result, selections, customPurpose, activeMethod]);
+    return analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules });
+  }, [result, selections, customPurpose, activeMethod, manuscriptRules]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
   const rawAdvice = useMemo(() => {
     if (!result) return null;
-    return analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod });
-  }, [result, selections, customPurpose, activeMethod]);
+    return analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules });
+  }, [result, selections, customPurpose, activeMethod, manuscriptRules]);
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 
