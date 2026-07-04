@@ -217,20 +217,20 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 // ── Premium locked screen ──────────────────────────────────────────────────────
 function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [codeResult, setCodeResult] = useState(null);
-  const [whatsappSent, setWhatsappSent] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Google Sign-In is identity only — it never unlocks this page. After
-  // signing in, the user returns here and must still enter an access code.
+  // Google Sign-In for Guests — identity + return to this exact page.
+  // After the redirect, checkAccess re-runs automatically; if an active
+  // Redeem Code exists in this session, the page opens immediately.
+  // Otherwise the authenticated "no access" dialog is shown below.
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try { sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
-    // Flag so ProtectedPage redirects Owner/Admin to their dashboard after
-    // the Google redirect returns. Guests stay here (access code still required).
     try { sessionStorage.setItem("sirr_locked_signin_redirect", routePath); } catch { /* ignore */ }
     try {
       await base44.auth.loginWithProvider("google", routePath);
@@ -257,7 +257,8 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
         addRedeemedCode(trimmed);
         mergeGrantedPermissions(data.permissions);
         setCodeResult({ success: true, message: data.message });
-        setTimeout(() => onUnlocked(), 1200);
+        // Re-check permissions and open the originally requested page.
+        setTimeout(() => onUnlocked(), 1000);
       } else {
         setCodeResult({ success: false, message: data?.message || "Invalid code." });
       }
@@ -268,96 +269,72 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
     }
   };
 
-  const handleWhatsApp = () => {
-    const message =
-      `السلام عليكم\n\n` +
-      `*طلب وصول — سر الحروف*\n\n` +
-      `📄 الصفحة: ${pageName}\n\n` +
-      `أرجو إرسال رمز القراءة لهذه الصفحة.`;
-    const url = `https://wa.me/${ADMIN_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
-    setWhatsappSent(true);
-  };
+  // ── State 1: Guest (not authenticated) → require Google Sign-In ──
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4"
+        style={{ background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 100%)" }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm space-y-4">
+          <div className="rounded-2xl border p-8 text-center" style={{
+            background: G.bg, borderColor: G.border, boxShadow: "0 0 48px rgba(212,175,55,0.10)",
+          }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
+              <Lock className="w-8 h-8" style={{ color: G.text }} />
+            </div>
+            <h1 className="font-inter text-lg font-bold mb-2" style={{ color: G.text }}>{pageName}</h1>
+            <p className="font-inter text-sm text-white/60 mb-6">
+              This page requires an account. Please sign in with Google to continue.
+            </p>
+            <button onClick={handleGoogle} disabled={googleLoading}
+              className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3 disabled:opacity-50"
+              style={{ background: "#ffffff", color: "#0d1b2a" }}>
+              {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleMark className="w-4 h-4" />}
+              {googleLoading ? "Redirecting…" : "Continue with Google"}
+            </button>
+            <button onClick={() => navigate("/")}
+              className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
+              style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
+              Cancel
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
+  // ── State 2: Authenticated but no active access ──
   return (
     <div className="min-h-screen flex items-center justify-center p-4"
       style={{ background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 100%)" }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm space-y-4"
-      >
-        {/* Main locked card */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm space-y-4">
         <div className="rounded-2xl border p-8 text-center" style={{
-          background: G.bg,
-          borderColor: G.border,
-          boxShadow: "0 0 48px rgba(212,175,55,0.10)",
+          background: G.bg, borderColor: G.border, boxShadow: "0 0 48px rgba(212,175,55,0.10)",
         }}>
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
             style={{ background: G.bgHi, border: `1px solid ${G.border}` }}>
             <Lock className="w-8 h-8" style={{ color: G.text }} />
           </div>
+          <h1 className="font-inter text-lg font-bold mb-2" style={{ color: G.text }}>{pageName}</h1>
+          <p className="font-inter text-sm text-white/60 mb-6">You don't have access to this premium content.</p>
 
-          <h1 className="font-amiri text-2xl font-bold mb-1" style={{ color: G.text }}>
-            PREMIUM CONTENT
-          </h1>
-          <p className="font-inter text-xs text-white/30 uppercase tracking-widest mb-2">
-            Premium Content
-          </p>
-          <p className="font-inter text-sm text-white/60 font-semibold mb-1">{pageName}</p>
-          <p className="font-inter text-xs text-white/35 mb-7">
-            This page is protected. Contact us on WhatsApp to obtain an access code.
-          </p>
-
-          {/* WhatsApp button */}
-          <button
-            onClick={handleWhatsApp}
+          <button onClick={() => setShowCodeEntry(v => !v)}
             className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
-            style={{
-              background: whatsappSent
-                ? "rgba(37,211,102,0.12)"
-                : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-              color: whatsappSent ? "#25D366" : "#ffffff",
-              border: whatsappSent ? "1px solid rgba(37,211,102,0.40)" : "none",
-              boxShadow: whatsappSent ? "none" : "0 0 24px rgba(37,211,102,0.30)",
-            }}
-          >
-            {whatsappSent
-              ? <CheckCircle className="w-4 h-4" />
-              : <MessageCircle className="w-4 h-4" />}
-            {whatsappSent ? "Sent!" : "Contact on WhatsApp"}
+            style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
+            <KeyRound className="w-4 h-4" />
+            Enter Redeem Code
           </button>
 
-          <p className="font-inter text-xs text-white/25 mb-4">{ADMIN_CONFIG.WHATSAPP_DISPLAY}</p>
+          <button onClick={() => navigate("/premium/request")}
+            className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
+            style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}>
+            View Plans
+          </button>
 
-          {/* Google Sign-In — identity only; does NOT unlock the page */}
-          {!isAuthenticated && (
-            <div className="mb-3">
-              <button
-                onClick={handleGoogle}
-                disabled={googleLoading}
-                className="w-full py-3 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                style={{ background: "#ffffff", color: "#0d1b2a" }}
-              >
-                {googleLoading
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <GoogleMark className="w-4 h-4" />}
-                {googleLoading ? "Redirecting…" : "Continue with Google"}
-              </button>
-              <p className="font-inter text-[10px] text-white/30 mt-1.5 leading-snug">
-                Sign in for identity — an access code is still required to unlock this page.
-              </p>
-            </div>
-          )}
-
-          {/* Code entry toggle */}
-          <button
-            onClick={() => setShowCodeEntry(v => !v)}
-            className="w-full py-3 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2"
-            style={{ background: "rgba(212,175,55,0.07)", border: `1px solid ${G.border}`, color: G.text }}
-          >
-            <KeyRound className="w-4 h-4" />
-            {showCodeEntry ? "Hide Access Code Entry" : "I Have an Access Code"}
+          <button onClick={() => navigate("/")}
+            className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
+            style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
+            Cancel
           </button>
         </div>
 
@@ -419,15 +396,6 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Back to home */}
-        <button
-          onClick={() => window.location.href = "/"}
-          className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
-          style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}
-        >
-          ← Back to Home
-        </button>
       </motion.div>
     </div>
   );
