@@ -131,21 +131,6 @@ const AuthenticatedApp = () => {
     () => { try { return sessionStorage.getItem('sirr_google_prompt_dismissed') === 'true'; } catch { return false; } }
   );
 
-  // [DIAG] App mounted (once)
-  useEffect(() => { console.log('[DIAG] App mounted — app launch detected'); }, []);
-
-  // [DIAG] Log auth/visibility state on every relevant change
-  useEffect(() => {
-    let adminSession = null;
-    try { adminSession = sessionStorage.getItem('sirr_admin_session'); } catch { /* ignore */ }
-    console.log('[DIAG] Auth state changed:', {
-      isAuthenticated, googlePromptDismissed,
-      justLoggedIn: adminSession === 'true',
-      sirr_admin_session: adminSession,
-      pathname: location.pathname
-    });
-  }, [isAuthenticated, googlePromptDismissed, location.pathname]);
-
   // Hide the post-splash Google prompt once the user is signed in.
   useEffect(() => {
     if (isAuthenticated) setGooglePromptDismissed(true);
@@ -165,26 +150,6 @@ const AuthenticatedApp = () => {
         <div className="w-8 h-8 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin"></div>
       </div>
     );
-  }
-
-  // [DIAG] Evaluate Google prompt render condition each render
-  {
-    let _adminSession = null;
-    try { _adminSession = sessionStorage.getItem('sirr_admin_session'); } catch { /* ignore */ }
-    console.log('[DIAG] Google prompt render check:', {
-      '!isAuthenticated': !isAuthenticated,
-      '!googlePromptDismissed': !googlePromptDismissed,
-      willRender: !isAuthenticated && !googlePromptDismissed,
-      sirr_admin_session: _adminSession,
-      pathname: location.pathname
-    });
-    if (!isAuthenticated && !googlePromptDismissed) {
-      console.log('[DIAG] GoogleSignInPrompt WILL render');
-    } else {
-      console.log('[DIAG] GoogleSignInPrompt will NOT render — blocked by:',
-        !isAuthenticated ? null : 'isAuthenticated=true',
-        googlePromptDismissed ? 'googlePromptDismissed=true' : null);
-    }
   }
 
   return (

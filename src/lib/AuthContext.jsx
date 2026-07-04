@@ -25,15 +25,12 @@ export const AuthProvider = ({ children }) => {
       try { return sessionStorage.getItem('sirr_admin_session') === 'true'; }
       catch { return false; }
     })();
-    console.log('[DIAG] AuthContext init — justLoggedIn=', justLoggedIn, 'sirr_admin_session=', (() => { try { return sessionStorage.getItem('sirr_admin_session'); } catch { return null; } })());
     if (justLoggedIn) {
-      console.log('[DIAG] Redirect received — consuming sirr_admin_session flag');
       try { sessionStorage.removeItem('sirr_admin_session'); } catch { /* ignore */ }
     }
 
     base44.auth.me().then(u => {
-      console.log('[DIAG] auth.me() resolved — user:', u ? { id: u.id, email: u.email, role: u.role } : null);
-      if (!u) { console.log('[DIAG] No token — staying guest'); return; } // no token — stay guest
+      if (!u) return; // no token — stay guest
       // Session-gate: only elevate after an explicit login this session, so
       // customers always start as guest. Applies identically to Preview and
       // the published APK — no environment-specific bypass.
@@ -57,7 +54,6 @@ export const AuthProvider = ({ children }) => {
         // Admin detection that the email/password path already had.
         const ownerR = resolveRole(u, null);
         if (ownerR === ROLES.OWNER) {
-          console.log('[DIAG] Auth state changed → OWNER (google/email)');
           setUser(u);
           setIsAuthenticated(true);
           setRole(ownerR);
@@ -70,13 +66,11 @@ export const AuthProvider = ({ children }) => {
               ? profiles.find((p) => p.status === 'ACTIVE' && p.is_owner === false) || null
               : null;
             if (ap) {
-              console.log('[DIAG] Auth state changed → ADMIN (google/email)');
               setAdminProfile(ap);
               setUser(u);
               setIsAuthenticated(true);
               setRole(ROLES.ADMIN);
             } else {
-              console.log('[DIAG] Auth state changed → GUEST (google, no admin profile)');
               // Google-signed-in Guest: create/update a UserAccessProfile.
               // Role stays 'guest' — identity never grants content access;
               // reading codes / access cards are still required to unlock pages.
@@ -119,7 +113,6 @@ export const AuthProvider = ({ children }) => {
             : null;
           const r = resolveRole(u, ap);
           if (r === ROLES.OWNER || r === ROLES.ADMIN) {
-            console.log('[DIAG] Auth state changed →', r === ROLES.OWNER ? 'OWNER' : 'ADMIN', '(platform admin)');
             setAdminProfile(ap);
             setUser(u);
             setIsAuthenticated(true);
@@ -132,8 +125,7 @@ export const AuthProvider = ({ children }) => {
           setAdminProfileLoading(false);
           // stay Guest
         });
-    }).catch((err) => {
-      console.log('[DIAG] auth.me() rejected — staying guest:', err?.message || err);
+    }).catch(() => {
       // No token / expired — that's fine, proceed as guest
     });
 
