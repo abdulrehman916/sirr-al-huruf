@@ -1,8 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
- * Renew an access code — updates expiry, appends to renewal_history + audit_log.
- * Re-enables the code if it was disabled.
+ * Renew a Reading Access Code — extends the code-level expiry, appends to
+ * renewal_history + audit_log, and re-enables the code if it was disabled.
+ *
+ * Stabilization (no architecture change):
+ *  - P2.4: Preserves per-page durations. Previously this overwrote ALL
+ *          page_durations and feature_durations with a uniform "RENEWED"
+ *          value, destroying per-page customization. Now it only updates the
+ *          code-level expiry_date; per-page/feature durations are left intact
+ *          so the owner's per-page setup is preserved across renewals.
+ *  - P2.5: The code-level expiry_date becomes the new authoritative expiry;
+ *          validateAndCleanPermissions syncs each redeemed device to it.
+ *  - P3.7: Validates code_id and duration inputs.
+ *  - P4.9: Writes a centralized AuditLog entry.
  *
  * Input:  { code_id, duration_type, duration_count, custom_date, notes }
  * Output: { success, message, new_expiry }
@@ -15,8 +26,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { code_id, duration_type, duration_count, custom_date, notes } = await req.json();
-    if (!code_id) return Response.json({ error: 'code_id required' }, { status: 400 });
+    const body = await req.json().catch(() => ({}));
+    const { code_id, duration_type, duration_count, custom_date, notes } = body;
+
+    // ── P3.7: Input validation ──
+    if (!code_id || typeof code_id !== 'string') {
+      return Response.json({ error: 'code_id required' }, { status: 400 });
+    }
+    if (!duration_type || typeof duration_type !== 'string') {
+      return Response.json({ error: 'duration_type required' }, { status: 400 });
+    }
 
     const code = await base44.asServiceRole.entities.AccessCode.get(code_id);
     if (!code) return Response.json({ error: 'Code not found' }, { status: 404 });
@@ -37,18 +56,24 @@ Deno.serve(async (req) => {
       isLifetime = true;
       newExpiry = null;
       label = 'Lifetime';
-    } else if (duration_type === 'CUSTOM' && custom_date) {
+    } else if (duration_type === 'CUSTOM') {
+      if (!custom_date) return Response.json({ error: 'custom_date required for CUSTOM duration' }, { status: 400 });
+      const customTime = new Date(custom_date).getTime();
+      if (isNaN(customTime)) return Response.json({ error: 'Invalid custom_date' }, { status: 400 });
       newExpiry = new Date(custom_date).toISOString();
-      durationMs = new Date(custom_date).getTime() - Date.now();
+      durationMs = customTime - Date.now();
       durationDays = Math.ceil(durationMs / 86400000);
       label = 'Custom';
     } else {
-      const ms = multipliers[duration_type] || 86400000;
-      durationMs = (parseInt(duration_count) || 0) * ms;
+      const ms = multipliers[duration_type];
+      if (!ms) return Response.json({ error: 'Invalid duration_type' }, { status: 400 });
+      const count = parseInt(duration_count);
+      if (isNaN(count) || count <= 0) return Response.json({ error: 'Valid duration_count required' }, { status: 400 });
+      durationMs = count * ms;
       durationDays = Math.ceil(durationMs / 86400000);
       newExpiry = new Date(Date.now() + durationMs).toISOString();
       const typeLabel = duration_type.charAt(0) + duration_type.slice(1).toLowerCase();
-      label = `${duration_count} ${typeLabel}`;
+      label = `${count} ${typeLabel}`;
     }
 
     const oldExpiry = code.expiry_date;
@@ -71,40 +96,29 @@ Deno.serve(async (req) => {
       details: `Renewed: ${label} → ${newExpiry || 'Lifetime'}`,
     };
 
-    // Update page_durations — all pages get the new duration
-    const updatedPageDurations: Record<string, any> = {};
-    for (const path of (code.page_paths || [])) {
-      updatedPageDurations[path] = {
-        value: "RENEWED",
-        label: label,
-        days: isLifetime ? null : durationDays,
-        duration_ms: isLifetime ? null : durationMs,
-        custom_date: duration_type === 'CUSTOM' ? custom_date : null,
-      };
-    }
-
-    // Update feature_durations — all features get the new duration
-    const updatedFeatureDurations: Record<string, any> = {};
-    const subFeatures = code.sub_features || {};
-    for (const [pagePath, featIds] of Object.entries(subFeatures)) {
-      for (const featId of (featIds as string[] || [])) {
-        updatedFeatureDurations[`${pagePath}:${featId}`] = {
-          plan_name: label + ' (Renewed)',
-          duration_days: isLifetime ? null : durationDays,
-          duration_ms: isLifetime ? null : durationMs,
-          is_lifetime: isLifetime,
-        };
-      }
-    }
-
+    // ── P2.4: Update ONLY the code-level expiry. page_durations and
+    // feature_durations are intentionally left untouched so the owner's
+    // per-page setup is preserved across renewals. ──
     await base44.asServiceRole.entities.AccessCode.update(code_id, {
       expiry_date: newExpiry,
       is_disabled: false, // Re-enable on renew
-      page_durations: updatedPageDurations,
-      feature_durations: updatedFeatureDurations,
       renewal_history: [...(code.renewal_history || []), renewalEntry],
       audit_log: [...(code.audit_log || []), auditEntry],
     });
+
+    // ── P4.9: Centralized audit log ──
+    try {
+      await base44.asServiceRole.entities.AuditLog.create({
+        log_id: 'AUDIT-' + crypto.randomUUID().toUpperCase(),
+        action_type: 'ACCESS_CODE_RENEWED',
+        performed_by: user.id,
+        performed_by_email: user.email || '',
+        target_entity: 'AccessCode',
+        target_id: code.code || code_id,
+        details: JSON.stringify({ code_id, label, old_expiry: oldExpiry || null, new_expiry: newExpiry }),
+        timestamp: now,
+      });
+    } catch { /* best-effort */ }
 
     return Response.json({
       success: true,

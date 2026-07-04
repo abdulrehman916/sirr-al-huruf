@@ -96,6 +96,18 @@ export default function AccessCodesTab() {
         is_disabled: !code.is_disabled,
         audit_log: [...(code.audit_log || []), auditEntry],
       });
+      // ── P4.9: Centralized audit log for revoke/enable ──
+      try {
+        await base44.entities.AuditLog.create({
+          log_id: 'AUDIT-' + (crypto.randomUUID ? crypto.randomUUID().toUpperCase() : Date.now().toString()),
+          action_type: code.is_disabled ? 'ACCESS_CODE_ENABLED' : 'ACCESS_CODE_DISABLED',
+          performed_by: me?.id || '',
+          target_entity: 'AccessCode',
+          target_id: code.code,
+          details: JSON.stringify({ code_id: code.id, action: code.is_disabled ? 'enabled' : 'disabled' }),
+          timestamp: now,
+        });
+      } catch { /* best-effort */ }
       toast({ title: code.is_disabled ? "✓ Code enabled" : "✓ Code disabled" });
       load();
     } catch (e) {

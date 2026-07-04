@@ -1,12 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
- * Redeem an access code without requiring auth.
- * Uses a guest session_id (UUID from localStorage) as the user identifier.
+ * Redeem a Reading Access Code without requiring auth.
+ * Uses a guest session_id (UUID from localStorage) as the device identifier.
  *
- * Supports per-feature plan durations via `feature_durations`:
- *   Each feature gets its own expiry based on its selected plan.
- *   The page-level expiry is set to the LATEST feature expiry (or null if any is lifetime).
+ * Stabilization (no behavior/architecture change to the Access Code system):
+ *  - P1.2: Rate limiting + brute-force protection, respecting
+ *          SystemSettings.reading_codes.max_redemption_attempts (default 3).
+ *  - P3.7: Strict input validation.
+ *  - P4.9: Audit logging of every redemption attempt (success/failure).
  *
  * Input:  { code: string, session_id: string }
  * Output: { success, message, pages_granted, permissions }
@@ -14,20 +16,89 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { code, session_id } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { code, session_id } = body;
 
-    if (!code || typeof code !== "string") {
-      return Response.json({ success: false, message: "Code is required" }, { status: 400 });
+    // ── P3.7: Input validation ──
+    if (!code || typeof code !== "string" || !code.trim()) {
+      return Response.json({ success: false, message: "Code is required." }, { status: 400 });
     }
-    if (!session_id || typeof session_id !== "string") {
-      return Response.json({ success: false, message: "Session ID is required" }, { status: 400 });
+    if (!session_id || typeof session_id !== "string" || !session_id.trim()) {
+      return Response.json({ success: false, message: "Session ID is required." }, { status: 400 });
     }
 
     const normalizedCode = code.trim().toUpperCase();
+    const clientIP = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || req.headers.get("x-real-ip") || "unknown";
+    const userAgent = req.headers.get("user-agent") || "unknown";
+
+    // ── P1.2: Rate limiting / brute-force protection ──
+    // Respect SystemSettings.reading_codes.max_redemption_attempts (default 3).
+    // Count this session's FAILED attempts in the last 15 minutes; lock if exceeded.
+    // Per-session (not per-IP) so valid users on shared NAT are never blocked.
+    const RATE_WINDOW_MS = 15 * 60 * 1000;
+    let maxAttempts = 3;
+    try {
+      const settings = await base44.asServiceRole.entities.SystemSettings.filter({ settings_id: "SETTINGS-MAIN" }, null, 1);
+      const cfg = settings && settings[0] ? settings[0].reading_codes : null;
+      if (cfg && cfg.max_redemption_attempts) {
+        const parsed = parseInt(cfg.max_redemption_attempts);
+        if (!isNaN(parsed) && parsed > 0) maxAttempts = parsed;
+      }
+    } catch { /* best-effort — fall back to default */ }
+
+    const windowStartISO = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
+    let recentFailed = 0;
+    try {
+      const attempts = await base44.asServiceRole.entities.AuditLog.filter(
+        { action_type: "CODE_REDEMPTION_ATTEMPT", performed_by: session_id, timestamp: { $gte: windowStartISO } },
+        "-timestamp", 200
+      );
+      recentFailed = (attempts || []).filter((a: any) => {
+        try { return JSON.parse(a.details || "{}").result === "FAILED"; } catch { return false; }
+      }).length;
+    } catch { /* best-effort — never block a valid user on a log read failure */ }
+
+    if (recentFailed >= maxAttempts) {
+      // Log brute-force detection (best-effort)
+      try {
+        await base44.asServiceRole.entities.AuditLog.create({
+          log_id: "AUDIT-" + crypto.randomUUID().toUpperCase(),
+          action_type: "BRUTE_FORCE_DETECTED",
+          performed_by: session_id,
+          performed_by_email: "session:" + session_id.slice(0, 16),
+          target_entity: "AccessCode",
+          target_id: normalizedCode,
+          details: JSON.stringify({ ip: clientIP, user_agent: userAgent, failed_attempts: recentFailed, max_attempts: maxAttempts }),
+          ip_address: clientIP,
+          user_agent: userAgent,
+          timestamp: new Date().toISOString(),
+        });
+      } catch { /* ignore */ }
+      return Response.json({ success: false, message: "Too many failed attempts. Please wait a few minutes and try again.", blocked: true }, { status: 429 });
+    }
+
+    // ── P4.9: Failed-attempt logger (to AuditLog, for counting + audit) ──
+    const logAttempt = async (result: string, reason?: string, extra: any = {}) => {
+      try {
+        await base44.asServiceRole.entities.AuditLog.create({
+          log_id: "AUDIT-" + crypto.randomUUID().toUpperCase(),
+          action_type: "CODE_REDEMPTION_ATTEMPT",
+          performed_by: session_id,
+          performed_by_email: "session:" + session_id.slice(0, 16),
+          target_entity: "AccessCode",
+          target_id: normalizedCode,
+          details: JSON.stringify({ result, ...(reason ? { reason } : {}), ip: clientIP, ...extra }),
+          ip_address: clientIP,
+          user_agent: userAgent,
+          timestamp: new Date().toISOString(),
+        });
+      } catch { /* best-effort */ }
+    };
 
     // Look up code
     const codes = await base44.asServiceRole.entities.AccessCode.filter({ code: normalizedCode }, null, 1);
     if (!codes || codes.length === 0) {
+      await logAttempt("FAILED", "NOT_FOUND");
       return Response.json({ success: false, message: "Invalid code. Please check and try again." });
     }
 
@@ -43,6 +114,7 @@ Deno.serve(async (req) => {
           details: `Attempt by User/Device: ${session_id.slice(0, 16)} — Result: Rejected — Code Disabled`,
         }],
       });
+      await logAttempt("FAILED", "DISABLED");
       return Response.json({ success: false, message: "This code has been disabled." });
     }
 
@@ -57,6 +129,7 @@ Deno.serve(async (req) => {
           details: `Attempt by User/Device: ${session_id.slice(0, 16)} — Result: Rejected — Code Expired`,
         }],
       });
+      await logAttempt("FAILED", "EXPIRED");
       return Response.json({ success: false, message: "This code has expired." });
     }
 
@@ -71,6 +144,7 @@ Deno.serve(async (req) => {
           details: `Attempt by User ID: ${session_id.slice(0, 16)}, Device ID: ${session_id.slice(0, 16)} — Result: Rejected - Already Redeemed`,
         }],
       });
+      await logAttempt("FAILED", "DEVICE_BOUND_ELSEWHERE");
       return Response.json({ success: false, message: "This Access Code has already been redeemed and cannot be used again." });
     }
 
@@ -160,10 +234,12 @@ Deno.serve(async (req) => {
     if (accessCode.used_by_user_id === session_id) {
       // Even for the original device, reject if the code-level expiry has passed
       if (accessCode.expiry_date && new Date(accessCode.expiry_date) < new Date()) {
+        await logAttempt("FAILED", "EXPIRED_REDOWNLOAD");
         return Response.json({ success: false, message: "This code has expired." });
       }
       const usedAt = accessCode.used_at ? new Date(accessCode.used_at) : new Date();
       const permissions = buildPermissions(usedAt, accessCode.used_at || new Date().toISOString(), true);
+      await logAttempt("SUCCESS", "RE_DOWNLOAD");
       return Response.json({
         success: true,
         message: `Access restored to ${pagePaths.length} page(s)!`,
@@ -183,12 +259,22 @@ Deno.serve(async (req) => {
           details: `Attempt by User ID: ${session_id.slice(0, 16)}, Device ID: ${session_id.slice(0, 16)} — Result: Rejected - Already Redeemed`,
         }],
       });
+      await logAttempt("FAILED", "MAX_USES_REACHED", { max_uses: maxUses });
       return Response.json({ success: false, message: "This Access Code has already been redeemed and cannot be used again." });
     }
 
     const now = new Date();
     const nowISO = now.toISOString();
     const permissions = buildPermissions(now, nowISO, false);
+
+    // ── P2.5: Synchronize the code-level expiry_date with the actual per-page
+    // expiries just granted. null only when every page is lifetime; otherwise the
+    // latest finite page expiry. This removes the null-even-when-finite
+    // inconsistency that previously let validateAndCleanPermissions grant lifetime.
+    const finiteExps = permissions.map((p: any) => p.expiry_date).filter((e: any) => e !== null && e !== undefined);
+    const codeLevelExpiry = finiteExps.length === 0
+      ? null
+      : finiteExps.reduce((m: string | null, e: string) => (!m || new Date(e) > new Date(m as string)) ? e : m, null as string | null);
 
     // Mark code as used + bind to device
     await base44.asServiceRole.entities.AccessCode.update(accessCode.id, {
@@ -197,8 +283,11 @@ Deno.serve(async (req) => {
       used_by_email: "guest:" + session_id.slice(0, 16),
       used_at: nowISO,
       device_id: session_id,
+      expiry_date: codeLevelExpiry,
       audit_log: [...(accessCode.audit_log || []), { action: "REDEEMED", timestamp: nowISO, admin_id: "system", details: `Redeemed by device: ${session_id.slice(0, 16)}` }],
     });
+
+    await logAttempt("SUCCESS", "REDEEMED", { pages_granted: pagePaths.length });
 
     return Response.json({
       success: true,

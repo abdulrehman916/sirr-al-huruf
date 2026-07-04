@@ -106,9 +106,25 @@ export async function validateAndCleanPermissions() {
     const perms = getLocalPermissions();
     let changed = false;
 
+    // ── P3.8: Build the set of page_paths still covered by ANY code bound to
+    // this session. localStorage permissions for pages NOT in this set belong
+    // to deleted/revoked codes (or pages an admin removed from a code) and must
+    // be cleaned — e.g. a deleted LIFETIME code must not keep granting access. ──
+    const coveredPaths = new Set();
+    data.codes.forEach((codeInfo) => {
+      (codeInfo.page_paths || []).forEach((p) => coveredPaths.add(p));
+    });
+    for (let i = perms.length - 1; i >= 0; i--) {
+      if (!coveredPaths.has(perms[i].page_path)) {
+        perms.splice(i, 1);
+        changed = true;
+      }
+    }
+
     data.codes.forEach(codeInfo => {
-      if (codeInfo.status === 'disabled') {
-        // Remove permissions for disabled codes (admin intentionally disabled)
+      if (codeInfo.status === 'disabled' || codeInfo.status === 'expired') {
+        // Remove permissions for disabled (admin-revoked) AND expired codes so
+        // revoked/expired access is always cleaned, not merely denied.
         codeInfo.page_paths.forEach(path => {
           const idx = perms.findIndex(p => p.page_path === path);
           if (idx >= 0) {
@@ -117,11 +133,9 @@ export async function validateAndCleanPermissions() {
           }
         });
       } else {
-        // For active AND expired codes, sync the expiry with the backend.
-        // This ensures:
-        //  - Expired codes stay denied via checkLocalPermission (expiry in the past)
-        //  - Renewed codes automatically get the NEW expiry → access restored
-        //  - Re-constructs permissions if they were previously removed
+        // Active code: sync per-page expiry with the authoritative backend
+        // code-level expiry (set at redemption/renewal). Reconstructs a
+        // permission if it was previously removed (e.g. renewed after expiry).
         codeInfo.page_paths.forEach((path, i) => {
           const existing = perms.find(p => p.page_path === path);
           const backendExpiry = codeInfo.expiry_date;
@@ -131,9 +145,7 @@ export async function validateAndCleanPermissions() {
               existing.expiry_date = backendExpiry;
               changed = true;
             }
-          } else if (codeInfo.status === 'active') {
-            // Re-construct permissions for renewed codes
-            // (was expired/removed, now active again after admin renewal)
+          } else {
             const pageName = (codeInfo.page_names || [])[i] || path;
             const subFeats = (codeInfo.sub_features || {})[path] || [];
             const featureExpiries = {};

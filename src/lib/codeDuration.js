@@ -191,3 +191,30 @@ export function fmtDate(d) {
   if (!d) return '∞ Lifetime';
   return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+
+/**
+ * P2.5: Compute the authoritative code-level expiry_date from per-page durations.
+ * Returns the latest FINITE page expiry, or null when ALL pages are lifetime
+ * (or no durations are set). Lifetime pages are ignored for the code-level so a
+ * mixed code never over-grants finite pages to lifetime. This keeps the code-level
+ * expiry synchronized with the actual per-page expiries and removes the previous
+ * null-even-when-finite inconsistency.
+ */
+export function computeCodeLevelExpiry(pageDurations, fromTime = new Date()) {
+  if (!pageDurations) return null;
+  let latest = null;
+  let finiteCount = 0;
+  let lifetimeCount = 0;
+  for (const path of Object.keys(pageDurations)) {
+    const d = pageDurations[path];
+    if (!d) continue;
+    if (d.value === 'LIFETIME') { lifetimeCount++; continue; }
+    let t = null;
+    if (d.value === 'CUSTOM' && d.custom_date) t = new Date(d.custom_date).getTime();
+    else if (d.duration_ms) t = fromTime.getTime() + d.duration_ms;
+    else if (d.days) t = fromTime.getTime() + d.days * 86400000;
+    if (t !== null) { finiteCount++; if (latest === null || t > latest) latest = t; }
+  }
+  if (finiteCount === 0 && lifetimeCount > 0) return null; // all pages lifetime
+  return latest ? new Date(latest).toISOString() : null;
+}

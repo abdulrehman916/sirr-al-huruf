@@ -9,7 +9,7 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages } from "@/lib/pageRegistry";
 import CreateCodePageItem from "./CreateCodePageItem";
-import { DURATION_OPTIONS } from "@/lib/codeDuration";
+import { DURATION_OPTIONS, computeCodeLevelExpiry } from "@/lib/codeDuration";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -91,6 +91,23 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
     try {
       const me = await base44.auth.me();
       const normalizedCode = codeStr.trim().toUpperCase();
+
+      // ── P1.1: Prevent duplicate Reading Access Codes ──
+      // Every code must be globally unique. Check before saving so existing
+      // codes are preserved and no two codes can ever share the same string.
+      try {
+        const existing = await base44.entities.AccessCode.filter({ code: normalizedCode }, null, 1);
+        if (existing && existing.length > 0) {
+          toast({ title: "Duplicate code", description: `A code "${normalizedCode}" already exists. Use a different code string.`, variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+      } catch (e) {
+        toast({ title: "Could not verify code uniqueness", description: e.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
       const names = selectedPages.map(path => pageList.find(p => p.path === path)?.name || path);
       const page_durations = {};
       selectedPages.forEach(path => { if (pageDurations[path]) page_durations[path] = pageDurations[path]; });
@@ -112,7 +129,7 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
         sub_features,
         feature_durations: featureDurations,
         duration: "CUSTOM",
-        expiry_date: null,
+        expiry_date: computeCodeLevelExpiry(page_durations),
         max_uses: maxUses,
         use_count: 0,
         is_disabled: false,
@@ -120,6 +137,20 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
         audit_log: [{ action: "CREATED", timestamp: new Date().toISOString(), admin_id: me.id, details: `Code created for ${customerName.trim()}` }],
         notes: notes.trim() || undefined,
       });
+
+      // ── P4.9: Centralized audit log for code creation ──
+      try {
+        await base44.entities.AuditLog.create({
+          log_id: 'AUDIT-' + (crypto.randomUUID ? crypto.randomUUID().toUpperCase() : Date.now().toString()),
+          action_type: 'ACCESS_CODE_CREATED',
+          performed_by: me.id,
+          performed_by_email: me.email || '',
+          target_entity: 'AccessCode',
+          target_id: normalizedCode,
+          details: JSON.stringify({ code: normalizedCode, customer: customerName.trim(), pages: selectedPages.length }),
+          timestamp: new Date().toISOString(),
+        });
+      } catch { /* best-effort */ }
 
       toast({ title: `✓ Code "${normalizedCode}" created for ${customerName.trim()}` });
       onCreated();
@@ -251,10 +282,10 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
       <div>
         <label className="text-xs text-white/45 mb-1 block">Max Uses (default 1 = single-use, device-bound)</label>
         <div className="flex items-center gap-3">
-          <input type="number" min={1} max={999} value={maxUses} onChange={e => setMaxUses(parseInt(e.target.value) || 1)}
+          <input type="number" min={1} max={1} value={maxUses} onChange={e => setMaxUses(1)}
             className="w-24 px-3 py-2 rounded-lg text-sm text-white outline-none text-center"
             style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }} />
-          <span className="text-xs text-white/35">{maxUses === 1 ? "Single-use (recommended, device-bound)" : `Up to ${maxUses} devices`}</span>
+          <span className="text-xs text-white/35">Single-use — bound to one device. Use "Reset Device" to reactivate on a new device.</span>
         </div>
       </div>
 
