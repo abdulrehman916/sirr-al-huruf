@@ -8,6 +8,7 @@ import PageLayout from "../components/PageLayout";
 import PullToRefresh from "../components/PullToRefresh";
 import useMouseParallax from "../hooks/useMouseParallax";
 import { useAuth } from "@/lib/AuthContext";
+import NavDebugPanel from "@/components/NavDebugPanel";
 
 // ── Build version marker — bump this string on every source change so the
 //    APK can be visually verified against the latest commit. If this string
@@ -92,6 +93,9 @@ export default function Home() {
           </span>
         </motion.button>
       )}
+
+      {/* TEMPORARY NAV DEBUG — remove after SHOP ADMIN investigation */}
+      <NavDebugPanel />
 
       {/* Build version marker — always visible so the APK can be verified
           against the latest source commit. */}

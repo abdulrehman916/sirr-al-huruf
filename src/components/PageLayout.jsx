@@ -290,6 +290,22 @@ export default function PageLayout({ children }) {
             </Link>
           )}
 
+          {(() => {
+            // TEMP DEBUG — log runtime values driving SHOP ADMIN visibility
+            const filtered = TAB_KEYS.filter((tab) => isNavTabVisible(tab.id, role, adminProfile));
+            // eslint-disable-next-line no-console
+            console.log("[NAV DEBUG PageLayout]", {
+              role,
+              isAuthenticated,
+              adminProfileEmail: adminProfile && adminProfile.email,
+              permShop: adminProfile && adminProfile.perm_shop_management,
+              adminShopVisible: isNavTabVisible("admin-shop", role, adminProfile),
+              filteredIds: filtered.map((t) => t.id),
+              userRole: user && user.role,
+              userEmail: user && user.email,
+            });
+            return null;
+          })()}
           {TAB_KEYS.filter((tab) => isNavTabVisible(tab.id, role, adminProfile)).map((tab) => (
             <NavTab
               key={tab.id}
