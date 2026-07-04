@@ -29,6 +29,15 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     // Reset admin flag at start — will be set to true if admin is detected below
     setAdminFlag(false);
 
+    // 0. Owner universal bypass — the Owner never sees any lock, premium
+    //    screen, reading-code page, or access restriction anywhere in the app.
+    //    Sets the admin flag so feature-level checks (Methods/Sections) also pass.
+    if (role === ROLES.OWNER) {
+      setAdminFlag(true);
+      setAccessStatus("granted");
+      return;
+    }
+
     // 1. Explicit public override from routeManifest flag
     if (requiresPermission === false) {
       setAccessStatus("granted");
