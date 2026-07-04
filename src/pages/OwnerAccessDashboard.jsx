@@ -6,7 +6,7 @@ import {
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
   Phone, Mail, Calendar, Crown, RefreshCw, Star, Zap,
   DollarSign, TrendingUp, Edit2, Save, AlertCircle,
-  Ban, CalendarPlus2, MessageSquare, KeyRound
+  Ban, CalendarPlus2, MessageSquare, KeyRound, UserCheck
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
@@ -19,6 +19,7 @@ import ManageSubscriptionModal from "@/components/admin/ManageSubscriptionModal"
 import MessagesTab from "@/components/admin/MessagesTab";
 import SubscriptionRequestsTab from "@/components/admin/SubscriptionRequestsTab";
 import UsersManagementTab from "@/components/admin/UsersManagementTab";
+import GoogleUsersTab from "@/components/admin/GoogleUsersTab";
 import SecurityAuditTab from "@/components/admin/SecurityAuditTab";
 import { Link } from "react-router-dom";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
@@ -60,6 +61,7 @@ function daysLeft(d) {
 
 const TABS = [
   { id: "users",       label: "Users",            icon: Users },
+  { id: "google-users", label: "Google Users",    icon: UserCheck },
   { id: "subs",        label: "Subscriptions",    icon: CreditCard },
   { id: "payments",    label: "Payments",         icon: TrendingUp },
   { id: "plans",       label: "Plans",            icon: Star },
@@ -1271,6 +1273,7 @@ export default function OwnerAccessDashboard() {
         {/* Tab content */}
         <div>
           {tab === "users"      && <UsersManagementTab users={users} profiles={profiles} onRefresh={loadAll} />}
+          {tab === "google-users" && <GoogleUsersTab users={users} profiles={profiles} onRefresh={loadAll} />}
           {tab === "subs"       && <SubscriptionsTab subscriptions={subscriptions} users={users} />}
           {tab === "payments"   && <PaymentsTab subscriptions={subscriptions} users={users} onManage={setManagingSub} />}
           {tab === "plans"      && <PlansTab plans={plans} onRefresh={loadAll} />}
