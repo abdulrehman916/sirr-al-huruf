@@ -9,7 +9,7 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages } from "@/lib/pageRegistry";
 import CreateCodePageItem from "./CreateCodePageItem";
-import { DURATION_OPTIONS, computeCodeLevelExpiry } from "@/lib/codeDuration";
+import { DURATION_OPTIONS, computeCodeLevelExpiry, buildPageGrant } from "@/lib/codeDuration";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -126,6 +126,13 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
         page_paths: selectedPages,
         page_names: names,
         page_durations,
+        // ── TRUE PER-PAGE EXPIRY: seed each page with its own independent grant
+        // { granted_at, expires_at } from creation time. Each page's timer is
+        // fully independent and never reset by adding/editing other pages. ──
+        page_grants: selectedPages.reduce((grants, path) => {
+          grants[path] = buildPageGrant(path, pageDurations[path], pageSubFeatures[path] || [], featureDurations, Date.now());
+          return grants;
+        }, {}),
         sub_features,
         feature_durations: featureDurations,
         duration: "CUSTOM",

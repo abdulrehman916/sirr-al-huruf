@@ -41,6 +41,11 @@
       "description": "Per-page duration settings. Keys are page paths, values are objects with {value, label, days, duration_ms, duration_type, duration_count, custom_date}",
       "additionalProperties": true
     },
+    "page_grants": {
+      "type": "object",
+      "description": "TRUE PER-PAGE EXPIRY source of truth. Map of page_path -> { granted_at, expires_at, duration_label }. Each page's timer is fully independent: granted_at = when the page was added to the code, expires_at = granted_at + duration (null = lifetime). Add/edit/remove/renew touch ONLY the affected page; other pages are never modified. expires_at is feature-aware (mirrors redeemCodeGuest.buildPermissions).",
+      "additionalProperties": true
+    },
     "feature_durations": {
       "type": "object",
       "description": "Per-feature plan settings. Keys are 'page_path:feature_id', values are {plan_name, duration_days, is_lifetime}.",
@@ -67,7 +72,7 @@
     },
     "expiry_date": {
       "type": "string",
-      "description": "ISO 8601 expiry timestamp. null = Lifetime (never expires)."
+      "description": "ISO 8601 expiry timestamp. null = Lifetime (never expires). Coarse code-level guard only; per-page expiry is authoritative via page_grants."
     },
     "max_uses": {
       "type": "integer",

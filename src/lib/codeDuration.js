@@ -200,6 +200,60 @@ export function fmtDate(d) {
  * expiry synchronized with the actual per-page expiries and removes the previous
  * null-even-when-finite inconsistency.
  */
+/**
+ * Compute a single page's feature-aware expiry timestamp.
+ * Mirrors redeemCodeGuest.buildPermissions exactly so the client, the
+ * validateCodeStatus backend, and the admin EditCodeModal all derive the
+ * same per-page expiry. Returns an ISO timestamp or null (Lifetime).
+ *
+ * @param {string} path - page_path
+ * @param {object} pageDur - page_durations[path] entry
+ * @param {string[]} subFeats - sub_features for this page
+ * @param {object} featureDurations - full feature_durations map
+ * @param {number} baseTimeMs - grant base time (ms)
+ */
+export function computePageExpiry(path, pageDur, subFeats, featureDurations, baseTimeMs = Date.now()) {
+  const base = baseTimeMs;
+  let pageExpiryMs = null;
+  let pageIsLifetime = false;
+  if (pageDur) {
+    if (pageDur.value === 'LIFETIME') pageIsLifetime = true;
+    else if (pageDur.value === 'CUSTOM' && pageDur.custom_date) pageExpiryMs = new Date(pageDur.custom_date).getTime();
+    else if (pageDur.duration_ms) pageExpiryMs = base + pageDur.duration_ms;
+    else if (pageDur.days) pageExpiryMs = base + pageDur.days * 86400000;
+  }
+  let latestFeatureMs = null;
+  let hasLifetimeFeature = false;
+  let hasFeatureDurations = false;
+  (subFeats || []).forEach((featId) => {
+    const fd = featureDurations ? featureDurations[`${path}:${featId}`] : null;
+    if (fd) {
+      hasFeatureDurations = true;
+      const featBase = fd.added_at ? new Date(fd.added_at).getTime() : base;
+      if (fd.is_lifetime) hasLifetimeFeature = true;
+      else if (fd.duration_ms) { const e = featBase + fd.duration_ms; if (latestFeatureMs === null || e > latestFeatureMs) latestFeatureMs = e; }
+      else if (fd.duration_days) { const e = featBase + fd.duration_days * 86400000; if (latestFeatureMs === null || e > latestFeatureMs) latestFeatureMs = e; }
+    }
+  });
+  if (hasFeatureDurations) {
+    if (hasLifetimeFeature) return null;
+    return latestFeatureMs !== null ? new Date(latestFeatureMs).toISOString() : null;
+  }
+  return pageIsLifetime ? null : (pageExpiryMs !== null ? new Date(pageExpiryMs).toISOString() : null);
+}
+
+/**
+ * Build a per-page grant record { granted_at, expires_at, duration_label }.
+ * Used by CreateCodeForm / EditCodeModal to write AccessCode.page_grants[path].
+ */
+export function buildPageGrant(path, pageDur, subFeats, featureDurations, grantedAtMs = Date.now()) {
+  return {
+    granted_at: new Date(grantedAtMs).toISOString(),
+    expires_at: computePageExpiry(path, pageDur, subFeats, featureDurations, grantedAtMs),
+    duration_label: pageDur?.label || '',
+  };
+}
+
 export function computeCodeLevelExpiry(pageDurations, fromTime = new Date()) {
   if (!pageDurations) return null;
   let latest = null;

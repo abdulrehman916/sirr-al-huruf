@@ -99,8 +99,24 @@ Deno.serve(async (req) => {
     // ── P2.4: Update ONLY the code-level expiry. page_durations and
     // feature_durations are intentionally left untouched so the owner's
     // per-page setup is preserved across renewals. ──
+    // ── TRUE PER-PAGE EXPIRY: a Renew Code action re-grants EVERY page from now
+    // with the new duration (each page independently). Per-page renew (single
+    // page) is done via the EditCodeModal duration change, which touches only
+    // that page. The code-level expiry_date is kept as a coarse guard only. ──
+    const pagePaths = code.page_paths || [];
+    const origGrants: Record<string, any> = code.page_grants || {};
+    const renewedGrants: Record<string, any> = { ...origGrants };
+    pagePaths.forEach((p: string) => {
+      renewedGrants[p] = {
+        granted_at: now,
+        expires_at: newExpiry, // null for Lifetime, custom ISO for CUSTOM
+        duration_label: label,
+      };
+    });
+
     await base44.asServiceRole.entities.AccessCode.update(code_id, {
       expiry_date: newExpiry,
+      page_grants: renewedGrants,
       is_disabled: false, // Re-enable on renew
       renewal_history: [...(code.renewal_history || []), renewalEntry],
       audit_log: [...(code.audit_log || []), auditEntry],

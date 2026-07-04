@@ -122,9 +122,9 @@ export async function validateAndCleanPermissions() {
     }
 
     data.codes.forEach(codeInfo => {
-      if (codeInfo.status === 'disabled' || codeInfo.status === 'expired') {
-        // Remove permissions for disabled (admin-revoked) AND expired codes so
-        // revoked/expired access is always cleaned, not merely denied.
+      if (codeInfo.status === 'disabled') {
+        // Whole code admin-revoked → remove ALL its pages. (Per-page removal is
+        // handled by the coveredPaths cleanup above when an admin removes a page.)
         codeInfo.page_paths.forEach(path => {
           const idx = perms.findIndex(p => p.page_path === path);
           if (idx >= 0) {
@@ -133,30 +133,35 @@ export async function validateAndCleanPermissions() {
           }
         });
       } else {
-        // Active code: sync per-page expiry with the authoritative backend
-        // code-level expiry (set at redemption/renewal). Reconstructs a
-        // permission if it was previously removed (e.g. renewed after expiry).
+        // Active code → sync EACH page to its OWN per-page grant. Pages are
+        // fully independent: an expired page is left in place (checkLocalPermission
+        // denies it, and a later per-page renewal restores it via this sync), never
+        // removed. A page missing from localStorage (e.g. redeemed on another
+        // device) is reconstructed from its own grant.
+        const grants = codeInfo.page_grants || {};
         codeInfo.page_paths.forEach((path, i) => {
-          const existing = perms.find(p => p.page_path === path);
-          const backendExpiry = codeInfo.expiry_date;
+          const grant = grants[path] || {};
+          const backendExpiry = Object.prototype.hasOwnProperty.call(grant, 'expires_at')
+            ? (grant.expires_at ?? null)
+            : codeInfo.expiry_date;
+          const backendGrantedAt = grant.granted_at || null;
 
+          const existing = perms.find(p => p.page_path === path);
           if (existing) {
-            if (backendExpiry !== existing.expiry_date) {
-              existing.expiry_date = backendExpiry;
-              changed = true;
-            }
+            if (backendExpiry !== existing.expiry_date) { existing.expiry_date = backendExpiry; changed = true; }
+            if (backendGrantedAt && existing.granted_at !== backendGrantedAt) { existing.granted_at = backendGrantedAt; changed = true; }
           } else {
             const pageName = (codeInfo.page_names || [])[i] || path;
             const subFeats = (codeInfo.sub_features || {})[path] || [];
             const featureExpiries = {};
             subFeats.forEach(featId => {
-              featureExpiries[featId] = { expiry_date: backendExpiry, plan_name: 'Renewed' };
+              featureExpiries[featId] = { expiry_date: backendExpiry, plan_name: 'Restored' };
             });
             perms.push({
               page_path: path,
               page_name: pageName,
               expiry_date: backendExpiry,
-              granted_at: new Date().toISOString(),
+              granted_at: backendGrantedAt || new Date().toISOString(),
               sub_features: subFeats.length > 0 ? subFeats : undefined,
               feature_expiries: Object.keys(featureExpiries).length > 0 ? featureExpiries : undefined,
             });

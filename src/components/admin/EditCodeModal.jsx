@@ -10,7 +10,7 @@ import { X, Plus, Loader2, Check, KeyRound } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { getContentPages } from "@/lib/pageRegistry";
-import { DURATION_OPTIONS } from "@/lib/codeDuration";
+import { DURATION_OPTIONS, buildPageGrant, computePageExpiry } from "@/lib/codeDuration";
 import CreateCodePageItem from "./CreateCodePageItem";
 
 const G = {
@@ -140,6 +140,18 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
         feature_durations: newFeatureDurations,
         sub_features: newPageSubFeatures,
       };
+      // ── TRUE PER-PAGE EXPIRY: a feature change only affects this page's
+      // feature-aware expiry. Preserve the page's granted_at and recompute its
+      // expires_at from the new feature set; other pages are untouched. ──
+      try {
+        const pd = (code.page_durations || {})[path];
+        const subFeats = newPageSubFeatures[path] || [];
+        const origGrants = code.page_grants || {};
+        const existingGrant = origGrants[path];
+        const grantedAt = existingGrant?.granted_at || pd?.added_at || code.used_at || nowISO;
+        const expiresAt = computePageExpiry(path, pd, subFeats, newFeatureDurations, new Date(grantedAt).getTime());
+        updateData.page_grants = { ...origGrants, [path]: { granted_at: grantedAt, expires_at: expiresAt, duration_label: pd?.label || '' } };
+      } catch { /* best-effort — never block feature save */ }
       if (isFeatureNew) {
         const me = await base44.auth.me();
         const dl = stampedPlan.is_lifetime ? 'Lifetime' : stampedPlan.duration_days ? `${stampedPlan.duration_days} days` : 'N/A';
@@ -221,10 +233,43 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
         auditEntries.push({ action: "REMOVED_FEATURE", timestamp: nowISO, admin_id: me?.id || "", details: `Feature removed: ${k}` });
       });
 
+      // ── TRUE PER-PAGE EXPIRY: build page_grants so each page keeps its OWN
+      // independent { granted_at, expires_at }. Only pages that are added,
+      // removed, or whose duration/sub-features actually change are touched —
+      // existing unchanged pages retain their original timer forever. ──
+      const origPageGrants = code.page_grants || {};
+      const newPageGrants = { ...origPageGrants };
+
+      const durEqual = (a, b) => {
+        if (!a && !b) return true;
+        if (!a || !b) return false;
+        return a.value === b.value && a.days === b.days && a.duration_ms === b.duration_ms &&
+          (a.custom_date || null) === (b.custom_date || null);
+      };
+      const subFeatsEqual = (a, b) =>
+        (a || []).slice().sort().join(",") === (b || []).slice().sort().join(",");
+
+      removedPages.forEach(p => { delete newPageGrants[p]; });
+
+      selectedPages.forEach(path => {
+        const newDur = stampedPageDurations[path];
+        const origDur = origPageDurations[path];
+        const newSub = pageSubFeatures[path] || [];
+        const origSub = (code.sub_features || {})[path] || [];
+        const isNew = !origPagePaths.includes(path);
+        const durChanged = !durEqual(newDur, origDur);
+        const subChanged = !subFeatsEqual(newSub, origSub);
+        if (isNew || durChanged || subChanged) {
+          // New page or duration/feature change → (re)grant this page only from now.
+          newPageGrants[path] = buildPageGrant(path, newDur, newSub, stampedFeatureDurations, Date.now());
+        }
+      });
+
       await base44.entities.AccessCode.update(code.id, {
         page_paths: selectedPages,
         page_names: names,
         page_durations: stampedPageDurations,
+        page_grants: newPageGrants,
         sub_features,
         feature_durations: stampedFeatureDurations,
         audit_log: [...(code.audit_log || []), ...auditEntries],

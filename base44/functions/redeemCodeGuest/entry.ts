@@ -157,28 +157,49 @@ Deno.serve(async (req) => {
     const pageDurations = accessCode.page_durations || {};
     const featureDurations = accessCode.feature_durations || {};
     const subFeaturesMap = accessCode.sub_features || {};
+    // ── TRUE PER-PAGE EXPIRY: page_grants is the source of truth. Each page has
+    // its own independent { granted_at, expires_at }. buildPermissions prefers
+    // the stored grant so redemption never resets an existing page's timer. ──
+    const pageGrants: Record<string, any> = accessCode.page_grants || {};
+
+    // Compute a single page's feature-aware expiry (mirrors client computePageExpiry).
+    const computePageExpiry = (path: string, pageDur: any, subFeats: string[], featDurs: any, baseTimeMs: number): string | null => {
+      let pageExpiryMs: number | null = null;
+      let pageIsLifetime = false;
+      if (pageDur) {
+        if (pageDur.value === "LIFETIME") pageIsLifetime = true;
+        else if (pageDur.value === "CUSTOM" && pageDur.custom_date) pageExpiryMs = new Date(pageDur.custom_date).getTime();
+        else if (pageDur.duration_ms) pageExpiryMs = baseTimeMs + pageDur.duration_ms;
+        else if (pageDur.days) pageExpiryMs = baseTimeMs + pageDur.days * 86400000;
+      }
+      let latestFeatureMs: number | null = null;
+      let hasLifetimeFeature = false;
+      let hasFeatureDurations = false;
+      (subFeats || []).forEach((featId: string) => {
+        const fd = featDurs[`${path}:${featId}`];
+        if (fd) {
+          hasFeatureDurations = true;
+          const featBase = fd.added_at ? new Date(fd.added_at).getTime() : baseTimeMs;
+          if (fd.is_lifetime) hasLifetimeFeature = true;
+          else if (fd.duration_ms) { const e = featBase + fd.duration_ms; if (latestFeatureMs === null || e > latestFeatureMs) latestFeatureMs = e; }
+          else if (fd.duration_days) { const e = featBase + fd.duration_days * 86400000; if (latestFeatureMs === null || e > latestFeatureMs) latestFeatureMs = e; }
+        }
+      });
+      if (hasFeatureDurations) {
+        if (hasLifetimeFeature) return null;
+        return latestFeatureMs !== null ? new Date(latestFeatureMs).toISOString() : null;
+      }
+      return pageIsLifetime ? null : (pageExpiryMs !== null ? new Date(pageExpiryMs).toISOString() : null);
+    };
 
     const buildPermissions = (baseTime: Date, grantedAt: string, isRedownload: boolean) => {
       return pagePaths.map((path: string, i: number) => {
         const pageDur = pageDurations[path];
         const pageSubFeats = subFeaturesMap[path] || [];
 
-        // Per-page base time: on re-download, use added_at if present (pages added after initial redemption)
+        // Per-page base time for the page-level fallback: on re-download, use
+        // added_at if present (pages added after initial redemption).
         const pageBaseTime = (isRedownload && pageDur?.added_at) ? new Date(pageDur.added_at) : baseTime;
-
-        // Page-level expiry from page_durations
-        let pageExpiry: string | null = null;
-        if (pageDur) {
-          if (pageDur.value === "LIFETIME") {
-            pageExpiry = null;
-          } else if (pageDur.value === "CUSTOM" && pageDur.custom_date) {
-            pageExpiry = new Date(pageDur.custom_date).toISOString();
-          } else if (pageDur.duration_ms) {
-            pageExpiry = new Date(pageBaseTime.getTime() + pageDur.duration_ms).toISOString();
-          } else if (pageDur.days) {
-            pageExpiry = new Date(pageBaseTime.getTime() + pageDur.days * 86400000).toISOString();
-          }
-        }
 
         // Per-feature expiries from feature_durations
         const featureExpiries: Record<string, { expiry_date: string | null; plan_name: string }> = {};
@@ -189,7 +210,6 @@ Deno.serve(async (req) => {
           const featKey = `${path}:${featId}`;
           const featDur = featureDurations[featKey];
           if (featDur) {
-            // Per-feature base time: on re-download, use added_at if present (features added after initial redemption)
             const featBaseTime = (isRedownload && featDur.added_at) ? new Date(featDur.added_at) : baseTime;
             if (featDur.is_lifetime) {
               featureExpiries[featId] = { expiry_date: null, plan_name: featDur.plan_name || "Lifetime" };
@@ -216,7 +236,14 @@ Deno.serve(async (req) => {
         if (hasFeatureDurations) {
           finalPageExpiry = hasLifetimeFeature ? null : latestFeatureExpiry;
         } else {
-          finalPageExpiry = pageExpiry;
+          finalPageExpiry = pageExpiryFromDur(pageDur, pageBaseTime);
+        }
+
+        // ── TRUE PER-PAGE EXPIRY: prefer the stored per-page grant. ──
+        const grant = pageGrants[path];
+        if (grant) {
+          finalPageExpiry = grant.expires_at ?? null;
+          grantedAt = grant.granted_at || grantedAt;
         }
 
         return {
@@ -229,6 +256,16 @@ Deno.serve(async (req) => {
         };
       });
     };
+
+    // Page-level expiry from page_durations only (helper for buildPermissions).
+    function pageExpiryFromDur(pageDur: any, base: Date): string | null {
+      if (!pageDur) return null;
+      if (pageDur.value === "LIFETIME") return null;
+      if (pageDur.value === "CUSTOM" && pageDur.custom_date) return new Date(pageDur.custom_date).toISOString();
+      if (pageDur.duration_ms) return new Date(base.getTime() + pageDur.duration_ms).toISOString();
+      if (pageDur.days) return new Date(base.getTime() + pageDur.days * 86400000).toISOString();
+      return null;
+    }
 
     // Check if this session already used this code (re-download)
     if (accessCode.used_by_user_id === session_id) {
@@ -276,6 +313,23 @@ Deno.serve(async (req) => {
       ? null
       : finiteExps.reduce((m: string | null, e: string) => (!m || new Date(e) > new Date(m as string)) ? e : m, null as string | null);
 
+    // ── TRUE PER-PAGE EXPIRY: persist per-page grants for legacy codes that have
+    // none yet (created before page_grants, or admin never set them). Each page
+    // gets its OWN independent { granted_at, expires_at }. Existing grants are
+    // NEVER overwritten here — redemption never resets a page's timer. ──
+    let newPageGrants: Record<string, any> | null = null;
+    if (Object.keys(pageGrants).length === 0) {
+      newPageGrants = {};
+      pagePaths.forEach((path: string, i: number) => {
+        const perm = permissions[i];
+        newPageGrants![path] = {
+          granted_at: perm.granted_at || nowISO,
+          expires_at: perm.expiry_date ?? null,
+          duration_label: (pageDurations[path] || {}).label || "",
+        };
+      });
+    }
+
     // Mark code as used + bind to device
     await base44.asServiceRole.entities.AccessCode.update(accessCode.id, {
       use_count: useCount + 1,
@@ -284,6 +338,7 @@ Deno.serve(async (req) => {
       used_at: nowISO,
       device_id: session_id,
       expiry_date: codeLevelExpiry,
+      ...(newPageGrants ? { page_grants: newPageGrants } : {}),
       audit_log: [...(accessCode.audit_log || []), { action: "REDEEMED", timestamp: nowISO, admin_id: "system", details: `Redeemed by device: ${session_id.slice(0, 16)}` }],
     });
 
