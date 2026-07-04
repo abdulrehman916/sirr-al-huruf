@@ -8,6 +8,7 @@ import PageLayout from "../components/PageLayout";
 import PullToRefresh from "../components/PullToRefresh";
 import useMouseParallax from "../hooks/useMouseParallax";
 import { useAuth } from "@/lib/AuthContext";
+import { isAdminRole } from "@/lib/rbac";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -66,9 +67,11 @@ export default function Home() {
         </span>
       </motion.button>
 
-      {/* Owner / Admin login entry — visible only to guests (not authenticated).
-          Once the Owner logs in, the Owner tab appears in the top navigation. */}
-      {role === "guest" && (
+      {/* Owner / Admin login entry — visible to anyone who is NOT an
+          authenticated Owner/Admin (guests and customers). Once the Owner
+          logs in, role becomes 'owner' and this button hides; the Owner
+          tab then appears in the top navigation instead. */}
+      {!isAdminRole(role) && (
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
