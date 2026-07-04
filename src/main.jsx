@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
+// [DIAG] Start capturing [DIAG] logs before the app mounts (debugging only).
+import '@/lib/diagLog';
 
 // Register / update service worker — forces immediate activation so old cached
 // login screens are purged and the latest build is always served.

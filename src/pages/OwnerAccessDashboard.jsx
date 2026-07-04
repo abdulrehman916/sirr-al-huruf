@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
@@ -23,6 +23,7 @@ import GoogleUsersTab from "@/components/admin/GoogleUsersTab";
 import SecurityAuditTab from "@/components/admin/SecurityAuditTab";
 import { Link } from "react-router-dom";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
+import DiagnosticsPanel from "@/components/DiagnosticsPanel";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -1166,6 +1167,15 @@ export default function OwnerAccessDashboard() {
   const [plans, setPlans] = useState([]);
   const [accessRequests, setAccessRequests] = useState([]);
   const [managingSub, setManagingSub] = useState(null);
+  const [showDiag, setShowDiag] = useState(false);
+  const diagTimer = useRef(null);
+  // [DIAG] Long-press the dashboard title (700ms) to open the diagnostics panel.
+  const handleDiagPressStart = () => {
+    diagTimer.current = setTimeout(() => { setShowDiag(true); }, 700);
+  };
+  const handleDiagPressEnd = () => {
+    if (diagTimer.current) { clearTimeout(diagTimer.current); diagTimer.current = null; }
+  };
 
   useEffect(() => { init(); }, []);
 
@@ -1230,7 +1240,14 @@ export default function OwnerAccessDashboard() {
 
   return (
     <PageLayout>
-      <PageTitle arabic="لوحة تحكم الوصول" latin="Owner Access Dashboard" subtitle="Manage Users · Pages · Subscriptions" icon="👑" />
+      <div
+        onPointerDown={handleDiagPressStart}
+        onPointerUp={handleDiagPressEnd}
+        onPointerLeave={handleDiagPressEnd}
+        onPointerCancel={handleDiagPressEnd}
+      >
+        <PageTitle arabic="لوحة تحكم الوصول" latin="Owner Access Dashboard" subtitle="Manage Users · Pages · Subscriptions" icon="👑" />
+      </div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5 pb-10">
 
@@ -1319,6 +1336,8 @@ export default function OwnerAccessDashboard() {
           />
         )}
       </AnimatePresence>
+
+      {showDiag && <DiagnosticsPanel onClose={() => setShowDiag(false)} />}
 
     </PageLayout>
   );
