@@ -95,8 +95,32 @@ export function matchAdminRoute(path) {
   return null;
 }
 
+// ── Owner-only development lock ─────────────────────────────────
+// All development surfaces are HARD-LOCKED to the Owner. No Admin
+// permission flag can ever grant access. Development is performed only
+// through the Base44 builder using the Owner account.
+// Locked surfaces: source code, pages, components, layouts, navigation,
+// routes, DB schema, functions, workflows, settings, deployments,
+// builder, and developer tools. This list is defensive — none of these
+// routes exist in the runtime app (there is no in-app code/page/builder
+// editor); any future path under these prefixes is denied to non-owners.
+export const DEVELOPER_LOCKED_PREFIXES = [
+  "/dev", "/builder", "/admin/developer", "/admin/code", "/admin/source",
+  "/admin/schema", "/admin/db", "/admin/functions", "/admin/workflows",
+  "/admin/deploy", "/admin/deployment", "/admin/build", "/admin/settings/dev",
+];
+
+export function isDeveloperLockedPath(path) {
+  return DEVELOPER_LOCKED_PREFIXES.some(
+    (p) => path === p || path.startsWith(p + "/")
+  );
+}
+
 // Can the given role access an admin route?
 export function canAccessAdminRoute(role, path, adminProfile) {
+  // Hard developer lock — owner-only, no permission override possible.
+  if (isDeveloperLockedPath(path)) return role === ROLES.OWNER;
+
   const rule = matchAdminRoute(path);
   if (!rule) {
     // Unlisted /admin route — default owner-only (strict).

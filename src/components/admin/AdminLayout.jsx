@@ -41,7 +41,7 @@ const SIDEBAR_SECTIONS = [
     label: "Content",
     items: [
       { path: "/admin/pdf-content-editor", label: "PDF Editor", icon: FileText },
-      { path: "/admin/holy-names-translator", label: "Holy Names", icon: Scroll },
+      { path: "/admin/holy-names-translator", label: "Holy Names", icon: ScrollText },
       { path: "/admin/feature-pricing", label: "Feature Pricing", icon: Tags },
     ]
   },
