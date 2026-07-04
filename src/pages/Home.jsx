@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/AuthContext";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { role } = useAuth();
   const mouse = useMouseParallax(1);
 
   const handleRefresh = () => new Promise(res => setTimeout(res, 800));
@@ -68,7 +68,7 @@ export default function Home() {
 
       {/* Owner / Admin login entry — visible only to guests (not authenticated).
           Once the Owner logs in, the admin nav button appears in the top bar. */}
-      {!isAuthenticated && (
+      {role === "guest" && (
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

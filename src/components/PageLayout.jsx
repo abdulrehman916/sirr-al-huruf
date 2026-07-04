@@ -121,7 +121,7 @@ export default function PageLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { startNav } = useNavigation();
-  const { user, role, adminProfile } = useAuth();
+  const { user, role, adminProfile, isAuthenticated } = useAuth();
   const [showAccount, setShowAccount] = useState(false);
 
   const isChildPage = CHILD_PAGES.some(p => location.pathname.startsWith(p));
@@ -267,8 +267,8 @@ export default function PageLayout({ children }) {
             paddingRight: "10px",
           }}
         >
-          {/* Admin button — owner / admin / shop_admin */}
-          {isAdminRole(role) && (
+          {/* Admin button — requires authenticated owner/admin (never for guests) */}
+          {isAuthenticated && isAdminRole(role) && (
             <Link
               to={getAdminHomePath(role)}
               onClick={startNav}
