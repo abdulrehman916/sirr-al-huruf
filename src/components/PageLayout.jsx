@@ -286,7 +286,7 @@ export default function PageLayout({ children }) {
               }}
             >
               <User className="w-3.5 h-3.5" />
-              <span className="font-inter text-xs font-bold tracking-wide">Admin</span>
+              <span className="font-inter text-xs font-bold tracking-wide">{role === "owner" ? "Owner" : "Admin"}</span>
             </Link>
           )}
 

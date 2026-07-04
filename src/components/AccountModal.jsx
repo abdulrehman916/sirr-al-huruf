@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function AccountModal({ user, onClose }) {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
@@ -65,11 +67,11 @@ export default function AccountModal({ user, onClose }) {
               <div className="flex items-center justify-between py-2 border-b border-white/10">
                 <span className="font-inter text-xs text-white/60">Role</span>
                 <span className={`font-inter text-xs font-semibold px-2 py-1 rounded-full ${
-                  profile.role === 'admin' 
-                    ? 'text-amber-400 bg-amber-400/10' 
+                  role === 'owner' || profile.role === 'admin'
+                    ? 'text-amber-400 bg-amber-400/10'
                     : 'text-blue-400 bg-blue-400/10'
                 }`}>
-                  {profile.role?.toUpperCase()}
+                  {role === 'owner' ? 'OWNER' : profile.role?.toUpperCase()}
                 </span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-white/10">
@@ -99,9 +101,9 @@ export default function AccountModal({ user, onClose }) {
                   background: "linear-gradient(135deg, rgba(212,175,55,0.30), rgba(212,175,55,0.15))",
                   border: "1px solid rgba(212,175,55,0.40)",
                   color: "#E8C84A",
-                }}>
-                Admin Dashboard
-              </button>
+                  }}>
+                  {role === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
+                  </button>
             )}
             
             <button
