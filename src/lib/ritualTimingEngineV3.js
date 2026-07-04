@@ -52,22 +52,25 @@ const CATEGORY_TO_RITUAL = {
 
 // Ritual keyword table (en + ml + ar) → ritualKey
 const RITUAL_KEYWORDS = [
-  { key: "love",        en: ["love", "attraction", "romance", "marriage", "union"],          ml: ["പ്രണയം", "വിവാഹം", "ആകർഷണം"], ar: ["محبة", "حب", "جلب", "زواج"] },
-  { key: "separation",  en: ["separation", "divorce", "banish", "breakup"],                  ml: ["വേർപിരിവ്", "വിവാഹമോചനം"],        ar: ["فرقة", "طرد", "فراق", "طلاق"] },
-  { key: "protection",  en: ["protection", "safety", "evil eye", "ward", "shield"],          ml: ["സംരക്ഷണം", "ദൃഷ്ടി"],               ar: ["حماية", "عين", "أمان", "تحصين"] },
-  { key: "wealth",      en: ["wealth", "money", "livelihood", "prosperity", "provision"],    ml: ["സമ്പത്ത്", "ധനം", "ഉപജീവനം"],       ar: ["رزق", "مال", "غنى"] },
-  { key: "knowledge",   en: ["knowledge", "study", "learning", "wisdom", "education"],      ml: ["അറിവ്", "പഠനം", "വിജ്ഞാനം"],         ar: ["علم", "حكمة", "دراسة"] },
-  { key: "healing",     en: ["healing", "health", "recovery", "cure", "medicine"],          ml: ["ചികിത്സ", "ആരോഗ്യം", "സുഖം"],        ar: ["شفاء", "صحة", "علاج"] },
-  { key: "enemy",      en: ["enemy", "harm", "destruction", "attack", "fire"],              ml: ["ശത്രു", "നാശം", "ഉപദ്രവം"],          ar: ["عداوة", "ضرر", "هلاك", "حريق"] },
-  { key: "travel",      en: ["travel", "journey", "voyage"],                                 ml: ["യാത്ര"],                              ar: ["سفر", "رحلة"] },
-  { key: "spiritual",   en: ["spiritual", "meditation", "divine", "worship", "dhikr"],       ml: ["ആത്മീയ", "ധ്യാനം", "ആരാധന"],         ar: ["روحاني", "تأمل", "عبادة", "ذكر"] },
-  { key: "jinn",        en: ["jinn", "spirit", "conjuration", "summon"],                     ml: ["ജിൻ"],                                ar: ["جن", "روحاني"] },
-  { key: "planetary",   en: ["planetary", "planet work", "planetary ritual"],                ml: ["ഗ്രഹ"],                                ar: ["كوكب", "گراه"] },
+  { key: "love",        en: ["love", "romance", "marriage", "union"],                       ml: ["പ്രണയം", "വിവാഹം"],                    ar: ["محبة", "حب", "زواج"] },
+  { key: "attraction",  en: ["attraction", "draw", "pull toward", "compel"],                ml: ["ആകർഷണം"],                               ar: ["جلب", "تهييج"] },
+  { key: "animal_attraction", en: ["animal", "beast", "wild animal", "hunt", "cattle"],     ml: ["മൃഗം", "വന്യമൃഗം", "വേട്ട"],           ar: ["حيوان", "وحش", "صيد", "بهيمة"] },
+  { key: "separation",  en: ["separation", "divorce", "banish", "breakup"],                  ml: ["വേർപിരിവ്", "വിവാഹമോചനം"],            ar: ["فرقة", "طرد", "فراق", "طلاق"] },
+  { key: "protection",  en: ["protection", "safety", "evil eye", "ward", "shield"],          ml: ["സംരക്ഷണം", "ദൃഷ്ടി"],                   ar: ["حماية", "عين", "أمان", "تحصين"] },
+  { key: "wealth",      en: ["wealth", "money", "livelihood", "prosperity", "provision"],    ml: ["സമ്പത്ത്", "ധനം", "ഉപജീവനം"],          ar: ["رزق", "مال", "غنى"] },
+  { key: "knowledge",   en: ["knowledge", "study", "learning", "wisdom", "education"],      ml: ["അറിവ്", "പഠനം", "വിജ്ഞാനം"],           ar: ["علم", "حكمة", "دراسة"] },
+  { key: "healing",     en: ["healing", "health", "recovery", "cure", "medicine"],          ml: ["ചികിത്സ", "ആരോഗ്യം", "സുഖം"],          ar: ["شفاء", "صحة", "علاج"] },
+  { key: "enemy",       en: ["enemy", "harm", "destruction", "attack", "fire"],              ml: ["ശത്രു", "നാശം", "ഉപദ്രവം"],            ar: ["عداوة", "ضرر", "هلاك", "حريق"] },
+  { key: "travel",      en: ["travel", "journey", "voyage"],                                 ml: ["യാത്ര"],                                  ar: ["سفر", "رحلة"] },
+  { key: "spiritual",   en: ["spiritual", "meditation", "divine", "worship", "dhikr"],       ml: ["ആത്മീയ", "ധ്യാനം", "ആരാധന"],           ar: ["روحاني", "تأمل", "عبادة", "ذكر"] },
+  { key: "jinn",        en: ["jinn", "spirit", "conjuration", "summon"],                     ml: ["ജിൻ"],                                   ar: ["جن", "روحاني"] },
+  { key: "planetary",   en: ["planetary", "planet work", "planetary ritual"],                ml: ["ഗ്രഹ"],                                   ar: ["كوكب", "گراه"] },
 ];
 
 // Map ritualKey → ACTION_RULES key (JS fallback)
 const RITUAL_TO_ACTION = {
-  love: "love", marriage: "marriage", separation: "spiritual", protection: "spiritual",
+  love: "love", attraction: "love", animal_attraction: "love",
+  marriage: "marriage", separation: "spiritual", protection: "spiritual",
   wealth: "business", knowledge: "study", healing: "healing", enemy: "spiritual",
   travel: "travel", spiritual: "spiritual", jinn: "spiritual", planetary: "spiritual",
   general: "spiritual",
@@ -75,8 +78,22 @@ const RITUAL_TO_ACTION = {
 
 // ═══════════════════════════════════════════════════════════════
 // STEP 1 — Identify the ritual from all available information
+// Priority:  semantic LLM intent (if provided) → Mizan purpose keys
+//            → multilingual keyword match → ManuscriptRule category
 // ═══════════════════════════════════════════════════════════════
-function identifyRitual({ selections, customPurpose, manuscriptRules }) {
+function identifyRitual({ selections, customPurpose, manuscriptRules, semanticIntent }) {
+  // ── 1a: Semantic LLM understanding (highest priority) ──
+  if (semanticIntent && semanticIntent.ritualKey) {
+    return {
+      ritualKey: semanticIntent.ritualKey,
+      matchedOn: `semantic understanding${semanticIntent.detectedLanguage ? ` (${semanticIntent.detectedLanguage})` : ""}: ${semanticIntent.explanation || semanticIntent.ritualCategory || ""}`,
+      semantic: true,
+      explanation: semanticIntent.explanation || "",
+      ritualCategory: semanticIntent.ritualCategory,
+      confidence: semanticIntent.confidence,
+    };
+  }
+
   const purposes = selections?.purposes || [];
   const custom = (customPurpose || "").trim();
   const haystacks = [custom, ...purposes].filter(Boolean);
@@ -292,7 +309,7 @@ function findEarliestValidTime(req, fromDate) {
 // ═══════════════════════════════════════════════════════════════
 // MAIN — analyzeRitualTiming (same return shape as V2)
 // ═══════════════════════════════════════════════════════════════
-export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
+export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent }) {
   const reasoning = [];
   const warnings = [];
   const bookNotes = [];
@@ -308,10 +325,18 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const dayNight = selections?.dayNight || null;
   const purposes = selections?.purposes || [];
 
-  // ── STEP 1: identify ritual ──
-  const { ritualKey, matchedOn } = identifyRitual({ selections, customPurpose, manuscriptRules });
+  // ── STEP 1: identify ritual (semantic first) ──
+  const identified = identifyRitual({ selections, customPurpose, manuscriptRules, semanticIntent });
+  const ritualKey = identified.ritualKey;
+  const matchedOn = identified.matchedOn;
   reasoning.push(`Ritual identified as "${ritualKey}" via ${matchedOn}.`);
-  rulesApplied.push({ id: "IDENTIFY", desc: `Ritual classified as ${ritualKey} (${matchedOn})`, source: "Engine inference from Mizan + custom purpose" });
+  rulesApplied.push({
+    id: "IDENTIFY",
+    desc: identified.semantic
+      ? `Ritual SEMANTICALLY classified as ${ritualKey}${identified.ritualCategory ? ` (${identified.ritualCategory})` : ""}. ${identified.explanation || ""}`
+      : `Ritual classified as ${ritualKey} (${matchedOn})`,
+    source: identified.semantic ? (semanticIntent.source || "Semantic LLM classification") : "Engine inference from Mizan + custom purpose",
+  });
 
   // ── STEP 2: gather rules ──
   const { req, citations, dbRuleCount, actionKey } = gatherRules(ritualKey, manuscriptRules);
@@ -533,7 +558,11 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   // ── Expert narrative ──
   const expertNarrative = [];
-  expertNarrative.push(`This ritual has been identified as "${ritualTypeLabel}" from your Mizan results and custom purpose (${matchedOn}).`);
+  if (identified.semantic && identified.explanation) {
+    expertNarrative.push(`This ritual has been SEMANTICALLY understood as "${ritualTypeLabel}". ${identified.explanation}`);
+  } else {
+    expertNarrative.push(`This ritual has been identified as "${ritualTypeLabel}" from your Mizan results and custom purpose (${matchedOn}).`);
+  }
   if (dbRuleCount > 0) expertNarrative.push(`${dbRuleCount} manuscript rule(s) were found in the database for this ritual, supplemented by the JS knowledge base.`);
   else expertNarrative.push(`No matching rules were found in the ManuscriptRule database; recommendations fall back to the existing JS knowledge base (${actionKey}).`);
   if (req.days) expertNarrative.push(`The manuscripts prescribe day(s): ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
@@ -588,9 +617,9 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 // CONFIGURATION ADVISOR — compares current Mizan vs manuscript ideal.
 // Same return shape as V2.
 // ═══════════════════════════════════════════════════════════════
-export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
-  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules });
-  const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules });
+export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent }) {
+  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent });
+  const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules, semanticIntent });
   const { req, citations } = gatherRules(ritualKey, manuscriptRules);
 
   const dominant = result?.dominant || (selections?.elements?.[0] || null);
@@ -605,12 +634,15 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   let allOptimal = true;
 
   const purposeLabel = ritualKey.charAt(0).toUpperCase() + ritualKey.slice(1) + " Work";
+  const identifiedAdv = identifyRitual({ selections, customPurpose, manuscriptRules, semanticIntent });
   recommendations.push({
     field: "Ritual Purpose", icon: "target",
     current: purposeLabel,
     recommended: purposeLabel,
     isOptimal: true,
-    reason: `Ritual identified as ${ritualKey} from Mizan selections and custom purpose. This is the basis for all manuscript rule lookups.`,
+    reason: identifiedAdv.semantic && identifiedAdv.explanation
+      ? `Ritual semantically understood as ${ritualKey}: ${identifiedAdv.explanation} This is the basis for all manuscript rule lookups.`
+      : `Ritual identified as ${ritualKey} from Mizan selections and custom purpose (${identifiedAdv.matchedOn}). This is the basis for all manuscript rule lookups.`,
   });
 
   const khayrSharrSelected = selections?.khayrSharr8 || null;

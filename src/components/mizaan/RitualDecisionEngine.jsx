@@ -3,7 +3,7 @@
 // Attached below all four Mizan methods. NEVER modifies Mizan logic.
 // Renders the 10-section expert spiritual decision report.
 // ═══════════════════════════════════════════════════════════════
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock, Calendar,
@@ -14,6 +14,7 @@ import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
 import { useRitualLang, localizeAnalysis, localizeAdvice, tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
+import { classifyRitualIntent } from "../../lib/classifyRitualIntent";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -41,18 +42,33 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
   const [expanded, setExpanded] = useState(true);
   const [lang, setLang] = useRitualLang();
   const { manuscriptRules } = useManuscriptRules();
+  const [semanticIntent, setSemanticIntent] = useState(null);
+  const [classifying, setClassifying] = useState(false);
+
+  // ── Semantic ritual understanding (LLM) — debounced on customPurpose/result/selections ──
+  useEffect(() => {
+    if (!customPurpose || !result) { setSemanticIntent(null); return; }
+    let alive = true;
+    setClassifying(true);
+    const t = setTimeout(() => {
+      classifyRitualIntent({ customPurpose, selections, result })
+        .then((si) => { if (alive) { setSemanticIntent(si); setClassifying(false); } })
+        .catch(() => { if (alive) { setSemanticIntent(null); setClassifying(false); } });
+    }, 400);
+    return () => { alive = false; clearTimeout(t); };
+  }, [customPurpose, result, selections]);
 
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    return analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules });
-  }, [result, selections, customPurpose, activeMethod, manuscriptRules]);
+    return analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent });
+  }, [result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
   const rawAdvice = useMemo(() => {
     if (!result) return null;
-    return analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules });
-  }, [result, selections, customPurpose, activeMethod, manuscriptRules]);
+    return analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent });
+  }, [result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent]);
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 
@@ -156,7 +172,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                     </span>
                   </div>
                   <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)" }}>
-                    {analysis.expertNarrative[0]}
+                    {classifying && !semanticIntent ? "Understanding the ritual intention…" : analysis.expertNarrative[0]}
                   </p>
                   {analysis.expertNarrative.slice(1).map((line, i) => (
                     <p key={i} className="font-inter text-sm leading-relaxed mt-2" style={{ color: "rgba(255,255,255,0.65)" }}>
