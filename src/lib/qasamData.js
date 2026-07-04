@@ -29,6 +29,77 @@ export const PDF_SOURCE_LABEL = 'كتاب الشروط والأقسام — صف
 export const PDF_URL = 'https://media.base44.com/files/public/69f3dea51ce92ee2fde20be6/7237cb58d____________-9-50.pdf';
 
 // ═══════════════════════════════════════════════════════════════
+//  VERIFICATION LOG — 2026-07-04
+//
+//  Cross-checked every Holy Name and angel name in this file against
+//  the app's verified Holy Names database (HolyOneName + HolyOnePDFName).
+//
+//  VERIFIED (exact match found in DB, spelling confirmed):
+//    Post-Qasam Du'a divine names found in HolyOnePDFName (verified status):
+//      - الودود   (PDF-HN-047, Al-Wadud)
+//      - القيوم   (PDF-HN-063, Al-Qayyum)
+//      - الجليل   (PDF-HN-042, Al-Jaleel)
+//      - المميت   (PDF-HN-061, Al-Mumit)
+//      - القادر   (PDF-HN-067, Al-Qaadir)
+//      - الحي     (PDF-HN-062, Al-Hayy)
+//    All six match the PDF transcription exactly. No harakat added —
+//    the DB stores them without harakat, matching the PDF.
+//
+//  VERIFICATION REQUIRED (not found in Holy Names DB):
+//    The following are occult-manuscript servant/angel names specific
+//    to the Sirr al-Huruf tradition. They are NOT part of the Asma
+//    ul-Husna and therefore do not appear in the verified Holy Names
+//    database. Per strict verification rule 7, the PDF text is
+//    preserved verbatim with NO added harakat and marked below.
+//
+//    Angel names (khuddam al-ayyam):
+//      - روقيائيل    (Sunday)   — PDF spelling preserved
+//      - جيرائيل     (Monday)   — PDF p.30 spelling; common form جبرائيل
+//      - سمسميائيل   (Tuesday, Da'wa p.28) / سمسيائيل (Qasam p.30) — both verbatim
+//      - ميكائيل     (Wednesday) — PDF spelling preserved
+//      - ضفيائيل     (Thursday, Da'wa p.28) / صرفيائيل (Qasam p.30) — both verbatim
+//      - عنيائيل     (Friday)   — PDF spelling preserved
+//      - عزرائيل     (Saturday)  — PDF spelling preserved
+//
+//    Seven earthly kings (مُلوك الأرض):
+//      - مذهب, مرة, برقان, شمهورش, زوبعة, ميمون, أبا محرز الأحمر
+//      All preserved exactly as the PDF writes them.
+//
+//  Divine names in post-Qasam Du'a NOT found in verified DB
+//  (left unchanged from PDF, no harakat added, marked VERIFICATION REQUIRED):
+//    الرؤوف, اللطيف, الرازق, الوافي, الكافي, العليم, الواسع, الكريم,
+//    الوهاب, الباسط, الحنان, المنان, الجواد, المحسن, المنتقم, الرحمن,
+//    الرحيم, العظيم, الغفور, المؤمن, المهيمن, المجيب, القريب, السميع,
+//    السريع, القدوس, القاهر, العزيز, الفتاح, الرزاق, العلي
+//    These are well-known Asma ul-Husna but were not present in the
+//    app's HolyOnePDFName verified set at verification time. The PDF
+//    transcription stands; no harakat inferred.
+// ═══════════════════════════════════════════════════════════════
+export const VERIFICATION_STATUS = {
+  verified_date: '2026-07-04',
+  verified_against: 'HolyOneName (12) + HolyOnePDFName (143)',
+  verified_names: [
+    { arabic: 'الودود', source: 'PDF-HN-047', status: 'verified' },
+    { arabic: 'القيوم', source: 'PDF-HN-063', status: 'verified' },
+    { arabic: 'الجليل', source: 'PDF-HN-042', status: 'verified' },
+    { arabic: 'المميت', source: 'PDF-HN-061', status: 'verified' },
+    { arabic: 'القادر', source: 'PDF-HN-067', status: 'verified' },
+    { arabic: 'الحي', source: 'PDF-HN-062', status: 'verified' },
+  ],
+  verification_required: [
+    'روقيائيل', 'جيرائيل', 'سمسميائيل', 'سمسيائيل', 'ميكائيل',
+    'ضفيائيل', 'صرفيائيل', 'عنيائيل', 'عزرائيل',
+    'مذهب', 'مرة', 'برقان', 'شمهورش', 'زوبعة', 'ميمون', 'أبا محرز الأحمر',
+    'الرؤوف', 'اللطيف', 'الرازق', 'الوافي', 'الكافي', 'العليم',
+    'الواسع', 'الكريم', 'الوهاب', 'الباسط', 'الحنان', 'المنان',
+    'الجواد', 'المحسن', 'المنتقم', 'الرحمن', 'الرحيم', 'العظيم',
+    'الغفور', 'المؤمن', 'المهيمن', 'المجيب', 'القريب', 'السميع',
+    'السريع', 'القدوس', 'القاهر', 'العزيز', 'الفتاح', 'الرزاق', 'العلي',
+  ],
+  note: 'No harakat was added, inferred, or guessed. The PDF text stands verbatim. Names not found in the verified DB are marked VERIFICATION REQUIRED and must not be modified without a reliable Arabic source.',
+};
+
+// ═══════════════════════════════════════════════════════════════
 //  GENERAL CONDITIONS (الشروط) — Pages 8–26 of PDF
 //  32 numbered conditions. Showing the ones directly relevant to
 //  Qasam practice (conditions 1, 2, 6, 7, 8, 9, 10, 12, 13, 14,

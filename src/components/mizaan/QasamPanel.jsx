@@ -24,6 +24,7 @@ import {
   RITUAL_ORDER_NOTE,
   PDF_SOURCE_LABEL,
   PDF_URL,
+  VERIFICATION_STATUS,
 } from "@/lib/qasamData";
 
 const G = {
@@ -92,14 +93,28 @@ export default function QasamPanel({ selections }) {
               <div className="p-4 space-y-4">
 
                 {/* Source verification */}
-                <div className="flex items-start gap-2 rounded-xl p-3" style={{
+                <div className="rounded-xl p-3 space-y-2" style={{
                   background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.18)",
                 }}>
-                  <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "rgba(74,222,128,0.65)" }} />
-                  <div>
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "rgba(74,222,128,0.65)" }} />
                     <p className="font-inter text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
                       <span className="font-bold" style={{ color: "rgba(74,222,128,0.80)" }}>Source:</span>{" "}
-                      {PDF_SOURCE_LABEL}. Every Arabic word, harakat, and holy name transcribed verbatim from the uploaded PDF (pages 27–31). Nothing generated or guessed. Indexed in ManuscriptLibrary (2026-07-04).
+                      {PDF_SOURCE_LABEL}. Every Arabic word transcribed verbatim from the uploaded PDF (pp.27–31). Indexed in ManuscriptLibrary (2026-07-04).
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "rgba(74,222,128,0.65)" }} />
+                    <p className="font-inter text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
+                      <span className="font-bold" style={{ color: "rgba(74,222,128,0.80)" }}>Verified ({VERIFICATION_STATUS.verified_names.length}):</span>{" "}
+                      {VERIFICATION_STATUS.verified_names.map(n => n.arabic).join('، ')} — exact match in Holy Names DB.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "rgba(251,191,36,0.70)" }} />
+                    <p className="font-inter text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
+                      <span className="font-bold" style={{ color: "rgba(251,191,36,0.80)" }}>Verification Required ({VERIFICATION_STATUS.verification_required.length}):</span>{" "}
+                      Angel names, earthly kings, and divine names not present in the verified DB. Preserved verbatim from PDF — no harakat added, no guessing. {VERIFICATION_STATUS.note}
                     </p>
                   </div>
                 </div>
