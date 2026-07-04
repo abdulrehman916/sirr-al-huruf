@@ -29,20 +29,12 @@ export const AuthProvider = ({ children }) => {
       try { sessionStorage.removeItem('sirr_admin_session'); } catch { /* ignore */ }
     }
 
-    // Builder Preview runs inside an iframe (window.self !== window.top);
-    // the published APK runs as the top-level window. Use this to separate
-    // Preview auth (always elevate on a valid Owner token) from APK runtime
-    // (session-gate: customers always start as guest after the Rules screen).
-    const isBuilderPreview = (() => {
-      try { return window.self !== window.top; } catch { return false; }
-    })();
-
     base44.auth.me().then(u => {
       if (!u) return; // no token — stay guest
-      // Builder Preview: always elevate on a valid token (original Owner-tab
-      // behavior). Published APK: keep the session-gate — only elevate after an
-      // explicit login this session, so customers always start as guest.
-      if (!justLoggedIn && !isBuilderPreview) {
+      // Session-gate: only elevate after an explicit login this session, so
+      // customers always start as guest. Applies identically to Preview and
+      // the published APK — no environment-specific bypass.
+      if (!justLoggedIn) {
         return;
       }
       // ── Owner/Admin email verification ─────────────────────────────
