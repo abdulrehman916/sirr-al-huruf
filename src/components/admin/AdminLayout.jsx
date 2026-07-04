@@ -40,7 +40,6 @@ const SIDEBAR_SECTIONS = [
   {
     label: "Content",
     items: [
-      { path: "/admin/holy-names-translator", label: "Holy Names", icon: ScrollText },
       { path: "/admin/feature-pricing", label: "Feature Pricing", icon: Tags },
     ]
   },
