@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { resolveRole } from '@/lib/rbac';
+import { resolveRole, ROLES } from '@/lib/rbac';
 
 const AuthContext = createContext();
 
@@ -45,30 +45,45 @@ export const AuthProvider = ({ children }) => {
       if (!justLoggedIn && !isBuilderPreview) {
         return;
       }
-      setUser(u);
-      setIsAuthenticated(true);
-      // Interim role — owner is resolved instantly via the email safety net.
-      setRole(resolveRole(u, null));
-      // Load AdminProfile to resolve RBAC role (admins only).
-      if (u.role === 'admin') {
-        setAdminProfileLoading(true);
-        base44.entities.AdminProfile.filter({ email: u.email })
-          .then((profiles) => {
-            const ap = Array.isArray(profiles) && profiles.length > 0
-              ? (profiles.find((p) => p.status === 'ACTIVE') || profiles[0])
-              : null;
-            setAdminProfile(ap);
-            setRole(resolveRole(u, ap));
-            setAdminProfileLoading(false);
-          })
-          .catch(() => {
-            setAdminProfile(null);
-            setRole(resolveRole(u, null));
-            setAdminProfileLoading(false);
-          });
-      } else {
-        setRole(resolveRole(u, null));
+      // ── Owner/Admin email verification ─────────────────────────────
+      // Owner role is granted ONLY if the authenticated email matches
+      // ADMIN_CONFIG.OWNER_EMAIL (resolveRole safety net) OR an AdminProfile
+      // record exists for that email with is_owner === true. Any other email
+      // — including a random Google account or a random Email/Password
+      // account — is NEVER elevated to Owner/Admin and stays a Guest
+      // (reading-code access only). This keeps the guest experience intact.
+      if (u.role !== 'admin') {
+        // Non-admin platform user: only the Owner-email safety net can grant Owner.
+        const r = resolveRole(u, null);
+        if (r === ROLES.OWNER) {
+          setUser(u);
+          setIsAuthenticated(true);
+          setRole(r);
+        }
+        // else: unrecognized email — stay Guest (no Customer elevation).
+        return;
       }
+      // Platform admin — load AdminProfile to resolve admin vs owner vs inactive.
+      setAdminProfileLoading(true);
+      base44.entities.AdminProfile.filter({ email: u.email })
+        .then((profiles) => {
+          const ap = Array.isArray(profiles) && profiles.length > 0
+            ? (profiles.find((p) => p.status === 'ACTIVE') || profiles[0])
+            : null;
+          const r = resolveRole(u, ap);
+          if (r === ROLES.OWNER || r === ROLES.ADMIN) {
+            setAdminProfile(ap);
+            setUser(u);
+            setIsAuthenticated(true);
+            setRole(r);
+          }
+          // else: inactive / no AdminProfile — stay Guest (no elevation).
+          setAdminProfileLoading(false);
+        })
+        .catch(() => {
+          setAdminProfileLoading(false);
+          // stay Guest
+        });
     }).catch(() => {
       // No token / expired — that's fine, proceed as guest
     });
