@@ -1,13 +1,18 @@
 /**
  * QasamPanel — Read-only Recommended Qasam / Recitation panel
- * Source: Sirr al-Huruf PDF (pages 27–31)
+ * Source: Sirr al-Huruf PDF (verbatim Arabic with harakat).
  * Placed below the Timing / RitualDecisionEngine section on the Mizan page.
+ *
+ * Rule-based selection: the displayed Qasam is chosen from the current
+ * Mizan selections (Day, Planetary Hour, Ritual Type, Khayr/Sharr) using
+ * resolveQasam() — never by hard-coded PDF page numbers.
+ *
  * This component ONLY displays content. It never modifies calculations.
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, ChevronDown, Scroll } from "lucide-react";
-import { getQasamForDay, GENERAL_POST_QASAM_DUA } from "@/lib/qasamData";
+import { BookOpen, ChevronDown, Scroll, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { resolveQasam, GENERAL_POST_QASAM_DUA } from "@/lib/qasamData";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -18,12 +23,24 @@ const G = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
+const PLANET_ARABIC = {
+  sems: 'الشمس', kamer: 'القمر', merih: 'المريخ', utarid: 'العطارد',
+  mustari: 'المشتري', zuhre: 'الزهرة', zuhal: 'الزحل',
+};
+
+const RITUAL_ARABIC = {
+  celb: 'جلب', tard: 'طرد', sihhat: 'الصحة', sekam: 'السقم', tarfet: 'طرفة العين',
+};
+
+const KHAYR_SHARR_ARABIC = {
+  khayr: 'الخير', sharr: 'الشر',
+};
+
 export default function QasamPanel({ selections }) {
   const [expanded, setExpanded] = useState(false);
   const [showDua, setShowDua] = useState(false);
 
-  const dayValue = selections?.days ?? selections?.day ?? null;
-  const entry = getQasamForDay(dayValue);
+  const { entry, conditions } = resolveQasam(selections);
 
   return (
     <div className="mt-4">
@@ -86,9 +103,64 @@ export default function QasamPanel({ selections }) {
                 >
                   <BookOpen className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "rgba(74,222,128,0.65)" }} />
                   <p className="font-inter text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-                    Source: Sirr al-Huruf PDF, pp. 27–31. Displayed verbatim — no translation, summarizing, or alteration. Read-only reference panel.
+                    Source: Sirr al-Huruf PDF — Arabic text verbatim with harakat. The Qasam below is selected automatically by rule from your current Mizan selections. Read-only reference panel.
                   </p>
                 </div>
+
+                {/* ── Rule-based selection conditions ── */}
+                {conditions && (
+                  <div
+                    className="rounded-xl p-3 space-y-2"
+                    style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${G.border}` }}
+                  >
+                    <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: G.text }}>
+                      Selection Conditions (Rule-Based)
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <ConditionChip
+                        label="Day"
+                        value={entry ? entry.dayName : (conditions.daySelected ? '—' : 'Not selected')}
+                        ok={!!entry}
+                      />
+                      <ConditionChip
+                        label="Planetary Hour"
+                        value={conditions.hourPlanet ? (PLANET_ARABIC[conditions.hourPlanet] || conditions.hourPlanet) : '—'}
+                        ok={!!conditions.hourPlanet}
+                      />
+                      <ConditionChip
+                        label="Ritual Type"
+                        value={conditions.ritualType ? (RITUAL_ARABIC[conditions.ritualType] || conditions.ritualType) : '—'}
+                        ok={!!conditions.ritualType}
+                      />
+                      <ConditionChip
+                        label="Khayr / Sharr"
+                        value={conditions.khayrSharr ? (KHAYR_SHARR_ARABIC[conditions.khayrSharr] || conditions.khayrSharr) : '—'}
+                        ok={!!conditions.khayrSharr}
+                      />
+                    </div>
+                    {/* Day/Hour planet match validation per PDF rule */}
+                    {entry && conditions.hourPlanet && (
+                      <div
+                        className="flex items-start gap-2 rounded-lg p-2.5"
+                        style={{
+                          background: conditions.hourMatchesDay ? "rgba(74,222,128,0.06)" : "rgba(251,191,36,0.06)",
+                          border: `1px solid ${conditions.hourMatchesDay ? "rgba(74,222,128,0.25)" : "rgba(251,191,36,0.30)"}`,
+                        }}
+                      >
+                        {conditions.hourMatchesDay
+                          ? <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "rgba(74,222,128,0.80)" }} />
+                          : <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "rgba(251,191,36,0.85)" }} />}
+                        <p className="font-inter text-[11px] leading-relaxed" style={{
+                          color: conditions.hourMatchesDay ? "rgba(186,230,253,0.85)" : "rgba(253,224,138,0.90)",
+                        }}>
+                          {conditions.hourMatchesDay
+                            ? `✓ PDF Rule satisfied: the selected Planetary Hour (${PLANET_ARABIC[conditions.hourPlanet]}) matches the planet of the selected Day. The king is called in his own day and hour.`
+                            : `⚠ PDF Rule: each king must be called during his planet's hour. The selected Hour's planet (${PLANET_ARABIC[conditions.hourPlanet]}) does not match this Day's planet (${PLANET_ARABIC[conditions.dayPlanet]}). Consider selecting the matching planetary hour.`}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {!entry ? (
                   <div
@@ -96,16 +168,16 @@ export default function QasamPanel({ selections }) {
                     style={{ background: G.bg, border: `1px solid ${G.border}` }}
                   >
                     <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-                      No specific Qasam or Recitation is provided in the source book for this selection.
+                      No Qasam matches the current selection.
                     </p>
                     <p className="font-inter text-xs mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
-                      Select a Day in the Mizan inputs above to display the corresponding Qasam.
+                      Select a Day in the Mizan inputs above to display the corresponding Qasam for that day's king.
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
 
-                    {/* Day badge */}
+                    {/* Day badge + king */}
                     <div className="flex items-center gap-3 flex-wrap">
                       <span
                         className="font-amiri text-base font-bold px-4 py-1.5 rounded-full"
@@ -118,13 +190,13 @@ export default function QasamPanel({ selections }) {
                       </span>
                     </div>
 
-                    {/* Rule note from PDF p.26 */}
+                    {/* Rule note: each king only on his own day */}
                     <div
                       className="rounded-xl p-3"
                       style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.20)" }}
                     >
                       <p className="font-inter text-[11px]" style={{ color: "rgba(251,191,36,0.80)" }}>
-                        📖 PDF Rule (p. 26): Each king must be called only on his own designated day and during his planet's hour.
+                        📖 PDF Rule: Each king is called only on his own designated day, during his planet's hour. This Qasam is the one assigned to the selected Day.
                       </p>
                     </div>
 
@@ -134,7 +206,6 @@ export default function QasamPanel({ selections }) {
                       labelMl="ദഅ്‌വ — ദൈർഘ്യമേറിയ ആഹ്വാന രൂപം"
                       arabic={entry.da3wa.arabic}
                       malayalam={entry.da3wa.malayalam}
-                      sourcePage="pp. 27–29"
                     />
 
                     {/* ── Form 2: Qasam (Omani scholar refined form) ── */}
@@ -143,11 +214,10 @@ export default function QasamPanel({ selections }) {
                       labelMl="ഖസം — ഒമാനി പണ്ഡിത-ശൈലി ശുദ്ധ രൂപം"
                       arabic={entry.qasam.arabic}
                       malayalam={entry.qasam.malayalam}
-                      sourcePage="pp. 29–31"
                       highlight
                     />
 
-                    {/* PDF note from p.29: The refined form unites the verse, king, servants, letters and names */}
+                    {/* PDF note: the refined form unites verse, king, servants, letters, names */}
                     <div
                       className="rounded-xl p-3"
                       style={{ background: G.bg, border: `1px solid ${G.border}` }}
@@ -156,7 +226,7 @@ export default function QasamPanel({ selections }) {
                         وَذَكَرَ هَذِهِ الأَقسَامَ أَحَدُ المَشَايِخِ العُمَانِيِّينَ رَحِمَهُ اللهُ تَعَالَى بِصِيغَةٍ أُخرَى وَهِيَ أَدَقُّ وَأَفضَلُ لِأَنَّهَا تَجمَعُ (الآيَةَ وَالمَلِكَ وَالخُدَّامَ المُوَكَّلِينَ وَالأَحرُفَ وَالأَسمَاءَ)
                       </p>
                       <p className="font-inter text-[10px] mt-2" style={{ color: "rgba(255,255,255,0.35)" }}>
-                        Source: PDF p. 29 — The Omani scholars' refined form is more precise and preferred as it unites the verse, the king, the assigned servants, letters, and names.
+                        The Omani scholars' refined form is more precise and preferred as it unites the verse, the king, the assigned servants, letters, and names.
                       </p>
                     </div>
 
@@ -168,7 +238,7 @@ export default function QasamPanel({ selections }) {
                         style={{ background: G.bg, border: `1px solid ${G.border}` }}
                       >
                         <span className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
-                          الدعاء العام بعد القسم — General Post-Qasam Du'a (p. 31)
+                          الدعاء العام بعد القسم — General Post-Qasam Du'a
                         </span>
                         <ChevronDown
                           className="w-4 h-4 transition-transform flex-shrink-0"
@@ -189,20 +259,19 @@ export default function QasamPanel({ selections }) {
                               labelMl=""
                               arabic={GENERAL_POST_QASAM_DUA.arabic}
                               malayalam={GENERAL_POST_QASAM_DUA.malayalam}
-                              sourcePage="p. 31"
                             />
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
 
-                    {/* Incense instruction from PDF p.31 */}
+                    {/* Incense instruction */}
                     <div
                       className="rounded-xl p-3"
                       style={{ background: "rgba(212,175,55,0.04)", border: `1px solid ${G.border}` }}
                     >
                       <p className="font-inter text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
-                        📌 <span className="font-bold" style={{ color: G.text }}>PDF Instruction (p. 31):</span> After the required Qasam for the requested day, use the incense of that day while reading or writing the Azima. Read the Azima upon all works after the Qasam.
+                        📌 <span className="font-bold" style={{ color: G.text }}>PDF Instruction:</span> After the required Qasam for the selected day, use the incense of that day while reading or writing the Azima. Read the Azima upon all works after the Qasam.
                       </p>
                     </div>
 
@@ -218,7 +287,21 @@ export default function QasamPanel({ selections }) {
   );
 }
 
-function Section({ label, labelMl, arabic, malayalam, sourcePage, highlight }) {
+function ConditionChip({ label, value, ok }) {
+  return (
+    <div
+      className="rounded-lg px-2.5 py-2"
+      style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${ok ? G.border : "rgba(255,255,255,0.08)"}` }}
+    >
+      <p className="font-inter text-[8px] uppercase tracking-wider" style={{ color: G.dim }}>{label}</p>
+      <p className="font-amiri text-sm font-bold truncate" style={{ color: ok ? G.text : "rgba(255,255,255,0.30)" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Section({ label, labelMl, arabic, malayalam, highlight }) {
   return (
     <div
       className="rounded-xl overflow-hidden"
@@ -232,26 +315,16 @@ function Section({ label, labelMl, arabic, malayalam, sourcePage, highlight }) {
     >
       {label && (
         <div
-          className="px-4 py-2.5 flex items-center justify-between"
+          className="px-4 py-2.5"
           style={{ borderBottom: `1px solid ${G.border}` }}
         >
-          <div>
-            <p className="font-inter text-[11px] font-bold uppercase tracking-wider" style={{ color: G.text }}>
-              {label}
+          <p className="font-inter text-[11px] font-bold uppercase tracking-wider" style={{ color: G.text }}>
+            {label}
+          </p>
+          {labelMl && (
+            <p className="font-inter text-[10px] mt-0.5" style={{ color: G.dim }}>
+              {labelMl}
             </p>
-            {labelMl && (
-              <p className="font-inter text-[10px] mt-0.5" style={{ color: G.dim }}>
-                {labelMl}
-              </p>
-            )}
-          </div>
-          {sourcePage && (
-            <span
-              className="font-inter text-[9px] px-2 py-0.5 rounded"
-              style={{ background: G.bgHi, color: G.dim, border: `1px solid ${G.border}` }}
-            >
-              {sourcePage}
-            </span>
           )}
         </div>
       )}
@@ -263,7 +336,7 @@ function Section({ label, labelMl, arabic, malayalam, sourcePage, highlight }) {
           dir="rtl"
         >
           <p
-            className="font-amiri leading-loose text-right"
+            className="font-amiri text-right"
             style={{
               color: "#F5E6B0",
               fontSize: "clamp(1.05rem, 2.5vw, 1.3rem)",
