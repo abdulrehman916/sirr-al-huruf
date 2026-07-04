@@ -9,6 +9,9 @@ const ROUTE_MANIFEST = [
   { path: '/', component: 'Home', chunk: 'Home', flags: ['public'] },
   { path: '/onboarding', component: 'Onboarding', chunk: 'Onboarding', flags: ['noauth'] },
   { path: '/otp-login', component: 'OTPLogin', chunk: 'OTPLogin', flags: ['noauth'] },
+  { path: '/login', component: 'Login', chunk: 'Login', flags: ['noauth'] },
+  { path: '/forgot-password', component: 'ForgotPassword', chunk: 'ForgotPassword', flags: ['noauth'] },
+  { path: '/reset-password', component: 'ResetPassword', chunk: 'ResetPassword', flags: ['noauth'] },
 
   // Free Content Pages
   { path: '/abjad', component: 'AbjadKabirPage', chunk: 'AbjadKabirPage', flags: ['public'] },

@@ -23,6 +23,9 @@ const PAGE_IMPORTS = {
   Home:                     () => import('./pages/Home'),
   Onboarding:               () => import('./pages/Onboarding'),
   OTPLogin:                 () => import('./pages/OTPLogin'),
+  Login:                    () => import('./pages/Login'),
+  ForgotPassword:           () => import('./pages/ForgotPassword'),
+  ResetPassword:             () => import('./pages/ResetPassword'),
   // Content
   AbjadKabirPage:           () => import('./pages/AbjadKabirPage'),
   AnasirPage:               () => import('./pages/AnasirPage'),
