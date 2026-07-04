@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store } from "lucide-react";
+import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, Scroll, Tags } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { filterAdminSections } from "@/lib/rbac";
 
@@ -35,6 +35,14 @@ const SIDEBAR_SECTIONS = [
       { path: "/admin/access-requests", label: "Access Requests", icon: Inbox },
       { path: "/admin/redeem-approvals", label: "Redeem Approvals", icon: ClipboardCheck },
       { path: "/admin/page-permissions", label: "Page Access", icon: Globe },
+    ]
+  },
+  {
+    label: "Content",
+    items: [
+      { path: "/admin/pdf-content-editor", label: "PDF Editor", icon: FileText },
+      { path: "/admin/holy-names-translator", label: "Holy Names", icon: Scroll },
+      { path: "/admin/feature-pricing", label: "Feature Pricing", icon: Tags },
     ]
   },
   {

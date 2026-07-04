@@ -24,12 +24,14 @@ export default function AdminFormModal({ mode, profile, onClose, onSaved }) {
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [email, setEmail] = useState(profile?.email || "");
   const [whatsapp, setWhatsapp] = useState(profile?.whatsapp_number || "");
-  const [permissions, setPermissions] = useState({
-    support_messages: profile?.perm_support_messages || false,
-    access_requests: profile?.perm_access_requests || false,
-    customer_management: profile?.perm_customer_management || false,
-    redeem_code_approval: profile?.perm_redeem_code_approval || false,
-    shop_management: profile?.perm_shop_management || false,
+  // Initialize every permission toggle from the canonical ADMIN_PERMISSIONS list.
+  // Owner is never editable here (managed elsewhere), so this only applies to Admins.
+  const [permissions, setPermissions] = useState(() => {
+    const init = {};
+    ADMIN_PERMISSIONS.forEach((p) => {
+      init[p.shortKey] = profile?.[p.key] === true;
+    });
+    return init;
   });
   const [saving, setSaving] = useState(false);
   const [invitationCode, setInvitationCode] = useState(null);

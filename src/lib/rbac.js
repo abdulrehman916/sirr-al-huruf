@@ -53,29 +53,29 @@ export function resolveRole(user, adminProfile) {
 // roles: which admin roles may access (owner always allowed).
 // perm: optional AdminProfile flag required for the 'admin' role.
 export const ROUTE_ACCESS = {
-  // Owner-only
-  "/admin/admins":               { roles: [ROLES.OWNER] },
-  "/admin/page-permissions":     { roles: [ROLES.OWNER] },
-  "/admin/access-logs":          { roles: [ROLES.OWNER] },
-  "/admin/analytics":            { roles: [ROLES.OWNER] },
-  "/admin/settings":             { roles: [ROLES.OWNER] },
-  "/admin/system-settings":      { roles: [ROLES.OWNER] },
-  "/admin/pdf-content-editor":    { roles: [ROLES.OWNER] },
-  "/admin/holy-names-translator": { roles: [ROLES.OWNER] },
-  "/admin/feature-pricing":       { roles: [ROLES.OWNER] },
-  "/admin/access-codes":          { roles: [ROLES.OWNER] },
-  "/admin/access-codes/:codeId":  { roles: [ROLES.OWNER] },
-  // Shop Management — additional permission layer on an Admin (perm_shop_management).
-  // Owner always; Admin only when granted the shop-management permission flag.
+  // ── Owner + Admin (each gated by an individual permission flag) ──
+  // Owner always passes (canAccessAdminRoute short-circuits for owner).
+  // Admin only when the matching perm_* flag is true on their AdminProfile.
+  "/admin/admins":               { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_admin_management" },
+  "/admin/page-permissions":      { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_page_permissions" },
+  "/admin/access-logs":          { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_analytics" },
+  "/admin/analytics":            { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_analytics" },
+  "/admin/settings":             { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_system_settings" },
+  "/admin/system-settings":      { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_system_settings" },
+  "/admin/pdf-content-editor":    { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_pdf_editor" },
+  "/admin/holy-names-translator": { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_holy_names_translator" },
+  "/admin/feature-pricing":       { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_feature_pricing" },
+  "/admin/access-codes":          { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_access_codes" },
+  "/admin/access-codes/:codeId":  { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_access_codes" },
   "/admin/shop":                  { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_shop_management" },
-  "/admin/products":              { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_shop_management" },
-  // General admin (owner + admin; admin gated by perm flag)
-  "/admin/access-dashboard":      { roles: [ROLES.OWNER, ROLES.ADMIN] },
+  "/admin/products":              { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_product_management" },
   "/admin/approved-users":        { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_customer_management" },
   "/admin/access-requests":       { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_access_requests" },
   "/admin/redeem-approvals":      { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_redeem_code_approval" },
   "/admin/support":               { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_support_messages" },
   "/admin/user/:userId":          { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_customer_management" },
+  // Dashboard — accessible to every admin (no perm flag required)
+  "/admin/access-dashboard":      { roles: [ROLES.OWNER, ROLES.ADMIN] },
 };
 
 // Match a concrete path against ROUTE_ACCESS patterns (supports :param).

@@ -49,17 +49,62 @@
     "perm_customer_management": {
       "type": "boolean",
       "default": false,
-      "description": "Permission: View and manage assigned customers"
+      "description": "Permission: View and manage assigned customers (User Management)"
     },
     "perm_redeem_code_approval": {
       "type": "boolean",
       "default": false,
-      "description": "Permission: Verify payment and approve pending redeem codes"
+      "description": "Permission: Verify payment and approve pending redeem codes (Redeem Approvals)"
     },
     "perm_shop_management": {
       "type": "boolean",
       "default": false,
-      "description": "Permission: Manage assigned shop (products, orders, shop reports). Grants the shop_admin role (shop-only access)."
+      "description": "Permission: Manage shop dashboard, orders, and reports (Shop Management)"
+    },
+    "perm_access_codes": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: Create, edit, renew, and reset reading codes (Access Codes)"
+    },
+    "perm_analytics": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: View access logs, analytics, and audit reports (Analytics)"
+    },
+    "perm_pdf_editor": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: Edit PDF content / manuscript ingestion source (PDF Editor)"
+    },
+    "perm_holy_names_translator": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: Translate and manage Divine Names content (Holy Names Translator)"
+    },
+    "perm_feature_pricing": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: Configure page and feature subscription pricing (Feature Pricing)"
+    },
+    "perm_product_management": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: Create, edit, and manage shop products and inventory (Product Management)"
+    },
+    "perm_system_settings": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: Configure system-wide settings (System Settings)"
+    },
+    "perm_page_permissions": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: Configure page visibility and access control (Page Permissions)"
+    },
+    "perm_admin_management": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permission: Add, edit, disable, and manage admin accounts (Admin Management)"
     },
     "invitation_code": {
       "type": "string",
