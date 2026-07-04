@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { filterAdminSections } from "@/lib/rbac";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -65,6 +67,8 @@ const SIDEBAR_SECTIONS = [
 ];
 
 function SidebarContent({ location, onNavigate }) {
+  const { role, adminProfile } = useAuth();
+  const sections = filterAdminSections(SIDEBAR_SECTIONS, role, adminProfile);
   return (
     <div style={{ padding: "16px 12px", display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Header */}
@@ -77,7 +81,7 @@ function SidebarContent({ location, onNavigate }) {
 
       {/* Sections */}
       <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 18, overflowY: "auto" }}>
-        {SIDEBAR_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <div key={section.label}>
             <p style={{
               fontFamily: "Inter, sans-serif",

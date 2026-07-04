@@ -7,6 +7,8 @@ import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
 import { checkLocalPermission, getSessionId, mergeGrantedPermissions, validateAndCleanPermissions, addRedeemedCode } from "@/lib/sessionId";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { setAdminFlag } from "@/lib/featurePermission";
+import { useAuth } from "@/lib/AuthContext";
+import { ROLES, isAdminRole, canAccessAdminRoute } from "@/lib/rbac";
 import { hasSubFeatures } from "@/lib/featureRegistry";
 import { preloadPageFeatureConfigs } from "@/lib/featureConfigCache";
 
@@ -19,6 +21,7 @@ const G = {
 };
 
 export default function ProtectedPage({ routePath, children, requiresPermission }) {
+  const { role, adminProfile, adminProfileLoading } = useAuth();
   const [accessStatus, setAccessStatus] = useState("checking");
   const [pageName, setPageName] = useState("");
 
@@ -38,18 +41,18 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
-    // 3. Admin-only pages — require admin login
+    // 3. Admin-only pages — RBAC role check
     const config = getPageConfig(routePath);
     if (config?.adminOnly || routePath.startsWith("/admin/")) {
-      try {
-        const user = await base44.auth.me();
-        if (user?.role === "admin") {
-          setAdminFlag(true);
-          setAccessStatus("granted");
-          return;
-        }
-      } catch {}
-      setAccessStatus("admin_only");
+      // Wait for admin profile to resolve before deciding (avoids wrong-screen flash).
+      if (adminProfileLoading) { setAccessStatus("checking"); return; }
+      if (isAdminRole(role) && canAccessAdminRoute(role, routePath, adminProfile)) {
+        setAdminFlag(true);
+        setAccessStatus("granted");
+        return;
+      }
+      // Not an admin at all → admin login prompt; wrong section → forbidden.
+      setAccessStatus(isAdminRole(role) ? "forbidden" : "admin_only");
       return;
     }
 
@@ -83,15 +86,12 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
-    // 5. Authenticated admin bypass (content pages too)
-    try {
-      const user = await base44.auth.me();
-      if (user?.role === "admin") {
-        setAdminFlag(true);
-        setAccessStatus("granted");
-        return;
-      }
-    } catch {}
+    // 5. Authenticated admin bypass (content pages too) — owner + admin only
+    if (role === ROLES.OWNER || role === ROLES.ADMIN) {
+      setAdminFlag(true);
+      setAccessStatus("granted");
+      return;
+    }
 
     // 6. Local permission check (localStorage — no auth needed)
     const localCheck = checkLocalPermission(routePath);
@@ -104,7 +104,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 
     // Background validation — removes permissions for revoked/disabled/expired codes
     validateAndCleanPermissions();
-  }, [routePath, requiresPermission]);
+  }, [routePath, requiresPermission, role, adminProfile, adminProfileLoading]);
 
   useEffect(() => {
     const config = getPageConfig(routePath);
@@ -136,6 +136,27 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
             style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
             Admin Login
           </a>
+          <button onClick={() => window.location.href = "/"}
+            className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
+            style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
+            ← Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessStatus === "forbidden") {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4"
+        style={{ background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 100%)" }}>
+        <div className="w-full max-w-sm space-y-4 text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+            style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+            <Shield className="w-8 h-8" style={{ color: G.text }} />
+          </div>
+          <h2 className="font-inter font-bold text-white text-lg">Access Restricted</h2>
+          <p className="font-inter text-sm text-white/40">Your role does not have access to this section.</p>
           <button onClick={() => window.location.href = "/"}
             className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
             style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>

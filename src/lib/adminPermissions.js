@@ -32,6 +32,13 @@ export const ADMIN_PERMISSIONS = [
     description: "Verify payment and approve pending redeem codes",
     icon: "🔑",
   },
+  {
+    key: "perm_shop_management",
+    shortKey: "shop_management",
+    label: "Shop Management",
+    description: "Manage assigned shop (products, orders, shop reports). Grants the shop_admin role (shop-only access).",
+    icon: "🏪",
+  },
 ];
 
 export const ADMIN_FORBIDDEN = [

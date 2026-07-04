@@ -5,7 +5,8 @@ import { ChevronLeft, User } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
-import { base44 } from "../api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
+import { isAdminRole, isNavTabVisible, getAdminHomePath } from "@/lib/rbac";
 
 
 // ── Permanent brand navigation terms — Arabic + English, never translated ──
@@ -120,12 +121,8 @@ export default function PageLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { startNav } = useNavigation();
+  const { user, role } = useAuth();
   const [showAccount, setShowAccount] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   const isChildPage = CHILD_PAGES.some(p => location.pathname.startsWith(p));
   const pageTitleKey = PAGE_TITLE_KEYS[location.pathname];
@@ -270,10 +267,10 @@ export default function PageLayout({ children }) {
             paddingRight: "10px",
           }}
         >
-          {/* Admin button */}
-          {user?.role === 'admin' && (
+          {/* Admin button — owner / admin / shop_admin */}
+          {isAdminRole(role) && (
             <Link
-              to="/admin/access-dashboard"
+              to={getAdminHomePath(role)}
               onClick={startNav}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
               style={{
@@ -293,7 +290,7 @@ export default function PageLayout({ children }) {
             </Link>
           )}
 
-          {TAB_KEYS.map((tab) => (
+          {TAB_KEYS.filter((tab) => isNavTabVisible(tab.id, role)).map((tab) => (
             <NavTab
               key={tab.id}
               tab={tab}

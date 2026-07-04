@@ -185,6 +185,7 @@ Deno.serve(async (req) => {
           perm_access_requests: permissions?.access_requests || false,
           perm_customer_management: permissions?.customer_management || false,
           perm_redeem_code_approval: permissions?.redeem_code_approval || false,
+          perm_shop_management: permissions?.shop_management || false,
           invitation_code: invitationCode,
           invitation_used: false,
           device_id: null,
@@ -240,6 +241,7 @@ Deno.serve(async (req) => {
           perm_access_requests: permissions?.access_requests || false,
           perm_customer_management: permissions?.customer_management || false,
           perm_redeem_code_approval: permissions?.redeem_code_approval || false,
+          perm_shop_management: permissions?.shop_management || false,
           activity_log: [
             ...(profile.activity_log || []),
             {

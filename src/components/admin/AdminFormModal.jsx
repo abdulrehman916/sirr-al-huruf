@@ -29,6 +29,7 @@ export default function AdminFormModal({ mode, profile, onClose, onSaved }) {
     access_requests: profile?.perm_access_requests || false,
     customer_management: profile?.perm_customer_management || false,
     redeem_code_approval: profile?.perm_redeem_code_approval || false,
+    shop_management: profile?.perm_shop_management || false,
   });
   const [saving, setSaving] = useState(false);
   const [invitationCode, setInvitationCode] = useState(null);
