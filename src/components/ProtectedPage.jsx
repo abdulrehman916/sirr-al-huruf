@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle, Shield } from "lucide-react";
@@ -8,7 +9,7 @@ import { checkLocalPermission, getSessionId, mergeGrantedPermissions, validateAn
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { setAdminFlag } from "@/lib/featurePermission";
 import { useAuth } from "@/lib/AuthContext";
-import { ROLES, isAdminRole, canAccessAdminRoute } from "@/lib/rbac";
+import { ROLES, isAdminRole, canAccessAdminRoute, getAdminHomePath } from "@/lib/rbac";
 import { hasSubFeatures } from "@/lib/featureRegistry";
 import { preloadPageFeatureConfigs } from "@/lib/featureConfigCache";
 
@@ -30,9 +31,26 @@ const GoogleMark = ({ className = "w-4 h-4" }) => (
 );
 
 export default function ProtectedPage({ routePath, children, requiresPermission }) {
-  const { role, adminProfile, adminProfileLoading } = useAuth();
+  const { role, adminProfile, adminProfileLoading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [accessStatus, setAccessStatus] = useState("checking");
   const [pageName, setPageName] = useState("");
+
+  // Post-signin redirect: when a Guest signs in via Google from a locked
+  // page, send Owner → Owner Dashboard, Admin → Admin Dashboard. Guests
+  // stay on the locked page (still need an access code). This does NOT
+  // change access-control — it is a one-shot convenience redirect.
+  useEffect(() => {
+    let flag = null;
+    try { flag = sessionStorage.getItem("sirr_locked_signin_redirect"); } catch { /* ignore */ }
+    if (!flag) return;
+    if (role === ROLES.OWNER || role === ROLES.ADMIN) {
+      try { sessionStorage.removeItem("sirr_locked_signin_redirect"); } catch { /* ignore */ }
+      navigate(getAdminHomePath(role), { replace: true });
+    } else if (isAuthenticated) {
+      try { sessionStorage.removeItem("sirr_locked_signin_redirect"); } catch { /* ignore */ }
+    }
+  }, [role, isAuthenticated, navigate]);
 
   const checkAccess = useCallback(async () => {
     // Reset admin flag at start — will be set to true if admin is detected below
@@ -211,11 +229,15 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try { sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+    // Flag so ProtectedPage redirects Owner/Admin to their dashboard after
+    // the Google redirect returns. Guests stay here (access code still required).
+    try { sessionStorage.setItem("sirr_locked_signin_redirect", routePath); } catch { /* ignore */ }
     try {
       await base44.auth.loginWithProvider("google", routePath);
     } catch {
       setGoogleLoading(false);
       try { sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
+      try { sessionStorage.removeItem("sirr_locked_signin_redirect"); } catch { /* ignore */ }
     }
   };
 

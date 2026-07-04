@@ -86,12 +86,16 @@ export const AuthProvider = ({ children }) => {
                 const now = new Date().toISOString();
                 const existing = await base44.entities.UserAccessProfile.filter({ user_id: u.id }, null, 1);
                 if (existing && existing.length > 0) {
-                  await base44.entities.UserAccessProfile.update(existing[0].id, { last_login: now });
+                  await base44.entities.UserAccessProfile.update(existing[0].id, {
+                    last_login: now,
+                    photo_url: u.photo_url || existing[0].photo_url || '',
+                  });
                 } else {
                   await base44.entities.UserAccessProfile.create({
                     user_id: u.id,
                     email: u.email,
                     full_name: u.full_name || '',
+                    photo_url: u.photo_url || '',
                     role: 'user',
                     registration_date: now,
                     last_login: now,

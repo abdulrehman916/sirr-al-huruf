@@ -18,6 +18,10 @@
       "type": "string",
       "description": "User email address"
     },
+    "photo_url": {
+      "type": "string",
+      "description": "Google profile photo URL (identity only)"
+    },
     "mobile_verified": {
       "type": "boolean",
       "default": false
