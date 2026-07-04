@@ -70,7 +70,8 @@ const ROUTE_MANIFEST = [
   { path: '/admin/feature-pricing', component: 'AdminFeaturePricing', chunk: 'AdminFeaturePricing' },
   { path: '/admin/products', component: 'AdminProducts', chunk: 'AdminProducts' },
   { path: '/admin/shop', component: 'AdminShopDashboard', chunk: 'AdminShopDashboard' },
-  
+  { path: '/admin/audit-log', component: 'AdminAuditLog', chunk: 'AdminAuditLog' },
+
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },
 

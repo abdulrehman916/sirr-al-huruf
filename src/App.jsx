@@ -79,6 +79,7 @@ const PAGE_IMPORTS = {
   ProductDetailPage:        () => import('./pages/ProductDetailPage'),
   AdminProducts:            () => import('./pages/AdminProducts'),
   AdminShopDashboard:       () => import('./pages/AdminShopDashboard'),
+  AdminAuditLog:            () => import('./pages/AdminAuditLog'),
   };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────

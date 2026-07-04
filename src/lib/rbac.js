@@ -76,6 +76,10 @@ export const ROUTE_ACCESS = {
   "/admin/user/:userId":          { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_customer_management" },
   // Dashboard — accessible to every admin (no perm flag required)
   "/admin/access-dashboard":      { roles: [ROLES.OWNER, ROLES.ADMIN] },
+  // Owner Audit Log — append-only trail; owner-only (the complete log must never
+  // be visible to non-owners, so the admin role is intentionally omitted here;
+  // the getOwnerAuditLog backend function also enforces owner-only server-side).
+  "/admin/audit-log":             { roles: [ROLES.OWNER] },
 };
 
 // Match a concrete path against ROUTE_ACCESS patterns (supports :param).

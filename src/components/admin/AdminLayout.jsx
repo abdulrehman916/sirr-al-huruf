@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, Scroll, Tags } from "lucide-react";
+import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { filterAdminSections } from "@/lib/rbac";
 
@@ -63,6 +63,7 @@ const SIDEBAR_SECTIONS = [
     items: [
       { path: "/admin/access-logs", label: "Access Logs", icon: FileText },
       { path: "/admin/analytics", label: "Analytics & Audit", icon: BarChart3 },
+      { path: "/admin/audit-log", label: "Owner Audit Log", icon: ScrollText },
     ]
   },
   {

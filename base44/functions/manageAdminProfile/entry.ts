@@ -166,6 +166,40 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ── Append-only audit log helper (best-effort, never throws) ──
+    // Captures the owner's identity, the affected AdminProfile, IP, device, user-agent.
+    const audit = async (action_type, action_label, profile, details) => {
+      try {
+        const ip =
+          req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+          req.headers.get('x-real-ip') ||
+          '';
+        await base44.asServiceRole.entities.OwnerAuditLog.create({
+          log_id:
+            'OAL-' +
+            Date.now().toString(36).toUpperCase() +
+            '-' +
+            Math.random().toString(36).substring(2, 8).toUpperCase(),
+          action_type,
+          action_label,
+          performed_by_id: user.id,
+          performed_by_email: user.email || '',
+          performed_by_name: user.full_name || user.email || '',
+          performed_by_role: 'owner',
+          object_type: 'AdminProfile',
+          object_id: profile?.admin_profile_id || profile?.email || '',
+          object_label: profile?.email || profile?.full_name || '',
+          details: details ? JSON.stringify(details) : '',
+          device_id: profile?.device_id || '',
+          ip_address: ip,
+          user_agent: req.headers.get('user-agent') || '',
+          timestamp: new Date().toISOString(),
+        });
+      } catch {
+        // Audit logging must never break the primary action.
+      }
+    };
+
     switch (action) {
       case 'CREATE': {
         const { email, full_name, whatsapp_number, permissions } = body;
@@ -280,6 +314,7 @@ Deno.serve(async (req) => {
           ],
         });
 
+        await audit('PERMISSION_CHANGED', 'Permissions updated for ' + (profile.email || ''), updated, { permissions });
         return Response.json({ success: true, profile: updated });
       }
 
@@ -304,6 +339,7 @@ Deno.serve(async (req) => {
           ],
         });
 
+        await audit('ADMIN_DISABLED', 'Admin disabled: ' + (profile.email || ''), updated);
         return Response.json({ success: true, profile: updated });
       }
 
@@ -326,6 +362,7 @@ Deno.serve(async (req) => {
           ],
         });
 
+        await audit('ADMIN_ENABLED', 'Admin enabled: ' + (profile.email || ''), updated);
         return Response.json({ success: true, profile: updated });
       }
 
@@ -337,6 +374,7 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Cannot delete owner' }, { status: 403 });
 
         await base44.asServiceRole.entities.AdminProfile.delete(profile.id);
+        await audit('ADMIN_REMOVED', 'Admin removed: ' + (profile.email || ''), profile);
         return Response.json({ success: true });
       }
 
@@ -361,6 +399,7 @@ Deno.serve(async (req) => {
           ],
         });
 
+        await audit('ADMIN_DEVICE_RESET', 'Device reset for ' + (profile.email || ''), updated);
         return Response.json({ success: true, profile: updated });
       }
 
