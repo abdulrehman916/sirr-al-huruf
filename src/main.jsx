@@ -8,6 +8,10 @@ import './index.css'
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then((registration) => {
+      // Force the browser to check for an updated sw.js on every launch —
+      // critical for APK/WebView builds so stale cached service workers are
+      // replaced with the latest build immediately.
+      registration.update().catch(() => {});
       // If a new SW is waiting, tell it to skip waiting and take over immediately
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' });

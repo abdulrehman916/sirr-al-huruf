@@ -2,7 +2,7 @@
 // Cache version bump — forces old SW and all old caches to be replaced immediately.
 // Change CACHE_VERSION to force a full cache bust on all clients.
 // IMPORTANT: Increment this version number on EVERY deployment to ensure users get the latest version.
-const CACHE_VERSION = 'sirr-v5-20260626';
+const CACHE_VERSION = 'sirr-v6-20260704';
 const STATIC_CACHE = CACHE_VERSION;
 
 // On install: skip waiting immediately so new SW activates without delay
