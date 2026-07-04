@@ -38,6 +38,7 @@ import Method3DivineNamesMatchSection from "../components/mizaan/Method3DivineNa
 import Method4Step1Section from "../components/mizaan/Method4Step1Section";
 import MizaanInputCard from "../components/mizaan/MizaanInputCard";
 import RitualDecisionEngine from "../components/mizaan/RitualDecisionEngine";
+import QasamPanel from "../components/mizaan/QasamPanel";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
 import { usePageState } from "../context/PageStateContext";
@@ -1159,6 +1160,11 @@ export default function Mizaan9Page() {
           customPurpose={customPurpose}
           activeMethod={activeMethod}
         />
+      )}
+
+      {/* ── QASAM / RECITATION PANEL — Read-only, below Timing/Ritual Engine ── */}
+      {result && activeMethod !== 5 && (
+        <QasamPanel selections={selections} />
       )}
 
       {/* Method 5 Placeholder */}
