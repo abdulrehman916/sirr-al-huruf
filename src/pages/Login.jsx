@@ -1,165 +1,48 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { LogIn, Mail, Lock, Loader2, ShieldCheck, KeyRound } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
-import { ADMIN_CONFIG } from "@/lib/adminConfig";
+
+// Inline Google "G" mark — no external dependency.
+const GoogleMark = ({ className = "w-5 h-5 mr-2" }) => (
+  <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
+    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.5 29.6 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.3-.4-3.5z"/>
+    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.5 29.6 4.5 24 4.5 16 4.5 9.1 9.1 6.3 14.7z"/>
+    <path fill="#4CAF50" d="M24 43.5c5.5 0 10.5-2 14.3-5.3l-6.6-5.5C29.6 34.6 26.9 36 24 36c-5.2 0-9.6-3.3-11.2-8l-6.6 5.1C9 38.9 16 43.5 24 43.5z"/>
+    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.6 5.5c-.5.4 6.6-4.8 6.6-14.5 0-1.2-.1-2.3-.4-3.5z"/>
+  </svg>
+);
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [remember, setRemember] = useState(
-    () => localStorage.getItem("sirr_remember_me") !== "false"
-  );
+  const [error, setError] = useState("");
 
-  // Owner-only 2FA state
-  const [twofaStep, setTwofaStep] = useState(false);
-  const [twofaToken, setTwofaToken] = useState("");
-  const [twofaOtp, setTwofaOtp] = useState("");
-  const [twofaError, setTwofaError] = useState("");
-  const [twofaLoading, setTwofaLoading] = useState(false);
-
-  const isOwnerEmail = (em) =>
-    !!em && ADMIN_CONFIG.OWNER_EMAIL &&
-    em.toLowerCase() === String(ADMIN_CONFIG.OWNER_EMAIL).toLowerCase();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleGoogle = async () => {
     setError("");
     setLoading(true);
     try {
-      // Step 1 — verify password (platform issues a session token).
-      await base44.auth.loginViaEmailPassword(email, password);
-
-      const me = await base44.auth.me();
-      if (isOwnerEmail(me?.email)) {
-        // Step 2 (Owner only) — send a 6-digit code, then "park" the session:
-        // clear the in-memory + stored token WITHOUT a page reload so the app
-        // is inaccessible until the code is verified. logout() is avoided here
-        // because it forces a redirect/reload.
-        const res = await base44.functions.invoke("owner2fa", { action: "SEND_OTP" });
-        try { base44.auth.setToken(null); } catch { /* ignore */ }
-        try { localStorage.removeItem("base44_access_token"); } catch { /* ignore */ }
-        try { localStorage.removeItem("token"); } catch { /* ignore */ }
-        setTwofaToken(res.data?.token || "");
-        setTwofaStep(true);
-        setLoading(false);
-      } else {
-        // Admin / Customer — no 2FA required.
-        try { sessionStorage.setItem('sirr_admin_session', 'true'); } catch { /* ignore */ }
-        window.location.href = "/";
-      }
+      // Mark this session as an explicit admin login so the session-gate in
+      // AuthContext allows role elevation after Google redirects back to "/".
+      try { sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+      // Redirects to Google consent, then back to "/". AuthContext resolves
+      // Owner / Admin / Guest from the authenticated email:
+      //   - Owner email == ADMIN_CONFIG.OWNER_EMAIL  → Owner
+      //   - Email exists in AdminProfile (enabled)   → Admin (assigned perms)
+      //   - Any other Google account                  → Guest
+      await base44.auth.loginWithProvider("google", "/");
     } catch (err) {
-      // If a session was created but 2FA send failed, park/clear it to deny
-      // access (without a reload so the error is visible).
-      try { base44.auth.setToken(null); } catch { /* ignore */ }
-      try { localStorage.removeItem("base44_access_token"); } catch { /* ignore */ }
-      try { localStorage.removeItem("token"); } catch { /* ignore */ }
-      setError(err?.response?.data?.error || err?.message || "Invalid email or password");
+      setError(err?.response?.data?.error || err?.message || "Google sign-in failed");
       setLoading(false);
+      try { sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
     }
   };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setTwofaError("");
-    setTwofaLoading(true);
-    try {
-      const res = await base44.functions.invoke("owner2fa", {
-        action: "VERIFY_OTP",
-        otp: twofaOtp.trim(),
-        token: twofaToken,
-      });
-      if (res.data && res.data.ok) {
-        // Step 3 — re-authenticate now that 2FA passed; issues a fresh token.
-        await base44.auth.loginViaEmailPassword(email, password);
-        try { sessionStorage.setItem('sirr_admin_session', 'true'); } catch { /* ignore */ }
-        window.location.href = "/";
-      } else {
-        setTwofaError((res.data && res.data.error) || "Incorrect verification code");
-        setTwofaLoading(false);
-      }
-    } catch (err) {
-      setTwofaError(err?.response?.data?.error || err?.message || "Verification failed");
-      setTwofaLoading(false);
-    }
-  };
-
-  const handleCancel2fa = () => {
-    // Deny access: fully clear the parked session and return to the login form.
-    setTwofaStep(false);
-    setTwofaToken("");
-    setTwofaOtp("");
-    setTwofaError("");
-    try { base44.auth.logout(); } catch { /* ignore */ }
-  };
-
-  // ── Owner 2FA verification screen ──
-  if (twofaStep) {
-    return (
-      <AuthLayout
-        icon={ShieldCheck}
-        title="Two-factor verification"
-        subtitle="A 6-digit code was sent to your Owner email"
-      >
-        {twofaError && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-            {twofaError}
-          </div>
-        )}
-        <form onSubmit={handleVerify} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="otp">Verification code</Label>
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <Input
-                id="otp"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                autoFocus
-                placeholder="123456"
-                value={twofaOtp}
-                onChange={(e) => setTwofaOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="pl-10 h-12 tracking-[0.4em] text-center font-semibold"
-                required
-              />
-            </div>
-          </div>
-          <Button type="submit" className="w-full h-12 font-medium" disabled={twofaLoading}>
-            {twofaLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              "Verify & log in"
-            )}
-          </Button>
-          <button
-            type="button"
-            onClick={handleCancel2fa}
-            className="w-full text-xs text-muted-foreground hover:underline"
-          >
-            Cancel
-          </button>
-        </form>
-      </AuthLayout>
-    );
-  }
-
-  // ── Standard login screen ──
   return (
     <AuthLayout
-      icon={LogIn}
-      title="Welcome back"
-      subtitle="Log in to your account"
+      icon={ShieldCheck}
+      title="Owner / Admin Login"
+      subtitle="Sign in with your authorized Google account"
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -167,69 +50,29 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              autoFocus
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-              Forgot password?
-            </Link>
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="remember"
-            checked={remember}
-            onCheckedChange={(v) => {
-              setRemember(!!v);
-              localStorage.setItem("sirr_remember_me", v ? "true" : "false");
-            }}
-          />
-          <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-            Remember me
-          </Label>
-        </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Logging in...
-            </>
-          ) : (
-            "Log in"
-          )}
-        </Button>
-      </form>
+      <Button
+        type="button"
+        onClick={handleGoogle}
+        className="w-full h-12 font-medium"
+        disabled={loading}
+      >
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Redirecting to Google...
+          </>
+        ) : (
+          <>
+            <GoogleMark />
+            Sign in with Google
+          </>
+        )}
+      </Button>
+
+      <p className="text-xs text-muted-foreground text-center mt-4 leading-relaxed">
+        Only the registered Owner email and approved Admin emails are granted access.
+        All other Google accounts remain guests with public features only.
+      </p>
     </AuthLayout>
   );
 }

@@ -53,14 +53,36 @@ export const AuthProvider = ({ children }) => {
       // account — is NEVER elevated to Owner/Admin and stays a Guest
       // (reading-code access only). This keeps the guest experience intact.
       if (u.role !== 'admin') {
-        // Non-admin platform user: only the Owner-email safety net can grant Owner.
-        const r = resolveRole(u, null);
-        if (r === ROLES.OWNER) {
+        // Google-signed-in users have platform role 'user'. Resolve role from
+        // the authenticated email against AdminProfile:
+        //   - Owner email == ADMIN_CONFIG.OWNER_EMAIL  → Owner (safety net)
+        //   - Email exists in an ACTIVE AdminProfile     → Admin (assigned perms)
+        //   - Any other Google account                  → Guest (no elevation)
+        // This preserves the existing RBAC rules — it only adds Google-account
+        // Admin detection that the email/password path already had.
+        const ownerR = resolveRole(u, null);
+        if (ownerR === ROLES.OWNER) {
           setUser(u);
           setIsAuthenticated(true);
-          setRole(r);
+          setRole(ownerR);
+          return;
         }
-        // else: unrecognized email — stay Guest (no Customer elevation).
+        setAdminProfileLoading(true);
+        base44.entities.AdminProfile.filter({ email: u.email })
+          .then((profiles) => {
+            const ap = Array.isArray(profiles) && profiles.length > 0
+              ? profiles.find((p) => p.status === 'ACTIVE' && p.is_owner === false) || null
+              : null;
+            if (ap) {
+              setAdminProfile(ap);
+              setUser(u);
+              setIsAuthenticated(true);
+              setRole(ROLES.ADMIN);
+            }
+            // else: unknown email — stay Guest (no Customer elevation).
+            setAdminProfileLoading(false);
+          })
+          .catch(() => { setAdminProfileLoading(false); });
         return;
       }
       // Platform admin — load AdminProfile to resolve admin vs owner vs inactive.
