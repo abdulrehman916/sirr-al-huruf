@@ -322,13 +322,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
             style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
             <KeyRound className="w-4 h-4" />
-            Enter Redeem Code
-          </button>
-
-          <button onClick={() => navigate("/premium/request")}
-            className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
-            style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.text }}>
-            View Plans
+            Enter Reading Access Code
           </button>
 
           <button onClick={() => navigate("/")}
