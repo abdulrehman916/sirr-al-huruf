@@ -121,7 +121,7 @@ export default function PageLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { startNav } = useNavigation();
-  const { user, role } = useAuth();
+  const { user, role, adminProfile } = useAuth();
   const [showAccount, setShowAccount] = useState(false);
 
   const isChildPage = CHILD_PAGES.some(p => location.pathname.startsWith(p));
@@ -290,7 +290,7 @@ export default function PageLayout({ children }) {
             </Link>
           )}
 
-          {TAB_KEYS.filter((tab) => isNavTabVisible(tab.id, role)).map((tab) => (
+          {TAB_KEYS.filter((tab) => isNavTabVisible(tab.id, role, adminProfile)).map((tab) => (
             <NavTab
               key={tab.id}
               tab={tab}

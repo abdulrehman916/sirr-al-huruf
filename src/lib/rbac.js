@@ -6,11 +6,15 @@
 // Astro Clock, Ritual Engine, or any existing business logic.
 //
 // Roles (identified via AdminProfile flags):
-//   owner      = AdminProfile.is_owner === true (or OWNER_EMAIL safety net)
-//   admin      = AdminProfile active, is_owner false, NOT shop-only
-//   shop_admin = AdminProfile active, perm_shop_management === true, is_owner false
-//   customer   = no admin profile / role === 'user'
-//   guest      = not authenticated
+//   owner    = AdminProfile.is_owner === true (or OWNER_EMAIL safety net)
+//   admin    = AdminProfile active, is_owner false.
+//             Shop Management is an ADDITIONAL PERMISSION (perm_shop_management)
+//             layered onto an Admin — NOT a separate role/account. An Admin with
+//             that flag keeps role 'admin' and additionally gains Shop routes.
+//   customer = no admin profile / role === 'user'
+//   guest    = not authenticated
+//
+// The SHOP_ADMIN constant is retained for backward compatibility only.
 // ═══════════════════════════════════════════════════════════════
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
 
@@ -23,7 +27,7 @@ export const ROLES = {
 };
 
 export function isAdminRole(role) {
-  return role === ROLES.OWNER || role === ROLES.ADMIN || role === ROLES.SHOP_ADMIN;
+  return role === ROLES.OWNER || role === ROLES.ADMIN;
 }
 
 // Resolve role from platform user + AdminProfile record.
@@ -39,8 +43,9 @@ export function resolveRole(user, adminProfile) {
   if (!adminProfile) return ROLES.CUSTOMER;
   if (adminProfile.is_owner === true) return ROLES.OWNER;
   if (adminProfile.status !== "ACTIVE") return ROLES.CUSTOMER;
-  // Shop-only admin: has the shop management flag and is not the owner.
-  if (adminProfile.perm_shop_management === true) return ROLES.SHOP_ADMIN;
+  // Shop Management is an additional permission on an Admin, not a separate role.
+  // An Admin with perm_shop_management stays 'admin' and additionally gains the
+  // Shop routes (see ROUTE_ACCESS perm gating below).
   return ROLES.ADMIN;
 }
 
@@ -60,9 +65,10 @@ export const ROUTE_ACCESS = {
   "/admin/feature-pricing":       { roles: [ROLES.OWNER] },
   "/admin/access-codes":          { roles: [ROLES.OWNER] },
   "/admin/access-codes/:codeId":  { roles: [ROLES.OWNER] },
-  // Shop admin (owner + shop_admin)
-  "/admin/shop":                  { roles: [ROLES.OWNER, ROLES.SHOP_ADMIN] },
-  "/admin/products":              { roles: [ROLES.OWNER, ROLES.SHOP_ADMIN] },
+  // Shop Management — additional permission layer on an Admin (perm_shop_management).
+  // Owner always; Admin only when granted the shop-management permission flag.
+  "/admin/shop":                  { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_shop_management" },
+  "/admin/products":              { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_shop_management" },
   // General admin (owner + admin; admin gated by perm flag)
   "/admin/access-dashboard":      { roles: [ROLES.OWNER, ROLES.ADMIN] },
   "/admin/approved-users":        { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_customer_management" },
@@ -100,18 +106,21 @@ export function canAccessAdminRoute(role, path, adminProfile) {
   return true;
 }
 
-// Landing admin path per role.
+// Landing admin path per role. (Shop Management is a permission, not a role,
+// so every admin lands on the general dashboard; shop is reachable via nav/sidebar.)
 export function getAdminHomePath(role) {
-  if (role === ROLES.SHOP_ADMIN) return "/admin/shop";
   return "/admin/access-dashboard";
 }
 
 // Top-nav tab visibility (PageLayout TAB_KEYS ids).
 // Content tabs are visible to all roles (gated by reading codes downstream).
-// 'admin-shop' tab is visible only to owner + shop_admin.
-export function isNavTabVisible(tabId, role) {
+// 'admin-shop' tab is visible to the owner, and to an Admin only when that
+// Admin has been granted the shop-management permission (perm_shop_management).
+export function isNavTabVisible(tabId, role, adminProfile) {
   if (tabId !== "admin-shop") return true;
-  return role === ROLES.OWNER || role === ROLES.SHOP_ADMIN;
+  if (role === ROLES.OWNER) return true;
+  if (role === ROLES.ADMIN) return adminProfile ? adminProfile.perm_shop_management === true : false;
+  return false;
 }
 
 // Filter admin sidebar sections for the role.
