@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
         }
         setAdminProfileLoading(true);
         base44.entities.AdminProfile.filter({ email: u.email })
-          .then((profiles) => {
+          .then(async (profiles) => {
             const ap = Array.isArray(profiles) && profiles.length > 0
               ? profiles.find((p) => p.status === 'ACTIVE' && p.is_owner === false) || null
               : null;
@@ -78,8 +78,31 @@ export const AuthProvider = ({ children }) => {
               setUser(u);
               setIsAuthenticated(true);
               setRole(ROLES.ADMIN);
+            } else {
+              // Google-signed-in Guest: create/update a UserAccessProfile.
+              // Role stays 'guest' — identity never grants content access;
+              // reading codes / access cards are still required to unlock pages.
+              try {
+                const now = new Date().toISOString();
+                const existing = await base44.entities.UserAccessProfile.filter({ user_id: u.id }, null, 1);
+                if (existing && existing.length > 0) {
+                  await base44.entities.UserAccessProfile.update(existing[0].id, { last_login: now });
+                } else {
+                  await base44.entities.UserAccessProfile.create({
+                    user_id: u.id,
+                    email: u.email,
+                    full_name: u.full_name || '',
+                    role: 'user',
+                    registration_date: now,
+                    last_login: now,
+                    account_status: 'ACTIVE',
+                  });
+                }
+              } catch { /* best-effort — never block the guest flow */ }
+              setUser(u);
+              setIsAuthenticated(true);
+              setRole('guest');
             }
-            // else: unknown email — stay Guest (no Customer elevation).
             setAdminProfileLoading(false);
           })
           .catch(() => { setAdminProfileLoading(false); });

@@ -16,6 +16,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedPage from './components/ProtectedPage';
 import ROUTE_MANIFEST from '@/lib/routeManifest';
 import RulesGate from './components/RulesGate';
+import GoogleSignInPrompt from './components/GoogleSignInPrompt';
 
 // ── Lazy import map — Core pages only ──────
 const PAGE_IMPORTS = {
@@ -123,9 +124,17 @@ const PageFallback = () => (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingPublicSettings } = useAuth();
+  const { isLoadingPublicSettings, isAuthenticated } = useAuth();
   const location = useLocation();
   const routeElements = useRouteElements();
+  const [googlePromptDismissed, setGooglePromptDismissed] = useState(
+    () => { try { return sessionStorage.getItem('sirr_google_prompt_dismissed') === 'true'; } catch { return false; } }
+  );
+
+  // Hide the post-splash Google prompt once the user is signed in.
+  useEffect(() => {
+    if (isAuthenticated) setGooglePromptDismissed(true);
+  }, [isAuthenticated]);
 
   // Scroll to top on every route change
   useEffect(() => {
@@ -144,6 +153,10 @@ const AuthenticatedApp = () => {
   }
 
   return (
+    <>
+    {!isAuthenticated && !googlePromptDismissed && (
+      <GoogleSignInPrompt onSkip={() => setGooglePromptDismissed(true)} />
+    )}
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
@@ -161,6 +174,7 @@ const AuthenticatedApp = () => {
         </Suspense>
       </motion.div>
     </AnimatePresence>
+    </>
   );
 };
 

@@ -20,6 +20,15 @@ const G = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
+const GoogleMark = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
+    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.5 29.6 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.3-.4-3.5z" />
+    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.5 29.6 4.5 24 4.5 16 4.5 9.1 9.1 6.3 14.7z" />
+    <path fill="#4CAF50" d="M24 43.5c5.5 0 10.5-2 14.3-5.3l-6.6-5.5C29.6 34.6 26.9 36 24 36c-5.2 0-9.6-3.3-11.2-8l-6.6 5.1C9 38.9 16 43.5 24 43.5z" />
+    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.6 5.5c-.5.4 6.6-4.8 6.6-14.5 0-1.2-.1-2.3-.4-3.5z" />
+  </svg>
+);
+
 export default function ProtectedPage({ routePath, children, requiresPermission }) {
   const { role, adminProfile, adminProfileLoading } = useAuth();
   const [accessStatus, setAccessStatus] = useState("checking");
@@ -189,11 +198,26 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 
 // ── Premium locked screen ──────────────────────────────────────────────────────
 function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
+  const { isAuthenticated } = useAuth();
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [codeResult, setCodeResult] = useState(null);
   const [whatsappSent, setWhatsappSent] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Google Sign-In is identity only — it never unlocks this page. After
+  // signing in, the user returns here and must still enter an access code.
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    try { sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+    try {
+      await base44.auth.loginWithProvider("google", routePath);
+    } catch {
+      setGoogleLoading(false);
+      try { sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
+    }
+  };
 
   const handleRedeem = async () => {
     const trimmed = code.trim().toUpperCase();
@@ -283,6 +307,26 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
           </button>
 
           <p className="font-inter text-xs text-white/25 mb-4">{ADMIN_CONFIG.WHATSAPP_DISPLAY}</p>
+
+          {/* Google Sign-In — identity only; does NOT unlock the page */}
+          {!isAuthenticated && (
+            <div className="mb-3">
+              <button
+                onClick={handleGoogle}
+                disabled={googleLoading}
+                className="w-full py-3 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: "#ffffff", color: "#0d1b2a" }}
+              >
+                {googleLoading
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <GoogleMark className="w-4 h-4" />}
+                {googleLoading ? "Redirecting…" : "Continue with Google"}
+              </button>
+              <p className="font-inter text-[10px] text-white/30 mt-1.5 leading-snug">
+                Sign in for identity — an access code is still required to unlock this page.
+              </p>
+            </div>
+          )}
 
           {/* Code entry toggle */}
           <button
