@@ -142,6 +142,14 @@ export const AuthProvider = ({ children }) => {
     import('@/lib/moduleSync')
       .then(({ syncModules }) => syncModules().catch(() => {}))
       .catch(() => {});
+
+    // Proactively validate redeemed reading codes against the backend on app
+    // load — removes localStorage permissions for revoked/disabled/expired codes
+    // BEFORE any page is visited, so a locked page can never be opened with a
+    // stale local permission from a code that was later revoked.
+    import('@/lib/sessionId')
+      .then(({ validateAndCleanPermissions }) => validateAndCleanPermissions().catch(() => {}))
+      .catch(() => {});
   }, []);
 
   const logout = () => {

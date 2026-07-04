@@ -65,19 +65,8 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
-    // 1. Explicit public override from routeManifest flag
-    if (requiresPermission === false) {
-      setAccessStatus("granted");
-      return;
-    }
-
-    // 2. Static registry — public page (requiresPermission: false)
-    if (isPublicPage(routePath)) {
-      setAccessStatus("granted");
-      return;
-    }
-
-    // 3. Admin-only pages — RBAC role check
+    // 1. Admin-only pages — RBAC role check (runs before DB/static so admin
+    //    pages are governed by RBAC, not PageVisibilityConfig).
     const config = getPageConfig(routePath);
     if (config?.adminOnly || routePath.startsWith("/admin/")) {
       // Wait for admin profile to resolve before deciding (avoids wrong-screen flash).
@@ -92,44 +81,69 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
-    // 4. Multi-feature pages are containers — always accessible.
-    //    Individual child features handle their own locking via checkFeatureAccess.
-    //    Preload feature configs so checkFeatureAccess has sync data on first render.
-    if (hasSubFeatures(routePath)) {
-      await preloadPageFeatureConfigs(routePath);
-      setAccessStatus("granted");
-      validateAndCleanPermissions();
-      return;
-    }
-
-    // 5. DB visibility config (cached 2 min)
+    // 2. DB visibility config — AUTHORITATIVE lock check (cached 2 min).
+    //    The admin's PageVisibilityConfig.requires_permission is the source of
+    //    truth for whether a page is locked. This MUST be checked before the
+    //    static public flags below — otherwise a statically-public page (e.g.
+    //    /shop) stays accessible even after the admin locks it in the DB, and
+    //    the lock is only visual. dbState: 'locked' | 'public' | 'none'.
     const visKey = visibilityKey(routePath);
-    let isPublicByDb = getCached(visKey);
-    if (isPublicByDb === undefined || isPublicByDb === null) {
+    let dbState = getCached(visKey);
+    if (dbState === null || dbState === undefined) {
       try {
         const dbConfigs = await base44.entities.PageVisibilityConfig.filter(
           { page_path: routePath, archived: false }, null, 1
         );
-        isPublicByDb = dbConfigs.length > 0 && !dbConfigs[0].requires_permission;
-        setCached(visKey, isPublicByDb);
+        if (dbConfigs.length > 0) {
+          dbState = dbConfigs[0].requires_permission ? 'locked' : 'public';
+        } else {
+          dbState = 'none';
+        }
+        setCached(visKey, dbState);
       } catch {
-        isPublicByDb = false;
-        setCached(visKey, false, 30000);
+        dbState = 'none';
+        setCached(visKey, 'none', 30000);
       }
     }
-    if (isPublicByDb) {
+    const dbLocked = dbState === 'locked';
+
+    // 3. DB explicitly says public → grant
+    if (dbState === 'public') {
       setAccessStatus("granted");
       return;
     }
 
-    // 5. Authenticated admin bypass (content pages too) — owner + admin only
+    // 4. Static public override (routeManifest flag + registry) — ONLY when the
+    //    DB hasn't explicitly locked the page. Preserves the fast-path for
+    //    genuinely public pages while enforcing the admin's DB lock.
+    if (!dbLocked) {
+      if (requiresPermission === false) { setAccessStatus("granted"); return; }
+      if (isPublicPage(routePath)) { setAccessStatus("granted"); return; }
+    }
+
+    // 5. Multi-feature pages are containers. If the DB hasn't locked the page,
+    //    the container is always accessible (child features lock individually
+    //    via checkFeatureAccess). If the DB HAS locked the page, the container
+    //    opens only when the user has a valid page-level permission (reading
+    //    code) — otherwise the locked screen is shown (enforce the lock).
+    if (hasSubFeatures(routePath)) {
+      await preloadPageFeatureConfigs(routePath);
+      if (!dbLocked || checkLocalPermission(routePath).granted) {
+        setAccessStatus("granted");
+        validateAndCleanPermissions();
+        return;
+      }
+      // DB-locked multi-feature page with no permission → fall through to locked
+    }
+
+    // 6. Authenticated admin bypass (content pages too) — owner + admin only
     if (role === ROLES.OWNER || role === ROLES.ADMIN) {
       setAdminFlag(true);
       setAccessStatus("granted");
       return;
     }
 
-    // 6. Local permission check (localStorage — no auth needed)
+    // 7. Local permission check (localStorage — reading code, no auth needed)
     const localCheck = checkLocalPermission(routePath);
     if (localCheck.granted) {
       setAccessStatus("granted");
