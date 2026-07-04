@@ -162,7 +162,7 @@ export default function GoogleUsersTab({ users, profiles, onRefresh }) {
       const me = await base44.auth.me();
       setIsOwner(me?.email?.toLowerCase() === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase());
       const res = await base44.functions.invoke("manageAdminProfile", { action: "GET_STATUS" });
-      setAdminProfiles(res.profiles || []);
+      setAdminProfiles(res.data?.profiles || []);
     } catch (e) {
       toast({ title: "Failed to load admin profiles", description: e.message, variant: "destructive" });
     } finally {
