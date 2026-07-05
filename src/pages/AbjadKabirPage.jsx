@@ -54,10 +54,6 @@ export default function AbjadKabirPage() {
     setInput("");
     setResults({ kebir: null, saghir: null, cumeli: null, bast: null, bast2: null });
     setHistory([]);
-    setBastLevel(1);
-    setBastulLevel(1);
-    setMode('kebir');
-    clearPageState(PAGE_KEY);
   };
 
   const calculateResults = useCallback((text, bastLvl = bastLevel, bastulLvl = bastulLevel) => {
