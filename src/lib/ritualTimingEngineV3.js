@@ -77,23 +77,10 @@ const RITUAL_TO_ACTION = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 1 — Identify the ritual from all available information
-// Priority:  semantic LLM intent (if provided) → Mizan purpose keys
-//            → multilingual keyword match → ManuscriptRule category
+// STEP 1 — Identify the ritual from user's Mizan selections + custom purpose
+// Priority: Mizan purpose keys → multilingual keyword match → ManuscriptRule category
 // ═══════════════════════════════════════════════════════════════
-function identifyRitual({ selections, customPurpose, manuscriptRules, semanticIntent }) {
-  // ── 1a: Semantic LLM understanding (highest priority) ──
-  if (semanticIntent && semanticIntent.ritualKey) {
-    return {
-      ritualKey: semanticIntent.ritualKey,
-      matchedOn: `semantic understanding${semanticIntent.detectedLanguage ? ` (${semanticIntent.detectedLanguage})` : ""}: ${semanticIntent.explanation || semanticIntent.ritualCategory || ""}`,
-      semantic: true,
-      explanation: semanticIntent.explanation || "",
-      ritualCategory: semanticIntent.ritualCategory,
-      confidence: semanticIntent.confidence,
-    };
-  }
-
+function identifyRitual({ selections, customPurpose, manuscriptRules }) {
   const purposes = selections?.purposes || [];
   const custom = (customPurpose || "").trim();
   const haystacks = [custom, ...purposes].filter(Boolean);
@@ -309,7 +296,7 @@ function findEarliestValidTime(req, fromDate) {
 // ═══════════════════════════════════════════════════════════════
 // MAIN — analyzeRitualTiming (same return shape as V2)
 // ═══════════════════════════════════════════════════════════════
-export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent }) {
+export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
   const reasoning = [];
   const warnings = [];
   const bookNotes = [];
@@ -325,17 +312,15 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const dayNight = selections?.dayNight || null;
   const purposes = selections?.purposes || [];
 
-  // ── STEP 1: identify ritual (semantic first) ──
-  const identified = identifyRitual({ selections, customPurpose, manuscriptRules, semanticIntent });
+  // ── STEP 1: identify ritual from user selections ──
+  const identified = identifyRitual({ selections, customPurpose, manuscriptRules });
   const ritualKey = identified.ritualKey;
   const matchedOn = identified.matchedOn;
   reasoning.push(`Ritual identified as "${ritualKey}" via ${matchedOn}.`);
   rulesApplied.push({
     id: "IDENTIFY",
-    desc: identified.semantic
-      ? `Ritual SEMANTICALLY classified as ${ritualKey}${identified.ritualCategory ? ` (${identified.ritualCategory})` : ""}. ${identified.explanation || ""}`
-      : `Ritual classified as ${ritualKey} (${matchedOn})`,
-    source: identified.semantic ? (semanticIntent.source || "Semantic LLM classification") : "Engine inference from Mizan + custom purpose",
+    desc: `Ritual classified as ${ritualKey} (${matchedOn})`,
+    source: "Engine inference from Mizan + custom purpose",
   });
 
   // ── STEP 2: gather rules ──
@@ -558,11 +543,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   // ── Expert narrative ──
   const expertNarrative = [];
-  if (identified.semantic && identified.explanation) {
-    expertNarrative.push(`This ritual has been SEMANTICALLY understood as "${ritualTypeLabel}". ${identified.explanation}`);
-  } else {
-    expertNarrative.push(`This ritual has been identified as "${ritualTypeLabel}" from your Mizan results and custom purpose (${matchedOn}).`);
-  }
+  expertNarrative.push(`This ritual has been identified as "${ritualTypeLabel}" from your Mizan results and custom purpose (${matchedOn}).`);
   if (dbRuleCount > 0) expertNarrative.push(`${dbRuleCount} manuscript rule(s) were found in the database for this ritual, supplemented by the JS knowledge base.`);
   else expertNarrative.push(`No matching rules were found in the ManuscriptRule database; recommendations fall back to the existing JS knowledge base (${actionKey}).`);
   if (req.days) expertNarrative.push(`The manuscripts prescribe day(s): ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
@@ -617,9 +598,9 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 // CONFIGURATION ADVISOR — compares current Mizan vs manuscript ideal.
 // Same return shape as V2.
 // ═══════════════════════════════════════════════════════════════
-export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent }) {
-  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, semanticIntent });
-  const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules, semanticIntent });
+export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
+  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules });
+  const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules });
   const { req, citations } = gatherRules(ritualKey, manuscriptRules);
 
   const dominant = result?.dominant || (selections?.elements?.[0] || null);
@@ -634,15 +615,13 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   let allOptimal = true;
 
   const purposeLabel = ritualKey.charAt(0).toUpperCase() + ritualKey.slice(1) + " Work";
-  const identifiedAdv = identifyRitual({ selections, customPurpose, manuscriptRules, semanticIntent });
+  const identifiedAdv = identifyRitual({ selections, customPurpose, manuscriptRules });
   recommendations.push({
     field: "Ritual Purpose", icon: "target",
     current: purposeLabel,
     recommended: purposeLabel,
     isOptimal: true,
-    reason: identifiedAdv.semantic && identifiedAdv.explanation
-      ? `Ritual semantically understood as ${ritualKey}: ${identifiedAdv.explanation} This is the basis for all manuscript rule lookups.`
-      : `Ritual identified as ${ritualKey} from Mizan selections and custom purpose (${identifiedAdv.matchedOn}). This is the basis for all manuscript rule lookups.`,
+    reason: `Ritual identified as ${ritualKey} from Mizan selections and custom purpose (${identifiedAdv.matchedOn}). This is the basis for all manuscript rule lookups.`,
   });
 
   const khayrSharrSelected = selections?.khayrSharr8 || null;
