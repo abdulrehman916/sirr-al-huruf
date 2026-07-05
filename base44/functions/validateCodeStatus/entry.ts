@@ -23,6 +23,26 @@ Deno.serve(async (req) => {
       100
     );
 
+    // Also include codes Google-linked to the authenticated user (if signed in)
+    // so auto-restored linked permissions are not stripped by the client cleanup.
+    let linkedCodes: any[] = [];
+    try {
+      const u = await base44.auth.me();
+      if (u) {
+        linkedCodes = await base44.asServiceRole.entities.AccessCode.filter(
+          { linked_user_id: u.id },
+          '-linked_at',
+          100
+        );
+      }
+    } catch { /* guest — no linked codes */ }
+
+    const seenIds = new Set((codes || []).map((c: any) => c.id));
+    const allCodes = [...(codes || [])];
+    for (const lc of (linkedCodes || [])) {
+      if (!seenIds.has(lc.id)) { allCodes.push(lc); seenIds.add(lc.id); }
+    }
+
     const now = new Date();
 
     // Compute a single page's feature-aware expiry (mirrors client computePageExpiry).
@@ -55,7 +75,7 @@ Deno.serve(async (req) => {
       return pageIsLifetime ? null : (pageExpiryMs !== null ? new Date(pageExpiryMs).toISOString() : null);
     };
 
-    const results = (codes || []).map((c: any) => {
+    const results = (allCodes || []).map((c: any) => {
       // ── TRUE PER-PAGE EXPIRY: the code is only 'disabled' if the admin disabled
       // it. We NEVER mark the whole code 'expired' because of one page — each page
       // expires independently via its own page_grants[path].expires_at. ──

@@ -97,6 +97,18 @@
       "type": "string",
       "description": "Email or guest identifier of the first user who redeemed"
     },
+    "linked_user_id": {
+      "type": "string",
+      "description": "Base44 User ID of the Google account this code is permanently linked to. Null = not yet linked. One code \u2194 one Google account. Set on first authenticated redemption via redeemCodeLinked."
+    },
+    "linked_user_email": {
+      "type": "string",
+      "description": "Google email of the linked account (denormalized for admin display)."
+    },
+    "linked_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the code was linked to the Google account."
+    },
     "device_id": {
       "type": "string",
       "description": "Device/session ID that first redeemed this code. Permanently bound unless admin resets."
@@ -159,7 +171,7 @@
           }
         }
       },
-      "description": "Complete audit trail: CREATED, REDEEMED, RENEWED, DISABLED, ENABLED, DELETED, RESET_DEVICE, ADDED_FEATURES, REMOVED_FEATURES"
+      "description": "Complete audit trail: CREATED, REDEEMED, REDEEMED_LINKED, LINKED_EXISTING, REJECTED_LINKED_ELSEWHERE, RENEWED, DISABLED, ENABLED, DELETED, RESET_DEVICE, ADDED_FEATURES, REMOVED_FEATURES"
     },
     "created_by": {
       "type": "string",

@@ -262,7 +262,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
     setCodeResult(null);
     try {
       const sessionId = getSessionId();
-      const res = await base44.functions.invoke("redeemCodeGuest", {
+      const res = await base44.functions.invoke("redeemCodeLinked", {
         code: trimmed,
         session_id: sessionId,
       });

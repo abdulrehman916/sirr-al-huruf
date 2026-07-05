@@ -95,6 +95,18 @@ export const AuthProvider = ({ children }) => {
                   });
                 }
               } catch { /* best-effort — never block the guest flow */ }
+              // Google-linked Reading Access Codes: auto-load all permissions from
+              // codes linked to this Google account so pages unlock without
+              // re-entering the code (works across devices). Identity-only — never
+              // bypasses access codes; only restores already-granted permissions.
+              try {
+                const { mergeGrantedPermissions } = await import('@/lib/sessionId');
+                const res = await base44.functions.invoke("loadLinkedPermissions", {});
+                const data = res.data;
+                if (data?.success && Array.isArray(data.permissions) && data.permissions.length > 0) {
+                  mergeGrantedPermissions(data.permissions);
+                }
+              } catch { /* best-effort — never block the guest flow */ }
               setUser(u);
               setIsAuthenticated(true);
               setRole('guest');
