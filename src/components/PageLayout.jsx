@@ -264,7 +264,7 @@ export default function PageLayout({ children }) {
             scrollbarWidth: "none",
             msOverflowStyle: "none",
             paddingLeft: "10px",
-            paddingRight: "10px",
+            paddingRight: isAuthenticated ? "52px" : "10px",
           }}
         >
           {/* Admin button — requires authenticated owner/admin (never for guests) */}
@@ -300,6 +300,24 @@ export default function PageLayout({ children }) {
             />
           ))}
         </div>
+
+        {/* ── Profile / Account button — top-right, authenticated users only ── */}
+        {isAuthenticated && (
+          <button
+            onClick={() => setShowAccount(true)}
+            aria-label="Account"
+            className="absolute top-2 right-2 z-[60] flex items-center justify-center w-9 h-9 rounded-full"
+            style={{
+              background: "linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.08))",
+              border: "1px solid rgba(212,175,55,0.40)",
+              color: "#E8C84A",
+              boxShadow: "0 0 12px rgba(212,175,55,0.15)",
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            <User className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* ── Scrollable page content ── */}
