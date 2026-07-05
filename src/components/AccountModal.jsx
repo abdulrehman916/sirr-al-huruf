@@ -3,11 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
+import { LogOut } from "lucide-react";
 
 export default function AccountModal({ user, onClose }) {
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { role, logout } = useAuth();
   const [profile, setProfile] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = () => {
+    setLoggingOut(true);
+    try { onClose(); } catch { /* ignore */ }
+    logout();
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -102,6 +110,19 @@ export default function AccountModal({ user, onClose }) {
                   </button>
             )}
             
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full py-3 px-4 rounded-xl font-inter text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+              style={{
+                background: "linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.10) 100%)",
+                border: "1px solid rgba(239,68,68,0.45)",
+                color: "#fca5a5",
+              }}>
+              <LogOut className="w-4 h-4" />
+              {loggingOut ? "Logging out…" : "Log Out"}
+            </button>
+
             <button
               onClick={onClose}
               className="w-full py-2.5 px-4 rounded-xl font-inter text-xs text-white/50 hover:text-white/80"
