@@ -97,6 +97,20 @@ Deno.serve(async (req) => {
       accessCode = sessionCodes.find((c: any) => !c.is_disabled) || null;
     }
 
+    // 3c: Check by Google user_id (linked_user_id) — a returning authenticated
+    //     customer who already redeemed a code under their Google account.
+    if (!accessCode && accessReq.user_id) {
+      const linkedCodes = await base44.asServiceRole.entities.AccessCode.filter({ linked_user_id: accessReq.user_id }, "-created_date", 10);
+      accessCode = (linkedCodes || []).find((c: any) => !c.is_disabled) || null;
+    }
+
+    // 3d: Check by customer email — fallback for legacy/manual codes where the
+    //     code is tied to the customer email but not yet linked to a Google acct.
+    if (!accessCode && accessReq.email) {
+      const emailCodes = await base44.asServiceRole.entities.AccessCode.filter({ email: accessReq.email }, "-created_date", 10);
+      accessCode = (emailCodes || []).find((c: any) => !c.is_disabled) || null;
+    }
+
     let finalCodeString = "";
 
     try {
@@ -200,31 +214,54 @@ async function createSystemMessage(base44: any, requestId: string, admin: any, m
   });
 }
 
-/** Look up SubscriptionPlanConfig for the request's page/feature/plan. Returns null if not found. */
+/** Look up SubscriptionPlanConfig for the request's page/feature/plan.
+ *  - If the request carries a plan_name, resolve that exact plan.
+ *  - If no plan_name (e.g. in-app/WhatsApp request), fall back to the page's
+ *    recommended active plan, then the first active plan — so configured
+ *    pricing/durations are respected instead of silently granting LIFETIME.
+ *  - Returns null only if no active plan exists for the page at all. */
 async function resolvePlanConfig(base44: any, accessReq: any) {
-  if (!accessReq.plan_name) return null;
-
   const featureId = accessReq.feature_id || "FULL_PAGE";
 
-  // Try exact feature_id match first
-  const plans = await base44.asServiceRole.entities.SubscriptionPlanConfig.filter({
-    page_path: accessReq.page_path,
-    feature_id: featureId,
-    plan_name: accessReq.plan_name,
-    is_active: true,
-  }, null, 1);
-
-  if (plans.length > 0) return plans[0];
-
-  // Fallback: try FULL_PAGE plan for the same page
-  if (featureId !== "FULL_PAGE") {
-    const fallbackPlans = await base44.asServiceRole.entities.SubscriptionPlanConfig.filter({
+  if (accessReq.plan_name) {
+    // Try exact feature_id match first
+    const plans = await base44.asServiceRole.entities.SubscriptionPlanConfig.filter({
       page_path: accessReq.page_path,
-      feature_id: "FULL_PAGE",
+      feature_id: featureId,
       plan_name: accessReq.plan_name,
       is_active: true,
     }, null, 1);
-    if (fallbackPlans.length > 0) return fallbackPlans[0];
+
+    if (plans.length > 0) return plans[0];
+
+    // Fallback: try FULL_PAGE plan for the same page
+    if (featureId !== "FULL_PAGE") {
+      const fallbackPlans = await base44.asServiceRole.entities.SubscriptionPlanConfig.filter({
+        page_path: accessReq.page_path,
+        feature_id: "FULL_PAGE",
+        plan_name: accessReq.plan_name,
+        is_active: true,
+      }, null, 1);
+      if (fallbackPlans.length > 0) return fallbackPlans[0];
+    }
+  }
+
+  // No plan_name, or exact match failed → use the page's recommended active plan
+  const allPagePlans = await base44.asServiceRole.entities.SubscriptionPlanConfig.filter(
+    { page_path: accessReq.page_path, is_active: true }, "sort_order", 50
+  );
+  if (allPagePlans && allPagePlans.length > 0) {
+    // Prefer a plan matching the request's feature_id
+    const featMatch = allPagePlans.find((p: any) => p.feature_id === featureId);
+    if (featMatch) return featMatch;
+    // Then the page's recommended plan
+    const recommended = allPagePlans.find((p: any) => p.is_recommended);
+    if (recommended) return recommended;
+    // Then any FULL_PAGE plan
+    const fullPage = allPagePlans.find((p: any) => p.feature_id === "FULL_PAGE");
+    if (fullPage) return fullPage;
+    // Otherwise the first active plan
+    return allPagePlans[0];
   }
 
   return null;

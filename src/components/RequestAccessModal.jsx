@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, User, Phone, Mail, MessageSquare, CheckCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { getSessionId, getRedeemedCodes } from "@/lib/sessionId";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -27,6 +28,7 @@ export default function RequestAccessModal({ pagePath, pageName, onClose }) {
     }
     setLoading(true);
     try {
+      const redeemed = getRedeemedCodes();
       const res = await base44.functions.invoke("submitAccessRequest", {
         name: form.name.trim(),
         phone: form.phone.trim(),
@@ -34,6 +36,8 @@ export default function RequestAccessModal({ pagePath, pageName, onClose }) {
         page_path: pagePath,
         page_name: pageName,
         message: form.message.trim(),
+        session_id: getSessionId(),
+        existing_code: redeemed.length > 0 ? redeemed[redeemed.length - 1] : null,
       });
       if (res.data.success) {
         setSubmitted(true);

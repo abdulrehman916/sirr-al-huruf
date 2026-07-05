@@ -70,16 +70,19 @@ export default function AdminAccessRequests() {
     );
   });
 
-  // Mark request as APPROVED — admin manually edits Reading Code to add the feature
+  // Approve & Deliver — single unified path. Calls approveAccessRequest which
+  // merges into / creates the Reading Code AND posts the code to the conversation.
   const handleApprove = async (req) => {
     setProcessing(req.id);
     try {
-      await base44.entities.AccessRequest.update(req.id, {
-        status: "APPROVED",
-        approved_by: user?.id || "admin",
-        approved_at: new Date().toISOString(),
+      const res = await base44.functions.invoke("approveAccessRequest", {
+        request_id: req.request_id,
       });
-      toast({ title: "✅ Request Approved", description: "Edit the user's Reading Code to add this feature." });
+      if (!res.data?.success) {
+        toast({ title: "Approval error", description: res.data?.error || "Failed to deliver access", variant: "destructive" });
+      } else {
+        toast({ title: "✓ Approved & code delivered", description: res.data?.code ? `Code: ${res.data.code}` : undefined });
+      }
       loadRequests();
     } catch (e) {
       toast({ title: "Error", description: e.message || "Failed to approve", variant: "destructive" });
@@ -98,13 +101,16 @@ export default function AdminAccessRequests() {
     setRejectingReq(null);
     setProcessing(req.id);
     try {
-      await base44.entities.AccessRequest.update(req.id, {
-        status: "REJECTED",
-        approved_by: user?.id || "admin",
-        approved_at: new Date().toISOString(),
+      const res = await base44.functions.invoke("approveAccessRequest", {
+        request_id: req.request_id,
+        reject: true,
         rejection_reason: rejectReason.trim() || "No reason provided",
       });
-      toast({ title: "Request Rejected", description: `${req.name}'s request has been rejected.` });
+      if (!res.data?.success) {
+        toast({ title: "Rejection error", description: res.data?.error || "Failed to reject", variant: "destructive" });
+      } else {
+        toast({ title: "Request Rejected", description: `${req.name}'s request has been rejected.` });
+      }
       loadRequests();
     } catch (e) {
       toast({ title: "Error", description: e.message || "Failed to reject", variant: "destructive" });

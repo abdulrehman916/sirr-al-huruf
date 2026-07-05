@@ -14,6 +14,21 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "Missing page_path" }, { status: 400 });
     }
 
+    // ── Duplicate prevention ──
+    // Reject if an open request (PENDING / AWAITING_PAYMENT / INFO_REQUESTED /
+    // PAYMENT_CONFIRMED) already exists for the same session_id + page_path.
+    // Closed/Rejected/CODE_UPDATED/APPROVED requests do NOT block a new one.
+    if (session_id) {
+      const openStatuses = ["PENDING", "AWAITING_PAYMENT", "INFO_REQUESTED", "PAYMENT_CONFIRMED"];
+      const existingReqs = await base44.asServiceRole.entities.AccessRequest.filter(
+        { session_id, page_path }, "-requested_at", 50
+      );
+      const hasOpen = (existingReqs || []).some(r => openStatuses.includes(r.status));
+      if (hasOpen) {
+        return Response.json({ success: false, error: "You already have an open request for this page. Please wait for a response." });
+      }
+    }
+
     const requestId = `REQ-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
     await base44.asServiceRole.entities.AccessRequest.create({
