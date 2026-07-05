@@ -88,8 +88,9 @@ export function getCurrentKawkab() {
 // instead of the current time. No algorithm is duplicated; the same
 // PLANET_SEQUENCE, getDayRuler, and formula are reused.
 //
-// Note: the Astro Clock treats day and night Saat numbering independently
-// (both 1–12 from the day ruler), so this formula is identical for both.
+// Note: Day and Night use DIFFERENT planet tables per the manuscript.
+// Night Saat 1 = Day Saat 1 shifted +2 in the Chaldean sequence
+// (GECE SAATLERİ TABLOSU). The nightOffset below encodes this rule.
 const MIZAN_DAY_TO_WEEKDAY = Object.freeze({
   sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
 });
@@ -97,17 +98,24 @@ const MIZAN_DAY_TO_WEEKDAY = Object.freeze({
 /**
  * Returns the Mizan planet key ruling a specific Saat number (1–12) on a
  * given weekday, using the Astro Clock's planetary-hour engine.
+ *
+ * Manuscript Night offset (GECE SAATLERİ TABLOSU): when dayNight === 'gece'
+ * (night), the Night table is the Day table shifted +2 in the Chaldean
+ * sequence. Day ('gunduz') or unset → no offset.
+ *
  * @param {number} saatNumber 1–12
  * @param {string} dayKey     one of: sun, mon, tue, wed, thu, fri, sat
+ * @param {string|null} dayNight  'gunduz' (day) | 'gece' (night) | null
  * @returns {string|null}     one of: zuhal, mustari, merih, sems, zuhre, utarid, kamer
  */
-export function getKawkabForSaat(saatNumber, dayKey) {
+export function getKawkabForSaat(saatNumber, dayKey, dayNight = null) {
   if (!saatNumber || saatNumber < 1 || saatNumber > 12) return null;
   const dayOfWeek = MIZAN_DAY_TO_WEEKDAY[dayKey];
   if (dayOfWeek === undefined) return null;
   const dayRuler = getDayRuler(dayOfWeek);
   if (!dayRuler) return null;
-  const planetIndex = (dayRuler.index + (saatNumber - 1)) % 7;
+  const nightOffset = dayNight === 'gece' ? 2 : 0;
+  const planetIndex = (dayRuler.index + nightOffset + (saatNumber - 1)) % 7;
   const astroPlanet = PLANET_SEQUENCE[planetIndex];
   return ASTRO_TO_MIZAN_PLANET[astroPlanet] || null;
 }

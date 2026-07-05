@@ -281,7 +281,11 @@ export function getCurrentPlanetaryHour(date, sunrise = 6.5, sunset = 18.25) {
   
   const dayRuler = getDayRuler(dayOfWeek);
   
-  const planetIndex = (dayRuler.index + hourIndex) % 7;
+  // Manuscript Night offset (GECE SAATLERİ TABLOSU): Night Saat 1 = Day Saat 1
+  // shifted +2 in the Chaldean sequence (e.g. Sunday Day Saat 1 = Sun, Sunday
+  // Night Saat 1 = Mercury). Day hours use no offset.
+  const nightOffset = isDay ? 0 : 2;
+  const planetIndex = (dayRuler.index + nightOffset + hourIndex) % 7;
   const planet = PLANET_SEQUENCE[planetIndex];
   
   const remainingMinutes = (hourEnd - currentHour) * 60;
@@ -423,9 +427,9 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   }
   
   // Night hours (13-24)
-  // Night hours continue from where day hours ended (hour 12)
-  // First night hour planet = (dayRuler.index + 12) % 7
-  const firstNightPlanetIndex = (dayRuler.index + 12) % 7;
+  // Manuscript Night offset (GECE SAATLERİ TABLOSU): Night Saat 1 = Day Saat 1
+  // shifted +2 in the Chaldean sequence. Night hour 13 = Night Saat 1.
+  const firstNightPlanetIndex = (dayRuler.index + 2) % 7;
   for (let i = 0; i < 12; i++) {
     const planetIndex = (firstNightPlanetIndex + i) % 7;
     const planet = PLANET_SEQUENCE[planetIndex];

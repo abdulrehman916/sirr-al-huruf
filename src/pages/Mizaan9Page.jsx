@@ -412,18 +412,19 @@ export default function Mizaan9Page() {
 
   const updateSel = (key) => (val) => setSelections(prev => ({ ...prev, [key]: val }));
 
-  // ── Saat ↔ Kawkab sync: when the selected Saat (Mizaan 4) or Day (Mizaan 5)
-  // changes, auto-set the Kawkab (Mizaan 6) to the planet ruling that Saat.
+  // ── Saat ↔ Kawkab sync: when the selected Saat (Mizaan 4), Day (Mizaan 5),
+  // or Day/Night (Mizaan 3) changes, auto-set the Kawkab (Mizaan 6) to the
+  // planet ruling that exact combination, per the manuscript Day/Night tables.
   // Reuses the Astro Clock planetary-hour engine (getKawkabForSaat). Manual
-  // Kawkab override persists between Saat changes — this effect fires only on
-  // hour/days change, so a manually-tapped Kawkab is never disturbed until the
-  // user picks a different Saat or Day.
+  // Kawkab override persists — this effect fires only on hour/days/dayNight
+  // change, so a manually-tapped Kawkab is never disturbed until the user
+  // picks a different Saat, Day, or Day/Night.
   useEffect(() => {
     if (!selections?.hour) return;
-    const planetKey = getKawkabForSaat(selections.hour, selections?.days);
+    const planetKey = getKawkabForSaat(selections.hour, selections?.days, selections?.dayNight);
     if (planetKey) updateSel("planet")(planetKey);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selections?.hour, selections?.days]);
+  }, [selections?.hour, selections?.days, selections?.dayNight]);
 
   return (
     <PageLayout>
