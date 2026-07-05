@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import PageTitle from "../components/PageTitle";
 import { mizaanAnalyzeAsync, mizaanCalcBast } from "../lib/mizaan9Engine";
-import { DAY_PLANET_MAP, MIZAAN_DAYNIGHT_FULL, MIZAAN_HOURS, MIZAAN_DAYS, MIZAAN_PLANETS_ALL, MIZAAN_PURPOSES, MIZAAN_ELEMENT_DEGREES } from "../lib/mizaan9Data";
+import { MIZAAN_DAYNIGHT_FULL, MIZAAN_HOURS, MIZAAN_DAYS, MIZAAN_PLANETS_ALL, MIZAAN_PURPOSES, MIZAAN_ELEMENT_DEGREES } from "../lib/mizaan9Data";
 import { MIZAAN_BAST2 } from "../lib/mizaan9Engine";
 import Mizaan1      from "../components/mizaan/Mizaan1";
 import Mizaan2      from "../components/mizaan/Mizaan2";
@@ -41,7 +41,7 @@ import RitualDecisionEngine from "../components/mizaan/RitualDecisionEngine";
 import QasamPanel from "../components/mizaan/QasamPanel";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
-import { getCurrentSaat } from "../lib/mizaanSaatCalculator";
+import { getCurrentSaat, getKawkabForSaat } from "../lib/mizaanSaatCalculator";
 import { usePageState } from "../context/PageStateContext";
 import { Lock } from "lucide-react";
 import FeatureLockedCard from "../components/FeatureLockedCard";
@@ -83,12 +83,13 @@ function MizaanDivider() {
 // Build initial selections from dominant element
 function buildDefaultSelections(dominant) {
   const dn = dominant ? (['fire','earth'].includes(dominant) ? 'gunduz' : 'gece') : null;
+  const todayKey = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
   return {
     elements:   dominant ? [dominant] : [],
     dayNight:   dn,
     hour:       getCurrentSaat(dn),
-    days:       ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()],
-    planet:     DAY_PLANET_MAP[['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]] ?? null,
+    days:       todayKey,
+    planet:     getKawkabForSaat(getCurrentSaat(dn), todayKey),
     purposes:   [],
     khayrSharr8: null,
   };
@@ -410,6 +411,19 @@ export default function Mizaan9Page() {
   };
 
   const updateSel = (key) => (val) => setSelections(prev => ({ ...prev, [key]: val }));
+
+  // ── Saat ↔ Kawkab sync: when the selected Saat (Mizaan 4) or Day (Mizaan 5)
+  // changes, auto-set the Kawkab (Mizaan 6) to the planet ruling that Saat.
+  // Reuses the Astro Clock planetary-hour engine (getKawkabForSaat). Manual
+  // Kawkab override persists between Saat changes — this effect fires only on
+  // hour/days change, so a manually-tapped Kawkab is never disturbed until the
+  // user picks a different Saat or Day.
+  useEffect(() => {
+    if (!selections?.hour) return;
+    const planetKey = getKawkabForSaat(selections.hour, selections?.days);
+    if (planetKey) updateSel("planet")(planetKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selections?.hour, selections?.days]);
 
   return (
     <PageLayout>

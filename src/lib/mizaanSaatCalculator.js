@@ -18,7 +18,7 @@
 // intentionally NOT used: "NOW" reflects the actual Saat containing the
 // current moment, per the Astro Clock, regardless of the Mizaan3 selection.
 // ═══════════════════════════════════════════════════════════════
-import { getCurrentPlanetaryHour } from "./astroClockLiveEngine";
+import { getCurrentPlanetaryHour, getDayRuler, PLANET_SEQUENCE } from "./astroClockLiveEngine";
 import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSunset";
 
 /**
@@ -77,4 +77,37 @@ export function getCurrentKawkab() {
   if (sunrise === null || sunset === null) return null;
   const hour = getCurrentPlanetaryHour(now, sunrise, sunset);
   return ASTRO_TO_MIZAN_PLANET[hour.planet] || null;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// KAWKAB FOR A SPECIFIC SAAT (Selected Saat → Kawkab sync)
+// ─────────────────────────────────────────────────────────────────
+// Reuses the EXACT same Astro Clock planetary-hour formula as
+// getCurrentPlanetaryHour: planetIndex = (dayRuler.index + hourIndex) % 7.
+// The only difference is the input — a user-selected Saat number (1–12)
+// instead of the current time. No algorithm is duplicated; the same
+// PLANET_SEQUENCE, getDayRuler, and formula are reused.
+//
+// Note: the Astro Clock treats day and night Saat numbering independently
+// (both 1–12 from the day ruler), so this formula is identical for both.
+const MIZAN_DAY_TO_WEEKDAY = Object.freeze({
+  sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+});
+
+/**
+ * Returns the Mizan planet key ruling a specific Saat number (1–12) on a
+ * given weekday, using the Astro Clock's planetary-hour engine.
+ * @param {number} saatNumber 1–12
+ * @param {string} dayKey     one of: sun, mon, tue, wed, thu, fri, sat
+ * @returns {string|null}     one of: zuhal, mustari, merih, sems, zuhre, utarid, kamer
+ */
+export function getKawkabForSaat(saatNumber, dayKey) {
+  if (!saatNumber || saatNumber < 1 || saatNumber > 12) return null;
+  const dayOfWeek = MIZAN_DAY_TO_WEEKDAY[dayKey];
+  if (dayOfWeek === undefined) return null;
+  const dayRuler = getDayRuler(dayOfWeek);
+  if (!dayRuler) return null;
+  const planetIndex = (dayRuler.index + (saatNumber - 1)) % 7;
+  const astroPlanet = PLANET_SEQUENCE[planetIndex];
+  return ASTRO_TO_MIZAN_PLANET[astroPlanet] || null;
 }

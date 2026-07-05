@@ -71,8 +71,8 @@ export default function Mizaan6({ selectedDay, selected, onChange, planetsData }
                 style={{ color: isSelected ? col : "rgba(255,255,255,0.18)" }}>
                 {p.bast.toLocaleString()}
               </p>
-              {isAuto && !isSelected && (
-                <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: col, opacity: 0.75 }}>Active ◉</span>
+              {isAuto && (
+                <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: col, opacity: 0.75 }}>Current ◉</span>
               )}
               {isSelected && (
                 <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
