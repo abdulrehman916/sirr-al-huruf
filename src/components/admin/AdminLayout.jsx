@@ -155,35 +155,8 @@ function SidebarContent({ location, onNavigate }) {
         ))}
       </nav>
 
-      {/* Back to App */}
+      {/* ── Sidebar footer: Back to App, then Log Out pinned to bottom ── */}
       <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${G.border}` }}>
-        <button
-          onClick={async () => {
-            clearLocalSession();
-            try { sessionStorage.removeItem("sirr_admin_session"); } catch {}
-            try { sessionStorage.removeItem("sirr_google_prompt_dismissed"); } catch {}
-            if (onNavigate) onNavigate();
-            await base44.auth.logout("/login");
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            width: "100%",
-            padding: "9px 10px",
-            borderRadius: 8,
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.35)",
-            color: "#fca5a5",
-            cursor: "pointer",
-            marginBottom: 8,
-          }}
-        >
-          <LogOut style={{ width: 14, height: 14, flexShrink: 0 }} />
-          <span style={{ fontFamily: "Inter, sans-serif", fontSize: 11, fontWeight: 700 }}>
-            Log Out
-          </span>
-        </button>
         <Link
           to="/"
           onClick={onNavigate}
@@ -191,7 +164,7 @@ function SidebarContent({ location, onNavigate }) {
             display: "flex",
             alignItems: "center",
             gap: 8,
-            padding: "8px 10px",
+            padding: "9px 10px",
             borderRadius: 8,
             background: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.08)",
@@ -203,6 +176,35 @@ function SidebarContent({ location, onNavigate }) {
             Back to App
           </span>
         </Link>
+        <button
+          onClick={async () => {
+            clearLocalSession();
+            try { sessionStorage.removeItem("sirr_admin_session"); } catch {}
+            try { sessionStorage.removeItem("sirr_google_prompt_dismissed"); } catch {}
+            if (onNavigate) onNavigate();
+            await base44.auth.logout("/login");
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            width: "100%",
+            marginTop: 10,
+            padding: "10px 10px",
+            borderRadius: 8,
+            background: "linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.10) 100%)",
+            border: "1px solid rgba(239,68,68,0.45)",
+            color: "#fca5a5",
+            cursor: "pointer",
+            boxShadow: "0 0 12px rgba(239,68,68,0.10)",
+          }}
+        >
+          <LogOut style={{ width: 14, height: 14, flexShrink: 0 }} />
+          <span style={{ fontFamily: "Inter, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.02em" }}>
+            Log Out
+          </span>
+        </button>
       </div>
     </div>
   );
@@ -394,35 +396,6 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
             </>
           )}
 
-          {/* ── Persistent Log Out button — always visible (even when sidebar collapsed) ── */}
-          <button
-            onClick={async () => {
-              clearLocalSession();
-              try { sessionStorage.removeItem("sirr_admin_session"); } catch {}
-              try { sessionStorage.removeItem("sirr_google_prompt_dismissed"); } catch {}
-              await base44.auth.logout("/login");
-            }}
-            aria-label="Log Out"
-            title="Log Out"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              marginLeft: "auto",
-              width: 34,
-              height: 34,
-              borderRadius: 8,
-              background: "rgba(239,68,68,0.10)",
-              border: "1px solid rgba(239,68,68,0.40)",
-              color: "#fca5a5",
-              cursor: "pointer",
-              flexShrink: 0,
-              padding: 0,
-            }}
-          >
-            <LogOut style={{ width: 16, height: 16 }} />
-          </button>
         </div>
 
         {/* ── Scrollable content area ── */}
