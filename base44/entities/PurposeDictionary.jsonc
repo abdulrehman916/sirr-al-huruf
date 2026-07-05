@@ -1,7 +1,7 @@
 {
   "name": "PurposeDictionary",
   "type": "object",
-  "description": "Admin-only backend lookup database. Maps free-text purpose phrases (Arabic, Malayalam, English) entered in the 7th Mizan to normalized 7th-Mizan purpose card keys. Never visible to end users. Populated manually by the Owner from manuscript sources. Read exclusively through the lookupPurposeIntent backend function (service role).",
+  "description": "Admin-only backend lookup database. Maps free-text purpose phrases (Arabic, Malayalam, English) entered in the 7th Mizan to normalized 7th-Mizan purpose card keys. Never visible to end users. Populated manually by the Owner from manuscript sources. Read exclusively through the lookupPurposeIntent backend function (service role). COMPLETELY ISOLATED \u2014 not part of any Mizan, Ebced, Bast, Kasam, Astro Clock, or Ritual Timing calculation. Only an intent lookup before the existing Ritual Timing workflow.",
   "properties": {
     "purpose_phrase": {
       "type": "string",
@@ -86,6 +86,55 @@
   "required": [
     "purpose_phrase",
     "normalized_purpose_key"
+  ],
+  "indexes": [
+    {
+      "name": "idx_is_active_aliases",
+      "fields": [
+        "is_active",
+        "aliases"
+      ]
+    },
+    {
+      "name": "idx_is_active_keyword",
+      "fields": [
+        "is_active",
+        "arabic_keyword"
+      ]
+    },
+    {
+      "name": "idx_is_active_phrase",
+      "fields": [
+        "is_active",
+        "purpose_phrase"
+      ]
+    },
+    {
+      "name": "idx_normalized_purpose_key",
+      "fields": [
+        "normalized_purpose_key"
+      ]
+    },
+    {
+      "name": "idx_is_active_language",
+      "fields": [
+        "is_active",
+        "language"
+      ]
+    },
+    {
+      "name": "idx_is_active_action",
+      "fields": [
+        "is_active",
+        "action"
+      ]
+    },
+    {
+      "name": "idx_is_active",
+      "fields": [
+        "is_active"
+      ]
+    }
   ],
   "rls": {
     "create": {
