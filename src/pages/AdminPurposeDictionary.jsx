@@ -5,6 +5,11 @@ import StatsPanel from "@/components/admin/purposeDict/StatsPanel";
 import EntryTable from "@/components/admin/purposeDict/EntryTable";
 import EntryEditor from "@/components/admin/purposeDict/EntryEditor";
 import ImportExportBar from "@/components/admin/purposeDict/ImportExportBar";
+// ── PERMANENT ISOLATION LAW ──
+// This import is documentation-only; it enforces that this page is the
+// ONLY writer of PurposeDictionary and must never connect to any Mizan,
+// engine, calculation, or timing logic. See purposeDictionaryIsolationLaw.js
+import "@/lib/purposeDictionaryIsolationLaw";
 import { Plus, RefreshCw, Loader2 } from "lucide-react";
 
 export default function AdminPurposeDictionary() {
