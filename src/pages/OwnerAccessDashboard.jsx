@@ -6,7 +6,7 @@ import {
   CheckCircle, X, Clock, Lock, ChevronDown, ChevronUp,
   Phone, Mail, Calendar, Crown, RefreshCw, Star, Zap,
   DollarSign, TrendingUp, Edit2, Save, AlertCircle,
-  Ban, CalendarPlus2, MessageSquare, KeyRound, UserCheck
+  Ban, CalendarPlus2, MessageSquare, KeyRound, UserCheck, Link2
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
@@ -23,6 +23,8 @@ import GoogleUsersTab from "@/components/admin/GoogleUsersTab";
 import SecurityAuditTab from "@/components/admin/SecurityAuditTab";
 import { Link } from "react-router-dom";
 import { ADMIN_CONFIG } from "@/lib/adminConfig";
+import { useAuth } from "@/lib/AuthContext";
+import GoogleLinkingPanel from "@/components/admin/GoogleLinkingPanel";
 
 const G = {
   border: "rgba(212,175,55,0.35)",
@@ -72,6 +74,7 @@ const TABS = [
   { id: "access",      label: "User Access",      icon: Shield },
   { id: "codes",       label: "Access Codes",     icon: KeyRound },
   { id: "security",    label: "Security Audit",   icon: Shield },
+  { id: "google",      label: "Google Linked",    icon: Link2 },
 ];
 
 const PLAN_COLORS = { Basic: "#60a5fa", Premium: "#f59e0b", Pro: "#a855f7", Ultimate: "#ec4899" };
@@ -1154,6 +1157,7 @@ function UserAccessRow({ user, userPerms, activeCount, existingPaths, onRevoke, 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 export default function OwnerAccessDashboard() {
   const { toast } = useToast();
+  const { role } = useAuth();
   const [isAdmin, setIsAdmin] = useState(null);
   const [tab, setTab] = useState("users");
   const [loading, setLoading] = useState(true);
@@ -1305,6 +1309,7 @@ export default function OwnerAccessDashboard() {
           {tab === "visibility" && <VisibilityTab pageConfigs={pageConfigs} onRefresh={loadAll} />}
           {tab === "access"     && <UserAccessTab users={users} permissions={permissions} onRefresh={loadAll} />}
           {tab === "codes"      && <AccessCodesTab />}
+          {tab === "google"     && <GoogleLinkingPanel role={role} />}
           {tab === "security"   && <SecurityAuditTab />}
         </div>
 

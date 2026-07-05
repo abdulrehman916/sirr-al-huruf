@@ -99,7 +99,7 @@
     },
     "linked_user_id": {
       "type": "string",
-      "description": "Base44 User ID of the Google account this code is permanently linked to. Null = not yet linked. One code \u2194 one Google account. Set on first authenticated redemption via redeemCodeLinked."
+      "description": "Base44 User ID of the Google account this code is permanently linked to. Null = not yet linked. One code \u2194 one Google account. Set by linkAccessCode (Owner/Admin) or redeemCodeLinked (customer self-service)."
     },
     "linked_user_email": {
       "type": "string",
@@ -108,6 +108,14 @@
     "linked_at": {
       "type": "string",
       "description": "ISO 8601 timestamp when the code was linked to the Google account."
+    },
+    "linked_by": {
+      "type": "string",
+      "description": "User ID of the Owner/Admin who performed the Google account link. Null if linked via customer self-service redemption."
+    },
+    "linked_by_name": {
+      "type": "string",
+      "description": "Display name/email of the Owner/Admin who linked the code (denormalized for admin display)."
     },
     "device_id": {
       "type": "string",
@@ -171,7 +179,7 @@
           }
         }
       },
-      "description": "Complete audit trail: CREATED, REDEEMED, REDEEMED_LINKED, LINKED_EXISTING, REJECTED_LINKED_ELSEWHERE, RENEWED, DISABLED, ENABLED, DELETED, RESET_DEVICE, ADDED_FEATURES, REMOVED_FEATURES"
+      "description": "Complete audit trail: CREATED, REDEEMED, REDEEMED_LINKED, LINKED_EXISTING, GOOGLE_LINKED, GOOGLE_UNLINKED, GOOGLE_TRANSFERRED, REJECTED_LINKED_ELSEWHERE, RENEWED, DISABLED, ENABLED, DELETED, RESET_DEVICE, ADDED_FEATURES, REMOVED_FEATURES"
     },
     "created_by": {
       "type": "string",

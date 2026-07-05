@@ -64,6 +64,7 @@ const PAGE_IMPORTS = {
   AdminSupport:             () => import('./pages/AdminSupport'),
   PagePermissions:          () => import('./pages/PagePermissions'),
   AdminAccessCodes:         () => import('./pages/AdminAccessCodes'),
+  AdminGoogleLinked:        () => import('./pages/AdminGoogleLinked'),
   CodeDetailPage:           () => import('./pages/CodeDetailPage'),
   AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
   AdminRedeemApprovals:     () => import('./pages/AdminRedeemApprovals'),

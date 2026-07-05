@@ -146,6 +146,7 @@ export default function AdminDashboard() {
           {[
             { to: "/admin/approved-users",   icon: "👥", label: "Manage Users" },
             { to: "/admin/access-codes",      icon: "🔑", label: "Reading Codes" },
+            { to: "/admin/google-linked",     icon: "🔗", label: "Google Linked" },
             { to: "/admin/page-permissions",  icon: "🌐", label: "Page Access" },
             { to: "/admin/support",           icon: "💬", label: "Support Messages" },
             { to: "/admin/access-logs",       icon: "📋", label: "Access Logs" },

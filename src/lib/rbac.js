@@ -67,6 +67,7 @@ export const ROUTE_ACCESS = {
   "/admin/feature-pricing":       { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_feature_pricing" },
   "/admin/access-codes":          { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_access_codes" },
   "/admin/access-codes/:codeId":  { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_access_codes" },
+  "/admin/google-linked":         { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_access_codes" },
   "/admin/shop":                  { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_shop_management" },
   "/admin/products":              { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_product_management" },
   "/admin/approved-users":        { roles: [ROLES.OWNER, ROLES.ADMIN], perm: "perm_customer_management" },

@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
+import { ROLES } from "@/lib/rbac";
 import CreateCodeForm from "./CreateCodeForm";
 import EditCodeModal from "./EditCodeModal";
 import RenewCodeModal from "./RenewCodeModal";
@@ -61,6 +63,8 @@ function CopyButton({ text }) {
 export default function AccessCodesTab() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { role } = useAuth();
+  const isOwner = role === ROLES.OWNER;
   const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -217,11 +221,13 @@ export default function AccessCodesTab() {
         <h3 className="font-inter font-bold text-white text-sm flex items-center gap-2">
           <KeyRound className="w-4 h-4" style={{ color: G.text }} /> License Management
         </h3>
+        {isOwner && (
         <button onClick={() => setShowCreate(v => !v)}
           className="px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2"
           style={{ background: "linear-gradient(135deg,#f6d860,#c98a14)", color: "#0d1b2a" }}>
           <Plus className="w-3.5 h-3.5" /> New Code
         </button>
+        )}
       </div>
 
       {/* Create form */}
@@ -293,6 +299,8 @@ export default function AccessCodesTab() {
                       style={{ background: "rgba(245,158,11,0.10)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.25)" }}>
                       <RefreshCw className="w-3 h-3" />
                     </button>
+                    {isOwner && (
+                      <>
                     <button onClick={(e) => handleToggleDisable(e, code)} title={code.is_disabled ? "Enable" : "Disable"}
                       className="w-6 h-6 rounded flex items-center justify-center"
                       style={{ background: code.is_disabled ? "rgba(34,197,94,0.10)" : "rgba(107,114,128,0.10)",
@@ -310,6 +318,8 @@ export default function AccessCodesTab() {
                       style={{ background: "rgba(239,68,68,0.10)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }}>
                       <Trash2 className="w-2.5 h-2.5" />
                     </button>
+                      </>
+                    )}
                     <ChevronRight className="w-3 h-3 text-white/30" />
                   </div>
                 </div>

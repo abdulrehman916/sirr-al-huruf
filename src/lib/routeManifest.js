@@ -58,6 +58,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/page-permissions', component: 'PagePermissions', chunk: 'PagePermissions' },
   { path: '/admin/access-codes', component: 'AdminAccessCodes', chunk: 'AdminAccessCodes' },
   { path: '/admin/access-codes/:codeId', component: 'CodeDetailPage', chunk: 'CodeDetailPage' },
+  { path: '/admin/google-linked', component: 'AdminGoogleLinked', chunk: 'AdminGoogleLinked' },
   { path: '/admin/access-requests', component: 'AdminAccessRequests', chunk: 'AdminAccessRequests' },
   { path: '/admin/redeem-approvals', component: 'AdminRedeemApprovals', chunk: 'AdminRedeemApprovals' },
   { path: '/admin/support', component: 'AdminSupport', chunk: 'AdminSupport' },
