@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
-import { clearLocalSession } from "@/lib/sessionId";
 
 export default function AccountModal({ user, onClose }) {
   const navigate = useNavigate();
@@ -21,16 +20,6 @@ export default function AccountModal({ user, onClose }) {
         .catch(console.error);
     }
   }, [user]);
-
-  const handleLogout = async () => {
-    // Clear only the local permission/session cache for the signed-in user.
-    // Access Codes stay linked to the Google account in the DB; signing in
-    // again (same or different account) auto-restores that account's permissions.
-    clearLocalSession();
-    try { sessionStorage.removeItem("sirr_admin_session"); } catch {}
-    try { sessionStorage.removeItem("sirr_google_prompt_dismissed"); } catch {}
-    await base44.auth.logout('/');
-  };
 
   return (
     <AnimatePresence>
@@ -112,16 +101,6 @@ export default function AccountModal({ user, onClose }) {
                   {role === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
                   </button>
             )}
-            
-            <button
-              onClick={handleLogout}
-              className="w-full py-3 px-4 rounded-xl font-inter text-sm font-semibold text-white/80 hover:text-white"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.15)",
-              }}>
-              Logout
-            </button>
             
             <button
               onClick={onClose}
