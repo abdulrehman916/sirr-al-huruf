@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
+import { clearLocalSession } from "@/lib/sessionId";
 
 export default function AccountModal({ user, onClose }) {
   const navigate = useNavigate();
@@ -22,7 +23,13 @@ export default function AccountModal({ user, onClose }) {
   }, [user]);
 
   const handleLogout = async () => {
-    await base44.auth.logout('/onboarding');
+    // Clear only the local permission/session cache for the signed-in user.
+    // Access Codes stay linked to the Google account in the DB; signing in
+    // again (same or different account) auto-restores that account's permissions.
+    clearLocalSession();
+    try { sessionStorage.removeItem("sirr_admin_session"); } catch {}
+    try { sessionStorage.removeItem("sirr_google_prompt_dismissed"); } catch {}
+    await base44.auth.logout('/');
   };
 
   return (

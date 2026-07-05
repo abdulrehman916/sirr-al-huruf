@@ -203,3 +203,19 @@ export function getRedeemedCodes() {
     return [];
   }
 }
+
+/**
+ * Clear ONLY the locally restored permissions/session for the signed-in user.
+ * Used on Logout: removes the in-memory permission cache, redeemed-code list,
+ * and the guest session ID so the next sign-in starts clean. Does NOT touch
+ * the database — Access Codes stay linked to their Google account, so signing
+ * back in with the same (or a different) account auto-restores that account's
+ * permissions via loadLinkedPermissions. No expiry, RLS, or code data changes.
+ */
+export function clearLocalSession() {
+  try {
+    localStorage.removeItem(PERMS_KEY);
+    localStorage.removeItem(REDEEMED_CODES_KEY);
+    localStorage.removeItem(SESSION_KEY);
+  } catch {}
+}
