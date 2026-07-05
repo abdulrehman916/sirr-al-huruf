@@ -20,6 +20,25 @@ Deno.serve(async (req) => {
       if (aps && aps.length > 0) adminProfile = aps[0];
     } catch { /* ignore */ }
     if (!adminProfile || adminProfile.is_owner !== true) {
+      try {
+        const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || req.headers.get('cf-connecting-ip') || '';
+        await base44.asServiceRole.entities.OwnerAuditLog.create({
+          log_id: 'OAL-REJECT-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+          action_type: 'ACCESS_CODE_ACTION_REJECTED',
+          action_label: 'Rejected: transfer AccessCode',
+          performed_by_id: me.id,
+          performed_by_email: me.email || '',
+          performed_by_name: me.full_name || '',
+          performed_by_role: adminProfile ? 'admin' : 'guest',
+          object_type: 'AccessCode',
+          object_id: code_id || '',
+          object_label: '',
+          details: JSON.stringify({ action: 'TRANSFER_ACCESS_CODE', reason: 'non-owner attempted transfer' }),
+          ip_address: ip,
+          user_agent: req.headers.get('user-agent') || '',
+          timestamp: new Date().toISOString(),
+        });
+      } catch { /* best-effort */ }
       return Response.json({ success: false, message: "Owner access required to transfer." }, { status: 403 });
     }
 

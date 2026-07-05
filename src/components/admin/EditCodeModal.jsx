@@ -160,7 +160,7 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
           details: `Feature added: ${featKey} — Plan: ${stampedPlan.plan_name || 'N/A'} (${dl})`,
         }];
       }
-      await base44.entities.AccessCode.update(code.id, updateData);
+      await base44.functions.invoke("updateAccessCode", { code_id: code.id, update_data: updateData });
       toast({ title: `✓ ${featId} saved` });
       refreshCode();
     } catch (e) {
@@ -265,14 +265,17 @@ export default function EditCodeModal({ code, onClose, onUpdated }) {
         }
       });
 
-      await base44.entities.AccessCode.update(code.id, {
-        page_paths: selectedPages,
-        page_names: names,
-        page_durations: stampedPageDurations,
-        page_grants: newPageGrants,
-        sub_features,
-        feature_durations: stampedFeatureDurations,
-        audit_log: [...(code.audit_log || []), ...auditEntries],
+      await base44.functions.invoke("updateAccessCode", {
+        code_id: code.id,
+        update_data: {
+          page_paths: selectedPages,
+          page_names: names,
+          page_durations: stampedPageDurations,
+          page_grants: newPageGrants,
+          sub_features,
+          feature_durations: stampedFeatureDurations,
+          audit_log: [...(code.audit_log || []), ...auditEntries],
+        },
       });
 
       toast({ title: `✓ Code "${code.code}" updated` });

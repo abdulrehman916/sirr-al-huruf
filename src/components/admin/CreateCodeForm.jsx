@@ -117,7 +117,7 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
         if (feats && feats.length > 0) sub_features[path] = feats;
       });
 
-      await base44.entities.AccessCode.create({
+      const codeData = {
         code: normalizedCode,
         customer_name: customerName.trim(),
         email: email.trim() || undefined,
@@ -126,9 +126,6 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
         page_paths: selectedPages,
         page_names: names,
         page_durations,
-        // ── TRUE PER-PAGE EXPIRY: seed each page with its own independent grant
-        // { granted_at, expires_at } from creation time. Each page's timer is
-        // fully independent and never reset by adding/editing other pages. ──
         page_grants: selectedPages.reduce((grants, path) => {
           grants[path] = buildPageGrant(path, pageDurations[path], pageSubFeatures[path] || [], featureDurations, Date.now());
           return grants;
@@ -143,7 +140,9 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
         created_by: me.id,
         audit_log: [{ action: "CREATED", timestamp: new Date().toISOString(), admin_id: me.id, details: `Code created for ${customerName.trim()}` }],
         notes: notes.trim() || undefined,
-      });
+      };
+      const res = await base44.functions.invoke("createAccessCode", { code_data: codeData });
+      if (!res.data?.success) throw new Error(res.data?.message || "Create failed");
 
       // ── P4.9: Centralized audit log for code creation ──
       try {

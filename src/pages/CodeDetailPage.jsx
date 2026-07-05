@@ -94,15 +94,8 @@ export default function CodeDetailPage() {
   const handleToggleDisable = async () => {
     setActionLoading(true);
     try {
-      const me = await base44.auth.me();
-      const now = new Date().toISOString();
-      await base44.entities.AccessCode.update(code.id, {
-        is_disabled: !code.is_disabled,
-        audit_log: [...(code.audit_log || []), {
-          action: code.is_disabled ? 'ENABLED' : 'DISABLED',
-          timestamp: now, admin_id: me?.id || '', details: code.is_disabled ? 'Code enabled' : 'Code disabled',
-        }],
-      });
+      const res = await base44.functions.invoke("setAccessCodeDisabled", { code_id: code.id, disable: !code.is_disabled });
+      if (!res.data?.success) throw new Error(res.data?.message || "Action failed");
       toast({ title: code.is_disabled ? "✓ Code enabled" : "✓ Code disabled" });
       load();
     } catch (e) {

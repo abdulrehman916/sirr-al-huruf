@@ -90,32 +90,12 @@ export default function AccessCodesTab() {
   const handleToggleDisable = async (e, code) => {
     e.stopPropagation();
     try {
-      const now = new Date().toISOString();
-      const me = await base44.auth.me();
-      const auditEntry = {
-        action: code.is_disabled ? 'ENABLED' : 'DISABLED',
-        timestamp: now, admin_id: me?.id || '', details: code.is_disabled ? 'Code enabled' : 'Code disabled',
-      };
-      await base44.entities.AccessCode.update(code.id, {
-        is_disabled: !code.is_disabled,
-        audit_log: [...(code.audit_log || []), auditEntry],
-      });
-      // ── P4.9: Centralized audit log for revoke/enable ──
-      try {
-        await base44.entities.AuditLog.create({
-          log_id: 'AUDIT-' + (crypto.randomUUID ? crypto.randomUUID().toUpperCase() : Date.now().toString()),
-          action_type: code.is_disabled ? 'ACCESS_CODE_ENABLED' : 'ACCESS_CODE_DISABLED',
-          performed_by: me?.id || '',
-          target_entity: 'AccessCode',
-          target_id: code.code,
-          details: JSON.stringify({ code_id: code.id, action: code.is_disabled ? 'enabled' : 'disabled' }),
-          timestamp: now,
-        });
-      } catch { /* best-effort */ }
+      const res = await base44.functions.invoke("setAccessCodeDisabled", { code_id: code.id, disable: !code.is_disabled });
+      if (!res.data?.success) throw new Error(res.data?.message || "Action failed");
       toast({ title: code.is_disabled ? "✓ Code enabled" : "✓ Code disabled" });
       load();
-    } catch (e) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     }
   };
 

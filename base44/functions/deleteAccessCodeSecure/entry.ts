@@ -17,8 +17,37 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Admin access required' }, { status: 403 });
+    if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+
+    // ── Owner-only: delete is an owner-only action (server-enforced) ──
+    let adminProfile: any = null;
+    try {
+      const aps = await base44.asServiceRole.entities.AdminProfile.filter({ email: user.email }, null, 1);
+      if (aps && aps.length > 0) adminProfile = aps[0];
+    } catch { /* ignore */ }
+    const isOwner = adminProfile?.is_owner === true;
+    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || req.headers.get('cf-connecting-ip') || '';
+    const ua = req.headers.get('user-agent') || '';
+    if (!isOwner) {
+      try {
+        await base44.asServiceRole.entities.OwnerAuditLog.create({
+          log_id: 'OAL-REJECT-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+          action_type: 'ACCESS_CODE_ACTION_REJECTED',
+          action_label: 'Rejected: delete AccessCode',
+          performed_by_id: user.id,
+          performed_by_email: user.email || '',
+          performed_by_name: user.full_name || '',
+          performed_by_role: adminProfile ? 'admin' : 'guest',
+          object_type: 'AccessCode',
+          object_id: '',
+          object_label: '',
+          details: JSON.stringify({ action: 'DELETE_ACCESS_CODE', reason: 'non-owner attempted delete' }),
+          ip_address: ip,
+          user_agent: ua,
+          timestamp: new Date().toISOString(),
+        });
+      } catch { /* best-effort */ }
+      return Response.json({ error: 'Owner access required to delete Access Codes.' }, { status: 403 });
     }
 
     const body = await req.json().catch(() => ({}));
