@@ -202,7 +202,7 @@
   "rls": {
     "create": {
       "user_condition": {
-        "role": "admin"
+        "role": "superadmin"
       }
     },
     "read": {
@@ -212,12 +212,12 @@
     },
     "update": {
       "user_condition": {
-        "role": "admin"
+        "role": "superadmin"
       }
     },
     "delete": {
       "user_condition": {
-        "role": "admin"
+        "role": "superadmin"
       }
     }
   }
