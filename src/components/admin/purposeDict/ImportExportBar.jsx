@@ -141,29 +141,80 @@ export default function ImportExportBar({ entries, onImportComplete }) {
           return;
         }
 
-        // ── Chunked smart import via backend (dedup + merge + validate) ──
-        // Sends ≤250 rows per call; backend checks existing records,
-        // merges aliases, skips empties, validates, and returns a report.
-        // Scales to millions via repeated chunked calls.
         const CHUNK_SIZE = 250;
         const totalChunks = Math.ceil(parsed.length / CHUNK_SIZE);
         const aggregated = { total: 0, imported: 0, updated: 0, skipped: 0, duplicatesMerged: 0, errors: [] };
 
+        // ── Phase 1: Auto-backup before import (version snapshot for rollback) ──
+        let versionId = null;
+        setProgress({ phase: "backup", current: 0, total: 1 });
+        try {
+          const backupRes = await base44.functions.invoke("backupPurposeDictionary", {
+            label: `Pre-import ${new Date().toISOString()}`,
+          });
+          versionId = backupRes.data?.version_id || null;
+        } catch (backupErr) {
+          // Backup failed — proceed without rollback safety net
+          console.warn("Pre-import backup failed:", backupErr);
+        }
+
+        // ── Phase 2: Chunked smart import via backend (dedup + merge + validate) ──
+        let importFailed = false;
+        let failError = null;
         for (let c = 0; c < totalChunks; c++) {
           const chunk = parsed.slice(c * CHUNK_SIZE, (c + 1) * CHUNK_SIZE);
-          setProgress({ current: c + 1, total: totalChunks });
-          const response = await base44.functions.invoke("bulkImportPurposeDictionary", { entries: chunk });
-          const r = response.data || {};
-          aggregated.total += r.total || 0;
-          aggregated.imported += r.imported || 0;
-          aggregated.updated += r.updated || 0;
-          aggregated.skipped += r.skipped || 0;
-          aggregated.duplicatesMerged += r.duplicatesMerged || 0;
-          if (r.errors) aggregated.errors.push(...r.errors);
+          setProgress({ phase: "import", current: c + 1, total: totalChunks });
+          try {
+            const response = await base44.functions.invoke("bulkImportPurposeDictionary", { entries: chunk });
+            const r = response.data || {};
+            aggregated.total += r.total || 0;
+            aggregated.imported += r.imported || 0;
+            aggregated.updated += r.updated || 0;
+            aggregated.skipped += r.skipped || 0;
+            aggregated.duplicatesMerged += r.duplicatesMerged || 0;
+            if (r.errors) aggregated.errors.push(...r.errors);
+          } catch (chunkErr) {
+            importFailed = true;
+            failError = chunkErr;
+            break;
+          }
+        }
+
+        // ── Phase 3: Rollback on failure OR finalize on success ──
+        if (importFailed && versionId) {
+          setProgress({ phase: "rollback", current: 0, total: 1 });
+          try {
+            const restoreRes = await base44.functions.invoke("restorePurposeDictionary", { version_id: versionId });
+            const rd = restoreRes.data || {};
+            // Client-side recreation: download snapshot + bulkCreate in chunks
+            if (rd.snapshot_file_url) {
+              const fileRes = await fetch(rd.snapshot_file_url);
+              const json = await fileRes.text();
+              const records = JSON.parse(json);
+              const restoreChunks = Math.ceil(records.length / 250);
+              for (let rc = 0; rc < restoreChunks; rc++) {
+                setProgress({ phase: "rollback", current: rc + 1, total: restoreChunks });
+                const chunk = records.slice(rc * 250, (rc + 1) * 250);
+                await base44.entities.PurposeDictionary.bulkCreate(chunk);
+              }
+            }
+            aggregated.errors.unshift(`Import failed: ${failError?.message || "Unknown error"}. Automatically rolled back to pre-import state (${rd.record_count} records restored).`);
+          } catch (rollbackErr) {
+            aggregated.errors.unshift(`Import failed: ${failError?.message}. Rollback also failed: ${rollbackErr.message}. Manual restore needed via Version History.`);
+          }
+          try {
+            await base44.functions.invoke("finalizePurposeDictionaryImport", { version_id: versionId, report: aggregated, status: "failed" });
+          } catch {}
+        } else if (versionId) {
+          try {
+            await base44.functions.invoke("finalizePurposeDictionaryImport", { version_id: versionId, report: aggregated, status: "completed" });
+          } catch {}
         }
 
         setReport(aggregated);
-        setMessage(`Done: ${aggregated.imported} new, ${aggregated.updated} updated, ${aggregated.duplicatesMerged} merged, ${aggregated.skipped} skipped.`);
+        setMessage(importFailed
+          ? "Import failed — rolled back to pre-import state. See report."
+          : `Done: ${aggregated.imported} new, ${aggregated.updated} updated, ${aggregated.duplicatesMerged} merged, ${aggregated.skipped} skipped.`);
         onImportComplete();
       } catch (err) {
         setMessage("Import failed: " + (err.message || "Unknown error"));
@@ -243,13 +294,16 @@ export default function ImportExportBar({ entries, onImportComplete }) {
           <div className="flex items-center gap-2 mb-1">
             <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: G.text }} />
             <p className="font-inter text-xs" style={{ color: G.text }}>
-              Processing chunk {progress.current} / {progress.total}
+              {progress.phase === "backup" ? "Creating backup snapshot..." :
+               progress.phase === "rollback" ? "Rolling back to pre-import state..." :
+               `Importing chunk ${progress.current} / ${progress.total}`}
             </p>
           </div>
           <div className="w-full h-1 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
             <div className="h-1 rounded-full transition-all" style={{
-              width: `${(progress.current / progress.total) * 100}%`,
-              background: "linear-gradient(90deg, #D4AF37, #F5D060)",
+              width: progress.phase === "import" ? `${(progress.current / progress.total) * 100}%` : "100%",
+              background: progress.phase === "rollback" ? "linear-gradient(90deg, #F87171, #FCA5A5)" : "linear-gradient(90deg, #D4AF37, #F5D060)",
+              opacity: progress.phase === "backup" ? 0.5 : 1,
             }} />
           </div>
         </div>
