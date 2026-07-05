@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Upload, FileJson, FileSpreadsheet, Loader2, Database } from "lucide-react";
 import * as XLSX from "xlsx";
 import { base44 } from "@/api/base44Client";
+import ImportReport from "./ImportReport";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -17,6 +18,8 @@ export default function ImportExportBar({ entries, onImportComplete }) {
   const [message, setMessage] = useState("");
   const fileRef = useRef(null);
   const [importMode, setImportMode] = useState("json"); // "json" | "csv" | "xlsx"
+  const [report, setReport] = useState(null);
+  const [progress, setProgress] = useState(null); // { current, total }
 
   // ── Export JSON ──
   const exportJSON = () => {
@@ -69,12 +72,39 @@ export default function ImportExportBar({ entries, onImportComplete }) {
     setShowMenu(false);
   };
 
+  // ── Export Excel (.xlsx) — exact PurposeDictionary column structure ──
+  const exportExcel = () => {
+    const headers = [
+      "purpose_phrase", "arabic_keyword", "malayalam_meaning", "english_meaning",
+      "action", "normalized_purpose_key", "language", "aliases", "source", "is_active", "notes",
+    ];
+    const rows = entries.map(e => ({
+      purpose_phrase: e.purpose_phrase || "",
+      arabic_keyword: e.arabic_keyword || "",
+      malayalam_meaning: e.malayalam_meaning || "",
+      english_meaning: e.english_meaning || "",
+      action: e.action || "jalb",
+      normalized_purpose_key: e.normalized_purpose_key || "",
+      language: e.language || "mixed",
+      aliases: (e.aliases || []).join("|"),
+      source: e.source || "",
+      is_active: e.is_active !== false ? "true" : "false",
+      notes: e.notes || "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "PurposeDictionary");
+    XLSX.writeFile(wb, `purpose-dictionary-${new Date().toISOString().split("T")[0]}.xlsx`);
+    setShowMenu(false);
+  };
+
   // ── Import ──
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setImporting(true);
     setMessage("");
+    setReport(null);
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -111,40 +141,35 @@ export default function ImportExportBar({ entries, onImportComplete }) {
           return;
         }
 
-        // Validate and clean entries
-        const cleaned = parsed
-          .filter(e => e && e.purpose_phrase && e.normalized_purpose_key)
-          .map(e => ({
-            purpose_phrase: String(e.purpose_phrase).trim(),
-            arabic_keyword: String(e.arabic_keyword || "").trim(),
-            malayalam_meaning: String(e.malayalam_meaning || "").trim(),
-            english_meaning: String(e.english_meaning || "").trim(),
-            action: e.action || "jalb",
-            normalized_purpose_key: e.normalized_purpose_key,
-            language: e.language || "mixed",
-            aliases: Array.isArray(e.aliases)
-              ? e.aliases.map(a => String(a).trim()).filter(Boolean)
-              : (typeof e.aliases === "string" ? e.aliases.split("|").map(a => a.trim()).filter(Boolean) : []),
-            source: String(e.source || "").trim(),
-            is_active: e.is_active !== false,
-            notes: String(e.notes || "").trim(),
-          }));
+        // ── Chunked smart import via backend (dedup + merge + validate) ──
+        // Sends ≤250 rows per call; backend checks existing records,
+        // merges aliases, skips empties, validates, and returns a report.
+        // Scales to millions via repeated chunked calls.
+        const CHUNK_SIZE = 250;
+        const totalChunks = Math.ceil(parsed.length / CHUNK_SIZE);
+        const aggregated = { total: 0, imported: 0, updated: 0, skipped: 0, duplicatesMerged: 0, errors: [] };
 
-        if (cleaned.length === 0) {
-          setMessage("No valid entries found (purpose_phrase and normalized_purpose_key are required).");
-          setImporting(false);
-          return;
+        for (let c = 0; c < totalChunks; c++) {
+          const chunk = parsed.slice(c * CHUNK_SIZE, (c + 1) * CHUNK_SIZE);
+          setProgress({ current: c + 1, total: totalChunks });
+          const response = await base44.functions.invoke("bulkImportPurposeDictionary", { entries: chunk });
+          const r = response.data || {};
+          aggregated.total += r.total || 0;
+          aggregated.imported += r.imported || 0;
+          aggregated.updated += r.updated || 0;
+          aggregated.skipped += r.skipped || 0;
+          aggregated.duplicatesMerged += r.duplicatesMerged || 0;
+          if (r.errors) aggregated.errors.push(...r.errors);
         }
 
-        // Bulk create
-        const result = await base44.entities.PurposeDictionary.bulkCreate(cleaned);
-        const successCount = Array.isArray(result) ? result.length : (result?.created || cleaned.length);
-        setMessage(`Imported ${successCount} entries successfully.`);
+        setReport(aggregated);
+        setMessage(`Done: ${aggregated.imported} new, ${aggregated.updated} updated, ${aggregated.duplicatesMerged} merged, ${aggregated.skipped} skipped.`);
         onImportComplete();
       } catch (err) {
         setMessage("Import failed: " + (err.message || "Unknown error"));
       } finally {
         setImporting(false);
+        setProgress(null);
         if (fileRef.current) fileRef.current.value = "";
       }
     };
@@ -201,6 +226,7 @@ export default function ImportExportBar({ entries, onImportComplete }) {
               <p className="font-inter text-[9px] uppercase tracking-wider font-bold px-2 py-1" style={{ color: "rgba(212,175,55,0.50)" }}>Export</p>
               <MenuItem icon={<FileJson className="w-3.5 h-3.5" />} label="Export JSON (Backup)" onClick={exportJSON} />
               <MenuItem icon={<FileSpreadsheet className="w-3.5 h-3.5" />} label="Export CSV" onClick={exportCSV} />
+              <MenuItem icon={<FileSpreadsheet className="w-3.5 h-3.5" />} label="Export Excel (.xlsx)" onClick={exportExcel} />
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "4px 0" }} />
               <p className="font-inter text-[9px] uppercase tracking-wider font-bold px-2 py-1" style={{ color: "rgba(212,175,55,0.50)" }}>Import</p>
               <MenuItem icon={<Upload className="w-3.5 h-3.5" />} label="Import JSON" onClick={() => triggerImport("json")} />
@@ -211,13 +237,35 @@ export default function ImportExportBar({ entries, onImportComplete }) {
         </>
       )}
 
-      {message && (
+      {progress && (
+        <div className="absolute right-0 top-full mt-1 rounded-lg p-2 z-1000 min-w-[250px]"
+          style={{ background: "rgba(8,16,38,0.95)", border: `1px solid ${G.border}` }}>
+          <div className="flex items-center gap-2 mb-1">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: G.text }} />
+            <p className="font-inter text-xs" style={{ color: G.text }}>
+              Processing chunk {progress.current} / {progress.total}
+            </p>
+          </div>
+          <div className="w-full h-1 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
+            <div className="h-1 rounded-full transition-all" style={{
+              width: `${(progress.current / progress.total) * 100}%`,
+              background: "linear-gradient(90deg, #D4AF37, #F5D060)",
+            }} />
+          </div>
+        </div>
+      )}
+      {message && !progress && (
         <div className="absolute right-0 top-full mt-1 rounded-lg p-2 z-1000 min-w-[250px]"
           style={{
             background: message.includes("failed") ? "rgba(248,113,113,0.14)" : "rgba(74,222,128,0.14)",
             border: `1px solid ${message.includes("failed") ? "rgba(248,113,113,0.40)" : "rgba(74,222,128,0.40)"}`,
           }}>
           <p className="font-inter text-xs" style={{ color: message.includes("failed") ? "#F87171" : "#4ADE80" }}>{message}</p>
+        </div>
+      )}
+      {report && !importing && (
+        <div className="absolute right-0 top-full mt-1 z-1000 min-w-[300px] max-w-[400px]">
+          <ImportReport report={report} onClose={() => setReport(null)} />
         </div>
       )}
     </div>
