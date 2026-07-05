@@ -44,3 +44,37 @@ export function getCurrentSaat(_dayNight = null) {
   const hour = getCurrentPlanetaryHour(now, sunrise, sunset);
   return hour.hourNumber;
 }
+
+// ─────────────────────────────────────────────────────────────────
+// MIZAAN 6 — KAWKAB (PLANET) "NOW" DETECTION
+// ─────────────────────────────────────────────────────────────────
+// Reuses the EXACT same Astro Clock `getCurrentPlanetaryHour` call as the
+// Saat detection above — the planetary-hour (Kawkab) algorithm is NOT
+// duplicated. The Astro Clock's returned planet name is mapped to the
+// corresponding Mizan planet key only; no calculation is reinvented.
+//
+// Astro Clock planet names (PLANET_SEQUENCE) → Mizan planet keys:
+const ASTRO_TO_MIZAN_PLANET = Object.freeze({
+  saturn:  'zuhal',
+  jupiter: 'mustari',
+  mars:    'merih',
+  sun:     'sems',
+  venus:   'zuhre',
+  mercury: 'utarid',
+  moon:    'kamer',
+});
+
+/**
+ * Returns the Mizan planet key for the current planetary hour (Kawkab),
+ * exactly as identified by the Astro Clock. Returns null if the Astro
+ * Clock cannot determine sunrise/sunset (polar edge case).
+ * @returns {string|null} one of: zuhal, mustari, merih, sems, zuhre, utarid, kamer
+ */
+export function getCurrentKawkab() {
+  const now = new Date();
+  const loc = getUserLocation();
+  const { sunrise, sunset } = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
+  if (sunrise === null || sunset === null) return null;
+  const hour = getCurrentPlanetaryHour(now, sunrise, sunset);
+  return ASTRO_TO_MIZAN_PLANET[hour.planet] || null;
+}

@@ -1,11 +1,23 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
-import { MIZAAN_PLANETS_ALL, DAY_PLANET_MAP } from "../../lib/mizaan9Data";
+import { MIZAAN_PLANETS_ALL } from "../../lib/mizaan9Data";
+import { getCurrentKawkab } from "../../lib/mizaanSaatCalculator";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
 export default function Mizaan6({ selectedDay, selected, onChange, planetsData }) {
-  const autoKey = selectedDay ? (DAY_PLANET_MAP[selectedDay] ?? null) : null;
+  // Auto "NOW" Kawkab = the Astro Clock's current planetary-hour ruler.
+  // Reuses the exact Astro Clock engine (getCurrentPlanetaryHour) via
+  // getCurrentKawkab() — no duplicate algorithm, no DAY_PLANET_MAP.
+  // Re-evaluated every 60s so the Kawkab follows the Saat as it changes.
+  // Manual selection (selected / onChange) is unchanged.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+  const autoKey = getCurrentKawkab();
   const toggle  = (key) => onChange(selected === key ? null : key);
 
   return (
