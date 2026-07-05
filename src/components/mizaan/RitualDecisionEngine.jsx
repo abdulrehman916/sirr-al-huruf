@@ -13,7 +13,8 @@ import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritua
 import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
 import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
-import { useRitualLang, localizeAnalysis, localizeAdvice, tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
+import { localizeAnalysis, localizeAdvice, tStr } from "../../lib/ritualTimingI18n";
+import { useI18n } from "@/i18n/I18nContext";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 const G = {
@@ -40,7 +41,7 @@ const SECTION_ICONS = {
 
 export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod }) {
   const [expanded, setExpanded] = useState(true);
-  const [lang, setLang] = useRitualLang();
+  const { language: lang } = useI18n();
   const { manuscriptRules } = useManuscriptRules();
   const [purposeLookup, setPurposeLookup] = useState({ matched: false });
 
@@ -87,26 +88,6 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   return (
     <div className="mt-6 space-y-4">
-      {/* ── Language Selector ── */}
-      <div className="flex justify-end">
-        <div className="inline-flex rounded-lg overflow-hidden" style={{ background: "rgba(8,16,38,0.80)", border: "1px solid rgba(212,175,55,0.30)" }}>
-          {RITUAL_LANGS.map(l => (
-            <button
-              key={l.code}
-              onClick={() => setLang(l.code)}
-              className="px-3 py-1.5 font-inter text-xs font-bold transition-colors"
-              style={{
-                background: lang === l.code ? "linear-gradient(135deg, rgba(212,175,55,0.30), rgba(212,175,55,0.12))" : "transparent",
-                color: lang === l.code ? "#F5D060" : "rgba(255,255,255,0.55)",
-                border: lang === l.code ? "1px solid rgba(212,175,55,0.50)" : "1px solid transparent",
-              }}
-            >
-              {l.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* ── Configuration Advisor (primary) ── */}
       <ConfigurationAdvisor advice={advice} lang={lang} />
 

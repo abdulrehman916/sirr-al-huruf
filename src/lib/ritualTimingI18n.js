@@ -43,6 +43,25 @@ const ML_PLANET = {
 const ML_ELEMENT = { fire: "അഗ്നി", water: "ജലം", air: "വായു", earth: "ഭൂമി" };
 const ML_PERIOD = { day: "പകൽ", night: "രാത്രി" };
 
+// ── Ritual type labels ("X Work" → Malayalam) ──
+const ML_RITUAL_TYPE = {
+  "Love Work": "പ്രണയ കർമ്മം",
+  "Separation Work": "വേർപിരിക്കൽ കർമ്മം",
+  "Healing Work": "രോഗശാന്തി കർമ്മം",
+  "Enemy Work": "ശത്രു കർമ്മം",
+  "Protection Work": "സംരക്ഷണ കർമ്മം",
+  "Wealth Work": "പണം നേടാനുള്ള കർമ്മം",
+  "Knowledge Work": "ജ്ഞാന കർമ്മം",
+  "Travel Work": "യാത്രാ കർമ്മം",
+  "Planetary Work": "ഗ്രഹ കർമ്മം",
+  "General Work": "പൊതുവായ ആധ്യാത്മിക കർമ്മം",
+};
+
+export function tRitualType(val, lang) {
+  if (lang !== "ml" || !val) return val;
+  return ML_RITUAL_TYPE[val] || val;
+}
+
 const ML_STATUS = {
   Yes: "അതെ", No: "ഇല്ല", Limited: "പരിമിതം",
   Suitable: "അനുയോജ്യം", "Not suitable": "അനുയോജ്യമല്ല",
@@ -285,7 +304,7 @@ function mlBody(section, analysis) {
   const bestDay = a?.bestDay ? tDay(a.bestDay, "ml") : "";
   const altDay = a?.altDay ? tDay(a.altDay, "ml") : "";
   const bestPlanet = a?.bestPlanetaryHour ? tPlanet(a.bestPlanetaryHour, "ml") : "";
-  const ritualType = a?.ritualType || "";
+  const ritualType = tRitualType(a?.ritualType, "ml") || "";
   const incense = a?.recommendedIncense ? tPlanet(a.astroClockStatus?.currentHour?.planet, "ml") + " ധൂപം" : "";
   const windows = a?.bestWindowsToday || [];
   const ranked = a?.rankedWindows || [];
@@ -428,7 +447,8 @@ export function localizeAnalysis(analysis, lang) {
     report,
     expertNarrative,
     verdict: tVerdict(analysis.verdict, lang),
-    ritualType: analysis.ritualType, // keep original (name)
+    ritualType: tRitualType(analysis.ritualType, lang),
+    ritualCategory: tRitualType(analysis.ritualCategory, lang),
     canPerformToday: tStatus(analysis.canPerformToday, lang),
     astroClockStatus: {
       ...analysis.astroClockStatus,
@@ -454,7 +474,7 @@ export function localizeAnalysis(analysis, lang) {
 function mlNarrative(line, idx, analysis, lang) {
   if (lang !== "ml") return line;
   const a = analysis;
-  const ritualType = a?.ritualType || "പൊതുവായ ആധ്യാത്മിക കർമ്മം";
+  const ritualType = tRitualType(a?.ritualType, "ml") || "പൊതുവായ ആധ്യാത്മിക കർമ്മം";
   const dominant = a?.elementDirection ? a.elementDirection : null;
   const elem = a?.elementCompatibility?.element;
   const elemMl = tElement(elem, "ml");
@@ -511,6 +531,7 @@ function tAdvisorCurrent(r, lang) {
   if (ML_DAY[v]) return ML_DAY[v];
   if (ML_PLANET[v]) return ML_PLANET[v];
   if (ML_ELEMENT[v]) return ML_ELEMENT[v];
+  if (ML_RITUAL_TYPE[v]) return ML_RITUAL_TYPE[v];
   if (/^Hour #/.test(v)) return v.replace("Hour #", "മണിക്കൂർ #");
   if (/^Now:/.test(v)) return v.replace("Now:", "ഇപ്പോൾ:");
   if (/^Not selected \(auto-inferred:/.test(v)) return v.replace("Not selected (auto-inferred:", "തിരഞ്ഞെടുത്തിട്ടില്ല (സ്വയമേവ നിർണ്ണയിച്ചത്:").replace("Khayr", "ഖൈർ").replace("Sharr", "ശർ");
@@ -525,6 +546,7 @@ function tAdvisorRecommended(r, lang) {
   if (ML_DAY[v]) return ML_DAY[v];
   if (ML_PLANET[v]) return ML_PLANET[v];
   if (ML_ELEMENT[v]) return ML_ELEMENT[v];
+  if (ML_RITUAL_TYPE[v]) return ML_RITUAL_TYPE[v];
   // "Friday or Tuesday (alternative)" pattern
   const orMatch = v.match(/^(\w+) or (\w+) \(alternative\)$/);
   if (orMatch) return `${ML_DAY[orMatch[1]] || orMatch[1]} അല്ലെങ്കിൽ ${ML_DAY[orMatch[2]] || orMatch[2]} (ബദൽ)`;
