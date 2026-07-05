@@ -3,13 +3,14 @@
 // Attached below all four Mizan methods. NEVER modifies Mizan logic.
 // Renders the 10-section expert spiritual decision report.
 // ═══════════════════════════════════════════════════════════════
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock, Calendar,
   Star, Sun, Sunset, Globe, CalendarClock, FileText, Scroll, Shield, Zap,
 } from "lucide-react";
 import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingEngineV3";
+import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
 import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
 import { useRitualLang, localizeAnalysis, localizeAdvice, tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
@@ -41,17 +42,42 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
   const [expanded, setExpanded] = useState(true);
   const [lang, setLang] = useRitualLang();
   const { manuscriptRules } = useManuscriptRules();
+  const [purposeLookup, setPurposeLookup] = useState({ matched: false });
+
+  // ── Purpose Dictionary background lookup (7th Mizan → normalized intent) ──
+  // Silently checks the Purpose Dictionary when the user enters a custom purpose.
+  // If matched AND no purpose card is selected, injects the normalized purpose key
+  // into a cloned selections object for the engine. Does NOT modify the engine,
+  // any calculation, or the 7th Mizan UI. Falls back silently if no match.
+  useEffect(() => {
+    setPurposeLookup({ matched: false });
+    if (!customPurpose || !customPurpose.trim()) return;
+    let cancelled = false;
+    lookupPurposeIntent(customPurpose, selections?.purposes?.[0]).then((res) => {
+      if (!cancelled) setPurposeLookup(res);
+    });
+    return () => { cancelled = true; };
+  }, [customPurpose, selections?.purposes]);
+
+  const effectiveSelections = useMemo(() => {
+    if (purposeLookup.matched && purposeLookup.ritualIntent) {
+      const hasCard = Array.isArray(selections?.purposes) && selections.purposes.length > 0;
+      if (!hasCard) return { ...selections, purposes: [purposeLookup.ritualIntent] };
+    }
+    return selections;
+  }, [selections, purposeLookup]);
+
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    return analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules });
-  }, [result, selections, customPurpose, activeMethod, manuscriptRules]);
+    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules });
+  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
   const rawAdvice = useMemo(() => {
     if (!result) return null;
-    return analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules });
-  }, [result, selections, customPurpose, activeMethod, manuscriptRules]);
+    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules });
+  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 
