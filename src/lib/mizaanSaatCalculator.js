@@ -82,40 +82,50 @@ export function getCurrentKawkab() {
 // ─────────────────────────────────────────────────────────────────
 // KAWKAB FOR A SPECIFIC SAAT (Selected Saat → Kawkab sync)
 // ─────────────────────────────────────────────────────────────────
-// Reuses the EXACT same Astro Clock planetary-hour formula as
-// getCurrentPlanetaryHour: planetIndex = (dayRuler.index + hourIndex) % 7.
-// The only difference is the input — a user-selected Saat number (1–12)
-// instead of the current time. No algorithm is duplicated; the same
-// PLANET_SEQUENCE, getDayRuler, and formula are reused.
+// Reads DIRECTLY from the manuscript Day/Night planetary-hour tables
+// (GÜNDÜZ / GECE SAATLERİ TABLOSU). No sequence inference — each cell is
+// the exact manuscript value for the (Day, Day/Night, Saat) triple.
 //
-// Note: Day and Night use DIFFERENT planet tables per the manuscript.
-// Night Saat 1 = Day Saat 1 shifted +2 in the Chaldean sequence
-// (GECE SAATLERİ TABLOSU). The nightOffset below encodes this rule.
-const MIZAN_DAY_TO_WEEKDAY = Object.freeze({
-  sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+// Cell values use Astro Clock planet names and are mapped to Mizan keys via
+// ASTRO_TO_MIZAN_PLANET. The NOW Kawkab (getCurrentKawkab above) still
+// reuses the Astro Clock engine; this lookup serves the SELECTED triple.
+
+// GÜNDÜZ SAATLERİ TABLOSU — Day table (Saat 1–12 × 7 weekdays)
+const MANUSCRIPT_DAY_TABLE = Object.freeze({
+  sun: ['sun','venus','mercury','moon','saturn','jupiter','mars','sun','venus','mercury','moon','saturn'],
+  mon: ['moon','saturn','jupiter','mars','sun','venus','mercury','moon','saturn','jupiter','mars','sun'],
+  tue: ['mars','sun','venus','mercury','moon','saturn','jupiter','mars','sun','venus','mercury','moon'],
+  wed: ['mercury','moon','saturn','jupiter','mars','sun','venus','mercury','moon','saturn','jupiter','mars'],
+  thu: ['jupiter','mars','sun','venus','mercury','moon','saturn','jupiter','mars','sun','venus','mercury'],
+  fri: ['venus','mercury','moon','saturn','jupiter','mars','sun','venus','mercury','moon','saturn','jupiter'],
+  sat: ['saturn','jupiter','mars','sun','venus','mercury','moon','saturn','jupiter','mars','sun','venus'],
+});
+
+// GECE SAATLERİ TABLOSU — Night table (Saat 1–12 × 7 weekdays)
+const MANUSCRIPT_NIGHT_TABLE = Object.freeze({
+  sun: ['mercury','moon','saturn','jupiter','mars','sun','venus','mercury','moon','saturn','jupiter','mars'],
+  mon: ['jupiter','mars','sun','venus','mercury','moon','saturn','jupiter','mars','sun','venus','mercury'],
+  tue: ['venus','mercury','moon','saturn','jupiter','mars','sun','venus','mercury','moon','saturn','jupiter'],
+  wed: ['saturn','jupiter','mars','sun','venus','mercury','moon','saturn','jupiter','mars','sun','venus'],
+  thu: ['sun','venus','mercury','moon','saturn','jupiter','mars','sun','venus','mercury','moon','saturn'],
+  fri: ['moon','saturn','jupiter','mars','sun','venus','mercury','moon','saturn','jupiter','mars','sun'],
+  sat: ['mars','sun','venus','mercury','moon','saturn','jupiter','mars','sun','venus','mercury','moon'],
 });
 
 /**
- * Returns the Mizan planet key ruling a specific Saat number (1–12) on a
- * given weekday, using the Astro Clock's planetary-hour engine.
- *
- * Manuscript Night offset (GECE SAATLERİ TABLOSU): when dayNight === 'gece'
- * (night), the Night table is the Day table shifted +2 in the Chaldean
- * sequence. Day ('gunduz') or unset → no offset.
+ * Returns the Mizan planet key for a specific (Day, Day/Night, Saat) triple,
+ * read directly from the manuscript Day or Night table — no inference.
  *
  * @param {number} saatNumber 1–12
  * @param {string} dayKey     one of: sun, mon, tue, wed, thu, fri, sat
- * @param {string|null} dayNight  'gunduz' (day) | 'gece' (night) | null
+ * @param {string|null} dayNight  'gunduz' (day) | 'gece' (night) | null (treated as day)
  * @returns {string|null}     one of: zuhal, mustari, merih, sems, zuhre, utarid, kamer
  */
 export function getKawkabForSaat(saatNumber, dayKey, dayNight = null) {
   if (!saatNumber || saatNumber < 1 || saatNumber > 12) return null;
-  const dayOfWeek = MIZAN_DAY_TO_WEEKDAY[dayKey];
-  if (dayOfWeek === undefined) return null;
-  const dayRuler = getDayRuler(dayOfWeek);
-  if (!dayRuler) return null;
-  const nightOffset = dayNight === 'gece' ? 2 : 0;
-  const planetIndex = (dayRuler.index + nightOffset + (saatNumber - 1)) % 7;
-  const astroPlanet = PLANET_SEQUENCE[planetIndex];
+  const table = dayNight === 'gece' ? MANUSCRIPT_NIGHT_TABLE : MANUSCRIPT_DAY_TABLE;
+  const row = table[dayKey];
+  if (!row) return null;
+  const astroPlanet = row[saatNumber - 1];
   return ASTRO_TO_MIZAN_PLANET[astroPlanet] || null;
 }
