@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Upload, FileJson, FileSpreadsheet, Loader2, Database } from "lucide-react";
+import * as XLSX from "xlsx";
 import { base44 } from "@/api/base44Client";
 
 const G = {
@@ -15,7 +16,7 @@ export default function ImportExportBar({ entries, onImportComplete }) {
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState("");
   const fileRef = useRef(null);
-  const [importMode, setImportMode] = useState("json"); // "json" | "csv"
+  const [importMode, setImportMode] = useState("json"); // "json" | "csv" | "xlsx"
 
   // ── Export JSON ──
   const exportJSON = () => {
@@ -78,10 +79,10 @@ export default function ImportExportBar({ entries, onImportComplete }) {
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
-        const content = event.target.result;
         let parsed = [];
 
         if (importMode === "json") {
+          const content = event.target.result;
           parsed = JSON.parse(content);
           if (!Array.isArray(parsed)) {
             // Maybe it's a backup object with entries array
@@ -91,8 +92,16 @@ export default function ImportExportBar({ entries, onImportComplete }) {
               throw new Error("Invalid JSON: expected an array of entries");
             }
           }
+        } else if (importMode === "xlsx") {
+          // Excel parse — read as ArrayBuffer
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          parsed = XLSX.utils.sheet_to_json(sheet, { defval: "" });
         } else {
           // CSV parse
+          const content = event.target.result;
           parsed = parseCSV(content);
         }
 
@@ -139,7 +148,11 @@ export default function ImportExportBar({ entries, onImportComplete }) {
         if (fileRef.current) fileRef.current.value = "";
       }
     };
-    reader.readAsText(file);
+    if (importMode === "xlsx") {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
   };
 
   const triggerImport = (mode) => {
@@ -155,7 +168,7 @@ export default function ImportExportBar({ entries, onImportComplete }) {
       <input
         ref={fileRef}
         type="file"
-        accept={importMode === "json" ? ".json,application/json" : ".csv,text/csv"}
+        accept={importMode === "json" ? ".json,application/json" : importMode === "xlsx" ? ".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : ".csv,text/csv"}
         onChange={handleFileSelect}
         style={{ display: "none" }}
       />
@@ -192,6 +205,7 @@ export default function ImportExportBar({ entries, onImportComplete }) {
               <p className="font-inter text-[9px] uppercase tracking-wider font-bold px-2 py-1" style={{ color: "rgba(212,175,55,0.50)" }}>Import</p>
               <MenuItem icon={<Upload className="w-3.5 h-3.5" />} label="Import JSON" onClick={() => triggerImport("json")} />
               <MenuItem icon={<Upload className="w-3.5 h-3.5" />} label="Import CSV" onClick={() => triggerImport("csv")} />
+              <MenuItem icon={<Upload className="w-3.5 h-3.5" />} label="Import Excel (.xlsx)" onClick={() => triggerImport("xlsx")} />
             </div>
           </div>
         </>
