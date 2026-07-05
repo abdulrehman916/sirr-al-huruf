@@ -5,7 +5,34 @@
   "properties": {
     "purpose_phrase": {
       "type": "string",
-      "description": "The purpose phrase as a user might enter it in the 7th Mizan custom purpose field (e.g. \u0645\u062d\u0628\u0629, \u062c\u0644\u0628, Mahabbah, \u0d38\u0d2e\u0d4d\u0d2a\u0d24\u0d4d\u0d24\u0d4d)"
+      "description": "Full Arabic phrase for this purpose entry (e.g. \u062c\u0644\u0628 \u0627\u0644\u0645\u062d\u0628\u0629)"
+    },
+    "arabic_keyword": {
+      "type": "string",
+      "description": "Short Arabic keyword for the purpose subject (e.g. \u0645\u062d\u0628\u0629)"
+    },
+    "malayalam_meaning": {
+      "type": "string",
+      "description": "Malayalam translation of the purpose (e.g. \u0d38\u0d4d\u0d28\u0d47\u0d39\u0d02)"
+    },
+    "english_meaning": {
+      "type": "string",
+      "description": "English translation of the purpose (e.g. Love)"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "jalb",
+        "tard",
+        "tafriq",
+        "jam",
+        "sihhat",
+        "sekam",
+        "tarfet",
+        "other"
+      ],
+      "default": "jalb",
+      "description": "Ritual action category this entry belongs to (Jalb=Attraction, Tard=Banishment, Tafriq=Separation, Jam=Gathering, etc.)"
     },
     "normalized_purpose_key": {
       "type": "string",
@@ -31,7 +58,7 @@
         "en",
         "mixed"
       ],
-      "default": "ar",
+      "default": "mixed",
       "description": "Primary language of the phrase for admin reference"
     },
     "aliases": {
@@ -40,7 +67,7 @@
         "type": "string"
       },
       "default": [],
-      "description": "Alternative spellings, forms, or synonyms of the same purpose phrase"
+      "description": "Alternative spellings, forms, or cross-language synonyms (Arabic, Malayalam, English) of the same purpose"
     },
     "source": {
       "type": "string",
