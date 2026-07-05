@@ -3,20 +3,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // ═══════════════════════════════════════════════════════════════
 // PURPOSE DICTIONARY LOOKUP — Read-only backend function
 // ═══════════════════════════════════════════════════════════════
-// ISOLATION: This function is called ONLY from the 7th Mizan
-// custom purpose field via purposeDictionaryLookup.js →
-// RitualDecisionEngine.jsx. It must NEVER be used by any other
-// Mizan, any Ebced/Bast calculation, any Kasam, any Astro Clock
-// computation, or any ritual mathematics.
-//
-// RESPONSIBILITY: 7th Mizan Custom Purpose → lookup → return
-// normalized_purpose_key → pass to existing Ritual Timing Engine.
-// Nothing else.
-//
-// SCALABILITY: Uses database-level indexed queries (filter + limit)
-// instead of loading all entries into memory. Supports unlimited
-// dictionary growth (thousands to millions of entries) with no
-// code changes needed.
+// ── PERMANENT ISOLATION CONTRACT (immutable) ──
+// This is the ONLY code permitted to READ the PurposeDictionary.
+//   • READ ONLY. Never writes.
+//   • Returns exactly ONE normalized_purpose_key, or {matched:false}.
+//   • Must NEVER modify any workflow, trigger any calculation,
+//     perform scoring/timing/AI/semantic inference, or influence
+//     any Mizan, engine, Ebced, Bast, Kasam, or Astro Clock output.
+//   • Must use indexed database queries with LIMIT 1 — never load
+//     the full dictionary into memory. Must stay fast at 1M+ records.
+//   • On no match → return {matched:false} and let the existing
+//     workflow continue exactly as before.
+// Caller: src/lib/purposeDictionaryLookup.js (7th Mizan custom purpose).
+// No other file, function, engine, page, or component may read this DB.
+// See src/lib/purposeDictionaryIsolationLaw.js for the full contract.
 // ═══════════════════════════════════════════════════════════════
 
 Deno.serve(async (req) => {
