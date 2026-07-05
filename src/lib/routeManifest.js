@@ -74,6 +74,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/products', component: 'AdminProducts', chunk: 'AdminProducts' },
   { path: '/admin/shop', component: 'AdminShopDashboard', chunk: 'AdminShopDashboard' },
   { path: '/admin/audit-log', component: 'AdminAuditLog', chunk: 'AdminAuditLog' },
+  { path: '/admin/purpose-dictionary', component: 'AdminPurposeDictionary', chunk: 'AdminPurposeDictionary' },
 
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },

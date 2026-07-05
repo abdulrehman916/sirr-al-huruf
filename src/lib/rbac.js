@@ -81,6 +81,9 @@ export const ROUTE_ACCESS = {
   // be visible to non-owners, so the admin role is intentionally omitted here;
   // the getOwnerAuditLog backend function also enforces owner-only server-side).
   "/admin/audit-log":             { roles: [ROLES.OWNER] },
+  // Purpose Dictionary Manager — Owner-only (admin-only backend lookup database
+  // for the 7th Mizan). NOT part of any calculation. Pure management surface.
+  "/admin/purpose-dictionary":    { roles: [ROLES.OWNER] },
 };
 
 // Match a concrete path against ROUTE_ACCESS patterns (supports :param).
