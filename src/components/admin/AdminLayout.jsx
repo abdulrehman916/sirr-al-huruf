@@ -393,6 +393,36 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
               </span>
             </>
           )}
+
+          {/* ── Persistent Log Out button — always visible (even when sidebar collapsed) ── */}
+          <button
+            onClick={async () => {
+              clearLocalSession();
+              try { sessionStorage.removeItem("sirr_admin_session"); } catch {}
+              try { sessionStorage.removeItem("sirr_google_prompt_dismissed"); } catch {}
+              await base44.auth.logout("/login");
+            }}
+            aria-label="Log Out"
+            title="Log Out"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              marginLeft: "auto",
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              background: "rgba(239,68,68,0.10)",
+              border: "1px solid rgba(239,68,68,0.40)",
+              color: "#fca5a5",
+              cursor: "pointer",
+              flexShrink: 0,
+              padding: 0,
+            }}
+          >
+            <LogOut style={{ width: 16, height: 16 }} />
+          </button>
         </div>
 
         {/* ── Scrollable content area ── */}
