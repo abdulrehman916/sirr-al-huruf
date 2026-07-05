@@ -12,6 +12,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { ROLES, isAdminRole, canAccessAdminRoute, getAdminHomePath } from "@/lib/rbac";
 import { hasSubFeatures } from "@/lib/featureRegistry";
 import { preloadPageFeatureConfigs } from "@/lib/featureConfigCache";
+import WhatsAppAccessRequest from "@/components/WhatsAppAccessRequest";
+import RequestAccessModal from "@/components/RequestAccessModal";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -233,6 +235,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [showCodeEntry, setShowCodeEntry] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [codeResult, setCodeResult] = useState(null);
@@ -339,6 +342,18 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             Enter Reading Access Code
           </button>
 
+          {/* ── Request access: WhatsApp + in-app form (original workflow) ── */}
+          <div className="mb-3">
+            <WhatsAppAccessRequest pageName={pageName} routePath={routePath} />
+          </div>
+
+          <button onClick={() => setShowRequestModal(true)}
+            className="w-full py-3 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2 mb-3"
+            style={{ background: "rgba(212,175,55,0.08)", border: `1px solid rgba(212,175,55,0.35)`, color: "#F5D060" }}>
+            <MessageCircle className="w-4 h-4" />
+            Request Access (In-App Form)
+          </button>
+
           <button onClick={() => navigate("/")}
             className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
             style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
@@ -405,6 +420,17 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* In-app access request modal (original workflow → submitAccessRequest) */}
+      <AnimatePresence>
+        {showRequestModal && (
+          <RequestAccessModal
+            pagePath={routePath}
+            pageName={pageName}
+            onClose={() => setShowRequestModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
