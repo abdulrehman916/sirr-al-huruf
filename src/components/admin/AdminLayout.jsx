@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags } from "lucide-react";
+import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { filterAdminSections } from "@/lib/rbac";
+import { base44 } from "@/api/base44Client";
+import { clearLocalSession } from "@/lib/sessionId";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -155,6 +157,33 @@ function SidebarContent({ location, onNavigate }) {
 
       {/* Back to App */}
       <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${G.border}` }}>
+        <button
+          onClick={async () => {
+            clearLocalSession();
+            try { sessionStorage.removeItem("sirr_admin_session"); } catch {}
+            try { sessionStorage.removeItem("sirr_google_prompt_dismissed"); } catch {}
+            if (onNavigate) onNavigate();
+            await base44.auth.logout("/login");
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            width: "100%",
+            padding: "9px 10px",
+            borderRadius: 8,
+            background: "rgba(239,68,68,0.08)",
+            border: "1px solid rgba(239,68,68,0.35)",
+            color: "#fca5a5",
+            cursor: "pointer",
+            marginBottom: 8,
+          }}
+        >
+          <LogOut style={{ width: 14, height: 14, flexShrink: 0 }} />
+          <span style={{ fontFamily: "Inter, sans-serif", fontSize: 11, fontWeight: 700 }}>
+            Log Out
+          </span>
+        </button>
         <Link
           to="/"
           onClick={onNavigate}
