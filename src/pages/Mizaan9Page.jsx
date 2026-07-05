@@ -41,6 +41,7 @@ import RitualDecisionEngine from "../components/mizaan/RitualDecisionEngine";
 import QasamPanel from "../components/mizaan/QasamPanel";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
+import { getCurrentSaat } from "../lib/mizaanSaatCalculator";
 import { usePageState } from "../context/PageStateContext";
 import { Lock } from "lucide-react";
 import FeatureLockedCard from "../components/FeatureLockedCard";
@@ -85,7 +86,7 @@ function buildDefaultSelections(dominant) {
   return {
     elements:   dominant ? [dominant] : [],
     dayNight:   dn,
-    hour:       (Math.floor(new Date().getHours() / 2) % 12) + 1,
+    hour:       getCurrentSaat(dn),
     days:       ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()],
     planet:     DAY_PLANET_MAP[['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]] ?? null,
     purposes:   [],
@@ -516,7 +517,8 @@ export default function Mizaan9Page() {
                 selected={selections.hour}
                 onChange={updateSel("hour")}
                 hoursData={ds.hours}
-                />
+                dayNight={selections.dayNight}
+              />
               <MizaanDivider />
               <Mizaan5
                 selected={selections.days}
@@ -691,6 +693,7 @@ export default function Mizaan9Page() {
                   selected={selections.hour}
                   onChange={updateSel("hour")}
                   hoursData={ds.hours}
+                  dayNight={selections.dayNight}
                 />
                 <MizaanDivider />
                 <Mizaan5
@@ -876,6 +879,7 @@ export default function Mizaan9Page() {
                   selected={selections.hour}
                   onChange={updateSel("hour")}
                   hoursData={ds.hours}
+                  dayNight={selections.dayNight}
                 />
                 <MizaanDivider />
                 <Mizaan5
@@ -1101,6 +1105,7 @@ export default function Mizaan9Page() {
                   selected={selections.hour}
                   onChange={updateSel("hour")}
                   hoursData={ds.hours}
+                  dayNight={selections.dayNight}
                 />
                 <MizaanDivider />
                 <Mizaan5

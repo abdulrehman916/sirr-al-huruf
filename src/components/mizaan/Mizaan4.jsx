@@ -1,17 +1,12 @@
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_HOURS } from "../../lib/mizaan9Data";
+import { getCurrentSaat } from "../../lib/mizaanSaatCalculator";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", glowHi: "rgba(212,175,55,0.45)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", faint: "rgba(212,175,55,0.20)" };
 
-// Map 0-23 local hour → 1-12 mizaan hour (each mizaan hour = 2 clock hours)
-function getCurrentMizaanHour() {
-  const h = new Date().getHours(); // 0–23
-  return (Math.floor(h / 2) % 12) + 1;
-}
-
-export default function Mizaan4({ selected, onChange, hoursData }) {
-  const autoHour = getCurrentMizaanHour();
+export default function Mizaan4({ selected, onChange, hoursData, dayNight }) {
+  const autoHour = getCurrentSaat(dayNight);
   const toggle = (hour) => onChange(selected === hour ? null : hour);
 
   return (
