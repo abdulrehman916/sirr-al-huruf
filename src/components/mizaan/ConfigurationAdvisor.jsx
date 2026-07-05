@@ -9,7 +9,7 @@ import {
   ChevronDown, CheckCircle2, AlertCircle, ArrowRight,
   Target, Scale, Calendar, Orbit, Clock, Flame, Sunset, Timer, Sparkles, Star,
 } from "lucide-react";
-import { tStr } from "../../lib/ritualTimingI18n";
+import { tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -33,7 +33,7 @@ const FIELD_ICONS = {
   star: Star,
 };
 
-export default function ConfigurationAdvisor({ advice, lang = "ml" }) {
+export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
   const [expanded, setExpanded] = useState(true);
 
   if (!advice || !advice.recommendations) return null;
@@ -86,6 +86,26 @@ export default function ConfigurationAdvisor({ advice, lang = "ml" }) {
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
             <div className="p-4 space-y-3">
+              {/* ── Language toggle (English / Malayalam) ── */}
+              {setLang && (
+                <div className="flex items-center justify-end gap-1.5">
+                  <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Lang</span>
+                  {RITUAL_LANGS.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => setLang(l.code)}
+                      className="px-2 py-0.5 rounded-md font-inter text-[10px] font-bold transition"
+                      style={{
+                        background: lang === l.code ? "rgba(212,175,55,0.18)" : "transparent",
+                        border: `1px solid ${lang === l.code ? G.borderHi : G.border}`,
+                        color: lang === l.code ? G.text : "rgba(255,255,255,0.45)",
+                      }}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {/* ── Intro statement ── */}
               <div className="rounded-xl p-3" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))", border: `1px solid ${G.border}` }}>
                 <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>

@@ -13,8 +13,7 @@ import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritua
 import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
 import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
-import { localizeAnalysis, localizeAdvice, tStr } from "../../lib/ritualTimingI18n";
-import { useI18n } from "@/i18n/I18nContext";
+import { localizeAnalysis, localizeAdvice, tStr, useRitualLang } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 const G = {
@@ -41,7 +40,7 @@ const SECTION_ICONS = {
 
 export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod }) {
   const [expanded, setExpanded] = useState(true);
-  const { language: lang } = useI18n();
+  const [lang, setLang] = useRitualLang();
   const { manuscriptRules } = useManuscriptRules();
   const [purposeLookup, setPurposeLookup] = useState({ matched: false });
 
@@ -89,7 +88,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
   return (
     <div className="mt-6 space-y-4">
       {/* ── Configuration Advisor (primary) ── */}
-      <ConfigurationAdvisor advice={advice} lang={lang} />
+      <ConfigurationAdvisor advice={advice} lang={lang} setLang={setLang} />
 
       <div className="rounded-2xl overflow-hidden" style={{
         background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
