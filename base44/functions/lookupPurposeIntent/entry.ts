@@ -10,8 +10,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 //   • Must NEVER modify any workflow, trigger any calculation,
 //     perform scoring/timing/AI/semantic inference, or influence
 //     any Mizan, engine, Ebced, Bast, Kasam, or Astro Clock output.
-//   • Must use indexed database queries with LIMIT 1 — never load
-//     the full dictionary into memory. Must stay fast at 1M+ records.
+//   • Must use indexed database queries with small bounded limits
+//     (never load the full dictionary) and select the LONGEST matching
+//     entry so a specific phrase always beats a generic parent. Must
+//     stay fast at 1M+ records.
 //   • On no match → return {matched:false} and let the existing
 //     workflow continue exactly as before.
 // Caller: src/lib/purposeDictionaryLookup.js (7th Mizan custom purpose).
@@ -43,57 +45,97 @@ Deno.serve(async (req) => {
       return Response.json({ matched: false });
     }
 
-    // Helper: try a single database query and return first match
-    const tryQuery = async (query) => {
-      const results = await base44.asServiceRole.entities.PurposeDictionary.filter(
-        query,
-        null,
-        1 // limit — only need the first match
-      );
-      if (results && results.length > 0) {
-        const entry = results[0];
-        return {
-          matched: true,
-          ritualIntent: entry.normalized_purpose_key,
-          matchedPhrase: entry.purpose_phrase,
-          source: entry.source || null,
-          malayalam_meaning: entry.malayalam_meaning || "",
-          english_meaning: entry.english_meaning || "",
-        };
-      }
-      return null;
-    };
-
-    // ── STEP 1: Exact match on aliases array (indexed) ──
-    // Aliases contain pre-normalized forms (no harakat) in Arabic,
-    // Malayalam, and English, so this covers most lookups.
-    const aliasResult = await tryQuery({
-      is_active: true,
-      aliases: normalizedInput,
+    // Build the standard single-result response from an entry
+    const buildResp = (entry) => ({
+      matched: true,
+      ritualIntent: entry.normalized_purpose_key,
+      matchedPhrase: entry.purpose_phrase,
+      source: entry.source || null,
+      malayalam_meaning: entry.malayalam_meaning || "",
+      english_meaning: entry.english_meaning || "",
     });
-    if (aliasResult) return Response.json(aliasResult);
 
-    // ── STEP 2: Exact match on arabic_keyword (indexed) ──
-    const keywordResult = await tryQuery({
-      is_active: true,
-      arabic_keyword: normalizedInput,
-    });
-    if (keywordResult) return Response.json(keywordResult);
+    // ── STEP 1: Exact purpose_phrase match (highest priority) ──
+    // If the dictionary stores the exact full phrase, return it immediately.
+    const phraseHits = await base44.asServiceRole.entities.PurposeDictionary.filter(
+      { is_active: true, purpose_phrase: normalizedInput },
+      null,
+      1
+    );
+    if (phraseHits && phraseHits.length > 0) {
+      return Response.json(buildResp(phraseHits[0]));
+    }
 
-    // ── STEP 3: Per-word fallback (up to 3 longest words) ──
-    // Even a SINGLE remaining token (e.g. "البدن") is queried — never
-    // skipped. Each word is tried against BOTH aliases and arabic_keyword.
-    const words = normalizedInput
+    // ── STEP 2: Longest-match selection across aliases + arabic_keyword ──
+    // Gather candidates from the full input AND each word (longest first),
+    // querying aliases and arabic_keyword (indexed, small bounded limit).
+    // Then pick the candidate with the LONGEST matched key — this ensures a
+    // specific entry like "الصحة في الدواب" always beats the generic "الصحة".
+    // Tie-break: longer normalized purpose_phrase, then field priority
+    // (arabic_keyword > aliases). Never loads the full dictionary.
+    const wordList = normalizedInput
       .split(/\s+/)
       .filter((w) => w.length >= 3)
       .sort((a, b) => b.length - a.length)
-      .slice(0, 3); // limit to 3 words for performance
+      .slice(0, 5);
+    const probes = [normalizedInput, ...wordList.filter((w) => w !== normalizedInput)];
 
-    for (const word of words) {
-      const aliasHit = await tryQuery({ is_active: true, aliases: word });
-      if (aliasHit) return Response.json(aliasHit);
-      const keywordHit = await tryQuery({ is_active: true, arabic_keyword: word });
-      if (keywordHit) return Response.json(keywordHit);
+    const FIELD_RANK = { arabic_keyword: 0, aliases: 1 };
+    const candidates = new Map(); // id -> { entry, field, key }
+    const addCandidates = (hits, field, key) => {
+      for (const h of hits) {
+        const id = h.id || (h.purpose_phrase + "|" + (h.arabic_keyword || ""));
+        const prev = candidates.get(id);
+        if (!prev || FIELD_RANK[field] < FIELD_RANK[prev.field]) {
+          candidates.set(id, { entry: h, field, key });
+        }
+      }
+    };
+
+    for (const probe of probes) {
+      const aHits = await base44.asServiceRole.entities.PurposeDictionary.filter(
+        { is_active: true, aliases: probe },
+        null,
+        5
+      );
+      if (aHits && aHits.length) addCandidates(aHits, "aliases", probe);
+
+      const kHits = await base44.asServiceRole.entities.PurposeDictionary.filter(
+        { is_active: true, arabic_keyword: probe },
+        null,
+        5
+      );
+      if (kHits && kHits.length) addCandidates(kHits, "arabic_keyword", probe);
+    }
+
+    if (candidates.size > 0) {
+      // Specificity: count how many words of the entry's purpose_phrase
+      // (ال-prefix stripped) appear in the input. Higher overlap = more
+      // specific to the typed phrase, so a specific entry (e.g. "صحة البدن")
+      // beats a generic action-prefixed one (e.g. "جلب الصحة") on input
+      // "الصحة في البدن". Tie-break: matched-key length, purpose_phrase
+      // length, then field priority (arabic_keyword > aliases).
+      const stripAl = (w) => w.replace(/^ال/, "");
+      const inputWords = new Set(normalizedInput.split(/\s+/).filter(Boolean).map(stripAl));
+      let best = null;
+      for (const c of candidates.values()) {
+        const keyLen = (c.key || "").length;
+        const ppNorm = normalize(c.entry.purpose_phrase || "");
+        const ppLen = ppNorm.length;
+        const overlap = ppNorm.split(/\s+/).filter(Boolean).filter((w) => inputWords.has(stripAl(w))).length;
+        const fieldRank = FIELD_RANK[c.field];
+        const score = { overlap, keyLen, ppLen, fieldRank };
+        if (
+          !best ||
+          score.overlap > best.score.overlap ||
+          (score.overlap === best.score.overlap && score.keyLen > best.score.keyLen) ||
+          (score.overlap === best.score.overlap && score.keyLen === best.score.keyLen && score.ppLen > best.score.ppLen) ||
+          (score.overlap === best.score.overlap && score.keyLen === best.score.keyLen && score.ppLen === best.score.ppLen && score.fieldRank < best.score.fieldRank)
+        ) {
+          best = { entry: c.entry, score };
+        }
+      }
+      if (best) return Response.json(buildResp(best.entry));
     }
 
     return Response.json({ matched: false });
