@@ -134,7 +134,14 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
                   <AdvisorRow
                     key={idx}
                     rec={rec.field === "Ritual Purpose" && semanticPhrase
-                      ? { ...rec, current: semanticPhrase, recommended: semanticPhrase }
+                      ? {
+                          ...rec,
+                          current: semanticPhrase,
+                          recommended: semanticPhrase,
+                          reason: lang === "ml"
+                            ? `ഈ കർമ്മത്തിന്റെ ഉദ്ദേശം ${semanticPhrase} എന്നതാണ്.`
+                            : `The intent of this ritual is: ${semanticPhrase}.`,
+                        }
                       : rec}
                     lang={lang}
                   />
