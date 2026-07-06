@@ -34,7 +34,7 @@ const CARD_TO_ACTION = {
 };
 
 // ── Common Ending (fixed, always appended) ──
-const ENDING_MEANING = { en: "quickly", ml: "വേഗം" };
+const ENDING_MEANING = { en: "Before the blink of an eye", ml: "കണ്ണടച്ച് തുറക്കുന്നതിന് മുമ്പ്" };
 
 // Normalize Arabic: strip harakat + tatweel
 function normalizeArabic(text) {
