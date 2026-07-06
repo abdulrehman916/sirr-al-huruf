@@ -134,6 +134,7 @@ export const STR = {
   optimalBanner: { en: "Your current Mizan configuration is already optimal.", ml: "നിങ്ങളുടെ നിലവിലെ മിസാൻ ക്രമീകരണം ഏറ്റവും ഉത്തമമാണ്." },
   optimalSub: { en: "No changes are recommended — proceed with the full decision report below.", ml: "മാറ്റങ്ങളൊന്നും ആവശ്യമില്ല — താഴെയുള്ള പൂർണ്ണ തീരുമാന റിപ്പോർട്ടിലൂടെ മുന്നോട്ടുപോകുക." },
   langLabel: { en: "മലയാളം", ml: "English" },
+  langWord: { en: "Language", ml: "ഭാഷ" },
   footerNote: { en: "This analysis is read-only and does not modify any Mizan calculation. All recommendations are derived from existing manuscript rules and live astronomical data.", ml: "ഈ വിശകലനം റീഡ്-ഒൺലി ആണ്; മിസാൻ കണക്കുകളൊന്നും മാറ്റുന്നില്ല. എല്ലാ ശുപാർശകളും നിലവിലുള്ള ഗ്രന്ഥ നിയമങ്ങളിൽ നിന്നും തത്സമയ ജ്യോതിശാസ്ത്ര വിവരങ്ങളിൽ നിന്നും ഉരുത്തിരിച്ചതാണ്." },
 };
 
@@ -471,43 +472,89 @@ export function localizeAnalysis(analysis, lang) {
 }
 
 // ── Malayalam expert narrative lines ──
+// Pattern-based: the engine pushes up to 9 conditional narrative lines, so the
+// final array index is NOT stable. We match by the English content pattern and
+// rebuild the line in Malayalam, extracting dynamic values (ritual type, day
+// names, planet names, counts, times) and translating them via the t* helpers.
 function mlNarrative(line, idx, analysis, lang) {
-  if (lang !== "ml") return line;
+  if (lang !== "ml" || !line) return line;
   const a = analysis;
-  const ritualType = tRitualType(a?.ritualType, "ml") || "പൊതുവായ ആധ്യാത്മിക കർമ്മം";
-  const dominant = a?.elementDirection ? a.elementDirection : null;
-  const elem = a?.elementCompatibility?.element;
-  const elemMl = tElement(elem, "ml");
-  const dir = a?.elementDirection?.dir;
-  const placement = a?.elementPlacement?.placement;
-  const bestDay = a?.bestDay;
-  const bestPlanet = a?.bestPlanetaryHour;
-  const canToday = a?.canPerformToday;
+  let m;
 
-  switch (idx) {
-    case 0:
-      return `നിങ്ങളുടെ മിസാൻ വിശകലനപ്രകാരം, ഈ കർമ്മം "${ritualType}" ആയി വർഗ്ഗീകരിച്ചിരിക്കുന്നു — ശരിയായ സമയത്ത് അനുഷ്ഠിക്കേണ്ട ഒരു ആധ്യാത്മിക പ്രവർത്തനം. ഇത് ${a?.ritualCategory || "പൊതുവായ ആധ്യാത്മിക കർമ്മം"} വിഭാഗത്തിൽ പെടുന്നു.`;
-    case 1:
-      if (a?.khayrSharrInferred) {
-        return a.khayrSharr === "khayr"
-          ? "മിസാൻ 8-ൽ ഖൈർ/ശർ സ്പഷ്ടമായി തിരഞ്ഞെടുത്തിട്ടില്ലാത്തതിനാൽ, ലക്ഷ്യ വിഭാഗത്തിൽ നിന്ന് യന്ത്രം ഇത് ഖൈർ (ഐശ്വര്യം) കർമ്മമായി അനുമാനിച്ചിരിക്കുന്നു. ഖൈർ കർമ്മങ്ങൾ വർദ്ധമാന ചന്ദ്രദശയിലും സഅീദാത് (അനുകൂല) മണിക്കൂറുകളിലും അനുഷ്ഠിക്കുന്നതാണ് ഉത്തമം."
-          : "മിസാൻ 8-ൽ ഖൈർ/ശർ സ്പഷ്ടമായി തിരഞ്ഞെടുത്തിട്ടില്ലാത്തതിനാൽ, ലക്ഷ്യ വിഭാഗത്തിൽ നിന്ന് യന്ത്രം ഇത് ശർ (നിരസനം) കർമ്മമായി അനുമാനിച്ചിരിക്കുന്നു. ശർ കർമ്മങ്ങൾ ക്ഷയദശയിലും, പ്രത്യേകിച്ച് അമാവാസയിലും (محاق) അനുഷ്ഠിക്കുന്നതാണ് ഉത്തമം.";
-      }
-      if (a?.khayrSharr === "khayr") return "നിങ്ങൾ ഇത് ഖൈർ (ഐശ്വര്യം) കർമ്മമായി തിരഞ്ഞെടുത്തിരിക്കുന്നു. ഖൈർ കർമ്മങ്ങൾ വർദ്ധമാന ചന്ദ്രദശയിലും സഅീദാത് (അനുകൂല) മണിക്കൂറുകളിലും അനുഷ്ഠിക്കുന്നതാണ് ഉത്തമം.";
-      if (a?.khayrSharr === "sharr") return "നിങ്ങൾ ഇത് ശർ (നിരസനം) കർമ്മമായി തിരഞ്ഞെടുത്തിരിക്കുന്നു. ശർ കർമ്മങ്ങൾ ക്ഷയദശയിലും, പ്രത്യേകിച്ച് അമാവാസയിലും (محاق) അനുഷ്ഠിക്കുന്നതാണ് ഉത്തമം.";
-      return "";
-    case 2:
-      if (elem) return `നിങ്ങളുടെ വാചകത്തിലെ പ്രധാന മൂലകം ${elemMl} ആയതിനാൽ, കർമ്മത്തിനിടയിൽ ${dir || "ഖിബ്ല"} ദിശയിലേക്ക് തിരിഞ്ഞ് ${placement ? `താൻത്രിക രേഖ ${placement}` : "ഉചിതമായി സ്ഥാപിക്കണം"}.`;
-      return "";
-    case 3: {
-      const dayPart = bestDay ? tDay(bestDay, "ml") : "ഏത് അനുയോജ്യ ദിവസവും";
-      const planetPart = bestPlanet ? tPlanet(bestPlanet, "ml") : "ഉചിതമായ ഗ്രഹ";
-      const todayPart = canToday === "Yes" ? "ഇന്ന് ഈ മാനദണ്ഡം പാലിക്കുകയും ഉത്തമ മണിക്കൂറുകൾ ലഭ്യവുമാണ്." : canToday === "Limited" ? "ഇന്ന് ശരിയായ ദിവസമാണെങ്കിലും ഉത്തമ മണിക്കൂറുകൾ കഴിഞ്ഞു — ശ്രദ്ധയോടെ മുന്നോട്ടുപോകുക അല്ലെങ്കിൽ കാത്തിരിക്കുക." : "ഇന്ന് ദിവസ മാനദണ്ഡം പാലിക്കുന്നില്ല — അടുത്ത ശുപാർശ ദിവസത്തിനായി കാത്തിരിക്കുക.";
-      return `ഗ്രന്ഥങ്ങൾ ഈ കർമ്മം ${dayPart} ${planetPart} മണിക്കൂറിൽ അനുഷ്ഠിക്കാൻ ശുപാർശ ചെയ്യുന്നു. ${todayPart}`;
-    }
-    default:
-      return line;
+  // 0 — "This ritual has been identified as "X" from your Mizan results and custom purpose (Y)."
+  if ((m = line.match(/^This ritual has been identified as "(.+?)" from your Mizan results and custom purpose \((.+?)\)\.$/))) {
+    const rt = tRitualType(m[1], "ml") || m[1];
+    const matched = tMatchedOn(m[2]);
+    return `നിങ്ങളുടെ മിസാൻ ഫലങ്ങളിൽ നിന്നും ഇഷ്ടാനുസൃത ലക്ഷ്യത്തിൽ നിന്നും (${matched}) ഈ കർമ്മം "${rt}" ആയി തിരിച്ചറിഞ്ഞിരിക്കുന്നു — ശരിയായ സമയത്ത് അനുഷ്ഠിക്കേണ്ട ഒരു ആധ്യാത്മിക പ്രവർത്തനം. ഇത് ${tRitualType(a?.ritualCategory, "ml") || "പൊതുവായ ആധ്യാത്മിക കർമ്മം"} വിഭാഗത്തിൽ പെടുന്നു.`;
   }
+  // 1 — "N manuscript rule(s) were found in the database for this ritual, supplemented by the JS knowledge base."
+  if ((m = line.match(/^(\d+) manuscript rule\(s\) were found in the database for this ritual, supplemented by the JS knowledge base\.$/))) {
+    return `ഈ കർമ്മത്തിനായി ഡാറ്റാബേസിൽ ${m[1]} ഗ്രന്ഥ നിയമം(ങ്ങൾ) കണ്ടെത്തി; JS വിജ്ഞാനകോശം കൂടി ഉപയോഗിച്ചു.`;
+  }
+  // 2 — "No matching rules were found in the ManuscriptRule database; recommendations fall back to the existing JS knowledge base (X)."
+  if (/^No matching rules were found in the ManuscriptRule database/.test(line)) {
+    return `ഗ്രന്ഥനിയമ ഡാറ്റാബേസിൽ പൊരുത്തമുള്ള നിയമങ്ങളൊന്നും കണ്ടെത്തിയില്ല; ശുപാർശകൾ നിലവിലുള്ള JS വിജ്ഞാനകോശത്തിലേക്ക് പിൻതിരിയുന്നു.`;
+  }
+  // 3 — "The manuscripts prescribe day(s): X."
+  if ((m = line.match(/^The manuscripts prescribe day\(s\): (.+)\.$/))) {
+    const days = m[1].split(",").map(d => tDay(d.trim(), "ml")).join(", ");
+    return `ഗ്രന്ഥങ്ങൾ നിർദ്ദേശിക്കുന്ന ദിവസം(ങ്ങൾ): ${days}.`;
+  }
+  // 4 — "The manuscripts prescribe hour(s) ruled by: X."
+  if ((m = line.match(/^The manuscripts prescribe hour\(s\) ruled by: (.+)\.$/))) {
+    const planets = m[1].split(",").map(p => tPlanet(p.trim(), "ml")).join(", ");
+    return `ഗ്രന്ഥങ്ങൾ നിർദ്ദേശിക്കുന്ന മണിക്കൂർ(ങ്ങൾ) ഭരിക്കുന്നത്: ${planets}.`;
+  }
+  // 5 — "The manuscripts require a X moon."
+  if ((m = line.match(/^The manuscripts require a (.+) moon\.$/))) {
+    return `ഗ്രന്ഥങ്ങൾ ${tMoonPhase(m[1])} ചന്ദ്രദശ ആവശ്യമാക്കുന്നു.`;
+  }
+  // 6 — "The manuscripts require this work be performed at night."
+  if (/^The manuscripts require this work be performed at night\.$/.test(line)) {
+    return `ഗ്രന്ഥങ്ങൾ ഈ കർമ്മം രാത്രിയിൽ അനുഷ്ഠിക്കാൻ ആവശ്യമാക്കുന്നു.`;
+  }
+  // 7 — "The earliest fully valid opportunity is X (today) / (N day(s) away) at TIME–TIME."
+  if ((m = line.match(/^The earliest fully valid opportunity is (.+?)(?: \(today\)| \((\d+) day\(s\) away\)) at (.+?)–(.+?)\.$/))) {
+    const day = tDay(m[1], "ml");
+    const when = m[2] ? `(${m[2]} ദിവസം അകലെ)` : "(ഇന്ന്)";
+    return `ഏറ്റവും നേരത്തെ പൂർണ്ണമായും സാധുവായ അവസരം ${day} ${when}, ${m[3]}–${m[4]}-ഓട്.`;
+  }
+  // 8 — "No specific day, hour, or moon restriction was found in the manuscripts for this ritual — timing is guided by the general planetary conditions only."
+  if (/^No specific day, hour, or moon restriction was found/.test(line)) {
+    return `ഈ കർമ്മത്തിന് ഗ്രന്ഥങ്ങളിൽ പ്രത്യേക ദിവസം, മണിക്കൂർ, അല്ലെങ്കിൽ ചന്ദ്രദശ നിർബന്ധമൊന്നും കണ്ടെത്തിയില്ല — സമയനിർണ്ണയം പൊതുവായ ഗ്രഹ അവസ്ഥകൾ മാത്രം അടിസ്ഥാനമാക്കിയുള്ളതാണ്.`;
+  }
+  return line;
+}
+
+// ── Translate the "matchedOn" fragment in narrative line 0 ──
+function tMatchedOn(val) {
+  if (!val) return "";
+  const ML = {
+    "purpose card": "ലക്ഷ്യ കാർഡ്",
+    "Mizan purpose card": "മിസാൻ ലക്ഷ്യ കാർഡ്",
+    "custom purpose": "ഇഷ്ടാനുസൃത ലക്ഷ്യം",
+    "custom purpose text": "ഇഷ്ടാനുസൃത ലക്ഷ്യ വാചകം",
+    "Mizan results": "മിസാൻ ഫലങ്ങൾ",
+  };
+  if (ML[val]) return ML[val];
+  // Try substring matches for composite phrases
+  let out = val;
+  for (const [en, ml] of Object.entries(ML)) out = out.replace(en, ml);
+  return out;
+}
+
+// ── Translate moon-phase word in narrative line 5 ──
+function tMoonPhase(val) {
+  if (!val) return "";
+  const ML = {
+    "waxing": "വർദ്ധമാന (مقبل)",
+    "waning": "ക്ഷയ (مدبر)",
+    "full": "പൗർണ്ണമി (بدر)",
+    "new": "അമാവാസ (محاق)",
+    "waxing (مقبل)": "വർദ്ധമാന (مقبل)",
+    "waning (مدبر)": "ക്ഷയ (مدبر)",
+  };
+  return ML[val.toLowerCase()] || val;
 }
 
 // ── Localize ConfigurationAdvisor recommendations ──

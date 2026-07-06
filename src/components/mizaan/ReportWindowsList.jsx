@@ -44,7 +44,7 @@ export default function ReportWindowsList({ windows, lang = "ml" }) {
               </span>
             </div>
             <p className="font-inter text-[11px] mb-0.5" style={{ color: "rgba(255,255,255,0.60)" }}>
-              <span className="font-bold" style={{ color: G.text }}>{w.planet}</span> · Hour #{w.hourNumber} · {w.period === 'day' ? 'Daytime' : 'Nighttime'}
+              <span className="font-bold" style={{ color: G.text }}>{w.planet}</span> · {tStr("hour", lang)} #{w.hourNumber} · {w.period === 'day' ? tStr("daytime", lang) : tStr("nighttime", lang)}
             </p>
             <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.45)" }}>
               {w.strengthReason}

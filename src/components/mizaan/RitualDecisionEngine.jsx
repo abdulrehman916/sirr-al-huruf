@@ -295,7 +295,7 @@ function ReportSection({ section, lang }) {
 
               {/* Today's Windows — star-rated list */}
               {section.windows && section.windows.length > 0 && (
-                <ReportWindowsList windows={section.windows} />
+                <ReportWindowsList windows={section.windows} lang={lang} />
               )}
 
               {/* Best Time — ranked 1st/2nd/3rd */}

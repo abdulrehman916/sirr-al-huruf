@@ -103,7 +103,7 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
               {/* ── Language toggle (English / Malayalam) ── */}
               {setLang && (
                 <div className="flex items-center justify-end gap-1.5">
-                  <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Lang</span>
+                  <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{tStr("langWord", lang)}</span>
                   {RITUAL_LANGS.map((l) => (
                     <button
                       key={l.code}
