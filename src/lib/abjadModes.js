@@ -128,6 +128,7 @@ export function calcCumeli(text) {
 // ══════════════════════════════════════
 export const BAST_TABLE = {
   'ا': { 1: 16,   2: 1047, 3: 594,  4: 1941, 5: 991 },
+  'ء': { 1: 16,   2: 1047, 3: 594,  4: 1941, 5: 991 },  // Standalone Hamza — mirrors ا (Bast-ul Aval = 16)
   'ب': { 1: 616,  2: 1569, 3: 1940, 4: 1046, 5: 921 },
   'ج': { 1: 1041, 2: 469,  3: 1400, 4: 451,  5: 1118 },
   'د': { 1: 283,  2: 2215, 3: 2535, 4: 3299, 5: 2806 },
@@ -167,6 +168,16 @@ export function calcBast(text, bastLevel = 1) {
       value: bastValue,
     };
   });
+  // Standalone Hamza (ء, U+0621): a valid Bast-ul Aval letter mirroring ا (= 16 at level 1).
+  // extractLetters filters by KABIR_MAP (Ebced authority) which excludes ء, so ء is appended
+  // here for Bast-ul Aval only. Ebced (Kebir/Sağir/Cumeli) and Bastul-Huruf-2 are unaffected.
+  const hamzaValue = BAST_TABLE['ء']?.[bastLevel] ?? 0;
+  if (hamzaValue > 0) {
+    const hamzaMatches = stripDiacritics(text).match(/ء/g) || [];
+    for (const ch of hamzaMatches) {
+      entries.push({ original: ch, normalized: 'ء', value: hamzaValue });
+    }
+  }
   const total = entries.reduce((s, e) => s + e.value, 0);
   return { entries, total, bastLevel };
 }
