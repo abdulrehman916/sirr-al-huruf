@@ -51,10 +51,12 @@ export const FIRST_BAST = {
   'ع': 197,  'ف': 657,  'ص': 595,  'ق': 60,   'ر': 517,
   'ش': 1095, 'ت': 337,  'ث': 763,  'خ': 522,  'ذ': 195,
   'ض': 655,  'ظ': 593,  'غ': 114,
-  // Additional normalizations for variants (inherit from base letters)
-  'ه': 709,  'ي': 579,  'ء': 16,   'أ': 16,   'إ': 16,
-  'آ': 16,   'ة': 709,  'ى': 579,  'ؤ': 468,  'ئ': 579,
+  // Non-Hamza variant aliases (Hamza forms resolved dynamically via mpNorm)
+  'ه': 709,  'ي': 579,  'ة': 709,  'ى': 579,
 };
+
+const MIZANPOST_NORM = { 'ء':'ا','أ':'ا','إ':'ا','آ':'ا','ؤ':'و','ئ':'ي' };
+function mpNorm(ch) { return MIZANPOST_NORM[ch] || ch; }
 
 // ── Full 5-level Bast table (p.42–43) ──────────────────────────
 // MANUSCRIPT-LOCKED: Pages 42-43 (HARFLERİN BASTI CETVELİ)
@@ -91,11 +93,7 @@ export const BAST_TABLE = {
   'ض': [655,   1996, 1770, 506,  1231],
   'ظ': [593,   2399, 2959, 2627, 2028],
   'غ': [114,   822,  1906, 1175, 1080],
-  // Variants (inherit from base letters)
-  'أ': [16,    1047, 594,  1941, 991],
-  'إ': [16,    1047, 594,  1941, 991],
-  'آ': [16,    1047, 594,  1941, 991],
-  'ء': [16,    1047, 594,  1941, 991],
+  // Non-Hamza variant (Hamza forms resolved dynamically via mpNorm)
   'ة': [709,   734,  1575, 1783, 2007],
 };
 
@@ -168,8 +166,9 @@ export function istintak(n) {
  * level: 1..5
  */
 export function getBastLevel(letter, level) {
-  const row = BAST_TABLE[letter];
-  if (!row) return FIRST_BAST[letter] || 0;
+  const n = mpNorm(letter);
+  const row = BAST_TABLE[n];
+  if (!row) return FIRST_BAST[n] || 0;
   return row[level - 1] || 0;
 }
 

@@ -45,19 +45,17 @@ export const BAST_TABLE_B = {
   'ر': [517,  2615, 14355,  73777,  362686],
   'خ': [522,  2504, 13407,  69393,  343896],
   'غ': [114,  1770,  8121,  36939,  182227],
-  // Variants (inherit from base letters — Bast1 shared)
-  'أ': [16,    911,  6137,  31296,  156119],
-  'إ': [16,    911,  6137,  31296,  156119],
-  'آ': [16,    911,  6137,  31296,  156119],
-  'ء': [16,    911,  6137,  31296,  156119],
+  // Non-Hamza variant (Hamza forms resolved dynamically via bNorm)
   'ة': [709,  2094,  9493,  47683,  238889],
-  'ئ': [579,  2518, 11672,  56032,  276357],
-  'ؤ': [468,  1570,  7288,  37242,  186822],
 };
+
+const B_NORM = { 'ء':'ا','أ':'ا','إ':'ا','آ':'ا','ؤ':'و','ئ':'ي' };
+function bNorm(ch) { return B_NORM[ch] || ch; }
 
 // Helper: get Bast level N for a letter from Section 2 table
 export function getBastLevelB(letter, level) {
-  const row = BAST_TABLE_B[letter];
+  const n = bNorm(letter);
+  const row = BAST_TABLE_B[n];
   if (!row) return BAST_TABLE_B['ا']?.[level - 1] || 0;
   return row[level - 1] || 0;
 }

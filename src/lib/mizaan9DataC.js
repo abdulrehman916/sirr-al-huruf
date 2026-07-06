@@ -9,16 +9,16 @@
 
 // ── Abjad Kebir (Ebcedi Kebir) letter values ──────────────────
 export const ABJAD_KEBIR = {
-  'ا': 1,   'أ': 1,   'إ': 1,   'آ': 1,   'ء': 1,
+  'ا': 1,
   'ب': 2,
   'ج': 3,
   'د': 4,
   'ه': 5,   'ة': 5,   'هـ': 5,
-  'و': 6,   'ؤ': 6,
+  'و': 6,
   'ز': 7,
   'ح': 8,
   'ط': 9,
-  'ي': 10,  'ى': 10,  'ئ': 10,
+  'ي': 10,  'ى': 10,
   'ك': 20,
   'ل': 30,
   'م': 40,
@@ -208,7 +208,7 @@ for (const [el, letters] of Object.entries(ELEMENT_LETTERS_C)) {
 }
 
 // Normalize Arabic variants (same as mizaan9Engine)
-const C_NORM = { 'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ئ':'ي','ؤ':'و','ة':'ه' };
+const C_NORM = { 'ء':'ا','أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ئ':'ي','ؤ':'و','ة':'ه' };
 function cNorm(ch) { return C_NORM[ch] || ch; }
 function cClean(text) {
   return text

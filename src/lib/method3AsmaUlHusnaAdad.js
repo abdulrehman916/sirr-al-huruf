@@ -93,7 +93,7 @@ export const METHOD3_ASMA_UL_HUSNA_ADAD = [
   { name: "التواب",                translit: "At-Tawwab",        adad: 409,  vocalized: "التَّوَّاب",                     malayalam: "പശ്ചാത്താപം ആവർത്തിച്ച് സ്വീകരിക്കുന്നവൻ" },
   { name: "المنتقم",               translit: "Al-Muntaqim",      adad: 430,  vocalized: "الْمُنْتَقِم",                   malayalam: "അതിക്രമകാരികളോട് പ്രതികാരം ചെയ്യുന്നവൻ" },
   { name: "العفو",                 translit: "Al-'Afuww",        adad: 156,  vocalized: "الْعَفُوّ",                      malayalam: "പൂർണ്ണമായി മാപ്പ് നൽകുന്നവൻ" },
-  { name: "الرؤوف",                translit: "Ar-Ra'uf",         adad: 286,  vocalized: "الرَّؤُوف",                      malayalam: "അതീവ ദയാലു" },
+  { name: "الرؤوف",                translit: "Ar-Ra'uf",         adad: 292,  vocalized: "الرَّؤُوف",                      malayalam: "അതീവ ദയാലു" },
   { name: "مالك الملك",            translit: "Malik-al-Mulk",    adad: 212,  vocalized: "مَالِكُ الْمُلْك",               malayalam: "രാജ്യാധിപത്യത്തിന്റെ ഉടമ" },
   { name: "ذو الجلال والإكرام",    translit: "Dhu-al-Jalal wa-al-Ikram", adad: 1100, vocalized: "ذُو الْجَلَالِ وَالْإِكْرَام", malayalam: "മഹത്വത്തിന്റെയും ആദരവിന്റെയും ഉടമ" },
   { name: "المقسط",                translit: "Al-Muqsit",        adad: 209,  vocalized: "الْمُقْسِط",                     malayalam: "തികഞ്ഞ നീതി പുലർത്തുന്നവൻ" },

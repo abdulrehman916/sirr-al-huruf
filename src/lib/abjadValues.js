@@ -3,17 +3,18 @@
  * Standard Qamari alphabet numerical values
  */
 
+// Hamza forms are resolved dynamically via ABJAD_NORM (inherit carrier letter's value)
 export const ABJAD_VALUES = {
-  'ا': 1, 'أ': 1, 'إ': 1, 'آ': 1, 'ء': 1,
+  'ا': 1,
   'ب': 2,
   'ج': 3,
   'د': 4,
   'ه': 5, 'ة': 5,
-  'و': 6, 'ؤ': 6,
+  'و': 6,
   'ز': 7,
   'ح': 8,
   'ط': 9,
-  'ي': 10, 'ى': 10, 'ئ': 10,
+  'ي': 10, 'ى': 10,
   'ك': 20,
   'ل': 30,
   'م': 40,
@@ -37,8 +38,10 @@ export const ABJAD_VALUES = {
 /**
  * Calculate Abjad value for a single letter
  */
+const ABJAD_NORM = { 'ء':'ا','أ':'ا','إ':'ا','آ':'ا','ؤ':'و','ئ':'ي' };
 export function getAbjadValue(letter) {
-  const normalized = letter.trim();
+  const t = letter.trim();
+  const normalized = ABJAD_NORM[t] || t;
   return ABJAD_VALUES[normalized] || 0;
 }
 

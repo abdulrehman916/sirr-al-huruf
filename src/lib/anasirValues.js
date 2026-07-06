@@ -18,7 +18,7 @@ export const ELEMENTS = {
       background: 'rgba(239,68,68,0.20)',
       borderColor: 'rgba(239,68,68,0.40)'
     },
-    letters: 'أهطمر'
+    letters: 'اهطمر'
   },
   air: {
     name: 'Air',

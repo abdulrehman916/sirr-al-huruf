@@ -5,7 +5,7 @@ import { ABJAD_MAP } from "./abjadValues";
 const CHUNK_SIZE = 500;
 
 const NORMALIZE_MAP = {
-  'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا',
+  'ء': 'ا', 'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا',
   'ى': 'ي', 'ئ': 'ي',
   'ؤ': 'و',
   'ة': 'ه',

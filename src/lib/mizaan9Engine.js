@@ -13,7 +13,7 @@ import { MIZAN_LOCK_STATUS, validateMizanDatasets } from './mizanCanonicalLock.j
 // These values are the exclusive authority for Mizan letter-to-number conversion.
 // FROZEN: Immutable — modification attempts will fail validation
 const MIZAAN_BAST1 = Object.freeze({
-  'ا': 16,   'ء': 16,   'ب': 616,  'ج': 1041, 'د': 283,  'ه': 709,
+  'ا': 16,   'ب': 616,  'ج': 1041, 'د': 283,  'ه': 709,
   'و': 468,  'ز': 141,  'ح': 612,  'ط': 539,  'ي': 579,
   'ك': 635,  'ل': 1097, 'م': 339,  'ن': 765,  'س': 524,
   'ع': 197,  'ف': 657,  'ص': 595,  'ق': 60,   'ر': 517,
@@ -119,7 +119,7 @@ export function getMizaanInterpretation(dominant, letterCount, bast1Total) {
 
 // ── Own normalization ──
 const MIZAAN_NORM = {
-  'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا',
+  'ء':'ا','أ':'ا','إ':'ا','آ':'ا','ٱ':'ا',
   'ى':'ي','ئ':'ي',
   'ؤ':'و',
   'ة':'ه',

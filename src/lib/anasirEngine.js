@@ -18,18 +18,19 @@ export function normalizeText(text) {
 /**
  * Get element for a single Arabic letter
  */
+const ANASIR_NORM = { 'ء':'ا','أ':'ا','إ':'ا','آ':'ا','ؤ':'و','ئ':'ي' };
 export function getElementForLetter(letter) {
-  const normalized = letter.trim();
-  
-  // Fire letters
-  if ('أهطمر'.includes(normalized)) return 'fire';
+  const normalized = ANASIR_NORM[letter.trim()] || letter.trim();
+
+  // Fire letters (carrier set — Hamza inherits Alif via ANASIR_NORM)
+  if ('اهطمر'.includes(normalized)) return 'fire';
   // Air letters
   if ('دزكوي'.includes(normalized)) return 'air';
   // Water letters
   if ('بجلن'.includes(normalized)) return 'water';
   // Earth letters
   if ('سعفصقثخذضظغخشت'.includes(normalized)) return 'earth';
-  
+
   return null;
 }
 
