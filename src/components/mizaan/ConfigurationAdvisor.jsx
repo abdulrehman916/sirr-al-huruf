@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 import { useRitualSemanticPhrase } from "../../lib/ritualSemanticPhrase";
+import { useAuth } from "@/lib/AuthContext";
+import { usePageState } from "../../context/PageStateContext";
+import AIPurposeSuggestionPanel from "./AIPurposeSuggestionPanel";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -36,7 +39,16 @@ const FIELD_ICONS = {
 
 export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
   const [expanded, setExpanded] = useState(true);
-  const semanticPhrase = useRitualSemanticPhrase(lang);
+  const { role } = useAuth();
+  const isAdmin = role === "admin" || role === "owner";
+  const { getPageState } = usePageState();
+  const pageState = getPageState("mizaan9", { selections: {}, customPurpose: "" });
+  const customPurpose = pageState.customPurpose || "";
+  const [aiData, setAiData] = useState(null);
+  const [aiRefreshKey, setAiRefreshKey] = useState(0);
+  const semanticPhrase = useRitualSemanticPhrase(lang, aiRefreshKey);
+  const displayPhrase = semanticPhrase || (aiData?.phrase || "");
+  const isAISourced = !semanticPhrase && !!aiData?.phrase;
 
   if (!advice || !advice.recommendations) return null;
 
@@ -133,20 +145,34 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
                 {recommendations.map((rec, idx) => (
                   <AdvisorRow
                     key={idx}
-                    rec={rec.field === "Ritual Purpose" && semanticPhrase
+                    rec={rec.field === "Ritual Purpose" && displayPhrase
                       ? {
                           ...rec,
-                          current: semanticPhrase,
-                          recommended: semanticPhrase,
-                          reason: lang === "ml"
-                            ? `ഈ കർമ്മത്തിന്റെ ഉദ്ദേശം ${semanticPhrase} എന്നതാണ്.`
-                            : `The intent of this ritual is: ${semanticPhrase}.`,
+                          current: displayPhrase,
+                          recommended: displayPhrase,
+                          reason: isAISourced
+                            ? (lang === "ml"
+                              ? `AI നിർദ്ദേശിച്ച അർത്ഥം (ഉടമ അംഗീകരിച്ചിട്ടില്ല): ${displayPhrase}`
+                              : `AI suggested meaning (not yet owner-approved): ${displayPhrase}`)
+                            : (lang === "ml"
+                              ? `ഈ കർമ്മത്തിന്റെ ഉദ്ദേശം ${displayPhrase} എന്നതാണ്.`
+                              : `The intent of this ritual is: ${displayPhrase}.`),
                         }
                       : rec}
                     lang={lang}
                   />
                 ))}
               </div>
+
+              {/* ── AI Suggested Meaning (admin/owner only, when no dictionary match) ── */}
+              {isAdmin && !semanticPhrase && customPurpose && (
+                <AIPurposeSuggestionPanel
+                  key={aiRefreshKey}
+                  lang={lang}
+                  onSuggestion={(data) => setAiData(data)}
+                  onSaved={() => { setAiData(null); setAiRefreshKey((k) => k + 1); }}
+                />
+              )}
             </div>
           </motion.div>
         )}

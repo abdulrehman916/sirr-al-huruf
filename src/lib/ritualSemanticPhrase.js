@@ -18,7 +18,7 @@ import { lookupPurposeIntent } from "./purposeDictionaryLookup";
 const MIZAAN_PAGE_KEY = "mizaan9";
 
 // ── Fixed Action words → meanings (manuscript) ──
-const ACTION_MEANINGS = {
+export const ACTION_MEANINGS = {
   "جلب":   { en: "Bring",      ml: "കൊണ്ടുവരുക" },
   "طرد":   { en: "Repel",      ml: "അകറ്റുക" },
   "الصحة": { en: "Improve",    ml: "മെച്ചപ്പെടുത്തുക" },
@@ -26,7 +26,7 @@ const ACTION_MEANINGS = {
 };
 
 // Purpose card key → Action Arabic word (the card IS the Action)
-const CARD_TO_ACTION = {
+export const CARD_TO_ACTION = {
   celb: "جلب",
   tard: "طرد",
   sihhat: "الصحة",
@@ -34,7 +34,7 @@ const CARD_TO_ACTION = {
 };
 
 // ── Common Ending (fixed, always appended) ──
-const ENDING_MEANING = { en: "Before the blink of an eye", ml: "കണ്ണടച്ച് തുറക്കുന്നതിന് മുമ്പ്" };
+export const ENDING_MEANING = { en: "Before the blink of an eye", ml: "കണ്ണടച്ച് തുറക്കുന്നതിന് മുമ്പ്" };
 
 // Normalize Arabic: strip harakat + tatweel
 function normalizeArabic(text) {
@@ -45,7 +45,7 @@ function normalizeArabic(text) {
 }
 
 // Detect action word from raw text (first matching word)
-function detectAction(text) {
+export function detectAction(text) {
   const norm = normalizeArabic(text);
   if (!norm) return null;
   const words = norm.split(/\s+/);
@@ -59,7 +59,7 @@ function detectAction(text) {
 // Isolate the middle (purpose) word: strip fixed Action + Ending tokens
 // so the dictionary lookup resolves the purpose's stored semantic meaning,
 // not a literal Arabic translation of the whole phrase.
-function extractMiddleWord(text, actionArabic) {
+export function extractMiddleWord(text, actionArabic) {
   const norm = normalizeArabic(text);
   if (!norm) return "";
   const ACTION_TOKENS = Object.keys(ACTION_MEANINGS);
@@ -116,9 +116,26 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
 }
 
 // ═══════════════════════════════════════════════════════════════
+// PURE HELPER — Build a display phrase from an AI-suggested meaning
+// (display-only; used by AIPurposeSuggestionPanel + ConfigurationAdvisor)
+// ═══════════════════════════════════════════════════════════════
+export function buildPhraseFromAIMeaning({ actionArabic, englishMeaning, malayalamMeaning, lang }) {
+  const purpose = lang === "ml"
+    ? (malayalamMeaning || englishMeaning || "")
+    : (englishMeaning || malayalamMeaning || "");
+  if (!purpose) return "";
+  const actionMeaning = actionArabic && ACTION_MEANINGS[actionArabic]
+    ? (lang === "ml" ? ACTION_MEANINGS[actionArabic].ml : ACTION_MEANINGS[actionArabic].en)
+    : "";
+  const ending = lang === "ml" ? ENDING_MEANING.ml : ENDING_MEANING.en;
+  if (actionMeaning) return `${actionMeaning} ${purpose} ${ending}`;
+  return `${purpose} ${ending}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // REACT HOOK — reads Mizan state from PageStateContext + dictionary
 // ═══════════════════════════════════════════════════════════════
-export function useRitualSemanticPhrase(lang) {
+export function useRitualSemanticPhrase(lang, refreshKey = 0) {
   const { getPageState } = usePageState();
   const [phrase, setPhrase] = useState("");
 
@@ -146,7 +163,7 @@ export function useRitualSemanticPhrase(lang) {
       }
     });
     return () => { cancelled = true; };
-  }, [customPurpose, selections, lang]);
+  }, [customPurpose, selections, lang, refreshKey]);
 
   return phrase;
 }
