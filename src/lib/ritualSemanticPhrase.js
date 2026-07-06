@@ -19,10 +19,10 @@ const MIZAAN_PAGE_KEY = "mizaan9";
 
 // ── Fixed Action words → meanings (manuscript) ──
 const ACTION_MEANINGS = {
-  "جلب":   { en: "Bring",      ml: "കൊണ്ടുവാ" },
-  "طرد":   { en: "Repel",      ml: "തുരത്തുക" },
+  "جلب":   { en: "Bring",      ml: "കൊണ്ടുവരുക" },
+  "طرد":   { en: "Repel",      ml: "അകറ്റുക" },
   "الصحة": { en: "Improve",    ml: "മെച്ചപ്പെടുത്തുക" },
-  "السقم": { en: "Cause harm", ml: "ദോഷം വരുത്തുക" },
+  "السقم": { en: "Cause harm", ml: "രോഗം വരുത്തുക" },
 };
 
 // Purpose card key → Action Arabic word (the card IS the Action)
@@ -59,8 +59,9 @@ function detectAction(text) {
 // ═══════════════════════════════════════════════════════════════
 // PURE BUILDER — returns the complete semantic phrase
 // ═══════════════════════════════════════════════════════════════
-// en order: Action + Purpose + Ending   → "Bring love quickly"
-// ml order: Purpose + Ending + Action   → "സ്നേഹം വേഗം കൊണ്ടുവാ"
+// Order (en + ml): Action + Purpose + Ending
+//   en → "Bring Love Before the blink of an eye"
+//   ml → "കൊണ്ടുവരുക സ്നേഹം കണ്ണടച്ച് തുറക്കുന്നതിന് മുമ്പ്"
 export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup, lang }) {
   const custom = (customPurpose || "").trim();
   if (!custom) return "";
@@ -88,9 +89,7 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
     const actionMeaning = lang === "ml"
       ? ACTION_MEANINGS[actionArabic].ml
       : ACTION_MEANINGS[actionArabic].en;
-    return lang === "ml"
-      ? `${purposeMeaning} ${endingMeaning} ${actionMeaning}`
-      : `${actionMeaning} ${purposeMeaning} ${endingMeaning}`;
+    return `${actionMeaning} ${purposeMeaning} ${endingMeaning}`;
   }
   // Partial: purpose matched but no action detected
   if (purposeMeaning) {
