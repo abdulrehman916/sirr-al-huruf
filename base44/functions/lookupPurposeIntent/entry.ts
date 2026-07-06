@@ -80,23 +80,20 @@ Deno.serve(async (req) => {
     });
     if (keywordResult) return Response.json(keywordResult);
 
-    // ── STEP 3: Multi-word fallback (max 3 longest words) ──
-    // For inputs like "جلب المحبة طرفة العين", split into words
-    // and try the longest, most specific words as alias lookups.
+    // ── STEP 3: Per-word fallback (up to 3 longest words) ──
+    // Even a SINGLE remaining token (e.g. "البدن") is queried — never
+    // skipped. Each word is tried against BOTH aliases and arabic_keyword.
     const words = normalizedInput
       .split(/\s+/)
       .filter((w) => w.length >= 3)
       .sort((a, b) => b.length - a.length)
-      .slice(0, 3); // limit to 3 queries for performance
+      .slice(0, 3); // limit to 3 words for performance
 
-    if (words.length > 1) {
-      for (const word of words) {
-        const wordResult = await tryQuery({
-          is_active: true,
-          aliases: word,
-        });
-        if (wordResult) return Response.json(wordResult);
-      }
+    for (const word of words) {
+      const aliasHit = await tryQuery({ is_active: true, aliases: word });
+      if (aliasHit) return Response.json(aliasHit);
+      const keywordHit = await tryQuery({ is_active: true, arabic_keyword: word });
+      if (keywordHit) return Response.json(keywordHit);
     }
 
     return Response.json({ matched: false });
