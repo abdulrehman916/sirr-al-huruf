@@ -18,7 +18,7 @@ export const BAST_LEVELS = [
 ];
 
 // ── Abjad Letter Normalization (same as abjadModes.js) ─────────
-const NORM = { 'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ئ':'ي','ؤ':'و','ة':'ه' };
+const NORM = { 'ء':'ا','أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ئ':'ي','ؤ':'و','ة':'ه' };
 export function normalize(ch) { return NORM[ch] || ch; }
 
 // ── Extract Arabic Letters from Text ───────────────────────────
