@@ -78,16 +78,30 @@ Deno.serve(async (req) => {
       .filter((w) => w.length >= 3)
       .sort((a, b) => b.length - a.length)
       .slice(0, 5);
-    // Generic Arabic normalization: also probe each token with the definite
-    // article (ال) removed, so "الدواب" reaches an entry stored as "دواب",
-    // "البدن" → "بدن", "الناس" → "ناس", "الرزق" → "رزق", etc. Applies to
-    // every token — no per-word special cases.
-    const stripAlPrefix = (w) => (w.length > 3 && w.startsWith("ال")) ? w.slice(2) : null;
+    // Generic Arabic normalization: generate probe variants by stripping
+    // common attached prefixes (و، ف، ب، ك، ل) and the definite article (ال)
+    // in any combination. Conservative: only strip while the remaining stem
+    // stays >= 3 chars, so real words like "كتاب" or "الله" are preserved.
+    // Lets "وبالصحة" → "صحة", "فللبدن" → "بدن", "وللرزق" → "رزق", etc.
+    // Applies to every token — no per-word special cases.
+    const PREFIX_CHARS = "وفبكل";
+    const variantsOf = (word) => {
+      const seen = new Set();
+      const queue = [word];
+      while (queue.length) {
+        const w = queue.shift();
+        if (seen.has(w)) continue;
+        seen.add(w);
+        if (w.length > 3 && PREFIX_CHARS.includes(w[0])) queue.push(w.slice(1));
+        if (w.length > 4 && w.startsWith("ال")) queue.push(w.slice(2));
+      }
+      return [...seen];
+    };
     const probes = [normalizedInput];
     for (const w of wordList) {
-      if (w !== normalizedInput && !probes.includes(w)) probes.push(w);
-      const stripped = stripAlPrefix(w);
-      if (stripped && !probes.includes(stripped)) probes.push(stripped);
+      for (const v of variantsOf(w)) {
+        if (v !== normalizedInput && !probes.includes(v)) probes.push(v);
+      }
     }
 
     const FIELD_RANK = { arabic_keyword: 0, aliases: 1 };
