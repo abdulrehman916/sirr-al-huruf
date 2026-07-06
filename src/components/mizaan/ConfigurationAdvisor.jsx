@@ -10,6 +10,7 @@ import {
   Target, Scale, Calendar, Orbit, Clock, Flame, Sunset, Timer, Sparkles, Star,
 } from "lucide-react";
 import { tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
+import { useRitualSemanticPhrase } from "../../lib/ritualSemanticPhrase";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -35,6 +36,7 @@ const FIELD_ICONS = {
 
 export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
   const [expanded, setExpanded] = useState(true);
+  const semanticPhrase = useRitualSemanticPhrase(lang);
 
   if (!advice || !advice.recommendations) return null;
 
@@ -129,7 +131,13 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
               {/* ── Per-field recommendations ── */}
               <div className="space-y-2">
                 {recommendations.map((rec, idx) => (
-                  <AdvisorRow key={idx} rec={rec} lang={lang} />
+                  <AdvisorRow
+                    key={idx}
+                    rec={rec.field === "Ritual Purpose" && semanticPhrase
+                      ? { ...rec, current: semanticPhrase, recommended: semanticPhrase }
+                      : rec}
+                    lang={lang}
+                  />
                 ))}
               </div>
             </div>

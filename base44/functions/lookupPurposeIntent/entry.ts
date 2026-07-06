@@ -57,6 +57,8 @@ Deno.serve(async (req) => {
           ritualIntent: entry.normalized_purpose_key,
           matchedPhrase: entry.purpose_phrase,
           source: entry.source || null,
+          malayalam_meaning: entry.malayalam_meaning || "",
+          english_meaning: entry.english_meaning || "",
         };
       }
       return null;
