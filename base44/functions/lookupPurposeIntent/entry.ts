@@ -94,6 +94,9 @@ Deno.serve(async (req) => {
         seen.add(w);
         if (w.length > 3 && PREFIX_CHARS.includes(w[0])) queue.push(w.slice(1));
         if (w.length > 4 && w.startsWith("ال")) queue.push(w.slice(2));
+        // Assimilation: ل + ال → لل. Un-assiminate "لل"+stem → "ال"+stem
+        // so "للدواب" also reaches "الدواب" → "دواب".
+        if (w.length > 4 && w.startsWith("لل")) queue.push("ال" + w.slice(2));
       }
       return [...seen];
     };
