@@ -93,9 +93,12 @@ export function countMebsutLetters(mebsutLetters) {
   return counts;
 }
 
+const SH_NORM = { 'ء':'ا','أ':'ا','إ':'ا','آ':'ا','ؤ':'و','ئ':'ي' };
+function shNorm(ch) { return SH_NORM[ch] || ch; }
 export function getElementForLetter(letter) {
+  const n = shNorm(letter);
   for (const [element, letters] of Object.entries(ELEMENT_LETTERS)) {
-    if (letters.includes(letter)) return element;
+    if (letters.includes(n)) return element;
   }
   return null;
 }
@@ -108,7 +111,7 @@ export function countElementsByElement(letterCounts) {
     const element = getElementForLetter(letter);
     if (element) {
       elementCounts[element] += count;
-      elementValues[element] += count * (ABJAD_KEBIR[letter] || 0);
+      elementValues[element] += count * (ABJAD_KEBIR[shNorm(letter)] || 0);
     }
   }
   
@@ -203,10 +206,11 @@ export function calculateBast(text, bastLevel = 1) {
   const breakdown = [];
   
   for (const char of text) {
-    const value = bastTable[char] || 0;
+    const n = shNorm(char);
+    const value = bastTable[n] || 0;
     if (value > 0) {
       total += value;
-      breakdown.push({ letter: char, value, element: getElementForLetter(char) });
+      breakdown.push({ letter: char, value, element: getElementForLetter(n) });
     }
   }
   
