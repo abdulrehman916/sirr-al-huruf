@@ -78,7 +78,17 @@ Deno.serve(async (req) => {
       .filter((w) => w.length >= 3)
       .sort((a, b) => b.length - a.length)
       .slice(0, 5);
-    const probes = [normalizedInput, ...wordList.filter((w) => w !== normalizedInput)];
+    // Generic Arabic normalization: also probe each token with the definite
+    // article (ال) removed, so "الدواب" reaches an entry stored as "دواب",
+    // "البدن" → "بدن", "الناس" → "ناس", "الرزق" → "رزق", etc. Applies to
+    // every token — no per-word special cases.
+    const stripAlPrefix = (w) => (w.length > 3 && w.startsWith("ال")) ? w.slice(2) : null;
+    const probes = [normalizedInput];
+    for (const w of wordList) {
+      if (w !== normalizedInput && !probes.includes(w)) probes.push(w);
+      const stripped = stripAlPrefix(w);
+      if (stripped && !probes.includes(stripped)) probes.push(stripped);
+    }
 
     const FIELD_RANK = { arabic_keyword: 0, aliases: 1 };
     const candidates = new Map(); // id -> { entry, field, key }
