@@ -4,17 +4,16 @@ import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_PURPOSES } from "../../lib/mizaan9Data";
 import { calcBast } from "../../lib/abjadModes";
 
-function countArabicLetters(str) {
-  if (!str) return 0;
-  return (str.match(/[\u0600-\u06FF]/g) || []).length;
-}
-
 function CustomPurposePanel({ customPurpose, onCustomPurpose }) {
   const stats = useMemo(() => {
     const trimmed = customPurpose.trim();
     if (!trimmed) return null;
-    const { total } = calcBast(trimmed, 1);
-    return { bast: total, letters: countArabicLetters(trimmed) };
+    // Bast-ul Aval AND Letter Count must come from the SAME calculation
+    // source. calcBast()->entries is exactly the array of base Arabic
+    // letters (harakat/tatweel stripped by extractLetters) that the Bast
+    // total was summed from — so entries.length is guaranteed to match.
+    const { total, entries } = calcBast(trimmed, 1);
+    return { bast: total, letters: entries.length };
   }, [customPurpose]);
 
   const active = stats !== null;
