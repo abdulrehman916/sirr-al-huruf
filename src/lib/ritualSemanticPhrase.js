@@ -56,6 +56,22 @@ function detectAction(text) {
   return null;
 }
 
+// Isolate the middle (purpose) word: strip fixed Action + Ending tokens
+// so the dictionary lookup resolves the purpose's stored semantic meaning,
+// not a literal Arabic translation of the whole phrase.
+function extractMiddleWord(text, actionArabic) {
+  const norm = normalizeArabic(text);
+  if (!norm) return "";
+  const ACTION_TOKENS = Object.keys(ACTION_MEANINGS);
+  const ENDING_TOKENS = ["طرفة", "طرفه", "العين"];
+  const words = norm.split(/\s+/).filter((w) => {
+    if (ACTION_TOKENS.includes(w)) return false;
+    if (ENDING_TOKENS.includes(w)) return false;
+    return true;
+  });
+  return words.join(" ").trim();
+}
+
 // ═══════════════════════════════════════════════════════════════
 // PURE BUILDER — returns the complete semantic phrase
 // ═══════════════════════════════════════════════════════════════
@@ -114,7 +130,17 @@ export function useRitualSemanticPhrase(lang) {
     const custom = (customPurpose || "").trim();
     if (!custom) { setPhrase(""); return; }
     let cancelled = false;
-    lookupPurposeIntent(customPurpose, selections?.purposes?.[0]).then((res) => {
+    // Resolve the MIDDLE word only (strip Action + Ending tokens) so the
+    // dictionary returns the purpose's stored semantic meaning, not a
+    // literal translation of the whole typed phrase.
+    let actionArabic = null;
+    const cardKey = Array.isArray(selections?.purposes) && selections.purposes.length > 0
+      ? selections.purposes[0] : null;
+    if (cardKey && CARD_TO_ACTION[cardKey]) actionArabic = CARD_TO_ACTION[cardKey];
+    if (!actionArabic) actionArabic = detectAction(custom);
+    const middleWord = extractMiddleWord(custom, actionArabic);
+    if (!middleWord) { setPhrase(""); return; }
+    lookupPurposeIntent(middleWord, cardKey).then((res) => {
       if (!cancelled) {
         setPhrase(buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang }));
       }
