@@ -19,6 +19,31 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Caller: src/lib/purposeDictionaryLookup.js (7th Mizan custom purpose).
 // No other file, function, engine, page, or component may read this DB.
 // See src/lib/purposeDictionaryIsolationLaw.js for the full contract.
+//
+// ── STABLE / PRODUCTION-READY — LOCKED CORE INFRASTRUCTURE ──
+// This lookup engine is a STABLE SHARED CORE component. It is feature-
+// complete and must NOT be modified for individual ritual purposes.
+//
+//   • To support a NEW ritual purpose → add/edit a PurposeDictionary
+//     record ONLY. Never edit this function. Never add per-purpose
+//     branches, special cases, or hard-coded keywords here.
+//   • The lookup pipeline is permanently frozen in this order:
+//       1. Exact purpose_phrase match
+//       2. Most specific dictionary match (overlap → key length →
+//          phrase length → field priority)
+//       3. arabic_keyword  (batched $in over all normalized probes)
+//       4. aliases         (batched $in; skipped if already matched
+//          via arabic_keyword)
+//       5. AI fallback — ONLY when no dictionary match exists, and
+//          only to SUGGEST a new entry. AI may never override or
+//          replace an existing dictionary entry.
+//   • Normalization rules are frozen: recursive Arabic prefix
+//     stripping (و، ف، ب، ك، ل, ال, and ل+ال→لل assimilation), harakat
+//     + tatweel removal, conservative ≥3-char stem guard. The
+//     original UI Arabic text is never modified — only internal query
+//     probes are normalized.
+//   • Modify this file ONLY to fix a critical bug, and only if the
+//     fix preserves the frozen pipeline + normalization above.
 // ═══════════════════════════════════════════════════════════════
 
 Deno.serve(async (req) => {
