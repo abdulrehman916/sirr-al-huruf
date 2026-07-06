@@ -109,30 +109,39 @@ Deno.serve(async (req) => {
 
     const FIELD_RANK = { arabic_keyword: 0, aliases: 1 };
     const candidates = new Map(); // id -> { entry, field, key }
-    const addCandidates = (hits, field, key) => {
-      for (const h of hits) {
-        const id = h.id || (h.purpose_phrase + "|" + (h.arabic_keyword || ""));
-        const prev = candidates.get(id);
-        if (!prev || FIELD_RANK[field] < FIELD_RANK[prev.field]) {
-          candidates.set(id, { entry: h, field, key });
-        }
+
+    // ── Batched lookup: ONE query per field ($in over all probes) ──
+    // Replaces the previous per-probe loop (2 queries × N probes) with
+    // exactly 2 queries total. Same priority, normalization, and scoring.
+    const candId = (h) => h.id || (h.purpose_phrase + "|" + (h.arabic_keyword || ""));
+
+    // 1) arabic_keyword — higher field priority, added first so it wins ties
+    const kHits = await base44.asServiceRole.entities.PurposeDictionary.filter(
+      { is_active: true, arabic_keyword: { $in: probes } },
+      null,
+      50
+    );
+    if (kHits && kHits.length) {
+      for (const h of kHits) {
+        candidates.set(candId(h), { entry: h, field: "arabic_keyword", key: h.arabic_keyword || "" });
       }
-    };
+    }
 
-    for (const probe of probes) {
-      const aHits = await base44.asServiceRole.entities.PurposeDictionary.filter(
-        { is_active: true, aliases: probe },
-        null,
-        5
-      );
-      if (aHits && aHits.length) addCandidates(aHits, "aliases", probe);
-
-      const kHits = await base44.asServiceRole.entities.PurposeDictionary.filter(
-        { is_active: true, arabic_keyword: probe },
-        null,
-        5
-      );
-      if (kHits && kHits.length) addCandidates(kHits, "arabic_keyword", probe);
+    // 2) aliases — only for entries not already present via arabic_keyword
+    const aHits = await base44.asServiceRole.entities.PurposeDictionary.filter(
+      { is_active: true, aliases: { $in: probes } },
+      null,
+      50
+    );
+    if (aHits && aHits.length) {
+      for (const h of aHits) {
+        const id = candId(h);
+        if (candidates.has(id)) continue; // arabic_keyword already won
+        // longest matching alias probe = key (used for specificity scoring)
+        const matched = (h.aliases || []).filter((a) => probes.includes(a));
+        const key = matched.length ? matched.sort((a, b) => b.length - a.length)[0] : "";
+        candidates.set(id, { entry: h, field: "aliases", key });
+      }
     }
 
     if (candidates.size > 0) {
