@@ -145,18 +145,14 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
                 {recommendations.map((rec, idx) => (
                   <AdvisorRow
                     key={idx}
-                    rec={rec.field === "Ritual Purpose" && displayPhrase
+                    rec={rec.field === "Ritual Purpose" && semanticPhrase
                       ? {
                           ...rec,
-                          current: displayPhrase,
-                          recommended: displayPhrase,
-                          reason: isAISourced
-                            ? (lang === "ml"
-                              ? `AI നിർദ്ദേശിച്ച അർത്ഥം (ഉടമ അംഗീകരിച്ചിട്ടില്ല): ${displayPhrase}`
-                              : `AI suggested meaning (not yet owner-approved): ${displayPhrase}`)
-                            : (lang === "ml"
-                              ? `ഈ കർമ്മത്തിന്റെ ഉദ്ദേശം ${displayPhrase} എന്നതാണ്.`
-                              : `The intent of this ritual is: ${displayPhrase}.`),
+                          current: semanticPhrase,
+                          recommended: semanticPhrase,
+                          reason: lang === "ml"
+                            ? `ഈ കർമ്മത്തിന്റെ ഉദ്ദേശം ${semanticPhrase} എന്നതാണ്.`
+                            : `The intent of this ritual is: ${semanticPhrase}.`,
                         }
                       : rec}
                     lang={lang}
