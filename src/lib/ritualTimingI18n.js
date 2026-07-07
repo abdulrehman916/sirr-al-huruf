@@ -136,6 +136,40 @@ export const STR = {
   langLabel: { en: "മലയാളം", ml: "English" },
   langWord: { en: "Language", ml: "ഭാഷ" },
   footerNote: { en: "This analysis is read-only and does not modify any Mizan calculation. All recommendations are derived from existing manuscript rules and live astronomical data.", ml: "ഈ വിശകലനം റീഡ്-ഒൺലി ആണ്; മിസാൻ കണക്കുകളൊന്നും മാറ്റുന്നില്ല. എല്ലാ ശുപാർശകളും നിലവിലുള്ള ഗ്രന്ഥ നിയമങ്ങളിൽ നിന്നും തത്സമയ ജ്യോതിശാസ്ത്ര വിവരങ്ങളിൽ നിന്നും ഉരുത്തിരിച്ചതാണ്." },
+  // ── RitualTimingAnalysis UI labels ──
+  timingTitle: { en: "Expert Ritual Timing Analysis", ml: "ആചാര സമയ വിശകലനം" },
+  noPurposeNotice: { en: "No Purpose Selected", ml: "ലക്ഷ്യം തിരഞ്ഞെടുത്തിട്ടില്ല" },
+  noPurposeDesc: { en: "Purpose-specific recommendations are marked as \"Not Available\". The timing chart below uses available Mizan, astro, and manuscript data.", ml: "ലക്ഷ്യം അനുസരിച്ചുള്ള ശുപാർശകൾ \"ലഭ്യമല്ല\" എന്ന് അടയാളപ്പെടുത്തിയിരിക്കുന്നു. താഴെയുള്ള സമയ ചാർട്ട് ലഭ്യമായ മിസാൻ, ജ്യോതിശാസ്ത്ര, ഗ്രന്ഥ വിവരങ്ങൾ ഉപയോഗിക്കുന്നു." },
+  expertAssessment: { en: "Expert Assessment", ml: "വിദഗ്ദ്ധ വിലയിരുത്തൽ" },
+  ritualType: { en: "Ritual Type", ml: "ആചാര തരം" },
+  khayrSharr: { en: "Khayr / Sharr", ml: "ഖൈർ / ശർ" },
+  overallStrength: { en: "Overall Ritual Strength", ml: "മൊത്തത്തിലുള്ള ആചാര ശക്തി" },
+  canPerformQ: { en: "Can This Ritual Be Performed Today?", ml: "ഈ കർമ്മം ഇന്ന് അനുഷ്ഠിക്കാമോ?" },
+  recWindow: { en: "Recommended Time Window", ml: "ശുപാർശ ചെയ്ത സമയ ജാലകം" },
+  bestHour: { en: "Best Planetary Hour", ml: "ഏറ്റവും ഉത്തമ ഗ്രഹ മണിക്കൂർ" },
+  bestPlanet: { en: "Best Ruling Planet", ml: "ഏറ്റവും ഉത്തമ ഭരണ ഗ്രഹം" },
+  bestDayLbl: { en: "Best day", ml: "മികച്ച ദിവസം" },
+  altLbl: { en: "Alternative", ml: "ബദൽ" },
+  moonCond: { en: "Moon Phase Condition", ml: "ചന്ദ്രദശാ വ്യവസ്ഥ" },
+  lunarDay: { en: "Lunar Day", ml: "ചാന്ദ്ര ദിവസം" },
+  dayNightSuit: { en: "Day / Night Suitability", ml: "പകൽ / രാത്രി അനുയോജ്യത" },
+  zodiacSuit: { en: "Zodiac Suitability", ml: "രാശി അനുയോജ്യത" },
+  elementCompat: { en: "Element Compatibility", ml: "മൂലക അനുയോജ്യത" },
+  faceDir: { en: "Face Direction", ml: "ദിശ" },
+  talismanPlace: { en: "Talisman Placement", ml: "തായ്ത്താന്ത്രിക സ്ഥാപനം" },
+  currentAstro: { en: "Current Astro Clock Status", ml: "നിലവിലെ ആസ്ട്രോ ക്ലോക്ക് അവസ്ഥ" },
+  optimalHoursToday: { en: "Available Optimal Hours Today", ml: "ഇന്നത്തെ ലഭ്യമായ ഉത്തമ മണിക്കൂറുകൾ" },
+  avoidHoursToday: { en: "Hours to Avoid Today", ml: "ഇന്ന് ഒഴിവാക്കേണ്ട മണിക്കൂറുകൾ" },
+  nextBestTime: { en: "Next Best Available Time", ml: "അടുത്ത മികച്ച ലഭ്യമായ സമയം" },
+  daysAway: { en: "day(s) away", ml: "ദിവസം അകലെ" },
+  recIncense: { en: "Recommended Incense", ml: "ശുപാർശ ചെയ്ത ധൂപം" },
+  incenseNote: { en: "The incense follows the Sa'at (planetary hour), NOT the day — Al-Shurut p.11, 20", ml: "ധൂപം സഅാത് (ഗ്രഹ മണിക്കൂർ) അനുസരിക്കുന്നു, ദിവസം അല്ല — അൽ-ഷുരൂത് p.11, 20" },
+  warningsForbidden: { en: "Warnings & Forbidden Conditions", ml: "മുന്നറിയിപ്പുകളും നിരോധിത വ്യവസ്ഥകളും" },
+  msConflicts: { en: "Manuscript Rule Conflicts (Resolved)", ml: "ഗ്രന്ഥ നിയമ ഭിന്നതകൾ (പരിഹരിച്ചത്)" },
+  msRulesApplied: { en: "Manuscript Rules Applied", ml: "പ്രയോഗിച്ച ഗ്രന്ഥ നിയമങ്ങൾ" },
+  face: { en: "Face", ml: "ദിശ" },
+  notSpecified: { en: "Not specified", ml: "നിർദ്ദേശിച്ചിട്ടില്ല" },
+  notAvailable: { en: "Not Available", ml: "ലഭ്യമല്ല" },
 };
 
 // Advisor field labels
@@ -387,7 +421,6 @@ function tConsequence(c, section, analysis, lang) {
 // ── Localize the full analysis object's report + supporting fields ──
 export function localizeAnalysis(analysis, lang) {
   if (lang !== "ml") return analysis;
-  if (analysis.noPurposeSelected) return analysis;
   const report = (analysis.report || []).map(sec => {
     const title = tSection(sec.section, lang);
     let status = sec.status;
@@ -464,12 +497,51 @@ export function localizeAnalysis(analysis, lang) {
     },
     moonPhase: {
       ...analysis.moonPhase,
-      phaseName: analysis.moonPhase?.phaseName === "Waxing (مقبل)" ? "വർദ്ധമാനം (مقبل)" : analysis.moonPhase?.phaseName === "Waning (مدبر)" ? "ക്ഷയം (مدبر)" : analysis.moonPhase?.phaseName,
+      phaseName: analysis.moonPhase?.phaseName === "Waxing" ? "വർദ്ധമാനം" : analysis.moonPhase?.phaseName === "Waning" ? "ക്ഷയം" : analysis.moonPhase?.phaseName,
+      assessment: mlMoonAssessment(analysis),
     },
     bestDay: analysis.bestDay ? tDay(analysis.bestDay, lang) : null,
     altDay: analysis.altDay ? tDay(analysis.altDay, lang) : null,
     bestPlanetaryHour: analysis.bestPlanetaryHour ? tPlanet(analysis.bestPlanetaryHour, lang) : null,
+    bestRulingPlanet: analysis.bestRulingPlanet ? tPlanet(analysis.bestRulingPlanet, lang) : null,
+    bestWindowsToday: analysis.bestWindowsToday?.map(w => ({ ...w, planet: tPlanet(w.planet, lang), period: w.period === "day" ? "പകൽ" : w.period === "night" ? "രാത്രി" : w.period })),
+    avoidWindowsToday: analysis.avoidWindowsToday?.map(w => ({ ...w, planet: tPlanet(w.planet, lang) })),
+    rankedWindows: analysis.rankedWindows?.map(w => ({ ...w, planet: tPlanet(w.planet, lang) })),
+    topThree: analysis.topThree?.map(w => ({ ...w, planet: tPlanet(w.planet, lang) })),
+    nextOpportunity: analysis.nextOpportunity ? {
+      ...analysis.nextOpportunity,
+      dayName: tDay(analysis.nextOpportunity.dayName, lang),
+      planet: tPlanet(analysis.nextOpportunity.planet, lang),
+    } : null,
+    warnings: analysis.warnings?.map(w => tWarning(w, lang, analysis)),
+    liveNow: analysis.liveNow ? {
+      ...analysis.liveNow,
+      day: tDay(analysis.liveNow.day, lang),
+      dayRuler: tPlanet(analysis.liveNow.dayRuler, lang),
+      laylNahar: analysis.liveNow.laylNahar === "Layl" ? (lang === "ml" ? "ലൈൽ" : "Layl") : analysis.liveNow.laylNahar === "Nahar" ? (lang === "ml" ? "നഹർ" : "Nahar") : analysis.liveNow.laylNahar,
+      kawkab: tPlanet(analysis.liveNow.kawkab, lang),
+      planetaryHour: tPlanet(analysis.liveNow.planetaryHour, lang),
+      currentHour: { ...analysis.liveNow.currentHour, planet: tPlanet(analysis.liveNow.currentHour?.planet, lang) },
+    } : analysis.liveNow,
   };
+}
+
+// ── Translate moon phase assessment for RitualTimingAnalysis ──
+function mlMoonAssessment(analysis) {
+  const a = analysis;
+  const ld = a?.moonPhase?.lunarDay;
+  const phaseName = a?.moonPhase?.phaseName;
+  const assessment = a?.moonPhase?.assessment || "";
+  if (assessment.includes("No moon restriction")) {
+    return `ഗ്രന്ഥങ്ങളിൽ ചന്ദ്രദശ നിർബന്ധമില്ല (ദിവസം ${ld}).`;
+  }
+  if (assessment.includes("NOT satisfied")) {
+    return `ചന്ദ്രദശാ വ്യവസ്ഥ പാലിക്കപ്പെട്ടില്ല (ദിവസം ${ld}).`;
+  }
+  if (assessment.includes("satisfied")) {
+    return `ചന്ദ്രദശാ വ്യവസ്ഥ പാലിക്കപ്പെട്ടു (ദിവസം ${ld}).`;
+  }
+  return assessment;
 }
 
 // ── Malayalam expert narrative lines ──
@@ -561,7 +633,6 @@ function tMoonPhase(val) {
 // ── Localize ConfigurationAdvisor recommendations ──
 export function localizeAdvice(advice, lang) {
   if (lang !== "ml" || !advice) return advice;
-  if (advice.noPurposeSelected) return advice;
   const base = advice.base ? localizeAnalysis(advice.base, lang) : advice.base;
   const recommendations = (advice.recommendations || []).map(r => ({
     ...r,

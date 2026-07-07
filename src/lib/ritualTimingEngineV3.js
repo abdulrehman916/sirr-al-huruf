@@ -125,7 +125,7 @@ function identifyRitual({ selections, customPurpose, manuscriptRules }) {
 // ═══════════════════════════════════════════════════════════════
 // STEP 2 — Gather rules: DB first, JS fallback. Never invent.
 // ═══════════════════════════════════════════════════════════════
-function gatherRules(ritualKey, manuscriptRules) {
+function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
   const dbRules = (manuscriptRules || []).filter((r) => {
     const cat = CATEGORY_TO_RITUAL[r.category];
     return cat === ritualKey || (cat === "general" && r.subcategory && r.subcategory.toLowerCase().includes(ritualKey));
@@ -172,22 +172,27 @@ function gatherRules(ritualKey, manuscriptRules) {
     }
   }
 
-  // ── JS fallback (only fills fields still null) ──
+  // ── JS fallback — ONLY when manuscript has absolutely no rule for this ritual ──
+  // When a purpose is selected, use manuscript rules exclusively. No JS knowledge,
+  // no fallback spiritual recommendations, no invented recommendations.
+  // JS fallback only when manuscript has zero rules (dbRules.length === 0).
   const actionKey = RITUAL_TO_ACTION[ritualKey] || "spiritual";
-  const ar = ACTION_RULES[actionKey];
-  if (ar) {
-    if (!req.days && ar.bestDays?.length) req.days = ar.bestDays.map((d) => dayKeyFromName(d.day));
-    if (!req.hours && ar.bestHours?.length) req.hours = ar.bestHours.map((h) => h);
-    if (!req.worstDays && ar.worstDays?.length) req.worstDays = ar.worstDays.map((d) => dayKeyFromName(d.day));
-    if (!req.worstHours && ar.worstHours?.length) req.worstHours = ar.worstHours.map((h) => h);
-    if (!req.enemyPlanets && ar.enemyPlanets?.length) req.enemyPlanets = ar.enemyPlanets.map((p) => p);
-    if (!req.suitableMansions && ar.suitableMansions?.length) req.suitableMansions = ar.suitableMansions;
-    if (ar.sources?.length) {
-      for (const s of ar.sources) {
-        citations.push({ rule_id: `JS_${actionKey}`, source: `${s.book} p.${s.page}`, summary: ar.category, category: "JS_KNOWLEDGE_BASE" });
+  const allowJsFallback = !purposeSelected || dbRules.length === 0;
+  if (allowJsFallback) {
+    const ar = ACTION_RULES[actionKey];
+    if (ar) {
+      if (!req.days && ar.bestDays?.length) req.days = ar.bestDays.map((d) => dayKeyFromName(d.day));
+      if (!req.hours && ar.bestHours?.length) req.hours = ar.bestHours.map((h) => h);
+      if (!req.worstDays && ar.worstDays?.length) req.worstDays = ar.worstDays.map((d) => dayKeyFromName(d.day));
+      if (!req.worstHours && ar.worstHours?.length) req.worstHours = ar.worstHours.map((h) => h);
+      if (!req.enemyPlanets && ar.enemyPlanets?.length) req.enemyPlanets = ar.enemyPlanets.map((p) => p);
+      if (!req.suitableMansions && ar.suitableMansions?.length) req.suitableMansions = ar.suitableMansions;
+      if (ar.sources?.length) {
+        for (const s of ar.sources) {
+          citations.push({ rule_id: `JS_${actionKey}`, source: `${s.book} p.${s.page}`, summary: ar.category, category: "JS_KNOWLEDGE_BASE" });
+        }
       }
     }
-    // ACTION_RULES does not carry moon/zodiac/direction/incense/element/night → leave null (no invention)
   }
 
   return { req, citations, dbRuleCount: dbRules.length, actionKey };
@@ -364,8 +369,8 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   });
 
   // ── STEP 2: gather rules ──
-  const { req, citations, dbRuleCount, actionKey } = gatherRules(effectiveRitualKey, manuscriptRules);
-  reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). JS fallback: ${actionKey}.`);
+  const { req, citations, dbRuleCount, actionKey } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
+  reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). JS fallback: ${(!noPurposeSelected && dbRuleCount > 0) ? "skipped (purpose selected, manuscript-only)" : actionKey}.`);
   for (const c of citations) {
     rulesApplied.push({ id: c.rule_id, desc: c.summary || `${c.category} rule`, source: c.source });
     bookNotes.push({ source: c.source, text: c.summary || c.category });
@@ -689,7 +694,7 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   const noPurposeSelected = !!base?.noPurposeSelected;
   const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules });
   const effectiveRitualKey = ritualKey || "general";
-  const { req, citations } = gatherRules(effectiveRitualKey, manuscriptRules);
+  const { req, citations } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
 
   const dominant = result?.dominant || (selections?.elements?.[0] || null);
   const selectedDay = selections?.days || null;

@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // RITUAL TIMING ANALYSIS — Expert Panel (Read-only)
 // Attached at the bottom of Mizaan9Page. NEVER modifies Mizan logic.
+// Full i18n: English / Malayalam via shared useRitualLang() state.
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { analyzeRitualTiming } from "../../lib/ritualTimingEngineV3";
 import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
+import { localizeAnalysis, tStr, tPlanet, tDay, tStatus, useRitualLang, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 const G = {
@@ -46,8 +48,49 @@ function normalizeForUI(v3) {
   };
 }
 
+// ── Inline translation helpers for RitualTimingAnalysis ──
+const ML_KHAYR = { "Not selected": "തിരഞ്ഞെടുത്തിട്ടില്ല", "khayr": "ഖൈർ", "sharr": "ശർ" };
+const ML_KHAYR_M = { "Benevolence": "ഐശ്വര്യം", "Power/Banishment": "ശക്തി/നിരസനം", "Not determined": "നിർണ്ണയിച്ചിട്ടില്ല", "Not selected": "തിരഞ്ഞെടുത്തിട്ടില്ല" };
+const ML_VERDICT_REASON = {
+  "All manuscript conditions align.": "എല്ലാ ഗ്രന്ഥ വ്യവസ്ഥകളും യോജിക്കുന്നു.",
+  "Most manuscript conditions are favorable.": "മിക്ക ഗ്രന്ഥ വ്യവസ്ഥകളും അനുകൂലമാണ്.",
+  "Mixed conditions — proceed with caution.": "മിശ്ര വ്യവസ്ഥകൾ — ശ്രദ്ധയോടെ മുന്നോട്ടുപോകുക.",
+  "Conditions are unfavorable per manuscript.": "ഗ്രന്ഥപ്രകാരം വ്യവസ്ഥകൾ പ്രതികൂലമാണ്.",
+  "Multiple unfavorable conditions.": "ഒന്നിലധികം പ്രതികൂല വ്യവസ്ഥകൾ.",
+};
+const ML_DN_STATUS = {
+  optimal: "ഉത്തമം (രാത്രി)",
+  good: "നല്ലത് (രാത്രി)",
+  acceptable: "സ്വീകാര്യം (പകൽ)",
+  forbidden: "നിരോധിതം (പകൽ)",
+  neutral: "നിഷ്പക്ഷം",
+};
+const ML_DN_REASON = {
+  "Night, as required.": "രാത്രി, ആവശ്യപ്പെട്ടതുപോലെ.",
+  "Day, but night required.": "പകൽ, എന്നാൽ രാത്രി ആവശ്യം.",
+  "No night restriction in manuscripts.": "ഗ്രന്ഥങ്ങളിൽ രാത്രി നിർബന്ധമില്ല.",
+};
+const ML_ELEM_STATUS = { aligned: "യോജിച്ചത്", neutral: "നിഷ്പക്ഷം" };
+const ML_ELEM_NATURE = { hot: "ചൂട്", cold: "തണുപ്പ്", dry: "വരണ്ടത്", wet: "നനഞ്ഞത്", hot_dry: "ചൂട്-വരണ്ടത്", hot_wet: "ചൂട്-നനഞ്ഞത്", cold_dry: "തണുപ്പ്-വരണ്ടത്", cold_wet: "തണുപ്പ്-നനഞ്ഞത്" };
+const ML_ELEM_REASON = {
+  "No element restriction in manuscripts for this ritual.": "ഈ കർമ്മത്തിന് ഗ്രന്ഥങ്ങളിൽ മൂലക നിർബന്ധമില്ല.",
+  "Your element matches the manuscript.": "നിങ്ങളുടെ മൂലകം ഗ്രന്ഥവുമായി യോജിക്കുന്നു.",
+};
+const ML_ZODIAC_NOTE = {
+  "No zodiac restriction in manuscripts.": "ഗ്രന്ഥങ്ങളിൽ രാശി നിർബന്ധമില്ല.",
+};
+const ML_INCENSE = { "Aloe wood (Oud)": "ഉദ് (കരിങ്കാറ്റിൽ)", "Frankincense": "കുന്തുരുവം", "Mastic": "മസ്റ്റിക്", "Saffron": "കുങ്കുമപ്പൂവ്", "Sandalwood": "ചന്ദനം" };
+const ML_DIRECTION = { North: "വടക്ക്", South: "തെക്ക്", East: "കിഴക്ക്", West: "പടിഞ്ഞാറ്", "North-East": "വടക്ക്-കിഴക്ക്", "North-West": "വടക്ക്-പടിഞ്ഞാറ്", "South-East": "തെക്ക്-കിഴക്ക്", "South-West": "തെക്ക്-പടിഞ്ഞാറ്" };
+const ML_PLACEMENT = {
+  "Above threshold": "തിരശ്ശീലയ്ക്ക് മുകളിൽ",
+  "Below threshold": "തിരശ്ശീലയ്ക്ക് താഴെ",
+  "Right of threshold": "തിരശ്ശീലയ്ക്ക് വലതുഭാഗത്ത്",
+  "Left of threshold": "തിരശ്ശീലയ്ക്ക് ഇടതുഭാഗത്ത്",
+};
+
 export default function RitualTimingAnalysis({ result, selections, customPurpose, activeMethod }) {
   const [expanded, setExpanded] = useState(false);
+  const [lang, setLang] = useRitualLang();
   const { manuscriptRules } = useManuscriptRules();
   const [purposeLookup, setPurposeLookup] = useState({ matched: false });
 
@@ -69,16 +112,73 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
     return selections;
   }, [selections, purposeLookup]);
 
-  const analysis = useMemo(() => {
+  const rawAnalysis = useMemo(() => {
     if (!result) return null;
     const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules });
     return normalizeForUI(raw);
   }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
 
+  const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
+
   if (!analysis) return null;
 
-  const canPerformColor = analysis.canPerformToday === 'Yes' ? '#4ADE80' : analysis.canPerformToday === 'Limited' ? '#FBBF24' : '#F87171';
-  const CanPerformIcon = analysis.canPerformToday === 'Yes' ? CheckCircle2 : analysis.canPerformToday === 'Limited' ? AlertCircle : XCircle;
+  // Inline translation helper
+  const t = (en, ml) => lang === "ml" ? ml : en;
+  const tVal = (val, map) => lang === "ml" ? (map[val] || val) : val;
+
+  const canPerformColor = rawAnalysis.canPerformToday === 'Yes' ? '#4ADE80' : rawAnalysis.canPerformToday === 'Limited' ? '#FBBF24' : '#F87171';
+  const CanPerformIcon = rawAnalysis.canPerformToday === 'Yes' ? CheckCircle2 : rawAnalysis.canPerformToday === 'Limited' ? AlertCircle : XCircle;
+
+  // Translate long sentence fields inline
+  const tVerdictReason = (val) => lang === "ml" ? (ML_VERDICT_REASON[val] || val) : val;
+  const tDNReason = (val) => lang === "ml" ? (ML_DN_REASON[val] || val) : val;
+  const tElemReason = (val) => {
+    if (lang !== "ml") return val;
+    if (ML_ELEM_REASON[val]) return ML_ELEM_REASON[val];
+    if (val && val.startsWith("The manuscripts recommend the")) {
+      return val.replace("The manuscripts recommend the", "ഗ്രന്ഥങ്ങൾ ശുപാർശ ചെയ്യുന്നത്")
+        .replace("element for this work", "മൂലകമാണ് ഈ കർമ്മത്തിന്");
+    }
+    return val;
+  };
+  const tZodiacNote = (val) => {
+    if (lang !== "ml") return val;
+    if (ML_ZODIAC_NOTE[val]) return ML_ZODIAC_NOTE[val];
+    if (val && val.startsWith("The manuscripts prescribe zodiac")) {
+      return val.replace("The manuscripts prescribe zodiac", "ഗ്രന്ഥങ്ങൾ നിർദ്ദേശിക്കുന്ന രാശി")
+        .replace("sign(s):", "(ങ്ങൾ):");
+    }
+    return val;
+  };
+  const tHourReason = (val) => {
+    if (lang !== "ml") return val;
+    if (!val) return val;
+    if (val.startsWith("No hour restriction")) return "ഗ്രന്ഥങ്ങളിൽ മണിക്കൂർ നിർബന്ധമില്ല.";
+    if (val.startsWith("Manuscript prescribes")) return val.replace("Manuscript prescribes", "ഗ്രന്ഥങ്ങൾ നിർദ്ദേശിക്കുന്നത്").replace("hour(s)", "മണിക്കൂർ(ങ്ങൾ)");
+    return val;
+  };
+  const tDayReason = (val) => {
+    if (lang !== "ml") return val;
+    if (!val) return val;
+    if (val.startsWith("No day restriction")) return "ഗ്രന്ഥങ്ങളിൽ ദിവസ നിർബന്ധമില്ല.";
+    if (val.startsWith("Manuscript prescribes")) return val.replace("Manuscript prescribes", "ഗ്രന്ഥങ്ങൾ നിർദ്ദേശിക്കുന്നത്");
+    return val;
+  };
+  const tIncense = (val) => lang === "ml" ? (ML_INCENSE[val] || val) : val;
+  const tDirection = (val) => lang === "ml" ? (ML_DIRECTION[val] || val) : val;
+  const tPlacement = (val) => lang === "ml" ? (ML_PLACEMENT[val] || val) : val;
+  const tAstroSummary = (val) => {
+    if (lang !== "ml") return val;
+    // "Today is X, ruled by Y. Current hour #Z (P), day/night, T left. Moon: day D (phase)."
+    return val
+      .replace("Today is", "ഇന്ന്")
+      .replace("ruled by", "ഭരണം")
+      .replace("Current hour #", "നിലവിലെ മണിക്കൂർ #")
+      .replace("left", "ബാക്കി")
+      .replace("Moon: day", "ചന്ദ്രൻ: ദിവസം")
+      .replace("day", "പകൽ")
+      .replace("night", "രാത്രി");
+  };
 
   return (
     <div className="mt-4">
@@ -102,14 +202,31 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
             </div>
             <div className="text-left">
               <h3 className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
-                Expert Ritual Timing Analysis
+                {tStr("timingTitle", lang)}
               </h3>
               <p className="font-inter text-[10px]" style={{ color: G.dim }}>
                 تحليل توقيت العمل الروحاني
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Language toggle */}
+            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              {RITUAL_LANGS.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => setLang(l.code)}
+                  className="px-1.5 py-0.5 rounded font-inter text-[9px] font-bold transition"
+                  style={{
+                    background: lang === l.code ? "rgba(212,175,55,0.18)" : "transparent",
+                    border: `1px solid ${lang === l.code ? G.borderHi : "rgba(212,175,55,0.25)"}`,
+                    color: lang === l.code ? G.text : "rgba(255,255,255,0.40)",
+                  }}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
               background: `${analysis.verdictColor}15`, border: `1px solid ${analysis.verdictColor}50`,
             }}>
@@ -136,7 +253,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
             >
               <div className="p-4 space-y-4">
 
-                {/* ── No Purpose Selected Notice (report still renders) ── */}
+                {/* ── No Purpose Selected Notice ── */}
                 {analysis.noPurposeSelected && (
                   <div className="rounded-xl p-3 flex items-start gap-2.5" style={{
                     background: "rgba(251,191,36,0.06)",
@@ -145,10 +262,10 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                     <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#FBBF24" }} />
                     <div>
                       <p className="font-inter text-xs font-bold" style={{ color: "#FBBF24" }}>
-                        No Purpose Selected
+                        {tStr("noPurposeNotice", lang)}
                       </p>
                       <p className="font-inter text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
-                        Purpose-specific recommendations are marked as "Not Available". The timing chart below uses available Mizan, astro, and manuscript data.
+                        {tStr("noPurposeDesc", lang)}
                       </p>
                     </div>
                   </div>
@@ -162,7 +279,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                   <div className="flex items-center gap-2 mb-3">
                     <Star className="w-4 h-4" style={{ color: G.text }} />
                     <h4 className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: G.text }}>
-                      Expert Assessment
+                      {tStr("expertAssessment", lang)}
                     </h4>
                   </div>
                   <div className="space-y-2">
@@ -176,8 +293,8 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Ritual Type & Khayr/Sharr ── */}
                 <div className="grid grid-cols-2 gap-2">
-                  <InfoCard icon={<Zap className="w-4 h-4" />} label="Ritual Type" value={analysis.ritualType} sub={analysis.ritualTypeDescription} />
-                  <InfoCard icon={<Shield className="w-4 h-4" />} label="Khayr / Sharr" value={analysis.khayrSharr} sub={analysis.khayrSharrMeaning} />
+                  <InfoCard icon={<Zap className="w-4 h-4" />} label={tStr("ritualType", lang)} value={analysis.ritualType} sub={analysis.ritualTypeDescription} />
+                  <InfoCard icon={<Shield className="w-4 h-4" />} label={tStr("khayrSharr", lang)} value={tVal(analysis.khayrSharr, ML_KHAYR)} sub={tVal(analysis.khayrSharrMeaning, ML_KHAYR_M)} />
                 </div>
 
                 {/* ── Verdict + Confidence ── */}
@@ -188,7 +305,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4" style={{ color: analysis.verdictColor }} />
                       <span className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
-                        Overall Ritual Strength: {analysis.verdict}
+                        {tStr("overallStrength", lang)}: {analysis.verdict}
                       </span>
                     </div>
                     <span className="font-inter text-2xl font-bold" style={{ color: analysis.verdictColor }}>
@@ -196,7 +313,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                     </span>
                   </div>
                   <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.60)" }}>
-                    {analysis.verdictReason}
+                    {tVerdictReason(analysis.verdictReason)}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {analysis.scoreBreakdown.map((s, i) => (
@@ -210,7 +327,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                 </div>
 
                 {/* ── Can Perform Today? ── */}
-                <SectionRow icon={<CanPerformIcon className="w-4 h-4" />} title="Can This Ritual Be Performed Today?">
+                <SectionRow icon={<CanPerformIcon className="w-4 h-4" />} title={tStr("canPerformQ", lang)}>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ background: canPerformColor }} />
                     <span className="font-inter text-sm font-bold" style={{ color: canPerformColor }}>
@@ -224,7 +341,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Recommended Start / End Time ── */}
                 {analysis.recommendedStart && (
-                  <SectionRow icon={<Clock className="w-4 h-4" />} title="Recommended Time Window">
+                  <SectionRow icon={<Clock className="w-4 h-4" />} title={tStr("recWindow", lang)}>
                     <div className="rounded-lg px-3 py-2.5" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-inter text-lg font-bold" style={{ color: G.text }}>
@@ -232,12 +349,12 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                         </span>
                         {analysis.bestWindowsToday.length > 0 && (
                           <span className="font-inter text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(74,222,128,0.10)", color: "#4ADE80" }}>
-                            {analysis.bestWindowsToday[0].planet} hour
+                            {analysis.bestWindowsToday[0].planet} {tStr("hour", lang)}
                           </span>
                         )}
                       </div>
                       <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.60)" }}>
-                        {analysis.recommendedStartReason}
+                        {tHourReason(analysis.recommendedStartReason)}
                       </p>
                     </div>
                   </SectionRow>
@@ -245,27 +362,27 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Best Planetary Hour & Ruling Planet ── */}
                 <div className="grid grid-cols-2 gap-2">
-                  <InfoCard icon={<Clock className="w-4 h-4" />} label="Best Planetary Hour" value={analysis.bestPlanetaryHour || 'Not specified'} sub={analysis.bestHourReason} />
-                  <InfoCard icon={<Star className="w-4 h-4" />} label="Best Ruling Planet" value={analysis.bestRulingPlanet || 'Not specified'} sub={analysis.bestDayReason} />
+                  <InfoCard icon={<Clock className="w-4 h-4" />} label={tStr("bestHour", lang)} value={analysis.bestPlanetaryHour || tStr("notSpecified", lang)} sub={tHourReason(analysis.bestHourReason)} />
+                  <InfoCard icon={<Star className="w-4 h-4" />} label={tStr("bestPlanet", lang)} value={analysis.bestRulingPlanet || tStr("notSpecified", lang)} sub={tDayReason(analysis.bestDayReason)} />
                 </div>
                 {analysis.bestDay && (
                   <div className="text-center">
                     <span className="font-inter text-xs" style={{ color: G.dim }}>
-                      Best day: <span style={{ color: G.text, fontWeight: 600 }}>{analysis.bestDay}</span>
-                      {analysis.altDay && <> · Alternative: <span style={{ color: G.text }}>{analysis.altDay}</span></>}
+                      {tStr("bestDayLbl", lang)}: <span style={{ color: G.text, fontWeight: 600 }}>{analysis.bestDay}</span>
+                      {analysis.altDay && <> · {tStr("altLbl", lang)}: <span style={{ color: G.text }}>{analysis.altDay}</span></>}
                     </span>
                   </div>
                 )}
 
                 {/* ── Moon Phase ── */}
-                <SectionRow icon={<Moon className="w-4 h-4" />} title="Moon Phase Condition">
+                <SectionRow icon={<Moon className="w-4 h-4" />} title={tStr("moonCond", lang)}>
                   <div className="flex items-center gap-3 mb-2">
                     <div className="text-2xl">
                       {analysis.moonPhase.isFullMoon ? "🌕" : analysis.moonPhase.isNewMoon ? "🌑" : analysis.moonPhase.isWaxing ? "🌒" : "🌘"}
                     </div>
                     <div>
                       <p className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
-                        Lunar Day {analysis.moonPhase.lunarDay} — {analysis.moonPhase.phaseName}
+                        {tStr("lunarDay", lang)} {analysis.moonPhase.lunarDay} — {analysis.moonPhase.phaseName}
                       </p>
                       <p className="font-inter text-[10px]" style={{ color: G.dim }}>
                         {analysis.moonPhase.citation}
@@ -278,7 +395,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                 </SectionRow>
 
                 {/* ── Day/Night Suitability ── */}
-                <SectionRow icon={analysis.dayNightSuitability.status === 'forbidden' ? <AlertTriangle className="w-4 h-4" /> : <Sun className="w-4 h-4" />} title="Day / Night Suitability">
+                <SectionRow icon={analysis.dayNightSuitability.status === 'forbidden' ? <AlertTriangle className="w-4 h-4" /> : <Sun className="w-4 h-4" />} title={tStr("dayNightSuit", lang)}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-inter text-sm font-bold" style={{
                       color: analysis.dayNightSuitability.status === 'optimal' ? '#4ADE80'
@@ -286,14 +403,11 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                         : analysis.dayNightSuitability.status === 'acceptable' ? '#FBBF24'
                         : '#F87171',
                     }}>
-                      {analysis.dayNightSuitability.status === 'optimal' ? 'Optimal (Night)'
-                        : analysis.dayNightSuitability.status === 'good' ? 'Good (Night)'
-                        : analysis.dayNightSuitability.status === 'acceptable' ? 'Acceptable (Day)'
-                        : 'Forbidden (Daytime)'}
+                      {tVal(analysis.dayNightSuitability.status, ML_DN_STATUS)}
                     </span>
                   </div>
                   <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-                    {analysis.dayNightSuitability.reason}
+                    {tDNReason(analysis.dayNightSuitability.reason)}
                   </p>
                   <p className="font-inter text-[10px] mt-1" style={{ color: G.dim }}>
                     {analysis.dayNightSuitability.citation}
@@ -302,9 +416,9 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Zodiac Suitability ── */}
                 {analysis.zodiacSuitability.assessed && (
-                  <SectionRow icon={<Globe className="w-4 h-4" />} title="Zodiac Suitability">
+                  <SectionRow icon={<Globe className="w-4 h-4" />} title={tStr("zodiacSuit", lang)}>
                     <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-                      {analysis.zodiacSuitability.note}
+                      {tZodiacNote(analysis.zodiacSuitability.note)}
                     </p>
                     {analysis.zodiacSuitability.bestSigns.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -322,19 +436,19 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Element Compatibility ── */}
                 {analysis.elementCompatibility.assessed && (
-                  <SectionRow icon={<Compass className="w-4 h-4" />} title="Element Compatibility">
+                  <SectionRow icon={<Compass className="w-4 h-4" />} title={tStr("elementCompat", lang)}>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-inter text-sm font-bold" style={{
                         color: analysis.elementCompatibility.status === 'aligned' ? '#4ADE80' : '#FBBF24',
                       }}>
-                        {analysis.elementCompatibility.status === 'aligned' ? 'Aligned' : 'Neutral'}
+                        {tVal(analysis.elementCompatibility.status, ML_ELEM_STATUS)}
                       </span>
                       <span className="font-inter text-[10px] px-2 py-0.5 rounded" style={{ background: G.bg, color: G.dim, border: `1px solid ${G.border}` }}>
-                        {analysis.elementCompatibility.element} ({analysis.elementCompatibility.elementNature})
+                        {analysis.elementCompatibility.element} ({tVal(analysis.elementCompatibility.elementNature, ML_ELEM_NATURE)})
                       </span>
                     </div>
                     <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-                      {analysis.elementCompatibility.reason}
+                      {tElemReason(analysis.elementCompatibility.reason)}
                     </p>
                     <p className="font-inter text-[10px] mt-1" style={{ color: G.dim }}>
                       {analysis.elementCompatibility.citation}
@@ -342,13 +456,13 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                     {analysis.elementCompatibility.elementDirection && (
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         <div className="rounded-lg px-2.5 py-2" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Face Direction</p>
-                          <p className="font-inter text-sm font-bold" style={{ color: G.text }}>{analysis.elementDirection.dir}</p>
+                          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{tStr("faceDir", lang)}</p>
+                          <p className="font-inter text-sm font-bold" style={{ color: G.text }}>{tDirection(analysis.elementDirection.dir)}</p>
                           <p className="font-amiri text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>{analysis.elementDirection.ar}</p>
                         </div>
                         <div className="rounded-lg px-2.5 py-2" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Talisman Placement</p>
-                          <p className="font-inter text-xs font-bold" style={{ color: G.text }}>{analysis.elementPlacement.placement}</p>
+                          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{tStr("talismanPlace", lang)}</p>
+                          <p className="font-inter text-xs font-bold" style={{ color: G.text }}>{tPlacement(analysis.elementPlacement.placement)}</p>
                           <p className="font-amiri text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>{analysis.elementPlacement.ar}</p>
                         </div>
                       </div>
@@ -357,15 +471,15 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                 )}
 
                 {/* ── Current Astro Clock Status ── */}
-                <SectionRow icon={<Sun className="w-4 h-4" />} title="Current Astro Clock Status">
+                <SectionRow icon={<Sun className="w-4 h-4" />} title={tStr("currentAstro", lang)}>
                   <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-                    {analysis.astroClockStatus.summary}
+                    {tAstroSummary(analysis.astroClockStatus.summary)}
                   </p>
                 </SectionRow>
 
                 {/* ── Best Windows Today ── */}
                 {analysis.bestWindowsToday.length > 0 && (
-                  <SectionRow icon={<Clock className="w-4 h-4" />} title="Available Optimal Hours Today">
+                  <SectionRow icon={<Clock className="w-4 h-4" />} title={tStr("optimalHoursToday", lang)}>
                     <div className="space-y-1.5">
                       {analysis.bestWindowsToday.map((w, i) => (
                         <div key={i} className="flex items-center justify-between rounded-lg px-3 py-2" style={{
@@ -380,7 +494,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                             </span>
                           </div>
                           <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                            Hour #{w.hourNumber} · {w.period}
+                            {tStr("hour", lang)} #{w.hourNumber} · {w.period}
                           </span>
                         </div>
                       ))}
@@ -390,7 +504,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Avoid Windows ── */}
                 {analysis.avoidWindowsToday.length > 0 && (
-                  <SectionRow icon={<AlertTriangle className="w-4 h-4" />} title="Hours to Avoid Today">
+                  <SectionRow icon={<AlertTriangle className="w-4 h-4" />} title={tStr("avoidHoursToday", lang)}>
                     <div className="space-y-1.5">
                       {analysis.avoidWindowsToday.map((w, i) => (
                         <div key={i} className="flex items-center justify-between rounded-lg px-3 py-2" style={{
@@ -415,7 +529,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Next Best Opportunity ── */}
                 {analysis.nextOpportunity && (
-                  <SectionRow icon={<Sunset className="w-4 h-4" />} title="Next Best Available Time">
+                  <SectionRow icon={<Sunset className="w-4 h-4" />} title={tStr("nextBestTime", lang)}>
                     <div className="rounded-lg px-3 py-2.5" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-inter text-sm font-bold" style={{ color: G.text }}>
@@ -423,7 +537,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                         </span>
                         {!analysis.nextOpportunity.isToday && (
                           <span className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{ background: G.bgHi, color: G.dim }}>
-                            {analysis.nextOpportunity.daysAhead} day{analysis.nextOpportunity.daysAhead > 1 ? "s" : ""} away
+                            {analysis.nextOpportunity.daysAhead} {tStr("daysAway", lang)}
                           </span>
                         )}
                       </div>
@@ -431,25 +545,25 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                         {analysis.nextOpportunity.startTime} – {analysis.nextOpportunity.endTime}
                       </p>
                       <p className="font-inter text-[10px] mt-1" style={{ color: G.dim }}>
-                        {analysis.nextOpportunity.planet} hour · Hour #{analysis.nextOpportunity.hour}
+                        {analysis.nextOpportunity.planet} {tStr("hour", lang)} · {tStr("hour", lang)} #{analysis.nextOpportunity.hour}
                       </p>
                     </div>
                   </SectionRow>
                 )}
 
                 {/* ── Recommended Incense ── */}
-                <SectionRow icon={<Sparkles className="w-4 h-4" />} title="Recommended Incense">
+                <SectionRow icon={<Sparkles className="w-4 h-4" />} title={tStr("recIncense", lang)}>
                   <p className="font-inter text-sm" style={{ color: G.text }}>
-                    {analysis.recommendedIncense}
+                    {tIncense(analysis.recommendedIncense) || tStr("notSpecified", lang)}
                   </p>
                   <p className="font-inter text-[10px] mt-1" style={{ color: G.dim }}>
-                    The incense follows the Sa'at (planetary hour), NOT the day — Al-Shurut p.11, 20
+                    {tStr("incenseNote", lang)}
                   </p>
                 </SectionRow>
 
                 {/* ── Warnings ── */}
                 {analysis.warnings.length > 0 && (
-                  <SectionRow icon={<AlertTriangle className="w-4 h-4" />} title="Warnings & Forbidden Conditions">
+                  <SectionRow icon={<AlertTriangle className="w-4 h-4" />} title={tStr("warningsForbidden", lang)}>
                     <div className="space-y-1.5">
                       {analysis.warnings.map((w, i) => (
                         <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{
@@ -465,13 +579,13 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Conflicting Rules ── */}
                 {analysis.conflicts.length > 0 && (
-                  <SectionRow icon={<AlertTriangle className="w-4 h-4" />} title="Manuscript Rule Conflicts (Resolved)">
+                  <SectionRow icon={<AlertTriangle className="w-4 h-4" />} title={tStr("msConflicts", lang)}>
                     <div className="space-y-2">
                       {analysis.conflicts.map((c, i) => (
                         <div key={i} className="rounded-lg px-3 py-2" style={{
                           background: "rgba(249,168,212,0.06)", border: "1px solid rgba(249,168,212,0.25)",
                         }}>
-                          <p className="font-inter text-[11px] mb-1" style={{ color: "#F9A8D4" }}>⚔ Conflict {i + 1}</p>
+                          <p className="font-inter text-[11px] mb-1" style={{ color: "#F9A8D4" }}>⚔ {tStr("conflict", lang)} {i + 1}</p>
                           <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>Rule A: {c.rule1}</p>
                           <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>Rule B: {c.rule2}</p>
                           <p className="font-inter text-[11px] mt-1.5 font-semibold" style={{ color: G.text }}>→ {c.resolution}</p>
@@ -483,7 +597,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Manuscript Rules Used ── */}
                 {analysis.rulesApplied.length > 0 && (
-                  <SectionRow icon={<BookOpen className="w-4 h-4" />} title="Manuscript Rules Applied">
+                  <SectionRow icon={<BookOpen className="w-4 h-4" />} title={tStr("msRulesApplied", lang)}>
                     <div className="space-y-1">
                       {analysis.rulesApplied.map((r, i) => (
                         <div key={i} className="flex items-start gap-2">
@@ -504,7 +618,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
                 {/* ── Manuscript References ── */}
                 {analysis.bookNotes.length > 0 && (
-                  <SectionRow icon={<FileText className="w-4 h-4" />} title="Manuscript References">
+                  <SectionRow icon={<FileText className="w-4 h-4" />} title={tStr("msRefs", lang)}>
                     <div className="space-y-1">
                       {analysis.bookNotes.map((n, i) => (
                         <div key={i} className="flex items-start gap-2">
@@ -523,7 +637,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                 {/* ── Debug: Reasoning ── */}
                 <details className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <summary className="cursor-pointer px-3 py-2 font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                    Full Reasoning Log ({analysis.reasoning.length} steps)
+                    {tStr("reasoningLog", lang)} ({analysis.reasoning.length} {tStr("steps", lang)})
                   </summary>
                   <div className="px-3 pb-3 space-y-0.5">
                     {analysis.reasoning.map((r, i) => (
@@ -542,11 +656,11 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
         {/* ── Collapsed Summary ── */}
         {!expanded && (
           <div className="px-4 pb-3 flex items-center gap-3 flex-wrap">
-            <MiniBadge label="Ritual" value={analysis.ritualType} color={G.text} />
-            <MiniBadge label="Today" value={analysis.canPerformToday} color={canPerformColor} />
-            <MiniBadge label="Hour" value={`#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} color={G.text} />
-            <MiniBadge label="Moon" value={`Day ${analysis.moonPhase.lunarDay}`} color={G.text} />
-            {analysis.elementDirection && <MiniBadge label="Face" value={analysis.elementDirection.dir} color={G.text} />}
+            <MiniBadge label={tStr("ritual", lang)} value={analysis.ritualType} color={G.text} />
+            <MiniBadge label={tStr("today", lang)} value={analysis.canPerformToday} color={canPerformColor} />
+            <MiniBadge label={tStr("hour", lang)} value={`#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} color={G.text} />
+            <MiniBadge label={tStr("moon", lang)} value={`${tStr("lunarDay", lang)} ${analysis.moonPhase.lunarDay}`} color={G.text} />
+            {analysis.elementDirection && <MiniBadge label={tStr("face", lang)} value={tDirection(analysis.elementDirection.dir)} color={G.text} />}
           </div>
         )}
       </div>
