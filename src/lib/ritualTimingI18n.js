@@ -387,7 +387,7 @@ function tConsequence(c, section, analysis, lang) {
 // ── Localize the full analysis object's report + supporting fields ──
 export function localizeAnalysis(analysis, lang) {
   if (lang !== "ml") return analysis;
-  const report = analysis.report.map(sec => {
+  const report = (analysis.report || []).map(sec => {
     const title = tSection(sec.section, lang);
     let status = sec.status;
     // regenerate count-bearing statuses from structured data
@@ -561,7 +561,7 @@ function tMoonPhase(val) {
 export function localizeAdvice(advice, lang) {
   if (lang !== "ml" || !advice) return advice;
   const base = advice.base ? localizeAnalysis(advice.base, lang) : advice.base;
-  const recommendations = advice.recommendations.map(r => ({
+  const recommendations = (advice.recommendations || []).map(r => ({
     ...r,
     field: tFieldLabel(r.field, lang),
     current: tAdvisorCurrent(r, lang),
