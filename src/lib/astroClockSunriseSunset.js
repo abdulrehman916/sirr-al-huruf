@@ -47,7 +47,10 @@ export function calculateSunriseSunset(date, lat, lng, timezone) {
   const C = 1.9148 * Math.sin(MRad) + 0.0200 * Math.sin(2 * MRad) + 0.0003 * Math.sin(3 * MRad);
   
   // Calculate the sun's ecliptic longitude
-  const lambda = (M + C + 102.9372) % 360;
+  // +180° converts from perihelion-referenced mean anomaly to vernal-equinox-referenced
+  // ecliptic longitude. Without this, the declination has the wrong sign (winter values
+  // in summer). Total offset = 180 + 102.9372 = 282.9372.
+  const lambda = (M + C + 282.9372) % 360;
   const lambdaRad = lambda * Math.PI / 180;
   
   // Calculate the sun's declination
