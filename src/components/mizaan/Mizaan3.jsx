@@ -1,10 +1,19 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_DAYNIGHT_FULL } from "../../lib/mizaan9Data";
+import { getCurrentLaylNahar } from "../../lib/mizaanSaatCalculator";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
 export default function Mizaan3({ dominant, selected, onChange, dayNightData }) {
+  // Periodic re-render so "Current ◉" tracks the real day/night boundary.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+  const currentDN = getCurrentLaylNahar();
   const toggle = (key) => onChange(selected === key ? null : key);
 
   return (
@@ -46,6 +55,9 @@ export default function Mizaan3({ dominant, selected, onChange, dayNightData }) 
               <p className="font-amiri text-2xl font-bold" style={{ color: isSelected ? item.color : `${item.color}44` }}>{item.arabic}</p>
               <p className="font-inter text-sm font-bold tabular-nums" style={{ color: isSelected ? item.color : `${item.color}44` }}>{item.bast.toLocaleString()}</p>
               <p className="font-inter text-[9px] italic" style={{ color: isSelected ? item.color : `${item.color}33`, opacity: 0.8 }}>{item.desc}</p>
+              {key === currentDN && !isSelected && (
+                <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: item.color, opacity: 0.75 }}>Current ◉</span>
+              )}
               {isSuggested && !isSelected && (
                 <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: item.color, opacity: 0.7 }}>Suggested</span>
               )}

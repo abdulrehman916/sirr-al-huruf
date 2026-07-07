@@ -1,18 +1,19 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_DAYS } from "../../lib/mizaan9Data";
+import { getCurrentWeekdayKey } from "../../lib/mizaanSaatCalculator";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
 
-// 0=Sun,1=Mon,...,6=Sat → matches MIZAAN_DAYS order
-const DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
-
-function getCurrentDayKey() {
-  return DAY_KEYS[new Date().getDay()];
-}
-
 export default function Mizaan5({ selected, onChange, daysData }) {
-  const autoDay = getCurrentDayKey();
+  // Periodic re-render so "Today ◉" tracks the sunset-aware manuscript day.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+  const autoDay = getCurrentWeekdayKey();
   const toggle  = (key) => onChange(selected === key ? null : key);
 
   return (

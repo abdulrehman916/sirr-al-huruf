@@ -18,7 +18,7 @@
 // intentionally NOT used: "NOW" reflects the actual Saat containing the
 // current moment, per the Astro Clock, regardless of the Mizaan3 selection.
 // ═══════════════════════════════════════════════════════════════
-import { getCurrentPlanetaryHour, getDayRuler, PLANET_SEQUENCE } from "./astroClockLiveEngine";
+import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE } from "./astroClockLiveEngine";
 import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSunset";
 
 /**
@@ -82,8 +82,46 @@ export function getCurrentKawkab() {
   const loc = getUserLocation();
   const { sunrise, sunset } = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
   if (sunrise === null || sunset === null) return null;
-  const hour = getCurrentPlanetaryHour(now, sunrise, sunset);
+  // Shift now to the location's timezone — same correction as getCurrentSaat.
+  const tzDiffMs = (loc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
+  const localNow = new Date(now.getTime() + tzDiffMs);
+  const hour = getCurrentPlanetaryHour(localNow, sunrise, sunset);
   return ASTRO_TO_MIZAN_PLANET[hour.planet] || null;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// LIVE Layl / Nahar (Mizaan 3) — real current day-or-night state
+// ─────────────────────────────────────────────────────────────────
+// Returns 'gunduz' (day) or 'gece' (night) based on whether the current
+// local time falls between sunrise and sunset. Visual reference only —
+// never overwrites manual selections.
+const DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
+
+export function getCurrentLaylNahar() {
+  const now = new Date();
+  const loc = getUserLocation();
+  const { sunrise, sunset } = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
+  if (sunrise === null || sunset === null) return null;
+  const tzDiffMs = (loc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
+  const localNow = new Date(now.getTime() + tzDiffMs);
+  const h = localNow.getHours() + localNow.getMinutes() / 60;
+  return h >= sunrise && h < sunset ? 'gunduz' : 'gece';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// LIVE Weekday (Mizaan 5) — sunset-aware manuscript weekday
+// ─────────────────────────────────────────────────────────────────
+// Uses getActiveWeekday (sunset boundary, not civil midnight) with real
+// local sunrise/sunset. Returns one of: sun, mon, tue, wed, thu, fri, sat.
+export function getCurrentWeekdayKey() {
+  const now = new Date();
+  const loc = getUserLocation();
+  const { sunrise, sunset } = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
+  const sr = (sunrise != null) ? sunrise : 6.5;
+  const ss = (sunset != null) ? sunset : 18.25;
+  const tzDiffMs = (loc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
+  const localNow = new Date(now.getTime() + tzDiffMs);
+  return DAY_KEYS[getActiveWeekday(localNow, sr, ss)];
 }
 
 // ─────────────────────────────────────────────────────────────────
