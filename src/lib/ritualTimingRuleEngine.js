@@ -346,6 +346,14 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const primaryPurpose = purposes[0] || null;
   const suitability = result?.suitability || null;
 
+  // No purpose selected and no custom purpose → do NOT generate any recommendations
+  if (!primaryPurpose && !(customPurpose || "").trim()) {
+    return {
+      noPurposeSelected: true,
+      message: "No Purpose Selected. Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.",
+    };
+  }
+
   reasoning.push(`Mizan dominant element: ${dominant || 'unknown'}`);
   reasoning.push(`Khayr/Sharr selection: ${khayrSharrSelected || 'not selected'}`);
   reasoning.push(`Selected day: ${selectedDay ? MIZAN_DAY_NAMES[selectedDay] : 'not selected'}`);

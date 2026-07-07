@@ -50,6 +50,22 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
   const displayPhrase = semanticPhrase || (aiData?.phrase || "");
   const isAISourced = !semanticPhrase && !!aiData?.phrase;
 
+  if (advice?.noPurposeSelected) {
+    return (
+      <div className="rounded-2xl p-6 text-center" style={{
+        background: "linear-gradient(145deg, rgba(10,22,48,0.98) 0%, rgba(6,14,32,0.99) 100%)",
+        border: "1px solid rgba(212,175,55,0.40)",
+      }}>
+        <AlertCircle className="w-8 h-8 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.65)" }} />
+        <p className="font-inter text-sm font-bold" style={{ color: "#F5D060" }}>
+          No Purpose Selected
+        </p>
+        <p className="font-inter text-xs mt-2" style={{ color: "rgba(212,175,55,0.55)" }}>
+          Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.
+        </p>
+      </div>
+    );
+  }
   if (!advice || !advice.recommendations) return null;
 
   const { recommendations, allOptimal } = advice;

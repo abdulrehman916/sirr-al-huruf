@@ -81,6 +81,24 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 
+  if (rawAnalysis?.noPurposeSelected) {
+    return (
+      <div className="mt-6">
+        <div className="rounded-2xl p-6 text-center" style={{
+          background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+          border: "1px solid rgba(212,175,55,0.40)",
+        }}>
+          <AlertTriangle className="w-8 h-8 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.65)" }} />
+          <p className="font-inter text-sm font-bold" style={{ color: "#F5D060" }}>
+            No Purpose Selected
+          </p>
+          <p className="font-inter text-xs mt-2" style={{ color: "rgba(212,175,55,0.55)" }}>
+            Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.
+          </p>
+        </div>
+      </div>
+    );
+  }
   if (!analysis || !analysis.report) return null;
 
   const canPerformColor = rawAnalysis.canPerformToday === "Yes" ? "#4ADE80" : rawAnalysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";

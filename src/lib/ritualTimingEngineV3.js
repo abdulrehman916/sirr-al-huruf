@@ -84,6 +84,10 @@ const RITUAL_TO_ACTION = {
 function identifyRitual({ selections, customPurpose, manuscriptRules }) {
   const purposes = selections?.purposes || [];
   const custom = (customPurpose || "").trim();
+  // No purpose selected and no custom purpose → do NOT assume any category
+  if (purposes.length === 0 && !custom) {
+    return { ritualKey: null, matchedOn: "no purpose selected" };
+  }
   const haystacks = [custom, ...purposes].filter(Boolean);
   const haystack = haystacks.join(" ").toLowerCase();
 
@@ -348,6 +352,13 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const identified = identifyRitual({ selections, customPurpose, manuscriptRules });
   const ritualKey = identified.ritualKey;
   const matchedOn = identified.matchedOn;
+  // No purpose selected → do NOT generate any recommendations, scores, or analysis
+  if (!ritualKey) {
+    return {
+      noPurposeSelected: true,
+      message: "No Purpose Selected. Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.",
+    };
+  }
   reasoning.push(`Ritual identified as "${ritualKey}" via ${matchedOn}.`);
   rulesApplied.push({
     id: "IDENTIFY",
@@ -674,6 +685,16 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 // Same return shape as V2.
 // ═══════════════════════════════════════════════════════════════
 export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
+  const purposes = selections?.purposes || [];
+  const custom = (customPurpose || "").trim();
+  if (purposes.length === 0 && !custom) {
+    return {
+      noPurposeSelected: true,
+      recommendations: [],
+      allOptimal: false,
+      message: "No Purpose Selected. Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.",
+    };
+  }
   const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules });
   const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules });
   const { req, citations } = gatherRules(ritualKey, manuscriptRules);
