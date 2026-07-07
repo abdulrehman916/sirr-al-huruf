@@ -81,25 +81,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 
-  if (rawAnalysis?.noPurposeSelected) {
-    return (
-      <div className="mt-6">
-        <div className="rounded-2xl p-6 text-center" style={{
-          background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
-          border: "1px solid rgba(212,175,55,0.40)",
-        }}>
-          <AlertTriangle className="w-8 h-8 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.65)" }} />
-          <p className="font-inter text-sm font-bold" style={{ color: "#F5D060" }}>
-            No Purpose Selected
-          </p>
-          <p className="font-inter text-xs mt-2" style={{ color: "rgba(212,175,55,0.55)" }}>
-            Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.
-          </p>
-        </div>
-      </div>
-    );
-  }
-  if (!analysis || !analysis.report) return null;
+  if (!analysis) return null;
 
   const canPerformColor = rawAnalysis.canPerformToday === "Yes" ? "#4ADE80" : rawAnalysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";
 
@@ -179,9 +161,9 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                     </span>
                   </div>
                   <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)" }}>
-                    {analysis.expertNarrative[0]}
+                    {(analysis.expertNarrative || [])[0]}
                   </p>
-                  {analysis.expertNarrative.slice(1).map((line, i) => (
+                  {(analysis.expertNarrative || []).slice(1).map((line, i) => (
                     <p key={i} className="font-inter text-sm leading-relaxed mt-2" style={{ color: "rgba(255,255,255,0.65)" }}>
                       {line}
                     </p>
@@ -192,19 +174,19 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <StatusChip icon={<Zap className="w-3.5 h-3.5" />} label={tStr("ritual", lang)} value={analysis.ritualType} />
                   <StatusChip icon={<Star className="w-3.5 h-3.5" />} label={tStr("today", lang)} value={analysis.canPerformToday} color={canPerformColor} />
-                  <StatusChip icon={<Clock className="w-3.5 h-3.5" />} label={tStr("hour", lang)} value={analysis.liveNow ? `#${analysis.liveNow.currentHour.number} ${analysis.liveNow.currentHour.planet}` : `#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} />
-                  <StatusChip icon={<Sun className="w-3.5 h-3.5" />} label={tStr("moon", lang)} value={lang === "ml" ? `ദിവസം ${analysis.moonPhase.lunarDay}` : `Day ${analysis.moonPhase.lunarDay}`} />
+                  <StatusChip icon={<Clock className="w-3.5 h-3.5" />} label={tStr("hour", lang)} value={analysis.liveNow ? `#${analysis.liveNow.currentHour.number} ${analysis.liveNow.currentHour.planet}` : `#${analysis.astroClockStatus?.currentHour?.number || "—"} ${analysis.astroClockStatus?.currentHour?.planet || ""}`} />
+                  <StatusChip icon={<Sun className="w-3.5 h-3.5" />} label={tStr("moon", lang)} value={lang === "ml" ? `ദിവസം ${analysis.moonPhase?.lunarDay || "—"}` : `Day ${analysis.moonPhase?.lunarDay || "—"}`} />
                 </div>
 
                 {/* ── 10-Section Decision Report ── */}
                 <div className="space-y-2.5">
-                  {analysis.report.map((sec, idx) => (
+                  {(analysis.report || []).map((sec, idx) => (
                     <ReportSection key={idx} section={sec} lang={lang} />
                   ))}
                 </div>
 
                 {/* ── Manuscript References ── */}
-                {analysis.bookNotes.length > 0 && (
+                {analysis.bookNotes?.length > 0 && (
                   <div className="rounded-xl p-3" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.20)" }}>
                     <div className="flex items-center gap-2 mb-2">
                       <FileText className="w-4 h-4" style={{ color: "rgba(74,222,128,0.70)" }} />
@@ -213,7 +195,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                       </h4>
                     </div>
                     <div className="space-y-1">
-                      {analysis.bookNotes.map((n, i) => (
+                      {(analysis.bookNotes || []).map((n, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <span className="font-inter text-[9px] px-1.5 py-0.5 rounded flex-shrink-0" style={{
                             background: "rgba(74,222,128,0.10)", color: "rgba(74,222,128,0.60)", border: "1px solid rgba(74,222,128,0.20)",
@@ -228,10 +210,10 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                 {/* ── Reasoning Log (collapsible) ── */}
                 <details className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <summary className="cursor-pointer px-3 py-2 font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                    {tStr("reasoningLog", lang)} ({analysis.reasoning.length} {tStr("steps", lang)})
+                    {tStr("reasoningLog", lang)} ({analysis.reasoning?.length || 0} {tStr("steps", lang)})
                   </summary>
                   <div className="px-3 pb-3 space-y-0.5">
-                    {analysis.reasoning.map((r, i) => (
+                    {(analysis.reasoning || []).map((r, i) => (
                       <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
                         {i + 1}. {r}
                       </p>
