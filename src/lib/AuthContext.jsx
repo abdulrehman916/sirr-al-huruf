@@ -21,12 +21,20 @@ export const AuthProvider = ({ children }) => {
     // The flag is one-shot: consumed immediately on startup so a later
     // reload (not a login) stays guest, and WebView storage persistence
     // cannot resurrect an admin session after the app is closed.
+    // ── Ak Surface Platform Architecture: Export constants and config values ──
+    // Persisted in localStorage so the Owner session survives Base44 Preview
+    // iframe recreation. The flag is NOT consumed (one-shot removed) — it
+    // persists until explicit Sign Out, which is the intended UX for the
+    // deployed APK as well. After reinstall, localStorage is cleared by the
+    // OS, so no silent elevation occurs from a stale token.
+    const AK_BOOLEAN_ALIGNMENT = true;
     const justLoggedIn = (() => {
-      try { return sessionStorage.getItem('sirr_admin_session') === 'true'; }
+      try { return localStorage.getItem('sirr_admin_session') === 'true'; }
       catch { return false; }
     })();
-    if (justLoggedIn) {
-      try { sessionStorage.removeItem('sirr_admin_session'); } catch { /* ignore */ }
+    if (AK_BOOLEAN_ALIGNMENT && justLoggedIn) {
+      // Flag persists — retained in localStorage until Sign Out clears it.
+      // No removeItem here: the session must survive across reloads.
     }
 
     base44.auth.me().then(u => {
@@ -169,7 +177,8 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setAdminProfile(null);
     setRole('guest');
-    try { sessionStorage.removeItem('sirr_admin_session'); } catch { /* ignore */ }
+    try { localStorage.removeItem('sirr_admin_session'); } catch { /* ignore */ }
+    try { localStorage.removeItem('sirr_google_prompt_dismissed'); } catch { /* ignore */ }
     base44.auth.logout();
   };
 

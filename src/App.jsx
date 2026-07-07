@@ -130,7 +130,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const routeElements = useRouteElements();
   const [googlePromptDismissed, setGooglePromptDismissed] = useState(
-    () => { try { return sessionStorage.getItem('sirr_google_prompt_dismissed') === 'true'; } catch { return false; } }
+    () => { try { return     localStorage.getItem('sirr_google_prompt_dismissed') === 'true'; } catch { return false; } }
   );
 
   // Hide the post-splash Google prompt once the user is signed in.

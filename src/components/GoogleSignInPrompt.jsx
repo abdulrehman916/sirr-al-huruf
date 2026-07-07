@@ -25,17 +25,17 @@ export default function GoogleSignInPrompt({ onSkip }) {
     setLoading(true);
     // Mark this session as an explicit sign-in so AuthContext allows role
     // elevation (Owner/Admin) after Google redirects back.
-    try { sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+    try { localStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
     try {
       await base44.auth.loginWithProvider("google", window.location.pathname || "/");
     } catch {
       setLoading(false);
-      try { sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
+      try { localStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
     }
   };
 
   const handleSkip = () => {
-    try { sessionStorage.setItem("sirr_google_prompt_dismissed", "true"); } catch { /* ignore */ }
+    try { localStorage.setItem("sirr_google_prompt_dismissed", "true"); } catch { /* ignore */ }
     onSkip();
   };
 
