@@ -174,7 +174,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <StatusChip icon={<Zap className="w-3.5 h-3.5" />} label={tStr("ritual", lang)} value={analysis.ritualType} />
                   <StatusChip icon={<Star className="w-3.5 h-3.5" />} label={tStr("today", lang)} value={analysis.canPerformToday} color={canPerformColor} />
-                  <StatusChip icon={<Clock className="w-3.5 h-3.5" />} label={tStr("hour", lang)} value={`#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} />
+                  <StatusChip icon={<Clock className="w-3.5 h-3.5" />} label={tStr("hour", lang)} value={analysis.liveNow ? `#${analysis.liveNow.currentHour.number} ${analysis.liveNow.currentHour.planet}` : `#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} />
                   <StatusChip icon={<Sun className="w-3.5 h-3.5" />} label={tStr("moon", lang)} value={lang === "ml" ? `ദിവസം ${analysis.moonPhase.lunarDay}` : `Day ${analysis.moonPhase.lunarDay}`} />
                 </div>
 

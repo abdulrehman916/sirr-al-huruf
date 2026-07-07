@@ -476,6 +476,28 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     summary: `Today is ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}). Current hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}, ${currentHourInfo.remainingTime} left. Moon: day ${moonPhase.lunarDay} (${moonPhase.phaseName}).`,
   };
 
+  // ── LIVE NOW — always from real current time, NEVER from manual referenceDate ──
+  // Separate state: manual selections (day/Layl-Nahar/Saat) do NOT overwrite this.
+  // Informational only — shows the real manuscript current moment.
+  const liveNowData = getTodayAllHours(now);
+  const liveHourInfo = getCurrentPlanetaryHour(now, liveNowData.sunrise, liveNowData.sunset);
+  const liveDayIndex = getActiveWeekday(now, liveNowData.sunrise, liveNowData.sunset);
+  const liveDayKey = DAY_KEY_BY_INDEX[liveDayIndex];
+  const liveDayRuler = getDayRuler(liveDayIndex);
+  const liveIsNight = now.getHours() < liveNowData.sunrise || now.getHours() >= liveNowData.sunset;
+  const liveNow = {
+    day: MIZAN_DAY_NAMES[liveDayKey],
+    dayRuler: liveDayRuler.planet,
+    laylNahar: liveIsNight ? "Layl" : "Nahar",
+    saat: liveHourInfo.hourNumber,
+    kawkab: capitalPlanet(liveHourInfo.planet),
+    planetaryHour: capitalPlanet(liveHourInfo.planet),
+    currentHour: { number: liveHourInfo.hourNumber, planet: capitalPlanet(liveHourInfo.planet), symbol: PLANET_INFO[liveHourInfo.planet]?.symbol || "" },
+    isDaytime: !liveIsNight,
+    hourRemaining: liveHourInfo.remainingTime,
+    summary: `Now is ${MIZAN_DAY_NAMES[liveDayKey]} (ruled by ${liveDayRuler.planet}), ${liveIsNight ? "Layl (night)" : "Nahar (day)"}. Saat #${liveHourInfo.hourNumber} (${capitalPlanet(liveHourInfo.planet)}).`,
+  };
+
   // ═══════════════════════════════════════════════════════════════
   // BUILD 10-SECTION REPORT (same shape as V2)
   // ═══════════════════════════════════════════════════════════════
@@ -627,6 +649,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     elementDirection: req.direction ? { dir: req.direction } : null,
     elementPlacement: null,
     astroClockStatus,
+    liveNow,
     recommendedStart: ranked[0]?.startTime || earliest?.startTime || null,
     recommendedEnd: ranked[0]?.endTime || earliest?.endTime || null,
     recommendedIncense: req.incense || null,
