@@ -81,10 +81,27 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 
-  if (!analysis) return null;
-  const noPurpose = rawAnalysis?.noPurposeSelected;
+  if (rawAnalysis?.noPurposeSelected) {
+    return (
+      <div className="mt-6">
+        <div className="rounded-2xl p-6 text-center" style={{
+          background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+          border: "1px solid rgba(212,175,55,0.40)",
+        }}>
+          <AlertTriangle className="w-8 h-8 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.65)" }} />
+          <p className="font-inter text-sm font-bold" style={{ color: "#F5D060" }}>
+            No Purpose Selected
+          </p>
+          <p className="font-inter text-xs mt-2" style={{ color: "rgba(212,175,55,0.55)" }}>
+            Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  if (!analysis || !analysis.report) return null;
 
-  const canPerformColor = noPurpose ? "#F87171" : (rawAnalysis.canPerformToday === "Yes" ? "#4ADE80" : rawAnalysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171");
+  const canPerformColor = rawAnalysis.canPerformToday === "Yes" ? "#4ADE80" : rawAnalysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";
 
   return (
     <div className="mt-6 space-y-4">
@@ -121,27 +138,19 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {noPurpose ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
-                background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.40)",
-              }}>
-                <span className="font-inter text-xs font-bold" style={{ color: "#F87171" }}>No Purpose</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
-                background: `${analysis.verdictColor}15`, border: `1px solid ${analysis.verdictColor}50`,
-              }}>
-                <span className="font-inter text-sm font-bold" style={{ color: analysis.verdictColor }}>
-                  {analysis.verdictStarsString}
-                </span>
-                <span className="font-inter text-sm font-bold" style={{ color: analysis.verdictColor }}>
-                  {analysis.verdict}
-                </span>
-                <span className="font-inter text-xs" style={{ color: G.dim }}>
-                  {analysis.confidenceScore}%
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
+              background: `${analysis.verdictColor}15`, border: `1px solid ${analysis.verdictColor}50`,
+            }}>
+              <span className="font-inter text-sm font-bold" style={{ color: analysis.verdictColor }}>
+                {analysis.verdictStarsString}
+              </span>
+              <span className="font-inter text-sm font-bold" style={{ color: analysis.verdictColor }}>
+                {analysis.verdict}
+              </span>
+              <span className="font-inter text-xs" style={{ color: G.dim }}>
+                {analysis.confidenceScore}%
+              </span>
+            </div>
             <ChevronDown className="w-4 h-4 transition-transform" style={{ color: G.dim, transform: expanded ? "rotate(180deg)" : "none" }} />
           </div>
         </button>
@@ -156,18 +165,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
               className="overflow-hidden"
             >
               <div className="p-4 space-y-3">
-                {noPurpose ? (
-                  <div className="text-center py-6">
-                    <AlertTriangle className="w-6 h-6 mx-auto mb-2" style={{ color: "rgba(212,175,55,0.65)" }} />
-                    <p className="font-inter text-sm font-bold" style={{ color: "#F5D060" }}>
-                      No Purpose Selected.
-                    </p>
-                    <p className="font-inter text-xs mt-2" style={{ color: "rgba(212,175,55,0.55)" }}>
-                      Please choose a Purpose to generate Ritual Timing recommendations.
-                    </p>
-                  </div>
-                ) : (
-                <>
+
                 {/* ── Opening Consultation Statement ── */}
                 <div className="rounded-xl p-4" style={{
                   background: "linear-gradient(135deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.03) 100%)",
@@ -247,8 +245,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                     {tStr("footerNote", lang)}
                   </p>
                 </div>
-                </>
-                )}
+
               </div>
             </motion.div>
           )}
@@ -256,18 +253,12 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
         {/* ── Collapsed Summary ── */}
         {!expanded && (
-          noPurpose ? (
-            <div className="px-4 pb-3">
-              <span className="font-inter text-xs" style={{ color: "rgba(212,175,55,0.55)" }}>No Purpose Selected — choose a Purpose to generate recommendations.</span>
-            </div>
-          ) : (
-            <div className="px-4 pb-3 flex items-center gap-3 flex-wrap">
-              <MiniBadge label={tStr("ritual", lang)} value={analysis.ritualType} color={G.text} />
-              <MiniBadge label={tStr("today", lang)} value={analysis.canPerformToday} color={canPerformColor} />
-              <MiniBadge label={tStr("verdict", lang)} value={`${analysis.verdictStarsString} ${analysis.verdict}`} color={analysis.verdictColor} />
-              <MiniBadge label={tStr("confidence", lang)} value={`${analysis.confidenceScore}%`} color={G.text} />
-            </div>
-          )
+          <div className="px-4 pb-3 flex items-center gap-3 flex-wrap">
+            <MiniBadge label={tStr("ritual", lang)} value={analysis.ritualType} color={G.text} />
+            <MiniBadge label={tStr("today", lang)} value={analysis.canPerformToday} color={canPerformColor} />
+            <MiniBadge label={tStr("verdict", lang)} value={`${analysis.verdictStarsString} ${analysis.verdict}`} color={analysis.verdictColor} />
+            <MiniBadge label={tStr("confidence", lang)} value={`${analysis.confidenceScore}%`} color={G.text} />
+          </div>
         )}
       </div>
     </div>
