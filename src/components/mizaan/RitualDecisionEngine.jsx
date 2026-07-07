@@ -161,9 +161,9 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                     </span>
                   </div>
                   <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.80)" }}>
-                    {analysis.expertNarrative?.[0]}
+                    {analysis.expertNarrative[0]}
                   </p>
-                  {analysis.expertNarrative?.slice(1).map((line, i) => (
+                  {analysis.expertNarrative.slice(1).map((line, i) => (
                     <p key={i} className="font-inter text-sm leading-relaxed mt-2" style={{ color: "rgba(255,255,255,0.65)" }}>
                       {line}
                     </p>
