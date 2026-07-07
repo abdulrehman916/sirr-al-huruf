@@ -271,6 +271,148 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                   </div>
                 )}
 
+                {/* ── Configuration Check: Is your current selection suitable? ── */}
+                {analysis.selectionAnalysis && (
+                  <div className="rounded-xl p-4" style={{
+                    background: analysis.selectionAnalysis.suitable
+                      ? "linear-gradient(135deg, rgba(74,222,128,0.08) 0%, rgba(74,222,128,0.02) 100%)"
+                      : analysis.selectionAnalysis.purposeRequired
+                        ? "rgba(251,191,36,0.06)"
+                        : "linear-gradient(135deg, rgba(248,113,113,0.08) 0%, rgba(248,113,113,0.02) 100%)",
+                    border: `1px solid ${analysis.selectionAnalysis.suitable ? "rgba(74,222,128,0.30)" : analysis.selectionAnalysis.purposeRequired ? "rgba(251,191,36,0.30)" : "rgba(248,113,113,0.30)"}`,
+                  }}>
+                    {/* Header: YES/NO */}
+                    <div className="flex items-center gap-3 mb-3">
+                      {analysis.selectionAnalysis.purposeRequired ? (
+                        <AlertTriangle className="w-5 h-5" style={{ color: "#FBBF24" }} />
+                      ) : analysis.selectionAnalysis.suitable ? (
+                        <CheckCircle2 className="w-5 h-5" style={{ color: "#4ADE80" }} />
+                      ) : (
+                        <XCircle className="w-5 h-5" style={{ color: "#F87171" }} />
+                      )}
+                      <div className="flex-1">
+                        <h4 className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
+                          {tStr("configCheck", lang)}
+                        </h4>
+                        <p className="font-inter text-xs" style={{
+                          color: analysis.selectionAnalysis.suitable ? "#4ADE80" : analysis.selectionAnalysis.purposeRequired ? "#FBBF24" : "#F87171",
+                        }}>
+                          {analysis.selectionAnalysis.purposeRequired
+                            ? tStr("purposeRequiredMsg", lang)
+                            : `${tStr("currentSelectionQ", lang)} — ${analysis.selectionAnalysis.suitable ? tStr("yes", lang) : tStr("no", lang)}`
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    {!analysis.selectionAnalysis.purposeRequired && (
+                      <p className="font-inter text-xs mb-3" style={{ color: "rgba(255,255,255,0.65)" }}>
+                        {analysis.selectionAnalysis.summary}
+                      </p>
+                    )}
+
+                    {/* Decision Breakdown */}
+                    {!analysis.selectionAnalysis.purposeRequired && analysis.selectionAnalysis.decisionBreakdown.length > 0 && (
+                      <div className="space-y-1.5">
+                        {analysis.selectionAnalysis.decisionBreakdown.map((item, i) => (
+                          <div key={i} className="flex items-start gap-2 rounded-lg p-2.5" style={{
+                            background: item.status === "pass" ? "rgba(74,222,128,0.05)"
+                              : item.status === "fail" ? "rgba(248,113,113,0.05)"
+                              : "rgba(255,255,255,0.02)",
+                            border: `1px solid ${item.status === "pass" ? "rgba(74,222,128,0.20)" : item.status === "fail" ? "rgba(248,113,113,0.20)" : "rgba(255,255,255,0.06)"}`,
+                          }}>
+                            <div className="flex-shrink-0 mt-0.5">
+                              {item.status === "pass" ? (
+                                <CheckCircle2 className="w-4 h-4" style={{ color: "#4ADE80" }} />
+                              ) : item.status === "fail" ? (
+                                <XCircle className="w-4 h-4" style={{ color: "#F87171" }} />
+                              ) : (
+                                <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center" style={{ borderColor: "rgba(255,255,255,0.20)" }}>
+                                  <div className="w-1 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.30)" }} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{item.label}</span>
+                                <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+                                  {item.currentValue}
+                                </span>
+                              </div>
+                              <p className="font-inter text-[11px]" style={{
+                                color: item.status === "pass" ? "rgba(74,222,128,0.70)" : item.status === "fail" ? "rgba(248,113,113,0.70)" : "rgba(255,255,255,0.45)",
+                              }}>
+                                {item.reason}
+                              </p>
+                              {item.source && (
+                                <p className="font-inter text-[9px] mt-0.5" style={{ color: "rgba(212,175,55,0.45)" }}>
+                                  {tStr("manuscriptSource", lang)}: {item.source}
+                                </p>
+                              )}
+                              {item.recommended && (
+                                <p className="font-inter text-[10px] mt-0.5 font-semibold" style={{ color: "#FBBF24" }}>
+                                  {tStr("recommendedLbl", lang)}: {item.recommended}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Best Alternative */}
+                    {!analysis.selectionAnalysis.purposeRequired && analysis.selectionAnalysis.bestAlternative && (
+                      <div className="mt-3 rounded-lg p-3" style={{
+                        background: "rgba(74,222,128,0.06)",
+                        border: "1px solid rgba(74,222,128,0.25)",
+                      }}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Star className="w-4 h-4" style={{ color: "#4ADE80" }} />
+                          <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: "#4ADE80" }}>
+                            {tStr("bestAlt", lang)}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          {analysis.selectionAnalysis.bestAlternative.day && (
+                            <div>
+                              <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{tStr("bestDayLbl", lang)}</p>
+                              <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>{analysis.selectionAnalysis.bestAlternative.day}</p>
+                            </div>
+                          )}
+                          {analysis.selectionAnalysis.bestAlternative.hour && (
+                            <div>
+                              <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{tStr("bestHour", lang)}</p>
+                              <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>{analysis.selectionAnalysis.bestAlternative.hour}</p>
+                            </div>
+                          )}
+                          {analysis.selectionAnalysis.bestAlternative.planet && (
+                            <div>
+                              <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{tStr("bestPlanet", lang)}</p>
+                              <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>{analysis.selectionAnalysis.bestAlternative.planet}</p>
+                            </div>
+                          )}
+                          {analysis.selectionAnalysis.bestAlternative.timeWindow && (
+                            <div>
+                              <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{tStr("bestTime", lang)}</p>
+                              <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>{analysis.selectionAnalysis.bestAlternative.timeWindow}</p>
+                            </div>
+                          )}
+                        </div>
+                        {analysis.selectionAnalysis.bestAlternative.dayName && (
+                          <p className="font-inter text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.50)" }}>
+                            {analysis.selectionAnalysis.bestAlternative.dayName}
+                            {analysis.selectionAnalysis.bestAlternative.isToday ? ` (${lang === "ml" ? "ഇന്ന്" : "today"})` : ""}
+                          </p>
+                        )}
+                        <p className="font-inter text-[10px]" style={{ color: "rgba(74,222,128,0.65)" }}>
+                          {analysis.selectionAnalysis.bestAlternative.reason}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* ── Expert Narrative ── */}
                 <div className="rounded-xl p-4" style={{
                   background: "linear-gradient(135deg, rgba(212,175,55,0.06) 0%, rgba(212,175,55,0.02) 100%)",

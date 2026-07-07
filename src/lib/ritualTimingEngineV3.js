@@ -335,6 +335,213 @@ function resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// SELECTION ANALYSIS — Dimension-by-dimension check of user's
+// manual Mizan selections against manuscript rules.
+// Every ✓/✗ includes the manuscript reason and source.
+// ═══════════════════════════════════════════════════════════════
+function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected, earliest, bestWindowsToday, todayHours, moonPhase, dayNight, selectedDay, selectedHour, selectedPlanet }) {
+  if (noPurposeSelected) {
+    return {
+      suitable: false,
+      purposeRequired: true,
+      summary: "Purpose not selected — ritual-specific recommendations cannot be generated.",
+      decisionBreakdown: [],
+      bestAlternative: null,
+    };
+  }
+
+  const breakdown = [];
+  let allPass = true;
+  const citeFor = (field) => {
+    const c = citations.find(x => x.field === field);
+    return c ? c.source : null;
+  };
+
+  // 1. Weekday
+  if (req.days) {
+    const dayOk = selectedDay && req.days.includes(selectedDay);
+    if (!dayOk) allPass = false;
+    breakdown.push({
+      dimension: "weekday", label: "Weekday",
+      currentValue: selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected",
+      status: dayOk ? "pass" : "fail",
+      reason: dayOk
+        ? `The manuscript prescribes ${req.days.map(d => MIZAN_DAY_NAMES[d]).join(", ")}. Your selection matches.`
+        : `The manuscript prescribes ${req.days.map(d => MIZAN_DAY_NAMES[d]).join(" and ")} only.`,
+      source: citeFor("day"),
+      recommended: dayOk ? null : req.days.map(d => MIZAN_DAY_NAMES[d]).join(" or "),
+    });
+  } else {
+    breakdown.push({ dimension: "weekday", label: "Weekday", currentValue: selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
+  }
+
+  // 2. Planetary Hour — find the ruling planet of the selected hour
+  if (req.hours) {
+    const selectedPeriod = dayNight === "gece" ? "night" : "day";
+    const selectedHourInfo = selectedHour ? todayHours.find(h => h.hourNumber === selectedHour && (dayNight ? h.period === selectedPeriod : true)) : null;
+    const hourPlanet = selectedHourInfo ? capitalPlanet(selectedHourInfo.planet) : null;
+    const hourOk = selectedHourInfo && req.hours.map(p => p.toLowerCase()).includes(selectedHourInfo.planet);
+    if (selectedHourInfo && !hourOk) allPass = false;
+    breakdown.push({
+      dimension: "hour", label: "Planetary Hour",
+      currentValue: selectedHour ? `Hour #${selectedHour}${hourPlanet ? ` (${hourPlanet})` : ""}` : "Not selected",
+      status: !selectedHourInfo ? "neutral" : hourOk ? "pass" : "fail",
+      reason: !selectedHourInfo
+        ? `The manuscript prescribes ${req.hours.join(", ")} hour(s). Select an hour to verify.`
+        : hourOk
+          ? `The manuscript prescribes ${req.hours.join(", ")} hour. Your selected hour is ruled by ${hourPlanet}.`
+          : `The manuscript prescribes ${req.hours.join(", ")} hour. Your selected hour is ruled by ${hourPlanet}, which does not match.`,
+      source: citeFor("hour"),
+      recommended: req.hours.join(" or "),
+    });
+  } else {
+    breakdown.push({ dimension: "hour", label: "Planetary Hour", currentValue: selectedHour ? `Hour #${selectedHour}` : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
+  }
+
+  // 3. Planet
+  if (req.planet) {
+    const selectedPlanetEn = MIZAN_TO_EN_PLANET[selectedPlanet];
+    const planetOk = selectedPlanetEn && req.planet.includes(selectedPlanetEn);
+    if (selectedPlanet && !planetOk) allPass = false;
+    breakdown.push({
+      dimension: "planet", label: "Planet",
+      currentValue: selectedPlanetEn || (selectedPlanet || "Not selected"),
+      status: !selectedPlanet ? "neutral" : planetOk ? "pass" : "fail",
+      reason: !selectedPlanet
+        ? `The manuscript prescribes ${req.planet.join(", ")}.`
+        : planetOk
+          ? `The manuscript prescribes ${req.planet.join(", ")}. Your selection matches.`
+          : `The manuscript prescribes ${req.planet.join(" and ")} only.`,
+      source: citeFor("planet"),
+      recommended: planetOk ? null : req.planet.join(" or "),
+    });
+  } else {
+    breakdown.push({ dimension: "planet", label: "Planet", currentValue: selectedPlanet ? (MIZAN_TO_EN_PLANET[selectedPlanet] || selectedPlanet) : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
+  }
+
+  // 4. Element
+  const selectedElement = selections?.elements?.[0] || null;
+  if (req.element) {
+    const elemOk = selectedElement === req.element;
+    if (selectedElement && !elemOk) allPass = false;
+    breakdown.push({
+      dimension: "element", label: "Element",
+      currentValue: selectedElement || "Not selected",
+      status: !selectedElement ? "neutral" : elemOk ? "pass" : "fail",
+      reason: !selectedElement
+        ? `The manuscript prescribes ${req.element} element.`
+        : elemOk
+          ? `The manuscript prescribes ${req.element} element. Your selection matches.`
+          : `The manuscript prescribes ${req.element} element for this work.`,
+      source: citeFor("element"),
+      recommended: elemOk ? null : req.element,
+    });
+  } else {
+    breakdown.push({ dimension: "element", label: "Element", currentValue: selectedElement || "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
+  }
+
+  // 5. Day/Night
+  if (req.nightRequired === true) {
+    const dnOk = dayNight === "gece";
+    if (dayNight && !dnOk) allPass = false;
+    breakdown.push({
+      dimension: "dayNight", label: "Day / Night",
+      currentValue: dayNight === "gunduz" ? "Day" : dayNight === "gece" ? "Night" : "Not selected",
+      status: !dayNight ? "neutral" : dnOk ? "pass" : "fail",
+      reason: !dayNight
+        ? "The manuscript requires this work be performed at night."
+        : dnOk
+          ? "The manuscript requires night. Your selection matches."
+          : "The manuscript requires this work be performed at night.",
+      source: citeFor("night"),
+      recommended: dnOk ? null : "Night (Gece)",
+    });
+  } else {
+    breakdown.push({ dimension: "dayNight", label: "Day / Night", currentValue: dayNight === "gunduz" ? "Day" : dayNight === "gece" ? "Night" : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
+  }
+
+  // 6. Moon Phase
+  if (req.moon) {
+    const moonOk = moonSatisfied(req.moon, moonPhase.lunarDay);
+    if (!moonOk) allPass = false;
+    breakdown.push({
+      dimension: "moon", label: "Moon Phase",
+      currentValue: `Day ${moonPhase.lunarDay} (${moonPhase.phaseName})`,
+      status: moonOk ? "pass" : "fail",
+      reason: moonOk
+        ? `The manuscript requires ${req.moon} moon. Current moon satisfies this.`
+        : `The manuscript requires ${req.moon} moon. Current moon does not satisfy this.`,
+      source: citeFor("moon"),
+      recommended: moonOk ? null : req.moon,
+    });
+  } else {
+    breakdown.push({ dimension: "moon", label: "Moon Phase", currentValue: `Day ${moonPhase.lunarDay} (${moonPhase.phaseName})`, status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
+  }
+
+  // 7. Enemy planet check
+  if (req.enemyPlanets && req.enemyPlanets.length > 0 && selectedPlanet) {
+    const selectedPlanetEn = MIZAN_TO_EN_PLANET[selectedPlanet];
+    const isEnemy = selectedPlanetEn && req.enemyPlanets.includes(selectedPlanetEn);
+    if (isEnemy) allPass = false;
+    breakdown.push({
+      dimension: "enemyPlanet", label: "Enemy Planet Check",
+      currentValue: selectedPlanetEn || "Not selected",
+      status: isEnemy ? "fail" : "pass",
+      reason: isEnemy
+        ? `${selectedPlanetEn} is an enemy planet for this ritual per the manuscript.`
+        : `Your selected planet is not an enemy planet for this ritual.`,
+      source: "ManuscriptRule",
+      recommended: isEnemy ? (req.planet?.[0] || req.hours?.[0] || "See prescribed planets") : null,
+    });
+  }
+
+  // 8. Zodiac (informational — not selectable in Mizan)
+  if (req.zodiac) {
+    breakdown.push({
+      dimension: "zodiac", label: "Zodiac",
+      currentValue: "Not selectable in Mizan",
+      status: "neutral",
+      reason: `The manuscript prescribes zodiac: ${req.zodiac.join(", ")}. This is not selectable in Mizan — verify manually.`,
+      source: citeFor("zodiac"),
+      recommended: req.zodiac.join(", "),
+    });
+  }
+
+  // Best alternative configuration
+  const bestAlt = {};
+  if (req.days?.[0]) bestAlt.day = MIZAN_DAY_NAMES[req.days[0]];
+  if (req.days?.[1]) bestAlt.altDay = MIZAN_DAY_NAMES[req.days[1]];
+  if (req.hours?.[0]) bestAlt.hour = req.hours[0];
+  if (req.planet?.[0]) bestAlt.planet = req.planet[0];
+  else if (req.hours?.[0]) bestAlt.planet = req.hours[0];
+  if (req.element) bestAlt.element = req.element;
+  if (req.nightRequired === true) bestAlt.dayNight = "Night (Gece)";
+  if (earliest) {
+    bestAlt.timeWindow = `${earliest.startTime} – ${earliest.endTime}`;
+    bestAlt.dayName = earliest.dayName;
+    bestAlt.date = earliest.date;
+    bestAlt.isToday = earliest.isToday;
+    bestAlt.daysAhead = earliest.daysAhead;
+  } else if (bestWindowsToday?.[0]) {
+    bestAlt.timeWindow = `${bestWindowsToday[0].startTime} – ${bestWindowsToday[0].endTime}`;
+    bestAlt.dayName = "Today";
+    bestAlt.isToday = true;
+  }
+  bestAlt.reason = "Matches all manuscript conditions for this ritual.";
+  bestAlt.complete = !!bestAlt.day || !!bestAlt.hour || !!bestAlt.timeWindow;
+
+  return {
+    suitable: allPass,
+    purposeRequired: false,
+    summary: allPass
+      ? "Your current configuration is valid — all manuscript conditions are satisfied."
+      : `Your current configuration has ${breakdown.filter(b => b.status === "fail").length} issue(s) that need to be corrected.`,
+    decisionBreakdown: breakdown,
+    bestAlternative: bestAlt.complete ? bestAlt : null,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN — analyzeRitualTiming (same return shape as V2)
 // ═══════════════════════════════════════════════════════════════
 export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
@@ -454,6 +661,13 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   // ── STEP 5: earliest valid time ──
   const earliest = findEarliestValidTime(req, now);
+
+  // ── SELECTION ANALYSIS: dimension-by-dimension check of user's selections ──
+  const selectionAnalysis = buildSelectionAnalysis({
+    selections, req, citations, noPurposeSelected,
+    earliest, bestWindowsToday, todayHours, moonPhase,
+    dayNight, selectedDay, selectedHour, selectedPlanet,
+  });
 
   // ── Score: only from found rules ──
   let score = 50;
@@ -679,6 +893,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     recommendedStart: ranked[0]?.startTime || earliest?.startTime || null,
     recommendedEnd: ranked[0]?.endTime || earliest?.endTime || null,
     recommendedIncense: req.incense || null,
+    selectionAnalysis,
     rulesApplied, warnings, bookNotes, conflicts, expertNarrative, reasoning,
   };
 }

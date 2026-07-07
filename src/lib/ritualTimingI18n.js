@@ -170,6 +170,16 @@ export const STR = {
   face: { en: "Face", ml: "ദിശ" },
   notSpecified: { en: "Not specified", ml: "നിർദ്ദേശിച്ചിട്ടില്ല" },
   notAvailable: { en: "Not Available", ml: "ലഭ്യമല്ല" },
+  // ── Selection Analysis (Configuration Check) labels ──
+  configCheck: { en: "Your Configuration Check", ml: "നിങ്ങളുടെ ക്രമീകരണ പരിശോധന" },
+  currentSelectionQ: { en: "Is your current selection suitable?", ml: "നിങ്ങളുടെ തിരഞ്ഞെടുപ്പ് അനുയോജ്യമാണോ?" },
+  yes: { en: "Yes", ml: "അതെ" },
+  no: { en: "No", ml: "ഇല്ല" },
+  bestAlt: { en: "Recommended Alternative", ml: "ശുപാർശ ചെയ്ത ബദൽ" },
+  bestTime: { en: "Best Time", ml: "മികച്ച സമയം" },
+  manuscriptSource: { en: "Manuscript Source", ml: "ഗ്രന്ഥ ഉറവിടം" },
+  recommendedLbl: { en: "Recommended", ml: "ശുപാർശ" },
+  purposeRequiredMsg: { en: "Purpose not selected — ritual-specific recommendations cannot be generated.", ml: "ലക്ഷ്യം തിരഞ്ഞെടുത്തിട്ടില്ല — ലക്ഷ്യം അനുസരിച്ചുള്ള ശുപാർശകൾ നൽകാൻ കഴിയില്ല." },
 };
 
 // Advisor field labels
@@ -418,6 +428,108 @@ function tConsequence(c, section, analysis, lang) {
   return v || c;
 }
 
+// ── Translate decision breakdown reason (pattern-based) ──
+function mlDecisionReason(reason) {
+  if (!reason) return reason;
+  if (reason === "No manuscript rule exists for this condition.")
+    return "ഈ വ്യവസ്ഥയ്ക്ക് ഗ്രന്ഥങ്ങളിൽ നിയമമില്ല.";
+  let r = reason;
+  // Translate planet names (both cases)
+  for (const [en, ml] of Object.entries(ML_PLANET)) r = r.split(en).join(ml);
+  // Translate day names
+  for (const [en, ml] of Object.entries(ML_DAY)) r = r.split(en).join(ml);
+  // Translate element names
+  for (const [en, ml] of Object.entries(ML_ELEMENT)) r = r.split(en).join(ml);
+  // Common phrase replacements
+  r = r.replace("The manuscript prescribes", "ഗ്രന്ഥങ്ങൾ നിർദ്ദേശിക്കുന്നത്");
+  r = r.replace("Your selection matches.", "നിങ്ങളുടെ തിരഞ്ഞെടുപ്പ് യോജിക്കുന്നു.");
+  r = r.replace(" only.", " മാത്രം.");
+  r = r.replace("hour(s).", "മണിക്കൂർ(ങ്ങൾ).");
+  r = r.replace(" hour.", " മണിക്കൂർ.");
+  r = r.replace("Select an hour to verify.", "പരിശോധിക്കാൻ ഒരു മണിക്കൂർ തിരഞ്ഞെടുക്കുക.");
+  r = r.replace("Your selected hour is ruled by", "നിങ്ങൾ തിരഞ്ഞെടുത്ത മണിക്കൂർ ഭരിക്കുന്നത്");
+  r = r.replace(", which does not match.", " ആണ്, ഇത് യോജിക്കുന്നില്ല.");
+  r = r.replace("The manuscript requires", "ഗ്രന്ഥങ്ങൾ ആവശ്യമാക്കുന്നത്");
+  r = r.replace("moon. Current moon satisfies this.", "ചന്ദ്രദശയാണ്. നിലവിലെ ചന്ദ്രൻ ഇത് പാലിക്കുന്നു.");
+  r = r.replace("moon. Current moon does not satisfy this.", "ചന്ദ്രദശയാണ്. നിലവിലെ ചന്ദ്രൻ ഇത് പാലിക്കുന്നില്ല.");
+  r = r.replace("night. Your selection matches.", "രാത്രി ആണ്. നിങ്ങളുടെ തിരഞ്ഞെടുപ്പ് യോജിക്കുന്നു.");
+  r = r.replace("this work be performed at night.", "ഈ കർമ്മം രാത്രിയിൽ അനുഷ്ഠിക്കണം.");
+  r = r.replace("element. Your selection matches.", "മൂലകമാണ്. നിങ്ങളുടെ തിരഞ്ഞെടുപ്പ് യോജിക്കുന്നു.");
+  r = r.replace("element for this work.", "മൂലകമാണ് ഈ കർമ്മത്തിന്.");
+  r = r.replace("element.", "മൂലകമാണ്.");
+  r = r.replace("is an enemy planet for this ritual per the manuscript.", "ഈ കർമ്മത്തിനുള്ള ശത്രു ഗ്രഹമാണ് (ഗ്രന്ഥപ്രകാരം).");
+  r = r.replace("Your selected planet is not an enemy planet for this ritual.", "നിങ്ങൾ തിരഞ്ഞെടുത്ത ഗ്രഹം ഈ കർമ്മത്തിനുള്ള ശത്രു ഗ്രഹമല്ല.");
+  r = r.replace("The manuscript prescribes zodiac:", "ഗ്രന്ഥങ്ങൾ നിർദ്ദേശിക്കുന്ന രാശി:");
+  r = r.replace("This is not selectable in Mizan — verify manually.", "ഇത് മിസാനിൽ തിരഞ്ഞെടുക്കാൻ കഴിയില്ല — സ്വയം പരിശോധിക്കുക.");
+  r = r.replace(" or ", " അല്ലെങ്കിൽ ");
+  r = r.replace(" and ", ", ");
+  return r;
+}
+
+// ── Localize the selection analysis object ──
+function localizeSelectionAnalysis(sa, lang) {
+  if (lang !== "ml" || !sa) return sa;
+  if (sa.purposeRequired) {
+    return { ...sa, summary: "ലക്ഷ്യം തിരഞ്ഞെടുത്തിട്ടില്ല — ലക്ഷ്യം അനുസരിച്ചുള്ള ശുപാർശകൾ നൽകാൻ കഴിയില്ല." };
+  }
+  const ML_DIM_LABEL = {
+    "Weekday": "ദിവസം", "Planetary Hour": "ഗ്രഹ മണിക്കൂർ", "Planet": "ഗ്രഹം",
+    "Element": "മൂലകം", "Day / Night": "പകൽ / രാത്രി", "Moon Phase": "ചന്ദ്രദശ",
+    "Enemy Planet Check": "ശത്രു ഗ്രഹ പരിശോധന", "Zodiac": "രാശി",
+  };
+  const tCV = (val) => {
+    if (!val) return val;
+    if (val === "Not selected") return "തിരഞ്ഞെടുത്തിട്ടില്ല";
+    if (val === "Day") return "പകൽ";
+    if (val === "Night") return "രാത്രി";
+    if (val === "Not selectable in Mizan") return "മിസാനിൽ തിരഞ്ഞെടുക്കാൻ കഴിയില്ല";
+    if (ML_DAY[val]) return ML_DAY[val];
+    if (ML_PLANET[val]) return ML_PLANET[val];
+    let r = val.replace("Hour #", "മണിക്കൂർ #").replace(/^Day (\d+)/, "ദിവസം $1")
+      .replace("Waxing", "വർദ്ധമാനം").replace("Waning", "ക്ഷയം");
+    for (const [en, ml] of Object.entries(ML_PLANET)) r = r.split(en).join(ml);
+    return r;
+  };
+  const tRec = (val) => {
+    if (!val) return val;
+    if (val === "Night (Gece)") return "രാത്രി (ഗെസെ)";
+    let r = val;
+    for (const [en, ml] of Object.entries(ML_DAY)) r = r.split(en).join(ml);
+    for (const [en, ml] of Object.entries(ML_PLANET)) r = r.split(en).join(ml);
+    for (const [en, ml] of Object.entries(ML_ELEMENT)) r = r.split(en).join(ml);
+    r = r.replace(" or ", " അല്ലെങ്കിൽ ");
+    return r;
+  };
+  const decisionBreakdown = (sa.decisionBreakdown || []).map(b => ({
+    ...b,
+    label: ML_DIM_LABEL[b.label] || b.label,
+    currentValue: tCV(b.currentValue),
+    reason: mlDecisionReason(b.reason),
+    recommended: tRec(b.recommended),
+  }));
+  const bestAlternative = sa.bestAlternative ? {
+    ...sa.bestAlternative,
+    day: sa.bestAlternative.day ? (ML_DAY[sa.bestAlternative.day] || sa.bestAlternative.day) : null,
+    altDay: sa.bestAlternative.altDay ? (ML_DAY[sa.bestAlternative.altDay] || sa.bestAlternative.altDay) : null,
+    hour: sa.bestAlternative.hour ? (ML_PLANET[sa.bestAlternative.hour] || sa.bestAlternative.hour) : null,
+    planet: sa.bestAlternative.planet ? (ML_PLANET[sa.bestAlternative.planet] || sa.bestAlternative.planet) : null,
+    element: sa.bestAlternative.element ? (ML_ELEMENT[sa.bestAlternative.element] || sa.bestAlternative.element) : null,
+    dayNight: sa.bestAlternative.dayNight === "Night (Gece)" ? "രാത്രി (ഗെസെ)" : sa.bestAlternative.dayNight,
+    dayName: sa.bestAlternative.dayName ? (ML_DAY[sa.bestAlternative.dayName] || sa.bestAlternative.dayName) : null,
+    reason: sa.bestAlternative.reason === "Matches all manuscript conditions for this ritual."
+      ? "ഈ കർമ്മത്തിനുള്ള എല്ലാ ഗ്രന്ഥ വ്യവസ്ഥകളും യോജിക്കുന്നു."
+      : sa.bestAlternative.reason,
+  } : null;
+  return {
+    ...sa,
+    summary: sa.suitable
+      ? "നിങ്ങളുടെ നിലവിലെ ക്രമീകരണം സാധുവാണ് — എല്ലാ ഗ്രന്ഥ വ്യവസ്ഥകളും പാലിക്കപ്പെട്ടിരിക്കുന്നു."
+      : `നിങ്ങളുടെ നിലവിലെ ക്രമീകരണത്തിൽ ${decisionBreakdown.filter(b => b.status === "fail").length} പ്രശ്നം(ങ്ങൾ) തിരുത്തേണ്ടതുണ്ട്.`,
+    decisionBreakdown,
+    bestAlternative,
+  };
+}
+
 // ── Localize the full analysis object's report + supporting fields ──
 export function localizeAnalysis(analysis, lang) {
   if (lang !== "ml") return analysis;
@@ -523,6 +635,7 @@ export function localizeAnalysis(analysis, lang) {
       planetaryHour: tPlanet(analysis.liveNow.planetaryHour, lang),
       currentHour: { ...analysis.liveNow.currentHour, planet: tPlanet(analysis.liveNow.currentHour?.planet, lang) },
     } : analysis.liveNow,
+    selectionAnalysis: localizeSelectionAnalysis(analysis.selectionAnalysis, lang),
   };
 }
 
