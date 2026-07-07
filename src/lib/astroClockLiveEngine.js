@@ -234,6 +234,30 @@ export const DAY_INFO = {
 export const PLANET_SEQUENCE = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon'];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ACTIVE WEEKDAY RESOLVER — Manuscript day-boundary rule (SINGLE SOURCE OF TRUTH)
+// ─────────────────────────────────────────────────────────────────────────────
+// Source: Kashf al-Haqa'iq li-man jahala al-Tara'iq (Omani manuscript), p.65:
+//   "الحساب للأيام يكون المراد به الليلة السابقة له والنهار التالي"
+//   The planetary day = the PRECEDING night + the FOLLOWING daytime.
+//   "فلو أردنا يوم الجمعة ... نقصد به يوم الخميس مساءً (ليلة الجمعة)"
+//   Friday = Thursday evening (night of Friday) + Friday daytime.
+//
+// Therefore the active weekday changes at SUNSET, not civil midnight.
+// After today's sunset the active weekday is the following civil weekday.
+// Between midnight and sunrise the night continues and the civil weekday
+// already matches the active manuscript day.
+//
+// This is the SINGLE source of truth for the active planetary weekday.
+// Every module that needs "today's" weekday must call this function —
+// do NOT call date.getDay() directly for the active planetary day.
+export function getActiveWeekday(date, sunrise, sunset) {
+  const currentHour = date.getHours() + date.getMinutes() / 60;
+  return currentHour >= sunset
+    ? (date.getDay() + 1) % 7
+    : date.getDay();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GET PLANETARY HOUR FOR CURRENT TIME
 // ─────────────────────────────────────────────────────────────────────────────
 /**
@@ -244,8 +268,8 @@ export const PLANET_SEQUENCE = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'me
  * @returns {Object} Current hour info
  */
 export function getCurrentPlanetaryHour(date, sunrise = 6.5, sunset = 18.25) {
-  const dayOfWeek = date.getDay(); // 0=Sunday, 6=Saturday
   const currentHour = date.getHours() + date.getMinutes() / 60;
+  const dayOfWeek = getActiveWeekday(date, sunrise, sunset);
   
   const dayDuration = sunset - sunrise;
   const nightDuration = 24 - dayDuration;
