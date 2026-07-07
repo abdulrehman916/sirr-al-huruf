@@ -387,6 +387,7 @@ function tConsequence(c, section, analysis, lang) {
 // ── Localize the full analysis object's report + supporting fields ──
 export function localizeAnalysis(analysis, lang) {
   if (lang !== "ml") return analysis;
+  if (analysis.noPurposeSelected) return analysis;
   const report = (analysis.report || []).map(sec => {
     const title = tSection(sec.section, lang);
     let status = sec.status;
@@ -560,6 +561,7 @@ function tMoonPhase(val) {
 // ── Localize ConfigurationAdvisor recommendations ──
 export function localizeAdvice(advice, lang) {
   if (lang !== "ml" || !advice) return advice;
+  if (advice.noPurposeSelected) return advice;
   const base = advice.base ? localizeAnalysis(advice.base, lang) : advice.base;
   const recommendations = (advice.recommendations || []).map(r => ({
     ...r,
