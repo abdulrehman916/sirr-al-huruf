@@ -2,14 +2,16 @@
 // RITUAL TIMING ANALYSIS — Expert Panel (Read-only)
 // Attached at the bottom of Mizaan9Page. NEVER modifies Mizan logic.
 // ═══════════════════════════════════════════════════════════════
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Clock, Moon, Compass, AlertTriangle, BookOpen,
   Sparkles, Sun, Sunset, Star, Zap, Shield, FileText, Globe,
   CheckCircle2, XCircle, AlertCircle,
 } from "lucide-react";
-import { analyzeRitualTiming } from "../../lib/ritualTimingRuleEngine";
+import { analyzeRitualTiming } from "../../lib/ritualTimingEngineV3";
+import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
+import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -20,13 +22,58 @@ const G = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
+// ── Normalize V3 engine output → shape expected by the original stacked-card UI ──
+function normalizeForUI(v3) {
+  if (!v3 || v3.noPurposeSelected) return v3;
+  return {
+    ...v3,
+    canPerformTodayReason: v3.canPerformTodayReason || "",
+    recommendedStartReason: v3.recommendedStartReason || v3.bestWindowsToday?.[0]?.reason || "",
+    zodiacSuitability: {
+      ...v3.zodiacSuitability,
+      bestSigns: (v3.zodiacSuitability?.bestSigns || []).map(s =>
+        typeof s === "string" ? { sign: s, hour: [] } : s
+      ),
+    },
+    elementCompatibility: {
+      ...v3.elementCompatibility,
+      element: v3.elementCompatibility?.element || "",
+      elementNature: v3.elementCompatibility?.elementNature || "",
+      citation: v3.elementCompatibility?.citation || "",
+    },
+    elementDirection: v3.elementDirection ? { ...v3.elementDirection, ar: v3.elementDirection.ar || "" } : null,
+    elementPlacement: v3.elementPlacement || { placement: "", ar: "" },
+  };
+}
+
 export default function RitualTimingAnalysis({ result, selections, customPurpose, activeMethod }) {
   const [expanded, setExpanded] = useState(false);
+  const { manuscriptRules } = useManuscriptRules();
+  const [purposeLookup, setPurposeLookup] = useState({ matched: false });
+
+  useEffect(() => {
+    setPurposeLookup({ matched: false });
+    if (!customPurpose || !customPurpose.trim()) return;
+    let cancelled = false;
+    lookupPurposeIntent(customPurpose, selections?.purposes?.[0]).then((res) => {
+      if (!cancelled) setPurposeLookup(res);
+    });
+    return () => { cancelled = true; };
+  }, [customPurpose, selections?.purposes]);
+
+  const effectiveSelections = useMemo(() => {
+    if (purposeLookup.matched && purposeLookup.ritualIntent) {
+      const hasCard = Array.isArray(selections?.purposes) && selections.purposes.length > 0;
+      if (!hasCard) return { ...selections, purposes: [purposeLookup.ritualIntent] };
+    }
+    return selections;
+  }, [selections, purposeLookup]);
 
   const analysis = useMemo(() => {
     if (!result) return null;
-    return analyzeRitualTiming({ result, selections, customPurpose, activeMethod });
-  }, [result, selections, customPurpose, activeMethod]);
+    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules });
+    return normalizeForUI(raw);
+  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
 
   if (analysis?.noPurposeSelected) {
     return (

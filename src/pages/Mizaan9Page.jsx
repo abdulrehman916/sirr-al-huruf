@@ -37,7 +37,7 @@ import Method3AbjadVerificationSection from "../components/mizaan/Method3AbjadVe
 import Method3DivineNamesMatchSection from "../components/mizaan/Method3DivineNamesMatchSection";
 import Method4Step1Section from "../components/mizaan/Method4Step1Section";
 import MizaanInputCard from "../components/mizaan/MizaanInputCard";
-import RitualDecisionEngine from "../components/mizaan/RitualDecisionEngine";
+import RitualTimingAnalysis from "../components/mizaan/RitualTimingAnalysis";
 import QasamPanel from "../components/mizaan/QasamPanel";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
@@ -1172,9 +1172,9 @@ export default function Mizaan9Page() {
         </div>
       )}
 
-      {/* ── RITUAL DECISION ENGINE — Read-only, appended below all methods ── */}
+      {/* ── RITUAL TIMING ANALYSIS — Original stacked-card chart, powered by V3 engine ── */}
       {result && activeMethod !== 5 && (
-        <RitualDecisionEngine
+        <RitualTimingAnalysis
           result={result}
           selections={selections}
           customPurpose={customPurpose}
