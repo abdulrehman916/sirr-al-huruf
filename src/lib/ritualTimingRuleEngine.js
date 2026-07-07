@@ -15,7 +15,7 @@
 // from the existing Mizan selections — the user never enters this again.
 // ═══════════════════════════════════════════════════════════════
 
-import { getCurrentPlanetaryHour, getDayRuler, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from './astroClockLiveEngine.js';
+import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from './astroClockLiveEngine.js';
 import { ACTION_RULES } from './astroClockActionTimingAdvisor.js';
 
 // ── Mizan key → English planet name (used by live engine) ──
@@ -190,10 +190,11 @@ function findNextValidDayHour(bestDayKey, bestHourPlanetEn) {
   const now = new Date();
   for (let i = 0; i < 7; i++) {
     const checkDate = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayIdx = checkDate.getDay();
+    const refData = getTodayAllHours(checkDate);
+    const dayIdx = getActiveWeekday(checkDate, refData.sunrise, refData.sunset);
     const dayKey = Object.keys(MIZAN_DAY_TO_INDEX).find(k => MIZAN_DAY_TO_INDEX[k] === dayIdx);
     if (dayKey === bestDayKey) {
-      const { hours } = getTodayAllHours(checkDate);
+      const { hours } = refData;
       const matching = findHoursByPlanet(hours, bestHourPlanetEn);
       if (matching.length > 0) {
         const firstHour = matching[0];
@@ -294,6 +295,37 @@ function nextBestMoonPhase(khayrSharr, currentMoonDay) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// MANUSCRIPT DAY RESOLVER — LIVE (sunset-aware) or MANUAL (selected day)
+// ═══════════════════════════════════════════════════════════════
+// LIVE mode (no selectedDay): active day = getActiveWeekday(now) — changes at sunset.
+// MANUAL mode (selectedDay set): the selected day IS the manuscript day.
+//   Night of Day X = previous civil day's sunset → X's sunrise (target = X-1).
+//   Day of Day X   = X's sunrise → X's sunset (target = X).
+// Returns { activeDayIndex, referenceDate } for downstream hour-table lookup.
+function resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset) {
+  if (!selectedDay) {
+    return { activeDayIndex: getActiveWeekday(now, sunrise, sunset), referenceDate: now };
+  }
+  const activeDayIndex = MIZAN_DAY_TO_INDEX[selectedDay];
+  const targetCivilIndex = dayNight === 'gece'
+    ? (activeDayIndex - 1 + 7) % 7
+    : activeDayIndex;
+  for (let i = 0; i < 7; i++) {
+    const checkDate = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+    if (checkDate.getDay() === targetCivilIndex) {
+      const referenceDate = new Date(checkDate);
+      if (dayNight === 'gece') {
+        referenceDate.setHours(Math.floor(sunset) + 1, 0, 0, 0);
+      } else if (dayNight === 'gunduz') {
+        referenceDate.setHours(Math.floor(sunrise) + 2, 0, 0, 0);
+      }
+      return { activeDayIndex, referenceDate };
+    }
+  }
+  return { activeDayIndex, referenceDate: now };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN ANALYSIS FUNCTION — COMPLETE DECISION REPORT
 // ═══════════════════════════════════════════════════════════════
 export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod }) {
@@ -353,14 +385,23 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     rulesApplied.push({ id: 'INFER_POLARITY', desc: `Polarity auto-inferred: ${khayrSharr} (from category: ${ritualCategory})`, source: 'Engine inference from manuscript purpose tables' });
   }
 
-  // ── STEP 3: Read live time ──
+  // ── STEP 3: Read time — manuscript sunset-aware (LIVE + MANUAL) ──
   const now = new Date();
-  const { hours: todayHours, sunrise, sunset } = getTodayAllHours(now);
-  const currentHourInfo = getCurrentPlanetaryHour(now, sunrise, sunset);
-  const dayRuler = getDayRuler(now.getDay());
-  const moonPhase = getMoonPhase(now);
-  const currentDayKey = Object.keys(MIZAN_DAY_TO_INDEX).find(k => MIZAN_DAY_TO_INDEX[k] === now.getDay());
-  const isNightTime = now.getHours() < sunrise || now.getHours() >= sunset;
+  const nowData = getTodayAllHours(now);
+  const sunrise = nowData.sunrise;
+  const sunset = nowData.sunset;
+
+  const { activeDayIndex, referenceDate } = resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset);
+  const refData = getTodayAllHours(referenceDate);
+  const todayHours = refData.hours;
+
+  const currentHourInfo = getCurrentPlanetaryHour(referenceDate, refData.sunrise, refData.sunset);
+  const dayRuler = getDayRuler(activeDayIndex);
+  const moonPhase = getMoonPhase(referenceDate);
+  const currentDayKey = Object.keys(MIZAN_DAY_TO_INDEX).find(k => MIZAN_DAY_TO_INDEX[k] === activeDayIndex);
+  const isNightTime = selectedDay
+    ? (dayNight === 'gece')
+    : (now.getHours() < sunrise || now.getHours() >= sunset);
 
   reasoning.push(`Current time: ${now.toLocaleString('en-US', { timeZone: 'Asia/Dubai' })}`);
   reasoning.push(`Current planetary hour: #${currentHourInfo.hourNumber} (${currentHourInfo.planet})`);
@@ -919,9 +960,11 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   const bestHourPlanet = pdfRule?.bestHour || null;
   const altHourPlanet = pdfRule?.altHour || null;
 
-  // Find the recommended hour NUMBER for today (the hour ruled by bestHourPlanet)
+  // Find the recommended hour NUMBER (manuscript sunset-aware: LIVE or MANUAL day)
   const now = new Date();
-  const { hours: todayHours } = getTodayAllHours(now);
+  const nowDataAdv = getTodayAllHours(now);
+  const { referenceDate: cfgRefDate } = resolveManuscriptDay(selectedDay, dayNight, now, nowDataAdv.sunrise, nowDataAdv.sunset);
+  const { hours: todayHours } = getTodayAllHours(cfgRefDate);
   const recommendedHourNumbers = bestHourPlanet
     ? findHoursByPlanet(todayHours, bestHourPlanet).map(h => h.hourNumber)
     : [];

@@ -15,7 +15,7 @@
 // any Mizan calculation, Method 1–4, or Astro Clock logic.
 // ═══════════════════════════════════════════════════════════════
 
-import { getCurrentPlanetaryHour, getDayRuler, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from "./astroClockLiveEngine.js";
+import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from "./astroClockLiveEngine.js";
 import { ACTION_RULES } from "./astroClockActionTimingAdvisor.js";
 
 // ── Maps ──
@@ -255,8 +255,8 @@ function findEarliestValidTime(req, fromDate) {
   const SEARCH_DAYS = 14;
   for (let d = 0; d < SEARCH_DAYS; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
-    const dayKey = DAY_KEY_BY_INDEX[date.getDay()];
     const { hours, sunrise, sunset } = getTodayAllHours(date);
+    const dayKey = DAY_KEY_BY_INDEX[getActiveWeekday(date, sunrise, sunset)];
     const moon = getMoonPhase(date);
 
     // Day rule check
@@ -291,6 +291,37 @@ function findEarliestValidTime(req, fromDate) {
     }
   }
   return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MANUSCRIPT DAY RESOLVER — LIVE (sunset-aware) or MANUAL (selected day)
+// ═══════════════════════════════════════════════════════════════
+// LIVE mode (no selectedDay): active day = getActiveWeekday(now) — changes at sunset.
+// MANUAL mode (selectedDay set): the selected day IS the manuscript day.
+//   Night of Day X = previous civil day's sunset → X's sunrise (target = X-1).
+//   Day of Day X   = X's sunrise → X's sunset (target = X).
+// Returns { activeDayIndex, referenceDate } for downstream hour-table lookup.
+function resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset) {
+  if (!selectedDay) {
+    return { activeDayIndex: getActiveWeekday(now, sunrise, sunset), referenceDate: now };
+  }
+  const activeDayIndex = MIZAN_DAY_TO_INDEX[selectedDay];
+  const targetCivilIndex = dayNight === 'gece'
+    ? (activeDayIndex - 1 + 7) % 7
+    : activeDayIndex;
+  for (let i = 0; i < 7; i++) {
+    const checkDate = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+    if (checkDate.getDay() === targetCivilIndex) {
+      const referenceDate = new Date(checkDate);
+      if (dayNight === 'gece') {
+        referenceDate.setHours(Math.floor(sunset) + 1, 0, 0, 0);
+      } else if (dayNight === 'gunduz') {
+        referenceDate.setHours(Math.floor(sunrise) + 2, 0, 0, 0);
+      }
+      return { activeDayIndex, referenceDate };
+    }
+  }
+  return { activeDayIndex, referenceDate: now };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -334,14 +365,23 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // ── Polarity (only if explicitly selected; never invent) ──
   const khayrSharr = khayrSharrSelected || null;
 
-  // ── STEP 3+4: live Astro Clock ──
+  // ── STEP 3+4: Astro Clock — manuscript sunset-aware (LIVE + MANUAL) ──
   const now = new Date();
-  const { hours: todayHours, sunrise, sunset } = getTodayAllHours(now);
-  const currentHourInfo = getCurrentPlanetaryHour(now, sunrise, sunset);
-  const dayRuler = getDayRuler(now.getDay());
-  const moonPhase = getMoonPhase(now);
-  const currentDayKey = DAY_KEY_BY_INDEX[now.getDay()];
-  const isNightTime = now.getHours() < sunrise || now.getHours() >= sunset;
+  const nowData = getTodayAllHours(now);
+  const sunrise = nowData.sunrise;
+  const sunset = nowData.sunset;
+
+  const { activeDayIndex, referenceDate } = resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset);
+  const refData = getTodayAllHours(referenceDate);
+  const todayHours = refData.hours;
+
+  const currentHourInfo = getCurrentPlanetaryHour(referenceDate, refData.sunrise, refData.sunset);
+  const dayRuler = getDayRuler(activeDayIndex);
+  const moonPhase = getMoonPhase(referenceDate);
+  const currentDayKey = DAY_KEY_BY_INDEX[activeDayIndex];
+  const isNightTime = selectedDay
+    ? (dayNight === 'gece')
+    : (now.getHours() < sunrise || now.getHours() >= sunset);
 
   reasoning.push(`Current: ${MIZAN_DAY_NAMES[currentDayKey]}, hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), moon day ${moonPhase.lunarDay}, ${isNightTime ? "night" : "day"}.`);
 
@@ -609,6 +649,8 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   const selectedPlanet = selections?.planet || null;
   const dayNight = selections?.dayNight || null;
   const now = new Date();
+  const nowDataAdv = getTodayAllHours(now);
+  const { referenceDate: cfgRefDate } = resolveManuscriptDay(selectedDay, dayNight, now, nowDataAdv.sunrise, nowDataAdv.sunset);
   const bestWindow = base.bestWindowsToday?.[0];
 
   const recommendations = [];
@@ -653,7 +695,7 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
     reason: !req.planet ? "The manuscripts do not prescribe a specific planet for this ritual." : !selectedPlanet ? `The manuscripts prescribe ${req.planet.join(", ")}.` : planetOptimal ? `Your planet matches the manuscript.` : `Your planet is ${MIZAN_TO_EN_PLANET[selectedPlanet]}, but the manuscripts prescribe ${req.planet.join(", ")} (${citations.map((c) => c.source).join("; ")}).`,
   });
 
-  const { hours: todayHours } = getTodayAllHours(now);
+  const { hours: todayHours } = getTodayAllHours(cfgRefDate);
   const recommendedHourNumbers = req.hours ? findHoursByPlanet(todayHours, req.hours[0]).map((h) => h.hourNumber) : [];
   const hourOptimal = !req.hours || (selectedHour && recommendedHourNumbers.includes(selectedHour));
   if (req.hours && !hourOptimal) allOptimal = false;

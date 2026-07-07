@@ -390,6 +390,9 @@ function formatCountdown(ms) {
 export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   const dayOfWeek = date.getDay();
   const dayRuler = getDayRuler(dayOfWeek);
+  // Manuscript rule (Kashf al-Haqa'iq p.65): night belongs to the FOLLOWING day.
+  // Night hours use the next civil day's ruler; day hours use this day's ruler.
+  const nightDayRuler = getDayRuler((dayOfWeek + 1) % 7);
   
   const dayDuration = sunset - sunrise;
   const nightDuration = 24 - dayDuration;
@@ -451,9 +454,9 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   }
   
   // Night hours (13-24)
-  // Manuscript Night offset (GECE SAATLERİ TABLOSU): Night Saat 1 = Day Saat 1
-  // shifted +2 in the Chaldean sequence. Night hour 13 = Night Saat 1.
-  const firstNightPlanetIndex = (dayRuler.index + 2) % 7;
+  // Manuscript rule (Kashf al-Haqa'iq p.65): night belongs to the FOLLOWING day.
+  // Night Saat 1 = next day's ruler + 2 (Chaldean offset). Night hour 13 = Night Saat 1.
+  const firstNightPlanetIndex = (nightDayRuler.index + 2) % 7;
   for (let i = 0; i < 12; i++) {
     const planetIndex = (firstNightPlanetIndex + i) % 7;
     const planet = PLANET_SEQUENCE[planetIndex];
