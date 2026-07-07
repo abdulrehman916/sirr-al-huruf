@@ -16,6 +16,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from "./astroClockLiveEngine.js";
+import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSunset.js";
 import { ACTION_RULES } from "./astroClockActionTimingAdvisor.js";
 
 // ── Maps ──
@@ -476,15 +477,20 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     summary: `Today is ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}). Current hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}, ${currentHourInfo.remainingTime} left. Moon: day ${moonPhase.lunarDay} (${moonPhase.phaseName}).`,
   };
 
-  // ── LIVE NOW — always from real current time, NEVER from manual referenceDate ──
+  // ── LIVE NOW — real current time + REAL local sunrise/sunset (NOAA) ──
   // Separate state: manual selections (day/Layl-Nahar/Saat) do NOT overwrite this.
-  // Informational only — shows the real manuscript current moment.
-  const liveNowData = getTodayAllHours(now);
-  const liveHourInfo = getCurrentPlanetaryHour(now, liveNowData.sunrise, liveNowData.sunset);
-  const liveDayIndex = getActiveWeekday(now, liveNowData.sunrise, liveNowData.sunset);
+  // Uses real local sunrise/sunset — never hardcoded seasonal approximations.
+  // getCurrentPlanetaryHour divides Sunrise→Sunset into 12 Day Saat and
+  // Sunset→next Sunrise into 12 Night Saat, returning the interval containing now.
+  const liveLoc = getUserLocation();
+  const liveSun = calculateSunriseSunset(now, liveLoc.lat, liveLoc.lng, liveLoc.timezone);
+  const liveSunrise = (liveSun.sunrise != null) ? liveSun.sunrise : 6.5;
+  const liveSunset = (liveSun.sunset != null) ? liveSun.sunset : 18.25;
+  const liveHourInfo = getCurrentPlanetaryHour(now, liveSunrise, liveSunset);
+  const liveDayIndex = getActiveWeekday(now, liveSunrise, liveSunset);
   const liveDayKey = DAY_KEY_BY_INDEX[liveDayIndex];
   const liveDayRuler = getDayRuler(liveDayIndex);
-  const liveIsNight = now.getHours() < liveNowData.sunrise || now.getHours() >= liveNowData.sunset;
+  const liveIsNight = now.getHours() < liveSunrise || now.getHours() >= liveSunset;
   const liveNow = {
     day: MIZAN_DAY_NAMES[liveDayKey],
     dayRuler: liveDayRuler.planet,
