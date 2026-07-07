@@ -39,9 +39,16 @@ export function getCurrentSaat(_dayNight = null) {
     return (Math.floor(now.getHours() / 2) % 12) + 1;
   }
 
+  // Shift now to the location's timezone so getHours()/getDay() return local
+  // time matching the sunrise/sunset values from calculateSunriseSunset.
+  // Without this, a browser in a non-Dubai timezone would read the wrong hour
+  // and default to Sahat 1 instead of the actual current Sahat.
+  const tzDiffMs = (loc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
+  const localNow = new Date(now.getTime() + tzDiffMs);
+
   // Use the EXACT Astro Clock Saat interval calculation. This returns the
   // hourNumber whose [hourStart, hourEnd) interval contains the current time.
-  const hour = getCurrentPlanetaryHour(now, sunrise, sunset);
+  const hour = getCurrentPlanetaryHour(localNow, sunrise, sunset);
   return hour.hourNumber;
 }
 

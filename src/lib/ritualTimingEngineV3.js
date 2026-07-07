@@ -486,11 +486,17 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const liveSun = calculateSunriseSunset(now, liveLoc.lat, liveLoc.lng, liveLoc.timezone);
   const liveSunrise = (liveSun.sunrise != null) ? liveSun.sunrise : 6.5;
   const liveSunset = (liveSun.sunset != null) ? liveSun.sunset : 18.25;
-  const liveHourInfo = getCurrentPlanetaryHour(now, liveSunrise, liveSunset);
-  const liveDayIndex = getActiveWeekday(now, liveSunrise, liveSunset);
+  // Shift now to the location's timezone so getHours()/getDay() return local
+  // time matching the sunrise/sunset values from calculateSunriseSunset.
+  // Without this, a browser in a non-Dubai timezone reads the wrong hour and
+  // the Sahat defaults to 1 instead of the actual current Sahat.
+  const liveTzDiffMs = (liveLoc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
+  const liveNowDate = new Date(now.getTime() + liveTzDiffMs);
+  const liveHourInfo = getCurrentPlanetaryHour(liveNowDate, liveSunrise, liveSunset);
+  const liveDayIndex = getActiveWeekday(liveNowDate, liveSunrise, liveSunset);
   const liveDayKey = DAY_KEY_BY_INDEX[liveDayIndex];
   const liveDayRuler = getDayRuler(liveDayIndex);
-  const liveIsNight = now.getHours() < liveSunrise || now.getHours() >= liveSunset;
+  const liveIsNight = liveNowDate.getHours() < liveSunrise || liveNowDate.getHours() >= liveSunset;
   const liveNow = {
     day: MIZAN_DAY_NAMES[liveDayKey],
     dayRuler: liveDayRuler.planet,
