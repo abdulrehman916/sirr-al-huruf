@@ -24,7 +24,7 @@ const G = {
 
 // ── Normalize V3 engine output → shape expected by the original stacked-card UI ──
 function normalizeForUI(v3) {
-  if (!v3 || v3.noPurposeSelected) return v3;
+  if (!v3) return v3;
   return {
     ...v3,
     canPerformTodayReason: v3.canPerformTodayReason || "",
@@ -75,24 +75,6 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
     return normalizeForUI(raw);
   }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
 
-  if (analysis?.noPurposeSelected) {
-    return (
-      <div className="mt-4">
-        <div className="rounded-2xl p-6 text-center" style={{
-          background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
-          border: "1px solid rgba(212,175,55,0.40)",
-        }}>
-          <AlertTriangle className="w-8 h-8 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.65)" }} />
-          <p className="font-inter text-sm font-bold" style={{ color: "#F5D060" }}>
-            No Purpose Selected
-          </p>
-          <p className="font-inter text-xs mt-2" style={{ color: "rgba(212,175,55,0.55)" }}>
-            Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.
-          </p>
-        </div>
-      </div>
-    );
-  }
   if (!analysis) return null;
 
   const canPerformColor = analysis.canPerformToday === 'Yes' ? '#4ADE80' : analysis.canPerformToday === 'Limited' ? '#FBBF24' : '#F87171';
@@ -153,6 +135,24 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
               className="overflow-hidden"
             >
               <div className="p-4 space-y-4">
+
+                {/* ── No Purpose Selected Notice (report still renders) ── */}
+                {analysis.noPurposeSelected && (
+                  <div className="rounded-xl p-3 flex items-start gap-2.5" style={{
+                    background: "rgba(251,191,36,0.06)",
+                    border: "1px solid rgba(251,191,36,0.30)",
+                  }}>
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#FBBF24" }} />
+                    <div>
+                      <p className="font-inter text-xs font-bold" style={{ color: "#FBBF24" }}>
+                        No Purpose Selected
+                      </p>
+                      <p className="font-inter text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                        Purpose-specific recommendations are marked as "Not Available". The timing chart below uses available Mizan, astro, and manuscript data.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Expert Narrative ── */}
                 <div className="rounded-xl p-4" style={{

@@ -352,22 +352,19 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const identified = identifyRitual({ selections, customPurpose, manuscriptRules });
   const ritualKey = identified.ritualKey;
   const matchedOn = identified.matchedOn;
-  // No purpose selected → do NOT generate any recommendations, scores, or analysis
-  if (!ritualKey) {
-    return {
-      noPurposeSelected: true,
-      message: "No Purpose Selected. Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.",
-    };
-  }
-  reasoning.push(`Ritual identified as "${ritualKey}" via ${matchedOn}.`);
+  // No purpose selected → continue with a "general" context so the full report
+  // still renders. Purpose-specific fields will be marked as unavailable.
+  const noPurposeSelected = !ritualKey;
+  const effectiveRitualKey = ritualKey || "general";
+  reasoning.push(`Ritual identified as "${effectiveRitualKey}" via ${matchedOn}.`);
   rulesApplied.push({
     id: "IDENTIFY",
-    desc: `Ritual classified as ${ritualKey} (${matchedOn})`,
+    desc: `Ritual classified as ${effectiveRitualKey} (${matchedOn})`,
     source: "Engine inference from Mizan + custom purpose",
   });
 
   // ── STEP 2: gather rules ──
-  const { req, citations, dbRuleCount, actionKey } = gatherRules(ritualKey, manuscriptRules);
+  const { req, citations, dbRuleCount, actionKey } = gatherRules(effectiveRitualKey, manuscriptRules);
   reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). JS fallback: ${actionKey}.`);
   for (const c of citations) {
     rulesApplied.push({ id: c.rule_id, desc: c.summary || `${c.category} rule`, source: c.source });
@@ -525,7 +522,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // BUILD 10-SECTION REPORT (same shape as V2)
   // ═══════════════════════════════════════════════════════════════
   const report = [];
-  const ritualTypeLabel = ritualKey.charAt(0).toUpperCase() + ritualKey.slice(1) + " Work";
+  const ritualTypeLabel = effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work";
 
   report.push({
     section: "TODAY ANALYSIS", icon: "calendar", status: canPerformToday,
@@ -640,6 +637,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   return {
     report, consultation: report,
+    noPurposeSelected,
     verdict, verdictColor, verdictReason, verdictStars: stars, verdictStarsString: starsToString(stars),
     confidenceScore: score, scoreBreakdown: scoreReasons,
     ritualType: ritualTypeLabel, ritualTypeDescription: "", ritualCategory: ritualTypeLabel, ritualIntent: ritualTypeLabel,
@@ -687,17 +685,11 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
   const purposes = selections?.purposes || [];
   const custom = (customPurpose || "").trim();
-  if (purposes.length === 0 && !custom) {
-    return {
-      noPurposeSelected: true,
-      recommendations: [],
-      allOptimal: false,
-      message: "No Purpose Selected. Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.",
-    };
-  }
   const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules });
+  const noPurposeSelected = !!base?.noPurposeSelected;
   const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules });
-  const { req, citations } = gatherRules(ritualKey, manuscriptRules);
+  const effectiveRitualKey = ritualKey || "general";
+  const { req, citations } = gatherRules(effectiveRitualKey, manuscriptRules);
 
   const dominant = result?.dominant || (selections?.elements?.[0] || null);
   const selectedDay = selections?.days || null;
@@ -712,14 +704,16 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   const recommendations = [];
   let allOptimal = true;
 
-  const purposeLabel = ritualKey.charAt(0).toUpperCase() + ritualKey.slice(1) + " Work";
+  const purposeLabel = effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work";
   const identifiedAdv = identifyRitual({ selections, customPurpose, manuscriptRules });
   recommendations.push({
     field: "Ritual Purpose", icon: "target",
-    current: purposeLabel,
-    recommended: purposeLabel,
-    isOptimal: true,
-    reason: `Ritual identified as ${ritualKey} from Mizan selections and custom purpose (${identifiedAdv.matchedOn}). This is the basis for all manuscript rule lookups.`,
+    current: noPurposeSelected ? "No Purpose Selected" : purposeLabel,
+    recommended: noPurposeSelected ? "Select a Purpose in Mizan 7" : purposeLabel,
+    isOptimal: !noPurposeSelected,
+    reason: noPurposeSelected
+      ? "No purpose selected in Mizan 7. Purpose-specific recommendations are marked as Not Available. Select a purpose to receive targeted ritual timing advice."
+      : `Ritual identified as ${effectiveRitualKey} from Mizan selections and custom purpose (${identifiedAdv.matchedOn}). This is the basis for all manuscript rule lookups.`,
   });
 
   const khayrSharrSelected = selections?.khayrSharr8 || null;
@@ -824,5 +818,5 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
     reason: req.incense ? `The manuscripts prescribe ${req.incense} (${citations.map((c) => c.source).join("; ")}).` : "The manuscripts do not prescribe a specific incense for this ritual.",
   });
 
-  return { recommendations, allOptimal, base };
+  return { recommendations, allOptimal, base, noPurposeSelected };
 }
