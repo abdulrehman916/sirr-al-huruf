@@ -58,10 +58,10 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
       }}>
         <AlertCircle className="w-8 h-8 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.65)" }} />
         <p className="font-inter text-sm font-bold" style={{ color: "#F5D060" }}>
-          No Purpose Selected
+          No Purpose Selected.
         </p>
         <p className="font-inter text-xs mt-2" style={{ color: "rgba(212,175,55,0.55)" }}>
-          Please choose a Purpose in Mizaan 7 to generate Ritual Timing recommendations.
+          Please choose a Purpose to generate Ritual Timing recommendations.
         </p>
       </div>
     );
