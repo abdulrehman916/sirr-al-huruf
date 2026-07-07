@@ -11,9 +11,6 @@ import {
 } from "lucide-react";
 import { tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 import { useRitualSemanticPhrase } from "../../lib/ritualSemanticPhrase";
-import { useAuth } from "@/lib/AuthContext";
-import { usePageState } from "../../context/PageStateContext";
-import AIPurposeSuggestionPanel from "./AIPurposeSuggestionPanel";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -39,16 +36,7 @@ const FIELD_ICONS = {
 
 export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
   const [expanded, setExpanded] = useState(true);
-  const { role } = useAuth();
-  const isAdmin = role === "admin" || role === "owner";
-  const { getPageState } = usePageState();
-  const pageState = getPageState("mizaan9", { selections: {}, customPurpose: "" });
-  const customPurpose = pageState.customPurpose || "";
-  const [aiData, setAiData] = useState(null);
-  const [aiRefreshKey, setAiRefreshKey] = useState(0);
-  const semanticPhrase = useRitualSemanticPhrase(lang, aiRefreshKey);
-  const displayPhrase = semanticPhrase || (aiData?.phrase || "");
-  const isAISourced = !semanticPhrase && !!aiData?.phrase;
+  const semanticPhrase = useRitualSemanticPhrase(lang);
 
   if (!advice || !advice.recommendations) return null;
 
@@ -103,7 +91,7 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
               {/* ── Language toggle (English / Malayalam) ── */}
               {setLang && (
                 <div className="flex items-center justify-end gap-1.5">
-                  <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{tStr("langWord", lang)}</span>
+                  <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>Lang</span>
                   {RITUAL_LANGS.map((l) => (
                     <button
                       key={l.code}
@@ -159,16 +147,6 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
                   />
                 ))}
               </div>
-
-              {/* ── AI Suggested Meaning (admin/owner only, when no dictionary match) ── */}
-              {isAdmin && !semanticPhrase && customPurpose && (
-                <AIPurposeSuggestionPanel
-                  key={aiRefreshKey}
-                  lang={lang}
-                  onSuggestion={(data) => setAiData(data)}
-                  onSaved={() => { setAiData(null); setAiRefreshKey((k) => k + 1); }}
-                />
-              )}
             </div>
           </motion.div>
         )}
