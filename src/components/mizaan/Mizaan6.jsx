@@ -14,7 +14,7 @@ export default function Mizaan6({ selectedDay, selected, onChange, planetsData }
   // Manual selection (selected / onChange) is unchanged.
   const [, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    const id = setInterval(() => setTick((t) => t + 1), 15000);
     return () => clearInterval(id);
   }, []);
   const autoKey = getCurrentKawkab();

@@ -10,7 +10,7 @@ export default function Mizaan3({ dominant, selected, onChange, dayNightData }) 
   // Periodic re-render so "Current ◉" tracks the real day/night boundary.
   const [, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    const id = setInterval(() => setTick((t) => t + 1), 15000);
     return () => clearInterval(id);
   }, []);
   const currentDN = getCurrentLaylNahar();

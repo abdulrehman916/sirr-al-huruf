@@ -11,7 +11,7 @@ export default function Mizaan4({ selected, onChange, hoursData, dayNight }) {
   // as time progresses — without this, autoHour is frozen at mount time.
   const [, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    const id = setInterval(() => setTick((t) => t + 1), 15000);
     return () => clearInterval(id);
   }, []);
   const autoHour = getCurrentSaat(dayNight);
