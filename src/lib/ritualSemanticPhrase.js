@@ -134,9 +134,11 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
   // 2. Purpose meaning — from dictionary lookup
   let purposeMeaning = "";
   if (purposeLookup?.matched) {
+    // Strict language isolation: never fall back to the other language.
+    // If the selected language's meaning is missing, leave empty (UI shows "Not Available").
     purposeMeaning = lang === "ml"
-      ? (purposeLookup.malayalam_meaning || purposeLookup.english_meaning || "")
-      : (purposeLookup.english_meaning || purposeLookup.malayalam_meaning || "");
+      ? (purposeLookup.malayalam_meaning || "")
+      : (purposeLookup.english_meaning || "");
   }
 
   // 3. Ending (always)
@@ -171,8 +173,8 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
 // ═══════════════════════════════════════════════════════════════
 export function buildPhraseFromAIMeaning({ actionArabic, englishMeaning, malayalamMeaning, lang }) {
   const purpose = lang === "ml"
-    ? (malayalamMeaning || englishMeaning || "")
-    : (englishMeaning || malayalamMeaning || "");
+    ? (malayalamMeaning || "")
+    : (englishMeaning || "");
   if (!purpose) return "";
   const actionMeaning = actionArabic && ACTION_MEANINGS[actionArabic]
     ? (lang === "ml" ? ACTION_MEANINGS[actionArabic].ml : ACTION_MEANINGS[actionArabic].en)

@@ -16,7 +16,7 @@
 // Read-only. Never modifies any Mizan, calculation, or engine.
 // Full language parity: Malayalam or English, never mixed.
 // ═══════════════════════════════════════════════════════════════
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, useMemo, memo, useRef } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ArrowDown, Loader2, Bug, ChevronDown } from "lucide-react";
 import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
@@ -53,6 +53,8 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
   const [lang, setLang] = useRitualLang();
   const [purposeLookup, setPurposeLookup] = useState({ matched: false });
   const [loading, setLoading] = useState(false);
+  // Track last resolved result to skip redundant onPurposeResolved calls
+  const lastResolvedRef = useRef(null);
 
   // ── Detect action, middle word, modifier (synchronous, from text) ──
   const detected = useMemo(() => {
@@ -77,6 +79,7 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
   useEffect(() => {
     if (!detected) {
       setPurposeLookup({ matched: false });
+      lastResolvedRef.current = null;
       if (onPurposeResolved) onPurposeResolved({ matched: false });
       return;
     }
@@ -93,11 +96,24 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
         setPurposeLookup(res);
         setLoading(false);
         if (onPurposeResolved) {
-          onPurposeResolved({
+          const newResolved = {
             ...res,
             interpretation_en: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "en" }),
             interpretation_ml: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "ml" }),
-          });
+          };
+          // Skip state update if nothing meaningfully changed — prevents
+          // unnecessary re-renders of downstream recommendation components.
+          const last = lastResolvedRef.current;
+          const changed = !last ||
+            last.matched !== newResolved.matched ||
+            last.english_meaning !== newResolved.english_meaning ||
+            last.malayalam_meaning !== newResolved.malayalam_meaning ||
+            last.interpretation_en !== newResolved.interpretation_en ||
+            last.interpretation_ml !== newResolved.interpretation_ml;
+          if (changed) {
+            lastResolvedRef.current = newResolved;
+            onPurposeResolved(newResolved);
+          }
         }
       });
     }, 500);
@@ -150,8 +166,7 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
     action: lang === "ml" ? "കർമ്മം (Action Card)" : "Action Card",
     mainPurpose: lang === "ml" ? "പ്രധാന ലക്ഷ്യം" : "Main Purpose",
     modifier: lang === "ml" ? "പരിഷ്കർത്തകൻ" : "Modifier",
-    purposeMeaningML: lang === "ml" ? "ലക്ഷ്യ അർത്ഥം (മലയാളം)" : "Purpose Meaning (Malayalam)",
-    purposeMeaningEN: lang === "ml" ? "ലക്ഷ്യ അർത്ഥം (ഇംഗ്ലീഷ്)" : "Purpose Meaning (English)",
+    purposeMeaning: lang === "ml" ? "ലക്ഷ്യ അർത്ഥം" : "Purpose Meaning",
     notDetected: lang === "ml" ? "കണ്ടെത്തിയില്ല" : "Not detected",
     noMatch: lang === "ml" ? "നിഘണ്ടുവിൽ ഇല്ല" : "Not in dictionary",
     dictSource: lang === "ml" ? "ഉറവിടം" : "Source",
@@ -230,9 +245,9 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
                 {interp.actionArabic}
               </span>
               <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {interp.actionMeaningML && interp.actionMeaningEN
-                  ? `(${interp.actionMeaningML} / ${interp.actionMeaningEN})`
-                  : ""}
+                {lang === "ml"
+                  ? (interp.actionMeaningML && `(${interp.actionMeaningML})`)
+                  : (interp.actionMeaningEN && `(${interp.actionMeaningEN})`)}
               </span>
             </div>
           ) : (
@@ -250,9 +265,9 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
                 {interp.mainPurposeArabic}
               </span>
               <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {interp.purposeMeaningML && `(${interp.purposeMeaningML})`}
-                {interp.purposeMeaningML && interp.purposeMeaningEN ? " / " : ""}
-                {interp.purposeMeaningEN && `(${interp.purposeMeaningEN})`}
+                {lang === "ml"
+                  ? (interp.purposeMeaningML && `(${interp.purposeMeaningML})`)
+                  : (interp.purposeMeaningEN && `(${interp.purposeMeaningEN})`)}
               </span>
               {interp.mainPurposeMatched && interp.mainPurposeSource && (
                 <span className="font-inter text-[9px] italic" style={{ color: "rgba(212,175,55,0.45)" }}>
@@ -280,9 +295,9 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
                 {interp.modifierArabic}
               </span>
               <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {interp.modifierMeaningML && interp.modifierMeaningEN
-                  ? `(${interp.modifierMeaningML} / ${interp.modifierMeaningEN})`
-                  : ""}
+                {lang === "ml"
+                  ? (interp.modifierMeaningML && `(${interp.modifierMeaningML})`)
+                  : (interp.modifierMeaningEN && `(${interp.modifierMeaningEN})`)}
               </span>
             </div>
           ) : (
@@ -299,50 +314,26 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
           <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.border})` }} />
         </div>
 
-        {/* Purpose Meaning (ML) — dictionary word ONLY, not the full sentence */}
+        {/* Purpose Meaning — dictionary word ONLY, selected language only (no mixing) */}
         <div className="rounded-lg p-3" style={{
           background: "rgba(212,175,55,0.10)",
           border: `1px solid ${G.borderHi}`,
         }}>
           <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-            {L.purposeMeaningML}
+            {L.purposeMeaning}
           </p>
-          {interp.purposeMeaningML ? (
-            <p className="font-malayalam text-sm font-bold leading-relaxed" style={{ color: G.text }}>
-              {interp.purposeMeaningML}
-            </p>
-          ) : loading ? (
-            <p className="font-inter text-xs italic" style={{ color: G.dim }}>
-              {L.loading}
-            </p>
-          ) : (
-            <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>
-              {L.notAvailable}
-            </p>
-          )}
-        </div>
-
-        {/* Purpose Meaning (EN) — dictionary word ONLY, not the full sentence */}
-        <div className="rounded-lg p-3" style={{
-          background: "rgba(212,175,55,0.06)",
-          border: `1px solid ${G.border}`,
-        }}>
-          <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-            {L.purposeMeaningEN}
-          </p>
-          {interp.purposeMeaningEN ? (
-            <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
-              {interp.purposeMeaningEN}
-            </p>
-          ) : loading ? (
-            <p className="font-inter text-xs italic" style={{ color: G.dim }}>
-              {L.loading}
-            </p>
-          ) : (
-            <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>
-              {L.notAvailable}
-            </p>
-          )}
+          {(() => {
+            const meaning = lang === "ml" ? interp.purposeMeaningML : interp.purposeMeaningEN;
+            if (meaning) {
+              return lang === "ml"
+                ? <p className="font-malayalam text-sm font-bold leading-relaxed" style={{ color: G.text }}>{meaning}</p>
+                : <p className="font-inter text-sm font-bold" style={{ color: G.text }}>{meaning}</p>;
+            }
+            if (loading) {
+              return <p className="font-inter text-xs italic" style={{ color: G.dim }}>{L.loading}</p>;
+            }
+            return <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>{L.notAvailable}</p>;
+          })()}
         </div>
 
         {/* ── DEBUG PANEL (temporary — lookup pipeline verification) ── */}
