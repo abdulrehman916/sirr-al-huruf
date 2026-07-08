@@ -8,6 +8,27 @@ const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", te
 
 const ELEMENT_ORDER = ['fire', 'earth', 'air', 'water'];
 
+// Malayalam meanings for each degree (UI display only — no calculation impact)
+const DEGREE_ML = {
+  f1: "ഉപയോഗത്തിലുള്ള തീ",
+  f2: "തീ തിന്നുകയും കുടിക്കുകയും ചെയ്യുന്നു",
+  f3: "തീ തിന്നുകയുമില്ല, കുടിക്കുകയുമില്ല",
+  f4: "തണുത്ത തീ",
+  e1: "വിത്തുകളെ ഉണർത്തുന്ന മണ്ണ്",
+  e2: "എല്ലാ ലോഹങ്ങളുടെയും മണ്ണ്",
+  e3: "നിർമ്മാണത്തിന് ഉപയോഗിക്കുന്ന മണ്ണ്",
+  e4: "സസ്യങ്ങളൊന്നും മുളക്കാത്ത പഴയ മണ്ണ്",
+  a1: "ജനങ്ങൾക്ക് ഗുണം ചെയ്യുന്നത് വീശുന്ന കാറ്റ്",
+  a2: "പ്രണയവും സ്നേഹവും നിറഞ്ഞ കാറ്റ്",
+  a3: "എല്ലാ പക്ഷികൾക്കുമുള്ള കാറ്റ്",
+  a4: "നാശം വരുത്തുന്ന തണുത്ത കാറ്റ്",
+  w1: "മധുരവും രുചികരവുമായ ശുദ്ധജലം",
+  w2: "കയ്പുള്ളതും ദുർഗന്ധമുള്ളതുമായ വെള്ളം",
+  w3: "ഉപ്പുരസമുള്ള കയ്പൻ വെള്ളം",
+  w4: "രുചിയില്ലാത്ത നിശ്ചലജലം",
+  w5: "മനുഷ്യന് ഗുണം ചെയ്യുന്ന ശുദ്ധജലം",
+};
+
 function DegreeCard({ degree, isSelected, col, glow, bg, border, onToggle }) {
   return (
     <motion.button
@@ -31,11 +52,19 @@ function DegreeCard({ degree, isSelected, col, glow, bg, border, onToggle }) {
         borderWidth: isSelected ? 2 : 1,
       }}>
       <div className="flex flex-col items-end gap-0.5 flex-1">
-        <p className="font-amiri text-base leading-snug"
-          style={{ color: isSelected ? col : `${col}77` }}
-          dir="rtl">
-          {degree.arabic}
-        </p>
+        <div className="flex flex-col sm:flex-row-reverse sm:items-center gap-0.5 sm:gap-2 justify-end w-full">
+          <p className="font-amiri text-base leading-snug"
+            style={{ color: isSelected ? col : `${col}77` }}
+            dir="rtl">
+            {degree.arabic}
+          </p>
+          {DEGREE_ML[degree.key] && (
+            <p className="font-malayalam text-[11px] leading-snug"
+              style={{ color: isSelected ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.35)" }}>
+              {DEGREE_ML[degree.key]}
+            </p>
+          )}
+        </div>
         <p className="font-inter text-[9px] font-bold tabular-nums"
           style={{ color: isSelected ? G.dim : "rgba(255,255,255,0.20)" }}>
           Bast: {degree.bast.toLocaleString()}
