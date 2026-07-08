@@ -152,7 +152,7 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
     dictSource: lang === "ml" ? "ഉറവിടം" : "Source",
     notAvailable: lang === "ml" ? "പ്രോജക്റ്റ് പർപ്പസ് ഡിക്ഷനറിയിൽ ഈ ലക്ഷ്യം കണ്ടെത്തിയില്ല." : "Purpose not found in the Project Purpose Dictionary.",
     loading: lang === "ml" ? "വ്യാഖ്യാനിക്കുന്നു..." : "Interpreting...",
-    autoLearned: lang === "ml" ? "സ്വയം പഠിച്ചു — പരിശോധന ആവശ്യം" : "Auto-Generated — Needs Review",
+    autoLearned: lang === "ml" ? "സ്വയം പഠിച്ചു — പരിശോധന ആവശ്യം" : "AI Generated — Needs Review",
   };
 
   if (!interp) return null;

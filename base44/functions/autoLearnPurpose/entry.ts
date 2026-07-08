@@ -8,7 +8,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 //      return the stored meaning immediately. Never regenerate.
 //   2. If NO match → use InvokeLLM to generate Malayalam + English
 //      meanings from the Arabic phrase (action + purpose + modifier).
-//   3. Save the new entry to PurposeDictionary (source: "Auto Generated",
+//   3. Save the new entry to PurposeDictionary (source: "AI Generated",
 //      notes: "Needs Review") so future lookups find it instantly.
 //   4. Return the result in the same shape as lookupPurposeIntent.
 //
@@ -190,9 +190,9 @@ Return ONLY a JSON object.`,
       normalized_purpose_key: normKey,
       language: "ar",
       aliases: [],
-      source: "Auto Generated",
+      source: "AI Generated",
       is_active: true,
-      notes: `Auto-generated from full phrase: "${customPurpose.trim()}" — needs review`,
+      notes: `AI-generated from full phrase: "${customPurpose.trim()}" — Needs Review`,
     };
 
     try {
@@ -207,7 +207,7 @@ Return ONLY a JSON object.`,
       matched: true,
       ritualIntent: normKey,
       matchedPhrase: newEntry.purpose_phrase,
-      source: "Auto Generated",
+      source: "AI Generated",
       malayalam_meaning: malayalamMeaning,
       english_meaning: englishMeaning,
       auto_learned: true,
