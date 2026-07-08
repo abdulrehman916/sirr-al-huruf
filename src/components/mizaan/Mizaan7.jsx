@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_PURPOSES } from "../../lib/mizaan9Data";
 import { calcBast } from "../../lib/abjadModes";
+import PurposeInterpretationCard from "./PurposeInterpretationCard";
 
 function CustomPurposePanel({ customPurpose, onCustomPurpose }) {
   const stats = useMemo(() => {
@@ -142,6 +143,9 @@ export default function Mizaan7({ selected, onChange, customPurpose, onCustomPur
 
       {/* Custom Purpose Input */}
       <CustomPurposePanel customPurpose={customPurpose} onCustomPurpose={onCustomPurpose} />
+
+      {/* Purpose Interpretation Card — Master purpose resolver for Ritual Timing */}
+      <PurposeInterpretationCard customPurpose={customPurpose} selections={{ purposes: selectedArr }} />
     </motion.div>
   );
 }
