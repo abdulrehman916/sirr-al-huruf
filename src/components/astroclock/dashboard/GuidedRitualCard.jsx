@@ -1,36 +1,25 @@
 // ═══════════════════════════════════════════════════════════════
 // GUIDED RITUAL CARD — 8-STEP COMPLETE RITUAL GUIDE
-// For every Dua, Azimah, Qasam, Dhikr, Quran verse, Recitation:
-//   STEP 1 — BEFORE YOU BEGIN (purpose, requirements, warnings)
-//   STEP 2 — PREPARATION CHECKLIST
-//   STEP 3 — RECITATION (Arabic, large manuscript style)
-//   STEP 4 — MALAYALAM MEANING (paragraph translation)
-//   STEP 5 — HOW TO PERFORM (numbered steps)
-//   STEP 6 — AFTER COMPLETION (post-ritual instructions)
-//   STEP 7 — REFERENCES (book, page, weekday, planet, angel, jinn)
-//   STEP 8 — RELATED RITUALS (linked, in manuscript order)
-//
-// RULES:
-//   - Never invent information — only manuscript-derived data
-//   - If manuscript doesn't specify → show "ഗ്രന്ഥത്തിൽ വ്യക്തമാക്കാത്തത്"
-//   - Preserve every Arabic character exactly
-//   - Manuscript is the highest authority
+// PERMANENT MANUSCRIPT RULE: Every instruction is sourced from
+// original manuscripts via cross-manuscript search. "Not specified"
+// is shown ONLY after ALL imported manuscripts are searched.
+// Every instruction includes its manuscript source + page number.
 // ═══════════════════════════════════════════════════════════════
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import QuranicArabicText from "@/components/astroclock/QuranicArabicText";
 import MalayalamTranslation from "./MalayalamTranslation";
+import { getMergedRitualInstructions, getRegisteredSources } from "@/lib/manuscriptRitualGuideData";
 import {
   WEEKDAY_PLANET_META,
-  MANUSCRIPT_PERFORMANCE_RULES,
-  getRelatedRecitations,
+  getAllRecitationsMap,
   getQuranVerificationNote,
   MANUSCRIPT_AUTHORITY_RULE,
 } from "@/lib/astroClockDailyMantrasData";
 
 const G = { text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.20)" };
-const NOT_SPECIFIED = "ഗ്രന്ഥത്തിൽ വ്യക്തമാക്കാത്തത്";
+const NOT_SPECIFIED_ANY = "ഇറക്കുമതി ചെയ്ത ഒരു ഗ്രന്ഥത്തിലും പറയാത്തത്";
 
 const TYPE_META = {
   azimah: { label_ml: "അസീം (ആഹ്വാനം)", color: "#F87171", bg: "rgba(248,113,113,0.06)" },
@@ -44,7 +33,50 @@ const TYPE_META = {
   ism: { label_ml: "ദൈവ നാമം", color: "#F472B6", bg: "rgba(244,114,182,0.04)" },
 };
 
-// ── Section label ──
+// Step 1 field definitions
+const STEP1_FIELDS = [
+  { field: 'purpose', label: 'ഉദ്ദേശം' },
+  { field: 'benefits', label: 'ഗുണങ്ങൾ' },
+  { field: 'required_purification', label: 'വുദു/ഗുസ്ല്' },
+  { field: 'required_intention', label: 'നിയ്യത്' },
+  { field: 'suitable_weekday', label: 'ദിവസം' },
+  { field: 'suitable_saat', label: 'സഅാത്' },
+  { field: 'suitable_planet', label: 'ഗ്രഹം' },
+  { field: 'suitable_lunar_mansion', label: 'ചാന്ദ്ര നക്ഷത്രം' },
+  { field: 'suitable_moon_phase', label: 'ചന്ദ്ര ഘട്ടം' },
+  { field: 'suitable_zodiac', label: 'രാശി' },
+  { field: 'required_angel', label: 'മലക്' },
+  { field: 'required_jinn', label: 'ജിൻ' },
+  { field: 'required_divine_names', label: 'ദൈവ നാമം' },
+  { field: 'required_incense', label: 'ധൂപം' },
+  { field: 'required_clothing', label: 'വസ്ത്രം' },
+  { field: 'required_direction', label: 'ദിശ' },
+  { field: 'required_fasting', label: 'ഉപവാസം' },
+  { field: 'warnings', label: 'മുന്നറിയിപ്പ്' },
+];
+
+// Step 2 checklist items
+const CHECKLIST_ITEMS = [
+  { label: 'ശരിയായ ദിവസം', field: 'suitable_weekday' },
+  { label: 'ശരിയായ സഅാത്', field: 'suitable_saat' },
+  { label: 'ശരിയായ ചന്ദ്ര സ്ഥാനം', field: 'suitable_moon_phase' },
+  { label: 'ശരിയായ ഗ്രഹം', field: 'suitable_planet' },
+  { label: 'ശുദ്ധി വരുത്തി', field: 'required_purification' },
+  { label: 'ധൂപം തയ്യാർ', field: 'required_incense' },
+  { label: 'ദിശ ഉറപ്പാക്കി', field: 'required_direction' },
+  { label: 'നിയ്യത് നിശ്ചയിച്ചു', field: 'required_intention' },
+];
+
+// Step 6 field definitions
+const STEP6_FIELDS = [
+  { field: 'repetition_count', label: 'ആവർത്തനം' },
+  { field: 'after_recitation_rules', label: 'ശേഷം ചെയ്യേണ്ടത്' },
+  { field: 'conditions', label: 'വ്യവസ്ഥകൾ' },
+  { field: 'exceptions', label: 'നിരോധനങ്ങൾ' },
+  { field: 'purpose', label: 'പ്രതീക്ഷിത ഫലം' },
+];
+
+// ── Step label ──
 function StepLabel({ num, label, color }) {
   return (
     <div className="flex items-center gap-2 mb-1.5">
@@ -52,212 +84,197 @@ function StepLabel({ num, label, color }) {
         style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}>
         STEP {num}
       </span>
-      <span className="font-malayalam text-xs font-bold" style={{ color }}>
-        {label}
-      </span>
+      <span className="font-malayalam text-xs font-bold" style={{ color }}>{label}</span>
       <div className="h-px flex-1" style={{ background: `${color}20` }} />
     </div>
   );
 }
 
-// ── Info row for Step 1 ──
-function InfoRow({ label, value, isSpecified = true }) {
+// ── Field display: shows instructions with source+page, or "not specified" ──
+function FieldDisplay({ label, fieldInstructions }) {
+  const hasData = fieldInstructions && fieldInstructions.length > 0;
   return (
     <div className="flex items-start gap-2 py-0.5">
-      <span className="font-malayalam text-[11px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.40)", minWidth: "90px" }}>
+      <span className="font-malayalam text-[11px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.40)", minWidth: "85px" }}>
         {label}:
       </span>
-      <span className="font-malayalam text-[11px] leading-relaxed" style={{
-        color: isSpecified ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.25)",
-        fontStyle: isSpecified ? "normal" : "italic",
-      }}>
-        {value}
-      </span>
+      <div className="flex-1">
+        {hasData ? (
+          fieldInstructions.map((instr, i) => (
+            <div key={i}>
+              <span className="font-malayalam text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>
+                {instr.text}
+              </span>
+              <span className="font-inter text-[8px] ml-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                📖 {instr.source} p.{instr.page}
+              </span>
+            </div>
+          ))
+        ) : (
+          <span className="font-malayalam text-[11px] italic" style={{ color: "rgba(255,255,255,0.25)" }}>
+            {NOT_SPECIFIED_ANY}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
 // ── STEP 1: Before You Begin ──
-function StepBeforeBegin({ mantra, weekdayMeta }) {
-  const rules = MANUSCRIPT_PERFORMANCE_RULES;
-  const hasDay = weekdayMeta !== null;
-  const hasRepetition = !!mantra.repetition;
-
+function StepBeforeBegin({ instructions, sources }) {
   return (
     <div className="rounded-lg p-3" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.12)" }}>
       <StepLabel num={1} label="ആരംഭത്തിന് മുമ്പ്" color={G.text} />
       <div className="space-y-0.5">
-        <InfoRow label="ഉദ്ദേശം" value={mantra.purpose_ml} />
-        <InfoRow label="വുദു/ഗുസ്ല്" value={NOT_SPECIFIED} isSpecified={false} />
-        <InfoRow label="നിയ്യത്" value={NOT_SPECIFIED} isSpecified={false} />
-        <InfoRow label="ദിവസം" value={hasDay ? `${weekdayMeta.day_ml} (${weekdayMeta.day_en})` : NOT_SPECIFIED} isSpecified={hasDay} />
-        <InfoRow label="സഅാത് (ഘടിക)" value={rules.timing.rule_ml} />
-        <InfoRow label="ഗ്രഹം" value={hasDay ? `${weekdayMeta.planet_ml} (${weekdayMeta.planet_en})` : NOT_SPECIFIED} isSpecified={hasDay} />
-        <InfoRow label="ചാന്ദ്ര നക്ഷത്രം" value={NOT_SPECIFIED} isSpecified={false} />
-        <InfoRow label="ചന്ദ്ര ഘട്ടം" value={rules.moon.rule_ml} />
-        <InfoRow label="ധൂപം" value={NOT_SPECIFIED} isSpecified={false} />
-        <InfoRow label="വസ്ത്രം" value={NOT_SPECIFIED} isSpecified={false} />
-        <InfoRow label="ദിശ" value={rules.direction.default_ml} />
-        <InfoRow label="ഉപവാസം" value={NOT_SPECIFIED} isSpecified={false} />
-        <InfoRow label="മുന്നറിയിപ്പ്" value={rules.night_preference.rule_ml} />
+        {STEP1_FIELDS.map(({ field, label }) => (
+          <FieldDisplay key={field} label={label} fieldInstructions={instructions[field]} />
+        ))}
       </div>
+      <p className="font-inter text-[8px] mt-2" style={{ color: "rgba(255,255,255,0.20)" }}>
+        ✓ {sources.length} ഗ്രന്ഥങ്ങൾ പൂർണ്ണമായി തിരയപ്പെട്ടു
+      </p>
     </div>
   );
 }
 
 // ── STEP 2: Preparation Checklist ──
-function StepChecklist({ mantra, weekdayMeta }) {
-  const hasDay = weekdayMeta !== null;
-  const items = [
-    { label: "ശരിയായ ദിവസം", specified: hasDay },
-    { label: "ശരിയായ സഅാത് (ഗ്രഹ ഘടിക)", specified: true },
-    { label: "ശരിയായ ചന്ദ്ര സ്ഥാനം", specified: true },
-    { label: "ശരിയായ ഗ്രഹം", specified: hasDay },
-    { label: "ശുദ്ധി വരുത്തി", specified: false },
-    { label: "സാധനങ്ങൾ തയ്യാർ", specified: false },
-    { label: "ധൂപം തയ്യാർ", specified: false },
-    { label: "ദിശ ഉറപ്പാക്കി", specified: true },
-    { label: "നിയ്യത് നിശ്ചയിച്ചു", specified: false },
-  ];
+function StepChecklist({ instructions }) {
   return (
     <div className="rounded-lg p-3" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.12)" }}>
       <StepLabel num={2} label="തയ്യാറാകൽ ചെക്ലിസ്റ്റ്" color="#4ADE80" />
       <div className="grid grid-cols-1 gap-1">
-        {items.map((item, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="text-[14px] flex-shrink-0" style={{ color: item.specified ? "rgba(74,222,128,0.60)" : "rgba(255,255,255,0.20)" }}>□</span>
-            <span className="font-malayalam text-[11px]" style={{
-              color: item.specified ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.30)",
-            }}>
-              {item.label}
-            </span>
-            {!item.specified && (
-              <span className="font-inter text-[8px] italic" style={{ color: "rgba(255,255,255,0.15)" }}>
-                (ഗ്രന്ഥത്തിൽ ഇല്ല)
+        {CHECKLIST_ITEMS.map((item, i) => {
+          const specified = instructions[item.field] && instructions[item.field].length > 0;
+          return (
+            <div key={i} className="flex items-center gap-2">
+              <span className="text-[14px] flex-shrink-0" style={{ color: specified ? "rgba(74,222,128,0.60)" : "rgba(255,255,255,0.20)" }}>□</span>
+              <span className="font-malayalam text-[11px]" style={{ color: specified ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.30)" }}>
+                {item.label}
               </span>
-            )}
-          </div>
-        ))}
+              {!specified && (
+                <span className="font-inter text-[8px] italic" style={{ color: "rgba(255,255,255,0.15)" }}>
+                  ({NOT_SPECIFIED_ANY})
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// ── STEP 5: How to Perform (numbered steps) ──
-function StepHowToPerform({ mantra, weekdayMeta }) {
-  const rules = MANUSCRIPT_PERFORMANCE_RULES;
-  const steps = [];
-
-  // Step 1: Start in the correct planetary hour (p.11)
-  steps.push({ text: rules.timing.rule_ml, page: "11" });
-
-  // Step 2: Night is preferred (p.39)
-  steps.push({ text: rules.night_preference.rule_ml, page: "39" });
-
-  // Step 3: Face the correct direction (p.42)
-  steps.push({ text: rules.direction.default_ml, page: "42" });
-
-  // Step 4: Waxing moon for good deeds (p.20)
-  steps.push({ text: rules.moon.rule_ml, page: "20" });
-
-  // Step 5: Day begins with preceding night (p.65)
-  steps.push({ text: rules.day_boundary.rule_ml, page: "65" });
-
-  // Step 6: Recite the specified number of times
-  if (mantra.repetition) {
-    steps.push({ text: `ഈ പാഠം ${mantra.repetition} തവണ ആവർത്തിക്കുക`, page: String(mantra.source?.page || "") });
-  }
-
-  // Step 7: For Azimah — recite after Qasam; for Qasam — recite after Azimah
-  if (mantra.type === "azimah") {
-    steps.push({ text: "ആഹ്വാനം (അസീം) ചൊല്ലുക, ശേഷം ഖസം ചൊല്ലുക", page: "27-31" });
-  } else if (mantra.type === "qasam") {
-    steps.push({ text: "ഖസം ചൊല്ലുക, ശേഷം സർവ ദു‌ആ ചൊല്ലുക", page: "31" });
-  }
+// ── STEP 5: How to Perform (numbered steps, each instruction separate) ──
+function StepHowToPerform({ instructions }) {
+  const steps = [
+    ...instructions.before_recitation_steps.map(s => ({ ...s, phase: "മുമ്പ്" })),
+    ...instructions.during_recitation_rules.map(s => ({ ...s, phase: "സമയം" })),
+    ...instructions.after_recitation_rules.map(s => ({ ...s, phase: "ശേഷം" })),
+  ];
 
   return (
     <div className="rounded-lg p-3" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.12)" }}>
       <StepLabel num={5} label="അനുഷ്ഠാന ക്രമം" color="#FBBF24" />
-      <div className="space-y-2">
-        {steps.map((step, i) => (
-          <div key={i} className="flex items-start gap-2.5">
-            <span className="font-inter text-[10px] font-bold flex-shrink-0 mt-0.5"
-              style={{ color: "#FBBF24", minWidth: "18px" }}>
-              {i + 1}.
-            </span>
-            <div className="flex-1">
-              <p className="font-malayalam text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>
-                {step.text}
-              </p>
-              {step.page && (
-                <span className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.20)" }}>
-                  📖 പേജ് {step.page}
+      {steps.length === 0 ? (
+        <p className="font-malayalam text-[11px] italic" style={{ color: "rgba(255,255,255,0.25)" }}>
+          {NOT_SPECIFIED_ANY}
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {steps.map((step, i) => (
+            <div key={i} className="flex items-start gap-2.5">
+              <span className="font-inter text-[10px] font-bold flex-shrink-0 mt-0.5" style={{ color: "#FBBF24", minWidth: "18px" }}>
+                {i + 1}.
+              </span>
+              <div className="flex-1">
+                <span className="font-inter text-[8px] px-1 rounded mr-1" style={{ background: "rgba(251,191,36,0.10)", color: "rgba(251,191,36,0.60)" }}>
+                  {step.phase}
                 </span>
-              )}
+                <span className="font-malayalam text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>
+                  {step.text}
+                </span>
+                <span className="font-inter text-[8px] block" style={{ color: "rgba(255,255,255,0.25)" }}>
+                  📖 {step.source} p.{step.page}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 // ── STEP 6: After Completion ──
-function StepAfterCompletion({ mantra }) {
-  const hasRepetition = !!mantra.repetition;
+function StepAfterCompletion({ instructions }) {
   return (
     <div className="rounded-lg p-3" style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)" }}>
       <StepLabel num={6} label="പൂർത്തിയായ ശേഷം" color="#60A5FA" />
       <div className="space-y-0.5">
-        <InfoRow label="ആവർത്തനം" value={hasRepetition ? `${mantra.repetition} തവണ ചൊല്ലിക്കഴിഞ്ഞു` : NOT_SPECIFIED}
-          isSpecified={hasRepetition} />
-        <InfoRow label="കാത്തിരിപ്പ്" value={NOT_SPECIFIED} isSpecified={false} />
-        <InfoRow label="നിരോധനങ്ങൾ" value={NOT_SPECIFIED} isSpecified={false} />
-        <InfoRow label="പ്രതീക്ഷിത ഫലം" value={mantra.purpose_ml || NOT_SPECIFIED} isSpecified={!!mantra.purpose_ml} />
+        {STEP6_FIELDS.map(({ field, label }) => (
+          <FieldDisplay key={field} label={label} fieldInstructions={instructions[field]} />
+        ))}
       </div>
     </div>
   );
 }
 
 // ── STEP 7: References ──
-function StepReferences({ mantra, weekdayMeta }) {
+function StepReferences({ mantra, instructions }) {
   const quranNote = getQuranVerificationNote(mantra.id);
-  const hasDay = weekdayMeta !== null;
-  const items = [
-    { label: "ഗ്രന്ഥം", value: mantra.source?.book_en, specified: !!mantra.source?.book_en },
-    { label: "പേജ്", value: mantra.source?.page, specified: !!mantra.source?.page },
-    { label: "മൂലഗ്രന്ഥം", value: mantra.source?.book, specified: !!mantra.source?.book, isArabic: true },
-    { label: "ദിവസം", value: hasDay ? `${weekdayMeta.day_ml} (${weekdayMeta.day_en})` : null, specified: hasDay },
-    { label: "സഅാത്", value: "ഗ്രഹ ഘടിക (p.11)", specified: true },
-    { label: "ഗ്രഹം", value: hasDay ? `${weekdayMeta.planet_ml} (${weekdayMeta.planet_en})` : null, specified: hasDay },
-    { label: "ചാന്ദ്ര നക്ഷത്രം", value: null, specified: false },
-    { label: "മലക്", value: hasDay ? `${weekdayMeta.angel_en} (${weekdayMeta.angel_ml})` : null, specified: hasDay },
-    { label: "ജിൻ", value: mantra.king_en ? `${mantra.king_en} (${mantra.king})` : (mantra.servant_en ? `${mantra.servant_en} (${mantra.servant})` : null), specified: !!(mantra.king_en || mantra.servant_en) },
-    { label: "ഉദ്ദേശം", value: mantra.purpose_en, specified: !!mantra.purpose_en },
+  const refFields = [
+    { label: 'ഗ്രന്ഥം', direct: mantra.source?.book_en, isArabic: false },
+    { label: 'പേജ്', direct: mantra.source?.page, isArabic: false },
+    { label: 'മൂലഗ്രന്ഥം', direct: mantra.source?.book, isArabic: true },
+    { label: 'ദിവസം', instr: instructions.suitable_weekday },
+    { label: 'സഅാത്', instr: instructions.suitable_saat },
+    { label: 'ഗ്രഹം', instr: instructions.suitable_planet },
+    { label: 'ചാന്ദ്ര നക്ഷത്രം', instr: instructions.suitable_lunar_mansion },
+    { label: 'മലക്', instr: instructions.required_angel },
+    { label: 'ജിൻ', instr: instructions.required_jinn },
   ];
 
   return (
     <div className="rounded-lg p-3" style={{ background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)" }}>
       <StepLabel num={7} label="റഫറൻസുകൾ" color="#818CF8" />
       <div className="grid grid-cols-1 gap-0.5">
-        {items.map((item, i) => (
+        {refFields.map((item, i) => (
           <div key={i} className="flex items-start gap-2 py-0.5">
             <span className="font-malayalam text-[10px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.35)", minWidth: "80px" }}>
               {item.label}
             </span>
-            {item.specified ? (
-              <span className={item.isArabic ? "font-amiri" : "font-inter"} style={{
-                fontSize: item.isArabic ? "12px" : "10px",
-                color: "rgba(255,255,255,0.65)",
-                direction: item.isArabic ? "rtl" : "ltr",
-              }}>
-                {item.value}
-              </span>
-            ) : (
-              <span className="font-malayalam text-[10px] italic" style={{ color: "rgba(255,255,255,0.20)" }}>
-                {NOT_SPECIFIED}
-              </span>
-            )}
+            <div className="flex-1">
+              {item.direct !== undefined ? (
+                item.direct ? (
+                  <span className={item.isArabic ? "font-amiri" : "font-inter"} style={{
+                    fontSize: item.isArabic ? "12px" : "10px",
+                    color: "rgba(255,255,255,0.65)",
+                    direction: item.isArabic ? "rtl" : "ltr",
+                  }}>
+                    {item.direct}
+                  </span>
+                ) : (
+                  <span className="font-malayalam text-[10px] italic" style={{ color: "rgba(255,255,255,0.20)" }}>
+                    {NOT_SPECIFIED_ANY}
+                  </span>
+                )
+              ) : item.instr && item.instr.length > 0 ? (
+                item.instr.map((instr, j) => (
+                  <div key={j}>
+                    <span className="font-malayalam text-[10px]" style={{ color: "rgba(255,255,255,0.65)" }}>
+                      {instr.text}
+                    </span>
+                    <span className="font-inter text-[8px] ml-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      📖 {instr.source} p.{instr.page}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <span className="font-malayalam text-[10px] italic" style={{ color: "rgba(255,255,255,0.20)" }}>
+                  {NOT_SPECIFIED_ANY}
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -276,38 +293,40 @@ function StepReferences({ mantra, weekdayMeta }) {
 }
 
 // ── STEP 8: Related Rituals ──
-function StepRelatedRituals({ mantra }) {
-  const related = getRelatedRecitations(mantra.id);
-  if (related.length === 0) return (
-    <div className="rounded-lg p-3" style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.12)" }}>
-      <StepLabel num={8} label="ബന്ധപ്പെട്ട ആചാരങ്ങൾ" color="#A78BFA" />
-      <p className="font-malayalam text-[10px] italic" style={{ color: "rgba(255,255,255,0.25)" }}>
-        {NOT_SPECIFIED}
-      </p>
-    </div>
-  );
+function StepRelatedRituals({ instructions }) {
+  const relatedInstrs = instructions.related_rituals || [];
 
   return (
     <div className="rounded-lg p-3" style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.12)" }}>
       <StepLabel num={8} label="ബന്ധപ്പെട്ട ആചാരങ്ങൾ" color="#A78BFA" />
-      <div className="space-y-1.5">
-        {related.map((r, i) => (
-          <div key={r.id} className="flex items-center gap-2">
-            <span className="font-inter text-[9px] font-bold flex-shrink-0" style={{ color: "#A78BFA" }}>
-              {i + 1}.
-            </span>
-            <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>
-              {TYPE_META[r.type]?.label_ml || r.type} — {r.king_en || r.servant_en || r.purpose_en?.slice(0, 50)}
-            </span>
-            <span className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.25)" }}>
-              p.{r.source?.page}
-            </span>
-          </div>
-        ))}
-        <p className="font-malayalam text-[10px] mt-1" style={{ color: "rgba(167,139,250,0.50)" }}>
-          മുകളിൽ പറഞ്ഞ ക്രമത്തിൽ ചൊല്ലേണ്ടതാണ്.
+      {relatedInstrs.length === 0 ? (
+        <p className="font-malayalam text-[10px] italic" style={{ color: "rgba(255,255,255,0.25)" }}>
+          {NOT_SPECIFIED_ANY}
         </p>
-      </div>
+      ) : (
+        <div className="space-y-1.5">
+          {relatedInstrs.map((instr, i) => {
+            const map = getAllRecitationsMap();
+            const r = map[instr.text];
+            return (
+              <div key={i} className="flex items-center gap-2">
+                <span className="font-inter text-[9px] font-bold flex-shrink-0" style={{ color: "#A78BFA" }}>
+                  {i + 1}.
+                </span>
+                <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>
+                  {r ? `${TYPE_META[r.type]?.label_ml || r.type} — ${r.king_en || r.servant_en || r.purpose_en?.slice(0, 50)}` : instr.text}
+                </span>
+                <span className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                  📖 {instr.source} p.{instr.page}
+                </span>
+              </div>
+            );
+          })}
+          <p className="font-malayalam text-[10px] mt-1" style={{ color: "rgba(167,139,250,0.50)" }}>
+            മുകളിൽ പറഞ്ഞ ക്രമത്തിൽ ചൊല്ലേണ്ടതാണ്.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -319,6 +338,10 @@ export default function GuidedRitualCard({ mantra, defaultExpanded = false }) {
   const weekdayMeta = mantra.day_index !== null && mantra.day_index !== undefined
     ? WEEKDAY_PLANET_META.find(d => d.day_index === mantra.day_index)
     : null;
+
+  // Cross-manuscript search: searches ALL registered manuscripts
+  const instructions = getMergedRitualInstructions(mantra.id);
+  const sources = getRegisteredSources();
 
   const title = mantra.king_en || mantra.servant_en || mantra.purpose_en?.slice(0, 60) || mantra.id;
 
@@ -354,10 +377,10 @@ export default function GuidedRitualCard({ mantra, defaultExpanded = false }) {
           >
             <div className="px-3 pb-3 space-y-2.5">
               {/* STEP 1 — Before You Begin */}
-              <StepBeforeBegin mantra={mantra} weekdayMeta={weekdayMeta} />
+              <StepBeforeBegin instructions={instructions} sources={sources} />
 
               {/* STEP 2 — Preparation Checklist */}
-              <StepChecklist mantra={mantra} weekdayMeta={weekdayMeta} />
+              <StepChecklist instructions={instructions} />
 
               {/* STEP 3 — Recitation (Arabic) */}
               <div className="rounded-lg p-3" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
@@ -372,16 +395,16 @@ export default function GuidedRitualCard({ mantra, defaultExpanded = false }) {
               </div>
 
               {/* STEP 5 — How to Perform */}
-              <StepHowToPerform mantra={mantra} weekdayMeta={weekdayMeta} />
+              <StepHowToPerform instructions={instructions} />
 
               {/* STEP 6 — After Completion */}
-              <StepAfterCompletion mantra={mantra} />
+              <StepAfterCompletion instructions={instructions} />
 
               {/* STEP 7 — References */}
-              <StepReferences mantra={mantra} weekdayMeta={weekdayMeta} />
+              <StepReferences mantra={mantra} instructions={instructions} />
 
               {/* STEP 8 — Related Rituals */}
-              <StepRelatedRituals mantra={mantra} />
+              <StepRelatedRituals instructions={instructions} />
             </div>
           </motion.div>
         )}
