@@ -1,71 +1,114 @@
 // ═══════════════════════════════════════════════════════════════
 // SECTION 1 — TODAY'S DASHBOARD
-// Complete today summary: Day, Layl/Nahar, Saat, Kawkab, Verdict,
-// Best/Avoid activities, Moon summary, Warnings — all in one compact view
+// Single-glance live summary: Day, Layl/Nahar, Saat, Kawkab, Verdict,
+// Moon snapshot. Activities & Warnings collapsed with references.
+//
+// UI PATTERN: Summary → Expand → Details → References
+// LANGUAGE RULE: One language per card — no mixing
+// DATA RULE: Live values from useAstroData only — no new calculations
 // ═══════════════════════════════════════════════════════════════
 import { useAstroData, PLANET_TR, DAY_TR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
-import { MiniCard } from "./DashboardSection";
-import { Sunrise, Sunset, Clock, Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
+import { MiniCard, SubCollapse } from "./DashboardSection";
+import { KNOWLEDGE_DAYS } from "@/lib/astroClockKnowledgeBase";
+import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
 const MALEFIC = ["saturn", "mars"];
+
+// TR Moon phase labels (standard astronomical terms — not manuscript data)
+const TR_MOON_PHASES = {
+  "New Moon": "Yeni Ay",
+  "Waxing Crescent": "Artan Hilal",
+  "First Quarter": "İlk Dördün",
+  "Waxing Gibbous": "Şişen Ay",
+  "Full Moon": "Dolunay",
+  "Waning Gibbous": "Azalan Ay",
+  "Last Quarter": "Son Dördün",
+  "Waning Crescent": "Azalan Hilal",
+};
 
 export default function TodayDashboard() {
   const d = useAstroData();
   const { txt, language } = useAstroClockLanguage();
   if (!d.currentHour) return null;
 
+  // ── Language-specific names ──
   const dayName = language === "ml" ? d.dayInfo?.name_ml : language === "tr" ? DAY_TR[d.activeDayIndex] : d.dayInfo?.name_en;
-  const planetName = language === "ml" ? d.planetInfo[d.currentHour.planet]?.name_ml_equivalent : language === "tr" ? PLANET_TR[d.currentHour.planet] : d.planetInfo[d.currentHour.planet]?.name_en;
-  const dayRulerName = language === "ml" ? d.planetInfo[d.dayRuler.planet]?.name_ml_equivalent : language === "tr" ? PLANET_TR[d.dayRuler.planet] : d.planetInfo[d.dayRuler.planet]?.name_en;
+  const planetName = language === "ml"
+    ? d.planetInfo[d.currentHour.planet]?.name_ml_equivalent
+    : language === "tr" ? PLANET_TR[d.currentHour.planet]
+    : d.planetInfo[d.currentHour.planet]?.name_en;
+  const dayRulerName = language === "ml"
+    ? d.planetInfo[d.dayRuler.planet]?.name_ml_equivalent
+    : language === "tr" ? PLANET_TR[d.dayRuler.planet]
+    : d.planetInfo[d.dayRuler.planet]?.name_en;
   const dayRulerSymbol = d.planetInfo[d.dayRuler.planet]?.symbol || "☉";
 
-  // Verdict
+  // ── Verdict ──
   const isBenefic = BENEFIC.includes(d.dayRuler.planet);
   const isMalefic = MALEFIC.includes(d.dayRuler.planet);
-  const verdict = isBenefic ? "excellent" : isMalefic ? "neutral" : "good";
   const verdictColor = isBenefic ? "#4ADE80" : isMalefic ? "#FBBF24" : "#86EFAC";
-  const verdictText = txt("അനുകൂലം", "Favorable", "Elverişli");
+  const verdictText = isBenefic
+    ? txt("മികച്ച ദിവസം", "Excellent Day", "Mükemmel Gün")
+    : isMalefic
+      ? txt("ശ്രദ്ധിക്കുക", "Cautious Day", "Dikkatli Gün")
+      : txt("നല്ല ദിവസം", "Good Day", "İyi Gün");
   const verdictSub = txt(
-    `${dayRulerName} ${txt("ഭരിക്കുന്ന ദിവസം", "ruled day", "yönetilen gün")}`,
+    `${dayRulerName} ഭരിക്കുന്നു`,
     `Ruled by ${dayRulerName}`,
-    `${dayRulerName} yönetiminde`
+    `${dayRulerName} yönetir`
   );
 
-  // Best / Avoid activities
-  const goodActions = language === "ml" ? d.weekdayAnalysis?.goodWorks_ml || d.weekdayAnalysis?.goodWorks : d.weekdayAnalysis?.goodWorks;
-  const badActions = language === "ml" ? d.weekdayAnalysis?.badWorks_ml || d.weekdayAnalysis?.badWorks : d.weekdayAnalysis?.badWorks;
-
-  // Moon summary
-  const moonSign = d.moonPosition?.zodiacSign;
-  const moonSignName = language === "ml" ? moonSign?.name_ml : language === "tr" ? d.moonZodiacFull?.name_tr : moonSign?.name_en;
-  const moonPhasePct = d.moonPosition ? parseFloat(d.moonPosition.phase) : 0;
-  const moonPhaseLabel = language === "ml" ? d.moonPhaseDesc?.ml : d.moonPhaseDesc?.en;
-  const waxing = d.lunarDay ? d.lunarDay <= 14 : true;
-  const moonMansionName = d.currentMansion?.name || d.currentMansion?.name_en || "—";
-
-  // Warnings
-  const warnings = [];
-  if (d.weekdayAnalysis?.enemyDays?.length) {
-    warnings.push(txt(
-      `${txt("ശത്രു ദിവസങ്ങൾ", "Enemy days", "Düşman günler")}: ${d.weekdayAnalysis.enemyDays.join(", ")}`,
-      `Enemy days: ${d.weekdayAnalysis.enemyDays.join(", ")}`,
-      `Düşman günler: ${d.weekdayAnalysis.enemyDays.join(", ")}`
-    ));
+  // ── Activities (language-specific, manuscript-sourced) ──
+  let bestActivities = [], avoidActivities = [];
+  if (language === "ml") {
+    bestActivities = d.dayInfo?.benefits_ml || [];
+    avoidActivities = d.dayInfo?.warnings_ml || [];
+  } else if (language === "tr") {
+    const trDay = KNOWLEDGE_DAYS[d.activeDayIndex];
+    bestActivities = trDay?.data?.suitable_operations || [];
+    avoidActivities = []; // No TR avoid list in manuscripts
+  } else {
+    bestActivities = d.dayInfo?.benefits_en || d.weekdayAnalysis?.goodWorks || [];
+    avoidActivities = d.dayInfo?.warnings_en || d.weekdayAnalysis?.badWorks || [];
   }
+
+  // ── Moon snapshot (compact — full Moon data in Section 4) ──
+  const moonSymbol = d.moonPosition?.zodiacSign?.symbol;
+  const moonSignName = language === "ml"
+    ? d.moonZodiacFull?.name_ml
+    : language === "tr" ? d.moonZodiacFull?.name_tr
+    : d.moonPosition?.zodiacSign?.name_en;
+  const moonPhasePct = d.moonPosition ? parseFloat(d.moonPosition.phase) : 0;
+  const phaseEn = d.moonPhaseDesc?.en || "";
+  const moonPhaseLabel = language === "ml"
+    ? d.moonPhaseDesc?.ml
+    : language === "tr" ? TR_MOON_PHASES[phaseEn] || phaseEn
+    : phaseEn;
+  const moonMansionDisplay = language === "ml"
+    ? `നക്ഷത്രം #${d.currentMansion?.no || "?"}`
+    : `#${d.currentMansion?.no || "?"} ${language === "tr" ? d.currentMansion?.name || "" : d.currentMansion?.name_en || ""}`.trim();
+
+  // ── Warnings (language-specific — no mixing) ──
+  const warnings = [];
   if (d.moonDignity?.strength === "weakest") {
     warnings.push(txt("ചന്ദ്രൻ നീചം (വൃശ്ചികം)", "Moon debilitated (Scorpio)", "Ay düşük (Akrep)"));
   }
-  if (d.planetInfo[d.currentHour.planet]?.warnings_en?.length && language !== "ml") {
+  if (language === "ml" && d.planetInfo[d.currentHour.planet]?.warnings_ml?.length) {
+    warnings.push(d.planetInfo[d.currentHour.planet].warnings_ml[0]);
+  } else if (language === "en" && d.planetInfo[d.currentHour.planet]?.warnings_en?.length) {
     warnings.push(d.planetInfo[d.currentHour.planet].warnings_en[0]);
   }
+  // TR: No planet warnings in TR — only Moon debilitated warning shows if applicable
 
   const G = { text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.20)" };
+  const refDay = txt("ഹാവാസ്സ് ദേരിൻലിക്ലേരി, പേ. 50-51", "Havâss'ın Derinlikleri, p.50-51", "Havâss'ın Derinlikleri, s.50-51");
+  const refWarn = txt("താഹ, പേ. 46, 66", "Taha, p.46, 66", "Taha, s.46, 66");
 
   return (
     <div className="space-y-3">
-      {/* ── State Grid ── */}
+      {/* ══ SUMMARY: State Grid ══ */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <MiniCard icon="📅" label={txt("ദിവസം", "Day", "Gün")} value={dayName} color={G.text} />
         <MiniCard icon={d.isNight ? "🌙" : "☀"} label={txt("ലൈൽ / നഹർ", "Layl / Nahar", "Gece / Gündüz")} value={d.laylNahar} color={d.isNight ? "#818CF8" : "#FBBF24"} />
@@ -73,82 +116,92 @@ export default function TodayDashboard() {
         <MiniCard icon={dayRulerSymbol} label={txt("കവ്കബ്", "Kawkab", "Kavkeb")} value={planetName} color={G.text} />
       </div>
 
-      {/* ── Verdict ── */}
+      {/* ══ SUMMARY: Verdict ══ */}
       <div className="rounded-xl p-3 flex items-center gap-3" style={{
         background: `${verdictColor}10`, border: `1px solid ${verdictColor}40`,
       }}>
         <Sparkles className="w-5 h-5 flex-shrink-0" style={{ color: verdictColor }} />
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <span className="font-inter text-sm font-bold" style={{ color: verdictColor }}>{verdictText}</span>
           <span className="font-inter text-[10px] ml-2" style={{ color: "rgba(255,255,255,0.50)" }}>{verdictSub}</span>
         </div>
-        <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+        <span className="font-inter text-[10px] flex-shrink-0 hidden sm:block" style={{ color: "rgba(255,255,255,0.40)" }}>
           {txt("സൂര്യോദയം", "Sunrise", "Doğuş")}: {d.sunrise.toFixed(1)}h · {txt("അസ്തമയം", "Sunset", "Batış")}: {d.sunset.toFixed(1)}h
         </span>
       </div>
 
-      {/* ── Best & Avoid ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="rounded-xl p-3" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.15)" }}>
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#4ADE80" }} />
-            <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>
-              {txt("അനുയോജ്യം", "Best Activities", "En İyi Eylemler")}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {(goodActions || []).slice(0, 5).map((a, i) => (
-              <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(74,222,128,0.08)", color: "rgba(74,222,128,0.80)" }}>{a}</span>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-xl p-3" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Ban className="w-3.5 h-3.5" style={{ color: "#F87171" }} />
-            <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#F87171" }}>
-              {txt("ഒഴിവാക്കുക", "Avoid", "Kaçınılacak")}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {(badActions || []).slice(0, 5).map((a, i) => (
-              <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(248,113,113,0.08)", color: "rgba(248,113,113,0.80)" }}>{a}</span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Moon Summary ── */}
-      <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.15)" }}>
+      {/* ══ SUMMARY: Moon Snapshot (compact one-liner — full data in Section 4) ══ */}
+      <div className="rounded-xl p-3 flex items-center gap-2.5" style={{
+        background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.15)",
+      }}>
         <Moon className="w-4 h-4 flex-shrink-0" style={{ color: "#818CF8" }} />
-        <div className="flex-1 grid grid-cols-3 gap-2">
-          <div>
-            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.30)" }}>{txt("രാശി", "Zodiac", "Burç")}</span>
-            <p className="font-inter text-xs font-bold" style={{ color: "#818CF8" }}>{moonSign?.symbol} {moonSignName}</p>
-          </div>
-          <div>
-            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.30)" }}>{txt("ഘട്ടം", "Phase", "Evre")}</span>
-            <p className="font-inter text-xs font-bold" style={{ color: "#818CF8" }}>{moonPhaseLabel} ({moonPhasePct.toFixed(0)}%)</p>
-          </div>
-          <div>
-            <span className="font-inter text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.30)" }}>{txt("നക്ഷത്രം", "Mansion", "Menzil")}</span>
-            <p className="font-inter text-xs font-bold" style={{ color: "#818CF8" }}>#{d.currentMansion?.no} {moonMansionName}</p>
-          </div>
+        <div className="flex-1 flex items-center gap-2 flex-wrap min-w-0">
+          <span className="font-inter text-xs font-bold" style={{ color: "#818CF8" }}>{moonSymbol} {moonSignName}</span>
+          <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>·</span>
+          <span className="font-inter text-xs" style={{ color: "#818CF8" }}>{moonPhaseLabel} ({moonPhasePct.toFixed(0)}%)</span>
+          <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>·</span>
+          <span className="font-inter text-xs" style={{ color: "#818CF8" }}>{moonMansionDisplay}</span>
         </div>
       </div>
 
-      {/* ── Warnings ── */}
-      {warnings.length > 0 && (
-        <div className="rounded-xl p-3" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
-          <div className="flex items-center gap-1.5 mb-1">
-            <AlertTriangle className="w-3.5 h-3.5" style={{ color: "#F87171" }} />
-            <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#F87171" }}>
-              {txt("മുന്നറിയിപ്പുകൾ", "Warnings", "Uyarılar")}
-            </span>
+      {/* ══ EXPAND: Today's Activities (collapsed by default) ══ */}
+      <SubCollapse title={txt("ഇന്നത്തെ പ്രവൃത്തികൾ", "Today's Activities", "Bugünün Eylemleri")}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {/* Best */}
+          <div className="rounded-lg p-2.5" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.15)" }}>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#4ADE80" }} />
+              <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>
+                {txt("അനുയോജ്യം", "Best", "En İyi")}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {bestActivities.slice(0, 6).map((a, i) => (
+                <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{
+                  background: "rgba(74,222,128,0.08)", color: "rgba(74,222,128,0.80)",
+                }}>{a}</span>
+              ))}
+            </div>
           </div>
-          {warnings.map((w, i) => (
-            <p key={i} className="font-inter text-[11px] mb-0.5" style={{ color: "rgba(248,113,113,0.75)" }}>• {w}</p>
-          ))}
+          {/* Avoid */}
+          {avoidActivities.length > 0 && (
+            <div className="rounded-lg p-2.5" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Ban className="w-3.5 h-3.5" style={{ color: "#F87171" }} />
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#F87171" }}>
+                  {txt("ഒഴിവാക്കുക", "Avoid", "Kaçınılacak")}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {avoidActivities.slice(0, 6).map((a, i) => (
+                  <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{
+                    background: "rgba(248,113,113,0.08)", color: "rgba(248,113,113,0.80)",
+                  }}>{a}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+        {/* Reference at bottom */}
+        <p className="font-inter text-[9px] mt-2 pt-2" style={{
+          color: "rgba(255,255,255,0.25)", borderTop: "1px solid rgba(212,175,55,0.10)",
+        }}>📖 {refDay}</p>
+      </SubCollapse>
+
+      {/* ══ EXPAND: Warnings (collapsed by default — only if warnings exist) ══ */}
+      {warnings.length > 0 && (
+        <SubCollapse title={txt("മുന്നറിയിപ്പുകൾ", "Warnings", "Uyarılar")}>
+          {warnings.map((w, i) => (
+            <div key={i} className="flex items-start gap-2 rounded-lg p-2 mb-1.5" style={{ background: "rgba(248,113,113,0.04)" }}>
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(248,113,113,0.70)" }} />
+              <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>{w}</p>
+            </div>
+          ))}
+          {/* Reference at bottom */}
+          <p className="font-inter text-[9px] mt-2 pt-2" style={{
+            color: "rgba(255,255,255,0.25)", borderTop: "1px solid rgba(212,175,55,0.10)",
+          }}>📖 {refWarn}</p>
+        </SubCollapse>
       )}
     </div>
   );
