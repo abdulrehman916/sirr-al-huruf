@@ -17,7 +17,7 @@
 
 import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from "./astroClockLiveEngine.js";
 import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSunset.js";
-import { ACTION_RULES } from "./astroClockActionTimingAdvisor.js";
+import { calculateMoonPosition } from "./astroClockMoonPosition.js";
 
 // ── Maps ──
 const MIZAN_TO_EN_PLANET = {
@@ -51,35 +51,12 @@ const CATEGORY_TO_RITUAL = {
   LUNAR_MANSIONS: "general",
 };
 
-// Ritual keyword table (en + ml + ar) → ritualKey
-const RITUAL_KEYWORDS = [
-  { key: "love",        en: ["love", "romance", "marriage", "union"],                       ml: ["പ്രണയം", "വിവാഹം"],                    ar: ["محبة", "حب", "زواج"] },
-  { key: "attraction",  en: ["attraction", "draw", "pull toward", "compel"],                ml: ["ആകർഷണം"],                               ar: ["جلب", "تهييج"] },
-  { key: "animal_attraction", en: ["animal", "beast", "wild animal", "hunt", "cattle"],     ml: ["മൃഗം", "വന്യമൃഗം", "വേട്ട"],           ar: ["حيوان", "وحش", "صيد", "بهيمة"] },
-  { key: "separation",  en: ["separation", "divorce", "banish", "breakup"],                  ml: ["വേർപിരിവ്", "വിവാഹമോചനം"],            ar: ["فرقة", "طرد", "فراق", "طلاق"] },
-  { key: "protection",  en: ["protection", "safety", "evil eye", "ward", "shield"],          ml: ["സംരക്ഷണം", "ദൃഷ്ടി"],                   ar: ["حماية", "عين", "أمان", "تحصين"] },
-  { key: "wealth",      en: ["wealth", "money", "livelihood", "prosperity", "provision"],    ml: ["സമ്പത്ത്", "ധനം", "ഉപജീവനം"],          ar: ["رزق", "مال", "غنى"] },
-  { key: "knowledge",   en: ["knowledge", "study", "learning", "wisdom", "education"],      ml: ["അറിവ്", "പഠനം", "വിജ്ഞാനം"],           ar: ["علم", "حكمة", "دراسة"] },
-  { key: "healing",     en: ["healing", "health", "recovery", "cure", "medicine"],          ml: ["ചികിത്സ", "ആരോഗ്യം", "സുഖം"],          ar: ["شفاء", "صحة", "علاج"] },
-  { key: "enemy",       en: ["enemy", "harm", "destruction", "attack", "fire"],              ml: ["ശത്രു", "നാശം", "ഉപദ്രവം"],            ar: ["عداوة", "ضرر", "هلاك", "حريق"] },
-  { key: "travel",      en: ["travel", "journey", "voyage"],                                 ml: ["യാത്ര"],                                  ar: ["سفر", "رحلة"] },
-  { key: "spiritual",   en: ["spiritual", "meditation", "divine", "worship", "dhikr"],       ml: ["ആത്മീയ", "ധ്യാനം", "ആരാധന"],           ar: ["روحاني", "تأمل", "عبادة", "ذكر"] },
-  { key: "jinn",        en: ["jinn", "spirit", "conjuration", "summon"],                     ml: ["ജിൻ"],                                   ar: ["جن", "روحاني"] },
-  { key: "planetary",   en: ["planetary", "planet work", "planetary ritual"],                ml: ["ഗ്രഹ"],                                   ar: ["كوكب", "گراه"] },
-];
-
-// Map ritualKey → ACTION_RULES key (JS fallback)
-const RITUAL_TO_ACTION = {
-  love: "love", attraction: "love", animal_attraction: "love",
-  marriage: "marriage", separation: "spiritual", protection: "spiritual",
-  wealth: "business", knowledge: "study", healing: "healing", enemy: "spiritual",
-  travel: "travel", spiritual: "spiritual", jinn: "spiritual", planetary: "spiritual",
-  general: "spiritual",
-};
-
 // ═══════════════════════════════════════════════════════════════
 // STEP 1 — Identify the ritual from user's Mizan selections + custom purpose
-// Priority: Mizan purpose keys → multilingual keyword match → ManuscriptRule category
+// Priority: Purpose Dictionary (confirmed) → Mizan purpose keys.
+// NO keyword fallback. NO heuristic inference. NO ManuscriptRule category guess.
+// Pipeline: Dictionary → AI → User Confirmation → Save → Reuse.
+// Until a confirmed dictionary entry exists, no ritual category is assigned.
 // ═══════════════════════════════════════════════════════════════
 function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup }) {
   const purposes = selections?.purposes || [];
@@ -121,47 +98,22 @@ function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLoo
     if (mizanPurposeMap[p]) return { ritualKey: mizanPurposeMap[p], matchedOn: `Mizan purpose "${p}"` };
   }
 
-  // ── PRIORITY 3: Arabic text without dictionary match → DO NOT GUESS ──
-  // If the custom purpose contains Arabic characters but the dictionary
-  // did not match, we must NOT fall back to literal keyword matching.
-  // Return null so the engine uses a "general" context with no purpose.
-  const hasArabic = /[\u0600-\u06FF]/.test(custom);
-  if (hasArabic && custom) {
-    return {
-      ritualKey: null,
-      matchedOn: "Arabic purpose not found in Purpose Dictionary — no guess",
-      semanticMeaningEn: "",
-      semanticMeaningMl: "",
-    };
-  }
-
-  // ── PRIORITY 4: Keyword match for non-Arabic text (English/Malayalam) ──
-  const haystacks = [custom, ...purposes].filter(Boolean);
-  const haystack = haystacks.join(" ").toLowerCase();
-
-  // Keyword match across en/ml/ar
-  for (const r of RITUAL_KEYWORDS) {
-    for (const kw of [...r.en, ...r.ml, ...r.ar]) {
-      if (haystack.includes(kw.toLowerCase())) {
-        return { ritualKey: r.key, matchedOn: `keyword "${kw}"` };
-      }
-    }
-  }
-
-  // Fall back to category inferred from ManuscriptRule availability
-  if (manuscriptRules && manuscriptRules.length > 0) {
-    const cats = {};
-    for (const r of manuscriptRules) cats[r.category] = (cats[r.category] || 0) + 1;
-    for (const [cat, key] of Object.entries(CATEGORY_TO_RITUAL)) {
-      if (cats[cat] && key !== "general") return { ritualKey: key, matchedOn: `ManuscriptRule category ${cat}` };
-    }
-  }
-
-  return { ritualKey: "general", matchedOn: "no explicit match — general ritual" };
+  // ── NO KEYWORD FALLBACK ──
+  // If the Purpose Dictionary did not match and no Mizan purpose key was
+  // selected, the ritual purpose is UNIDENTIFIED. Never infer from
+  // hardcoded keywords, never guess from ManuscriptRule categories.
+  // Pipeline: Dictionary → AI → User Confirmation → Save → Reuse.
+  // Until a confirmed dictionary entry exists, no ritual category is assigned.
+  return {
+    ritualKey: null,
+    matchedOn: "no confirmed dictionary match — purpose identification requires confirmed entry",
+    semanticMeaningEn: "",
+    semanticMeaningMl: "",
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 2 — Gather rules: DB first, JS fallback. Never invent.
+// STEP 2 — Gather rules: ManuscriptRule DB only. No JS fallback. Never invent.
 // ═══════════════════════════════════════════════════════════════
 function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
   const dbRules = (manuscriptRules || []).filter((r) => {
@@ -206,45 +158,46 @@ function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
       if (dj.element) { req.element = String(dj.element).toLowerCase(); citations.push({ ...cite, field: "element", value: dj.element }); }
       if (typeof dj.nightRequired === "boolean") { req.nightRequired = dj.nightRequired; citations.push({ ...cite, field: "night", value: String(dj.nightRequired) }); }
       if (Array.isArray(dj.enemyPlanets) && dj.enemyPlanets.length) req.enemyPlanets = dj.enemyPlanets.map((p) => capitalPlanet(p));
-      if (Array.isArray(dj.suitableMansions) && dj.suitableMansions.length) req.suitableMansions = dj.suitableMansions;
+      if (Array.isArray(dj.suitableMansions) && dj.suitableMansions.length) { req.suitableMansions = dj.suitableMansions; citations.push({ ...cite, field: "mansion", value: req.suitableMansions.join(", ") }); }
     }
   }
 
-  // ── JS fallback — ONLY when manuscript has absolutely no rule for this ritual ──
-  // When a purpose is selected, use manuscript rules exclusively. No JS knowledge,
-  // no fallback spiritual recommendations, no invented recommendations.
-  // JS fallback only when manuscript has zero rules (dbRules.length === 0).
-  const actionKey = RITUAL_TO_ACTION[ritualKey] || "spiritual";
-  const allowJsFallback = !purposeSelected;
-  if (allowJsFallback) {
-    const ar = ACTION_RULES[actionKey];
-    if (ar) {
-      if (!req.days && ar.bestDays?.length) req.days = ar.bestDays.map((d) => dayKeyFromName(d.day));
-      if (!req.hours && ar.bestHours?.length) req.hours = ar.bestHours.map((h) => h);
-      if (!req.worstDays && ar.worstDays?.length) req.worstDays = ar.worstDays.map((d) => dayKeyFromName(d.day));
-      if (!req.worstHours && ar.worstHours?.length) req.worstHours = ar.worstHours.map((h) => h);
-      if (!req.enemyPlanets && ar.enemyPlanets?.length) req.enemyPlanets = ar.enemyPlanets.map((p) => p);
-      if (!req.suitableMansions && ar.suitableMansions?.length) req.suitableMansions = ar.suitableMansions;
-      if (ar.sources?.length) {
-        for (const s of ar.sources) {
-          citations.push({ rule_id: `JS_${actionKey}`, source: `${s.book} p.${s.page}`, summary: ar.category, category: "JS_KNOWLEDGE_BASE" });
-        }
-      }
-    }
-  }
-
-  return { req, citations, dbRuleCount: dbRules.length, actionKey };
+  // ── NO JS FALLBACK ──
+  // Recommendations come ONLY from ManuscriptRule DB. If no manuscript rule
+  // exists for a dimension, that dimension is reported as unrestricted with
+  // "No manuscript rule available for this ritual." Never invent or estimate.
+  return { req, citations, dbRuleCount: dbRules.length, actionKey: null };
 }
 
 // ═══════════════════════════════════════════════════════════════
 // Astronomy helpers (pure math, read-only)
 // ═══════════════════════════════════════════════════════════════
+// ── LIVE MOON ENGINE ──
+// Connects to the Astro Clock moon position calculator for real astronomical
+// data: Moon Sign (zodiac), Moon Mansion (Manzil), Moon Phase, Waxing/Waning.
+// Used in every manuscript timing evaluation that requires moon dimensions.
 function getMoonPhase(date) {
+  // Lunar day from known new moon (backward compatibility with moonSatisfied)
   const knownNewMoon = new Date("2000-01-06T18:14:00Z").getTime();
   const lunarCycleMs = 29.53059 * 24 * 60 * 60 * 1000;
   const cycles = (date.getTime() - knownNewMoon) / lunarCycleMs;
   const frac = cycles - Math.floor(cycles);
   const lunarDay = Math.floor(frac * 29.53) + 1;
+
+  // ── LIVE MOON POSITION from Astro Clock engine (read-only) ──
+  // Returns: longitude, zodiacSign {name_en, name_ml, symbol},
+  // mansion {name_en, harfi, no, ...}, phase (illumination %), nakshatra
+  let liveMoon = null;
+  try {
+    liveMoon = calculateMoonPosition(date);
+  } catch (_e) {
+    liveMoon = null;
+  }
+
+  const moonSign = liveMoon?.zodiacSign || null;
+  const moonMansion = liveMoon?.mansion || null;
+  const illumination = liveMoon ? parseFloat(liveMoon.phase) : 0;
+
   return {
     lunarDay,
     isWaxing: lunarDay <= 14,
@@ -252,6 +205,15 @@ function getMoonPhase(date) {
     isNewMoon: lunarDay >= 27 || lunarDay <= 1,
     isFullMoon: lunarDay >= 13 && lunarDay <= 16,
     phaseName: lunarDay <= 14 ? "Waxing" : "Waning",
+    // ── LIVE DATA from Astro Clock Moon Engine ──
+    moonSign: moonSign ? moonSign.name_en : null,
+    moonSignMl: moonSign ? moonSign.name_ml : null,
+    moonSignSymbol: moonSign ? moonSign.symbol : null,
+    moonMansion: moonMansion ? (moonMansion.name_en || moonMansion.name) : null,
+    moonMansionArabic: moonMansion ? (moonMansion.harfi || moonMansion.arabic || "") : null,
+    moonMansionNumber: moonMansion ? (moonMansion.no || null) : null,
+    moonLongitude: liveMoon ? parseFloat(liveMoon.longitude) : null,
+    moonIllumination: illumination,
   };
 }
 
@@ -311,6 +273,16 @@ function findEarliestValidTime(req, fromDate) {
     if (req.days && !req.days.includes(dayKey)) continue;
     // Moon rule check
     if (!moonSatisfied(req.moon, moon.lunarDay)) continue;
+    // Moon sign rule check (live from Astro Clock)
+    if (req.zodiac && moon.moonSign && !req.zodiac.includes(moon.moonSign.toLowerCase())) continue;
+    // Moon mansion rule check (live from Astro Clock)
+    if (req.suitableMansions && moon.moonMansion) {
+      const mansionMatch = req.suitableMansions.some(m =>
+        String(m).toLowerCase() === String(moon.moonMansion).toLowerCase() ||
+        String(m) === String(moon.moonMansionNumber)
+      );
+      if (!mansionMatch) continue;
+    }
 
     for (const h of hours) {
       // Skip past hours today
@@ -498,13 +470,19 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
     breakdown.push({ dimension: "dayNight", label: "Day / Night", currentValue: dayNight === "gunduz" ? "Day" : dayNight === "gece" ? "Night" : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
   }
 
-  // 6. Moon Phase
+  // 6. Moon Phase (live data from Astro Clock Moon Engine)
+  const moonDisplay = [
+    `Day ${moonPhase.lunarDay} (${moonPhase.phaseName})`,
+    moonPhase.moonSign ? `Sign: ${moonPhase.moonSign}` : null,
+    moonPhase.moonMansion ? `Mansion: ${moonPhase.moonMansion}` : null,
+  ].filter(Boolean).join(" · ");
+
   if (req.moon) {
     const moonOk = moonSatisfied(req.moon, moonPhase.lunarDay);
     if (!moonOk) allPass = false;
     breakdown.push({
       dimension: "moon", label: "Moon Phase",
-      currentValue: `Day ${moonPhase.lunarDay} (${moonPhase.phaseName})`,
+      currentValue: moonDisplay,
       status: moonOk ? "pass" : "fail",
       reason: moonOk
         ? `The manuscript requires ${req.moon} moon. Current moon satisfies this.`
@@ -513,7 +491,48 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
       recommended: moonOk ? null : req.moon,
     });
   } else {
-    breakdown.push({ dimension: "moon", label: "Moon Phase", currentValue: `Day ${moonPhase.lunarDay} (${moonPhase.phaseName})`, status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
+    breakdown.push({ dimension: "moon", label: "Moon Phase", currentValue: moonDisplay, status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
+  }
+
+  // 6b. Moon Sign (live from Astro Clock — checked when manuscript requires zodiac)
+  if (req.zodiac && moonPhase.moonSign) {
+    const signOk = req.zodiac.includes(moonPhase.moonSign.toLowerCase());
+    if (!signOk) allPass = false;
+    breakdown.push({
+      dimension: "moonSign", label: "Moon Sign (Live)",
+      currentValue: `${moonPhase.moonSignSymbol || ""} ${moonPhase.moonSign}`,
+      status: signOk ? "pass" : "fail",
+      reason: signOk
+        ? `The manuscript prescribes zodiac ${req.zodiac.join(", ")}. Current moon sign matches.`
+        : `The manuscript prescribes zodiac ${req.zodiac.join(", ")}. Current moon sign is ${moonPhase.moonSign}.`,
+      source: citeFor("zodiac"),
+      recommended: signOk ? null : req.zodiac.join(" or "),
+    });
+  } else if (req.zodiac && !moonPhase.moonSign) {
+    breakdown.push({ dimension: "moonSign", label: "Moon Sign (Live)", currentValue: "Unavailable", status: "neutral", reason: "Moon sign data unavailable from Astro Clock.", source: null, recommended: req.zodiac.join(", ") });
+  }
+
+  // 6c. Moon Mansion / Manzil (live from Astro Clock — checked when manuscript requires mansions)
+  if (req.suitableMansions && moonPhase.moonMansion) {
+    const mansionOk = req.suitableMansions.some(m =>
+      String(m).toLowerCase() === String(moonPhase.moonMansion).toLowerCase() ||
+      String(m) === String(moonPhase.moonMansionNumber)
+    );
+    if (!mansionOk) allPass = false;
+    breakdown.push({
+      dimension: "moonMansion", label: "Moon Mansion / Manzil (Live)",
+      currentValue: moonPhase.moonMansionArabic
+        ? `${moonPhase.moonMansionArabic} (${moonPhase.moonMansion})`
+        : moonPhase.moonMansion,
+      status: mansionOk ? "pass" : "fail",
+      reason: mansionOk
+        ? `The manuscript prescribes mansions ${req.suitableMansions.join(", ")}. Current mansion matches.`
+        : `The manuscript prescribes mansions ${req.suitableMansions.join(", ")}. Current mansion is ${moonPhase.moonMansion}.`,
+      source: citeFor("mansion"),
+      recommended: mansionOk ? null : req.suitableMansions.join(" or "),
+    });
+  } else if (req.suitableMansions && !moonPhase.moonMansion) {
+    breakdown.push({ dimension: "moonMansion", label: "Moon Mansion / Manzil (Live)", currentValue: "Unavailable", status: "neutral", reason: "Moon mansion data unavailable from Astro Clock.", source: null, recommended: req.suitableMansions.join(", ") });
   }
 
   // 7. Enemy planet check
@@ -530,18 +549,6 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
         : `Your selected planet is not an enemy planet for this ritual.`,
       source: "ManuscriptRule",
       recommended: isEnemy ? (req.planet?.[0] || req.hours?.[0] || "See prescribed planets") : null,
-    });
-  }
-
-  // 8. Zodiac (informational — not selectable in Mizan)
-  if (req.zodiac) {
-    breakdown.push({
-      dimension: "zodiac", label: "Zodiac",
-      currentValue: "Not selectable in Mizan",
-      status: "neutral",
-      reason: `The manuscript prescribes zodiac: ${req.zodiac.join(", ")}. This is not selectable in Mizan — verify manually.`,
-      source: citeFor("zodiac"),
-      recommended: req.zodiac.join(", "),
     });
   }
 
@@ -614,8 +621,8 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   });
 
   // ── STEP 2: gather rules ──
-  const { req, citations, dbRuleCount, actionKey } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
-  reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). JS fallback: ${noPurposeSelected ? "allowed (no purpose selected)" : "disabled (purpose selected — manuscript-only authority)"}.`);
+  const { req, citations, dbRuleCount } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
+  reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). No JS fallback — manuscript-only authority.`);
   for (const c of citations) {
     rulesApplied.push({ id: c.rule_id, desc: c.summary || `${c.category} rule`, source: c.source });
     bookNotes.push({ source: c.source, text: c.summary || c.category });
@@ -752,8 +759,10 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     currentHour: { number: currentHourInfo.hourNumber, planet: capitalPlanet(currentHourInfo.planet), symbol: PLANET_INFO[currentHourInfo.planet]?.symbol || "" },
     isDaytime: !isNightTime, hourRemaining: currentHourInfo.remainingTime,
     nextPlanet: PLANET_SEQUENCE[(PLANET_SEQUENCE.indexOf(currentHourInfo.planet) + 1) % 7] || "",
-    moonPhase: `Day ${moonPhase.lunarDay} (${moonPhase.phaseName})`,
-    summary: `Today is ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}). Current hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}, ${currentHourInfo.remainingTime} left. Moon: day ${moonPhase.lunarDay} (${moonPhase.phaseName}).`,
+    moonPhase: `Day ${moonPhase.lunarDay} (${moonPhase.phaseName})${moonPhase.moonSign ? `, ${moonPhase.moonSign}` : ""}${moonPhase.moonMansion ? `, ${moonPhase.moonMansion}` : ""}`,
+    moonSign: moonPhase.moonSign || null,
+    moonMansion: moonPhase.moonMansion || null,
+    summary: `Today is ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}). Current hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}, ${currentHourInfo.remainingTime} left. Moon: day ${moonPhase.lunarDay} (${moonPhase.phaseName})${moonPhase.moonSign ? `, sign ${moonPhase.moonSign}` : ""}${moonPhase.moonMansion ? `, mansion ${moonPhase.moonMansion}` : ""}.`,
   };
 
   // ── LIVE NOW — real current time + REAL local sunrise/sunset (NOAA) ──
@@ -804,7 +813,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     body: canPerformToday === "Yes" ? `Yes — the current conditions satisfy every manuscript rule found for this ritual. You may proceed now.`
       : canPerformToday === "Limited" ? `Today is partially suitable — some valid hours remain, but the current moment is not ideal.`
       : `No — today does not satisfy the manuscript rules for this ritual. ${req.days ? `Prescribed day(s): ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.` : ""}`,
-    citation: citations.map((c) => c.source).join("; ") || "ManuscriptRule + JS knowledge base",
+    citation: citations.map((c) => c.source).join("; ") || "ManuscriptRule DB only",
     consequence: "Proceeding against manuscript rules weakens or reverses the ritual.",
   });
 
@@ -869,7 +878,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   report.push({
     section: "ASTRO ANALYSIS", icon: "globe", status: `${astroClockStatus.day} / ${astroClockStatus.currentHour.planet}`,
-    body: `Today is ${astroClockStatus.day}, ruled by ${dayRuler.planet}. Current hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}, ${currentHourInfo.remainingTime} left. Moon: day ${moonPhase.lunarDay} (${moonPhase.phaseName}). Overall manuscript strength: ${verdict} (${score}%).`,
+    body: `Today is ${astroClockStatus.day}, ruled by ${dayRuler.planet}. Current hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}, ${currentHourInfo.remainingTime} left. Moon: day ${moonPhase.lunarDay} (${moonPhase.phaseName})${moonPhase.moonSign ? `, sign ${moonPhase.moonSign}${moonPhase.moonSignSymbol ? ` ${moonPhase.moonSignSymbol}` : ""}` : ""}${moonPhase.moonMansion ? `, mansion ${moonPhase.moonMansion}` : ""}, ${moonPhase.isWaxing ? "waxing" : "waning"}${moonPhase.moonIllumination != null ? `, ${moonPhase.moonIllumination}% illuminated` : ""}. Overall manuscript strength: ${verdict} (${score}%).`,
     citation: "Live Astro Clock (read-only)",
     consequence: "Composite of all manuscript conditions.",
     details: { dayRuler: dayRuler.planet, currentHour: currentHourInfo, moonPhase, score, verdict },
@@ -878,8 +887,8 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   report.push({
     section: "MANUSCRIPT EXPLANATION", icon: "book", status: `${rulesApplied.length} rules applied`,
     rules: rulesApplied,
-    body: `Every recommendation is grounded in the ManuscriptRule database (priority) and the existing JS knowledge base (fallback). ${citations.length} rule citation(s) found for this ritual. No rule was invented: dimensions without a manuscript rule are reported as unrestricted.`,
-    citation: "ManuscriptRule DB + JS knowledge base",
+    body: `Every recommendation is grounded exclusively in the ManuscriptRule database. ${citations.length} rule citation(s) found for this ritual. No JS fallback, no heuristic, no invented rule: dimensions without a manuscript rule are reported as unrestricted.`,
+    citation: "ManuscriptRule DB (manuscript-only authority)",
     consequence: "Each rule carries the authority of its source manuscript.",
   });
 
@@ -901,8 +910,10 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // ── Expert narrative ──
   const expertNarrative = [];
   expertNarrative.push(`This ritual has been identified as "${ritualTypeLabel}" from your Mizan results and custom purpose (${matchedOn}).`);
-  if (dbRuleCount > 0) expertNarrative.push(`${dbRuleCount} manuscript rule(s) were found in the database for this ritual, supplemented by the JS knowledge base.`);
-  else expertNarrative.push(`No matching rules were found in the ManuscriptRule database; recommendations fall back to the existing JS knowledge base (${actionKey}).`);
+  if (dbRuleCount > 0) expertNarrative.push(`${dbRuleCount} manuscript rule(s) were found in the database for this ritual. All recommendations are manuscript-sourced.`);
+  else expertNarrative.push(`No matching rules were found in the ManuscriptRule database. No manuscript rule available for this ritual — all dimensions are unrestricted.`);
+  if (moonPhase.moonSign) expertNarrative.push(`Live moon sign: ${moonPhase.moonSign}${moonPhase.moonSignSymbol ? ` ${moonPhase.moonSignSymbol}` : ""}.`);
+  if (moonPhase.moonMansion) expertNarrative.push(`Live moon mansion (Manzil): ${moonPhase.moonMansion}${moonPhase.moonMansionArabic ? ` (${moonPhase.moonMansionArabic})` : ""}.`);
   if (req.days) expertNarrative.push(`The manuscripts prescribe day(s): ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
   if (req.hours) expertNarrative.push(`The manuscripts prescribe hour(s) ruled by: ${req.hours.join(", ")}.`);
   if (req.moon) expertNarrative.push(`The manuscripts require a ${req.moon} moon.`);
@@ -928,6 +939,9 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     moonPhase: {
       lunarDay: moonPhase.lunarDay, phaseName: moonPhase.phaseName,
       isWaxing: moonPhase.isWaxing, isNewMoon: moonPhase.isNewMoon, isFullMoon: moonPhase.isFullMoon,
+      moonSign: moonPhase.moonSign, moonSignMl: moonPhase.moonSignMl, moonSignSymbol: moonPhase.moonSignSymbol,
+      moonMansion: moonPhase.moonMansion, moonMansionArabic: moonPhase.moonMansionArabic, moonMansionNumber: moonPhase.moonMansionNumber,
+      moonLongitude: moonPhase.moonLongitude, moonIllumination: moonPhase.moonIllumination,
       assessment: req.moon ? (moonSatisfied(req.moon, moonPhase.lunarDay) ? `Moon condition (${req.moon}) satisfied (day ${moonPhase.lunarDay}).` : `Moon condition (${req.moon}) NOT satisfied (day ${moonPhase.lunarDay}).`) : `No moon restriction in manuscripts (day ${moonPhase.lunarDay}).`,
       citation: "ManuscriptRule (if specified)",
     },
@@ -941,7 +955,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
       reason: req.nightRequired === true ? (isNightTime ? "Night, as required." : "Day, but night required.") : "No night restriction in manuscripts.",
       citation: "ManuscriptRule (if specified)",
     },
-    zodiacSuitability: { assessed: !!req.zodiac, bestSigns: req.zodiac || [], note: req.zodiac ? `Manuscript prescribes zodiac: ${req.zodiac.join(", ")}` : "No zodiac restriction in manuscripts." },
+    zodiacSuitability: { assessed: !!req.zodiac, bestSigns: req.zodiac || [], currentMoonSign: moonPhase.moonSign || null, note: req.zodiac ? `Manuscript prescribes zodiac: ${req.zodiac.join(", ")}. Current moon sign: ${moonPhase.moonSign || "unavailable"}.` : "No zodiac restriction in manuscripts." },
     elementCompatibility: { assessed: !!req.element, status: "neutral", reason: req.element ? `Manuscript prescribes element: ${req.element}` : "No element restriction in manuscripts." },
     elementDirection: req.direction ? { dir: req.direction } : null,
     elementPlacement: null,
@@ -1073,12 +1087,13 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   if (req.moon && !moonSatisfied(req.moon, base.moonPhase.lunarDay)) allOptimal = false;
 
   recommendations.push({
-    field: "Zodiac Sign", icon: "sparkles",
-    current: "Not selected in Mizan",
+    field: "Moon Sign (Live)", icon: "sparkles",
+    current: base.moonPhase?.moonSign ? `${base.moonPhase.moonSignSymbol || ""} ${base.moonPhase.moonSign}` : "Live data unavailable",
     recommended: req.zodiac ? req.zodiac.join(", ") : "No zodiac restriction in manuscripts",
-    isOptimal: true,
-    reason: req.zodiac ? `The manuscripts prescribe zodiac sign(s): ${req.zodiac.join(", ")} (${citations.map((c) => c.source).join("; ")}).` : "The manuscripts do not prescribe a zodiac sign for this ritual.",
+    isOptimal: !req.zodiac || (base.moonPhase?.moonSign && req.zodiac.includes(base.moonPhase.moonSign.toLowerCase())),
+    reason: !req.zodiac ? "The manuscripts do not prescribe a zodiac sign for this ritual." : (base.moonPhase?.moonSign ? (req.zodiac.includes(base.moonPhase.moonSign.toLowerCase()) ? `Current moon sign ${base.moonPhase.moonSign} matches the manuscript prescription (${citations.map((c) => c.source).join("; ")}).` : `Current moon sign is ${base.moonPhase.moonSign}, but the manuscripts prescribe ${req.zodiac.join(", ")} (${citations.map((c) => c.source).join("; ")}).`) : `The manuscripts prescribe zodiac sign(s): ${req.zodiac.join(", ")} (${citations.map((c) => c.source).join("; ")}). Live moon sign unavailable.`),
   });
+  if (req.zodiac && base.moonPhase?.moonSign && !req.zodiac.includes(base.moonPhase.moonSign.toLowerCase())) allOptimal = false;
 
   recommendations.push({
     field: "Direction", icon: "compass",
