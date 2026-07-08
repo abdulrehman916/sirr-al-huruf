@@ -551,10 +551,10 @@ export const KNOWLEDGE_LETTER_RULES = [];
 // KNOWLEDGE BASE STATUS
 // ═══════════════════════════════════════════════════════════════
 export const KNOWLEDGE_BASE_STATUS = {
-  version: "2.0.0",
+  version: "3.0.0",
   status: "ACTIVE",
-  total_sources: 3,
-  total_rules_ingested: 409,
+  total_sources: 4,
+  total_rules_ingested: 570,
   sections_active: 19,
   last_ingestion: "2026-06-14",
   principle: "ADDITIVE_ONLY",
@@ -562,6 +562,7 @@ export const KNOWLEDGE_BASE_STATUS = {
   ready_for_next_pdf: true,
   sources_summary: [
     { id: "havass_derinlikleri_1", records: 350, pages: "1-100" },
-    { id: "taha_judicial_astrology", records: 59, pages: "1-80" }
+    { id: "taha_judicial_astrology", records: 59, pages: "1-80" },
+    { id: "kashf_alhaqa_iq", records: 161, pages: "1-90", language: "Arabic", tradition: "Omani" }
   ]
 };
