@@ -1,22 +1,30 @@
 // ═══════════════════════════════════════════════════════════════
-// MOON ANALYSIS CARD — Optional, user-initiated Moon evaluation
+// MOON ANALYSIS CARD — User-controlled, 100% optional
 // ═══════════════════════════════════════════════════════════════
-// Self-contained collapsible card. Displays live Moon data by default.
-// Moon compatibility analysis starts ONLY when the user presses the
-// "Analyze Moon Compatibility" button.
+// By default, the Ritual Timing Engine IGNORES Moon entirely.
+// Moon analysis starts ONLY if the user explicitly selects one of:
 //
-// If no manuscript Moon rule exists for the ritual, displays:
-//   "Moon conditions are NOT required for this ritual."
-// and does NOT affect the main timing decision.
+//   ○ Show Current Moon Status  — display live Moon data + check
+//                                  against manuscript rules (if any)
 //
-// Never inserts Moon commentary into the main ritual report.
-// Never reduces the main compatibility score.
-// Never generates Moon warnings in the main report.
+//   ○ Plan Ritual by Moon       — user picks desired Mansion/Zodiac/
+//                                  Phase → engine finds when Moon
+//                                  enters that condition → evaluates
+//                                  ALL manuscript conditions at that
+//                                  future moment
+//
+// Moon alone NEVER approves a ritual. A future time is valid ONLY
+// when ALL required manuscript conditions are simultaneously satisfied.
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, ChevronDown, Sparkles, Check, X, Minus, CalendarClock, Search, AlertTriangle } from "lucide-react";
-import { analyzeMoonCompatibility, findNextSuitableMoonTime } from "../../lib/ritualTimingEngineV3";
+import { Moon, ChevronDown, Check, X, Minus, CalendarClock, Search, AlertTriangle, Sparkles } from "lucide-react";
+import {
+  analyzeMoonCompatibility,
+  planRitualByMoon,
+  MOON_MANSIONS,
+  ZODIAC_SIGNS,
+} from "../../lib/ritualTimingEngineV3";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -27,12 +35,20 @@ const G = {
   pass: "#4ADE80",
   fail: "#F87171",
   neutral: "rgba(255,255,255,0.40)",
+  blue: "rgba(96,165,250,0.90)",
+  blueBorder: "rgba(96,165,250,0.35)",
 };
 
 // ── Bilingual labels ──
 const L = (lang) => ({
-  title: lang === "ml" ? "ചന്ദ്ര വിശകലനം (ഐച്ഛികം)" : "Moon Analysis (Optional)",
-  subtitle: lang === "ml" ? "കൈയെഴുത്തുപ്രതി നിയമങ്ങൾ മാത്രം" : "Manuscript rules only",
+  title: lang === "ml" ? "ചന്ദ്ര പ്ലാനിംഗ് (ഐച്ഛികം)" : "Moon Planning (Optional)",
+  subtitle: lang === "ml" ? "സ്ഥിരസ്ഥിതി: ചന്ദ്രനെ അവഗണിക്കുക" : "Default: Moon is ignored",
+  defaultMsg: lang === "ml"
+    ? "സ്ഥിരസ്ഥിതിയായി ആചാര സമയ യന്ത്രം ചന്ദ്രനെ അവഗണിക്കുന്നു. താഴെയുള്ള ഓപ്ഷനുകളിൽ ഒന്ന് തിരഞ്ഞെടുക്കുക."
+    : "By default, the Ritual Timing Engine ignores Moon. Select an option below to begin.",
+  opt1: lang === "ml" ? "നിലവിലെ ചന്ദ്ര നില കാണിക്കുക" : "Show Current Moon Status",
+  opt2: lang === "ml" ? "ചന്ദ്രനെ അടിസ്ഥാനമാക്കി കർമ്മം ആസൂത്രണം ചെയ്യുക" : "Plan Ritual by Moon",
+  // Option 1 labels
   currentMoon: lang === "ml" ? "നിലവിലെ ചന്ദ്രൻ" : "Current Moon",
   phase: lang === "ml" ? "ചന്ദ്ര ദശ" : "Moon Phase",
   waxWane: lang === "ml" ? "വർദ്ധമാനം / ക്ഷയം" : "Waxing / Waning",
@@ -40,64 +56,91 @@ const L = (lang) => ({
   mansion: lang === "ml" ? "ചാന്ദ്ര മാളിക (മൻസിൽ)" : "Moon Mansion (Manzil)",
   illumination: lang === "ml" ? "പ്രകാശിതർത്ഥം" : "Illumination",
   moonAge: lang === "ml" ? "ചന്ദ്രന്റെ പ്രായം" : "Age of Moon",
-  status: lang === "ml" ? "അവസ്ഥ" : "Status",
-  statusInfo: lang === "ml" ? "നിലവിലെ ചന്ദ്ര വിവരം ലഭ്യമാണ്." : "Current Moon information is available.",
-  analyzeBtn: lang === "ml" ? "ചന്ദ്ര അനുയോജ്യത വിശകലനം ചെയ്യുക" : "Analyze Moon Compatibility",
-  analyzing: lang === "ml" ? "വിശകലനം ചെയ്യുന്നു..." : "Analyzing...",
-  noRuleTitle: lang === "ml" ? "കൈയെഴുത്തുപ്രതി നിയമം ഇല്ല" : "No Moon Rule Required",
-  noRuleMsg: lang === "ml"
-    ? "കൈയെഴുത്തുപ്രതി പ്രകാരം, ഈ കർമ്മത്തിന് ചന്ദ്ര വ്യവസ്ഥകൾ ആവശ്യമില്ല. നിലവിലെ ചന്ദ്ര വിവരം കൂടുതൽ അറിവിനായി മാത്രം കാണിക്കുന്നു."
-    : "According to the manuscript, Moon conditions are NOT required for this ritual. Current Moon information is shown only as additional reference.",
-  reportTitle: lang === "ml" ? "ചന്ദ്ര അനുയോജ്യത റിപ്പോർട്ട്" : "Moon Compatibility Report",
-  evaluation: lang === "ml" ? "വിലയിരുത്തൽ" : "Evaluation",
-  finalResult: lang === "ml" ? "അന്തിമ ഫലം" : "Final Result",
-  compatible: lang === "ml" ? "ചന്ദ്ര വ്യവസ്ഥകൾ ഈ കർമ്മത്തിന് അനുയോജ്യമാണ്." : "Moon conditions are compatible with this ritual.",
-  notCompatible: lang === "ml" ? "ചന്ദ്ര വ്യവസ്ഥകൾ ഈ കർമ്മത്തിന് അനുയോജ്യമല്ല." : "Moon conditions are NOT compatible with this ritual.",
-  waitRecommendation: lang === "ml" ? "ശുപാർശ" : "Recommendation",
-  findNextToggle: lang === "ml" ? "അടുത്ത അനുയോജ്യ ചന്ദ്ര സമയം കണ്ടെത്തുക" : "Find Next Suitable Moon Time",
-  nextOpportunity: lang === "ml" ? "അടുത്ത ശുപാർശ അവസരം" : "Next Recommended Opportunity",
-  date: lang === "ml" ? "തീയതി" : "Date",
-  bestDay: lang === "ml" ? "മികച്ച ദിവസം" : "Best Day",
-  bestSaat: lang === "ml" ? "മികച്ച സഅാത്" : "Best Saat",
-  confidence: lang === "ml" ? "ആത്മവിശ്വാസം" : "Confidence",
-  noNextFound: lang === "ml" ? "30 ദിവസത്തിനുള്ളിൽ അനുയോജ്യ സമയമില്ല." : "No suitable Moon time found within 30 days.",
-  filters: lang === "ml" ? "ചന്ദ്ര ഫിൽട്ടറുകൾ" : "Moon Filters",
-  requireWaxing: lang === "ml" ? "വർദ്ധമാന ചന്ദ്രൻ ആവശ്യം" : "Require Waxing Moon",
-  requireWaning: lang === "ml" ? "ക്ഷയ ചന്ദ്രൻ ആവശ്യം" : "Require Waning Moon",
-  ignoreMoon: lang === "ml" ? "ചന്ദ്രനെ അവഗണിക്കുക (സ്ഥിരസ്ഥിതി)" : "Ignore Moon (Default)",
-  msRules: lang === "ml" ? "ബാധകമായ കൈയെഴുത്തുപ്രതി നിയമങ്ങൾ" : "Applicable Manuscript Rules",
-  noRulesFound: lang === "ml" ? "ഈ കർമ്മത്തിന് ചന്ദ്ര നിയമങ്ങളൊന്നുമില്ല." : "No Moon rules found for this ritual.",
   waxing: lang === "ml" ? "വർദ്ധമാനം" : "Waxing",
   waning: lang === "ml" ? "ക്ഷയം" : "Waning",
   day: lang === "ml" ? "ദിവസം" : "Day",
-  source: lang === "ml" ? "ഉറവിടം" : "Source",
-  excellent: lang === "ml" ? "അത്യുത്തം" : "Excellent",
+  noRuleTitle: lang === "ml" ? "കൈയെഴുത്തുപ്രതി നിയമം ഇല്ല" : "No Moon Rule Required",
+  noRuleMsg: lang === "ml"
+    ? "നിലവിലെ ചന്ദ്ര വിവരം കൂടുതൽ അറിവിനായി മാത്രം കാണിക്കുന്നു. കൈയെഴുത്തുപ്രതി പ്രകാരം ഈ കർമ്മത്തിന് ചന്ദ്ര വ്യവസ്ഥകൾ ആവശ്യമില്ല."
+    : "Current Moon information is shown for reference only. This ritual does not require Moon conditions according to the manuscript.",
+  msRulesTitle: lang === "ml" ? "കൈയെഴുത്തുപ്രതി ചന്ദ്ര നിയമങ്ങൾ" : "Manuscript Moon Rules",
+  evaluation: lang === "ml" ? "വിലയിരുത്തൽ" : "Evaluation",
+  compatible: lang === "ml" ? "നിലവിലെ ചന്ദ്രൻ കൈയെഴുത്തുപ്രതി നിയമങ്ങളെ പാലിക്കുന്നു." : "Current Moon satisfies the manuscript rules.",
+  notCompatible: lang === "ml" ? "നിലവിലെ ചന്ദ്രൻ കൈയെഴുത്തുപ്രതി നിയമങ്ങളെ പാലിക്കുന്നില്ല." : "Current Moon does NOT satisfy the manuscript rules.",
+  // Option 2 labels
+  desiredMansion: lang === "ml" ? "ആഗ്രഹിക്കുന്ന മാളിക" : "Desired Moon Mansion",
+  desiredZodiac: lang === "ml" ? "ആഗ്രഹിക്കുന്ന രാശി" : "Desired Moon Zodiac",
+  desiredPhase: lang === "ml" ? "വർദ്ധമാനം / ക്ഷയം (ഐച്ഛികം)" : "Waxing / Waning (Optional)",
+  anyMansion: lang === "ml" ? "ഏതെങ്കിലും" : "Any",
+  anyZodiac: lang === "ml" ? "ഏതെങ്കിലും" : "Any",
+  anyPhase: lang === "ml" ? "എതും" : "Any",
+  planBtn: lang === "ml" ? "കർമ്മം ആസൂത്രണം ചെയ്യുക" : "Plan Ritual",
+  planning: lang === "ml" ? "ആസൂത്രണം ചെയ്യുന്നു..." : "Planning...",
+  moonEnters: lang === "ml" ? "ചന്ദ്രൻ പ്രവേശിക്കുന്നു" : "Moon enters",
+  fullEvaluation: lang === "ml" ? "പൂർണ്ണ വിലയിരുത്തൽ" : "Full Evaluation",
+  recommended: lang === "ml" ? "✅ ശുപാർശ ചെയ്ത ആചാര സമയം" : "✅ Recommended Ritual Time",
+  notRecommended: lang === "ml" ? "അനുയോജ്യമല്ലാത്ത സമയം" : "Not Fully Compatible",
+  allPassMsg: lang === "ml"
+    ? "ഈ ഭാവി സമയം തിരഞ്ഞെടുത്ത ആചാരം അനുഷ്ഠിക്കാൻ അനുയോജ്യമാണ്."
+    : "This future time is compatible for performing the selected ritual.",
+  notAllPassMsg: lang === "ml"
+    ? "എല്ലാ കൈയെഴുത്തുപ്രതി വ്യവസ്ഥകളും ഒരേസമയം പാലിക്കപ്പെടുന്ന അടുത്ത ചന്ദ്ര അവസരത്തിനായി കാത്തിരിക്കുക."
+    : "Wait for the next Moon occurrence where ALL manuscript conditions are satisfied.",
+  searching: lang === "ml" ? "തിരയുന്നു..." : "Searching...",
+  noResult: lang === "ml"
+    ? "60 ദിവസത്തിനുള്ളിൽ എല്ലാ വ്യവസ്ഥകളും പാലിക്കുന്ന സമയമില്ല."
+    : "No fully compatible time found within 60 days.",
+  noMoonMatch: lang === "ml"
+    ? "തിരഞ്ഞെടുത്ത ചന്ദ്ര അവസ്ഥ പാലിക്കുന്ന ദിവസമില്ല."
+    : "No matching Moon condition found. Select at least one condition.",
+  date: lang === "ml" ? "തീയതി" : "Date",
+  time: lang === "ml" ? "സമയം" : "Time",
+  month: lang === "ml" ? "മാസം" : "Month",
+  dayName: lang === "ml" ? "ദിവസം" : "Day",
+  saat: lang === "ml" ? "സഅാത്" : "Saat",
+  kawkab: lang === "ml" ? "കവ്കബ്" : "Kawkab",
+  moonStatus: lang === "ml" ? "ചന്ദ്രൻ" : "Moon",
   noData: lang === "ml" ? "ചന്ദ്ര വിവരം ലഭ്യമല്ല" : "Moon data unavailable",
+  selectCondition: lang === "ml"
+    ? "കുറഞ്ഞത് ഒരു ചന്ദ്ര അവസ്ഥയെങ്കിലും തിരഞ്ഞെടുക്കുക."
+    : "Select at least one Moon condition to plan.",
 });
 
 export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, req, lang = "ml" }) {
   const [expanded, setExpanded] = useState(false);
-  const [analysisEnabled, setAnalysisEnabled] = useState(false);
-  const [findNextEnabled, setFindNextEnabled] = useState(false);
-  const [filters, setFilters] = useState({});
+  const [selectedOption, setSelectedOption] = useState(null); // null | "status" | "plan"
+  const [desiredMansion, setDesiredMansion] = useState("");
+  const [desiredZodiac, setDesiredZodiac] = useState("");
+  const [desiredPhase, setDesiredPhase] = useState("");
+  const [planResult, setPlanResult] = useState(null);
+  const [planning, setPlanning] = useState(false);
   const t = L(lang);
 
-  // ── Moon compatibility (computed on demand only) ──
+  // ── Option 1: Current Moon compatibility (computed on demand) ──
   const moonCompat = useMemo(() => {
-    if (!analysisEnabled || !moonPhase) return null;
+    if (selectedOption !== "status" || !moonPhase) return null;
     return analyzeMoonCompatibility({ moonReq, moonPhase, moonCitations });
-  }, [analysisEnabled, moonReq, moonPhase, moonCitations]);
+  }, [selectedOption, moonReq, moonPhase, moonCitations]);
 
-  // ── Next suitable moon time (computed on demand only) ──
-  const nextTime = useMemo(() => {
-    if (!findNextEnabled || !moonPhase) return null;
-    return findNextSuitableMoonTime({
-      req,
-      moonReq,
-      fromDate: new Date(),
-      filters,
-    });
-  }, [findNextEnabled, moonReq, moonPhase, req, filters]);
+  // ── Option 2: Plan by Moon ──
+  const handlePlan = () => {
+    if (!desiredMansion && !desiredZodiac && !desiredPhase) return;
+    setPlanning(true);
+    setPlanResult(null);
+    // Defer to next tick so UI can show "planning" state
+    setTimeout(() => {
+      const result = planRitualByMoon({
+        req,
+        moonReq,
+        desiredMansion: desiredMansion || null,
+        desiredZodiac: desiredZodiac || null,
+        desiredPhase: desiredPhase || null,
+        fromDate: new Date(),
+      });
+      setPlanResult(result);
+      setPlanning(false);
+    }, 100);
+  };
 
   if (!moonPhase) return null;
 
@@ -124,9 +167,9 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{
             background: "linear-gradient(135deg, rgba(96,165,250,0.18) 0%, rgba(96,165,250,0.05) 100%)",
-            border: "1px solid rgba(96,165,250,0.35)",
+            border: `1px solid ${G.blueBorder}`,
           }}>
-            <Moon className="w-5 h-5" style={{ color: "rgba(96,165,250,0.90)" }} />
+            <Moon className="w-5 h-5" style={{ color: G.blue }} />
           </div>
           <div className="text-left">
             <h3 className="font-inter text-sm font-bold tracking-wide" style={{ color: "#fff" }}>
@@ -151,239 +194,224 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
           >
             <div className="p-4 space-y-3">
 
-              {/* ── Current Moon Data (always shown) ── */}
-              <div className="rounded-xl p-3" style={{
-                background: "rgba(96,165,250,0.05)",
-                border: "1px solid rgba(96,165,250,0.20)",
-              }}>
-                <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: "rgba(96,165,250,0.70)" }}>
-                  {t.currentMoon}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <MoonDataRow label={t.phase} value={`${t.day} ${moonPhase.lunarDay} (${lang === "ml" ? (moonPhase.isWaxing ? t.waxing : t.waning) : moonPhase.phaseName})`} />
-                  <MoonDataRow label={t.waxWane} value={moonPhase.isWaxing ? t.waxing : t.waning} />
-                  <MoonDataRow label={t.zodiacSign} value={moonPhase.moonSign ? `${moonPhase.moonSignSymbol || ""} ${moonPhase.moonSign}` : "—"} />
-                  <MoonDataRow label={t.mansion} value={moonPhase.moonMansion ? (moonPhase.moonMansionArabic ? `${moonPhase.moonMansionArabic} (${moonPhase.moonMansion})` : moonPhase.moonMansion) : "—"} />
-                  <MoonDataRow label={t.illumination} value={illumination} />
-                  <MoonDataRow label={t.moonAge} value={ageDisplay} />
-                </div>
-                <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(96,165,250,0.15)" }}>
-                  <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    {t.status}: {t.statusInfo}
+              {/* ── Default message (no option selected) ── */}
+              {!selectedOption && (
+                <div className="rounded-xl p-4 text-center" style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}>
+                  <Moon className="w-6 h-6 mx-auto mb-2" style={{ color: G.dim }} />
+                  <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
+                    {t.defaultMsg}
                   </p>
                 </div>
-              </div>
-
-              {/* ── Analyze Button (only if not yet analyzed) ── */}
-              {!analysisEnabled && (
-                <button
-                  onClick={() => setAnalysisEnabled(true)}
-                  className="w-full rounded-xl py-3 font-inter text-sm font-bold transition flex items-center justify-center gap-2"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(96,165,250,0.20) 0%, rgba(96,165,250,0.08) 100%)",
-                    border: "1px solid rgba(96,165,250,0.40)",
-                    color: "rgba(96,165,250,0.95)",
-                  }}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {t.analyzeBtn}
-                </button>
               )}
 
-              {/* ── Moon Compatibility Report (after button press) ── */}
-              {moonCompat && (
+              {/* ── Option Selector (radio-style) ── */}
+              <div className="space-y-2">
+                <OptionRadio
+                  label={t.opt1}
+                  icon={<Moon className="w-4 h-4" />}
+                  selected={selectedOption === "status"}
+                  onSelect={() => setSelectedOption(selectedOption === "status" ? null : "status")}
+                  lang={lang}
+                />
+                <OptionRadio
+                  label={t.opt2}
+                  icon={<CalendarClock className="w-4 h-4" />}
+                  selected={selectedOption === "plan"}
+                  onSelect={() => setSelectedOption(selectedOption === "plan" ? null : "plan")}
+                  lang={lang}
+                />
+              </div>
+
+              {/* ── OPTION 1: Show Current Moon Status ── */}
+              {selectedOption === "status" && (
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl p-3 space-y-3"
-                  style={{
-                    background: moonCompat.hasMoonRules
-                      ? (moonCompat.compatible ? "rgba(74,222,128,0.05)" : "rgba(248,113,113,0.05)")
-                      : "rgba(255,255,255,0.02)",
-                    border: moonCompat.hasMoonRules
-                      ? `1px solid ${moonCompat.compatible ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}`
-                      : "1px solid rgba(255,255,255,0.08)",
-                  }}
+                  className="space-y-3"
                 >
-                  {/* Report Title */}
-                  <div className="flex items-center gap-2">
-                    <Moon className="w-4 h-4" style={{ color: G.text }} />
-                    <span className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
-                      {t.reportTitle}
-                    </span>
+                  {/* Live Moon Data */}
+                  <div className="rounded-xl p-3" style={{
+                    background: "rgba(96,165,250,0.05)",
+                    border: `1px solid ${G.blueBorder}`,
+                  }}>
+                    <p className="font-inter text-[9px] uppercase tracking-widest mb-2" style={{ color: "rgba(96,165,250,0.70)" }}>
+                      {t.currentMoon}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <MoonDataRow label={t.phase} value={`Day ${moonPhase.lunarDay} (${moonPhase.isWaxing ? t.waxing : t.waning})`} />
+                      <MoonDataRow label={t.waxWane} value={moonPhase.isWaxing ? t.waxing : t.waning} />
+                      <MoonDataRow label={t.zodiacSign} value={moonPhase.moonSign ? `${moonPhase.moonSignSymbol || ""} ${moonPhase.moonSign}` : "—"} />
+                      <MoonDataRow label={t.mansion} value={moonPhase.moonMansion ? (moonPhase.moonMansionArabic ? `${moonPhase.moonMansionArabic} (${moonPhase.moonMansion})` : moonPhase.moonMansion) : "—"} />
+                      <MoonDataRow label={t.illumination} value={illumination} />
+                      <MoonDataRow label={t.moonAge} value={ageDisplay} />
+                    </div>
                   </div>
 
-                  {/* No Moon Rule Case */}
-                  {!moonCompat.hasMoonRules && (
-                    <div className="rounded-lg p-3" style={{
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                  {/* Manuscript Moon Rule Evaluation */}
+                  {moonCompat && (
+                    <div className="rounded-xl p-3 space-y-2" style={{
+                      background: moonCompat.hasMoonRules
+                        ? (moonCompat.compatible ? "rgba(74,222,128,0.05)" : "rgba(248,113,113,0.05)")
+                        : "rgba(255,255,255,0.02)",
+                      border: moonCompat.hasMoonRules
+                        ? `1px solid ${moonCompat.compatible ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}`
+                        : "1px solid rgba(255,255,255,0.08)",
                     }}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Minus className="w-4 h-4" style={{ color: G.neutral }} />
-                        <span className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
-                          {t.noRuleTitle}
-                        </span>
-                      </div>
-                      <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-                        {t.noRuleMsg}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Moon Rules Exist — Evaluation */}
-                  {moonCompat.hasMoonRules && (
-                    <>
-                      {/* Evaluation Checks */}
-                      <div className="space-y-1.5">
-                        <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                          {t.evaluation}
-                        </p>
-                        {moonCompat.checks.map((check, idx) => (
-                          <MoonCheckRow key={idx} check={check} lang={lang} t={t} />
-                        ))}
-                      </div>
-
-                      {/* Applicable Manuscript Rules */}
-                      {moonCompat.citations?.length > 0 && (
-                        <div className="rounded-lg p-2.5" style={{
-                          background: "rgba(74,222,128,0.04)",
-                          border: "1px solid rgba(74,222,128,0.15)",
-                        }}>
-                          <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(74,222,128,0.60)" }}>
-                            {t.msRules}
-                          </p>
-                          <div className="space-y-1">
-                            {moonCompat.citations.map((c, i) => (
-                              <div key={i} className="flex items-start gap-2">
-                                <span className="font-inter text-[9px] px-1.5 py-0.5 rounded flex-shrink-0" style={{
-                                  background: "rgba(74,222,128,0.10)",
-                                  color: "rgba(74,222,128,0.60)",
-                                  border: "1px solid rgba(74,222,128,0.20)",
-                                }}>{c.source}</span>
-                                <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{c.summary || c.category}</p>
-                              </div>
-                            ))}
+                      {/* No Moon Rule */}
+                      {!moonCompat.hasMoonRules && (
+                        <div className="flex items-start gap-2">
+                          <Minus className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: G.neutral }} />
+                          <div>
+                            <p className="font-inter text-sm font-bold mb-1" style={{ color: "#fff" }}>
+                              {t.noRuleTitle}
+                            </p>
+                            <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
+                              {t.noRuleMsg}
+                            </p>
                           </div>
                         </div>
                       )}
 
-                      {/* Final Result */}
-                      <div className="rounded-lg p-3" style={{
-                        background: moonCompat.compatible ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)",
-                        border: `1px solid ${moonCompat.compatible ? "rgba(74,222,128,0.30)" : "rgba(248,113,113,0.30)"}`,
-                      }}>
-                        <div className="flex items-center gap-2 mb-1">
-                          {moonCompat.compatible
-                            ? <Check className="w-4 h-4" style={{ color: G.pass }} />
-                            : <AlertTriangle className="w-4 h-4" style={{ color: G.fail }} />}
-                          <span className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{
-                            color: moonCompat.compatible ? G.pass : G.fail,
-                          }}>
-                            {t.finalResult}
-                          </span>
-                        </div>
-                        <p className="font-inter text-sm font-bold" style={{
-                          color: moonCompat.compatible ? G.pass : G.fail,
-                        }}>
-                          {moonCompat.compatible ? t.compatible : t.notCompatible}
-                        </p>
-                        {!moonCompat.compatible && (
-                          <p className="font-inter text-xs mt-1" style={{ color: "rgba(255,255,255,0.60)" }}>
-                            {t.waitRecommendation}: {lang === "ml" ? "ചന്ദ്രൻ മാറുന്നതുവരെ കാത്തിരിക്കുക." : "Wait until the Moon conditions change."}
+                      {/* Moon Rules Exist — show ✓/✗ */}
+                      {moonCompat.hasMoonRules && (
+                        <>
+                          <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+                            {t.msRulesTitle}
                           </p>
-                        )}
-                      </div>
-
-                      {/* Find Next Suitable Moon Time — Toggle */}
-                      <button
-                        onClick={() => setFindNextEnabled(!findNextEnabled)}
-                        className="w-full rounded-lg py-2.5 font-inter text-xs font-bold transition flex items-center justify-center gap-2"
-                        style={{
-                          background: findNextEnabled ? "rgba(96,165,250,0.15)" : "transparent",
-                          border: `1px solid ${findNextEnabled ? "rgba(96,165,250,0.40)" : G.border}`,
-                          color: findNextEnabled ? "rgba(96,165,250,0.95)" : G.dim,
-                        }}
-                      >
-                        <Search className="w-3.5 h-3.5" />
-                        {t.findNextToggle}
-                      </button>
-
-                      {/* Next Suitable Time Result */}
-                      {findNextEnabled && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          className="space-y-2"
-                        >
-                          {nextTime ? (
-                            <div className="rounded-lg p-3" style={{
-                              background: "rgba(74,222,128,0.06)",
-                              border: "1px solid rgba(74,222,128,0.25)",
-                            }}>
-                              <div className="flex items-center gap-2 mb-2">
-                                <CalendarClock className="w-4 h-4" style={{ color: G.pass }} />
-                                <span className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: G.pass }}>
-                                  {t.nextOpportunity}
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                <MoonDataRow label={t.date} value={nextTime.date} />
-                                <MoonDataRow label={t.bestDay} value={lang === "ml" ? nextTime.dayName : nextTime.dayName} />
-                                <MoonDataRow label={t.bestSaat} value={`#${nextTime.bestHour} (${nextTime.bestHourPlanet})`} />
-                                <MoonDataRow label={t.phase} value={`${t.day} ${nextTime.lunarDay} (${nextTime.moonPhaseName})`} />
-                                <MoonDataRow label={t.zodiacSign} value={nextTime.moonSign ? `${nextTime.moonSignSymbol || ""} ${nextTime.moonSign}` : "—"} />
-                                <MoonDataRow label={t.mansion} value={nextTime.moonMansion ? (nextTime.moonMansionArabic ? `${nextTime.moonMansionArabic} (${nextTime.moonMansion})` : nextTime.moonMansion) : "—"} />
-                              </div>
-                              <div className="mt-2 pt-2 flex items-center justify-between" style={{ borderTop: "1px solid rgba(74,222,128,0.15)" }}>
-                                <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.dim }}>
-                                  {t.confidence}
-                                </span>
-                                <span className="font-inter text-sm font-bold" style={{ color: G.pass }}>
-                                  {t.excellent} ({nextTime.confidence}%)
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="rounded-lg p-3 text-center" style={{
-                              background: "rgba(248,113,113,0.05)",
-                              border: "1px solid rgba(248,113,113,0.20)",
-                            }}>
-                              <p className="font-inter text-xs" style={{ color: "rgba(248,113,113,0.70)" }}>
-                                {t.noNextFound}
+                          {moonCompat.checks.map((check, idx) => (
+                            <MoonCheckRow key={idx} check={check} lang={lang} />
+                          ))}
+                          <div className="rounded-lg p-2.5 mt-1" style={{
+                            background: moonCompat.compatible ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)",
+                            border: `1px solid ${moonCompat.compatible ? "rgba(74,222,128,0.30)" : "rgba(248,113,113,0.30)"}`,
+                          }}>
+                            <div className="flex items-center gap-2">
+                              {moonCompat.compatible
+                                ? <Check className="w-4 h-4" style={{ color: G.pass }} />
+                                : <AlertTriangle className="w-4 h-4" style={{ color: G.fail }} />}
+                              <p className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{
+                                color: moonCompat.compatible ? G.pass : G.fail,
+                              }}>
+                                {moonCompat.compatible ? t.compatible : t.notCompatible}
                               </p>
                             </div>
-                          )}
-
-                          {/* Optional Moon Filters */}
-                          <div className="rounded-lg p-2.5" style={{
-                            background: "rgba(255,255,255,0.02)",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                          }}>
-                            <p className="font-inter text-[9px] uppercase tracking-widest mb-1.5" style={{ color: G.dim }}>
-                              {t.filters}
-                            </p>
-                            <div className="space-y-1">
-                              <FilterCheckbox
-                                label={t.requireWaxing}
-                                checked={filters.moon === "waxing"}
-                                onChange={(checked) => setFilters(prev => ({ ...prev, moon: checked ? "waxing" : undefined }))}
-                              />
-                              <FilterCheckbox
-                                label={t.requireWaning}
-                                checked={filters.moon === "waning"}
-                                onChange={(checked) => setFilters(prev => ({ ...prev, moon: checked ? "waning" : undefined }))}
-                              />
-                              <FilterCheckbox
-                                label={t.ignoreMoon}
-                                checked={!filters.moon}
-                                onChange={() => setFilters({})}
-                              />
-                            </div>
                           </div>
-                        </motion.div>
+                        </>
                       )}
-                    </>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* ── OPTION 2: Plan Ritual by Moon ── */}
+              {selectedOption === "plan" && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-3"
+                >
+                  {/* Desired Condition Selectors */}
+                  <div className="rounded-xl p-3 space-y-3" style={{
+                    background: "rgba(96,165,250,0.05)",
+                    border: `1px solid ${G.blueBorder}`,
+                  }}>
+                    {/* Desired Mansion */}
+                    <div>
+                      <label className="font-inter text-[9px] uppercase tracking-widest block mb-1" style={{ color: "rgba(96,165,250,0.70)" }}>
+                        {t.desiredMansion}
+                      </label>
+                      <select
+                        value={desiredMansion}
+                        onChange={(e) => setDesiredMansion(e.target.value)}
+                        className="w-full rounded-lg px-3 py-2 font-inter text-xs"
+                        style={{
+                          background: "rgba(8,16,38,0.80)",
+                          border: `1px solid ${G.blueBorder}`,
+                          color: "#fff",
+                        }}
+                      >
+                        <option value="">{t.anyMansion}</option>
+                        {MOON_MANSIONS.map(m => (
+                          <option key={m.no} value={m.no}>
+                            #{m.no} — {m.name} ({m.harfi})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Desired Zodiac */}
+                    <div>
+                      <label className="font-inter text-[9px] uppercase tracking-widest block mb-1" style={{ color: "rgba(96,165,250,0.70)" }}>
+                        {t.desiredZodiac}
+                      </label>
+                      <select
+                        value={desiredZodiac}
+                        onChange={(e) => setDesiredZodiac(e.target.value)}
+                        className="w-full rounded-lg px-3 py-2 font-inter text-xs"
+                        style={{
+                          background: "rgba(8,16,38,0.80)",
+                          border: `1px solid ${G.blueBorder}`,
+                          color: "#fff",
+                        }}
+                      >
+                        <option value="">{t.anyZodiac}</option>
+                        {ZODIAC_SIGNS.map(z => (
+                          <option key={z.name_en} value={z.name_en}>
+                            {z.symbol} {z.name_en} {lang === "ml" ? `(${z.name_ml})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Desired Phase */}
+                    <div>
+                      <label className="font-inter text-[9px] uppercase tracking-widest block mb-1" style={{ color: "rgba(96,165,250,0.70)" }}>
+                        {t.desiredPhase}
+                      </label>
+                      <select
+                        value={desiredPhase}
+                        onChange={(e) => setDesiredPhase(e.target.value)}
+                        className="w-full rounded-lg px-3 py-2 font-inter text-xs"
+                        style={{
+                          background: "rgba(8,16,38,0.80)",
+                          border: `1px solid ${G.blueBorder}`,
+                          color: "#fff",
+                        }}
+                      >
+                        <option value="">{t.anyPhase}</option>
+                        <option value="waxing">{t.waxing}</option>
+                        <option value="waning">{t.waning}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Plan Button */}
+                  <button
+                    onClick={handlePlan}
+                    disabled={planning || (!desiredMansion && !desiredZodiac && !desiredPhase)}
+                    className="w-full rounded-xl py-3 font-inter text-sm font-bold transition flex items-center justify-center gap-2 disabled:opacity-40"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(96,165,250,0.20) 0%, rgba(96,165,250,0.08) 100%)",
+                      border: `1px solid ${G.blueBorder}`,
+                      color: G.blue,
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {planning ? t.planning : t.planBtn}
+                  </button>
+
+                  {(!desiredMansion && !desiredZodiac && !desiredPhase) && (
+                    <p className="font-inter text-[10px] text-center" style={{ color: G.dim }}>
+                      {t.selectCondition}
+                    </p>
+                  )}
+
+                  {/* Plan Result */}
+                  {planResult && (
+                    <PlanResultView result={planResult} t={t} lang={lang} />
                   )}
                 </motion.div>
               )}
@@ -393,6 +421,180 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAN RESULT VIEW — Shows the Moon entry moment + full evaluation
+// ═══════════════════════════════════════════════════════════════
+function PlanResultView({ result, t, lang }) {
+  const { found, firstMatch, recommendedTime, searchedDays } = result;
+
+  if (!firstMatch) {
+    return (
+      <div className="rounded-xl p-4 text-center" style={{
+        background: "rgba(248,113,113,0.05)",
+        border: "1px solid rgba(248,113,113,0.20)",
+      }}>
+        <AlertTriangle className="w-5 h-5 mx-auto mb-2" style={{ color: G.fail }} />
+        <p className="font-inter text-xs" style={{ color: "rgba(248,113,113,0.80)" }}>
+          {t.noMoonMatch}
+        </p>
+      </div>
+    );
+  }
+
+  // Format the Moon entry moment
+  const formatDate = (m) => {
+    const d = m.dateObj;
+    const time = m.timeStr !== "—" ? m.timeStr : "—";
+    return { dateStr: `${m.dayNumber} ${m.monthName} ${m.year}`, timeStr: time, dayName: m.dayName };
+  };
+
+  const firstFmt = formatDate(firstMatch);
+  const recFmt = recommendedTime ? formatDate(recommendedTime) : null;
+
+  return (
+    <div className="space-y-3">
+      {/* ── Moon Entry Moment (first match) ── */}
+      <div className="rounded-xl p-3" style={{
+        background: "rgba(96,165,250,0.06)",
+        border: `1px solid ${G.blueBorder}`,
+      }}>
+        <div className="flex items-center gap-2 mb-2">
+          <Moon className="w-4 h-4" style={{ color: G.blue }} />
+          <span className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: G.blue }}>
+            {t.moonEnters}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <MoonDataRow label={t.date} value={firstFmt.dateStr} />
+          <MoonDataRow label={t.time} value={firstFmt.timeStr} />
+          <MoonDataRow label={t.month} value={firstMatch.monthName} />
+          <MoonDataRow label={t.dayName} value={firstFmt.dayName} />
+        </div>
+      </div>
+
+      {/* ── Full Evaluation at first match ── */}
+      <div className="rounded-xl p-3 space-y-2" style={{
+        background: firstMatch.allPass ? "rgba(74,222,128,0.04)" : "rgba(255,255,255,0.02)",
+        border: firstMatch.allPass ? "1px solid rgba(74,222,128,0.20)" : "1px solid rgba(255,255,255,0.08)",
+      }}>
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+          {t.fullEvaluation}
+        </p>
+        {firstMatch.checks.map((check, idx) => (
+          <MoonCheckRow key={idx} check={check} lang={lang} />
+        ))}
+      </div>
+
+      {/* ── Final Result ── */}
+      {found && recommendedTime ? (
+        // ✅ ALL conditions pass — Recommended Ritual Time
+        <div className="rounded-xl p-4" style={{
+          background: "rgba(74,222,128,0.10)",
+          border: "1px solid rgba(74,222,128,0.35)",
+          boxShadow: "0 0 24px rgba(74,222,128,0.15)",
+        }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Check className="w-5 h-5" style={{ color: G.pass }} />
+            <span className="font-inter text-sm font-bold" style={{ color: G.pass }}>
+              {t.recommended}
+            </span>
+          </div>
+          {/* Show recommended time if different from first match */}
+          {recommendedTime !== firstMatch && (
+            <div className="grid grid-cols-2 gap-2 mb-2 p-2 rounded-lg" style={{
+              background: "rgba(74,222,128,0.06)",
+            }}>
+              <MoonDataRow label={t.date} value={recFmt.dateStr} />
+              <MoonDataRow label={t.time} value={recFmt.timeStr} />
+              <MoonDataRow label={t.saat} value={`#${recommendedTime.hourNumber} (${recommendedTime.hourPlanet})`} />
+              <MoonDataRow label={t.dayName} value={recFmt.dayName} />
+            </div>
+          )}
+          {recommendedTime === firstMatch && (
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <MoonDataRow label={t.saat} value={`#${recommendedTime.hourNumber} (${recommendedTime.hourPlanet})`} />
+              <MoonDataRow label={t.kawkab} value={recommendedTime.hourPlanet} />
+            </div>
+          )}
+          <p className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: G.pass }}>
+            {t.allPassMsg}
+          </p>
+        </div>
+      ) : (
+        // ✗ NOT all conditions pass — continue searching
+        <div className="rounded-xl p-4" style={{
+          background: "rgba(248,113,113,0.08)",
+          border: "1px solid rgba(248,113,113,0.25)",
+        }}>
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-5 h-5" style={{ color: G.fail }} />
+            <span className="font-inter text-sm font-bold" style={{ color: G.fail }}>
+              {t.notRecommended}
+            </span>
+          </div>
+          {/* Show which conditions failed */}
+          <div className="space-y-1 mb-2">
+            {firstMatch.checks.filter(c => c.status === "fail").map((c, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <X className="w-3.5 h-3.5" style={{ color: G.fail }} />
+                <span className={`text-xs ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.75)" }}>
+                  {c.label}: {c.reason}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg p-2.5" style={{
+            background: "rgba(96,165,250,0.06)",
+            border: `1px solid ${G.blueBorder}`,
+          }}>
+            <div className="flex items-start gap-2">
+              <Search className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: G.blue }} />
+              <p className={`text-xs leading-relaxed ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.70)" }}>
+                {t.notAllPassMsg}
+              </p>
+            </div>
+          </div>
+          {/* If searched 60 days and no full match found */}
+          {!found && searchedDays >= 60 && (
+            <p className="font-inter text-[10px] mt-2 text-center" style={{ color: G.fail }}>
+              {t.noResult}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Option Radio Button ──
+function OptionRadio({ label, icon, selected, onSelect, lang }) {
+  return (
+    <button
+      onClick={onSelect}
+      className="w-full flex items-center gap-3 p-3 rounded-xl transition text-left"
+      style={{
+        background: selected ? "rgba(96,165,250,0.08)" : "rgba(255,255,255,0.02)",
+        border: `1px solid ${selected ? G.blueBorder : "rgba(255,255,255,0.06)"}`,
+      }}
+    >
+      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{
+        border: `2px solid ${selected ? G.blue : G.dim}`,
+        background: selected ? G.blue : "transparent",
+      }}>
+        {selected && <div className="w-2 h-2 rounded-full" style={{ background: "#fff" }} />}
+      </div>
+      <div style={{ color: selected ? G.blue : "rgba(255,255,255,0.70)" }}>
+        {icon}
+      </div>
+      <span className={`text-sm font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{
+        color: selected ? G.blue : "rgba(255,255,255,0.80)",
+      }}>
+        {label}
+      </span>
+    </button>
   );
 }
 
@@ -411,7 +613,7 @@ function MoonDataRow({ label, value }) {
 }
 
 // ── Moon Check Row (✓/✗/neutral) ──
-function MoonCheckRow({ check, lang, t }) {
+function MoonCheckRow({ check, lang }) {
   const isPass = check.status === "pass";
   const isFail = check.status === "fail";
   const isNeutral = check.status === "neutral";
@@ -432,7 +634,7 @@ function MoonCheckRow({ check, lang, t }) {
               {check.label}
             </span>
             <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-              {check.currentValue}
+              {check.currentValue || check.current}
             </span>
           </div>
           <p className={`text-[11px] leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.65)" }}>
@@ -441,28 +643,5 @@ function MoonCheckRow({ check, lang, t }) {
         </div>
       </div>
     </div>
-  );
-}
-
-// ── Filter Checkbox ──
-function FilterCheckbox({ label, checked, onChange }) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className="w-full flex items-center gap-2 p-1.5 rounded transition text-left"
-      style={{
-        background: checked ? "rgba(96,165,250,0.08)" : "transparent",
-      }}
-    >
-      <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0" style={{
-        border: `1px solid ${checked ? "rgba(96,165,250,0.50)" : G.border}`,
-        background: checked ? "rgba(96,165,250,0.20)" : "transparent",
-      }}>
-        {checked && <Check className="w-3 h-3" style={{ color: "rgba(96,165,250,0.95)" }} />}
-      </div>
-      <span className="font-inter text-[11px]" style={{ color: checked ? "rgba(96,165,250,0.90)" : "rgba(255,255,255,0.55)" }}>
-        {label}
-      </span>
-    </button>
   );
 }

@@ -18,6 +18,26 @@
 import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from "./astroClockLiveEngine.js";
 import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSunset.js";
 import { calculateMoonPosition } from "./astroClockMoonPosition.js";
+import { AY_MANAZILLERI } from "./astroClockData.js";
+
+// ── Moon Mansion & Zodiac lists (for Plan-by-Moon dropdowns) ──
+export const MOON_MANSIONS = (AY_MANAZILLERI || []).map(m => ({
+  no: m.no, name: m.name, harfi: m.harfi,
+}));
+export const ZODIAC_SIGNS = [
+  { name_en: "Aries", name_ml: "മേഷം", symbol: "♈" },
+  { name_en: "Taurus", name_ml: "ഇടവം", symbol: "♉" },
+  { name_en: "Gemini", name_ml: "മിഥുനം", symbol: "♊" },
+  { name_en: "Cancer", name_ml: "കർക്കിടകം", symbol: "♋" },
+  { name_en: "Leo", name_ml: "ചിങ്ങം", symbol: "♌" },
+  { name_en: "Virgo", name_ml: "കന്നി", symbol: "♍" },
+  { name_en: "Libra", name_ml: "തുലാം", symbol: "♎" },
+  { name_en: "Scorpio", name_ml: "വൃശ്ചികം", symbol: "♏" },
+  { name_en: "Sagittarius", name_ml: "ധനു", symbol: "♐" },
+  { name_en: "Capricorn", name_ml: "മകരം", symbol: "♑" },
+  { name_en: "Aquarius", name_ml: "കുംഭം", symbol: "♒" },
+  { name_en: "Pisces", name_ml: "മീനം", symbol: "♓" },
+];
 
 // ── Maps ──
 const MIZAN_TO_EN_PLANET = {
@@ -1189,4 +1209,216 @@ export function findNextSuitableMoonTime({ req, moonReq, fromDate, filters }) {
     }
   }
   return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAN RITUAL BY MOON — User-controlled future Moon planning
+// ═══════════════════════════════════════════════════════════════
+// Called by MoonAnalysisCard ONLY when the user selects "Plan Ritual
+// by Moon" and chooses desired Moon conditions (Mansion/Zodiac/Phase).
+//
+// Searches up to 60 days (~2 Moon cycles) for when the Moon enters
+// the user's desired condition. At each matching day, evaluates ALL
+// manuscript conditions simultaneously:
+//   ✓ Day (req.days)
+//   ✓ Saat (req.hours, avoiding worstHours)
+//   ✓ Kawkab (planetary ruler of the Saat)
+//   ✓ Moon (satisfied by definition — user selected it)
+//   ✓ Nahas (worstDays, worstHours, enemyPlanets)
+//   ✓ Manuscript Moon rules (moonReq, if they exist)
+//
+// Returns:
+//   { found: true, firstMatch, recommendedTime, searchedDays }
+//   — firstMatch: the first time Moon enters the desired condition (with full ✓/✗ evaluation)
+//   — recommendedTime: the first time ALL conditions are simultaneously satisfied
+//   — If no fully compatible time found in 60 days, found=false and recommendedTime=null
+//
+// Moon alone NEVER approves a ritual. A future time is valid ONLY when
+// ALL required manuscript conditions are simultaneously satisfied.
+// ═══════════════════════════════════════════════════════════════
+export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, desiredPhase, fromDate }) {
+  const SEARCH_DAYS = 60;
+  let firstMatch = null;
+
+  for (let d = 1; d <= SEARCH_DAYS; d++) {
+    const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
+    const moon = getMoonPhase(date);
+
+    // ── Check if Moon matches user's desired conditions ──
+    let moonMatch = true;
+    if (desiredPhase === "waxing" && !moon.isWaxing) moonMatch = false;
+    if (desiredPhase === "waning" && !moon.isWaning) moonMatch = false;
+    if (desiredZodiac && moon.moonSign && desiredZodiac.toLowerCase() !== moon.moonSign.toLowerCase()) moonMatch = false;
+    if (desiredMansion) {
+      const mansionOk = String(desiredMansion) === String(moon.moonMansionNumber) ||
+                        String(desiredMansion).toLowerCase() === String(moon.moonMansion).toLowerCase();
+      if (!mansionOk) moonMatch = false;
+    }
+    if (!moonMatch) continue;
+
+    // ── Moon matches! Evaluate ALL conditions on this day ──
+    const { hours, sunrise, sunset } = getTodayAllHours(date);
+    const dayIndex = getActiveWeekday(date, sunrise, sunset);
+    const dayKey = DAY_KEY_BY_INDEX[dayIndex];
+
+    const checks = [];
+    let allPass = true;
+
+    // 1. Day check
+    if (req?.days) {
+      const dayOk = req.days.includes(dayKey);
+      if (!dayOk) allPass = false;
+      checks.push({
+        dimension: "day", label: "Day",
+        status: dayOk ? "pass" : "fail",
+        current: MIZAN_DAY_NAMES[dayKey],
+        required: req.days.map(dd => MIZAN_DAY_NAMES[dd]).join(", "),
+        reason: dayOk ? "Day is suitable." : "The Day is prohibited.",
+      });
+    } else {
+      checks.push({
+        dimension: "day", label: "Day",
+        status: "pass", current: MIZAN_DAY_NAMES[dayKey], required: "Any",
+        reason: "No day restriction — Day is suitable.",
+      });
+    }
+
+    // 2. Nahas (worst day) check
+    if (req?.worstDays && req.worstDays.length > 0) {
+      const isWorstDay = req.worstDays.includes(dayKey);
+      if (isWorstDay) allPass = false;
+      checks.push({
+        dimension: "nahas_day", label: "Nahas (Day)",
+        status: isWorstDay ? "fail" : "pass",
+        current: MIZAN_DAY_NAMES[dayKey],
+        required: "Avoid: " + req.worstDays.map(dd => MIZAN_DAY_NAMES[dd]).join(", "),
+        reason: isWorstDay ? "Nahas restriction exists." : "No Nahas restriction on this day.",
+      });
+    }
+
+    // 3. Find best Saat on this day (satisfies hours, night, avoids worst/enemy)
+    let bestHour = null;
+    for (const h of hours) {
+      if (req?.hours && !req.hours.map(p => p.toLowerCase()).includes(h.planet)) continue;
+      if (req?.nightRequired === true && h.period !== "night") continue;
+      if (req?.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(h.planet)) continue;
+      if (req?.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(h.planet)) continue;
+      bestHour = h;
+      break;
+    }
+
+    // 4. Saat check
+    const saatOk = !!bestHour;
+    if (!saatOk) allPass = false;
+    checks.push({
+      dimension: "saat", label: "Saat",
+      status: saatOk ? "pass" : "fail",
+      current: bestHour ? `#${bestHour.hourNumber} (${capitalPlanet(bestHour.planet)})` : "None available",
+      required: req?.hours ? req.hours.join(", ") : "Any",
+      reason: saatOk ? "Saat is suitable." : "No suitable Saat found on this day.",
+    });
+
+    // 5. Kawkab check (ruling planet of the Saat)
+    if (bestHour) {
+      const kawkabOk = !req?.hours || req.hours.map(p => p.toLowerCase()).includes(bestHour.planet);
+      if (!kawkabOk) allPass = false;
+      checks.push({
+        dimension: "kawkab", label: "Kawkab",
+        status: kawkabOk ? "pass" : "fail",
+        current: capitalPlanet(bestHour.planet),
+        required: req?.hours ? req.hours.join(", ") : "Any",
+        reason: kawkabOk ? "Kawkab is suitable." : "Kawkab does not match prescription.",
+      });
+
+      // 6. Nahas (hour) check
+      const hasNahasHour = (req?.worstHours && req.worstHours.length > 0) || (req?.enemyPlanets && req.enemyPlanets.length > 0);
+      if (hasNahasHour) {
+        const isWorstHour = (req?.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(bestHour.planet)) ||
+                            (req?.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(bestHour.planet));
+        if (isWorstHour) allPass = false;
+        checks.push({
+          dimension: "nahas_hour", label: "Nahas (Hour)",
+          status: isWorstHour ? "fail" : "pass",
+          current: capitalPlanet(bestHour.planet),
+          required: "Avoid enemy/worst planets",
+          reason: isWorstHour ? "Nahas restriction exists." : "No Nahas restriction on this hour.",
+        });
+      }
+    }
+
+    // 7. Moon check (satisfied by definition — user selected this condition)
+    checks.push({
+      dimension: "moon", label: "Moon",
+      status: "pass",
+      current: moon.moonMansion ? `${moon.moonMansion} / ${moon.moonSign || "—"}` : moon.moonSign || "—",
+      required: "User-selected condition",
+      reason: "Moon requirement satisfied.",
+    });
+
+    // 8. Manuscript Moon rules (if they exist for this ritual)
+    const hasMsMoonRules = !!(moonReq?.moon || moonReq?.zodiac || moonReq?.suitableMansions);
+    if (hasMsMoonRules) {
+      let moonRuleOk = true;
+      if (moonReq.moon && !moonSatisfied(moonReq.moon, moon.lunarDay)) moonRuleOk = false;
+      if (moonReq.zodiac && moon.moonSign && !moonReq.zodiac.includes(moon.moonSign.toLowerCase())) moonRuleOk = false;
+      if (moonReq.suitableMansions && moon.moonMansion) {
+        const mOk = moonReq.suitableMansions.some(m =>
+          String(m).toLowerCase() === String(moon.moonMansion).toLowerCase() ||
+          String(m) === String(moon.moonMansionNumber)
+        );
+        if (!mOk) moonRuleOk = false;
+      }
+      if (!moonRuleOk) allPass = false;
+      checks.push({
+        dimension: "moon_rule", label: "Manuscript Moon Rule",
+        status: moonRuleOk ? "pass" : "fail",
+        current: moon.moonMansion ? `${moon.moonMansion} / ${moon.moonSign || "—"}` : "—",
+        required: "Per manuscript",
+        reason: moonRuleOk ? "Manuscript Moon restriction satisfied." : "Manuscript Moon restriction NOT satisfied.",
+      });
+    }
+
+    // 9. Night requirement check
+    if (req?.nightRequired === true) {
+      const nightOk = bestHour && bestHour.period === "night";
+      if (!nightOk) allPass = false;
+      checks.push({
+        dimension: "night", label: "Day / Night",
+        status: nightOk ? "pass" : "fail",
+        current: bestHour ? (bestHour.period === "night" ? "Night" : "Day") : "—",
+        required: "Night",
+        reason: nightOk ? "Night, as required." : "Manuscript requires night but no night Saat available.",
+      });
+    }
+
+    // ── Build result for this match ──
+    const monthName = date.toLocaleString("en-US", { month: "long" });
+    const matchResult = {
+      date: date.toISOString().split("T")[0],
+      dateObj: date,
+      dayName: MIZAN_DAY_NAMES[dayKey],
+      monthName,
+      dayNumber: date.getDate(),
+      year: date.getFullYear(),
+      timeStr: bestHour ? bestHour.startTime : "—",
+      timeEnd: bestHour ? bestHour.endTime : null,
+      hourNumber: bestHour?.hourNumber || null,
+      hourPlanet: bestHour ? capitalPlanet(bestHour.planet) : null,
+      moon: { ...moon },
+      checks,
+      allPass,
+      bestHour,
+    };
+
+    // Record first match (always)
+    if (!firstMatch) firstMatch = matchResult;
+
+    // If ALL conditions pass, this is the recommended time
+    if (allPass) {
+      return { found: true, firstMatch, recommendedTime: matchResult, searchedDays: d };
+    }
+  }
+
+  // No fully compatible time found in 60 days
+  return { found: false, firstMatch, recommendedTime: null, searchedDays: SEARCH_DAYS };
 }
