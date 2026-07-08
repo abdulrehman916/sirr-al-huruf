@@ -1,8 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // PURPOSE DICTIONARY LOOKUP — Client-side helper
 // ═══════════════════════════════════════════════════════════════
-// Calls the backend lookupPurposeIntent function silently.
-// Returns { matched: boolean, ritualIntent?: string }.
+// Calls the backend autoLearnPurpose function: checks the dictionary first,
+// and if no match exists, auto-generates + saves a new entry (self-learning).
+// Returns { matched: boolean, ritualIntent?: string, auto_learned?: boolean }.
 // Never exposes dictionary contents to the client.
 //
 // ── PERMANENT ISOLATION LAW ──
@@ -20,7 +21,11 @@ export async function lookupPurposeIntent(customPurpose, selectedAction) {
     return { matched: false };
   }
   try {
-    const response = await base44.functions.invoke("lookupPurposeIntent", {
+    // Calls autoLearnPurpose: checks dictionary first (via lookupPurposeIntent),
+    // auto-creates a new entry if no match, then returns the stored meaning.
+    // This ensures the dictionary is the permanent source of truth and
+    // grows automatically with every new purpose.
+    const response = await base44.functions.invoke("autoLearnPurpose", {
       customPurpose,
       selectedAction,
     });

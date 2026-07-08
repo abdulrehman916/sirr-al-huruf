@@ -117,6 +117,7 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
       modifierArabic: detected.modifierArabic,
       modifierMeaning,
       finalMeaning,
+      autoLearned: purposeLookup?.auto_learned || false,
     };
   }, [detected, purposeLookup, customPurpose, lang]);
 
@@ -133,6 +134,7 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
     dictSource: "ഉറവിടം",
     notAvailable: "പ്രോജക്റ്റ് പർപ്പസ് ഡിക്ഷനറിയിൽ ഈ ലക്ഷ്യം കണ്ടെത്തിയില്ല.",
     loading: "വ്യാഖ്യാനിക്കുന്നു...",
+    autoLearned: "സ്വയം പഠിച്ചു — പരിശോധന ആവശ്യം",
   } : {
     title: "Purpose Interpretation",
     original: "Original Arabic Text",
@@ -145,6 +147,7 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
     dictSource: "Source",
     notAvailable: "Purpose not found in the Project Purpose Dictionary.",
     loading: "Interpreting...",
+    autoLearned: "Auto-Generated — Needs Review",
   };
 
   if (!interp) return null;
@@ -167,6 +170,12 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
           <span className="font-inter text-xs font-bold uppercase tracking-widest" style={{ color: G.text }}>
             {L.title}
           </span>
+          {interp.autoLearned && (
+            <span className="font-inter text-[8px] uppercase tracking-widest px-1.5 py-0.5 rounded-full ml-2"
+              style={{ color: "#FBBF24", border: "1px solid rgba(251,191,36,0.50)", background: "rgba(251,191,36,0.10)" }}>
+              {L.autoLearned}
+            </span>
+          )}
         </div>
         {/* Language toggle */}
         <div className="flex items-center gap-1">
