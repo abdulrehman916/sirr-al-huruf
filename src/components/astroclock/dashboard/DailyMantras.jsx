@@ -24,6 +24,9 @@ const TYPE_META = {
   universal_supplication: { label_en: "Supplication", label_ml: "ദു‌ആ", label_tr: "Dua", color: "#4ADE80", bg: "rgba(74,222,128,0.06)" },
   dhikr: { label_en: "Dhikr", label_ml: "ദിക്ർ", label_tr: "Zikir", color: G.text, bg: "rgba(212,175,55,0.06)" },
   prayer_sequence: { label_en: "Prayer", label_ml: "നമസ്കാരം", label_tr: "Namaz", color: "#FBBF24", bg: "rgba(251,191,36,0.06)" },
+  prayer: { label_en: "Prayer", label_ml: "പ്രാർഥന", label_tr: "Dua", color: "#FBBF24", bg: "rgba(251,191,36,0.06)" },
+  dua: { label_en: "Dua", label_ml: "ദു‌ആ", label_tr: "Dua", color: "#4ADE80", bg: "rgba(74,222,128,0.06)" },
+  quran_recitation: { label_en: "Quran", label_ml: "ഖുർആൻ", label_tr: "Kur'an", color: "#34D399", bg: "rgba(52,211,153,0.06)" },
 };
 
 function MantraCard({ mantra, language, txt }) {
