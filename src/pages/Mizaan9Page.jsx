@@ -42,7 +42,7 @@ import RitualTimingAnalysis from "../components/mizaan/RitualTimingAnalysis";
 import QasamPanel from "../components/mizaan/QasamPanel";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
-import { getCurrentSaat, getKawkabForSaat } from "../lib/mizaanSaatCalculator";
+import { getCurrentSaat, getKawkabForSaat, getCurrentLaylNahar, getCurrentWeekdayKey } from "../lib/mizaanSaatCalculator";
 import { usePageState } from "../context/PageStateContext";
 import { Lock } from "lucide-react";
 import FeatureLockedCard from "../components/FeatureLockedCard";
@@ -81,16 +81,23 @@ function MizaanDivider() {
   );
 }
 
-// Build initial selections from dominant element
+// Build initial selections from the ACTUAL current manuscript state:
+//   • dayNight  — real sunrise/sunset (Layl or Nahar right now)
+//   • days      — sunset-aware manuscript weekday (Kashf al-Haqa'iq p.65)
+//   • hour      — current Saat (Astro Clock sunrise/sunset intervals)
+//   • planet    — Kawkab from the correct Day/Night manuscript table
+// Manual selections are never overwritten by this — it only runs on
+// Analyze / Clear / section-switch, setting the default reference state.
 function buildDefaultSelections(dominant) {
-  const dn = dominant ? (['fire','earth'].includes(dominant) ? 'gunduz' : 'gece') : null;
-  const todayKey = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
+  const dn       = getCurrentLaylNahar();    // 'gunduz' | 'gece' | null
+  const todayKey = getCurrentWeekdayKey();   // sunset-aware: sun..sat
+  const saat     = getCurrentSaat();         // 1–12 (ignores dayNight arg)
   return {
     elements:   dominant ? [dominant] : [],
     dayNight:   dn,
-    hour:       getCurrentSaat(dn),
+    hour:       saat,
     days:       todayKey,
-    planet:     getKawkabForSaat(getCurrentSaat(dn), todayKey),
+    planet:     getKawkabForSaat(saat, todayKey, dn),
     purposes:   [],
     khayrSharr8: null,
   };
