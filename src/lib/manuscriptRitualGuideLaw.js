@@ -52,6 +52,20 @@ export const RITUAL_INSTRUCTION_FIELDS = [
   'qasam',
   'azimah',
   'tawkeel',
+  'title_ml',
+  'introduction',
+  'when_to_perform',
+  'category',
+  'required_herbs',
+  'required_plants',
+  'required_medicines',
+  'required_powders',
+  'required_oils',
+  'required_materials',
+  'required_preparation',
+  'arabic_word_explanations',
+  'avoidances',
+  'expected_result',
   'additional_notes',
 ];
 
@@ -118,6 +132,35 @@ export function getFieldInstructions(recitationId, fieldName) {
 // Check if a field is specified in ANY registered manuscript
 export function isFieldSpecified(recitationId, fieldName) {
   return getFieldInstructions(recitationId, fieldName) !== null;
+}
+
+// Manuscript entry categories — auto-classification system
+export const MANUSCRIPT_CATEGORIES = [
+  'Dua', 'Azimah', 'Qasam', 'Tawkeel', 'Dhikr', 'Quran Verse', 'Salawat',
+  'Istighfar', 'Healing Method', 'Herbal Medicine', 'Plant Uses', 'Oils',
+  'Powders', 'Incense', 'Talisman', 'Vefk', 'Spiritual Treatment',
+  'Physical Treatment', 'Protection', 'Love Works', 'Rizq', 'Business',
+  'Enemy Protection', 'Jinn Related', 'Angel Related', 'Planet Related',
+  'Saat Related', 'Lunar Mansion Related', 'Moon Related', 'Zodiac Related',
+  'Dream', 'Istikhara', 'Purification', 'Fasting', 'Clothing', 'Direction',
+  'Timing', 'Conditions', 'Warnings', 'Notes', 'Other',
+];
+
+const TYPE_TO_CATEGORY = {
+  azimah: 'Azimah',
+  qasam: 'Qasam',
+  universal_supplication: 'Dua',
+  dua: 'Dua',
+  prayer: 'Istikhara',
+  quran_recitation: 'Quran Verse',
+  istighfar: 'Istighfar',
+  tawkeel: 'Tawkeel',
+  ism: 'Dhikr',
+};
+
+// Auto-classify a manuscript entry into a category based on its type
+export function autoClassifyEntry(mantra) {
+  return TYPE_TO_CATEGORY[mantra.type] || 'Other';
 }
 
 // The permanent law constant

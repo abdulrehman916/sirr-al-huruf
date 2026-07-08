@@ -10,7 +10,7 @@
 // The cross-manuscript search automatically includes the new source.
 // No changes to this file or existing code needed.
 // ═══════════════════════════════════════════════════════════════
-import { registerManuscriptInstructions } from "./manuscriptRitualGuideLaw";
+import { registerManuscriptInstructions, autoClassifyEntry } from "./manuscriptRitualGuideLaw";
 import {
   KASHF_AZAYIM_BY_DAY,
   KASHF_AQSAM_BY_DAY,
@@ -30,6 +30,53 @@ import {
 const SOURCE = "Kashf al-Haqa'iq";
 const rules = MANUSCRIPT_PERFORMANCE_RULES;
 
+// Helper: derive Malayalam title from type + day (display label)
+function deriveTitleMl(mantra, weekdayMeta) {
+  if (weekdayMeta) {
+    if (mantra.type === 'azimah') return `${weekdayMeta.day_ml} ദിവസത്തെ ആഹ്വാനം`;
+    if (mantra.type === 'qasam') return `${weekdayMeta.day_ml} ദിവസത്തെ ശപഥം`;
+  }
+  if (mantra.id === 'kashf_istikhara') return 'ഇസ്തിഖാറ ദു‌ആ';
+  if (mantra.id === 'kashf_opening_secrets') return 'രഹസ്യങ്ങൾ തുറക്കാനുള്ള ദു‌ആ';
+  if (mantra.id === 'kashf_istighfar') return 'ഇസ്തിഗ്ഫാർ';
+  if (mantra.id === 'kashf_tanzil_dua') return 'തൻസീൽ ദു‌ആ';
+  if (mantra.id === 'kashf_ism_alim') return 'ദൈവ നാമം: യാ അലീം';
+  if (mantra.id === 'kashf_tawkeel_love') return 'സ്നേഹ തവ്കീൽ';
+  if (mantra.id === 'kashf_supplication_post_qasam') return 'സർവ ദു‌ആ';
+  if (mantra.id === 'kashf_supplication_ilahi') return 'ആത്മ കൃത്യ ദു‌ആ';
+  if (mantra.type === 'quran_recitation') {
+    const note = QURAN_VERIFICATION_NOTES[mantra.id];
+    return note ? `ഖുർആൻ വചനം (${note.quran_ref})` : 'ഖുർആൻ വചനം';
+  }
+  return mantra.purpose_ml?.slice(0, 40) || mantra.id;
+}
+
+// Helper: derive when to perform from manuscript timing rules
+function deriveWhenToPerform(mantra) {
+  const parts = [{ text: 'നിശ്ചിത ഗ്രഹ ഘടികയിൽ', page: 11 }];
+  if (mantra.type === 'azimah') {
+    parts.push({ text: 'രാത്രി ഉത്തമം', page: 39 });
+    parts.push({ text: 'ഖസത്തിന് മുമ്പ് ചൊല്ലുക', page: '27-31' });
+  } else if (mantra.type === 'qasam') {
+    parts.push({ text: 'അസീം-ന് ശേഷം ചൊല്ലുക', page: '27-31' });
+  } else if (mantra.id === 'kashf_istikhara') {
+    return [{ text: 'എല്ലാ കൃത്യങ്ങൾക്ക് മുമ്പ് ചൊല്ലുക', page: 43 }];
+  } else if (mantra.id === 'kashf_supplication_post_qasam') {
+    return [{ text: 'എല്ലാ കൃത്യങ്ങൾക്ക് ശേഷം ചൊല്ലുക', page: 31 }];
+  } else if (mantra.id === 'kashf_istighfar') {
+    return [{ text: 'തൻസീലിന് മുമ്പ് ചൊല്ലുക', page: 51 }];
+  } else if (mantra.id === 'kashf_tanzil_dua') {
+    return [{ text: 'ഇസ്തിഗ്ഫാറിന് ശേഷം ചൊല്ലുക', page: 51 }];
+  } else if (mantra.id === 'kashf_opening_secrets') {
+    parts.push({ text: 'രഹസ്യങ്ങൾ തുറക്കാൻ', page: 47 });
+  } else if (mantra.id === 'kashf_ism_alim') {
+    return [{ text: 'രഹസ്യങ്ങൾ തുറക്കാൻ 15 തവണ ആവർത്തിക്കുക', page: 47 }];
+  } else if (mantra.id === 'kashf_tawkeel_love') {
+    parts.push({ text: 'സ്നേഹ കൃത്യത്തിൽ', page: 52 });
+  }
+  return parts;
+}
+
 // Build a comprehensive instruction entry from verified manuscript data.
 // Only uses data actually present in the manuscripts — never invents.
 function buildEntry(mantra) {
@@ -39,9 +86,28 @@ function buildEntry(mantra) {
     ? WEEKDAY_PLANET_META.find(d => d.day_index === mantra.day_index)
     : null;
 
+  // Category (auto-classified)
+  entry.category = [{ text: autoClassifyEntry(mantra), page }];
+
+  // Malayalam Title (display label derived from type + day)
+  entry.title_ml = [{ text: deriveTitleMl(mantra, weekdayMeta), page }];
+
   // Purpose
   if (mantra.purpose_ml) {
     entry.purpose = [{ text: mantra.purpose_ml, page }];
+  }
+
+  // Introduction (what this practice is used for — from purpose)
+  if (mantra.purpose_ml) {
+    entry.introduction = [{ text: mantra.purpose_ml, page }];
+  }
+
+  // When to perform (from manuscript timing rules)
+  entry.when_to_perform = deriveWhenToPerform(mantra);
+
+  // Expected result (from purpose — manuscript states expected outcome)
+  if (mantra.purpose_ml) {
+    entry.expected_result = [{ text: mantra.purpose_ml, page }];
   }
 
   // Suitable weekday + planet + angel (from weekday metadata, pp.27-31)
@@ -165,4 +231,6 @@ export {
   getRegisteredSources,
   RITUAL_INSTRUCTION_FIELDS,
   MANUSCRIPT_RITUAL_GUIDE_LAW,
+  MANUSCRIPT_CATEGORIES,
+  autoClassifyEntry,
 } from "./manuscriptRitualGuideLaw";
