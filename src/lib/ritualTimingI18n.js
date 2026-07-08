@@ -279,6 +279,9 @@ function tWindowReason(reason, planet, pdfName, lang) {
   const base = `${p} മണിക്കൂർ —`;
   if (/ideal for/.test(reason)) return `${base} ${pdfName || "ഈ കർമ്മത്തിന്"} ഏറ്റവും അനുയോജ്യം`;
   if (/benefic planet, suitable for Khayr/.test(reason)) return `${base} ഉപകാര ഗ്രഹം; ഖൈർ കർമ്മത്തിന് അനുയോജ്യം`;
+  if (/hour matches manuscript prescription/.test(reason)) return `${base} ഗ്രന്ഥ നിർദ്ദേശവുമായി പൊരുത്തപ്പെടുന്നു`;
+  if (/night hour as required/.test(reason)) return `${base} ഗ്രന്ഥപ്രകാരം രാത്രി മണിക്കൂർ`;
+  if (/available hour/.test(reason)) return `${base} ലഭ്യമായ മണിക്കൂർ`;
   return reason;
 }
 
@@ -298,6 +301,7 @@ function tAvoidReason(reason, lang) {
     return `ശത്രു ഗ്രഹം — ${m ? m[1] : "ഈ കർമ്മത്തിന്"} പ്രതികൂലം`;
   }
   if (/malefic planet, weakens Khayr/.test(reason)) return "പാപഗ്രഹം — ഖൈർ കർമ്മങ്ങളെ ദുർബലമാക്കും";
+  if (/enemy\/worst planet per manuscript/.test(reason)) return "ഗ്രന്ഥപ്രകാരം ശത്രു/മോശം ഗ്രഹം";
   return reason;
 }
 
@@ -590,6 +594,15 @@ function mlEnemyNote(analysis) {
   return "ഈ കർമ്മത്തിന് ഗ്രന്ഥങ്ങളിൽ ശത്രു ഗ്രഹങ്ങളൊന്നും നിർദ്ദേശിച്ചിട്ടില്ല.";
 }
 
+const ML_SCORE_REASON = {
+  "Correct day per manuscript (+20)": "ഗ്രന്ഥപ്രകാരം ശരിയായ ദിവസം (+20)",
+  "Wrong day per manuscript (-15)": "ഗ്രന്ഥപ്രകാരം തെറ്റായ ദിവസം (-15)",
+  "Current hour matches manuscript (+25)": "നിലവിലെ മണിക്കൂർ ഗ്രന്ഥവുമായി പൊരുത്തപ്പെടുന്നു (+25)",
+  "Current hour not prescribed (-10)": "നിലവിലെ മണിക്കൂർ നിർദ്ദേശിച്ചതല്ല (-10)",
+  "Night requirement met (+10)": "രാത്രി നിർബന്ധം പാലിച്ചു (+10)",
+  "Not enemy hour (+5)": "ശത്രു മണിക്കൂറല്ല (+5)",
+};
+
 // ── Localize the full analysis object's report + supporting fields ──
 export function localizeAnalysis(analysis, lang) {
   if (lang !== "ml") return analysis;
@@ -655,13 +668,13 @@ export function localizeAnalysis(analysis, lang) {
     expertNarrative,
     verdict: tVerdict(analysis.verdict, lang),
     ritualType: lang === "ml"
-      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualType] || "മലയാളം പരിഭാഷ ലഭ്യമല്ല")
+      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualType] || analysis.ritualType)
       : analysis.ritualType,
     ritualCategory: lang === "ml"
-      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualCategory] || "മലയാളം പരിഭാഷ ലഭ്യമല്ല")
+      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualCategory] || analysis.ritualCategory)
       : analysis.ritualCategory,
     ritualIntent: lang === "ml"
-      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualIntent] || "മലയാളം പരിഭാഷ ലഭ്യമല്ല")
+      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualIntent] || analysis.ritualIntent)
       : analysis.ritualIntent,
     verdictReason: ML_VERDICT_REASON[analysis.verdict] || analysis.verdictReason,
     khayrSharr: ML_KHAYR_SHARR[analysis.khayrSharr] || analysis.khayrSharr,
@@ -684,6 +697,7 @@ export function localizeAnalysis(analysis, lang) {
       ...analysis.enemyAnalysis,
       note: mlEnemyNote(analysis),
     } : analysis.enemyAnalysis,
+    scoreBreakdown: analysis.scoreBreakdown?.map(s => ML_SCORE_REASON[s] || s),
     canPerformToday: tStatus(analysis.canPerformToday, lang),
     astroClockStatus: {
       ...analysis.astroClockStatus,
@@ -704,8 +718,8 @@ export function localizeAnalysis(analysis, lang) {
     altDay: analysis.altDay ? tDay(analysis.altDay, lang) : null,
     bestPlanetaryHour: analysis.bestPlanetaryHour ? tPlanet(analysis.bestPlanetaryHour, lang) : null,
     bestRulingPlanet: analysis.bestRulingPlanet ? tPlanet(analysis.bestRulingPlanet, lang) : null,
-    bestWindowsToday: analysis.bestWindowsToday?.map(w => ({ ...w, planet: tPlanet(w.planet, lang), period: w.period === "day" ? "പകൽ" : w.period === "night" ? "രാത്രി" : w.period })),
-    avoidWindowsToday: analysis.avoidWindowsToday?.map(w => ({ ...w, planet: tPlanet(w.planet, lang) })),
+    bestWindowsToday: analysis.bestWindowsToday?.map(w => ({ ...w, planet: tPlanet(w.planet, lang), period: w.period === "day" ? "പകൽ" : w.period === "night" ? "രാത്രി" : w.period, reason: tWindowReason(w.reason, w.planet, analysis.ritualType, lang) })),
+    avoidWindowsToday: analysis.avoidWindowsToday?.map(w => ({ ...w, planet: tPlanet(w.planet, lang), reason: tAvoidReason(w.reason, lang) })),
     rankedWindows: analysis.rankedWindows?.map(w => ({ ...w, planet: tPlanet(w.planet, lang) })),
     topThree: analysis.topThree?.map(w => ({ ...w, planet: tPlanet(w.planet, lang) })),
     nextOpportunity: analysis.nextOpportunity ? {

@@ -113,7 +113,53 @@ Deno.serve(async (req) => {
     });
     const existing = existingRes?.data || existingRes;
     if (existing && existing.matched) {
-      // Entry already exists — return it. Never regenerate.
+      // ── AUTO-BACKFILL missing translations ──
+      // If the matched entry has empty malayalam_meaning or english_meaning,
+      // generate the missing translation(s) via LLM and persist them to the
+      // dictionary entry. This ensures every lookup returns complete bilingual
+      // translations — no placeholders, no English fallback, no mixed-language UI.
+      // The backfill runs ONCE per entry; subsequent lookups find the complete entry.
+      const needsMl = !existing.malayalam_meaning || !existing.malayalam_meaning.trim();
+      const needsEn = !existing.english_meaning || !existing.english_meaning.trim();
+      if (needsMl || needsEn) {
+        try {
+          const backfill = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are an expert translator for Arabic occult manuscript terminology.
+Translate this Arabic ritual purpose word into both Malayalam and English.
+
+Arabic purpose: "${existing.matchedPhrase || parsed.mainPurpose}"
+
+Instructions:
+- malayalam_meaning: concise Malayalam translation of the PURPOSE word only (no action, no modifier)
+- english_meaning: concise English translation of the PURPOSE word only
+
+Return ONLY a JSON object.`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                malayalam_meaning: { type: "string", description: "Malayalam translation of the purpose" },
+                english_meaning: { type: "string", description: "English translation of the purpose" },
+              },
+            },
+          });
+          const genMl = (backfill?.malayalam_meaning || "").trim();
+          const genEn = (backfill?.english_meaning || "").trim();
+          const finalMl = needsMl ? genMl : existing.malayalam_meaning;
+          const finalEn = needsEn ? genEn : existing.english_meaning;
+          if (finalMl || finalEn) {
+            const entryId = existing._debug?.entryId;
+            if (entryId) {
+              const updates = {};
+              if (needsMl && finalMl) updates.malayalam_meaning = finalMl;
+              if (needsEn && finalEn) updates.english_meaning = finalEn;
+              await base44.asServiceRole.entities.PurposeDictionary.update(entryId, updates);
+            }
+            return Response.json({ ...existing, malayalam_meaning: finalMl || existing.malayalam_meaning, english_meaning: finalEn || existing.english_meaning });
+          }
+        } catch (_e) {
+          // Backfill failed — return entry as-is (existing behavior)
+        }
+      }
       return Response.json(existing);
     }
 
