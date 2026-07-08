@@ -215,7 +215,7 @@ function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
   // no fallback spiritual recommendations, no invented recommendations.
   // JS fallback only when manuscript has zero rules (dbRules.length === 0).
   const actionKey = RITUAL_TO_ACTION[ritualKey] || "spiritual";
-  const allowJsFallback = !purposeSelected || dbRules.length === 0;
+  const allowJsFallback = !purposeSelected;
   if (allowJsFallback) {
     const ar = ACTION_RULES[actionKey];
     if (ar) {
@@ -615,7 +615,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   // ── STEP 2: gather rules ──
   const { req, citations, dbRuleCount, actionKey } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
-  reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). JS fallback: ${(!noPurposeSelected && dbRuleCount > 0) ? "skipped (purpose selected, manuscript-only)" : actionKey}.`);
+  reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). JS fallback: ${noPurposeSelected ? "allowed (no purpose selected)" : "disabled (purpose selected — manuscript-only authority)"}.`);
   for (const c of citations) {
     rulesApplied.push({ id: c.rule_id, desc: c.summary || `${c.category} rule`, source: c.source });
     bookNotes.push({ source: c.source, text: c.summary || c.category });
@@ -716,6 +716,20 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   if (currentNightOk && req.nightRequired === true) { score += 10; scoreReasons.push("Night requirement met (+10)"); }
   if (currentNotEnemy && req.enemyPlanets?.length) { score += 5; scoreReasons.push("Not enemy hour (+5)"); }
   score = Math.max(0, Math.min(100, score));
+
+  // ── Estimated compatibility after applying all recommendations ──
+  // If the user follows every manuscript recommendation, all conditions pass.
+  // Calculate the max achievable score from the rules that exist.
+  let estimatedAfterChanges = score;
+  if (dbRuleCount > 0) {
+    let maxScore = 50;
+    if (req.days) maxScore += 20;
+    if (req.hours) maxScore += 25;
+    if (req.moon) maxScore += 10;
+    if (req.nightRequired === true) maxScore += 10;
+    if (req.enemyPlanets?.length) maxScore += 5;
+    estimatedAfterChanges = Math.min(100, maxScore);
+  }
 
   const stars = scoreToStars(score);
   let verdict, verdictColor, verdictReason;
@@ -937,6 +951,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     recommendedEnd: ranked[0]?.endTime || earliest?.endTime || null,
     recommendedIncense: req.incense || null,
     selectionAnalysis,
+    estimatedCompatibilityAfterChanges: estimatedAfterChanges,
     rulesApplied, warnings, bookNotes, conflicts, expertNarrative, reasoning,
   };
 }

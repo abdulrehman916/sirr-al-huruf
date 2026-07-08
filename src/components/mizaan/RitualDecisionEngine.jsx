@@ -12,6 +12,7 @@ import {
 import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingEngineV3";
 import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
+import ManuscriptComplianceChecklist from "./ManuscriptComplianceChecklist";
 import { localizeAnalysis, localizeAdvice, tStr, useRitualLang } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
@@ -194,6 +195,9 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                     </div>
                   );
                 })()}
+
+                {/* ── Manuscript Compliance Checklist — ✓/✗ per-condition ── */}
+                <ManuscriptComplianceChecklist analysis={analysis} lang={lang} />
 
                 {/* ── Opening Consultation Statement ── */}
                 <div className="rounded-xl p-4" style={{
