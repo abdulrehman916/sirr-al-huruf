@@ -1257,6 +1257,7 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
 
   let firstManuscriptValid = null;
   let firstMoonPerfect = null;
+  let firstPerfectMatch = null;
 
   for (let d = 1; d <= MAX_SEARCH_DAYS; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
@@ -1488,8 +1489,11 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
     if (!firstMoonPerfect && mandatoryPass && moonPrefPass) {
       firstMoonPerfect = matchResult;
     }
-    if (firstMoonPerfect) break;
-    if (!hasMoonPrefs && firstManuscriptValid) break;
+    const allEnhancementsPass = enhancementChecks.every(c => c.status === "pass");
+    if (!firstPerfectMatch && mandatoryPass && (hasMoonPrefs ? moonPrefPass : true) && allEnhancementsPass) {
+      firstPerfectMatch = matchResult;
+    }
+    if (firstPerfectMatch) break;
   }
 
   // ═══ BUILD RESULT ═══
@@ -1498,6 +1502,7 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       found: !!firstManuscriptValid,
       firstManuscriptValid,
       firstMoonPerfect: firstManuscriptValid,
+      firstPerfectMatch,
       recommendedTime: firstManuscriptValid,
       moonPerfectTime: null,
       moonPrefsSatisfied: true,
@@ -1512,6 +1517,7 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       found: true,
       firstManuscriptValid,
       firstMoonPerfect,
+      firstPerfectMatch,
       recommendedTime: firstManuscriptValid,
       moonPerfectTime: sameTime ? null : firstMoonPerfect,
       moonPrefsSatisfied: sameTime,
@@ -1525,6 +1531,7 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       found: true,
       firstManuscriptValid,
       firstMoonPerfect: null,
+      firstPerfectMatch,
       recommendedTime: firstManuscriptValid,
       moonPerfectTime: null,
       moonPrefsSatisfied: false,
@@ -1537,6 +1544,7 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
     found: false,
     firstManuscriptValid: null,
     firstMoonPerfect: null,
+    firstPerfectMatch: null,
     recommendedTime: null,
     moonPerfectTime: null,
     moonPrefsSatisfied: false,
