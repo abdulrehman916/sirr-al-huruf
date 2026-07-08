@@ -56,11 +56,27 @@ Deno.serve(async (req) => {
       return Response.json({ matched: false });
     }
 
-    // Normalize: strip harakat, tatweel, lowercase, trim
+    // Basic normalize: strip harakat, tatweel, lowercase, trim
     const normalize = (text) => {
       return String(text)
         .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '') // harakat
         .replace(/\u0640/g, '')                               // tatweel
+        .toLowerCase()
+        .trim();
+    };
+
+    // Deep normalize: Alif forms (أإآ→ا), Hamza (ؤ→و, ئ→ي, ء removed),
+    // NFC/NFKC, invisible Unicode — stage-2 probe variants
+    const normalizeDeep = (text) => {
+      return String(text)
+        .normalize('NFKC')
+        .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '') // harakat
+        .replace(/\u0640/g, '')                               // tatweel
+        .replace(/[\u0622\u0623\u0625]/g, '\u0627')          // آ أ إ → ا
+        .replace(/\u0624/g, '\u0648')                         // ؤ → و
+        .replace(/\u0626/g, '\u064A')                         // ئ → ي
+        .replace(/\u0621/g, '')                               // ء removed
+        .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '') // invisible
         .toLowerCase()
         .trim();
     };
@@ -70,14 +86,27 @@ Deno.serve(async (req) => {
       return Response.json({ matched: false });
     }
 
+    // Probes array — initialized with normalized input, extended in stage 2
+    const probes = [normalizedInput];
+
     // Build the standard single-result response from an entry
-    const buildResp = (entry) => ({
+    const buildResp = (entry, lookupPath) => ({
       matched: true,
       ritualIntent: entry.normalized_purpose_key,
       matchedPhrase: entry.purpose_phrase,
       source: entry.source || null,
       malayalam_meaning: entry.malayalam_meaning || "",
       english_meaning: entry.english_meaning || "",
+      _debug: {
+        normalizedKey: normalizedInput,
+        deepNormalizedKey: normalizeDeep(customPurpose),
+        probesUsed: probes.slice(0, 10),
+        probesCount: probes.length,
+        matchFound: true,
+        entryId: entry.id || null,
+        source: entry.source || null,
+        lookupPath,
+      },
     });
 
     // ── STEP 1: Exact purpose_phrase match (highest priority) ──
@@ -88,7 +117,7 @@ Deno.serve(async (req) => {
       1
     );
     if (phraseHits && phraseHits.length > 0) {
-      return Response.json(buildResp(phraseHits[0]));
+      return Response.json(buildResp(phraseHits[0], "exact_phrase"));
     }
 
     // ── STEP 2: Longest-match selection across aliases + arabic_keyword ──
@@ -125,11 +154,19 @@ Deno.serve(async (req) => {
       }
       return [...seen];
     };
-    const probes = [normalizedInput];
     for (const w of wordList) {
       for (const v of variantsOf(w)) {
         if (v !== normalizedInput && !probes.includes(v)) probes.push(v);
       }
+    }
+
+    // ── Deep-normalized probes (Alif/Hamza/NFC/invisible) — stage 2 ──
+    // MANDATORY: generates deep-normalized variant of every probe so entries
+    // stored with any Alif/Hamza form are found in the same batched query.
+    const basicProbes = [...probes];
+    for (const p of basicProbes) {
+      const dp = normalizeDeep(p);
+      if (dp !== p && !probes.includes(dp)) probes.push(dp);
     }
 
     const FIELD_RANK = { arabic_keyword: 0, aliases: 1 };
@@ -196,10 +233,22 @@ Deno.serve(async (req) => {
           best = { entry: c.entry, score };
         }
       }
-      if (best) return Response.json(buildResp(best.entry));
+      if (best) return Response.json(buildResp(best.entry, best.field));
     }
 
-    return Response.json({ matched: false });
+    return Response.json({
+      matched: false,
+      _debug: {
+        normalizedKey: normalizedInput,
+        deepNormalizedKey: normalizeDeep(customPurpose),
+        probesUsed: probes.slice(0, 10),
+        probesCount: probes.length,
+        matchFound: false,
+        entryId: null,
+        source: null,
+        lookupPath: "none",
+      },
+    });
   } catch (error) {
     return Response.json({ matched: false, error: error.message }, { status: 500 });
   }

@@ -97,7 +97,7 @@ export function parsePurposeStructure(text) {
 
   // 3. Main Purpose = everything in between (grammatical particles removed)
   const purposeWords = stripArabicParticles(rest);
-  return { action, mainPurpose: purposeWords.join(" ").trim(), modifier };
+  return { action, rawMiddle: rest.join(" ").trim(), mainPurpose: purposeWords.join(" ").trim(), modifier };
 }
 
 // Detect action word from raw text (first word if it's an action card)

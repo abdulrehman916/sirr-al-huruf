@@ -18,10 +18,10 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, ArrowDown, Loader2 } from "lucide-react";
+import { BookOpen, ArrowDown, Loader2, Bug, ChevronDown } from "lucide-react";
 import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
 import {
-  detectAction, extractMiddleWord, ACTION_MEANINGS, ENDING_MEANING,
+  detectAction, parsePurposeStructure, ACTION_MEANINGS, ENDING_MEANING,
   CARD_TO_ACTION, buildRitualSemanticPhrase,
 } from "../../lib/ritualSemanticPhrase";
 import { useRitualLang, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
@@ -65,10 +65,12 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
     if (cardKey && CARD_TO_ACTION[cardKey]) actionArabic = CARD_TO_ACTION[cardKey];
     if (!actionArabic) actionArabic = detectAction(custom);
 
-    const middleWord = extractMiddleWord(custom, actionArabic);
+    const parsed = parsePurposeStructure(custom);
+    const middleWord = parsed.mainPurpose;
+    const rawMiddle = parsed.rawMiddle;
     const modifierArabic = detectModifier(custom);
 
-    return { actionArabic, middleWord, modifierArabic, cardKey };
+    return { actionArabic, middleWord, rawMiddle, modifierArabic, cardKey };
   }, [customPurpose, selections]);
 
   // ── Purpose Dictionary lookup (async) ──
@@ -331,6 +333,15 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
             </p>
           )}
         </div>
+
+        {/* ── DEBUG PANEL (temporary — lookup pipeline verification) ── */}
+        <DebugPanel
+          originalInput={interp.originalArabic}
+          action={interp.actionArabic}
+          rawMiddle={detected?.rawMiddle || ""}
+          normalizedPurpose={detected?.middleWord || ""}
+          purposeLookup={purposeLookup}
+        />
       </div>
     </motion.div>
   );
@@ -344,6 +355,93 @@ function Row({ label, children }) {
         {label}
       </p>
       {children}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEBUG PANEL — Lookup pipeline verification (temporary, dev-only)
+// ═══════════════════════════════════════════════════════════════
+function DebugPanel({ originalInput, action, rawMiddle, normalizedPurpose, purposeLookup }) {
+  const [open, setOpen] = useState(false);
+  const dbg = purposeLookup?._debug || {};
+  const matched = purposeLookup?.matched || false;
+  const source = dbg.source || purposeLookup?.source || (purposeLookup?.auto_learned ? "Auto-Learned" : "—");
+  const entryId = dbg.entryId || "—";
+  const lookupPath = dbg.lookupPath || "—";
+  const probesUsed = Array.isArray(dbg.probesUsed) ? dbg.probesUsed : [];
+
+  const D = {
+    title: "DICTIONARY LOOKUP DEBUG",
+    original: "1. Original Arabic Input",
+    action: "2. Detected Action",
+    rawMiddle: "3. Main Purpose (before normalization)",
+    normalized: "4. Normalized Main Purpose",
+    dictKey: "5. Dictionary Key Searched",
+    deepKey: "5b. Deep-Normalized Key (Alif/Hamza/NFC)",
+    match: "6. Dictionary Match",
+    entryId: "7. Entry ID",
+    source: "8. Lookup Source",
+    path: "Lookup Path",
+    probes: "Probe Variants Used",
+  };
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{
+      background: "rgba(99,102,241,0.05)",
+      border: "1px solid rgba(99,102,241,0.30)",
+    }}>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-2.5">
+        <div className="flex items-center gap-2">
+          <Bug className="w-3.5 h-3.5" style={{ color: "rgba(129,140,248,0.80)" }} />
+          <span className="font-inter text-[9px] font-bold uppercase tracking-widest" style={{ color: "rgba(129,140,248,0.80)" }}>
+            {D.title}
+          </span>
+        </div>
+        <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ color: "rgba(129,140,248,0.60)", transform: open ? "rotate(180deg)" : "none" }} />
+      </button>
+      {open && (
+        <div className="px-3 pb-3 space-y-1.5">
+          <DebugRow label={D.original} value={originalInput} rtl />
+          <DebugRow label={D.action} value={action || "—"} rtl />
+          <DebugRow label={D.rawMiddle} value={rawMiddle || "—"} rtl />
+          <DebugRow label={D.normalized} value={normalizedPurpose || "—"} rtl />
+          <DebugRow label={D.dictKey} value={dbg.normalizedKey || normalizedPurpose || "—"} rtl />
+          <DebugRow label={D.deepKey} value={dbg.deepNormalizedKey || "—"} rtl />
+          <DebugRow label={D.match} value={matched ? "YES ✓" : "NO ✗"} color={matched ? "#4ADE80" : "#F87171"} />
+          <DebugRow label={D.entryId} value={entryId} />
+          <DebugRow label={D.source} value={source} color={purposeLookup?.auto_learned ? "#FBBF24" : "#4ADE80"} />
+          <DebugRow label={D.path} value={lookupPath} />
+          {probesUsed.length > 0 && (
+            <div className="pt-1">
+              <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: "rgba(129,140,248,0.50)" }}>
+                {D.probes} ({probesUsed.length}{dbg.probesCount ? `/${dbg.probesCount}` : ""})
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {probesUsed.map((p, i) => (
+                  <span key={i} className="font-amiri text-xs px-1.5 py-0.5 rounded" style={{
+                    background: "rgba(99,102,241,0.10)", border: "1px solid rgba(99,102,241,0.20)",
+                    color: "rgba(255,255,255,0.70)",
+                  }} dir="rtl">{p}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DebugRow({ label, value, color, rtl }) {
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <span className="font-inter text-[9px] uppercase tracking-wider flex-shrink-0" style={{ color: "rgba(129,140,248,0.55)" }}>
+        {label}
+      </span>
+      <span className={`text-[11px] font-bold text-right ${rtl ? "font-amiri" : "font-inter"}`} style={{ color: color || "rgba(255,255,255,0.85)" }} dir={rtl ? "rtl" : "ltr"}>
+        {value}
+      </span>
     </div>
   );
 }

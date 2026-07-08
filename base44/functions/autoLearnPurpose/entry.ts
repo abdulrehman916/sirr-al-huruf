@@ -211,6 +211,14 @@ Return ONLY a JSON object.`,
       malayalam_meaning: malayalamMeaning,
       english_meaning: englishMeaning,
       auto_learned: true,
+      _debug: {
+        normalizedKey: parsed.mainPurpose,
+        deepNormalizedKey: parsed.mainPurpose,
+        matchFound: false,
+        entryId: null,
+        source: "AI Generated (Auto-Learned)",
+        lookupPath: "auto_learned",
+      },
     });
   } catch (error) {
     return Response.json({ matched: false, error: error.message }, { status: 500 });
