@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_PURPOSES } from "../../lib/mizaan9Data";
@@ -68,13 +68,16 @@ const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", te
 export default function Mizaan7({ selected, onChange, customPurpose, onCustomPurpose, purposesData, onPurposeResolved }) {
   // selected is now an array
   const selectedArr = Array.isArray(selected) ? selected : (selected ? [selected] : []);
-  const toggle = (key) => {
+  // Stabilize selections object — a new literal every render causes
+  // PurposeInterpretationCard's useMemo/useEffect deps to change infinitely.
+  const selectionsProp = useMemo(() => ({ purposes: selectedArr }), [selectedArr]);
+  const toggle = useCallback((key) => {
     if (selectedArr.includes(key)) {
       onChange(selectedArr.filter(k => k !== key));
     } else {
       onChange([...selectedArr, key]);
     }
-  };
+  }, [selectedArr, onChange]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}
@@ -145,7 +148,7 @@ export default function Mizaan7({ selected, onChange, customPurpose, onCustomPur
       <CustomPurposePanel customPurpose={customPurpose} onCustomPurpose={onCustomPurpose} />
 
       {/* Purpose Interpretation Card — Master purpose resolver for Ritual Timing */}
-      <PurposeInterpretationCard customPurpose={customPurpose} selections={{ purposes: selectedArr }} onPurposeResolved={onPurposeResolved} />
+      <PurposeInterpretationCard customPurpose={customPurpose} selections={selectionsProp} onPurposeResolved={onPurposeResolved} />
     </motion.div>
   );
 }

@@ -16,7 +16,7 @@
 // Read-only. Never modifies any Mizan, calculation, or engine.
 // Full language parity: Malayalam or English, never mixed.
 // ═══════════════════════════════════════════════════════════════
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ArrowDown, Loader2, Bug, ChevronDown } from "lucide-react";
 import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
@@ -49,7 +49,7 @@ function detectModifier(text) {
   return null;
 }
 
-export default function PurposeInterpretationCard({ customPurpose, selections, onPurposeResolved }) {
+const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ customPurpose, selections, onPurposeResolved }) {
   const [lang, setLang] = useRitualLang();
   const [purposeLookup, setPurposeLookup] = useState({ matched: false });
   const [loading, setLoading] = useState(false);
@@ -82,23 +82,26 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
     }
     setLoading(true);
     let cancelled = false;
-    // Pass ONLY the extracted Main Purpose (middle segment) to the lookup —
-    // NEVER the full phrase. The Action Card and Modifier must not be searched.
-    lookupPurposeIntent(detected.middleWord || "", detected.cardKey).then((res) => {
+    // Debounce 500ms — wait until the user stops typing before firing the lookup.
+    // Prevents one network request per keystroke and keeps typing/scrolling smooth.
+    const debounceTimer = setTimeout(() => {
       if (cancelled) return;
-      setPurposeLookup(res);
-      setLoading(false);
-      // Pass the COMPLETED interpretation (not just the raw dictionary word) so
-      // Ritual Timing receives the full sentence: Action + Purpose + Modifier.
-      if (onPurposeResolved) {
-        onPurposeResolved({
-          ...res,
-          interpretation_en: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "en" }),
-          interpretation_ml: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "ml" }),
-        });
-      }
-    });
-    return () => { cancelled = true; };
+      // Pass ONLY the extracted Main Purpose (middle segment) to the lookup —
+      // NEVER the full phrase. The Action Card and Modifier must not be searched.
+      lookupPurposeIntent(detected.middleWord || "", detected.cardKey).then((res) => {
+        if (cancelled) return;
+        setPurposeLookup(res);
+        setLoading(false);
+        if (onPurposeResolved) {
+          onPurposeResolved({
+            ...res,
+            interpretation_en: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "en" }),
+            interpretation_ml: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "ml" }),
+          });
+        }
+      });
+    }, 500);
+    return () => { cancelled = true; clearTimeout(debounceTimer); };
   }, [detected, customPurpose, onPurposeResolved]);
 
   // ── Build interpretation for display (both languages) ──
@@ -308,6 +311,10 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
             <p className="font-malayalam text-sm font-bold leading-relaxed" style={{ color: G.text }}>
               {interp.purposeMeaningML}
             </p>
+          ) : loading ? (
+            <p className="font-inter text-xs italic" style={{ color: G.dim }}>
+              {L.loading}
+            </p>
           ) : (
             <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>
               {L.notAvailable}
@@ -327,6 +334,10 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
             <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
               {interp.purposeMeaningEN}
             </p>
+          ) : loading ? (
+            <p className="font-inter text-xs italic" style={{ color: G.dim }}>
+              {L.loading}
+            </p>
           ) : (
             <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>
               {L.notAvailable}
@@ -345,7 +356,9 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
       </div>
     </motion.div>
   );
-}
+});
+
+export default PurposeInterpretationCard;
 
 // ── Single interpretation row ──
 function Row({ label, children }) {
