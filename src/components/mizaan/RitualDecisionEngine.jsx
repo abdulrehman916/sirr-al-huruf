@@ -22,7 +22,7 @@ import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
 import ManuscriptComplianceChecklist from "./ManuscriptComplianceChecklist";
 import MoonAnalysisCard from "./MoonAnalysisCard";
-import { localizeAnalysis, localizeAdvice, tStr, useRitualLang } from "../../lib/ritualTimingI18n";
+import { localizeAnalysis, localizeAdvice, tStr, useRitualLang, tDay, tPlanet } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 const G = {
@@ -222,6 +222,47 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
               />
             )}
           </div>
+
+          {/* ── Current Manuscript State — Layl/Nahar, Weekday, Saat, Kawkab ── */}
+          {rawAnalysis.liveNow && (
+            <div className="grid grid-cols-2 gap-2 mt-3 pt-3" style={{ borderTop: `1px solid ${G.border}` }}>
+              <StateItem
+                label={T("Layl / Nahar", "ലൈൽ / നഹർ", lang)}
+                value={rawAnalysis.liveNow.laylNahar === "Layl"
+                  ? T("Layl (Night)", "ലൈൽ (രാത്രി)", lang)
+                  : T("Nahar (Day)", "നഹർ (പകൽ)", lang)}
+                color={rawAnalysis.liveNow.laylNahar === "Layl" ? "#818CF8" : "#FBBF24"}
+              />
+              <StateItem
+                label={T("Weekday", "ദിവസം", lang)}
+                value={tDay(rawAnalysis.liveNow.day, lang)}
+                color={G.text}
+              />
+              <StateItem
+                label={T("Saat", "സഅാത്", lang)}
+                value={`#${rawAnalysis.liveNow.saat}`}
+                color={G.text}
+              />
+              <StateItem
+                label={T("Kawkab", "കവ്കബ്", lang)}
+                value={tPlanet(rawAnalysis.liveNow.kawkab, lang)}
+                color={G.text}
+              />
+            </div>
+          )}
+
+          {/* ── One-line Warning — only if applicable ── */}
+          {analysis.warnings?.length > 0 && (
+            <div className="flex items-center gap-2 mt-2 rounded-lg p-2" style={{
+              background: "rgba(248,113,113,0.06)",
+              border: "1px solid rgba(248,113,113,0.20)",
+            }}>
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "rgba(248,113,113,0.80)" }} />
+              <p className="font-inter text-[11px] flex-1" style={{ color: "rgba(248,113,113,0.85)" }}>
+                {analysis.warnings[0]}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -435,6 +476,20 @@ function CollapsibleSection({ icon, title, children }) {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ── State Item — compact label/value pair for manuscript state grid ──
+function StateItem({ label, value, color }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(255,255,255,0.30)" }}>
+        {label}
+      </span>
+      <span className="font-inter text-sm font-bold" style={{ color: color || "rgba(255,255,255,0.80)" }}>
+        {value}
+      </span>
     </div>
   );
 }
