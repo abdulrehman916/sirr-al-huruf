@@ -36,6 +36,9 @@ export const CARD_TO_ACTION = {
 // ── Common Ending (fixed, always appended) ──
 export const ENDING_MEANING = { en: "Quickly", ml: "വേഗത്തിൽ" };
 
+// ── Known modifier phrases (last N words of the phrase) ──
+const MODIFIER_PHRASES = ["طرفة العين", "طرفه العين"];
+
 // Normalize Arabic: strip harakat + tatweel
 function normalizeArabic(text) {
   return String(text || "")
@@ -44,32 +47,55 @@ function normalizeArabic(text) {
     .trim();
 }
 
-// Detect action word from raw text (first matching word)
-export function detectAction(text) {
+// ═══════════════════════════════════════════════════════════════
+// POSITIONAL PARSER — extracts Action / Main Purpose / Modifier
+// ═══════════════════════════════════════════════════════════════
+// Structure: [Action Card] + [Main Purpose] + [Modifier]
+//   Action = first word if it's جلب/طرد/الصحة/السقم
+//   Modifier = last 2 words if they form "طرفة العين" (or variant)
+//   Main Purpose = everything in between
+//
+// The Main Purpose is NEVER the Action Card or the Modifier.
+export function parsePurposeStructure(text) {
   const norm = normalizeArabic(text);
-  if (!norm) return null;
-  const words = norm.split(/\s+/);
-  if (ACTION_MEANINGS[words[0]]) return words[0];
-  for (const w of words) {
-    if (ACTION_MEANINGS[w]) return w;
+  if (!norm) return { action: "", mainPurpose: "", modifier: "" };
+  const words = norm.split(/\s+/).filter(Boolean);
+  if (!words.length) return { action: "", mainPurpose: "", modifier: "" };
+
+  // 1. Action = first word if it's an action card
+  let action = "";
+  let rest = [...words];
+  if (ACTION_MEANINGS[rest[0]]) {
+    action = rest[0];
+    rest = rest.slice(1);
   }
-  return null;
+
+  // 2. Modifier = last 2 words if they form a known modifier phrase
+  let modifier = "";
+  if (rest.length >= 2) {
+    const lastTwo = rest.slice(-2).join(" ");
+    if (MODIFIER_PHRASES.includes(lastTwo)) {
+      modifier = lastTwo;
+      rest = rest.slice(0, -2);
+    }
+  }
+
+  // 3. Main Purpose = everything in between
+  return { action, mainPurpose: rest.join(" ").trim(), modifier };
 }
 
-// Isolate the middle (purpose) word: strip ONLY pure action verbs (جلب, طرد)
-// + Ending modifier tokens. Purpose nouns (الصحة, السقم) are NOT stripped —
-// they ARE the main purpose and must be preserved for dictionary lookup.
+// Detect action word from raw text (first word if it's an action card)
+export function detectAction(text) {
+  const parsed = parsePurposeStructure(text);
+  return parsed.action || null;
+}
+
+// Isolate the middle (Main Purpose) word(s) using positional parsing.
+// Strips the first word if it's an Action Card (جلب/طرد/الصحة/السقم)
+// and the last 2 words if they form a Modifier (طرفة العين).
+// Returns ONLY the Main Purpose for dictionary lookup.
 export function extractMiddleWord(text, actionArabic) {
-  const norm = normalizeArabic(text);
-  if (!norm) return "";
-  const STRIPPABLE_ACTIONS = ["جلب", "طرد"];
-  const ENDING_TOKENS = ["طرفة", "طرفه", "العين"];
-  const words = norm.split(/\s+/).filter((w) => {
-    if (STRIPPABLE_ACTIONS.includes(w)) return false;
-    if (ENDING_TOKENS.includes(w)) return false;
-    return true;
-  });
-  return words.join(" ").trim();
+  return parsePurposeStructure(text).mainPurpose;
 }
 
 // ═══════════════════════════════════════════════════════════════

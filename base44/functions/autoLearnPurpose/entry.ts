@@ -24,6 +24,53 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Caller: src/lib/purposeDictionaryLookup.js (replaces direct lookupPurposeIntent call).
 // ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
+// PURPOSE PHRASE PARSER — Positional structure extraction
+// ═══════════════════════════════════════════════════════════════
+// Every custom purpose follows: [Action Card] + [Main Purpose] + [Modifier]
+//   Action Cards:  جلب, طرد, الصحة, السقم  (first word)
+//   Modifiers:     طرفة العين              (last 2 words)
+//   Main Purpose:  everything in between   (ONLY this goes to the dictionary)
+//
+// The Main Purpose is NEVER the Action Card or the Modifier.
+// Only the Main Purpose is searched in the Purpose Dictionary.
+// ═══════════════════════════════════════════════════════════════
+const ACTION_CARDS = ["جلب", "طرد", "الصحة", "السقم"];
+const MODIFIER_PHRASES = ["طرفة العين", "طرفه العين"];
+
+function parsePurposePhrase(text) {
+  const norm = String(text || "")
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, "") // harakat
+    .replace(/\u0640/g, "")                               // tatweel
+    .trim();
+  if (!norm) return { action: "", mainPurpose: "", modifier: "" };
+
+  const words = norm.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return { action: "", mainPurpose: "", modifier: "" };
+
+  // 1. Action = first word if it's an action card
+  let action = "";
+  let rest = [...words];
+  if (ACTION_CARDS.includes(rest[0])) {
+    action = rest[0];
+    rest = rest.slice(1);
+  }
+
+  // 2. Modifier = last 2 words if they form a known modifier phrase
+  let modifier = "";
+  if (rest.length >= 2) {
+    const lastTwo = rest.slice(-2).join(" ");
+    if (MODIFIER_PHRASES.includes(lastTwo)) {
+      modifier = lastTwo;
+      rest = rest.slice(0, -2);
+    }
+  }
+
+  // 3. Main Purpose = everything in between
+  const mainPurpose = rest.join(" ").trim();
+  return { action, mainPurpose, modifier };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -34,9 +81,18 @@ Deno.serve(async (req) => {
       return Response.json({ matched: false });
     }
 
-    // ── STEP 1: Check existing dictionary (reuse locked lookup) ──
+    // ── Parse phrase structure: [Action] + [Main Purpose] + [Modifier] ──
+    const parsed = parsePurposePhrase(customPurpose);
+
+    // ── STEP 1: Check dictionary using ONLY the Main Purpose ──
+    // The Action Card and Modifier must NEVER be searched — only the
+    // middle word(s) are the actual purpose. If no main purpose was
+    // extracted (e.g., user typed only an action card), no lookup.
+    if (!parsed.mainPurpose) {
+      return Response.json({ matched: false });
+    }
     const existingRes = await base44.functions.invoke('lookupPurposeIntent', {
-      customPurpose,
+      customPurpose: parsed.mainPurpose,
       selectedAction,
     });
     const existing = existingRes?.data || existingRes;
@@ -53,19 +109,23 @@ Analyze this Arabic ritual purpose phrase and generate accurate translations.
 
 Arabic phrase: "${customPurpose}"
 
+The phrase has already been parsed into its structure:
+- Action Card: "${parsed.action || "(none)"}"
+- Main Purpose: "${parsed.mainPurpose}"
+- Modifier: "${parsed.modifier || "(none)"}"
+
 Instructions:
-1. Identify the action word: جلب (Bring/Attract), طرد (Repel/Banish), الصحة (Health/Restore), السقم (Illness/Inflict), or none.
-2. Identify the main purpose (the core subject — e.g., محبة=Love, رزق=Provision, علم=Knowledge, سلطان=Authority).
-3. Identify the modifier: طرفة العين (Quickly/Immediately) if present, otherwise none.
-4. Generate a natural Malayalam translation.
+1. The Main Purpose is: ${parsed.mainPurpose} — translate THIS word/phrase, NOT the action or modifier.
+2. Generate a natural Malayalam translation combining Action + Purpose + Modifier.
    - Word order: Modifier (if any) + Purpose + Action
-   - Example: "جلب المحبة طرفة العين" → "വേഗത്തിൽ സ്നേഹം കൊണ്ടുവരുക"
-   - Example: "الصحة في البدن طرفة العين" → "വേഗത്തിൽ ശരീരാരോഗ്യം വീണ്ടെടുക്കുക"
-5. Generate a natural English translation.
+   - Example: Action=جلب, Purpose=المحبة, Modifier=طرفة العين → "വേഗത്തിൽ സ്നേഹം കൊണ്ടുവരുക"
+   - Example: Action=الصحة, Purpose=في البدن, Modifier=طرفة العين → "വേഗത്തിൽ ശരീരാരോഗ്യം വീണ്ടെടുക്കുക"
+   - Example: Action=طرد, Purpose=العداوة, Modifier=طرفة العين → "വേഗത്തിൽ ശത്രുത അകറ്റുക"
+3. Generate a natural English translation combining Action + Purpose + Modifier.
    - Word order: Action + Purpose + Modifier
-   - Example: "جلب المحبة طرفة العين" → "Bring Love Quickly"
-   - Example: "الصحة في البدن طرفة العين" → "Restore Physical Health Quickly"
-6. Determine the normalized_purpose_key (must be exactly one of):
+   - Example: Action=جلب, Purpose=المحبة, Modifier=طرفة العين → "Bring Love Quickly"
+   - Example: Action=الصحة, Purpose=في البدن, Modifier=طرفة العين → "Restore Physical Health Quickly"
+4. Determine the normalized_purpose_key based on the MAIN PURPOSE (not the action):
    - "celb" (attraction/جلب), "tard" (banishment/طرد), "sihhat" (health/صحة), "sekam" (illness/سقم),
    - "tarfet" (instant/طرفة), "rizq" (provision/رزق), "knowledge" (knowledge/علم),
    - "travel" (travel/سفر), "sultan" (authority/سلطان), "haybah" (awe/هيبة)
@@ -76,7 +136,7 @@ Return ONLY a JSON object.`,
         properties: {
           english_meaning: { type: "string", description: "Natural English translation" },
           malayalam_meaning: { type: "string", description: "Natural Malayalam translation" },
-          arabic_keyword: { type: "string", description: "Core purpose word in Arabic (without action/modifier)" },
+          arabic_keyword: { type: "string", description: "Core purpose word in Arabic (the Main Purpose, without action/modifier)" },
           normalized_purpose_key: { type: "string", description: "One of: celb, tard, sihhat, sekam, tarfet, rizq, knowledge, travel, sultan, haybah" },
         },
       },
