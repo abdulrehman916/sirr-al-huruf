@@ -80,7 +80,9 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
     }
     setLoading(true);
     let cancelled = false;
-    lookupPurposeIntent((customPurpose || "").trim(), detected.cardKey).then((res) => {
+    // Pass ONLY the extracted Main Purpose (middle segment) to the lookup —
+    // NEVER the full phrase. The Action Card and Modifier must not be searched.
+    lookupPurposeIntent(detected.middleWord || "", detected.cardKey).then((res) => {
       if (cancelled) return;
       setPurposeLookup(res);
       setLoading(false);

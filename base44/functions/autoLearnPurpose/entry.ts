@@ -101,31 +101,34 @@ Deno.serve(async (req) => {
       return Response.json(existing);
     }
 
-    // ── STEP 2: No match — generate meanings via LLM ──
+    // ── STEP 2: No match — generate MAIN PURPOSE meaning via LLM ──
+    // The LLM translates ONLY the Main Purpose (the middle segment).
+    // The Action Card and Modifier are handled by the frontend builder
+    // (buildRitualSemanticPhrase) — the dictionary stores ONLY the purpose
+    // word meaning, so the builder can combine Action + Purpose + Modifier
+    // without duplicating the action or modifier.
     const llmResult = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an expert in Arabic occult manuscripts, Islamic spirituality, and Malayalam/English translation.
+      prompt: `You are an expert in Arabic occult manuscripts and Islamic spirituality.
 
-Analyze this Arabic ritual purpose phrase and generate accurate translations.
+Translate this Arabic MAIN PURPOSE word/phrase into Malayalam and English.
+This is the MAIN PURPOSE only — the Action (جلب/طرد/الصحة/السقم) and Modifier (طرفة العين) are handled separately. Do NOT include them in your translation.
 
-Arabic phrase: "${customPurpose}"
-
-The phrase has already been parsed into its structure:
-- Action Card: "${parsed.action || "(none)"}"
-- Main Purpose: "${parsed.mainPurpose}"
-- Modifier: "${parsed.modifier || "(none)"}"
+Arabic Main Purpose: "${parsed.mainPurpose}"
 
 Instructions:
-1. The Main Purpose is: ${parsed.mainPurpose} — translate THIS word/phrase, NOT the action or modifier.
-2. Generate a natural Malayalam translation combining Action + Purpose + Modifier.
-   - Word order: Modifier (if any) + Purpose + Action
-   - Example: Action=جلب, Purpose=المحبة, Modifier=طرفة العين → "വേഗത്തിൽ സ്നേഹം കൊണ്ടുവരുക"
-   - Example: Action=الصحة, Purpose=في البدن, Modifier=طرفة العين → "വേഗത്തിൽ ശരീരാരോഗ്യം വീണ്ടെടുക്കുക"
-   - Example: Action=طرد, Purpose=العداوة, Modifier=طرفة العين → "വേഗത്തിൽ ശത്രുത അകറ്റുക"
-3. Generate a natural English translation combining Action + Purpose + Modifier.
-   - Word order: Action + Purpose + Modifier
-   - Example: Action=جلب, Purpose=المحبة, Modifier=طرفة العين → "Bring Love Quickly"
-   - Example: Action=الصحة, Purpose=في البدن, Modifier=طرفة العين → "Restore Physical Health Quickly"
-4. Determine the normalized_purpose_key based on the MAIN PURPOSE (not the action):
+1. English: Translate the Main Purpose word ONLY.
+   - "المحبة" → "Love"
+   - "الرزق" → "Provision"
+   - "في البدن" → "Body Health"
+   - "المرض" → "Illness"
+   - "الهيبة" → "Awe"
+2. Malayalam: Translate the Main Purpose word ONLY.
+   - "المحبة" → "സ്നേഹം"
+   - "الرزق" → "ഉപജീവനം"
+   - "في البدن" → "ശരീരാരോഗ്യം"
+   - "المرض" → "രോഗം"
+   - "الهيبة" → "ഭീമാണം"
+3. Determine the normalized_purpose_key based on the MAIN PURPOSE:
    - "celb" (attraction/جلب), "tard" (banishment/طرد), "sihhat" (health/صحة), "sekam" (illness/سقم),
    - "tarfet" (instant/طرفة), "rizq" (provision/رزق), "knowledge" (knowledge/علم),
    - "travel" (travel/سفر), "sultan" (authority/سلطان), "haybah" (awe/هيبة)
@@ -134,9 +137,8 @@ Return ONLY a JSON object.`,
       response_json_schema: {
         type: "object",
         properties: {
-          english_meaning: { type: "string", description: "Natural English translation" },
-          malayalam_meaning: { type: "string", description: "Natural Malayalam translation" },
-          arabic_keyword: { type: "string", description: "Core purpose word in Arabic (the Main Purpose, without action/modifier)" },
+          english_meaning: { type: "string", description: "English translation of the MAIN PURPOSE only (e.g. 'Love', 'Health') — NOT the full phrase" },
+          malayalam_meaning: { type: "string", description: "Malayalam translation of the MAIN PURPOSE only (e.g. 'സ്നേഹം') — NOT the full phrase" },
           normalized_purpose_key: { type: "string", description: "One of: celb, tard, sihhat, sekam, tarfet, rizq, knowledge, travel, sultan, haybah" },
         },
       },
@@ -156,12 +158,16 @@ Return ONLY a JSON object.`,
 
     const englishMeaning = (llmResult.english_meaning || "").trim();
     const malayalamMeaning = (llmResult.malayalam_meaning || "").trim();
-    const arabicKeyword = (llmResult.arabic_keyword || "").trim();
 
     // ── STEP 3: Save to PurposeDictionary ──
+    // purpose_phrase = the MAIN PURPOSE only (not the full phrase), so that
+    // step 1 (exact match) finds it instantly on the next lookup of the same
+    // main purpose — regardless of which Action Card or Modifier was used.
+    // arabic_keyword = the parsed mainPurpose (from the parser, not the LLM),
+    // so the indexed keyword always matches what the parser extracts.
     const newEntry = {
-      purpose_phrase: customPurpose.trim(),
-      arabic_keyword: arabicKeyword,
+      purpose_phrase: parsed.mainPurpose,
+      arabic_keyword: parsed.mainPurpose,
       malayalam_meaning: malayalamMeaning,
       english_meaning: englishMeaning,
       action: actionEnum,
@@ -170,7 +176,7 @@ Return ONLY a JSON object.`,
       aliases: [],
       source: "Auto Generated",
       is_active: true,
-      notes: "Auto-generated — needs review",
+      notes: `Auto-generated from full phrase: "${customPurpose.trim()}" — needs review`,
     };
 
     try {

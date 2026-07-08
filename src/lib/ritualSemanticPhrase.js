@@ -21,7 +21,7 @@ const MIZAAN_PAGE_KEY = "mizaan9";
 export const ACTION_MEANINGS = {
   "جلب":   { en: "Bring",      ml: "കൊണ്ടുവരുക" },
   "طرد":   { en: "Repel",      ml: "അകറ്റുക" },
-  "الصحة": { en: "Restore",   ml: "ലഭിക്കുക" },
+  "الصحة": { en: "Restore",   ml: "വീണ്ടെടുക്കുക" },
   "السقم": { en: "Inflict",   ml: "ബാധിക്കുക" },
 };
 
@@ -195,7 +195,8 @@ export function useRitualSemanticPhrase(lang, refreshKey = 0) {
     if (!actionArabic) actionArabic = detectAction(custom);
     const middleWord = extractMiddleWord(custom, actionArabic);
     if (!middleWord) { setPhrase(""); return; }
-    lookupPurposeIntent(custom, cardKey).then((res) => {
+    // Lookup ONLY the Main Purpose (middle segment) — never the full phrase.
+    lookupPurposeIntent(middleWord, cardKey).then((res) => {
       if (!cancelled) {
         setPhrase(buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang }));
       }
