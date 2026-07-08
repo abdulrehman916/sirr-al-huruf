@@ -96,22 +96,26 @@ export function getMergedRitualInstructions(recitationId) {
 
   for (const source of _registry) {
     const entry = source.instructions[recitationId];
-    if (!entry) continue;
+    const generalEntry = source.instructions['_general'];
+    const entriesToSearch = [entry, generalEntry].filter(Boolean);
+    if (entriesToSearch.length === 0) continue;
     for (const field of RITUAL_INSTRUCTION_FIELDS) {
-      const instructions = entry[field];
-      if (!instructions || !Array.isArray(instructions)) continue;
-      for (const instr of instructions) {
-        const exists = merged[field].some(m =>
-          m.text === instr.text &&
-          m.source === source.sourceName &&
-          m.page === instr.page
-        );
-        if (!exists) {
-          merged[field].push({
-            text: instr.text,
-            source: source.sourceName,
-            page: instr.page,
-          });
+      for (const ent of entriesToSearch) {
+        const instructions = ent[field];
+        if (!instructions || !Array.isArray(instructions)) continue;
+        for (const instr of instructions) {
+          const exists = merged[field].some(m =>
+            m.text === instr.text &&
+            m.source === source.sourceName &&
+            m.page === instr.page
+          );
+          if (!exists) {
+            merged[field].push({
+              text: instr.text,
+              source: source.sourceName,
+              page: instr.page,
+            });
+          }
         }
       }
     }
@@ -156,6 +160,18 @@ const TYPE_TO_CATEGORY = {
   istighfar: 'Istighfar',
   tawkeel: 'Tawkeel',
   ism: 'Dhikr',
+  conditions: 'Conditions',
+  protection: 'Protection',
+  jinn_related: 'Jinn Related',
+  incense: 'Incense',
+  timing: 'Timing',
+  warnings: 'Warnings',
+  fasting: 'Fasting',
+  materials: 'Powders',
+  lunar_mansion: 'Lunar Mansion Related',
+  lunar_day: 'Timing',
+  nahs_days: 'Warnings',
+  poetry: 'Notes',
 };
 
 // Auto-classify a manuscript entry into a category based on its type

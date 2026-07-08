@@ -24,6 +24,7 @@ import {
   getTotalMantraCount,
   DAILY_MANTRA_SCAN_REPORT,
 } from "@/lib/astroClockDailyMantrasData";
+import { KASHF_FULL_MANTRAS } from "@/lib/manuscriptRitualGuideFullData";
 
 const G = { text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.20)" };
 const AR = "#818CF8";
@@ -47,6 +48,51 @@ function SourceGroup({ sourceGroup, txt, defaultExpandedId }) {
         />
       ))}
     </div>
+  );
+}
+
+const CATEGORY_MAP = {
+  dua: 'Dua', poetry: 'Notes', conditions: 'Conditions', protection: 'Protection',
+  jinn_related: 'Jinn Related', incense: 'Incense', timing: 'Timing',
+  warnings: 'Warnings', fasting: 'Fasting', materials: 'Powders',
+  lunar_mansion: 'Lunar Mansion Related', lunar_day: 'Timing', nahs_days: 'Warnings',
+};
+
+const CATEGORY_ORDER = ['Dua', 'Conditions', 'Protection', 'Jinn Related', 'Incense', 'Timing',
+  'Fasting', 'Powders', 'Lunar Mansion Related', 'Warnings', 'Notes'];
+
+function ManuscriptKnowledgeSection({ mantras, txt }) {
+  const groups = {};
+  for (const m of mantras) {
+    const cat = CATEGORY_MAP[m.type] || 'Other';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(m);
+  }
+  return (
+    <SubCollapse title={txt("ഗ്രന്ഥ വിജ്ഞാനം", "Manuscript Knowledge", "El Yazması Bilgisi")}>
+      <div className="space-y-1.5">
+        <p className="font-malayalam text-[10px] pb-1" style={{ color: "rgba(255,255,255,0.40)" }}>
+          {mantras.length} {txt("പ്രയോഗങ്ങൾ — എല്ലാ ഗ്രന്ഥങ്ങളിൽ നിന്നും", "entries — from all manuscripts", "kayıt — tüm el yazmalarından")}
+        </p>
+        {CATEGORY_ORDER.map(cat => {
+          if (!groups[cat]) return null;
+          return (
+            <div key={cat}>
+              <div className="flex items-center gap-2 pt-1">
+                <div className="h-px flex-1" style={{ background: "rgba(212,175,55,0.15)" }} />
+                <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
+                  {cat} ({groups[cat].length})
+                </span>
+                <div className="h-px flex-1" style={{ background: "rgba(212,175,55,0.15)" }} />
+              </div>
+              {groups[cat].map((mantra, i) => (
+                <GuidedRitualCard key={mantra.id || i} mantra={mantra} />
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </SubCollapse>
   );
 }
 
@@ -103,6 +149,9 @@ export default function DailyMantras() {
       {mantraGroups.map((group, i) => (
         <SourceGroup key={i} sourceGroup={group} txt={txt} defaultExpandedId={defaultExpandedId} />
       ))}
+
+      {/* Manuscript Knowledge — All extracted entries by category */}
+      <ManuscriptKnowledgeSection mantras={KASHF_FULL_MANTRAS} txt={txt} />
 
       {/* Scan report (collapsed) */}
       <SubCollapse title={txt("ഗ്രന്ഥ ഓഡിറ്റ് റിപ്പോർട്ട്", "Manuscript Audit Report", "El Yazması Denetim Raporu")}>
