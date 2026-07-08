@@ -1,0 +1,149 @@
+// ═══════════════════════════════════════════════════════════════
+// SECTION 7 — PLANET ENCYCLOPEDIA
+// All 7 planetary rulers — expandable cards, current planet highlighted
+// Planet info appears ONLY here — no duplication in other sections
+// ═══════════════════════════════════════════════════════════════
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown } from "lucide-react";
+import { useAstroData, PLANET_TR } from "./useAstroData";
+import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+
+const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
+
+// Element derived from ruling signs in ZODIAC_SIGNS (not invented)
+function getPlanetElements(planetKey, zodiacSigns) {
+  const elements = new Set();
+  Object.values(zodiacSigns || {}).forEach(s => {
+    if (s.ruling_planet?.toLowerCase() === planetKey.charAt(0).toUpperCase() + planetKey.slice(1)) {
+      elements.add(s.element);
+    }
+  });
+  return Array.from(elements);
+}
+
+export default function PlanetEncyclopedia() {
+  const d = useAstroData();
+  const { txt, language } = useAstroClockLanguage();
+  const [expanded, setExpanded] = useState(null);
+  const currentPlanet = d.currentHour?.planet;
+
+  return (
+    <div className="space-y-1.5">
+      {PLANET_ORDER.map(key => {
+    const info = d.planetInfo[key];
+    if (!info) return null;
+    const friends = d.planetFriendships[key];
+    const isCurrent = key === currentPlanet;
+    const isOpen = expanded === key;
+    const trName = PLANET_TR[key];
+    const displayName = language === "ml" ? info.name_ml_equivalent : language === "tr" ? trName : info.name_en;
+    const nature = language === "ml" ? info.nature_ml : language === "tr" ? trName : info.nature_en;
+    const elements = getPlanetElements(key, d.zodiacSigns);
+    const color = isCurrent ? "#F5D060" : "rgba(255,255,255,0.70)";
+    const borderColor = isCurrent ? "rgba(212,175,55,0.40)" : "rgba(255,255,255,0.08)";
+
+    const goodActions = language === "ml" ? info.goodActions_ml : info.goodActions_en;
+    const badActions = language === "ml" ? info.badActions_ml : info.badActions_en;
+    const benefits = language === "ml" ? info.benefits_ml : info.benefits_en;
+    const warnings = language === "ml" ? info.warnings_ml : info.warnings_en;
+    const spiritual = language === "ml" ? info.spiritualOperations_ml : info.spiritualOperations_en;
+
+    const friendNames = (friends?.friends || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
+    const enemyNames = (friends?.enemies || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
+    const neutralNames = (friends?.neutral || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
+
+    return (
+      <div key={key} className="rounded-lg overflow-hidden" style={{
+        background: isCurrent ? "rgba(212,175,55,0.06)" : "rgba(255,255,255,0.02)",
+        border: `1px solid ${borderColor}`,
+      }}>
+        <button onClick={() => setExpanded(isOpen ? null : key)} className="w-full flex items-center gap-2 p-2.5 text-left">
+          <span className="text-lg leading-none w-7 text-center">{info.symbol}</span>
+          <div className="flex-1 min-w-0">
+            <span className="font-inter text-xs font-bold block truncate" style={{ color }}>{displayName}</span>
+            <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>{nature}</span>
+          </div>
+          <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.40)" }}>{info.name_ar}</span>
+          {isCurrent && <span className="font-inter text-[7px] uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060" }}>{txt("നിലവിലെ", "Now", "Şimdi")}</span>}
+          <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)", transform: isOpen ? "rotate(180deg)" : "none" }} />
+        </button>
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
+              <div className="px-2.5 pb-2.5 space-y-2">
+                {/* Names */}
+                <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അറബി", "Arabic", "Arapça")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{info.name_ar}</span></div>
+                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("തുർക്കി", "Turkish", "Türkçe")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{trName}</span></div>
+                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മലയാളം", "Malayalam", "Malayalam")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{info.name_ml_equivalent}</span></div>
+                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മൂലകം", "Elements", "Elementler")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{elements.join(", ") || "—"}</span></div>
+                </div>
+
+                {/* Friendships */}
+                {friends && (
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <div className="rounded p-1.5" style={{ background: "rgba(74,222,128,0.04)" }}>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "rgba(74,222,128,0.50)" }}>{txt("സുഹൃത്", "Friends", "Dostlar")}</p>
+                      <p className="font-inter text-[9px]" style={{ color: "rgba(74,222,128,0.70)" }}>{friendNames.join(", ") || "—"}</p>
+                    </div>
+                    <div className="rounded p-1.5" style={{ background: "rgba(248,113,113,0.04)" }}>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.50)" }}>{txt("ശത്രു", "Enemies", "Düşmanlar")}</p>
+                      <p className="font-inter text-[9px]" style={{ color: "rgba(248,113,113,0.70)" }}>{enemyNames.join(", ") || "—"}</p>
+                    </div>
+                    <div className="rounded p-1.5" style={{ background: "rgba(251,191,36,0.04)" }}>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "rgba(251,191,36,0.50)" }}>{txt("നിരപേക്ഷം", "Neutral", "Nötr")}</p>
+                      <p className="font-inter text-[9px]" style={{ color: "rgba(251,191,36,0.70)" }}>{neutralNames.join(", ") || "—"}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Strong / Weak */}
+                {warnings?.length > 0 && (
+                  <div>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.50)" }}>{txt("ദുർബല അവസ്ഥ", "Weak Conditions", "Zayıf Durumlar")}</p>
+                    {warnings.map((w, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {w}</p>)}
+                  </div>
+                )}
+
+                {/* Good Actions */}
+                {goodActions?.length > 0 && (
+                  <div>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(74,222,128,0.50)" }}>{txt("അനുയോജ്യം", "Recommended", "Önerilen")}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {goodActions.map((a, i) => <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(74,222,128,0.06)", color: "rgba(74,222,128,0.65)" }}>{a}</span>)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Bad Actions */}
+                {badActions?.length > 0 && (
+                  <div>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.50)" }}>{txt("ഒഴിവാക്കുക", "Avoid", "Kaçınılacak")}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {badActions.map((a, i) => <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(248,113,113,0.06)", color: "rgba(248,113,113,0.65)" }}>{a}</span>)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Spiritual */}
+                {spiritual?.length > 0 && (
+                  <div>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.50)" }}>{txt("ആത്മികം", "Spiritual Uses", "Manevi Kullanım")}</p>
+                    {spiritual.map((s, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {s}</p>)}
+                  </div>
+                )}
+
+                {/* Source */}
+                <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {info.source}</p>
+                {friends?.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {friends.source}</p>}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  })}
+    </div>
+  );
+}

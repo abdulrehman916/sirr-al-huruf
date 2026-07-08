@@ -1,224 +1,138 @@
 // ═══════════════════════════════════════════════════════════════
-// ASTRO CLOCK PAGE — RESTRUCTURED UX
-// 9 Sections: Day Analysis, Planetary Hours, Moon Status, Manazil, Planets, Timing Advisor
-// Astro Clock module only — completely isolated
-// ✨ NEW: Search box at top, Today's Summary first
+// ASTRO CLOCK PAGE — PROFESSIONAL KNOWLEDGE DASHBOARD
+// 8 Sections, each with unique responsibility — zero duplication
+// UI-only redesign: no calculation/engine changes
 // ═══════════════════════════════════════════════════════════════
-
-import { useState } from "react";
-import { motion } from "framer-motion";
-import PageLayout from "../components/PageLayout";
-import PageTitle from "../components/PageTitle";
-import { AstroClockLanguageProvider, useAstroClockLanguage } from "@/lib/astroClockLanguageContext.jsx";
-import LiveDayAnalysis from "../components/astroclock/LiveDayAnalysis";
-import LivePlanetaryHours from "../components/astroclock/LivePlanetaryHours";
-import DaytimePlanetaryHours from "../components/astroclock/DaytimePlanetaryHours";
-import NighttimePlanetaryHours from "../components/astroclock/NighttimePlanetaryHours";
-import LiveMoonPosition from "../components/astroclock/LiveMoonPosition";
-import ManazilDatabase from "../components/astroclock/ManazilDatabase";
-import PlanetKnowledgePanels from "../components/astroclock/PlanetKnowledgePanels";
-import ProfessionalTimingDecisionEngine from "../components/astroclock/ProfessionalTimingDecisionEngine";
-import KarmaTimingAdvisor from "../components/astroclock/KarmaTimingAdvisor";
-
-import AdvancedManuscriptDecisionEngine from "../components/astroclock/AdvancedManuscriptDecisionEngine.jsx";
-import ZodiacKnowledgePanel from "../components/astroclock/ZodiacKnowledgePanel.jsx";
-import IncenseAdvisor from "../components/astroclock/IncenseAdvisor.jsx";
-import BirthProfileAnalyzer from "../components/astroclock/BirthProfileAnalyzer.jsx";
-import TraditionalMoonTransitForecast from "../components/astroclock/TraditionalMoonTransitForecast.jsx";
-import BuhurReference from "../components/astroclock/BuhurReference.jsx";
-import PlanetaryHourVerification from "../components/astroclock/PlanetaryHourVerification.jsx";
-import PlanetaryHourBookView from "../components/astroclock/PlanetaryHourBookView.jsx";
-import Full24HourPlanetaryChart from "../components/astroclock/Full24HourPlanetaryChart.jsx";
-import MoonMansionTracker from "../components/astroclock/MoonMansionTracker.jsx";
-import { ASTRO_CLOCK_LIVE_ENGINE_STATUS } from "@/lib/astroClockLiveEngine";
+import { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
-import AstroClockErrorBoundary from "../components/astroclock/AstroClockErrorBoundary";
-import AdvancedKnowledgeSearch from "../components/astroclock/AdvancedKnowledgeSearch.jsx";
-import TodayOverviewFull from "../components/astroclock/TodayOverviewFull.jsx";
+import { AstroClockLanguageProvider, useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import PageLayout from "@/components/PageLayout";
+import PageTitle from "@/components/PageTitle";
+import DashboardSection from "@/components/astroclock/dashboard/DashboardSection";
+import AstroClockErrorBoundary from "@/components/astroclock/AstroClockErrorBoundary";
 
-function LanguageToggle() {
-  const { t, toggleLanguage } = useAstroClockLanguage();
+// Lazy-load all sections — only renders when expanded
+const TodayDashboard = lazy(() => import("@/components/astroclock/dashboard/TodayDashboard"));
+const SmartSearch = lazy(() => import("@/components/astroclock/dashboard/SmartSearch"));
+const SaatGrid = lazy(() => import("@/components/astroclock/dashboard/SaatGrid"));
+const MoonCenter = lazy(() => import("@/components/astroclock/dashboard/MoonCenter"));
+const MoonZodiac = lazy(() => import("@/components/astroclock/dashboard/MoonZodiac"));
+const MansionsReference = lazy(() => import("@/components/astroclock/dashboard/MansionsReference"));
+const PlanetEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/PlanetEncyclopedia"));
+const ReferenceLibrary = lazy(() => import("@/components/astroclock/dashboard/ReferenceLibrary"));
 
+function LangSelector() {
+  const { language, setLanguage, txt } = useAstroClockLanguage();
+  const langs = [
+    { key: "ml", label: "മലയാളം" },
+    { key: "en", label: "English" },
+    { key: "tr", label: "Türkçe" },
+  ];
   return (
-    <button
-      onClick={toggleLanguage}
-      className="px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all"
-      style={{
-        background: "rgba(212,175,55,0.10)",
-        color: "#F5D060",
-        borderColor: "rgba(212,175,55,0.40)"
-      }}
-    >
-      {t.toggle}
-    </button>
+    <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(212,175,55,0.30)" }}>
+      {langs.map(l => (
+        <button key={l.key} onClick={() => setLanguage(l.key)}
+          className="px-3 py-2 font-inter text-[10px] font-bold uppercase tracking-wider transition-colors"
+          style={{
+            background: language === l.key ? "rgba(212,175,55,0.15)" : "transparent",
+            color: language === l.key ? "#F5D060" : "rgba(255,255,255,0.40)",
+          }}>{l.label}</button>
+      ))}
+    </div>
   );
 }
 
 function AstroClockContent() {
-  const { isMalayalam } = useAstroClockLanguage();
-  const [engineStatus, setEngineStatus] = useState(ASTRO_CLOCK_LIVE_ENGINE_STATUS);
+  const { txt } = useAstroClockLanguage();
 
   return (
     <PageLayout>
-      <div className="space-y-6 pb-8">
-
-        {/* Header with Language Toggle and Audit Links */}
-        <div className="flex items-center justify-between mb-6">
-          <PageTitle
-            arabic="الساعة الفلكية"
-            latin="Astro Clock"
-            subtitle="Traditional Ilm al-Huruf Timing System"
-            icon="🕰"
-          />
-          <div className="flex items-center gap-3">
-            <Link
-              to="/manuscript-library"
-              className="px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
-              style={{
-                background: "rgba(212,175,55,0.10)",
-                color: "#F5D060",
-                borderColor: "rgba(212,175,55,0.40)"
-              }}
-            >
-              📚 {isMalayalam ? "ഗ്രന്ഥശേഖരം" : "Library"}
+      <div className="space-y-3 pb-8 max-w-4xl mx-auto">
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <PageTitle arabic="الساعة الفلكية" latin="Astro Clock" subtitle={txt("പാരമ്പര്യ സമയ വ്യവസ്ഥ", "Traditional Timing System", "Geleneksel Zaman Sistemi")} icon="🕰" />
+          <div className="flex items-center gap-2">
+            <Link to="/manuscript-library" className="px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5"
+              style={{ background: "rgba(212,175,55,0.10)", color: "#F5D060", borderColor: "rgba(212,175,55,0.30)" }}>
+              📚 {txt("ഗ്രന്ഥശേഖരം", "Library", "Kütüphane")}
             </Link>
-            <Link
-              to="/manuscript-action-finder"
-              className="px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
-              style={{
-                background: "rgba(212,175,55,0.10)",
-                color: "#F5D060",
-                borderColor: "rgba(212,175,55,0.40)"
-              }}
-            >
-              🔍 {isMalayalam ? "തിരയുക" : "Finder"}
-            </Link>
-            <Link
-              to="/manuscript-audit-full"
-              className="px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
-              style={{
-                background: "rgba(212,175,55,0.10)",
-                color: "#F5D060",
-                borderColor: "rgba(212,175,55,0.40)"
-              }}
-            >
-              📖 {isMalayalam ? "ഹസ്തലിഖിത" : "Audit"}
-            </Link>
-            <LanguageToggle />
+            <LangSelector />
           </div>
         </div>
 
-        {/* Engine Status */}
-        {engineStatus && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl border p-3 text-center mb-6"
-            style={{
-              background: "rgba(212,175,55,0.04)",
-              borderColor: "rgba(212,175,55,0.20)",
-            }}
-          >
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.45)" }}>
-              {engineStatus.note}
-            </p>
-          </motion.div>
-        )}
-
-        {/* ✨ MASTER SEARCH: Single unified search for all Astro Clock knowledge */}
-        <AstroClockErrorBoundary label="Master Search">
-          <AdvancedKnowledgeSearch />
+        {/* ── 8 Sections — each unique, no duplication ── */}
+        <AstroClockErrorBoundary label="Today Dashboard">
+          <DashboardSection icon="📅" title={txt("ഇന്നത്തെ ഡാഷ്ബോർഡ്", "Today's Dashboard", "Bugün Paneli")}
+            subtitle={txt("ദിവസം, സഅാത്, കവ്കബ്, പ്രവൃത്തികൾ, മുന്നറിയിപ്പുകൾ", "Day, Saat, Kawkab, Activities, Warnings", "Gün, Saat, Kavkeb, Eylemler, Uyarılar")}
+            defaultOpen badge="●">
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <TodayDashboard />
+            </Suspense>
+          </DashboardSection>
         </AstroClockErrorBoundary>
 
-        {/* ✨ RESTRUCTURED: Full Today Overview with 7 Influences */}
-        <AstroClockErrorBoundary label="Today Overview">
-          <TodayOverviewFull />
+        <AstroClockErrorBoundary label="Smart Search">
+          <DashboardSection icon="🔍" title={txt("സ്മാർട്ട് തിരച്ചിൽ", "Smart Search", "Akıllı Arama")}
+            subtitle={txt("ഉദ്ദേശം → മികച്ച സഅാത്", "Purpose → Best Saat", "Amaç → En İyi Saat")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <SmartSearch />
+            </Suspense>
+          </DashboardSection>
         </AstroClockErrorBoundary>
 
-        {/* ORIGINAL: Live Day Analysis (Preserved) */}
-        <AstroClockErrorBoundary label="Live Day Analysis"><LiveDayAnalysis /></AstroClockErrorBoundary>
+        <AstroClockErrorBoundary label="Saat Grid">
+          <DashboardSection icon="⏰" title={txt("ഇന്നത്തെ 24 സഅാത്", "Today's 24 Saat", "Bugünün 24 Saati")}
+            subtitle={txt("12 പകൽ + 12 രാത്രി ഗ്രഹ മണിക്കൂറുകൾ", "12 Day + 12 Night Planetary Hours", "12 Gündüz + 12 Gece Gezegen Saati")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <SaatGrid />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
 
-        {/* SECTION 2: Current Planetary Hour (Live with Countdown) */}
-        <AstroClockErrorBoundary label="Current Planetary Hour"><LivePlanetaryHours /></AstroClockErrorBoundary>
+        <AstroClockErrorBoundary label="Moon Center">
+          <DashboardSection icon="🌙" title={txt("ചന്ദ്ര കേന്ദ്രം", "Moon Center", "Ay Merkezi")}
+            subtitle={txt("രാശി, ഘട്ടം, നക്ഷത്രം, ശക്തി, സ്വഭാവം", "Zodiac, Phase, Mansion, Strength, Nature", "Burç, Evre, Menzil, Güç, Doğa")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <MoonCenter />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
 
-        {/* SECTION 4: Daytime 12 Hours */}
-        <AstroClockErrorBoundary label="Daytime Hours"><DaytimePlanetaryHours /></AstroClockErrorBoundary>
+        <AstroClockErrorBoundary label="Moon Zodiac">
+          <DashboardSection icon="♈" title={txt("ചന്ദ്രന്റെ രാശി", "Moon in Zodiac", "Burçta Ay")}
+            subtitle={txt("നിലവിലെ രാശി + അടുത്ത മാറ്റം", "Current Zodiac + Next Transition", "Mevcut Burç + Sonraki Geçiş")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <MoonZodiac />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
 
-        {/* SECTION 5: Nighttime 12 Hours */}
-        <AstroClockErrorBoundary label="Nighttime Hours"><NighttimePlanetaryHours /></AstroClockErrorBoundary>
+        <AstroClockErrorBoundary label="Mansions">
+          <DashboardSection icon="⭐" title={txt("28 ചാന്ദ്ര നക്ഷത്രങ്ങൾ", "28 Lunar Mansions", "28 Ay Menzili")}
+            subtitle={txt("മന്സിൽ / നക്ഷത്ര റഫറൻസ്", "Manzil / Nakshatra Reference", "Menzil / Nakşatra Referansı")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <MansionsReference />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
 
-        {/* SECTION 6: Live Moon Position */}
-        <AstroClockErrorBoundary label="Moon Position"><LiveMoonPosition /></AstroClockErrorBoundary>
+        <AstroClockErrorBoundary label="Planets">
+          <DashboardSection icon="🪐" title={txt("ഗ്രഹ വിജ്ഞാനകോശം", "Planet Encyclopedia", "Gezegen Ansiklopedisi")}
+            subtitle={txt("7 ഗ്രഹ ഭരണികൾ", "7 Planetary Rulers", "7 Gezegen Hükümdarı")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <PlanetEncyclopedia />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
 
-        {/* SECTION 7: Manazil Database */}
-        <AstroClockErrorBoundary label="Moon Mansions"><ManazilDatabase /></AstroClockErrorBoundary>
-
-        {/* SECTION 8: Planet Knowledge Panels */}
-        <AstroClockErrorBoundary label="Planet Knowledge"><PlanetKnowledgePanels /></AstroClockErrorBoundary>
-
-        {/* SECTION 9: Zodiac Knowledge Panel */}
-        <AstroClockErrorBoundary label="Zodiac Knowledge"><ZodiacKnowledgePanel /></AstroClockErrorBoundary>
-
-        {/* SECTION 10: Incense Advisor */}
-        <AstroClockErrorBoundary label="Incense Advisor"><IncenseAdvisor /></AstroClockErrorBoundary>
-
-        {/* SECTION 11: Professional Timing Decision Engine */}
-        <AstroClockErrorBoundary label="Professional Timing"><ProfessionalTimingDecisionEngine /></AstroClockErrorBoundary>
-
-        {/* SECTION 12: Karma Timing Advisor */}
-        <AstroClockErrorBoundary label="Karma Timing"><KarmaTimingAdvisor /></AstroClockErrorBoundary>
-
-        {/* SECTION 13: Advanced Manuscript Decision Engine */}
-        <AstroClockErrorBoundary label="Advanced Decision Engine"><AdvancedManuscriptDecisionEngine /></AstroClockErrorBoundary>
-
-        {/* SECTION 14: Birth Profile Analyzer */}
-        <AstroClockErrorBoundary label="Birth Profile"><BirthProfileAnalyzer /></AstroClockErrorBoundary>
-
-        {/* SECTION 15: Traditional Moon Transit Forecast */}
-        <AstroClockErrorBoundary label="Moon Transit"><TraditionalMoonTransitForecast /></AstroClockErrorBoundary>
-
-        {/* SECTION 16: Buhur Reference */}
-        <AstroClockErrorBoundary label="Buhur Reference"><BuhurReference /></AstroClockErrorBoundary>
-
-        {/* SECTION 17: Planetary Hour Verification */}
-        <AstroClockErrorBoundary label="Hour Verification"><PlanetaryHourVerification /></AstroClockErrorBoundary>
-
-        {/* SECTION 18: Planetary Hour Book View */}
-        <AstroClockErrorBoundary label="Book View"><PlanetaryHourBookView /></AstroClockErrorBoundary>
-
-        {/* SECTION 19: Full 24-Hour Planetary Chart */}
-        <AstroClockErrorBoundary label="24-Hour Chart"><Full24HourPlanetaryChart /></AstroClockErrorBoundary>
-
-        {/* SECTION 20: Moon Mansion Tracker */}
-        <AstroClockErrorBoundary label="Moon Tracker"><MoonMansionTracker /></AstroClockErrorBoundary>
-
-        {/* Framework Notice */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          className="rounded-2xl border p-5 text-center relative overflow-hidden"
-          style={{
-            background: "linear-gradient(145deg, rgba(8,18,44,0.98) 0%, rgba(4,10,28,0.99) 100%)",
-            borderColor: "rgba(212,175,55,0.25)",
-            boxShadow: "0 2px 20px rgba(0,0,0,0.40), inset 0 1px 0 rgba(212,175,55,0.06)",
-          }}
-        >
-          <p className="font-inter text-[9px] uppercase tracking-[0.22em] mb-3" style={{ color: "rgba(212,175,55,0.55)" }}>
-            ✦ Traditional System Ready
-          </p>
-          <p className="font-inter text-sm mb-2" style={{ color: "rgba(255,255,255,0.60)" }}>
-            {isMalayalam 
-              ? "സമ്പൂർണ്ണ പാരമ്പര്യ ഇൽം അൽ-ഹുറൂഫ് / മൻസിൽ / സഅത്ത് സമയക്രമം സജ്ജമാക്കി" 
-              : "Complete traditional Ilm al-Huruf / Manazil / Sa'at timing system initialized"}
-          </p>
-          <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
-            {isMalayalam
-              ? "തത്സമയ സൂര്യോദയം/സൂര്യാസ്തമയം, ഗ്രഹ മണിക്കൂറുകൾ, ചന്ദ്ര സ്ഥാനം — ബ്രൗസർ ജിയോലൊക്കേഷൻ ഉപയോഗിച്ച് കണക്കാക്കുന്നു"
-              : "Live sunrise/sunset, planetary hours, moon position — calculated using browser geolocation"}
-          </p>
-        </motion.div>
-
+        <AstroClockErrorBoundary label="References">
+          <DashboardSection icon="📖" title={txt("റഫറൻസ് ലൈബ്രറി", "Reference Library", "Kaynak Kitaplığı")}
+            subtitle={txt("ഗ്രന്ഥങ്ങളിലെ എല്ലാ പേജുകളും", "All Manuscript Page References", "Tüm El Yazması Sayfa Referansları")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <ReferenceLibrary />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
       </div>
     </PageLayout>
   );
