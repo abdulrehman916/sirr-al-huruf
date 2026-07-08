@@ -1258,8 +1258,13 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
   let firstManuscriptValid = null;
   let firstMoonPerfect = null;
   let firstPerfectMatch = null;
+  let firstMoonMatch = null;
+  let rejectionTimeline = [];
+  let todayResult = null;
+  let todayMoonMatches = false;
+  let todayManuscriptPass = false;
 
-  for (let d = 1; d <= MAX_SEARCH_DAYS; d++) {
+  for (let d = 0; d <= MAX_SEARCH_DAYS; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
     const moon = getMoonPhase(date);
     const { hours, sunrise, sunset } = getTodayAllHours(date);
@@ -1465,6 +1470,7 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
     const matchResult = {
       date: date.toISOString().split("T")[0],
       dateObj: date,
+      daysAhead: d,
       dayName: MIZAN_DAY_NAMES[dayKey],
       monthName,
       dayNumber: date.getDate(),
@@ -1483,6 +1489,18 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       nahasStatus,
     };
 
+    // Track today's data (d=0)
+    if (d === 0) {
+      todayResult = matchResult;
+      todayMoonMatches = hasMoonPrefs ? moonPrefPass : true;
+      todayManuscriptPass = mandatoryPass;
+    }
+
+    // Track first Moon match (regardless of manuscript)
+    if (!firstMoonMatch && hasMoonPrefs && moonPrefPass) {
+      firstMoonMatch = matchResult;
+    }
+
     if (!firstManuscriptValid && mandatoryPass) {
       firstManuscriptValid = matchResult;
     }
@@ -1493,6 +1511,25 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
     if (!firstPerfectMatch && mandatoryPass && (hasMoonPrefs ? moonPrefPass : true) && allEnhancementsPass) {
       firstPerfectMatch = matchResult;
     }
+
+    // Track rejection: Moon matched but manuscript failed
+    if (hasMoonPrefs && moonPrefPass && !mandatoryPass) {
+      const failedChecks = mandatoryChecks.filter(c => c.status === "fail");
+      rejectionTimeline.push({
+        date: matchResult.date,
+        dayName: matchResult.dayName,
+        dayNumber: matchResult.dayNumber,
+        monthName: matchResult.monthName,
+        year: matchResult.year,
+        moonMatched: true,
+        failedChecks: failedChecks.map(c => ({ label: c.label, reason: c.reason, dimension: c.dimension })),
+        allMandatoryChecks: mandatoryChecks,
+        moonData: { ...moon },
+        bestHour: bestHour ? { hourNumber: bestHour.hourNumber, planet: capitalPlanet(bestHour.planet), startTime: bestHour.startTime, endTime: bestHour.endTime, period: bestHour.period } : null,
+        daysAhead: d,
+      });
+    }
+
     if (firstPerfectMatch) break;
   }
 
@@ -1507,6 +1544,11 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       moonPerfectTime: null,
       moonPrefsSatisfied: true,
       hasMoonPrefs: false,
+      todayMoonMatches: false,
+      todayManuscriptPass,
+      todayResult,
+      firstMoonMatch: null,
+      rejectionTimeline: [],
       searchedDays: MAX_SEARCH_DAYS,
     };
   }
@@ -1522,6 +1564,11 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       moonPerfectTime: sameTime ? null : firstMoonPerfect,
       moonPrefsSatisfied: sameTime,
       hasMoonPrefs: true,
+      todayMoonMatches,
+      todayManuscriptPass,
+      todayResult,
+      firstMoonMatch,
+      rejectionTimeline,
       searchedDays: MAX_SEARCH_DAYS,
     };
   }
@@ -1536,6 +1583,11 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       moonPerfectTime: null,
       moonPrefsSatisfied: false,
       hasMoonPrefs: true,
+      todayMoonMatches,
+      todayManuscriptPass,
+      todayResult,
+      firstMoonMatch,
+      rejectionTimeline,
       searchedDays: MAX_SEARCH_DAYS,
     };
   }
@@ -1549,6 +1601,11 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
     moonPerfectTime: null,
     moonPrefsSatisfied: false,
     hasMoonPrefs: true,
+    todayMoonMatches,
+    todayManuscriptPass,
+    todayResult,
+    firstMoonMatch,
+    rejectionTimeline,
     searchedDays: MAX_SEARCH_DAYS,
   };
 }
