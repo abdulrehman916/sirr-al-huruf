@@ -13,6 +13,7 @@ import AstroClockErrorBoundary from "@/components/astroclock/AstroClockErrorBoun
 
 // Lazy-load all sections — only renders when expanded
 const TodayDashboard = lazy(() => import("@/components/astroclock/dashboard/TodayDashboard"));
+const DailyMantras = lazy(() => import("@/components/astroclock/dashboard/DailyMantras"));
 const SmartSearch = lazy(() => import("@/components/astroclock/dashboard/SmartSearch"));
 const SaatGrid = lazy(() => import("@/components/astroclock/dashboard/SaatGrid"));
 const MoonCenter = lazy(() => import("@/components/astroclock/dashboard/MoonCenter"));
@@ -67,6 +68,16 @@ function AstroClockContent() {
             defaultOpen badge="●">
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <TodayDashboard />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        {/* ── Section 2 — Daily Mantras & Spiritual Recitations ── */}
+        <AstroClockErrorBoundary label="Daily Mantras">
+          <DashboardSection icon="📿" title={txt("ദൈനംദിന മന്ത്രങ്ങൾ", "Daily Mantras", "Günlük Mantralar")}
+            subtitle={txt("ഇന്നത്തെ ആത്മിക പാരായണങ്ങൾ", "Today's Spiritual Recitations", "Bugünün Ruani Zikirleri")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <DailyMantras />
             </Suspense>
           </DashboardSection>
         </AstroClockErrorBoundary>
