@@ -39,6 +39,21 @@ export const ENDING_MEANING = { en: "Quickly", ml: "വേഗത്തിൽ" };
 // ── Known modifier phrases (last N words of the phrase) ──
 const MODIFIER_PHRASES = ["طرفة العين", "طرفه العين"];
 
+// ── Arabic grammatical particles to strip before dictionary lookup ──
+// Standalone particle words: في, من, إلى, على, عن (filtered out entirely)
+// Attached prefixes: بـ, لـ, كـ, و, ف (stripped from word starts when followed by ال)
+const STANDALONE_PARTICLES = ["في", "فى", "من", "إلى", "الى", "على", "علي", "عن"];
+const PREFIX_PATTERN = /^([بلكوف])(ال.+)$/;
+
+function stripArabicParticles(words) {
+  return words
+    .filter((w) => !STANDALONE_PARTICLES.includes(w))
+    .map((w) => {
+      const m = w.match(PREFIX_PATTERN);
+      return m ? m[2] : w;
+    });
+}
+
 // Normalize Arabic: strip harakat + tatweel
 function normalizeArabic(text) {
   return String(text || "")
@@ -80,8 +95,9 @@ export function parsePurposeStructure(text) {
     }
   }
 
-  // 3. Main Purpose = everything in between
-  return { action, mainPurpose: rest.join(" ").trim(), modifier };
+  // 3. Main Purpose = everything in between (grammatical particles removed)
+  const purposeWords = stripArabicParticles(rest);
+  return { action, mainPurpose: purposeWords.join(" ").trim(), modifier };
 }
 
 // Detect action word from raw text (first word if it's an action card)

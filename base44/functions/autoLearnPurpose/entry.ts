@@ -38,6 +38,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const ACTION_CARDS = ["جلب", "طرد", "الصحة", "السقم"];
 const MODIFIER_PHRASES = ["طرفة العين", "طرفه العين"];
 
+// ── Arabic grammatical particles to strip before dictionary lookup ──
+// Standalone particle words: في, من, إلى, على, عن (filtered out entirely)
+// Attached prefixes: بـ, لـ, كـ, و, ف (stripped from word starts when followed by ال)
+const STANDALONE_PARTICLES = ["في", "فى", "من", "إلى", "الى", "على", "علي", "عن"];
+const PREFIX_PATTERN = /^([بلكوف])(ال.+)$/;
+
+function stripArabicParticles(words) {
+  return words
+    .filter((w) => !STANDALONE_PARTICLES.includes(w))
+    .map((w) => {
+      const m = w.match(PREFIX_PATTERN);
+      return m ? m[2] : w;
+    });
+}
+
 function parsePurposePhrase(text) {
   const norm = String(text || "")
     .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, "") // harakat
@@ -66,8 +81,9 @@ function parsePurposePhrase(text) {
     }
   }
 
-  // 3. Main Purpose = everything in between
-  const mainPurpose = rest.join(" ").trim();
+  // 3. Main Purpose = everything in between (grammatical particles removed)
+  const purposeWords = stripArabicParticles(rest);
+  const mainPurpose = purposeWords.join(" ").trim();
   return { action, mainPurpose, modifier };
 }
 
