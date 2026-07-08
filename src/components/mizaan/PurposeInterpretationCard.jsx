@@ -412,6 +412,13 @@ function DebugPanel({ originalInput, action, rawMiddle, normalizedPurpose, purpo
           <DebugRow label={D.entryId} value={entryId} />
           <DebugRow label={D.source} value={source} color={purposeLookup?.auto_learned ? "#FBBF24" : "#4ADE80"} />
           <DebugRow label={D.path} value={lookupPath} />
+          {dbg.error && (
+            <div className="rounded-lg p-2" style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.20)" }}>
+              <p className="font-inter text-[10px] font-bold" style={{ color: "rgba(248,113,113,0.80)" }}>
+                ERROR: {dbg.error}
+              </p>
+            </div>
+          )}
           {probesUsed.length > 0 && (
             <div className="pt-1">
               <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: "rgba(129,140,248,0.50)" }}>
