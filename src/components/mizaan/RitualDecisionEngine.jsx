@@ -13,6 +13,7 @@ import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritua
 import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
 import ManuscriptComplianceChecklist from "./ManuscriptComplianceChecklist";
+import MoonAnalysisCard from "./MoonAnalysisCard";
 import { localizeAnalysis, localizeAdvice, tStr, useRitualLang } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
@@ -226,7 +227,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                   <StatusChip icon={<Zap className="w-3.5 h-3.5" />} label={tStr("ritual", lang)} value={analysis.ritualType} />
                   <StatusChip icon={<Star className="w-3.5 h-3.5" />} label={tStr("today", lang)} value={analysis.canPerformToday} color={canPerformColor} />
                   <StatusChip icon={<Clock className="w-3.5 h-3.5" />} label={tStr("hour", lang)} value={`#${analysis.astroClockStatus.currentHour.number} ${analysis.astroClockStatus.currentHour.planet}`} />
-                  <StatusChip icon={<Sun className="w-3.5 h-3.5" />} label={tStr("moon", lang)} value={lang === "ml" ? `ദിവസം ${analysis.moonPhase.lunarDay}` : `Day ${analysis.moonPhase.lunarDay}`} />
+                  <StatusChip icon={<Sun className="w-3.5 h-3.5" />} label={lang === "ml" ? "പകൽ/രാത്രി" : "Day/Night"} value={analysis.astroClockStatus.isDaytime ? (lang === "ml" ? "പകൽ" : "Day") : (lang === "ml" ? "രാത്രി" : "Night")} />
                 </div>
 
                 {/* ── 10-Section Decision Report ── */}
@@ -294,6 +295,15 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
           </div>
         )}
       </div>
+
+      {/* ── Moon Analysis (Optional — user-initiated, separate card) ── */}
+      <MoonAnalysisCard
+        moonPhase={rawAnalysis?.moonPhase}
+        moonReq={rawAnalysis?.moonReq}
+        moonCitations={rawAnalysis?.moonCitations}
+        req={rawAnalysis?.req}
+        lang={lang}
+      />
     </div>
   );
 }
