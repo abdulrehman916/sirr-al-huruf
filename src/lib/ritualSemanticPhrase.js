@@ -141,27 +141,32 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
       : (purposeLookup.english_meaning || "");
   }
 
-  // 3. Ending (always)
-  const endingMeaning = lang === "ml" ? ENDING_MEANING.ml : ENDING_MEANING.en;
+  // 3. Modifier — only included when "طرفة العين" is detected in the text
+  const parsed = parsePurposeStructure(custom);
+  const hasModifier = !!parsed.modifier;
+  const modifierMeaning = hasModifier
+    ? (lang === "ml" ? ENDING_MEANING.ml : ENDING_MEANING.en)
+    : "";
 
-  // Build complete phrase
-  // English order:  Action + Purpose + Modifier  → "Restore Health Quickly"
-  // Malayalam order: Modifier + Purpose + Action  → "വേഗത്തിൽ ആരോഗ്യം ലഭിക്കുക"
+  // Build complete phrase (single source of truth: resolvedPurposePhrase)
+  // Malayalam order:  Purpose + Action (+ Modifier)  → "സ്നേഹം കൊണ്ടുവരുക"
+  // English order:    Action + Purpose (+ Modifier)  → "Bring Love"
   if (actionArabic && purposeMeaning) {
     const actionMeaning = lang === "ml"
       ? ACTION_MEANINGS[actionArabic].ml
       : ACTION_MEANINGS[actionArabic].en;
     if (lang === "ml") {
-      return `${endingMeaning} ${purposeMeaning} ${actionMeaning}`;
+      return hasModifier
+        ? `${purposeMeaning} ${actionMeaning} ${modifierMeaning}`
+        : `${purposeMeaning} ${actionMeaning}`;
     }
-    return `${actionMeaning} ${purposeMeaning} ${endingMeaning}`;
+    return hasModifier
+      ? `${actionMeaning} ${purposeMeaning} ${modifierMeaning}`
+      : `${actionMeaning} ${purposeMeaning}`;
   }
   // Partial: purpose matched but no action detected
   if (purposeMeaning) {
-    if (lang === "ml") {
-      return `${endingMeaning} ${purposeMeaning}`;
-    }
-    return `${purposeMeaning} ${endingMeaning}`;
+    return hasModifier ? `${purposeMeaning} ${modifierMeaning}` : purposeMeaning;
   }
   // No dictionary match — no semantic phrase
   return "";

@@ -314,7 +314,7 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
           <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.border})` }} />
         </div>
 
-        {/* Purpose Meaning — dictionary word ONLY, selected language only (no mixing) */}
+        {/* Resolved Purpose Phrase — Action + Purpose + Modifier (if applicable), selected language only */}
         <div className="rounded-lg p-3" style={{
           background: "rgba(212,175,55,0.10)",
           border: `1px solid ${G.borderHi}`,
@@ -323,11 +323,11 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
             {L.purposeMeaning}
           </p>
           {(() => {
-            const meaning = lang === "ml" ? interp.purposeMeaningML : interp.purposeMeaningEN;
-            if (meaning) {
+            const phrase = lang === "ml" ? interp.finalMeaningML : interp.finalMeaningEN;
+            if (phrase) {
               return lang === "ml"
-                ? <p className="font-malayalam text-sm font-bold leading-relaxed" style={{ color: G.text }}>{meaning}</p>
-                : <p className="font-inter text-sm font-bold" style={{ color: G.text }}>{meaning}</p>;
+                ? <p className="font-malayalam text-sm font-bold leading-relaxed" style={{ color: G.text }}>{phrase}</p>
+                : <p className="font-inter text-sm font-bold" style={{ color: G.text }}>{phrase}</p>;
             }
             if (loading) {
               return <p className="font-inter text-xs italic" style={{ color: G.dim }}>{L.loading}</p>;
