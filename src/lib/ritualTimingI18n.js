@@ -669,7 +669,7 @@ function mlNarrative(line, idx, analysis, lang) {
 
   // 0 — "This ritual has been identified as "X" from your Mizan results and custom purpose (Y)."
   if ((m = line.match(/^This ritual has been identified as "(.+?)" from your Mizan results and custom purpose \((.+?)\)\.$/))) {
-    const rt = tRitualType(m[1], "ml") || m[1];
+    const rt = a?.ritualSemanticMl || tRitualType(m[1], "ml") || m[1];
     const matched = tMatchedOn(m[2]);
     return `നിങ്ങളുടെ മിസാൻ ഫലങ്ങളിൽ നിന്നും ഇഷ്ടാനുസൃത ലക്ഷ്യത്തിൽ നിന്നും (${matched}) ഈ കർമ്മം "${rt}" ആയി തിരിച്ചറിഞ്ഞിരിക്കുന്നു — ശരിയായ സമയത്ത് അനുഷ്ഠിക്കേണ്ട ഒരു ആധ്യാത്മിക പ്രവർത്തനം. ഇത് ${tRitualType(a?.ritualCategory, "ml") || "പൊതുവായ ആധ്യാത്മിക കർമ്മം"} വിഭാഗത്തിൽ പെടുന്നു.`;
   }

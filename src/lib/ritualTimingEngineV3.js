@@ -104,6 +104,8 @@ function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLoo
         matchedOn: `Purpose Dictionary: "${purposeLookup.matchedPhrase}" → ${purposeLookup.ritualIntent}`,
         semanticMeaningEn: purposeLookup.english_meaning || "",
         semanticMeaningMl: purposeLookup.malayalam_meaning || "",
+        resolvedPhraseEn: purposeLookup.interpretation_en || "",
+        resolvedPhraseMl: purposeLookup.interpretation_ml || "",
         dictionarySource: purposeLookup.source || null,
       };
     }
@@ -777,9 +779,11 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // BUILD 10-SECTION REPORT (same shape as V2)
   // ═══════════════════════════════════════════════════════════════
   const report = [];
-  const ritualTypeLabel = identified.semanticMeaningEn
-    ? identified.semanticMeaningEn
-    : effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work";
+  // Canonical display label: full resolved phrase (Action + Purpose + Modifier),
+  // never the isolated dictionary keyword. Falls back to ritual-key label only
+  // when no dictionary match produced a resolved phrase.
+  const ritualTypeLabel = identified.resolvedPhraseEn
+    || (effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work");
 
   report.push({
     section: "TODAY ANALYSIS", icon: "calendar", status: canPerformToday,
@@ -898,7 +902,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     verdict, verdictColor, verdictReason, verdictStars: stars, verdictStarsString: starsToString(stars),
     confidenceScore: score, scoreBreakdown: scoreReasons,
     ritualType: ritualTypeLabel, ritualTypeDescription: "", ritualCategory: ritualTypeLabel, ritualIntent: ritualTypeLabel,
-    ritualSemanticMl: identified.semanticMeaningMl || null,
+    ritualSemanticMl: identified.resolvedPhraseMl || null,
     khayrSharr: khayrSharr || "Not selected", khayrSharrInferred: false,
     khayrSharrMeaning: khayrSharr === "khayr" ? "Benevolence" : khayrSharr === "sharr" ? "Power/Banishment" : "Not determined",
     canPerformToday,
