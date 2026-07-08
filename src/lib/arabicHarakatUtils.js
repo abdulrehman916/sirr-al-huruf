@@ -74,6 +74,10 @@ export function hashText(text) {
   return Math.abs(hash).toString(36);
 }
 
+// Minimum AI confidence (0-100) required to apply AI-generated Harakat.
+// Below this threshold, the original text is displayed without AI Harakat.
+export const HARAKAT_CONFIDENCE_THRESHOLD = 70;
+
 const CACHE_PREFIX = "sirr_harakat_";
 
 /**
