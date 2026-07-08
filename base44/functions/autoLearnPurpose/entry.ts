@@ -137,12 +137,12 @@ Instructions:
    - english_meaning: concise English translation of the MAIN PURPOSE only
    - malayalam_meaning: Malayalam translation of the MAIN PURPOSE only
    - normalized_purpose_key: one of "celb", "tard", "sihhat", "sekam", "tarfet", "rizq", "knowledge", "travel", "sultan", "haybah"
+   - synonyms: array of 2-6 Arabic alternate spellings / root variants / common forms of this word (e.g. with/without ال, different hamza forms, singular/plural). These are saved so future lookups find any variant instantly without calling AI again.
+   - confidence: integer 0-100 — how confident the AI is that this is the correct meaning (100 = certain, 50 = uncertain). First candidate should have the highest confidence.
 
 Examples:
-  "المال" → [Wealth, Money, Property, Financial assets]
-  "المحبة" → [Love, Affection, Devotion]
-  "الرزق" → [Provision, Sustenance, Livelihood]
-  "الهيبة" → [Awe, Majesty, Authority]
+  "المال" → [Wealth (synonyms: [مال, الأموال, مالاً], confidence: 95), Money (synonyms: [نقود, دراهم], confidence: 70)]
+  "المحبة" → [Love (synonyms: [محبة, مودة, وداد, حب], confidence: 95), Affection (synonyms: [عاطفة, ميل], confidence: 60)]
 
 Return ONLY a JSON object.`,
       response_json_schema: {
@@ -156,6 +156,12 @@ Return ONLY a JSON object.`,
                 english_meaning: { type: "string", description: "English translation of the MAIN PURPOSE only" },
                 malayalam_meaning: { type: "string", description: "Malayalam translation of the MAIN PURPOSE only" },
                 normalized_purpose_key: { type: "string", description: "One of: celb, tard, sihhat, sekam, tarfet, rizq, knowledge, travel, sultan, haybah" },
+                synonyms: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "2-6 Arabic alternate spellings / root variants / common forms",
+                },
+                confidence: { type: "integer", description: "AI confidence score 0-100" },
               },
             },
             description: "2-5 candidate meanings, most likely first",
@@ -182,6 +188,10 @@ Return ONLY a JSON object.`,
         english_meaning: (c.english_meaning || "").trim(),
         malayalam_meaning: (c.malayalam_meaning || "").trim(),
         normalized_purpose_key: c.normalized_purpose_key || "celb",
+        synonyms: Array.isArray(c.synonyms)
+          ? c.synonyms.map((s) => String(s || "").trim()).filter(Boolean)
+          : [],
+        confidence: typeof c.confidence === "number" ? Math.max(0, Math.min(100, Math.round(c.confidence))) : 50,
         rank: i + 1,
       })),
       _debug: {

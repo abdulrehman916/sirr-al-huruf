@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { mainPurpose, english_meaning, malayalam_meaning, normalized_purpose_key } = body;
+    const { mainPurpose, english_meaning, malayalam_meaning, normalized_purpose_key, synonyms, ai_confidence } = body;
 
     if (!mainPurpose || !mainPurpose.trim()) {
       return Response.json({ error: "mainPurpose is required" }, { status: 400 });
@@ -44,8 +44,11 @@ Deno.serve(async (req) => {
       action: actionEnum,
       normalized_purpose_key: normKey,
       language: "ar",
-      aliases: [],
-      source: "AI Generated (User Confirmed)",
+      aliases: Array.isArray(synonyms)
+        ? synonyms.map((s) => String(s || "").trim()).filter(Boolean)
+        : [],
+      ai_confidence: typeof ai_confidence === "number" ? Math.max(0, Math.min(100, Math.round(ai_confidence))) : null,
+      source: "AI Confirmed",
       is_active: true,
       notes: "User-confirmed meaning from AI candidates",
     };
@@ -62,9 +65,10 @@ Deno.serve(async (req) => {
       confirmed: true,
       ritualIntent: normKey,
       matchedPhrase: newEntry.purpose_phrase,
-      source: "AI Generated (User Confirmed)",
+      source: "AI Confirmed",
       malayalam_meaning: newEntry.malayalam_meaning,
       english_meaning: newEntry.english_meaning,
+      ai_confidence: newEntry.ai_confidence,
       _debug: {
         normalizedKey: newEntry.purpose_phrase,
         deepNormalizedKey: newEntry.purpose_phrase,

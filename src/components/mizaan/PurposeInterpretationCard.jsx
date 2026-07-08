@@ -196,6 +196,8 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
         english_meaning: candidate.english_meaning,
         malayalam_meaning: candidate.malayalam_meaning,
         normalized_purpose_key: candidate.normalized_purpose_key,
+        synonyms: candidate.synonyms,
+        ai_confidence: candidate.confidence,
       });
       if (result.matched) {
         // Clear cache so future lookups find the new dictionary entry

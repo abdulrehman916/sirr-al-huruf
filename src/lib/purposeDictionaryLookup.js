@@ -57,12 +57,14 @@ export function clearLookupCache(customPurpose, selectedAction) {
 
 // Confirm a user-selected candidate meaning. Saves to PurposeDictionary
 // and returns the confirmed result in the same shape as lookupPurposeIntent.
-export function confirmPurposeMeaning({ mainPurpose, english_meaning, malayalam_meaning, normalized_purpose_key }) {
+export function confirmPurposeMeaning({ mainPurpose, english_meaning, malayalam_meaning, normalized_purpose_key, synonyms, ai_confidence }) {
   return base44.functions.invoke("confirmPurposeMeaning", {
     mainPurpose,
     english_meaning,
     malayalam_meaning,
     normalized_purpose_key,
+    synonyms,
+    ai_confidence,
   })
     .then((response) => response.data || { matched: false })
     .catch((err) => {

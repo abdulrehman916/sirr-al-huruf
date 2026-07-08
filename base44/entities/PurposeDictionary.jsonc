@@ -1,7 +1,7 @@
 {
   "name": "PurposeDictionary",
   "type": "object",
-  "description": "Admin-only backend lookup database. Maps free-text purpose phrases (Arabic, Malayalam, English) entered in the 7th Mizan to normalized 7th-Mizan purpose card keys. Never visible to end users. Populated manually by the Owner from manuscript sources. Read exclusively through the lookupPurposeIntent backend function (service role). COMPLETELY ISOLATED \u2014 not part of any Mizan, Ebced, Bast, Kasam, Astro Clock, or Ritual Timing calculation. Only an intent lookup before the existing Ritual Timing workflow.",
+  "description": "Admin-only backend lookup database. Maps free-text purpose phrases (Arabic, Malayalam, English) entered in the 7th Mizan to normalized 7th-Mizan purpose card keys. Never visible to end users. Populated manually by the Owner from manuscript sources or auto-populated when a user confirms an AI-generated meaning. Read exclusively through the lookupPurposeIntent backend function (service role). COMPLETELY ISOLATED \u2014 not part of any Mizan, Ebced, Bast, Kasam, Astro Clock, or Ritual Timing calculation. Only an intent lookup before the existing Ritual Timing workflow.",
   "properties": {
     "purpose_phrase": {
       "type": "string",
@@ -9,7 +9,7 @@
     },
     "arabic_keyword": {
       "type": "string",
-      "description": "Short Arabic keyword for the purpose subject (e.g. \u0645\u062d\u0628\u0629)"
+      "description": "Short normalized Arabic keyword for the purpose subject, harakat stripped (e.g. \u0645\u062d\u0628\u0629)"
     },
     "malayalam_meaning": {
       "type": "string",
@@ -67,11 +67,15 @@
         "type": "string"
       },
       "default": [],
-      "description": "Alternative spellings, forms, or cross-language synonyms (Arabic, Malayalam, English) of the same purpose"
+      "description": "Alternative Arabic spellings, forms, root variants, and cross-language synonyms of the same purpose. Populated by AI when a user confirms a generated meaning, so future lookups find any variant instantly without re-calling AI."
+    },
+    "ai_confidence": {
+      "type": "number",
+      "description": "AI confidence score (0-100) for AI-generated entries. Null for manuscript-sourced entries. Higher = more certain. Stored so the Owner can review and prioritize low-confidence entries."
     },
     "source": {
       "type": "string",
-      "description": "Manuscript source reference (book name, page) for this mapping"
+      "description": "Provenance of this entry. 'Manuscript \u2014 Owner populated' for manually added entries. 'AI Confirmed' for entries auto-saved after a user confirmed an AI-generated meaning."
     },
     "is_active": {
       "type": "boolean",
