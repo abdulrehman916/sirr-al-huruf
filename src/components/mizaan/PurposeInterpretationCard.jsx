@@ -22,7 +22,7 @@ import { BookOpen, ArrowDown, Loader2, Bug, ChevronDown } from "lucide-react";
 import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
 import {
   detectAction, parsePurposeStructure, ACTION_MEANINGS, ENDING_MEANING,
-  CARD_TO_ACTION, buildRitualSemanticPhrase,
+  CARD_TO_ACTION, CARD_TO_MODIFIER, buildRitualSemanticPhrase, buildCanonicalArabicPhrase,
 } from "../../lib/ritualSemanticPhrase";
 import { useRitualLang, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 
@@ -61,18 +61,24 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
     const custom = (customPurpose || "").trim();
     if (!custom) return null;
 
+    // Action — from any selected action card, else detect from text
     let actionArabic = null;
-    const cardKey = Array.isArray(selections?.purposes) && selections.purposes.length > 0
-      ? selections.purposes[0] : null;
-    if (cardKey && CARD_TO_ACTION[cardKey]) actionArabic = CARD_TO_ACTION[cardKey];
+    const purposes = Array.isArray(selections?.purposes) ? selections.purposes : [];
+    const actionCard = purposes.find((k) => CARD_TO_ACTION[k]);
+    if (actionCard) actionArabic = CARD_TO_ACTION[actionCard];
     if (!actionArabic) actionArabic = detectAction(custom);
 
     const parsed = parsePurposeStructure(custom);
     const middleWord = parsed.mainPurpose;
     const rawMiddle = parsed.rawMiddle;
-    const modifierArabic = detectModifier(custom);
+    // Modifier — from any selected modifier card, else detect from text
+    let modifierArabic = detectModifier(custom);
+    if (!modifierArabic) {
+      const modCard = purposes.find((k) => CARD_TO_MODIFIER[k]);
+      if (modCard) modifierArabic = CARD_TO_MODIFIER[modCard];
+    }
 
-    return { actionArabic, middleWord, rawMiddle, modifierArabic, cardKey };
+    return { actionArabic, middleWord, rawMiddle, modifierArabic, cardKey: actionCard || null };
   }, [customPurpose, selections]);
 
   // ── Purpose Dictionary lookup (async) ──
@@ -96,8 +102,10 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
         setPurposeLookup(res);
         setLoading(false);
         if (onPurposeResolved) {
+          const canonicalArabic = buildCanonicalArabicPhrase({ selections, customPurpose });
           const newResolved = {
             ...res,
+            canonical_arabic: canonicalArabic,
             interpretation_en: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "en" }),
             interpretation_ml: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "ml" }),
           };
@@ -109,7 +117,8 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
             last.english_meaning !== newResolved.english_meaning ||
             last.malayalam_meaning !== newResolved.malayalam_meaning ||
             last.interpretation_en !== newResolved.interpretation_en ||
-            last.interpretation_ml !== newResolved.interpretation_ml;
+            last.interpretation_ml !== newResolved.interpretation_ml ||
+            last.canonical_arabic !== newResolved.canonical_arabic;
           if (changed) {
             lastResolvedRef.current = newResolved;
             onPurposeResolved(newResolved);
@@ -142,6 +151,7 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
 
     return {
       originalArabic: (customPurpose || "").trim(),
+      canonicalArabic: buildCanonicalArabicPhrase({ selections, customPurpose }),
       actionArabic: detected.actionArabic,
       actionMeaningML: detected.actionArabic ? (ACTION_MEANINGS[detected.actionArabic]?.ml || "") : "",
       actionMeaningEN: detected.actionArabic ? (ACTION_MEANINGS[detected.actionArabic]?.en || "") : "",
@@ -163,6 +173,7 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
   const L = {
     title: lang === "ml" ? "ലക്ഷ്യ വ്യാഖ്യാനം" : "Purpose Interpretation",
     original: lang === "ml" ? "യഥാർത്ഥ അറബിക് വാചകം" : "Original Arabic Text",
+    canonical: lang === "ml" ? "സമ്പൂർണ്ണ ലക്ഷ്യം" : "Canonical Purpose",
     action: lang === "ml" ? "കർമ്മം (Action Card)" : "Action Card",
     mainPurpose: lang === "ml" ? "പ്രധാന ലക്ഷ്യം" : "Main Purpose",
     modifier: lang === "ml" ? "പരിഷ്കർത്തകൻ" : "Modifier",
@@ -230,10 +241,10 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
           </div>
         )}
 
-        {/* Original Arabic */}
-        <Row label={L.original}>
-          <p className="font-amiri text-base text-right leading-relaxed" style={{ color: "#fff" }} dir="rtl">
-            {interp.originalArabic}
+        {/* Canonical Purpose — Action + Purpose + Modifier (built from both modes) */}
+        <Row label={L.canonical}>
+          <p className="font-amiri text-base text-right leading-relaxed" style={{ color: G.text }} dir="rtl">
+            {interp.canonicalArabic || interp.originalArabic}
           </p>
         </Row>
 
@@ -314,7 +325,7 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
           <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.border})` }} />
         </div>
 
-        {/* Resolved Purpose Phrase — Action + Purpose + Modifier (if applicable), selected language only */}
+        {/* Canonical Purpose + Resolved Meaning — Action + Purpose + Modifier */}
         <div className="rounded-lg p-3" style={{
           background: "rgba(212,175,55,0.10)",
           border: `1px solid ${G.borderHi}`,
@@ -322,6 +333,11 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
           <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
             {L.purposeMeaning}
           </p>
+          {interp.canonicalArabic && (
+            <p className="font-amiri text-base text-right leading-relaxed mb-2" style={{ color: "#fff" }} dir="rtl">
+              {interp.canonicalArabic}
+            </p>
+          )}
           {(() => {
             const phrase = lang === "ml" ? interp.finalMeaningML : interp.finalMeaningEN;
             if (phrase) {

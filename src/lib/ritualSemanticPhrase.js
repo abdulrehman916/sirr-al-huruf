@@ -33,6 +33,11 @@ export const CARD_TO_ACTION = {
   sekam: "السقم",
 };
 
+// Purpose card key → Modifier Arabic phrase (the card IS the Modifier)
+export const CARD_TO_MODIFIER = {
+  tarfet: "طرفة العين",
+};
+
 // ── Common Ending (fixed, always appended) ──
 export const ENDING_MEANING = { en: "Quickly", ml: "വേഗത്തിൽ" };
 
@@ -124,11 +129,11 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
   const custom = (customPurpose || "").trim();
   if (!custom) return "";
 
-  // 1. Action — from selected card, else detect from text
+  // 1. Action — from any selected action card, else detect from text
   let actionArabic = null;
-  const cardKey = Array.isArray(selections?.purposes) && selections.purposes.length > 0
-    ? selections.purposes[0] : null;
-  if (cardKey && CARD_TO_ACTION[cardKey]) actionArabic = CARD_TO_ACTION[cardKey];
+  const actionCard = Array.isArray(selections?.purposes)
+    ? selections.purposes.find((k) => CARD_TO_ACTION[k]) : null;
+  if (actionCard) actionArabic = CARD_TO_ACTION[actionCard];
   if (!actionArabic) actionArabic = detectAction(custom);
 
   // 2. Purpose meaning — from dictionary lookup
@@ -141,9 +146,13 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
       : (purposeLookup.english_meaning || "");
   }
 
-  // 3. Modifier — only included when "طرفة العين" is detected in the text
+  // 3. Modifier — from card selection OR text detection (unified for both modes)
   const parsed = parsePurposeStructure(custom);
-  const hasModifier = !!parsed.modifier;
+  let hasModifier = !!parsed.modifier;
+  if (!hasModifier) {
+    const purposes = Array.isArray(selections?.purposes) ? selections.purposes : [];
+    hasModifier = purposes.some((key) => CARD_TO_MODIFIER[key]);
+  }
   const modifierMeaning = hasModifier
     ? (lang === "ml" ? ENDING_MEANING.ml : ENDING_MEANING.en)
     : "";
@@ -170,6 +179,42 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
   }
   // No dictionary match — no semantic phrase
   return "";
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CANONICAL ARABIC PHRASE — Action + Purpose + Modifier
+// Unified builder for both input modes (card selection + full sentence).
+// MODE 1: Action from card + Purpose from text + Modifier from card
+// MODE 2: All three detected from text
+// Both modes produce identical canonical Arabic phrase.
+// ═══════════════════════════════════════════════════════════════
+export function buildCanonicalArabicPhrase({ selections, customPurpose }) {
+  const custom = (customPurpose || "").trim();
+  if (!custom) return "";
+
+  const purposes = Array.isArray(selections?.purposes) ? selections.purposes : [];
+
+  // 1. Action — from card, else detect from text
+  let actionArabic = null;
+  const actionCard = purposes.find((k) => CARD_TO_ACTION[k]);
+  if (actionCard) actionArabic = CARD_TO_ACTION[actionCard];
+  if (!actionArabic) actionArabic = detectAction(custom);
+
+  // 2. Modifier — from card, else detect from text
+  let modifierArabic = null;
+  const modCard = purposes.find((k) => CARD_TO_MODIFIER[k]);
+  if (modCard) modifierArabic = CARD_TO_MODIFIER[modCard];
+  if (!modifierArabic) modifierArabic = parsePurposeStructure(custom).modifier || null;
+
+  // 3. Main Purpose — from text (positional parser strips action + modifier)
+  const mainPurpose = parsePurposeStructure(custom).mainPurpose || custom;
+
+  // Build canonical: Action + Purpose + Modifier
+  const parts = [];
+  if (actionArabic) parts.push(actionArabic);
+  if (mainPurpose) parts.push(mainPurpose);
+  if (modifierArabic) parts.push(modifierArabic);
+  return parts.join(" ");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -212,14 +257,14 @@ export function useRitualSemanticPhrase(lang, refreshKey = 0) {
     // dictionary returns the purpose's stored semantic meaning, not a
     // literal translation of the whole typed phrase.
     let actionArabic = null;
-    const cardKey = Array.isArray(selections?.purposes) && selections.purposes.length > 0
-      ? selections.purposes[0] : null;
-    if (cardKey && CARD_TO_ACTION[cardKey]) actionArabic = CARD_TO_ACTION[cardKey];
+    const purposes = Array.isArray(selections?.purposes) ? selections.purposes : [];
+    const actionCard = purposes.find((k) => CARD_TO_ACTION[k]);
+    if (actionCard) actionArabic = CARD_TO_ACTION[actionCard];
     if (!actionArabic) actionArabic = detectAction(custom);
     const middleWord = extractMiddleWord(custom, actionArabic);
     if (!middleWord) { setPhrase(""); return; }
     // Lookup ONLY the Main Purpose (middle segment) — never the full phrase.
-    lookupPurposeIntent(middleWord, cardKey).then((res) => {
+    lookupPurposeIntent(middleWord, actionCard || null).then((res) => {
       if (!cancelled) {
         setPhrase(buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang }));
       }
