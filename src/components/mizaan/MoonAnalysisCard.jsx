@@ -39,6 +39,94 @@ const G = {
   blueBorder: "rgba(96,165,250,0.35)",
 };
 
+// ── Engine check label/reason translators (Malayalam) ──
+const ML_CHECK_LABEL = {
+  "Day": "ദിവസം",
+  "Saat": "സഅാത്",
+  "Kawkab": "കവ്കബ്",
+  "Nahas (Day)": "നഹാസ് (ദിവസം)",
+  "Nahas (Hour)": "നഹാസ് (മണിക്കൂർ)",
+  "Day / Night": "പകൽ / രാത്രി",
+  "Manuscript Moon Phase": "കൈയെഴുത്തുപ്രതി ചന്ദ്രദശ",
+  "Manuscript Moon Zodiac": "കൈയെഴുത്തുപ്രതി ചന്ദ്ര രാശി",
+  "Manuscript Moon Mansion": "കൈയെഴുത്തുപ്രതി ചന്ദ്ര മാളിക",
+  "Moon Phase": "ചന്ദ്രദശ",
+  "Moon Zodiac": "ചന്ദ്ര രാശി",
+  "Moon Mansion": "ചന്ദ്ര മാളിക",
+};
+const ML_DAY_MAP = { Sunday: "ഞായർ", Monday: "തിങ്കൾ", Tuesday: "ചൊവ്വ", Wednesday: "ബുധൻ", Thursday: "വ്യാഴം", Friday: "വെള്ളി", Saturday: "ശനി" };
+const ML_PLANET_MAP = { Sun: "സൂര്യൻ", Moon: "ചന്ദ്രൻ", Mars: "ചൊവ്വ", Mercury: "ബുധൻ", Jupiter: "ഗുരു", Venus: "ശുക്രൻ", Saturn: "ശനി" };
+
+function tCheckLabel(label, lang) {
+  if (lang !== "ml" || !label) return label;
+  return ML_CHECK_LABEL[label] || label;
+}
+function tCheckReason(reason, lang) {
+  if (lang !== "ml" || !reason) return reason;
+  let r = reason;
+  for (const [en, ml] of Object.entries(ML_DAY_MAP)) r = r.split(en).join(ml);
+  for (const [en, ml] of Object.entries(ML_PLANET_MAP)) r = r.split(en).join(ml);
+  r = r.replace("Day is prescribed by manuscript.", "ദിവസം ഗ്രന്ഥപ്രകാരം നിർദ്ദേശിച്ചതാണ്.");
+  r = r.replace("Day is not prescribed by manuscript.", "ദിവസം ഗ്രന്ഥപ്രകാരം നിർദ്ദേശിച്ചതല്ല.");
+  r = r.replace("Nahas restriction exists.", "നഹാസ് നിർബന്ധം നിലവിലുണ്ട്.");
+  r = r.replace("No Nahas on this day.", "ഈ ദിവസത്തിന് നഹാസ് ഇല്ല.");
+  r = r.replace("Nahas restriction exists on this hour.", "ഈ മണിക്കൂറിന് നഹാസ് നിർബന്ധം നിലവിലുണ്ട്.");
+  r = r.replace("No Nahas on this hour.", "ഈ മണിക്കൂറിന് നഹാസ് ഇല്ല.");
+  r = r.replace("Saat is prescribed by manuscript.", "സഅാത് ഗ്രന്ഥപ്രകാരം നിർദ്ദേശിച്ചതാണ്.");
+  r = r.replace("No suitable Saat found on this day.", "ഈ ദിവസത്തിൽ അനുയോജ്യമായ സഅാത് ഇല്ല.");
+  r = r.replace("Kawkab matches manuscript prescription.", "കവ്കബ് ഗ്രന്ഥ നിർദ്ദേശവുമായി പൊരുത്തപ്പെടുന്നു.");
+  r = r.replace("Kawkab does not match prescription.", "കവ്കബ് നിർദ്ദേശവുമായി പൊരുത്തപ്പെടുന്നില്ല.");
+  r = r.replace("Night, as required by manuscript.", "രാത്രി, ഗ്രന്ഥപ്രകാരം ആവശ്യമുള്ളത്.");
+  r = r.replace("Manuscript requires night but no night Saat available.", "ഗ്രന്ഥം രാത്രി ആവശ്യമാക്കുന്നു, എന്നാൽ രാത്രി സഅാത് ലഭ്യമല്ല.");
+  r = r.replace("Manuscript Moon phase satisfied.", "കൈയെഴുത്തുപ്രതി ചന്ദ്രദശ പാലിക്കപ്പെട്ടു.");
+  r = r.replace("Manuscript Moon phase NOT satisfied.", "കൈയെഴുത്തുപ്രതി ചന്ദ്രദശ പാലിക്കപ്പെട്ടില്ല.");
+  r = r.replace("Manuscript Moon zodiac satisfied.", "കൈയെഴുത്തുപ്രതി ചന്ദ്ര രാശി പാലിക്കപ്പെട്ടു.");
+  r = r.replace("Manuscript Moon zodiac NOT satisfied.", "കൈയെഴുത്തുപ്രതി ചന്ദ്ര രാശി പാലിക്കപ്പെട്ടില്ല.");
+  r = r.replace("Manuscript Moon mansion satisfied.", "കൈയെഴുത്തുപ്രതി ചന്ദ്ര മാളിക പാലിക്കപ്പെട്ടു.");
+  r = r.replace("Manuscript Moon mansion NOT satisfied.", "കൈയെഴുത്തുപ്രതി ചന്ദ്ര മാളിക പാലിക്കപ്പെട്ടില്ല.");
+  r = r.replace("Selected Moon phase matched.", "തിരഞ്ഞെടുത്ത ചന്ദ്രദശ പൊരുത്തപ്പെട്ടു.");
+  r = r.replace("Selected Moon phase NOT matched.", "തിരഞ്ഞെടുത്ത ചന്ദ്രദശ പൊരുത്തപ്പെട്ടില്ല.");
+  r = r.replace("Selected Moon zodiac matched.", "തിരഞ്ഞെടുത്ത ചന്ദ്ര രാശി പൊരുത്തപ്പെട്ടു.");
+  r = r.replace("Selected Moon zodiac NOT matched.", "തിരഞ്ഞെടുത്ത ചന്ദ്ര രാശി പൊരുത്തപ്പെട്ടില്ല.");
+  r = r.replace("Selected Moon mansion matched.", "തിരഞ്ഞെടുത്ത ചന്ദ്ര മാളിക പൊരുത്തപ്പെട്ടു.");
+  r = r.replace("Selected Moon mansion NOT matched.", "തിരഞ്ഞെടുത്ത ചന്ദ്ര മാളിക പൊരുത്തപ്പെട്ടില്ല.");
+  r = r.replace("None available", "ലഭ്യമല്ല");
+  r = r.replace("Any", "ഏതെങ്കിലും");
+  r = r.replace("Avoid enemy/worst planets", "ശത്രു/മോശം ഗ്രഹങ്ങൾ ഒഴിവാക്കുക");
+  r = r.replace("Night", "രാത്രി");
+  r = r.replace("Day", "പകൽ");
+  return r;
+}
+function tDayName(name, lang) {
+  if (lang !== "ml" || !name) return name;
+  return ML_DAY_MAP[name] || name;
+}
+function tMoonPhaseName(name, lang) {
+  if (lang !== "ml" || !name) return name;
+  if (name === "Waxing") return "വർദ്ധമാനം";
+  if (name === "Waning") return "ക്ഷയം";
+  return name;
+}
+const ML_MONTH_MAP = {
+  January: "ജനുവരി", February: "ഫെബ്രുവരി", March: "മാർച്ച്", April: "ഏപ്രിൽ",
+  May: "മേയ്", June: "ജൂൺ", July: "ജൂലൈ", August: "ഓഗസ്റ്റ്",
+  September: "സെപ്റ്റംബർ", October: "ഒക്ടോബർ", November: "നവംബർ", December: "ഡിസംബർ",
+};
+function tPlanetName(name, lang) {
+  if (lang !== "ml" || !name) return name;
+  return ML_PLANET_MAP[name] || name;
+}
+function tMonthName(name, lang) {
+  if (lang !== "ml" || !name) return name;
+  return ML_MONTH_MAP[name] || name;
+}
+function tNahasStatus(status, lang) {
+  if (lang !== "ml" || !status) return status;
+  if (status.includes("blocked")) return "നഹാസ് നിർബന്ധം നിലവിലുണ്ട് — ഈ സമയം തടസ്സപ്പെട്ടു.";
+  if (status.includes("No Nahas")) return "നഹാസ് നിർബന്ധമില്ല.";
+  return status;
+}
+
 // ── Bilingual labels ──
 const L = (lang) => ({
   title: lang === "ml" ? "ചന്ദ്ര പ്ലാനിംഗ് (ഐച്ഛികം)" : "Moon Planning (Optional)",
@@ -686,12 +774,12 @@ function PlanResultView({ result, t, lang, moonCitations, req }) {
             {t.nextMoonOccurs}
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <MoonDataRow label={t.date} value={`${firstMoonMatch.dayNumber} ${firstMoonMatch.monthName} ${firstMoonMatch.year}`} />
+            <MoonDataRow label={t.date} value={`${firstMoonMatch.dayNumber} ${tMonthName(firstMoonMatch.monthName, lang)} ${firstMoonMatch.year}`} />
             <MoonDataRow label={t.time} value={firstMoonMatch.timeStr} />
-            <MoonDataRow label={t.dayName} value={firstMoonMatch.dayName} />
+            <MoonDataRow label={t.dayName} value={tDayName(firstMoonMatch.dayName, lang)} />
             <MoonDataRow label={t.mansion} value={firstMoonMatch.moon?.moonMansion ? (firstMoonMatch.moon.moonMansionArabic ? `${firstMoonMatch.moon.moonMansionArabic} (${firstMoonMatch.moon.moonMansion})` : firstMoonMatch.moon.moonMansion) : "—"} />
             <MoonDataRow label={t.zodiacSign} value={firstMoonMatch.moon?.moonSign ? `${firstMoonMatch.moon.moonSignSymbol || ""} ${firstMoonMatch.moon.moonSign}` : "—"} />
-            <MoonDataRow label={t.phase} value={firstMoonMatch.moon ? `Day ${firstMoonMatch.moon.lunarDay} (${firstMoonMatch.moon.phaseName})` : "—"} />
+            <MoonDataRow label={t.phase} value={firstMoonMatch.moon ? `Day ${firstMoonMatch.moon.lunarDay} (${tMoonPhaseName(firstMoonMatch.moon.phaseName, lang)})` : "—"} />
           </div>
           {/* Manuscript status at this moon match */}
           <div className="flex items-center gap-2 p-2 rounded-lg" style={{
@@ -785,19 +873,19 @@ function FinalTimelineCard({ data: m, t, lang, moonCitations, hasMoonPrefs, moon
       {/* Complete Details Grid */}
       <div className="p-3 space-y-2">
         <div className="grid grid-cols-2 gap-2">
-          <MoonDataRow label={t.date} value={`${m.dayNumber} ${m.monthName} ${m.year}`} />
+          <MoonDataRow label={t.date} value={`${m.dayNumber} ${tMonthName(m.monthName, lang)} ${m.year}`} />
           <MoonDataRow label={t.localTime} value={m.timeStr} />
-          <MoonDataRow label={t.dayName} value={m.dayName} />
-          <MoonDataRow label={t.month} value={m.monthName} />
-          <MoonDataRow label={t.saat} value={m.hourNumber ? `#${m.hourNumber} (${m.hourPlanet})` : "—"} />
-          <MoonDataRow label={t.kawkab} value={m.hourPlanet || "—"} />
+          <MoonDataRow label={t.dayName} value={tDayName(m.dayName, lang)} />
+          <MoonDataRow label={t.month} value={tMonthName(m.monthName, lang)} />
+          <MoonDataRow label={t.saat} value={m.hourNumber ? `#${m.hourNumber} (${tPlanetName(m.hourPlanet, lang)})` : "—"} />
+          <MoonDataRow label={t.kawkab} value={tPlanetName(m.hourPlanet, lang) || "—"} />
           {m.moon?.moonMansion && (
             <MoonDataRow label={t.mansion} value={m.moon.moonMansionArabic ? `${m.moon.moonMansionArabic} (${m.moon.moonMansion})` : m.moon.moonMansion} />
           )}
           {m.moon?.moonSign && (
             <MoonDataRow label={t.zodiacSign} value={`${m.moon.moonSignSymbol || ""} ${m.moon.moonSign}`} />
           )}
-          <MoonDataRow label={t.phase} value={m.moon ? `Day ${m.moon.lunarDay} (${m.moon.phaseName})` : "—"} />
+          <MoonDataRow label={t.phase} value={m.moon ? `Day ${m.moon.lunarDay} (${tMoonPhaseName(m.moon.phaseName, lang)})` : "—"} />
           <MoonDataRow label={t.waxWane} value={m.moon?.isWaxing ? t.waxing : t.waning} />
           <MoonDataRow label={t.illumination} value={illumination} />
           <MoonDataRow label={t.moonAge} value={moonAge} />
@@ -814,7 +902,7 @@ function FinalTimelineCard({ data: m, t, lang, moonCitations, hasMoonPrefs, moon
             ? <AlertTriangle className="w-3.5 h-3.5" style={{ color: G.fail }} />
             : <Check className="w-3.5 h-3.5" style={{ color: G.pass }} />}
           <span className={`text-xs ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.75)" }}>
-            {t.nahasLabel}: {nahasActive ? m.nahasStatus : t.nahasClean}
+            {t.nahasLabel}: {nahasActive ? tNahasStatus(m.nahasStatus, lang) : t.nahasClean}
           </span>
         </div>
 
@@ -855,7 +943,7 @@ function FinalTimelineCard({ data: m, t, lang, moonCitations, hasMoonPrefs, moon
                   ? <Check className="w-3 h-3 flex-shrink-0" style={{ color: G.pass }} />
                   : <X className="w-3 h-3 flex-shrink-0" style={{ color: G.fail }} />}
                 <span className={`text-[11px] ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: mc.status === "pass" ? "rgba(255,255,255,0.70)" : G.fail }}>
-                  {mc.label}
+                  {tCheckLabel(mc.label, lang)}
                 </span>
               </div>
             ))}
@@ -961,10 +1049,10 @@ function TimelineExplanation({ rejectionTimeline, finalTime, t, lang, hasMoonPre
               }}>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "#fff" }}>
-                    {entry.dayNumber} {entry.monthName} {entry.year}
+                    {entry.dayNumber} {tMonthName(entry.monthName, lang)} {entry.year}
                   </span>
                   <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-                    ({entry.dayName})
+                    ({tDayName(entry.dayName, lang)})
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -977,7 +1065,7 @@ function TimelineExplanation({ rejectionTimeline, finalTime, t, lang, hasMoonPre
                   <div key={fci} className="flex items-start gap-1.5">
                     <X className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: G.fail }} />
                     <span className={`text-[11px] ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(248,113,113,0.70)" }}>
-                      {fc.label}: {fc.reason}
+                      {tCheckLabel(fc.label, lang)}: {tCheckReason(fc.reason, lang)}
                     </span>
                   </div>
                 ))}
@@ -998,17 +1086,17 @@ function TimelineExplanation({ rejectionTimeline, finalTime, t, lang, hasMoonPre
               }}>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: G.text }}>
-                    {finalTime.dayNumber} {finalTime.monthName} {finalTime.year}
+                    {finalTime.dayNumber} {tMonthName(finalTime.monthName, lang)} {finalTime.year}
                   </span>
                   <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-                    ({finalTime.dayName})
+                    ({tDayName(finalTime.dayName, lang)})
                   </span>
                 </div>
                 {finalTime.mandatoryChecks.filter(c => c.status === "pass").map((mc, mci) => (
                   <div key={mci} className="flex items-start gap-1.5">
                     <Check className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: G.pass }} />
                     <span className={`text-[11px] ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.65)" }}>
-                      {mc.label}: {mc.reason}
+                      {tCheckLabel(mc.label, lang)}: {tCheckReason(mc.reason, lang)}
                     </span>
                   </div>
                 ))}
@@ -1016,7 +1104,7 @@ function TimelineExplanation({ rejectionTimeline, finalTime, t, lang, hasMoonPre
                   <div key={`mp${mci}`} className="flex items-start gap-1.5">
                     <Check className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: G.pass }} />
                     <span className={`text-[11px] ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.65)" }}>
-                      {mc.label}: {mc.reason}
+                      {tCheckLabel(mc.label, lang)}: {tCheckReason(mc.reason, lang)}
                     </span>
                   </div>
                 ))}
@@ -1202,10 +1290,10 @@ function ExplainWhy({ data, t, lang, hasMoonPrefs, moonCitations, moonDistanceDa
         <p className="font-inter text-[9px] uppercase tracking-widest font-bold mb-1" style={{ color: G.blue }}>
           {t.transCurrentMoon}
         </p>
-        <MoonDataRow label={t.currentMoonLabel} value={data.moon ? `Day ${data.moon.lunarDay} (${data.moon.phaseName})` : "—"} />
+        <MoonDataRow label={t.currentMoonLabel} value={data.moon ? `Day ${data.moon.lunarDay} (${tMoonPhaseName(data.moon.phaseName, lang)})` : "—"} />
         <MoonDataRow label={t.mansion} value={data.moon?.moonMansion ? (data.moon.moonMansionArabic ? `${data.moon.moonMansionArabic} (${data.moon.moonMansion})` : data.moon.moonMansion) : "—"} />
         <MoonDataRow label={t.zodiacSign} value={data.moon?.moonSign ? `${data.moon.moonSignSymbol || ""} ${data.moon.moonSign}` : "—"} />
-        <MoonDataRow label={t.phase} value={data.moon ? data.moon.phaseName : "—"} />
+        <MoonDataRow label={t.phase} value={data.moon ? tMoonPhaseName(data.moon.phaseName, lang) : "—"} />
         <MoonDataRow label={t.illumination} value={data.moon?.moonIllumination != null ? `${Math.round(data.moon.moonIllumination)}%` : "—"} />
         <MoonDataRow label={t.moonAge} value={data.moon?.lunarDay != null ? `${data.moon.lunarDay} ${t.day}` : "—"} />
         {moonDistanceDays != null && (
@@ -1306,14 +1394,14 @@ function MoonCheckRow({ check, lang }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "#fff" }}>
-              {check.label}
+              {tCheckLabel(check.label, lang)}
             </span>
             <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>
               {check.currentValue || check.current}
             </span>
           </div>
           <p className={`text-[11px] leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.65)" }}>
-            {check.reason}
+            {tCheckReason(check.reason, lang)}
           </p>
         </div>
       </div>

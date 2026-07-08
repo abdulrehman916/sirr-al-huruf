@@ -542,6 +542,54 @@ function localizeSelectionAnalysis(sa, lang) {
   };
 }
 
+// ── Extra translation maps for analysis-level fields ──
+const ML_VERDICT_REASON = {
+  Excellent: "എല്ലാ കൈയെഴുത്തുപ്രതി വ്യവസ്ഥകളും യോജിക്കുന്നു.",
+  Good: "മിക്ക കൈയെഴുത്തുപ്രതി വ്യവസ്ഥകളും അനുകൂലമാണ്.",
+  Moderate: "മിശ്രിത വ്യവസ്ഥകൾ — ശ്രദ്ധയോടെ മുന്നോട്ടുപോകുക.",
+  Weak: "കൈയെഴുത്തുപ്രതി പ്രകാരം വ്യവസ്ഥകൾ പ്രതികൂലമാണ്.",
+  Avoid: "ഒന്നിലധികം പ്രതികൂല വ്യവസ്ഥകൾ.",
+};
+const ML_KHAYR_SHARR = {
+  "khayr": "ഖൈർ",
+  "sharr": "ശർ",
+  "Not selected": "തിരഞ്ഞെടുത്തിട്ടില്ല",
+};
+const ML_KHAYR_SHARR_MEANING = {
+  "khayr": "ഐശ്വര്യം",
+  "sharr": "ശക്തി/നിരസനം",
+  "Not selected": "നിർണ്ണയിച്ചിട്ടില്ല",
+  "Not determined": "നിർണ്ണയിച്ചിട്ടില്ല",
+};
+const ML_DAY_NIGHT_REASON = {
+  optimal: "രാത്രി, ഗ്രന്ഥപ്രകാരം ആവശ്യമുള്ളത്.",
+  forbidden: "പകലാണ്, എന്നാൽ ഗ്രന്ഥം രാത്രി ആവശ്യമാക്കുന്നു.",
+  neutral: "ഗ്രന്ഥങ്ങളിൽ രാത്രി നിർബന്ധമില്ല.",
+};
+function mlBestReason(analysis, type) {
+  if (type === "day") {
+    return analysis.bestDay
+      ? `ഗ്രന്ഥം നിർദ്ദേശിക്കുന്നത് ${analysis.bestDay}`
+      : "ഗ്രന്ഥങ്ങളിൽ ദിവസ നിർബന്ധമില്ല.";
+  }
+  return analysis.bestPlanetaryHour
+    ? `ഗ്രന്ഥം നിർദ്ദേശിക്കുന്നത് ${analysis.bestPlanetaryHour} മണിക്കൂർ(ങ്ങൾ)`
+    : "ഗ്രന്ഥങ്ങളിൽ മണിക്കൂർ നിർബന്ധമില്ല.";
+}
+function mlElementReason(analysis) {
+  const el = analysis.req?.element;
+  if (!el) return "ഗ്രന്ഥങ്ങളിൽ മൂലക നിർബന്ധമില്ല.";
+  return `ഗ്രന്ഥം നിർദ്ദേശിക്കുന്ന മൂലകം: ${ML_ELEMENT[el] || el}`;
+}
+function mlEnemyNote(analysis) {
+  const enemies = analysis.enemyAnalysis?.enemyRulers;
+  if (enemies && enemies.length > 0) {
+    const mlEnemies = enemies.map(e => ML_PLANET[e] || e).join(", ");
+    return `ഗ്രന്ഥം ${mlEnemies} നെ ഈ കർമ്മത്തിനുള്ള ശത്രു ഗ്രഹങ്ങളായി തിരിച്ചറിഞ്ഞിരിക്കുന്നു.`;
+  }
+  return "ഈ കർമ്മത്തിന് ഗ്രന്ഥങ്ങളിൽ ശത്രു ഗ്രഹങ്ങളൊന്നും നിർദ്ദേശിച്ചിട്ടില്ല.";
+}
+
 // ── Localize the full analysis object's report + supporting fields ──
 export function localizeAnalysis(analysis, lang) {
   if (lang !== "ml") return analysis;
@@ -606,8 +654,36 @@ export function localizeAnalysis(analysis, lang) {
     report,
     expertNarrative,
     verdict: tVerdict(analysis.verdict, lang),
-    ritualType: (lang === "ml" && analysis.ritualSemanticMl) ? analysis.ritualSemanticMl : tRitualType(analysis.ritualType, lang),
-    ritualCategory: (lang === "ml" && analysis.ritualSemanticMl) ? analysis.ritualSemanticMl : tRitualType(analysis.ritualCategory, lang),
+    ritualType: lang === "ml"
+      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualType] || "മലയാളം പരിഭാഷ ലഭ്യമല്ല")
+      : analysis.ritualType,
+    ritualCategory: lang === "ml"
+      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualCategory] || "മലയാളം പരിഭാഷ ലഭ്യമല്ല")
+      : analysis.ritualCategory,
+    ritualIntent: lang === "ml"
+      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualIntent] || "മലയാളം പരിഭാഷ ലഭ്യമല്ല")
+      : analysis.ritualIntent,
+    verdictReason: ML_VERDICT_REASON[analysis.verdict] || analysis.verdictReason,
+    khayrSharr: ML_KHAYR_SHARR[analysis.khayrSharr] || analysis.khayrSharr,
+    khayrSharrMeaning: ML_KHAYR_SHARR_MEANING[analysis.khayrSharr] || analysis.khayrSharrMeaning,
+    bestDayReason: mlBestReason(analysis, "day"),
+    bestHourReason: mlBestReason(analysis, "hour"),
+    dayNightSuitability: analysis.dayNightSuitability ? {
+      ...analysis.dayNightSuitability,
+      reason: ML_DAY_NIGHT_REASON[analysis.dayNightSuitability.status] || analysis.dayNightSuitability.reason,
+    } : analysis.dayNightSuitability,
+    elementCompatibility: analysis.elementCompatibility ? {
+      ...analysis.elementCompatibility,
+      reason: mlElementReason(analysis),
+    } : analysis.elementCompatibility,
+    zodiacSuitability: analysis.zodiacSuitability ? {
+      ...analysis.zodiacSuitability,
+      note: "രാശി വിശകലനം ഐച്ഛികമാണ് — ചന്ദ്ര വിശകലന കാർഡ് ഉപയോഗിക്കുക.",
+    } : analysis.zodiacSuitability,
+    enemyAnalysis: analysis.enemyAnalysis ? {
+      ...analysis.enemyAnalysis,
+      note: mlEnemyNote(analysis),
+    } : analysis.enemyAnalysis,
     canPerformToday: tStatus(analysis.canPerformToday, lang),
     astroClockStatus: {
       ...analysis.astroClockStatus,
