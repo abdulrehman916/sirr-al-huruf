@@ -86,7 +86,15 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
       if (cancelled) return;
       setPurposeLookup(res);
       setLoading(false);
-      if (onPurposeResolved) onPurposeResolved(res);
+      // Pass the COMPLETED interpretation (not just the raw dictionary word) so
+      // Ritual Timing receives the full sentence: Action + Purpose + Modifier.
+      if (onPurposeResolved) {
+        onPurposeResolved({
+          ...res,
+          interpretation_en: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "en" }),
+          interpretation_ml: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang: "ml" }),
+        });
+      }
     });
     return () => { cancelled = true; };
   }, [detected, customPurpose, onPurposeResolved]);
