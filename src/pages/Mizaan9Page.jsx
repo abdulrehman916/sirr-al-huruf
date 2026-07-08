@@ -737,6 +737,7 @@ export default function Mizaan9Page() {
                   customPurpose={customPurpose}
                   onCustomPurpose={setCustomPurpose}
                   purposesData={ds.purposes}
+                  onPurposeResolved={handlePurposeResolved}
                 />
                 <MizaanDivider />
                 <Mizaan8
@@ -923,6 +924,7 @@ export default function Mizaan9Page() {
                   customPurpose={customPurpose}
                   onCustomPurpose={setCustomPurpose}
                   purposesData={ds.purposes}
+                  onPurposeResolved={handlePurposeResolved}
                 />
                 <MizaanDivider />
                 <Mizaan8
@@ -1149,6 +1151,7 @@ export default function Mizaan9Page() {
                   customPurpose={customPurpose}
                   onCustomPurpose={setCustomPurpose}
                   purposesData={ds.purposes}
+                  onPurposeResolved={handlePurposeResolved}
                 />
                 <MizaanDivider />
                 <Mizaan8
