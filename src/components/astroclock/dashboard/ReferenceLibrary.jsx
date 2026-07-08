@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, BookOpen } from "lucide-react";
 import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import { getAllKashfReferences } from "@/lib/astroClockManuscriptMerger";
 
 function extractPageNum(source) {
   if (!source) return null;
@@ -65,6 +66,9 @@ export default function ReferenceLibrary() {
     addRef("Havâss'ın Derinlikleri, PDF2 p.54-60", txt("സഅാത് ഗണിതം", "Hour Calculation", "Saat Hesabı"));
     addRef("Havâss'ın Derinlikleri, Pages 20-31", txt("രാശികൾ", "Zodiac Signs", "Burçlar"));
     addRef("Kashf al-Haqa'iq, p.65", txt("ദിവസ അതിര്", "Day Boundary", "Gün Sınırı"));
+
+    // Kashf al-Haqa'iq — full Omani manuscript references
+    getAllKashfReferences().forEach(r => addRef(`Kashf al-Haqa'iq, p.${r.page}`, r.topic));
 
     return Array.from(map.values()).sort((a, b) => a.book.localeCompare(b.book));
   }, [d, txt]);

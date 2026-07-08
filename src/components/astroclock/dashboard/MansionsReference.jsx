@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
+import { getKashfMansionByNo } from "@/lib/astroClockManuscriptMerger";
 
 export default function MansionsReference() {
   const d = useAstroData();
@@ -48,6 +50,7 @@ export default function MansionsReference() {
       <div className="space-y-1.5 max-h-[600px] overflow-y-auto scrollbar-none">
         {filtered.map(m => {
           const isCurrent = m.no === currentNo;
+          const kashfMansion = getKashfMansionByNo(m.no);
           const isNahs = m.genel_hukum?.toLowerCase().includes("nahs") || m.genel_hukum?.toLowerCase().includes("uğursuz");
           const isOpen = expanded === m.no;
           const color = isCurrent ? "#F5D060" : isNahs ? "#F87171" : "#4ADE80";
@@ -95,6 +98,24 @@ export default function MansionsReference() {
 
                       {/* Source */}
                       <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {txt("ഹസ്തലിഖിതം", "Manuscript", "El Yazması")}: Havâss'ın Derinlikleri, PDF2 p.64-74</p>
+
+                      {/* Kashf Omani tradition */}
+                      {kashfMansion && (
+                        <ManuscriptSourcePanel
+                          sources={[{
+                            id: "kashf",
+                            label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
+                            items: [{
+                              ar: kashfMansion.operation_ar,
+                              en: `${kashfMansion.nature_en} — ${kashfMansion.operation_ar}`,
+                              ml: kashfMansion.nature_ml,
+                              tr: kashfMansion.nature_tr,
+                              type: kashfMansion.nature_en.includes("Auspi") ? "recommend" : "warning",
+                              source: kashfMansion.source,
+                            }]
+                          }]}
+                        />
+                      )}
                     </div>
                   </motion.div>
                 )}

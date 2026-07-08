@@ -8,6 +8,8 @@ import { useState, useMemo } from "react";
 import { useAstroData, PURPOSE_MAP, PLANET_TR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { Search, Clock, CheckCircle2, Ban, BookOpen } from "lucide-react";
+import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
+import { getKashfOperationsForPurpose } from "@/lib/astroClockManuscriptMerger";
 
 const PURPOSE_LABELS = {
   love: { ml: "പ്രണയം", en: "Love", tr: "Aşk" },
@@ -58,7 +60,8 @@ export default function SmartSearch() {
 
     const references = config.planets.map(p => d.planetInfo[p]?.source).filter(Boolean);
 
-    return { best, alt, avoid, explanation, references, planetNames };
+    const kashfOps = getKashfOperationsForPurpose(matched);
+    return { best, alt, avoid, explanation, references, planetNames, kashfOps };
   }, [matched, d, language, txt]);
 
   const handleSearch = () => {
@@ -163,6 +166,24 @@ export default function SmartSearch() {
                 <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(74,222,128,0.08)", color: "rgba(74,222,128,0.60)", border: "1px solid rgba(74,222,128,0.15)" }}>{r}</span>
               ))}
             </div>
+          )}
+
+          {/* Additional Manuscript Sources */}
+          {results.kashfOps && results.kashfOps.length > 0 && (
+            <ManuscriptSourcePanel
+              sources={[{
+                id: "kashf",
+                label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
+                items: results.kashfOps.map(op => ({
+                  ar: op.ar,
+                  en: `${op.en} — ${op.day_en}, ${op.planet_en}`,
+                  ml: `${op.ml} — ${op.day_en}, ${op.planet_en}`,
+                  tr: `${op.tr} — ${op.day_en}, ${op.planet_en}`,
+                  type: "recommend",
+                  source: op.source,
+                }))
+              }]}
+            />
           )}
         </div>
       )}

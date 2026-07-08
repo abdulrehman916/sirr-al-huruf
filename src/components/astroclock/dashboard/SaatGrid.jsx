@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useAstroData, PLANET_TR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
+import { getKashfHourAttributes } from "@/lib/astroClockManuscriptMerger";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
 const MALEFIC = ["saturn", "mars"];
@@ -51,6 +53,7 @@ export default function SaatGrid() {
     const badActions = language === "ml" ? d.planetInfo[h.planet]?.badActions_ml : d.planetInfo[h.planet]?.badActions_en;
     const spiritual = language === "ml" ? d.planetInfo[h.planet]?.spiritualOperations_ml : d.planetInfo[h.planet]?.spiritualOperations_en;
     const source = d.planetInfo[h.planet]?.source;
+    const kashfAttrs = getKashfHourAttributes(d.activeDayIndex, displayNum, h.period);
 
     const statusLabels = {
       current: txt("നിലവിലെ", "Current", "Mevcut"),
@@ -105,6 +108,19 @@ export default function SaatGrid() {
                 )}
                 {source && (
                   <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.40)" }}>📖 {source}</p>
+                )}
+                {kashfAttrs.length > 0 && (
+                  <ManuscriptSourcePanel
+                    sources={[{
+                      id: "kashf",
+                      label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
+                      items: kashfAttrs.map(a => ({
+                        ar: a.ar, en: a.en, ml: a.ml, tr: a.tr,
+                        type: a.type === "answer" ? "answer" : a.type === "dominance" ? "dominance" : "jaad",
+                        source: a.source,
+                      }))
+                    }]}
+                  />
                 )}
               </div>
             </motion.div>

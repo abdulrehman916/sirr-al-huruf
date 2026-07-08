@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useAstroData, PLANET_TR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
+import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/astroClockManuscriptMerger";
 
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
@@ -52,6 +54,8 @@ export default function PlanetEncyclopedia() {
     const friendNames = (friends?.friends || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
     const enemyNames = (friends?.enemies || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
     const neutralNames = (friends?.neutral || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
+    const kashfOps = getKashfOperationsForPlanet(key);
+    const kashfDir = getKashfDirectionForElement(elements[0]);
 
     return (
       <div key={key} className="rounded-lg overflow-hidden" style={{
@@ -137,6 +141,19 @@ export default function PlanetEncyclopedia() {
                 {/* Source */}
                 <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {info.source}</p>
                 {friends?.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {friends.source}</p>}
+
+                {(kashfOps.length > 0 || kashfDir) && (
+                  <ManuscriptSourcePanel
+                    sources={[{
+                      id: "kashf",
+                      label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
+                      items: [
+                        ...(kashfDir ? [{ ...kashfDir, type: "info" }] : []),
+                        ...kashfOps.map(op => ({ ...op, type: "info" })),
+                      ]
+                    }]}
+                  />
+                )}
               </div>
             </motion.div>
           )}

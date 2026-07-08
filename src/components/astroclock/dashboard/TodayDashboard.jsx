@@ -11,6 +11,7 @@ import { useAstroData, PLANET_TR, DAY_TR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard, SubCollapse } from "./DashboardSection";
 import { KNOWLEDGE_DAYS } from "@/lib/astroClockKnowledgeBase";
+import { getKashfLunarDayInfo, getKashfNahsStatus } from "@/lib/astroClockManuscriptMerger";
 import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
@@ -90,8 +91,15 @@ export default function TodayDashboard() {
     ? `നക്ഷത്രം #${d.currentMansion?.no || "?"}`
     : `#${d.currentMansion?.no || "?"} ${language === "tr" ? d.currentMansion?.name || "" : d.currentMansion?.name_en || ""}`.trim();
 
+  // ── Kashf lunar day data ──
+  const kashfLunarDay = getKashfLunarDayInfo(d.lunarDay);
+  const kashfNahs = getKashfNahsStatus(d.lunarDay);
+
   // ── Warnings (language-specific — no mixing) ──
   const warnings = [];
+  if (kashfNahs?.isNahs) {
+    warnings.push(language === "ml" ? kashfNahs.ml : language === "tr" ? kashfNahs.tr : kashfNahs.en);
+  }
   if (d.moonDignity?.strength === "weakest") {
     warnings.push(txt("ചന്ദ്രൻ നീചം (വൃശ്ചികം)", "Moon debilitated (Scorpio)", "Ay düşük (Akrep)"));
   }
@@ -146,6 +154,18 @@ export default function TodayDashboard() {
 
       {/* ══ EXPAND: Today's Activities (collapsed by default) ══ */}
       <SubCollapse title={txt("ഇന്നത്തെ പ്രവൃത്തികൾ", "Today's Activities", "Bugünün Eylemleri")}>
+        {kashfLunarDay && (
+          <div className="rounded-lg p-2 mb-2" style={{
+            background: kashfLunarDay.nature_en.includes("Auspi") ? "rgba(74,222,128,0.04)" : kashfLunarDay.nature_en.includes("Inauspi") ? "rgba(248,113,113,0.04)" : "rgba(251,191,36,0.04)",
+            border: `1px solid ${kashfLunarDay.nature_en.includes("Auspi") ? "rgba(74,222,128,0.12)" : kashfLunarDay.nature_en.includes("Inauspi") ? "rgba(248,113,113,0.12)" : "rgba(251,191,36,0.12)"}`,
+          }}>
+            <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>
+              {txt("ചാന്ദ്ര ദിവസം", "Lunar Day", "Ay Günü")} {d.lunarDay}: {language === "ml" ? kashfLunarDay.nature_ml : language === "tr" ? kashfLunarDay.nature_tr : kashfLunarDay.nature_en}
+            </p>
+            <p className="font-amiri text-[10px] mt-0.5" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{kashfLunarDay.summary_ar}</p>
+            <p className="font-inter text-[8px] mt-0.5" style={{ color: "rgba(129,140,248,0.30)" }}>📖 {kashfLunarDay.source}</p>
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {/* Best */}
           <div className="rounded-lg p-2.5" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.15)" }}>

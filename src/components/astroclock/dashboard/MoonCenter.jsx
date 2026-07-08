@@ -6,6 +6,8 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard } from "./DashboardSection";
 import { Moon } from "lucide-react";
+import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
+import { getKashfNightDayRule, getKashfLunarDayInfo } from "@/lib/astroClockManuscriptMerger";
 
 export default function MoonCenter() {
   const d = useAstroData();
@@ -42,6 +44,8 @@ export default function MoonCenter() {
     txt("ദുർബലം", "Weak", "Zayıf");
   const strengthColor = moonPhasePct > 50 ? "#4ADE80" : moonPhasePct > 25 ? "#FBBF24" : "#F87171";
 
+  const kashfLunarDay = getKashfLunarDayInfo(d.lunarDay);
+  const kashfNightRule = getKashfNightDayRule();
   const recommendations = [];
   if (waxing && moonPhasePct > 50) {
     recommendations.push(txt("ആകർഷണം, വർദ്ധന, ജല്പം കർമ്മങ്ങൾക്ക് അനുകൂലം", "Favorable for attraction, growth, increase works", "Çekim, büyüme, artış çalışmaları için elverişli"));
@@ -106,6 +110,29 @@ export default function MoonCenter() {
           ))}
         </div>
       )}
+
+      <ManuscriptSourcePanel
+        sources={[{
+          id: "kashf",
+          label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
+          items: [
+            ...(kashfLunarDay ? [{
+              en: `Lunar Day ${d.lunarDay}: ${kashfLunarDay.nature_en}`,
+              ml: `ചാന്ദ്ര ദിവസം ${d.lunarDay}: ${kashfLunarDay.nature_ml}`,
+              tr: `Ay Günü ${d.lunarDay}: ${kashfLunarDay.nature_tr}`,
+              type: kashfLunarDay.nature_en.includes("Auspi") ? "recommend" : "warning",
+              source: kashfLunarDay.source,
+            }] : []),
+            {
+              en: kashfNightRule.en,
+              ml: kashfNightRule.ml,
+              tr: kashfNightRule.tr,
+              type: "info",
+              source: kashfNightRule.source,
+            },
+          ]
+        }]}
+      />
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard } from "./DashboardSection";
 import { ArrowRight } from "lucide-react";
+import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
+import { getKashfZodiacTiming } from "@/lib/astroClockManuscriptMerger";
 
 export default function MoonZodiac() {
   const d = useAstroData();
@@ -16,6 +18,7 @@ export default function MoonZodiac() {
   }
 
   const z = d.moonZodiacFull;
+  const kashfZodiacTiming = getKashfZodiacTiming(z.name_en);
   const zName = language === "ml" ? z.name_ml_equivalent : language === "tr" ? z.name_tr : z.name_en;
   const zElement = language === "ml" ? z.element_ml : z.element;
   const zGender = language === "ml" ? z.gender_ml : z.gender;
@@ -124,6 +127,19 @@ export default function MoonZodiac() {
             </div>
           </div>
         </div>
+      )}
+
+      {kashfZodiacTiming.length > 0 && (
+        <ManuscriptSourcePanel
+          sources={[{
+            id: "kashf",
+            label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
+            items: kashfZodiacTiming.map(t => ({
+              ar: t.ar, en: t.en, ml: t.ml, tr: t.tr,
+              type: "info", source: t.source,
+            }))
+          }]}
+        />
       )}
     </div>
   );
