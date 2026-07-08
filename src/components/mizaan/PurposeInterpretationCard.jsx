@@ -145,8 +145,8 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
     action: lang === "ml" ? "കർമ്മം (Action Card)" : "Action Card",
     mainPurpose: lang === "ml" ? "പ്രധാന ലക്ഷ്യം" : "Main Purpose",
     modifier: lang === "ml" ? "പരിഷ്കർത്തകൻ" : "Modifier",
-    mlMeaning: "Malayalam Meaning",
-    enMeaning: "English Meaning",
+    purposeMeaningML: lang === "ml" ? "ലക്ഷ്യ അർത്ഥം (മലയാളം)" : "Purpose Meaning (Malayalam)",
+    purposeMeaningEN: lang === "ml" ? "ലക്ഷ്യ അർത്ഥം (ഇംഗ്ലീഷ്)" : "Purpose Meaning (English)",
     notDetected: lang === "ml" ? "കണ്ടെത്തിയില്ല" : "Not detected",
     noMatch: lang === "ml" ? "നിഘണ്ടുവിൽ ഇല്ല" : "Not in dictionary",
     dictSource: lang === "ml" ? "ഉറവിടം" : "Source",
@@ -294,17 +294,17 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
           <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.border})` }} />
         </div>
 
-        {/* Malayalam Meaning */}
+        {/* Purpose Meaning (ML) — dictionary word ONLY, not the full sentence */}
         <div className="rounded-lg p-3" style={{
           background: "rgba(212,175,55,0.10)",
           border: `1px solid ${G.borderHi}`,
         }}>
           <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-            {L.mlMeaning}
+            {L.purposeMeaningML}
           </p>
-          {interp.finalMeaningML ? (
+          {interp.purposeMeaningML ? (
             <p className="font-malayalam text-sm font-bold leading-relaxed" style={{ color: G.text }}>
-              {interp.finalMeaningML}
+              {interp.purposeMeaningML}
             </p>
           ) : (
             <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>
@@ -313,17 +313,17 @@ export default function PurposeInterpretationCard({ customPurpose, selections, o
           )}
         </div>
 
-        {/* English Meaning */}
+        {/* Purpose Meaning (EN) — dictionary word ONLY, not the full sentence */}
         <div className="rounded-lg p-3" style={{
           background: "rgba(212,175,55,0.06)",
           border: `1px solid ${G.border}`,
         }}>
           <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-            {L.enMeaning}
+            {L.purposeMeaningEN}
           </p>
-          {interp.finalMeaningEN ? (
+          {interp.purposeMeaningEN ? (
             <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
-              {interp.finalMeaningEN}
+              {interp.purposeMeaningEN}
             </p>
           ) : (
             <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>
