@@ -525,7 +525,7 @@ export const DAILY_MANTRA_SCAN_REPORT = {
   ],
   total_recitations_confirmed: 37,
   total_recitations_identified: 37,
-  conclusion: "37 recitations found in Kashf al-Haqa'iq across 13 pages (pp.27-53). ALL 37 fully extracted with exact Arabic text. ZERO pending. Zero recitations in Havâss or Taha. Zero recitations in PDF 3 (pp.61-90). Note: p.53 uses the same 2 Quran verses as p.50 (Kahf 18:99 + Ahqaf 46:31) for nahs times. p.37 contains the universal supplication (same as p.31) and same Quran verses (same as p.50).",
+  conclusion: "37 core recitations found in Kashf al-Haqa'iq across 13 pages (pp.27-53). ADDITIONAL pp.91-180 content: 28 Lunar Mansion detailed operations, 15 Protection Amulet (Tahseen) sections, 5 Sarf al-Ammar formulas, Azimah al-Shajara, Azimah Idris — all added to KASHF_FULL_MANTRAS via manuscriptRitualGuideFullData.js. ALL 37 fully extracted with exact Arabic text. ZERO pending. Zero recitations in Havâss or Taha. Zero recitations in PDF 3 (pp.61-90). Note: p.53 uses the same 2 Quran verses as p.50 (Kahf 18:99 + Ahqaf 46:31) for nahs times. p.37 contains the universal supplication (same as p.31) and same Quran verses (same as p.50).",
 };
 
 // ═══════════════════════════════════════════════════════════════

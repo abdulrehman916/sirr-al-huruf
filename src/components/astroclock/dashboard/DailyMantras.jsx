@@ -56,10 +56,11 @@ const CATEGORY_MAP = {
   jinn_related: 'Jinn Related', incense: 'Incense', timing: 'Timing',
   warnings: 'Warnings', fasting: 'Fasting', materials: 'Powders',
   lunar_mansion: 'Lunar Mansion Related', lunar_day: 'Timing', nahs_days: 'Warnings',
+  exorcism: 'Jinn Related',
 };
 
 const CATEGORY_ORDER = ['Dua', 'Conditions', 'Protection', 'Jinn Related', 'Incense', 'Timing',
-  'Fasting', 'Powders', 'Lunar Mansion Related', 'Warnings', 'Notes'];
+  'Fasting', 'Powders', 'Lunar Mansion Related', 'Warnings', 'Notes', 'Other'];
 
 function ManuscriptKnowledgeSection({ mantras, txt }) {
   const groups = {};
