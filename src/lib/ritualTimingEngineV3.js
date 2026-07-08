@@ -295,6 +295,8 @@ function findEarliestValidTime(req, fromDate) {
 
     // Day rule check only — Moon is handled separately in analyzeMoonCompatibility
     if (req.days && !req.days.includes(dayKey)) continue;
+    // Nahas day check — skip forbidden days per manuscript
+    if (req.worstDays && req.worstDays.includes(dayKey)) continue;
 
     for (const h of hours) {
       // Skip past hours today
@@ -502,6 +504,24 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
     });
   }
 
+  // 8. Nahas (forbidden) day check
+  if (req.worstDays && req.worstDays.length > 0) {
+    const isNahasDay = selectedDay && req.worstDays.includes(selectedDay);
+    if (isNahasDay) allPass = false;
+    breakdown.push({
+      dimension: "nahasDay", label: "Nahas (Forbidden Day)",
+      currentValue: selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected",
+      status: !selectedDay ? "neutral" : isNahasDay ? "fail" : "pass",
+      reason: !selectedDay
+        ? `The manuscript forbids: ${req.worstDays.map(d => MIZAN_DAY_NAMES[d]).join(", ")}.`
+        : isNahasDay
+          ? `${MIZAN_DAY_NAMES[selectedDay]} is a Nahas (forbidden) day for this ritual per the manuscript.`
+          : `Your selected day is not a Nahas day.`,
+      source: citeFor("day"),
+      recommended: isNahasDay ? (req.days?.map(d => MIZAN_DAY_NAMES[d]).join(" or ") || "Avoid forbidden days") : null,
+    });
+  }
+
   // Best alternative configuration
   const bestAlt = {};
   if (req.days?.[0]) bestAlt.day = MIZAN_DAY_NAMES[req.days[0]];
@@ -607,8 +627,9 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const currentNightOk = req.nightRequired !== true || isNightTime;
   const currentNotEnemy = !req.enemyPlanets || !req.enemyPlanets.map((p) => p.toLowerCase()).includes(currentHourInfo.planet);
   const currentNotWorst = !req.worstHours || !req.worstHours.map((p) => p.toLowerCase()).includes(currentHourInfo.planet);
+  const currentNotWorstDay = !req.worstDays || !req.worstDays.includes(currentDayKey);
   // Moon is NOT part of the main timing evaluation — it is optional.
-  const currentMomentSuitable = currentHourOk && currentDayOk && currentNightOk && currentNotEnemy && currentNotWorst;
+  const currentMomentSuitable = currentHourOk && currentDayOk && currentNightOk && currentNotEnemy && currentNotWorst && currentNotWorstDay;
 
   // ── Can perform today? ──
   let canPerformToday = "No";
@@ -622,7 +643,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
       (!req.enemyPlanets || !req.enemyPlanets.map((p) => p.toLowerCase()).includes(h.planet)) &&
       (req.nightRequired !== true || h.period === "night")
     );
-    const dayOk = !req.days || req.days.includes(currentDayKey);
+    const dayOk = (!req.days || req.days.includes(currentDayKey)) && (!req.worstDays || !req.worstDays.includes(currentDayKey));
     if (anyOk && dayOk) canPerformToday = "Limited";
   }
 
@@ -669,6 +690,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   if (currentHourOk) { score += 25; scoreReasons.push("Current hour matches manuscript (+25)"); } else if (req.hours) { score -= 10; scoreReasons.push("Current hour not prescribed (-10)"); }
   if (currentNightOk && req.nightRequired === true) { score += 10; scoreReasons.push("Night requirement met (+10)"); }
   if (currentNotEnemy && req.enemyPlanets?.length) { score += 5; scoreReasons.push("Not enemy hour (+5)"); }
+  if (currentNotWorstDay) { score += 5; scoreReasons.push("Not a Nahas day (+5)"); } else if (req.worstDays) { score -= 15; scoreReasons.push("Nahas day per manuscript (-15)"); }
   score = Math.max(0, Math.min(100, score));
 
   // ── Estimated compatibility after applying all recommendations ──
@@ -681,6 +703,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     if (req.hours) maxScore += 25;
     if (req.nightRequired === true) maxScore += 10;
     if (req.enemyPlanets?.length) maxScore += 5;
+    if (req.worstDays) maxScore += 5;
     estimatedAfterChanges = Math.min(100, maxScore);
   }
 
@@ -697,6 +720,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   if (req.hours && !currentHourOk) warnings.push(`Current hour (${capitalPlanet(currentHourInfo.planet)}) is not prescribed. Manuscript prescribes: ${req.hours.join(", ")} hour(s).`);
   if (req.nightRequired === true && !isNightTime) warnings.push("Manuscript requires night, but it is currently day.");
   if (req.worstHours && currentNotWorst === false) warnings.push(`Current hour is a worst/enemy hour: ${capitalPlanet(currentHourInfo.planet)}.`);
+  if (req.worstDays && req.worstDays.includes(currentDayKey)) warnings.push(`Today (${MIZAN_DAY_NAMES[currentDayKey]}) is a Nahas (forbidden) day per the manuscript. Avoid performing this ritual today.`);
 
   // ── Astro Clock status ──
   const astroClockStatus = {
