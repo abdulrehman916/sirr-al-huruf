@@ -54,7 +54,7 @@ export const KASHF_AZAYIM_BY_DAY = [
     id: "kashf_azimah_tuesday",
     day_index: 2, king: "أبو محرز الأحمر", king_en: "Abu Mihraz al-Ahmar",
     type: "azimah",
-    arabic_text: "اجب يا أبا محرز الأحمر بحق الطفف اجلففٍ شَغَفٍ ليطشلاً شلا رون لكه هلك منهشل جهلف مهلق شهليص شهليص نموه نموه دمليخ اجتي بحقها عليك وبحق الملك عليك سمسميائيل وتوكلوا بكذا وكذا الوحا الوحا العجل العجل الساعة الساعة",
+    arabic_text: "اجب يا أبا محرز الأحمر بحق الطفف اجلففٍ شَغَفٍ ليطشلاً شلا رون لكه هلك منهشل جهلف مهلق شهليص شهليص نموه نموه دمليخ ارحي بحقها عليك وبحق الملك عليك سمسميائيل وتوكلوا بكذا وكذا الوحا الوحا العجل العجل الساعة الساعة",
     purpose_en: "Invocation of the king of Tuesday (Mars). For binding a fornicator, separation, forceful works.",
     purpose_ml: "ചൊവ്വ ദിവസത്തെ (ചൊവ്വ ഗ്രഹ) ദൂതൻ. ബന്ധനം, വേർപിരിയൽ, ശക്തി കൃത്യങ്ങൾ.",
     purpose_tr: "Salı günü meleğinin çağrılması (Mars). Bağlama, ayrılık, güç işleri.",
@@ -137,7 +137,7 @@ export const KASHF_AQSAM_BY_DAY = [
   {
     id: "kashf_qasam_tuesday", day_index: 2, servant: "أحمر", servant_en: "Ahmar",
     type: "qasam",
-    arabic_text: "يوم الثلاثاء: أقسمت عليك يا أحمر خادم يوم الثلاثاء بحق طيكل وبحق الملك الموكل عليك سمتيائيل وبحق مالك يوم الدين وبحق الملك القدوس القاهر العزيز وبحق قهطهطيل أن تتوكل بعملي وتقضي حاجتي كذا وكذا",
+    arabic_text: "يوم الثلاثاء: أقسمت عليك يا أحمر خادم يوم الثلاثاء بحق طيكل وبحق الملك الموكل عليك سمسيائيل وبحق مالك يوم الدين وبحق الملك القدوس القاهر العزيز وبحق قهطهطيل أن تتوكل بعملي وتقضي حاجتي كذا وكذا",
     purpose_en: "Oath to Tuesday's servant. Incorporates 'Maliki yawmi al-din' and angel Samsiya'il.",
     purpose_ml: "ചൊവ്വ ദൂതനോടുള്ള ശപഥ. مالك يوم الدين, മലക് സംസിയാഇൽ.",
     purpose_tr: "Salı hizmetçisine yemin. Maliki yevmidin, melek Samsiya'il.",
@@ -213,7 +213,8 @@ export const KASHF_UNIVERSAL_SUPPLICATIONS = [
 export const KASHF_ISTIKHARA_DUAS = [
   {
     id: "kashf_istikhara", day_index: null, type: "prayer",
-    arabic_text: "اللهم إني استخيرك بعلمك و استقدرك بقدرتك و اسألك من فضلك العظيم أن تبين لي عاقبة أمري (في كذا وكذا تذكر حاجتك) فإن كان خيرا لي فاشرح لي صدري ووفقني لعمله وإن كان شرا فاصرفه عني واصرفني عنه إنك على كل شيء قدير",
+    arabic_text: "اللهم إني استخيرك بعلمك و استقدرك بقدرتك و اسألك من فضلك العظيم أن تبين لي عاقبة أمري (في كذا وكذا تذكر حاجتك) فإن كان خيرا لي فاشرح لي صدري ووفقني لعمله وإن كان شرا فاصرفه عني واصرفني عنه إنك على كل شيء قدير وأنت المحيط العليم",
+    repetition: "7",
     purpose_en: "Istikhara (guidance) dua recited before every spiritual work. Replace 'كذا وكذا' with your specific need.",
     purpose_ml: "എല്ലാ ആത്മ കൃത്യങ്ങൾക്ക് മുമ്പ് ചൊല്ലേണ്ട ഇസ്തിഖാറ ദു‌ആ. كذا وكذا-ൽ ആവശ്യം പ്രസ്താവിക്കുക.",
     purpose_tr: "Her ruhaniyat çalışmasından önce istihare duası. كذا وكذا yerine ihtiyacınızı belirtin.",
