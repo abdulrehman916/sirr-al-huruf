@@ -8,6 +8,7 @@ import { ChevronDown, BookOpen, Sparkles } from "lucide-react";
 import { useAstroData, DAY_TR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { SubCollapse } from "./DashboardSection";
+import QuranicArabicText from "@/components/astroclock/QuranicArabicText";
 import {
   getDailyMantrasForDay,
   getTotalMantraCount,
@@ -62,12 +63,8 @@ function MantraCard({ mantra, language, txt }) {
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
             <div className="px-3 pb-3 space-y-2.5">
-              {/* Arabic text — never translated, always preserved as-is */}
-              <div className="rounded-lg p-3" style={{ background: "rgba(212,175,55,0.06)", border: `1px solid ${G.border}` }}>
-                <p className="font-amiri text-base leading-loose text-right" style={{ color: G.text, direction: "rtl", lineHeight: "2.4" }}>
-                  {mantra.arabic_text}
-                </p>
-              </div>
+              {/* Arabic text — Quranic display layer with AI Harakat enhancement */}
+              <QuranicArabicText text={mantra.arabic_text} size="md" color={G.text} />
 
               {/* Purpose explanation */}
               {purpose && (
