@@ -84,70 +84,60 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
     return () => { cancelled = true; };
   }, [detected, customPurpose]);
 
-  // ── Build interpretation for display (language-aware) ──
+  // ── Build interpretation for display (both languages) ──
   const interp = useMemo(() => {
     if (!detected || !(customPurpose || "").trim()) return null;
 
-    const purposeMeaning = purposeLookup?.matched
-      ? (lang === "ml"
-          ? (purposeLookup.malayalam_meaning || purposeLookup.english_meaning || "")
-          : (purposeLookup.english_meaning || purposeLookup.malayalam_meaning || ""))
-      : "";
+    const mainPurposeArabic = detected.middleWord || (purposeLookup?.matchedPhrase || "");
+    const mainPurposeMatched = purposeLookup?.matched || false;
+    const mainPurposeSource = purposeLookup?.source || null;
 
-    const actionMeaning = detected.actionArabic
-      ? (lang === "ml" ? ACTION_MEANINGS[detected.actionArabic]?.ml : ACTION_MEANINGS[detected.actionArabic]?.en)
-      : null;
+    // Dictionary meanings — both languages, shown simultaneously
+    const purposeMeaningML = mainPurposeMatched ? (purposeLookup.malayalam_meaning || "") : "";
+    const purposeMeaningEN = mainPurposeMatched ? (purposeLookup.english_meaning || "") : "";
 
-    const modifierMeaning = detected.modifierArabic
-      ? (lang === "ml" ? ENDING_MEANING.ml : ENDING_MEANING.en)
-      : null;
-
-    const finalMeaning = buildRitualSemanticPhrase({
-      selections, customPurpose, purposeLookup, lang,
+    // Combined final meaning — both languages
+    const finalMeaningML = buildRitualSemanticPhrase({
+      selections, customPurpose, purposeLookup, lang: "ml",
+    });
+    const finalMeaningEN = buildRitualSemanticPhrase({
+      selections, customPurpose, purposeLookup, lang: "en",
     });
 
     return {
       originalArabic: (customPurpose || "").trim(),
       actionArabic: detected.actionArabic,
-      actionMeaning,
-      mainPurposeArabic: detected.middleWord || (purposeLookup?.matchedPhrase || ""),
-      mainPurposeMeaning: purposeMeaning,
-      mainPurposeMatched: purposeLookup?.matched || false,
-      mainPurposeSource: purposeLookup?.source || null,
+      actionMeaningML: detected.actionArabic ? (ACTION_MEANINGS[detected.actionArabic]?.ml || "") : "",
+      actionMeaningEN: detected.actionArabic ? (ACTION_MEANINGS[detected.actionArabic]?.en || "") : "",
+      mainPurposeArabic,
+      purposeMeaningML,
+      purposeMeaningEN,
+      mainPurposeMatched,
+      mainPurposeSource,
       modifierArabic: detected.modifierArabic,
-      modifierMeaning,
-      finalMeaning,
+      modifierMeaningML: detected.modifierArabic ? ENDING_MEANING.ml : "",
+      modifierMeaningEN: detected.modifierArabic ? ENDING_MEANING.en : "",
+      finalMeaningML,
+      finalMeaningEN,
       autoLearned: purposeLookup?.auto_learned || false,
     };
-  }, [detected, purposeLookup, customPurpose, lang]);
+  }, [detected, purposeLookup, customPurpose]);
 
-  // ── Labels (full language parity) ──
-  const L = lang === "ml" ? {
-    title: "ലക്ഷ്യ വ്യാഖ്യാനം",
-    original: "യഥാർത്ഥ അറബിക് വാചകം",
-    action: "കർമ്മം",
-    mainPurpose: "പ്രധാന ലക്ഷ്യം",
-    modifier: "പരിഷ്കർത്തകൻ",
-    finalMeaning: "അന്തിമ അർത്ഥം",
-    notDetected: "കണ്ടെത്തിയില്ല",
-    noMatch: "നിഘണ്ടുവിൽ ഇല്ല",
-    dictSource: "ഉറവിടം",
-    notAvailable: "പ്രോജക്റ്റ് പർപ്പസ് ഡിക്ഷനറിയിൽ ഈ ലക്ഷ്യം കണ്ടെത്തിയില്ല.",
-    loading: "വ്യാഖ്യാനിക്കുന്നു...",
-    autoLearned: "സ്വയം പഠിച്ചു — പരിശോധന ആവശ്യം",
-  } : {
-    title: "Purpose Interpretation",
-    original: "Original Arabic Text",
-    action: "Detected Action",
-    mainPurpose: "Detected Main Purpose",
-    modifier: "Detected Modifier",
-    finalMeaning: "Final Meaning",
-    notDetected: "Not detected",
-    noMatch: "Not in dictionary",
-    dictSource: "Source",
-    notAvailable: "Purpose not found in the Project Purpose Dictionary.",
-    loading: "Interpreting...",
-    autoLearned: "Auto-Generated — Needs Review",
+  // ── Labels (bilingual — both shown simultaneously) ──
+  const L = {
+    title: lang === "ml" ? "ലക്ഷ്യ വ്യാഖ്യാനം" : "Purpose Interpretation",
+    original: lang === "ml" ? "യഥാർത്ഥ അറബിക് വാചകം" : "Original Arabic Text",
+    action: lang === "ml" ? "കർമ്മം (Action Card)" : "Action Card",
+    mainPurpose: lang === "ml" ? "പ്രധാന ലക്ഷ്യം" : "Main Purpose",
+    modifier: lang === "ml" ? "പരിഷ്കർത്തകൻ" : "Modifier",
+    mlMeaning: "Malayalam Meaning",
+    enMeaning: "English Meaning",
+    notDetected: lang === "ml" ? "കണ്ടെത്തിയില്ല" : "Not detected",
+    noMatch: lang === "ml" ? "നിഘണ്ടുവിൽ ഇല്ല" : "Not in dictionary",
+    dictSource: lang === "ml" ? "ഉറവിടം" : "Source",
+    notAvailable: lang === "ml" ? "പ്രോജക്റ്റ് പർപ്പസ് ഡിക്ഷനറിയിൽ ഈ ലക്ഷ്യം കണ്ടെത്തിയില്ല." : "Purpose not found in the Project Purpose Dictionary.",
+    loading: lang === "ml" ? "വ്യാഖ്യാനിക്കുന്നു..." : "Interpreting...",
+    autoLearned: lang === "ml" ? "സ്വയം പഠിച്ചു — പരിശോധന ആവശ്യം" : "Auto-Generated — Needs Review",
   };
 
   if (!interp) return null;
@@ -212,18 +202,18 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
           </p>
         </Row>
 
-        {/* Detected Action */}
+        {/* Action Card */}
         <Row label={L.action}>
           {interp.actionArabic ? (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-amiri text-base" style={{ color: G.text }} dir="rtl">
                 {interp.actionArabic}
               </span>
-              {interp.actionMeaning && (
-                <span className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
-                  = {interp.actionMeaning}
-                </span>
-              )}
+              <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {interp.actionMeaningML && interp.actionMeaningEN
+                  ? `(${interp.actionMeaningML} / ${interp.actionMeaningEN})`
+                  : ""}
+              </span>
             </div>
           ) : (
             <span className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -232,18 +222,18 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
           )}
         </Row>
 
-        {/* Detected Main Purpose */}
+        {/* Main Purpose */}
         <Row label={L.mainPurpose}>
           {interp.mainPurposeArabic ? (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-amiri text-base" style={{ color: G.text }} dir="rtl">
                 {interp.mainPurposeArabic}
               </span>
-              {interp.mainPurposeMeaning && (
-                <span className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
-                  = {interp.mainPurposeMeaning}
-                </span>
-              )}
+              <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {interp.purposeMeaningML && `(${interp.purposeMeaningML})`}
+                {interp.purposeMeaningML && interp.purposeMeaningEN ? " / " : ""}
+                {interp.purposeMeaningEN && `(${interp.purposeMeaningEN})`}
+              </span>
               {interp.mainPurposeMatched && interp.mainPurposeSource && (
                 <span className="font-inter text-[9px] italic" style={{ color: "rgba(212,175,55,0.45)" }}>
                   ({L.dictSource}: {interp.mainPurposeSource})
@@ -262,15 +252,17 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
           )}
         </Row>
 
-        {/* Detected Modifier */}
+        {/* Modifier */}
         <Row label={L.modifier}>
           {interp.modifierArabic ? (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-amiri text-base" style={{ color: G.text }} dir="rtl">
                 {interp.modifierArabic}
               </span>
-              <span className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
-                = {interp.modifierMeaning}
+              <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {interp.modifierMeaningML && interp.modifierMeaningEN
+                  ? `(${interp.modifierMeaningML} / ${interp.modifierMeaningEN})`
+                  : ""}
               </span>
             </div>
           ) : (
@@ -287,17 +279,36 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
           <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.border})` }} />
         </div>
 
-        {/* Final Meaning — MASTER PURPOSE */}
+        {/* Malayalam Meaning */}
         <div className="rounded-lg p-3" style={{
           background: "rgba(212,175,55,0.10)",
           border: `1px solid ${G.borderHi}`,
         }}>
           <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-            {L.finalMeaning}
+            {L.mlMeaning}
           </p>
-          {interp.finalMeaning ? (
+          {interp.finalMeaningML ? (
+            <p className="font-malayalam text-sm font-bold leading-relaxed" style={{ color: G.text }}>
+              {interp.finalMeaningML}
+            </p>
+          ) : (
+            <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>
+              {L.notAvailable}
+            </p>
+          )}
+        </div>
+
+        {/* English Meaning */}
+        <div className="rounded-lg p-3" style={{
+          background: "rgba(212,175,55,0.06)",
+          border: `1px solid ${G.border}`,
+        }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
+            {L.enMeaning}
+          </p>
+          {interp.finalMeaningEN ? (
             <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
-              {interp.finalMeaning}
+              {interp.finalMeaningEN}
             </p>
           ) : (
             <p className="font-inter text-xs italic" style={{ color: "rgba(248,113,113,0.55)" }}>
