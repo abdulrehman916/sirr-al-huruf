@@ -76,7 +76,7 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
     if (!detected) { setPurposeLookup({ matched: false }); return; }
     setLoading(true);
     let cancelled = false;
-    lookupPurposeIntent(detected.middleWord || (customPurpose || "").trim(), detected.cardKey).then((res) => {
+    lookupPurposeIntent((customPurpose || "").trim(), detected.cardKey).then((res) => {
       if (cancelled) return;
       setPurposeLookup(res);
       setLoading(false);
@@ -131,7 +131,7 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
     notDetected: "കണ്ടെത്തിയില്ല",
     noMatch: "നിഘണ്ടുവിൽ ഇല്ല",
     dictSource: "ഉറവിടം",
-    notAvailable: "ലഭ്യമല്ല — ലക്ഷ്യം നിഘണ്ടുവിൽ കണ്ടെത്തിയില്ല",
+    notAvailable: "പ്രോജക്റ്റ് പർപ്പസ് ഡിക്ഷനറിയിൽ ഈ ലക്ഷ്യം കണ്ടെത്തിയില്ല.",
     loading: "വ്യാഖ്യാനിക്കുന്നു...",
   } : {
     title: "Purpose Interpretation",
@@ -143,7 +143,7 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
     notDetected: "Not detected",
     noMatch: "Not in dictionary",
     dictSource: "Source",
-    notAvailable: "Not available — purpose not found in dictionary",
+    notAvailable: "Purpose not found in the Project Purpose Dictionary.",
     loading: "Interpreting...",
   };
 

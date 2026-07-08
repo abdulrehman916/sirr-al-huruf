@@ -21,8 +21,8 @@ const MIZAAN_PAGE_KEY = "mizaan9";
 export const ACTION_MEANINGS = {
   "جلب":   { en: "Bring",      ml: "കൊണ്ടുവരുക" },
   "طرد":   { en: "Repel",      ml: "അകറ്റുക" },
-  "الصحة": { en: "Improve",    ml: "മെച്ചപ്പെടുത്തുക" },
-  "السقم": { en: "Cause harm", ml: "രോഗം വരുത്തുക" },
+  "الصحة": { en: "Restore",   ml: "ലഭിക്കുക" },
+  "السقم": { en: "Inflict",   ml: "ബാധിക്കുക" },
 };
 
 // Purpose card key → Action Arabic word (the card IS the Action)
@@ -34,7 +34,7 @@ export const CARD_TO_ACTION = {
 };
 
 // ── Common Ending (fixed, always appended) ──
-export const ENDING_MEANING = { en: "Before the blink of an eye", ml: "കണ്ണടച്ച് തുറക്കുന്നതിന് മുമ്പ്" };
+export const ENDING_MEANING = { en: "Quickly", ml: "വേഗത്തിൽ" };
 
 // Normalize Arabic: strip harakat + tatweel
 function normalizeArabic(text) {
@@ -56,16 +56,16 @@ export function detectAction(text) {
   return null;
 }
 
-// Isolate the middle (purpose) word: strip fixed Action + Ending tokens
-// so the dictionary lookup resolves the purpose's stored semantic meaning,
-// not a literal Arabic translation of the whole phrase.
+// Isolate the middle (purpose) word: strip ONLY pure action verbs (جلب, طرد)
+// + Ending modifier tokens. Purpose nouns (الصحة, السقم) are NOT stripped —
+// they ARE the main purpose and must be preserved for dictionary lookup.
 export function extractMiddleWord(text, actionArabic) {
   const norm = normalizeArabic(text);
   if (!norm) return "";
-  const ACTION_TOKENS = Object.keys(ACTION_MEANINGS);
+  const STRIPPABLE_ACTIONS = ["جلب", "طرد"];
   const ENDING_TOKENS = ["طرفة", "طرفه", "العين"];
   const words = norm.split(/\s+/).filter((w) => {
-    if (ACTION_TOKENS.includes(w)) return false;
+    if (STRIPPABLE_ACTIONS.includes(w)) return false;
     if (ENDING_TOKENS.includes(w)) return false;
     return true;
   });
@@ -75,9 +75,9 @@ export function extractMiddleWord(text, actionArabic) {
 // ═══════════════════════════════════════════════════════════════
 // PURE BUILDER — returns the complete semantic phrase
 // ═══════════════════════════════════════════════════════════════
-// Order (en + ml): Action + Purpose + Ending
-//   en → "Bring Love Before the blink of an eye"
-//   ml → "കൊണ്ടുവരുക സ്നേഹം കണ്ണടച്ച് തുറക്കുന്നതിന് മുമ്പ്"
+// Order: Action + Purpose + Modifier (en) / Modifier + Purpose + Action (ml)
+//   en → "Bring Love Quickly"
+//   ml → "വേഗത്തിൽ സ്നേഹം കൊണ്ടുവരുക"
 export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup, lang }) {
   const custom = (customPurpose || "").trim();
   if (!custom) return "";
@@ -101,14 +101,22 @@ export function buildRitualSemanticPhrase({ selections, customPurpose, purposeLo
   const endingMeaning = lang === "ml" ? ENDING_MEANING.ml : ENDING_MEANING.en;
 
   // Build complete phrase
+  // English order:  Action + Purpose + Modifier  → "Restore Health Quickly"
+  // Malayalam order: Modifier + Purpose + Action  → "വേഗത്തിൽ ആരോഗ്യം ലഭിക്കുക"
   if (actionArabic && purposeMeaning) {
     const actionMeaning = lang === "ml"
       ? ACTION_MEANINGS[actionArabic].ml
       : ACTION_MEANINGS[actionArabic].en;
+    if (lang === "ml") {
+      return `${endingMeaning} ${purposeMeaning} ${actionMeaning}`;
+    }
     return `${actionMeaning} ${purposeMeaning} ${endingMeaning}`;
   }
   // Partial: purpose matched but no action detected
   if (purposeMeaning) {
+    if (lang === "ml") {
+      return `${endingMeaning} ${purposeMeaning}`;
+    }
     return `${purposeMeaning} ${endingMeaning}`;
   }
   // No dictionary match — no semantic phrase
@@ -128,7 +136,11 @@ export function buildPhraseFromAIMeaning({ actionArabic, englishMeaning, malayal
     ? (lang === "ml" ? ACTION_MEANINGS[actionArabic].ml : ACTION_MEANINGS[actionArabic].en)
     : "";
   const ending = lang === "ml" ? ENDING_MEANING.ml : ENDING_MEANING.en;
-  if (actionMeaning) return `${actionMeaning} ${purpose} ${ending}`;
+  if (actionMeaning) {
+    if (lang === "ml") return `${ending} ${purpose} ${actionMeaning}`;
+    return `${actionMeaning} ${purpose} ${ending}`;
+  }
+  if (lang === "ml") return `${ending} ${purpose}`;
   return `${purpose} ${ending}`;
 }
 
@@ -157,7 +169,7 @@ export function useRitualSemanticPhrase(lang, refreshKey = 0) {
     if (!actionArabic) actionArabic = detectAction(custom);
     const middleWord = extractMiddleWord(custom, actionArabic);
     if (!middleWord) { setPhrase(""); return; }
-    lookupPurposeIntent(middleWord, cardKey).then((res) => {
+    lookupPurposeIntent(custom, cardKey).then((res) => {
       if (!cancelled) {
         setPhrase(buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: res, lang }));
       }
