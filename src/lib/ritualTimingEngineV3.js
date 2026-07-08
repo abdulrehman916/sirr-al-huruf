@@ -1237,69 +1237,63 @@ export function findNextSuitableMoonTime({ req, moonReq, fromDate, filters }) {
 // ALL required manuscript conditions are simultaneously satisfied.
 // ═══════════════════════════════════════════════════════════════
 export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, desiredPhase, fromDate }) {
-  // No fixed limit — search until a fully compatible time is found.
-  // 365 days (1 year, ~12+ Moon cycles) is a safety cap only; if no match
-  // exists in a year, the conditions are genuinely incompatible.
+  // ═══════════════════════════════════════════════════════════════
+  // PRIORITY-BASED SEARCH
+  //   1. Mandatory manuscript rules (req + moonReq) — MUST pass
+  //   2. User-selected Moon filters — PREFERRED (optional)
+  //   3. General enhancements — non-blocking
+  //
+  // Returns TWO times:
+  //   recommendedTime  = earliest time ALL mandatory manuscript rules pass
+  //   moonPerfectTime  = earliest time mandatory rules + ALL user Moon prefs pass
+  //
+  // If Moon prefs pass at recommendedTime, moonPerfectTime is null (same time).
+  // If Moon prefs fail at recommendedTime but pass later, moonPerfectTime is later.
+  // If Moon prefs never pass, moonPerfectTime is null.
+  // ═══════════════════════════════════════════════════════════════
   const MAX_SEARCH_DAYS = 365;
-  let firstMatch = null;
+  const hasMoonPrefs = !!(desiredMansion || desiredZodiac || desiredPhase);
+  const hasMsMoonRules = !!(moonReq?.moon || moonReq?.zodiac || moonReq?.suitableMansions);
+
+  let firstManuscriptValid = null;
+  let firstMoonPerfect = null;
 
   for (let d = 1; d <= MAX_SEARCH_DAYS; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
     const moon = getMoonPhase(date);
-
-    // ── Check if Moon matches user's desired conditions ──
-    let moonMatch = true;
-    if (desiredPhase === "waxing" && !moon.isWaxing) moonMatch = false;
-    if (desiredPhase === "waning" && !moon.isWaning) moonMatch = false;
-    if (desiredZodiac && moon.moonSign && desiredZodiac.toLowerCase() !== moon.moonSign.toLowerCase()) moonMatch = false;
-    if (desiredMansion) {
-      const mansionOk = String(desiredMansion) === String(moon.moonMansionNumber) ||
-                        String(desiredMansion).toLowerCase() === String(moon.moonMansion).toLowerCase();
-      if (!mansionOk) moonMatch = false;
-    }
-    if (!moonMatch) continue;
-
-    // ── Moon matches! Evaluate ALL conditions on this day ──
     const { hours, sunrise, sunset } = getTodayAllHours(date);
     const dayIndex = getActiveWeekday(date, sunrise, sunset);
     const dayKey = DAY_KEY_BY_INDEX[dayIndex];
+    const dayRuler = getDayRuler(dayIndex);
 
-    const checks = [];
-    let allPass = true;
+    // ═══ 1. MANDATORY MANUSCRIPT CONDITIONS ═══
+    const mandatoryChecks = [];
+    let mandatoryPass = true;
 
-    // 1. Day check
     if (req?.days) {
       const dayOk = req.days.includes(dayKey);
-      if (!dayOk) allPass = false;
-      checks.push({
+      if (!dayOk) mandatoryPass = false;
+      mandatoryChecks.push({
         dimension: "day", label: "Day",
         status: dayOk ? "pass" : "fail",
         current: MIZAN_DAY_NAMES[dayKey],
         required: req.days.map(dd => MIZAN_DAY_NAMES[dd]).join(", "),
-        reason: dayOk ? "Day is suitable." : "The Day is prohibited.",
-      });
-    } else {
-      checks.push({
-        dimension: "day", label: "Day",
-        status: "pass", current: MIZAN_DAY_NAMES[dayKey], required: "Any",
-        reason: "No day restriction — Day is suitable.",
+        reason: dayOk ? "Day is prescribed by manuscript." : "Day is not prescribed by manuscript.",
       });
     }
 
-    // 2. Nahas (worst day) check
-    if (req?.worstDays && req.worstDays.length > 0) {
+    if (req?.worstDays?.length) {
       const isWorstDay = req.worstDays.includes(dayKey);
-      if (isWorstDay) allPass = false;
-      checks.push({
+      if (isWorstDay) mandatoryPass = false;
+      mandatoryChecks.push({
         dimension: "nahas_day", label: "Nahas (Day)",
         status: isWorstDay ? "fail" : "pass",
         current: MIZAN_DAY_NAMES[dayKey],
         required: "Avoid: " + req.worstDays.map(dd => MIZAN_DAY_NAMES[dd]).join(", "),
-        reason: isWorstDay ? "Nahas restriction exists." : "No Nahas restriction on this day.",
+        reason: isWorstDay ? "Nahas restriction exists." : "No Nahas on this day.",
       });
     }
 
-    // 3. Find best Saat on this day (satisfies hours, night, avoids worst/enemy)
     let bestHour = null;
     for (const h of hours) {
       if (req?.hours && !req.hours.map(p => p.toLowerCase()).includes(h.planet)) continue;
@@ -1310,91 +1304,156 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       break;
     }
 
-    // 4. Saat check
     const saatOk = !!bestHour;
-    if (!saatOk) allPass = false;
-    checks.push({
+    if (!saatOk) mandatoryPass = false;
+    mandatoryChecks.push({
       dimension: "saat", label: "Saat",
       status: saatOk ? "pass" : "fail",
       current: bestHour ? `#${bestHour.hourNumber} (${capitalPlanet(bestHour.planet)})` : "None available",
       required: req?.hours ? req.hours.join(", ") : "Any",
-      reason: saatOk ? "Saat is suitable." : "No suitable Saat found on this day.",
+      reason: saatOk ? "Saat is prescribed by manuscript." : "No suitable Saat found on this day.",
     });
 
-    // 5. Kawkab check (ruling planet of the Saat)
     if (bestHour) {
       const kawkabOk = !req?.hours || req.hours.map(p => p.toLowerCase()).includes(bestHour.planet);
-      if (!kawkabOk) allPass = false;
-      checks.push({
+      if (!kawkabOk) mandatoryPass = false;
+      mandatoryChecks.push({
         dimension: "kawkab", label: "Kawkab",
         status: kawkabOk ? "pass" : "fail",
         current: capitalPlanet(bestHour.planet),
         required: req?.hours ? req.hours.join(", ") : "Any",
-        reason: kawkabOk ? "Kawkab is suitable." : "Kawkab does not match prescription.",
+        reason: kawkabOk ? "Kawkab matches manuscript prescription." : "Kawkab does not match prescription.",
       });
 
-      // 6. Nahas (hour) check
-      const hasNahasHour = (req?.worstHours && req.worstHours.length > 0) || (req?.enemyPlanets && req.enemyPlanets.length > 0);
+      const hasNahasHour = (req?.worstHours?.length) || (req?.enemyPlanets?.length);
       if (hasNahasHour) {
         const isWorstHour = (req?.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(bestHour.planet)) ||
                             (req?.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(bestHour.planet));
-        if (isWorstHour) allPass = false;
-        checks.push({
+        if (isWorstHour) mandatoryPass = false;
+        mandatoryChecks.push({
           dimension: "nahas_hour", label: "Nahas (Hour)",
           status: isWorstHour ? "fail" : "pass",
           current: capitalPlanet(bestHour.planet),
           required: "Avoid enemy/worst planets",
-          reason: isWorstHour ? "Nahas restriction exists." : "No Nahas restriction on this hour.",
+          reason: isWorstHour ? "Nahas restriction exists on this hour." : "No Nahas on this hour.",
         });
       }
     }
 
-    // 7. Moon check (satisfied by definition — user selected this condition)
-    checks.push({
-      dimension: "moon", label: "Moon",
-      status: "pass",
-      current: moon.moonMansion ? `${moon.moonMansion} / ${moon.moonSign || "—"}` : moon.moonSign || "—",
-      required: "User-selected condition",
-      reason: "Moon requirement satisfied.",
-    });
-
-    // 8. Manuscript Moon rules (if they exist for this ritual)
-    const hasMsMoonRules = !!(moonReq?.moon || moonReq?.zodiac || moonReq?.suitableMansions);
-    if (hasMsMoonRules) {
-      let moonRuleOk = true;
-      if (moonReq.moon && !moonSatisfied(moonReq.moon, moon.lunarDay)) moonRuleOk = false;
-      if (moonReq.zodiac && moon.moonSign && !moonReq.zodiac.includes(moon.moonSign.toLowerCase())) moonRuleOk = false;
-      if (moonReq.suitableMansions && moon.moonMansion) {
-        const mOk = moonReq.suitableMansions.some(m =>
-          String(m).toLowerCase() === String(moon.moonMansion).toLowerCase() ||
-          String(m) === String(moon.moonMansionNumber)
-        );
-        if (!mOk) moonRuleOk = false;
-      }
-      if (!moonRuleOk) allPass = false;
-      checks.push({
-        dimension: "moon_rule", label: "Manuscript Moon Rule",
-        status: moonRuleOk ? "pass" : "fail",
-        current: moon.moonMansion ? `${moon.moonMansion} / ${moon.moonSign || "—"}` : "—",
-        required: "Per manuscript",
-        reason: moonRuleOk ? "Manuscript Moon restriction satisfied." : "Manuscript Moon restriction NOT satisfied.",
-      });
-    }
-
-    // 9. Night requirement check
     if (req?.nightRequired === true) {
       const nightOk = bestHour && bestHour.period === "night";
-      if (!nightOk) allPass = false;
-      checks.push({
+      if (!nightOk) mandatoryPass = false;
+      mandatoryChecks.push({
         dimension: "night", label: "Day / Night",
         status: nightOk ? "pass" : "fail",
         current: bestHour ? (bestHour.period === "night" ? "Night" : "Day") : "—",
         required: "Night",
-        reason: nightOk ? "Night, as required." : "Manuscript requires night but no night Saat available.",
+        reason: nightOk ? "Night, as required by manuscript." : "Manuscript requires night but no night Saat available.",
       });
     }
 
-    // ── Nahas Status summary ──
+    if (hasMsMoonRules) {
+      if (moonReq.moon) {
+        const mrOk = moonSatisfied(moonReq.moon, moon.lunarDay);
+        if (!mrOk) mandatoryPass = false;
+        mandatoryChecks.push({
+          dimension: "ms_moon_phase", label: "Manuscript Moon Phase",
+          status: mrOk ? "pass" : "fail",
+          current: `Day ${moon.lunarDay} (${moon.phaseName})`,
+          required: moonReq.moon,
+          reason: mrOk ? "Manuscript Moon phase satisfied." : "Manuscript Moon phase NOT satisfied.",
+        });
+      }
+      if (moonReq.zodiac && moon.moonSign) {
+        const mzOk = moonReq.zodiac.includes(moon.moonSign.toLowerCase());
+        if (!mzOk) mandatoryPass = false;
+        mandatoryChecks.push({
+          dimension: "ms_moon_zodiac", label: "Manuscript Moon Zodiac",
+          status: mzOk ? "pass" : "fail",
+          current: `${moon.moonSignSymbol || ""} ${moon.moonSign}`,
+          required: moonReq.zodiac.join(", "),
+          reason: mzOk ? "Manuscript Moon zodiac satisfied." : "Manuscript Moon zodiac NOT satisfied.",
+        });
+      }
+      if (moonReq.suitableMansions && moon.moonMansion) {
+        const mmOk = moonReq.suitableMansions.some(m =>
+          String(m).toLowerCase() === String(moon.moonMansion).toLowerCase() ||
+          String(m) === String(moon.moonMansionNumber)
+        );
+        if (!mmOk) mandatoryPass = false;
+        mandatoryChecks.push({
+          dimension: "ms_moon_mansion", label: "Manuscript Moon Mansion",
+          status: mmOk ? "pass" : "fail",
+          current: moon.moonMansionArabic ? `${moon.moonMansionArabic} (${moon.moonMansion})` : moon.moonMansion,
+          required: moonReq.suitableMansions.join(", "),
+          reason: mmOk ? "Manuscript Moon mansion satisfied." : "Manuscript Moon mansion NOT satisfied.",
+        });
+      }
+    }
+
+    // ═══ 2. USER-SELECTED MOON PREFERENCES (optional) ═══
+    const moonPrefChecks = [];
+    let moonPrefPass = true;
+
+    if (desiredPhase) {
+      const phaseOk = (desiredPhase === "waxing" && moon.isWaxing) || (desiredPhase === "waning" && moon.isWaning);
+      if (!phaseOk) moonPrefPass = false;
+      moonPrefChecks.push({
+        dimension: "pref_phase", label: "Moon Phase",
+        status: phaseOk ? "pass" : "fail",
+        current: moon.phaseName,
+        required: desiredPhase,
+        reason: phaseOk ? "Selected Moon phase matched." : "Selected Moon phase NOT matched.",
+      });
+    }
+    if (desiredZodiac && moon.moonSign) {
+      const zodOk = desiredZodiac.toLowerCase() === moon.moonSign.toLowerCase();
+      if (!zodOk) moonPrefPass = false;
+      moonPrefChecks.push({
+        dimension: "pref_zodiac", label: "Moon Zodiac",
+        status: zodOk ? "pass" : "fail",
+        current: `${moon.moonSignSymbol || ""} ${moon.moonSign}`,
+        required: desiredZodiac,
+        reason: zodOk ? "Selected Moon zodiac matched." : "Selected Moon zodiac NOT matched.",
+      });
+    }
+    if (desiredMansion) {
+      const manOk = String(desiredMansion) === String(moon.moonMansionNumber) ||
+                    String(desiredMansion).toLowerCase() === String(moon.moonMansion).toLowerCase();
+      if (!manOk) moonPrefPass = false;
+      moonPrefChecks.push({
+        dimension: "pref_mansion", label: "Moon Mansion",
+        status: manOk ? "pass" : "fail",
+        current: moon.moonMansionArabic ? `${moon.moonMansionArabic} (${moon.moonMansion})` : (moon.moonMansion || "—"),
+        required: desiredMansion,
+        reason: manOk ? "Selected Moon mansion matched." : "Selected Moon mansion NOT matched.",
+      });
+    }
+
+    // ═══ 3. GENERAL ENHANCEMENTS (optional, non-blocking) ═══
+    const enhancementChecks = [];
+
+    const isBeneficDay = BENEFIC.includes(dayRuler.planet);
+    enhancementChecks.push({
+      dimension: "enh_benefic_day", label: "Benefic Day Ruler",
+      status: isBeneficDay ? "pass" : "neutral",
+      current: dayRuler.planet,
+      required: "Jupiter / Venus / Sun / Moon (preferred)",
+      reason: isBeneficDay ? `${dayRuler.planet} is a benefic planet — favorable enhancement.` : `${dayRuler.planet} is not benefic — neutral.`,
+    });
+
+    const illumPct = moon.moonIllumination != null ? parseFloat(moon.moonIllumination) : 0;
+    const goodIllum = illumPct >= 50;
+    enhancementChecks.push({
+      dimension: "enh_moon_illum", label: "Moon Illumination",
+      status: goodIllum ? "pass" : "neutral",
+      current: `${illumPct.toFixed(1)}%`,
+      required: "≥ 50% (preferred)",
+      reason: goodIllum ? "Moon is well-illuminated — favorable enhancement." : "Moon illumination is low — neutral.",
+    });
+
+    // ── Build result for this day ──
+    const monthName = date.toLocaleString("en-US", { month: "long" });
     const nahasActive = (req?.worstDays && req.worstDays.includes(dayKey)) ||
       (bestHour && req?.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(bestHour.planet)) ||
       (bestHour && req?.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(bestHour.planet));
@@ -1402,8 +1461,6 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       ? "Nahas restriction exists — this time is blocked."
       : "No Nahas restriction found.";
 
-    // ── Build result for this match ──
-    const monthName = date.toLocaleString("en-US", { month: "long" });
     const matchResult = {
       date: date.toISOString().split("T")[0],
       dateObj: date,
@@ -1416,21 +1473,74 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       hourNumber: bestHour?.hourNumber || null,
       hourPlanet: bestHour ? capitalPlanet(bestHour.planet) : null,
       moon: { ...moon },
-      checks,
-      allPass,
+      mandatoryChecks,
+      mandatoryPass,
+      moonPrefChecks,
+      moonPrefPass,
+      enhancementChecks,
       bestHour,
       nahasStatus,
     };
 
-    // Record first match (always)
-    if (!firstMatch) firstMatch = matchResult;
-
-    // If ALL conditions pass, this is the recommended time — stop searching
-    if (allPass) {
-      return { found: true, firstMatch, recommendedTime: matchResult, searchedDays: d };
+    if (!firstManuscriptValid && mandatoryPass) {
+      firstManuscriptValid = matchResult;
     }
+    if (!firstMoonPerfect && mandatoryPass && moonPrefPass) {
+      firstMoonPerfect = matchResult;
+    }
+    if (firstMoonPerfect) break;
+    if (!hasMoonPrefs && firstManuscriptValid) break;
   }
 
-  // No fully compatible time found within the safety cap
-  return { found: false, firstMatch, recommendedTime: null, searchedDays: MAX_SEARCH_DAYS };
+  // ═══ BUILD RESULT ═══
+  if (!hasMoonPrefs) {
+    return {
+      found: !!firstManuscriptValid,
+      firstManuscriptValid,
+      firstMoonPerfect: firstManuscriptValid,
+      recommendedTime: firstManuscriptValid,
+      moonPerfectTime: null,
+      moonPrefsSatisfied: true,
+      hasMoonPrefs: false,
+      searchedDays: MAX_SEARCH_DAYS,
+    };
+  }
+
+  if (firstMoonPerfect) {
+    const sameTime = firstManuscriptValid === firstMoonPerfect;
+    return {
+      found: true,
+      firstManuscriptValid,
+      firstMoonPerfect,
+      recommendedTime: firstManuscriptValid,
+      moonPerfectTime: sameTime ? null : firstMoonPerfect,
+      moonPrefsSatisfied: sameTime,
+      hasMoonPrefs: true,
+      searchedDays: MAX_SEARCH_DAYS,
+    };
+  }
+
+  if (firstManuscriptValid) {
+    return {
+      found: true,
+      firstManuscriptValid,
+      firstMoonPerfect: null,
+      recommendedTime: firstManuscriptValid,
+      moonPerfectTime: null,
+      moonPrefsSatisfied: false,
+      hasMoonPrefs: true,
+      searchedDays: MAX_SEARCH_DAYS,
+    };
+  }
+
+  return {
+    found: false,
+    firstManuscriptValid: null,
+    firstMoonPerfect: null,
+    recommendedTime: null,
+    moonPerfectTime: null,
+    moonPrefsSatisfied: false,
+    hasMoonPrefs: true,
+    searchedDays: MAX_SEARCH_DAYS,
+  };
 }
