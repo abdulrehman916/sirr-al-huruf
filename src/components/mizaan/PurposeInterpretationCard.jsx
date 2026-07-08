@@ -49,7 +49,7 @@ function detectModifier(text) {
   return null;
 }
 
-export default function PurposeInterpretationCard({ customPurpose, selections }) {
+export default function PurposeInterpretationCard({ customPurpose, selections, onPurposeResolved }) {
   const [lang, setLang] = useRitualLang();
   const [purposeLookup, setPurposeLookup] = useState({ matched: false });
   const [loading, setLoading] = useState(false);
@@ -73,16 +73,21 @@ export default function PurposeInterpretationCard({ customPurpose, selections })
 
   // ── Purpose Dictionary lookup (async) ──
   useEffect(() => {
-    if (!detected) { setPurposeLookup({ matched: false }); return; }
+    if (!detected) {
+      setPurposeLookup({ matched: false });
+      if (onPurposeResolved) onPurposeResolved({ matched: false });
+      return;
+    }
     setLoading(true);
     let cancelled = false;
     lookupPurposeIntent((customPurpose || "").trim(), detected.cardKey).then((res) => {
       if (cancelled) return;
       setPurposeLookup(res);
       setLoading(false);
+      if (onPurposeResolved) onPurposeResolved(res);
     });
     return () => { cancelled = true; };
-  }, [detected, customPurpose]);
+  }, [detected, customPurpose, onPurposeResolved]);
 
   // ── Build interpretation for display (both languages) ──
   const interp = useMemo(() => {

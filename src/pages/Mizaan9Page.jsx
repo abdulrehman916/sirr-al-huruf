@@ -284,6 +284,11 @@ export default function Mizaan9Page() {
   const [activeMethod, setActiveMethod] = useState(1);
   const [activeSection, setActiveSection] = useState(1);
   const [lockedFeature, setLockedFeature] = useState(null);
+  // ── Resolved purpose from the Purpose Interpretation card (single source of truth) ──
+  // The card resolves the Arabic phrase once; this result flows to Ritual Timing
+  // so it NEVER analyzes Arabic again — it consumes the interpreted meaning directly.
+  const [resolvedPurpose, setResolvedPurpose] = useState({ matched: false });
+  const handlePurposeResolved = useCallback((res) => setResolvedPurpose(res), []);
   // Nine Mizan (Mizan 1–9 + Final Summary) is IDENTICAL for Section 1 and Section 2 — it always uses
   // the Section 1 dataset so selections/values never go blank when switching sections. Only the
   // post-Nine-Mizan pipeline (Kitabet/A'van/Kasem via getBastLevelFn below) is section-specific.
@@ -555,6 +560,7 @@ export default function Mizaan9Page() {
                 customPurpose={customPurpose}
                 onCustomPurpose={setCustomPurpose}
                 purposesData={ds.purposes}
+                onPurposeResolved={handlePurposeResolved}
                 />
               <MizaanDivider />
               <Mizaan8
@@ -1180,6 +1186,7 @@ export default function Mizaan9Page() {
           selections={selections}
           customPurpose={customPurpose}
           activeMethod={activeMethod}
+          purposeLookup={resolvedPurpose}
         />
       )}
 
@@ -1190,6 +1197,7 @@ export default function Mizaan9Page() {
           selections={selections}
           customPurpose={customPurpose}
           activeMethod={activeMethod}
+          purposeLookup={resolvedPurpose}
         />
       )}
 

@@ -10,7 +10,6 @@ import {
   Star, Sun, Sunset, Globe, CalendarClock, FileText, Scroll, Shield, Zap,
 } from "lucide-react";
 import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingEngineV3";
-import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
 import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
 import { localizeAnalysis, localizeAdvice, tStr, useRitualLang } from "../../lib/ritualTimingI18n";
@@ -38,46 +37,33 @@ const SECTION_ICONS = {
   sparkles: Sparkles,
 };
 
-export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod }) {
+export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod, purposeLookup }) {
   const [expanded, setExpanded] = useState(true);
   const [lang, setLang] = useRitualLang();
   const { manuscriptRules } = useManuscriptRules();
-  const [purposeLookup, setPurposeLookup] = useState({ matched: false });
 
-  // ── Purpose Dictionary background lookup (7th Mizan → normalized intent) ──
-  // Silently checks the Purpose Dictionary when the user enters a custom purpose.
-  // If matched AND no purpose card is selected, injects the normalized purpose key
-  // into a cloned selections object for the engine. Does NOT modify the engine,
-  // any calculation, or the 7th Mizan UI. Falls back silently if no match.
-  useEffect(() => {
-    setPurposeLookup({ matched: false });
-    if (!customPurpose || !customPurpose.trim()) return;
-    let cancelled = false;
-    lookupPurposeIntent(customPurpose, selections?.purposes?.[0]).then((res) => {
-      if (!cancelled) setPurposeLookup(res);
-    });
-    return () => { cancelled = true; };
-  }, [customPurpose, selections?.purposes]);
-
+  // purposeLookup comes from the Purpose Interpretation card (single source of truth).
+  // Ritual Timing NEVER analyzes Arabic — it consumes the interpreted meaning directly.
+  const resolvedPurpose = purposeLookup || { matched: false };
   const effectiveSelections = useMemo(() => {
-    if (purposeLookup.matched && purposeLookup.ritualIntent) {
+    if (resolvedPurpose.matched && resolvedPurpose.ritualIntent) {
       const hasCard = Array.isArray(selections?.purposes) && selections.purposes.length > 0;
-      if (!hasCard) return { ...selections, purposes: [purposeLookup.ritualIntent] };
+      if (!hasCard) return { ...selections, purposes: [resolvedPurpose.ritualIntent] };
     }
     return selections;
-  }, [selections, purposeLookup]);
+  }, [selections, resolvedPurpose]);
 
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup });
-  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
+    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose });
+  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
   const rawAdvice = useMemo(() => {
     if (!result) return null;
-    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup });
-  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
+    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose });
+  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose]);
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 

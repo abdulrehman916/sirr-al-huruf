@@ -65,7 +65,7 @@ function CustomPurposePanel({ customPurpose, onCustomPurpose }) {
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.40)", bg: "rgba(212,175,55,0.07)" };
 
-export default function Mizaan7({ selected, onChange, customPurpose, onCustomPurpose, purposesData }) {
+export default function Mizaan7({ selected, onChange, customPurpose, onCustomPurpose, purposesData, onPurposeResolved }) {
   // selected is now an array
   const selectedArr = Array.isArray(selected) ? selected : (selected ? [selected] : []);
   const toggle = (key) => {
@@ -145,7 +145,7 @@ export default function Mizaan7({ selected, onChange, customPurpose, onCustomPur
       <CustomPurposePanel customPurpose={customPurpose} onCustomPurpose={onCustomPurpose} />
 
       {/* Purpose Interpretation Card — Master purpose resolver for Ritual Timing */}
-      <PurposeInterpretationCard customPurpose={customPurpose} selections={{ purposes: selectedArr }} />
+      <PurposeInterpretationCard customPurpose={customPurpose} selections={{ purposes: selectedArr }} onPurposeResolved={onPurposeResolved} />
     </motion.div>
   );
 }

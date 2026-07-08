@@ -11,7 +11,6 @@ import {
   CheckCircle2, XCircle, AlertCircle,
 } from "lucide-react";
 import { analyzeRitualTiming } from "../../lib/ritualTimingEngineV3";
-import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
 import { localizeAnalysis, tStr, tPlanet, tDay, tStatus, useRitualLang, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
@@ -88,35 +87,28 @@ const ML_PLACEMENT = {
   "Left of threshold": "തിരശ്ശീലയ്ക്ക് ഇടതുഭാഗത്ത്",
 };
 
-export default function RitualTimingAnalysis({ result, selections, customPurpose, activeMethod }) {
+export default function RitualTimingAnalysis({ result, selections, customPurpose, activeMethod, purposeLookup }) {
   const [expanded, setExpanded] = useState(false);
   const [lang, setLang] = useRitualLang();
   const { manuscriptRules } = useManuscriptRules();
-  const [purposeLookup, setPurposeLookup] = useState({ matched: false });
 
-  useEffect(() => {
-    setPurposeLookup({ matched: false });
-    if (!customPurpose || !customPurpose.trim()) return;
-    let cancelled = false;
-    lookupPurposeIntent(customPurpose, selections?.purposes?.[0]).then((res) => {
-      if (!cancelled) setPurposeLookup(res);
-    });
-    return () => { cancelled = true; };
-  }, [customPurpose, selections?.purposes]);
+  // purposeLookup comes from the Purpose Interpretation card (single source of truth).
+  // Ritual Timing NEVER analyzes Arabic — it consumes the interpreted meaning directly.
+  const resolvedPurpose = purposeLookup || { matched: false };
 
   const effectiveSelections = useMemo(() => {
-    if (purposeLookup.matched && purposeLookup.ritualIntent) {
+    if (resolvedPurpose.matched && resolvedPurpose.ritualIntent) {
       const hasCard = Array.isArray(selections?.purposes) && selections.purposes.length > 0;
-      if (!hasCard) return { ...selections, purposes: [purposeLookup.ritualIntent] };
+      if (!hasCard) return { ...selections, purposes: [resolvedPurpose.ritualIntent] };
     }
     return selections;
-  }, [selections, purposeLookup]);
+  }, [selections, resolvedPurpose]);
 
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup });
+    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose });
     return normalizeForUI(raw);
-  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
+  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
