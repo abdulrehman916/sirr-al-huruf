@@ -20,7 +20,7 @@ const MIZAAN_PAGE_KEY = "mizaan9";
 // ── Fixed Action words → meanings (manuscript) ──
 export const ACTION_MEANINGS = {
   "جلب":   { en: "Bring",      ml: "കൊണ്ടുവരുക" },
-  "طرد":   { en: "Repel",      ml: "അകറ്റുക" },
+  "طرد":   { en: "Drive away", ml: "അകറ്റുക" },
   "الصحة": { en: "Restore",   ml: "വീണ്ടെടുക്കുക" },
   "السقم": { en: "Inflict",   ml: "ബാധിക്കുക" },
 };
