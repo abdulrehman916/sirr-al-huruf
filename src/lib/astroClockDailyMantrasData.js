@@ -20,6 +20,142 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════
+// MANUSCRIPT AUTHORITY RULE — ARCHITECTURE LAW
+// The original manuscript PDF is the PRIMARY AUTHORITY.
+// Never silently replace manuscript text with a standard Quran
+// edition or any external source. If the manuscript differs in
+// any way, preserve the manuscript exactly and record the
+// difference as a manuscript note. Every Arabic entry keeps:
+// original manuscript text, source book, page number, optional
+// verification note. The manuscript remains the canonical source.
+// ═══════════════════════════════════════════════════════════════
+export const MANUSCRIPT_AUTHORITY_RULE = {
+  rule_en: "The original manuscript PDF is the PRIMARY AUTHORITY. Never silently replace manuscript text with a standard Quran edition. If the manuscript differs, preserve it exactly and record the difference as a manuscript note.",
+  rule_ml: "മൂല ഗ്രന്ഥ PDF ആണ് പ്രാഥമിക അധികാരം. ഗ്രന്ഥ പാഠം ഒരിക്കലും മാറ്റരുത്.",
+  canonical_source: "Kashf al-Haqa'iq manuscript PDF",
+  never_overwrite: true,
+};
+
+// ═══════════════════════════════════════════════════════════════
+// WEEKDAY-PLANET-ANGEL METADATA (from manuscript)
+// Source: Kashf al-Haqa'iq, pp.27-31
+// ═══════════════════════════════════════════════════════════════
+export const WEEKDAY_PLANET_META = [
+  { day_index: 0, day_en: "Sunday", day_ml: "ഞായർ", day_ar: "الأحد",
+    planet_en: "Sun", planet_ml: "സൂര്യൻ", planet_ar: "الشمس",
+    king_ar: "المذهب", king_en: "al-Mudhhab",
+    angel_ar: "روقيائيل", angel_en: "Ruqiya'il", angel_ml: "റൂഖിയാഇൽ" },
+  { day_index: 1, day_en: "Monday", day_ml: "തിങ്കൾ", day_ar: "الاثنين",
+    planet_en: "Moon", planet_ml: "ചന്ദ്രൻ", planet_ar: "القمر",
+    king_ar: "مُرَّة", king_en: "Murrah",
+    angel_ar: "جبرائيل", angel_en: "Jibrail", angel_ml: "ജിബ്‌രീൽ" },
+  { day_index: 2, day_en: "Tuesday", day_ml: "ചൊവ്വ", day_ar: "الثلاثاء",
+    planet_en: "Mars", planet_ml: "ചൊവ്വ ഗ്രഹം", planet_ar: "المريخ",
+    king_ar: "أبو محرز الأحمر", king_en: "Abu Mihraz al-Ahmar",
+    angel_ar: "سمسيائيل", angel_en: "Samsiya'il", angel_ml: "സംസിയാഇൽ" },
+  { day_index: 3, day_en: "Wednesday", day_ml: "ബുധൻ", day_ar: "الأربعاء",
+    planet_en: "Mercury", planet_ml: "ബുധ ഗ്രഹം", planet_ar: "عطارد",
+    king_ar: "برقان", king_en: "Burqan",
+    angel_ar: "ميكائيل", angel_en: "Mika'il", angel_ml: "മീകാഇൽ" },
+  { day_index: 4, day_en: "Thursday", day_ml: "വ്യാഴം", day_ar: "الخميس",
+    planet_en: "Jupiter", planet_ml: "വ്യാഴ ഗ്രഹം", planet_ar: "المشتري",
+    king_ar: "شمهورش", king_en: "Shamhursh",
+    angel_ar: "صرفيائيل", angel_en: "Sarfiya'il", angel_ml: "സർഫിയാഇൽ" },
+  { day_index: 5, day_en: "Friday", day_ml: "വെള്ളി", day_ar: "الجمعة",
+    planet_en: "Venus", planet_ml: "ശുക്ര ഗ്രഹം", planet_ar: "الزهرة",
+    king_ar: "زوبعة", king_en: "Zawba'a",
+    angel_ar: "عنيائيل", angel_en: "Unya'il", angel_ml: "ഉന്യാഇൽ" },
+  { day_index: 6, day_en: "Saturday", day_ml: "ശനി", day_ar: "السبت",
+    planet_en: "Saturn", planet_ml: "ശനി ഗ്രഹം", planet_ar: "زحل",
+    king_ar: "ميمون أبا نوخ", king_en: "Maymun Abu Nukh",
+    angel_ar: "عزرائيل", angel_en: "Azra'il", angel_ml: "അസ്റാഇൽ" },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// MANUSCRIPT PERFORMANCE RULES (from Kashf al-Haqa'iq)
+// Source: pp.11, 20, 39, 42, 65-66
+// ═══════════════════════════════════════════════════════════════
+export const MANUSCRIPT_PERFORMANCE_RULES = {
+  source: "Kashf al-Haqa'iq, pp.11, 20, 39, 42, 65-66",
+  timing: {
+    rule_ml: "കൃത്യങ്ങൾ നിശ്ചിത ഗ്രഹ ഘടികയിൽ മാത്രം ഫലിക്കും (പേജ് 11)",
+    rule_en: "Operations only succeed in their computed planetary hour (p.11)",
+  },
+  night_preference: {
+    rule_ml: "ആത്മ കൃത്യങ്ങൾ രാത്രിയിൽ ഉത്തമം; സൂര്യൻ ദിവസം എല്ലാ ആത്മാക്കളെയും അടക്കുന്നു (പേജ് 39). ത്വിലസ്മ, ആഹ്വാനം, ആത്മ ചികിത്സ പകലോ രാത്രിയോ ആകാം.",
+    rule_en: "Night is preferred; Sun suppresses spirits by day (p.39). Talismans, invocations, spiritual treatments may be day or night.",
+  },
+  direction: {
+    source: "p.42",
+    rules: [
+      { element_en: "Fire", element_ml: "അഗ്നി", direction_en: "West", direction_ml: "പടിഞ്ഞാറ്" },
+      { element_en: "Water", element_ml: "ജലം", direction_en: "East", direction_ml: "കിഴക്ക്" },
+      { element_en: "Air", element_ml: "വായു", direction_en: "North", direction_ml: "വടക്ക്" },
+      { element_en: "Earth", element_ml: "ഭൂമി", direction_en: "South", direction_ml: "തെക്ക്" },
+    ],
+    default_ml: "സംശയമുള്ളപ്പോൾ പടിഞ്ഞാറോ ഖിബ്ലയോ അഭിമുഖമാക്കുക (പേജ് 42)",
+    default_en: "When in doubt, face West or the Qibla (p.42)",
+  },
+  moon: {
+    rule_ml: "നല്ല കൃത്യങ്ങൾ ചന്ദ്ര വളർച്ചക്കാലത്ത് — മാസത്തിന്റെ ആദ്യ പകുതി (പേജ് 20)",
+    rule_en: "Good deeds during waxing moon — first half of lunar month (p.20)",
+  },
+  day_boundary: {
+    rule_ml: "ഗ്രഹ ദിനം = മുൻ രാത്രി + പിൻ പകൽ. വെള്ളി = വ്യാഴം വൈകുന്നേരം + വെള്ളി പകൽ (പേജ് 65)",
+    rule_en: "The day begins with the preceding night (p.65)",
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// RECITATION RELATIONSHIPS — which recitations are linked
+// Manuscript specifies the order of recitation.
+// ═══════════════════════════════════════════════════════════════
+export const RECITATION_RELATIONSHIPS = {
+  // Weekday pairs: Azimah first, then Qasam (pp.27-31)
+  kashf_azimah_sunday: ["kashf_qasam_sunday"],
+  kashf_azimah_monday: ["kashf_qasam_monday"],
+  kashf_azimah_tuesday: ["kashf_qasam_tuesday"],
+  kashf_azimah_wednesday: ["kashf_qasam_wednesday"],
+  kashf_azimah_thursday: ["kashf_qasam_thursday"],
+  kashf_azimah_friday: ["kashf_qasam_friday"],
+  kashf_azimah_saturday: ["kashf_qasam_saturday"],
+  kashf_qasam_sunday: ["kashf_azimah_sunday"],
+  kashf_qasam_monday: ["kashf_azimah_monday"],
+  kashf_qasam_tuesday: ["kashf_azimah_tuesday"],
+  kashf_qasam_wednesday: ["kashf_azimah_wednesday"],
+  kashf_qasam_thursday: ["kashf_azimah_thursday"],
+  kashf_qasam_friday: ["kashf_azimah_friday"],
+  kashf_qasam_saturday: ["kashf_azimah_saturday"],
+  // Tanzil sequence: Istighfar first, then Tanzil dua (p.51)
+  kashf_istighfar: ["kashf_tanzil_dua"],
+  kashf_tanzil_dua: ["kashf_istighfar"],
+  // Opening secrets: Dua first, then Divine Name (p.47)
+  kashf_opening_secrets: ["kashf_ism_alim"],
+  kashf_ism_alim: ["kashf_opening_secrets"],
+  // Love works: Tawkeel + 3 Quran verses (p.52)
+  kashf_tawkeel_love: ["kashf_quran_baqarah_260", "kashf_quran_anbiya_104", "kashf_quran_naml_40"],
+  kashf_quran_baqarah_260: ["kashf_tawkeel_love", "kashf_quran_anbiya_104", "kashf_quran_naml_40"],
+  kashf_quran_anbiya_104: ["kashf_tawkeel_love", "kashf_quran_baqarah_260", "kashf_quran_naml_40"],
+  kashf_quran_naml_40: ["kashf_tawkeel_love", "kashf_quran_baqarah_260", "kashf_quran_anbiya_104"],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// QURAN VERIFICATION NOTES — for validation only
+// Manuscript text is ALWAYS canonical. These notes verify that
+// the manuscript text matches the standard Quran edition, for
+// reference only. If a difference exists, it is noted here and
+// the manuscript version is preserved.
+// ═══════════════════════════════════════════════════════════════
+export const QURAN_VERIFICATION_NOTES = {
+  kashf_quran_kahf_99: { quran_ref: "Quran 18:99 (Surah Kahf)", matches_standard: true, note: "Manuscript text matches standard Quran. Manuscript remains canonical." },
+  kashf_quran_ahqaf_31: { quran_ref: "Quran 46:31-32 (Surah Ahqaf)", matches_standard: true, note: "Manuscript text matches standard Quran. Manuscript remains canonical." },
+  kashf_quran_baqarah_148: { quran_ref: "Quran 2:148 (Surah Baqarah)", matches_standard: true, note: "Manuscript text matches standard Quran. Manuscript remains canonical." },
+  kashf_quran_baqarah_260: { quran_ref: "Quran 2:260 (Surah Baqarah)", matches_standard: true, note: "Manuscript text matches standard Quran. Manuscript remains canonical." },
+  kashf_quran_anbiya_104: { quran_ref: "Quran 21:104 (Surah Anbiya)", matches_standard: true, note: "Manuscript text matches standard Quran. Manuscript remains canonical." },
+  kashf_quran_naml_40: { quran_ref: "Quran 27:40 (Surah Naml)", matches_standard: true, note: "Manuscript text matches standard Quran. Manuscript remains canonical." },
+};
+
+// ═══════════════════════════════════════════════════════════════
 // CATEGORY A: SEVEN DAILY AZAYIM (العزائم / الدعوات للأيام)
 // Source: Kashf al-Haqa'iq, pp.27-30
 // Each Azimah is recited on its specific weekday with the day's
@@ -442,4 +578,43 @@ export function getTotalMantraCount() {
 
 export function hasAnyDailyMantras() {
   return getTotalMantraCount() > 0;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS FOR GUIDED RITUAL PAGE
+// ═══════════════════════════════════════════════════════════════
+
+// Returns a map of all recitations by ID
+export function getAllRecitationsMap() {
+  const map = {};
+  [
+    ...KASHF_AZAYIM_BY_DAY,
+    ...KASHF_AQSAM_BY_DAY,
+    ...KASHF_UNIVERSAL_SUPPLICATIONS,
+    ...KASHF_ISTIKHARA_DUAS,
+    ...KASHF_QURAN_RECITATIONS,
+    ...KASHF_OPENING_SECRETS_DUAS,
+    ...KASHF_TANZIL_DUAS,
+    ...KASHF_DIVINE_NAMES,
+    ...KASHF_TAWKEEL,
+  ].forEach(m => { map[m.id] = m; });
+  return map;
+}
+
+// Returns related recitation objects for a given mantra ID
+export function getRelatedRecitations(mantraId) {
+  const ids = RECITATION_RELATIONSHIPS[mantraId] || [];
+  const map = getAllRecitationsMap();
+  return ids.map(id => map[id]).filter(Boolean);
+}
+
+// Returns weekday metadata for a day index
+export function getWeekdayMeta(dayIndex) {
+  if (dayIndex === null || dayIndex === undefined) return null;
+  return WEEKDAY_PLANET_META.find(d => d.day_index === dayIndex) || null;
+}
+
+// Returns Quran verification note for a mantra ID (if it's a Quran verse)
+export function getQuranVerificationNote(mantraId) {
+  return QURAN_VERIFICATION_NOTES[mantraId] || null;
 }
