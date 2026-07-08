@@ -648,6 +648,7 @@ export function localizeAnalysis(analysis, lang) {
       currentHour: { ...analysis.liveNow.currentHour, planet: tPlanet(analysis.liveNow.currentHour?.planet, lang) },
     } : analysis.liveNow,
     selectionAnalysis: localizeSelectionAnalysis(analysis.selectionAnalysis, lang),
+    reasoning: analysis.reasoning?.map(r => mlReasoning(r, analysis, lang)),
   };
 }
 
@@ -667,6 +668,34 @@ function mlMoonAssessment(analysis) {
     return `ചന്ദ്രദശാ വ്യവസ്ഥ പാലിക്കപ്പെട്ടു (ദിവസം ${ld}).`;
   }
   return assessment;
+}
+
+// ── Translate reasoning log entries (pattern-based) ──
+function mlReasoning(line, analysis, lang) {
+  if (lang !== "ml" || !line) return line;
+  const a = analysis;
+  let m;
+
+  // "Ritual identified as "X" via Y."
+  if ((m = line.match(/^Ritual identified as "(.+?)" via (.+)\.$/))) {
+    const rt = a?.ritualSemanticMl || tRitualType(m[1], "ml") || m[1];
+    return `കർമ്മം "${rt}" ആയി തിരിച്ചറിഞ്ഞു — അടിസ്ഥാനം: ${tMatchedOn(m[2])}.`;
+  }
+  // "ManuscriptRule DB: N matching rule(s). JS fallback: ..."
+  if ((m = line.match(/^ManuscriptRule DB: (\d+) matching rule\(s\)\. JS fallback: (.+)\.$/))) {
+    const fallback = m[2].includes("disabled")
+      ? "പ്രവർത്തനരഹിതം (ലക്ഷ്യം തിരഞ്ഞെടുത്തിട്ടുണ്ട് — കൈയെഴുത്തുപ്രതി നിയമങ്ങൾ മാത്രം)"
+      : "പ്രവർത്തനക്ഷമം (ലക്ഷ്യം തിരഞ്ഞെടുത്തിട്ടില്ല)";
+    return `കൈയെഴുത്തുപ്രതി ഡാറ്റാബേസ്: ${m[1]} നിയമം(ങ്ങൾ) പൊരുത്തപ്പെട്ടു. JS ബാക്കപ്: ${fallback}.`;
+  }
+  // "Current: Day, hour #N (Planet), moon day N, day/night."
+  if ((m = line.match(/^Current: (\w+), hour #(\d+) \((\w+)\), moon day (\d+), (day|night)\.$/))) {
+    const day = tDay(m[1], "ml");
+    const planet = tPlanet(m[3], "ml");
+    const period = m[5] === "night" ? "രാത്രി" : "പകൽ";
+    return `നിലവിൽ: ${day}, മണിക്കൂർ #${m[2]} (${planet}), ചാന്ദ്ര ദിവസം ${m[4]}, ${period}.`;
+  }
+  return line;
 }
 
 // ── Malayalam expert narrative lines ──
