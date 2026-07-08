@@ -67,6 +67,14 @@ const L = (lang) => ({
   evaluation: lang === "ml" ? "വിലയിരുത്തൽ" : "Evaluation",
   compatible: lang === "ml" ? "നിലവിലെ ചന്ദ്രൻ കൈയെഴുത്തുപ്രതി നിയമങ്ങളെ പാലിക്കുന്നു." : "Current Moon satisfies the manuscript rules.",
   notCompatible: lang === "ml" ? "നിലവിലെ ചന്ദ്രൻ കൈയെഴുത്തുപ്രതി നിയമങ്ങളെ പാലിക്കുന്നില്ല." : "Current Moon does NOT satisfy the manuscript rules.",
+  moonMatchQuestion: lang === "ml"
+    ? "നിലവിലെ ചന്ദ്രൻ തിരഞ്ഞെടുത്ത ആചാരവുമായി പൊരുത്തപ്പെടുന്നോ?"
+    : "Does the current Moon match the selected ritual?",
+  moonMatchYesShort: lang === "ml" ? "✓ പൊരുത്തപ്പെടുന്നു" : "✓ Matches",
+  moonMatchNoShort: lang === "ml" ? "✗ പൊരുത്തപ്പെടുന്നില്ല" : "✗ Does not match",
+  moonMatchNeverAffects: lang === "ml"
+    ? "ഈ കാർഡ് ഒരിക്കലും ആചാര തീരുമാനത്തെ ബാധിക്കുന്നില്ല."
+    : "This card never affects the ritual decision.",
   // Option 2 labels
   desiredMansion: lang === "ml" ? "ആഗ്രഹിക്കുന്ന മാളിക" : "Desired Moon Mansion",
   desiredZodiac: lang === "ml" ? "ആഗ്രഹിക്കുന്ന രാശി" : "Desired Moon Zodiac",
@@ -74,8 +82,8 @@ const L = (lang) => ({
   anyMansion: lang === "ml" ? "ഏതെങ്കിലും" : "Any",
   anyZodiac: lang === "ml" ? "ഏതെങ്കിലും" : "Any",
   anyPhase: lang === "ml" ? "എതും" : "Any",
-  planBtn: lang === "ml" ? "കർമ്മം ആസൂത്രണം ചെയ്യുക" : "Plan Ritual",
-  planning: lang === "ml" ? "ആസൂത്രണം ചെയ്യുന്നു..." : "Planning...",
+  planBtn: lang === "ml" ? "അടുത്ത പൊരുത്തമുള്ള ചന്ദ്ര സമയം കണ്ടെത്തുക" : "Find Next Matching Moon Time",
+  planning: lang === "ml" ? "തിരയുന്നു..." : "Searching...",
   moonEnters: lang === "ml" ? "ചന്ദ്രൻ പ്രവേശിക്കുന്നു" : "Moon enters",
   fullEvaluation: lang === "ml" ? "പൂർണ്ണ വിലയിരുത്തൽ" : "Full Evaluation",
   recommended: lang === "ml" ? "✅ ശുപാർശ ചെയ്ത ആചാര സമയം" : "✅ Recommended Ritual Time",
@@ -129,12 +137,12 @@ const L = (lang) => ({
   timelineTitle: lang === "ml" ? "ശുപാർശ കാലരേഖ" : "Recommended Timeline",
   bestManuscriptTitle: lang === "ml" ? "✅ മികച്ച കൈയെഴുത്തുപ്രതി സമയം" : "✅ Best Manuscript Time",
   bestManuscriptDesc: lang === "ml"
-    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും പാലിക്കുന്ന ഏറ്റവും പഴയ തീയതി. കൈയെഴുത്തുപ്രതി ആവശ്യമില്ലെങ്കിൽ ചന്ദ്രനെ അവഗണിക്കുന്നു."
-    : "The earliest date where ALL mandatory manuscript rules pass. This recommendation ignores Moon unless Moon is a manuscript requirement.",
+    ? "ഇത് ഏറ്റവും പഴയ കൈയെഴുത്തുപ്രതി പ്രകാരം സാധുവായ ആചാര സമയമാണ്. കൈയെഴുത്തുപ്രതി ആവശ്യപ്പെടുന്നില്ലെങ്കിൽ ചന്ദ്രനെ അവഗണിക്കുന്നു."
+    : "This is the earliest manuscript-valid ritual time. Moon is ignored unless the manuscript itself requires it.",
   bestMoonTitle: lang === "ml" ? "🌙 മികച്ച ചന്ദ്ര മുൻഗണന പൊരുത്തം" : "🌙 Best Moon Preference Match",
   bestMoonDesc: lang === "ml"
-    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും തിരഞ്ഞെടുത്ത ചന്ദ്ര മുൻഗണനകളും പാലിക്കുന്ന ഏറ്റവും പഴയ തീയതി."
-    : "The earliest date where all mandatory manuscript rules pass AND all selected Moon preferences pass.",
+    ? "തിരഞ്ഞെടുത്ത ചന്ദ്ര മുൻഗണനകൾ പാലിക്കുന്ന ഏറ്റവും പഴയ സമയമാണിത്."
+    : "This is the earliest time matching your selected Moon preferences.",
   bestAvailableTitle: lang === "ml" ? "⭐ മികച്ച ലഭ്യമായ സമയം" : "⭐ Best Available Time",
   bestAvailableBadge: "★★★★★ BEST AVAILABLE TIME",
   bestAvailableDesc: lang === "ml"
@@ -163,6 +171,25 @@ const L = (lang) => ({
     : "The manuscript does not specifically permit destructive rituals during this Nahas.",
   nahasCitationLabel: lang === "ml" ? "കൈയെഴുത്തുപ്രതി റഫറൻസ്" : "Manuscript Citation",
   nahasClean: lang === "ml" ? "നഹാസ് നിരോധനമില്ല — ഈ സമയം സുരക്ഷിതമാണ്." : "No Nahas restriction — this time is safe.",
+  nahasGoodProhibited: lang === "ml" ? "✓ നല്ല ആചാരങ്ങൾ നിരോധിച്ചിരിക്കുന്നു" : "✓ Good rituals prohibited",
+  nahasDestructivePermitted: lang === "ml"
+    ? "കൈയെഴുത്തുപ്രതി പ്രകാരം, ഈ നഹാസ് ഈ ആചാര വിഭാഗങ്ങളെ അനുവദിക്കുന്നു."
+    : "According to the manuscript, this Nahas permits these ritual categories.",
+  nahasDayNameLabel: lang === "ml" ? "നഹാസ് ദിവസം" : "Nahas Day",
+  moonMatchTitle: lang === "ml" ? "നിലവിലെ ചന്ദ്രൻ തിരഞ്ഞെടുത്ത ആചാരവുമായി പൊരുത്തപ്പെടുന്നോ?" : "Does the current Moon match the selected ritual?",
+  moonMatchYes: lang === "ml" ? "✓ പൊരുത്തപ്പെടുന്നു" : "✓ Matches",
+  moonMatchNo: lang === "ml" ? "✗ പൊരുത്തപ്പെടുന്നില്ല" : "✗ Does not match",
+  moonMatchExplain: lang === "ml" ? "വിശദീകരണം" : "Explanation",
+  // Transparency section headers (▼ collapsible)
+  transMandatory: lang === "ml" ? "▼ നിർബന്ധ നിയമങ്ങൾ പാലിച്ചു" : "▼ Mandatory Rules Passed",
+  transMoonPrefs: lang === "ml" ? "▼ ചന്ദ്ര മുൻഗണനകൾ" : "▼ Moon Preferences",
+  transNahas: lang === "ml" ? "▼ നഹാസ് നില" : "▼ Nahas Status",
+  transCurrentMoon: lang === "ml" ? "▼ നിലവിലെ ചന്ദ്രൻ" : "▼ Current Moon",
+  transExplainWhy: lang === "ml" ? "▼ കാരണം വിശദീകരിക്കുക" : "▼ Explain Why",
+  transCitations: lang === "ml" ? "▼ കൈയെഴുത്തുപ്രതി റഫറൻസുകൾ" : "▼ Manuscript Citations",
+  manuscriptAuthority: lang === "ml"
+    ? "കൈയെഴുത്തുപ്രതി എപ്പോഴും അന്തിമ അധികാരമാണ്."
+    : "The manuscript is always the final authority.",
 });
 
 export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, req, lang = "ml" }) {
@@ -343,21 +370,31 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
                           {moonCompat.checks.map((check, idx) => (
                             <MoonCheckRow key={idx} check={check} lang={lang} />
                           ))}
-                          <div className="rounded-lg p-2.5 mt-1" style={{
+                          {/* Match question + ✓/✗ answer */}
+                          <div className="rounded-lg p-2.5 mt-1 space-y-1.5" style={{
                             background: moonCompat.compatible ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)",
                             border: `1px solid ${moonCompat.compatible ? "rgba(74,222,128,0.30)" : "rgba(248,113,113,0.30)"}`,
                           }}>
+                            <p className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.80)" }}>
+                              {t.moonMatchQuestion}
+                            </p>
                             <div className="flex items-center gap-2">
                               {moonCompat.compatible
                                 ? <Check className="w-4 h-4" style={{ color: G.pass }} />
-                                : <AlertTriangle className="w-4 h-4" style={{ color: G.fail }} />}
-                              <p className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{
+                                : <X className="w-4 h-4" style={{ color: G.fail }} />}
+                              <p className={`text-sm font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{
                                 color: moonCompat.compatible ? G.pass : G.fail,
                               }}>
-                                {moonCompat.compatible ? t.compatible : t.notCompatible}
+                                {moonCompat.compatible ? t.moonMatchYesShort : t.moonMatchNoShort}
                               </p>
                             </div>
+                            <p className={`text-[11px] leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.60)" }}>
+                              {moonCompat.compatible ? t.compatible : t.notCompatible}
+                            </p>
                           </div>
+                          <p className="font-inter text-[10px] text-center" style={{ color: G.dim }}>
+                            {t.moonMatchNeverAffects}
+                          </p>
                         </>
                       )}
                     </div>
@@ -684,7 +721,7 @@ function TimelineCard({ card, num, t, lang, moonCitations, hasMoonPrefs, isMerge
 
         {/* Explain Why content */}
         {showExplain && (
-          <ExplainWhy data={m} t={t} lang={lang} hasMoonPrefs={hasMoonPrefs} />
+          <ExplainWhy data={m} t={t} lang={lang} hasMoonPrefs={hasMoonPrefs} moonCitations={moonCitations} />
         )}
       </div>
     </div>
@@ -754,6 +791,16 @@ function NahasWarning({ req, t, lang, moonCitations }) {
         </div>
       )}
 
+      {/* Nahas Day Name */}
+      <div>
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>
+          {t.nahasDayNameLabel}
+        </p>
+        <p className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "#fff" }}>
+          {dayNames[todayKey]}
+        </p>
+      </div>
+
       {/* Scope */}
       <div>
         <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>
@@ -761,20 +808,33 @@ function NahasWarning({ req, t, lang, moonCitations }) {
         </p>
         <p className={`text-xs leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.70)" }}>
           {lang === "ml"
-            ? "ഈ നഹാസ് എല്ലാ ആചാരങ്ങൾക്കും ബാധകമാണോ അതോ പ്രത്യേക ആചാര വിഭാഗങ്ങൾക്ക് മാത്രമോ എന്ന് കൈയെഴുത്തുപ്രതി വ്യക്തമാക്കുന്നു. നാശകരമായതും വേർപിരിക്കൽ കർമ്മങ്ങളും ഈ നഹാസ് സമയത്ത് അനുവദനീയമാണെന്ന് കൈയെഴുത്തുപ്രതി പറയുന്നെങ്കിൽ, അത് റഫറൻസ് സഹിതം സൂചിപ്പിക്കപ്പെടുന്നു."
-            : "The manuscript clarifies whether this Nahas applies to all rituals or only specific ritual categories. If the manuscript permits destructive, separation, or harmful rituals during this Nahas, it is stated with citation."}
+            ? "ഈ നഹാസ് എല്ലാ ആചാരങ്ങൾക്കും ബാധകമാണോ അതോ പ്രത്യേക ആചാര വിഭാഗങ്ങൾക്ക് മാത്രമോ എന്ന് കൈയെഴുത്തുപ്രതി വ്യക്തമാക്കുന്നു."
+            : "The manuscript clarifies whether this Nahas applies to all rituals or only specific ritual categories."}
         </p>
       </div>
 
-      {/* Destructive Rituals Permitted? */}
-      <div>
-        <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>
-          {t.nahasDestructiveTitle}
-        </p>
-        <p className={`text-xs leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.70)" }}>
-          {t.nahasDestructiveNo}
-        </p>
+      {/* Good Rituals Prohibited */}
+      <div className="flex items-center gap-2 p-2 rounded-lg" style={{
+        background: "rgba(248,113,113,0.08)",
+        border: "1px solid rgba(248,113,113,0.20)",
+      }}>
+        <X className="w-3.5 h-3.5 flex-shrink-0" style={{ color: G.fail }} />
+        <span className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: G.fail }}>
+          {t.nahasGoodProhibited}
+        </span>
       </div>
+
+      {/* Destructive Rituals Permitted? — only if manuscript citation supports it */}
+      {nahasCitation && (
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>
+            {t.nahasDestructiveTitle}
+          </p>
+          <p className={`text-xs leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.70)" }}>
+            {t.nahasDestructiveNo}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -782,28 +842,28 @@ function NahasWarning({ req, t, lang, moonCitations }) {
 // ═══════════════════════════════════════════════════════════════
 // EXPLAIN WHY — Expandable rule breakdown for a timeline card
 // ═══════════════════════════════════════════════════════════════
-function ExplainWhy({ data, t, lang, hasMoonPrefs }) {
+function ExplainWhy({ data, t, lang, hasMoonPrefs, moonCitations }) {
   return (
     <motion.div
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: "auto" }}
       className="space-y-3 overflow-hidden"
     >
-      {/* Mandatory Manuscript Rules */}
+      {/* ▼ Mandatory Rules Passed */}
       <div className="space-y-1.5">
         <p className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: G.text }}>
-          {t.mandatorySection}
+          {t.transMandatory}
         </p>
         {data.mandatoryChecks.map((check, idx) => (
           <MoonCheckRow key={idx} check={check} lang={lang} />
         ))}
       </div>
 
-      {/* Moon Preferences */}
+      {/* ▼ Moon Preferences */}
       {hasMoonPrefs && data.moonPrefChecks.length > 0 && (
         <div className="space-y-1.5">
           <p className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: G.blue }}>
-            {t.moonPrefSection}
+            {t.transMoonPrefs}
           </p>
           {data.moonPrefChecks.map((check, idx) => (
             <MoonCheckRow key={idx} check={check} lang={lang} />
@@ -811,13 +871,29 @@ function ExplainWhy({ data, t, lang, hasMoonPrefs }) {
         </div>
       )}
 
-      {/* General Information */}
+      {/* ▼ Nahas Status */}
+      <div className="rounded-lg p-2.5" style={{
+        background: "rgba(74,222,128,0.04)",
+        border: "1px solid rgba(74,222,128,0.15)",
+      }}>
+        <p className="font-inter text-[9px] uppercase tracking-widest font-bold mb-1" style={{ color: G.pass }}>
+          {t.transNahas}
+        </p>
+        <div className="flex items-center gap-2">
+          <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: G.pass }} />
+          <span className={`text-xs ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.75)" }}>
+            {t.nahasClean}
+          </span>
+        </div>
+      </div>
+
+      {/* ▼ Current Moon */}
       <div className="rounded-xl p-3 space-y-1" style={{
         background: "rgba(96,165,250,0.04)",
         border: `1px solid ${G.blueBorder}`,
       }}>
         <p className="font-inter text-[9px] uppercase tracking-widest font-bold mb-1" style={{ color: G.blue }}>
-          {t.generalInfo}
+          {t.transCurrentMoon}
         </p>
         <MoonDataRow label={t.currentMoonLabel} value={data.moon ? `Day ${data.moon.lunarDay} (${data.moon.phaseName})` : "—"} />
         <MoonDataRow label={t.mansion} value={data.moon?.moonMansion ? (data.moon.moonMansionArabic ? `${data.moon.moonMansionArabic} (${data.moon.moonMansion})` : data.moon.moonMansion) : "—"} />
@@ -825,6 +901,34 @@ function ExplainWhy({ data, t, lang, hasMoonPrefs }) {
         <MoonDataRow label={t.phase} value={data.moon ? data.moon.phaseName : "—"} />
         <MoonDataRow label={t.illumination} value={data.moon?.moonIllumination != null ? `${Math.round(data.moon.moonIllumination)}%` : "—"} />
       </div>
+
+      {/* ▼ Manuscript Citations */}
+      {moonCitations && moonCitations.length > 0 && (
+        <div className="rounded-lg p-2.5" style={{
+          background: "rgba(74,222,128,0.04)",
+          border: "1px solid rgba(74,222,128,0.15)",
+        }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest font-bold mb-1" style={{ color: "rgba(74,222,128,0.60)" }}>
+            {t.transCitations}
+          </p>
+          <div className="space-y-0.5">
+            {moonCitations.map((c, i) => (
+              <div key={i} className="flex items-start gap-1.5">
+                <span className="font-inter text-[9px] px-1 rounded flex-shrink-0" style={{
+                  background: "rgba(74,222,128,0.10)",
+                  color: "rgba(74,222,128,0.60)",
+                }}>{c.source}</span>
+                <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>{c.summary || c.category}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Manuscript authority footer */}
+      <p className="font-inter text-[10px] text-center" style={{ color: G.dim }}>
+        {t.manuscriptAuthority}
+      </p>
     </motion.div>
   );
 }
