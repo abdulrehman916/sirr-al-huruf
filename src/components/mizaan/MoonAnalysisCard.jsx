@@ -222,6 +222,47 @@ const L = (lang) => ({
   manuscriptFail: lang === "ml" ? "സാധുവല്ല" : "Not Valid",
   moonDistance: lang === "ml" ? "തിരഞ്ഞെടുത്ത ചന്ദ്രഅവസ്ഥയിൽ നിന്നുള്ള ദൂരം" : "Distance from Selected Moon",
   daysUntilMatch: lang === "ml" ? "ദിവസങ്ങൾ" : "days",
+  // ── Confidence tier labels ──
+  conf_perfectMatch_title: lang === "ml" ? "★★★★★ തികഞ്ഞ കൈയെഴുത്തുപ്രതി പൊരുത്തം" : "★★★★★ Perfect Manuscript Match",
+  conf_perfectMatch_desc: lang === "ml"
+    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും പാലിച്ചു. എല്ലാ ചന്ദ്ര മുൻഗണനകളും പാലിച്ചു."
+    : "All mandatory manuscript rules passed. All enabled Moon preferences passed.",
+  conf_perfectMatch_summary: lang === "ml"
+    ? "ഈ സമയം എല്ലാ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും ചന്ദ്ര മുൻഗണനകളും പാലിക്കുന്നു."
+    : "This time satisfies every manuscript rule and all selected Moon preferences.",
+  conf_strongMatch_title: lang === "ml" ? "★★★★☆ ശക്തമായ കൈയെഴുത്തുപ്രതി പൊരുത്തം" : "★★★★☆ Strong Manuscript Match",
+  conf_strongMatch_desc: lang === "ml"
+    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും പാലിച്ചു. ചില ചന്ദ്ര മുൻഗണനകൾ തിരഞ്ഞെടുത്തിട്ടില്ല."
+    : "All mandatory manuscript rules passed. Some optional Moon preferences were not selected.",
+  conf_strongMatch_summary: lang === "ml"
+    ? "ഈ സമയം എല്ലാ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും തിരഞ്ഞെടുത്ത ചന്ദ്ര മുൻഗണനകളും പാലിക്കുന്നു."
+    : "This time satisfies every manuscript rule and your selected Moon preferences.",
+  conf_manuscriptValid_title: lang === "ml" ? "★★★☆☆ കൈയെഴുത്തുപ്രതി സാധു" : "★★★☆☆ Manuscript Valid",
+  conf_manuscriptValid_desc: lang === "ml"
+    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും പാലിച്ചു. ചന്ദ്ര പ്ലാനിംഗ് പ്രവർത്തനക്ഷമമല്ലാത്തതിനാൽ ചന്ദ്രനെ അവഗണിച്ചു."
+    : "All mandatory manuscript rules passed. Moon preferences were ignored because Moon Planning is disabled.",
+  conf_manuscriptValid_summary: lang === "ml"
+    ? "ഈ സമയം എല്ലാ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും പാലിക്കുന്നു. ചന്ദ്ര പ്ലാനിംഗ് പ്രവർത്തനക്ഷമമല്ല."
+    : "This time satisfies every manuscript rule. Moon Planning is not enabled.",
+  conf_waitingForMoon_title: lang === "ml" ? "★★☆☆☆ ചന്ദ്ര മുൻഗണനയ്ക്കായി കാത്തിരിക്കുന്നു" : "★★☆☆☆ Waiting for Moon Preference",
+  conf_waitingForMoon_desc: lang === "ml"
+    ? "കൈയെഴുത്തുപ്രതി നിയമങ്ങൾ പാലിച്ചു. ചന്ദ്ര പ്ലാനിംഗ് പ്രവർത്തനക്ഷമമാണ്, പക്ഷേ തിരഞ്ഞെടുത്ത ചന്ദ്ര മുൻഗണന ഇതുവരെ സംഭവിച്ചിട്ടില്ല."
+    : "Manuscript rules pass. Moon Planning is enabled but the selected Moon preference has not yet occurred.",
+  conf_waitingForMoon_summary: lang === "ml"
+    ? "കൈയെഴുത്തുപ്രതി നിയമങ്ങൾ സാധുവാണ്, പക്ഷേ തിരഞ്ഞെടുത്ത ചന്ദ്ര മുൻഗണന പിന്നീട് സംഭവിക്കും."
+    : "Manuscript rules are valid, but your selected Moon preference will occur later.",
+  conf_notRecommended_title: lang === "ml" ? "★☆☆☆☆ ശുപാർശ ചെയ്യുന്നില്ല" : "★☆☆☆☆ Not Recommended",
+  conf_notRecommended_desc: lang === "ml"
+    ? "ഒന്നോ അതിലധികമോ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങൾ പരാജയപ്പെട്ടു. ഈ സമയം ഒരിക്കലും ശുപാർശ ചെയ്യരുത്."
+    : "One or more mandatory manuscript rules failed. Never recommend this time.",
+  conf_notRecommended_summary: lang === "ml"
+    ? "നിർബന്ധ കൈയെഴുത്തുപ്രതി വ്യവസ്ഥകൾ പാലിക്കപ്പെടാത്തതിനാൽ ഈ കർമ്മം ശുപാർശ ചെയ്യാൻ കഴിയില്ല."
+    : "This ritual cannot be recommended because mandatory manuscript conditions are not satisfied.",
+  confWhyTitle: lang === "ml" ? "എന്തുകൊണ്ട് ഈ ശുപാർശ?" : "Why this recommendation?",
+  confMandatoryRules: lang === "ml" ? "നിർബന്ധ നിയമങ്ങൾ" : "Mandatory Rules",
+  confMoonPrefs: lang === "ml" ? "ചന്ദ്ര മുൻഗണനകൾ" : "Moon Preferences",
+  confMoonDisabled: lang === "ml" ? "ചന്ദ്ര പ്ലാനിംഗ് പ്രവർത്തനക്ഷമമല്ല" : "Moon Planning disabled",
+  confNotSelected: lang === "ml" ? "തിരഞ്ഞെടുത്തിട്ടില്ല" : "Not selected",
 });
 
 export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, req, lang = "ml" }) {
@@ -696,9 +737,24 @@ function PlanResultView({ result, t, lang, moonCitations, req }) {
 // ═══════════════════════════════════════════════════════════════
 // FINAL TIMELINE CARD — Complete ritual time with all fields
 // ═══════════════════════════════════════════════════════════════
+function computeConfidence({ mandatoryPass, hasMoonPrefs, moonPrefPass, moonPrefChecks }) {
+  if (!mandatoryPass) return { stars: 1, badge: "★☆☆☆☆", tier: "notRecommended" };
+  if (!hasMoonPrefs) return { stars: 3, badge: "★★★☆☆", tier: "manuscriptValid" };
+  if (!moonPrefPass) return { stars: 2, badge: "★★☆☆☆", tier: "waitingForMoon" };
+  const hasMansion = moonPrefChecks?.some(c => c.dimension === "pref_mansion");
+  const hasZodiac = moonPrefChecks?.some(c => c.dimension === "pref_zodiac");
+  const hasPhase = moonPrefChecks?.some(c => c.dimension === "pref_phase");
+  if (hasMansion && hasZodiac && hasPhase) return { stars: 5, badge: "★★★★★", tier: "perfectMatch" };
+  return { stars: 4, badge: "★★★★☆", tier: "strongMatch" };
+}
+
 function FinalTimelineCard({ data: m, t, lang, moonCitations, hasMoonPrefs, moonDistanceDays }) {
   const [showChecklist, setShowChecklist] = useState(false);
 
+  const conf = computeConfidence({ mandatoryPass: m.mandatoryPass, hasMoonPrefs, moonPrefPass: m.moonPrefPass, moonPrefChecks: m.moonPrefChecks });
+  const confTitle = t[`conf_${conf.tier}_title`];
+  const confDesc = t[`conf_${conf.tier}_desc`];
+  const confSummary = t[`conf_${conf.tier}_summary`];
   const nahasActive = m.nahasStatus && m.nahasStatus.includes("blocked");
   const illumination = m.moon?.moonIllumination != null ? `${Math.round(m.moon.moonIllumination)}%` : "—";
   const moonAge = m.moon?.lunarDay != null ? `${m.moon.lunarDay} ${t.day}` : "—";
@@ -712,17 +768,17 @@ function FinalTimelineCard({ data: m, t, lang, moonCitations, hasMoonPrefs, moon
       {/* Header */}
       <div className="p-3" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <span className="text-base leading-none">⭐</span>
+          <span className="text-base leading-none">{conf.stars >= 4 ? "⭐" : conf.stars >= 3 ? "✅" : conf.stars >= 2 ? "⏳" : "⚠"}</span>
           <span className={`text-sm font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: G.text }}>
-            {t.finalRecommendedTitle}
+            {confTitle}
           </span>
           <span className="font-inter text-[8px] px-2 py-0.5 rounded-full font-bold" style={{
             background: "rgba(212,175,55,0.15)", color: G.text,
             border: "1px solid rgba(212,175,55,0.30)", letterSpacing: "0.05em",
-          }}>★★★★★</span>
+          }}>{conf.badge}</span>
         </div>
         <p className={`text-[11px] leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.60)" }}>
-          {t.finalRecommendedDesc}
+          {confDesc}
         </p>
       </div>
 
@@ -783,6 +839,61 @@ function FinalTimelineCard({ data: m, t, lang, moonCitations, hasMoonPrefs, moon
           </div>
         )}
 
+        {/* Why this recommendation? — Confidence Checklist */}
+        <div className="rounded-lg p-2.5 space-y-2" style={{
+          background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          <p className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: G.text }}>
+            {t.confWhyTitle}
+          </p>
+          {/* Mandatory Rules */}
+          <div className="space-y-1">
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.50)" }}>{t.confMandatoryRules}</p>
+            {m.mandatoryChecks.map((mc, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                {mc.status === "pass"
+                  ? <Check className="w-3 h-3 flex-shrink-0" style={{ color: G.pass }} />
+                  : <X className="w-3 h-3 flex-shrink-0" style={{ color: G.fail }} />}
+                <span className={`text-[11px] ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: mc.status === "pass" ? "rgba(255,255,255,0.70)" : G.fail }}>
+                  {mc.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          {/* Moon Preferences */}
+          <div className="space-y-1">
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.50)" }}>{t.confMoonPrefs}</p>
+            {hasMoonPrefs ? (
+              [
+                { dim: "pref_mansion", label: t.mansion },
+                { dim: "pref_zodiac", label: t.zodiacSign },
+                { dim: "pref_phase", label: t.waxWane },
+              ].map(({ dim, label }) => {
+                const check = m.moonPrefChecks?.find(c => c.dimension === dim);
+                return (
+                  <div key={dim} className="flex items-center gap-1.5">
+                    {!check
+                      ? <Minus className="w-3 h-3 flex-shrink-0" style={{ color: G.neutral }} />
+                      : check.status === "pass"
+                        ? <Check className="w-3 h-3 flex-shrink-0" style={{ color: G.pass }} />
+                        : <X className="w-3 h-3 flex-shrink-0" style={{ color: G.fail }} />}
+                    <span className={`text-[11px] ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: !check ? "rgba(255,255,255,0.40)" : check.status === "pass" ? "rgba(255,255,255,0.70)" : G.fail }}>
+                      {label}{!check ? ` — ${t.confNotSelected}` : ""}
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Minus className="w-3 h-3 flex-shrink-0" style={{ color: G.neutral }} />
+                <span className={`text-[11px] ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.40)" }}>
+                  {t.confMoonDisabled}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Visual Checklist button */}
         <button onClick={() => setShowChecklist(!showChecklist)} className="w-full rounded-lg py-2 font-inter text-xs font-bold transition flex items-center justify-center gap-2" style={{
           background: showChecklist ? "rgba(212,175,55,0.10)" : "rgba(255,255,255,0.03)",
@@ -798,6 +909,18 @@ function FinalTimelineCard({ data: m, t, lang, moonCitations, hasMoonPrefs, moon
         {showChecklist && (
           <ExplainWhy data={m} t={t} lang={lang} hasMoonPrefs={hasMoonPrefs} moonCitations={moonCitations} moonDistanceDays={moonDistanceDays} />
         )}
+
+        {/* Final Summary */}
+        <div className="rounded-lg p-2.5 text-center" style={{
+          background: conf.stars >= 4 ? "rgba(212,175,55,0.08)" : conf.stars >= 3 ? "rgba(74,222,128,0.06)" : conf.stars >= 2 ? "rgba(96,165,250,0.06)" : "rgba(248,113,113,0.06)",
+          border: `1px solid ${conf.stars >= 4 ? "rgba(212,175,55,0.20)" : conf.stars >= 3 ? "rgba(74,222,128,0.20)" : conf.stars >= 2 ? G.blueBorder : "rgba(248,113,113,0.20)"}`,
+        }}>
+          <p className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{
+            color: conf.stars >= 4 ? G.text : conf.stars >= 3 ? G.pass : conf.stars >= 2 ? G.blue : G.fail,
+          }}>
+            {confSummary}
+          </p>
+        </div>
       </div>
     </div>
   );
