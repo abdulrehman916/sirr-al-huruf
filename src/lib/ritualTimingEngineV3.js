@@ -81,25 +81,61 @@ const RITUAL_TO_ACTION = {
 // STEP 1 — Identify the ritual from user's Mizan selections + custom purpose
 // Priority: Mizan purpose keys → multilingual keyword match → ManuscriptRule category
 // ═══════════════════════════════════════════════════════════════
-function identifyRitual({ selections, customPurpose, manuscriptRules }) {
+function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup }) {
   const purposes = selections?.purposes || [];
   const custom = (customPurpose || "").trim();
-  // No purpose selected and no custom purpose → do NOT assume any category
-  if (purposes.length === 0 && !custom) {
-    return { ritualKey: null, matchedOn: "no purpose selected" };
-  }
-  const haystacks = [custom, ...purposes].filter(Boolean);
-  const haystack = haystacks.join(" ").toLowerCase();
 
-  // Mizan purpose keys (from selections.purposes) map directly
+  // Mizan purpose keys → ritual category
   const mizanPurposeMap = {
     celb: "love", tard: "separation", sihhat: "healing", sekam: "enemy",
     tarfet: "protection", rizq: "wealth", knowledge: "knowledge",
     travel: "travel", sultan: "planetary", haybah: "planetary",
   };
+
+  // ── PRIORITY 1: Purpose Dictionary (authoritative) ──
+  // If the dictionary matched, use the normalized_purpose_key to map to
+  // the ritual category. Never guess, never use literal translation.
+  // The dictionary stores the semantic meaning used for display.
+  if (purposeLookup?.matched && purposeLookup.ritualIntent) {
+    const ritualKey = mizanPurposeMap[purposeLookup.ritualIntent];
+    if (ritualKey) {
+      return {
+        ritualKey,
+        matchedOn: `Purpose Dictionary: "${purposeLookup.matchedPhrase}" → ${purposeLookup.ritualIntent}`,
+        semanticMeaningEn: purposeLookup.english_meaning || "",
+        semanticMeaningMl: purposeLookup.malayalam_meaning || "",
+        dictionarySource: purposeLookup.source || null,
+      };
+    }
+  }
+
+  // No purpose selected and no custom purpose → do NOT assume any category
+  if (purposes.length === 0 && !custom) {
+    return { ritualKey: null, matchedOn: "no purpose selected" };
+  }
+
+  // ── PRIORITY 2: Mizan purpose keys (from selections.purposes) ──
   for (const p of purposes) {
     if (mizanPurposeMap[p]) return { ritualKey: mizanPurposeMap[p], matchedOn: `Mizan purpose "${p}"` };
   }
+
+  // ── PRIORITY 3: Arabic text without dictionary match → DO NOT GUESS ──
+  // If the custom purpose contains Arabic characters but the dictionary
+  // did not match, we must NOT fall back to literal keyword matching.
+  // Return null so the engine uses a "general" context with no purpose.
+  const hasArabic = /[\u0600-\u06FF]/.test(custom);
+  if (hasArabic && custom) {
+    return {
+      ritualKey: null,
+      matchedOn: "Arabic purpose not found in Purpose Dictionary — no guess",
+      semanticMeaningEn: "",
+      semanticMeaningMl: "",
+    };
+  }
+
+  // ── PRIORITY 4: Keyword match for non-Arabic text (English/Malayalam) ──
+  const haystacks = [custom, ...purposes].filter(Boolean);
+  const haystack = haystacks.join(" ").toLowerCase();
 
   // Keyword match across en/ml/ar
   for (const r of RITUAL_KEYWORDS) {
@@ -544,7 +580,7 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
 // ═══════════════════════════════════════════════════════════════
 // MAIN — analyzeRitualTiming (same return shape as V2)
 // ═══════════════════════════════════════════════════════════════
-export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
+export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup }) {
   const reasoning = [];
   const warnings = [];
   const bookNotes = [];
@@ -561,7 +597,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const purposes = selections?.purposes || [];
 
   // ── STEP 1: identify ritual from user selections ──
-  const identified = identifyRitual({ selections, customPurpose, manuscriptRules });
+  const identified = identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup });
   const ritualKey = identified.ritualKey;
   const matchedOn = identified.matchedOn;
   // No purpose selected → continue with a "general" context so the full report
@@ -741,7 +777,9 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // BUILD 10-SECTION REPORT (same shape as V2)
   // ═══════════════════════════════════════════════════════════════
   const report = [];
-  const ritualTypeLabel = effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work";
+  const ritualTypeLabel = identified.semanticMeaningEn
+    ? identified.semanticMeaningEn
+    : effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work";
 
   report.push({
     section: "TODAY ANALYSIS", icon: "calendar", status: canPerformToday,
@@ -860,6 +898,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     verdict, verdictColor, verdictReason, verdictStars: stars, verdictStarsString: starsToString(stars),
     confidenceScore: score, scoreBreakdown: scoreReasons,
     ritualType: ritualTypeLabel, ritualTypeDescription: "", ritualCategory: ritualTypeLabel, ritualIntent: ritualTypeLabel,
+    ritualSemanticMl: identified.semanticMeaningMl || null,
     khayrSharr: khayrSharr || "Not selected", khayrSharrInferred: false,
     khayrSharrMeaning: khayrSharr === "khayr" ? "Benevolence" : khayrSharr === "sharr" ? "Power/Banishment" : "Not determined",
     canPerformToday,
@@ -902,12 +941,12 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 // CONFIGURATION ADVISOR — compares current Mizan vs manuscript ideal.
 // Same return shape as V2.
 // ═══════════════════════════════════════════════════════════════
-export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules }) {
+export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup }) {
   const purposes = selections?.purposes || [];
   const custom = (customPurpose || "").trim();
-  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules });
+  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup });
   const noPurposeSelected = !!base?.noPurposeSelected;
-  const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules });
+  const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup });
   const effectiveRitualKey = ritualKey || "general";
   const { req, citations } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
 
@@ -924,8 +963,8 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   const recommendations = [];
   let allOptimal = true;
 
-  const purposeLabel = effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work";
-  const identifiedAdv = identifyRitual({ selections, customPurpose, manuscriptRules });
+  const purposeLabel = base?.ritualType || (effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work");
+  const identifiedAdv = identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup });
   recommendations.push({
     field: "Ritual Purpose", icon: "target",
     current: noPurposeSelected ? "No Purpose Selected" : purposeLabel,

@@ -69,14 +69,14 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules });
+    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup });
   }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
   const rawAdvice = useMemo(() => {
     if (!result) return null;
-    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules });
+    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup });
   }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);

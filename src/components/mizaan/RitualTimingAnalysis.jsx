@@ -114,7 +114,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules });
+    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup });
     return normalizeForUI(raw);
   }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules]);
 

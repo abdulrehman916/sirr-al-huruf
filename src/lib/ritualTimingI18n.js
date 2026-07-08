@@ -594,8 +594,8 @@ export function localizeAnalysis(analysis, lang) {
     report,
     expertNarrative,
     verdict: tVerdict(analysis.verdict, lang),
-    ritualType: tRitualType(analysis.ritualType, lang),
-    ritualCategory: tRitualType(analysis.ritualCategory, lang),
+    ritualType: (lang === "ml" && analysis.ritualSemanticMl) ? analysis.ritualSemanticMl : tRitualType(analysis.ritualType, lang),
+    ritualCategory: (lang === "ml" && analysis.ritualSemanticMl) ? analysis.ritualSemanticMl : tRitualType(analysis.ritualCategory, lang),
     canPerformToday: tStatus(analysis.canPerformToday, lang),
     astroClockStatus: {
       ...analysis.astroClockStatus,
