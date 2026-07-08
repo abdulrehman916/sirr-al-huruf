@@ -92,6 +92,7 @@ const ML_SECTION_TITLE = {
 export const STR = {
   panelTitle: { en: "Ritual Decision Engine", ml: "ആചാര തീരുമാന യന്ത്രം" },
   understanding: { en: "Understanding Your Ritual", ml: "നിങ്ങളുടെ ആചാരം മനസ്സിലാക്കൽ" },
+  ritualPurpose: { en: "Purpose of this ritual", ml: "ഈ കർമ്മത്തിന്റെ ഉദ്ദേശം" },
   ritual: { en: "Ritual", ml: "ആചാരം" },
   today: { en: "Today", ml: "ഇന്ന്" },
   hour: { en: "Hour", ml: "മണിക്കൂർ" },

@@ -10,7 +10,6 @@ import {
   Target, Scale, Calendar, Orbit, Clock, Flame, Sunset, Timer, Sparkles, Star,
 } from "lucide-react";
 import { tStr, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
-import { useRitualSemanticPhrase } from "../../lib/ritualSemanticPhrase";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -34,9 +33,13 @@ const FIELD_ICONS = {
   star: Star,
 };
 
-export default function ConfigurationAdvisor({ advice, lang = "ml", setLang }) {
+export default function ConfigurationAdvisor({ advice, lang = "ml", setLang, purposeLookup }) {
   const [expanded, setExpanded] = useState(true);
-  const semanticPhrase = useRitualSemanticPhrase(lang);
+  // EXACT text from the Purpose Meaning box — never rebuilt or re-translated.
+  // purposeLookup is passed from RitualDecisionEngine (resolved by PurposeInterpretationCard).
+  const semanticPhrase = lang === "ml"
+    ? (purposeLookup?.interpretation_ml || "")
+    : (purposeLookup?.interpretation_en || "");
 
   if (!advice || !advice.recommendations) return null;
 

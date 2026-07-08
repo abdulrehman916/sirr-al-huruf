@@ -7,7 +7,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock, Calendar,
-  Star, Sun, Sunset, Globe, CalendarClock, FileText, Scroll, Shield, Zap,
+  Star, Sun, Sunset, Globe, CalendarClock, FileText, Scroll, Shield, Zap, Target,
 } from "lucide-react";
 import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingEngineV3";
 import ReportWindowsList from "./ReportWindowsList";
@@ -110,7 +110,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
   return (
     <div className="mt-6 space-y-4">
       {/* ── Configuration Advisor (primary) ── */}
-      <ConfigurationAdvisor advice={advice} lang={lang} setLang={setLang} />
+      <ConfigurationAdvisor advice={advice} lang={lang} setLang={setLang} purposeLookup={resolvedPurpose} />
 
       <div className="rounded-2xl overflow-hidden" style={{
         background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
@@ -169,6 +169,31 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
               className="overflow-hidden"
             >
               <div className="p-4 space-y-3">
+
+                {/* ── Ritual Purpose — EXACT text from Purpose Meaning box (canonical source) ── */}
+                {(() => {
+                  const exactPurpose = lang === "ml"
+                    ? resolvedPurpose.interpretation_ml
+                    : resolvedPurpose.interpretation_en;
+                  if (!exactPurpose) return null;
+                  return (
+                    <div className="rounded-xl p-4" style={{
+                      background: "linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.04) 100%)",
+                      border: `1px solid ${G.borderHi}`,
+                      boxShadow: "0 0 20px rgba(212,175,55,0.12)",
+                    }}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Target className="w-4 h-4" style={{ color: G.text }} />
+                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: G.text }}>
+                          {tStr("ritualPurpose", lang)}
+                        </span>
+                      </div>
+                      <p className={lang === "ml" ? "font-malayalam text-base font-bold leading-relaxed" : "font-inter text-base font-bold"} style={{ color: "#fff" }}>
+                        {exactPurpose}
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 {/* ── Opening Consultation Statement ── */}
                 <div className="rounded-xl p-4" style={{
