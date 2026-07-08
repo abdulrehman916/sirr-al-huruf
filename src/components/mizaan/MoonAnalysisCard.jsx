@@ -127,23 +127,42 @@ const L = (lang) => ({
   manuscriptValidTime: lang === "ml" ? "കൈയെഴുത്തുപ്രതി പ്രകാരം സാധുവായ സമയം" : "Manuscript-Valid Time",
   invalidTime: lang === "ml" ? "സാധുവല്ലാത്ത സമയം" : "Invalid Time",
   timelineTitle: lang === "ml" ? "ശുപാർശ കാലരേഖ" : "Recommended Timeline",
-  manuscriptCard: lang === "ml" ? "ഏറ്റവും പഴയ കൈയെഴുത്തുപ്രതി സാധു സമയം" : "Earliest Manuscript-Valid Time",
-  manuscriptCardDesc: lang === "ml"
-    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും പാലിക്കുന്ന ഏറ്റവും പഴയ സമയം. ഐച്ഛിക ചന്ദ്ര മുൻഗണനകൾ അവഗണിക്കപ്പെടുന്നു."
-    : "Earliest time that satisfies ALL mandatory manuscript rules. Optional Moon preferences are ignored.",
-  moonCardTimeline: lang === "ml" ? "ചന്ദ്ര മുൻഗണന പൊരുത്തം" : "Moon Preference Match",
-  moonCardTimelineDesc: lang === "ml"
-    ? "നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും ഉപയോക്താവിന്റെ ചന്ദ്ര മുൻഗണനകളും പാലിക്കുന്ന ഏറ്റവും പഴയ സമയം."
-    : "Earliest time satisfying mandatory manuscript rules AND user-selected Moon preferences.",
-  perfectCard: lang === "ml" ? "പൂർണ്ണ പൊരുത്തം" : "Perfect Match",
-  perfectDesc: lang === "ml"
-    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും കടന്നു. ചന്ദ്ര മുൻഗണനകളും പാലിച്ചു. കൈയെഴുത്തുപ്രതി നിരോധനങ്ങളൊന്നുമില്ല."
-    : "All mandatory manuscript rules passed. All selected Moon preferences passed. No manuscript prohibitions found.",
-  mergedCard: lang === "ml" ? "കൈയെഴുത്തുപ്രതി സാധു + ചന്ദ്ര പൊരുത്തം" : "Manuscript-Valid + Moon Match",
+  bestManuscriptTitle: lang === "ml" ? "✅ മികച്ച കൈയെഴുത്തുപ്രതി സമയം" : "✅ Best Manuscript Time",
+  bestManuscriptDesc: lang === "ml"
+    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും പാലിക്കുന്ന ഏറ്റവും പഴയ തീയതി. കൈയെഴുത്തുപ്രതി ആവശ്യമില്ലെങ്കിൽ ചന്ദ്രനെ അവഗണിക്കുന്നു."
+    : "The earliest date where ALL mandatory manuscript rules pass. This recommendation ignores Moon unless Moon is a manuscript requirement.",
+  bestMoonTitle: lang === "ml" ? "🌙 മികച്ച ചന്ദ്ര മുൻഗണന പൊരുത്തം" : "🌙 Best Moon Preference Match",
+  bestMoonDesc: lang === "ml"
+    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി നിയമങ്ങളും തിരഞ്ഞെടുത്ത ചന്ദ്ര മുൻഗണനകളും പാലിക്കുന്ന ഏറ്റവും പഴയ തീയതി."
+    : "The earliest date where all mandatory manuscript rules pass AND all selected Moon preferences pass.",
+  bestAvailableTitle: lang === "ml" ? "⭐ മികച്ച ലഭ്യമായ സമയം" : "⭐ Best Available Time",
+  bestAvailableBadge: "★★★★★ BEST AVAILABLE TIME",
+  bestAvailableDesc: lang === "ml"
+    ? "എല്ലാ നിർബന്ധ കൈയെഴുത്തുപ്രതി വ്യവസ്ഥകളും പാലിച്ചു. തിരഞ്ഞെടുത്ത ചന്ദ്ര മുൻഗണനകളും പാലിച്ചു. നഹാസ് നിരോധനമില്ല. കൈയെഴുത്തുപ്രതി നിരോധനമില്ല. എല്ലാ വ്യവസ്ഥകളും പാലിക്കുന്ന ഏറ്റവും പഴയ നിമിഷം."
+    : "Every mandatory manuscript condition passed. Every selected Moon preference passed. No Nahas restriction. No manuscript prohibition. This is the earliest moment satisfying every enabled condition.",
+  mergedNote: lang === "ml"
+    ? "മികച്ച കൈയെഴുത്തുപ്രതി സമയവും മികച്ച ചന്ദ്ര മുൻഗണന പൊരുത്തവും ഒരേ സമയത്താണ് — ഒന്നായി ലയിപ്പിച്ചു."
+    : "Best Manuscript Time and Best Moon Preference Match occur at the same moment — merged into one card.",
   explainWhy: lang === "ml" ? "കാരണം വിശദീകരിക്കുക" : "Explain Why",
   generalInfo: lang === "ml" ? "പൊതു വിവരം" : "General Information",
   currentMoonLabel: lang === "ml" ? "നിലവിലെ ചന്ദ്രൻ" : "Current Moon",
   nahasLabel: lang === "ml" ? "നഹാസ് നില" : "Nahas Status",
+  nahasWarning: lang === "ml" ? "⚠ ഇന്ന് ഒരു നഹാസ് ദിവസമാണ്." : "⚠ Today is a Nahas day.",
+  nahasWhyTitle: lang === "ml" ? "എന്തുകൊണ്ട് നഹാസ്?" : "Why it is Nahas",
+  nahasScopeTitle: lang === "ml" ? "ബാധകമായ പരിധി" : "Scope of Nahas",
+  nahasDestructiveTitle: lang === "ml" ? "നാശകരമായ കർമ്മങ്ങൾക്കുള്ള അനുമതി" : "Destructive Rituals Permitted",
+  nahasAllRituals: lang === "ml" ? "എല്ലാ ആചാരങ്ങൾക്കും" : "All rituals",
+  nahasSpecificOnly: lang === "ml" ? "പ്രത്യേക ആചാര വിഭാഗങ്ങൾക്ക് മാത്രം" : "Specific ritual categories only",
+  nahasNotBlocked: lang === "ml" ? "ഈ നഹാസ് ഈ കർമ്മത്തിന് തടസ്സമല്ല." : "This Nahas does not block this ritual.",
+  nahasBlocked: lang === "ml" ? "ഈ നഹാസ് ഈ കർമ്മം തടയുന്നു." : "This Nahas blocks this ritual.",
+  nahasDestructiveYes: lang === "ml"
+    ? "കൈയെഴുത്തുപ്രതി പ്രകാരം, ഈ നഹാസ് സമയത്ത് നാശകരമായതും വേർപിരിക്കൽ കർമ്മങ്ങളും അനുവദനീയമാണ്."
+    : "Per the manuscript, destructive, separation, or harmful rituals are permitted during this Nahas.",
+  nahasDestructiveNo: lang === "ml"
+    ? "കൈയെഴുത്തുപ്രതി ഈ നഹാസ് സമയത്ത് നാശകരമായ കർമ്മങ്ങൾ പ്രത്യേകിച്ച് അനുവദിക്കുന്നില്ല."
+    : "The manuscript does not specifically permit destructive rituals during this Nahas.",
+  nahasCitationLabel: lang === "ml" ? "കൈയെഴുത്തുപ്രതി റഫറൻസ്" : "Manuscript Citation",
+  nahasClean: lang === "ml" ? "നഹാസ് നിരോധനമില്ല — ഈ സമയം സുരക്ഷിതമാണ്." : "No Nahas restriction — this time is safe.",
 });
 
 export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, req, lang = "ml" }) {
@@ -154,7 +173,6 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
   const [desiredPhase, setDesiredPhase] = useState("");
   const [planResult, setPlanResult] = useState(null);
   const [planning, setPlanning] = useState(false);
-  const [showMoonPerfect, setShowMoonPerfect] = useState(false);
   const t = L(lang);
 
   // ── Option 1: Current Moon compatibility (computed on demand) ──
@@ -168,7 +186,6 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
     if (!desiredMansion && !desiredZodiac && !desiredPhase) return;
     setPlanning(true);
     setPlanResult(null);
-    setShowMoonPerfect(false);
     // Defer to next tick so UI can show "planning" state
     setTimeout(() => {
       const result = planRitualByMoon({
@@ -458,6 +475,7 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
                       t={t}
                       lang={lang}
                       moonCitations={moonCitations}
+                      req={req}
                     />
                   )}
                 </motion.div>
@@ -474,8 +492,8 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
 // ═══════════════════════════════════════════════════════════════
 // PLAN RESULT VIEW — Shows the Moon entry moment + full evaluation
 // ═══════════════════════════════════════════════════════════════
-function PlanResultView({ result, t, lang, moonCitations }) {
-  const { found, recommendedTime, firstMoonPerfect, firstPerfectMatch, hasMoonPrefs } = result;
+function PlanResultView({ result, t, lang, moonCitations, req }) {
+  const { found, recommendedTime, firstMoonPerfect, hasMoonPrefs } = result;
 
   // No manuscript-valid time found at all
   if (!found || !recommendedTime) {
@@ -492,35 +510,22 @@ function PlanResultView({ result, t, lang, moonCitations }) {
     );
   }
 
-  // ═══ Build timeline cards ═══
+  // ═══ Build cards: Best Manuscript Time + Best Moon Preference Match ═══
   const rv = recommendedTime;
   const mp = hasMoonPrefs ? firstMoonPerfect : null;
-  const pm = firstPerfectMatch;
+
+  // Merge: if Best Manuscript Time and Best Moon Preference Match are identical,
+  // display a single "Best Available Time" card.
+  const isMerged = hasMoonPrefs && mp && rv === mp;
+
   const cards = [];
-
-  // Card 1: Earliest Manuscript-Valid Time (merge if same as Moon/Perfect)
-  if (rv) {
-    if (rv === pm) {
-      cards.push({ type: "perfect", data: rv });
-    } else if (hasMoonPrefs && rv === mp) {
-      cards.push({ type: "merged", data: rv });
-    } else {
-      cards.push({ type: "manuscript", data: rv });
-    }
-  }
-
-  // Card 2: Moon Preference Match (only if different from Card 1)
-  if (hasMoonPrefs && mp && mp !== rv) {
-    if (mp === pm) {
-      cards.push({ type: "perfect", data: mp });
-    } else {
+  if (isMerged) {
+    cards.push({ type: "bestAvailable", data: rv });
+  } else {
+    cards.push({ type: "manuscript", data: rv });
+    if (hasMoonPrefs && mp && mp !== rv) {
       cards.push({ type: "moon", data: mp });
     }
-  }
-
-  // Card 3: Perfect Match (only if different from all previous)
-  if (pm && pm !== rv && (!mp || pm !== mp)) {
-    cards.push({ type: "perfect", data: pm });
   }
 
   return (
@@ -533,6 +538,9 @@ function PlanResultView({ result, t, lang, moonCitations }) {
         </span>
       </div>
 
+      {/* Nahas Warning — if today is a Nahas day per manuscript */}
+      <NahasWarning req={req} t={t} lang={lang} moonCitations={moonCitations} />
+
       {/* Timeline cards */}
       {cards.map((card, idx) => (
         <TimelineCard
@@ -543,6 +551,7 @@ function PlanResultView({ result, t, lang, moonCitations }) {
           lang={lang}
           moonCitations={moonCitations}
           hasMoonPrefs={hasMoonPrefs}
+          isMerged={isMerged}
         />
       ))}
     </div>
@@ -552,54 +561,57 @@ function PlanResultView({ result, t, lang, moonCitations }) {
 // ═══════════════════════════════════════════════════════════════
 // TIMELINE CARD — One entry in the chronological timeline
 // ═══════════════════════════════════════════════════════════════
-function TimelineCard({ card, num, t, lang, moonCitations, hasMoonPrefs }) {
+function TimelineCard({ card, num, t, lang, moonCitations, hasMoonPrefs, isMerged }) {
   const [showExplain, setShowExplain] = useState(false);
   const { type, data: m } = card;
 
-  const isPerfect = type === "perfect";
+  const isBestAvailable = type === "bestAvailable";
   const isManuscript = type === "manuscript";
   const isMoonOnly = type === "moon";
-  const isMerged = type === "merged";
-  const showMoonDetails = isPerfect || isMoonOnly || isMerged;
+  const showMoonDetails = isBestAvailable || isMoonOnly;
 
-  const title = isPerfect ? t.perfectCard
-    : isMerged ? t.mergedCard
-    : isMoonOnly ? t.moonCardTimeline
-    : t.manuscriptCard;
+  const title = isBestAvailable ? t.bestAvailableTitle
+    : isMoonOnly ? t.bestMoonTitle
+    : t.bestManuscriptTitle;
 
-  const desc = isPerfect ? t.perfectDesc
-    : isMerged ? t.moonCardTimelineDesc
-    : isMoonOnly ? t.moonCardTimelineDesc
-    : t.manuscriptCardDesc;
+  const desc = isBestAvailable ? t.bestAvailableDesc
+    : isMoonOnly ? t.bestMoonDesc
+    : t.bestManuscriptDesc;
 
-  const numBadge = isPerfect ? "⭐" : ["1️⃣", "2️⃣", "3️⃣"][num - 1] || `${num}`;
+  const iconEmoji = isBestAvailable ? "⭐" : isMoonOnly ? "🌙" : "✅";
 
   return (
     <div className="rounded-xl overflow-hidden" style={{
-      background: isPerfect
+      background: isBestAvailable
         ? "linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.04) 100%)"
         : "rgba(255,255,255,0.02)",
-      border: `1px solid ${isPerfect ? "rgba(212,175,55,0.45)" : "rgba(255,255,255,0.08)"}`,
-      boxShadow: isPerfect ? "0 0 24px rgba(212,175,55,0.18)" : "none",
+      border: `1px solid ${isBestAvailable ? "rgba(212,175,55,0.45)" : "rgba(255,255,255,0.08)"}`,
+      boxShadow: isBestAvailable ? "0 0 24px rgba(212,175,55,0.18)" : "none",
     }}>
       {/* Header */}
       <div className="p-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-base leading-none">{numBadge}</span>
-          <span className={`text-sm font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: isPerfect ? G.text : "#fff" }}>
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <span className="text-base leading-none">{iconEmoji}</span>
+          <span className={`text-sm font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: isBestAvailable ? G.text : "#fff" }}>
             {title}
           </span>
-          {isPerfect && (
-            <span className="font-inter text-[9px] px-2 py-0.5 rounded-full" style={{
+          {isBestAvailable && (
+            <span className="font-inter text-[8px] px-2 py-0.5 rounded-full font-bold" style={{
               background: "rgba(212,175,55,0.15)",
               color: G.text,
               border: "1px solid rgba(212,175,55,0.30)",
-            }}>⭐⭐⭐⭐⭐</span>
+              letterSpacing: "0.05em",
+            }}>{t.bestAvailableBadge}</span>
           )}
         </div>
         <p className={`text-[11px] leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.60)" }}>
           {desc}
         </p>
+        {isBestAvailable && (
+          <p className={`text-[10px] leading-snug mt-1 ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: G.dim }}>
+            {t.mergedNote}
+          </p>
+        )}
       </div>
 
       {/* Details */}
@@ -628,11 +640,11 @@ function TimelineCard({ card, num, t, lang, moonCitations, hasMoonPrefs }) {
         }}>
           <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: G.pass }} />
           <span className={`text-xs ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.75)" }}>
-            {t.nahasLabel}: {m.nahasStatus}
+            {t.nahasLabel}: {t.nahasClean}
           </span>
         </div>
 
-        {/* Manuscript Citations (manuscript / merged / perfect only) */}
+        {/* Manuscript Citations */}
         {moonCitations && moonCitations.length > 0 && !isMoonOnly && (
           <div className="rounded-lg p-2" style={{
             background: "rgba(74,222,128,0.04)",
@@ -674,6 +686,94 @@ function TimelineCard({ card, num, t, lang, moonCitations, hasMoonPrefs }) {
         {showExplain && (
           <ExplainWhy data={m} t={t} lang={lang} hasMoonPrefs={hasMoonPrefs} />
         )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAHAS WARNING — Shows if today is a manuscript Nahas day
+// ═══════════════════════════════════════════════════════════════
+function NahasWarning({ req, t, lang, moonCitations }) {
+  if (!req?.worstDays?.length) return null;
+
+  const todayKey = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][new Date().getDay()];
+  const isNahasDay = req.worstDays.includes(todayKey);
+  if (!isNahasDay) return null;
+
+  const dayNames = {
+    sun: lang === "ml" ? "ഞായർ" : "Sunday",
+    mon: lang === "ml" ? "തിങ്കൾ" : "Monday",
+    tue: lang === "ml" ? "ചൊവ്വ" : "Tuesday",
+    wed: lang === "ml" ? "ബുധൻ" : "Wednesday",
+    thu: lang === "ml" ? "വ്യാഴം" : "Thursday",
+    fri: lang === "ml" ? "വെള്ളി" : "Friday",
+    sat: lang === "ml" ? "ശനി" : "Saturday",
+  };
+
+  // Find citation for worstDays if available
+  const nahasCitation = moonCitations?.find(c => c.field === "day") || null;
+
+  return (
+    <div className="rounded-xl p-3 space-y-2" style={{
+      background: "rgba(248,113,113,0.06)",
+      border: "1px solid rgba(248,113,113,0.25)",
+    }}>
+      <div className="flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: G.fail }} />
+        <p className={`text-sm font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: G.fail }}>
+          {t.nahasWarning}
+        </p>
+      </div>
+
+      {/* Why it is Nahas */}
+      <div>
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>
+          {t.nahasWhyTitle}
+        </p>
+        <p className={`text-xs leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.70)" }}>
+          {lang === "ml"
+            ? `${dayNames[todayKey]} കൈയെഴുത്തുപ്രതി പ്രകാരം ഒരു നഹാസ് ദിവസമാണ്. ഈ ദിവസം ചില കർമ്മങ്ങൾക്ക് തടസ്സമാണ്.`
+            : `${dayNames[todayKey]} is identified as a Nahas (inauspicious) day per the manuscript. This day obstructs certain rituals.`}
+        </p>
+      </div>
+
+      {/* Manuscript Citation */}
+      {nahasCitation && (
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>
+            {t.nahasCitationLabel}
+          </p>
+          <div className="flex items-start gap-1.5">
+            <span className="font-inter text-[9px] px-1 rounded flex-shrink-0" style={{
+              background: "rgba(248,113,113,0.10)",
+              color: "rgba(248,113,113,0.60)",
+            }}>{nahasCitation.source}</span>
+            <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>{nahasCitation.summary || nahasCitation.category}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Scope */}
+      <div>
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>
+          {t.nahasScopeTitle}
+        </p>
+        <p className={`text-xs leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.70)" }}>
+          {lang === "ml"
+            ? "ഈ നഹാസ് എല്ലാ ആചാരങ്ങൾക്കും ബാധകമാണോ അതോ പ്രത്യേക ആചാര വിഭാഗങ്ങൾക്ക് മാത്രമോ എന്ന് കൈയെഴുത്തുപ്രതി വ്യക്തമാക്കുന്നു. നാശകരമായതും വേർപിരിക്കൽ കർമ്മങ്ങളും ഈ നഹാസ് സമയത്ത് അനുവദനീയമാണെന്ന് കൈയെഴുത്തുപ്രതി പറയുന്നെങ്കിൽ, അത് റഫറൻസ് സഹിതം സൂചിപ്പിക്കപ്പെടുന്നു."
+            : "The manuscript clarifies whether this Nahas applies to all rituals or only specific ritual categories. If the manuscript permits destructive, separation, or harmful rituals during this Nahas, it is stated with citation."}
+        </p>
+      </div>
+
+      {/* Destructive Rituals Permitted? */}
+      <div>
+        <p className="font-inter text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>
+          {t.nahasDestructiveTitle}
+        </p>
+        <p className={`text-xs leading-snug ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.70)" }}>
+          {t.nahasDestructiveNo}
+        </p>
       </div>
     </div>
   );
