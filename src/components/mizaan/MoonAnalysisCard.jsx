@@ -88,8 +88,8 @@ const L = (lang) => ({
     : "Wait for the next Moon occurrence where ALL manuscript conditions are satisfied.",
   searching: lang === "ml" ? "തിരയുന്നു..." : "Searching...",
   noResult: lang === "ml"
-    ? "60 ദിവസത്തിനുള്ളിൽ എല്ലാ വ്യവസ്ഥകളും പാലിക്കുന്ന സമയമില്ല."
-    : "No fully compatible time found within 60 days.",
+    ? "ഒരു വർഷത്തിനുള്ളിൽ എല്ലാ വ്യവസ്ഥകളും ഒരേസമയം പാലിക്കുന്ന സമയമില്ല."
+    : "No fully compatible time found within one year of searching.",
   noMoonMatch: lang === "ml"
     ? "തിരഞ്ഞെടുത്ത ചന്ദ്ര അവസ്ഥ പാലിക്കുന്ന ദിവസമില്ല."
     : "No matching Moon condition found. Select at least one condition.",
@@ -411,7 +411,7 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
 
                   {/* Plan Result */}
                   {planResult && (
-                    <PlanResultView result={planResult} t={t} lang={lang} />
+                    <PlanResultView result={planResult} t={t} lang={lang} moonCitations={moonCitations} />
                   )}
                 </motion.div>
               )}
@@ -427,7 +427,7 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
 // ═══════════════════════════════════════════════════════════════
 // PLAN RESULT VIEW — Shows the Moon entry moment + full evaluation
 // ═══════════════════════════════════════════════════════════════
-function PlanResultView({ result, t, lang }) {
+function PlanResultView({ result, t, lang, moonCitations }) {
   const { found, firstMatch, recommendedTime, searchedDays } = result;
 
   if (!firstMatch) {
@@ -519,6 +519,39 @@ function PlanResultView({ result, t, lang }) {
               <MoonDataRow label={t.kawkab} value={recommendedTime.hourPlanet} />
             </div>
           )}
+          {/* Nahas Status */}
+          {recommendedTime.nahasStatus && (
+            <div className="flex items-center gap-2 mb-2 p-2 rounded-lg" style={{
+              background: "rgba(74,222,128,0.04)",
+            }}>
+              <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: G.pass }} />
+              <span className={`text-xs ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.75)" }}>
+                {lang === "ml" ? "നഹാസ്" : "Nahas"}: {recommendedTime.nahasStatus}
+              </span>
+            </div>
+          )}
+          {/* Manuscript Citations */}
+          {moonCitations && moonCitations.length > 0 && (
+            <div className="rounded-lg p-2 mb-2" style={{
+              background: "rgba(74,222,128,0.04)",
+              border: "1px solid rgba(74,222,128,0.12)",
+            }}>
+              <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: "rgba(74,222,128,0.60)" }}>
+                {lang === "ml" ? "കൈയെഴുത്തുപ്രതി റഫറൻസുകൾ" : "Manuscript Citations"}
+              </p>
+              <div className="space-y-0.5">
+                {moonCitations.map((c, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <span className="font-inter text-[9px] px-1 rounded flex-shrink-0" style={{
+                      background: "rgba(74,222,128,0.10)",
+                      color: "rgba(74,222,128,0.60)",
+                    }}>{c.source}</span>
+                    <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>{c.summary || c.category}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <p className={`text-xs font-bold ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: G.pass }}>
             {t.allPassMsg}
           </p>
@@ -557,8 +590,8 @@ function PlanResultView({ result, t, lang }) {
               </p>
             </div>
           </div>
-          {/* If searched 60 days and no full match found */}
-          {!found && searchedDays >= 60 && (
+          {/* If searched the full safety cap and no full match found */}
+          {!found && searchedDays >= 365 && (
             <p className="font-inter text-[10px] mt-2 text-center" style={{ color: G.fail }}>
               {t.noResult}
             </p>

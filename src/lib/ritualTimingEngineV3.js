@@ -1237,10 +1237,13 @@ export function findNextSuitableMoonTime({ req, moonReq, fromDate, filters }) {
 // ALL required manuscript conditions are simultaneously satisfied.
 // ═══════════════════════════════════════════════════════════════
 export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, desiredPhase, fromDate }) {
-  const SEARCH_DAYS = 60;
+  // No fixed limit — search until a fully compatible time is found.
+  // 365 days (1 year, ~12+ Moon cycles) is a safety cap only; if no match
+  // exists in a year, the conditions are genuinely incompatible.
+  const MAX_SEARCH_DAYS = 365;
   let firstMatch = null;
 
-  for (let d = 1; d <= SEARCH_DAYS; d++) {
+  for (let d = 1; d <= MAX_SEARCH_DAYS; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
     const moon = getMoonPhase(date);
 
@@ -1391,6 +1394,14 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       });
     }
 
+    // ── Nahas Status summary ──
+    const nahasActive = (req?.worstDays && req.worstDays.includes(dayKey)) ||
+      (bestHour && req?.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(bestHour.planet)) ||
+      (bestHour && req?.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(bestHour.planet));
+    const nahasStatus = nahasActive
+      ? "Nahas restriction exists — this time is blocked."
+      : "No Nahas restriction found.";
+
     // ── Build result for this match ──
     const monthName = date.toLocaleString("en-US", { month: "long" });
     const matchResult = {
@@ -1408,17 +1419,18 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       checks,
       allPass,
       bestHour,
+      nahasStatus,
     };
 
     // Record first match (always)
     if (!firstMatch) firstMatch = matchResult;
 
-    // If ALL conditions pass, this is the recommended time
+    // If ALL conditions pass, this is the recommended time — stop searching
     if (allPass) {
       return { found: true, firstMatch, recommendedTime: matchResult, searchedDays: d };
     }
   }
 
-  // No fully compatible time found in 60 days
-  return { found: false, firstMatch, recommendedTime: null, searchedDays: SEARCH_DAYS };
+  // No fully compatible time found within the safety cap
+  return { found: false, firstMatch, recommendedTime: null, searchedDays: MAX_SEARCH_DAYS };
 }
