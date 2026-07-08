@@ -117,107 +117,81 @@ Deno.serve(async (req) => {
       return Response.json(existing);
     }
 
-    // ── STEP 2: No match — generate MAIN PURPOSE meaning via LLM ──
-    // The LLM translates ONLY the Main Purpose (the middle segment).
-    // The Action Card and Modifier are handled by the frontend builder
-    // (buildRitualSemanticPhrase) — the dictionary stores ONLY the purpose
-    // word meaning, so the builder can combine Action + Purpose + Modifier
-    // without duplicating the action or modifier.
+    // ── STEP 2: No match — generate CANDIDATE meanings via LLM ──
+    // The LLM generates 2-5 possible meanings for the Arabic Main Purpose.
+    // The user must confirm the intended meaning before it is used or saved.
+    // No dictionary entry is saved until the user confirms (see
+    // confirmPurposeMeaning function).
     const llmResult = await base44.integrations.Core.InvokeLLM({
       prompt: `You are an expert in Arabic occult manuscripts and Islamic spirituality.
 
-Translate this Arabic MAIN PURPOSE word/phrase into Malayalam and English.
-This is the MAIN PURPOSE only — the Action (جلب/طرد/الصحة/السقم) and Modifier (طرفة العين) are handled separately. Do NOT include them in your translation.
+Analyze this Arabic MAIN PURPOSE word and generate 2-5 possible meanings.
+This is the MAIN PURPOSE only — the Action (جلب/طرد/الصحة/السقم) and Modifier (طرفة العين) are handled separately.
 
 Arabic Main Purpose: "${parsed.mainPurpose}"
 
 Instructions:
-1. English: Translate the Main Purpose word ONLY.
-   - "المحبة" → "Love"
-   - "الرزق" → "Provision"
-   - "في البدن" → "Body Health"
-   - "المرض" → "Illness"
-   - "الهيبة" → "Awe"
-2. Malayalam: Translate the Main Purpose word ONLY.
-   - "المحبة" → "സ്നേഹം"
-   - "الرزق" → "ഉപജീവനം"
-   - "في البدن" → "ശരീരാരോഗ്യം"
-   - "المرض" → "രോഗം"
-   - "الهيبة" → "ഭീമാണം"
-3. Determine the normalized_purpose_key based on the MAIN PURPOSE:
-   - "celb" (attraction/جلب), "tard" (banishment/طرد), "sihhat" (health/صحة), "sekam" (illness/سقم),
-   - "tarfet" (instant/طرفة), "rizq" (provision/رزق), "knowledge" (knowledge/علم),
-   - "travel" (travel/سفر), "sultan" (authority/سلطان), "haybah" (awe/هيبة)
+1. Perform Arabic lexical analysis of the word (root, form, common usages).
+2. Generate 2-5 candidate meanings, ordered by likelihood (most likely first).
+3. Each candidate must include:
+   - english_meaning: concise English translation of the MAIN PURPOSE only
+   - malayalam_meaning: Malayalam translation of the MAIN PURPOSE only
+   - normalized_purpose_key: one of "celb", "tard", "sihhat", "sekam", "tarfet", "rizq", "knowledge", "travel", "sultan", "haybah"
+
+Examples:
+  "المال" → [Wealth, Money, Property, Financial assets]
+  "المحبة" → [Love, Affection, Devotion]
+  "الرزق" → [Provision, Sustenance, Livelihood]
+  "الهيبة" → [Awe, Majesty, Authority]
 
 Return ONLY a JSON object.`,
       response_json_schema: {
         type: "object",
         properties: {
-          english_meaning: { type: "string", description: "English translation of the MAIN PURPOSE only (e.g. 'Love', 'Health') — NOT the full phrase" },
-          malayalam_meaning: { type: "string", description: "Malayalam translation of the MAIN PURPOSE only (e.g. 'സ്നേഹം') — NOT the full phrase" },
-          normalized_purpose_key: { type: "string", description: "One of: celb, tard, sihhat, sekam, tarfet, rizq, knowledge, travel, sultan, haybah" },
+          candidates: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                english_meaning: { type: "string", description: "English translation of the MAIN PURPOSE only" },
+                malayalam_meaning: { type: "string", description: "Malayalam translation of the MAIN PURPOSE only" },
+                normalized_purpose_key: { type: "string", description: "One of: celb, tard, sihhat, sekam, tarfet, rizq, knowledge, travel, sultan, haybah" },
+              },
+            },
+            description: "2-5 candidate meanings, most likely first",
+          },
         },
       },
     });
 
-    // ── Validate normalized_purpose_key ──
-    const VALID_KEYS = ["celb", "tard", "sihhat", "sekam", "tarfet", "rizq", "knowledge", "travel", "sultan", "haybah"];
-    const normKey = VALID_KEYS.includes(llmResult.normalized_purpose_key) ? llmResult.normalized_purpose_key : "celb";
-
-    // ── Map normalized_purpose_key → action enum ──
-    const KEY_TO_ACTION = {
-      celb: "jalb", tard: "tard", sihhat: "sihhat", sekam: "sekam",
-      tarfet: "tarfet", rizq: "jalb", knowledge: "jalb", travel: "jalb",
-      sultan: "jalb", haybah: "jalb",
-    };
-    const actionEnum = KEY_TO_ACTION[normKey] || "other";
-
-    const englishMeaning = (llmResult.english_meaning || "").trim();
-    const malayalamMeaning = (llmResult.malayalam_meaning || "").trim();
-
-    // ── STEP 3: Save to PurposeDictionary ──
-    // purpose_phrase = the MAIN PURPOSE only (not the full phrase), so that
-    // step 1 (exact match) finds it instantly on the next lookup of the same
-    // main purpose — regardless of which Action Card or Modifier was used.
-    // arabic_keyword = the parsed mainPurpose (from the parser, not the LLM),
-    // so the indexed keyword always matches what the parser extracts.
-    const newEntry = {
-      purpose_phrase: parsed.mainPurpose,
-      arabic_keyword: parsed.mainPurpose,
-      malayalam_meaning: malayalamMeaning,
-      english_meaning: englishMeaning,
-      action: actionEnum,
-      normalized_purpose_key: normKey,
-      language: "ar",
-      aliases: [],
-      source: "AI Generated",
-      is_active: true,
-      notes: `AI-generated from full phrase: "${customPurpose.trim()}" — Needs Review`,
-    };
-
-    try {
-      await base44.asServiceRole.entities.PurposeDictionary.create(newEntry);
-    } catch (saveErr) {
-      // If save fails (e.g. duplicate), still return the generated meaning
-      // so the UI works. The next call will find it via lookupPurposeIntent.
+    const candidates = Array.isArray(llmResult?.candidates) ? llmResult.candidates : [];
+    if (candidates.length === 0) {
+      return Response.json({
+        matched: false,
+        needsConfirmation: false,
+        _debug: { lookupPath: "ai_no_candidates", matchFound: false },
+      });
     }
 
-    // ── STEP 4: Return result (same shape as lookupPurposeIntent) ──
+    // ── Return candidates for user confirmation (NO auto-save) ──
     return Response.json({
-      matched: true,
-      ritualIntent: normKey,
-      matchedPhrase: newEntry.purpose_phrase,
-      source: "AI Generated",
-      malayalam_meaning: malayalamMeaning,
-      english_meaning: englishMeaning,
-      auto_learned: true,
+      matched: false,
+      needsConfirmation: true,
+      mainPurpose: parsed.mainPurpose,
+      candidates: candidates.map((c, i) => ({
+        english_meaning: (c.english_meaning || "").trim(),
+        malayalam_meaning: (c.malayalam_meaning || "").trim(),
+        normalized_purpose_key: c.normalized_purpose_key || "celb",
+        rank: i + 1,
+      })),
       _debug: {
         normalizedKey: parsed.mainPurpose,
         deepNormalizedKey: parsed.mainPurpose,
         matchFound: false,
         entryId: null,
-        source: "AI Generated (Auto-Learned)",
-        lookupPath: "auto_learned",
+        source: "AI Candidates (Needs Confirmation)",
+        lookupPath: "ai_candidates",
+        candidatesCount: candidates.length,
       },
     });
   } catch (error) {

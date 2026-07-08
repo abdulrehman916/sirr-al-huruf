@@ -18,8 +18,8 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useMemo, memo, useRef } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, ArrowDown, Loader2, Bug, ChevronDown } from "lucide-react";
-import { lookupPurposeIntent } from "../../lib/purposeDictionaryLookup";
+import { BookOpen, ArrowDown, Loader2, Bug, ChevronDown, AlertTriangle, Check } from "lucide-react";
+import { lookupPurposeIntent, confirmPurposeMeaning, clearLookupCache } from "../../lib/purposeDictionaryLookup";
 import {
   detectAction, parsePurposeStructure, ACTION_MEANINGS, ENDING_MEANING,
   CARD_TO_ACTION, CARD_TO_MODIFIER, buildRitualSemanticPhrase, buildCanonicalArabicPhrase,
@@ -53,6 +53,7 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
   const [lang, setLang] = useRitualLang();
   const [purposeLookup, setPurposeLookup] = useState({ matched: false });
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   // Track last resolved result to skip redundant onPurposeResolved calls
   const lastResolvedRef = useRef(null);
 
@@ -184,6 +185,39 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
     notAvailable: lang === "ml" ? "പ്രോജക്റ്റ് പർപ്പസ് ഡിക്ഷനറിയിൽ ഈ ലക്ഷ്യം കണ്ടെത്തിയില്ല." : "Purpose not found in the Project Purpose Dictionary.",
     loading: lang === "ml" ? "വ്യാഖ്യാനിക്കുന്നു..." : "Interpreting...",
     autoLearned: lang === "ml" ? "സ്വയം പഠിച്ചു — പരിശോധന ആവശ്യം" : "AI Generated — Needs Review",
+  };
+
+  // ── Handle user confirming a candidate meaning ──
+  const handleConfirmMeaning = async (candidate) => {
+    setConfirming(true);
+    try {
+      const result = await confirmPurposeMeaning({
+        mainPurpose: purposeLookup.mainPurpose,
+        english_meaning: candidate.english_meaning,
+        malayalam_meaning: candidate.malayalam_meaning,
+        normalized_purpose_key: candidate.normalized_purpose_key,
+      });
+      if (result.matched) {
+        // Clear cache so future lookups find the new dictionary entry
+        clearLookupCache(detected?.middleWord, detected?.cardKey);
+        setPurposeLookup(result);
+        if (onPurposeResolved) {
+          const canonicalArabic = buildCanonicalArabicPhrase({ selections, customPurpose });
+          const newResolved = {
+            ...result,
+            canonical_arabic: canonicalArabic,
+            interpretation_en: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: result, lang: "en" }),
+            interpretation_ml: buildRitualSemanticPhrase({ selections, customPurpose, purposeLookup: result, lang: "ml" }),
+          };
+          lastResolvedRef.current = newResolved;
+          onPurposeResolved(newResolved);
+        }
+      }
+    } catch (_err) {
+      // Error already handled by confirmPurposeMeaning returning { matched: false }
+    } finally {
+      setConfirming(false);
+    }
   };
 
   if (!interp) return null;
@@ -324,6 +358,50 @@ const PurposeInterpretationCard = memo(function PurposeInterpretationCard({ cust
           <ArrowDown className="w-3 h-3" style={{ color: G.dim }} />
           <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${G.border})` }} />
         </div>
+
+        {/* Candidate Selection — when dictionary miss, AI generated candidates */}
+        {purposeLookup.needsConfirmation && purposeLookup.candidates?.length > 0 && (
+          <div className="rounded-lg p-3" style={{
+            background: "rgba(251,191,36,0.08)",
+            border: "1px solid rgba(251,191,36,0.40)",
+          }}>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: "#FBBF24" }} />
+              <span className="font-inter text-[10px] font-bold uppercase tracking-widest" style={{ color: "#FBBF24" }}>
+                {lang === "ml" ? "ലക്ഷ്യം സ്ഥിരീകരിക്കേണ്ടതുണ്ട്" : "Purpose requires confirmation"}
+              </span>
+            </div>
+            <p className="font-inter text-[11px] mb-2" style={{ color: "rgba(255,255,255,0.60)" }}>
+              {lang === "ml" ? "ശരിയായ അർത്ഥം തിരഞ്ഞെടുക്കുക:" : "Select the intended meaning:"}
+            </p>
+            <div className="space-y-1.5">
+              {purposeLookup.candidates.map((c, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleConfirmMeaning(c)}
+                  disabled={confirming}
+                  className="w-full rounded-lg p-2.5 text-left transition hover:bg-opacity-20 disabled:opacity-50"
+                  style={{
+                    background: "rgba(212,175,55,0.06)",
+                    border: "1px solid rgba(212,175,55,0.25)",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-inter text-sm font-bold" style={{ color: G.text }}>{c.english_meaning}</p>
+                      <p className="font-malayalam text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>{c.malayalam_meaning}</p>
+                    </div>
+                    {confirming ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" style={{ color: G.dim }} />
+                    ) : (
+                      <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: G.dim }} />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Canonical Purpose + Resolved Meaning — Action + Purpose + Modifier */}
         <div className="rounded-lg p-3" style={{

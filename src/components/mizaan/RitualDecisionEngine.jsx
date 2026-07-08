@@ -54,18 +54,54 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
   }, [selections, resolvedPurpose]);
 
   const rawAnalysis = useMemo(() => {
-    if (!result) return null;
+    if (!result || resolvedPurpose.needsConfirmation) return null;
     return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose });
   }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
   const rawAdvice = useMemo(() => {
-    if (!result) return null;
+    if (!result || resolvedPurpose.needsConfirmation) return null;
     return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose });
   }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose]);
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
+
+  // ── Block recommendations when purpose is unconfirmed ──
+  // Ritual Timing must NEVER generate recommendations from an uncertain
+  // AI guess. Only a confirmed dictionary entry or user-confirmed meaning
+  // may be used.
+  if (resolvedPurpose.needsConfirmation) {
+    return (
+      <div className="mt-6 rounded-2xl p-6" style={{
+        background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+        border: "1px solid rgba(251,191,36,0.40)",
+        boxShadow: "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)",
+      }}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{
+            background: "linear-gradient(135deg, rgba(251,191,36,0.20) 0%, rgba(251,191,36,0.06) 100%)",
+            border: "1px solid rgba(251,191,36,0.50)",
+          }}>
+            <AlertTriangle className="w-5 h-5" style={{ color: "#FBBF24" }} />
+          </div>
+          <div>
+            <h3 className="font-inter text-base font-bold tracking-wide" style={{ color: "#FBBF24" }}>
+              {lang === "ml" ? "ലക്ഷ്യം സ്ഥിരീകരിക്കേണ്ടതുണ്ട്" : "Purpose requires confirmation"}
+            </h3>
+            <p className="font-amiri text-sm" style={{ color: "rgba(251,191,36,0.50)" }}>
+              يحتاج تأكيد المعنى
+            </p>
+          </div>
+        </div>
+        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
+          {lang === "ml"
+            ? "ദയവായി ലക്ഷ്യ വ്യാഖ്യാന കാർഡിൽ ശരിയായ അർത്ഥം തിരഞ്ഞെടുക്കുക. സ്ഥിരീകരിക്കുന്നതുവരെ ആചാര സമയ നിർദ്ദേശങ്ങൾ ലഭ്യമല്ല."
+            : "Please select the intended meaning in the Purpose Interpretation card above. Ritual timing recommendations are unavailable until the purpose is confirmed."}
+        </p>
+      </div>
+    );
+  }
 
   if (!analysis || !analysis.report) return null;
 

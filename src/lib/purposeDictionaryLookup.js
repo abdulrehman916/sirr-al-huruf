@@ -42,3 +42,30 @@ export function lookupPurposeIntent(customPurpose, selectedAction) {
   lookupCache.set(cacheKey, promise);
   return promise;
 }
+
+// Clear the lookup cache so the next lookup re-queries the dictionary.
+// Called after a user confirms a meaning (the new dictionary entry must
+// be found on the next lookup, not the stale needsConfirmation result).
+export function clearLookupCache(customPurpose, selectedAction) {
+  if (customPurpose) {
+    const cacheKey = `${customPurpose}::${selectedAction || ""}`;
+    lookupCache.delete(cacheKey);
+  } else {
+    lookupCache.clear();
+  }
+}
+
+// Confirm a user-selected candidate meaning. Saves to PurposeDictionary
+// and returns the confirmed result in the same shape as lookupPurposeIntent.
+export function confirmPurposeMeaning({ mainPurpose, english_meaning, malayalam_meaning, normalized_purpose_key }) {
+  return base44.functions.invoke("confirmPurposeMeaning", {
+    mainPurpose,
+    english_meaning,
+    malayalam_meaning,
+    normalized_purpose_key,
+  })
+    .then((response) => response.data || { matched: false })
+    .catch((err) => {
+      return { matched: false, error: err?.message || "Confirmation failed" };
+    });
+}
