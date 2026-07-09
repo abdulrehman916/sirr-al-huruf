@@ -100,11 +100,16 @@ Deno.serve(async (req) => {
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
 
     const body = await req.json();
-    const { book_id } = body;
+    const { book_id, batch_size } = body;
 
     if (!book_id) {
       return Response.json({ error: 'book_id is required' }, { status: 400 });
     }
+
+    // Process at most batch_size pending entries per call to stay under gateway timeout.
+    // Each verifyArabicText call takes ~70s (internet search); 5 parallel = ~70s total.
+    // Caller re-invokes until all entries are processed.
+    const BATCH_SIZE = Math.min(batch_size || 5, 8);
 
     // ══ Fetch ManuscriptBook ══
     const books = await base44.asServiceRole.entities.ManuscriptBook.filter({ book_id });
@@ -124,27 +129,23 @@ Deno.serve(async (req) => {
     const alreadyManualReview = entries.filter((e: any) => e.verification_status === 'manual_review');
 
     // ══ STAGE 2: Arabic Verification ══
-    // Call verifyArabicText for EVERY pending entry with Arabic text.
-    // Process in parallel batches of 8 to balance speed and rate limits.
-    const BATCH_SIZE = 8;
-    const verificationResults: any[] = [];
-
-    for (let i = 0; i < pendingEntries.length; i += BATCH_SIZE) {
-      const batch = pendingEntries.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map((entry: any) =>
-          verifyEntryArabic(
-            base44,
-            entry.arabic_text || '',
-            entry.book_title || book.book_title || '',
-            entry.page_number || '',
-            entry.topic || entry.purpose || '',
-            entry.entry_type || 'instruction'
-          )
+    // Call verifyArabicText for pending entries — ONE batch per call.
+    // Caller re-invokes until all entries are processed.
+    const batch = pendingEntries.slice(0, BATCH_SIZE);
+    const verificationResults: any[] = await Promise.all(
+      batch.map((entry: any) =>
+        verifyEntryArabic(
+          base44,
+          entry.arabic_text || '',
+          entry.book_title || book.book_title || '',
+          entry.page_number || '',
+          entry.topic || entry.purpose || '',
+          entry.entry_type || 'instruction'
         )
-      );
-      verificationResults.push(...batchResults);
-    }
+      )
+    );
+
+    const remainingPending = pendingEntries.length - batch.length;
 
     // ══ STAGE 3: Malayalam Translation + Update Entries ══
     // Translations come ONLY from verifyArabicText results (trusted sources).
@@ -152,8 +153,8 @@ Deno.serve(async (req) => {
     let updatedCount = 0;
     const updatePromises: Promise<any>[] = [];
 
-    for (let i = 0; i < pendingEntries.length; i++) {
-      const entry = pendingEntries[i];
+    for (let i = 0; i < batch.length; i++) {
+      const entry = batch[i];
       const verification = verificationResults[i];
 
       let verifiedArabicHash = '';
@@ -203,6 +204,20 @@ Deno.serve(async (req) => {
     }
 
     await Promise.all(updatePromises);
+
+    // ══ If more pending entries remain, return "continue" status ══
+    // Caller re-invokes verifyBookEntries with the same book_id.
+    if (remainingPending > 0) {
+      return Response.json({
+        status: 'batch_complete',
+        book_id: book_id,
+        book_title: book.book_title,
+        batch_processed: batch.length,
+        remaining_pending: remainingPending,
+        message: `Batch complete: ${batch.length} entries verified. ${remainingPending} remaining. Call verifyBookEntries again with the same book_id to continue.`,
+        next_step: `verifyBookEntries({ "book_id": "${book_id}" })`,
+      });
+    }
 
     // ══ Fetch updated entries for final metrics ══
     const allEntries = await base44.asServiceRole.entities.ManuscriptEntry.filter({ book_id });
