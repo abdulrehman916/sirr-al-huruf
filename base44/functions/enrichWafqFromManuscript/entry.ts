@@ -137,7 +137,7 @@ Return JSON: { "entries_analyzed": <number>, "wafq_pieces": [ { ... } ] }`;
     const result: any = (llmRes as any).data || llmRes;
     const pieces: any[] = Array.isArray(result.wafq_pieces) ? result.wafq_pieces : [];
 
-    let created = 0, merged = 0;
+    let created = 0, merged = 0, canonicalMerged = 0;
     const withWafq = new Set<string>();
 
     for (const p of pieces) {
@@ -161,28 +161,44 @@ Return JSON: { "entries_analyzed": <number>, "wafq_pieces": [ { ... } ] }`;
           merged++;
         }
       } else {
-        const kid = `WK-${p.source_entry_id}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-        await base44.asServiceRole.entities.WafqKnowledge.create({
-          knowledge_id: kid,
-          source_type: p.source_type || 'wafq',
-          knowledge_category: p.category || 'wafq_structure',
-          knowledge_text_en: textEn,
-          knowledge_text_ml: p.text_ml || '',
-          knowledge_text_ar: p.text_ar || '',
-          content_hash: hash,
-          is_marker: false,
-          grid_size: p.grid_size || '',
-          associated_divine_name: p.associated_divine_name || '',
-          timing_reference: p.timing_reference || '',
-          source_book_id: book_id,
-          source_book_title: book.book_title,
-          source_page_number: srcEntry?.page_number || '',
-          source_entry_id: p.source_entry_id,
-          is_verified: isVer,
-          supporting_sources: [],
-          source_count: 1
-        });
-        created++;
+        // CANONICAL KEY CHECK — field-level knowledge evolution
+        const canonicalKey = `${p.source_type || 'wafq'}|${p.category || 'wafq_structure'}|${p.grid_size ?? ''}`;
+        const canonicalMatches = await base44.asServiceRole.entities.WafqKnowledge.filter({ canonical_key: canonicalKey, is_marker: false }, undefined, 1);
+
+        if (canonicalMatches?.length > 0) {
+          const ex = canonicalMatches[0];
+          const mergeRes = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are merging new verified manuscript knowledge into an existing canonical record. Never remove existing information. Add only genuinely new information. Organize by category with bullet points. Do not duplicate.\n\nEXISTING:\n${ex.knowledge_text_en}\n\nNEW:\n${textEn}\n\nReturn JSON: { "merged_text_en": "..." }`,
+            response_json_schema: { type: "object", properties: { merged_text_en: { type: "string" } }, required: ["merged_text_en"] }
+          });
+          const mergedData: any = (mergeRes as any).data || mergeRes;
+          const mergedEn = mergedData.merged_text_en || textEn;
+          const appendedAr = ex.knowledge_text_ar && p.text_ar ? ex.knowledge_text_ar + '\n---\n' + p.text_ar : (p.text_ar || ex.knowledge_text_ar || '');
+          const appendedMl = ex.knowledge_text_ml && p.text_ml ? ex.knowledge_text_ml + '\n---\n' + p.text_ml : (p.text_ml || ex.knowledge_text_ml || '');
+          const appendedGrid = ex.grid_size && p.grid_size ? ex.grid_size + '; ' + p.grid_size : (p.grid_size || ex.grid_size || '');
+          const appendedDivine = ex.associated_divine_name && p.associated_divine_name ? ex.associated_divine_name + '; ' + p.associated_divine_name : (p.associated_divine_name || ex.associated_divine_name || '');
+          const appendedTiming = ex.timing_reference && p.timing_reference ? ex.timing_reference + '; ' + p.timing_reference : (p.timing_reference || ex.timing_reference || '');
+
+          await base44.asServiceRole.entities.WafqKnowledge.update(ex.id, {
+            knowledge_text_en: mergedEn, knowledge_text_ml: appendedMl, knowledge_text_ar: appendedAr,
+            grid_size: appendedGrid, associated_divine_name: appendedDivine, timing_reference: appendedTiming,
+            supporting_sources: [...(ex.supporting_sources || []), { book_title: book.book_title, page_number: srcEntry?.page_number || '', entry_id: p.source_entry_id }],
+            source_count: (ex.source_count || 1) + 1, is_verified: ex.is_verified || isVer
+          });
+          canonicalMerged++;
+        } else {
+          const kid = `WK-${p.source_entry_id}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+          await base44.asServiceRole.entities.WafqKnowledge.create({
+            knowledge_id: kid, source_type: p.source_type || 'wafq', knowledge_category: p.category || 'wafq_structure',
+            canonical_key: canonicalKey,
+            knowledge_text_en: textEn, knowledge_text_ml: p.text_ml || '', knowledge_text_ar: p.text_ar || '',
+            content_hash: hash, is_marker: false,
+            grid_size: p.grid_size || '', associated_divine_name: p.associated_divine_name || '', timing_reference: p.timing_reference || '',
+            source_book_id: book_id, source_book_title: book.book_title, source_page_number: srcEntry?.page_number || '',
+            source_entry_id: p.source_entry_id, is_verified: isVer, supporting_sources: [], source_count: 1
+          });
+          created++;
+        }
       }
       withWafq.add(p.source_entry_id);
     }

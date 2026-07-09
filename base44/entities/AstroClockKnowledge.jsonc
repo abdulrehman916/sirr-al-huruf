@@ -1,7 +1,7 @@
 {
   "name": "AstroClockKnowledge",
   "type": "object",
-  "description": "Timing intelligence extracted from verified manuscripts and merged into the Astro Clock. Each record is a single piece of timing knowledge (recommendation, rule, warning, condition) linked to a specific weekday, day/night period, Sahath, or planetary hour. GLOBAL RULE: Never overwrite verified knowledge \u2014 only new, genuinely distinct timing knowledge is stored. Duplicate knowledge from different sources is merged via supporting_sources. Populated automatically by enrichAstroClockFromManuscript after manuscript verification completes. Marker records (is_marker=true) indicate an entry was analyzed but contained no timing knowledge \u2014 they prevent reprocessing and are never displayed.",
+  "description": "Timing intelligence extracted from verified manuscripts and merged into the Astro Clock. Each record is a canonical knowledge record linked to a specific weekday, day/night period, Sahath, or planetary hour. KNOWLEDGE EVOLUTION RULE: Records with the same canonical_key accumulate knowledge from multiple manuscripts \u2014 new knowledge is merged into the existing record via LLM, never duplicated, never overwritten. Duplicate knowledge from different sources is merged via supporting_sources. Marker records (is_marker=true) prevent reprocessing and are never displayed.",
   "properties": {
     "knowledge_id": {
       "type": "string",
@@ -54,24 +54,28 @@
     },
     "knowledge_text_en": {
       "type": "string",
-      "description": "English text of the timing knowledge. Empty string for marker records (is_marker=true)."
+      "description": "English text of the timing knowledge. Evolves as new manuscripts add knowledge \u2014 merged via LLM. Empty string for marker records."
     },
     "knowledge_text_ml": {
       "type": "string",
-      "description": "Malayalam translation of the timing knowledge. Empty for markers."
+      "description": "Malayalam translation. Appended from new sources. Empty for markers."
     },
     "knowledge_text_ar": {
       "type": "string",
-      "description": "Original Arabic text if the timing knowledge is from an Arabic manuscript. Empty for markers."
+      "description": "Original Arabic text. Appended from new sources \u2014 never modified. Empty for markers."
     },
     "content_hash": {
       "type": "string",
-      "description": "SHA-256 hash of normalized knowledge_text_en for duplicate detection. Same knowledge from different sources shares the same hash \u2014 only stored once, with supporting sources linked. Marker records use a unique hash (no-timing-<entry_id>)."
+      "description": "SHA-256 hash of normalized knowledge_text_en for exact duplicate detection. Marker records use no-timing-<entry_id>."
+    },
+    "canonical_key": {
+      "type": "string",
+      "description": "Canonical routing key for field-level knowledge evolution. Format: 'source_type|weekday|period|sahath_number|planet'. Records with the same canonical_key represent the same canonical topic (e.g., all Sunday weekday knowledge). When new knowledge matches an existing canonical_key, it is merged into the existing record via LLM \u2014 never duplicated, never overwritten."
     },
     "is_marker": {
       "type": "boolean",
       "default": false,
-      "description": "If true, this is a marker record indicating the entry was analyzed but contained no timing knowledge. Marker records are never displayed in the UI \u2014 they only prevent reprocessing."
+      "description": "If true, entry analyzed but no timing knowledge found. Never displayed."
     },
     "source_book_id": {
       "type": "string",
@@ -79,11 +83,11 @@
     },
     "source_book_title": {
       "type": "string",
-      "description": "Denormalized book title for display without joins"
+      "description": "Denormalized book title"
     },
     "source_page_number": {
       "type": "string",
-      "description": "Page number in the source manuscript"
+      "description": "Page number"
     },
     "source_entry_id": {
       "type": "string",
@@ -92,7 +96,7 @@
     "is_verified": {
       "type": "boolean",
       "default": false,
-      "description": "True only if the source ManuscriptEntry was verified (verification_status='verified'). Never overwrite verified knowledge."
+      "description": "True only if source ManuscriptEntry was verified."
     },
     "supporting_sources": {
       "type": "array",
@@ -111,12 +115,12 @@
         }
       },
       "default": [],
-      "description": "Additional manuscript sources that contain the same timing knowledge. Updated when a duplicate content_hash is found \u2014 the new source is added here instead of creating a new record. Never overwrites existing text."
+      "description": "Additional manuscript sources. Updated when duplicate content_hash or canonical_key match is found."
     },
     "source_count": {
       "type": "integer",
       "default": 1,
-      "description": "Total number of manuscript sources for this knowledge piece. 0 for marker records."
+      "description": "Total manuscript sources. 0 for markers."
     }
   },
   "required": [
@@ -137,6 +141,12 @@
       "name": "idx_content_hash",
       "fields": [
         "content_hash"
+      ]
+    },
+    {
+      "name": "idx_canonical_key",
+      "fields": [
+        "canonical_key"
       ]
     },
     {

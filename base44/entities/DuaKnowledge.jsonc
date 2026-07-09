@@ -1,11 +1,11 @@
 {
   "name": "DuaKnowledge",
   "type": "object",
-  "description": "Canonical store for Dua, Dhikr, Wird, Quran verse, Divine Name, and Invocation knowledge extracted from verified manuscripts. Each record is a single piece of dua-related knowledge. GLOBAL ROUTING RULE: Never overwrite verified knowledge \u2014 only new, genuinely distinct knowledge is stored. Duplicate knowledge from different sources is merged via supporting_sources. Populated automatically by routeManuscriptKnowledge after manuscript verification completes. Marker records (is_marker=true) indicate an entry was analyzed but contained no dua knowledge \u2014 they prevent reprocessing and are never displayed. ISOLATED \u2014 only routeManuscriptKnowledge and enrichDuaFromManuscript write to this entity. Never accessed by any Mizan, Astro Clock, Ritual, or Wafq calculation.",
+  "description": "Canonical store for Dua, Dhikr, Wird, Quran verse, Divine Name, and Invocation knowledge. KNOWLEDGE EVOLUTION RULE: Records with the same canonical_key accumulate knowledge from multiple manuscripts \u2014 new knowledge is merged into the existing record via LLM, never duplicated, never overwritten. Marker records prevent reprocessing. ISOLATED \u2014 only routeManuscriptKnowledge and enrichDuaFromManuscript write to this entity.",
   "properties": {
     "knowledge_id": {
       "type": "string",
-      "description": "Permanent unique identifier. Format: DK-<source_entry_id>-<seq> or DK-MARKER-<entry_id> for markers."
+      "description": "Permanent unique identifier. Format: DK-<source_entry_id>-<seq> or DK-MARKER-<entry_id>."
     },
     "source_type": {
       "type": "string",
@@ -17,7 +17,7 @@
         "divine_name",
         "invocation"
       ],
-      "description": "Type of dua knowledge: dua=general supplication, dhikr=remembrance formula, wird=litany sequence, quran_verse=Quran recitation, divine_name=Asma dhikr, invocation=spiritual invocation"
+      "description": "Type of dua knowledge"
     },
     "knowledge_category": {
       "type": "string",
@@ -37,32 +37,36 @@
     },
     "knowledge_text_en": {
       "type": "string",
-      "description": "English text of the dua knowledge. Empty string for marker records."
+      "description": "English text. Evolves as new manuscripts add knowledge \u2014 merged via LLM. Empty for markers."
     },
     "knowledge_text_ml": {
       "type": "string",
-      "description": "Malayalam translation of the dua knowledge. Empty for markers."
+      "description": "Malayalam translation. Appended from new sources. Empty for markers."
     },
     "knowledge_text_ar": {
       "type": "string",
-      "description": "Original Arabic text verbatim from the manuscript. Primary for dua \u2014 never AI-generated. Empty for markers."
+      "description": "Original Arabic text verbatim. Appended from new sources \u2014 never modified. Empty for markers."
     },
     "content_hash": {
       "type": "string",
-      "description": "SHA-256 hash of normalized knowledge_text_en for duplicate detection. Same knowledge from different sources shares the same hash. Marker records use a unique hash (no-dua-<entry_id>)."
+      "description": "SHA-256 hash for exact duplicate detection. Markers use no-dua-<entry_id>."
+    },
+    "canonical_key": {
+      "type": "string",
+      "description": "Canonical key for field-level evolution. Format: 'source_type|knowledge_category'. Records with same key accumulate knowledge from multiple manuscripts."
     },
     "is_marker": {
       "type": "boolean",
       "default": false,
-      "description": "If true, this is a marker record \u2014 entry analyzed but no dua knowledge found. Never displayed."
+      "description": "If true, no dua knowledge found. Never displayed."
     },
     "repetition_count": {
       "type": "string",
-      "description": "How many times to recite the dua/dhikr (from manuscript). Empty if not specified."
+      "description": "How many times to recite. Appended from new sources."
     },
     "timing_reference": {
       "type": "string",
-      "description": "Lightweight cross-module reference to Astro Clock timing if the dua has timing requirements. Full timing knowledge stays in AstroClockKnowledge. Example: 'Best recited on Thursday during Jupiter hour'."
+      "description": "Lightweight cross-module reference to Astro Clock timing. Appended from new sources."
     },
     "source_book_id": {
       "type": "string",
@@ -70,11 +74,11 @@
     },
     "source_book_title": {
       "type": "string",
-      "description": "Denormalized book title for display"
+      "description": "Denormalized book title"
     },
     "source_page_number": {
       "type": "string",
-      "description": "Page number in the source manuscript"
+      "description": "Page number"
     },
     "source_entry_id": {
       "type": "string",
@@ -83,7 +87,7 @@
     "is_verified": {
       "type": "boolean",
       "default": false,
-      "description": "True only if the source ManuscriptEntry was verified (verification_status='verified')."
+      "description": "True if source entry was verified."
     },
     "supporting_sources": {
       "type": "array",
@@ -102,12 +106,12 @@
         }
       },
       "default": [],
-      "description": "Additional manuscript sources containing the same dua knowledge. Updated when a duplicate content_hash is found."
+      "description": "Additional sources. Updated when duplicate content_hash or canonical_key match is found."
     },
     "source_count": {
       "type": "integer",
       "default": 1,
-      "description": "Total number of manuscript sources. 0 for marker records."
+      "description": "Total sources. 0 for markers."
     }
   },
   "required": [
@@ -128,6 +132,12 @@
       "name": "idx_content_hash",
       "fields": [
         "content_hash"
+      ]
+    },
+    {
+      "name": "idx_canonical_key",
+      "fields": [
+        "canonical_key"
       ]
     },
     {

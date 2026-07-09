@@ -1,11 +1,11 @@
 {
   "name": "RitualKnowledge",
   "type": "object",
-  "description": "Canonical store for Amal, Ritual, Spiritual Procedure, Exorcism, and Protection knowledge extracted from verified manuscripts. Each record is a single piece of ritual-related knowledge. GLOBAL ROUTING RULE: Never overwrite verified knowledge \u2014 only new, genuinely distinct knowledge is stored. Duplicate knowledge from different sources is merged via supporting_sources. Populated automatically by routeManuscriptKnowledge after manuscript verification completes. Marker records (is_marker=true) prevent reprocessing. ISOLATED \u2014 only routeManuscriptKnowledge and enrichRitualFromManuscript write to this entity.",
+  "description": "Canonical store for Amal, Ritual, Spiritual Procedure, Exorcism, and Protection knowledge. KNOWLEDGE EVOLUTION RULE: Records with the same canonical_key accumulate knowledge from multiple manuscripts \u2014 new knowledge is merged into the existing record via LLM, never duplicated, never overwritten. Marker records prevent reprocessing. ISOLATED \u2014 only routeManuscriptKnowledge and enrichRitualFromManuscript write to this entity.",
   "properties": {
     "knowledge_id": {
       "type": "string",
-      "description": "Permanent unique identifier. Format: RK-<source_entry_id>-<seq> or RK-MARKER-<entry_id> for markers."
+      "description": "Permanent unique identifier. Format: RK-<source_entry_id>-<seq> or RK-MARKER-<entry_id>."
     },
     "source_type": {
       "type": "string",
@@ -17,7 +17,7 @@
         "protection",
         "instruction"
       ],
-      "description": "Type of ritual knowledge: amal=spiritual work, ritual=formal ceremony, procedure=step sequence, exorcism=jinn removal, protection=warding, instruction=guideline"
+      "description": "Type of ritual knowledge"
     },
     "knowledge_category": {
       "type": "string",
@@ -35,36 +35,40 @@
     },
     "knowledge_text_en": {
       "type": "string",
-      "description": "English text of the ritual knowledge. Empty string for marker records."
+      "description": "English text. Evolves as new manuscripts add knowledge \u2014 merged via LLM. Empty for markers."
     },
     "knowledge_text_ml": {
       "type": "string",
-      "description": "Malayalam translation. Empty for markers."
+      "description": "Malayalam translation. Appended from new sources. Empty for markers."
     },
     "knowledge_text_ar": {
       "type": "string",
-      "description": "Original Arabic text verbatim from the manuscript. Empty for markers."
+      "description": "Original Arabic text verbatim. Appended from new sources. Empty for markers."
     },
     "content_hash": {
       "type": "string",
-      "description": "SHA-256 hash of normalized knowledge_text_en for duplicate detection. Marker records use no-ritual-<entry_id>."
+      "description": "SHA-256 hash for duplicate detection. Markers use no-ritual-<entry_id>."
+    },
+    "canonical_key": {
+      "type": "string",
+      "description": "Canonical key for field-level evolution. Format: 'source_type|knowledge_category'. Records with same key accumulate knowledge."
     },
     "is_marker": {
       "type": "boolean",
       "default": false,
-      "description": "If true, entry analyzed but no ritual knowledge found. Never displayed."
+      "description": "If true, no ritual knowledge found. Never displayed."
     },
     "materials_summary": {
       "type": "string",
-      "description": "Lightweight summary of required materials. Full preparation details stay in Preparation entity. Example: 'Requires frankincense and rose water'."
+      "description": "Lightweight materials summary. Appended from new sources."
     },
     "timing_reference": {
       "type": "string",
-      "description": "Lightweight cross-module reference to Astro Clock timing. Full timing stays in AstroClockKnowledge. Example: 'Perform during Saturn hour on Saturday night'."
+      "description": "Lightweight cross-module reference to Astro Clock timing. Appended."
     },
     "duration": {
       "type": "string",
-      "description": "Ritual duration if specified in manuscript (e.g., '7 days', '40 days'). Empty if not specified."
+      "description": "Ritual duration if specified. Appended from new sources."
     },
     "source_book_id": {
       "type": "string",
@@ -104,7 +108,7 @@
         }
       },
       "default": [],
-      "description": "Additional sources with the same ritual knowledge."
+      "description": "Additional sources. Updated when duplicate or canonical match found."
     },
     "source_count": {
       "type": "integer",
@@ -130,6 +134,12 @@
       "name": "idx_content_hash",
       "fields": [
         "content_hash"
+      ]
+    },
+    {
+      "name": "idx_canonical_key",
+      "fields": [
+        "canonical_key"
       ]
     },
     {

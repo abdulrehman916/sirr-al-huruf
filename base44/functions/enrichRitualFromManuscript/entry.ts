@@ -143,7 +143,7 @@ Return JSON: { "entries_analyzed": <number>, "ritual_pieces": [ { ... } ] }`;
     const result: any = (llmRes as any).data || llmRes;
     const pieces: any[] = Array.isArray(result.ritual_pieces) ? result.ritual_pieces : [];
 
-    let created = 0, merged = 0;
+    let created = 0, merged = 0, canonicalMerged = 0;
     const withRitual = new Set<string>();
 
     for (const p of pieces) {
@@ -167,28 +167,44 @@ Return JSON: { "entries_analyzed": <number>, "ritual_pieces": [ { ... } ] }`;
           merged++;
         }
       } else {
-        const kid = `RK-${p.source_entry_id}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-        await base44.asServiceRole.entities.RitualKnowledge.create({
-          knowledge_id: kid,
-          source_type: p.source_type || 'ritual',
-          knowledge_category: p.category || 'ritual_procedure',
-          knowledge_text_en: textEn,
-          knowledge_text_ml: p.text_ml || '',
-          knowledge_text_ar: p.text_ar || '',
-          content_hash: hash,
-          is_marker: false,
-          materials_summary: p.materials_summary || '',
-          timing_reference: p.timing_reference || '',
-          duration: p.duration || '',
-          source_book_id: book_id,
-          source_book_title: book.book_title,
-          source_page_number: srcEntry?.page_number || '',
-          source_entry_id: p.source_entry_id,
-          is_verified: isVer,
-          supporting_sources: [],
-          source_count: 1
-        });
-        created++;
+        // CANONICAL KEY CHECK — field-level knowledge evolution
+        const canonicalKey = `${p.source_type || 'ritual'}|${p.category || 'ritual_procedure'}`;
+        const canonicalMatches = await base44.asServiceRole.entities.RitualKnowledge.filter({ canonical_key: canonicalKey, is_marker: false }, undefined, 1);
+
+        if (canonicalMatches?.length > 0) {
+          const ex = canonicalMatches[0];
+          const mergeRes = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are merging new verified manuscript knowledge into an existing canonical record. Never remove existing information. Add only genuinely new information. Organize by category with bullet points. Do not duplicate.\n\nEXISTING:\n${ex.knowledge_text_en}\n\nNEW:\n${textEn}\n\nReturn JSON: { "merged_text_en": "..." }`,
+            response_json_schema: { type: "object", properties: { merged_text_en: { type: "string" } }, required: ["merged_text_en"] }
+          });
+          const mergedData: any = (mergeRes as any).data || mergeRes;
+          const mergedEn = mergedData.merged_text_en || textEn;
+          const appendedAr = ex.knowledge_text_ar && p.text_ar ? ex.knowledge_text_ar + '\n---\n' + p.text_ar : (p.text_ar || ex.knowledge_text_ar || '');
+          const appendedMl = ex.knowledge_text_ml && p.text_ml ? ex.knowledge_text_ml + '\n---\n' + p.text_ml : (p.text_ml || ex.knowledge_text_ml || '');
+          const appendedMat = ex.materials_summary && p.materials_summary ? ex.materials_summary + '; ' + p.materials_summary : (p.materials_summary || ex.materials_summary || '');
+          const appendedTiming = ex.timing_reference && p.timing_reference ? ex.timing_reference + '; ' + p.timing_reference : (p.timing_reference || ex.timing_reference || '');
+          const appendedDur = ex.duration && p.duration ? ex.duration + '; ' + p.duration : (p.duration || ex.duration || '');
+
+          await base44.asServiceRole.entities.RitualKnowledge.update(ex.id, {
+            knowledge_text_en: mergedEn, knowledge_text_ml: appendedMl, knowledge_text_ar: appendedAr,
+            materials_summary: appendedMat, timing_reference: appendedTiming, duration: appendedDur,
+            supporting_sources: [...(ex.supporting_sources || []), { book_title: book.book_title, page_number: srcEntry?.page_number || '', entry_id: p.source_entry_id }],
+            source_count: (ex.source_count || 1) + 1, is_verified: ex.is_verified || isVer
+          });
+          canonicalMerged++;
+        } else {
+          const kid = `RK-${p.source_entry_id}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+          await base44.asServiceRole.entities.RitualKnowledge.create({
+            knowledge_id: kid, source_type: p.source_type || 'ritual', knowledge_category: p.category || 'ritual_procedure',
+            canonical_key: canonicalKey,
+            knowledge_text_en: textEn, knowledge_text_ml: p.text_ml || '', knowledge_text_ar: p.text_ar || '',
+            content_hash: hash, is_marker: false,
+            materials_summary: p.materials_summary || '', timing_reference: p.timing_reference || '', duration: p.duration || '',
+            source_book_id: book_id, source_book_title: book.book_title, source_page_number: srcEntry?.page_number || '',
+            source_entry_id: p.source_entry_id, is_verified: isVer, supporting_sources: [], source_count: 1
+          });
+          created++;
+        }
       }
       withRitual.add(p.source_entry_id);
     }

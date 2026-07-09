@@ -1,11 +1,11 @@
 {
   "name": "WafqKnowledge",
   "type": "object",
-  "description": "Canonical store for Wafq, Magic Square, Letter Diagram, Numeric Diagram, and Taweez knowledge extracted from verified manuscripts. Each record is a single piece of wafq-related knowledge. GLOBAL ROUTING RULE: Never overwrite verified knowledge. Duplicate knowledge merged via supporting_sources. Populated automatically by routeManuscriptKnowledge. Marker records prevent reprocessing. ISOLATED \u2014 only routeManuscriptKnowledge and enrichWafqFromManuscript write to this entity.",
+  "description": "Canonical store for Wafq, Magic Square, Letter Diagram, Numeric Diagram, and Taweez knowledge. KNOWLEDGE EVOLUTION RULE: Records with the same canonical_key accumulate knowledge from multiple manuscripts \u2014 new knowledge is merged via LLM, never duplicated, never overwritten. Marker records prevent reprocessing. ISOLATED \u2014 only routeManuscriptKnowledge and enrichWafqFromManuscript write to this entity.",
   "properties": {
     "knowledge_id": {
       "type": "string",
-      "description": "Permanent unique identifier. Format: WK-<source_entry_id>-<seq> or WK-MARKER-<entry_id> for markers."
+      "description": "Permanent unique identifier. Format: WK-<source_entry_id>-<seq> or WK-MARKER-<entry_id>."
     },
     "source_type": {
       "type": "string",
@@ -16,7 +16,7 @@
         "numeric_diagram",
         "taweez"
       ],
-      "description": "Type: wafq=general wafq, magic_square=numeric grid, letter_diagram=letter arrangement, numeric_diagram=number calculation, taweez=protective seal"
+      "description": "Type of wafq knowledge"
     },
     "knowledge_category": {
       "type": "string",
@@ -30,23 +30,27 @@
         "construction_method",
         "usage_instruction"
       ],
-      "description": "Category of wafq knowledge"
+      "description": "Category"
     },
     "knowledge_text_en": {
       "type": "string",
-      "description": "English text of the wafq knowledge. Empty for markers."
+      "description": "English text. Evolves as new manuscripts add knowledge \u2014 merged via LLM. Empty for markers."
     },
     "knowledge_text_ml": {
       "type": "string",
-      "description": "Malayalam translation. Empty for markers."
+      "description": "Malayalam translation. Appended from new sources. Empty for markers."
     },
     "knowledge_text_ar": {
       "type": "string",
-      "description": "Original Arabic text verbatim. Empty for markers."
+      "description": "Original Arabic text verbatim. Appended from new sources. Empty for markers."
     },
     "content_hash": {
       "type": "string",
       "description": "SHA-256 hash for duplicate detection. Markers use no-wafq-<entry_id>."
+    },
+    "canonical_key": {
+      "type": "string",
+      "description": "Canonical key for field-level evolution. Format: 'source_type|knowledge_category|grid_size'. Records with same key accumulate knowledge."
     },
     "is_marker": {
       "type": "boolean",
@@ -55,15 +59,15 @@
     },
     "grid_size": {
       "type": "string",
-      "description": "Grid dimensions if specified (e.g., '3x3', '4x4', '5x5', '7x7'). Empty if not applicable."
+      "description": "Grid dimensions if specified (e.g., '3x3', '4x4'). Appended from new sources."
     },
     "associated_divine_name": {
       "type": "string",
-      "description": "Lightweight reference to the Divine Name associated with this wafq. Full divine name data stays in HolyOneName/DuaKnowledge. Example: 'Ya Rahman (248)'."
+      "description": "Divine name reference. Appended from new sources."
     },
     "timing_reference": {
       "type": "string",
-      "description": "Lightweight cross-module reference to Astro Clock timing for wafq construction timing."
+      "description": "Lightweight cross-module reference to Astro Clock timing. Appended."
     },
     "source_book_id": {
       "type": "string",
@@ -103,7 +107,7 @@
         }
       },
       "default": [],
-      "description": "Additional sources with the same wafq knowledge."
+      "description": "Additional sources. Updated when duplicate or canonical match found."
     },
     "source_count": {
       "type": "integer",
@@ -129,6 +133,12 @@
       "name": "idx_content_hash",
       "fields": [
         "content_hash"
+      ]
+    },
+    {
+      "name": "idx_canonical_key",
+      "fields": [
+        "canonical_key"
       ]
     },
     {

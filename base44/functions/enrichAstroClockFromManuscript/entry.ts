@@ -232,6 +232,7 @@ Return a JSON object with this exact schema:
     let newRecordsCreated = 0;
     let sourcesAdded = 0;
     let duplicatesSkipped = 0;
+    let canonicalMerged = 0;
     const entriesWithTimingSet = new Set<string>();
 
     for (const piece of timingPieces) {
@@ -268,30 +269,58 @@ Return a JSON object with this exact schema:
           duplicatesSkipped++;
         }
       } else {
-        // New knowledge — create record
-        const knowledgeId = `ACK-${piece.source_entry_id}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-        await base44.asServiceRole.entities.AstroClockKnowledge.create({
-          knowledge_id: knowledgeId,
-          source_type: piece.source_type || 'planetary_hour',
-          weekday: (piece.source_type === 'weekday' || piece.source_type === 'day_period' || piece.source_type === 'night_period') && piece.weekday !== undefined && piece.weekday !== null ? Number(piece.weekday) : null,
-          period: piece.period || null,
-          sahath_number: piece.source_type === 'sahath' && piece.sahath_number !== undefined && piece.sahath_number !== null && piece.sahath_number > 0 ? Number(piece.sahath_number) : null,
-          planet: piece.planet || null,
-          knowledge_category: piece.knowledge_category || 'timing_rule',
-          knowledge_text_en: textEn,
-          knowledge_text_ml: piece.knowledge_text_ml || '',
-          knowledge_text_ar: piece.knowledge_text_ar || '',
-          content_hash: contentHash,
-          is_marker: false,
-          source_book_id: book_id,
-          source_book_title: book.book_title,
-          source_page_number: sourceEntry?.page_number || '',
-          source_entry_id: piece.source_entry_id,
-          is_verified: isVerified,
-          supporting_sources: [],
-          source_count: 1
-        });
-        newRecordsCreated++;
+        // CANONICAL KEY CHECK — field-level knowledge evolution
+        const canonicalKey = `${piece.source_type || 'planetary_hour'}|${piece.weekday ?? ''}|${piece.period ?? ''}|${piece.sahath_number ?? ''}|${piece.planet ?? ''}`;
+        const canonicalMatches = await base44.asServiceRole.entities.AstroClockKnowledge.filter({ canonical_key: canonicalKey, is_marker: false }, undefined, 1);
+
+        if (canonicalMatches?.length > 0) {
+          // Canonical match — merge new knowledge into existing record via LLM
+          const ex = canonicalMatches[0];
+          const mergeRes = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are merging new verified manuscript knowledge into an existing canonical record. Never remove existing information. Add only genuinely new information. Organize by category (Recommended Activities:, Activities Requiring Caution:, Conditions:, Warnings:). Use bullet points. Do not duplicate.\n\nEXISTING:\n${ex.knowledge_text_en}\n\nNEW:\n${textEn}\n\nReturn JSON: { "merged_text_en": "..." }`,
+            response_json_schema: { type: "object", properties: { merged_text_en: { type: "string" } }, required: ["merged_text_en"] }
+          });
+          const mergedData: any = (mergeRes as any).data || mergeRes;
+          const mergedEn = mergedData.merged_text_en || textEn;
+          const appendedAr = ex.knowledge_text_ar && piece.knowledge_text_ar ? ex.knowledge_text_ar + '\n---\n' + piece.knowledge_text_ar : (piece.knowledge_text_ar || ex.knowledge_text_ar || '');
+          const appendedMl = ex.knowledge_text_ml && piece.knowledge_text_ml ? ex.knowledge_text_ml + '\n---\n' + piece.knowledge_text_ml : (piece.knowledge_text_ml || ex.knowledge_text_ml || '');
+
+          await base44.asServiceRole.entities.AstroClockKnowledge.update(ex.id, {
+            knowledge_text_en: mergedEn,
+            knowledge_text_ml: appendedMl,
+            knowledge_text_ar: appendedAr,
+            supporting_sources: [...(ex.supporting_sources || []), { book_title: book.book_title, page_number: sourceEntry?.page_number || '', entry_id: piece.source_entry_id }],
+            source_count: (ex.source_count || 1) + 1,
+            is_verified: ex.is_verified || isVerified
+          });
+          canonicalMerged++;
+        } else {
+          // No canonical match — create new record
+          const knowledgeId = `ACK-${piece.source_entry_id}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+          await base44.asServiceRole.entities.AstroClockKnowledge.create({
+            knowledge_id: knowledgeId,
+            source_type: piece.source_type || 'planetary_hour',
+            weekday: (piece.source_type === 'weekday' || piece.source_type === 'day_period' || piece.source_type === 'night_period') && piece.weekday !== undefined && piece.weekday !== null ? Number(piece.weekday) : null,
+            period: piece.period || null,
+            sahath_number: piece.source_type === 'sahath' && piece.sahath_number !== undefined && piece.sahath_number !== null && piece.sahath_number > 0 ? Number(piece.sahath_number) : null,
+            planet: piece.planet || null,
+            knowledge_category: piece.knowledge_category || 'timing_rule',
+            canonical_key: canonicalKey,
+            knowledge_text_en: textEn,
+            knowledge_text_ml: piece.knowledge_text_ml || '',
+            knowledge_text_ar: piece.knowledge_text_ar || '',
+            content_hash: contentHash,
+            is_marker: false,
+            source_book_id: book_id,
+            source_book_title: book.book_title,
+            source_page_number: sourceEntry?.page_number || '',
+            source_entry_id: piece.source_entry_id,
+            is_verified: isVerified,
+            supporting_sources: [],
+            source_count: 1
+          });
+          newRecordsCreated++;
+        }
       }
 
       entriesWithTimingSet.add(piece.source_entry_id);
