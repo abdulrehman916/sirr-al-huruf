@@ -114,61 +114,144 @@ Deno.serve(async (req) => {
     const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     const pdfUrl = uploadResult.file_url;
 
-    // ══ 6. Invoke validateManuscriptImport (Phase 1 pipeline) ══
-    const importResult: any = await base44.functions.invoke('validateManuscriptImport', {
-      pdf_url: pdfUrl,
+    // ══ 6. Split PDF into chunks and upload each ══
+    // No LLM calls here — this is fast (PDF splitting + uploads only).
+    // Each chunk is processed independently by processImportChunk.
+    // This prevents HTTP 504 timeouts on large manuscripts.
+
+    const isPdf = fileExt === 'pdf';
+    const bookId = `MS-OD-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const jobId = `JOB-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const now = new Date().toISOString();
+
+    let chunksArr: any[] = [];
+    let totalPages = 0;
+
+    if (isPdf) {
+      // Split PDF into 10-page chunks using pdf-lib
+      const pdfLibMod = await import('npm:pdf-lib@1.17.1');
+      const { PDFDocument } = pdfLibMod;
+      const fullPdfDoc = await PDFDocument.load(fileBytes, { ignoreEncryption: true });
+      totalPages = fullPdfDoc.getPageCount();
+      const CHUNK_SIZE = 10;
+      const totalChunks = Math.ceil(totalPages / CHUNK_SIZE);
+
+      for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+        const startPage = chunkIdx * CHUNK_SIZE + 1;
+        const endPage = Math.min((chunkIdx + 1) * CHUNK_SIZE, totalPages);
+
+        const chunkPdf = await PDFDocument.create();
+        const pageIndices: number[] = [];
+        for (let p = startPage - 1; p < endPage; p++) pageIndices.push(p);
+        const copiedPages = await chunkPdf.copyPages(fullPdfDoc, pageIndices);
+        copiedPages.forEach((p: any) => chunkPdf.addPage(p));
+
+        const chunkBytes = await chunkPdf.save();
+        const chunkBlob = new Blob([chunkBytes], { type: 'application/pdf' });
+        const chunkFileName = `${bookId}_chunk_${chunkIdx + 1}_pages_${startPage}-${endPage}.pdf`;
+        const chunkFile = new File([chunkBlob], chunkFileName, { type: 'application/pdf' });
+        const chunkUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: chunkFile });
+
+        chunksArr.push({
+          chunk_number: chunkIdx + 1,
+          chunk_url: chunkUpload.file_url,
+          page_offset: startPage - 1,
+          page_range: `${startPage}-${endPage}`,
+          page_count: endPage - startPage + 1,
+        });
+      }
+    } else {
+      // Non-PDF: single chunk (whole file)
+      chunksArr.push({
+        chunk_number: 1,
+        chunk_url: pdfUrl,
+        page_offset: 0,
+        page_range: '1-1',
+        page_count: 1,
+      });
+    }
+
+    const totalChunks = chunksArr.length;
+
+    // ══ 7. Create ManuscriptBook (extraction pending) ══
+    await base44.asServiceRole.entities.ManuscriptBook.create({
+      book_id: bookId,
       book_title,
       book_title_ar: book_title_ar || '',
       author: author || '',
       language: language || 'Arabic',
+      source: 'onedrive',
+      original_file_url: pdfUrl,
       original_file_name: fileName,
+      upload_date: now,
+      version: '2.0-chunked',
+      total_pages: totalPages,
+      ocr_status: 'pending',
+      verification_status: 'unverified',
+      extraction_status: 'pending',
+      categories_covered: [],
+      total_entries_extracted: 0,
       tradition: tradition || '',
+      validation_status: 'not_validated',
+      validation_report: {},
+      validation_date: now,
+      onedrive_file_id: file_id,
+      onedrive_file_path: filePath,
+      onedrive_etag: etag,
+      onedrive_file_hash: fileHash,
+      onedrive_modified_date: modifiedDate,
+      notes: `Chunked import — ${totalChunks} chunk(s). Process each chunk via processImportChunk.`,
     });
 
-    const importData = importResult.data || importResult;
-
-    // Propagate quality rejection — do not proceed with OneDrive metadata update
-    if (importData.status === 'import_rejected') {
-      return Response.json({
-        status: 'import_rejected',
-        book_id: importData.book_id,
-        book_title,
-        overall_confidence: importData.overall_confidence,
-        reason: importData.reason,
-        problem_pages: importData.problem_pages,
-        quality_details: importData.quality_details,
-        message: importData.message,
-      });
-    }
-
-    const newBookId = importData.book_id;
-    if (!newBookId) {
-      return Response.json({ error: 'Import pipeline did not return a book_id', import_result: importResult }, { status: 500 });
-    }
-
-    // ══ 7. Update ManuscriptBook with OneDrive metadata ══
-    const newBooks = await base44.asServiceRole.entities.ManuscriptBook.filter({ book_id: newBookId });
-    if (newBooks && newBooks.length > 0) {
-      await base44.asServiceRole.entities.ManuscriptBook.update(newBooks[0].id, {
-        source: 'onedrive',
-        onedrive_file_id: file_id,
-        onedrive_file_path: filePath,
-        onedrive_etag: etag,
-        onedrive_file_hash: fileHash,
-        onedrive_modified_date: modifiedDate,
-        original_file_name: fileName,
-      });
-    }
+    // ══ 8. Create ManuscriptImportJob for resumable tracking ══
+    await base44.asServiceRole.entities.ManuscriptImportJob.create({
+      job_id: jobId,
+      book_id: bookId,
+      book_title,
+      onedrive_file_id: file_id,
+      onedrive_file_path: filePath,
+      onedrive_etag: etag,
+      onedrive_file_hash: fileHash,
+      total_chunks: totalChunks,
+      chunks: chunksArr.map((c: any) => ({
+        chunk_number: c.chunk_number,
+        chunk_url: c.chunk_url,
+        page_offset: c.page_offset,
+        page_range: c.page_range,
+        status: 'pending',
+        retry_count: 0,
+        max_retries: 3,
+        error: '',
+        failed_stage: '',
+        stage_timings: {},
+        entries_extracted: 0,
+        images_extracted: 0,
+        processing_time_ms: 0,
+        started_at: '',
+        completed_at: '',
+      })),
+      current_stage: 'splitting',
+      status: 'splitting',
+      overall_progress: 0,
+      started_at: now,
+      completed_at: '',
+      created_by: user.id,
+      created_by_email: user.email,
+    });
 
     return Response.json({
-      status: 'imported',
-      book_id: newBookId,
+      status: 'chunked',
+      job_id: jobId,
+      book_id: bookId,
       book_title,
       onedrive_file_id: file_id,
       onedrive_file_path: filePath,
       file_hash: fileHash,
-      message: `Successfully imported "${book_title}" from OneDrive. Phase 1 (extraction + images) complete. Call verifyBookEntries to complete Arabic verification and translation.`,
-      next_step: `verifyBookEntries({ "book_id": "${newBookId}" })`,
+      total_pages: totalPages,
+      total_chunks: totalChunks,
+      chunks: chunksArr,
+      message: `PDF split into ${totalChunks} chunk(s). Process each chunk via processImportChunk.`,
+      next_step: `processImportChunk({ "job_id": "${jobId}", "chunk_number": 1 })`,
     });
   } catch (error) {
     return Response.json({ error: error.message, status: 'import_failed' }, { status: 500 });

@@ -318,7 +318,7 @@ CRITICAL: It is BETTER TO REJECT an unclear manuscript than to extract incorrect
     const pagesAssessed = (qualityResult as any)?.pages_assessed || 0;
 
     // ══ QUALITY GATE: Reject poor-quality manuscripts — do NOT import ══
-    const qualityPassed = qualityVerdict === 'pass' && overallConfidence >= 65;
+    const qualityPassed = skipQualityGate ? true : (qualityVerdict === 'pass' && overallConfidence >= 65);
 
     if (!qualityPassed) {
       const rejectionReport = {

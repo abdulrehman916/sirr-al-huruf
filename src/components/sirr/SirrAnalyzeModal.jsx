@@ -36,6 +36,8 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
   const [batchInfo, setBatchInfo] = useState({ current: 0, remaining: 0 });
   const [stats, setStats] = useState({ entries: 0, verified: 0, manualReview: 0, images: 0, malayalam: 0, rate: 0, internalReused: 0, knowledgeRouted: 0 });
   const [finalResult, setFinalResult] = useState(null);
+  const [failedStage, setFailedStage] = useState("");
+  const [chunkTimings, setChunkTimings] = useState({});
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -77,7 +79,11 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
       }
 
       // ── CHUNKED: Large file auto-split — process each chunk independently ──
+      // Each chunk is processed via processImportChunk with automatic retry.
+      // Progress is saved after every completed chunk — never restarts from scratch.
+      // Failed chunks retry with exponential backoff (2s, 4s, 8s).
       let bookId = importData.book_id;
+      let jobId = importData.job_id;
 
       if (importData.status === "chunked") {
         setStage("splitting");
@@ -88,27 +94,89 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
           setBatchInfo({ current: chunk.chunk_number, remaining: total_chunks - chunk.chunk_number });
           setProgress(8 + Math.round((chunk.chunk_number / total_chunks) * 12));
 
-          const chunkRes = await base44.functions.invoke("validateManuscriptImport", {
-            pdf_url: chunk.chunk_url,
-            book_title: bookTitle,
-            existing_book_id: bookId,
-            page_offset: chunk.page_offset,
-            chunk_number: chunk.chunk_number,
-            total_chunks,
-            do_quality_gate: chunk.chunk_number === 1,
-            is_final_chunk: chunk.chunk_number === total_chunks,
-            original_file_name: file.name,
-          });
-          const chunkData = chunkRes.data;
+          // Process chunk with automatic retry (exponential backoff)
+          let chunkSuccess = false;
+          let chunkAttempts = 0;
+          const MAX_CHUNK_RETRIES = 3;
 
-          if (chunkData.status === "import_rejected") {
-            setStage("rejected");
-            setProgress(100);
-            setRejection({
-              confidence: chunkData.overall_confidence || 0,
-              reason: chunkData.reason || "Quality below threshold",
-              problemPages: chunkData.problem_pages || [],
-            });
+          while (!chunkSuccess && chunkAttempts <= MAX_CHUNK_RETRIES) {
+            chunkAttempts++;
+            try {
+              const chunkRes = await base44.functions.invoke("processImportChunk", {
+                job_id: jobId,
+                chunk_number: chunk.chunk_number,
+                retry_attempt: chunkAttempts - 1,
+              });
+              const chunkData = chunkRes.data;
+
+              // Already completed (resumable — skip)
+              if (chunkData.status === "already_completed") {
+                chunkSuccess = true;
+                setChunkTimings(prev => ({ ...prev, [`chunk_${chunk.chunk_number}`]: chunkData.processing_time_ms }));
+                break;
+              }
+
+              // Quality rejection
+              if (chunkData.status === "import_rejected") {
+                setStage("rejected");
+                setProgress(100);
+                setRejection({
+                  confidence: chunkData.overall_confidence || 0,
+                  reason: chunkData.reason || "Quality below threshold",
+                  problemPages: chunkData.problem_pages || [],
+                });
+                return;
+              }
+
+              // Chunk failed — retry with exponential backoff
+              if (chunkData.status === "chunk_failed") {
+                setFailedStage(chunkData.failed_stage || "unknown");
+                if (chunkData.can_retry) {
+                  const backoffMs = (chunkData.retry_after_seconds || 2) * 1000;
+                  await new Promise(r => setTimeout(r, backoffMs));
+                  continue;
+                } else {
+                  setError(chunkData.error || `Chunk ${chunk.chunk_number} failed after max retries`);
+                  setStage("error");
+                  return;
+                }
+              }
+
+              // Max retries exceeded
+              if (chunkData.status === "max_retries_exceeded") {
+                setFailedStage(chunkData.failed_stage || "unknown");
+                setError(chunkData.error || `Chunk ${chunk.chunk_number} exceeded max retries`);
+                setStage("error");
+                return;
+              }
+
+              // Success
+              chunkSuccess = true;
+              setChunkTimings(prev => ({ ...prev, [`chunk_${chunk.chunk_number}`]: chunkData.processing_time_ms }));
+              setStats(prev => ({
+                ...prev,
+                entries: prev.entries + (chunkData.entries_extracted || 0),
+                images: prev.images + (chunkData.images_extracted || 0),
+              }));
+
+            } catch (chunkErr) {
+              // Network/timeout error — retry with backoff
+              setFailedStage("network_timeout");
+              if (chunkAttempts <= MAX_CHUNK_RETRIES) {
+                const backoffMs = Math.pow(2, chunkAttempts) * 1000;
+                await new Promise(r => setTimeout(r, backoffMs));
+                continue;
+              } else {
+                setError(chunkErr.response?.data?.error || chunkErr.message || `Chunk ${chunk.chunk_number} failed`);
+                setStage("error");
+                return;
+              }
+            }
+          }
+
+          if (!chunkSuccess) {
+            setError(`Chunk ${chunk.chunk_number} failed after ${MAX_CHUNK_RETRIES} retries`);
+            setStage("error");
             return;
           }
         }
@@ -357,6 +425,20 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
               </p>
             </div>
             <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.60)" }}>{error}</p>
+            {failedStage && (
+              <div className="rounded-lg p-2" style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.20)" }}>
+                <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+                  {isMl ? "പരാജയപ്പെട്ട ഘട്ടം" : "Failed Stage"}:{" "}
+                  <span className="font-bold" style={{ color: "#F87171" }}>{failedStage}</span>
+                </p>
+                {Object.keys(chunkTimings).length > 0 && (
+                  <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(255,255,255,0.30)" }}>
+                    {isMl ? "പൂർത്തിയായ ഭാഗങ്ങൾ" : "Completed chunks"}: {Object.keys(chunkTimings).length}{" "}
+                    · {isMl ? "സമയം" : "Times"}: {Object.values(chunkTimings).map(t => `${Math.round(t / 1000)}s`).join(", ")}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
