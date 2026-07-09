@@ -131,22 +131,45 @@ Deno.serve(async (req) => {
 
     const prompt = `You are a professional translator for an Islamic occult manuscript encyclopedia (Sirr al-Huruf).
 
-Translate each Turkish text below to BOTH English AND Malayalam.
+GLOBAL MEANING PRESERVATION RULE — SIRR PAGE:
+Meaning preservation has HIGHER priority than removing Turkish words.
+Do NOT remove any Turkish word unless its exact meaning has been identified.
 
-RULES:
-- Preserve all Islamic/occult/spiritual terminology accurately.
-- Arabic phrases or names within the Turkish text must remain in Arabic script in both translations.
-- Numbers, measurements, and proper names should be preserved.
-- Do NOT translate book titles or author names.
-- English: clean, professional translation.
-- Malayalam: use proper Malayalam script (Unicode range U+0D00–U+0D7F).
+For each Turkish text below, follow these rules STRICTLY:
+
+1. RESEARCH: Identify the exact meaning from reliable Turkish dictionaries, botanical references, historical/manuscript references, or authoritative sources. NEVER guess.
+
+2. CONFIDENCE ASSESSMENT: Rate your confidence in the identified meaning:
+   - "high": You are certain of the exact meaning from reliable sources.
+   - "medium": You have a reasonable understanding but some uncertainty.
+   - "low": You cannot reliably identify the meaning.
+
+3. If confidence is "high" or "medium":
+   - If an exact English equivalent exists, use it.
+   - If a standard Malayalam name exists (especially for plants, herbs, incense, minerals, animals, ritual materials), use that official Malayalam name.
+   - If no Malayalam name exists but English exists, keep the English technical name and add a natural Malayalam explanation.
+   - Arabic phrases or names within the Turkish text must remain in Arabic script in both translations.
+   - Numbers, measurements, and proper names should be preserved.
+
+4. If confidence is "low":
+   - DO NOT translate.
+   - DO NOT remove the Turkish word.
+   - Return the ORIGINAL text unchanged.
+   - Set english and malayalam to empty strings.
+   - Accuracy is more important than removing Turkish.
+
+5. NEVER invent meanings. NEVER use approximate translations. NEVER hallucinate botanical or ritual names. Every replacement must preserve the original meaning exactly.
+
+6. Do NOT translate book titles, author names, or source references — return them unchanged with confidence "high".
 
 Return a JSON object with a "translations" array. Each item must have:
   - id: the original id string
-  - english: the English translation
-  - malayalam: the Malayalam translation
+  - english: the English translation (empty string if confidence is "low")
+  - malayalam: the Malayalam translation (empty string if confidence is "low")
+  - confidence: "high" | "medium" | "low"
+  - meaning_identified: brief description of the identified meaning (or "unverified" if low)
 
-Items to translate:
+Items to process:
 ${itemsJson}`;
 
     const llmResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
@@ -161,7 +184,9 @@ ${itemsJson}`;
               properties: {
                 id: { type: 'string' },
                 english: { type: 'string' },
-                malayalam: { type: 'string' }
+                malayalam: { type: 'string' },
+                confidence: { type: 'string' },
+                meaning_identified: { type: 'string' }
               }
             }
           }
@@ -169,7 +194,7 @@ ${itemsJson}`;
       }
     });
 
-    // Build translation lookup
+    // Build translation lookup — includes confidence per GLOBAL MEANING PRESERVATION RULE
     const translations: any = {};
     const transArray = (llmResponse as any)?.translations || [];
     if (Array.isArray(transArray)) {
@@ -177,7 +202,9 @@ ${itemsJson}`;
         if (t.id) {
           translations[t.id] = {
             english: t.english || '',
-            malayalam: t.malayalam || ''
+            malayalam: t.malayalam || '',
+            confidence: t.confidence || 'low',
+            meaning_identified: t.meaning_identified || 'unverified'
           };
         }
       }
@@ -203,7 +230,10 @@ ${itemsJson}`;
           const translationId = `${entry.entry_id}__${field}`;
           const translation = translations[translationId];
 
-          if (translation && translation.english && translation.malayalam) {
+          // GLOBAL MEANING PRESERVATION RULE:
+          // Only apply translation if confidence is "high" or "medium".
+          // If confidence is "low", KEEP the original Turkish text unchanged.
+          if (translation && translation.english && translation.malayalam && translation.confidence !== 'low') {
             // Save English to original field (overwrites Turkish)
             updateData[field] = translation.english;
 
@@ -214,9 +244,12 @@ ${itemsJson}`;
               updateData.content_translations_ml[field] = translation.malayalam;
             }
 
-            entryAudit.fields_translated.push(`${field}→EN+ML`);
+            entryAudit.fields_translated.push(`${field}→EN+ML (${translation.confidence})`);
             totalCorrected++;
             hasUpdates = true;
+          } else if (translation && translation.confidence === 'low') {
+            // MEANING UNVERIFIED — keep original Turkish text unchanged
+            entryAudit.fields_translated.push(`${field}→KEPT_UNVERIFIED (${translation.meaning_identified})`);
           } else {
             entryAudit.fields_translated.push(`${field}→SKIPPED`);
           }

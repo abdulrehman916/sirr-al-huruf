@@ -6,6 +6,22 @@
 //   - All user-visible content: follows selected UI language (ML/EN/AR)
 //   - Turkish NEVER appears in content fields
 //   - Arabic manuscripts, talismans, harakat, Quranic text: untouched
+//
+// ══ GLOBAL MEANING PRESERVATION RULE — SIRR PAGE ══
+// Meaning preservation has HIGHER priority than removing Turkish words.
+// Do NOT remove any Turkish word unless its exact meaning has been identified.
+//
+// 1. Research exact meaning from reliable sources. Never guess.
+// 2. If English equivalent exists → use English → create Malayalam from English.
+// 3. If standard Malayalam name exists (plants/herbs/incense/minerals) → use official Malayalam name.
+// 4. If no Malayalam but English exists → keep English + add Malayalam explanation → remove Turkish.
+// 5. If neither can be verified with confidence → DO NOT translate, DO NOT remove, leave Turkish unchanged.
+// 6. Preserve author names, book titles, Arabic text, talismans, harakat, proper nouns, references.
+// 7. Never invent meanings. Never approximate. Never hallucinate.
+//
+// UI GUARD FALLBACK: If a field still contains Turkish (because meaning could not be verified),
+// show the original text rather than hiding it. Showing the original is better than showing
+// "Not specified" — the content IS in the manuscript, just in Turkish (unverified meaning).
 // ═══════════════════════════════════════════════════════════════
 
 // Turkish-specific characters (not found in English, Malayalam, or Arabic)
@@ -145,7 +161,12 @@ export function getLanguageContent(method, field, language) {
       return original;
     }
 
-    // No Malayalam version — do NOT show English or Turkish
+    // GLOBAL MEANING PRESERVATION RULE:
+    // If no verified Malayalam translation exists, show the original text (even if Turkish)
+    // rather than hiding it. Showing the original is better than showing "Not specified".
+    if (original && original.trim().length > 0) {
+      return original;
+    }
     return null;
   }
 
@@ -166,6 +187,8 @@ export function getLanguageContent(method, field, language) {
   }
 
   // ── English mode (default): show English, never Turkish ──
+  // GLOBAL MEANING PRESERVATION RULE: If no verified English translation exists,
+  // show the original text (even if Turkish) — meaning preservation > Turkish removal.
   const original = method[field];
   if (original && !hasTurkish(original)) {
     return original;
@@ -175,6 +198,12 @@ export function getLanguageContent(method, field, language) {
   const enField = method[`${field}_en`];
   if (enField && !hasTurkish(enField)) {
     return enField;
+  }
+
+  // LAST RESORT: Show original text (may contain Turkish) if no verified translation exists.
+  // This is better than showing "Not specified" — the content IS in the manuscript.
+  if (original && original.trim().length > 0) {
+    return original;
   }
 
   return null;
