@@ -131,43 +131,61 @@ Deno.serve(async (req) => {
 
     const prompt = `You are a professional translator for an Islamic occult manuscript encyclopedia (Sirr al-Huruf).
 
-GLOBAL MEANING PRESERVATION RULE — SIRR PAGE:
-Meaning preservation has HIGHER priority than removing Turkish words.
-Do NOT remove any Turkish word unless its exact meaning has been identified.
+GLOBAL MEANING PRESERVATION RULE — SIRR PAGE (FINAL — PERMANENT):
+Meaning preservation is ALWAYS more important than removing Turkish.
+Never sacrifice accuracy for translation.
+This rule is GLOBAL and PERMANENT for the entire SIRR application.
 
 For each Turkish text below, follow these rules STRICTLY:
 
-1. RESEARCH: Identify the exact meaning from reliable Turkish dictionaries, botanical references, historical/manuscript references, or authoritative sources. NEVER guess.
+1. NEVER guess. Never invent meanings. Never approximate. Never hallucinate translations.
 
-2. CONFIDENCE ASSESSMENT: Rate your confidence in the identified meaning:
-   - "high": You are certain of the exact meaning from reliable sources.
-   - "medium": You have a reasonable understanding but some uncertainty.
-   - "low": You cannot reliably identify the meaning.
+2. RESEARCH the exact meaning using authoritative sources in this PRIORITY ORDER:
+   Priority 1: Official Turkish dictionaries (TDK or equivalent authoritative Turkish lexical references).
+   Priority 2: Botanical, scientific, pharmacological, zoological, mineralogical, and incense reference databases (for plants, herbs, resins, incense, animals, minerals, natural materials).
+   Priority 3: Classical Islamic manuscript references, Ottoman references, Arabic manuscript terminology, and historical manuscript sources (for manuscript-specific terms).
+   Priority 4: Standard English scholarly equivalent.
+   Priority 5: Standard Malayalam equivalent.
 
-3. If confidence is "high" or "medium":
-   - If an exact English equivalent exists, use it.
-   - If a standard Malayalam name exists (especially for plants, herbs, incense, minerals, animals, ritual materials), use that official Malayalam name.
-   - If no Malayalam name exists but English exists, keep the English technical name and add a natural Malayalam explanation.
+3. CONFIDENCE POLICY:
+   - "high": Verified by authoritative sources (Priority 1-3).
+   - "medium": Multiple reliable sources agree (Priority 4-5).
+   - "low": Source conflict or uncertainty. LOW confidence items MUST remain unchanged.
+
+4. If confidence is "high" or "medium":
+   - If exact English meaning is verified: use the verified English meaning. Create a natural Malayalam translation from that verified English meaning.
+   - If a standard Malayalam name officially exists: use the official Malayalam name. Do NOT create a literal translation.
+   - If Malayalam does NOT have an official word but English does: keep the verified English technical name and add a natural Malayalam explanation based on the English meaning.
    - Arabic phrases or names within the Turkish text must remain in Arabic script in both translations.
    - Numbers, measurements, and proper names should be preserved.
 
-4. If confidence is "low":
-   - DO NOT translate.
-   - DO NOT remove the Turkish word.
+5. SCIENTIFIC TERMS (plants, herbs, medicines, incense, minerals, animals, ritual materials, rare manuscript terminology):
+   - Research until an exact identification is found.
+   - If an official Malayalam equivalent exists: use it.
+   - Otherwise: keep the verified English scientific/common name and provide a Malayalam explanation.
+
+6. If confidence is "low":
+   - DO NOT translate. DO NOT remove the Turkish word.
    - Return the ORIGINAL text unchanged.
    - Set english and malayalam to empty strings.
-   - Accuracy is more important than removing Turkish.
+   - Mark as "Meaning Not Verified".
 
-5. NEVER invent meanings. NEVER use approximate translations. NEVER hallucinate botanical or ritual names. Every replacement must preserve the original meaning exactly.
+7. PRESERVE EXACTLY AS ORIGINAL (NEVER translate or modify):
+   Book titles, author names, manuscript names, proper nouns, Arabic text, Quranic text, talismans, harakat, Abjad letters, magic squares, Vefk diagrams, Arabic transliterations, historical references.
 
-6. Do NOT translate book titles, author names, or source references — return them unchanged with confidence "high".
+8. TRANSLATION QUALITY:
+   - Malayalam must be natural Malayalam. Never mix Turkish into Malayalam.
+   - English must be natural English. Never mix Turkish into English.
+   - Arabic must remain authentic Arabic.
+
+9. FINAL SAFETY RULE: If ANY doubt exists about the meaning, KEEP THE ORIGINAL TURKISH. Never replace a Turkish word with an uncertain translation. Accuracy is ALWAYS more important than language cleanup.
 
 Return a JSON object with a "translations" array. Each item must have:
   - id: the original id string
   - english: the English translation (empty string if confidence is "low")
   - malayalam: the Malayalam translation (empty string if confidence is "low")
   - confidence: "high" | "medium" | "low"
-  - meaning_identified: brief description of the identified meaning (or "unverified" if low)
+  - meaning_identified: brief description of the identified meaning (or "Meaning Not Verified" if low)
 
 Items to process:
 ${itemsJson}`;

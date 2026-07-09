@@ -7,21 +7,31 @@
 //   - Turkish NEVER appears in content fields
 //   - Arabic manuscripts, talismans, harakat, Quranic text: untouched
 //
-// ══ GLOBAL MEANING PRESERVATION RULE — SIRR PAGE ══
-// Meaning preservation has HIGHER priority than removing Turkish words.
-// Do NOT remove any Turkish word unless its exact meaning has been identified.
+// ══ GLOBAL MEANING PRESERVATION RULE — SIRR PAGE (FINAL — PERMANENT) ══
+// Meaning preservation is ALWAYS more important than removing Turkish.
+// Never sacrifice accuracy for translation. This rule is GLOBAL and PERMANENT.
 //
-// 1. Research exact meaning from reliable sources. Never guess.
-// 2. If English equivalent exists → use English → create Malayalam from English.
-// 3. If standard Malayalam name exists (plants/herbs/incense/minerals) → use official Malayalam name.
-// 4. If no Malayalam but English exists → keep English + add Malayalam explanation → remove Turkish.
-// 5. If neither can be verified with confidence → DO NOT translate, DO NOT remove, leave Turkish unchanged.
-// 6. Preserve author names, book titles, Arabic text, talismans, harakat, proper nouns, references.
-// 7. Never invent meanings. Never approximate. Never hallucinate.
+// 1. NEVER guess. Never invent. Never approximate. Never hallucinate.
+// 2. Research exact meaning using PRIORITY ORDER:
+//    P1: TDK/authoritative Turkish dictionaries.
+//    P2: Botanical/scientific/pharmacological/mineralogical references (plants/herbs/incense/minerals/animals).
+//    P3: Classical Islamic/Ottoman/Arabic manuscript references.
+//    P4: Standard English scholarly equivalent.
+//    P5: Standard Malayalam equivalent.
+// 3. Confidence: HIGH=verified by authoritative sources. MEDIUM=multiple sources agree. LOW=conflict/uncertainty.
+//    LOW confidence items MUST remain unchanged.
+// 4. If verified English meaning exists → use it → create natural Malayalam from English.
+// 5. If official Malayalam name exists → use it (do NOT literal-translate).
+// 6. If no Malayalam but English exists → keep English + Malayalam explanation → remove Turkish.
+// 7. If meaning cannot be verified (LOW confidence) → DO NOT translate, DO NOT remove, keep Turkish, mark "Meaning Not Verified".
+// 8. PRESERVE EXACTLY: book titles, author names, manuscript names, proper nouns, Arabic text, Quranic text,
+//    talismans, harakat, Abjad letters, magic squares, Vefk diagrams, Arabic transliterations, historical references.
+// 9. Scientific terms (plants/herbs/incense/minerals/animals/ritual materials): research until exact identification.
+//    If official Malayalam exists → use it. Otherwise → English name + Malayalam explanation.
+// 10. FINAL SAFETY RULE: If ANY doubt → KEEP ORIGINAL TURKISH. Accuracy > language cleanup.
 //
-// UI GUARD FALLBACK: If a field still contains Turkish (because meaning could not be verified),
-// show the original text rather than hiding it. Showing the original is better than showing
-// "Not specified" — the content IS in the manuscript, just in Turkish (unverified meaning).
+// UI GUARD FALLBACK: If a field still contains Turkish (meaning not verified),
+// show the original text rather than hiding it. Content IS in the manuscript.
 // ═══════════════════════════════════════════════════════════════
 
 // Turkish-specific characters (not found in English, Malayalam, or Arabic)
