@@ -229,6 +229,111 @@ Deno.serve(async (req) => {
       pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
     } catch { /* PDF download failed — LLM can still use file_urls */ }
 
+    // ══ STAGE 0: QUALITY ASSESSMENT GATE ══
+    // Assess manuscript readability BEFORE extraction.
+    // Reject poor-quality manuscripts — do NOT import them.
+    // Accuracy > completeness. Better to reject than to save incorrect data.
+    const qualityPrompt = `You are an expert in Islamic manuscript analysis and Arabic calligraphy preservation.
+
+TASK: Assess the READABILITY and EXTRACTION QUALITY of this PDF manuscript. Determine whether this manuscript can be reliably extracted with high accuracy.
+
+Analyze the manuscript for these quality criteria:
+1. PAGE CLARITY: Are pages clear enough to read? (blurred, smudged, faded, low-resolution scans)
+2. ARABIC LEGIBILITY: Is the Arabic text clearly readable? (calligraphy quality, harakat visibility, letter clarity)
+3. TEXT COMPLETENESS: Are pages complete? (missing pages, cut-off text, incomplete scans, damaged pages)
+4. OCR FEASIBILITY: Can text be reliably extracted? (broken characters, overlapping text, decorative borders interfering)
+5. CONSISTENCY: Is quality consistent across pages? (some clear, others unreadable)
+6. CONTENT INTEGRITY: Is the actual content (rituals, Arabic, tables, diagrams) intact and legible?
+
+For each page, note whether it has problems.
+
+Return:
+- quality_verdict: "pass" or "reject"
+- overall_confidence: 0-100 (confidence that extraction will be accurate)
+- reason: if rejected, explain why
+- problem_pages: array of page numbers with quality issues
+- quality_details: { page_clarity, arabic_legibility, text_completeness, ocr_feasibility, consistency, content_integrity } each 0-100
+- pages_assessed: total pages examined
+
+REJECTION THRESHOLD: Reject if overall_confidence < 65, OR if more than 20% of pages have problems, OR if Arabic legibility is too poor to preserve harakat reliably.
+
+CRITICAL: It is BETTER TO REJECT an unclear manuscript than to extract incorrect or incomplete information. Accuracy and authenticity are more important than importing every available manuscript.`;
+
+    const qualityResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: qualityPrompt,
+      file_urls: [pdf_url],
+      model: 'gemini_3_flash',
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          quality_verdict: { type: 'string' },
+          overall_confidence: { type: 'integer' },
+          reason: { type: 'string' },
+          problem_pages: { type: 'array', items: { type: 'string' } },
+          quality_details: {
+            type: 'object',
+            properties: {
+              page_clarity: { type: 'integer' },
+              arabic_legibility: { type: 'integer' },
+              text_completeness: { type: 'integer' },
+              ocr_feasibility: { type: 'integer' },
+              consistency: { type: 'integer' },
+              content_integrity: { type: 'integer' },
+            },
+          },
+          pages_assessed: { type: 'integer' },
+        },
+      },
+    });
+
+    const qualityVerdict = (qualityResult as any)?.quality_verdict || 'pass';
+    const overallConfidence = (qualityResult as any)?.overall_confidence ?? 0;
+    const qualityReason = (qualityResult as any)?.reason || '';
+    const problemPages = (qualityResult as any)?.problem_pages || [];
+    const qualityDetails = (qualityResult as any)?.quality_details || {};
+    const pagesAssessed = (qualityResult as any)?.pages_assessed || 0;
+
+    // ══ QUALITY GATE: Reject poor-quality manuscripts — do NOT import ══
+    const qualityPassed = qualityVerdict === 'pass' && overallConfidence >= 65;
+
+    if (!qualityPassed) {
+      const rejectionReport = {
+        quality_rejected: true,
+        quality_verdict: 'reject',
+        overall_confidence: overallConfidence,
+        reason: qualityReason || 'Manuscript quality below threshold for reliable extraction',
+        problem_pages: problemPages,
+        quality_details: qualityDetails,
+        pages_assessed: pagesAssessed,
+        rejection_date: validationDate,
+        message: 'Import Rejected: manuscript quality too poor for reliable extraction. No entries imported.',
+      };
+
+      await base44.asServiceRole.entities.ManuscriptBook.update(book.id, {
+        extraction_status: 'failed',
+        ocr_status: 'failed',
+        validation_status: 'failed',
+        total_pages: pagesAssessed,
+        total_entries_extracted: 0,
+        validation_report: rejectionReport,
+        validation_date: validationDate,
+        notes: `IMPORT REJECTED — Quality: ${overallConfidence}/100. ${qualityReason}`,
+      });
+
+      return Response.json({
+        status: 'import_rejected',
+        book_id: bookId,
+        book_title,
+        quality_verdict: 'reject',
+        overall_confidence: overallConfidence,
+        reason: qualityReason,
+        problem_pages: problemPages,
+        quality_details: qualityDetails,
+        message: `Import Rejected: manuscript quality too poor (confidence ${overallConfidence}/100). No entries imported. Reason: ${qualityReason}`,
+        validation_report: rejectionReport,
+      });
+    }
+
     const extractionPrompt = `You are an expert in Islamic occult manuscripts, Arabic calligraphy, and spiritual text preservation.
 
 TASK: Analyze EVERY page of this PDF manuscript. Extract ALL content from EVERY page. Do NOT skip any page.
@@ -290,11 +395,14 @@ ALSO provide: total_pages_analyzed, pages_with_images, pages_with_errors, skippe
 
 CRITICAL RULES:
 - Process EVERY page. Do not skip any.
-- Preserve Arabic text EXACTLY as written. Never guess harakat.
-- If Arabic is unclear, set arabic_text_preserved=false.
-- Never invent information. If a field is not in the manuscript, leave it empty.
+- Preserve Arabic text EXACTLY as written. Never guess harakat. Never invent missing Arabic.
+- If Arabic is unclear or partially unreadable, extract ONLY what is clearly readable. Set arabic_text_preserved=false.
+- NEVER invent meanings, translations, or interpretations. Only extract what is explicitly written.
+- If a field is not in the manuscript, leave it empty. Do not guess.
+- For each entry, provide extraction_confidence (0-100): your confidence that the extracted content is accurate and complete. Below 70 = uncertain (unclear Arabic, missing fields, damaged content).
 - Every entry MUST belong to a heading (heading_id). Never leave an entry orphaned.
-- Preserve exact page order (entry_order must be sequential 1, 2, 3... by page).`;
+- Preserve exact page order (entry_order must be sequential 1, 2, 3... by page).
+- ACCURACY OVER COMPLETENESS: It is better to extract fewer entries with high confidence than many entries with uncertain content.`;
 
     const llmResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: extractionPrompt,
@@ -349,6 +457,7 @@ CRITICAL RULES:
                 image_type: { type: 'string' },
                 image_description: { type: 'string' },
                 arabic_text_preserved: { type: 'boolean' },
+                extraction_confidence: { type: 'integer' },
                 sirr_section: { type: 'integer' },
                 topic: { type: 'string' },
                 topic_ml: { type: 'string' },
@@ -463,8 +572,8 @@ CRITICAL RULES:
         entry_order: entry.entry_order || (idx + 1),
         images: pageImages, // Actual image URLs from Stage 4
         verified_arabic_hash: '', // Will be filled in Phase 2
-        verification_status: 'pending', // Stage 2 pending
-        extraction_confidence: entry.arabic_text_preserved === false ? 50 : 80,
+        verification_status: (entry.extraction_confidence || (entry.arabic_text_preserved === false ? 50 : 80)) < 70 ? 'manual_review' : 'pending',
+        extraction_confidence: entry.extraction_confidence || (entry.arabic_text_preserved === false ? 50 : 80),
         extraction_date: validationDate,
       };
     });
@@ -553,6 +662,13 @@ CRITICAL RULES:
 
     const validationReport = {
       phase: 1,
+      quality_assessment: {
+        verdict: 'pass',
+        overall_confidence: overallConfidence,
+        quality_details: qualityDetails,
+        problem_pages: problemPages,
+        pages_assessed: pagesAssessed,
+      },
       summary: {
         total_pages_processed: totalPagesAnalyzed,
         total_entries_extracted: totalEntries,
