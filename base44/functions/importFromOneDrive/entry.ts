@@ -116,7 +116,23 @@ Deno.serve(async (req) => {
       tradition: tradition || '',
     });
 
-    const newBookId = importResult.data?.book_id || importResult.book_id;
+    const importData = importResult.data || importResult;
+
+    // Propagate quality rejection — do not proceed with OneDrive metadata update
+    if (importData.status === 'import_rejected') {
+      return Response.json({
+        status: 'import_rejected',
+        book_id: importData.book_id,
+        book_title,
+        overall_confidence: importData.overall_confidence,
+        reason: importData.reason,
+        problem_pages: importData.problem_pages,
+        quality_details: importData.quality_details,
+        message: importData.message,
+      });
+    }
+
+    const newBookId = importData.book_id;
     if (!newBookId) {
       return Response.json({ error: 'Import pipeline did not return a book_id', import_result: importResult }, { status: 500 });
     }

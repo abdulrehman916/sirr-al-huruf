@@ -246,7 +246,7 @@ Never fabricate. Never infer. Never guess.`;
     const llmResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       add_context_from_internet: true,
-      model: 'gemini_3_flash',
+      model: 'gemini_3_1_pro',
       response_json_schema: {
         type: 'object',
         properties: {

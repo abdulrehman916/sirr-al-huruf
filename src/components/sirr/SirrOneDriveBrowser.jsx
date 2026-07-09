@@ -16,9 +16,10 @@ import { useState, useEffect, useCallback } from "react";
 import {
   ChevronLeft, Folder, FileText, Loader2, Cloud,
   CheckCircle2, AlertCircle, RefreshCw, HardDriveDownload,
-  Shield
+  Shield, Microscope
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import SirrAnalyzeModal from "./SirrAnalyzeModal";
 
 export default function SirrOneDriveBrowser({ onBack, onImported, language }) {
   const isMl = language === "ml";
@@ -32,6 +33,7 @@ export default function SirrOneDriveBrowser({ onBack, onImported, language }) {
   const [importing, setImporting] = useState(false);
   const [importStatus, setImportStatus] = useState({});
   const [error, setError] = useState("");
+  const [analyzingFile, setAnalyzingFile] = useState(null);
 
   // ── Check admin status ──
   useEffect(() => {
@@ -284,6 +286,15 @@ export default function SirrOneDriveBrowser({ onBack, onImported, language }) {
                   </p>
                 </div>
 
+                {/* ANALYZE button — full automatic pipeline */}
+                <button onClick={(e) => { e.stopPropagation(); setAnalyzingFile(file); }}
+                  disabled={importing}
+                  className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all"
+                  style={{ background: "rgba(212,175,55,0.12)", color: "#D4AF37", border: "1px solid rgba(212,175,55,0.25)" }}>
+                  <Microscope className="w-3 h-3" />
+                  {isMl ? "വിശകലനം" : "Analyze"}
+                </button>
+
                 {/* Status icon */}
                 {status?.status === "importing" && <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" style={{ color: "#D4AF37" }} />}
                 {status?.status === "imported" && <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#4ADE80" }} />}
@@ -352,6 +363,16 @@ export default function SirrOneDriveBrowser({ onBack, onImported, language }) {
             {isMl ? "ഈ ഫോൾഡറിൽ PDF ഫയലുകളില്ല." : "No PDF files in this folder."}
           </p>
         </div>
+      )}
+
+      {/* Analyze Modal — full automatic pipeline */}
+      {analyzingFile && (
+        <SirrAnalyzeModal
+          file={analyzingFile}
+          language={language}
+          onClose={() => setAnalyzingFile(null)}
+          onComplete={() => { setAnalyzingFile(null); if (onImported) onImported(); }}
+        />
       )}
     </div>
   );
