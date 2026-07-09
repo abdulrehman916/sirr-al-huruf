@@ -23,7 +23,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   X, Loader2, CheckCircle2, AlertCircle, Microscope,
   FileSearch, Database, Copy, ShieldAlert,
-  Image as ImageIcon, ShieldCheck, Save
+  Image as ImageIcon, ShieldCheck, Save, Clock
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -34,7 +34,7 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
   const [rejection, setRejection] = useState(null);
   const [progress, setProgress] = useState(0);
   const [batchInfo, setBatchInfo] = useState({ current: 0, remaining: 0 });
-  const [stats, setStats] = useState({ entries: 0, verified: 0, manualReview: 0, images: 0, malayalam: 0, rate: 0, internalReused: 0 });
+  const [stats, setStats] = useState({ entries: 0, verified: 0, manualReview: 0, images: 0, malayalam: 0, rate: 0, internalReused: 0, astroEnriched: 0 });
   const [finalResult, setFinalResult] = useState(null);
   const startedRef = useRef(false);
 
@@ -166,6 +166,30 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
         await base44.functions.invoke("detectManuscriptDuplicates", { book_id: bookId });
       } catch { /* non-critical — duplicates can be detected later */ }
 
+      // ══ STAGE: Astro Clock Auto-Enrichment ══
+      // Extracts timing knowledge from verified entries and merges into AstroClockKnowledge.
+      // Batch-processed — caller re-invokes until all entries processed.
+      setStage("astro_enrichment");
+      setProgress(83);
+
+      try {
+        let enrichData;
+        do {
+          const enrichRes = await base44.functions.invoke("enrichAstroClockFromManuscript", {
+            book_id: bookId,
+            batch_size: 5,
+          });
+          enrichData = enrichRes.data;
+          if (enrichData.status === "batch_complete") {
+            setStats(prev => ({ ...prev, astroEnriched: (prev.astroEnriched || 0) + (enrichData.new_pieces_extracted || 0) }));
+          }
+        } while (enrichData.status === "batch_complete");
+
+        if (enrichData.timing_pieces_extracted !== undefined) {
+          setStats(prev => ({ ...prev, astroEnriched: enrichData.timing_pieces_extracted }));
+        }
+      } catch { /* non-critical — enrichment can run later */ }
+
       // ══ STAGE: Review Queue (entries below confidence threshold) ══
       setStage("review");
       setProgress(90);
@@ -191,11 +215,12 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
     { id: "internal_search", label: isMl ? "ആന്തരിക ഡാറ്റാബേസ് തിരയൽ" : "Internal Database Search", icon: Database },
     { id: "external_verification", label: isMl ? "ബാഹ്യ പരിശോധന" : "External Verification", icon: ShieldCheck },
     { id: "duplicates", label: isMl ? "ഡ്യൂപ്ലിക്കേറ്റ് കണ്ടെത്തൽ" : "Duplicate Detection", icon: Copy },
+    { id: "astro_enrichment", label: isMl ? "ആസ്ട്രോ ക്ലോക്ക് സമ്പന്നീകരണം" : "Astro Clock Enrichment", icon: Clock },
     { id: "review", label: isMl ? "പരിശോധന ക്യൂ" : "Review Queue", icon: AlertCircle },
     { id: "save", label: isMl ? "സംരക്ഷിക്കൽ" : "Save", icon: Save },
   ];
 
-  const stageOrder = ["quality", "extraction", "image_processing", "internal_search", "external_verification", "duplicates", "review", "save"];
+  const stageOrder = ["quality", "extraction", "image_processing", "internal_search", "external_verification", "duplicates", "astro_enrichment", "review", "save"];
   const currentStageIdx = stageOrder.indexOf(stage);
   const isError = stage === "error" || stage === "rejected" || stage === "changed";
 
@@ -343,6 +368,7 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
               <Stat label={isMl ? "പരിശോധന" : "Review"} value={stats.manualReview} color="#FBBF24" />
               <Stat label={isMl ? "ചിത്രങ്ങൾ" : "Images"} value={stats.images} />
               <Stat label={isMl ? "മലയാളം" : "Malayalam"} value={stats.malayalam} />
+              <Stat label={isMl ? "ആസ്ട്രോ" : "Astro"} value={stats.astroEnriched} color="#D4AF37" />
             </div>
           </div>
         )}

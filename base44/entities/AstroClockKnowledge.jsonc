@@ -1,0 +1,212 @@
+{
+  "name": "AstroClockKnowledge",
+  "type": "object",
+  "description": "Timing intelligence extracted from verified manuscripts and merged into the Astro Clock. Each record is a single piece of timing knowledge (recommendation, rule, warning, condition) linked to a specific weekday, day/night period, Sahath, or planetary hour. GLOBAL RULE: Never overwrite verified knowledge \u2014 only new, genuinely distinct timing knowledge is stored. Duplicate knowledge from different sources is merged via supporting_sources. Populated automatically by enrichAstroClockFromManuscript after manuscript verification completes. Marker records (is_marker=true) indicate an entry was analyzed but contained no timing knowledge \u2014 they prevent reprocessing and are never displayed.",
+  "properties": {
+    "knowledge_id": {
+      "type": "string",
+      "description": "Permanent unique identifier. Format: ACK-<source_entry_id>-<seq> or ACK-MARKER-<entry_id> for markers."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "weekday",
+        "day_period",
+        "night_period",
+        "sahath",
+        "planetary_hour"
+      ],
+      "description": "Which Astro Clock section this knowledge enriches: weekday=specific weekday, day_period=daytime general, night_period=nighttime general, sahath=specific Sahath number, planetary_hour=specific planet hour"
+    },
+    "weekday": {
+      "type": "integer",
+      "description": "0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday. Only for source_type=weekday, day_period, night_period. Null for sahath/planetary_hour."
+    },
+    "period": {
+      "type": "string",
+      "enum": [
+        "day",
+        "night"
+      ],
+      "description": "Day or Night period. Only for source_type=day_period, night_period, sahath. Null for weekday/planetary_hour."
+    },
+    "sahath_number": {
+      "type": "integer",
+      "description": "Sahath number 1-12. Only for source_type=sahath. Null for other source types."
+    },
+    "planet": {
+      "type": "string",
+      "description": "Planet key (sun, moon, mars, mercury, jupiter, venus, saturn). Only for source_type=planetary_hour or sahath (the ruling planet). Null for weekday/day_period/night_period."
+    },
+    "knowledge_category": {
+      "type": "string",
+      "enum": [
+        "recommendation",
+        "rule",
+        "warning",
+        "condition",
+        "timing_rule",
+        "suitable_time",
+        "unsuitable_time",
+        "special_timing"
+      ],
+      "description": "Type of timing knowledge"
+    },
+    "knowledge_text_en": {
+      "type": "string",
+      "description": "English text of the timing knowledge. Empty string for marker records (is_marker=true)."
+    },
+    "knowledge_text_ml": {
+      "type": "string",
+      "description": "Malayalam translation of the timing knowledge. Empty for markers."
+    },
+    "knowledge_text_ar": {
+      "type": "string",
+      "description": "Original Arabic text if the timing knowledge is from an Arabic manuscript. Empty for markers."
+    },
+    "content_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of normalized knowledge_text_en for duplicate detection. Same knowledge from different sources shares the same hash \u2014 only stored once, with supporting sources linked. Marker records use a unique hash (no-timing-<entry_id>)."
+    },
+    "is_marker": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this is a marker record indicating the entry was analyzed but contained no timing knowledge. Marker records are never displayed in the UI \u2014 they only prevent reprocessing."
+    },
+    "source_book_id": {
+      "type": "string",
+      "description": "FK to ManuscriptBook.book_id"
+    },
+    "source_book_title": {
+      "type": "string",
+      "description": "Denormalized book title for display without joins"
+    },
+    "source_page_number": {
+      "type": "string",
+      "description": "Page number in the source manuscript"
+    },
+    "source_entry_id": {
+      "type": "string",
+      "description": "FK to ManuscriptEntry.entry_id"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "True only if the source ManuscriptEntry was verified (verification_status='verified'). Never overwrite verified knowledge."
+    },
+    "supporting_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "book_title": {
+            "type": "string"
+          },
+          "page_number": {
+            "type": "string"
+          },
+          "entry_id": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Additional manuscript sources that contain the same timing knowledge. Updated when a duplicate content_hash is found \u2014 the new source is added here instead of creating a new record. Never overwrites existing text."
+    },
+    "source_count": {
+      "type": "integer",
+      "default": 1,
+      "description": "Total number of manuscript sources for this knowledge piece. 0 for marker records."
+    }
+  },
+  "required": [
+    "knowledge_id",
+    "source_type",
+    "knowledge_category",
+    "knowledge_text_en",
+    "content_hash"
+  ],
+  "indexes": [
+    {
+      "name": "idx_knowledge_id",
+      "fields": [
+        "knowledge_id"
+      ]
+    },
+    {
+      "name": "idx_content_hash",
+      "fields": [
+        "content_hash"
+      ]
+    },
+    {
+      "name": "idx_source_type",
+      "fields": [
+        "source_type"
+      ]
+    },
+    {
+      "name": "idx_source_type_weekday",
+      "fields": [
+        "source_type",
+        "weekday"
+      ]
+    },
+    {
+      "name": "idx_source_type_sahath",
+      "fields": [
+        "source_type",
+        "sahath_number"
+      ]
+    },
+    {
+      "name": "idx_source_type_planet",
+      "fields": [
+        "source_type",
+        "planet"
+      ]
+    },
+    {
+      "name": "idx_is_marker",
+      "fields": [
+        "is_marker"
+      ]
+    },
+    {
+      "name": "idx_is_verified",
+      "fields": [
+        "is_verified"
+      ]
+    },
+    {
+      "name": "idx_source_book_id",
+      "fields": [
+        "source_book_id"
+      ]
+    },
+    {
+      "name": "idx_source_entry_id",
+      "fields": [
+        "source_entry_id"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
