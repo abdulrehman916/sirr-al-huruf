@@ -5,7 +5,7 @@
 // (OneDrive-sourced PDFs) plus pre-existing static manuscripts.
 // The original PDF always remains the master source.
 // ═══════════════════════════════════════════════════════════════
-import { ChevronLeft, BookMarked, FileText, Globe, Database, Loader2, CheckCircle2, AlertCircle, FileCheck2, ClipboardList, Cloud } from "lucide-react";
+import { ChevronLeft, BookMarked, FileText, Globe, Database, Loader2, CheckCircle2, AlertCircle, FileCheck2, ClipboardList, Cloud, FolderTree } from "lucide-react";
 
 function StatusBadge({ status, isMl }) {
   const config = {
@@ -126,7 +126,7 @@ function BookCard({ book, isDb, isMl, onShowValidationReport }) {
   );
 }
 
-export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadingDb, onBack, onShowValidationReport, onImportFromOneDrive, language }) {
+export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadingDb, onBack, onShowValidationReport, onImportFromOneDrive, onImportFolderFromOneDrive, language }) {
   const isMl = language === "ml";
 
   return (
@@ -138,13 +138,23 @@ export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadin
           style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.60)", border: "1px solid rgba(255,255,255,0.10)" }}>
           <ChevronLeft className="w-4 h-4" /> {isMl ? "തിരികെ" : "Back"}
         </button>
-        {onImportFromOneDrive && (
-          <button onClick={onImportFromOneDrive}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all btn-gold ml-auto">
-            <Cloud className="w-3.5 h-3.5" />
-            {isMl ? "OneDrive ഇറക്കുമതി" : "Import from OneDrive"}
-          </button>
-        )}
+        <div className="flex items-center gap-2 ml-auto">
+          {onImportFromOneDrive && (
+            <button onClick={onImportFromOneDrive}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+              style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.60)", border: "1px solid rgba(255,255,255,0.10)" }}>
+              <Cloud className="w-3.5 h-3.5" />
+              {isMl ? "PDF ഇറക്കുമതി" : "Import PDF"}
+            </button>
+          )}
+          {onImportFolderFromOneDrive && (
+            <button onClick={onImportFolderFromOneDrive}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all btn-gold">
+              <FolderTree className="w-3.5 h-3.5" />
+              {isMl ? "ഫോൾഡർ ഇറക്കുമതി" : "Import Folder"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Title */}

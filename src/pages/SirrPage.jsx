@@ -11,6 +11,7 @@ import { fetchPreparations } from "@/lib/preparationLibrarySync";
 import SirrPreparationLibrary from "@/components/sirr/SirrPreparationLibrary";
 import SirrPreparationDetail from "@/components/sirr/SirrPreparationDetail";
 import SirrOneDriveBrowser from "@/components/sirr/SirrOneDriveBrowser";
+import SirrOneDriveFolderImporter from "@/components/sirr/SirrOneDriveFolderImporter";
 
 export default function SirrPage() {
   const [language, setLanguage] = useState("ml");
@@ -150,6 +151,15 @@ export default function SirrPage() {
             onBack={handleBackToHub}
             onShowValidationReport={handleShowValidationReport}
             onImportFromOneDrive={() => setView("onedrive_browser")}
+            onImportFolderFromOneDrive={() => setView("folder_importer")}
+            language={language}
+          />
+        )}
+
+        {view === "folder_importer" && (
+          <SirrOneDriveFolderImporter
+            onBack={() => setView("library")}
+            onImported={handleOneDriveImported}
             language={language}
           />
         )}
