@@ -92,6 +92,57 @@ async function verifyEntryArabic(
   }
 }
 
+// ── Helper: Search internal knowledge base before external verification ──
+// SELF-LEARNING: Search all verified records first. Reuse instead of duplicate.
+// Never perform external verification when verified info exists internally.
+async function searchInternalForEntry(
+  base44: any,
+  arabicText: string,
+  purpose: string,
+  topic: string,
+  entryType: string,
+  bookTitle: string,
+  pageNumber: string
+): Promise<any> {
+  if (!arabicText || arabicText.trim().length === 0) {
+    return { match_found: false, verification_status: 'no_arabic' };
+  }
+
+  try {
+    const response = await base44.functions.invoke('searchInternalKnowledgeBase', {
+      arabic_text: arabicText,
+      purpose,
+      topic,
+      entry_type: entryType,
+      book_name: bookTitle,
+      page_number: pageNumber,
+    });
+
+    const result = response.data || response;
+    if (result.match_found) {
+      return {
+        verification_status: 'verified',
+        verification_confidence: result.verification_confidence || 'HIGH',
+        text_hash: result.text_hash || '',
+        arabic_text_verified: result.verified_arabic || '',
+        original_manuscript_text: '',
+        malayalam_meaning: result.malayalam_meaning || '',
+        english_meaning: result.english_meaning || '',
+        source: result.message || 'Internal knowledge base reuse',
+        primary_source: result.primary_source || 'Internal knowledge base',
+        revision_number: 0,
+        date_verified: new Date().toISOString(),
+        notes: `Internal reuse: ${result.match_type} (confidence: ${result.confidence}%)`,
+        internal_reuse: true,
+        match_found: true,
+      };
+    }
+    return { match_found: false };
+  } catch {
+    return { match_found: false };
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -128,22 +179,51 @@ Deno.serve(async (req) => {
     const alreadyVerified = entries.filter((e: any) => e.verification_status === 'verified');
     const alreadyManualReview = entries.filter((e: any) => e.verification_status === 'manual_review');
 
-    // ══ STAGE 2: Arabic Verification ══
-    // Call verifyArabicText for pending entries — ONE batch per call.
-    // Caller re-invokes until all entries are processed.
+    // ══ STAGE 2a: Internal Database Search (SELF-LEARNING — FREE) ══
+    // Search the entire internal knowledge base first.
+    // Reuse verified records instead of creating duplicates.
+    // Never perform external verification when verified info exists internally.
     const batch = pendingEntries.slice(0, BATCH_SIZE);
-    const verificationResults: any[] = await Promise.all(
+
+    const internalResults: any[] = await Promise.all(
       batch.map((entry: any) =>
-        verifyEntryArabic(
+        searchInternalForEntry(
+          base44,
+          entry.arabic_text || '',
+          entry.purpose || '',
+          entry.topic || '',
+          entry.entry_type || 'instruction',
+          entry.book_title || book.book_title || '',
+          entry.page_number || ''
+        )
+      )
+    );
+
+    // ══ STAGE 2b: External Verification (ONLY for entries without internal matches) ══
+    // Only new entries that don't exist in the internal knowledge base
+    // are sent for external verification using the strongest AI model.
+    const verificationResults: any[] = await Promise.all(
+      batch.map((entry: any, i: number) => {
+        if (internalResults[i]?.match_found) {
+          return Promise.resolve(internalResults[i]);
+        }
+        return verifyEntryArabic(
           base44,
           entry.arabic_text || '',
           entry.book_title || book.book_title || '',
           entry.page_number || '',
           entry.topic || entry.purpose || '',
           entry.entry_type || 'instruction'
-        )
-      )
+        );
+      })
     );
+
+    let internalReused = 0;
+    let externalVerified = 0;
+    for (let i = 0; i < internalResults.length; i++) {
+      if (internalResults[i]?.match_found) internalReused++;
+      else externalVerified++;
+    }
 
     const remainingPending = pendingEntries.length - batch.length;
 
@@ -216,7 +296,9 @@ Deno.serve(async (req) => {
         book_title: book.book_title,
         batch_processed: batch.length,
         remaining_pending: remainingPending,
-        message: `Batch complete: ${batch.length} entries verified. ${remainingPending} remaining. Call verifyBookEntries again with the same book_id to continue.`,
+        internal_reused: internalReused,
+        external_verified: externalVerified,
+        message: `Batch complete: ${batch.length} entries processed. ${internalReused} reused internally (free), ${externalVerified} externally verified. ${remainingPending} remaining.`,
         next_step: `verifyBookEntries({ "book_id": "${book_id}" })`,
       });
     }

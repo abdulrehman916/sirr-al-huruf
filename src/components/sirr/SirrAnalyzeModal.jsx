@@ -22,7 +22,8 @@
 import { useState, useEffect, useRef } from "react";
 import {
   X, Loader2, CheckCircle2, AlertCircle, Microscope,
-  FileSearch, Database, Copy, ShieldAlert
+  FileSearch, Database, Copy, ShieldAlert,
+  Image as ImageIcon, ShieldCheck, Save
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -33,7 +34,7 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
   const [rejection, setRejection] = useState(null);
   const [progress, setProgress] = useState(0);
   const [batchInfo, setBatchInfo] = useState({ current: 0, remaining: 0 });
-  const [stats, setStats] = useState({ entries: 0, verified: 0, manualReview: 0, images: 0, malayalam: 0, rate: 0 });
+  const [stats, setStats] = useState({ entries: 0, verified: 0, manualReview: 0, images: 0, malayalam: 0, rate: 0, internalReused: 0 });
   const [finalResult, setFinalResult] = useState(null);
   const startedRef = useRef(false);
 
@@ -111,15 +112,21 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
         }
       } catch { /* non-critical — stats will update after verification */ }
 
-      // ══ STAGE 2-4 + 6: Arabic Verification (internal DB → external → save) ══
-      // verifyArabicText searches: VerifiedArabic DB (P1) → ManuscriptEntry library (P2)
-      // → external sources (P3, strongest model) → manual review (P4)
-      // Self-learning: entries found internally cost ZERO credits.
-      setStage("verification");
+      // ══ STAGE: Image Processing (completed during extraction — mark and continue) ══
+      setStage("image_processing");
+      setProgress(25);
+      await new Promise(r => setTimeout(r, 600));
+
+      // ══ STAGE: Internal Database Search + External Verification ══
+      // verifyBookEntries now searches internal knowledge base FIRST.
+      // Entries found internally are reused (zero credits).
+      // Only new entries are sent for external verification.
+      setStage("internal_search");
       setProgress(30);
 
       let verifyData;
       let batchCount = 0;
+      let totalInternalReused = 0;
 
       do {
         batchCount++;
@@ -132,8 +139,11 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
         verifyData = verifyRes.data;
 
         if (verifyData.status === "batch_complete") {
+          totalInternalReused += verifyData.internal_reused || 0;
+          setStats(prev => ({ ...prev, internalReused: totalInternalReused }));
           setBatchInfo({ current: batchCount, remaining: verifyData.remaining_pending });
-          setProgress(30 + Math.min(50, batchCount * 8));
+          if (batchCount === 1) setStage("external_verification");
+          setProgress(30 + Math.min(45, batchCount * 7));
         }
       } while (verifyData.status === "batch_complete");
 
@@ -148,18 +158,25 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
         rate: vSummary.verification_rate || 0,
       }));
 
-      // ══ STAGE 8: Duplicate Detection ══
+      // ══ STAGE: Duplicate Detection ══
       setStage("duplicates");
-      setProgress(85);
+      setProgress(80);
 
       try {
         await base44.functions.invoke("detectManuscriptDuplicates", { book_id: bookId });
       } catch { /* non-critical — duplicates can be detected later */ }
 
-      // ══ COMPLETE ══
-      setStage("complete");
+      // ══ STAGE: Review Queue (entries below confidence threshold) ══
+      setStage("review");
+      setProgress(90);
+      await new Promise(r => setTimeout(r, 600));
+
+      // ══ STAGE: Save (complete) ══
+      setStage("save");
       setProgress(100);
       setFinalResult(verifyData);
+      await new Promise(r => setTimeout(r, 400));
+      setStage("complete");
 
     } catch (e) {
       setError(e.response?.data?.error || e.message || "Analysis failed");
@@ -169,12 +186,16 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
 
   const stages = [
     { id: "quality", label: isMl ? "ഗുണനിലവാര പരിശോധന" : "Quality Check", icon: Microscope },
-    { id: "extraction", label: isMl ? "പേജ് ബൈ പേജ് എക്സ്ട്രാക്ഷൻ" : "Page-by-Page Extraction", icon: FileSearch },
-    { id: "verification", label: isMl ? "അറബിക് പരിശോധന" : "Arabic Verification", icon: Database },
+    { id: "extraction", label: isMl ? "പേജ് എക്സ്ട്രാക്ഷൻ" : "Page Extraction", icon: FileSearch },
+    { id: "image_processing", label: isMl ? "ചിത്ര സംസ്കരണം" : "Image Processing", icon: ImageIcon },
+    { id: "internal_search", label: isMl ? "ആന്തരിക ഡാറ്റാബേസ് തിരയൽ" : "Internal Database Search", icon: Database },
+    { id: "external_verification", label: isMl ? "ബാഹ്യ പരിശോധന" : "External Verification", icon: ShieldCheck },
     { id: "duplicates", label: isMl ? "ഡ്യൂപ്ലിക്കേറ്റ് കണ്ടെത്തൽ" : "Duplicate Detection", icon: Copy },
+    { id: "review", label: isMl ? "പരിശോധന ക്യൂ" : "Review Queue", icon: AlertCircle },
+    { id: "save", label: isMl ? "സംരക്ഷിക്കൽ" : "Save", icon: Save },
   ];
 
-  const stageOrder = ["quality", "extraction", "verification", "duplicates"];
+  const stageOrder = ["quality", "extraction", "image_processing", "internal_search", "external_verification", "duplicates", "review", "save"];
   const currentStageIdx = stageOrder.indexOf(stage);
   const isError = stage === "error" || stage === "rejected" || stage === "changed";
 
@@ -295,10 +316,11 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
                       style={{ color: isDone ? "#4ADE80" : isActive ? "#D4AF37" : "rgba(255,255,255,0.35)" }}>
                       {s.label}
                     </p>
-                    {isActive && s.id === "verification" && batchInfo.current > 0 && (
+                    {isActive && (s.id === "internal_search" || s.id === "external_verification") && batchInfo.current > 0 && (
                       <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>
                         {isMl ? `ബാച്ച് ${batchInfo.current}` : `Batch ${batchInfo.current}`}
                         {batchInfo.remaining > 0 ? ` — ${batchInfo.remaining} ${isMl ? "ബാക്കി" : "remaining"}` : ""}
+                        {stats.internalReused > 0 ? ` · ${stats.internalReused} ${isMl ? "ആന്തരികം" : "reused"}` : ""}
                       </p>
                     )}
                   </div>
@@ -317,10 +339,10 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
             <div className="grid grid-cols-3 gap-2">
               <Stat label={isMl ? "എൻട്രികൾ" : "Entries"} value={stats.entries} />
               <Stat label={isMl ? "പരിശോധിച്ചത്" : "Verified"} value={stats.verified} color="#4ADE80" />
+              <Stat label={isMl ? "ആന്തരികം" : "Reused"} value={stats.internalReused} color="#60A5FA" />
               <Stat label={isMl ? "പരിശോധന" : "Review"} value={stats.manualReview} color="#FBBF24" />
               <Stat label={isMl ? "ചിത്രങ്ങൾ" : "Images"} value={stats.images} />
               <Stat label={isMl ? "മലയാളം" : "Malayalam"} value={stats.malayalam} />
-              <Stat label={isMl ? "നിരക്ക്" : "Rate"} value={stats.rate > 0 ? `${stats.rate}%` : "—"} />
             </div>
           </div>
         )}
