@@ -143,7 +143,7 @@ Return JSON: { "entries_analyzed": <number>, "dua_pieces": [ { ... } ] }`;
     const result: any = (llmRes as any).data || llmRes;
     const pieces: any[] = Array.isArray(result.dua_pieces) ? result.dua_pieces : [];
 
-    let created = 0, merged = 0, canonicalMerged = 0;
+    let created = 0, merged = 0, canonicalMerged = 0, conflictsDetected = 0, contextSpecificAdded = 0;
     const withDua = new Set<string>();
 
     for (const p of pieces) {
@@ -173,24 +173,119 @@ Return JSON: { "entries_analyzed": <number>, "dua_pieces": [ { ... } ] }`;
 
         if (canonicalMatches?.length > 0) {
           const ex = canonicalMatches[0];
-          const mergeRes = await base44.integrations.Core.InvokeLLM({
-            prompt: `You are merging new verified manuscript knowledge into an existing canonical record. Never remove existing information. Add only genuinely new information. Organize by category with bullet points. Do not duplicate.\n\nEXISTING:\n${ex.knowledge_text_en}\n\nNEW:\n${textEn}\n\nReturn JSON: { "merged_text_en": "..." }`,
-            response_json_schema: { type: "object", properties: { merged_text_en: { type: "string" } }, required: ["merged_text_en"] }
-          });
-          const mergedData: any = (mergeRes as any).data || mergeRes;
-          const mergedEn = mergedData.merged_text_en || textEn;
-          const appendedAr = ex.knowledge_text_ar && p.text_ar ? ex.knowledge_text_ar + '\n---\n' + p.text_ar : (p.text_ar || ex.knowledge_text_ar || '');
-          const appendedMl = ex.knowledge_text_ml && p.text_ml ? ex.knowledge_text_ml + '\n---\n' + p.text_ml : (p.text_ml || ex.knowledge_text_ml || '');
-          const appendedRep = ex.repetition_count && p.repetition_count ? ex.repetition_count + '; ' + p.repetition_count : (p.repetition_count || ex.repetition_count || '');
-          const appendedTiming = ex.timing_reference && p.timing_reference ? ex.timing_reference + '; ' + p.timing_reference : (p.timing_reference || ex.timing_reference || '');
+          // ══ CONFLICT RESOLUTION: Classify before merging ══
+          const classifyRes = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a KNOWLEDGE CONFLICT RESOLVER for Islamic occult manuscript knowledge.
 
-          await base44.asServiceRole.entities.DuaKnowledge.update(ex.id, {
-            knowledge_text_en: mergedEn, knowledge_text_ml: appendedMl, knowledge_text_ar: appendedAr,
-            repetition_count: appendedRep, timing_reference: appendedTiming,
-            supporting_sources: [...(ex.supporting_sources || []), { book_title: book.book_title, page_number: srcEntry?.page_number || '', entry_id: p.source_entry_id }],
-            source_count: (ex.source_count || 1) + 1, is_verified: ex.is_verified || isVer
+CLASSIFICATION TYPES:
+1. COMPLEMENTARY — New information that adds to the existing record without contradicting it.
+   → Merge into resolved text. Return merged_text_en.
+2. EQUIVALENT — Same meaning expressed differently.
+   → Merge into resolved text as one normalized statement. Return merged_text_en.
+3. CONTEXT_SPECIFIC — Valid only under certain conditions (weekday, Sahath, planet, season, intention, material, method).
+   → Store under matching condition. Do NOT affect other conditions. Return context_entry.
+4. CONFLICTING — Genuinely disagrees with existing knowledge on the same point under the same conditions.
+   → Preserve BOTH statements. Do NOT overwrite either. Return conflict_entry.
+
+EXISTING RESOLVED KNOWLEDGE:
+${ex.knowledge_text_en || '(empty)'}
+
+EXISTING CONTEXT-SPECIFIC ENTRIES:
+${JSON.stringify(ex.context_specific || [])}
+
+EXISTING CONFLICTING OPINIONS:
+${JSON.stringify(ex.conflicting_opinions || [])}
+
+NEW KNOWLEDGE:
+${textEn}
+Repetition count: ${p.repetition_count || 'N/A'}
+Timing reference: ${p.timing_reference || 'N/A'}
+
+TASK: Compare NEW against EXISTING. Classify the relationship. Return the appropriate action.
+
+RULES:
+- Never lose verified information.
+- If unsure whether something conflicts, lean toward CONTEXT_SPECIFIC rather than CONFLICTING.
+- Only classify as CONFLICTING when two sources genuinely disagree on the same point under the same conditions.
+- For COMPLEMENTARY/EQUIVALENT: produce merged_text_en organizing all knowledge by category with bullet points. Never remove existing. Add only genuinely new. Do not duplicate.
+- For CONTEXT_SPECIFIC: identify the precise condition (e.g., "weekday:Thursday", "sahath:8", "planet:Mars", "intention:love", "material:silver").
+- For CONFLICTING: identify the specific field that conflicts (e.g., "repetition_count", "timing", "method").
+
+Return JSON: { "classification": "complementary"|"equivalent"|"context_specific"|"conflicting", "merged_text_en": "...", "context_entry": { "condition": "...", "text_en": "...", "text_ml": "...", "text_ar": "..." }, "conflict_entry": { "field": "...", "opinion_text_en": "...", "opinion_text_ml": "...", "opinion_text_ar": "..." }, "conflict_field": "..." }`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                classification: { type: "string", enum: ["complementary", "equivalent", "context_specific", "conflicting"] },
+                merged_text_en: { type: "string" },
+                context_entry: { type: "object", properties: { condition: { type: "string" }, text_en: { type: "string" }, text_ml: { type: "string" }, text_ar: { type: "string" } } },
+                conflict_entry: { type: "object", properties: { field: { type: "string" }, opinion_text_en: { type: "string" }, opinion_text_ml: { type: "string" }, opinion_text_ar: { type: "string" } } },
+                conflict_field: { type: "string" }
+              },
+              required: ["classification"]
+            }
           });
-          canonicalMerged++;
+          const classifyData: any = (classifyRes as any).data || classifyRes;
+          const classification = classifyData.classification || 'complementary';
+          const newSource = { book_title: book.book_title, page_number: srcEntry?.page_number || '', entry_id: p.source_entry_id };
+
+          if (classification === 'conflicting') {
+            // CONFLICTING: Preserve both opinions, do NOT overwrite
+            const existingConflicts = ex.conflicting_opinions || [];
+            const conflictField = classifyData.conflict_field || classifyData.conflict_entry?.field || 'general';
+            existingConflicts.push({
+              field: conflictField,
+              opinion_text_en: classifyData.conflict_entry?.opinion_text_en || textEn,
+              opinion_text_ml: classifyData.conflict_entry?.opinion_text_ml || p.text_ml || '',
+              opinion_text_ar: classifyData.conflict_entry?.opinion_text_ar || p.text_ar || '',
+              sources: [newSource],
+              source_count: 1
+            });
+            const existingFlags = ex.conflict_flags || [];
+            if (!existingFlags.includes(conflictField)) existingFlags.push(conflictField);
+
+            await base44.asServiceRole.entities.DuaKnowledge.update(ex.id, {
+              conflicting_opinions: existingConflicts,
+              conflict_flags: existingFlags,
+              supporting_sources: [...(ex.supporting_sources || []), newSource],
+              source_count: (ex.source_count || 1) + 1,
+              is_verified: ex.is_verified || isVer
+            });
+            conflictsDetected++;
+          } else if (classification === 'context_specific') {
+            // CONTEXT-SPECIFIC: Store under matching condition
+            const existingContext = ex.context_specific || [];
+            existingContext.push({
+              condition: classifyData.context_entry?.condition || 'unspecified',
+              text_en: classifyData.context_entry?.text_en || textEn,
+              text_ml: classifyData.context_entry?.text_ml || p.text_ml || '',
+              text_ar: classifyData.context_entry?.text_ar || p.text_ar || '',
+              sources: [newSource],
+              source_count: 1
+            });
+
+            await base44.asServiceRole.entities.DuaKnowledge.update(ex.id, {
+              context_specific: existingContext,
+              supporting_sources: [...(ex.supporting_sources || []), newSource],
+              source_count: (ex.source_count || 1) + 1,
+              is_verified: ex.is_verified || isVer
+            });
+            contextSpecificAdded++;
+          } else {
+            // COMPLEMENTARY or EQUIVALENT: Merge into resolved text
+            const mergedEn = classifyData.merged_text_en || textEn;
+            const appendedAr = ex.knowledge_text_ar && p.text_ar ? ex.knowledge_text_ar + '\n---\n' + p.text_ar : (p.text_ar || ex.knowledge_text_ar || '');
+            const appendedMl = ex.knowledge_text_ml && p.text_ml ? ex.knowledge_text_ml + '\n---\n' + p.text_ml : (p.text_ml || ex.knowledge_text_ml || '');
+            const appendedRep = ex.repetition_count && p.repetition_count ? ex.repetition_count + '; ' + p.repetition_count : (p.repetition_count || ex.repetition_count || '');
+            const appendedTiming = ex.timing_reference && p.timing_reference ? ex.timing_reference + '; ' + p.timing_reference : (p.timing_reference || ex.timing_reference || '');
+
+            await base44.asServiceRole.entities.DuaKnowledge.update(ex.id, {
+              knowledge_text_en: mergedEn, knowledge_text_ml: appendedMl, knowledge_text_ar: appendedAr,
+              repetition_count: appendedRep, timing_reference: appendedTiming,
+              supporting_sources: [...(ex.supporting_sources || []), newSource],
+              source_count: (ex.source_count || 1) + 1, is_verified: ex.is_verified || isVer
+            });
+            canonicalMerged++;
+          }
         } else {
           const kid = `DK-${p.source_entry_id}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
           await base44.asServiceRole.entities.DuaKnowledge.create({
@@ -236,12 +331,12 @@ Return JSON: { "entries_analyzed": <number>, "dua_pieces": [ { ... } ] }`;
 
     const remaining = unprocessed.length - batch.length;
     if (remaining > 0) {
-      return Response.json({ status: 'batch_complete', book_id, batch_processed: batch.length, remaining, new_pieces: created, sources_merged: merged, message: `Batch: ${created} new, ${merged} merged. ${remaining} remaining.` });
+      return Response.json({ status: 'batch_complete', book_id, batch_processed: batch.length, remaining, new_pieces: created, sources_merged: merged, conflicts_detected: conflictsDetected, context_specific_added: contextSpecificAdded, message: `Batch: ${created} new, ${merged} merged, ${conflictsDetected} conflicts, ${contextSpecificAdded} context-specific. ${remaining} remaining.` });
     }
 
     const all = await base44.asServiceRole.entities.DuaKnowledge.filter({ source_book_id: book_id });
     const real = all.filter((k: any) => !k.is_marker && k.knowledge_text_en?.length > 0);
-    return Response.json({ status: 'enrichment_complete', book_id, total_entries: entries.length, verified_entries: verified.length, dua_pieces_extracted: real.length, sources_merged: merged, message: `Dua enrichment complete. ${real.length} pieces.` });
+    return Response.json({ status: 'enrichment_complete', book_id, total_entries: entries.length, verified_entries: verified.length, dua_pieces_extracted: real.length, sources_merged: merged, conflicts_detected: conflictsDetected, context_specific_added: contextSpecificAdded, message: `Dua enrichment complete. ${real.length} pieces, ${conflictsDetected} conflicts preserved, ${contextSpecificAdded} context-specific.` });
   } catch (error) {
     return Response.json({ error: error.message, status: 'enrichment_failed' }, { status: 500 });
   }

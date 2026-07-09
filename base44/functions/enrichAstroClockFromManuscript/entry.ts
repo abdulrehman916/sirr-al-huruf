@@ -233,6 +233,8 @@ Return a JSON object with this exact schema:
     let sourcesAdded = 0;
     let duplicatesSkipped = 0;
     let canonicalMerged = 0;
+    let conflictsDetected = 0;
+    let contextSpecificAdded = 0;
     const entriesWithTimingSet = new Set<string>();
 
     for (const piece of timingPieces) {
@@ -274,26 +276,116 @@ Return a JSON object with this exact schema:
         const canonicalMatches = await base44.asServiceRole.entities.AstroClockKnowledge.filter({ canonical_key: canonicalKey, is_marker: false }, undefined, 1);
 
         if (canonicalMatches?.length > 0) {
-          // Canonical match — merge new knowledge into existing record via LLM
           const ex = canonicalMatches[0];
-          const mergeRes = await base44.integrations.Core.InvokeLLM({
-            prompt: `You are merging new verified manuscript knowledge into an existing canonical record. Never remove existing information. Add only genuinely new information. Organize by category (Recommended Activities:, Activities Requiring Caution:, Conditions:, Warnings:). Use bullet points. Do not duplicate.\n\nEXISTING:\n${ex.knowledge_text_en}\n\nNEW:\n${textEn}\n\nReturn JSON: { "merged_text_en": "..." }`,
-            response_json_schema: { type: "object", properties: { merged_text_en: { type: "string" } }, required: ["merged_text_en"] }
-          });
-          const mergedData: any = (mergeRes as any).data || mergeRes;
-          const mergedEn = mergedData.merged_text_en || textEn;
-          const appendedAr = ex.knowledge_text_ar && piece.knowledge_text_ar ? ex.knowledge_text_ar + '\n---\n' + piece.knowledge_text_ar : (piece.knowledge_text_ar || ex.knowledge_text_ar || '');
-          const appendedMl = ex.knowledge_text_ml && piece.knowledge_text_ml ? ex.knowledge_text_ml + '\n---\n' + piece.knowledge_text_ml : (piece.knowledge_text_ml || ex.knowledge_text_ml || '');
+          // ══ CONFLICT RESOLUTION: Classify before merging ══
+          const classifyRes = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a KNOWLEDGE CONFLICT RESOLVER for Islamic occult manuscript timing knowledge.
 
-          await base44.asServiceRole.entities.AstroClockKnowledge.update(ex.id, {
-            knowledge_text_en: mergedEn,
-            knowledge_text_ml: appendedMl,
-            knowledge_text_ar: appendedAr,
-            supporting_sources: [...(ex.supporting_sources || []), { book_title: book.book_title, page_number: sourceEntry?.page_number || '', entry_id: piece.source_entry_id }],
-            source_count: (ex.source_count || 1) + 1,
-            is_verified: ex.is_verified || isVerified
+CLASSIFICATION TYPES:
+1. COMPLEMENTARY — New information that adds to the existing record without contradicting it.
+   → Merge into resolved text. Return merged_text_en.
+2. EQUIVALENT — Same meaning expressed differently.
+   → Merge into resolved text as one normalized statement. Return merged_text_en.
+3. CONTEXT_SPECIFIC — Valid only under certain conditions (weekday, Sahath, planet, season, intention, method).
+   → Store under matching condition. Do NOT affect other conditions. Return context_entry.
+4. CONFLICTING — Genuinely disagrees with existing knowledge on the same point under the same conditions.
+   → Preserve BOTH statements. Do NOT overwrite either. Return conflict_entry.
+
+EXISTING RESOLVED KNOWLEDGE:
+${ex.knowledge_text_en || '(empty)'}
+
+EXISTING CONTEXT-SPECIFIC ENTRIES:
+${JSON.stringify(ex.context_specific || [])}
+
+EXISTING CONFLICTING OPINIONS:
+${JSON.stringify(ex.conflicting_opinions || [])}
+
+NEW KNOWLEDGE:
+${textEn}
+
+TASK: Compare NEW against EXISTING. Classify the relationship. Return the appropriate action.
+
+RULES:
+- Never lose verified information.
+- If unsure whether something conflicts, lean toward CONTEXT_SPECIFIC rather than CONFLICTING.
+- Only classify as CONFLICTING when two sources genuinely disagree on the same point under the same conditions.
+- For COMPLEMENTARY/EQUIVALENT: produce merged_text_en organizing all knowledge by category (Recommended Activities:, Activities Requiring Caution:, Conditions:, Warnings:). Use bullet points. Never remove existing. Add only genuinely new. Do not duplicate.
+- For CONTEXT_SPECIFIC: identify the precise condition (e.g., "weekday:Thursday", "sahath:8", "planet:Mars").
+- For CONFLICTING: identify the specific field that conflicts (e.g., "timing", "best_suited_activity", "method").
+- NEVER use labels: Avoid, Do Not Do, Forbidden. Use: Suitable, Less Suitable, Caution, Warning.
+
+Return JSON: { "classification": "complementary"|"equivalent"|"context_specific"|"conflicting", "merged_text_en": "...", "context_entry": { "condition": "...", "text_en": "...", "text_ml": "...", "text_ar": "..." }, "conflict_entry": { "field": "...", "opinion_text_en": "...", "opinion_text_ml": "...", "opinion_text_ar": "..." }, "conflict_field": "..." }`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                classification: { type: "string", enum: ["complementary", "equivalent", "context_specific", "conflicting"] },
+                merged_text_en: { type: "string" },
+                context_entry: { type: "object", properties: { condition: { type: "string" }, text_en: { type: "string" }, text_ml: { type: "string" }, text_ar: { type: "string" } } },
+                conflict_entry: { type: "object", properties: { field: { type: "string" }, opinion_text_en: { type: "string" }, opinion_text_ml: { type: "string" }, opinion_text_ar: { type: "string" } } },
+                conflict_field: { type: "string" }
+              },
+              required: ["classification"]
+            }
           });
-          canonicalMerged++;
+          const classifyData: any = (classifyRes as any).data || classifyRes;
+          const classification = classifyData.classification || 'complementary';
+          const newSource = { book_title: book.book_title, page_number: sourceEntry?.page_number || '', entry_id: piece.source_entry_id };
+
+          if (classification === 'conflicting') {
+            const existingConflicts = ex.conflicting_opinions || [];
+            const conflictField = classifyData.conflict_field || classifyData.conflict_entry?.field || 'general';
+            existingConflicts.push({
+              field: conflictField,
+              opinion_text_en: classifyData.conflict_entry?.opinion_text_en || textEn,
+              opinion_text_ml: classifyData.conflict_entry?.opinion_text_ml || piece.knowledge_text_ml || '',
+              opinion_text_ar: classifyData.conflict_entry?.opinion_text_ar || piece.knowledge_text_ar || '',
+              sources: [newSource],
+              source_count: 1
+            });
+            const existingFlags = ex.conflict_flags || [];
+            if (!existingFlags.includes(conflictField)) existingFlags.push(conflictField);
+
+            await base44.asServiceRole.entities.AstroClockKnowledge.update(ex.id, {
+              conflicting_opinions: existingConflicts,
+              conflict_flags: existingFlags,
+              supporting_sources: [...(ex.supporting_sources || []), newSource],
+              source_count: (ex.source_count || 1) + 1,
+              is_verified: ex.is_verified || isVerified
+            });
+            conflictsDetected++;
+          } else if (classification === 'context_specific') {
+            const existingContext = ex.context_specific || [];
+            existingContext.push({
+              condition: classifyData.context_entry?.condition || 'unspecified',
+              text_en: classifyData.context_entry?.text_en || textEn,
+              text_ml: classifyData.context_entry?.text_ml || piece.knowledge_text_ml || '',
+              text_ar: classifyData.context_entry?.text_ar || piece.knowledge_text_ar || '',
+              sources: [newSource],
+              source_count: 1
+            });
+
+            await base44.asServiceRole.entities.AstroClockKnowledge.update(ex.id, {
+              context_specific: existingContext,
+              supporting_sources: [...(ex.supporting_sources || []), newSource],
+              source_count: (ex.source_count || 1) + 1,
+              is_verified: ex.is_verified || isVerified
+            });
+            contextSpecificAdded++;
+          } else {
+            const mergedEn = classifyData.merged_text_en || textEn;
+            const appendedAr = ex.knowledge_text_ar && piece.knowledge_text_ar ? ex.knowledge_text_ar + '\n---\n' + piece.knowledge_text_ar : (piece.knowledge_text_ar || ex.knowledge_text_ar || '');
+            const appendedMl = ex.knowledge_text_ml && piece.knowledge_text_ml ? ex.knowledge_text_ml + '\n---\n' + piece.knowledge_text_ml : (piece.knowledge_text_ml || ex.knowledge_text_ml || '');
+
+            await base44.asServiceRole.entities.AstroClockKnowledge.update(ex.id, {
+              knowledge_text_en: mergedEn,
+              knowledge_text_ml: appendedMl,
+              knowledge_text_ar: appendedAr,
+              supporting_sources: [...(ex.supporting_sources || []), newSource],
+              source_count: (ex.source_count || 1) + 1,
+              is_verified: ex.is_verified || isVerified
+            });
+            canonicalMerged++;
+          }
         } else {
           // No canonical match — create new record
           const knowledgeId = `ACK-${piece.source_entry_id}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -366,7 +458,9 @@ Return a JSON object with this exact schema:
         new_pieces_extracted: newRecordsCreated,
         sources_added: sourcesAdded,
         duplicates_skipped: duplicatesSkipped,
-        message: `Batch: ${batch.length} entries analyzed. ${newRecordsCreated} new timing pieces, ${sourcesAdded} sources merged. ${remaining} remaining.`,
+        conflicts_detected: conflictsDetected,
+        context_specific_added: contextSpecificAdded,
+        message: `Batch: ${batch.length} entries analyzed. ${newRecordsCreated} new timing pieces, ${sourcesAdded} sources merged, ${conflictsDetected} conflicts, ${contextSpecificAdded} context-specific. ${remaining} remaining.`,
         next_step: `enrichAstroClockFromManuscript({ "book_id": "${book_id}" })`,
       });
     }
@@ -389,7 +483,9 @@ Return a JSON object with this exact schema:
       timing_pieces_extracted: realKnowledge.length,
       by_type: byType,
       sources_merged: sourcesAdded,
-      message: `Astro Clock enrichment complete. ${realKnowledge.length} timing pieces extracted from ${book.book_title}.`,
+      conflicts_detected: conflictsDetected,
+      context_specific_added: contextSpecificAdded,
+      message: `Astro Clock enrichment complete. ${realKnowledge.length} timing pieces extracted, ${conflictsDetected} conflicts preserved, ${contextSpecificAdded} context-specific.`,
     });
   } catch (error) {
     return Response.json({ error: error.message, status: 'enrichment_failed' }, { status: 500 });
