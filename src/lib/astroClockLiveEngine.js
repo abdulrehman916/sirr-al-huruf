@@ -392,14 +392,20 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   // This ensures current time matches the sunrise/sunset values.
   const currentHours = date.getHours() + date.getMinutes() / 60;
   const isBeforeSunrise = currentHours < sunrise;
+  const isAfterSunset = currentHours >= sunset;
+  const isNighttime = isBeforeSunrise || isAfterSunset;
+  const isDaytime = !isNighttime;
 
   const dayOfWeek = date.getDay();
-  const dayRuler = getDayRuler(dayOfWeek);
-  // Manuscript rule (Kashf al-Haqa'iq p.65): night belongs to the FOLLOWING day.
-  // BUT when before sunrise (in the previous day's night that crossed midnight),
-  // that night belongs to the CURRENT day ("Thursday evening = night of Friday").
-  // So: before sunrise → current day's ruler; after sunset → next day's ruler.
-  const nightDayRuler = getDayRuler(isBeforeSunrise ? dayOfWeek : (dayOfWeek + 1) % 7);
+  // Day ruler: when before sunrise, Day Sahaths belong to the PREVIOUS daylight
+  // period (the day that ended at yesterday's sunset). Otherwise (after sunset
+  // or during daytime), they belong to the current calendar day.
+  const dayRuler = getDayRuler(isBeforeSunrise ? (dayOfWeek - 1 + 7) % 7 : dayOfWeek);
+  // Night ruler: when after sunset, the active night belongs to the NEXT day
+  // (manuscript: "Friday evening = night of Saturday"). Otherwise (before sunrise
+  // or during daytime), the night belongs to the CURRENT day ("Thursday evening
+  // = night of Friday").
+  const nightDayRuler = getDayRuler(isAfterSunset ? (dayOfWeek + 1) % 7 : dayOfWeek);
   
   const dayDuration = sunset - sunrise;
   const nightDuration = 24 - dayDuration;
@@ -423,7 +429,11 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
     let timeUntilStart = null;
     let status = 'upcoming';
     
-    if (nowMs >= startMs && nowMs < endMs) {
+    if (isNighttime) {
+      // Nighttime: ALL Day Sahaths are COMPLETED — the previous daylight period
+      // is finished. They stay expandable and clickable (status only affects styling).
+      status = 'past';
+    } else if (nowMs >= startMs && nowMs < endMs) {
       // Current hour
       timeRemaining = formatCountdown(endMs - nowMs);
       status = 'current';
@@ -503,7 +513,11 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
     let timeUntilStart = null;
     let status = 'upcoming';
 
-    if (nightNowMs >= startMs && nightNowMs < endMs) {
+    if (isDaytime) {
+      // Daytime: ALL Night Sahaths are COMPLETED — the previous night is finished.
+      // They stay expandable and clickable (status only affects styling).
+      status = 'past';
+    } else if (nightNowMs >= startMs && nightNowMs < endMs) {
       // Active — current time is between start and end
       timeRemaining = formatCountdown(endMs - nightNowMs);
       status = 'current';
