@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
 
-export default function SirrSectionView({ section, onSelectTopic, onBack, language }) {
+export default function SirrSectionView({ section, onSelectTopic, onBack, language, onSelectPreparations }) {
   const isMl = language === "ml";
 
   return (
@@ -32,6 +32,12 @@ export default function SirrSectionView({ section, onSelectTopic, onBack, langua
         <p className="font-inter text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
           {section.topic_count} {isMl ? "വിഷയങ്ങൾ" : "topics"}
         </p>
+        {section.id === 6 && onSelectPreparations && (
+          <button onClick={onSelectPreparations}
+            className="mt-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all btn-gold">
+            {isMl ? "🌿 തയ്യാറാക്കലുകളുടെ ലൈബ്രറി" : "🌿 Preparation Library"}
+          </button>
+        )}
       </div>
 
       {/* Empty state */}

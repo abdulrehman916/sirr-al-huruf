@@ -7,6 +7,9 @@ import SirrSourceLibrary from "@/components/sirr/SirrSourceLibrary";
 import SirrValidationReport from "@/components/sirr/SirrValidationReport";
 import { getSirrKnowledgeStructure } from "@/lib/sirrKnowledgeClassifier";
 import { fetchManuscriptBooks, fetchManuscriptEntries, mergeEntriesIntoStructure } from "@/lib/manuscriptLibrarySync";
+import { fetchPreparations } from "@/lib/preparationLibrarySync";
+import SirrPreparationLibrary from "@/components/sirr/SirrPreparationLibrary";
+import SirrPreparationDetail from "@/components/sirr/SirrPreparationDetail";
 
 export default function SirrPage() {
   const [language, setLanguage] = useState("ml");
@@ -17,6 +20,9 @@ export default function SirrPage() {
   const [databaseEntries, setDatabaseEntries] = useState([]);
   const [loadingDb, setLoadingDb] = useState(true);
   const [selectedValidationBook, setSelectedValidationBook] = useState(null);
+  const [preparations, setPreparations] = useState([]);
+  const [loadingPreps, setLoadingPreps] = useState(true);
+  const [selectedPreparation, setSelectedPreparation] = useState(null);
 
   const baseStructure = useMemo(() => getSirrKnowledgeStructure(), []);
   const structure = useMemo(
@@ -27,16 +33,21 @@ export default function SirrPage() {
   useEffect(() => {
     let cancelled = false;
     setLoadingDb(true);
-    Promise.all([fetchManuscriptBooks(), fetchManuscriptEntries()])
-      .then(([books, entries]) => {
+    Promise.all([fetchManuscriptBooks(), fetchManuscriptEntries(), fetchPreparations()])
+      .then(([books, entries, preps]) => {
         if (!cancelled) {
           setDatabaseBooks(books);
           setDatabaseEntries(entries);
+          setPreparations(preps);
           setLoadingDb(false);
+          setLoadingPreps(false);
         }
       })
       .catch(() => {
-        if (!cancelled) setLoadingDb(false);
+        if (!cancelled) {
+          setLoadingDb(false);
+          setLoadingPreps(false);
+        }
       });
     return () => { cancelled = true; };
   }, []);
@@ -105,6 +116,7 @@ export default function SirrPage() {
             onSelectTopic={handleSelectTopic}
             onBack={handleBackToHub}
             language={language}
+            onSelectPreparations={() => setView("preparation_library")}
           />
         )}
 
@@ -114,6 +126,7 @@ export default function SirrPage() {
             section={selectedSection}
             onBack={handleBackToSection}
             language={language}
+            onSelectPreparation={(prep) => { setSelectedPreparation(prep); setView("preparation_detail"); }}
           />
         )}
 
@@ -133,6 +146,26 @@ export default function SirrPage() {
             book={selectedValidationBook}
             onBack={() => { setView("library"); setSelectedValidationBook(null); }}
             language={language}
+          />
+        )}
+
+        {view === "preparation_library" && (
+          <SirrPreparationLibrary
+            preparations={preparations}
+            loading={loadingPreps}
+            onSelectPreparation={(prep) => { setSelectedPreparation(prep); setView("preparation_detail"); }}
+            onBack={() => setView("hub")}
+            language={language}
+            accent="#34D399"
+          />
+        )}
+
+        {view === "preparation_detail" && selectedPreparation && (
+          <SirrPreparationDetail
+            preparation={selectedPreparation}
+            onBack={() => setView("preparation_library")}
+            language={language}
+            accent="#34D399"
           />
         )}
       </div>

@@ -8,7 +8,7 @@ import { useState } from "react";
 import { ChevronLeft, BookMarked, FileText } from "lucide-react";
 import SirrMethodDetail from "./SirrMethodDetail";
 
-export default function SirrTopicView({ topic, section, onBack, language }) {
+export default function SirrTopicView({ topic, section, onBack, language, onSelectPreparation }) {
   const isMl = language === "ml";
   const [selectedMethod, setSelectedMethod] = useState(null);
 
@@ -30,6 +30,7 @@ export default function SirrTopicView({ topic, section, onBack, language }) {
         language={language}
         onBack={() => setSelectedMethod(null)}
         backLabel={isMl ? topic.topic_ml : topic.topic_en}
+        onSelectPreparation={onSelectPreparation}
       />
     );
   }

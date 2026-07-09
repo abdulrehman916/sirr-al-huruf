@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { ChevronLeft, BookOpen, ZoomIn, X, FileText } from "lucide-react";
 import VerifiedArabicDisplay from "./VerifiedArabicDisplay";
+import SirrRelatedPreparations from "./SirrRelatedPreparations";
 
 const NOT_SPECIFIED_ML = "ഗ്രന്ഥത്തിൽ വ്യക്തമാക്കാത്തത്";
 const NOT_SPECIFIED_EN = "Not specified in the manuscript";
@@ -90,7 +91,7 @@ function ImageViewer({ images, accent }) {
   );
 }
 
-export default function SirrMethodDetail({ method, accent, language, onBack, backLabel }) {
+export default function SirrMethodDetail({ method, accent, language, onBack, backLabel, onSelectPreparation }) {
   const isMl = language === "ml";
   const notSpecified = isMl ? NOT_SPECIFIED_ML : NOT_SPECIFIED_EN;
   const images = method.images || [];
@@ -214,6 +215,14 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
           <FieldRow label={isMl ? "കൃഷി നിയമം" : "Farming Rule"} value={method.farming_rule} accent={accent} language={language} />
         )}
       </div>
+
+      {/* Related Preparations */}
+      <SirrRelatedPreparations
+        method={method}
+        accent={accent}
+        language={language}
+        onSelectPreparation={onSelectPreparation}
+      />
 
       {/* PDF Reference */}
       <div className="text-center py-3">
