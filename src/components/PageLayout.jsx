@@ -23,6 +23,7 @@ const TAB_KEYS = [
   { id: "plants",           arabicTitle: "النباتات",        englishSubtitle: "PLANTS",  path: "/plants" },
   { id: "evil-jinn",        arabicTitle: "الجن",            englishSubtitle: "JINN",    path: "/evil-jinn" },
   { id: "holy-names",       arabicTitle: "الأسماء أ",       englishSubtitle: "NAMES-A", path: "/holy-names" },
+  { id: "sirr",             arabicTitle: "السر",            englishSubtitle: "SIRR",    path: "/sirr" },
 
   { id: "astro-clock",      arabicTitle: "الساعة",          englishSubtitle: "ASTRO",   path: "/astro-clock" },
   { id: "shop",             arabicTitle: "المتجر",          englishSubtitle: "SHOP",    path: "/shop" },
@@ -43,6 +44,7 @@ const PAGE_TITLE_KEYS = {
   "/plants": "page_plants",
   "/evil-jinn": "page_evil_jinn",
   "/holy-names": "page_holy_names",
+  "/sirr": "page_sirr",
   "/astro-clock": "page_astro_clock",
   "/shop": "page_shop",
   "/support": "support_title",

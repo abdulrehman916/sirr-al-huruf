@@ -141,7 +141,7 @@ const NAV_CARDS = [
   { path: "/holy-names",       arabic: "أسماء مقدسة",  label: "HOLY NAMES",       subtitle: "Sacred Names Reference",    iconKey: "holyNames", accent: [212, 175, 55] },
   { path: "/evil-jinn",        arabic: "الجن الشرير",  label: "EVIL JINN",        subtitle: "Jinn Classification",       iconKey: "evilJinn",   accent: [239, 68, 68] },
   { path: "/astro-clock",      arabic: "الساعة الفلكية", label: "ASTRO CLOCK",      subtitle: "Celestial Time Engine",     iconKey: "astroClock", accent: [99, 179, 237] },
-  { path: "/sirr",             arabic: "السر",           label: "SIRR",             subtitle: "PDF Knowledge Analysis",    iconKey: "sirr",   accent: [212, 175, 55] },
+  { path: "/sirr",             arabic: "السر",           label: "SIRR",             subtitle: "Manuscript Knowledge",      iconKey: "sirr",   accent: [212, 175, 55] },
   { path: "/shop",             arabic: "المتجر",         label: "SHOP",             subtitle: "Premium Products & Books",  iconKey: "shop",   accent: [212, 175, 55] },
 ];
 

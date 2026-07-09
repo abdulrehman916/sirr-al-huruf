@@ -34,6 +34,7 @@ const ROUTE_MANIFEST = [
 
   { path: '/astro-clock', component: 'AstroClockPage', chunk: 'AstroClockPage' },
   { path: '/astro-clock/search', component: 'AstroClockSearch', chunk: 'AstroClockSearch' },
+  { path: '/sirr', component: 'SirrPage', chunk: 'SirrPage', flags: ['public'] },
   
   // Support — all public
   { path: '/support', component: 'CustomerService', chunk: 'CustomerService', flags: ['public'] },

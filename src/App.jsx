@@ -43,6 +43,7 @@ const PAGE_IMPORTS = {
   HolyOneDetailPage:        () => import('./pages/HolyOneDetailPage'),
   AstroClockPage:           () => import('./pages/AstroClockPage'),
   AstroClockSearch:         () => import('./components/astroclock/AstroClockSearch'),
+  SirrPage:                 () => import('./pages/SirrPage'),
   // Support
   CustomerService:          () => import('./pages/CustomerService'),
   SupportHub:               () => import('./pages/SupportHub'),
