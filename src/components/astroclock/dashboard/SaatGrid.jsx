@@ -1,7 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-// SECTION 3 — TODAY'S 12 SAAT
+// SECTION 3 — TODAY'S 24 SAHATH
 // Unified grid of all 24 planetary hours (12 day + 12 night)
-// Compact cards: Saat #, Time, Planet, Status — expandable for details
+// Compact cards: Saat #, Time, Planet, Quality, Status — expandable
+// GLOBAL RULE: Quality (strength) and Status (Completed/Active/Upcoming)
+// are independent. Card color = quality. Badge = status. Never "Avoid".
 // ═══════════════════════════════════════════════════════════════
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,25 +12,21 @@ import { useAstroData, PLANET_TR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfHourAttributes } from "@/lib/astroClockManuscriptMerger";
+import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
+import { getSahathQuality } from "@/lib/astroClockSahathQuality.js";
 
-const BENEFIC = ["sun", "jupiter", "venus", "moon"];
-const MALEFIC = ["saturn", "mars"];
+// Status badge — independent from quality. Controls badge text + card opacity only.
+const STATUS_BADGE = {
+  current: { color: "#4ADE80", bg: "rgba(74,222,128,0.12)", border: "rgba(74,222,128,0.45)" },
+  upcoming: { color: "#F5D060", bg: "rgba(212,175,55,0.08)", border: "rgba(212,175,55,0.25)" },
+  past: { color: "rgba(255,255,255,0.40)", bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.10)" },
+};
 
-function hourStatus(planet, isCurrent, isPast) {
+function hourStatus(isCurrent, isPast) {
   if (isCurrent) return "current";
   if (isPast) return "past";
   return "upcoming";
 }
-
-const STATUS_META = {
-  current: { color: "#4ADE80", bg: "rgba(74,222,128,0.10)", border: "rgba(74,222,128,0.40)" },
-  upcoming: { color: "#F5D060", bg: "rgba(212,175,55,0.06)", border: "rgba(212,175,55,0.20)" },
-  past: { color: "rgba(255,255,255,0.45)", bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.10)" },
-  excellent: { color: "#4ADE80", bg: "rgba(74,222,128,0.06)", border: "rgba(74,222,128,0.20)" },
-  good: { color: "#86EFAC", bg: "rgba(134,239,172,0.04)", border: "rgba(134,239,172,0.15)" },
-  neutral: { color: "#FBBF24", bg: "rgba(251,191,36,0.04)", border: "rgba(251,191,36,0.15)" },
-  avoid: { color: "#F87171", bg: "rgba(248,113,113,0.04)", border: "rgba(248,113,113,0.15)" },
-};
 
 export default function SaatGrid() {
   const d = useAstroData();
@@ -36,20 +34,24 @@ export default function SaatGrid() {
   const [expanded, setExpanded] = useState(null);
   if (!d.allHours) return null;
 
-  // Split into day (1-12) and night (13-24 → display as 1-12 night)
   const dayHours = d.allHours.filter(h => h.period === "day");
   const nightHours = d.allHours.filter(h => h.period === "night");
 
   const renderHour = (h) => {
-    const status = hourStatus(h.planet, h.status === "current", h.status === "past");
-    const meta = STATUS_META[status];
+    const status = hourStatus(h.status === "current", h.status === "past");
+    const sBadge = STATUS_BADGE[status];
+    const quality = getSahathQuality(h.planet, d.dayRuler?.planet);
     const planetName = language === "ml" ? d.planetInfo[h.planet]?.name_ml_equivalent : language === "tr" ? PLANET_TR[h.planet] : d.planetInfo[h.planet]?.name_en;
     const symbol = d.planetInfo[h.planet]?.symbol || "";
     const displayNum = h.period === "night" ? h.hourNumber - 12 : h.hourNumber;
     const isOpen = expanded === `${h.period}-${h.hourNumber}`;
 
-    const goodActions = language === "ml" ? d.planetInfo[h.planet]?.goodActions_ml : d.planetInfo[h.planet]?.goodActions_en;
-    const badActions = language === "ml" ? d.planetInfo[h.planet]?.badActions_ml : d.planetInfo[h.planet]?.badActions_en;
+    const planetRules = getPlanetHourRules(h.planet);
+    const bestSuited = language === "ml" ? planetRules?.strengthenedActions?.ml : planetRules?.strengthenedActions?.en;
+    const suitable = language === "ml" ? planetRules?.suitableActions?.ml : planetRules?.suitableActions?.en;
+    const caution = language === "ml" ? planetRules?.weakenedActions?.ml : planetRules?.weakenedActions?.en;
+    const lessSuitable = language === "ml" ? planetRules?.unsuitableActions?.ml : planetRules?.unsuitableActions?.en;
+    const warnings = language === "ml" ? d.planetInfo[h.planet]?.warnings_ml : d.planetInfo[h.planet]?.warnings_en;
     const spiritual = language === "ml" ? d.planetInfo[h.planet]?.spiritualOperations_ml : d.planetInfo[h.planet]?.spiritualOperations_en;
     const source = d.planetInfo[h.planet]?.source;
     const kashfAttrs = getKashfHourAttributes(d.activeDayIndex, displayNum, h.period);
@@ -58,31 +60,35 @@ export default function SaatGrid() {
       current: txt("സജീവം", "Active Now", "Mevcut"),
       upcoming: txt("വരാനിരിക്കുന്ന", "Upcoming", "Gelecek"),
       past: txt("പൂർത്തിയായി", "Completed", "Geçti"),
-      excellent: txt("മികച്ചത്", "Excellent", "Mükemmel"),
-      good: txt("നല്ലത്", "Good", "İyi"),
-      neutral: txt("സാധാരണം", "Neutral", "Nötr"),
-      avoid: txt("ഒഴിവാക്കുക", "Avoid", "Kaçınılacak"),
     };
+    const qualityLabel = txt(quality.label_ml, quality.label_en, quality.label_tr);
 
     return (
       <div key={`${h.period}-${h.hourNumber}`} className="rounded-xl overflow-hidden" style={{
-        background: meta.bg, border: `1px solid ${meta.border}`,
+        background: quality.color + "0D",
+        border: `1px solid ${quality.color}40`,
         opacity: status === "past" ? 0.55 : 1,
-        boxShadow: status === "current" ? "0 0 16px rgba(74,222,128,0.20)" : "none",
+        boxShadow: status === "current" ? `0 0 16px ${quality.color}30` : "none",
         transition: "opacity 0.3s ease, box-shadow 0.3s ease",
       }}>
         <button onClick={() => setExpanded(isOpen ? null : `${h.period}-${h.hourNumber}`)}
           className="w-full flex items-center gap-2 p-2.5 text-left">
-          <span className="font-inter text-xs font-bold tabular-nums w-7 text-center" style={{ color: meta.color }}>#{displayNum}</span>
+          <span className="font-inter text-xs font-bold tabular-nums w-7 text-center" style={{ color: quality.color }}>#{displayNum}</span>
           <span className="text-base leading-none">{symbol}</span>
           <div className="flex-1 min-w-0">
-            <span className="font-inter text-xs font-bold block truncate" style={{ color: meta.color }}>{planetName}</span>
+            <span className="font-inter text-xs font-bold block truncate" style={{ color: quality.color }}>{planetName}</span>
             <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(255,255,255,0.40)" }}>{h.startTime} – {h.endTime}</span>
           </div>
-          <span className="font-inter text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}>
+          {/* Quality badge — colored dot + strength label (manuscript-based) */}
+          <span className="font-inter text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0" style={{ background: quality.color + "15", border: `1px solid ${quality.color}40` }}>
+            <span>{quality.dot}</span>
+            <span style={{ color: quality.color }}>{qualityLabel}</span>
+          </span>
+          {/* Status badge — Completed / Active Now / Upcoming (independent from quality) */}
+          <span className="font-inter text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: sBadge.bg, color: sBadge.color, border: `1px solid ${sBadge.border}` }}>
             {statusLabels[status]}
           </span>
-          <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: meta.color, transform: isOpen ? "rotate(180deg)" : "none" }} />
+          <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: quality.color, transform: isOpen ? "rotate(180deg)" : "none" }} />
         </button>
         <AnimatePresence>
           {isOpen && (
@@ -91,22 +97,46 @@ export default function SaatGrid() {
                 {h.timeRemaining && (
                   <p className="font-inter text-[10px]" style={{ color: "#F5D060" }}>⏳ {txt("ബാക്കി", "Remaining", "Kalan")}: {h.timeRemaining}</p>
                 )}
-                {goodActions?.length > 0 && (
+                {/* Best suited activities */}
+                {bestSuited?.length > 0 && (
                   <div>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(74,222,128,0.60)" }}>{txt("അനുയോജ്യം", "Recommended", "Önerilen")}</p>
-                    {goodActions.slice(0, 3).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>• {a}</p>)}
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(34,197,94,0.70)" }}>{txt("ഏറ്റവും അനുയോജ്യം", "Best Suited", "En Uygun")}</p>
+                    {bestSuited.slice(0, 3).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>• {a}</p>)}
                   </div>
                 )}
-                {badActions?.length > 0 && (
+                {/* Suitable activities */}
+                {suitable?.length > 0 && (
                   <div>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.60)" }}>{txt("ഒഴിവാക്കുക", "Avoid", "Kaçınılacak")}</p>
-                    {badActions.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>• {a}</p>)}
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(134,239,172,0.60)" }}>{txt("അനുയോജ്യം", "Suitable", "Uygun")}</p>
+                    {suitable.slice(0, 3).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>• {a}</p>)}
                   </div>
                 )}
+                {/* Activities requiring caution */}
+                {caution?.length > 0 && (
+                  <div>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(251,191,36,0.60)" }}>{txt("ശ്രദ്ധിക്കുക", "Caution", "Dikkat")}</p>
+                    {caution.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {a}</p>)}
+                  </div>
+                )}
+                {/* Less suitable activities — NEVER labeled "Avoid" */}
+                {lessSuitable?.length > 0 && (
+                  <div>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.55)" }}>{txt("കുറവ് അനുയോജ്യം", "Less Suitable", "Daha Az Uygun")}</p>
+                    {lessSuitable.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>• {a}</p>)}
+                  </div>
+                )}
+                {/* Spiritual operations */}
                 {spiritual?.length > 0 && (
                   <div>
                     <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>{txt("ആത്മികം", "Spiritual", "Manevi")}</p>
                     {spiritual.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {a}</p>)}
+                  </div>
+                )}
+                {/* Warnings and conditions */}
+                {warnings?.length > 0 && (
+                  <div>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(251,191,36,0.50)" }}>{txt("മുന്നറിയിപ്പുകൾ", "Warnings", "Uyarılar")}</p>
+                    {warnings.map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>• {a}</p>)}
                   </div>
                 )}
                 {source && (

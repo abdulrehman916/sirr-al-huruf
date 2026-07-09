@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Users, Sword, Shield, CheckCircle, XCircle, Book } from "lucide-react";
 import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 import { getPlanetFriendships } from "@/lib/astroClockPlanetFriendships.js";
+import { getSahathQuality } from "@/lib/astroClockSahathQuality.js";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -43,6 +44,8 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
   const hourStatus = hour.status || 'upcoming';
   const isCompleted = hourStatus === 'past';
   const isCurrent = hourStatus === 'current';
+  const quality = getSahathQuality(hour.planet, hour.dayRuler || null);
+  const qualityLabel = isMalayalam ? quality.label_ml : quality.label_en;
 
   return (
     <div className="rounded-xl border p-5 w-full max-w-full overflow-x-hidden"
@@ -106,6 +109,15 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
             <span className="font-inter text-[9px]" style={{ color: G.dim }}>⏳ {hour.timeUntilStart}</span>
           )}
         </div>
+
+        {/* Quality Badge — Excellent / Very Good / Good / Moderate / Weak */}
+        <div className="flex items-center gap-2 pl-1">
+          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+            style={{ background: `${quality.color}15`, color: quality.color, border: `1px solid ${quality.color}40` }}>
+            <span>{quality.dot}</span>
+            {qualityLabel}
+          </span>
+        </div>
       </div>
 
       {/* Quick Info: Status & Element */}
@@ -159,8 +171,11 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
               {/* Actions Strengthened/Weakened */}
               <ActionsSection planetRules={planetRules} isMalayalam={isMalayalam} />
               
-              {/* Suitable/Unsuitable Operations */}
+              {/* Suitable/Less Suitable Activities */}
               <OperationsSection planetRules={planetRules} isMalayalam={isMalayalam} />
+              
+              {/* Warnings and Conditions */}
+              <WarningsSection hour={hour} isMalayalam={isMalayalam} />
               
               {/* Manuscript Source */}
               <ManuscriptSourceSection planetRules={planetRules} isMalayalam={isMalayalam} />
@@ -252,7 +267,7 @@ function ActionsSection({ planetRules, isMalayalam }) {
         <div className="flex items-center gap-2 mb-3">
           <CheckCircle className="w-4 h-4" style={{ color: "#22c55e" }} />
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
-            {isMalayalam ? "ശക്തിപ്പെടുത്തുന്ന പ്രവർത്തനങ്ങൾ" : "Actions Strengthened"}
+            {isMalayalam ? "ഏറ്റവും അനുയോജ്യ പ്രവർത്തനങ്ങൾ" : "Best Suited Activities"}
           </p>
         </div>
         <div className="space-y-1">
@@ -274,7 +289,7 @@ function ActionsSection({ planetRules, isMalayalam }) {
         <div className="flex items-center gap-2 mb-3">
           <XCircle className="w-4 h-4" style={{ color: "#ef4444" }} />
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
-            {isMalayalam ? "ക്ഷീണിപ്പിക്കുന്ന പ്രവർത്തനങ്ങൾ" : "Actions Weakened"}
+            {isMalayalam ? "ശ്രദ്ധിക്കേണ്ട പ്രവർത്തനങ്ങൾ" : "Activities Requiring Caution"}
           </p>
         </div>
         <div className="space-y-1">
@@ -305,7 +320,7 @@ function OperationsSection({ planetRules, isMalayalam }) {
         <div className="flex items-center gap-2 mb-3">
           <CheckCircle className="w-4 h-4" style={{ color: "#22c55e" }} />
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#22c55e" }}>
-            {isMalayalam ? "ഉചിത പ്രവർത്തനങ്ങൾ" : "Suitable Operations"}
+            {isMalayalam ? "അനുയോജ്യ പ്രവർത്തനങ്ങൾ" : "Suitable Activities"}
           </p>
         </div>
         <div className="space-y-1">
@@ -327,7 +342,7 @@ function OperationsSection({ planetRules, isMalayalam }) {
         <div className="flex items-center gap-2 mb-3">
           <XCircle className="w-4 h-4" style={{ color: "#ef4444" }} />
           <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "#ef4444" }}>
-            {isMalayalam ? "അനുചിത പ്രവർത്തനങ്ങൾ" : "Unsuitable Operations"}
+            {isMalayalam ? "കുറവ് അനുയോജ്യ പ്രവർത്തനങ്ങൾ" : "Less Suitable Activities"}
           </p>
         </div>
         <div className="space-y-1">
@@ -343,6 +358,28 @@ function OperationsSection({ planetRules, isMalayalam }) {
             </p>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function WarningsSection({ hour, isMalayalam }) {
+  const warnings = isMalayalam ? hour.planetInfo?.warnings_ml : hour.planetInfo?.warnings_en;
+  const warningsArr = Array.isArray(warnings) ? warnings : (warnings ? [warnings] : []);
+  if (warningsArr.length === 0) return null;
+
+  return (
+    <div className="p-4 rounded-lg border" style={{ background: "rgba(251,191,36,0.04)", borderColor: "rgba(251,191,36,0.25)" }}>
+      <p className="font-inter text-[9px] uppercase tracking-widest mb-3" style={{ color: "#FBBF24" }}>
+        {isMalayalam ? "മുന്നറിയിപ്പുകളും വ്യവസ്ഥകളും" : "Warnings & Conditions"}
+      </p>
+      <div className="space-y-1">
+        {warningsArr.map((w, idx) => (
+          <p key={idx} className="font-malayalam-sm text-white/70 flex items-start gap-2">
+            <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#FBBF24" }} />
+            {w}
+          </p>
+        ))}
       </div>
     </div>
   );
