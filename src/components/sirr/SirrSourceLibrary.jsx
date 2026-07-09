@@ -109,7 +109,7 @@ function BookCard({ book, isDb, isMl, onShowValidationReport }) {
       {/* Validation Report Button */}
       {isDb && book.validation_status && book.validation_status !== "not_validated" && onShowValidationReport && (
         <button
-          onClick={() => onShowValidationReport(book)}
+          onClick={() => onShowValidationReport?.(book)}
           className="w-full mt-2 flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-bold transition-all"
           style={{
             background: book.validation_status === "passed" ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)",
