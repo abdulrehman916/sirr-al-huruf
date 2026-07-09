@@ -188,39 +188,54 @@ Deno.serve(async (req) => {
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
 
     const body = await req.json();
-    const { pdf_url, book_title, book_title_ar, author, language, original_file_name, tradition } = body;
+    const { pdf_url, book_title, book_title_ar, author, language, original_file_name, tradition,
+            existing_book_id, page_offset, chunk_number, total_chunks, do_quality_gate, is_final_chunk } = body;
+    const pageNumOffset = parseInt(page_offset) || 0;
+    const isChunkMode = !!existing_book_id;
 
     if (!pdf_url || !book_title) {
       return Response.json({ error: 'pdf_url and book_title are required' }, { status: 400 });
     }
 
-    const bookId = `MS-VAL-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const validationDate = new Date().toISOString();
+    let bookId: string;
+    let book: any;
 
-    // ══ Create ManuscriptBook ══
-    const book = await base44.asServiceRole.entities.ManuscriptBook.create({
-      book_id: bookId,
-      book_title,
-      book_title_ar: book_title_ar || '',
-      author: author || '',
-      language: language || 'Arabic',
-      source: 'validation',
-      original_file_url: pdf_url,
-      original_file_name: original_file_name || '',
-      upload_date: validationDate,
-      version: '2.0-validation-4stage',
-      total_pages: 0,
-      ocr_status: 'processing',
-      verification_status: 'unverified',
-      extraction_status: 'validation_in_progress',
-      categories_covered: [],
-      total_entries_extracted: 0,
-      tradition: tradition || '',
-      validation_status: 'pending',
-      validation_report: {},
-      validation_date: validationDate,
-      notes: 'Phase 1: Extraction + Images. Call verifyBookEntries next for Phase 2.',
-    });
+    if (isChunkMode) {
+      // CHUNK MODE: Use existing book (created by importFromOneDrive for large split PDFs)
+      const existingBooks = await base44.asServiceRole.entities.ManuscriptBook.filter({ book_id: existing_book_id });
+      if (!existingBooks || existingBooks.length === 0) {
+        return Response.json({ error: 'existing_book_id not found: ' + existing_book_id }, { status: 404 });
+      }
+      book = existingBooks[0];
+      bookId = existing_book_id;
+    } else {
+      // NORMAL MODE: Create new ManuscriptBook
+      bookId = `MS-VAL-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      book = await base44.asServiceRole.entities.ManuscriptBook.create({
+        book_id: bookId,
+        book_title,
+        book_title_ar: book_title_ar || '',
+        author: author || '',
+        language: language || 'Arabic',
+        source: 'validation',
+        original_file_url: pdf_url,
+        original_file_name: original_file_name || '',
+        upload_date: validationDate,
+        version: '2.0-validation-4stage',
+        total_pages: 0,
+        ocr_status: 'processing',
+        verification_status: 'unverified',
+        extraction_status: 'validation_in_progress',
+        categories_covered: [],
+        total_entries_extracted: 0,
+        tradition: tradition || '',
+        validation_status: 'pending',
+        validation_report: {},
+        validation_date: validationDate,
+        notes: 'Phase 1: Extraction + Images. Call verifyBookEntries next for Phase 2.',
+      });
+    }
 
     // ══ STAGE 1: File Content Extraction ══
     // Detect file type from original_file_name extension.
@@ -237,6 +252,8 @@ Deno.serve(async (req) => {
     }
 
     // ══ STAGE 0: QUALITY ASSESSMENT GATE ══
+    // Skip for chunk mode (non-first chunks) — quality gate runs on chunk 1 only.
+    const skipQualityGate = isChunkMode && do_quality_gate !== true;
     // Assess manuscript readability BEFORE extraction.
     // Reject poor-quality manuscripts — do NOT import them.
     // Accuracy > completeness. Better to reject than to save incorrect data.
@@ -266,7 +283,7 @@ REJECTION THRESHOLD: Reject if overall_confidence < 65, OR if more than 20% of p
 
 CRITICAL: It is BETTER TO REJECT an unclear manuscript than to extract incorrect or incomplete information. Accuracy and authenticity are more important than importing every available manuscript.`;
 
-    const qualityResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    const qualityResult: any = skipQualityGate ? {} : await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: qualityPrompt,
       file_urls: [pdf_url],
       model: 'gemini_3_flash',
@@ -521,7 +538,9 @@ CRITICAL RULES:
             const chunkFile = new File([chunkBlob], chunkFileName, { type: 'application/pdf' });
             const chunkUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: chunkFile });
 
-            const chunkPrompt = `You are analyzing pages ${startPage} to ${endPage} of an Islamic occult manuscript PDF.\nIMPORTANT: Use ABSOLUTE page numbers (${startPage} to ${endPage}) in your response.\n\n${extractionPrompt}`;
+            const absStartPage = startPage + pageNumOffset;
+            const absEndPage = endPage + pageNumOffset;
+            const chunkPrompt = `You are analyzing pages ${absStartPage} to ${absEndPage} of an Islamic occult manuscript PDF.\nIMPORTANT: Use ABSOLUTE page numbers (${absStartPage} to ${absEndPage}) in your response.\n\n${extractionPrompt}`;
 
             const chunkResult: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
               prompt: chunkPrompt,
@@ -576,7 +595,7 @@ CRITICAL RULES:
 
     // Ensure global sequential entry_order across all chunks (manuscript page order)
     entries.forEach((e: any, idx: number) => {
-      e.entry_order = idx + 1;
+      e.entry_order = isChunkMode ? (chunk_number * 100000 + idx + 1) : (idx + 1);
     });
 
     // ══ STAGE 4: Image Extraction ══
@@ -683,7 +702,7 @@ CRITICAL RULES:
       const mappedHeadingId = entry.heading_id ? (headingIdMap[entry.heading_id] || '') : '';
 
       return {
-        entry_id: `ME-${bookId}-${idx + 1}`,
+        entry_id: `ME-${bookId}-${isChunkMode ? `C${chunk_number}_` : ''}${idx + 1}`,
         book_id: bookId,
         book_title,
         book_title_ar: book_title_ar || '',
@@ -711,7 +730,7 @@ CRITICAL RULES:
         warnings: entry.warnings || '',
         benefits: entry.benefits || '',
         notes: entry.notes || '',
-        page_number: entry.page_number || '',
+        page_number: entry.page_number ? String(parseInt(entry.page_number) + pageNumOffset) : '',
         heading_id: mappedHeadingId,
         entry_order: entry.entry_order || (idx + 1),
         images: pageImages, // Actual image URLs from Stage 4
@@ -864,11 +883,39 @@ CRITICAL RULES:
     };
 
     // ══ Update ManuscriptBook ══
+    // For chunk mode: accumulate metrics. Only set 'completed' on final chunk.
+    if (isChunkMode && !is_final_chunk) {
+      const existingEntries = book.total_entries_extracted || 0;
+      await base44.asServiceRole.entities.ManuscriptBook.update(book.id, {
+        extraction_status: 'validation_in_progress',
+        ocr_status: 'processing',
+        total_pages: Math.max(book.total_pages || 0, pageNumOffset + totalPagesAnalyzed),
+        total_entries_extracted: existingEntries + totalEntries,
+        notes: `Chunk ${chunk_number}/${total_chunks} processed: ${totalEntries} entries. ${total_chunks - chunk_number} remaining.`,
+      });
+      return Response.json({
+        status: 'chunk_processed', book_id: bookId, book_title: book.book_title,
+        chunk_number, total_chunks, entries_created: createdEntries.length,
+        entries_in_chunk: totalEntries, total_entries_so_far: existingEntries + totalEntries,
+        message: `Chunk ${chunk_number}/${total_chunks} processed: ${totalEntries} entries extracted.`,
+      });
+    }
+
+    // Final chunk (or normal mode): finalize the book
+    const finalEntriesCount = isChunkMode ? (book.total_entries_extracted || 0) + totalEntries : totalEntries;
+
+    // For chunk mode: adjust validation report to reflect merged totals across all chunks
+    if (isChunkMode) {
+      validationReport.summary.total_entries_extracted = finalEntriesCount;
+      validationReport.summary.total_pages_processed = Math.max(book.total_pages || 0, pageNumOffset + totalPagesAnalyzed);
+      validationReport.chunking_info = { total_chunks, merged: true, total_entries: finalEntriesCount };
+    }
+
     await base44.asServiceRole.entities.ManuscriptBook.update(book.id, {
       extraction_status: 'completed',
       ocr_status: 'completed',
-      total_pages: totalPagesAnalyzed,
-      total_entries_extracted: totalEntries,
+      total_pages: isChunkMode ? Math.max(book.total_pages || 0, pageNumOffset + totalPagesAnalyzed) : totalPagesAnalyzed,
+      total_entries_extracted: finalEntriesCount,
       categories_covered: Object.entries(entriesBySection)
         .filter(([, v]: [string, any]) => v.count > 0)
         .map(([k]: [string, any]) => k.replace('sirr_', 'Sirr ')),
@@ -878,6 +925,17 @@ CRITICAL RULES:
       verification_status: 'unverified',
       notes: `Phase 1 complete: ${totalEntries} entries, ${totalImages} images. Call verifyBookEntries for Phase 2.`,
     });
+
+    if (isChunkMode) {
+      return Response.json({
+        status: 'chunk_merge_complete', book_id: bookId, book_title: book.book_title,
+        chunk_number, total_chunks, entries_created: createdEntries.length,
+        total_entries: finalEntriesCount, validation_report: validationReport,
+        fourteen_point_check: fourteenPointCheck,
+        message: `All ${total_chunks} chunks merged. ${finalEntriesCount} total entries. Phase 1 complete.`,
+        next_step: `verifyBookEntries({ "book_id": "${bookId}" })`,
+      });
+    }
 
     return Response.json({
       status: 'phase_1_complete',

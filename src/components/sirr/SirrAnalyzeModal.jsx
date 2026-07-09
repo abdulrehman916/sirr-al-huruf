@@ -76,7 +76,44 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
         return;
       }
 
-      const bookId = importData.book_id;
+      // ── CHUNKED: Large file auto-split — process each chunk independently ──
+      let bookId = importData.book_id;
+
+      if (importData.status === "chunked") {
+        setStage("splitting");
+        setProgress(8);
+        const { chunks, total_chunks } = importData;
+
+        for (const chunk of chunks) {
+          setBatchInfo({ current: chunk.chunk_number, remaining: total_chunks - chunk.chunk_number });
+          setProgress(8 + Math.round((chunk.chunk_number / total_chunks) * 12));
+
+          const chunkRes = await base44.functions.invoke("validateManuscriptImport", {
+            pdf_url: chunk.chunk_url,
+            book_title: bookTitle,
+            existing_book_id: bookId,
+            page_offset: chunk.page_offset,
+            chunk_number: chunk.chunk_number,
+            total_chunks,
+            do_quality_gate: chunk.chunk_number === 1,
+            is_final_chunk: chunk.chunk_number === total_chunks,
+            original_file_name: file.name,
+          });
+          const chunkData = chunkRes.data;
+
+          if (chunkData.status === "import_rejected") {
+            setStage("rejected");
+            setProgress(100);
+            setRejection({
+              confidence: chunkData.overall_confidence || 0,
+              reason: chunkData.reason || "Quality below threshold",
+              problemPages: chunkData.problem_pages || [],
+            });
+            return;
+          }
+        }
+      }
+
       if (!bookId) {
         setError("No book_id returned from import");
         setStage("error");
@@ -211,6 +248,7 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
 
   const stages = [
     { id: "quality", label: isMl ? "ഗുണനിലവാര പരിശോധന" : "Quality Check", icon: Microscope },
+    { id: "splitting", label: isMl ? "വലിയ പുസ്തകം വിഭജനം" : "Splitting Book", icon: FileSearch },
     { id: "extraction", label: isMl ? "പേജ് എക്സ്ട്രാക്ഷൻ" : "Page Extraction", icon: FileSearch },
     { id: "image_processing", label: isMl ? "ചിത്ര സംസ്കരണം" : "Image Processing", icon: ImageIcon },
     { id: "internal_search", label: isMl ? "ആന്തരിക ഡാറ്റാബേസ് തിരയൽ" : "Internal Database Search", icon: Database },
@@ -221,7 +259,7 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
     { id: "save", label: isMl ? "സംരക്ഷിക്കൽ" : "Save", icon: Save },
   ];
 
-  const stageOrder = ["quality", "extraction", "image_processing", "internal_search", "external_verification", "duplicates", "knowledge_routing", "review", "save"];
+  const stageOrder = ["quality", "splitting", "extraction", "image_processing", "internal_search", "external_verification", "duplicates", "knowledge_routing", "review", "save"];
   const currentStageIdx = stageOrder.indexOf(stage);
   const isError = stage === "error" || stage === "rejected" || stage === "changed";
 
@@ -347,6 +385,11 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
                         {isMl ? `ബാച്ച് ${batchInfo.current}` : `Batch ${batchInfo.current}`}
                         {batchInfo.remaining > 0 ? ` — ${batchInfo.remaining} ${isMl ? "ബാക്കി" : "remaining"}` : ""}
                         {stats.internalReused > 0 ? ` · ${stats.internalReused} ${isMl ? "ആന്തരികം" : "reused"}` : ""}
+                      </p>
+                    )}
+                    {isActive && s.id === "splitting" && batchInfo.current > 0 && (
+                      <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                        {isMl ? `ഭാഗം ${batchInfo.current}/${batchInfo.current + batchInfo.remaining}` : `Part ${batchInfo.current}/${batchInfo.current + batchInfo.remaining}`}
                       </p>
                     )}
                   </div>

@@ -90,6 +90,50 @@ export default function SirrOneDriveBrowser({ onBack, onImported, language }) {
     });
   };
 
+  // ── Process chunked import (large files auto-split into parts) ──
+  const processChunks = async (statusKey, name, bookTitle, data) => {
+    const { book_id, chunks, total_chunks } = data;
+    let chunkError = null;
+    for (const chunk of chunks) {
+      setImportStatus((prev) => ({
+        ...prev,
+        [statusKey]: { status: "importing", name, message: `Processing Part ${chunk.chunk_number}/${total_chunks}...` },
+      }));
+      try {
+        const chunkRes = await base44.functions.invoke("validateManuscriptImport", {
+          pdf_url: chunk.chunk_url,
+          book_title: bookTitle,
+          existing_book_id: book_id,
+          page_offset: chunk.page_offset,
+          chunk_number: chunk.chunk_number,
+          total_chunks,
+          do_quality_gate: chunk.chunk_number === 1,
+          is_final_chunk: chunk.chunk_number === total_chunks,
+          original_file_name: name,
+        });
+        const chunkData = chunkRes.data;
+        if (chunkData.status === "import_rejected") {
+          setImportStatus((prev) => ({
+            ...prev,
+            [statusKey]: { status: "error", message: `Quality rejected: ${chunkData.reason || "below threshold"}`, book_id, name },
+          }));
+          return false;
+        }
+      } catch (e) {
+        chunkError = e.response?.data?.error || e.message || `Part ${chunk.chunk_number} failed`;
+      }
+    }
+    setImportStatus((prev) => ({
+      ...prev,
+      [statusKey]: {
+        status: chunkError ? "error" : "imported",
+        message: chunkError ? `Partially imported: ${chunkError}` : `Completed. ${total_chunks} parts merged into one book.`,
+        book_id, book_title: bookTitle, name,
+      },
+    }));
+    return !chunkError;
+  };
+
   // ── Import selected files ──
   const handleImport = async () => {
     setImporting(true);
@@ -103,17 +147,21 @@ export default function SirrOneDriveBrowser({ onBack, onImported, language }) {
           book_title: bookTitle,
         });
         const data = res.data;
-        setImportStatus((prev) => ({
-          ...prev,
-          [file.id]: {
-            status: data.status,
-            message: data.message,
-            book_id: data.book_id,
-            file_id: file.id,
-            book_title: bookTitle,
-            name: file.name,
-          },
-        }));
+        if (data.status === "chunked") {
+          await processChunks(file.id, file.name, bookTitle, data);
+        } else {
+          setImportStatus((prev) => ({
+            ...prev,
+            [file.id]: {
+              status: data.status,
+              message: data.message,
+              book_id: data.book_id,
+              file_id: file.id,
+              book_title: bookTitle,
+              name: file.name,
+            },
+          }));
+        }
       } catch (e) {
         setImportStatus((prev) => ({
           ...prev,
@@ -137,10 +185,14 @@ export default function SirrOneDriveBrowser({ onBack, onImported, language }) {
         force_reimport: true,
       });
       const data = res.data;
-      setImportStatus((prev) => ({
-        ...prev,
-        [fileId]: { status: "imported", message: data.message, book_id: data.book_id, name: bookTitle },
-      }));
+      if (data.status === "chunked") {
+        await processChunks(fileId, bookTitle, bookTitle, data);
+      } else {
+        setImportStatus((prev) => ({
+          ...prev,
+          [fileId]: { status: "imported", message: data.message, book_id: data.book_id, name: bookTitle },
+        }));
+      }
     } catch (e) {
       setImportStatus((prev) => ({
         ...prev,
