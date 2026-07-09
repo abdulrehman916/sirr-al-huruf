@@ -17,18 +17,17 @@ const MALEFIC = ["saturn", "mars"];
 function hourStatus(planet, isCurrent, isPast) {
   if (isCurrent) return "current";
   if (isPast) return "past";
-  if (MALEFIC.includes(planet)) return "avoid";
-  if (BENEFIC.includes(planet)) return "excellent";
-  return "neutral";
+  return "upcoming";
 }
 
 const STATUS_META = {
-  current: { color: "#F5D060", bg: "rgba(212,175,55,0.12)", border: "rgba(212,175,55,0.40)" },
+  current: { color: "#4ADE80", bg: "rgba(74,222,128,0.10)", border: "rgba(74,222,128,0.40)" },
+  upcoming: { color: "#F5D060", bg: "rgba(212,175,55,0.06)", border: "rgba(212,175,55,0.20)" },
+  past: { color: "rgba(255,255,255,0.45)", bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.10)" },
   excellent: { color: "#4ADE80", bg: "rgba(74,222,128,0.06)", border: "rgba(74,222,128,0.20)" },
   good: { color: "#86EFAC", bg: "rgba(134,239,172,0.04)", border: "rgba(134,239,172,0.15)" },
   neutral: { color: "#FBBF24", bg: "rgba(251,191,36,0.04)", border: "rgba(251,191,36,0.15)" },
   avoid: { color: "#F87171", bg: "rgba(248,113,113,0.04)", border: "rgba(248,113,113,0.15)" },
-  past: { color: "rgba(255,255,255,0.20)", bg: "rgba(255,255,255,0.01)", border: "rgba(255,255,255,0.05)" },
 };
 
 export default function SaatGrid() {
@@ -56,17 +55,21 @@ export default function SaatGrid() {
     const kashfAttrs = getKashfHourAttributes(d.activeDayIndex, displayNum, h.period);
 
     const statusLabels = {
-      current: txt("നിലവിലെ", "Current", "Mevcut"),
+      current: txt("സജീവം", "Active Now", "Mevcut"),
+      upcoming: txt("വരാനിരിക്കുന്ന", "Upcoming", "Gelecek"),
+      past: txt("പൂർത്തിയായി", "Completed", "Geçti"),
       excellent: txt("മികച്ചത്", "Excellent", "Mükemmel"),
       good: txt("നല്ലത്", "Good", "İyi"),
       neutral: txt("സാധാരണം", "Neutral", "Nötr"),
       avoid: txt("ഒഴിവാക്കുക", "Avoid", "Kaçınılacak"),
-      past: txt("കഴിഞ്ഞത്", "Past", "Geçti"),
     };
 
     return (
       <div key={`${h.period}-${h.hourNumber}`} className="rounded-xl overflow-hidden" style={{
         background: meta.bg, border: `1px solid ${meta.border}`,
+        opacity: status === "past" ? 0.55 : 1,
+        boxShadow: status === "current" ? "0 0 16px rgba(74,222,128,0.20)" : "none",
+        transition: "opacity 0.3s ease, box-shadow 0.3s ease",
       }}>
         <button onClick={() => setExpanded(isOpen ? null : `${h.period}-${h.hourNumber}`)}
           className="w-full flex items-center gap-2 p-2.5 text-left">

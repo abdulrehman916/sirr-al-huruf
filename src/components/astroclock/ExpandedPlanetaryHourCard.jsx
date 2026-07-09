@@ -36,12 +36,22 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
   const friendships = getPlanetFriendships(hour.planet);
   const isSaad = planetRules?.nature?.includes("Sa'd");
 
+  // ── Status-based styling (Completed / Active Now / Upcoming) ──
+  // Completed: dimmed opacity, still fully clickable & expandable
+  // Current: highlighted border + glow
+  // Upcoming: full visibility, no dimming
+  const hourStatus = hour.status || 'upcoming';
+  const isCompleted = hourStatus === 'past';
+  const isCurrent = hourStatus === 'current';
+
   return (
     <div className="rounded-xl border p-5 w-full max-w-full overflow-x-hidden"
       style={{
-        background: G.bg,
-        borderColor: G.border,
-        boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
+        background: isCurrent ? "rgba(212,175,55,0.16)" : G.bg,
+        borderColor: isCurrent ? G.borderHi : G.border,
+        boxShadow: isCurrent ? `0 0 28px ${G.glow}, 0 2px 12px rgba(0,0,0,0.3)` : "0 2px 12px rgba(0,0,0,0.3)",
+        opacity: isCompleted ? 0.55 : 1,
+        transition: "opacity 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease",
       }}>
       {/* Header: Basic Info */}
       <div className="flex flex-col gap-2 mb-4">
@@ -66,6 +76,35 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
           <p className="font-malayalam-sm" style={{ color: G.dim }}>
             {hour.duration}
           </p>
+        </div>
+
+        {/* Status Badge — Completed / Active Now / Upcoming */}
+        <div className="flex items-center gap-2 pl-1">
+          {isCompleted && (
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest"
+              style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.40)", border: "1px solid rgba(255,255,255,0.10)" }}>
+              {isMalayalam ? "പൂർത്തിയായി" : "Completed"}
+            </span>
+          )}
+          {isCurrent && (
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+              style={{ background: "rgba(74,222,128,0.12)", color: "#4ADE80", border: "1px solid rgba(74,222,128,0.45)" }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#4ADE80" }} />
+              {isMalayalam ? "സജീവം" : "Active Now"}
+            </span>
+          )}
+          {!isCompleted && !isCurrent && (
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest"
+              style={{ background: G.bgHi, color: G.dim, border: `1px solid ${G.faint}` }}>
+              {isMalayalam ? "വരാനിരിക്കുന്ന" : "Upcoming"}
+            </span>
+          )}
+          {isCurrent && hour.timeRemaining && (
+            <span className="font-inter text-[9px]" style={{ color: "#4ADE80" }}>⏳ {hour.timeRemaining}</span>
+          )}
+          {!isCompleted && !isCurrent && hour.timeUntilStart && (
+            <span className="font-inter text-[9px]" style={{ color: G.dim }}>⏳ {hour.timeUntilStart}</span>
+          )}
         </div>
       </div>
 
