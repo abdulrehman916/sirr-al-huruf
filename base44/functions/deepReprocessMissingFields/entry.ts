@@ -162,7 +162,7 @@ CRITICAL RULES FOR field_results:
     const llmResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       file_urls: [pdfUrl],
-      model: 'gemini_3_1_pro',
+      model: model || 'gemini_3_1_pro',
       response_json_schema: {
         type: 'object',
         properties: {
