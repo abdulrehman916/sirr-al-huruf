@@ -6,12 +6,14 @@ import SirrTopicView from "@/components/sirr/SirrTopicView";
 import SirrSourceLibrary from "@/components/sirr/SirrSourceLibrary";
 import SirrValidationReport from "@/components/sirr/SirrValidationReport";
 import { getSirrKnowledgeStructure } from "@/lib/sirrKnowledgeClassifier";
-import { fetchManuscriptBooks, fetchManuscriptEntries, mergeEntriesIntoStructure } from "@/lib/manuscriptLibrarySync";
+import { fetchManuscriptBooks, fetchManuscriptEntries, fetchManuscriptHeadings, mergeEntriesIntoStructure, buildHeadingTree } from "@/lib/manuscriptLibrarySync";
 import { fetchPreparations } from "@/lib/preparationLibrarySync";
 import SirrPreparationLibrary from "@/components/sirr/SirrPreparationLibrary";
 import SirrPreparationDetail from "@/components/sirr/SirrPreparationDetail";
 import SirrOneDriveBrowser from "@/components/sirr/SirrOneDriveBrowser";
 import SirrOneDriveFolderImporter from "@/components/sirr/SirrOneDriveFolderImporter";
+import SirrBookTOC from "@/components/sirr/SirrBookTOC";
+import SirrHeadingView from "@/components/sirr/SirrHeadingView";
 
 export default function SirrPage() {
   const [language, setLanguage] = useState("ml");
@@ -20,8 +22,12 @@ export default function SirrPage() {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [databaseBooks, setDatabaseBooks] = useState([]);
   const [databaseEntries, setDatabaseEntries] = useState([]);
+  const [databaseHeadings, setDatabaseHeadings] = useState([]);
   const [loadingDb, setLoadingDb] = useState(true);
   const [selectedValidationBook, setSelectedValidationBook] = useState(null);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [selectedHeading, setSelectedHeading] = useState(null);
+  const [headingBreadcrumb, setHeadingBreadcrumb] = useState([]);
   const [preparations, setPreparations] = useState([]);
   const [loadingPreps, setLoadingPreps] = useState(true);
   const [selectedPreparation, setSelectedPreparation] = useState(null);
@@ -35,11 +41,12 @@ export default function SirrPage() {
   useEffect(() => {
     let cancelled = false;
     setLoadingDb(true);
-    Promise.all([fetchManuscriptBooks(), fetchManuscriptEntries(), fetchPreparations()])
-      .then(([books, entries, preps]) => {
+    Promise.all([fetchManuscriptBooks(), fetchManuscriptEntries(), fetchManuscriptHeadings(), fetchPreparations()])
+      .then(([books, entries, headings, preps]) => {
         if (!cancelled) {
           setDatabaseBooks(books);
           setDatabaseEntries(entries);
+          setDatabaseHeadings(headings);
           setPreparations(preps);
           setLoadingDb(false);
           setLoadingPreps(false);
@@ -86,13 +93,34 @@ export default function SirrPage() {
 
   const handleOneDriveImported = () => {
     setLoadingDb(true);
-    Promise.all([fetchManuscriptBooks(), fetchManuscriptEntries()])
-      .then(([books, entries]) => {
+    Promise.all([fetchManuscriptBooks(), fetchManuscriptEntries(), fetchManuscriptHeadings()])
+      .then(([books, entries, headings]) => {
         setDatabaseBooks(books);
         setDatabaseEntries(entries);
+        setDatabaseHeadings(headings);
         setLoadingDb(false);
       })
       .catch(() => setLoadingDb(false));
+  };
+
+  const handleSelectBook = (book) => {
+    setSelectedBook(book);
+    setSelectedHeading(null);
+    setHeadingBreadcrumb([]);
+    setView("book_toc");
+  };
+
+  const handleSelectHeading = (heading) => {
+    const breadcrumb = [];
+    let current = heading;
+    while (current) {
+      breadcrumb.unshift(current);
+      const parentId = current.parent_heading_id;
+      current = parentId ? databaseHeadings.find((h) => h.heading_id === parentId) : null;
+    }
+    setHeadingBreadcrumb(breadcrumb);
+    setSelectedHeading(heading);
+    setView("heading");
   };
 
   return (
@@ -152,6 +180,7 @@ export default function SirrPage() {
             onShowValidationReport={handleShowValidationReport}
             onImportFromOneDrive={() => setView("onedrive_browser")}
             onImportFolderFromOneDrive={() => setView("folder_importer")}
+            onSelectBook={handleSelectBook}
             language={language}
           />
         )}
@@ -169,6 +198,33 @@ export default function SirrPage() {
             onBack={() => setView("library")}
             onImported={handleOneDriveImported}
             language={language}
+          />
+        )}
+
+        {view === "book_toc" && selectedBook && (
+          <SirrBookTOC
+            book={selectedBook}
+            headingTree={buildHeadingTree(databaseHeadings.filter((h) => h.book_id === selectedBook.book_id))}
+            entries={databaseEntries.filter((e) => e.book_id === selectedBook.book_id)}
+            onSelectHeading={handleSelectHeading}
+            onBack={() => { setView("library"); setSelectedBook(null); }}
+            language={language}
+          />
+        )}
+
+        {view === "heading" && selectedHeading && selectedBook && (
+          <SirrHeadingView
+            heading={selectedHeading}
+            childHeadings={databaseHeadings
+              .filter((h) => h.parent_heading_id === selectedHeading.heading_id)
+              .sort((a, b) => (a.heading_order || 0) - (b.heading_order || 0))}
+            entries={databaseEntries.filter((e) => e.heading_id === selectedHeading.heading_id)}
+            breadcrumb={headingBreadcrumb}
+            onSelectHeading={handleSelectHeading}
+            onSelectEntry={() => {}}
+            onBack={() => { setView("book_toc"); setSelectedHeading(null); }}
+            language={language}
+            accent="#D4AF37"
           />
         )}
 

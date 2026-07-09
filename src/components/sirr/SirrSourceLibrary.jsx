@@ -5,7 +5,7 @@
 // (OneDrive-sourced PDFs) plus pre-existing static manuscripts.
 // The original PDF always remains the master source.
 // ═══════════════════════════════════════════════════════════════
-import { ChevronLeft, BookMarked, FileText, Globe, Database, Loader2, CheckCircle2, AlertCircle, FileCheck2, ClipboardList, Cloud, FolderTree } from "lucide-react";
+import { ChevronLeft, BookMarked, FileText, Globe, Database, Loader2, CheckCircle2, AlertCircle, FileCheck2, ClipboardList, Cloud, FolderTree, ListTree } from "lucide-react";
 
 function StatusBadge({ status, isMl }) {
   const config = {
@@ -26,7 +26,7 @@ function StatusBadge({ status, isMl }) {
   );
 }
 
-function BookCard({ book, isDb, isMl, onShowValidationReport }) {
+function BookCard({ book, isDb, isMl, onShowValidationReport, onSelectBook }) {
   return (
     <div className="rounded-xl p-4"
       style={{
@@ -106,6 +106,22 @@ function BookCard({ book, isDb, isMl, onShowValidationReport }) {
         {book.tradition || ""}{isDb && book.upload_date ? ` · ${isMl ? "ഇറക്കുമതി" : "Imported"}: ${new Date(book.upload_date).toLocaleDateString()}` : ""}
       </p>
 
+      {/* Table of Contents Button */}
+      {isDb && onSelectBook && (book.total_entries_extracted || 0) > 0 && (
+        <button
+          onClick={() => onSelectBook(book)}
+          className="w-full mt-2 flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-bold transition-all"
+          style={{
+            background: "rgba(212,175,55,0.08)",
+            color: "#D4AF37",
+            border: "1px solid rgba(212,175,55,0.20)",
+          }}
+        >
+          <ListTree className="w-3.5 h-3.5" />
+          {isMl ? "മൂല ഗ്രന്ഥ ഉള്ളടക്കം കാണുക" : "View Table of Contents"}
+        </button>
+      )}
+
       {/* Validation Report Button */}
       {isDb && book.validation_status && book.validation_status !== "not_validated" && onShowValidationReport && (
         <button
@@ -126,7 +142,7 @@ function BookCard({ book, isDb, isMl, onShowValidationReport }) {
   );
 }
 
-export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadingDb, onBack, onShowValidationReport, onImportFromOneDrive, onImportFolderFromOneDrive, language }) {
+export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadingDb, onBack, onShowValidationReport, onImportFromOneDrive, onImportFolderFromOneDrive, onSelectBook, language }) {
   const isMl = language === "ml";
 
   return (
@@ -188,7 +204,7 @@ export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadin
             </span>
           </div>
           {databaseBooks.map((book) => (
-            <BookCard key={book.id || book.book_id} book={book} isDb={true} isMl={isMl} onShowValidationReport={onShowValidationReport} />
+            <BookCard key={book.id || book.book_id} book={book} isDb={true} isMl={isMl} onShowValidationReport={onShowValidationReport} onSelectBook={onSelectBook} />
           ))}
         </div>
       )}

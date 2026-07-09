@@ -1,7 +1,7 @@
 {
   "name": "ManuscriptEntry",
   "type": "object",
-  "description": "Extracted knowledge entries from imported manuscripts. Each entry is auto-classified into a Sirr section (1-7) and grouped by topic. Never merges entries from different books \u2014 every entry retains its book_id and book_title. Designed for unlimited expansion. Linked to ManuscriptBook via book_id and to VerifiedArabic via verified_arabic_hash. Enterprise Duplicate Detection: entries are grouped into Methods via method_id. The first entry of a method is is_primary_method_entry=true. Duplicates are linked, not merged \u2014 every source is preserved.",
+  "description": "Extracted knowledge entries from imported manuscripts. Each entry is auto-classified into a Sirr section (1-7) and grouped by topic. Never merges entries from different books \u2014 every entry retains its book_id and book_title. Designed for unlimited expansion. Linked to ManuscriptBook via book_id, to ManuscriptHeading via heading_id (dynamic manuscript structure tree), and to VerifiedArabic via verified_arabic_hash. Enterprise Duplicate Detection: entries are grouped into Methods via method_id. The first entry of a method is is_primary_method_entry=true. Duplicates are linked, not merged \u2014 every source is preserved.",
   "properties": {
     "entry_id": {
       "type": "string",
@@ -30,11 +30,11 @@
         6,
         7
       ],
-      "description": "Auto-classified Sirr section: 1=Diseases & Healing, 2=Jinn/Ruqyah, 3=Mahabbah, 4=Wafq/Taweez, 5=Duas/Quran, 6=Herbs/Incense, 7=Planetary/Times"
+      "description": "ALTERNATIVE CLASSIFICATION \u2014 not the primary navigation structure. Auto-classified Sirr section: 1=Diseases & Healing, 2=Jinn/Ruqyah, 3=Mahabbah, 4=Wafq/Taweez, 5=Duas/Quran, 6=Herbs/Incense, 7=Planetary/Times. The primary structure is the ManuscriptHeading tree (heading_id)."
     },
     "topic": {
       "type": "string",
-      "description": "Topic name (English). Items with the same topic across different books are grouped together but never merged."
+      "description": "ALTERNATIVE classification topic name (English). The primary grouping is via heading_id (manuscript's own headings). This field is kept for backward compatibility and Sirr section filtering."
     },
     "topic_ml": {
       "type": "string",
@@ -151,6 +151,14 @@
     "page_number": {
       "type": "string",
       "description": "Page number in the source PDF"
+    },
+    "heading_id": {
+      "type": "string",
+      "description": "FK to ManuscriptHeading.heading_id. The manuscript heading this entry belongs to (chapter/section/subsection \u2014 dynamic tree, any depth). Empty for entries from books imported before the heading tree system. The 7 Sirr sections remain as an alternative classification, not the primary navigation."
+    },
+    "entry_order": {
+      "type": "integer",
+      "description": "Sequential position of this entry within the book, by page order. Preserves the exact manuscript page-by-page ordering. 1-based."
     },
     "images": {
       "type": "array",
@@ -352,6 +360,27 @@
       "fields": [
         "method_id",
         "is_primary_method_entry"
+      ]
+    },
+    {
+      "name": "idx_heading_id",
+      "fields": [
+        "heading_id"
+      ]
+    },
+    {
+      "name": "idx_book_heading_order",
+      "fields": [
+        "book_id",
+        "heading_id",
+        "entry_order"
+      ]
+    },
+    {
+      "name": "idx_book_entry_order",
+      "fields": [
+        "book_id",
+        "entry_order"
       ]
     }
   ],

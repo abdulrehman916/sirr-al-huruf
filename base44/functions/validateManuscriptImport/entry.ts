@@ -233,11 +233,42 @@ Deno.serve(async (req) => {
 
 TASK: Analyze EVERY page of this PDF manuscript. Extract ALL content from EVERY page. Do NOT skip any page.
 
+═══ HEADING DETECTION — MANUSCRIPT STRUCTURE PRESERVATION ═══
+FIRST, detect the REAL heading hierarchy from the PDF layout. Different manuscripts use different structures (Bab/Fasl/Mas'ala, Chapter/Section, Part/Chapter, etc.). You must detect what actually exists — never invent headings.
+
+Detect headings by recognizing:
+- Larger font sizes (chapter titles are typically larger than body text)
+- Bold or centered text (section headings are often bold or centered)
+- Decorative separators (ornamental dividers between chapters/sections)
+- Numbered headings (e.g., "باب الأول", "الفصل الثاني", "القسم الثالث", "1.", "2.")
+- Arabic heading conventions: باب (Bab/Door), فصل (Fasl/Chapter), قسم (Qism/Section), جزء (Juz/Part), مسألة (Mas'ala/Question)
+- Page-break boundaries (chapters often start on a new page)
+- Indentation levels (sub-headings may be indented)
+- Whitespace patterns (extra space before headings)
+
+Build a HEADING TREE with any number of levels. For each heading provide:
+- heading_id: unique identifier within this book (e.g., "H1", "H1-1", "H1-1-1", "H2", etc.)
+- parent_heading_id: the heading_id of the parent heading (empty string "" for top-level)
+- heading_level: integer depth (1 = top-level, 2 = sub-heading, 3 = sub-sub-heading, etc.)
+- heading_title: the heading text in English transliteration or translation
+- heading_title_ar: the heading text in original Arabic script (empty if not in Arabic)
+- heading_order: sequence within parent (1-based)
+- start_page: first page where this heading appears
+- end_page: last page before the next heading at the same level (empty if unknown)
+- heading_source: "pdf_detected" (real heading found in PDF) or "generated_fallback" (no heading found, temporary label created)
+
+RULES FOR HEADINGS:
+- NEVER invent headings when the manuscript already contains them.
+- Only create "generated_fallback" headings when a section of content has NO detectable heading at all.
+- Preserve heading titles EXACTLY as written (Arabic verbatim, never modified).
+- If a manuscript has no headings at all, create ONE generated_fallback top-level heading covering the entire book.
+
+═══ ENTRY EXTRACTION ═══
 For each page, extract:
 1. ALL Arabic text — preserve EXACTLY as written in the manuscript, including harakat (diacritics). Never modify, modernize, or simplify Arabic.
 2. All entries: rituals, duas, Quran verses, divine names, wafq, taweez, diagrams, tables, instructions, materials, timing, conditions, warnings, notes, references.
 3. Identify any images, wafq (magic squares), taweez (amulets), diagrams, tables, or seals on each page.
-4. For each entry, classify into a Sirr section (1-7):
+4. For each entry, classify into a Sirr section (1-7) — this is an ALTERNATIVE classification only:
    1 = Diseases & Healing
    2 = Jinn, Ruqyah & Spiritual Protection
    3 = Mahabbah, Acceptance & Relationships
@@ -252,6 +283,8 @@ For each entry, provide:
 - has_image, image_type (wafq/taweez/diagram/table/seal/drawing/none), image_description
 - arabic_text_preserved (true if clearly readable)
 - sirr_section (1-7), topic, topic_ml, topic_ar
+- heading_id: the heading_id this entry belongs to (from the heading tree above). Every entry MUST have a heading_id.
+- entry_order: sequential position of this entry within the book, by page order (1-based). Entries MUST be in exact manuscript page order.
 
 ALSO provide: total_pages_analyzed, pages_with_images, pages_with_errors, skipped_pages, errors
 
@@ -259,7 +292,9 @@ CRITICAL RULES:
 - Process EVERY page. Do not skip any.
 - Preserve Arabic text EXACTLY as written. Never guess harakat.
 - If Arabic is unclear, set arabic_text_preserved=false.
-- Never invent information. If a field is not in the manuscript, leave it empty.`;
+- Never invent information. If a field is not in the manuscript, leave it empty.
+- Every entry MUST belong to a heading (heading_id). Never leave an entry orphaned.
+- Preserve exact page order (entry_order must be sequential 1, 2, 3... by page).`;
 
     const llmResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: extractionPrompt,
@@ -269,6 +304,24 @@ CRITICAL RULES:
         type: 'object',
         properties: {
           total_pages_analyzed: { type: 'integer' },
+          headings: {
+            type: 'array',
+            description: 'Dynamic heading tree detected from the PDF layout. Any number of levels.',
+            items: {
+              type: 'object',
+              properties: {
+                heading_id: { type: 'string' },
+                parent_heading_id: { type: 'string' },
+                heading_level: { type: 'integer' },
+                heading_title: { type: 'string' },
+                heading_title_ar: { type: 'string' },
+                heading_order: { type: 'integer' },
+                start_page: { type: 'string' },
+                end_page: { type: 'string' },
+                heading_source: { type: 'string' },
+              },
+            },
+          },
           entries: {
             type: 'array',
             items: {
@@ -300,6 +353,8 @@ CRITICAL RULES:
                 topic: { type: 'string' },
                 topic_ml: { type: 'string' },
                 topic_ar: { type: 'string' },
+                heading_id: { type: 'string' },
+                entry_order: { type: 'integer' },
               },
             },
           },
@@ -337,9 +392,43 @@ CRITICAL RULES:
       imagesByPage[pg].push(img.image_url);
     }
 
+    // ══ STAGE 1.5: Create ManuscriptHeading records (dynamic heading tree) ══
+    const llmHeadings = llmResult.headings || [];
+    // Map LLM heading_id → permanent database heading_id
+    const headingIdMap: Record<string, string> = {};
+    const headingRecords: any[] = [];
+
+    if (llmHeadings.length > 0) {
+      for (const h of llmHeadings) {
+        const permanentId = `H-${bookId}-${h.heading_level || 1}-${h.heading_order || 1}-${Math.random().toString(36).slice(2, 6)}`;
+        headingIdMap[h.heading_id] = permanentId;
+
+        headingRecords.push({
+          heading_id: permanentId,
+          parent_heading_id: h.parent_heading_id ? (headingIdMap[h.parent_heading_id] || '') : '',
+          book_id: bookId,
+          heading_level: h.heading_level || 1,
+          heading_title: h.heading_title || 'Untitled',
+          heading_title_ar: h.heading_title_ar || '',
+          heading_order: h.heading_order || 1,
+          start_page: h.start_page || '',
+          end_page: h.end_page || '',
+          heading_source: h.heading_source || 'generated_fallback',
+          entry_count: 0,
+          total_entry_count: 0,
+        });
+      }
+
+      if (headingRecords.length > 0) {
+        await base44.asServiceRole.entities.ManuscriptHeading.bulkCreate(headingRecords);
+      }
+    }
+
     // ══ Build ManuscriptEntry records (verification_status='pending') ══
     const entryRecords = entries.map((entry: any, idx: number) => {
       const pageImages = imagesByPage[String(entry.page_number)] || [];
+      // Map LLM heading_id to permanent database heading_id
+      const mappedHeadingId = entry.heading_id ? (headingIdMap[entry.heading_id] || '') : '';
 
       return {
         entry_id: `ME-${bookId}-${idx + 1}`,
@@ -370,6 +459,8 @@ CRITICAL RULES:
         benefits: entry.benefits || '',
         notes: entry.notes || '',
         page_number: entry.page_number || '',
+        heading_id: mappedHeadingId,
+        entry_order: entry.entry_order || (idx + 1),
         images: pageImages, // Actual image URLs from Stage 4
         verified_arabic_hash: '', // Will be filled in Phase 2
         verification_status: 'pending', // Stage 2 pending
@@ -377,6 +468,30 @@ CRITICAL RULES:
         extraction_date: validationDate,
       };
     });
+
+    // ══ Update heading entry counts ══
+    if (headingRecords.length > 0 && entryRecords.length > 0) {
+      const entryCountByHeading: Record<string, number> = {};
+      for (const e of entryRecords) {
+        if (e.heading_id) {
+          entryCountByHeading[e.heading_id] = (entryCountByHeading[e.heading_id] || 0) + 1;
+        }
+      }
+      const headingUpdates = headingRecords
+        .filter((h) => entryCountByHeading[h.heading_id] !== undefined)
+        .map((h) => ({
+          id: h.id || h.heading_id,
+          entry_count: entryCountByHeading[h.heading_id] || 0,
+          total_entry_count: entryCountByHeading[h.heading_id] || 0,
+        }));
+      // Note: total_entry_count for parent headings would require tree traversal;
+      // entry_count (direct) is set here. total_entry_count can be computed later.
+      if (headingUpdates.length > 0) {
+        try {
+          await base44.asServiceRole.entities.ManuscriptHeading.bulkUpdate(headingUpdates);
+        } catch { /* non-critical */ }
+      }
+    }
 
     // ══ Create ManuscriptEntry records ══
     let createdEntries: any[] = [];

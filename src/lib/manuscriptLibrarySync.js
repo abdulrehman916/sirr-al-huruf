@@ -1,10 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
 // MANUSCRIPT LIBRARY SYNC — DATABASE ↔ SIRR KNOWLEDGE STRUCTURE
 // ═══════════════════════════════════════════════════════════════
-// Fetches ManuscriptBook and ManuscriptEntry records from the
-// database and merges them into the existing static Sirr knowledge
-// structure. Database entries appear alongside static manuscript
-// data, grouped by section → topic → method (by book).
+// Fetches ManuscriptBook, ManuscriptEntry, and ManuscriptHeading
+// records from the database. Merges entries into the existing static
+// Sirr knowledge structure. Database entries appear alongside static
+// manuscript data, grouped by section → topic → method (by book).
+//
+// HEADING TREE: ManuscriptHeading records form a dynamic tree (any
+// depth) via parent_heading_id. buildHeadingTree() converts the flat
+// list into a nested structure for UI navigation.
 // ═══════════════════════════════════════════════════════════════
 import { base44 } from "@/api/base44Client";
 
@@ -26,6 +30,75 @@ export async function fetchManuscriptEntries() {
   } catch {
     return [];
   }
+}
+
+// ── Fetch all ManuscriptHeading records ──
+export async function fetchManuscriptHeadings() {
+  try {
+    const headings = await base44.entities.ManuscriptHeading.list("-created_date", 500);
+    return headings || [];
+  } catch {
+    return [];
+  }
+}
+
+// ── Build a nested heading tree from flat ManuscriptHeading records ──
+// Returns: array of top-level heading nodes, each with .children[] (recursive)
+export function buildHeadingTree(headings) {
+  if (!headings || headings.length === 0) return [];
+
+  const byParent = {};
+  const byId = {};
+
+  // Index all headings
+  for (const h of headings) {
+    byId[h.heading_id] = { ...h, children: [] };
+  }
+
+  // Group by parent
+  for (const h of headings) {
+    const parentId = h.parent_heading_id || "";
+    if (!byParent[parentId]) byParent[parentId] = [];
+    byParent[parentId].push(byId[h.heading_id]);
+  }
+
+  // Attach children to parents
+  for (const h of headings) {
+    const parentId = h.parent_heading_id || "";
+    if (parentId && byId[parentId]) {
+      byId[parentId].children = byParent[h.heading_id] || [];
+    }
+  }
+
+  // Return top-level headings (parent_heading_id empty), sorted by heading_order
+  const topLevel = (byParent[""] || []).sort((a, b) => (a.heading_order || 0) - (b.heading_order || 0));
+
+  // Recursively sort children
+  function sortChildren(node) {
+    if (node.children) {
+      node.children.sort((a, b) => (a.heading_order || 0) - (b.heading_order || 0));
+      node.children.forEach(sortChildren);
+    }
+  }
+  topLevel.forEach(sortChildren);
+
+  return topLevel;
+}
+
+// ── Group entries by heading_id ──
+// Returns: { [heading_id]: [entry1, entry2, ...] } sorted by entry_order
+export function groupEntriesByHeading(entries) {
+  const byHeading = {};
+  for (const e of entries) {
+    const hid = e.heading_id || "";
+    if (!byHeading[hid]) byHeading[hid] = [];
+    byHeading[hid].push(e);
+  }
+  // Sort each group by entry_order
+  for (const hid of Object.keys(byHeading)) {
+    byHeading[hid].sort((a, b) => (a.entry_order || 0) - (b.entry_order || 0));
+  }
+  return byHeading;
 }
 
 // ── Merge database entries into the static Sirr knowledge structure ──
@@ -84,6 +157,8 @@ export function mergeEntriesIntoStructure(structure, entries) {
       content_translations_ml: entry.content_translations_ml || {},
       images: entry.images || [],
       verified_arabic_hash: entry.verified_arabic_hash || "",
+      heading_id: entry.heading_id || "",
+      entry_order: entry.entry_order || 0,
       source: "database",
     });
 
