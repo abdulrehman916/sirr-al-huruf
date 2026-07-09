@@ -1,20 +1,28 @@
 // ═══════════════════════════════════════════════════════════════
-// VERIFIED ARABIC DATABASE — FRONTEND LOOKUP MODULE (STRICT)
+// VERIFIED ARABIC DATABASE — FRONTEND LOOKUP MODULE (FINAL POLICY)
 // ═══════════════════════════════════════════════════════════════
 // STRICT CACHE RULES:
 //   - Only cache records with verification_status === 'verified'
 //   - Never cache unverified records
 //   - Never cache manual_review_required records
 //
-// BACKEND WORKFLOW (verifyArabicText function):
-//   STEP 1: Check VerifiedArabic DB (return only verified/manual_review)
-//   STEP 2: Check HolyOneName (divine names)
-//   STEP 3: Search manuscript data (ManuscriptRule + frontend-passed)
-//   STEP 4: Internet search (authoritative sources)
-//   STEP 5: Cross-validate ALL sources
-//   STEP 6: Save ONLY verified or manual_review. Unverified → save nothing.
+// REVISION POLICY:
+//   - text_hash is the PERMANENT UNIQUE IDENTIFIER
+//   - Same Arabic text always links to the same record chain
+//   - Backend returns the highest revision_number for a given text_hash
+//   - Re-verification (forceReverification=true) creates a NEW revision
+//   - Previous revisions are preserved — never overwritten
 //
-// RULE: AI MUST NEVER GUESS harakat. If unverified → "Verification unavailable".
+// AUTHORITY HIERARCHY (backend):
+//   1. Quran → 2. Hadith → 3. Manuscript → 4. Trusted references →
+//   5. Holy Names DB → 6. Manual review
+//   Internet search is ONLY an assistant, never the sole authority.
+//
+// CONFIDENCE LEVELS:
+//   HIGH = Book + trusted online references agree
+//   MEDIUM = Trusted references agree but manuscript differs
+//   LOW = Only one trusted source exists
+//   UNVERIFIED = No trusted source (nothing stored)
 // ═══════════════════════════════════════════════════════════════
 
 import { base44 } from "@/api/base44Client";
@@ -57,17 +65,21 @@ const inflightPromises = new Map();
  * STRICT RULES:
  *   - Only verified records are cached in localStorage
  *   - Unverified records are never cached
- *   - Promise sharing prevents duplicate API calls within a session
+ *   - text_hash is the permanent unique identifier
+ *   - Same Arabic text anywhere in the app links to the same record
  *
  * @param {string} arabicText - The Arabic text to verify
  * @param {string} [sourceType] - quran, hadith, divine_name, dua, etc.
  * @param {string} [bookName] - Source book name
  * @param {string|number} [pageNumber] - Source page number
  * @param {string} [section] - Section/chapter name
- * @param {string} [manuscriptArabicText] - Arabic text from app's manuscript data files (for Step 3 comparison)
+ * @param {string} [manuscriptArabicText] - Arabic text from app's manuscript data files (Step 3 comparison)
  * @param {string} [manuscriptSource] - Which manuscript source (for reference)
- * @returns {Promise<Object>} - { arabic_text, malayalam_meaning, english_meaning,
- *   verification_status, source_url, book_name, page_number, section, notes, reused }
+ * @param {boolean} [forceReverification] - Explicitly request re-verification (creates new revision)
+ * @param {string} [revisionReason] - Reason for re-verification
+ * @returns {Promise<Object>} - { arabic_text, original_manuscript_text, malayalam_meaning,
+ *   english_meaning, verification_status, verification_confidence, revision_number,
+ *   source_url, book_name, page_number, section, notes, reused }
  */
 export async function lookupVerifiedArabic(
   arabicText,
@@ -76,32 +88,37 @@ export async function lookupVerifiedArabic(
   pageNumber,
   section,
   manuscriptArabicText,
-  manuscriptSource
+  manuscriptSource,
+  forceReverification,
+  revisionReason
 ) {
   if (!arabicText || typeof arabicText !== "string") return null;
 
   const cacheKey = CACHE_KEY_PREFIX + normalizeForCache(arabicText);
 
-  // Check localStorage cache — ONLY verified records are cached
-  try {
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (Date.now() - parsed.cached_at < CACHE_TTL) {
-        // Only return cached data if it was verified
-        if (parsed.data?.verification_status === "verified") {
-          return parsed.data;
+  // If force_reverification, skip cache entirely
+  if (!forceReverification) {
+    // Check localStorage cache — ONLY verified records are cached
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.cached_at < CACHE_TTL) {
+          if (parsed.data?.verification_status === "verified") {
+            return parsed.data;
+          }
+          // Non-verified cached data — remove it
+          localStorage.removeItem(cacheKey);
         }
-        // If cached but not verified, remove it (shouldn't happen, but safety)
-        localStorage.removeItem(cacheKey);
       }
+    } catch {
+      // localStorage not available — proceed to API
     }
-  } catch {
-    // localStorage not available — proceed to API
   }
 
   // Promise sharing — prevents duplicate API calls during rapid re-renders
-  if (inflightPromises.has(cacheKey)) {
+  // (not used for force_reverification, which should always hit the API)
+  if (!forceReverification && inflightPromises.has(cacheKey)) {
     return inflightPromises.get(cacheKey);
   }
 
@@ -115,6 +132,8 @@ export async function lookupVerifiedArabic(
         section: section,
         manuscript_arabic_text: manuscriptArabicText,
         manuscript_source: manuscriptSource,
+        force_reverification: forceReverification || false,
+        revision_reason: revisionReason || null,
       });
 
       const data = response.data;
@@ -137,6 +156,7 @@ export async function lookupVerifiedArabic(
       console.error("Verified Arabic lookup failed:", error);
       return {
         verification_status: "unverified",
+        verification_confidence: "UNVERIFIED",
         arabic_text: arabicText,
         malayalam_meaning: "",
         english_meaning: "",
@@ -144,11 +164,15 @@ export async function lookupVerifiedArabic(
         notes: "Verification service temporarily unavailable.",
       };
     } finally {
-      inflightPromises.delete(cacheKey);
+      if (!forceReverification) {
+        inflightPromises.delete(cacheKey);
+      }
     }
   })();
 
-  inflightPromises.set(cacheKey, promise);
+  if (!forceReverification) {
+    inflightPromises.set(cacheKey, promise);
+  }
   return promise;
 }
 

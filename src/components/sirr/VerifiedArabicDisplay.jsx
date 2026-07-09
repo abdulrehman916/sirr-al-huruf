@@ -52,6 +52,7 @@ export default function VerifiedArabicDisplay({
         if (!cancelled) {
           setResult({
             verification_status: "unverified",
+            verification_confidence: "UNVERIFIED",
             arabic_text: arabicText,
           });
           setLoading(false);
@@ -124,9 +125,10 @@ export default function VerifiedArabicDisplay({
                   border: "1px solid rgba(74,222,128,0.20)",
                 }}
               >
-                ✓ Verified{" "}
-                {result.source_url ? `· ${result.source_url.slice(0, 40)}` : ""}
-                {result.holy_name_match ? " · Holy Names DB" : ""}
+                ✓ Verified · {result.verification_confidence || "?"}{" "}
+                {result.revision_number > 1 ? ` · Rev ${result.revision_number}` : ""}
+                {result.source_url ? ` · ${result.source_url.slice(0, 40)}` : ""}
+                {result.holy_name_match ? " · Holy Names" : ""}
                 {result.manuscript_match ? " · Manuscript" : ""}
               </span>
             )}
@@ -155,6 +157,29 @@ export default function VerifiedArabicDisplay({
               </span>
             )}
           </div>
+
+          {/* ══ Original manuscript text (preserved verbatim, if different) ══ */}
+          {result.original_manuscript_text &&
+           result.original_manuscript_text !== result.arabic_text && (
+            <div className="mt-2 pt-2" style={{ borderTop: `1px dashed ${accent}20` }}>
+              <p
+                className="font-inter text-[8px] text-center"
+                style={{ color: `${accent}66` }}
+              >
+                📜 Original manuscript text (preserved verbatim):
+              </p>
+              <p
+                className="font-amiri text-base text-center mt-1 selectable"
+                style={{
+                  color: "rgba(255,255,255,0.50)",
+                  direction: "rtl",
+                  lineHeight: 2,
+                }}
+              >
+                {result.original_manuscript_text}
+              </p>
+            </div>
+          )}
 
           {/* ══ Translation — ONLY in selected language, NEVER mixed ══ */}
           {language === "ml" && result.malayalam_meaning && (

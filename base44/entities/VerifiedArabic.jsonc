@@ -1,19 +1,23 @@
 {
   "name": "VerifiedArabic",
   "type": "object",
-  "description": "Permanent database of verified Arabic text. AI MUST NEVER GUESS harakat. Only VERIFIED or MANUAL_REVIEW_REQUIRED records are stored \u2014 unverified records are never saved. WORKFLOW: 1) Check this DB by text_hash. 2) Check HolyOneName. 3) Search manuscript data. 4) Search internet (authoritative sources). 5) Cross-validate all sources. 6) Only save if verified or manual_review. 7) Reuse verified records forever. RULE: If verification fails, store NOTHING. Return 'Verification unavailable'. Never cache unverified. Never create placeholder harakat or translations.",
+  "description": "Permanent database of verified Arabic text. AI MUST NEVER GUESS harakat. Only VERIFIED or MANUAL_REVIEW_REQUIRED records are stored \u2014 unverified records are never saved. WORKFLOW: 1) Check this DB by text_hash (highest revision). 2) Check HolyOneName. 3) Search manuscript data. 4) Search internet (authoritative sources only \u2014 assistant, NOT sole authority). 5) Cross-validate ALL sources. 6) Save as new revision (never overwrite previous). RULE: If verification fails, store NOTHING. Return 'Verification unavailable'. Never cache unverified. Never create placeholder harakat or translations. AUTHORITY HIERARCHY: 1) Quran, 2) Authentic Hadith, 3) Original manuscript, 4) Multiple trusted Arabic references, 5) Holy Names DB, 6) Manual review. CONFIDENCE: HIGH=Book+online agree, MEDIUM=online agree but manuscript differs, LOW=only one source, UNVERIFIED=no source. REVISIONS: Never overwrite \u2014 create Revision 1, 2, 3... with timestamp and reason. text_hash is the permanent unique identifier \u2014 same Arabic text always links to the same record chain.",
   "properties": {
     "text_hash": {
       "type": "string",
-      "description": "SHA-256 hash of normalized Arabic (harakat stripped, alef variants normalized) for deduplication lookup"
+      "description": "SHA-256 hash of normalized Arabic (harakat stripped, alef variants normalized). PERMANENT UNIQUE IDENTIFIER \u2014 all revisions of the same Arabic text share this hash. Same text anywhere in the app links to the same record chain."
     },
     "arabic_text": {
       "type": "string",
-      "description": "Verified Arabic text WITH full harakat, copied exactly from authoritative source. Never AI-guessed."
+      "description": "Verified Arabic text WITH full harakat, copied exactly from authoritative source. Never AI-guessed. This is the verified/normalized version."
     },
     "arabic_text_normalized": {
       "type": "string",
       "description": "Arabic text WITHOUT harakat, normalized for search matching"
+    },
+    "original_manuscript_text": {
+      "type": "string",
+      "description": "EXACT original Arabic text from the manuscript source, stored SEPARATELY from the verified version. Never modified. Never destroyed. Preserved verbatim for comparison even if the verified version differs."
     },
     "malayalam_meaning": {
       "type": "string",
@@ -82,6 +86,17 @@
       "default": "unverified",
       "description": "verified=all checks passed, sources agree. manual_review_required=sources disagree, flagged for admin. unverified=NOT SAVED \u2014 returned but nothing stored."
     },
+    "verification_confidence": {
+      "type": "string",
+      "enum": [
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "UNVERIFIED"
+      ],
+      "default": "UNVERIFIED",
+      "description": "HIGH=Book+trusted online references agree. MEDIUM=Trusted references agree but manuscript differs. LOW=Only one trusted source exists. UNVERIFIED=No trusted source."
+    },
     "cross_verification_sources": {
       "type": "array",
       "items": {
@@ -106,11 +121,20 @@
     },
     "manuscript_arabic_text": {
       "type": "string",
-      "description": "The Arabic text as found in the manuscript data (for comparison reference)"
+      "description": "Legacy field \u2014 same as original_manuscript_text. Kept for backward compatibility with pre-policy records."
+    },
+    "revision_number": {
+      "type": "integer",
+      "default": 1,
+      "description": "Revision number. 1=initial verification. Increments when re-verified with a better source. Previous revisions are NEVER overwritten \u2014 preserved for comparison."
+    },
+    "revision_reason": {
+      "type": "string",
+      "description": "Why this revision was created (e.g., 'Initial verification', 'Re-verification: better source found', 'Manual correction')"
     },
     "date_verified": {
       "type": "string",
-      "description": "ISO 8601 timestamp when verified"
+      "description": "ISO 8601 timestamp when this revision was created/verified"
     },
     "reviewer": {
       "type": "string",
@@ -134,9 +158,22 @@
       ]
     },
     {
+      "name": "idx_text_hash_revision",
+      "fields": [
+        "text_hash",
+        "revision_number"
+      ]
+    },
+    {
       "name": "idx_verification_status",
       "fields": [
         "verification_status"
+      ]
+    },
+    {
+      "name": "idx_verification_confidence",
+      "fields": [
+        "verification_confidence"
       ]
     },
     {
