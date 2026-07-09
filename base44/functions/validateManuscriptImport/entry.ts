@@ -404,83 +404,173 @@ CRITICAL RULES:
 - Preserve exact page order (entry_order must be sequential 1, 2, 3... by page).
 - ACCURACY OVER COMPLETENESS: It is better to extract fewer entries with high confidence than many entries with uncertain content.`;
 
-    const llmResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: extractionPrompt,
-      file_urls: [pdf_url],
-      model: 'gemini_3_flash',
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          total_pages_analyzed: { type: 'integer' },
-          headings: {
-            type: 'array',
-            description: 'Dynamic heading tree detected from the PDF layout. Any number of levels.',
-            items: {
-              type: 'object',
-              properties: {
-                heading_id: { type: 'string' },
-                parent_heading_id: { type: 'string' },
-                heading_level: { type: 'integer' },
-                heading_title: { type: 'string' },
-                heading_title_ar: { type: 'string' },
-                heading_order: { type: 'integer' },
-                start_page: { type: 'string' },
-                end_page: { type: 'string' },
-                heading_source: { type: 'string' },
-              },
-            },
-          },
-          entries: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                page_number: { type: 'string' },
-                entry_type: { type: 'string' },
-                purpose: { type: 'string' },
-                arabic_text: { type: 'string' },
-                malayalam_meaning: { type: 'string' },
-                english_meaning: { type: 'string' },
-                conditions: { type: 'string' },
-                materials: { type: 'string' },
-                preparation: { type: 'string' },
-                procedure: { type: 'string' },
-                timing: { type: 'string' },
-                planet: { type: 'string' },
-                day: { type: 'string' },
-                incense: { type: 'string' },
-                repetition: { type: 'string' },
-                warnings: { type: 'string' },
-                benefits: { type: 'string' },
-                notes: { type: 'string' },
-                has_image: { type: 'boolean' },
-                image_type: { type: 'string' },
-                image_description: { type: 'string' },
-                arabic_text_preserved: { type: 'boolean' },
-                extraction_confidence: { type: 'integer' },
-                sirr_section: { type: 'integer' },
-                topic: { type: 'string' },
-                topic_ml: { type: 'string' },
-                topic_ar: { type: 'string' },
-                heading_id: { type: 'string' },
-                entry_order: { type: 'integer' },
-              },
-            },
-          },
-          pages_with_images: { type: 'array', items: { type: 'string' } },
-          pages_with_errors: { type: 'array', items: { type: 'string' } },
-          skipped_pages: { type: 'array', items: { type: 'string' } },
-          errors: { type: 'array', items: { type: 'string' } },
-        },
-      },
-    });
+    // ══ STAGE 1: PDF Content Extraction — PAGE-BY-PAGE (chunked for accuracy) ══
+    // Permanent Rule: "import the book page by page."
+    // Process the PDF in small page chunks. Each chunk is extracted separately
+    // to ensure every page is thoroughly analyzed. Results are aggregated.
 
-    const entries = llmResult.entries || [];
-    const pagesWithImages = llmResult.pages_with_images || [];
-    const pagesWithErrors = llmResult.pages_with_errors || [];
-    const skippedPages = llmResult.skipped_pages || [];
-    const errors = llmResult.errors || [];
-    const totalPagesAnalyzed = llmResult.total_pages_analyzed || 0;
+    const EXTRACTION_SCHEMA = {
+      type: 'object',
+      properties: {
+        total_pages_analyzed: { type: 'integer' },
+        headings: {
+          type: 'array',
+          description: 'Dynamic heading tree detected from the PDF layout.',
+          items: {
+            type: 'object',
+            properties: {
+              heading_id: { type: 'string' },
+              parent_heading_id: { type: 'string' },
+              heading_level: { type: 'integer' },
+              heading_title: { type: 'string' },
+              heading_title_ar: { type: 'string' },
+              heading_order: { type: 'integer' },
+              start_page: { type: 'string' },
+              end_page: { type: 'string' },
+              heading_source: { type: 'string' },
+            },
+          },
+        },
+        entries: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              page_number: { type: 'string' },
+              entry_type: { type: 'string' },
+              purpose: { type: 'string' },
+              arabic_text: { type: 'string' },
+              malayalam_meaning: { type: 'string' },
+              english_meaning: { type: 'string' },
+              conditions: { type: 'string' },
+              materials: { type: 'string' },
+              preparation: { type: 'string' },
+              procedure: { type: 'string' },
+              timing: { type: 'string' },
+              planet: { type: 'string' },
+              day: { type: 'string' },
+              incense: { type: 'string' },
+              repetition: { type: 'string' },
+              warnings: { type: 'string' },
+              benefits: { type: 'string' },
+              notes: { type: 'string' },
+              has_image: { type: 'boolean' },
+              image_type: { type: 'string' },
+              image_description: { type: 'string' },
+              arabic_text_preserved: { type: 'boolean' },
+              extraction_confidence: { type: 'integer' },
+              sirr_section: { type: 'integer' },
+              topic: { type: 'string' },
+              topic_ml: { type: 'string' },
+              topic_ar: { type: 'string' },
+              heading_id: { type: 'string' },
+              entry_order: { type: 'integer' },
+            },
+          },
+        },
+        pages_with_images: { type: 'array', items: { type: 'string' } },
+        pages_with_errors: { type: 'array', items: { type: 'string' } },
+        skipped_pages: { type: 'array', items: { type: 'string' } },
+        errors: { type: 'array', items: { type: 'string' } },
+      },
+    };
+
+    let entries: any[] = [];
+    let llmHeadings: any[] = [];
+    let pagesWithImages: string[] = [];
+    let pagesWithErrors: string[] = [];
+    let skippedPages: string[] = [];
+    let errors: string[] = [];
+    let totalPagesAnalyzed = 0;
+
+    // Try page-by-page chunked extraction if PDF bytes are available
+    let chunkedExtraction = false;
+    if (pdfBytes) {
+      try {
+        const pdfLibMod = await import('npm:pdf-lib@1.17.1');
+        const { PDFDocument: PdfDoc } = pdfLibMod;
+        const fullPdfDoc = await PdfDoc.load(pdfBytes, { ignoreEncryption: true });
+        const totalPdfPages = fullPdfDoc.getPageCount();
+
+        if (totalPdfPages > 0) {
+          chunkedExtraction = true;
+          const CHUNK_SIZE = 10;
+          const totalChunks = Math.ceil(totalPdfPages / CHUNK_SIZE);
+
+          for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+            const startPage = chunkIdx * CHUNK_SIZE + 1;
+            const endPage = Math.min((chunkIdx + 1) * CHUNK_SIZE, totalPdfPages);
+
+            // Create a chunk PDF with just these pages
+            const chunkPdf = await PdfDoc.create();
+            const pageIndices: number[] = [];
+            for (let p = startPage - 1; p < endPage; p++) pageIndices.push(p);
+            const copiedPages = await chunkPdf.copyPages(fullPdfDoc, pageIndices);
+            copiedPages.forEach((p: any) => chunkPdf.addPage(p));
+
+            const chunkBytes = await chunkPdf.save();
+            const chunkBlob = new Blob([chunkBytes], { type: 'application/pdf' });
+            const chunkFileName = `${bookId}_pages_${startPage}-${endPage}.pdf`;
+            const chunkFile = new File([chunkBlob], chunkFileName, { type: 'application/pdf' });
+            const chunkUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: chunkFile });
+
+            const chunkPrompt = `You are analyzing pages ${startPage} to ${endPage} of an Islamic occult manuscript PDF.\nIMPORTANT: Use ABSOLUTE page numbers (${startPage} to ${endPage}) in your response.\n\n${extractionPrompt}`;
+
+            const chunkResult: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+              prompt: chunkPrompt,
+              file_urls: [chunkUpload.file_url],
+              model: 'gemini_3_flash',
+              response_json_schema: EXTRACTION_SCHEMA,
+            });
+
+            // Prefix heading_ids with chunk number to ensure uniqueness across chunks
+            if (chunkResult.entries) {
+              for (const e of chunkResult.entries) {
+                if (e.heading_id) e.heading_id = `C${chunkIdx + 1}_${e.heading_id}`;
+                entries.push(e);
+              }
+            }
+            if (chunkResult.headings) {
+              for (const h of chunkResult.headings) {
+                h.heading_id = `C${chunkIdx + 1}_${h.heading_id}`;
+                if (h.parent_heading_id) h.parent_heading_id = `C${chunkIdx + 1}_${h.parent_heading_id}`;
+                llmHeadings.push(h);
+              }
+            }
+            if (chunkResult.pages_with_images) pagesWithImages.push(...chunkResult.pages_with_images);
+            if (chunkResult.pages_with_errors) pagesWithErrors.push(...chunkResult.pages_with_errors);
+            if (chunkResult.skipped_pages) skippedPages.push(...chunkResult.skipped_pages);
+            if (chunkResult.errors) errors.push(...chunkResult.errors);
+            totalPagesAnalyzed += (chunkResult.total_pages_analyzed || (endPage - startPage + 1));
+          }
+        }
+      } catch {
+        // Fall back to whole-PDF extraction
+        chunkedExtraction = false;
+      }
+    }
+
+    // Fallback: whole-PDF extraction
+    if (!chunkedExtraction) {
+      const llmResult: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: extractionPrompt,
+        file_urls: [pdf_url],
+        model: 'gemini_3_flash',
+        response_json_schema: EXTRACTION_SCHEMA,
+      });
+      entries = llmResult.entries || [];
+      llmHeadings = llmResult.headings || [];
+      pagesWithImages = llmResult.pages_with_images || [];
+      pagesWithErrors = llmResult.pages_with_errors || [];
+      skippedPages = llmResult.skipped_pages || [];
+      errors = llmResult.errors || [];
+      totalPagesAnalyzed = llmResult.total_pages_analyzed || 0;
+    }
+
+    // Ensure global sequential entry_order across all chunks (manuscript page order)
+    entries.forEach((e: any, idx: number) => {
+      e.entry_order = idx + 1;
+    });
 
     // ══ STAGE 4: Image Extraction ══
     let extractedImages: any[] = [];
@@ -502,8 +592,7 @@ CRITICAL RULES:
     }
 
     // ══ STAGE 1.5: Create ManuscriptHeading records (dynamic heading tree) ══
-    const llmHeadings = llmResult.headings || [];
-    // Map LLM heading_id → permanent database heading_id
+    // Map LLM heading_id → permanent database heading_id (llmHeadings populated during extraction)
     const headingIdMap: Record<string, string> = {};
     const headingRecords: any[] = [];
 

@@ -1,7 +1,7 @@
 {
   "name": "ManuscriptEntry",
   "type": "object",
-  "description": "Extracted knowledge entries from imported manuscripts. Each entry is auto-classified into a Sirr section (1-7) and grouped by topic. Never merges entries from different books \u2014 every entry retains its book_id and book_title. Designed for unlimited expansion. Linked to ManuscriptBook via book_id, to ManuscriptHeading via heading_id (dynamic manuscript structure tree), and to VerifiedArabic via verified_arabic_hash. Enterprise Duplicate Detection: entries are grouped into Methods via method_id. The first entry of a method is is_primary_method_entry=true. Duplicates are linked, not merged \u2014 every source is preserved.",
+  "description": "Extracted knowledge entries from imported manuscripts. Each entry is auto-classified into a Sirr section (1-7) and grouped by topic. Never merges entries from different books \u2014 every entry retains its book_id and book_title. Designed for unlimited expansion. Linked to ManuscriptBook via book_id, to ManuscriptHeading via heading_id (dynamic manuscript structure tree), and to VerifiedArabic via verified_arabic_hash. Enterprise Duplicate Detection: entries are grouped into Methods via method_id. The first entry of a method is is_primary_method_entry=true. Duplicates are linked, not merged \u2014 every source is preserved. RULE 11: Every saved entry must include Source book, Page number, Confidence score, Verification status, Verification source, Verification date.",
   "properties": {
     "entry_id": {
       "type": "string",
@@ -182,6 +182,14 @@
       ],
       "default": "unverified",
       "description": "Arabic verification status"
+    },
+    "verification_source": {
+      "type": "string",
+      "description": "RULE 11: Primary source used for Arabic verification (denormalized from VerifiedArabic.primary_source for display without joins). Empty if not yet verified."
+    },
+    "verification_date": {
+      "type": "string",
+      "description": "RULE 11: ISO 8601 date when this entry's Arabic was verified. Empty if not yet verified."
     },
     "extraction_confidence": {
       "type": "number",

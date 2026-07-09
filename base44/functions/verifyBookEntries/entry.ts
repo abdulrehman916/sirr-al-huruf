@@ -197,6 +197,8 @@ Deno.serve(async (req) => {
         base44.asServiceRole.entities.ManuscriptEntry.update(entry.id, {
           verified_arabic_hash: verifiedArabicHash,
           verification_status: verificationStatus,
+          verification_source: verification?.primary_source || '',
+          verification_date: verification?.date_verified || '',
           malayalam_meaning: malayalamMeaning,
           english_meaning: englishMeaning,
         }).then(() => { updatedCount++; })
