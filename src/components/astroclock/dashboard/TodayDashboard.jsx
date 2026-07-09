@@ -7,27 +7,14 @@
 // LANGUAGE RULE: One language per card — no mixing
 // DATA RULE: Live values from useAstroData only — no new calculations
 // ═══════════════════════════════════════════════════════════════
-import { useAstroData, PLANET_TR, DAY_TR } from "./useAstroData";
+import { useAstroData, DAY_AR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard, SubCollapse } from "./DashboardSection";
-import { KNOWLEDGE_DAYS } from "@/lib/astroClockKnowledgeBase";
 import { getKashfLunarDayInfo, getKashfNahsStatus } from "@/lib/astroClockManuscriptMerger";
 import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
 const MALEFIC = ["saturn", "mars"];
-
-// TR Moon phase labels (standard astronomical terms — not manuscript data)
-const TR_MOON_PHASES = {
-  "New Moon": "Yeni Ay",
-  "Waxing Crescent": "Artan Hilal",
-  "First Quarter": "İlk Dördün",
-  "Waxing Gibbous": "Şişen Ay",
-  "Full Moon": "Dolunay",
-  "Waning Gibbous": "Azalan Ay",
-  "Last Quarter": "Son Dördün",
-  "Waning Crescent": "Azalan Hilal",
-};
 
 export default function TodayDashboard() {
   const d = useAstroData();
@@ -35,14 +22,14 @@ export default function TodayDashboard() {
   if (!d.currentHour) return null;
 
   // ── Language-specific names ──
-  const dayName = language === "ml" ? d.dayInfo?.name_ml : language === "tr" ? DAY_TR[d.activeDayIndex] : d.dayInfo?.name_en;
+  const dayName = language === "ml" ? d.dayInfo?.name_ml : language === "ar" ? DAY_AR[d.activeDayIndex] : d.dayInfo?.name_en;
   const planetName = language === "ml"
     ? d.planetInfo[d.currentHour.planet]?.name_ml_equivalent
-    : language === "tr" ? PLANET_TR[d.currentHour.planet]
+    : language === "ar" ? d.planetInfo[d.currentHour.planet]?.name_ar
     : d.planetInfo[d.currentHour.planet]?.name_en;
   const dayRulerName = language === "ml"
     ? d.planetInfo[d.dayRuler.planet]?.name_ml_equivalent
-    : language === "tr" ? PLANET_TR[d.dayRuler.planet]
+    : language === "ar" ? d.planetInfo[d.dayRuler.planet]?.name_ar
     : d.planetInfo[d.dayRuler.planet]?.name_en;
   const dayRulerSymbol = d.planetInfo[d.dayRuler.planet]?.symbol || "☉";
 
@@ -66,10 +53,6 @@ export default function TodayDashboard() {
   if (language === "ml") {
     bestActivities = d.dayInfo?.benefits_ml || [];
     avoidActivities = d.dayInfo?.warnings_ml || [];
-  } else if (language === "tr") {
-    const trDay = KNOWLEDGE_DAYS[d.activeDayIndex];
-    bestActivities = trDay?.data?.suitable_operations || [];
-    avoidActivities = []; // No TR avoid list in manuscripts
   } else {
     bestActivities = d.dayInfo?.benefits_en || d.weekdayAnalysis?.goodWorks || [];
     avoidActivities = d.dayInfo?.warnings_en || d.weekdayAnalysis?.badWorks || [];
@@ -79,17 +62,17 @@ export default function TodayDashboard() {
   const moonSymbol = d.moonPosition?.zodiacSign?.symbol;
   const moonSignName = language === "ml"
     ? d.moonZodiacFull?.name_ml
-    : language === "tr" ? d.moonZodiacFull?.name_tr
+    : language === "ar" ? d.moonPosition?.zodiacSign?.name_en
     : d.moonPosition?.zodiacSign?.name_en;
   const moonPhasePct = d.moonPosition ? parseFloat(d.moonPosition.phase) : 0;
   const phaseEn = d.moonPhaseDesc?.en || "";
   const moonPhaseLabel = language === "ml"
     ? d.moonPhaseDesc?.ml
-    : language === "tr" ? TR_MOON_PHASES[phaseEn] || phaseEn
+    : language === "ar" ? phaseEn
     : phaseEn;
   const moonMansionDisplay = language === "ml"
     ? `നക്ഷത്രം #${d.currentMansion?.no || "?"}`
-    : `#${d.currentMansion?.no || "?"} ${language === "tr" ? d.currentMansion?.name || "" : d.currentMansion?.name_en || ""}`.trim();
+    : `#${d.currentMansion?.no || "?"} ${d.currentMansion?.name_en || ""}`.trim();
 
   // ── Kashf lunar day data ──
   const kashfLunarDay = getKashfLunarDayInfo(d.lunarDay);
@@ -98,7 +81,7 @@ export default function TodayDashboard() {
   // ── Warnings (language-specific — no mixing) ──
   const warnings = [];
   if (kashfNahs?.isNahs) {
-    warnings.push(language === "ml" ? kashfNahs.ml : language === "tr" ? kashfNahs.tr : kashfNahs.en);
+    warnings.push(language === "ml" ? kashfNahs.ml : language === "ar" ? kashfNahs.en : kashfNahs.en);
   }
   if (d.moonDignity?.strength === "weakest") {
     warnings.push(txt("ചന്ദ്രൻ നീചം (വൃശ്ചികം)", "Moon debilitated (Scorpio)", "Ay düşük (Akrep)"));
@@ -160,7 +143,7 @@ export default function TodayDashboard() {
             border: `1px solid ${kashfLunarDay.nature_en.includes("Auspi") ? "rgba(74,222,128,0.12)" : kashfLunarDay.nature_en.includes("Inauspi") ? "rgba(248,113,113,0.12)" : "rgba(251,191,36,0.12)"}`,
           }}>
             <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>
-              {txt("ചാന്ദ്ര ദിവസം", "Lunar Day", "Ay Günü")} {d.lunarDay}: {language === "ml" ? kashfLunarDay.nature_ml : language === "tr" ? kashfLunarDay.nature_tr : kashfLunarDay.nature_en}
+              {txt("ചാന്ദ്ര ദിവസം", "Lunar Day", "Ay Günü")} {d.lunarDay}: {language === "ml" ? kashfLunarDay.nature_ml : language === "ar" ? kashfLunarDay.nature_en : kashfLunarDay.nature_en}
             </p>
             <p className="font-amiri text-[10px] mt-0.5" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{kashfLunarDay.summary_ar}</p>
             <p className="font-inter text-[8px] mt-0.5" style={{ color: "rgba(129,140,248,0.30)" }}>📖 {kashfLunarDay.source}</p>

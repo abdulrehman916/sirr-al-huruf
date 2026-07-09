@@ -427,3 +427,28 @@
 .text-gold-dim {
   color: rgba(212,175,55,0.70) !important;
 }
+
+/* ── Astro Clock Arabic Display — GLOBAL UI LANGUAGE RULE ── */
+/* Arabic names: 25-35% larger, visually prominent, easy to read */
+.astro-arabic {
+  font-family: 'Noto Naskh Arabic', 'Amiri', 'Scheherazade New', serif;
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 2;
+  letter-spacing: 0.04em;
+  direction: rtl;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Malayalam transliteration: directly below Arabic, slightly smaller */
+.astro-arabic-ml {
+  font-size: clamp(0.875rem, 1.5vw, 1.0625rem);
+  color: rgba(212,175,55,0.60);
+  text-align: center;
+  direction: ltr;
+  margin-top: 0.15rem;
+  line-height: 1.5;
+  font-weight: 500;
+}

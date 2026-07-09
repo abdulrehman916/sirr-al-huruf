@@ -8,7 +8,8 @@ const LanguageContext = createContext();
 
 export function AstroClockLanguageProvider({ children }) {
   const [language, setLang] = useState(() => {
-    const saved = localStorage.getItem("astroClockLanguage");
+    let saved = localStorage.getItem("astroClockLanguage");
+    if (saved === "tr") saved = "ar"; // GLOBAL UI LANGUAGE RULE: Turkish replaced by Arabic
     return saved || "ml";
   });
 
@@ -18,17 +19,24 @@ export function AstroClockLanguageProvider({ children }) {
 
   const isMalayalam = language === "ml";
   const isEnglish = language === "en";
-  const isTurkish = language === "tr";
+  const isArabic = language === "ar";
 
   const setLanguage = useCallback((lang) => setLang(lang), []);
   const toggleLanguage = useCallback(() => {
-    setLang(prev => prev === "ml" ? "en" : prev === "en" ? "tr" : "ml");
+    setLang(prev => prev === "ml" ? "en" : prev === "en" ? "ar" : "ml");
   }, []);
 
-  // Inline trilingual picker — returns the string for the current language
-  const txt = useCallback((ml, en, tr) => {
+  // txt: returns Malayalam or English. Never returns Turkish.
+  // Existing calls with a 3rd arg (legacy Turkish) are safely ignored.
+  const txt = useCallback((ml, en) => {
     if (language === "ml") return ml;
-    if (language === "tr") return tr || en;
+    return en;
+  }, [language]);
+
+  // txtA: trilingual-aware — use when Arabic translation is available
+  const txtA = useCallback((ml, en, ar) => {
+    if (language === "ml") return ml;
+    if (language === "ar") return ar || en;
     return en;
   }, [language]);
 
@@ -77,7 +85,7 @@ export function AstroClockLanguageProvider({ children }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, isMalayalam, isEnglish, isTurkish, t, txt, toggleLanguage, setLanguage }}>
+    <LanguageContext.Provider value={{ language, isMalayalam, isEnglish, isArabic, t, txt, txtA, toggleLanguage, setLanguage }}>
       {children}
     </LanguageContext.Provider>
   );

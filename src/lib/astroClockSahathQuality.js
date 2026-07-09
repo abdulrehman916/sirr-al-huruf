@@ -33,11 +33,11 @@ const PLANET_NATURE_STRENGTH = {
 };
 
 export const QUALITY_META = {
-  5: { dot: "🟢", color: "#22c55e", label_en: "Excellent", label_ml: "മികച്ചത്", label_tr: "Mükemmel" },
-  4: { dot: "🟢", color: "#4ADE80", label_en: "Very Good", label_ml: "വളരെ നല്ലത്", label_tr: "Çok İyi" },
-  3: { dot: "🟡", color: "#F5D060", label_en: "Good", label_ml: "നല്ലത്", label_tr: "İyi" },
-  2: { dot: "🟠", color: "#FB923C", label_en: "Moderate", label_ml: "സാധാരണം", label_tr: "Orta" },
-  1: { dot: "🔴", color: "#F87171", label_en: "Weak", label_ml: "ദുർബലം", label_tr: "Zayıf" },
+  5: { dot: "🟢", color: "#22c55e", label_en: "Excellent", label_ml: "മികച്ചത്", label_ar: "ممتاز", label_tr: "Mükemmel" },
+  4: { dot: "🟢", color: "#4ADE80", label_en: "Very Good", label_ml: "വളരെ നല്ലത്", label_ar: "جيد جداً", label_tr: "Çok İyi" },
+  3: { dot: "🟡", color: "#F5D060", label_en: "Good", label_ml: "നല്ലത്", label_ar: "جيد", label_tr: "İyi" },
+  2: { dot: "🟠", color: "#FB923C", label_en: "Moderate", label_ml: "സാധാരണം", label_ar: "متوسط", label_tr: "Orta" },
+  1: { dot: "🔴", color: "#F87171", label_en: "Weak", label_ml: "ദുർബലം", label_ar: "ضعيف", label_tr: "Zayıf" },
 };
 
 /**

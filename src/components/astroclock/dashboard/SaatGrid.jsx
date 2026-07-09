@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { useAstroData, PLANET_TR } from "./useAstroData";
+import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfHourAttributes } from "@/lib/astroClockManuscriptMerger";
@@ -30,7 +30,7 @@ function hourStatus(isCurrent, isPast) {
 
 export default function SaatGrid() {
   const d = useAstroData();
-  const { txt, language } = useAstroClockLanguage();
+  const { txt, txtA, language } = useAstroClockLanguage();
   const [expanded, setExpanded] = useState(null);
   if (!d.allHours) return null;
 
@@ -41,7 +41,7 @@ export default function SaatGrid() {
     const status = hourStatus(h.status === "current", h.status === "past");
     const sBadge = STATUS_BADGE[status];
     const quality = getSahathQuality(h.planet, d.dayRuler?.planet);
-    const planetName = language === "ml" ? d.planetInfo[h.planet]?.name_ml_equivalent : language === "tr" ? PLANET_TR[h.planet] : d.planetInfo[h.planet]?.name_en;
+    const planetName = language === "ml" ? d.planetInfo[h.planet]?.name_ml_equivalent : language === "ar" ? d.planetInfo[h.planet]?.name_ar : d.planetInfo[h.planet]?.name_en;
     const symbol = d.planetInfo[h.planet]?.symbol || "";
     const displayNum = h.period === "night" ? h.hourNumber - 12 : h.hourNumber;
     const isOpen = expanded === `${h.period}-${h.hourNumber}`;
@@ -61,7 +61,7 @@ export default function SaatGrid() {
       upcoming: txt("വരാനിരിക്കുന്ന", "Upcoming", "Gelecek"),
       past: txt("പൂർത്തിയായി", "Completed", "Geçti"),
     };
-    const qualityLabel = txt(quality.label_ml, quality.label_en, quality.label_tr);
+    const qualityLabel = txtA(quality.label_ml, quality.label_en, quality.label_ar);
 
     return (
       <div key={`${h.period}-${h.hourNumber}`} className="rounded-xl overflow-hidden" style={{
@@ -76,7 +76,14 @@ export default function SaatGrid() {
           <span className="font-inter text-xs font-bold tabular-nums w-7 text-center" style={{ color: quality.color }}>#{displayNum}</span>
           <span className="text-base leading-none">{symbol}</span>
           <div className="flex-1 min-w-0">
-            <span className="font-inter text-xs font-bold block truncate" style={{ color: quality.color }}>{planetName}</span>
+            {language === "ml" && d.planetInfo[h.planet]?.name_ar ? (
+              <>
+                <span className="font-amiri block truncate" style={{ color: quality.color, fontSize: '1.05rem', fontWeight: 700, direction: 'rtl', lineHeight: 1.4 }}>{d.planetInfo[h.planet].name_ar}</span>
+                <span className="font-malayalam-sm block truncate" style={{ color: 'rgba(212,175,55,0.55)', lineHeight: 1.3 }}>({d.planetInfo[h.planet]?.name_ml_reading})</span>
+              </>
+            ) : (
+              <span className="font-inter text-xs font-bold block truncate" style={{ color: quality.color }}>{planetName}</span>
+            )}
             <span className="font-inter text-[9px] tabular-nums" style={{ color: "rgba(255,255,255,0.40)" }}>{h.startTime} – {h.endTime}</span>
           </div>
           {/* Quality badge — colored dot + strength label (manuscript-based) */}

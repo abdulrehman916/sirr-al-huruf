@@ -61,9 +61,14 @@ export default function ExpandedPlanetaryHourCard({ hour, isMalayalam }) {
         <div className="flex items-center gap-3">
           <span className="text-3xl flex-shrink-0">{hour.planetInfo?.symbol}</span>
           <div className="min-w-0">
-            <p className="font-amiri text-2xl font-bold" style={{ color: G.text }}>
+            <p className="font-amiri text-3xl font-bold" style={{ color: G.text }}>
               {hour.planetInfo?.name_ar}
             </p>
+            {isMalayalam && hour.planetInfo?.name_ml_reading && (
+              <p className="font-malayalam-sm" style={{ color: 'rgba(212,175,55,0.60)', marginTop: '-0.25rem' }}>
+                ({hour.planetInfo.name_ml_reading})
+              </p>
+            )}
             <p className="font-malayalam-md font-bold text-white">
               {isMalayalam ? hour.planetInfo?.name_ml_equivalent : hour.planetInfo?.name_en}
             </p>

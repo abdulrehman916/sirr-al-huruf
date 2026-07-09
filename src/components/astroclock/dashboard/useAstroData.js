@@ -20,6 +20,12 @@ export const PLANET_TR = {
   jupiter: "Jüpiter", venus: "Venüs", saturn: "Satürn",
 };
 export const DAY_TR = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+// Arabic name maps (GLOBAL UI LANGUAGE RULE — Turkish is internal-only, never shown to users)
+export const PLANET_AR = {
+  sun: "الشمس", moon: "القمر", mars: "المريخ", mercury: "عطارد",
+  jupiter: "المشتري", venus: "الزهرة", saturn: "زحل",
+};
+export const DAY_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 export const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 // Moon dignity (traditional manuscript rules)
