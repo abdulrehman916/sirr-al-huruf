@@ -1,11 +1,11 @@
 {
   "name": "ManuscriptBook",
   "type": "object",
-  "description": "Permanent Enterprise Digital Manuscript Library. Stores metadata for every imported PDF book. The original PDF always remains the master source \u2014 never copied or modified. Designed for unlimited expansion (thousands to hundreds of thousands of books). Source = OneDrive by default. Every book has a permanent book_id that never changes.",
+  "description": "Permanent Enterprise Digital Manuscript Library. Stores metadata for every imported PDF book. The original PDF always remains the master source \u2014 never copied or modified. Designed for unlimited expansion. Validation gate: bulk OneDrive import is locked until at least one book passes validation (validation_status='passed').",
   "properties": {
     "book_id": {
       "type": "string",
-      "description": "PERMANENT unique identifier. Never changes. Used as FK reference in ManuscriptEntry. Format: MS-<timestamp>-<rand>"
+      "description": "PERMANENT unique identifier. Never changes. Used as FK reference in ManuscriptEntry."
     },
     "book_title": {
       "type": "string",
@@ -21,7 +21,7 @@
     },
     "language": {
       "type": "string",
-      "description": "Primary language of the manuscript (Arabic, Turkish, Persian, etc.)"
+      "description": "Primary language of the manuscript"
     },
     "source": {
       "type": "string",
@@ -29,14 +29,15 @@
         "onedrive",
         "upload",
         "url",
-        "manual"
+        "manual",
+        "validation"
       ],
       "default": "onedrive",
-      "description": "Source of the PDF file. Default: OneDrive"
+      "description": "Source of the PDF file. 'validation' = single-PDF validation test."
     },
     "original_file_url": {
       "type": "string",
-      "description": "Permanent URL to the original PDF file. The original PDF always remains the master source \u2014 never copied or modified."
+      "description": "Permanent URL to the original PDF file. The original PDF always remains the master source."
     },
     "original_file_name": {
       "type": "string",
@@ -49,7 +50,7 @@
     "version": {
       "type": "string",
       "default": "1.0",
-      "description": "Version of the import/extraction. Increments when re-extracted."
+      "description": "Version of the import/extraction."
     },
     "total_pages": {
       "type": "integer",
@@ -86,10 +87,11 @@
         "processing",
         "completed",
         "failed",
-        "partial"
+        "partial",
+        "validation_in_progress"
       ],
       "default": "pending",
-      "description": "Content extraction status"
+      "description": "Content extraction status. 'validation_in_progress' = single-PDF validation running."
     },
     "categories_covered": {
       "type": "array",
@@ -97,7 +99,7 @@
         "type": "string"
       },
       "default": [],
-      "description": "Sirr sections covered by this manuscript (e.g., 'Sirr 1', 'Sirr 2')"
+      "description": "Sirr sections covered by this manuscript"
     },
     "total_entries_extracted": {
       "type": "integer",
@@ -106,12 +108,32 @@
     },
     "tradition": {
       "type": "string",
-      "description": "Occult/scholarly tradition (Omani, Turkish, Persian, etc.)"
+      "description": "Occult/scholarly tradition"
     },
     "pdf_count": {
       "type": "integer",
       "default": 1,
       "description": "Number of PDF files if the manuscript spans multiple PDFs"
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "not_validated",
+        "pending",
+        "passed",
+        "failed"
+      ],
+      "default": "not_validated",
+      "description": "Single-PDF validation status. 'passed' = validation succeeded, bulk import unlocked. 'failed' = validation found critical errors."
+    },
+    "validation_report": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Complete validation report JSON: { total_pages_processed, total_entries_extracted, total_images_extracted, total_arabic_texts, total_verified_arabic, total_manual_review, total_classifications, errors, skipped_pages, pages_with_images, arabic_preservation_rate, entries_by_section }"
+    },
+    "validation_date": {
+      "type": "string",
+      "description": "ISO 8601 date when validation was run"
     },
     "notes": {
       "type": "string",
@@ -141,6 +163,12 @@
       "name": "idx_extraction_status",
       "fields": [
         "extraction_status"
+      ]
+    },
+    {
+      "name": "idx_validation_status",
+      "fields": [
+        "validation_status"
       ]
     },
     {

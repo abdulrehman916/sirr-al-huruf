@@ -4,17 +4,19 @@ import SirrHub from "@/components/sirr/SirrHub";
 import SirrSectionView from "@/components/sirr/SirrSectionView";
 import SirrTopicView from "@/components/sirr/SirrTopicView";
 import SirrSourceLibrary from "@/components/sirr/SirrSourceLibrary";
+import SirrValidationReport from "@/components/sirr/SirrValidationReport";
 import { getSirrKnowledgeStructure } from "@/lib/sirrKnowledgeClassifier";
 import { fetchManuscriptBooks, fetchManuscriptEntries, mergeEntriesIntoStructure } from "@/lib/manuscriptLibrarySync";
 
 export default function SirrPage() {
   const [language, setLanguage] = useState("ml");
-  const [view, setView] = useState("hub"); // 'hub' | 'section' | 'topic' | 'library'
+  const [view, setView] = useState("hub");
   const [selectedSectionId, setSelectedSectionId] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [databaseBooks, setDatabaseBooks] = useState([]);
   const [databaseEntries, setDatabaseEntries] = useState([]);
   const [loadingDb, setLoadingDb] = useState(true);
+  const [selectedValidationBook, setSelectedValidationBook] = useState(null);
 
   const baseStructure = useMemo(() => getSirrKnowledgeStructure(), []);
   const structure = useMemo(
@@ -38,6 +40,7 @@ export default function SirrPage() {
       });
     return () => { cancelled = true; };
   }, []);
+
   const selectedSection = structure.sections.find((s) => s.id === selectedSectionId);
 
   const handleSelectSection = (sectionId) => {
@@ -62,6 +65,11 @@ export default function SirrPage() {
   };
 
   const handleSelectLibrary = () => setView("library");
+
+  const handleShowValidationReport = (book) => {
+    setSelectedValidationBook(book);
+    setView("validation_report");
+  };
 
   return (
     <PageLayout>
@@ -115,6 +123,15 @@ export default function SirrPage() {
             databaseBooks={databaseBooks}
             loadingDb={loadingDb}
             onBack={handleBackToHub}
+            onShowValidationReport={handleShowValidationReport}
+            language={language}
+          />
+        )}
+
+        {view === "validation_report" && selectedValidationBook && (
+          <SirrValidationReport
+            book={selectedValidationBook}
+            onBack={() => { setView("library"); setSelectedValidationBook(null); }}
             language={language}
           />
         )}

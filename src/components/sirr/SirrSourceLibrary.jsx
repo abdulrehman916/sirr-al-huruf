@@ -5,7 +5,7 @@
 // (OneDrive-sourced PDFs) plus pre-existing static manuscripts.
 // The original PDF always remains the master source.
 // ═══════════════════════════════════════════════════════════════
-import { ChevronLeft, BookMarked, FileText, Globe, Database, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { ChevronLeft, BookMarked, FileText, Globe, Database, Loader2, CheckCircle2, AlertCircle, FileCheck2, ClipboardList } from "lucide-react";
 
 function StatusBadge({ status, isMl }) {
   const config = {
@@ -26,7 +26,7 @@ function StatusBadge({ status, isMl }) {
   );
 }
 
-function BookCard({ book, isDb, isMl }) {
+function BookCard({ book, isDb, isMl, onShowValidationReport }) {
   return (
     <div className="rounded-xl p-4"
       style={{
@@ -105,11 +105,28 @@ function BookCard({ book, isDb, isMl }) {
       <p className="font-inter text-[10px] mt-2" style={{ color: "rgba(255,255,255,0.35)" }}>
         {book.tradition || ""}{isDb && book.upload_date ? ` · ${isMl ? "ഇറക്കുമതി" : "Imported"}: ${new Date(book.upload_date).toLocaleDateString()}` : ""}
       </p>
+
+      {/* Validation Report Button */}
+      {isDb && book.validation_status && book.validation_status !== "not_validated" && onShowValidationReport && (
+        <button
+          onClick={() => onShowValidationReport(book)}
+          className="w-full mt-2 flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-bold transition-all"
+          style={{
+            background: book.validation_status === "passed" ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)",
+            color: book.validation_status === "passed" ? "#4ADE80" : "#F87171",
+            border: `1px solid ${book.validation_status === "passed" ? "rgba(74,222,128,0.20)" : "rgba(248,113,113,0.20)"}`,
+          }}
+        >
+          {book.validation_status === "passed"
+            ? <><FileCheck2 className="w-3.5 h-3.5" /> {isMl ? "പരിശോധന റിപ്പോർട്ട് കാണുക" : "View Validation Report"}</>
+            : <><ClipboardList className="w-3.5 h-3.5" /> {isMl ? "പരിശോധന റിപ്പോർട്ട് കാണുക" : "View Validation Report"}</>}
+        </button>
+      )}
     </div>
   );
 }
 
-export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadingDb, onBack, language }) {
+export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadingDb, onBack, onShowValidationReport, language }) {
   const isMl = language === "ml";
 
   return (
@@ -154,7 +171,7 @@ export default function SirrSourceLibrary({ sourceLibrary, databaseBooks, loadin
             </span>
           </div>
           {databaseBooks.map((book) => (
-            <BookCard key={book.id || book.book_id} book={book} isDb={true} isMl={isMl} />
+            <BookCard key={book.id || book.book_id} book={book} isDb={true} isMl={isMl} onShowValidationReport={onShowValidationReport} />
           ))}
         </div>
       )}
