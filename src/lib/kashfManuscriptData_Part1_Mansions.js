@@ -6,7 +6,7 @@
 //   Layer 3: Sheikh Zahir al-Ismaili (pp.126-132)
 // ═══════════════════════════════════════════════════════════════
 
-const SOURCE = "كشف الحقائق";
+const SOURCE_AR = "كشف الحقائق";
 const SOURCE_EN = "Kashf al-Haqa'iq";
 
 // ── LAYER 1: Sheikh Khalili's 28 Mansions (pp.90-114) ──────────
@@ -602,7 +602,5 @@ export const ZODIAC_MANSION_TABLE = {
     { zodiac_ar: "الحوت", zodiac_en: "Pisces", mansions: "ثلث فرع المقدم والمؤخر وبطن الحوت (الرشا)" },
   ]
 };
-
-const SOURCE_AR = "كشف الحقائق";
 
 export default MANSIONS_LAYER1;
