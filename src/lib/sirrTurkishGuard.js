@@ -11,21 +11,34 @@
 // Turkish-specific characters (not found in English, Malayalam, or Arabic)
 const TURKISH_CHARS = /[çşğğıİöüÇŞĞĞ]/;
 
-// Common Turkish words — 2+ matches indicates Turkish text
+// Turkish function/content words. "ve" is included but does NOT trigger
+// alone (it is Arabic/Persian "and" و, used in all Islamic transliterations).
 const TURKISH_WORDS = [
+  // Function words
   've', 'ile', 'bir', 'bu', 'şu', 'için', 'gibi', 'kadar', 'ancak',
   'veya', 'sonra', 'önce', 'değil', 'vardır', 'yoktur', 'olarak',
   'üzere', 'rağmen', 'dolayı', 'nedeniyle', 'tarafından', 'maksadıyla',
   'gayesiyle', 'amacıyla', 'cihetle', 'itibaren', 'bahisle', 'dair',
   'edilir', 'yapılır', 'alınır', 'yazılır', 'okunur', 'söylenir',
   'denenmiştir', 'bildirilmiştir', 'belirtilmiştir', 'anlatılmıştır',
-  'açıklanmıştır', 'nakledilmiştir', 'rivayet', 'methal', 'beyan'
+  'açıklanmıştır', 'nakledilmiştir', 'rivayet', 'methal', 'beyan',
+  // Common verbs / postpositions (manuscript instruction language)
+  'eder', 'olur', 'yapar', 'gelir', 'verir', 'alır', 'koyar', 'yazar',
+  'okur', 'söyler', 'yakar', 'yakarsın', 'yazıp', 'okuyup', 'yakıp',
+  'konur', 'gerekir', 'üzerine', 'içine', 'altına', 'üstüne', 'şekilde',
+  'biçimde', 'halde', 'lazım'
 ];
 
+// Word boundary that treats Turkish letters as word characters.
+// JavaScript's \b only works with ASCII, so "önce" and "üzere" (starting
+// with non-ASCII) are never matched by \bönce\b. This custom boundary
+// includes Turkish letters as word characters.
+const WORD_CHARS = 'a-z0-9_ığüşçöıİĞÜŞÇÖ';
+
 // Check if text contains Turkish
-// RULE: Turkish chars alone (ç,ş,ğ,ı,İ,ö,ü) do NOT trigger detection —
-// they may come from proper names (Bülent Kısa, Kitabül Cilve, Mücerrebat, hüddam).
-// Only actual Turkish FUNCTION WORDS trigger detection.
+// RULE: "ve" alone does NOT trigger — it is Arabic/Persian "and" (و),
+// universally used in transliterated Islamic terms like "Celb ve İrsal"
+// (جلب و ارسال). Only non-"ve" words or 2+ words = Turkish.
 export function hasTurkish(text) {
   if (!text || typeof text !== 'string') return false;
   const t = text.trim();
@@ -33,21 +46,21 @@ export function hasTurkish(text) {
 
   const lowerT = t.toLowerCase();
 
-  // Count Turkish function word matches
-  let turkishWordCount = 0;
+  let matchCount = 0;
+  let hasNonVe = false;
   for (const word of TURKISH_WORDS) {
-    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    const regex = new RegExp(`(?:^|[^${WORD_CHARS}])${word}(?:[^${WORD_CHARS}]|$)`, 'gi');
     if (regex.test(lowerT)) {
-      turkishWordCount++;
-      if (turkishWordCount >= 2) return true; // 2+ Turkish function words = definitely Turkish
+      matchCount++;
+      if (word !== 've') hasNonVe = true;
     }
   }
 
-  // 1 Turkish function word = likely Turkish (even if mixed with English)
-  if (turkishWordCount >= 1) return true;
-
-  // 0 Turkish function words = NOT Turkish
-  // (Turkish chars from proper names, spiritual terms, manuscript references are OK)
+  // Any non-"ve" Turkish word = Turkish
+  if (hasNonVe) return true;
+  // 2+ Turkish words = Turkish
+  if (matchCount >= 2) return true;
+  // "ve" alone = Arabic "and", NOT Turkish
   return false;
 }
 
