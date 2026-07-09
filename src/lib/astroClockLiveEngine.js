@@ -453,35 +453,64 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
     });
   }
   
-  // Night hours (13-24)
+  // ══ NIGHT HOURS (13-24) — MIDNIGHT CROSSING FIX ══
+  // CRITICAL: Night Sahaths span from sunset through midnight to the next sunrise.
+  // Crossing midnight must NOT reset or complete remaining night Sahaths.
+  // The date change at 12:00 AM must not affect the current night's Sahath sequence.
+  //
+  // FIX: Use UNADJUSTED start/end times (may be >= 24) for chronological comparison.
+  // When current time is after midnight (before sunrise) AND we're in the night
+  // that started on `date` (current calendar date is the day after `date`), shift
+  // current time +24 so the comparison is chronologically correct across midnight.
+  //
+  // Status rules (per Sahath, compared individually):
+  //   current < start       → Upcoming
+  //   start ≤ current < end → Active
+  //   current ≥ end         → Completed
+  //
   // Manuscript rule (Kashf al-Haqa'iq p.65): night belongs to the FOLLOWING day.
   // Night Saat 1 = next day's ruler + 2 (Chaldean offset). Night hour 13 = Night Saat 1.
   const firstNightPlanetIndex = (nightDayRuler.index + 2) % 7;
+
+  // After midnight in the displayed night: shift current time +24 for comparison.
+  // True when current calendar date is the day AFTER `date` and current time is
+  // before sunrise (we're in the early-morning part of the night that began at `date`'s sunset).
+  const _msPerDay = 24 * 60 * 60 * 1000;
+  const _dateMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const _nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const _dayDiff = Math.round((_nowMidnight - _dateMidnight) / _msPerDay);
+  const _isAfterMidnightInNight = (_dayDiff === 1) && (currentHours < sunrise);
+  const nightCurrentHours = _isAfterMidnightInNight ? currentHours + 24 : currentHours;
+
   for (let i = 0; i < 12; i++) {
     const planetIndex = (firstNightPlanetIndex + i) % 7;
     const planet = PLANET_SEQUENCE[planetIndex];
     const start = sunset + i * nightHourDuration;
     const end = start + nightHourDuration;
     
-    // Calculate countdown for each night hour
+    // For DISPLAY: adjust times to 0-24 range
     const startAdjusted = start >= 24 ? start - 24 : start;
     const endAdjusted = end >= 24 ? end - 24 : end;
-    const startMs = startAdjusted * 60 * 60 * 1000;
-    const endMs = endAdjusted * 60 * 60 * 1000;
-    const nowMs = currentHours * 60 * 60 * 1000;
+
+    // For COMPARISON: use UNADJUSTED start/end (may be >= 24) with night-aware
+    // current time. This correctly handles hours that cross midnight (start < 24,
+    // end >= 24) — the unadjusted end is chronologically after the unadjusted start.
+    const startMs = start * 60 * 60 * 1000;
+    const endMs = end * 60 * 60 * 1000;
+    const nightNowMs = nightCurrentHours * 60 * 60 * 1000;
     let timeRemaining = null;
     let timeUntilStart = null;
     let status = 'upcoming';
-    
-    if (nowMs >= startMs && nowMs < endMs) {
-      // Current hour
-      timeRemaining = formatCountdown(endMs - nowMs);
+
+    if (nightNowMs >= startMs && nightNowMs < endMs) {
+      // Active — current time is between start and end
+      timeRemaining = formatCountdown(endMs - nightNowMs);
       status = 'current';
-    } else if (nowMs < startMs) {
-      // Upcoming hour
-      timeUntilStart = formatCountdown(startMs - nowMs);
+    } else if (nightNowMs < startMs) {
+      // Upcoming — current time is before start
+      timeUntilStart = formatCountdown(startMs - nightNowMs);
     } else {
-      // Past hour
+      // Completed — current time is after end
       status = 'past';
     }
     
