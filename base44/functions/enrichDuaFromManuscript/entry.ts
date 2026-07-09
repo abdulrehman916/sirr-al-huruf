@@ -186,6 +186,14 @@ CLASSIFICATION TYPES:
    → Store under matching condition. Do NOT affect other conditions. Return context_entry.
 4. CONFLICTING — Genuinely disagrees with existing knowledge on the same point under the same conditions.
    → Preserve BOTH statements. Do NOT overwrite either. Return conflict_entry.
+5. IMPROVED — The new knowledge provides a BETTER quality version of the same knowledge:
+   - Better wording (clearer, more precise, more complete phrasing)
+   - Better Arabic (more accurate Arabic text, correct spelling)
+   - Better Harakat (more complete/accurate diacritics)
+   - Better source references (additional or more authoritative sources)
+   → Update canonical text with improved version. Return improved_text_en and improvement_note.
+   → The previous version is preserved in context_specific under condition "previous_version".
+   → Use this ONLY when the new knowledge is a better quality version of the SAME knowledge, not when it adds new information.
 
 EXISTING RESOLVED KNOWLEDGE:
 ${ex.knowledge_text_en || '(empty)'}
@@ -211,12 +219,14 @@ RULES:
 - For CONTEXT_SPECIFIC: identify the precise condition (e.g., "weekday:Thursday", "sahath:8", "planet:Mars", "intention:love", "material:silver").
 - For CONFLICTING: identify the specific field that conflicts (e.g., "repetition_count", "timing", "method").
 
-Return JSON: { "classification": "complementary"|"equivalent"|"context_specific"|"conflicting", "merged_text_en": "...", "context_entry": { "condition": "...", "text_en": "...", "text_ml": "...", "text_ar": "..." }, "conflict_entry": { "field": "...", "opinion_text_en": "...", "opinion_text_ml": "...", "opinion_text_ar": "..." }, "conflict_field": "..." }`,
+Return JSON: { "classification": "complementary"|"equivalent"|"context_specific"|"conflicting"|"improved", "merged_text_en": "...", "improved_text_en": "...", "improvement_note": "...", "context_entry": { "condition": "...", "text_en": "...", "text_ml": "...", "text_ar": "..." }, "conflict_entry": { "field": "...", "opinion_text_en": "...", "opinion_text_ml": "...", "opinion_text_ar": "..." }, "conflict_field": "..." }`,
             response_json_schema: {
               type: "object",
               properties: {
-                classification: { type: "string", enum: ["complementary", "equivalent", "context_specific", "conflicting"] },
+                classification: { type: "string", enum: ["complementary", "equivalent", "context_specific", "conflicting", "improved"] },
                 merged_text_en: { type: "string" },
+                improved_text_en: { type: "string" },
+                improvement_note: { type: "string" },
                 context_entry: { type: "object", properties: { condition: { type: "string" }, text_en: { type: "string" }, text_ml: { type: "string" }, text_ar: { type: "string" } } },
                 conflict_entry: { type: "object", properties: { field: { type: "string" }, opinion_text_en: { type: "string" }, opinion_text_ml: { type: "string" }, opinion_text_ar: { type: "string" } } },
                 conflict_field: { type: "string" }
@@ -270,6 +280,26 @@ Return JSON: { "classification": "complementary"|"equivalent"|"context_specific"
               is_verified: ex.is_verified || isVer
             });
             contextSpecificAdded++;
+          } else if (classification === 'improved') {
+            // IMPROVED: Update canonical text with better version, preserve old in context_specific
+            const existingContext = ex.context_specific || [];
+            existingContext.push({
+              condition: 'previous_version',
+              text_en: ex.knowledge_text_en || '',
+              text_ml: ex.knowledge_text_ml || '',
+              text_ar: ex.knowledge_text_ar || '',
+              sources: [newSource],
+              source_count: 1
+            });
+            await base44.asServiceRole.entities.DuaKnowledge.update(ex.id, {
+              knowledge_text_en: classifyData.improved_text_en || textEn,
+              knowledge_text_ar: p.text_ar || ex.knowledge_text_ar || '',
+              context_specific: existingContext,
+              supporting_sources: [...(ex.supporting_sources || []), newSource],
+              source_count: (ex.source_count || 1) + 1,
+              is_verified: ex.is_verified || isVer
+            });
+            canonicalMerged++;
           } else {
             // COMPLEMENTARY or EQUIVALENT: Merge into resolved text
             const mergedEn = classifyData.merged_text_en || textEn;
