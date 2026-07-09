@@ -1,7 +1,7 @@
 {
   "name": "ManuscriptBook",
   "type": "object",
-  "description": "Permanent Enterprise Digital Manuscript Library. Stores metadata for every imported PDF book. The original PDF always remains the master source \u2014 never copied or modified. Designed for unlimited expansion. Validation gate: bulk OneDrive import is locked until at least one book passes validation (validation_status='passed'). Supports Enterprise Duplicate Detection via edition and publication_year fields preserved in supporting_sources.",
+  "description": "Permanent Enterprise Digital Manuscript Library. Stores metadata for every imported PDF book. The original PDF always remains the master source \u2014 never copied or modified. Designed for unlimited expansion. Validation gate: bulk OneDrive import is locked until at least one book passes validation (validation_status='passed'). Supports Enterprise Duplicate Detection via edition and publication_year fields preserved in supporting_sources. OneDrive Integration: tracks onedrive_file_id, onedrive_file_path, onedrive_etag, onedrive_file_hash, onedrive_modified_date for permanent file provenance and change detection.",
   "properties": {
     "book_id": {
       "type": "string",
@@ -33,7 +33,7 @@
         "validation"
       ],
       "default": "onedrive",
-      "description": "Source of the PDF file. 'validation' = single-PDF validation test."
+      "description": "Source of the PDF file. 'validation' = single-PDF validation test. 'onedrive' = imported via OneDrive connector."
     },
     "original_file_url": {
       "type": "string",
@@ -143,6 +143,26 @@
       "type": "string",
       "description": "ISO 8601 date when validation was run"
     },
+    "onedrive_file_id": {
+      "type": "string",
+      "description": "PERMANENT OneDrive file ID. Used for duplicate detection and change tracking. Never changes once stored. If this file_id already exists in the database, the PDF is not re-imported."
+    },
+    "onedrive_file_path": {
+      "type": "string",
+      "description": "Full path of the PDF file in OneDrive (e.g., '/Manuscripts/Book1.pdf'). Preserved permanently for re-import tracking and provenance."
+    },
+    "onedrive_etag": {
+      "type": "string",
+      "description": "OneDrive ETag at time of import. Used to detect if the original PDF has changed since last import. Compared on every import attempt."
+    },
+    "onedrive_file_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the PDF content at time of import. Used for content-level duplicate detection and change verification."
+    },
+    "onedrive_modified_date": {
+      "type": "string",
+      "description": "Last modified date of the OneDrive file at time of import (ISO 8601). Used to detect changes."
+    },
     "notes": {
       "type": "string",
       "description": "Admin notes about this manuscript"
@@ -189,6 +209,12 @@
       "name": "idx_book_title",
       "fields": [
         "book_title"
+      ]
+    },
+    {
+      "name": "idx_onedrive_file_id",
+      "fields": [
+        "onedrive_file_id"
       ]
     }
   ],

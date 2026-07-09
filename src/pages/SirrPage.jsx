@@ -10,6 +10,7 @@ import { fetchManuscriptBooks, fetchManuscriptEntries, mergeEntriesIntoStructure
 import { fetchPreparations } from "@/lib/preparationLibrarySync";
 import SirrPreparationLibrary from "@/components/sirr/SirrPreparationLibrary";
 import SirrPreparationDetail from "@/components/sirr/SirrPreparationDetail";
+import SirrOneDriveBrowser from "@/components/sirr/SirrOneDriveBrowser";
 
 export default function SirrPage() {
   const [language, setLanguage] = useState("ml");
@@ -82,6 +83,17 @@ export default function SirrPage() {
     setView("validation_report");
   };
 
+  const handleOneDriveImported = () => {
+    setLoadingDb(true);
+    Promise.all([fetchManuscriptBooks(), fetchManuscriptEntries()])
+      .then(([books, entries]) => {
+        setDatabaseBooks(books);
+        setDatabaseEntries(entries);
+        setLoadingDb(false);
+      })
+      .catch(() => setLoadingDb(false));
+  };
+
   return (
     <PageLayout>
       <div className="relative z-10 w-full max-w-4xl mx-auto px-3 sm:px-4 py-4">
@@ -137,6 +149,15 @@ export default function SirrPage() {
             loadingDb={loadingDb}
             onBack={handleBackToHub}
             onShowValidationReport={handleShowValidationReport}
+            onImportFromOneDrive={() => setView("onedrive_browser")}
+            language={language}
+          />
+        )}
+
+        {view === "onedrive_browser" && (
+          <SirrOneDriveBrowser
+            onBack={() => setView("library")}
+            onImported={handleOneDriveImported}
             language={language}
           />
         )}
