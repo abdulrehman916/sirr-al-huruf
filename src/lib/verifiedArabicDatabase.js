@@ -1,20 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// VERIFIED ARABIC DATABASE — FRONTEND LOOKUP MODULE
+// VERIFIED ARABIC DATABASE — FRONTEND LOOKUP MODULE (STRICT)
 // ═══════════════════════════════════════════════════════════════
-// Provides lookupVerifiedArabic() which:
-//   1. Checks localStorage cache (24h TTL, one-time per text)
-//   2. Calls verifyArabicText backend function (full workflow)
-//   3. Shares in-flight promises to prevent duplicate API calls
+// STRICT CACHE RULES:
+//   - Only cache records with verification_status === 'verified'
+//   - Never cache unverified records
+//   - Never cache manual_review_required records
 //
-// The backend function handles:
-//   STEP 1: Check VerifiedArabic entity (by text_hash)
-//   STEP 2: Check HolyOneName (for divine names)
-//   STEP 3: Internet search (authoritative sources)
-//   STEP 4: Cross-verification
-//   STEP 5: Harakat (copy exactly, never guess)
-//   STEP 6: Translation (from verified Arabic only)
-//   STEP 7: Save permanently
-//   STEP 8: Reuse on future calls
+// BACKEND WORKFLOW (verifyArabicText function):
+//   STEP 1: Check VerifiedArabic DB (return only verified/manual_review)
+//   STEP 2: Check HolyOneName (divine names)
+//   STEP 3: Search manuscript data (ManuscriptRule + frontend-passed)
+//   STEP 4: Internet search (authoritative sources)
+//   STEP 5: Cross-validate ALL sources
+//   STEP 6: Save ONLY verified or manual_review. Unverified → save nothing.
 //
 // RULE: AI MUST NEVER GUESS harakat. If unverified → "Verification unavailable".
 // ═══════════════════════════════════════════════════════════════
@@ -22,9 +20,9 @@
 import { base44 } from "@/api/base44Client";
 
 const CACHE_KEY_PREFIX = "verified_arabic_";
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours — only for verified records
 
-// ── Normalize Arabic for cache key (strip harakat, normalize alef) ──
+// ── Normalize Arabic for cache key ──
 const ARABIC_LETTER_RANGES = [
   [0x0621, 0x064a],
   [0x066e, 0x066f],
@@ -50,35 +48,56 @@ function normalizeForCache(text) {
   return result.slice(0, 100);
 }
 
-// ── Promise sharing: one request per unique text ──
+// ── Promise sharing: one request per unique text per session ──
 const inflightPromises = new Map();
 
 /**
  * Lookup verified Arabic text with full harakat, translations, and source.
  *
+ * STRICT RULES:
+ *   - Only verified records are cached in localStorage
+ *   - Unverified records are never cached
+ *   - Promise sharing prevents duplicate API calls within a session
+ *
  * @param {string} arabicText - The Arabic text to verify
- * @param {string} [sourceType] - Category: quran, hadith, divine_name, dua, etc.
+ * @param {string} [sourceType] - quran, hadith, divine_name, dua, etc.
  * @param {string} [bookName] - Source book name
  * @param {string|number} [pageNumber] - Source page number
+ * @param {string} [section] - Section/chapter name
+ * @param {string} [manuscriptArabicText] - Arabic text from app's manuscript data files (for Step 3 comparison)
+ * @param {string} [manuscriptSource] - Which manuscript source (for reference)
  * @returns {Promise<Object>} - { arabic_text, malayalam_meaning, english_meaning,
- *   verification_status, source_url, book_name, page_number, notes, reused }
+ *   verification_status, source_url, book_name, page_number, section, notes, reused }
  */
-export async function lookupVerifiedArabic(arabicText, sourceType, bookName, pageNumber) {
+export async function lookupVerifiedArabic(
+  arabicText,
+  sourceType,
+  bookName,
+  pageNumber,
+  section,
+  manuscriptArabicText,
+  manuscriptSource
+) {
   if (!arabicText || typeof arabicText !== "string") return null;
 
   const cacheKey = CACHE_KEY_PREFIX + normalizeForCache(arabicText);
 
-  // Check localStorage cache first
+  // Check localStorage cache — ONLY verified records are cached
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Date.now() - parsed.cached_at < CACHE_TTL) {
-        return parsed.data;
+        // Only return cached data if it was verified
+        if (parsed.data?.verification_status === "verified") {
+          return parsed.data;
+        }
+        // If cached but not verified, remove it (shouldn't happen, but safety)
+        localStorage.removeItem(cacheKey);
       }
     }
   } catch {
-    // localStorage not available or corrupt — proceed to API
+    // localStorage not available — proceed to API
   }
 
   // Promise sharing — prevents duplicate API calls during rapid re-renders
@@ -93,24 +112,29 @@ export async function lookupVerifiedArabic(arabicText, sourceType, bookName, pag
         source_type: sourceType,
         book_name: bookName,
         page_number: pageNumber,
+        section: section,
+        manuscript_arabic_text: manuscriptArabicText,
+        manuscript_source: manuscriptSource,
       });
 
       const data = response.data;
 
-      // Cache the result permanently in localStorage (24h TTL)
-      try {
-        localStorage.setItem(
-          cacheKey,
-          JSON.stringify({ data, cached_at: Date.now() })
-        );
-      } catch {
-        // Storage full or unavailable — non-critical
+      // STRICT CACHE RULE: Only cache verified records
+      if (data?.verification_status === "verified") {
+        try {
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ data, cached_at: Date.now() })
+          );
+        } catch {
+          // Storage full — non-critical
+        }
       }
+      // Unverified and manual_review records are NOT cached
 
       return data;
     } catch (error) {
       console.error("Verified Arabic lookup failed:", error);
-      // Graceful fallback — never crash the UI
       return {
         verification_status: "unverified",
         arabic_text: arabicText,
@@ -130,7 +154,6 @@ export async function lookupVerifiedArabic(arabicText, sourceType, bookName, pag
 
 /**
  * Clear the localStorage cache for a specific Arabic text.
- * Useful when admin re-verifies a text and wants to force re-lookup.
  */
 export function clearVerifiedArabicCache(arabicText) {
   if (!arabicText) return;

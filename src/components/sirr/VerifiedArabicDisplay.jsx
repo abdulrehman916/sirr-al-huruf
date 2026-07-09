@@ -20,6 +20,9 @@ export default function VerifiedArabicDisplay({
   sourceType,
   bookName,
   pageNumber,
+  section,
+  manuscriptArabicText,
+  manuscriptSource,
   language = "ml", // 'ml' = Malayalam only, 'en' = English only
   size = "lg", // 'sm' | 'md' | 'lg' | 'xl'
   accent = "#D4AF37",
@@ -30,7 +33,15 @@ export default function VerifiedArabicDisplay({
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    lookupVerifiedArabic(arabicText, sourceType, bookName, pageNumber)
+    lookupVerifiedArabic(
+      arabicText,
+      sourceType,
+      bookName,
+      pageNumber,
+      section,
+      manuscriptArabicText,
+      manuscriptSource
+    )
       .then((data) => {
         if (!cancelled) {
           setResult(data);
@@ -116,6 +127,7 @@ export default function VerifiedArabicDisplay({
                 ✓ Verified{" "}
                 {result.source_url ? `· ${result.source_url.slice(0, 40)}` : ""}
                 {result.holy_name_match ? " · Holy Names DB" : ""}
+                {result.manuscript_match ? " · Manuscript" : ""}
               </span>
             )}
             {isManualReview && (

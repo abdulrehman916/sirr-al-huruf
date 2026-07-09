@@ -1,7 +1,7 @@
 {
   "name": "VerifiedArabic",
   "type": "object",
-  "description": "Permanent database of verified Arabic text with full harakat, Malayalam/English translations, and authoritative source attribution. AI MUST check this database before any internet search. Never guess harakat \u2014 if text cannot be verified, display 'Verification unavailable'. Each unique Arabic text is verified once and reused forever. STEPS: 1) Check this DB by text_hash. 2) Check HolyOneName for divine names. 3) Search internet (Quran.com, Sunnah.com, etc). 4) Cross-verify across sources. 5) Copy harakat exactly. 6) Translate from verified Arabic. 7) Save here. 8) Reuse on future lookups. 9) 'Verification unavailable' if no trusted source.",
+  "description": "Permanent database of verified Arabic text. AI MUST NEVER GUESS harakat. Only VERIFIED or MANUAL_REVIEW_REQUIRED records are stored \u2014 unverified records are never saved. WORKFLOW: 1) Check this DB by text_hash. 2) Check HolyOneName. 3) Search manuscript data. 4) Search internet (authoritative sources). 5) Cross-validate all sources. 6) Only save if verified or manual_review. 7) Reuse verified records forever. RULE: If verification fails, store NOTHING. Return 'Verification unavailable'. Never cache unverified. Never create placeholder harakat or translations.",
   "properties": {
     "text_hash": {
       "type": "string",
@@ -9,19 +9,19 @@
     },
     "arabic_text": {
       "type": "string",
-      "description": "Verified Arabic text with full harakat, copied exactly from authoritative source. If unverified, contains original input without added harakat."
+      "description": "Verified Arabic text WITH full harakat, copied exactly from authoritative source. Never AI-guessed."
     },
     "arabic_text_normalized": {
       "type": "string",
-      "description": "Arabic text without harakat, normalized for search matching"
+      "description": "Arabic text WITHOUT harakat, normalized for search matching"
     },
     "malayalam_meaning": {
       "type": "string",
-      "description": "Malayalam translation generated ONLY from verified Arabic. Empty if unverified."
+      "description": "Malayalam translation generated ONLY from verified Arabic. Never placeholder. Empty if no translation available."
     },
     "english_meaning": {
       "type": "string",
-      "description": "English translation generated ONLY from verified Arabic. Empty if unverified."
+      "description": "English translation generated ONLY from verified Arabic. Never placeholder. Empty if no translation available."
     },
     "source_type": {
       "type": "string",
@@ -53,6 +53,10 @@
       "type": "string",
       "description": "Page number in source (string for flexibility)"
     },
+    "section": {
+      "type": "string",
+      "description": "Section or chapter name in the source"
+    },
     "source_url": {
       "type": "string",
       "description": "Primary authoritative source URL (Quran.com, Sunnah.com, etc.)"
@@ -66,7 +70,7 @@
         "priority_4"
       ],
       "default": "priority_4",
-      "description": "Authoritative source priority: 1=Quran.com/Tanzil/King Fahd, 2=Sunnah.com/Shamela/Al-Waraq/Dorar/Altafsir, 3=scanned manuscripts/archives, 4=verified scholarly sites"
+      "description": "1=Quran.com/Tanzil/King Fahd, 2=Sunnah.com/Shamela/Al-Waraq/Dorar/Altafsir, 3=scanned manuscripts/archives, 4=verified scholarly sites"
     },
     "verification_status": {
       "type": "string",
@@ -76,7 +80,7 @@
         "unverified"
       ],
       "default": "unverified",
-      "description": "verified=cross-checked across trusted sources. manual_review_required=sources disagree. unverified=no trusted source found \u2014 display 'Verification unavailable'."
+      "description": "verified=all checks passed, sources agree. manual_review_required=sources disagree, flagged for admin. unverified=NOT SAVED \u2014 returned but nothing stored."
     },
     "cross_verification_sources": {
       "type": "array",
@@ -89,7 +93,20 @@
     "holy_name_match": {
       "type": "boolean",
       "default": false,
-      "description": "True if this text was matched/verified against the HolyOneName database"
+      "description": "Yes/No: Was this text matched in the HolyOneName database?"
+    },
+    "manuscript_match": {
+      "type": "boolean",
+      "default": false,
+      "description": "Yes/No: Was this text matched in the app's manuscript data?"
+    },
+    "manuscript_source_detail": {
+      "type": "string",
+      "description": "Which manuscript source matched (book name, page, section)"
+    },
+    "manuscript_arabic_text": {
+      "type": "string",
+      "description": "The Arabic text as found in the manuscript data (for comparison reference)"
     },
     "date_verified": {
       "type": "string",
@@ -133,6 +150,12 @@
       "fields": [
         "source_type",
         "verification_status"
+      ]
+    },
+    {
+      "name": "idx_manuscript_match",
+      "fields": [
+        "manuscript_match"
       ]
     }
   ],
