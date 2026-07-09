@@ -95,15 +95,15 @@ async function verifyEntryArabic(
 // ── Helper: Search internal knowledge base before external verification ──
 // SELF-LEARNING: Search all verified records first. Reuse instead of duplicate.
 // Never perform external verification when verified info exists internally.
+// CANONICAL MERGE: When a match is found, merge new info + add source to canonical record.
 async function searchInternalForEntry(
   base44: any,
-  arabicText: string,
-  purpose: string,
-  topic: string,
-  entryType: string,
+  entry: any,
   bookTitle: string,
   pageNumber: string
 ): Promise<any> {
+  const arabicText = entry.arabic_text || '';
+
   if (!arabicText || arabicText.trim().length === 0) {
     return { match_found: false, verification_status: 'no_arabic' };
   }
@@ -111,15 +111,61 @@ async function searchInternalForEntry(
   try {
     const response = await base44.functions.invoke('searchInternalKnowledgeBase', {
       arabic_text: arabicText,
-      purpose,
-      topic,
-      entry_type: entryType,
+      purpose: entry.purpose || '',
+      topic: entry.topic || '',
+      entry_type: entry.entry_type || 'instruction',
       book_name: bookTitle,
       page_number: pageNumber,
+      timing: entry.timing || '',
+      day: entry.day || '',
+      planet: entry.planet || '',
+      conditions: entry.conditions || '',
+      materials: entry.materials || '',
+      procedure: entry.procedure || '',
+      warnings: entry.warnings || '',
+      benefits: entry.benefits || '',
+      has_images: (entry.images && entry.images.length > 0) || false,
     });
 
     const result = response.data || response;
     if (result.match_found) {
+      // ── Canonical merge: merge new info + add source to the canonical record ──
+      let canonicalMerged = false;
+      let mergedFields: string[] = [];
+      let sourceAdded = false;
+
+      if (result.matched_entry_id) {
+        try {
+          const mergeResponse = await base44.functions.invoke('canonicalMergeEntry', {
+            matched_entry_id: result.matched_entry_id,
+            new_entry_data: {
+              entry_id: entry.entry_id,
+              book_title: bookTitle,
+              page_number: pageNumber,
+              conditions: entry.conditions || '',
+              materials: entry.materials || '',
+              preparation: entry.preparation || '',
+              procedure: entry.procedure || '',
+              timing: entry.timing || '',
+              planet: entry.planet || '',
+              day: entry.day || '',
+              incense: entry.incense || '',
+              repetition: entry.repetition || '',
+              warnings: entry.warnings || '',
+              benefits: entry.benefits || '',
+              notes: entry.notes || '',
+              introduction: entry.introduction || '',
+            },
+            book_title: bookTitle,
+            page_number: pageNumber,
+          });
+          const mergeResult = mergeResponse.data || mergeResponse;
+          canonicalMerged = mergeResult.merged || false;
+          mergedFields = mergeResult.new_fields_added || [];
+          sourceAdded = mergeResult.source_added || false;
+        } catch { /* non-critical — reuse still works without merge */ }
+      }
+
       return {
         verification_status: 'verified',
         verification_confidence: result.verification_confidence || 'HIGH',
@@ -132,9 +178,12 @@ async function searchInternalForEntry(
         primary_source: result.primary_source || 'Internal knowledge base',
         revision_number: 0,
         date_verified: new Date().toISOString(),
-        notes: `Internal reuse: ${result.match_type} (confidence: ${result.confidence}%)`,
+        notes: `Internal reuse: ${result.match_type} (confidence: ${result.confidence}%). Canonical merge: ${canonicalMerged ? `merged ${mergedFields.length} fields, source ${sourceAdded ? 'added' : 'exists'}` : 'not needed'}.`,
         internal_reuse: true,
         match_found: true,
+        canonical_merged: canonicalMerged,
+        merged_fields: mergedFields,
+        source_added: sourceAdded,
       };
     }
     return { match_found: false };
@@ -189,10 +238,7 @@ Deno.serve(async (req) => {
       batch.map((entry: any) =>
         searchInternalForEntry(
           base44,
-          entry.arabic_text || '',
-          entry.purpose || '',
-          entry.topic || '',
-          entry.entry_type || 'instruction',
+          entry,
           entry.book_title || book.book_title || '',
           entry.page_number || ''
         )
