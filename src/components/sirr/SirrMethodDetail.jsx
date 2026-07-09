@@ -1,48 +1,165 @@
 // ═══════════════════════════════════════════════════════════════
-// SIRR METHOD DETAIL — FULL FIELD DISPLAY
+// SIRR METHOD DETAIL — PREMIUM 16-FIELD ISLAMIC LIBRARY DISPLAY
 // ═══════════════════════════════════════════════════════════════
-// Displays EVERY field found in the manuscript.
-// Does not invent any information.
-// Shows "Not specified in the manuscript" for missing fields.
-// Uses VerifiedArabicDisplay for verified Arabic with harakat.
+// Displays EVERY field found in the manuscript in exact order:
+//   1.  Arabic Text (Verified Harakat Version)
+//   2.  Original Manuscript Arabic (if different)
+//   3.  Malayalam Pronunciation
+//   4.  Complete Malayalam Meaning
+//   5.  Purpose
+//   6.  Method of Use
+//   7.  Number of Recitations
+//   8.  Best Time / Day / Conditions
+//   9.  Required Materials
+//   10. Warnings / Restrictions / Conditions
+//   11. Benefits
+//   12. Source Book
+//   13. Original Page Number
+//   14. Verification Status
+//   15. Cross Verification Sources
+//   16. Additional Notes
+//
+// RULES:
+//   - Never invent or guess harakat — AI suppression enforced
+//   - "Not specified in the manuscript" for missing fields
+//   - Premium Quranic Arabic typography (Amiri/Naskh, large, spaced)
+//   - Collapsible cards for long explanations
+//   - Arabic visually separated from Malayalam
+//   - Original manuscript preserved verbatim, verified version separate
 // ═══════════════════════════════════════════════════════════════
-import { useState } from "react";
-import { ChevronLeft, BookOpen, ZoomIn, X, FileText } from "lucide-react";
-import VerifiedArabicDisplay from "./VerifiedArabicDisplay";
+import { useState, useEffect } from "react";
+import {
+  ChevronLeft, BookOpen, ZoomIn, X, FileText, Loader2,
+  CheckCircle2, AlertCircle, ShieldAlert,
+} from "lucide-react";
+import { lookupVerifiedArabic } from "@/lib/verifiedArabicDatabase";
 import SirrRelatedPreparations from "./SirrRelatedPreparations";
+import CollapsibleCard from "./CollapsibleCard";
 
 const NOT_SPECIFIED_ML = "ഗ്രന്ഥത്തിൽ വ്യക്തമാക്കാത്തത്";
 const NOT_SPECIFIED_EN = "Not specified in the manuscript";
 
-function FieldRow({ icon: Icon, label, value, accent, language, isArabic }) {
+// ── Premium Arabic Typography ──
+function ArabicPremiumText({ text, accent, size = "lg" }) {
+  if (!text) return null;
+  const fontSize =
+    size === "xl" ? "clamp(1.75rem, 4.5vw, 2.25rem)"
+    : size === "lg" ? "clamp(1.5rem, 4vw, 2rem)"
+    : size === "md" ? "clamp(1.25rem, 3vw, 1.5rem)"
+    : "clamp(1rem, 2.5vw, 1.25rem)";
+
+  return (
+    <p
+      className="selectable"
+      style={{
+        fontFamily: "'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif",
+        fontWeight: 700,
+        fontSize,
+        letterSpacing: "0.06em",
+        wordSpacing: "0.15em",
+        lineHeight: 3.0,
+        color: accent,
+        direction: "rtl",
+        textAlign: "center",
+        textShadow: `0 0 24px ${accent}30`,
+        padding: "1rem 0.5rem",
+        margin: 0,
+        WebkitFontSmoothing: "antialiased",
+        MozOsxFontSmoothing: "grayscale",
+        fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1, "ss01" 1, "mkmk" 1, "mark" 1',
+        overflowWrap: "break-word",
+        wordBreak: "normal",
+        hyphens: "none",
+      }}
+    >
+      {text}
+    </p>
+  );
+}
+
+// ── Malayalam Text ──
+function MalayalamText({ text, color = "rgba(255,255,255,0.80)" }) {
+  if (!text) return null;
+  return (
+    <p
+      className="font-malayalam selectable"
+      style={{ fontSize: "clamp(0.95rem, 2.2vw, 1.1rem)", lineHeight: 1.9, color, margin: 0, whiteSpace: "pre-wrap" }}
+    >
+      {text}
+    </p>
+  );
+}
+
+// ── Simple Field (shows value or "Not specified") ──
+function SimpleField({ value, language, isArabic, accent }) {
   const isMl = language === "ml";
   const notSpecified = isMl ? NOT_SPECIFIED_ML : NOT_SPECIFIED_EN;
   const hasValue = value && String(value).trim().length > 0;
 
+  if (!hasValue) {
+    return (
+      <p className={`text-sm ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.25)" }}>
+        {notSpecified}
+      </p>
+    );
+  }
+  if (isArabic) {
+    return <ArabicPremiumText text={value} accent={accent} size="md" />;
+  }
+  return isMl ? (
+    <MalayalamText text={value} />
+  ) : (
+    <p className="font-inter text-sm selectable" style={{ color: "rgba(255,255,255,0.80)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+      {value}
+    </p>
+  );
+}
+
+// ── Verification Badge ──
+function VerificationBadge({ status, confidence, method, language }) {
+  const isMl = language === "ml";
+
+  if (status === "verified") {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
+        style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.25)" }}>
+        <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "#4ADE80" }} />
+        <div>
+          <p className="font-inter text-xs font-bold" style={{ color: "#4ADE80" }}>
+            {isMl ? "സ്ഥിരീകരിച്ചു" : "Verified"} · {confidence || "?"}
+          </p>
+          {method && (
+            <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+              {isMl ? "രീതി" : "Method"}: {method.replace(/_/g, " ")}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+  if (status === "manual_review_required") {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
+        style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}>
+        <ShieldAlert className="w-4 h-4 flex-shrink-0" style={{ color: "#FBBF24" }} />
+        <p className="font-inter text-xs font-bold" style={{ color: "#FBBF24" }}>
+          {isMl ? "കൈമാത്ര സ്ഥിരീകരണം ആവശ്യം — ഉറവിടങ്ങൾ തമ്മിൽ ഭിന്നാഭിപ്രായം" : "Manual review required — sources disagree"}
+        </p>
+      </div>
+    );
+  }
   return (
-    <div className="flex gap-2.5 py-2" style={{ borderBottom: `1px solid ${accent}10` }}>
-      <div className="flex-shrink-0 w-7 flex justify-center pt-0.5">
-        {Icon && <Icon className="w-4 h-4" style={{ color: `${accent}99` }} />}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-inter text-[10px] font-bold uppercase tracking-wide" style={{ color: `${accent}99` }}>
-          {label}
-        </p>
-        <p
-          className={`text-sm mt-1 ${isArabic ? "font-amiri" : isMl ? "font-malayalam" : "font-inter"}`}
-          style={{
-            color: hasValue ? "rgba(255,255,255,0.80)" : "rgba(255,255,255,0.25)",
-            direction: isArabic ? "rtl" : "ltr",
-            lineHeight: isArabic ? 2.2 : 1.6,
-          }}
-        >
-          {hasValue ? value : notSpecified}
-        </p>
-      </div>
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
+      style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)" }}>
+      <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#F87171" }} />
+      <p className="font-inter text-xs font-bold" style={{ color: "#F87171" }}>
+        {isMl ? "സ്ഥിരീകരണം ലഭ്യമല്ല — വിശ്വസനീയ ഉറവിടം കണ്ടെത്തിയില്ല" : "Verification unavailable — no trusted source found"}
+      </p>
     </div>
   );
 }
 
+// ── Image Viewer (preserved from original) ──
 function ImageViewer({ images, accent }) {
   const [fullscreen, setFullscreen] = useState(null);
   const [zoom, setZoom] = useState(1);
@@ -61,7 +178,6 @@ function ImageViewer({ images, accent }) {
         ))}
       </div>
 
-      {/* Fullscreen viewer */}
       {fullscreen && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
           style={{ background: "rgba(0,0,0,0.95)" }}
@@ -72,16 +188,12 @@ function ImageViewer({ images, accent }) {
           </button>
           <div className="flex gap-2 mb-4" onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
-              className="px-3 py-1.5 rounded-lg font-bold text-white" style={{ background: "rgba(255,255,255,0.10)" }}>
-              −
-            </button>
+              className="px-3 py-1.5 rounded-lg font-bold text-white" style={{ background: "rgba(255,255,255,0.10)" }}>−</button>
             <span className="px-3 py-1.5 font-inter text-sm text-white" style={{ background: "rgba(255,255,255,0.10)" }}>
               {Math.round(zoom * 100)}%
             </span>
             <button onClick={() => setZoom((z) => Math.min(4, z + 0.25))}
-              className="px-3 py-1.5 rounded-lg font-bold text-white" style={{ background: "rgba(255,255,255,0.10)" }}>
-              +
-            </button>
+              className="px-3 py-1.5 rounded-lg font-bold text-white" style={{ background: "rgba(255,255,255,0.10)" }}>+</button>
           </div>
           <img src={fullscreen} alt="Full view" className="max-w-full max-h-[80vh] object-contain transition-transform"
             style={{ transform: `scale(${zoom})` }} onClick={(e) => e.stopPropagation()} />
@@ -91,10 +203,62 @@ function ImageViewer({ images, accent }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT — 16-FIELD PREMIUM DISPLAY
+// ═══════════════════════════════════════════════════════════════
 export default function SirrMethodDetail({ method, accent, language, onBack, backLabel, onSelectPreparation }) {
   const isMl = language === "ml";
   const notSpecified = isMl ? NOT_SPECIFIED_ML : NOT_SPECIFIED_EN;
   const images = method.images || [];
+
+  // ── Verified Arabic lookup ──
+  const [verifiedResult, setVerifiedResult] = useState(null);
+  const [loadingVerified, setLoadingVerified] = useState(true);
+
+  useEffect(() => {
+    if (!method.arabic_text) {
+      setLoadingVerified(false);
+      return;
+    }
+    let cancelled = false;
+    const sourceType =
+      method.type === "ism" ? "divine_name"
+      : method.type === "quran_recitation" ? "quran"
+      : "manuscript_quotation";
+    lookupVerifiedArabic(
+      method.arabic_text, sourceType, method.book_name, method.page_number,
+      undefined, method.arabic_text, method.book_name
+    )
+      .then((data) => { if (!cancelled) { setVerifiedResult(data); setLoadingVerified(false); } })
+      .catch(() => {
+        if (!cancelled) {
+          setVerifiedResult({ verification_status: "unverified", arabic_text: method.arabic_text });
+          setLoadingVerified(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [method.arabic_text]);
+
+  // ── Derived values ──
+  const verifiedArabic = verifiedResult?.arabic_text || method.arabic_text;
+  const showOriginalDiff = verifiedResult?.original_manuscript_text
+    && verifiedResult.original_manuscript_text !== verifiedResult?.arabic_text;
+  const malayalamMeaning = verifiedResult?.malayalam_meaning || method.malayalam_meaning;
+  const verificationStatus = verifiedResult?.verification_status || "unverified";
+  const verificationConfidence = verifiedResult?.verification_confidence || "UNVERIFIED";
+  const verificationMethod = verifiedResult?.verification_method;
+  const crossVerificationSources = verifiedResult?.cross_verification_sources || [];
+  const primarySource = verifiedResult?.primary_source;
+  const secondarySources = verifiedResult?.secondary_sources || [];
+
+  // ── Timing combination (section 8) ──
+  const timingParts = [];
+  if (method.timing) timingParts.push(isMl ? `സമയം: ${method.timing}` : `Time: ${method.timing}`);
+  if (method.day || method.suitable_day) timingParts.push(isMl ? `ദിവസം: ${method.day || method.suitable_day}` : `Day: ${method.day || method.suitable_day}`);
+  if (method.planet) timingParts.push(isMl ? `ഗ്രഹം: ${method.planet}` : `Planet: ${method.planet}`);
+  if (method.incense) timingParts.push(isMl ? `ധൂപം: ${method.incense}` : `Incense: ${method.incense}`);
+  if (method.conditions) timingParts.push(isMl ? `വ്യവസ്ഥകൾ: ${method.conditions}` : `Conditions: ${method.conditions}`);
+  const timingCombined = timingParts.join("\n");
 
   return (
     <div className="space-y-3">
@@ -110,11 +274,13 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
       {/* Book & Page header */}
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: `${accent}08`, border: `1px solid ${accent}20` }}>
         <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: accent }} />
-        <span className="font-amiri text-sm flex-shrink-0" style={{ color: accent, direction: "rtl" }}>
-          {method.book_name_ar}
-        </span>
+        {method.book_name_ar && (
+          <span className="font-amiri text-sm flex-shrink-0" style={{ color: accent, direction: "rtl" }}>
+            {method.book_name_ar}
+          </span>
+        )}
         <span className="font-inter text-[10px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.40)" }}>
-          {method.book_name}
+          {method.book_title || method.book_name}
         </span>
         <span className="flex-1"></span>
         <span className="font-inter text-[10px] flex items-center gap-1" style={{ color: accent }}>
@@ -122,47 +288,79 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
         </span>
       </div>
 
-      {/* Purpose */}
-      <div className="rounded-xl p-4" style={{ background: `${accent}08`, border: `1px solid ${accent}22` }}>
-        <p className="font-inter text-[10px] font-bold uppercase tracking-wide" style={{ color: `${accent}99` }}>
-          {isMl ? "ഉദ്ദേശ്യം" : "Purpose"}
-        </p>
-        <p className={`text-sm mt-1 ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.85)" }}>
-          {isMl ? (method.purpose_ml || notSpecified) : (method.purpose_en || notSpecified)}
-        </p>
-      </div>
+      {/* ══ 1. Arabic Text (Verified Harakat Version) ══ */}
+      <CollapsibleCard sectionNumber={1} title="Arabic Text (Verified Harakat)" titleMl="അറബി പാഠം (സ്ഥിരീകരിച്ച ഹരകത്തോടെ)" accent={accent} language={language} defaultOpen={true}>
+        {loadingVerified ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin" style={{ color: accent }} />
+          </div>
+        ) : verifiedArabic ? (
+          <ArabicPremiumText text={verifiedArabic} accent={accent} size="lg" />
+        ) : (
+          <p className={`text-center text-sm ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.25)" }}>
+            {notSpecified}
+          </p>
+        )}
+      </CollapsibleCard>
 
-      {/* Original Arabic (verbatim from manuscript) */}
-      {method.arabic_text && (
-        <div className="rounded-xl p-4" style={{ background: "rgba(212,175,55,0.06)", border: `1px solid ${accent}30` }}>
-          <p className="font-inter text-[10px] font-bold uppercase tracking-wide text-center" style={{ color: `${accent}99` }}>
-            {isMl ? "മൂല അറബി പാഠം" : "Original Arabic (Manuscript)"}
+      {/* ══ 2. Original Manuscript Arabic (if different) ══ */}
+      {showOriginalDiff && (
+        <CollapsibleCard sectionNumber={2} title="Original Manuscript Arabic" titleMl="മൂല ഗ്രന്ഥ അറബി പാഠം" accent={accent} language={language} defaultOpen={true}>
+          <ArabicPremiumText text={verifiedResult.original_manuscript_text} accent="rgba(255,255,255,0.50)" size="md" />
+          <p className="font-inter text-[8px] text-center mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+            📜 {isMl ? "മൂല ഗ്രന്ഥത്തിൽ നിന്ന് കൃത്യമായി സംരക്ഷിച്ചത്" : "Preserved verbatim from the original manuscript"}
           </p>
-          <p className="font-amiri text-xl text-center mt-2 selectable" style={{
-            color: accent, direction: "rtl", lineHeight: 2.4, letterSpacing: "0.04em",
-          }}>
-            {method.arabic_text}
-          </p>
-        </div>
+        </CollapsibleCard>
       )}
 
-      {/* Verified Arabic with Harakat (ONLY if verified) */}
-      {method.arabic_text && (
-        <div>
-          <p className="font-inter text-[10px] font-bold uppercase tracking-wide text-center mb-1" style={{ color: `${accent}99` }}>
-            {isMl ? "സ്ഥിരീകരിച്ച അറബി (ഹരകത്തോടെ)" : "Verified Arabic with Harakat"}
-          </p>
-          <VerifiedArabicDisplay
-            arabicText={method.arabic_text}
-            sourceType={method.type === "ism" ? "divine_name" : method.type === "quran_recitation" ? "quran" : "manuscript_quotation"}
-            bookName={method.book_name}
-            pageNumber={method.page_number}
-            language={language}
-            size="lg"
-            accent={accent}
-          />
-        </div>
-      )}
+      {/* ══ 3. Malayalam Pronunciation ══ */}
+      <CollapsibleCard sectionNumber={3} title="Malayalam Pronunciation" titleMl="മലയാള ഉച്ചാരണം" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={method.malayalam_pronunciation} language={language} accent={accent} />
+      </CollapsibleCard>
+
+      {/* ══ 4. Complete Malayalam Meaning ══ */}
+      <CollapsibleCard sectionNumber={4} title="Complete Malayalam Meaning" titleMl="സമ്പൂർണ്ണ മലയാള അർത്ഥം" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={malayalamMeaning} language={language} accent={accent} />
+      </CollapsibleCard>
+
+      {/* ══ 5. Purpose ══ */}
+      <CollapsibleCard sectionNumber={5} title="Purpose" titleMl="ഉദ്ദേശ്യം" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={isMl ? (method.purpose_ml || method.purpose) : (method.purpose_en || method.purpose)} language={language} accent={accent} />
+      </CollapsibleCard>
+
+      {/* ══ 6. Method of Use ══ */}
+      <CollapsibleCard sectionNumber={6} title="Method of Use" titleMl="ഉപയോഗിക്കേണ്ട രീതി" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={method.procedure || method.usage || method.preparation} language={language} accent={accent} />
+      </CollapsibleCard>
+
+      {/* ══ 7. Number of Recitations ══ */}
+      <CollapsibleCard sectionNumber={7} title="Number of Recitations" titleMl="ആവർത്തന എണ്ണം" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={method.repetition} language={language} accent={accent} />
+      </CollapsibleCard>
+
+      {/* ══ 8. Best Time / Day / Conditions ══ */}
+      <CollapsibleCard sectionNumber={8} title="Best Time / Day / Conditions" titleMl="ഉത്തമ സമയം / ദിവസം / വ്യവസ്ഥകൾ" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={timingCombined} language={language} accent={accent} />
+      </CollapsibleCard>
+
+      {/* ══ 9. Required Materials ══ */}
+      <CollapsibleCard sectionNumber={9} title="Required Materials" titleMl="ആവശ്യമായ വസ്തുക്കൾ" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField
+          value={method.materials || (method.ingredients ? (Array.isArray(method.ingredients) ? method.ingredients.join(", ") : method.ingredients) : undefined)}
+          language={language}
+          accent={accent}
+        />
+      </CollapsibleCard>
+
+      {/* ══ 10. Warnings / Restrictions / Conditions ══ */}
+      <CollapsibleCard sectionNumber={10} title="Warnings / Restrictions" titleMl="മുന്നറിയിപ്പുകൾ / നിയന്ത്രണങ്ങൾ" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={method.warnings || method.warning || method.forbidden} language={language} accent={accent} />
+      </CollapsibleCard>
+
+      {/* ══ 11. Benefits ══ */}
+      <CollapsibleCard sectionNumber={11} title="Benefits" titleMl="ഗുണങ്ങൾ" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={method.benefits || method.suitable} language={language} accent={accent} />
+      </CollapsibleCard>
 
       {/* Images (Wafq, Taweez, Seals, Diagrams) */}
       {images.length > 0 && (
@@ -174,47 +372,160 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
         </div>
       )}
 
-      {/* All remaining fields */}
-      <div className="rounded-xl p-4" style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${accent}15` }}>
-        <FieldRow label={isMl ? "ആമുഖം" : "Introduction"} value={method.introduction} accent={accent} language={language} />
-        <FieldRow label={isMl ? "വ്യവസ്ഥകൾ" : "Conditions"} value={method.conditions} accent={accent} language={language} />
-        <FieldRow label={isMl ? "വസ്തുക്കൾ" : "Materials"} value={method.materials} accent={accent} language={language} />
-        <FieldRow label={isMl ? "തയ്യാറാക്കൽ" : "Preparation"} value={method.preparation} accent={accent} language={language} />
-        <FieldRow label={isMl ? "നടപടിക്രമം" : "Procedure"} value={method.usage || method.procedure} accent={accent} language={language} />
-        <FieldRow label={isMl ? "സമയം" : "Timing"} value={method.timing} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ഗ്രഹം" : "Planet"} value={method.planet} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ദിവസം" : "Day"} value={method.day || method.suitable_day} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ധൂപം" : "Incense"} value={method.incense} accent={accent} language={language} />
-        <FieldRow label={isMl ? "മലയാളം അർത്ഥം" : "Malayalam Meaning"} value={method.malayalam_meaning || method.purpose_ml} accent={accent} language={language} />
-        <FieldRow label={isMl ? "English Translation" : "English Translation"} value={method.english_meaning || method.purpose_en} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ഔഷധങ്ങൾ" : "Herbs / Medicines"} value={method.ingredients ? (Array.isArray(method.ingredients) ? method.ingredients.join(", ") : method.ingredients) : undefined} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ആവർത്തന എണ്ണം" : "Repetition Count"} value={method.repetition} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ഉചിത സഅാത്ത്" : "Suitable Saat"} value={method.best_saat || method.suitable_saat} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ചന്ദ്രൻ" : "Moon"} value={method.moon} accent={accent} language={language} />
-        <FieldRow label={isMl ? "മലക്ക്" : "Angel"} value={method.angel || method.king_en} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ജിന്ന്" : "Jinn"} value={method.jinn} accent={accent} language={language} />
-        <FieldRow label={isMl ? "മുന്നറിയിപ്പുകൾ" : "Warnings"} value={method.warnings || method.warning || method.forbidden} accent={accent} language={language} />
-        <FieldRow label={isMl ? "കുറിപ്പുകൾ" : "Notes"} value={method.notes || method.readings} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ഗുണങ്ങൾ" : "Benefits"} value={method.benefits || method.suitable} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ഉറവിട പണ്ഡിതൻ" : "Source Scholar"} value={method.source_scholar} accent={accent} language={language} />
+      {/* ══ 12. Source Book ══ */}
+      <CollapsibleCard sectionNumber={12} title="Source Book" titleMl="ഉറവിട ഗ്രന്ഥം" accent={accent} language={language} defaultOpen={true}>
+        <div className="flex items-center gap-2 flex-wrap">
+          {method.book_name_ar && (
+            <span className="font-amiri text-base" style={{ color: accent, direction: "rtl" }}>
+              {method.book_name_ar}
+            </span>
+          )}
+          <span className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.70)" }}>
+            {method.book_title || method.book_name}
+          </span>
+        </div>
+        {method.source_scholar && (
+          <p className="font-inter text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.40)" }}>
+            {isMl ? "ഉറവിട പണ്ഡിതൻ" : "Source Scholar"}: {method.source_scholar}
+          </p>
+        )}
+      </CollapsibleCard>
 
-        {/* Mansion-specific fields */}
-        {method.nature && (
-          <FieldRow label={isMl ? "സ്വഭാവം" : "Nature"} value={method.nature} accent={accent} language={language} />
+      {/* ══ 13. Original Page Number ══ */}
+      <CollapsibleCard sectionNumber={13} title="Original Page Number" titleMl="മൂല പേജ് നമ്പർ" accent={accent} language={language} defaultOpen={true}>
+        <SimpleField value={method.page_number} language={language} accent={accent} />
+      </CollapsibleCard>
+
+      {/* ══ 14. Verification Status ══ */}
+      <CollapsibleCard sectionNumber={14} title="Verification Status" titleMl="സ്ഥിരീകരണ നില" accent={accent} language={language} defaultOpen={true}>
+        {loadingVerified ? (
+          <div className="flex justify-center py-2">
+            <Loader2 className="w-5 h-5 animate-spin" style={{ color: accent }} />
+          </div>
+        ) : (
+          <VerificationBadge
+            status={verificationStatus}
+            confidence={verificationConfidence}
+            method={verificationMethod}
+            language={language}
+          />
         )}
-        {method.marriage_rule && (
-          <FieldRow label={isMl ? "വിവാഹ നിയമം" : "Marriage Rule"} value={method.marriage_rule} accent={accent} language={language} />
+        <p className="font-inter text-[8px] text-center mt-2" style={{ color: "rgba(255,255,255,0.20)" }}>
+          ⚖️ {isMl ? "സ്വാഭാവികത പൂർണ്ണതയേക്കാൾ പ്രധാനം. ഹരകത്തോ അറബിയോ കണ്ടുപിടിക്കില്ല." : "Authenticity is more important than completeness. Never invent Arabic or harakat."}
+        </p>
+      </CollapsibleCard>
+
+      {/* ══ 15. Cross Verification Sources ══ */}
+      <CollapsibleCard sectionNumber={15} title="Cross Verification Sources" titleMl="ക്രോസ് സ്ഥിരീകരണ ഉറവിടങ്ങൾ" accent={accent} language={language} defaultOpen={true}>
+        {primarySource || secondarySources.length > 0 || crossVerificationSources.length > 0 ? (
+          <div className="space-y-1.5">
+            {primarySource && (
+              <div className="flex items-start gap-2">
+                <span className="font-inter text-[9px] font-bold flex-shrink-0" style={{ color: `${accent}99` }}>
+                  {isMl ? "പ്രാഥമികം" : "Primary"}:
+                </span>
+                <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>
+                  {primarySource}
+                </span>
+              </div>
+            )}
+            {secondarySources.length > 0 && (
+              <div className="flex items-start gap-2">
+                <span className="font-inter text-[9px] font-bold flex-shrink-0" style={{ color: `${accent}99` }}>
+                  {isMl ? "ദ്വിതീയ" : "Secondary"}:
+                </span>
+                <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>
+                  {secondarySources.join(" · ")}
+                </span>
+              </div>
+            )}
+            {crossVerificationSources.length > 0 && (
+              <div className="space-y-0.5">
+                {crossVerificationSources.map((url, idx) => (
+                  <p key={idx} className="font-inter text-[9px] break-all" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {url}
+                  </p>
+                ))}
+              </div>
+            )}
+            {verifiedResult?.holy_name_match && (
+              <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.50)" }}>
+                ✓ {isMl ? "Holy Names ഡാറ്റാബേസിൽ പൊരുത്തം" : "Matched in Holy Names database"}
+              </p>
+            )}
+            {verifiedResult?.manuscript_match && (
+              <p className="font-inter text-[9px]" style={{ color: "rgba(212,175,55,0.50)" }}>
+                ✓ {isMl ? "മറ്റ് ഗ്രന്ഥങ്ങളിൽ പൊരുത്തം" : "Matched in other manuscripts"}
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className={`text-sm ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.25)" }}>
+            {notSpecified}
+          </p>
         )}
-        {method.travel_rule && (
-          <FieldRow label={isMl ? "യാത്രാ നിയമം" : "Travel Rule"} value={method.travel_rule} accent={accent} language={language} />
-        )}
-        {method.clothing_rule && (
-          <FieldRow label={isMl ? "വസ്ത്ര നിയമം" : "Clothing Rule"} value={method.clothing_rule} accent={accent} language={language} />
-        )}
-        {method.farming_rule && (
-          <FieldRow label={isMl ? "കൃഷി നിയമം" : "Farming Rule"} value={method.farming_rule} accent={accent} language={language} />
-        )}
-      </div>
+      </CollapsibleCard>
+
+      {/* ══ 16. Additional Notes ══ */}
+      <CollapsibleCard sectionNumber={16} title="Additional Notes" titleMl="അധിക കുറിപ്പുകൾ" accent={accent} language={language} defaultOpen={false}>
+        <div className="space-y-2.5">
+          {method.introduction && (
+            <div>
+              <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
+                {isMl ? "ആമുഖം" : "Introduction"}
+              </p>
+              <SimpleField value={method.introduction} language={language} accent={accent} />
+            </div>
+          )}
+          <div>
+            <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
+              {isMl ? "കുറിപ്പുകൾ" : "Notes"}
+            </p>
+            <SimpleField value={method.notes || method.readings} language={language} accent={accent} />
+          </div>
+          {/* Mansion-specific fields (if present) */}
+          {method.nature && (
+            <div>
+              <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
+                {isMl ? "സ്വഭാവം" : "Nature"}
+              </p>
+              <SimpleField value={method.nature} language={language} accent={accent} />
+            </div>
+          )}
+          {method.marriage_rule && (
+            <div>
+              <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
+                {isMl ? "വിവാഹ നിയമം" : "Marriage Rule"}
+              </p>
+              <SimpleField value={method.marriage_rule} language={language} accent={accent} />
+            </div>
+          )}
+          {method.travel_rule && (
+            <div>
+              <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
+                {isMl ? "യാത്രാ നിയമം" : "Travel Rule"}
+              </p>
+              <SimpleField value={method.travel_rule} language={language} accent={accent} />
+            </div>
+          )}
+          {method.clothing_rule && (
+            <div>
+              <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
+                {isMl ? "വസ്ത്ര നിയമം" : "Clothing Rule"}
+              </p>
+              <SimpleField value={method.clothing_rule} language={language} accent={accent} />
+            </div>
+          )}
+          {method.farming_rule && (
+            <div>
+              <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
+                {isMl ? "കൃഷി നിയമം" : "Farming Rule"}
+              </p>
+              <SimpleField value={method.farming_rule} language={language} accent={accent} />
+            </div>
+          )}
+        </div>
+      </CollapsibleCard>
 
       {/* Related Preparations */}
       <SirrRelatedPreparations
@@ -224,10 +535,10 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
         onSelectPreparation={onSelectPreparation}
       />
 
-      {/* PDF Reference */}
+      {/* Footer */}
       <div className="text-center py-3">
         <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>
-          {isMl ? "ഗ്രന്ഥം" : "Book"}: {method.book_name} · {isMl ? "പേജ്" : "Page"}: {method.page_number || notSpecified}
+          {isMl ? "ഗ്രന്ഥം" : "Book"}: {method.book_title || method.book_name} · {isMl ? "പേജ്" : "Page"}: {method.page_number || notSpecified}
         </p>
         <p className="font-inter text-[8px] mt-1" style={{ color: "rgba(255,255,255,0.15)" }}>
           ⚖️ {isMl ? "മൂല ഗ്രന്ഥം പ്രാഥമിക അധികാരം. വിവരങ്ങൾ കണ്ടുപിടിക്കുന്നില്ല." : "Manuscript is primary authority. No information invented."}
