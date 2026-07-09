@@ -1,7 +1,7 @@
 {
   "name": "ManuscriptBook",
   "type": "object",
-  "description": "Permanent Enterprise Digital Manuscript Library. Stores metadata for every imported PDF book. The original PDF always remains the master source \u2014 never copied or modified. Designed for unlimited expansion. Validation gate: bulk OneDrive import is locked until at least one book passes validation (validation_status='passed').",
+  "description": "Permanent Enterprise Digital Manuscript Library. Stores metadata for every imported PDF book. The original PDF always remains the master source \u2014 never copied or modified. Designed for unlimited expansion. Validation gate: bulk OneDrive import is locked until at least one book passes validation (validation_status='passed'). Supports Enterprise Duplicate Detection via edition and publication_year fields preserved in supporting_sources.",
   "properties": {
     "book_id": {
       "type": "string",
@@ -51,6 +51,14 @@
       "type": "string",
       "default": "1.0",
       "description": "Version of the import/extraction."
+    },
+    "edition": {
+      "type": "string",
+      "description": "Edition of the manuscript (e.g., '1st Edition', 'Cairo 1932'). Preserved in supporting_sources for duplicate detection."
+    },
+    "publication_year": {
+      "type": "string",
+      "description": "Year of publication or printing. Preserved in supporting_sources for duplicate detection."
     },
     "total_pages": {
       "type": "integer",
