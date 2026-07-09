@@ -125,10 +125,84 @@ Deno.serve(async (req) => {
     // Take a batch
     const batch = unrouted.slice(0, BATCH);
 
-    // Classify each entry by primary purpose using entry_type
+    // Classify each entry by PRIMARY PURPOSE using LLM content analysis.
+    // Falls back to entry_type-based routing if LLM classification fails.
+    // This fixes Bug #10: type-based routing misroutes entries whose content
+    // doesn't match their entry_type (e.g., a dua stored as 'instruction').
+    const entryRouteMap: Record<string, string> = {};
+    let classificationMethod = 'llm_content';
+
+    try {
+      const classifyPrompt = `You are classifying Islamic occult manuscript entries by their PRIMARY PURPOSE.
+
+ENTRIES:
+${batch.map((e: any, i: number) => `Entry ${i + 1} (ID: ${e.entry_id}, Type: ${e.entry_type}):
+- Purpose: ${(e.purpose || 'N/A').substring(0, 150)}
+- Topic: ${(e.topic || 'N/A').substring(0, 100)}
+- Arabic: ${(e.arabic_text || '').substring(0, 200)}
+- English: ${(e.english_meaning || '').substring(0, 200)}
+- Procedure: ${(e.procedure || '').substring(0, 200)}
+- Materials: ${(e.materials || '').substring(0, 100)}
+- Timing: ${(e.timing || 'N/A').substring(0, 100)}`).join('\n\n')}
+
+TASK: For each entry, determine its PRIMARY PURPOSE — what is the entry MOSTLY about?
+- "astro_timing" — PRIMARILY about timing/planetary hours/when to perform
+- "dua" — PRIMARILY a supplication/invocation/dhikr/quran verse/divine name
+- "ritual" — PRIMARILY an amal/procedure/exorcism/protection method with steps
+- "wafq" — PRIMARILY a magic square/letter diagram/taweez/numeric grid
+- "other" — PRIMARILY about materials/herbs/incense/notes
+
+RULES:
+- A dua that mentions timing → "dua" (the dua is primary)
+- A ritual with a wafq → classify by what is primary
+- A timing rule → "astro_timing"
+- When in doubt: "ritual" for procedures, "dua" for recitations
+
+Return JSON: { "classifications": [{ "entry_id": "...", "primary_purpose": "astro_timing"|"dua"|"ritual"|"wafq"|"other" }] }`;
+
+      const classifyRes = await base44.integrations.Core.InvokeLLM({
+        prompt: classifyPrompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            classifications: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  entry_id: { type: "string" },
+                  primary_purpose: { type: "string", enum: ["astro_timing", "dua", "ritual", "wafq", "other"] }
+                },
+                required: ["entry_id", "primary_purpose"]
+              }
+            }
+          },
+          required: ["classifications"]
+        }
+      });
+
+      const classifyData: any = (classifyRes as any).data || classifyRes;
+      const classifications: any[] = Array.isArray(classifyData.classifications) ? classifyData.classifications : [];
+      for (const c of classifications) {
+        if (c.entry_id && c.primary_purpose) {
+          entryRouteMap[c.entry_id] = c.primary_purpose;
+        }
+      }
+    } catch {
+      classificationMethod = 'type_fallback';
+    }
+
+    // Fill missing entries with type-based fallback
+    for (const entry of batch) {
+      if (!entryRouteMap[entry.entry_id]) {
+        entryRouteMap[entry.entry_id] = ENTRY_TYPE_TO_ROUTE[entry.entry_type] || 'other';
+      }
+    }
+
+    // Build route groups from classification
     const routeGroups: Record<string, string[]> = {};
     for (const entry of batch) {
-      const route = ENTRY_TYPE_TO_ROUTE[entry.entry_type] || 'other';
+      const route = entryRouteMap[entry.entry_id];
       if (!routeGroups[route]) routeGroups[route] = [];
       routeGroups[route].push(entry.entry_id);
     }
@@ -165,7 +239,7 @@ Deno.serve(async (req) => {
     let routedCount = 0;
     let skippedForRetry = 0;
     for (const entry of batch) {
-      const route = ENTRY_TYPE_TO_ROUTE[entry.entry_type] || 'other';
+      const route = entryRouteMap[entry.entry_id];
       const routedTo = ROUTE_TO_ENTITY[route] || 'none';
 
       // RETRY SAFETY: If enrichment failed for this route group, skip this entry.

@@ -665,9 +665,21 @@ CRITICAL RULES:
     }
 
     // ══ Build ManuscriptEntry records (verification_status='pending') ══
+    // Arabic normalization for indexed O(1) search (matches searchInternalKnowledgeBase)
+    const _alefVariants = new Set([0x0623, 0x0625, 0x0622, 0x0671]);
+    const _normAlef = '\u0627';
+    const _normalizeAr = (txt: string): string => {
+      if (!txt) return '';
+      let r = '';
+      for (const ch of txt) {
+        const c = ch.codePointAt(0)!;
+        if ((c >= 0x0621 && c <= 0x064a) || (c >= 0x0671 && c <= 0x06d3)) r += _alefVariants.has(c) ? _normAlef : ch;
+        else if ((c >= 0x066e && c <= 0x066f) || c === 0x06d5) r += ch;
+      }
+      return r;
+    };
     const entryRecords = entries.map((entry: any, idx: number) => {
       const pageImages = imagesByPage[String(entry.page_number)] || [];
-      // Map LLM heading_id to permanent database heading_id
       const mappedHeadingId = entry.heading_id ? (headingIdMap[entry.heading_id] || '') : '';
 
       return {
@@ -683,8 +695,9 @@ CRITICAL RULES:
         purpose: entry.purpose || '',
         purpose_ml: entry.malayalam_meaning || '',
         introduction: '',
-        arabic_text: entry.arabic_text || '', // Original manuscript text — always preserved
-        malayalam_meaning: '', // Will be filled in Phase 2 from verified sources ONLY
+        arabic_text: entry.arabic_text || '',
+        arabic_normalized: _normalizeAr(entry.arabic_text || ''),
+        malayalam_meaning: '',
         english_meaning: '', // Will be filled in Phase 2 from verified sources ONLY
         conditions: entry.conditions || '',
         materials: entry.materials || '',

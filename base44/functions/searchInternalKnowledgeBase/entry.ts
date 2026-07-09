@@ -184,18 +184,36 @@ Deno.serve(async (req) => {
       }
     } catch { /* continue to next tier */ }
 
-    // ══ TIER 3: REMOVED — O(n²) in-memory scan replaced by Tier 1/2 indexed lookups ══
-    // Previous implementation loaded 300 verified ManuscriptEntry records into memory
-    // and performed O(n) normalized Arabic comparison for EACH search call.
-    // At 5000 books this would be 75M comparisons — unsustainable.
-    //
-    // Tier 1 (exact text_hash on VerifiedArabic) and Tier 2 (normalized match on
-    // VerifiedArabic) are indexed O(1) lookups that cover the same ground:
-    // every verified ManuscriptEntry's Arabic text is stored in VerifiedArabic
-    // during verifyBookEntries, so Tier 1/2 catch all exact and normalized matches.
-    //
-    // Tier 3b (partial/substring match) is also removed — it relied on the same
-    // in-memory scan and was incomplete (only searched 300 most recent entries).
+    // ══ TIER 3: Exact normalized match in verified ManuscriptEntry library (confidence: 90) ══
+    // Database-side indexed search on arabic_normalized field.
+    // Catches same Arabic text found in a different book — reuse canonical record.
+    // O(1) via idx_arabic_normalized_verified composite index.
+    // Replaces the old O(n²) in-memory scan that loaded 300 entries per call.
+    try {
+      const libraryMatches = await base44.asServiceRole.entities.ManuscriptEntry.filter(
+        { arabic_normalized: normalized, verification_status: 'verified', is_primary_method_entry: true },
+        '-created_date',
+        10
+      );
+      if (libraryMatches && libraryMatches.length > 0) {
+        const best = libraryMatches[0];
+        return Response.json({
+          match_found: true,
+          match_type: 'library_normalized',
+          confidence: 90,
+          verified_arabic: best.arabic_text || '',
+          text_hash: best.verified_arabic_hash || textHash,
+          malayalam_meaning: best.malayalam_meaning || '',
+          english_meaning: best.english_meaning || '',
+          primary_source: best.verification_source || (best.book_title + ' p.' + (best.page_number || '?')),
+          verification_confidence: 'HIGH',
+          verification_method: 'internal_reuse',
+          skip_external_verification: true,
+          message: 'Normalized Arabic match in verified library (different book). Reusing — zero credits.',
+          matched_entry_id: best.entry_id,
+        });
+      }
+    } catch { /* continue to next tier */ }
 
     // ══ TIER 4: Semantic metadata match (confidence: 80) ══
     // Full semantic comparison: purpose + topic + timing + day + planet + conditions
