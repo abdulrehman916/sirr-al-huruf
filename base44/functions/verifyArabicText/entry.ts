@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ═══════════════════════════════════════════════════════════════
-// CRITICAL MANUSCRIPT VERIFICATION SYSTEM — FINAL POLICY
+// CRITICAL MANUSCRIPT VERIFICATION SYSTEM — FINAL IMMUTABLE POLICY
 // ═══════════════════════════════════════════════════════════════
 // Never generate Arabic harakat using AI prediction. AI MUST NEVER GUESS.
 // Internet search is ONLY an assistant — never the sole authority.
@@ -14,46 +14,43 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 //   5. Holy Names database
 //   6. Manual review if disagreement exists
 //
-// WORKFLOW (ALL steps must complete before saving):
-//   STEP 1: Check local VerifiedArabic DB — return highest revision
-//   STEP 2: Check Holy Names database (HolyOneName)
-//   STEP 3: Search original manuscript data (ManuscriptRule + frontend-passed)
-//   STEP 4: Search the internet (authoritative sources — ASSISTANT ONLY)
-//   STEP 5: Cross-validate ALL sources (manuscript vs internet vs holy names)
+// IMMUTABLE FIELDS (per revision — never overwritten, new revision = new record):
+//   original_manuscript_text, arabic_text, verification_confidence,
+//   verification_status, verification_method, primary_source,
+//   secondary_sources, book_name, page_number, source_url,
+//   cross_verification_sources, holy_name_match, manuscript_match,
+//   revision_number, date_verified, reviewer, notes
 //
-// CONFIDENCE LEVELS:
-//   HIGH       = Book + trusted online references agree
-//   MEDIUM     = Trusted references agree but manuscript differs
-//   LOW        = Only one trusted source exists
-//   UNVERIFIED = No trusted source → DO NOT SAVE
+// WORKFLOW:
+//   STEP 1: Check DB — return highest VERIFIED revision (rule 6: if a newer
+//           revision has lower confidence, the old verified one stays active)
+//   STEP 2: Check Holy Names database
+//   STEP 3: Search original manuscript data
+//   STEP 4: Internet search (ASSISTANT ONLY)
+//   STEP 5: Cross-validate ALL sources
+//   STEP 6: Confidence drop check (rule 6)
+//   STEP 7: Save as NEW revision (never overwrite)
 //
-// REVISION POLICY:
-//   - Never overwrite previous verified data
-//   - When re-verified, create a NEW revision (Revision 2, 3, ...)
-//   - Previous revisions preserved for comparison
-//   - text_hash is the permanent unique identifier
-//   - Same Arabic text always links to the same record chain
+// CONFIDENCE: HIGH=Book+online agree, MEDIUM=online agree but manuscript differs,
+//   LOW=only one source, UNVERIFIED=no source (nothing stored)
 //
-// ORIGINAL MANUSCRIPT TEXT:
-//   - Stored separately in original_manuscript_text
-//   - Never modified, never destroyed
-//   - Preserved verbatim even if verified version differs
-//
-// SAVE RULES:
-//   - verified (HIGH/LOW)     → SAVE as new revision
-//   - manual_review (MEDIUM)  → SAVE as new revision (flagged for admin)
-//   - unverified (UNVERIFIED) → DO NOT SAVE ANYTHING
+// RULES:
+//   1. Never overwrite original manuscript Arabic.
+//   2. Never overwrite a previous verified version — always new revision.
+//   3. Every revision keeps previous history permanently.
+//   4. Every phrase has one permanent unique ID (text_hash).
+//   5. Same Arabic text links to same record — never duplicate.
+//   6. If confidence drops, keep both revisions, require manual approval.
+//   7. Display original manuscript separately from verified when they differ.
+//   8. If not fully verified, never generate harakat — show "Verification unavailable".
+//   9. Every verification reproducible from stored sources.
+//   10. Authenticity > completeness. Never guess. Never fabricate.
 // ═══════════════════════════════════════════════════════════════
 
-// ── Arabic normalization ──
-const ARABIC_LETTER_RANGES = [
-  [0x0621, 0x064a],
-  [0x066e, 0x066f],
-  [0x0671, 0x06d3],
-  [0x06d5, 0x06d5],
-];
+const ARABIC_LETTER_RANGES = [[0x0621, 0x064a], [0x066e, 0x066f], [0x0671, 0x06d3], [0x06d5, 0x06d5]];
 const ALEF_VARIANTS = new Set([0x0623, 0x0625, 0x0622, 0x0671]);
 const PLAIN_ALEF = '\u0627';
+const CONFIDENCE_ORDER = { HIGH: 4, MEDIUM: 3, LOW: 2, UNVERIFIED: 0 };
 
 function isInRange(code, ranges) {
   return ranges.some(([s, e]) => code >= s && code <= e);
@@ -84,23 +81,13 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     let user = null;
-    try {
-      user = await base44.auth.me();
-    } catch {
-      user = null;
-    }
+    try { user = await base44.auth.me(); } catch { user = null; }
 
     const body = await req.json();
     const {
-      arabic_text,
-      source_type,
-      book_name,
-      page_number,
-      section,
-      manuscript_arabic_text,
-      manuscript_source,
-      force_reverification,
-      revision_reason,
+      arabic_text, source_type, book_name, page_number, section,
+      manuscript_arabic_text, manuscript_source,
+      force_reverification, revision_reason,
     } = body;
 
     if (!arabic_text || typeof arabic_text !== 'string') {
@@ -110,29 +97,31 @@ Deno.serve(async (req) => {
     const normalized = normalizeArabic(arabic_text);
     const textHash = await sha256Hex(normalized);
 
-    // ══ STEP 1: Check local VERIFIED_ARABIC_DATABASE (highest revision) ══
-    const existing = await base44.asServiceRole.entities.VerifiedArabic.filter(
+    // ══ STEP 1: Check DB — return highest VERIFIED revision (rule 6) ══
+    const allRevisions = await base44.asServiceRole.entities.VerifiedArabic.filter(
       { text_hash: textHash },
       '-revision_number',
-      1
+      20
     );
     let maxRevision = 0;
-    if (existing && existing.length > 0) {
-      const currentEntry = existing[0]; // highest revision_number
-      maxRevision = currentEntry.revision_number || 1;
+    let currentVerified = null;
+    let currentManualReview = null;
+    if (allRevisions && allRevisions.length > 0) {
+      maxRevision = allRevisions[0].revision_number || 1;
+      // Rule 6: return the highest VERIFIED revision (not just highest revision_number)
+      currentVerified = allRevisions.find(r => r.verification_status === 'verified') || null;
+      currentManualReview = allRevisions.find(r => r.verification_status === 'manual_review_required') || null;
+    }
 
-      // If NOT force_reverification and record is verified/manual_review → reuse forever
-      if (!force_reverification) {
-        if (
-          currentEntry.verification_status === 'verified' ||
-          currentEntry.verification_status === 'manual_review_required'
-        ) {
-          return Response.json({
-            ...currentEntry,
-            source: 'local_verified_database',
-            reused: true,
-          });
-        }
+    // If NOT force_reverification, reuse the existing record forever
+    if (!force_reverification) {
+      const reuseEntry = currentVerified || currentManualReview;
+      if (reuseEntry) {
+        return Response.json({
+          ...reuseEntry,
+          source: 'local_verified_database',
+          reused: true,
+        });
       }
     }
 
@@ -140,58 +129,43 @@ Deno.serve(async (req) => {
     let holyNameMatch = null;
     if (source_type === 'divine_name' || source_type === 'ism') {
       try {
-        const holyNames = await base44.asServiceRole.entities.HolyOneName.list(
-          '-created_date',
-          200
-        );
+        const holyNames = await base44.asServiceRole.entities.HolyOneName.list('-created_date', 200);
         if (holyNames && Array.isArray(holyNames)) {
-          holyNameMatch =
-            holyNames.find((h) => {
-              const hNorm = normalizeArabic(h.arabic_name || '');
-              return hNorm.length > 0 && hNorm === normalized;
-            }) || null;
+          holyNameMatch = holyNames.find((h) => {
+            const hNorm = normalizeArabic(h.arabic_name || '');
+            return hNorm.length > 0 && hNorm === normalized;
+          }) || null;
         }
-      } catch {
-        holyNameMatch = null;
-      }
+      } catch { holyNameMatch = null; }
     }
 
-    // ══ STEP 3: Search original manuscript data inside this app ══
+    // ══ STEP 3: Search original manuscript data ══
     let manuscriptMatch = null;
     try {
-      const rules = await base44.asServiceRole.entities.ManuscriptRule.list(
-        '-created_date',
-        200
-      );
+      const rules = await base44.asServiceRole.entities.ManuscriptRule.list('-created_date', 200);
       if (rules && Array.isArray(rules)) {
-        manuscriptMatch =
-          rules.find((r) => {
-            const rNorm = normalizeArabic(r.original_text || '');
-            return rNorm.length > 0 && rNorm === normalized;
-          }) || null;
+        manuscriptMatch = rules.find((r) => {
+          const rNorm = normalizeArabic(r.original_text || '');
+          return rNorm.length > 0 && rNorm === normalized;
+        }) || null;
       }
-    } catch {
-      manuscriptMatch = null;
-    }
+    } catch { manuscriptMatch = null; }
+
     let frontendManuscriptMatch = false;
     if (manuscript_arabic_text) {
       const fNorm = normalizeArabic(manuscript_arabic_text);
-      if (fNorm.length > 0 && fNorm === normalized) {
-        frontendManuscriptMatch = true;
-      }
+      if (fNorm.length > 0 && fNorm === normalized) frontendManuscriptMatch = true;
     }
 
     const hasManuscriptMatch = !!manuscriptMatch || frontendManuscriptMatch;
     const manuscriptSourceDetail = manuscriptMatch
       ? `${manuscriptMatch.book_name || 'ManuscriptRule'} p.${manuscriptMatch.page_number || '?'}${manuscriptMatch.chapter ? ' · ' + manuscriptMatch.chapter : ''}`
-      : frontendManuscriptMatch
-        ? manuscript_source || 'Frontend manuscript data'
-        : '';
+      : frontendManuscriptMatch ? (manuscript_source || 'Frontend manuscript data') : '';
     const originalManuscriptText =
       manuscriptMatch?.original_text ||
       (frontendManuscriptMatch ? manuscript_arabic_text : '');
 
-    // ══ STEP 4: Search the internet (ASSISTANT ONLY — not sole authority) ══
+    // ══ STEP 4: Internet search (ASSISTANT ONLY) ══
     const prompt = `You are an expert Arabic manuscript verifier specializing in Islamic texts, Quran, Hadith, divine names (Asma al-Husna), adhkar, and occult manuscript traditions.
 
 TASK: Verify this Arabic text by searching authoritative sources on the internet. Internet search is ONLY an assistant — the manuscript and Holy Names are primary authorities.
@@ -219,13 +193,12 @@ SEARCH INSTRUCTIONS (follow EXACTLY):
 8. If NO trusted source exists → verification_status = "unverified". DO NOT create harakat.
 9. Generate Malayalam and English meanings ONLY from verified Arabic. Never translate guessed text.
 10. If unverified, leave malayalam_meaning and english_meaning EMPTY.
-11. List ALL source URLs you checked in cross_verification_sources (even if they disagreed).
+11. List ALL source URLs you checked in cross_verification_sources (even disagreeing ones).
 
 AUTHENTICITY IS MORE IMPORTANT THAN COMPLETENESS.
 It is acceptable to leave a text unverified.
 It is NEVER acceptable to invent Arabic or harakat.
-Never create placeholder translations.
-Never auto-fill unknown Arabic.
+Never create placeholder translations. Never auto-fill unknown Arabic.
 The system's highest priority is authenticity, not completeness.
 Never fabricate. Never infer. Never guess.`;
 
@@ -236,32 +209,13 @@ Never fabricate. Never infer. Never guess.`;
       response_json_schema: {
         type: 'object',
         properties: {
-          arabic_text_verified: {
-            type: 'string',
-            description: 'Full Arabic with harakat from authoritative source. If unverified, original input without added harakat.',
-          },
-          malayalam_meaning: {
-            type: 'string',
-            description: 'Malayalam translation from verified Arabic only. EMPTY if unverified.',
-          },
-          english_meaning: {
-            type: 'string',
-            description: 'English translation from verified Arabic only. EMPTY if unverified.',
-          },
+          arabic_text_verified: { type: 'string', description: 'Full Arabic with harakat from authoritative source. If unverified, original input without added harakat.' },
+          malayalam_meaning: { type: 'string', description: 'Malayalam translation from verified Arabic only. EMPTY if unverified.' },
+          english_meaning: { type: 'string', description: 'English translation from verified Arabic only. EMPTY if unverified.' },
           source_url: { type: 'string', description: 'Primary authoritative source URL' },
-          cross_verification_sources: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'ALL source URLs compared (including disagreeing ones)',
-          },
-          source_priority: {
-            type: 'string',
-            enum: ['priority_1', 'priority_2', 'priority_3', 'priority_4'],
-          },
-          verification_status: {
-            type: 'string',
-            enum: ['verified', 'manual_review_required', 'unverified'],
-          },
+          cross_verification_sources: { type: 'array', items: { type: 'string' }, description: 'ALL source URLs compared' },
+          source_priority: { type: 'string', enum: ['priority_1', 'priority_2', 'priority_3', 'priority_4'] },
+          verification_status: { type: 'string', enum: ['verified', 'manual_review_required', 'unverified'] },
           notes: { type: 'string', description: 'Discrepancies or verification notes' },
         },
       },
@@ -284,12 +238,11 @@ Never fabricate. Never infer. Never guess.`;
         if (localNorm === internetNorm) {
           finalArabic = holyNameMatch.arabic_name;
           finalMl = holyNameMatch.meaning_malayalam || finalMl;
-          finalNotes = (finalNotes ? finalNotes + ' | ' : '') + 'Holy Names DB match confirmed. Local version retained.';
+          finalNotes = (finalNotes ? finalNotes + ' | ' : '') + 'Holy Names DB match confirmed.';
           holyNameUsed = true;
         } else {
-          // DISAGREEMENT — flag for manual review, never overwrite
           finalStatus = 'manual_review_required';
-          finalNotes = (finalNotes ? finalNotes + ' | ' : '') + 'DISCREPANCY: Holy Names DB differs from internet source. Manual review required — do not overwrite.';
+          finalNotes = (finalNotes ? finalNotes + ' | ' : '') + 'DISCREPANCY: Holy Names DB differs from internet. Manual review required.';
         }
       } else if (finalStatus === 'unverified') {
         finalArabic = holyNameMatch.arabic_name;
@@ -300,23 +253,20 @@ Never fabricate. Never infer. Never guess.`;
       }
     }
 
-    // ── Manuscript data cross-check ──
+    // ── Manuscript cross-check ──
     if (hasManuscriptMatch) {
       if (finalStatus === 'verified') {
         const manuscriptNorm = normalizeArabic(originalManuscriptText);
         const internetNorm = normalizeArabic(finalArabic);
         if (manuscriptNorm === internetNorm) {
-          // Match — keep manuscript version (primary authority)
           finalArabic = originalManuscriptText;
-          finalNotes = (finalNotes ? finalNotes + ' | ' : '') + 'Manuscript data match confirmed. Manuscript version retained.';
+          finalNotes = (finalNotes ? finalNotes + ' | ' : '') + 'Manuscript data match confirmed.';
           manuscriptUsed = true;
         } else {
-          // DISAGREEMENT — flag for manual review, never overwrite either
           finalStatus = 'manual_review_required';
-          finalNotes = (finalNotes ? finalNotes + ' | ' : '') + 'DISCREPANCY: Manuscript data differs from verified online version. Manual review required — do not overwrite automatically.';
+          finalNotes = (finalNotes ? finalNotes + ' | ' : '') + 'DISCREPANCY: Manuscript differs from verified online version. Manual review required.';
         }
       } else if (finalStatus === 'unverified' && !holyNameUsed) {
-        // No internet source, but manuscript has it — manuscript is primary authority
         finalArabic = originalManuscriptText;
         finalStatus = 'verified';
         finalNotes = 'Verified from manuscript data (local primary authority). No internet source found.';
@@ -328,12 +278,9 @@ Never fabricate. Never infer. Never guess.`;
       }
     }
 
-    // ══ COMPUTE VERIFICATION CONFIDENCE ══
+    // ══ COMPUTE CONFIDENCE ══
     const onlineSourceCount = (llmResult.cross_verification_sources || []).length;
-    const totalSources =
-      (hasManuscriptMatch ? 1 : 0) +
-      (holyNameMatch ? 1 : 0) +
-      onlineSourceCount;
+    const totalSources = (hasManuscriptMatch ? 1 : 0) + (holyNameMatch ? 1 : 0) + onlineSourceCount;
 
     let confidence;
     if (finalStatus === 'unverified') {
@@ -341,11 +288,62 @@ Never fabricate. Never infer. Never guess.`;
     } else if (finalStatus === 'manual_review_required') {
       confidence = 'MEDIUM';
     } else {
-      // verified
       confidence = totalSources >= 2 ? 'HIGH' : 'LOW';
     }
 
-    // ══ UNVERIFIED — DO NOT SAVE ANYTHING ══
+    // ══ COMPUTE VERIFICATION METHOD ══
+    const usedInternet = llmResult.verification_status === 'verified';
+    const sourceCountForMethod = (manuscriptUsed ? 1 : 0) + (holyNameUsed ? 1 : 0) + (usedInternet ? 1 : 0);
+    let verificationMethod;
+    if (sourceCountForMethod >= 2) {
+      verificationMethod = 'multi_source';
+    } else if (manuscriptUsed) {
+      verificationMethod = 'manuscript_only';
+    } else if (holyNameUsed) {
+      verificationMethod = 'holy_names_db';
+    } else {
+      verificationMethod = 'internet_cross_check';
+    }
+
+    // ══ COMPUTE PRIMARY & SECONDARY SOURCES (for reproducibility — rule 9) ══
+    let primarySource = '';
+    const secondarySources = [];
+
+    if (usedInternet && llmResult.source_url) {
+      primarySource = `${book_name || 'Internet source'} — ${llmResult.source_url}`;
+    } else if (manuscriptUsed && manuscriptSourceDetail) {
+      primarySource = `Manuscript: ${manuscriptSourceDetail}`;
+    } else if (holyNameUsed) {
+      primarySource = 'Holy Names Database';
+    }
+
+    // Build secondary sources (everything that's not primary)
+    if (manuscriptUsed && manuscriptSourceDetail && !primarySource.startsWith('Manuscript:')) {
+      secondarySources.push(`Manuscript: ${manuscriptSourceDetail}`);
+    }
+    if (holyNameUsed && primarySource !== 'Holy Names Database') {
+      secondarySources.push('Holy Names Database');
+    }
+    (llmResult.cross_verification_sources || []).forEach(url => {
+      if (url !== llmResult.source_url) {
+        secondarySources.push(url);
+      }
+    });
+
+    // ══ STEP 6: CONFIDENCE DROP CHECK (rule 6) ══
+    // If re-verification produces LOWER confidence than current verified revision,
+    // keep both revisions, require manual approval.
+    if (force_reverification && currentVerified) {
+      const prevConfidence = currentVerified.verification_confidence || 'LOW';
+      if ((CONFIDENCE_ORDER[confidence] || 0) < (CONFIDENCE_ORDER[prevConfidence] || 0)) {
+        // Confidence dropped — flag for manual approval, old revision stays active
+        finalStatus = 'manual_review_required';
+        finalNotes = (finalNotes ? finalNotes + ' | ' : '') +
+          `CONFIDENCE DROPPED from ${prevConfidence} to ${confidence}. Manual approval required per rule 6. Previous revision ${currentVerified.revision_number} retained as active.`;
+      }
+    }
+
+    // ══ UNVERIFIED — DO NOT SAVE ANYTHING (rule 8) ══
     if (finalStatus === 'unverified') {
       return Response.json({
         verification_status: 'unverified',
@@ -354,12 +352,12 @@ Never fabricate. Never infer. Never guess.`;
         malayalam_meaning: '',
         english_meaning: '',
         source: 'verification_unavailable',
-        notes: 'Verification unavailable. No trusted source found. Nothing stored.',
+        notes: 'Verification unavailable. No trusted source found. Nothing stored. No harakat generated.',
         text_hash: textHash,
       });
     }
 
-    // ══ STEP 6: Save as NEW REVISION (never overwrite previous) ══
+    // ══ STEP 7: Save as NEW REVISION (never overwrite — rules 2, 3) ══
     const newRevisionNumber = maxRevision > 0 ? maxRevision + 1 : 1;
     const finalRevisionReason = force_reverification
       ? (revision_reason || 'Re-verification requested')
@@ -369,7 +367,7 @@ Never fabricate. Never infer. Never guess.`;
       text_hash: textHash,
       arabic_text: finalArabic,
       arabic_text_normalized: normalized,
-      original_manuscript_text: originalManuscriptText || '', // EXACT manuscript text — never modified
+      original_manuscript_text: originalManuscriptText || '',
       malayalam_meaning: finalMl,
       english_meaning: finalEn,
       source_type: source_type || 'unknown_arabic',
@@ -380,11 +378,14 @@ Never fabricate. Never infer. Never guess.`;
       source_priority: llmResult.source_priority || 'priority_4',
       verification_status: finalStatus,
       verification_confidence: confidence,
+      verification_method: verificationMethod,
+      primary_source: primarySource,
+      secondary_sources: secondarySources,
       cross_verification_sources: llmResult.cross_verification_sources || [],
       holy_name_match: holyNameUsed,
       manuscript_match: manuscriptUsed,
       manuscript_source_detail: manuscriptSourceDetail,
-      manuscript_arabic_text: originalManuscriptText || '', // legacy field, same value
+      manuscript_arabic_text: originalManuscriptText || '',
       revision_number: newRevisionNumber,
       revision_reason: finalRevisionReason,
       date_verified: new Date().toISOString(),

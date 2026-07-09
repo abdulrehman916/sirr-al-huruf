@@ -158,6 +158,16 @@ export default function VerifiedArabicDisplay({
             )}
           </div>
 
+          {/* ══ Verification method ══ */}
+          {result.verification_method && (
+            <p
+              className="font-inter text-[8px] text-center mt-1"
+              style={{ color: "rgba(255,255,255,0.30)" }}
+            >
+              Method: {result.verification_method.replace(/_/g, " ")}
+            </p>
+          )}
+
           {/* ══ Original manuscript text (preserved verbatim, if different) ══ */}
           {result.original_manuscript_text &&
            result.original_manuscript_text !== result.arabic_text && (
