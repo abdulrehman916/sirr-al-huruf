@@ -6,13 +6,32 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Never generate Arabic harakat using AI prediction. AI MUST NEVER GUESS.
 // Internet search is ONLY an assistant — never the sole authority.
 //
-// AUTHORITY HIERARCHY (highest to lowest):
-//   1. Quran (for Quranic verses)
-//   2. Authentic Hadith sources (when applicable)
-//   3. The original manuscript used in this project
-//   4. Multiple trusted Arabic references
-//   5. Holy Names database
-//   6. Manual review if disagreement exists
+// ══ GLOBAL KNOWLEDGE & DEEP VERIFICATION RULE (PERMANENT) ══
+// The system is a VERIFIED MANUSCRIPT LIBRARY, not a text generator.
+// Never generate or guess information. Always verify.
+//
+// VERIFICATION PRIORITY (highest to lowest):
+//   Priority 1: Search our own verified Sirr Al-Huruf database first (VerifiedArabic).
+//               Reuse the verified version. Never regenerate verified information.
+//   Priority 2: Search every verified manuscript already imported into our library
+//               (ManuscriptEntry with verification_status='verified').
+//               Compare every matching version. Preserve manuscript variants.
+//   Priority 3: Only if NOT available internally — DEEP verification using multiple
+//               trusted external references. Never depend on a single website.
+//               Accept a correction ONLY when there is strong agreement.
+//   Priority 4: If verification is still uncertain — DO NOT CHANGE THE MANUSCRIPT.
+//               Mark "Needs Manual Review". Never guess.
+//
+// ARABIC RULE: Never invent Arabic, harakat, ayat, surahs, dua, dhikr, meanings.
+//   Every correction must be supported by evidence.
+//
+// SELF-LEARNING RULE: Every verified entry becomes permanent knowledge.
+//   Future imports search the verified database first.
+//   The database becomes smarter after every verified book.
+//   Never replace verified knowledge with AI assumptions.
+//
+// FINAL PRINCIPLE: The AI is a Research Assistant and Verification Engine, NOT an author.
+//   Accuracy > speed. Verification > generation. When in doubt, keep original unchanged.
 //
 // IMMUTABLE FIELDS (per revision — never overwritten, new revision = new record):
 //   original_manuscript_text, arabic_text, verification_confidence,
@@ -151,18 +170,40 @@ Deno.serve(async (req) => {
       }
     } catch { manuscriptMatch = null; }
 
+    // ══ STEP 3b: Search verified ManuscriptEntry library (Priority 2 — self-learning) ══
+    // Search every verified manuscript already imported into our library.
+    // If the same Arabic text was verified in a previous import, reuse it.
+    // This makes the database smarter after every verified book.
+    let verifiedEntryMatch = null;
+    try {
+      const verifiedEntries = await base44.asServiceRole.entities.ManuscriptEntry.filter(
+        { verification_status: 'verified' },
+        '-created_date',
+        200
+      );
+      if (verifiedEntries && Array.isArray(verifiedEntries)) {
+        verifiedEntryMatch = verifiedEntries.find((e: any) => {
+          const eNorm = normalizeArabic(e.arabic_text || '');
+          return eNorm.length > 0 && eNorm === normalized;
+        }) || null;
+      }
+    } catch { verifiedEntryMatch = null; }
+
     let frontendManuscriptMatch = false;
     if (manuscript_arabic_text) {
       const fNorm = normalizeArabic(manuscript_arabic_text);
       if (fNorm.length > 0 && fNorm === normalized) frontendManuscriptMatch = true;
     }
 
-    const hasManuscriptMatch = !!manuscriptMatch || frontendManuscriptMatch;
+    const hasManuscriptMatch = !!manuscriptMatch || !!verifiedEntryMatch || frontendManuscriptMatch;
     const manuscriptSourceDetail = manuscriptMatch
       ? `${manuscriptMatch.book_name || 'ManuscriptRule'} p.${manuscriptMatch.page_number || '?'}${manuscriptMatch.chapter ? ' · ' + manuscriptMatch.chapter : ''}`
+      : verifiedEntryMatch
+      ? `${verifiedEntryMatch.book_title || 'ManuscriptEntry'} p.${verifiedEntryMatch.page_number || '?'}`
       : frontendManuscriptMatch ? (manuscript_source || 'Frontend manuscript data') : '';
     const originalManuscriptText =
       manuscriptMatch?.original_text ||
+      (verifiedEntryMatch ? verifiedEntryMatch.arabic_text : '') ||
       (frontendManuscriptMatch ? manuscript_arabic_text : '');
 
     // ══ STEP 4: Internet search (ASSISTANT ONLY) ══
@@ -274,6 +315,9 @@ Never fabricate. Never infer. Never guess.`;
         if (manuscriptMatch) {
           finalMl = manuscriptMatch.rule_summary_ml || '';
           finalEn = manuscriptMatch.rule_summary || '';
+        } else if (verifiedEntryMatch) {
+          finalMl = verifiedEntryMatch.malayalam_meaning || '';
+          finalEn = verifiedEntryMatch.english_meaning || '';
         }
       }
     }
