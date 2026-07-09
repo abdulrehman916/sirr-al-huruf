@@ -83,25 +83,34 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ══ 3. Download PDF content from OneDrive ══
+    // ══ 3. Download file content from OneDrive ══
     const contentUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${file_id}/content`;
     const contentRes = await fetch(contentUrl, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
     if (!contentRes.ok) {
-      return Response.json({ error: `Failed to download PDF from OneDrive: ${contentRes.status}` }, { status: 502 });
+      return Response.json({ error: `Failed to download file from OneDrive: ${contentRes.status}` }, { status: 502 });
     }
-    const pdfBuffer = await contentRes.arrayBuffer();
-    const pdfBytes = new Uint8Array(pdfBuffer);
+    const fileBuffer = await contentRes.arrayBuffer();
+    const fileBytes = new Uint8Array(fileBuffer);
 
     // ══ 4. Compute SHA-256 hash for content-level dedup ══
-    const hashBuffer = await crypto.subtle.digest('SHA-256', pdfBuffer);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const fileHash = hashArray.map((b: number) => b.toString(16).padStart(2, '0')).join('');
 
-    // ══ 5. Upload PDF to Base44 storage ══
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const file = new File([blob], fileName, { type: 'application/pdf' });
+    // ══ 5. Upload file to Base44 storage (detect MIME type from extension) ══
+    const fileExt = fileName.toLowerCase().split('.').pop() || '';
+    const mimeType = fileExt === 'pdf' ? 'application/pdf'
+      : fileExt === 'txt' ? 'text/plain'
+      : fileExt === 'md' ? 'text/markdown'
+      : fileExt === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : fileExt === 'jpg' || fileExt === 'jpeg' ? 'image/jpeg'
+      : fileExt === 'png' ? 'image/png'
+      : fileExt === 'webp' ? 'image/webp'
+      : 'application/octet-stream';
+    const blob = new Blob([fileBytes], { type: mimeType });
+    const file = new File([blob], fileName, { type: mimeType });
     const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     const pdfUrl = uploadResult.file_url;
 

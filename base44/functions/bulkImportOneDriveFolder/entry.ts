@@ -26,7 +26,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Never stores the Microsoft password. OAuth access token only.
 // ═══════════════════════════════════════════════════════════════
 
-// ── Recursive folder scanner — returns all PDFs in folder + subfolders ──
+// ── Supported file types for manuscript import ──
+const SUPPORTED_MIME_TYPES = new Set([
+  'application/pdf',
+  'text/plain',
+  'text/markdown',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+
+// ── Recursive folder scanner — returns all importable files in folder + subfolders ──
 async function scanFolderRecursively(
   accessToken: string,
   folderId: string,
@@ -53,7 +64,7 @@ async function scanFolderRecursively(
           `${path}/${item.name}`
         );
         allPdfs.push(...subPdfs);
-      } else if (item.file && item.file.mimeType === 'application/pdf') {
+      } else if (item.file && SUPPORTED_MIME_TYPES.has(item.file.mimeType)) {
         allPdfs.push({
           file_id: item.id,
           file_name: item.name,
@@ -129,7 +140,7 @@ Deno.serve(async (req) => {
           // Reuse the proven importFromOneDrive logic
           const importRes = await base44.functions.invoke('importFromOneDrive', {
             file_id: pdf.file_id,
-            book_title: pdf.file_name.replace(/\.pdf$/i, ''),
+            book_title: pdf.file_name.replace(/\.[^/.]+$/, ''),
           });
           const importData = importRes.data || importRes;
 
@@ -142,7 +153,7 @@ Deno.serve(async (req) => {
             // Old version is preserved permanently (never overwritten)
             const reimportRes = await base44.functions.invoke('importFromOneDrive', {
               file_id: pdf.file_id,
-              book_title: pdf.file_name.replace(/\.pdf$/i, ''),
+              book_title: pdf.file_name.replace(/\.[^/.]+$/, ''),
               force_reimport: true,
             });
             const reimportData = reimportRes.data || reimportRes;

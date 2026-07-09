@@ -249,12 +249,19 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ══ STAGE 2: SAME METHOD — Compare ritual structure ══
+      // ══ STAGE 2: SAME METHOD — Compare ritual structure (topic-filtered) ══
+      // Query by sirr_section + topic to narrow the search space.
+      // Falls back to sirr_section only if entry has no topic.
       if (!matched) {
-        const sectionPrimaries = await base44.asServiceRole.entities.ManuscriptEntry.filter({
+        const stage2Filter: any = {
           sirr_section: entry.sirr_section,
           is_primary_method_entry: true,
-        }, '-created_date', 50);
+        };
+        if (entry.topic) stage2Filter.topic = entry.topic;
+
+        const sectionPrimaries = await base44.asServiceRole.entities.ManuscriptEntry.filter(
+          stage2Filter, '-created_date', 200
+        );
 
         for (const candidate of sectionPrimaries) {
           if (candidate.entry_id === entry.entry_id) continue;
@@ -274,12 +281,17 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ══ STAGE 3: EQUIVALENT METHOD — Semantic comparison via LLM ══
+      // ══ STAGE 3: EQUIVALENT METHOD — Semantic comparison via LLM (topic-filtered) ══
       if (!matched) {
-        const candidates = await base44.asServiceRole.entities.ManuscriptEntry.filter({
+        const stage3Filter: any = {
           sirr_section: entry.sirr_section,
           is_primary_method_entry: true,
-        }, '-created_date', 20);
+        };
+        if (entry.topic) stage3Filter.topic = entry.topic;
+
+        const candidates = await base44.asServiceRole.entities.ManuscriptEntry.filter(
+          stage3Filter, '-created_date', 50
+        );
 
         // Filter out self and limit to 10 for LLM
         const llmCandidates = candidates.filter((c: any) => c.entry_id !== entry.entry_id).slice(0, 10);

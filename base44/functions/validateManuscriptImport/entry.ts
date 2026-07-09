@@ -222,12 +222,19 @@ Deno.serve(async (req) => {
       notes: 'Phase 1: Extraction + Images. Call verifyBookEntries next for Phase 2.',
     });
 
-    // ══ STAGE 1: PDF Content Extraction ══
+    // ══ STAGE 1: File Content Extraction ══
+    // Detect file type from original_file_name extension.
+    // Non-PDF files (DOCX, TXT, Markdown, Images) skip pdf-lib chunking
+    // and use whole-file LLM extraction via file_urls (Gemini vision).
+    const fileExt = (original_file_name || pdf_url || '').toLowerCase().split('.').pop() || '';
+    const isPdf = !fileExt || fileExt === 'pdf';
     let pdfBytes: Uint8Array | null = null;
-    try {
-      const pdfResponse = await fetch(pdf_url);
-      pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
-    } catch { /* PDF download failed — LLM can still use file_urls */ }
+    if (isPdf) {
+      try {
+        const pdfResponse = await fetch(pdf_url);
+        pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
+      } catch { /* PDF download failed — LLM can still use file_urls */ }
+    }
 
     // ══ STAGE 0: QUALITY ASSESSMENT GATE ══
     // Assess manuscript readability BEFORE extraction.
@@ -592,33 +599,68 @@ CRITICAL RULES:
     }
 
     // ══ STAGE 1.5: Create ManuscriptHeading records (dynamic heading tree) ══
-    // Map LLM heading_id → permanent database heading_id (llmHeadings populated during extraction)
+    // DEDUPLICATION: Headings are deduplicated by (title, level) across all chunks.
+    // The same heading appearing in multiple chunks (e.g., a chapter heading that
+    // spans pages across chunk boundaries) is recognized as ONE heading.
+    // Parent-child relationships are resolved globally, not per-chunk.
+    // This fixes the broken heading tree where chunk-prefixed IDs prevented
+    // cross-chunk parent-child resolution.
     const headingIdMap: Record<string, string> = {};
-    const headingRecords: any[] = [];
+    const headingDedupMap: Map<string, any> = new Map();
+    const chunkIdToPermanentId: Map<string, string> = new Map();
 
     if (llmHeadings.length > 0) {
+      // Pass 1: Deduplicate headings by (title, level) across all chunks
       for (const h of llmHeadings) {
-        const permanentId = `H-${bookId}-${h.heading_level || 1}-${h.heading_order || 1}-${Math.random().toString(36).slice(2, 6)}`;
-        headingIdMap[h.heading_id] = permanentId;
+        const dedupKey = `${(h.heading_title || 'Untitled').trim().toLowerCase()}|${h.heading_level || 1}`;
+        if (headingDedupMap.has(dedupKey)) {
+          chunkIdToPermanentId.set(h.heading_id, headingDedupMap.get(dedupKey).heading_id);
+          const existing = headingDedupMap.get(dedupKey);
+          if (h.end_page && (!existing.end_page || String(h.end_page) > String(existing.end_page))) {
+            existing.end_page = h.end_page;
+          }
+        } else {
+          const permanentId = `H-${bookId}-${h.heading_level || 1}-${h.heading_order || 1}-${Math.random().toString(36).slice(2, 6)}`;
+          const record: any = {
+            heading_id: permanentId,
+            parent_heading_id: '',
+            book_id: bookId,
+            heading_level: h.heading_level || 1,
+            heading_title: h.heading_title || 'Untitled',
+            heading_title_ar: h.heading_title_ar || '',
+            heading_order: h.heading_order || 1,
+            start_page: h.start_page || '',
+            end_page: h.end_page || '',
+            heading_source: h.heading_source || 'generated_fallback',
+            entry_count: 0,
+            total_entry_count: 0,
+            _original_parent: h.parent_heading_id || '',
+          };
+          headingDedupMap.set(dedupKey, record);
+          chunkIdToPermanentId.set(h.heading_id, permanentId);
+        }
+      }
 
-        headingRecords.push({
-          heading_id: permanentId,
-          parent_heading_id: h.parent_heading_id ? (headingIdMap[h.parent_heading_id] || '') : '',
-          book_id: bookId,
-          heading_level: h.heading_level || 1,
-          heading_title: h.heading_title || 'Untitled',
-          heading_title_ar: h.heading_title_ar || '',
-          heading_order: h.heading_order || 1,
-          start_page: h.start_page || '',
-          end_page: h.end_page || '',
-          heading_source: h.heading_source || 'generated_fallback',
-          entry_count: 0,
-          total_entry_count: 0,
-        });
+      // Pass 2: Resolve parent references globally
+      const headingRecords: any[] = [];
+      for (const record of headingDedupMap.values()) {
+        if (record._original_parent) {
+          record.parent_heading_id = chunkIdToPermanentId.get(record._original_parent) || '';
+        }
+        delete record._original_parent;
+        headingRecords.push(record);
+      }
+
+      for (const [chunkId, permanentId] of chunkIdToPermanentId) {
+        headingIdMap[chunkId] = permanentId;
       }
 
       if (headingRecords.length > 0) {
-        await base44.asServiceRole.entities.ManuscriptHeading.bulkCreate(headingRecords);
+        try {
+          await base44.asServiceRole.entities.ManuscriptHeading.bulkCreate(headingRecords);
+        } catch (e) {
+          // Non-critical — headings may fail but entries still get created
+        }
       }
     }
 

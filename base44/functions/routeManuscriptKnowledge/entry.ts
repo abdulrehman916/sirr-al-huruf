@@ -27,29 +27,31 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Entry type → primary purpose routing map
 const ENTRY_TYPE_TO_ROUTE: Record<string, string> = {
-  // Astro Clock — timing-related
+  // Astro Clock — timing-related ONLY
   timing: 'astro_timing',
-  condition: 'astro_timing',
   // Dua module
   dua: 'dua',
   quran_verse: 'dua',
   divine_name: 'dua',
-  // Ritual module
+  // Ritual module — conditions, warnings, instructions are most often ritual-related.
+  // Timing-related conditions/warnings are captured by the Ritual LLM as timing_reference
+  // (a lightweight cross-module reference to Astro Clock), so nothing is lost.
   ritual: 'ritual',
   exorcism: 'ritual',
   protection: 'ritual',
   instruction: 'ritual',
-  // Wafq module
+  condition: 'ritual',
+  warning: 'ritual',
+  // Wafq module — images in these manuscripts are almost always wafq/taweez/diagrams
   wafq: 'wafq',
   taweez: 'wafq',
   diagram: 'wafq',
   table: 'wafq',
+  image: 'wafq',
   // Other — not routed to a specific module
   material: 'other',
   herb: 'other',
   incense: 'other',
-  image: 'other',
-  warning: 'other',
   note: 'other',
   reference: 'other',
 };
@@ -85,7 +87,7 @@ Deno.serve(async (req) => {
     if (!books?.length) return Response.json({ error: 'Book not found' }, { status: 404 });
     const book = books[0];
 
-    const entries = await base44.asServiceRole.entities.ManuscriptEntry.filter({ book_id });
+    const entries = await base44.asServiceRole.entities.ManuscriptEntry.filter({ book_id }, '-created_date', 500);
     if (!entries?.length) return Response.json({ error: 'No entries found' }, { status: 404 });
 
     // Only verified or manual_review entries
@@ -131,17 +133,15 @@ Deno.serve(async (req) => {
       routeGroups[route].push(entry.entry_id);
     }
 
-    // Call the appropriate enrichment function for each non-empty route group
+    // Call enrichment functions in PARALLEL to prevent Deno timeout
+    // (sequential calls for 4 route groups × ~30s each = ~120s → timeout)
     const routingResults: Record<string, any> = {};
     const now = new Date().toISOString();
 
-    for (const [route, entryIds] of Object.entries(routeGroups)) {
+    const routePromises = Object.entries(routeGroups).map(async ([route, entryIds]: [string, string[]]) => {
       if (route === 'other' || !ROUTE_TO_FUNCTION[route]) {
-        // "other" entries — no enrichment, just create routing records
-        routingResults[route] = { status: 'skipped', entry_count: entryIds.length };
-        continue;
+        return [route, { status: 'skipped', entry_count: entryIds.length }];
       }
-
       try {
         const fnName = ROUTE_TO_FUNCTION[route];
         const fnRes = await base44.functions.invoke(fnName, {
@@ -149,19 +149,33 @@ Deno.serve(async (req) => {
           batch_size: BATCH,
           entry_ids: entryIds,
         });
-        routingResults[route] = (fnRes as any).data || fnRes;
+        return [route, (fnRes as any).data || fnRes];
       } catch (err) {
-        routingResults[route] = { status: 'error', error: err.message, entry_count: entryIds.length };
+        return [route, { status: 'error', error: err.message, entry_count: entryIds.length }];
       }
+    });
+
+    const routeResults = await Promise.all(routePromises);
+    for (const [route, result] of routeResults) {
+      routingResults[route] = result;
     }
 
-    // Create KnowledgeRouting records for ALL entries in this batch
+    // Create KnowledgeRouting records — SKIP entries where enrichment FAILED
+    // so they can be retried on the next call instead of being permanently orphaned
     let routedCount = 0;
+    let skippedForRetry = 0;
     for (const entry of batch) {
       const route = ENTRY_TYPE_TO_ROUTE[entry.entry_type] || 'other';
       const routedTo = ROUTE_TO_ENTITY[route] || 'none';
 
-      // Fetch knowledge records created for this entry (to link in routing record)
+      // RETRY SAFETY: If enrichment failed for this route group, skip this entry.
+      // It will be retried on the next routeManuscriptKnowledge call.
+      const routeResult = routingResults[route];
+      if (routedTo !== 'none' && routeResult?.status === 'error') {
+        skippedForRetry++;
+        continue;
+      }
+
       let knowledgeIds: string[] = [];
       let isMarker = false;
 
@@ -195,9 +209,10 @@ Deno.serve(async (req) => {
       return Response.json({
         status: 'batch_complete', book_id, book_title: book.book_title,
         batch_processed: batch.length, remaining, entries_routed: routedCount,
+        skipped_for_retry: skippedForRetry,
         route_groups: Object.fromEntries(Object.entries(routeGroups).map(([k, v]) => [k, v.length])),
         routing_results: routingResults,
-        message: `Batch: ${routedCount} entries routed. ${remaining} remaining.`,
+        message: `Batch: ${routedCount} entries routed${skippedForRetry > 0 ? `, ${skippedForRetry} skipped for retry` : ''}. ${remaining} remaining.`,
       });
     }
 

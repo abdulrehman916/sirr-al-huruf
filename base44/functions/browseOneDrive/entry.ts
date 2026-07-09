@@ -38,11 +38,21 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
+    const SUPPORTED_MIME_TYPES = new Set([
+      'application/pdf',
+      'text/plain',
+      'text/markdown',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]);
     const items = (data.value || []).map((item: any) => ({
       id: item.id,
       name: item.name,
       is_folder: !!item.folder,
       is_pdf: !!(item.file && item.file.mimeType === 'application/pdf'),
+      is_importable: !!(item.file && SUPPORTED_MIME_TYPES.has(item.file.mimeType)),
       mime_type: item.file ? item.file.mimeType : '',
       size: item.size || 0,
       etag: item.eTag || '',

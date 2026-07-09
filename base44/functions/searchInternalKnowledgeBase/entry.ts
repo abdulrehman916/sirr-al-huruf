@@ -184,66 +184,18 @@ Deno.serve(async (req) => {
       }
     } catch { /* continue to next tier */ }
 
-    // ══ TIER 3: Verified ManuscriptEntry library search (confidence: 90) ══
-    // Search every verified manuscript already imported into our library.
-    // Compare normalized Arabic text in memory.
-    // This catches the same text appearing in different books.
-    try {
-      const verifiedEntries = await base44.asServiceRole.entities.ManuscriptEntry.filter(
-        { verification_status: 'verified', is_primary_method_entry: true },
-        '-created_date',
-        300
-      );
-
-      if (verifiedEntries && verifiedEntries.length > 0) {
-        for (const entry of verifiedEntries) {
-          if (!entry.arabic_text) continue;
-          const entryNorm = normalizeArabic(entry.arabic_text);
-          if (entryNorm.length === 0) continue;
-
-          // Tier 3: Exact normalized match
-          if (entryNorm === normalized) {
-            return Response.json({
-              match_found: true,
-              match_type: 'verified_entry_exact',
-              confidence: 90,
-              verified_arabic: entry.arabic_text,
-              text_hash: entry.verified_arabic_hash || textHash,
-              malayalam_meaning: entry.malayalam_meaning || '',
-              english_meaning: entry.english_meaning || '',
-              primary_source: entry.verification_source || (entry.book_title + ' p.' + (entry.page_number || '?')),
-              verification_confidence: 'HIGH',
-              verification_method: 'internal_reuse',
-              skip_external_verification: true,
-              message: 'Exact match in verified manuscript library. Reusing record — zero credits.',
-            });
-          }
-
-          // Tier 3b: Partial/substring match (confidence: 85)
-          // One text contains the other — catches Quran verses within longer duas,
-          // partial text overlap, and embedded references.
-          // Minimum 20 normalized characters to avoid false positives on short texts.
-          if (normalized.length >= 20 && entryNorm.length >= 20) {
-            if (normalized.includes(entryNorm) || entryNorm.includes(normalized)) {
-              return Response.json({
-                match_found: true,
-                match_type: 'partial_match',
-                confidence: 85,
-                verified_arabic: entry.arabic_text,
-                text_hash: entry.verified_arabic_hash || textHash,
-                malayalam_meaning: entry.malayalam_meaning || '',
-                english_meaning: entry.english_meaning || '',
-                primary_source: entry.verification_source || (entry.book_title + ' p.' + (entry.page_number || '?')),
-                verification_confidence: 'MEDIUM',
-                verification_method: 'internal_reuse',
-                skip_external_verification: true,
-                message: 'Partial match in verified manuscript library (substring overlap). Reusing record — zero credits.',
-              });
-            }
-          }
-        }
-      }
-    } catch { /* continue to next tier */ }
+    // ══ TIER 3: REMOVED — O(n²) in-memory scan replaced by Tier 1/2 indexed lookups ══
+    // Previous implementation loaded 300 verified ManuscriptEntry records into memory
+    // and performed O(n) normalized Arabic comparison for EACH search call.
+    // At 5000 books this would be 75M comparisons — unsustainable.
+    //
+    // Tier 1 (exact text_hash on VerifiedArabic) and Tier 2 (normalized match on
+    // VerifiedArabic) are indexed O(1) lookups that cover the same ground:
+    // every verified ManuscriptEntry's Arabic text is stored in VerifiedArabic
+    // during verifyBookEntries, so Tier 1/2 catch all exact and normalized matches.
+    //
+    // Tier 3b (partial/substring match) is also removed — it relied on the same
+    // in-memory scan and was incomplete (only searched 300 most recent entries).
 
     // ══ TIER 4: Semantic metadata match (confidence: 80) ══
     // Full semantic comparison: purpose + topic + timing + day + planet + conditions
