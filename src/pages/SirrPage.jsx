@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import PageLayout from "@/components/PageLayout";
 import SirrAccordionSection from "@/components/sirr/SirrAccordionSection";
-import GuidedRitualCard from "@/components/astroclock/dashboard/GuidedRitualCard";
+import SirrRitualCard from "@/components/sirr/SirrRitualCard";
 import { KASHF_FULL_MANTRAS } from "@/lib/manuscriptRitualGuideFullData";
 import {
   KASHF_UNIVERSAL_SUPPLICATIONS,
@@ -233,7 +233,7 @@ export default function SirrPage() {
             defaultOpen={i === 0}
           >
             {section.items.map((item, j) => (
-              <GuidedRitualCard key={item.id || j} mantra={item} />
+              <SirrRitualCard key={item.id || j} item={item} accent={section.accent} />
             ))}
           </SirrAccordionSection>
         ))}
