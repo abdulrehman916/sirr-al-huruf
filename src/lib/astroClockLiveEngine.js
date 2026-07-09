@@ -388,19 +388,23 @@ function formatCountdown(ms) {
 // GET ALL 24 HOURS FOR A DAY
 // ─────────────────────────────────────────────────────────────────────────────
 export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
+  // Use date (location timezone) — never new Date() (browser timezone).
+  // This ensures current time matches the sunrise/sunset values.
+  const currentHours = date.getHours() + date.getMinutes() / 60;
+  const isBeforeSunrise = currentHours < sunrise;
+
   const dayOfWeek = date.getDay();
   const dayRuler = getDayRuler(dayOfWeek);
   // Manuscript rule (Kashf al-Haqa'iq p.65): night belongs to the FOLLOWING day.
-  // Night hours use the next civil day's ruler; day hours use this day's ruler.
-  const nightDayRuler = getDayRuler((dayOfWeek + 1) % 7);
+  // BUT when before sunrise (in the previous day's night that crossed midnight),
+  // that night belongs to the CURRENT day ("Thursday evening = night of Friday").
+  // So: before sunrise → current day's ruler; after sunset → next day's ruler.
+  const nightDayRuler = getDayRuler(isBeforeSunrise ? dayOfWeek : (dayOfWeek + 1) % 7);
   
   const dayDuration = sunset - sunrise;
   const nightDuration = 24 - dayDuration;
   const dayHourDuration = dayDuration / 12;
   const nightHourDuration = nightDuration / 12;
-  
-  const now = new Date();
-  const currentHours = now.getHours() + now.getMinutes() / 60;
   
   const hours = [];
   
@@ -453,34 +457,31 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
     });
   }
   
-  // ══ NIGHT HOURS (13-24) — MIDNIGHT CROSSING FIX ══
-  // CRITICAL: Night Sahaths span from sunset through midnight to the next sunrise.
+  // ══ NIGHT HOURS (13-24) — SUNRISE/SUNSET BOUNDARY ONLY ══
+  // Night Sahaths span from sunset through midnight to the next sunrise.
   // Crossing midnight must NOT reset or complete remaining night Sahaths.
-  // The date change at 12:00 AM must not affect the current night's Sahath sequence.
+  // The ONLY valid Day/Night transition is: Sunrise → Day, Sunset → Night.
+  // Calendar date change at 12:00 AM has NO effect on Sahath status.
   //
-  // FIX: Use UNADJUSTED start/end times (may be >= 24) for chronological comparison.
-  // When current time is after midnight (before sunrise) AND we're in the night
-  // that started on `date` (current calendar date is the day after `date`), shift
-  // current time +24 so the comparison is chronologically correct across midnight.
+  // METHOD: Use UNADJUSTED start/end times (may be >= 24) for chronological comparison.
+  // When current time is before sunrise (after midnight, in the previous day's night),
+  // nightCurrentHours = currentHours + 24 for correct comparison across midnight.
   //
   // Status rules (per Sahath, compared individually):
-  //   current < start       → Upcoming
-  //   start ≤ current < end → Active
-  //   current ≥ end         → Completed
+  //   nightNow < start       → Upcoming
+  //   start ≤ nightNow < end → Active
+  //   nightNow ≥ end         → Completed
   //
-  // Manuscript rule (Kashf al-Haqa'iq p.65): night belongs to the FOLLOWING day.
-  // Night Saat 1 = next day's ruler + 2 (Chaldean offset). Night hour 13 = Night Saat 1.
+  // Night ruler: isBeforeSunrise ? current day : next day (defined above as nightDayRuler).
+  // Night Saat 1 = nightDayRuler + 2 (Chaldean offset). Night hour 13 = Night Saat 1.
   const firstNightPlanetIndex = (nightDayRuler.index + 2) % 7;
 
-  // After midnight in the displayed night: shift current time +24 for comparison.
-  // True when current calendar date is the day AFTER `date` and current time is
-  // before sunrise (we're in the early-morning part of the night that began at `date`'s sunset).
-  const _msPerDay = 24 * 60 * 60 * 1000;
-  const _dateMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-  const _nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const _dayDiff = Math.round((_nowMidnight - _dateMidnight) / _msPerDay);
-  const _isAfterMidnightInNight = (_dayDiff === 1) && (currentHours < sunrise);
-  const nightCurrentHours = _isAfterMidnightInNight ? currentHours + 24 : currentHours;
+  // MIDNIGHT CROSSING: If current time is before sunrise, we're in the night
+  // that started at the PREVIOUS day's sunset. Shift current time +24 for
+  // chronological comparison against night hour intervals that start at sunset
+  // (e.g., 19.2) and extend past midnight (e.g., up to 30.5 = next sunrise).
+  // This uses ONLY the sunrise boundary — never calendar date or midnight.
+  const nightCurrentHours = isBeforeSunrise ? currentHours + 24 : currentHours;
 
   for (let i = 0; i < 12; i++) {
     const planetIndex = (firstNightPlanetIndex + i) % 7;
