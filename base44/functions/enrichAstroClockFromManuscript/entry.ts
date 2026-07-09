@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
 
     const body = await req.json();
-    const { book_id, batch_size } = body;
+    const { book_id, batch_size, entry_ids } = body;
 
     if (!book_id) {
       return Response.json({ error: 'book_id is required' }, { status: 400 });
@@ -65,9 +65,14 @@ Deno.serve(async (req) => {
     }
 
     // ══ 3. Only process verified or manual_review entries ══
-    const verifiedEntries = entries.filter((e: any) =>
-      e.verification_status === 'verified' || e.verification_status === 'manual_review'
-    );
+    const verifiedEntries = entries.filter((e: any) => {
+      const isVerified = e.verification_status === 'verified' || e.verification_status === 'manual_review';
+      if (!isVerified) return false;
+      if (entry_ids && Array.isArray(entry_ids) && entry_ids.length > 0) {
+        return entry_ids.includes(e.entry_id);
+      }
+      return true;
+    });
 
     if (verifiedEntries.length === 0) {
       return Response.json({

@@ -1,0 +1,190 @@
+{
+  "name": "WafqKnowledge",
+  "type": "object",
+  "description": "Canonical store for Wafq, Magic Square, Letter Diagram, Numeric Diagram, and Taweez knowledge extracted from verified manuscripts. Each record is a single piece of wafq-related knowledge. GLOBAL ROUTING RULE: Never overwrite verified knowledge. Duplicate knowledge merged via supporting_sources. Populated automatically by routeManuscriptKnowledge. Marker records prevent reprocessing. ISOLATED \u2014 only routeManuscriptKnowledge and enrichWafqFromManuscript write to this entity.",
+  "properties": {
+    "knowledge_id": {
+      "type": "string",
+      "description": "Permanent unique identifier. Format: WK-<source_entry_id>-<seq> or WK-MARKER-<entry_id> for markers."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "wafq",
+        "magic_square",
+        "letter_diagram",
+        "numeric_diagram",
+        "taweez"
+      ],
+      "description": "Type: wafq=general wafq, magic_square=numeric grid, letter_diagram=letter arrangement, numeric_diagram=number calculation, taweez=protective seal"
+    },
+    "knowledge_category": {
+      "type": "string",
+      "enum": [
+        "wafq_structure",
+        "magic_square_layout",
+        "letter_arrangement",
+        "numeric_calculation",
+        "taweez_design",
+        "grid_template",
+        "construction_method",
+        "usage_instruction"
+      ],
+      "description": "Category of wafq knowledge"
+    },
+    "knowledge_text_en": {
+      "type": "string",
+      "description": "English text of the wafq knowledge. Empty for markers."
+    },
+    "knowledge_text_ml": {
+      "type": "string",
+      "description": "Malayalam translation. Empty for markers."
+    },
+    "knowledge_text_ar": {
+      "type": "string",
+      "description": "Original Arabic text verbatim. Empty for markers."
+    },
+    "content_hash": {
+      "type": "string",
+      "description": "SHA-256 hash for duplicate detection. Markers use no-wafq-<entry_id>."
+    },
+    "is_marker": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, no wafq knowledge found. Never displayed."
+    },
+    "grid_size": {
+      "type": "string",
+      "description": "Grid dimensions if specified (e.g., '3x3', '4x4', '5x5', '7x7'). Empty if not applicable."
+    },
+    "associated_divine_name": {
+      "type": "string",
+      "description": "Lightweight reference to the Divine Name associated with this wafq. Full divine name data stays in HolyOneName/DuaKnowledge. Example: 'Ya Rahman (248)'."
+    },
+    "timing_reference": {
+      "type": "string",
+      "description": "Lightweight cross-module reference to Astro Clock timing for wafq construction timing."
+    },
+    "source_book_id": {
+      "type": "string",
+      "description": "FK to ManuscriptBook.book_id"
+    },
+    "source_book_title": {
+      "type": "string",
+      "description": "Denormalized book title"
+    },
+    "source_page_number": {
+      "type": "string",
+      "description": "Page number"
+    },
+    "source_entry_id": {
+      "type": "string",
+      "description": "FK to ManuscriptEntry.entry_id"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if source entry was verified."
+    },
+    "supporting_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "book_title": {
+            "type": "string"
+          },
+          "page_number": {
+            "type": "string"
+          },
+          "entry_id": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Additional sources with the same wafq knowledge."
+    },
+    "source_count": {
+      "type": "integer",
+      "default": 1,
+      "description": "Total sources. 0 for markers."
+    }
+  },
+  "required": [
+    "knowledge_id",
+    "source_type",
+    "knowledge_category",
+    "knowledge_text_en",
+    "content_hash"
+  ],
+  "indexes": [
+    {
+      "name": "idx_knowledge_id",
+      "fields": [
+        "knowledge_id"
+      ]
+    },
+    {
+      "name": "idx_content_hash",
+      "fields": [
+        "content_hash"
+      ]
+    },
+    {
+      "name": "idx_source_type",
+      "fields": [
+        "source_type"
+      ]
+    },
+    {
+      "name": "idx_is_marker",
+      "fields": [
+        "is_marker"
+      ]
+    },
+    {
+      "name": "idx_is_verified",
+      "fields": [
+        "is_verified"
+      ]
+    },
+    {
+      "name": "idx_source_book_id",
+      "fields": [
+        "source_book_id"
+      ]
+    },
+    {
+      "name": "idx_source_entry_id",
+      "fields": [
+        "source_entry_id"
+      ]
+    },
+    {
+      "name": "idx_source_type_category",
+      "fields": [
+        "source_type",
+        "knowledge_category"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

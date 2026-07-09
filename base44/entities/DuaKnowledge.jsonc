@@ -1,0 +1,189 @@
+{
+  "name": "DuaKnowledge",
+  "type": "object",
+  "description": "Canonical store for Dua, Dhikr, Wird, Quran verse, Divine Name, and Invocation knowledge extracted from verified manuscripts. Each record is a single piece of dua-related knowledge. GLOBAL ROUTING RULE: Never overwrite verified knowledge \u2014 only new, genuinely distinct knowledge is stored. Duplicate knowledge from different sources is merged via supporting_sources. Populated automatically by routeManuscriptKnowledge after manuscript verification completes. Marker records (is_marker=true) indicate an entry was analyzed but contained no dua knowledge \u2014 they prevent reprocessing and are never displayed. ISOLATED \u2014 only routeManuscriptKnowledge and enrichDuaFromManuscript write to this entity. Never accessed by any Mizan, Astro Clock, Ritual, or Wafq calculation.",
+  "properties": {
+    "knowledge_id": {
+      "type": "string",
+      "description": "Permanent unique identifier. Format: DK-<source_entry_id>-<seq> or DK-MARKER-<entry_id> for markers."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "dua",
+        "dhikr",
+        "wird",
+        "quran_verse",
+        "divine_name",
+        "invocation"
+      ],
+      "description": "Type of dua knowledge: dua=general supplication, dhikr=remembrance formula, wird=litany sequence, quran_verse=Quran recitation, divine_name=Asma dhikr, invocation=spiritual invocation"
+    },
+    "knowledge_category": {
+      "type": "string",
+      "enum": [
+        "dua_text",
+        "dhikr_formula",
+        "wird_sequence",
+        "quran_recitation",
+        "divine_name_dhikr",
+        "invocation_text",
+        "protection_dua",
+        "healing_dua",
+        "love_dua",
+        "wealth_dua"
+      ],
+      "description": "Category of dua knowledge"
+    },
+    "knowledge_text_en": {
+      "type": "string",
+      "description": "English text of the dua knowledge. Empty string for marker records."
+    },
+    "knowledge_text_ml": {
+      "type": "string",
+      "description": "Malayalam translation of the dua knowledge. Empty for markers."
+    },
+    "knowledge_text_ar": {
+      "type": "string",
+      "description": "Original Arabic text verbatim from the manuscript. Primary for dua \u2014 never AI-generated. Empty for markers."
+    },
+    "content_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of normalized knowledge_text_en for duplicate detection. Same knowledge from different sources shares the same hash. Marker records use a unique hash (no-dua-<entry_id>)."
+    },
+    "is_marker": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this is a marker record \u2014 entry analyzed but no dua knowledge found. Never displayed."
+    },
+    "repetition_count": {
+      "type": "string",
+      "description": "How many times to recite the dua/dhikr (from manuscript). Empty if not specified."
+    },
+    "timing_reference": {
+      "type": "string",
+      "description": "Lightweight cross-module reference to Astro Clock timing if the dua has timing requirements. Full timing knowledge stays in AstroClockKnowledge. Example: 'Best recited on Thursday during Jupiter hour'."
+    },
+    "source_book_id": {
+      "type": "string",
+      "description": "FK to ManuscriptBook.book_id"
+    },
+    "source_book_title": {
+      "type": "string",
+      "description": "Denormalized book title for display"
+    },
+    "source_page_number": {
+      "type": "string",
+      "description": "Page number in the source manuscript"
+    },
+    "source_entry_id": {
+      "type": "string",
+      "description": "FK to ManuscriptEntry.entry_id"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "True only if the source ManuscriptEntry was verified (verification_status='verified')."
+    },
+    "supporting_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "book_title": {
+            "type": "string"
+          },
+          "page_number": {
+            "type": "string"
+          },
+          "entry_id": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Additional manuscript sources containing the same dua knowledge. Updated when a duplicate content_hash is found."
+    },
+    "source_count": {
+      "type": "integer",
+      "default": 1,
+      "description": "Total number of manuscript sources. 0 for marker records."
+    }
+  },
+  "required": [
+    "knowledge_id",
+    "source_type",
+    "knowledge_category",
+    "knowledge_text_en",
+    "content_hash"
+  ],
+  "indexes": [
+    {
+      "name": "idx_knowledge_id",
+      "fields": [
+        "knowledge_id"
+      ]
+    },
+    {
+      "name": "idx_content_hash",
+      "fields": [
+        "content_hash"
+      ]
+    },
+    {
+      "name": "idx_source_type",
+      "fields": [
+        "source_type"
+      ]
+    },
+    {
+      "name": "idx_is_marker",
+      "fields": [
+        "is_marker"
+      ]
+    },
+    {
+      "name": "idx_is_verified",
+      "fields": [
+        "is_verified"
+      ]
+    },
+    {
+      "name": "idx_source_book_id",
+      "fields": [
+        "source_book_id"
+      ]
+    },
+    {
+      "name": "idx_source_entry_id",
+      "fields": [
+        "source_entry_id"
+      ]
+    },
+    {
+      "name": "idx_source_type_category",
+      "fields": [
+        "source_type",
+        "knowledge_category"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

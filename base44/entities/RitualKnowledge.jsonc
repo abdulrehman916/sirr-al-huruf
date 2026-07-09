@@ -1,0 +1,191 @@
+{
+  "name": "RitualKnowledge",
+  "type": "object",
+  "description": "Canonical store for Amal, Ritual, Spiritual Procedure, Exorcism, and Protection knowledge extracted from verified manuscripts. Each record is a single piece of ritual-related knowledge. GLOBAL ROUTING RULE: Never overwrite verified knowledge \u2014 only new, genuinely distinct knowledge is stored. Duplicate knowledge from different sources is merged via supporting_sources. Populated automatically by routeManuscriptKnowledge after manuscript verification completes. Marker records (is_marker=true) prevent reprocessing. ISOLATED \u2014 only routeManuscriptKnowledge and enrichRitualFromManuscript write to this entity.",
+  "properties": {
+    "knowledge_id": {
+      "type": "string",
+      "description": "Permanent unique identifier. Format: RK-<source_entry_id>-<seq> or RK-MARKER-<entry_id> for markers."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "amal",
+        "ritual",
+        "procedure",
+        "exorcism",
+        "protection",
+        "instruction"
+      ],
+      "description": "Type of ritual knowledge: amal=spiritual work, ritual=formal ceremony, procedure=step sequence, exorcism=jinn removal, protection=warding, instruction=guideline"
+    },
+    "knowledge_category": {
+      "type": "string",
+      "enum": [
+        "ritual_procedure",
+        "spiritual_practice",
+        "exorcism_method",
+        "protection_method",
+        "sequence_of_actions",
+        "preparation_step",
+        "closing_procedure",
+        "opening_procedure"
+      ],
+      "description": "Category of ritual knowledge"
+    },
+    "knowledge_text_en": {
+      "type": "string",
+      "description": "English text of the ritual knowledge. Empty string for marker records."
+    },
+    "knowledge_text_ml": {
+      "type": "string",
+      "description": "Malayalam translation. Empty for markers."
+    },
+    "knowledge_text_ar": {
+      "type": "string",
+      "description": "Original Arabic text verbatim from the manuscript. Empty for markers."
+    },
+    "content_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of normalized knowledge_text_en for duplicate detection. Marker records use no-ritual-<entry_id>."
+    },
+    "is_marker": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, entry analyzed but no ritual knowledge found. Never displayed."
+    },
+    "materials_summary": {
+      "type": "string",
+      "description": "Lightweight summary of required materials. Full preparation details stay in Preparation entity. Example: 'Requires frankincense and rose water'."
+    },
+    "timing_reference": {
+      "type": "string",
+      "description": "Lightweight cross-module reference to Astro Clock timing. Full timing stays in AstroClockKnowledge. Example: 'Perform during Saturn hour on Saturday night'."
+    },
+    "duration": {
+      "type": "string",
+      "description": "Ritual duration if specified in manuscript (e.g., '7 days', '40 days'). Empty if not specified."
+    },
+    "source_book_id": {
+      "type": "string",
+      "description": "FK to ManuscriptBook.book_id"
+    },
+    "source_book_title": {
+      "type": "string",
+      "description": "Denormalized book title"
+    },
+    "source_page_number": {
+      "type": "string",
+      "description": "Page number"
+    },
+    "source_entry_id": {
+      "type": "string",
+      "description": "FK to ManuscriptEntry.entry_id"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if source entry was verified."
+    },
+    "supporting_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "book_title": {
+            "type": "string"
+          },
+          "page_number": {
+            "type": "string"
+          },
+          "entry_id": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Additional sources with the same ritual knowledge."
+    },
+    "source_count": {
+      "type": "integer",
+      "default": 1,
+      "description": "Total sources. 0 for markers."
+    }
+  },
+  "required": [
+    "knowledge_id",
+    "source_type",
+    "knowledge_category",
+    "knowledge_text_en",
+    "content_hash"
+  ],
+  "indexes": [
+    {
+      "name": "idx_knowledge_id",
+      "fields": [
+        "knowledge_id"
+      ]
+    },
+    {
+      "name": "idx_content_hash",
+      "fields": [
+        "content_hash"
+      ]
+    },
+    {
+      "name": "idx_source_type",
+      "fields": [
+        "source_type"
+      ]
+    },
+    {
+      "name": "idx_is_marker",
+      "fields": [
+        "is_marker"
+      ]
+    },
+    {
+      "name": "idx_is_verified",
+      "fields": [
+        "is_verified"
+      ]
+    },
+    {
+      "name": "idx_source_book_id",
+      "fields": [
+        "source_book_id"
+      ]
+    },
+    {
+      "name": "idx_source_entry_id",
+      "fields": [
+        "source_entry_id"
+      ]
+    },
+    {
+      "name": "idx_source_type_category",
+      "fields": [
+        "source_type",
+        "knowledge_category"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
