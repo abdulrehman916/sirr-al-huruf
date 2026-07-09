@@ -403,13 +403,13 @@ ALSO provide: total_pages_analyzed, pages_with_images, pages_with_errors, skippe
 CRITICAL RULES:
 - Process EVERY page. Do not skip any.
 - Preserve Arabic text EXACTLY as written. Never guess harakat. Never invent missing Arabic.
-- If Arabic is unclear or partially unreadable, extract ONLY what is clearly readable. Set arabic_text_preserved=false.
+- If Arabic is unclear or partially unreadable, extract what is readable AND note the unreadable portions in notes. Set arabic_text_preserved=false. NEVER skip the entry — mark it for Manual Verification instead.
 - NEVER invent meanings, translations, or interpretations. Only extract what is explicitly written.
 - If a field is not in the manuscript, leave it empty. Do not guess.
 - For each entry, provide extraction_confidence (0-100): your confidence that the extracted content is accurate and complete. Below 70 = uncertain (unclear Arabic, missing fields, damaged content).
 - Every entry MUST belong to a heading (heading_id). Never leave an entry orphaned.
 - Preserve exact page order (entry_order must be sequential 1, 2, 3... by page).
-- ACCURACY OVER COMPLETENESS: It is better to extract fewer entries with high confidence than many entries with uncertain content.`;
+- COMPLETE EXTRACTION (GLOBAL KNOWLEDGE INGESTION LAW): Extract EVERYTHING. Nothing may be skipped — no page, paragraph, Arabic text, table, image, footnote, caption, appendix, reference, note, or example. If confidence is low, extract what is available and set extraction_confidence below 70. Mark uncertain Arabic with arabic_text_preserved=false. NEVER skip content — mark it for Manual Verification instead. The goal is to absorb the COMPLETE manuscript without losing a single piece of knowledge.`;
 
     // ══ STAGE 1: PDF Content Extraction — PAGE-BY-PAGE (chunked for accuracy) ══
     // Permanent Rule: "import the book page by page."
@@ -802,6 +802,8 @@ CRITICAL RULES:
       '12_method_pages': allEntriesHaveIndexFields ? 'PASS' : 'FAIL',
       '13_image_zoom': imagesAreUrls ? 'PASS' : 'FAIL',
       '14_validation_report': 'PASS',
+      '15_complete_extraction': (allPagesProcessed && hasEntries && skippedPages.length === 0) ? 'PASS' : 'FAIL',
+      '16_zero_data_loss': (errors.length === 0 && totalEntries > 0) ? 'PASS' : 'FAIL',
     };
 
     const validationReport = {
