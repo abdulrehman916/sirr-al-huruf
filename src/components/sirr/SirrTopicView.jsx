@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { ChevronLeft, BookMarked, FileText } from "lucide-react";
 import SirrMethodDetail from "./SirrMethodDetail";
+import { getLanguageContent } from "@/lib/sirrTurkishGuard";
 
 export default function SirrTopicView({ topic, section, onBack, language, onSelectPreparation }) {
   const isMl = language === "ml";
@@ -54,7 +55,7 @@ export default function SirrTopicView({ topic, section, onBack, language, onSele
           </h2>
         )}
         <p className={`text-sm font-bold mt-1 ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: section.accent }}>
-          {isMl ? topic.topic_ml : topic.topic_en}
+          {getLanguageContent(topic, 'topic', language) || (isMl ? "വ്യക്തമാക്കാത്തത്" : "Not specified")}
         </p>
         <p className="font-inter text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
           {topic.methods.length} {isMl ? "രീതികൾ" : "methods"} · {bookGroups.length} {isMl ? "ഗ്രന്ഥങ്ങൾ" : "books"}
@@ -93,7 +94,7 @@ export default function SirrTopicView({ topic, section, onBack, language, onSele
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-bold ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.80)" }}>
-                    {isMl ? method.purpose_ml : method.purpose_en}
+                    {getLanguageContent(method, 'purpose', language) || (isMl ? "വ്യക്തമാക്കാത്തത്" : "Not specified")}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
                     <FileText className="w-3 h-3" style={{ color: "rgba(255,255,255,0.30)" }} />

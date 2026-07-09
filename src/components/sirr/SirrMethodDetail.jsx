@@ -35,6 +35,7 @@ import {
 import { lookupVerifiedArabic } from "@/lib/verifiedArabicDatabase";
 import SirrRelatedPreparations from "./SirrRelatedPreparations";
 import CollapsibleCard from "./CollapsibleCard";
+import { getLanguageContent, hasTurkish } from "@/lib/sirrTurkishGuard";
 
 const NOT_SPECIFIED_ML = "ഗ്രന്ഥത്തിൽ വ്യക്തമാക്കാത്തത്";
 const NOT_SPECIFIED_EN = "Not specified in the manuscript";
@@ -211,6 +212,17 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
   const notSpecified = isMl ? NOT_SPECIFIED_ML : NOT_SPECIFIED_EN;
   const images = method.images || [];
 
+  // Language-content helper with fallback fields — enforces SIRR global language rule
+  const lc = (field, ...fallbacks) => {
+    let val = getLanguageContent(method, field, language);
+    if (val) return val;
+    for (const fb of fallbacks) {
+      val = getLanguageContent(method, fb, language);
+      if (val) return val;
+    }
+    return null;
+  };
+
   // ── Verified Arabic lookup ──
   const [verifiedResult, setVerifiedResult] = useState(null);
   const [loadingVerified, setLoadingVerified] = useState(true);
@@ -251,13 +263,18 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
   const primarySource = verifiedResult?.primary_source;
   const secondarySources = verifiedResult?.secondary_sources || [];
 
-  // ── Timing combination (section 8) ──
+  // ── Timing combination (section 8) — Turkish guard applied ──
   const timingParts = [];
-  if (method.timing) timingParts.push(isMl ? `സമയം: ${method.timing}` : `Time: ${method.timing}`);
-  if (method.day || method.suitable_day) timingParts.push(isMl ? `ദിവസം: ${method.day || method.suitable_day}` : `Day: ${method.day || method.suitable_day}`);
-  if (method.planet) timingParts.push(isMl ? `ഗ്രഹം: ${method.planet}` : `Planet: ${method.planet}`);
-  if (method.incense) timingParts.push(isMl ? `ധൂപം: ${method.incense}` : `Incense: ${method.incense}`);
-  if (method.conditions) timingParts.push(isMl ? `വ്യവസ്ഥകൾ: ${method.conditions}` : `Conditions: ${method.conditions}`);
+  const timingVal = lc('timing');
+  if (timingVal) timingParts.push(isMl ? `സമയം: ${timingVal}` : `Time: ${timingVal}`);
+  const dayVal = lc('day', 'suitable_day');
+  if (dayVal) timingParts.push(isMl ? `ദിവസം: ${dayVal}` : `Day: ${dayVal}`);
+  const planetVal = lc('planet');
+  if (planetVal) timingParts.push(isMl ? `ഗ്രഹം: ${planetVal}` : `Planet: ${planetVal}`);
+  const incenseVal = lc('incense');
+  if (incenseVal) timingParts.push(isMl ? `ധൂപം: ${incenseVal}` : `Incense: ${incenseVal}`);
+  const conditionsVal = lc('conditions');
+  if (conditionsVal) timingParts.push(isMl ? `വ്യവസ്ഥകൾ: ${conditionsVal}` : `Conditions: ${conditionsVal}`);
   const timingCombined = timingParts.join("\n");
 
   return (
@@ -315,27 +332,27 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
 
       {/* ══ 3. Malayalam Pronunciation ══ */}
       <CollapsibleCard sectionNumber={3} title="Malayalam Pronunciation" titleMl="മലയാള ഉച്ചാരണം" accent={accent} language={language} defaultOpen={true}>
-        <SimpleField value={method.malayalam_pronunciation} language={language} accent={accent} />
+        <SimpleField value={!hasTurkish(method.malayalam_pronunciation) ? method.malayalam_pronunciation : null} language={language} accent={accent} />
       </CollapsibleCard>
 
       {/* ══ 4. Complete Malayalam Meaning ══ */}
       <CollapsibleCard sectionNumber={4} title="Complete Malayalam Meaning" titleMl="സമ്പൂർണ്ണ മലയാള അർത്ഥം" accent={accent} language={language} defaultOpen={true}>
-        <SimpleField value={malayalamMeaning} language={language} accent={accent} />
+        <SimpleField value={!hasTurkish(malayalamMeaning) ? malayalamMeaning : null} language={language} accent={accent} />
       </CollapsibleCard>
 
       {/* ══ 5. Purpose ══ */}
       <CollapsibleCard sectionNumber={5} title="Purpose" titleMl="ഉദ്ദേശ്യം" accent={accent} language={language} defaultOpen={true}>
-        <SimpleField value={isMl ? (method.purpose_ml || method.purpose) : (method.purpose_en || method.purpose)} language={language} accent={accent} />
+        <SimpleField value={lc('purpose')} language={language} accent={accent} />
       </CollapsibleCard>
 
       {/* ══ 6. Method of Use ══ */}
       <CollapsibleCard sectionNumber={6} title="Method of Use" titleMl="ഉപയോഗിക്കേണ്ട രീതി" accent={accent} language={language} defaultOpen={true}>
-        <SimpleField value={method.procedure || method.usage || method.preparation} language={language} accent={accent} />
+        <SimpleField value={lc('procedure', 'usage', 'preparation')} language={language} accent={accent} />
       </CollapsibleCard>
 
       {/* ══ 7. Number of Recitations ══ */}
       <CollapsibleCard sectionNumber={7} title="Number of Recitations" titleMl="ആവർത്തന എണ്ണം" accent={accent} language={language} defaultOpen={true}>
-        <SimpleField value={method.repetition} language={language} accent={accent} />
+        <SimpleField value={lc('repetition')} language={language} accent={accent} />
       </CollapsibleCard>
 
       {/* ══ 8. Best Time / Day / Conditions ══ */}
@@ -345,21 +362,17 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
 
       {/* ══ 9. Required Materials ══ */}
       <CollapsibleCard sectionNumber={9} title="Required Materials" titleMl="ആവശ്യമായ വസ്തുക്കൾ" accent={accent} language={language} defaultOpen={true}>
-        <SimpleField
-          value={method.materials || (method.ingredients ? (Array.isArray(method.ingredients) ? method.ingredients.join(", ") : method.ingredients) : undefined)}
-          language={language}
-          accent={accent}
-        />
+        <SimpleField value={lc('materials')} language={language} accent={accent} />
       </CollapsibleCard>
 
       {/* ══ 10. Warnings / Restrictions / Conditions ══ */}
       <CollapsibleCard sectionNumber={10} title="Warnings / Restrictions" titleMl="മുന്നറിയിപ്പുകൾ / നിയന്ത്രണങ്ങൾ" accent={accent} language={language} defaultOpen={true}>
-        <SimpleField value={method.warnings || method.warning || method.forbidden} language={language} accent={accent} />
+        <SimpleField value={lc('warnings', 'warning', 'forbidden')} language={language} accent={accent} />
       </CollapsibleCard>
 
       {/* ══ 11. Benefits ══ */}
       <CollapsibleCard sectionNumber={11} title="Benefits" titleMl="ഗുണങ്ങൾ" accent={accent} language={language} defaultOpen={true}>
-        <SimpleField value={method.benefits || method.suitable} language={language} accent={accent} />
+        <SimpleField value={lc('benefits', 'suitable')} language={language} accent={accent} />
       </CollapsibleCard>
 
       {/* Images (Wafq, Taweez, Seals, Diagrams) */}
@@ -474,14 +487,14 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
               <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
                 {isMl ? "ആമുഖം" : "Introduction"}
               </p>
-              <SimpleField value={method.introduction} language={language} accent={accent} />
+              <SimpleField value={lc('introduction')} language={language} accent={accent} />
             </div>
           )}
           <div>
             <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
               {isMl ? "കുറിപ്പുകൾ" : "Notes"}
             </p>
-            <SimpleField value={method.notes || method.readings} language={language} accent={accent} />
+            <SimpleField value={lc('notes', 'readings')} language={language} accent={accent} />
           </div>
           {/* Mansion-specific fields (if present) */}
           {method.nature && (
@@ -489,7 +502,7 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
               <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
                 {isMl ? "സ്വഭാവം" : "Nature"}
               </p>
-              <SimpleField value={method.nature} language={language} accent={accent} />
+              <SimpleField value={lc('nature')} language={language} accent={accent} />
             </div>
           )}
           {method.marriage_rule && (
@@ -497,7 +510,7 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
               <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
                 {isMl ? "വിവാഹ നിയമം" : "Marriage Rule"}
               </p>
-              <SimpleField value={method.marriage_rule} language={language} accent={accent} />
+              <SimpleField value={lc('marriage_rule')} language={language} accent={accent} />
             </div>
           )}
           {method.travel_rule && (
@@ -505,7 +518,7 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
               <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
                 {isMl ? "യാത്രാ നിയമം" : "Travel Rule"}
               </p>
-              <SimpleField value={method.travel_rule} language={language} accent={accent} />
+              <SimpleField value={lc('travel_rule')} language={language} accent={accent} />
             </div>
           )}
           {method.clothing_rule && (
@@ -513,7 +526,7 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
               <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
                 {isMl ? "വസ്ത്ര നിയമം" : "Clothing Rule"}
               </p>
-              <SimpleField value={method.clothing_rule} language={language} accent={accent} />
+              <SimpleField value={lc('clothing_rule')} language={language} accent={accent} />
             </div>
           )}
           {method.farming_rule && (
@@ -521,7 +534,7 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
               <p className="font-inter text-[9px] font-bold uppercase mb-0.5" style={{ color: `${accent}99` }}>
                 {isMl ? "കൃഷി നിയമം" : "Farming Rule"}
               </p>
-              <SimpleField value={method.farming_rule} language={language} accent={accent} />
+              <SimpleField value={lc('farming_rule')} language={language} accent={accent} />
             </div>
           )}
         </div>

@@ -81,6 +81,7 @@ export function mergeEntriesIntoStructure(structure, entries) {
       notes: entry.notes || "",
       malayalam_meaning: entry.malayalam_meaning || "",
       english_meaning: entry.english_meaning || "",
+      content_translations_ml: entry.content_translations_ml || {},
       images: entry.images || [],
       verified_arabic_hash: entry.verified_arabic_hash || "",
       source: "database",

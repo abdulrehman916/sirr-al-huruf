@@ -2,6 +2,7 @@
 // SIRR SECTION VIEW — TOPIC LIST
 // ═══════════════════════════════════════════════════════════════
 import { ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
+import { getLanguageContent } from "@/lib/sirrTurkishGuard";
 
 export default function SirrSectionView({ section, onSelectTopic, onBack, language, onSelectPreparations }) {
   const isMl = language === "ml";
@@ -73,7 +74,7 @@ export default function SirrSectionView({ section, onSelectTopic, onBack, langua
                 </p>
               )}
               <p className={`text-sm font-bold ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.80)" }}>
-                {isMl ? topic.topic_ml : topic.topic_en}
+                {getLanguageContent(topic, 'topic', language) || (isMl ? "വ്യക്തമാക്കാത്തത്" : "Not specified")}
               </p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">

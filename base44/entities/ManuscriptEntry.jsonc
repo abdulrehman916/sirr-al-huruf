@@ -13,11 +13,11 @@
     },
     "book_title": {
       "type": "string",
-      "description": "Denormalized book title for display without joins"
+      "description": "Denormalized book title for display without joins. SIRR LANGUAGE RULE: Book titles remain in their original language (Turkish/Arabic/English). Never translated."
     },
     "book_title_ar": {
       "type": "string",
-      "description": "Denormalized Arabic book title for display"
+      "description": "Denormalized Arabic book title for display. Original language preserved."
     },
     "sirr_section": {
       "type": "integer",
@@ -34,7 +34,7 @@
     },
     "topic": {
       "type": "string",
-      "description": "Topic name (e.g., 'Stomach Pain', 'Love Attraction'). Items with the same topic across different books are grouped together but never merged."
+      "description": "Topic name (English). Items with the same topic across different books are grouped together but never merged."
     },
     "topic_ml": {
       "type": "string",
@@ -72,7 +72,7 @@
     },
     "purpose": {
       "type": "string",
-      "description": "Purpose or goal of this entry"
+      "description": "Purpose or goal of this entry (English)"
     },
     "purpose_ml": {
       "type": "string",
@@ -80,11 +80,11 @@
     },
     "introduction": {
       "type": "string",
-      "description": "Introduction or context"
+      "description": "Introduction or context (English)"
     },
     "arabic_text": {
       "type": "string",
-      "description": "Original Arabic text, verbatim from the manuscript. Never AI-generated."
+      "description": "Original Arabic text, verbatim from the manuscript. Never AI-generated. Never modified."
     },
     "malayalam_meaning": {
       "type": "string",
@@ -96,51 +96,57 @@
     },
     "conditions": {
       "type": "string",
-      "description": "Conditions or prerequisites for performing this method"
+      "description": "Conditions or prerequisites for performing this method (English)"
     },
     "materials": {
       "type": "string",
-      "description": "Materials required"
+      "description": "Materials required (English)"
     },
     "preparation": {
       "type": "string",
-      "description": "Preparation instructions"
+      "description": "Preparation instructions (English)"
     },
     "procedure": {
       "type": "string",
-      "description": "Procedure steps"
+      "description": "Procedure steps (English)"
     },
     "timing": {
       "type": "string",
-      "description": "Timing requirements (planetary hour, time of day, etc.)"
+      "description": "Timing requirements (planetary hour, time of day, etc.) (English)"
     },
     "planet": {
       "type": "string",
-      "description": "Associated planet"
+      "description": "Associated planet (English)"
     },
     "day": {
       "type": "string",
-      "description": "Suitable day of the week"
+      "description": "Suitable day of the week (English)"
     },
     "incense": {
       "type": "string",
-      "description": "Required incense"
+      "description": "Required incense (English)"
     },
     "repetition": {
       "type": "string",
-      "description": "Repetition count"
+      "description": "Repetition count (English)"
     },
     "warnings": {
       "type": "string",
-      "description": "Warnings or precautions"
+      "description": "Warnings or precautions (English)"
     },
     "benefits": {
       "type": "string",
-      "description": "Benefits or expected results"
+      "description": "Benefits or expected results (English)"
     },
     "notes": {
       "type": "string",
-      "description": "Additional notes from the manuscript"
+      "description": "Additional notes from the manuscript (English)"
+    },
+    "content_translations_ml": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {},
+      "description": "SIRR LANGUAGE RULE. Malayalam translations for content fields that do NOT have a dedicated _ml variant (introduction, conditions, materials, preparation, procedure, timing, planet, day, incense, repetition, warnings, benefits, notes). Keys are field names, values are Malayalam translations. Populated by translateSirrTurkishFields. Used by sirrTurkishGuard to display 100% Malayalam content when Malayalam is selected. Never contains Turkish or English."
     },
     "page_number": {
       "type": "string",
