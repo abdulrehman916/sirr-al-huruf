@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import PageLayout from "@/components/PageLayout";
 import SirrAccordionSection from "@/components/sirr/SirrAccordionSection";
 import SirrRitualCard from "@/components/sirr/SirrRitualCard";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/kashfManuscriptRegistration";
 
 export default function SirrPage() {
+  const [language, setLanguage] = useState("ml");
   const sections = useMemo(() => {
     const protectionItems = KASHF_FULL_MANTRAS.filter(
       (m) => m.type === "protection" || m.type === "conditions"
@@ -173,11 +174,23 @@ export default function SirrPage() {
 
   const totalEntries = sections.reduce((sum, s) => sum + s.items.length, 0);
 
+  const subtitleCls = language === "ml" ? "font-malayalam" : "font-inter";
+  const subtitleText =
+    language === "ml"
+      ? "ഗ്രന്ഥ വിജ്ഞാന സമാഹാരം — കശ്ഫ് അൽ-ഹഖാഇഖ് മൂലത്തിൽ നിന്ന്"
+      : "Manuscript Knowledge Collection — from Kashf al-Haqa'iq";
+  const entriesLabel = language === "ml" ? "രേഖകൾ" : "entries";
+  const categoriesLabel = language === "ml" ? "വിഭാഗങ്ങൾ" : "categories";
+  const authorityText =
+    language === "ml"
+      ? "⚖️ മൂല ഗ്രന്ഥം ആണ് പ്രാഥമിക അധികാരം. എല്ലാ അറബി പാഠവും ഗ്രന്ഥത്തിൽ നിന്ന് നേരിട്ട് പകർത്തിയതാണ്."
+      : "⚖️ The original manuscript is the primary authority. All Arabic text is copied directly from the source.";
+
   return (
     <PageLayout>
       <div className="relative z-10 w-full max-w-4xl mx-auto px-3 sm:px-4 py-4 space-y-3">
         {/* Header */}
-        <div className="text-center pt-2 pb-3">
+        <div className="text-center pt-2 pb-2">
           <h1
             className="font-amiri text-3xl font-bold"
             style={{ color: "#D4AF37", direction: "rtl" }}
@@ -191,17 +204,55 @@ export default function SirrPage() {
             SIRR
           </p>
           <p
-            className="font-malayalam text-xs mt-1"
+            className={`${subtitleCls} text-xs mt-1`}
             style={{ color: "rgba(255,255,255,0.45)" }}
           >
-            ഗ്രന്ഥ വിജ്ഞാന സമാഹാരം — കശ്ഫ് അൽ-ഹഖാഇഖ് മൂലത്തിൽ നിന്ന്
+            {subtitleText}
           </p>
           <p
             className="font-inter text-[10px] mt-1"
             style={{ color: "rgba(212,175,55,0.50)" }}
           >
-            {totalEntries} entries · {sections.length} categories
+            {totalEntries} {entriesLabel} · {sections.length} {categoriesLabel}
           </p>
+        </div>
+
+        {/* Language Switcher */}
+        <div className="flex items-center justify-center gap-2 py-1">
+          <button
+            onClick={() => setLanguage("ml")}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              language === "ml" ? "btn-gold" : ""
+            }`}
+            style={
+              language !== "ml"
+                ? {
+                    background: "rgba(255,255,255,0.05)",
+                    color: "rgba(255,255,255,0.50)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                  }
+                : {}
+            }
+          >
+            മലയാളം
+          </button>
+          <button
+            onClick={() => setLanguage("en")}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              language === "en" ? "btn-gold" : ""
+            }`}
+            style={
+              language !== "en"
+                ? {
+                    background: "rgba(255,255,255,0.05)",
+                    color: "rgba(255,255,255,0.50)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                  }
+                : {}
+            }
+          >
+            English
+          </button>
         </div>
 
         {/* Manuscript Authority Notice */}
@@ -213,11 +264,10 @@ export default function SirrPage() {
           }}
         >
           <p
-            className="font-malayalam text-[10px] leading-relaxed text-center"
+            className={`${subtitleCls} text-[10px] leading-relaxed text-center`}
             style={{ color: "rgba(255,255,255,0.45)" }}
           >
-            ⚖️ മൂല ഗ്രന്ഥം ആണ് പ്രാഥമിക അധികാരം. എല്ലാ അറബി
-            പാഠവും ഗ്രന്ഥത്തിൽ നിന്ന് നേരിട്ട് പകർത്തിയതാണ്.
+            {authorityText}
           </p>
         </div>
 
@@ -231,9 +281,15 @@ export default function SirrPage() {
             count={section.items.length}
             accent={section.accent}
             defaultOpen={i === 0}
+            language={language}
           >
             {section.items.map((item, j) => (
-              <SirrRitualCard key={item.id || j} item={item} accent={section.accent} />
+              <SirrRitualCard
+                key={item.id || j}
+                item={item}
+                accent={section.accent}
+                language={language}
+              />
             ))}
           </SirrAccordionSection>
         ))}

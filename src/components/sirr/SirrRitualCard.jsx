@@ -1,38 +1,104 @@
 // ═══════════════════════════════════════════════════════════════
-// SIRR RITUAL CARD — LEVEL 2 INDIVIDUAL RITUAL DISPLAY
-// 16-field display in the user's exact specified order.
-// Each ritual is independently expandable.
+// SIRR RITUAL CARD — LANGUAGE-AWARE 10-FIELD DISPLAY
+// ═══════════════════════════════════════════════════════════════
+// Displays each ritual in the user's exact specified order:
+//   1. Purpose
+//   2. Arabic Text (always visible, premium typography)
+//   3. Malayalam/English Meaning (language-dependent)
+//   4. How to Perform
+//   5. Repetition
+//   6. Timing
+//   7. Materials
+//   8. Warnings
+//   9. Benefits
+//  10. Book Reference
+//
+// LANGUAGE MODES:
+//   ML mode → Only Malayalam headings + Malayalam text
+//   EN mode → Only English headings + English text
+//   Arabic always visible in both modes.
+//
 // Manuscript is the only authority — never invent or omit.
+// No machine translation — only pre-existing manuscript data.
 // ═══════════════════════════════════════════════════════════════
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import QuranicArabicText from "@/components/astroclock/QuranicArabicText";
-import MalayalamTranslation from "@/components/astroclock/dashboard/MalayalamTranslation";
+import SirrArabicText from "@/components/sirr/SirrArabicText";
 import { getMergedRitualInstructions } from "@/lib/manuscriptRitualGuideData";
 import { WEEKDAY_PLANET_META } from "@/lib/astroClockDailyMantrasData";
 
-const NS = "ഗ്രന്ഥത്തിൽ വ്യക്തമാക്കാത്തത്";
+const NS_ML = "ഗ്രന്ഥത്തിൽ വ്യക്തമാക്കാത്തത്";
+const NS_EN = "Not specified in the manuscript";
+
+const LABELS = {
+  ml: {
+    purpose: "ഉദ്ദേശം",
+    arabic: "അറബി പാഠം",
+    meaning: "മലയാള പരിഭാഷ",
+    howTo: "അനുഷ്ഠാന ക്രമം",
+    repetition: "ആവർത്തനം",
+    timing: "സമയം",
+    materials: "ആവശ്യ സാധനങ്ങൾ",
+    warnings: "മുന്നറിയിപ്പുകൾ",
+    benefits: "ഫലം",
+    reference: "മൂലഗ്രന്ഥം",
+    scholar: "പണ്ഡിതൻ",
+    book: "ഗ്രന്ഥം",
+    page: "പേജ്",
+    source: "മൂലം",
+  },
+  en: {
+    purpose: "Purpose",
+    arabic: "Arabic Text",
+    meaning: "English Meaning",
+    howTo: "How to Perform",
+    repetition: "Repetition",
+    timing: "Timing",
+    materials: "Materials",
+    warnings: "Warnings",
+    benefits: "Benefits",
+    reference: "Book Reference",
+    scholar: "Scholar",
+    book: "Book",
+    page: "Page",
+    source: "Source",
+  },
+};
 
 // ── Detect Arabic text for RTL rendering ──
 function isArabic(text) {
   return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text || "");
 }
 
-// ── Derive concise heading title from heterogeneous data ──
-function deriveTitle(item) {
+// ── Derive heading title (language-aware) ──
+function deriveTitle(item, lang) {
+  if (lang === "ml") {
+    if (item.title_ml) return item.title_ml;
+    if (item.purpose_ml) {
+      const dash = item.purpose_ml.indexOf(" — ");
+      if (dash > 0) return item.purpose_ml.slice(0, dash);
+      return item.purpose_ml.length > 60
+        ? item.purpose_ml.slice(0, 57) + "…"
+        : item.purpose_ml;
+    }
+  }
   if (item.title_en) return item.title_en;
-  if (item.king_en && item.day_index != null) {
-    const d = WEEKDAY_PLANET_META.find((w) => w.day_index === item.day_index);
-    if (d) return `${d.day_en} Azimah — ${item.king_en}`;
-  }
-  if (item.servant_en && item.day_index != null) {
-    const d = WEEKDAY_PLANET_META.find((w) => w.day_index === item.day_index);
-    if (d) return `${d.day_en} Qasam — ${item.servant_en}`;
-  }
+  if (item.title) return item.title;
+  if (item.name_en) return item.name_en;
   if (item.purpose_en) {
-    const first = item.purpose_en.split(".")[0].trim();
-    return first.length > 70 ? first.slice(0, 67) + "…" : first;
+    const dash = item.purpose_en.indexOf(" — ");
+    if (dash > 0) return item.purpose_en.slice(0, dash);
+    return item.purpose_en.length > 60
+      ? item.purpose_en.slice(0, 57) + "…"
+      : item.purpose_en;
+  }
+  if (item.purpose_ml) {
+    const dash = item.purpose_ml.indexOf(" — ");
+    if (dash > 0) return item.purpose_ml.slice(0, dash);
+    return item.purpose_ml.length > 60
+      ? item.purpose_ml.slice(0, 57) + "…"
+      : item.purpose_ml;
   }
   return item.id || "—";
 }
@@ -43,52 +109,78 @@ function instrText(arr) {
   return arr.map((a) => a.text).join(" ");
 }
 
-// ── Normalized text display (Arabic RTL / Malayalam LTR) ──
-function T({ text, className = "" }) {
+// ── Language-aware text renderer ──
+function T({ text, lang, className = "" }) {
   if (!text) return null;
   const ar = isArabic(text);
+  if (ar) {
+    return (
+      <span
+        className={`font-amiri ${className}`}
+        style={{ direction: "rtl", textAlign: "right", display: "block", lineHeight: "1.8" }}
+      >
+        {text}
+      </span>
+    );
+  }
+  const cls = lang === "ml" ? "font-malayalam" : "font-inter";
   return (
-    <span
-      className={`${ar ? "font-amiri" : "font-malayalam"} ${className}`}
-      style={ar ? { direction: "rtl", textAlign: "right", display: "block" } : {}}
-    >
+    <span className={`${cls} ${className}`} style={{ lineHeight: "1.8" }}>
       {text}
     </span>
   );
 }
 
-// ── Single field row ──
-function Field({ icon, label, children, accent }) {
+// ── Not-specified placeholder (language-aware) ──
+function NSpan({ lang }) {
+  const cls = lang === "ml" ? "font-malayalam" : "font-inter";
   return (
-    <div className="flex items-start gap-2 py-1">
-      <span className="text-[10px] flex-shrink-0 mt-0.5" style={{ color: `${accent}88` }}>
+    <span className={`${cls} italic`} style={{ color: "rgba(255,255,255,0.25)" }}>
+      {lang === "ml" ? NS_ML : NS_EN}
+    </span>
+  );
+}
+
+// ── Section label with divider line ──
+function SectionLabel({ icon, label, accent, lang }) {
+  const cls = lang === "ml" ? "font-malayalam" : "font-inter";
+  return (
+    <div className="flex items-center gap-2 mb-1.5">
+      <span className="text-[11px] flex-shrink-0" style={{ color: `${accent}88` }}>
         {icon}
       </span>
-      <div className="flex-1 min-w-0">
-        <div className="font-malayalam text-[10px] font-bold mb-0.5" style={{ color: `${accent}aa` }}>
-          {label}
-        </div>
-        <div className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.72)" }}>
-          {children}
-        </div>
-      </div>
+      <span className={`${cls} text-[11px] font-bold flex-shrink-0`} style={{ color: `${accent}cc` }}>
+        {label}
+      </span>
+      <div className="h-px flex-1" style={{ background: `${accent}20` }} />
     </div>
   );
 }
 
-function NSpan() {
+// ── Standard section with label + content ──
+function Section({ icon, label, accent, lang, children }) {
   return (
-    <span className="font-malayalam italic" style={{ color: "rgba(255,255,255,0.25)" }}>
-      {NS}
-    </span>
+    <div className="py-2">
+      <SectionLabel icon={icon} label={label} accent={accent} lang={lang} />
+      <div className="pl-5 text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
+        {children}
+      </div>
+    </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
-export default function SirrRitualCard({ item, accent = "#D4AF37", defaultExpanded = false }) {
+export default function SirrRitualCard({
+  item,
+  accent = "#D4AF37",
+  defaultExpanded = false,
+  language = "ml",
+}) {
   const [open, setOpen] = useState(defaultExpanded);
+  const lang = language;
+  const labels = LABELS[lang];
 
   const instr = getMergedRitualInstructions(item.id) || {};
   const dayMeta =
@@ -96,28 +188,16 @@ export default function SirrRitualCard({ item, accent = "#D4AF37", defaultExpand
       ? WEEKDAY_PLANET_META.find((w) => w.day_index === item.day_index)
       : null;
 
-  // ── Normalize all 16 fields ──
-  const purpose = item.purpose_ml || item.purpose_en || instrText(instr.purpose);
-  const introduction = instrText(instr.introduction);
-  const conditions =
-    item.prerequisites ||
-    [instrText(instr.conditions), instrText(instr.required_purification)]
-      .filter(Boolean)
-      .join(" ") ||
-    null;
-  const materials =
-    item.materials ||
-    (item.ingredients ? item.ingredients.join("\n") : null) ||
-    instrText(instr.required_materials);
-  const preparation = item.preparation;
-  const timing = item.timing || instrText(instr.when_to_perform);
-  const weekday = dayMeta ? dayMeta.day_ml : instrText(instr.suitable_weekday);
-  const planet = dayMeta ? dayMeta.planet_ml : instrText(instr.suitable_planet);
-  const angel = dayMeta ? dayMeta.angel_ml : null;
-  const jinn = item.king_en || item.servant_en || (dayMeta ? dayMeta.king_en : null);
-  const arabicText = item.arabic_text;
+  // ── Field data (language-aware) ──
+  const purpose =
+    lang === "ml"
+      ? item.purpose_ml || instrText(instr.purpose)
+      : item.purpose_en || item.purpose_ml || instrText(instr.purpose);
 
-  // Procedure: raw array → merged steps
+  const introduction = instrText(instr.introduction);
+  const meaning = introduction && introduction !== purpose ? introduction : null;
+
+  // Procedure steps
   let procedureSteps = item.procedure_steps || item.usage || item.how_to_use;
   if (!procedureSteps) {
     const merged = [
@@ -128,50 +208,69 @@ export default function SirrRitualCard({ item, accent = "#D4AF37", defaultExpand
     procedureSteps = merged.length > 0 ? merged.map((m) => m.text) : null;
   }
   const procedureArr = procedureSteps
-    ? (Array.isArray(procedureSteps) ? procedureSteps : [procedureSteps])
+    ? Array.isArray(procedureSteps)
+      ? procedureSteps
+      : [procedureSteps]
     : null;
 
   const repetition = item.repetition || instrText(instr.repetition_count);
-  const warnings = item.warnings || item.warning || instrText(instr.warnings);
-  const source = item.source;
 
-  const title = deriveTitle(item);
-  const titleAr = item.title_ar || (dayMeta ? dayMeta.king_ar : null);
+  const timing =
+    item.timing ||
+    instrText(instr.when_to_perform) ||
+    (dayMeta ? (lang === "ml" ? dayMeta.day_ml : dayMeta.day_en) : null);
+
+  const materials =
+    item.materials ||
+    (item.ingredients
+      ? Array.isArray(item.ingredients)
+        ? item.ingredients.join("\n")
+        : item.ingredients
+      : null) ||
+    instrText(instr.required_materials);
+
+  const warnings = item.warnings || item.warning || instrText(instr.warnings);
+
+  const benefits = instrText(instr.expected_result) || item.benefits;
+
+  const source = item.source;
+  const arabicText = item.arabic_text;
+
+  const title = deriveTitle(item, lang);
+  const titleAr = item.title_ar || item.name_ar || (dayMeta ? dayMeta.king_ar : null);
+  const titleCls = lang === "ml" ? "font-malayalam" : "font-inter";
 
   return (
     <div
       className="rounded-lg overflow-hidden"
       style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${accent}22` }}
     >
-      {/* ── Level 2 Heading ── */}
+      {/* ── Header ── */}
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2.5 p-2.5 text-left"
+        className="w-full flex items-center gap-2.5 p-3 text-left"
         style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
       >
         {titleAr && (
           <span
             className="font-amiri text-sm flex-shrink-0 truncate"
-            style={{ color: accent, direction: "rtl", maxWidth: "90px" }}
+            style={{ color: accent, direction: "rtl", maxWidth: "100px" }}
           >
-            {titleAr.length > 15 ? titleAr.slice(0, 13) + "…" : titleAr}
+            {titleAr.length > 18 ? titleAr.slice(0, 16) + "…" : titleAr}
           </span>
         )}
         <div className="flex-1 min-w-0">
-          <span
-            className="font-inter text-[11px] font-bold block truncate"
-            style={{ color: accent }}
-          >
+          <span className={`${titleCls} text-[12px] font-bold block truncate`} style={{ color: accent }}>
             {title}
           </span>
         </div>
         <ChevronDown
-          className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200"
+          className="w-4 h-4 flex-shrink-0 transition-transform duration-200"
           style={{ color: accent, transform: open ? "rotate(180deg)" : "none" }}
         />
       </button>
 
-      {/* ── Expanded: 16 fields in user's exact order ── */}
+      {/* ── Expanded: 10 fields in user's exact order ── */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -181,153 +280,118 @@ export default function SirrRitualCard({ item, accent = "#D4AF37", defaultExpand
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 pt-1 space-y-0.5">
+            <div className="px-3 pb-4 pt-1 space-y-1">
               {/* 1. Purpose */}
-              <Field icon="◎" label="ഉദ്ദേശം" accent={accent}>
-                <T text={purpose} /> {!purpose && <NSpan />}
-              </Field>
+              <Section icon="◎" label={labels.purpose} accent={accent} lang={lang}>
+                {purpose ? <T text={purpose} lang={lang} /> : <NSpan lang={lang} />}
+              </Section>
 
-              {/* 2. Introduction */}
-              <Field icon="✦" label="ആമുഖം" accent={accent}>
-                {introduction ? <T text={introduction} /> : <NSpan />}
-              </Field>
-
-              {/* 3. Conditions */}
-              <Field icon="⚖" label="വ്യവസ്ഥകൾ" accent={accent}>
-                {conditions ? (
-                  <T text={conditions} className="whitespace-pre-line" />
-                ) : (
-                  <NSpan />
-                )}
-              </Field>
-
-              {/* 4. Required materials */}
-              <Field icon="🌿" label="ആവശ്യ സാധനങ്ങൾ" accent={accent}>
-                {materials ? (
-                  <T text={materials} className="whitespace-pre-line" />
-                ) : (
-                  <NSpan />
-                )}
-              </Field>
-
-              {/* 5. Preparation */}
-              <Field icon="🔧" label="തയ്യാറാകൽ" accent={accent}>
-                {preparation ? <T text={preparation} /> : <NSpan />}
-              </Field>
-
-              {/* 6. Timing */}
-              <Field icon="⏰" label="സമയം" accent={accent}>
-                {timing ? <T text={timing} /> : <NSpan />}
-              </Field>
-
-              {/* 7. Related weekday */}
-              <Field icon="📅" label="ദിവസം" accent={accent}>
-                {weekday ? <T text={weekday} /> : <NSpan />}
-              </Field>
-
-              {/* 8. Related planet */}
-              <Field icon="🪐" label="ഗ്രഹം" accent={accent}>
-                {planet ? <T text={planet} /> : <NSpan />}
-              </Field>
-
-              {/* 9. Related angel */}
-              <Field icon="😇" label="മലക്" accent={accent}>
-                {angel ? <T text={angel} /> : <NSpan />}
-              </Field>
-
-              {/* 10. Related jinn — ONLY if explicitly stated */}
-              {jinn && (
-                <Field icon="👻" label="ജ്ഞം" accent={accent}>
-                  <T text={jinn} />
-                </Field>
-              )}
-
-              {/* 11. Arabic text — beautiful traditional script with Harakat */}
-              <Field icon="ع" label="അറബി പാഠം" accent={accent}>
+              {/* 2. Arabic Text — full-width premium display */}
+              <div className="py-2">
+                <SectionLabel icon="ع" label={labels.arabic} accent={accent} lang={lang} />
                 {arabicText ? (
-                  <QuranicArabicText text={arabicText} size="md" color={accent} />
+                  <SirrArabicText text={arabicText} accent={accent} />
                 ) : (
-                  <NSpan />
+                  <div className="pl-5">
+                    <NSpan lang={lang} />
+                  </div>
                 )}
-              </Field>
+              </div>
 
-              {/* 12. Malayalam meaning */}
-              <Field icon="📝" label="മലയാള പരിഭാഷ" accent={accent}>
-                {arabicText ? <MalayalamTranslation mantra={item} /> : <NSpan />}
-              </Field>
+              {/* 3. Meaning (Malayalam/English) */}
+              <Section icon="📝" label={labels.meaning} accent={accent} lang={lang}>
+                {meaning ? <T text={meaning} lang={lang} /> : <NSpan lang={lang} />}
+              </Section>
 
-              {/* 13. Step-by-step procedure */}
-              <Field icon="📋" label="അനുഷ്ഠാന ക്രമം" accent={accent}>
+              {/* 4. How to Perform */}
+              <Section icon="📋" label={labels.howTo} accent={accent} lang={lang}>
                 {procedureArr ? (
                   <div className="space-y-1.5 pt-1">
                     {procedureArr.map((step, i) => (
                       <div key={i} className="flex gap-2">
                         <span
-                          className="font-inter text-[9px] font-bold flex-shrink-0 mt-0.5"
-                          style={{ color: accent, minWidth: "16px" }}
+                          className="font-inter text-[10px] font-bold flex-shrink-0 mt-0.5"
+                          style={{ color: accent, minWidth: "18px" }}
                         >
                           {i + 1}.
                         </span>
-                        <T text={typeof step === "string" ? step : step.text} />
+                        <T text={typeof step === "string" ? step : step.text} lang={lang} />
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <NSpan />
+                  <NSpan lang={lang} />
                 )}
-              </Field>
+              </Section>
 
-              {/* 14. Repetition count */}
-              <Field icon="🔢" label="ആവർത്തനം" accent={accent}>
-                {repetition ? <T text={repetition} /> : <NSpan />}
-              </Field>
+              {/* 5. Repetition */}
+              <Section icon="🔢" label={labels.repetition} accent={accent} lang={lang}>
+                {repetition ? <T text={repetition} lang={lang} /> : <NSpan lang={lang} />}
+              </Section>
 
-              {/* 15. Warnings */}
-              <Field icon="⚠" label="മുന്നറിയിപ്പുകൾ" accent={accent}>
-                {warnings ? <T text={warnings} className="whitespace-pre-line" /> : <NSpan />}
-              </Field>
+              {/* 6. Timing */}
+              <Section icon="⏰" label={labels.timing} accent={accent} lang={lang}>
+                {timing ? <T text={timing} lang={lang} /> : <NSpan lang={lang} />}
+              </Section>
 
-              {/* 16. Manuscript reference */}
-              <Field icon="📖" label="മൂലഗ്രന്ഥം" accent={accent}>
+              {/* 7. Materials */}
+              <Section icon="🌿" label={labels.materials} accent={accent} lang={lang}>
+                {materials ? (
+                  <T text={materials} lang={lang} className="whitespace-pre-line" />
+                ) : (
+                  <NSpan lang={lang} />
+                )}
+              </Section>
+
+              {/* 8. Warnings */}
+              <Section icon="⚠" label={labels.warnings} accent={accent} lang={lang}>
+                {warnings ? (
+                  <T text={warnings} lang={lang} className="whitespace-pre-line" />
+                ) : (
+                  <NSpan lang={lang} />
+                )}
+              </Section>
+
+              {/* 9. Benefits */}
+              <Section icon="✨" label={labels.benefits} accent={accent} lang={lang}>
+                {benefits ? <T text={benefits} lang={lang} /> : <NSpan lang={lang} />}
+              </Section>
+
+              {/* 10. Book Reference */}
+              <Section icon="📖" label={labels.reference} accent={accent} lang={lang}>
                 {source ? (
                   <div className="space-y-0.5">
                     <div className="flex gap-2">
                       <span
-                        className="font-inter text-[9px] flex-shrink-0"
-                        style={{ color: "rgba(255,255,255,0.35)", minWidth: "45px" }}
+                        className="font-inter text-[10px] flex-shrink-0"
+                        style={{ color: "rgba(255,255,255,0.35)", minWidth: "50px" }}
                       >
-                        Book:
+                        {labels.book}:
                       </span>
-                      <span
-                        className="font-inter text-[10px]"
-                        style={{ color: "rgba(255,255,255,0.65)" }}
-                      >
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>
                         {source.book_en || source.book}
                       </span>
                     </div>
                     <div className="flex gap-2">
                       <span
-                        className="font-inter text-[9px] flex-shrink-0"
-                        style={{ color: "rgba(255,255,255,0.35)", minWidth: "45px" }}
+                        className="font-inter text-[10px] flex-shrink-0"
+                        style={{ color: "rgba(255,255,255,0.35)", minWidth: "50px" }}
                       >
-                        Page:
+                        {labels.page}:
                       </span>
-                      <span
-                        className="font-inter text-[10px]"
-                        style={{ color: "rgba(255,255,255,0.65)" }}
-                      >
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>
                         {source.page}
                       </span>
                     </div>
                     <div className="flex gap-2">
                       <span
-                        className="font-inter text-[9px] flex-shrink-0"
-                        style={{ color: "rgba(255,255,255,0.35)", minWidth: "45px" }}
+                        className="font-inter text-[10px] flex-shrink-0"
+                        style={{ color: "rgba(255,255,255,0.35)", minWidth: "50px" }}
                       >
-                        Source:
+                        {labels.source}:
                       </span>
                       <span
-                        className="font-amiri text-[12px]"
+                        className="font-amiri text-[13px]"
                         style={{ color: "rgba(255,255,255,0.65)", direction: "rtl" }}
                       >
                         {source.book}
@@ -335,16 +399,16 @@ export default function SirrRitualCard({ item, accent = "#D4AF37", defaultExpand
                     </div>
                   </div>
                 ) : (
-                  <NSpan />
+                  <NSpan lang={lang} />
                 )}
-              </Field>
+              </Section>
 
               {/* Scholar attribution (if available) */}
               {item.scholar && (
-                <div className="pt-1.5 mt-1" style={{ borderTop: `1px solid ${accent}15` }}>
-                  <span className="font-inter text-[9px]" style={{ color: `${accent}66` }}>
-                    ✦ Scholar:{" "}
-                    <span className="font-amiri text-[11px]" style={{ direction: "rtl" }}>
+                <div className="pt-2 mt-1" style={{ borderTop: `1px solid ${accent}15` }}>
+                  <span className="font-inter text-[10px]" style={{ color: `${accent}66` }}>
+                    ✦ {labels.scholar}:{" "}
+                    <span className="font-amiri text-[12px]" style={{ direction: "rtl" }}>
                       {item.scholar}
                     </span>
                   </span>

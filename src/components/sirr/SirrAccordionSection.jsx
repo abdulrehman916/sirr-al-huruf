@@ -1,3 +1,10 @@
+// ═══════════════════════════════════════════════════════════════
+// SIRR ACCORDION SECTION — LANGUAGE-AWARE CATEGORY HEADER
+// ═══════════════════════════════════════════════════════════════
+// Shows Arabic title + selected-language title only.
+// ML mode → Arabic + Malayalam
+// EN mode → Arabic + English
+// ═══════════════════════════════════════════════════════════════
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
@@ -9,9 +16,12 @@ export default function SirrAccordionSection({
   count,
   accent = "#D4AF37",
   defaultOpen = false,
+  language = "ml",
   children,
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const displayTitle = language === "ml" ? titleMl : title;
+  const titleCls = language === "ml" ? "font-malayalam" : "font-inter";
 
   return (
     <div
@@ -34,17 +44,8 @@ export default function SirrAccordionSection({
           {titleAr}
         </span>
         <div className="flex-1 min-w-0">
-          <span
-            className="font-inter text-sm font-bold block"
-            style={{ color: accent }}
-          >
-            {title}
-          </span>
-          <span
-            className="font-malayalam text-[11px] block truncate"
-            style={{ color: "rgba(255,255,255,0.45)" }}
-          >
-            {titleMl}
+          <span className={`${titleCls} text-sm font-bold block`} style={{ color: accent }}>
+            {displayTitle}
           </span>
         </div>
         <span
