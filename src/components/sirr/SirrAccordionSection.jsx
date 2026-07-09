@@ -10,18 +10,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
 export default function SirrAccordionSection({
-  title,
   titleAr,
   titleMl,
   count,
   accent = "#D4AF37",
   defaultOpen = false,
-  language = "ml",
   children,
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const displayTitle = language === "ml" ? titleMl : title;
-  const titleCls = language === "ml" ? "font-malayalam" : "font-inter";
 
   return (
     <div
@@ -44,8 +40,8 @@ export default function SirrAccordionSection({
           {titleAr}
         </span>
         <div className="flex-1 min-w-0">
-          <span className={`${titleCls} text-sm font-bold block`} style={{ color: accent }}>
-            {displayTitle}
+          <span className="font-malayalam text-sm font-bold block" style={{ color: accent }}>
+            {titleMl}
           </span>
         </div>
         <span

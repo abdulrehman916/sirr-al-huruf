@@ -218,10 +218,10 @@ export default function SirrPage() {
         </div>
 
         {/* Language Switcher */}
-        <div className="flex items-center justify-center gap-2 py-1">
+        <div className="flex items-center justify-center gap-1.5 py-1">
           <button
             onClick={() => setLanguage("ml")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               language === "ml" ? "btn-gold" : ""
             }`}
             style={
@@ -234,11 +234,14 @@ export default function SirrPage() {
                 : {}
             }
           >
-            മലയാളം
+            🇲🇱 മലയാളം
           </button>
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.20)" }}>
+            |
+          </span>
           <button
             onClick={() => setLanguage("en")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               language === "en" ? "btn-gold" : ""
             }`}
             style={
@@ -251,7 +254,7 @@ export default function SirrPage() {
                 : {}
             }
           >
-            English
+            🇬🇧 English
           </button>
         </div>
 
