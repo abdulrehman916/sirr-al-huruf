@@ -1,0 +1,177 @@
+{
+  "name": "ManuscriptBook",
+  "type": "object",
+  "description": "Permanent Enterprise Digital Manuscript Library. Stores metadata for every imported PDF book. The original PDF always remains the master source \u2014 never copied or modified. Designed for unlimited expansion (thousands to hundreds of thousands of books). Source = OneDrive by default. Every book has a permanent book_id that never changes.",
+  "properties": {
+    "book_id": {
+      "type": "string",
+      "description": "PERMANENT unique identifier. Never changes. Used as FK reference in ManuscriptEntry. Format: MS-<timestamp>-<rand>"
+    },
+    "book_title": {
+      "type": "string",
+      "description": "Full title of the manuscript"
+    },
+    "book_title_ar": {
+      "type": "string",
+      "description": "Arabic title (if applicable)"
+    },
+    "author": {
+      "type": "string",
+      "description": "Author or scribe of the manuscript"
+    },
+    "language": {
+      "type": "string",
+      "description": "Primary language of the manuscript (Arabic, Turkish, Persian, etc.)"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "onedrive",
+        "upload",
+        "url",
+        "manual"
+      ],
+      "default": "onedrive",
+      "description": "Source of the PDF file. Default: OneDrive"
+    },
+    "original_file_url": {
+      "type": "string",
+      "description": "Permanent URL to the original PDF file. The original PDF always remains the master source \u2014 never copied or modified."
+    },
+    "original_file_name": {
+      "type": "string",
+      "description": "Original file name as stored in OneDrive"
+    },
+    "upload_date": {
+      "type": "string",
+      "description": "ISO 8601 date when the PDF was imported into the library"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0",
+      "description": "Version of the import/extraction. Increments when re-extracted."
+    },
+    "total_pages": {
+      "type": "integer",
+      "default": 0,
+      "description": "Total number of pages in the PDF"
+    },
+    "ocr_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "not_required"
+      ],
+      "default": "pending",
+      "description": "OCR processing status"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "partially_verified",
+        "verified",
+        "manual_review"
+      ],
+      "default": "unverified",
+      "description": "Verification status of the extracted content"
+    },
+    "extraction_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "partial"
+      ],
+      "default": "pending",
+      "description": "Content extraction status"
+    },
+    "categories_covered": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Sirr sections covered by this manuscript (e.g., 'Sirr 1', 'Sirr 2')"
+    },
+    "total_entries_extracted": {
+      "type": "integer",
+      "default": 0,
+      "description": "Total number of entries extracted from this manuscript"
+    },
+    "tradition": {
+      "type": "string",
+      "description": "Occult/scholarly tradition (Omani, Turkish, Persian, etc.)"
+    },
+    "pdf_count": {
+      "type": "integer",
+      "default": 1,
+      "description": "Number of PDF files if the manuscript spans multiple PDFs"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin notes about this manuscript"
+    }
+  },
+  "required": [
+    "book_id",
+    "book_title",
+    "source",
+    "extraction_status"
+  ],
+  "indexes": [
+    {
+      "name": "idx_book_id",
+      "fields": [
+        "book_id"
+      ]
+    },
+    {
+      "name": "idx_source",
+      "fields": [
+        "source"
+      ]
+    },
+    {
+      "name": "idx_extraction_status",
+      "fields": [
+        "extraction_status"
+      ]
+    },
+    {
+      "name": "idx_verification_status",
+      "fields": [
+        "verification_status"
+      ]
+    },
+    {
+      "name": "idx_book_title",
+      "fields": [
+        "book_title"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

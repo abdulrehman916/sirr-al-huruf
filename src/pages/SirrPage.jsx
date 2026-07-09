@@ -1,18 +1,43 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import PageLayout from "@/components/PageLayout";
 import SirrHub from "@/components/sirr/SirrHub";
 import SirrSectionView from "@/components/sirr/SirrSectionView";
 import SirrTopicView from "@/components/sirr/SirrTopicView";
 import SirrSourceLibrary from "@/components/sirr/SirrSourceLibrary";
 import { getSirrKnowledgeStructure } from "@/lib/sirrKnowledgeClassifier";
+import { fetchManuscriptBooks, fetchManuscriptEntries, mergeEntriesIntoStructure } from "@/lib/manuscriptLibrarySync";
 
 export default function SirrPage() {
   const [language, setLanguage] = useState("ml");
   const [view, setView] = useState("hub"); // 'hub' | 'section' | 'topic' | 'library'
   const [selectedSectionId, setSelectedSectionId] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
+  const [databaseBooks, setDatabaseBooks] = useState([]);
+  const [databaseEntries, setDatabaseEntries] = useState([]);
+  const [loadingDb, setLoadingDb] = useState(true);
 
-  const structure = useMemo(() => getSirrKnowledgeStructure(), []);
+  const baseStructure = useMemo(() => getSirrKnowledgeStructure(), []);
+  const structure = useMemo(
+    () => mergeEntriesIntoStructure(baseStructure, databaseEntries),
+    [baseStructure, databaseEntries]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingDb(true);
+    Promise.all([fetchManuscriptBooks(), fetchManuscriptEntries()])
+      .then(([books, entries]) => {
+        if (!cancelled) {
+          setDatabaseBooks(books);
+          setDatabaseEntries(entries);
+          setLoadingDb(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoadingDb(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
   const selectedSection = structure.sections.find((s) => s.id === selectedSectionId);
 
   const handleSelectSection = (sectionId) => {
@@ -87,6 +112,8 @@ export default function SirrPage() {
         {view === "library" && (
           <SirrSourceLibrary
             sourceLibrary={structure.sourceLibrary}
+            databaseBooks={databaseBooks}
+            loadingDb={loadingDb}
             onBack={handleBackToHub}
             language={language}
           />

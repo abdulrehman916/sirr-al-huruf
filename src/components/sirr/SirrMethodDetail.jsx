@@ -176,17 +176,19 @@ export default function SirrMethodDetail({ method, accent, language, onBack, bac
       {/* All remaining fields */}
       <div className="rounded-xl p-4" style={{ background: "rgba(8,16,38,0.60)", border: `1px solid ${accent}15` }}>
         <FieldRow label={isMl ? "ആമുഖം" : "Introduction"} value={method.introduction} accent={accent} language={language} />
-        <FieldRow label={isMl ? "മലയാളം അർത്ഥം" : "Malayalam Meaning"} value={method.purpose_ml} accent={accent} language={language} />
-        <FieldRow label={isMl ? "English Meaning" : "English Meaning"} value={method.purpose_en} accent={accent} language={language} />
+        <FieldRow label={isMl ? "വ്യവസ്ഥകൾ" : "Conditions"} value={method.conditions} accent={accent} language={language} />
         <FieldRow label={isMl ? "വസ്തുക്കൾ" : "Materials"} value={method.materials} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ഔഷധങ്ങൾ" : "Herbs / Medicines"} value={method.ingredients ? (Array.isArray(method.ingredients) ? method.ingredients.join(", ") : method.ingredients) : undefined} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ധൂപം" : "Incense"} value={method.incense} accent={accent} language={language} />
         <FieldRow label={isMl ? "തയ്യാറാക്കൽ" : "Preparation"} value={method.preparation} accent={accent} language={language} />
         <FieldRow label={isMl ? "നടപടിക്രമം" : "Procedure"} value={method.usage || method.procedure} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ആവർത്തന എണ്ണം" : "Repetition Count"} value={method.repetition} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ഉചിത ദിവസം" : "Suitable Day"} value={method.timing || method.suitable_day} accent={accent} language={language} />
-        <FieldRow label={isMl ? "ഉചിത സഅാത്ത്" : "Suitable Saat"} value={method.best_saat || method.suitable_saat} accent={accent} language={language} />
+        <FieldRow label={isMl ? "സമയം" : "Timing"} value={method.timing} accent={accent} language={language} />
         <FieldRow label={isMl ? "ഗ്രഹം" : "Planet"} value={method.planet} accent={accent} language={language} />
+        <FieldRow label={isMl ? "ദിവസം" : "Day"} value={method.day || method.suitable_day} accent={accent} language={language} />
+        <FieldRow label={isMl ? "ധൂപം" : "Incense"} value={method.incense} accent={accent} language={language} />
+        <FieldRow label={isMl ? "മലയാളം അർത്ഥം" : "Malayalam Meaning"} value={method.malayalam_meaning || method.purpose_ml} accent={accent} language={language} />
+        <FieldRow label={isMl ? "English Translation" : "English Translation"} value={method.english_meaning || method.purpose_en} accent={accent} language={language} />
+        <FieldRow label={isMl ? "ഔഷധങ്ങൾ" : "Herbs / Medicines"} value={method.ingredients ? (Array.isArray(method.ingredients) ? method.ingredients.join(", ") : method.ingredients) : undefined} accent={accent} language={language} />
+        <FieldRow label={isMl ? "ആവർത്തന എണ്ണം" : "Repetition Count"} value={method.repetition} accent={accent} language={language} />
+        <FieldRow label={isMl ? "ഉചിത സഅാത്ത്" : "Suitable Saat"} value={method.best_saat || method.suitable_saat} accent={accent} language={language} />
         <FieldRow label={isMl ? "ചന്ദ്രൻ" : "Moon"} value={method.moon} accent={accent} language={language} />
         <FieldRow label={isMl ? "മലക്ക്" : "Angel"} value={method.angel || method.king_en} accent={accent} language={language} />
         <FieldRow label={isMl ? "ജിന്ന്" : "Jinn"} value={method.jinn} accent={accent} language={language} />

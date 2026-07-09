@@ -1,0 +1,258 @@
+{
+  "name": "ManuscriptEntry",
+  "type": "object",
+  "description": "Extracted knowledge entries from imported manuscripts. Each entry is auto-classified into a Sirr section (1-7) and grouped by topic. Never merges entries from different books \u2014 every entry retains its book_id and book_title. Designed for unlimited expansion. Linked to ManuscriptBook via book_id and to VerifiedArabic via verified_arabic_hash.",
+  "properties": {
+    "entry_id": {
+      "type": "string",
+      "description": "Permanent unique identifier for this extracted entry. Format: ME-<book_id>-<seq>"
+    },
+    "book_id": {
+      "type": "string",
+      "description": "FK to ManuscriptBook.book_id. The manuscript this entry was extracted from. Never changes."
+    },
+    "book_title": {
+      "type": "string",
+      "description": "Denormalized book title for display without joins"
+    },
+    "book_title_ar": {
+      "type": "string",
+      "description": "Denormalized Arabic book title for display"
+    },
+    "sirr_section": {
+      "type": "integer",
+      "enum": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "description": "Auto-classified Sirr section: 1=Diseases & Healing, 2=Jinn/Ruqyah, 3=Mahabbah, 4=Wafq/Taweez, 5=Duas/Quran, 6=Herbs/Incense, 7=Planetary/Times"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Topic name (e.g., 'Stomach Pain', 'Love Attraction'). Items with the same topic across different books are grouped together but never merged."
+    },
+    "topic_ml": {
+      "type": "string",
+      "description": "Malayalam topic name"
+    },
+    "topic_ar": {
+      "type": "string",
+      "description": "Arabic topic name (if available)"
+    },
+    "entry_type": {
+      "type": "string",
+      "enum": [
+        "ritual",
+        "dua",
+        "quran_verse",
+        "divine_name",
+        "wafq",
+        "taweez",
+        "diagram",
+        "image",
+        "table",
+        "instruction",
+        "material",
+        "timing",
+        "condition",
+        "warning",
+        "note",
+        "reference",
+        "exorcism",
+        "protection",
+        "incense",
+        "herb"
+      ],
+      "description": "Type of extracted content"
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Purpose or goal of this entry"
+    },
+    "purpose_ml": {
+      "type": "string",
+      "description": "Malayalam purpose"
+    },
+    "introduction": {
+      "type": "string",
+      "description": "Introduction or context"
+    },
+    "arabic_text": {
+      "type": "string",
+      "description": "Original Arabic text, verbatim from the manuscript. Never AI-generated."
+    },
+    "malayalam_meaning": {
+      "type": "string",
+      "description": "Malayalam translation of the Arabic text"
+    },
+    "english_meaning": {
+      "type": "string",
+      "description": "English translation of the Arabic text"
+    },
+    "conditions": {
+      "type": "string",
+      "description": "Conditions or prerequisites for performing this method"
+    },
+    "materials": {
+      "type": "string",
+      "description": "Materials required"
+    },
+    "preparation": {
+      "type": "string",
+      "description": "Preparation instructions"
+    },
+    "procedure": {
+      "type": "string",
+      "description": "Procedure steps"
+    },
+    "timing": {
+      "type": "string",
+      "description": "Timing requirements (planetary hour, time of day, etc.)"
+    },
+    "planet": {
+      "type": "string",
+      "description": "Associated planet"
+    },
+    "day": {
+      "type": "string",
+      "description": "Suitable day of the week"
+    },
+    "incense": {
+      "type": "string",
+      "description": "Required incense"
+    },
+    "repetition": {
+      "type": "string",
+      "description": "Repetition count"
+    },
+    "warnings": {
+      "type": "string",
+      "description": "Warnings or precautions"
+    },
+    "benefits": {
+      "type": "string",
+      "description": "Benefits or expected results"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes from the manuscript"
+    },
+    "page_number": {
+      "type": "string",
+      "description": "Page number in the source PDF"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Extracted image URLs (diagrams, wafq, taweez, seals). Original images only \u2014 never redrawn or AI-recreated."
+    },
+    "verified_arabic_hash": {
+      "type": "string",
+      "description": "text_hash linking to VerifiedArabic entity for verified harakat. Empty if not yet verified."
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "pending",
+        "verified",
+        "manual_review"
+      ],
+      "default": "unverified",
+      "description": "Arabic verification status"
+    },
+    "extraction_confidence": {
+      "type": "number",
+      "description": "AI extraction confidence score (0-100)"
+    },
+    "extraction_date": {
+      "type": "string",
+      "description": "ISO 8601 date when this entry was extracted"
+    }
+  },
+  "required": [
+    "entry_id",
+    "book_id",
+    "sirr_section",
+    "entry_type"
+  ],
+  "indexes": [
+    {
+      "name": "idx_entry_id",
+      "fields": [
+        "entry_id"
+      ]
+    },
+    {
+      "name": "idx_book_id",
+      "fields": [
+        "book_id"
+      ]
+    },
+    {
+      "name": "idx_sirr_section",
+      "fields": [
+        "sirr_section"
+      ]
+    },
+    {
+      "name": "idx_sirr_section_topic",
+      "fields": [
+        "sirr_section",
+        "topic"
+      ]
+    },
+    {
+      "name": "idx_book_id_sirr_section",
+      "fields": [
+        "book_id",
+        "sirr_section"
+      ]
+    },
+    {
+      "name": "idx_entry_type",
+      "fields": [
+        "entry_type"
+      ]
+    },
+    {
+      "name": "idx_verification_status",
+      "fields": [
+        "verification_status"
+      ]
+    },
+    {
+      "name": "idx_book_id_entry_type",
+      "fields": [
+        "book_id",
+        "entry_type"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
