@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Loader2, ShieldCheck, X } from "lucide-react";
+import { persistSet } from "@/lib/devModePersistence";
 
 const GoogleMark = ({ className = "w-5 h-5" }) => (
   <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
@@ -35,7 +36,7 @@ export default function GoogleSignInPrompt({ onSkip }) {
   };
 
   const handleSkip = () => {
-    try { localStorage.setItem("sirr_google_prompt_dismissed", "true"); } catch { /* ignore */ }
+    persistSet("sirr_google_prompt_dismissed", "true");
     onSkip();
   };
 

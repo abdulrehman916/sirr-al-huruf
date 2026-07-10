@@ -1,16 +1,23 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import { persistGet, persistSet, sessionGet, sessionSet, isDevMode } from "@/lib/devModePersistence";
 
 export default function SplashScreen({ onComplete }) {
   React.useEffect(() => {
-    const hasSeenSplash = sessionStorage.getItem('hasSeenSplash');
+    const hasSeenSplash = isDevMode
+      ? persistGet('hasSeenSplash')
+      : sessionGet('hasSeenSplash');
     if (hasSeenSplash) {
       onComplete();
       return;
     }
 
     const timer = setTimeout(() => {
-      sessionStorage.setItem('hasSeenSplash', 'true');
+      if (isDevMode) {
+        persistSet('hasSeenSplash', 'true');
+      } else {
+        sessionSet('hasSeenSplash', 'true');
+      }
       onComplete();
     }, 2800);
 

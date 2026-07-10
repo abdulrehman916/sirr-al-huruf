@@ -17,6 +17,7 @@ import ProtectedPage from './components/ProtectedPage';
 import ROUTE_MANIFEST from '@/lib/routeManifest';
 import RulesGate from './components/RulesGate';
 import GoogleSignInPrompt from './components/GoogleSignInPrompt';
+import { persistGet } from '@/lib/devModePersistence';
 
 // ── Lazy import map — Core pages only ──────
 const PAGE_IMPORTS = {
@@ -131,7 +132,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const routeElements = useRouteElements();
   const [googlePromptDismissed, setGooglePromptDismissed] = useState(
-    () => { try { return     localStorage.getItem('sirr_google_prompt_dismissed') === 'true'; } catch { return false; } }
+    () => persistGet('sirr_google_prompt_dismissed') === 'true'
   );
 
   // Hide the post-splash Google prompt once the user is signed in.
