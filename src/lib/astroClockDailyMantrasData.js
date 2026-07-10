@@ -190,7 +190,7 @@ export const KASHF_AZAYIM_BY_DAY = [
     id: "kashf_azimah_tuesday",
     day_index: 2, king: "أبو محرز الأحمر", king_en: "Abu Mihraz al-Ahmar",
     type: "azimah",
-    arabic_text: "اجب يا أبا محرز الأحمر بحق الطفف اجلففٍ شَغَفٍ ليطشلاً شلا رون لكه هلك منهشل جهلف مهلق شهليص شهليص نموه نموه دمليخ ارحي بحقها عليك وبحق الملك عليك سمسميائيل وتوكلوا بكذا وكذا الوحا الوحا العجل العجل الساعة الساعة",
+    arabic_text: "اجب يا أبا محرز الأحمر بحق الطفف اجلفف شَغَف ليطشال رون لكه هلك منهشل جهلفف مهلق شهليص شهليص نموه نموه دملتخ ارحي بحقها عليك وبحق الملك عليك سمسميائيل وتوكلوا بكذا وكذا الوحا الوحا العجل العجل الساعة الساعة",
     purpose_en: "Invocation of the king of Tuesday (Mars). For binding a fornicator, separation, forceful works.",
     purpose_ml: "ചൊവ്വ ദിവസത്തെ (ചൊവ്വ ഗ്രഹ) ദൂതൻ. ബന്ധനം, വേർപിരിയൽ, ശക്തി കൃത്യങ്ങൾ.",
     purpose_tr: "Salı günü meleğinin çağrılması (Mars). Bağlama, ayrılık, güç işleri.",
