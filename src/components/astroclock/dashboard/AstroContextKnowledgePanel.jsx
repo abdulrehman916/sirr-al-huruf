@@ -163,7 +163,15 @@ export default function AstroContextKnowledgePanel({ context }) {
     );
   }
 
-  if (error || !knowledge || knowledge.length === 0) return null;
+  if (error || !knowledge || knowledge.length === 0) {
+    return (
+      <div className="rounded-lg p-2 mt-1.5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <p className="font-inter text-[9px] text-center" style={{ color: "rgba(255,255,255,0.30)" }}>
+          {txt("ഈ സഅാത്തിന് ഗ്രന്ഥ വിജ്ഞാനം ലഭ്യമല്ല", "No verified manuscript knowledge available.", "لا توجد معرفة مخطوطة متاحة.")}
+        </p>
+      </div>
+    );
+  }
 
   // Merge all knowledge records for this context (there should typically be one)
   const merged = knowledge.reduce((acc, rec) => {
