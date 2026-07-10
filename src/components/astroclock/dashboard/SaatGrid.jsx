@@ -66,6 +66,7 @@ export default function SaatGrid() {
 
     return (
       <div key={`${h.period}-${h.hourNumber}`} className="rounded-xl" style={{
+        position: "relative",
         background: quality.color + "0D",
         border: `1px solid ${quality.color}40`,
         opacity: status === "past" ? 0.55 : 1,
