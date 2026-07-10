@@ -10,7 +10,7 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/astroClockManuscriptMerger";
-import { elementToML, planetMLDisplay, PLANET_ML_PARTS } from "@/lib/astroClockLabelMap";
+import { elementToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
@@ -39,7 +39,7 @@ export default function PlanetEncyclopedia() {
     const friends = d.planetFriendships[key];
     const isCurrent = key === currentPlanet;
     const isOpen = expanded === key;
-    const displayName = language === "ml" ? (planetMLDisplay(key) || info.name_ml_equivalent) : info.name_en;
+    const displayName = language === "ml" ? (planetArabicMLDisplay(key) || info.name_ml_equivalent) : info.name_en;
     const nature = language === "ml" ? info.nature_ml : info.nature_en;
     const elements = getPlanetElements(key, d.zodiacSigns);
     const color = isCurrent ? "#F5D060" : "rgba(255,255,255,0.70)";
@@ -68,7 +68,7 @@ export default function PlanetEncyclopedia() {
             <span className="font-inter text-xs font-bold block truncate" style={{ color }}>{displayName}</span>
             <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>{nature}</span>
           </div>
-          {language !== "ml" && <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.40)" }}>{info.name_ar}</span>}
+          {language !== "ml" && <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.40)" }}>{PLANET_AR_ML[key]?.ar || info.name_ar}</span>}
           {isCurrent && <span className="font-inter text-[7px] uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060" }}>{txt("നിലവിലെ", "Now", "Şimdi")}</span>}
           <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)", transform: isOpen ? "rotate(180deg)" : "none" }} />
         </button>
@@ -78,8 +78,8 @@ export default function PlanetEncyclopedia() {
               <div className="px-2.5 pb-2.5 space-y-2">
                 {/* Names */}
                 <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അറബി പദം", "Arabic", "Arapça")}: </span><span className={language === "ml" ? "font-malayalam-sm" : "font-amiri"} style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? (PLANET_ML_PARTS[key]?.reading || info.name_ar) : info.name_ar}</span></div>
-                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മലയാള അർത്ഥം", "Malayalam", "Malayalam")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? (PLANET_ML_PARTS[key]?.meaning || info.name_ml_equivalent) : info.name_ml_equivalent}</span></div>
+                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അറബി പദം", "Arabic", "Arapça")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{PLANET_AR_ML[key]?.ar || info.name_ar}</span></div>
+                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മലയാള അർത്ഥം", "Malayalam", "Malayalam")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{PLANET_AR_ML[key]?.ml || info.name_ml_equivalent}</span></div>
                   <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മൂലകം", "Elements", "Elementler")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? (elements.map(e => elementToML(e)).join(", ") || "—") : (elements.join(", ") || "—")}</span></div>
                 </div>
 

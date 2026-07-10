@@ -55,7 +55,7 @@ export default function MoonCenter() {
     recommendations.push(txt("തടയൽ, നീക്കം, ശുദ്ധീകരണം കർമ്മങ്ങൾക്ക് അനുകൂലം", "Favorable for banishment, removal, cleansing works", "Uzaklaştırma, temizleme çalışmaları için elverişli"));
   }
   if (isNahs) {
-    recommendations.push(txt("ഈ നക്ഷത്രം നഹ്സ് ആണ് — പ്രധാന കർമ്മങ്ങൾ ഒഴിവാക്കുക", "This mansion is Nahs — avoid important works", "Bu menzil nahs'tır — önemli çalışmalarından kaçının"));
+    recommendations.push(txt("ഈ നക്ഷത്രം نحس ആണ് — പ്രധാന കർമ്മങ്ങൾ ഒഴിവാക്കുക", "This mansion is Nahs — avoid important works", "Bu menzil nahs'tır — önemli çalışmalarından kaçının"));
   }
   if (dignity?.strength === "weakest") {
     recommendations.push(txt("ചന്ദ്രൻ നീചം — മാനസിക കാര്യങ്ങൾ വിലമതിക്കുക", "Moon debilitated — be cautious with mental matters", "Ay düşük — zihinsel konularda dikkatli olun"));

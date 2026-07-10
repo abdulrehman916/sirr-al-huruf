@@ -70,9 +70,9 @@ export function zodiacEnToML(nameEn) {
 export function natureToML(genelHukum) {
   if (!genelHukum) return "—";
   const lower = genelHukum.toLowerCase();
-  if (lower.includes("nahs") || lower.includes("uğursuz")) return "നഹ്സ്";
-  if (lower.includes("saad") || lower.includes("sa'd") || lower.includes("uğurlu") || lower.includes("uygun")) return "സഅദ്";
-  if (lower.includes("karışık")) return "മിശ്രം";
+  if (lower.includes("nahs") || lower.includes("uğursuz")) return "نحس — പ്രതികൂലം";
+  if (lower.includes("saad") || lower.includes("sa'd") || lower.includes("uğurlu") || lower.includes("uygun")) return "سعد — അനുകൂലം";
+  if (lower.includes("karışık")) return "مختلط — മിശ്രം";
   return "—";
 }
 
@@ -86,20 +86,20 @@ export function elementToML(element) {
   return ELEMENT_EN_TO_ML[element] || element;
 }
 
-// ── Planet Malayalam display: ML transliteration (ML meaning) ──
-// Format: "ശംസ് (സൂര്യൻ)" — Malayalam transliteration of Arabic term + Malayalam meaning
-export const PLANET_ML_PARTS = {
-  sun:     { reading: "ശംസ്",    meaning: "സൂര്യൻ" },
-  moon:    { reading: "ഖമർ",     meaning: "ചന്ദ്രൻ" },
-  mars:    { reading: "മിരീഖ്",   meaning: "ചൊവ്വാഗ്രഹം" },
-  mercury: { reading: "ഉതാരിദ്",  meaning: "ബുധഗ്രഹം" },
-  jupiter: { reading: "മുഷ്തരി",  meaning: "വ്യാഴഗ്രഹം" },
-  venus:   { reading: "സുഹ്റ",    meaning: "ശുക്രഗ്രഹം" },
-  saturn:  { reading: "സുഹൽ",     meaning: "ശനിഗ്രഹം" },
+// ── Planet Arabic + Malayalam meaning display ──
+// Arabic term preserved in Arabic script; Malayalam provides meaning only (no transliteration)
+export const PLANET_AR_ML = {
+  sun:     { ar: "الشمس",    ml: "സൂര്യൻ" },
+  moon:    { ar: "القمر",    ml: "ചന്ദ്രൻ" },
+  mars:    { ar: "المريخ",   ml: "ചൊവ്വാഗ്രഹം" },
+  mercury: { ar: "عطارد",    ml: "ബുധഗ്രഹം" },
+  jupiter: { ar: "المشتري",  ml: "വ്യാഴഗ്രഹം" },
+  venus:   { ar: "الزهرة",   ml: "ശുക്രഗ്രഹം" },
+  saturn:  { ar: "زحل",      ml: "ശനിഗ്രഹം" },
 };
 
-export function planetMLDisplay(planetKey) {
-  const parts = PLANET_ML_PARTS[planetKey];
+export function planetArabicMLDisplay(planetKey) {
+  const parts = PLANET_AR_ML[planetKey];
   if (!parts) return null;
-  return `${parts.reading} (${parts.meaning})`;
+  return `${parts.ar} — ${parts.ml}`;
 }

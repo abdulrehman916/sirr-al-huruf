@@ -10,7 +10,7 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { Search, Clock, CheckCircle2, Ban, BookOpen } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfOperationsForPurpose } from "@/lib/astroClockManuscriptMerger";
-import { planetMLDisplay } from "@/lib/astroClockLabelMap";
+import { planetArabicMLDisplay } from "@/lib/astroClockLabelMap";
 
 const PURPOSE_LABELS = {
   love: { ml: "പ്രണയം", en: "Love", tr: "Aşk" },
@@ -55,7 +55,7 @@ export default function SmartSearch() {
 
     const explanation = txt(
       `${PURPOSE_LABELS[matched].ml} ${txt("കർമ്മത്തിന്", "work benefits from", "çalışması için")}`,
-      `${PURPOSE_LABELS[matched].en} work benefits from ${planetNames.join(", ")} ${txt("സഅാത്", "hours", "saatleri")}.`,
+      `${PURPOSE_LABELS[matched].en} work benefits from ${planetNames.join(", ")} ${txt("ساعة", "hours", "saatleri")}.`,
       `${PURPOSE_LABELS[matched].tr} çalışması ${planetNames.join(", ")} saatleri için elverişlidir.`
     );
 
@@ -131,7 +131,7 @@ export default function SmartSearch() {
             <div>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#4ADE80" }} />
-                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>{txt("മികച്ച സഅാത്", "Best Saat", "En İyi Saat")}</span>
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>{txt("മികച്ച ساعة", "Best Saat", "En İyi Saat")}</span>
               </div>
               {results.best.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} />)}
             </div>
@@ -142,7 +142,7 @@ export default function SmartSearch() {
             <div>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <Clock className="w-3.5 h-3.5" style={{ color: G.dim }} />
-                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>{txt("ബദൽ സഅാത്", "Alternative Saat", "Alternatif Saat")}</span>
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>{txt("ബദൽ ساعة", "Alternative Saat", "Alternatif Saat")}</span>
               </div>
               {results.alt.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} />)}
             </div>
@@ -193,7 +193,7 @@ export default function SmartSearch() {
 }
 
 function SaatRow({ h, d, lang, avoid }) {
-  const planetName = lang === "ml" ? (planetMLDisplay(h.planet) || d.planetInfo[h.planet]?.name_ml_equivalent) : d.planetInfo[h.planet]?.name_en;
+  const planetName = lang === "ml" ? (planetArabicMLDisplay(h.planet) || d.planetInfo[h.planet]?.name_ml_equivalent) : d.planetInfo[h.planet]?.name_en;
   const symbol = d.planetInfo[h.planet]?.symbol || "";
   const color = avoid ? "#F87171" : h.status === "current" ? "#F5D060" : "#86EFAC";
   const statusLabel = h.status === "current" ? (lang === "ml" ? "നിലവിലെ" : "Current") : "";

@@ -15,7 +15,7 @@ import AstroContextKnowledgePanel from "./AstroContextKnowledgePanel";
 import { getKashfHourAttributes } from "@/lib/astroClockManuscriptMerger";
 import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 import { getSahathQuality } from "@/lib/astroClockSahathQuality.js";
-import { PLANET_ML_PARTS } from "@/lib/astroClockLabelMap";
+import { PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 
 // Status badge — independent from quality. Controls badge text + card opacity only.
 const STATUS_BADGE = {
@@ -82,10 +82,10 @@ export default function SaatGrid() {
           <span className="font-inter text-xs font-bold tabular-nums w-7 text-center" style={{ color: quality.color }}>#{displayNum}</span>
           <span className="text-base leading-none">{symbol}</span>
           <div className="flex-1 min-w-0">
-            {language === "ml" && PLANET_ML_PARTS[h.planet] ? (
+            {language === "ml" && PLANET_AR_ML[h.planet] ? (
               <>
-                <span className="font-malayalam-sm block truncate" style={{ color: quality.color, fontWeight: 700, lineHeight: 1.4 }}>{PLANET_ML_PARTS[h.planet].reading}</span>
-                <span className="font-malayalam-sm block truncate" style={{ color: 'rgba(212,175,55,0.55)', lineHeight: 1.3 }}>({PLANET_ML_PARTS[h.planet].meaning})</span>
+                <span className="font-amiri block truncate" style={{ color: quality.color, fontWeight: 700, lineHeight: 1.4, direction: 'rtl' }}>{PLANET_AR_ML[h.planet].ar}</span>
+                <span className="font-malayalam-sm block truncate" style={{ color: 'rgba(212,175,55,0.55)', lineHeight: 1.3 }}>{PLANET_AR_ML[h.planet].ml}</span>
               </>
             ) : (
               <span className="font-inter text-xs font-bold block truncate" style={{ color: quality.color }}>{planetName}</span>
@@ -199,7 +199,7 @@ export default function SaatGrid() {
       {/* Day Hours */}
       <div>
         <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "rgba(212,175,55,0.55)" }}>
-          ☀ {txt("പകൽ 12 സഅാത്", "Daytime 12 Saat", "Gündüz 12 Saat")} — {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {d.sunrise.toFixed(1)}h → {txt("അസ്തമയം", "Sunset", "Batış")} {d.sunset.toFixed(1)}h
+          ☀ {txt("പകൽ 12 ساعة", "Daytime 12 Saat", "Gündüz 12 Saat")} — {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {d.sunrise.toFixed(1)}h → {txt("അസ്തമയം", "Sunset", "Batış")} {d.sunset.toFixed(1)}h
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {dayHours.map(renderHour)}
@@ -209,7 +209,7 @@ export default function SaatGrid() {
       {/* Night Hours */}
       <div>
         <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "rgba(129,140,248,0.55)" }}>
-          🌙 {txt("രാത്രി 12 സഅാത്", "Nighttime 12 Saat", "Gece 12 Saat")} — {txt("അസ്തമയം", "Sunset", "Batış")} {d.sunset.toFixed(1)}h → {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {d.sunrise.toFixed(1)}h
+          🌙 {txt("രാത്രി 12 ساعة", "Nighttime 12 Saat", "Gece 12 Saat")} — {txt("അസ്തമയം", "Sunset", "Batış")} {d.sunset.toFixed(1)}h → {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {d.sunrise.toFixed(1)}h
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {nightHours.map(renderHour)}
