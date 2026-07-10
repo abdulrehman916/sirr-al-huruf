@@ -18,7 +18,7 @@ function extractPageNum(source) {
 }
 
 function extractBookName(source) {
-  if (!source) return "Unknown";
+  if (!source) return "—";
   // Extract book name before page numbers
   const match = source.match(/^(.+?)[\s,]+(?:PDF|p\.)/i);
   return match ? match[1].trim() : source.split(",")[0].trim();
@@ -45,17 +45,17 @@ export default function ReferenceLibrary() {
 
     // Planet sources
     Object.entries(d.planetInfo || {}).forEach(([key, info]) => {
-      addRef(info.source, `${txt("ഗ്രഹം", "Planet", "Gezegen")}: ${info.name_en}`);
+      addRef(info.source, `${txt("ഗ്രഹം", "Planet", "Gezegen")}: ${language === "ml" ? info.name_ml_equivalent : info.name_en}`);
     });
 
     // Friendship sources
     Object.entries(d.planetFriendships || {}).forEach(([key, info]) => {
-      addRef(info.source, `${txt("സൌഹൃദം", "Friendship", "Dostluk")}: ${key}`);
+      addRef(info.source, `${txt("സൌഹൃദം", "Friendship", "Dostluk")}: ${language === "ml" ? d.planetInfo[key]?.name_ml_equivalent : key}`);
     });
 
     // Weekday analysis sources
     Object.entries(d.weekdayAnalysis || {}).forEach(([key, wa]) => {
-      if (wa.source) addRef(wa.source, `${txt("ദിവസം", "Day", "Gün")}: ${wa.source?.includes("50") ? "Day Rules" : "Day Rules"}`);
+      if (wa.source) addRef(wa.source, `${txt("ദിവസം", "Day", "Gün")}: ${txt("നിയമങ്ങൾ", "Day Rules", "Gün Kuralları")}`);
     });
 
     // Manuscript references for mansions

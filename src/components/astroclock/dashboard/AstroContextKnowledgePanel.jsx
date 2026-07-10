@@ -137,7 +137,7 @@ function SourceList({ sources, language, txt }) {
         <div key={i} className="mb-1 last:mb-0">
           <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.45)" }}>
             • {src.book_title}{src.page_number ? ` — p.${src.page_number}` : ''}
-            {src.screenshot_url ? ' 📷 Screenshot' : ''}
+            {src.screenshot_url ? ` 📷 ${txt("സ്ക്രീൻഷോട്ട്", "Screenshot", "لقطة")}` : ''}
           </p>
         </div>
       ))}

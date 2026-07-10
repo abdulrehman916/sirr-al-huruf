@@ -177,7 +177,7 @@ export default function SmartSearch() {
                 items: results.kashfOps.map(op => ({
                   ar: op.ar,
                   en: `${op.en} — ${op.day_en}, ${op.planet_en}`,
-                  ml: `${op.ml} — ${op.day_en}, ${op.planet_en}`,
+                  ml: op.ml,
                   tr: `${op.tr} — ${op.day_en}, ${op.planet_en}`,
                   type: "recommend",
                   source: op.source,
