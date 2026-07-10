@@ -65,15 +65,18 @@ export default function SaatGrid() {
     const qualityLabel = txtA(quality.label_ml, quality.label_en, quality.label_ar);
 
     return (
-      <div key={`${h.period}-${h.hourNumber}`} className="rounded-xl overflow-hidden" style={{
+      <div key={`${h.period}-${h.hourNumber}`} className="rounded-xl" style={{
         background: quality.color + "0D",
         border: `1px solid ${quality.color}40`,
         opacity: status === "past" ? 0.55 : 1,
         boxShadow: status === "current" ? `0 0 16px ${quality.color}30` : "none",
         transition: "opacity 0.3s ease, box-shadow 0.3s ease",
+        overflow: "visible",
+        zIndex: isOpen ? 20 : 1,
+        isolation: isOpen ? "isolate" : "auto",
       }}>
         <button onClick={() => setExpanded(isOpen ? null : `${h.period}-${h.hourNumber}`)}
-          className="w-full flex items-center gap-2 p-2.5 text-left">
+          className="w-full flex items-center gap-2 p-2.5 text-left rounded-xl">
           <span className="font-inter text-xs font-bold tabular-nums w-7 text-center" style={{ color: quality.color }}>#{displayNum}</span>
           <span className="text-base leading-none">{symbol}</span>
           <div className="flex-1 min-w-0">
@@ -99,7 +102,17 @@ export default function SaatGrid() {
           <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: quality.color, transform: isOpen ? "rotate(180deg)" : "none" }} />
         </button>
         {isOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}
+            className="rounded-b-xl sm:absolute sm:left-0 sm:right-0 sm:top-full sm:z-50 sm:max-h-[60vh] sm:overflow-y-auto sm:shadow-2xl"
+            style={{
+              background: "rgba(4,10,24,0.97)",
+              borderTop: `1px solid ${quality.color}30`,
+              borderLeft: `1px solid ${quality.color}40`,
+              borderRight: `1px solid ${quality.color}40`,
+              borderBottom: `1px solid ${quality.color}40`,
+            }}
+          >
             <div className="px-2.5 pb-2.5 space-y-1.5">
                 {h.timeRemaining && (
                   <p className="font-inter text-[10px]" style={{ color: "#F5D060" }}>⏳ {txt("ബാക്കി", "Remaining", "Kalan")}: {h.timeRemaining}</p>

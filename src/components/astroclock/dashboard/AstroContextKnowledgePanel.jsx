@@ -146,6 +146,33 @@ function SourceList({ sources, language, txt }) {
 }
 
 /**
+ * Deduplicates truly identical actions (same English text).
+ * Different actions with different text are preserved separately.
+ * Never merges actions from different Saat or different sources.
+ */
+function dedupeActions(actions) {
+  if (!actions || actions.length === 0) return [];
+  const seen = new Set();
+  return actions.filter(a => {
+    const key = (a.en || '').toLowerCase().trim();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function dedupeSources(sources) {
+  if (!sources || sources.length === 0) return [];
+  const seen = new Set();
+  return sources.filter(s => {
+    const key = `${s.book_title || ''}|${s.page_number || ''}|${s.screenshot_url || ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
  * @param {object} context - { weekday, period, saat_number, planet, nakshatra }
  */
 export default function AstroContextKnowledgePanel({ context }) {
@@ -192,6 +219,15 @@ export default function AstroContextKnowledgePanel({ context }) {
     }
     return acc;
   }, {});
+
+  // Deduplicate truly identical actions (same English text) — preserve different rules
+  merged.recommended = dedupeActions(merged.recommended);
+  merged.forbidden = dedupeActions(merged.forbidden);
+  merged.enemy = dedupeActions(merged.enemy);
+  merged.friendship = dedupeActions(merged.friendship);
+  merged.warnings = dedupeActions(merged.warnings);
+  merged.notes = dedupeActions(merged.notes);
+  merged.sources = dedupeSources(merged.sources);
 
   const hasContent = (merged.recommended?.length > 0) ||
     (merged.forbidden?.length > 0) ||
