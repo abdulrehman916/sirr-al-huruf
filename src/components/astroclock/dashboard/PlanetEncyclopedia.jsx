@@ -10,6 +10,7 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/astroClockManuscriptMerger";
+import { elementToML } from "@/lib/astroClockLabelMap";
 
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
@@ -79,7 +80,7 @@ export default function PlanetEncyclopedia() {
                 <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                   <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അറബി", "Arabic", "Arapça")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{info.name_ar}</span></div>
                   <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മലയാളം", "Malayalam", "Malayalam")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{info.name_ml_equivalent}</span></div>
-                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മൂലകം", "Elements", "Elementler")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{elements.join(", ") || "—"}</span></div>
+                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മൂലകം", "Elements", "Elementler")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? (elements.map(e => elementToML(e)).join(", ") || "—") : (elements.join(", ") || "—")}</span></div>
                 </div>
 
                 {/* Friendships */}

@@ -12,6 +12,7 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard, SubCollapse } from "./DashboardSection";
 import { getKashfLunarDayInfo, getKashfNahsStatus } from "@/lib/astroClockManuscriptMerger";
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
+import { zodiacEnToML } from "@/lib/astroClockLabelMap";
 import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
@@ -61,7 +62,7 @@ export default function TodayDashboard() {
   // ── Moon snapshot (compact — full Moon data in Section 4) ──
   const moonSymbol = d.moonPosition?.zodiacSign?.symbol;
   const moonSignName = language === "ml"
-    ? d.moonZodiacFull?.name_ml
+    ? zodiacEnToML(d.moonPosition?.zodiacSign?.name_en)
     : d.moonPosition?.zodiacSign?.name_en;
   const moonPhasePct = d.moonPosition ? parseFloat(d.moonPosition.phase) : 0;
   const phaseEn = d.moonPhaseDesc?.en || "";

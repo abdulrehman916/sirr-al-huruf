@@ -8,7 +8,7 @@ import { MiniCard } from "./DashboardSection";
 import { Moon } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfNightDayRule, getKashfLunarDayInfo } from "@/lib/astroClockManuscriptMerger";
-import { natureToArabic, isNahsNature } from "@/lib/astroClockLabelMap";
+import { natureToArabic, natureToML, isNahsNature, zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 
 export default function MoonCenter() {
@@ -20,7 +20,7 @@ export default function MoonCenter() {
   }
 
   const moonSign = d.moonPosition.zodiacSign;
-  const moonSignName = language === "ml" ? moonSign?.name_ml : moonSign?.name_en;
+  const moonSignName = language === "ml" ? zodiacEnToML(moonSign?.name_en) : moonSign?.name_en;
   const moonPhasePct = parseFloat(d.moonPosition.phase);
   const moonPhaseLabel = language === "ml" ? d.moonPhaseDesc?.ml : d.moonPhaseDesc?.en;
   const waxing = d.lunarDay ? d.lunarDay <= 14 : true;
@@ -33,12 +33,12 @@ export default function MoonCenter() {
   const dignityColor = dignity?.strength === "weakest" ? "#F87171" : dignity?.strength === "very_strong" || dignity?.strength === "strongest" ? "#4ADE80" : "#FBBF24";
 
   const element = d.moonZodiacFull ? (language === "ml" ? d.moonZodiacFull.element_ml : d.moonZodiacFull.element) : "—";
-  const mansionNature = natureToArabic(moonMansion?.genel_hukum);
+  const mansionNature = language === "ml" ? natureToML(moonMansion?.genel_hukum) : natureToArabic(moonMansion?.genel_hukum);
   const isNahs = isNahsNature(moonMansion?.genel_hukum);
   const natureColor = isNahs ? "#F87171" : "#4ADE80";
 
-  const friendlySigns = d.moonZodiacFull?.friendly_signs || [];
-  const enemySigns = d.moonZodiacFull?.enemy_signs || [];
+  const friendlySigns = language === "ml" ? signsToML(d.moonZodiacFull?.friendly_signs) : (d.moonZodiacFull?.friendly_signs || []);
+  const enemySigns = language === "ml" ? signsToML(d.moonZodiacFull?.enemy_signs) : (d.moonZodiacFull?.enemy_signs || []);
 
   const strengthLabel = moonPhasePct > 75 ? txt("വളരെ ശക്തം", "Very Strong", "Çok Güçlü") :
     moonPhasePct > 50 ? txt("ശക്തം", "Strong", "Güçlü") :

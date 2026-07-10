@@ -8,6 +8,7 @@ import { MiniCard } from "./DashboardSection";
 import { ArrowRight } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfZodiacTiming } from "@/lib/astroClockManuscriptMerger";
+import { zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
 
 export default function MoonZodiac() {
   const d = useAstroData();
@@ -19,7 +20,7 @@ export default function MoonZodiac() {
 
   const z = d.moonZodiacFull;
   const kashfZodiacTiming = getKashfZodiacTiming(z.name_en);
-  const zName = language === "ml" ? z.name_ml_equivalent : z.name_en;
+  const zName = language === "ml" ? zodiacEnToML(z.name_en) : z.name_en;
   const zElement = language === "ml" ? z.element_ml : z.element;
   const zGender = language === "ml" ? z.gender_ml : z.gender;
   const zRuler = language === "ml" ? z.ruling_planet_ml : z.ruling_planet;
@@ -28,7 +29,8 @@ export default function MoonZodiac() {
   const zExplanation = language === "ml" ? z.explanation_ml : z.explanation_en;
 
   const nextTransit = d.moonTransits?.signTransits?.[1];
-  const nextSignName = nextTransit?.name || "—";
+  const nextSignNameRaw = nextTransit?.name || "—";
+  const nextSignName = language === "ml" ? zodiacEnToML(nextSignNameRaw) : nextSignNameRaw;
   const nextSignSymbol = nextTransit?.symbol || "";
   const transitionTime = nextTransit?.entryTime ? new Date(nextTransit.entryTime).toLocaleString(language === "ml" ? "ml-IN" : "en-US", {
     weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
@@ -43,6 +45,8 @@ export default function MoonZodiac() {
   const planetInfo = d.planetInfo[planetKey];
   const goodActions = language === "ml" ? planetInfo?.goodActions_ml : planetInfo?.goodActions_en;
   const badActions = language === "ml" ? planetInfo?.badActions_ml : planetInfo?.badActions_en;
+  const friendlyDisplay = language === "ml" ? (signsToML(z.friendly_signs).join(", ") || "—") : (z.friendly_signs?.join(", ") || "—");
+  const enemyDisplay = language === "ml" ? (signsToML(z.enemy_signs).join(", ") || "—") : (z.enemy_signs?.join(", ") || "—");
 
   return (
     <div className="space-y-3">
@@ -93,11 +97,11 @@ export default function MoonZodiac() {
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-lg p-2" style={{ background: "rgba(74,222,128,0.03)", border: "1px solid rgba(74,222,128,0.10)" }}>
           <p className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(74,222,128,0.50)" }}>{txt("സൌഹൃദ", "Friendly", "Dost")}</p>
-          <p className="font-inter text-[10px]" style={{ color: "rgba(74,222,128,0.65)" }}>{z.friendly_signs?.join(", ") || "—"}</p>
+          <p className="font-inter text-[10px]" style={{ color: "rgba(74,222,128,0.65)" }}>{friendlyDisplay}</p>
         </div>
         <div className="rounded-lg p-2" style={{ background: "rgba(248,113,113,0.03)", border: "1px solid rgba(248,113,113,0.10)" }}>
           <p className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.50)" }}>{txt("ശത്രു", "Enemy", "Düşman")}</p>
-          <p className="font-inter text-[10px]" style={{ color: "rgba(248,113,113,0.65)" }}>{z.enemy_signs?.join(", ") || "—"}</p>
+          <p className="font-inter text-[10px]" style={{ color: "rgba(248,113,113,0.65)" }}>{enemyDisplay}</p>
         </div>
       </div>
 

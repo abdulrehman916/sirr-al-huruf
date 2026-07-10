@@ -36,3 +36,52 @@ export function extractDegree(baslamaSiniri) {
   const match = baslamaSiniri.match(/(\d+)/);
   return match ? match[1] : "";
 }
+
+// ── Malayalam zodiac names (standard Kerala rashi names) ──
+const ZODIAC_TR_TO_ML = {
+  "koç": "മേടം", "boğa": "ഇടവം", "ikizler": "മിഥുനം",
+  "yengeç": "കർക്കടകം", "aslan": "ചിങ്ങം", "başak": "കന്നി",
+  "terazi": "തുലാം", "akrep": "വൃശ്ചികം", "yay": "ധനു",
+  "oğlak": "മകരം", "kova": "കുംഭം", "balık": "മീനം",
+};
+
+const ZODIAC_EN_TO_ML = {
+  "aries": "മേടം", "taurus": "ഇടവം", "gemini": "മിഥുനം",
+  "cancer": "കർക്കടകം", "leo": "ചിങ്ങം", "virgo": "കന്നി",
+  "libra": "തുലാം", "scorpio": "വൃശ്ചികം", "sagittarius": "ധനു",
+  "capricorn": "മകരം", "aquarius": "കുംഭം", "pisces": "മീനം",
+};
+
+const ELEMENT_EN_TO_ML = {
+  "Fire": "അഗ്നി", "Earth": "ഭൂമി", "Air": "വായു", "Water": "വെള്ളം",
+};
+
+export function zodiacToML(zodiacSign) {
+  if (!zodiacSign) return "—";
+  const lower = zodiacSign.toLowerCase();
+  return ZODIAC_TR_TO_ML[lower] || ZODIAC_EN_TO_ML[lower] || "—";
+}
+
+export function zodiacEnToML(nameEn) {
+  if (!nameEn) return "—";
+  return ZODIAC_EN_TO_ML[nameEn.toLowerCase()] || "—";
+}
+
+export function natureToML(genelHukum) {
+  if (!genelHukum) return "—";
+  const lower = genelHukum.toLowerCase();
+  if (lower.includes("nahs") || lower.includes("uğursuz")) return "നഹ്സ്";
+  if (lower.includes("saad") || lower.includes("sa'd") || lower.includes("uğurlu") || lower.includes("uygun")) return "സഅദ്";
+  if (lower.includes("karışık")) return "മിശ്രം";
+  return "—";
+}
+
+export function signsToML(signs) {
+  if (!signs || !signs.length) return [];
+  return signs.map(s => ZODIAC_EN_TO_ML[s.toLowerCase()] || s);
+}
+
+export function elementToML(element) {
+  if (!element) return "—";
+  return ELEMENT_EN_TO_ML[element] || element;
+}

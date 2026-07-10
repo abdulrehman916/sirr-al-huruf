@@ -9,7 +9,7 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfMansionByNo } from "@/lib/astroClockManuscriptMerger";
-import { natureToArabic, isNahsNature, zodiacToArabic, extractDegree } from "@/lib/astroClockLabelMap";
+import { natureToArabic, natureToML, isNahsNature, zodiacToArabic, zodiacToML, extractDegree } from "@/lib/astroClockLabelMap";
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 
 export default function MansionsReference() {
@@ -57,6 +57,9 @@ export default function MansionsReference() {
           const isOpen = expanded === m.no;
           const color = isCurrent ? "#F5D060" : isNahs ? "#F87171" : "#4ADE80";
           const borderColor = isCurrent ? "rgba(212,175,55,0.40)" : isNahs ? "rgba(248,113,113,0.15)" : "rgba(74,222,128,0.12)";
+          const zodiacDisplay = language === "ml" ? zodiacToML(m.zodiac_sign) : zodiacToArabic(m.zodiac_sign);
+          const natureDisplay = language === "ml" ? natureToML(m.genel_hukum) : natureToArabic(m.genel_hukum);
+          const zodiacFontClass = language === "ml" ? "font-inter" : "font-amiri";
 
           return (
             <div key={m.no} className="rounded-lg overflow-hidden" style={{
@@ -77,10 +80,10 @@ export default function MansionsReference() {
                     <div className="px-2.5 pb-2.5 space-y-1.5">
                       {/* Properties */}
                       <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അതിര്", "Boundary", "Sınır")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacToArabic(m.zodiac_sign)} {extractDegree(m.baslama_siniri)}°</span></div>
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("രാശി", "Zodiac", "Burç")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacToArabic(m.zodiac_sign)} ({m.zodiac_degree}°)</span></div>
+                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അതിര്", "Boundary", "Sınır")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} {extractDegree(m.baslama_siniri)}°</span></div>
+                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("രാശി", "Zodiac", "Burç")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} ({m.zodiac_degree}°)</span></div>
                         <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അക്ഷരം", "Letter", "Harf")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{m.harfi} <span className="font-amiri">{m.harf_arabic}</span></span></div>
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("വിധി", "Ruling", "Hüküm")}: </span><span className="font-amiri" style={{ color: isNahs ? "#F87171" : "#4ADE80" }}>{natureToArabic(m.genel_hukum)}</span></div>
+                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("വിധി", "Ruling", "Hüküm")}: </span><span className={zodiacFontClass} style={{ color: isNahs ? "#F87171" : "#4ADE80" }}>{natureDisplay}</span></div>
                       </div>
 
                       {/* Manuscript operations — Arabic source shown via Kashf panel below */}
