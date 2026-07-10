@@ -11,6 +11,7 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/astroClockManuscriptMerger";
 import { elementToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
+import { GIH_PLANET_INFLUENCE_CHARACTERISTICS } from "@/lib/gizliIlimlerHazinesiZodiacData";
 
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
@@ -136,6 +137,32 @@ export default function PlanetEncyclopedia() {
                     {spiritual.map((s, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {s}</p>)}
                   </div>
                 )}
+
+                {/* GIH Planet Influence Characteristics */}
+                {GIH_PLANET_INFLUENCE_CHARACTERISTICS[key] && (() => {
+                  const infl = GIH_PLANET_INFLUENCE_CHARACTERISTICS[key];
+                  return (
+                    <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1" style={{ color: "rgba(212,175,55,0.60)" }}>📖 {txt("ഗ്രഹ സ്വാധീനം (GIH)", "Planet Influence (GIH)", "Gezegen Tesiri")} — p.{infl.source_page}</p>
+                      <div className="space-y-1">
+                        <div>
+                          <p className="font-inter text-[8px] font-bold" style={{ color: "rgba(212,175,55,0.50)" }}>{txt("ശാരീരിക സവിശേഷതകൾ", "Physical Traits", "Fiziksel")}</p>
+                          <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>{infl.physical_traits_en}</p>
+                        </div>
+                        <div>
+                          <p className="font-inter text-[8px] font-bold" style={{ color: "rgba(212,175,55,0.50)" }}>{txt("സ്വഭാവ സവിശേഷതകൾ", "Character Traits", "Karakter")}</p>
+                          <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>{infl.character_traits_en}</p>
+                        </div>
+                        {infl.moon_phase_note_en && (
+                          <p className="font-inter text-[9px] italic" style={{ color: "rgba(129,140,248,0.55)" }}>🌙 {infl.moon_phase_note_en}</p>
+                        )}
+                        {infl.moon_independence_note_en && (
+                          <p className="font-inter text-[9px] italic" style={{ color: "rgba(129,140,248,0.50)" }}>☾ {infl.moon_independence_note_en}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Source */}
                 <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {info.source}</p>

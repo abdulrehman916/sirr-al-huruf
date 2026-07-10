@@ -24,6 +24,8 @@ const MoonCenter = lazy(() => import("@/components/astroclock/dashboard/MoonCent
 const MoonZodiac = lazy(() => import("@/components/astroclock/dashboard/MoonZodiac"));
 const MansionsReference = lazy(() => import("@/components/astroclock/dashboard/MansionsReference"));
 const PlanetEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/PlanetEncyclopedia"));
+const ZodiacEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/ZodiacEncyclopedia"));
+const GihManuscriptKnowledge = lazy(() => import("@/components/astroclock/dashboard/GihManuscriptKnowledge"));
 const ReferenceLibrary = lazy(() => import("@/components/astroclock/dashboard/ReferenceLibrary"));
 
 function LangSelector() {
@@ -154,6 +156,15 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
+        <AstroClockErrorBoundary label="Zodiac Encyclopedia">
+          <DashboardSection icon="♈" title={txt("12 രാശികൾ", "12 Zodiac Signs", "12 Burç")}
+            subtitle={txt("എല്ലാ രാശികളുടെയും പൂർണ്ണ വിശദാംശങ്ങൾ", "Full Details for All Signs", "Tüm Burçların Tam Detayları")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <ZodiacEncyclopedia />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
         <AstroClockErrorBoundary label="Mansions">
           <DashboardSection icon="⭐" title={txt("28 ചാന്ദ്ര നക്ഷത്രങ്ങൾ", "28 Lunar Mansions", "28 Ay Menzili")}
             subtitle={txt("മന്സിൽ / നക്ഷത്ര റഫറൻസ്", "Manzil / Nakshatra Reference", "Menzil / Nakşatra Referansı")}>
@@ -168,6 +179,15 @@ function AstroClockContent() {
             subtitle={txt("7 ഗ്രഹ ഭരണികൾ", "7 Planetary Rulers", "7 Gezegen Hükümdarı")}>
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <PlanetEncyclopedia />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        <AstroClockErrorBoundary label="GIH Manuscript Knowledge">
+          <DashboardSection icon="📜" title={txt("ഗ്രന്ഥ വിജ്ഞാനം", "Manuscript Knowledge", "El Yazması Bilgisi")}
+            subtitle={txt("ഗുപ്ത വിജ്ഞാന ശേഖരം (7ാം പുസ്തകം)", "Gizli İlimler Hazinesi (7th Book)", "Gizli İlimler Hazinesi (7. Kitap)")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <GihManuscriptKnowledge />
             </Suspense>
           </DashboardSection>
         </AstroClockErrorBoundary>
