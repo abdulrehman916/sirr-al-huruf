@@ -71,6 +71,62 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ══ 2b. Recovery — check if entries already exist for this chunk ══
+    // Handles the timeout case: validateManuscriptImport completed and created entries,
+    // but processImportChunk timed out before updating the job. On retry, we detect the
+    // existing entries and mark the chunk as completed WITHOUT reprocessing.
+    // This prevents: (a) duplicate entries, (b) stuck "processing" status, (c) infinite retry loops.
+    {
+      const chunkPrefix = `ME-${job.book_id}-C${chunk_number}_`;
+      const allBookEntries = await base44.asServiceRole.entities.ManuscriptEntry.filter({ book_id: job.book_id });
+      const chunkEntryCount = allBookEntries.filter((e: any) =>
+        e.entry_id && String(e.entry_id).startsWith(chunkPrefix)
+      ).length;
+
+      if (chunkEntryCount > 0) {
+        const recoveredChunks = [...job.chunks];
+        recoveredChunks[chunkIdx] = {
+          ...recoveredChunks[chunkIdx],
+          status: 'completed',
+          entries_extracted: chunkEntryCount,
+          processing_time_ms: 0,
+          completed_at: new Date().toISOString(),
+          error: '',
+          failed_stage: '',
+          retry_count: chunk.retry_count,
+        };
+
+        const completedCount = recoveredChunks.filter((c: any) => c.status === 'completed').length;
+        const overallProgress = Math.round((completedCount / job.total_chunks) * 100);
+        const allComplete = completedCount === job.total_chunks;
+
+        await base44.asServiceRole.entities.ManuscriptImportJob.update(job.id, {
+          chunks: recoveredChunks,
+          overall_progress: overallProgress,
+          current_stage: allComplete ? 'extraction_complete' : `chunk_${chunk_number}_recovered`,
+          status: allComplete ? 'completed' : 'extracting',
+          completed_at: allComplete ? new Date().toISOString() : '',
+        });
+
+        return Response.json({
+          status: 'already_completed',
+          job_id,
+          book_id: job.book_id,
+          chunk_number,
+          entries_extracted: chunkEntryCount,
+          overall_progress: overallProgress,
+          chunks_completed: completedCount,
+          chunks_remaining: job.total_chunks - completedCount,
+          all_chunks_complete: allComplete,
+          recovered: true,
+          message: `Chunk ${chunk_number} was already processed (${chunkEntryCount} entries found in database). Marked as completed — no reprocessing needed.`,
+          next_step: allComplete
+            ? `verifyBookEntries({ "book_id": "${job.book_id}" })`
+            : `processImportChunk({ "job_id": "${job_id}", "chunk_number": ${chunk_number + 1} })`,
+        });
+      }
+    }
+
     // ══ 3. Check max retries ══
     const MAX_RETRIES = chunk.max_retries || 3;
     if (chunk.retry_count >= MAX_RETRIES) {

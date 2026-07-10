@@ -179,6 +179,19 @@ export default function SirrAnalyzeModal({ file, language, onClose, onComplete }
             setStage("error");
             return;
           }
+
+          // ══ Poll job status from database for accurate progress ══
+          // The function response may be stale if the HTTP request was slow.
+          // The database is the source of truth for chunk completion status.
+          try {
+            const jobs = await base44.entities.ManuscriptImportJob.filter({ job_id: jobId });
+            if (jobs && jobs.length > 0) {
+              const liveJob = jobs[0];
+              const completedCount = liveJob.chunks.filter(c => c.status === 'completed').length;
+              setProgress(8 + Math.round((completedCount / total_chunks) * 12));
+              setBatchInfo({ current: completedCount, remaining: total_chunks - completedCount });
+            }
+          } catch { /* non-critical — continue with next chunk */ }
         }
       }
 

@@ -998,6 +998,22 @@ ${extractionPrompt}`;
       }
     }
 
+    // ══ IDEMPOTENT CHUNK PROCESSING — Delete existing entries for this chunk ══
+    // Prevents duplicate entries when a chunk is reprocessed (e.g., after timeout).
+    // If processImportChunk times out after validateManuscriptImport created entries,
+    // the retry calls validateManuscriptImport again. Without this cleanup, duplicate
+    // entries would be created. With it, the chunk is safely reprocessed (idempotent).
+    if (isChunkMode) {
+      const chunkPrefix = `ME-${bookId}-C${chunk_number}_`;
+      const allBookEntries = await base44.asServiceRole.entities.ManuscriptEntry.filter({ book_id: bookId });
+      const chunkEntries = allBookEntries.filter((e: any) =>
+        e.entry_id && String(e.entry_id).startsWith(chunkPrefix)
+      );
+      for (const e of chunkEntries) {
+        await base44.asServiceRole.entities.ManuscriptEntry.delete(e.id);
+      }
+    }
+
     // ══ Create ManuscriptEntry records ══
     let createdEntries: any[] = [];
     if (entryRecords.length > 0) {
