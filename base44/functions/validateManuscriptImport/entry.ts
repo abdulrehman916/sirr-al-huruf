@@ -627,6 +627,7 @@ CRITICAL RULES:
     const headingIdMap: Record<string, string> = {};
     const headingDedupMap: Map<string, any> = new Map();
     const chunkIdToPermanentId: Map<string, string> = new Map();
+    let headingRecords: any[] = [];
 
     if (llmHeadings.length > 0) {
       // Pass 1: Deduplicate headings by (title, level) across all chunks
@@ -661,7 +662,7 @@ CRITICAL RULES:
       }
 
       // Pass 2: Resolve parent references globally
-      const headingRecords: any[] = [];
+      headingRecords = [];
       for (const record of headingDedupMap.values()) {
         if (record._original_parent) {
           record.parent_heading_id = chunkIdToPermanentId.get(record._original_parent) || '';
