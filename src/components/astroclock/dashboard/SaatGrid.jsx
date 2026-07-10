@@ -105,7 +105,7 @@ export default function SaatGrid() {
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}
-            className="rounded-b-xl sm:absolute sm:left-0 sm:right-0 sm:top-full sm:z-50 sm:max-h-[60vh] sm:overflow-y-auto sm:shadow-2xl"
+            className="rounded-b-xl shadow-2xl"
             style={{
               background: "rgba(4,10,24,0.97)",
               borderTop: `1px solid ${quality.color}30`,
