@@ -52,7 +52,6 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
 
   const pickLang = (item) => {
     if (language === "ml") return item.ml || item.en;
-    if (language === "tr") return item.tr || item.en;
     return item.en;
   };
 
@@ -91,7 +90,7 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
                           <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.60)" }}>
                             {pickLang(item)}
                           </p>
-                          {item.ar && language !== "ml" && (
+                          {item.ar && (
                             <p className="font-amiri text-[11px] mt-0.5" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{item.ar}</p>
                           )}
                           {item.source && (

@@ -5,7 +5,7 @@
 // Does NOT re-render the entire Astro Clock
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo } from "react";
-import { useAstroData, PURPOSE_MAP, PLANET_TR } from "./useAstroData";
+import { useAstroData, PURPOSE_MAP } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { Search, Clock, CheckCircle2, Ban, BookOpen } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
@@ -49,7 +49,7 @@ export default function SmartSearch() {
     const avoid = avoidHours.slice(0, 3);
 
     const planetNames = config.planets.map(p =>
-      language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en
+      language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en
     );
 
     const explanation = txt(
@@ -192,10 +192,10 @@ export default function SmartSearch() {
 }
 
 function SaatRow({ h, d, lang, avoid }) {
-  const planetName = lang === "ml" ? d.planetInfo[h.planet]?.name_ml_equivalent : lang === "tr" ? PLANET_TR[h.planet] : d.planetInfo[h.planet]?.name_en;
+  const planetName = lang === "ml" ? d.planetInfo[h.planet]?.name_ml_equivalent : d.planetInfo[h.planet]?.name_en;
   const symbol = d.planetInfo[h.planet]?.symbol || "";
   const color = avoid ? "#F87171" : h.status === "current" ? "#F5D060" : "#86EFAC";
-  const statusLabel = h.status === "current" ? (lang === "ml" ? "നിലവിലെ" : lang === "tr" ? "Mevcut" : "Current") : "";
+  const statusLabel = h.status === "current" ? (lang === "ml" ? "നിലവിലെ" : "Current") : "";
 
   return (
     <div className="flex items-center gap-2 rounded-lg p-2 mb-1" style={{

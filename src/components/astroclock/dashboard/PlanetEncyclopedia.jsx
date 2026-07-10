@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { useAstroData, PLANET_TR } from "./useAstroData";
+import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/astroClockManuscriptMerger";
@@ -38,9 +38,8 @@ export default function PlanetEncyclopedia() {
     const friends = d.planetFriendships[key];
     const isCurrent = key === currentPlanet;
     const isOpen = expanded === key;
-    const trName = PLANET_TR[key];
-    const displayName = language === "ml" ? info.name_ml_equivalent : language === "tr" ? trName : info.name_en;
-    const nature = language === "ml" ? info.nature_ml : language === "tr" ? trName : info.nature_en;
+    const displayName = language === "ml" ? info.name_ml_equivalent : info.name_en;
+    const nature = language === "ml" ? info.nature_ml : info.nature_en;
     const elements = getPlanetElements(key, d.zodiacSigns);
     const color = isCurrent ? "#F5D060" : "rgba(255,255,255,0.70)";
     const borderColor = isCurrent ? "rgba(212,175,55,0.40)" : "rgba(255,255,255,0.08)";
@@ -51,9 +50,9 @@ export default function PlanetEncyclopedia() {
     const warnings = language === "ml" ? info.warnings_ml : info.warnings_en;
     const spiritual = language === "ml" ? info.spiritualOperations_ml : info.spiritualOperations_en;
 
-    const friendNames = (friends?.friends || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
-    const enemyNames = (friends?.enemies || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
-    const neutralNames = (friends?.neutral || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "tr" ? PLANET_TR[p] : d.planetInfo[p]?.name_en);
+    const friendNames = (friends?.friends || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en);
+    const enemyNames = (friends?.enemies || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en);
+    const neutralNames = (friends?.neutral || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en);
     const kashfOps = getKashfOperationsForPlanet(key);
     const kashfDir = getKashfDirectionForElement(elements[0]);
 
@@ -79,7 +78,6 @@ export default function PlanetEncyclopedia() {
                 {/* Names */}
                 <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                   <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അറബി", "Arabic", "Arapça")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{info.name_ar}</span></div>
-                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("തുർക്കി", "Turkish", "Türkçe")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{trName}</span></div>
                   <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മലയാളം", "Malayalam", "Malayalam")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{info.name_ml_equivalent}</span></div>
                   <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മൂലകം", "Elements", "Elementler")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{elements.join(", ") || "—"}</span></div>
                 </div>

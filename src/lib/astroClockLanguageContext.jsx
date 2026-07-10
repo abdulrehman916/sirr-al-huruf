@@ -9,7 +9,7 @@ const LanguageContext = createContext();
 export function AstroClockLanguageProvider({ children }) {
   const [language, setLang] = useState(() => {
     let saved = localStorage.getItem("astroClockLanguage");
-    if (saved === "tr") saved = "ar"; // GLOBAL UI LANGUAGE RULE: Turkish replaced by Arabic
+    if (saved === "tr" || saved === "ar") saved = "ml"; // Only ML + EN supported
     return saved || "ml";
   });
 
@@ -36,7 +36,7 @@ export function AstroClockLanguageProvider({ children }) {
     try { localStorage.removeItem("astroClockCustomDate"); } catch {}
   }, []);
   const toggleLanguage = useCallback(() => {
-    setLang(prev => prev === "ml" ? "en" : prev === "en" ? "ar" : "ml");
+    setLang(prev => prev === "ml" ? "en" : "ml");
   }, []);
 
   // txt: returns Malayalam or English. Never returns Turkish.

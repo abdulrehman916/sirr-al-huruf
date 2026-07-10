@@ -19,7 +19,7 @@ export default function MoonZodiac() {
 
   const z = d.moonZodiacFull;
   const kashfZodiacTiming = getKashfZodiacTiming(z.name_en);
-  const zName = language === "ml" ? z.name_ml_equivalent : language === "tr" ? z.name_tr : z.name_en;
+  const zName = language === "ml" ? z.name_ml_equivalent : z.name_en;
   const zElement = language === "ml" ? z.element_ml : z.element;
   const zGender = language === "ml" ? z.gender_ml : z.gender;
   const zRuler = language === "ml" ? z.ruling_planet_ml : z.ruling_planet;
@@ -30,7 +30,7 @@ export default function MoonZodiac() {
   const nextTransit = d.moonTransits?.signTransits?.[1];
   const nextSignName = nextTransit?.name || "—";
   const nextSignSymbol = nextTransit?.symbol || "";
-  const transitionTime = nextTransit?.entryTime ? new Date(nextTransit.entryTime).toLocaleString(language === "ml" ? "ml-IN" : language === "tr" ? "tr-TR" : "en-US", {
+  const transitionTime = nextTransit?.entryTime ? new Date(nextTransit.entryTime).toLocaleString(language === "ml" ? "ml-IN" : "en-US", {
     weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
   }) : "—";
 

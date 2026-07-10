@@ -8,6 +8,7 @@ import { MiniCard } from "./DashboardSection";
 import { Moon } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfNightDayRule, getKashfLunarDayInfo } from "@/lib/astroClockManuscriptMerger";
+import { natureToArabic, isNahsNature } from "@/lib/astroClockLabelMap";
 
 export default function MoonCenter() {
   const d = useAstroData();
@@ -18,7 +19,7 @@ export default function MoonCenter() {
   }
 
   const moonSign = d.moonPosition.zodiacSign;
-  const moonSignName = language === "ml" ? moonSign?.name_ml : language === "tr" ? d.moonZodiacFull?.name_tr : moonSign?.name_en;
+  const moonSignName = language === "ml" ? moonSign?.name_ml : moonSign?.name_en;
   const moonPhasePct = parseFloat(d.moonPosition.phase);
   const moonPhaseLabel = language === "ml" ? d.moonPhaseDesc?.ml : d.moonPhaseDesc?.en;
   const waxing = d.lunarDay ? d.lunarDay <= 14 : true;
@@ -27,12 +28,12 @@ export default function MoonCenter() {
   const moonMansionName = moonMansion?.name || "—";
 
   const dignity = d.moonDignity;
-  const dignityType = dignity ? (language === "ml" ? dignity.type_ml : language === "tr" ? dignity.type_tr : dignity.type_en) : txt("സാധാരണം", "Normal", "Normal");
+  const dignityType = dignity ? (language === "ml" ? dignity.type_ml : dignity.type_en) : txt("സാധാരണം", "Normal", "Normal");
   const dignityColor = dignity?.strength === "weakest" ? "#F87171" : dignity?.strength === "very_strong" || dignity?.strength === "strongest" ? "#4ADE80" : "#FBBF24";
 
   const element = d.moonZodiacFull ? (language === "ml" ? d.moonZodiacFull.element_ml : d.moonZodiacFull.element) : "—";
-  const mansionNature = moonMansion?.genel_hukum || "—";
-  const isNahs = mansionNature.toLowerCase().includes("nahs") || mansionNature.toLowerCase().includes("uğursuz");
+  const mansionNature = natureToArabic(moonMansion?.genel_hukum);
+  const isNahs = isNahsNature(moonMansion?.genel_hukum);
   const natureColor = isNahs ? "#F87171" : "#4ADE80";
 
   const friendlySigns = d.moonZodiacFull?.friendly_signs || [];

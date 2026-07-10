@@ -9,6 +9,7 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfMansionByNo } from "@/lib/astroClockManuscriptMerger";
+import { natureToArabic, isNahsNature, zodiacToArabic, extractDegree } from "@/lib/astroClockLabelMap";
 
 export default function MansionsReference() {
   const d = useAstroData();
@@ -21,8 +22,8 @@ export default function MansionsReference() {
 
   const filtered = manazil.filter(m => {
     if (filter === "current") return m.no === currentNo;
-    if (filter === "favorable") return m.genel_hukum && !m.genel_hukum.toLowerCase().includes("nahs") && !m.genel_hukum.toLowerCase().includes("uğursuz");
-    if (filter === "unfavorable") return m.genel_hukum && (m.genel_hukum.toLowerCase().includes("nahs") || m.genel_hukum.toLowerCase().includes("uğursuz"));
+    if (filter === "favorable") return m.genel_hukum && !isNahsNature(m.genel_hukum);
+    if (filter === "unfavorable") return m.genel_hukum && isNahsNature(m.genel_hukum);
     return true;
   });
 
@@ -51,7 +52,7 @@ export default function MansionsReference() {
         {filtered.map(m => {
           const isCurrent = m.no === currentNo;
           const kashfMansion = getKashfMansionByNo(m.no);
-          const isNahs = m.genel_hukum?.toLowerCase().includes("nahs") || m.genel_hukum?.toLowerCase().includes("uğursuz");
+          const isNahs = isNahsNature(m.genel_hukum);
           const isOpen = expanded === m.no;
           const color = isCurrent ? "#F5D060" : isNahs ? "#F87171" : "#4ADE80";
           const borderColor = isCurrent ? "rgba(212,175,55,0.40)" : isNahs ? "rgba(248,113,113,0.15)" : "rgba(74,222,128,0.12)";
@@ -75,29 +76,14 @@ export default function MansionsReference() {
                     <div className="px-2.5 pb-2.5 space-y-1.5">
                       {/* Properties */}
                       <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അതിര്", "Boundary", "Sınır")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{m.baslama_siniri}</span></div>
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("രാശി", "Zodiac", "Burç")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{m.zodiac_sign} ({m.zodiac_degree}°)</span></div>
+                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അതിര്", "Boundary", "Sınır")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacToArabic(m.zodiac_sign)} {extractDegree(m.baslama_siniri)}°</span></div>
+                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("രാശി", "Zodiac", "Burç")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacToArabic(m.zodiac_sign)} ({m.zodiac_degree}°)</span></div>
                         <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അക്ഷരം", "Letter", "Harf")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{m.harfi} <span className="font-amiri">{m.harf_arabic}</span></span></div>
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("വിധി", "Ruling", "Hüküm")}: </span><span style={{ color: isNahs ? "#F87171" : "#4ADE80" }}>{m.genel_hukum}</span></div>
+                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("വിധി", "Ruling", "Hüküm")}: </span><span className="font-amiri" style={{ color: isNahs ? "#F87171" : "#4ADE80" }}>{natureToArabic(m.genel_hukum)}</span></div>
                       </div>
 
-                      {/* Operations */}
-                      {m.operations?.length > 0 && (
-                        <div>
-                          <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(212,175,55,0.50)" }}>{txt("പ്രവർത്തനങ്ങൾ", "Operations", "Çalışmalar")}</p>
-                          {m.operations.map((op, i) => (
-                            <p key={i} className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.55)" }}>• {op}</p>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Note */}
-                      {m.note && (
-                        <p className="font-inter text-[9px] italic" style={{ color: "rgba(255,255,255,0.35)" }}>📝 {m.note}</p>
-                      )}
-
-                      {/* Source */}
-                      <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {txt("ഹസ്തലിഖിതം", "Manuscript", "El Yazması")}: Havâss'ın Derinlikleri, PDF2 p.64-74</p>
+                      {/* Manuscript operations — Arabic source shown via Kashf panel below */}
+                      <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {txt("ഗ്രന്ഥം", "Manuscript", "Manuscript")}: كشف الحقائق</p>
 
                       {/* Kashf Omani tradition */}
                       {kashfMansion && (

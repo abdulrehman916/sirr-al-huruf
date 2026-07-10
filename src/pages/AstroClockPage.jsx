@@ -31,7 +31,6 @@ function LangSelector() {
   const langs = [
     { key: "ml", label: "മലയാളം" },
     { key: "en", label: "English" },
-    { key: "ar", label: "العربية" },
   ];
   return (
     <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(212,175,55,0.30)" }}>
@@ -68,9 +67,9 @@ function CustomDatePicker() {
       />
       {customDate && (
         <button onClick={clearCustomDate}
-          className="px-2 py-2 rounded-xl font-inter text-[10px] font-bold"
-          style={{ background: "rgba(248,113,113,0.10)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}>
-          ✕
+          className="px-3 py-2 rounded-xl font-inter text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"
+          style={{ background: "rgba(74,222,128,0.10)", color: "#4ADE80", border: "1px solid rgba(74,222,128,0.25)" }}>
+          ↻ {txt("ഇന്ന്", "Today")}
         </button>
       )}
     </div>
