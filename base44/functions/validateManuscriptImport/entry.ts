@@ -362,6 +362,37 @@ CRITICAL: It is BETTER TO REJECT an unclear manuscript than to extract incorrect
 
 TASK: Analyze EVERY page of this PDF manuscript. Extract ALL content from EVERY page. Do NOT skip any page.
 
+═══ CRITICAL ARABIC EXTRACTION MANDATE ═══
+EVERY page that contains ANY Arabic text MUST have that Arabic text captured in the arabic_text field of at least one entry. This is NON-NEGOTIABLE.
+
+- Quranic verses, supplications, invocations, divine names, dhikr formulas, tawkeel, angel names, jinn names, and ANY Arabic text MUST be extracted verbatim into the arabic_text field.
+- If a page is primarily Arabic (e.g., a page of Quranic verses or supplications), create entries with the arabic_text field filled with the COMPLETE Arabic text.
+- NEVER create an entry with empty arabic_text if the page contains any Arabic text. If a page has Arabic text that does not fit any specific entry type, create an entry with entry_type="reference" and put the Arabic text in arabic_text.
+- Preserve ALL harakat (diacritics), punctuation, verse numbers (e.g., ١٢٣), and line order EXACTLY as they appear in the manuscript.
+- If Arabic text is unclear or partially unreadable, extract what is readable AND note the unreadable portions in notes. Set arabic_text_preserved=false. NEVER skip the entry or leave arabic_text empty.
+
+═══ FIELD SEPARATION RULE ═══
+Each piece of information goes into its CORRECT field. Never mix fields:
+- Arabic recitation/verse/supplication/invocation/divine name text → arabic_text (VERBATIM Arabic only)
+- Step-by-step procedure instructions → procedure
+- Explanations, commentary, context → notes or english_meaning
+- Warnings and precautions → warnings
+- Conditions and prerequisites → conditions
+- Materials and ingredients → materials
+- Preparation instructions → preparation
+- Timing requirements → timing
+- Associated planet → planet
+- Suitable day → day
+- Required incense → incense
+- Repetition count → repetition
+- Benefits → benefits
+- References → notes
+
+NEVER copy Arabic recitation text into the procedure, conditions, materials, warnings, or timing fields. Arabic text goes ONLY in arabic_text.
+
+═══ ANTI-DUPLICATION RULE ═══
+Each Arabic passage appears in exactly ONE entry. Never copy the same Arabic text into multiple entries or multiple knowledge fields. If the same Arabic appears on multiple pages, each occurrence is a separate entry with its own page_number.
+
 ═══ HEADING DETECTION — MANUSCRIPT STRUCTURE PRESERVATION ═══
 FIRST, detect the REAL heading hierarchy from the PDF layout. Different manuscripts use different structures (Bab/Fasl/Mas'ala, Chapter/Section, Part/Chapter, etc.). You must detect what actually exists — never invent headings.
 
@@ -394,7 +425,7 @@ RULES FOR HEADINGS:
 
 ═══ ENTRY EXTRACTION ═══
 For each page, extract:
-1. ALL Arabic text — preserve EXACTLY as written in the manuscript, including harakat (diacritics). Never modify, modernize, or simplify Arabic.
+1. ALL Arabic text — preserve EXACTLY as written in the manuscript, including harakat (diacritics), verse numbers, and punctuation. Never modify, modernize, or simplify Arabic. NEVER leave arabic_text empty if the page contains Arabic.
 2. All entries: rituals, duas, Quran verses, divine names, wafq, taweez, diagrams, tables, instructions, materials, timing, conditions, warnings, notes, references.
 3. Identify any images, wafq (magic squares), taweez (amulets), diagrams, tables, or seals on each page.
 4. For each entry, classify into a Sirr section (1-7) — this is an ALTERNATIVE classification only:
@@ -407,13 +438,23 @@ For each page, extract:
    7 = Sacred Times, Planetary Hours, Lunar Mansions & Spiritual Rules
 
 For each entry, provide:
-- page_number, entry_type, purpose, arabic_text (VERBATIM), malayalam_meaning (if in manuscript), english_meaning
+- page_number, entry_type, purpose, arabic_text (VERBATIM — NEVER EMPTY if page has Arabic), malayalam_meaning (if in manuscript), english_meaning
 - conditions, materials, preparation, procedure, timing, planet, day, incense, repetition, warnings, benefits, notes
 - has_image, image_type (wafq/taweez/diagram/table/seal/drawing/none), image_description
 - arabic_text_preserved (true if clearly readable)
 - sirr_section (1-7), topic, topic_ml, topic_ar
 - heading_id: the heading_id this entry belongs to (from the heading tree above). Every entry MUST have a heading_id.
 - entry_order: sequential position of this entry within the book, by page order (1-based). Entries MUST be in exact manuscript page order.
+
+═══ PER-PAGE ARABIC COMPLETENESS AUDIT ═══
+For EVERY page you analyze, you MUST provide a page_arabic_audit entry:
+- page_number: the page number
+- has_arabic: true if the page contains ANY Arabic text (even a single word)
+- arabic_line_count: number of distinct Arabic lines/sentences on the page
+- arabic_completeness_score: 0-100 (100 = every Arabic line on the page is captured in entries' arabic_text fields)
+- missing_arabic_lines: array of any Arabic text that was NOT captured in entries (empty array if all captured)
+
+CRITICAL: If has_arabic is true but any entry for that page has empty arabic_text, the completeness score MUST be below 100 and the missing Arabic MUST be listed in missing_arabic_lines.
 
 ALSO provide: total_pages_analyzed, pages_with_images, pages_with_errors, skipped_pages, errors
 
@@ -426,7 +467,8 @@ CRITICAL RULES:
 - For each entry, provide extraction_confidence (0-100): your confidence that the extracted content is accurate and complete. Below 70 = uncertain (unclear Arabic, missing fields, damaged content).
 - Every entry MUST belong to a heading (heading_id). Never leave an entry orphaned.
 - Preserve exact page order (entry_order must be sequential 1, 2, 3... by page).
-- COMPLETE EXTRACTION (GLOBAL KNOWLEDGE INGESTION LAW): Extract EVERYTHING. Nothing may be skipped — no page, paragraph, Arabic text, table, image, footnote, caption, appendix, reference, note, or example. If confidence is low, extract what is available and set extraction_confidence below 70. Mark uncertain Arabic with arabic_text_preserved=false. NEVER skip content — mark it for Manual Verification instead. The goal is to absorb the COMPLETE manuscript without losing a single piece of knowledge.`;
+- COMPLETE EXTRACTION (GLOBAL KNOWLEDGE INGESTION LAW): Extract EVERYTHING. Nothing may be skipped — no page, paragraph, Arabic text, table, image, footnote, caption, appendix, reference, note, or example. If confidence is low, extract what is available and set extraction_confidence below 70. Mark uncertain Arabic with arabic_text_preserved=false. NEVER skip content — mark it for Manual Verification instead.
+- ARABIC IS SACRED: Losing Arabic text is the WORST possible outcome. It is better to extract too much than too little. It is better to mark an uncertain entry for manual review than to omit it. Every Arabic word on every page MUST appear in the arabic_text field of some entry.`;
 
     // ══ STAGE 1: PDF Content Extraction — PAGE-BY-PAGE (chunked for accuracy) ══
     // Permanent Rule: "import the book page by page."
@@ -496,11 +538,26 @@ CRITICAL RULES:
         pages_with_errors: { type: 'array', items: { type: 'string' } },
         skipped_pages: { type: 'array', items: { type: 'string' } },
         errors: { type: 'array', items: { type: 'string' } },
+        page_arabic_audit: {
+          type: 'array',
+          description: 'Per-page Arabic completeness audit. For every page processed.',
+          items: {
+            type: 'object',
+            properties: {
+              page_number: { type: 'string' },
+              has_arabic: { type: 'boolean' },
+              arabic_line_count: { type: 'integer' },
+              arabic_completeness_score: { type: 'integer' },
+              missing_arabic_lines: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        },
       },
     };
 
     let entries: any[] = [];
     let llmHeadings: any[] = [];
+    let pageArabicAudit: any[] = [];
     let pagesWithImages: string[] = [];
     let pagesWithErrors: string[] = [];
     let skippedPages: string[] = [];
@@ -567,6 +624,7 @@ CRITICAL RULES:
             if (chunkResult.pages_with_errors) pagesWithErrors.push(...chunkResult.pages_with_errors);
             if (chunkResult.skipped_pages) skippedPages.push(...chunkResult.skipped_pages);
             if (chunkResult.errors) errors.push(...chunkResult.errors);
+            if (chunkResult.page_arabic_audit) pageArabicAudit.push(...chunkResult.page_arabic_audit);
             totalPagesAnalyzed += (chunkResult.total_pages_analyzed || (endPage - startPage + 1));
           }
         }
@@ -591,9 +649,128 @@ CRITICAL RULES:
       skippedPages = llmResult.skipped_pages || [];
       errors = llmResult.errors || [];
       totalPagesAnalyzed = llmResult.total_pages_analyzed || 0;
+      pageArabicAudit = llmResult.page_arabic_audit || [];
     }
 
-    // Ensure global sequential entry_order across all chunks (manuscript page order)
+    // ══ POST-EXTRACTION ARABIC COMPLETENESS VALIDATION + AUTOMATIC RETRY ══
+    // Requirement 7 & 8: Compare extracted Arabic against original page.
+    // Any page below 100% completeness is reprocessed automatically.
+    let retryCount = 0;
+    let retrySucceeded = 0;
+    let retryFailed = 0;
+    const retriedPageNumbers: string[] = [];
+
+    const incompletePages = pageArabicAudit.filter(
+      (p: any) => p.has_arabic === true && (p.arabic_completeness_score ?? 100) < 100
+    );
+
+    if (incompletePages.length > 0 && pdfBytes) {
+      try {
+        const pdfLibRetry = await import('npm:pdf-lib@1.17.1');
+        const { PDFDocument: RetryDoc } = pdfLibRetry;
+        const fullRetryDoc = await RetryDoc.load(pdfBytes, { ignoreEncryption: true });
+        const totalRetryPages = fullRetryDoc.getPageCount();
+
+        // Build a retry PDF containing only the incomplete pages
+        const retryPageIndices: number[] = [];
+        const retryAbsPages: string[] = [];
+        for (const pageAudit of incompletePages) {
+          const absPageNum = parseInt(pageAudit.page_number);
+          const relPageIdx = absPageNum - pageNumOffset - 1;
+          if (relPageIdx >= 0 && relPageIdx < totalRetryPages) {
+            retryPageIndices.push(relPageIdx);
+            retryAbsPages.push(String(absPageNum));
+          }
+        }
+
+        if (retryPageIndices.length > 0) {
+          retryCount = retryPageIndices.length;
+          const retryPdf = await RetryDoc.create();
+          const copiedRetryPages = await retryPdf.copyPages(fullRetryDoc, retryPageIndices);
+          copiedRetryPages.forEach((p: any) => retryPdf.addPage(p));
+          const retryBytes = await retryPdf.save();
+          const retryBlob = new Blob([retryBytes], { type: 'application/pdf' });
+          const retryFile = new File([retryBlob], `${bookId}_arabic_retry.pdf`, { type: 'application/pdf' });
+          const retryUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: retryFile });
+
+          const retryPrompt = `You are RE-EXTRACTING Arabic text from specific pages of an Islamic occult manuscript that had INCOMPLETE Arabic extraction in the first pass.
+
+═══ CRITICAL ARABIC EXTRACTION MANDATE ═══
+The previous extraction MISSED Arabic text on these pages. You MUST extract EVERY Arabic word, letter, harakat, verse number, and punctuation mark. The arabic_text field MUST contain the COMPLETE Arabic text.
+
+If a page contains Quranic verses, supplications, invocations, divine names, dhikr, tawkeel, or ANY Arabic text, you MUST capture it in arabic_text. NEVER leave arabic_text empty if the page has Arabic.
+
+═══ FIELD SEPARATION ═══
+- Arabic recitation/verse/supplication text → arabic_text (VERBATIM)
+- Procedure steps → procedure
+- Explanations → notes
+- Warnings → warnings
+- Conditions → conditions
+- Materials → materials
+- Timing → timing
+
+═══ ANTI-DUPLICATION ═══
+Each Arabic passage appears in exactly ONE entry. Never copy the same Arabic text into multiple entries.
+
+═══ PER-PAGE ARABIC AUDIT ═══
+For every page, provide page_arabic_audit with:
+- has_arabic, arabic_line_count, arabic_completeness_score (MUST be 100 if all Arabic is captured), missing_arabic_lines (MUST be empty if score is 100)
+
+${extractionPrompt}`;
+
+          const retryResult: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: retryPrompt,
+            file_urls: [retryUpload.file_url],
+            model: 'gemini_3_flash',
+            response_json_schema: EXTRACTION_SCHEMA,
+          });
+
+          // Replace entries for retried pages with retry results
+          entries = entries.filter((e: any) => !retryAbsPages.includes(String(e.page_number)));
+          if (retryResult.entries) {
+            for (const e of retryResult.entries) {
+              if (e.heading_id) e.heading_id = `RETRY_${e.heading_id}`;
+              entries.push(e);
+            }
+          }
+          if (retryResult.headings) {
+            for (const h of retryResult.headings) {
+              h.heading_id = `RETRY_${h.heading_id}`;
+              if (h.parent_heading_id) h.parent_heading_id = `RETRY_${h.parent_heading_id}`;
+              llmHeadings.push(h);
+            }
+          }
+          if (retryResult.page_arabic_audit) {
+            const retryAuditPages = new Set(retryResult.page_arabic_audit.map((a: any) => String(a.page_number)));
+            pageArabicAudit = pageArabicAudit.filter((p: any) => !retryAuditPages.has(String(p.page_number)));
+            pageArabicAudit.push(...retryResult.page_arabic_audit);
+          }
+          if (retryResult.pages_with_images) pagesWithImages.push(...retryResult.pages_with_images);
+          if (retryResult.errors) errors.push(...retryResult.errors);
+
+          // Count retry outcomes
+          for (const absPage of retryAbsPages) {
+            const updatedAudit = pageArabicAudit.find((p: any) => String(p.page_number) === absPage);
+            if (updatedAudit && (updatedAudit.arabic_completeness_score ?? 0) >= 100) {
+              retrySucceeded++;
+            } else {
+              retryFailed++;
+            }
+            retriedPageNumbers.push(absPage);
+          }
+        }
+      } catch {
+        // Non-critical — retry failure doesn't block the pipeline
+      }
+    }
+
+    // Ensure global sequential entry_order (manuscript page order) after retries
+    entries.sort((a: any, b: any) => {
+      const aPage = parseInt(a.page_number) || 0;
+      const bPage = parseInt(b.page_number) || 0;
+      if (aPage !== bPage) return aPage - bPage;
+      return 0;
+    });
     entries.forEach((e: any, idx: number) => {
       e.entry_order = isChunkMode ? (chunk_number * 100000 + idx + 1) : (idx + 1);
     });
@@ -628,6 +805,7 @@ CRITICAL RULES:
     const headingDedupMap: Map<string, any> = new Map();
     const chunkIdToPermanentId: Map<string, string> = new Map();
     let headingRecords: any[] = [];
+    let createdHeadings: any[] = [];
 
     if (llmHeadings.length > 0) {
       // Pass 1: Deduplicate headings by (title, level) across all chunks
@@ -677,9 +855,61 @@ CRITICAL RULES:
 
       if (headingRecords.length > 0) {
         try {
-          await base44.asServiceRole.entities.ManuscriptHeading.bulkCreate(headingRecords);
+          createdHeadings = await base44.asServiceRole.entities.ManuscriptHeading.bulkCreate(headingRecords);
         } catch (e) {
           // Non-critical — headings may fail but entries still get created
+        }
+      }
+    }
+
+    // ══ FINAL PRE-SAVE VALIDATION GATE ══
+    // Requirement 9: Before saving, verify that the final extracted knowledge
+    // is identical to the source manuscript. If anything is missing, mark for
+    // manual verification instead of saving incomplete data.
+    const auditByPage: Record<string, any> = {};
+    for (const a of pageArabicAudit) {
+      auditByPage[String(a.page_number)] = a;
+    }
+
+    let incompleteEntriesCount = 0;
+    let manualReviewDueToMissingArabic = 0;
+
+    for (const entry of entries) {
+      const pageAudit = auditByPage[String(entry.page_number)];
+      const hasEmptyArabic = !entry.arabic_text || String(entry.arabic_text).trim().length === 0;
+
+      if (hasEmptyArabic && pageAudit && pageAudit.has_arabic === true) {
+        // Page has Arabic but this entry doesn't — DATA LOSS
+        incompleteEntriesCount++;
+        entry.extraction_confidence = Math.min(entry.extraction_confidence || 50, 40);
+        entry.arabic_text_preserved = false;
+        entry._needs_manual_review = true;
+        manualReviewDueToMissingArabic++;
+      }
+    }
+
+    // Fallback: if LLM didn't provide page_arabic_audit, use heuristic detection.
+    // If a page has entries of Arabic-bearing types but ALL have empty arabic_text,
+    // those entries likely had Arabic that was missed.
+    if (pageArabicAudit.length === 0) {
+      const entriesByPageFallback: Record<string, any[]> = {};
+      for (const e of entries) {
+        const pg = String(e.page_number);
+        if (!entriesByPageFallback[pg]) entriesByPageFallback[pg] = [];
+        entriesByPageFallback[pg].push(e);
+      }
+      const arabicEntryTypes = ['dua', 'quran_verse', 'divine_name', 'tawkeel', 'exorcism', 'protection', 'reference', 'note'];
+      for (const [pg, pageEntries] of Object.entries(entriesByPageFallback)) {
+        const allEmptyArabic = pageEntries.every((e: any) => !e.arabic_text || String(e.arabic_text).trim().length === 0);
+        const hasArabicType = pageEntries.some((e: any) => arabicEntryTypes.includes(e.entry_type));
+        if (allEmptyArabic && hasArabicType) {
+          for (const entry of pageEntries) {
+            entry.extraction_confidence = Math.min(entry.extraction_confidence || 50, 40);
+            entry.arabic_text_preserved = false;
+            entry._needs_manual_review = true;
+            incompleteEntriesCount++;
+            manualReviewDueToMissingArabic++;
+          }
         }
       }
     }
@@ -736,29 +966,31 @@ CRITICAL RULES:
         entry_order: entry.entry_order || (idx + 1),
         images: pageImages, // Actual image URLs from Stage 4
         verified_arabic_hash: '', // Will be filled in Phase 2
-        verification_status: (entry.extraction_confidence || (entry.arabic_text_preserved === false ? 50 : 80)) < 70 ? 'manual_review' : 'pending',
+        verification_status: entry._needs_manual_review || (entry.extraction_confidence || (entry.arabic_text_preserved === false ? 50 : 80)) < 70 ? 'manual_review' : 'pending',
         extraction_confidence: entry.extraction_confidence || (entry.arabic_text_preserved === false ? 50 : 80),
         extraction_date: validationDate,
       };
     });
 
     // ══ Update heading entry counts ══
-    if (headingRecords.length > 0 && entryRecords.length > 0) {
+    if (createdHeadings.length > 0 && entryRecords.length > 0) {
       const entryCountByHeading: Record<string, number> = {};
       for (const e of entryRecords) {
         if (e.heading_id) {
           entryCountByHeading[e.heading_id] = (entryCountByHeading[e.heading_id] || 0) + 1;
         }
       }
-      const headingUpdates = headingRecords
-        .filter((h) => entryCountByHeading[h.heading_id] !== undefined)
-        .map((h) => ({
-          id: h.id || h.heading_id,
-          entry_count: entryCountByHeading[h.heading_id] || 0,
-          total_entry_count: entryCountByHeading[h.heading_id] || 0,
+      const headingIdToDbId: Record<string, string> = {};
+      for (const h of createdHeadings) {
+        if (h.heading_id) headingIdToDbId[h.heading_id] = h.id;
+      }
+      const headingUpdates = Object.entries(entryCountByHeading)
+        .filter(([hid]) => headingIdToDbId[hid])
+        .map(([hid, count]) => ({
+          id: headingIdToDbId[hid],
+          entry_count: count,
+          total_entry_count: count,
         }));
-      // Note: total_entry_count for parent headings would require tree traversal;
-      // entry_count (direct) is set here. total_entry_count can be computed later.
       if (headingUpdates.length > 0) {
         try {
           await base44.asServiceRole.entities.ManuscriptHeading.bulkUpdate(headingUpdates);
@@ -870,6 +1102,28 @@ CRITICAL RULES:
           png: totalPngImages,
           error: imageExtractionError,
         },
+      },
+      per_page_arabic_completeness: pageArabicAudit.map((p: any) => ({
+        page_number: p.page_number,
+        has_arabic: p.has_arabic,
+        arabic_line_count: p.arabic_line_count || 0,
+        completeness_score: p.arabic_completeness_score || 0,
+        missing_arabic_lines: p.missing_arabic_lines || [],
+        retried: retriedPageNumbers.includes(String(p.page_number)),
+      })),
+      extraction_quality: {
+        total_pages_audited: pageArabicAudit.length,
+        pages_with_arabic: pageArabicAudit.filter((p: any) => p.has_arabic).length,
+        pages_at_100_percent: pageArabicAudit.filter((p: any) => !p.has_arabic || (p.arabic_completeness_score ?? 0) >= 100).length,
+        pages_below_100_percent: pageArabicAudit.filter((p: any) => p.has_arabic && (p.arabic_completeness_score ?? 100) < 100).length,
+        incomplete_entries: incompleteEntriesCount,
+        manual_review_due_to_missing_arabic: manualReviewDueToMissingArabic,
+        retry_attempts: retryCount,
+        retry_succeeded: retrySucceeded,
+        retry_failed: retryFailed,
+        overall_arabic_completeness: pageArabicAudit.filter((p: any) => p.has_arabic).length > 0
+          ? Math.round(pageArabicAudit.filter((p: any) => p.has_arabic).reduce((sum: number, p: any) => sum + (p.arabic_completeness_score || 0), 0) / Math.max(1, pageArabicAudit.filter((p: any) => p.has_arabic).length))
+          : 100,
       },
       entries_by_section: entriesBySection,
       pages_with_images: pagesWithImages,
