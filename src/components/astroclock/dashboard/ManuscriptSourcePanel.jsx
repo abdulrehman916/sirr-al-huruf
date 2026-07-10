@@ -8,7 +8,7 @@
 // DATA RULE: Additive only — never hides existing section data
 // ═══════════════════════════════════════════════════════════════
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronDown, BookOpen, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 
@@ -42,6 +42,14 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
   const activeSources = sources.filter(s => s.items && s.items.length > 0);
   if (activeSources.length === 0) return null;
 
+  // Real unique source count — deduplicate by source label/id, never hide valid sources
+  const uniqueSourceIds = new Set();
+  activeSources.forEach(s => {
+    if (s.id) uniqueSourceIds.add(s.id);
+    else if (s.label) uniqueSourceIds.add(s.label);
+  });
+  const realSourceCount = uniqueSourceIds.size;
+
   const pickLang = (item) => {
     if (language === "ml") return item.ml || item.en;
     if (language === "tr") return item.tr || item.en;
@@ -57,13 +65,12 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2 p-2.5 text-left">
         <BookOpen className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "rgba(129,140,248,0.50)" }} />
         <span className="font-inter text-[10px] uppercase tracking-wider font-bold flex-1" style={{ color: "rgba(129,140,248,0.60)" }}>
-          {panelTitle} ({activeSources.length})
+          {panelTitle} ({realSourceCount})
         </span>
         <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: "rgba(129,140,248,0.40)", transform: open ? "rotate(180deg)" : "none" }} />
       </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
+      {open && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
             <div className="px-2.5 pb-2.5 space-y-2">
               {activeSources.map(source => (
                 <div key={source.id}>
@@ -99,7 +106,6 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
     </div>
   );
 }

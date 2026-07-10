@@ -43,6 +43,36 @@ function LangSelector() {
   );
 }
 
+function CustomDatePicker() {
+  const { customDate, setCustomDate, clearCustomDate, txt } = useAstroClockLanguage();
+  return (
+    <div className="flex items-center gap-1.5">
+      <input type="date"
+        value={customDate ? customDate.toISOString().split("T")[0] : ""}
+        min="2020-01-01" max="2030-12-31"
+        onChange={(e) => {
+          if (e.target.value) setCustomDate(new Date(e.target.value + "T12:00:00"));
+          else clearCustomDate();
+        }}
+        className="px-2 py-2 rounded-xl font-inter text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+        style={{
+          background: customDate ? "rgba(212,175,55,0.15)" : "transparent",
+          color: customDate ? "#F5D060" : "rgba(255,255,255,0.40)",
+          border: "1px solid rgba(212,175,55,0.30)",
+          colorScheme: "dark",
+        }}
+      />
+      {customDate && (
+        <button onClick={clearCustomDate}
+          className="px-2 py-2 rounded-xl font-inter text-[10px] font-bold"
+          style={{ background: "rgba(248,113,113,0.10)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}>
+          ✕
+        </button>
+      )}
+    </div>
+  );
+}
+
 function AstroClockContent() {
   const { txt } = useAstroClockLanguage();
 
@@ -58,6 +88,7 @@ function AstroClockContent() {
               📚 {txt("ഗ്രന്ഥശേഖരം", "Library", "Kütüphane")}
             </Link>
             <LangSelector />
+            <CustomDatePicker />
           </div>
         </div>
 

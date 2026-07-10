@@ -13,6 +13,7 @@ import { calculateMoonPosition, calculateMoonTransits, getMoonPhaseDescription }
 import { AY_MANAZILLERI, PLANETARY_DAY_RULERS } from "@/lib/astroClockData";
 import { ZODIAC_SIGNS } from "@/lib/astroClockZodiacData";
 import { PLANET_FRIENDSHIPS } from "@/lib/astroClockPlanetFriendships";
+import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 
 // Turkish name maps (from manuscript PLANETARY_DAY_RULERS)
 export const PLANET_TR = {
@@ -51,6 +52,7 @@ export const PURPOSE_MAP = {
 };
 
 export function useAstroData() {
+  const { customDate } = useAstroClockLanguage();
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -59,7 +61,7 @@ export function useAstroData() {
   }, []);
 
   return useMemo(() => {
-    const now = new Date();
+    const now = customDate || new Date();
     const loc = getUserLocation();
     const sun = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
     const sr = sun.sunrise ?? 6.5;
@@ -109,5 +111,5 @@ export function useAstroData() {
       planetSequence: PLANET_SEQUENCE,
       zodiacSigns: ZODIAC_SIGNS,
     };
-  }, [tick]);
+  }, [tick, customDate]);
 }

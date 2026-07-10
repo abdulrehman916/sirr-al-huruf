@@ -6,7 +6,7 @@
 // are independent. Card color = quality. Badge = status. Never "Avoid".
 // ═══════════════════════════════════════════════════════════════
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
@@ -97,10 +97,9 @@ export default function SaatGrid() {
           </span>
           <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: quality.color, transform: isOpen ? "rotate(180deg)" : "none" }} />
         </button>
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
-              <div className="px-2.5 pb-2.5 space-y-1.5">
+        {isOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
+            <div className="px-2.5 pb-2.5 space-y-1.5">
                 {h.timeRemaining && (
                   <p className="font-inter text-[10px]" style={{ color: "#F5D060" }}>⏳ {txt("ബാക്കി", "Remaining", "Kalan")}: {h.timeRemaining}</p>
                 )}
@@ -162,10 +161,9 @@ export default function SaatGrid() {
                     }]}
                   />
                 )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
       </div>
     );
   };

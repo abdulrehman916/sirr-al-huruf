@@ -22,6 +22,10 @@ export function AstroClockLanguageProvider({ children }) {
   const isArabic = language === "ar";
 
   const setLanguage = useCallback((lang) => setLang(lang), []);
+
+  // Custom date override — when set, all Astro Clock calculations use this date instead of today
+  const [customDate, setCustomDate] = useState(null);
+  const clearCustomDate = useCallback(() => setCustomDate(null), []);
   const toggleLanguage = useCallback(() => {
     setLang(prev => prev === "ml" ? "en" : prev === "en" ? "ar" : "ml");
   }, []);
@@ -85,7 +89,7 @@ export function AstroClockLanguageProvider({ children }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, isMalayalam, isEnglish, isArabic, t, txt, txtA, toggleLanguage, setLanguage }}>
+    <LanguageContext.Provider value={{ language, isMalayalam, isEnglish, isArabic, t, txt, txtA, toggleLanguage, setLanguage, customDate, setCustomDate, clearCustomDate }}>
       {children}
     </LanguageContext.Provider>
   );
