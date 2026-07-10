@@ -12,7 +12,7 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard, SubCollapse } from "./DashboardSection";
 import { getKashfLunarDayInfo, getKashfNahsStatus } from "@/lib/astroClockManuscriptMerger";
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
-import { zodiacEnToML } from "@/lib/astroClockLabelMap";
+import { zodiacEnToML, planetMLDisplay } from "@/lib/astroClockLabelMap";
 import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
@@ -30,7 +30,7 @@ export default function TodayDashboard() {
     : d.planetInfo[d.currentHour.planet]?.name_en;
   const planetNameAr = d.planetInfo[d.currentHour.planet]?.name_ar;
   const dayRulerName = language === "ml"
-    ? d.planetInfo[d.dayRuler.planet]?.name_ml_equivalent
+    ? (planetMLDisplay(d.dayRuler.planet) || d.planetInfo[d.dayRuler.planet]?.name_ml_equivalent)
     : d.planetInfo[d.dayRuler.planet]?.name_en;
   const dayRulerSymbol = d.planetInfo[d.dayRuler.planet]?.symbol || "☉";
 
@@ -101,8 +101,8 @@ export default function TodayDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <MiniCard icon="📅" label={txt("ദിവസം", "Day", "Gün")} value={dayName} color={G.text} />
         <MiniCard icon={d.isNight ? "🌙" : "☀"} label={txt("ലൈൽ / നഹർ", "Layl / Nahar", "Gece / Gündüz")} value={d.laylNahar} color={d.isNight ? "#818CF8" : "#FBBF24"} />
-        <MiniCard icon="⏰" label={txt("സഅാത്", "Saat", "Saat")} value={`#${d.currentHour.hourNumber}`} color={G.text} />
-        <MiniCard icon={dayRulerSymbol} label={txt("കവ്കബ്", "Kawkab", "Kavkeb")} value={planetNameAr || planetName} color={G.text} />
+        <MiniCard icon="⏰" label={txt("സാഅത്ത് (ഗ്രഹമണിക്കൂർ)", "Saat", "Saat")} value={`#${d.currentHour.hourNumber}`} color={G.text} />
+        <MiniCard icon={dayRulerSymbol} label={txt("കൌകബ് (ഗ്രഹം)", "Kawkab", "Kavkeb")} value={language === "ml" ? (planetMLDisplay(d.currentHour.planet) || planetName) : (planetNameAr || planetName)} color={G.text} />
       </div>
 
       {/* ══ SUMMARY: Verdict ══ */}

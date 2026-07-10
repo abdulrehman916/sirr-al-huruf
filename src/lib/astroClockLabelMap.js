@@ -85,3 +85,21 @@ export function elementToML(element) {
   if (!element) return "—";
   return ELEMENT_EN_TO_ML[element] || element;
 }
+
+// ── Planet Malayalam display: ML transliteration (ML meaning) ──
+// Format: "ശംസ് (സൂര്യൻ)" — Malayalam transliteration of Arabic term + Malayalam meaning
+export const PLANET_ML_PARTS = {
+  sun:     { reading: "ശംസ്",    meaning: "സൂര്യൻ" },
+  moon:    { reading: "ഖമർ",     meaning: "ചന്ദ്രൻ" },
+  mars:    { reading: "മിരീഖ്",   meaning: "ചൊവ്വാഗ്രഹം" },
+  mercury: { reading: "ഉതാരിദ്",  meaning: "ബുധഗ്രഹം" },
+  jupiter: { reading: "മുഷ്തരി",  meaning: "വ്യാഴഗ്രഹം" },
+  venus:   { reading: "സുഹ്റ",    meaning: "ശുക്രഗ്രഹം" },
+  saturn:  { reading: "സുഹൽ",     meaning: "ശനിഗ്രഹം" },
+};
+
+export function planetMLDisplay(planetKey) {
+  const parts = PLANET_ML_PARTS[planetKey];
+  if (!parts) return null;
+  return `${parts.reading} (${parts.meaning})`;
+}

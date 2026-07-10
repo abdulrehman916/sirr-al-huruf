@@ -10,6 +10,7 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { Search, Clock, CheckCircle2, Ban, BookOpen } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfOperationsForPurpose } from "@/lib/astroClockManuscriptMerger";
+import { planetMLDisplay } from "@/lib/astroClockLabelMap";
 
 const PURPOSE_LABELS = {
   love: { ml: "പ്രണയം", en: "Love", tr: "Aşk" },
@@ -192,7 +193,7 @@ export default function SmartSearch() {
 }
 
 function SaatRow({ h, d, lang, avoid }) {
-  const planetName = lang === "ml" ? d.planetInfo[h.planet]?.name_ml_equivalent : d.planetInfo[h.planet]?.name_en;
+  const planetName = lang === "ml" ? (planetMLDisplay(h.planet) || d.planetInfo[h.planet]?.name_ml_equivalent) : d.planetInfo[h.planet]?.name_en;
   const symbol = d.planetInfo[h.planet]?.symbol || "";
   const color = avoid ? "#F87171" : h.status === "current" ? "#F5D060" : "#86EFAC";
   const statusLabel = h.status === "current" ? (lang === "ml" ? "നിലവിലെ" : "Current") : "";

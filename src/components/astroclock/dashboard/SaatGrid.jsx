@@ -15,6 +15,7 @@ import AstroContextKnowledgePanel from "./AstroContextKnowledgePanel";
 import { getKashfHourAttributes } from "@/lib/astroClockManuscriptMerger";
 import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 import { getSahathQuality } from "@/lib/astroClockSahathQuality.js";
+import { PLANET_ML_PARTS } from "@/lib/astroClockLabelMap";
 
 // Status badge — independent from quality. Controls badge text + card opacity only.
 const STATUS_BADGE = {
@@ -81,10 +82,10 @@ export default function SaatGrid() {
           <span className="font-inter text-xs font-bold tabular-nums w-7 text-center" style={{ color: quality.color }}>#{displayNum}</span>
           <span className="text-base leading-none">{symbol}</span>
           <div className="flex-1 min-w-0">
-            {language === "ml" && d.planetInfo[h.planet]?.name_ar ? (
+            {language === "ml" && PLANET_ML_PARTS[h.planet] ? (
               <>
-                <span className="font-amiri block truncate" style={{ color: quality.color, fontSize: '1.05rem', fontWeight: 700, direction: 'rtl', lineHeight: 1.4 }}>{d.planetInfo[h.planet].name_ar}</span>
-                <span className="font-malayalam-sm block truncate" style={{ color: 'rgba(212,175,55,0.55)', lineHeight: 1.3 }}>({d.planetInfo[h.planet]?.name_ml_reading})</span>
+                <span className="font-malayalam-sm block truncate" style={{ color: quality.color, fontWeight: 700, lineHeight: 1.4 }}>{PLANET_ML_PARTS[h.planet].reading}</span>
+                <span className="font-malayalam-sm block truncate" style={{ color: 'rgba(212,175,55,0.55)', lineHeight: 1.3 }}>({PLANET_ML_PARTS[h.planet].meaning})</span>
               </>
             ) : (
               <span className="font-inter text-xs font-bold block truncate" style={{ color: quality.color }}>{planetName}</span>
