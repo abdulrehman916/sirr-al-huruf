@@ -23,9 +23,18 @@ export function AstroClockLanguageProvider({ children }) {
 
   const setLanguage = useCallback((lang) => setLang(lang), []);
 
-  // Custom date override — when set, all Astro Clock calculations use this date instead of today
-  const [customDate, setCustomDate] = useState(null);
-  const clearCustomDate = useCallback(() => setCustomDate(null), []);
+  // Custom date override — persisted to localStorage so Historical Date Mode survives reloads
+  const [customDate, setCustomDate] = useState(() => {
+    try { const saved = localStorage.getItem("astroClockCustomDate"); return saved ? new Date(saved) : null; } catch { return null; }
+  });
+  const setCustomDatePersisted = useCallback((date) => {
+    setCustomDate(date);
+    try { if (date) localStorage.setItem("astroClockCustomDate", date.toISOString()); else localStorage.removeItem("astroClockCustomDate"); } catch {}
+  }, []);
+  const clearCustomDate = useCallback(() => {
+    setCustomDate(null);
+    try { localStorage.removeItem("astroClockCustomDate"); } catch {}
+  }, []);
   const toggleLanguage = useCallback(() => {
     setLang(prev => prev === "ml" ? "en" : prev === "en" ? "ar" : "ml");
   }, []);
@@ -89,7 +98,7 @@ export function AstroClockLanguageProvider({ children }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, isMalayalam, isEnglish, isArabic, t, txt, txtA, toggleLanguage, setLanguage, customDate, setCustomDate, clearCustomDate }}>
+    <LanguageContext.Provider value={{ language, isMalayalam, isEnglish, isArabic, t, txt, txtA, toggleLanguage, setLanguage, customDate, setCustomDate: setCustomDatePersisted, clearCustomDate }}>
       {children}
     </LanguageContext.Provider>
   );
