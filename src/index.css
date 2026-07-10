@@ -253,7 +253,7 @@
     font-family: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif;
     font-weight: 700;
     font-size: clamp(2.2rem, 5vw, 3rem);
-    letter-spacing: 0.06em;
+    letter-spacing: 0;
     word-spacing: 0.12em;
     line-height: 3.2;
     text-rendering: optimizeLegibility;
