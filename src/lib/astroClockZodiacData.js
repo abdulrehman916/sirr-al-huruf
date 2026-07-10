@@ -488,6 +488,37 @@ export const ZODIAC_SIGNS = {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ENRICHMENT: Gizli İlimler Hazinesi — Yedinci Kitap (Mustafalolu, pp.1409-1507)
+// Additional source references merged. No existing data overwritten.
+// New fields added: favorable_colors_gih, favorable_stones_gih, favorable_metals_gih,
+//   favorable_days_gih, favorable_number_gih, favorable_hour_planet_gih,
+//   health_vulnerabilities_gih, ritual_timing_moon_sign_gih, ritual_note_en_gih,
+//   compatible_signs_gih, incompatible_signs_gih
+// Source: GIH pp.1424-1507
+// ─────────────────────────────────────────────────────────────────────────────
+const GIH_SIGN_ENRICHMENT = {
+  aries:       { favorable_colors_gih: ["red","white","yellow"], favorable_stones_gih: ["diamond","ruby"], favorable_metals_gih: ["iron"], favorable_days_gih: ["Tuesday","Saturday"], favorable_number_gih: 5, favorable_hour_planet_gih: "mars", health_vulnerabilities_en_gih: ["headache","stomach disorders","kidney problems","heart problems in old age"], ritual_timing_moon_sign_gih: "Aries", ritual_note_en_gih: "When Moon enters Aries, write protective prayer in a Mars hour with saffron, musk and rose water — protection from all harm.", compatible_signs_gih: ["Gemini","Leo","Sagittarius","Aquarius"], incompatible_signs_gih: ["Cancer","Scorpio","Pisces"] },
+  taurus:      { favorable_colors_gih: ["blue","lemon_yellow","orange"], favorable_stones_gih: ["emerald","agate","coral"], favorable_metals_gih: ["copper","silver"], favorable_days_gih: ["Friday","Saturday"], favorable_number_gih: 2, favorable_hour_planet_gih: "venus", health_vulnerabilities_en_gih: ["throat inflammation","tonsil inflammation","heart problems","rheumatism"], ritual_timing_moon_sign_gih: "Taurus", ritual_note_en_gih: "When Moon enters Taurus, write protective prayer on Friday in Venus hour with saffron, musk and rose water.", compatible_signs_gih: ["Cancer","Virgo","Capricorn","Pisces"], incompatible_signs_gih: ["Leo","Aquarius"] },
+  gemini:      { favorable_colors_gih: ["yellow","green","red","blue"], favorable_stones_gih: ["emerald","agate","topaz"], favorable_metals_gih: ["silver","copper"], favorable_days_gih: ["Wednesday"], favorable_number_gih: 5, favorable_hour_planet_gih: "mercury", health_vulnerabilities_en_gih: ["rheumatism","nerve disorders","breathing problems"], ritual_timing_moon_sign_gih: "Gemini", ritual_note_en_gih: "When Moon enters Gemini, write protection prayer on Wednesday in Mercury hour with musk, saffron, rose water.", compatible_signs_gih: ["Libra","Aquarius","Aries","Leo"], incompatible_signs_gih: ["Pisces","Virgo"] },
+  cancer:      { favorable_colors_gih: ["white","sky_blue","lemon_yellow","light_green"], favorable_stones_gih: ["crystal","moonstone","turquoise"], favorable_metals_gih: ["silver"], favorable_days_gih: ["Monday"], favorable_number_gih: 2, favorable_hour_planet_gih: "moon", health_vulnerabilities_en_gih: ["stomach disorders","digestive problems","asthma","nerve disorders"], ritual_timing_moon_sign_gih: "Cancer", ritual_note_en_gih: "When Moon enters Cancer, wear a silver ring fumigated with white pepper, camphor and asarabacca at Moon hour on Monday.", compatible_signs_gih: ["Scorpio","Pisces","Taurus","Virgo"], incompatible_signs_gih: ["Aries","Libra","Gemini"] },
+  leo:         { favorable_colors_gih: ["red","gold","yellow"], favorable_stones_gih: ["ruby","diamond"], favorable_metals_gih: ["gold"], favorable_days_gih: ["Sunday"], favorable_number_gih: 1, favorable_hour_planet_gih: "sun", health_vulnerabilities_en_gih: ["back problems","heart conditions","eye ailments"], compatible_signs_gih: ["Aries","Gemini","Libra","Sagittarius"], incompatible_signs_gih: ["Taurus","Aquarius"] },
+  virgo:       { favorable_colors_gih: ["dark_blue","dark_green"], favorable_stones_gih: ["emerald","turquoise"], favorable_metals_gih: ["copper","silver"], favorable_days_gih: ["Wednesday"], favorable_number_gih: 2, favorable_hour_planet_gih: "venus", health_vulnerabilities_en_gih: ["heart problems","stomach problems","kidney problems","intestinal conditions"], compatible_signs_gih: ["Taurus","Capricorn","Cancer","Scorpio"], incompatible_signs_gih: ["Gemini","Sagittarius","Pisces"] },
+  libra:       { favorable_colors_gih: ["blue","white","indigo"], favorable_stones_gih: ["sapphire","opal"], favorable_metals_gih: ["copper","silver"], favorable_days_gih: ["Friday","Monday"], favorable_number_gih: 6, favorable_hour_planet_gih: "venus", health_vulnerabilities_en_gih: ["head problems","heart ailments","bile problems"], compatible_signs_gih: ["Gemini","Aquarius","Leo","Sagittarius"], incompatible_signs_gih: ["Cancer","Capricorn","Aries"] },
+  scorpio:     { favorable_colors_gih: ["red","dark"], favorable_stones_gih: ["ruby","red_stone"], favorable_metals_gih: ["iron"], favorable_days_gih: ["Tuesday"], favorable_hour_planet_gih: "mars", health_vulnerabilities_en_gih: ["heart disease","stomach ailments","accidents","fire"], compatible_signs_gih: ["Cancer","Pisces","Virgo","Capricorn"], incompatible_signs_gih: ["Leo","Aquarius","Taurus"] },
+  sagittarius: { favorable_colors_gih: ["blue","white","sky_blue"], favorable_stones_gih: ["turquoise","emerald"], favorable_metals_gih: ["tin","copper"], favorable_days_gih: ["Thursday"], favorable_number_gih: 3, favorable_hour_planet_gih: "jupiter", health_vulnerabilities_en_gih: ["bile problems","dizziness","rheumatism","heart pain","asthma"], compatible_signs_gih: ["Aries","Leo","Gemini","Aquarius"], incompatible_signs_gih: ["Virgo","Pisces","Scorpio"] },
+  capricorn:   { favorable_colors_gih: ["dark","black","blue","brown"], favorable_stones_gih: ["sapphire","onyx"], favorable_metals_gih: ["lead","iron"], favorable_days_gih: ["Saturday"], favorable_number_gih: 8, favorable_hour_planet_gih: "saturn", health_vulnerabilities_en_gih: ["rheumatism","cold","nerve conditions","digestive problems"], compatible_signs_gih: ["Taurus","Virgo","Scorpio","Pisces"], incompatible_signs_gih: ["Aries","Cancer","Leo"] },
+  aquarius:    { favorable_colors_gih: ["blue","sky_blue","saffron"], favorable_stones_gih: ["sapphire","turquoise"], favorable_metals_gih: ["silver"], favorable_days_gih: ["Saturday","Wednesday"], favorable_hour_planet_gih: "saturn", health_vulnerabilities_en_gih: ["nervous conditions","blood circulation problems"], compatible_signs_gih: ["Gemini","Libra","Aries","Sagittarius"], incompatible_signs_gih: ["Taurus","Leo","Scorpio"] },
+  pisces:      { favorable_colors_gih: ["blue","green","white","saffron"], favorable_stones_gih: ["topaz","turquoise","emerald"], favorable_metals_gih: ["tin","silver"], favorable_days_gih: ["Thursday"], favorable_hour_planet_gih: "jupiter", health_vulnerabilities_en_gih: ["bile problems","stomach problems","dizziness"], compatible_signs_gih: ["Cancer","Scorpio","Taurus","Capricorn"], incompatible_signs_gih: ["Gemini","Virgo"] }
+};
+
+// Apply enrichment to ZODIAC_SIGNS
+Object.keys(GIH_SIGN_ENRICHMENT).forEach(key => {
+  if (ZODIAC_SIGNS[key]) {
+    Object.assign(ZODIAC_SIGNS[key], GIH_SIGN_ENRICHMENT[key]);
+  }
+});
+
 export function getZodiacSign(key) {
   return ZODIAC_SIGNS[key] || null;
 }
