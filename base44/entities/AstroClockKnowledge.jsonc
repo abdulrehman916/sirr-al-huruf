@@ -1,11 +1,11 @@
 {
   "name": "AstroClockKnowledge",
   "type": "object",
-  "description": "Timing intelligence extracted from verified manuscripts and merged into the Astro Clock. Each record is a canonical knowledge record linked to a specific weekday, day/night period, Sahath, or planetary hour. GLOBAL KNOWLEDGE CONFLICT RESOLUTION RULE: When multiple verified manuscripts provide information for the same canonical record, every newly extracted field is classified as Complementary (auto-merge), Equivalent (normalize-merge), Context-Specific (store under condition), or Conflicting (preserve both as Multiple Verified Opinions). The system never loses verified information and never blindly merges conflicting statements. Marker records (is_marker=true) prevent reprocessing and are never displayed.",
+  "description": "Timing intelligence extracted from verified manuscripts, screenshots, and merged into the Astro Clock. FULL-CONTEXT INDEXING RULE: Every knowledge record is indexed by the complete context \u2014 Weekday + Day/Night + Sa'at Number (1-24) + Governing Kawkab + Nakshatra/Manzil (if applicable). Knowledge is NEVER stored by planet name alone. Two records for the same Kawkab but different weekdays are DIFFERENT records. When the manuscript cycle returns to the same Day + Sa'at + Kawkab combination, the same canonical knowledge is displayed. GLOBAL MERGE RULE: When multiple sources (manuscripts, screenshots) provide information for the same full-context combination, unique recommendations are merged, duplicates are removed, every source reference is preserved, and existing knowledge is NEVER overwritten or deleted. Conflicting opinions are preserved as 'Multiple Verified Opinions'. Marker records (is_marker=true) prevent reprocessing and are never displayed.",
   "properties": {
     "knowledge_id": {
       "type": "string",
-      "description": "Permanent unique identifier. Format: ACK-<source_entry_id>-<seq> or ACK-MARKER-<entry_id> for markers."
+      "description": "Permanent unique identifier. Format: ACK-<source_entry_id>-<seq>, ACK-SCR-<timestamp>-<rand> for screenshots, or ACK-MARKER-<entry_id> for markers."
     },
     "source_type": {
       "type": "string",
@@ -14,13 +14,14 @@
         "day_period",
         "night_period",
         "sahath",
-        "planetary_hour"
+        "planetary_hour",
+        "full_context"
       ],
-      "description": "Which Astro Clock section this knowledge enriches: weekday=specific weekday, day_period=daytime general, night_period=nighttime general, sahath=specific Sahath number, planetary_hour=specific planet hour"
+      "description": "Which Astro Clock section this knowledge enriches. 'full_context' = indexed by the complete Weekday+Period+Saat+Kawkab+Nakshatra combination (screenshot-sourced records use this). Legacy types retained for backward compatibility."
     },
     "weekday": {
       "type": "integer",
-      "description": "0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday. Only for source_type=weekday, day_period, night_period. Null for sahath/planetary_hour."
+      "description": "0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday. REQUIRED for full_context records \u2014 every knowledge record must specify its weekday."
     },
     "period": {
       "type": "string",
@@ -28,15 +29,27 @@
         "day",
         "night"
       ],
-      "description": "Day or Night period. Only for source_type=day_period, night_period, sahath. Null for weekday/planetary_hour."
+      "description": "Day or Night period. REQUIRED for full_context records."
     },
     "sahath_number": {
       "type": "integer",
-      "description": "Sahath number 1-12. Only for source_type=sahath. Null for other source types."
+      "description": "Legacy Sahath number 1-12 (per-period). Retained for backward compatibility with manuscript enrichment."
+    },
+    "saat_number": {
+      "type": "integer",
+      "description": "FULL-CONTEXT Sa'at number 1-24. 1-12 = daytime hours, 13-24 = nighttime hours. REQUIRED for full_context records \u2014 uniquely identifies the planetary hour within the 24-hour cycle."
     },
     "planet": {
       "type": "string",
-      "description": "Planet key (sun, moon, mars, mercury, jupiter, venus, saturn). Only for source_type=planetary_hour or sahath (the ruling planet). Null for weekday/day_period/night_period."
+      "description": "Governing Kawkab / planet key (sun, moon, mars, mercury, jupiter, venus, saturn). For full_context records, this is the Kawkab ruling this specific Sa'at."
+    },
+    "nakshatra": {
+      "type": "string",
+      "description": "Lunar mansion / Manzil name if the knowledge is specific to a nakshatra. Empty if not applicable. Part of the full context key."
+    },
+    "full_context_key": {
+      "type": "string",
+      "description": "FULL-CONTEXT INDEX KEY. Format: 'weekday|period|saat_number|kawkab|nakshatra'. Every full_context record uses this key. Two records with the same key represent the same canonical Day+Saat+Kawkab combination and are merged \u2014 never duplicated."
     },
     "knowledge_category": {
       "type": "string",
@@ -48,13 +61,276 @@
         "timing_rule",
         "suitable_time",
         "unsuitable_time",
-        "special_timing"
+        "special_timing",
+        "full_context_rule"
       ],
-      "description": "Type of timing knowledge"
+      "description": "Type of timing knowledge. 'full_context_rule' = complete Day+Saat+Kawkab rule with action arrays."
+    },
+    "recommended_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "ml": {
+            "type": "string"
+          },
+          "ar": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "book_title": {
+                  "type": "string"
+                },
+                "page_number": {
+                  "type": "string"
+                },
+                "entry_id": {
+                  "type": "string"
+                },
+                "screenshot_url": {
+                  "type": "string"
+                }
+              }
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "en"
+        ]
+      },
+      "default": [],
+      "description": "FULL-CONTEXT: Actions recommended for this exact Day+Saat+Kawkab. Unique items only \u2014 duplicates removed during merge. Every source preserved."
+    },
+    "forbidden_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "ml": {
+            "type": "string"
+          },
+          "ar": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "book_title": {
+                  "type": "string"
+                },
+                "page_number": {
+                  "type": "string"
+                },
+                "entry_id": {
+                  "type": "string"
+                },
+                "screenshot_url": {
+                  "type": "string"
+                }
+              }
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "en"
+        ]
+      },
+      "default": [],
+      "description": "FULL-CONTEXT: Actions forbidden / to be avoided for this exact Day+Saat+Kawkab. Unique items only. Every source preserved."
+    },
+    "enemy_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "ml": {
+            "type": "string"
+          },
+          "ar": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "book_title": {
+                  "type": "string"
+                },
+                "page_number": {
+                  "type": "string"
+                },
+                "entry_id": {
+                  "type": "string"
+                },
+                "screenshot_url": {
+                  "type": "string"
+                }
+              }
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "en"
+        ]
+      },
+      "default": [],
+      "description": "FULL-CONTEXT: Enemy-related actions for this exact Day+Saat+Kawkab. Unique items only. Every source preserved."
+    },
+    "friendship_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "ml": {
+            "type": "string"
+          },
+          "ar": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "book_title": {
+                  "type": "string"
+                },
+                "page_number": {
+                  "type": "string"
+                },
+                "entry_id": {
+                  "type": "string"
+                },
+                "screenshot_url": {
+                  "type": "string"
+                }
+              }
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "en"
+        ]
+      },
+      "default": [],
+      "description": "FULL-CONTEXT: Friendship-related actions for this exact Day+Saat+Kawkab. Unique items only. Every source preserved."
+    },
+    "ritual_suitability": {
+      "type": "string",
+      "description": "FULL-CONTEXT: Ritual suitability assessment for this exact Day+Saat+Kawkab. Describes which ritual types are suitable and why."
+    },
+    "warnings_list": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "ml": {
+            "type": "string"
+          },
+          "ar": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "book_title": {
+                  "type": "string"
+                },
+                "page_number": {
+                  "type": "string"
+                },
+                "entry_id": {
+                  "type": "string"
+                },
+                "screenshot_url": {
+                  "type": "string"
+                }
+              }
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "en"
+        ]
+      },
+      "default": [],
+      "description": "FULL-CONTEXT: Warnings for this exact Day+Saat+Kawkab. Unique items only. Every source preserved."
+    },
+    "notes_list": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "ml": {
+            "type": "string"
+          },
+          "ar": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "book_title": {
+                  "type": "string"
+                },
+                "page_number": {
+                  "type": "string"
+                },
+                "entry_id": {
+                  "type": "string"
+                },
+                "screenshot_url": {
+                  "type": "string"
+                }
+              }
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "en"
+        ]
+      },
+      "default": [],
+      "description": "FULL-CONTEXT: Additional notes for this exact Day+Saat+Kawkab. Unique items only. Every source preserved."
     },
     "knowledge_text_en": {
       "type": "string",
-      "description": "English text of the timing knowledge \u2014 RESOLVED text containing complementary and equivalent knowledge merged via LLM. Empty string for marker records."
+      "description": "English text of the timing knowledge \u2014 RESOLVED text containing complementary and equivalent knowledge merged via LLM. Empty string for marker records. For full_context records, this is a summary of the complete rule."
     },
     "knowledge_text_ml": {
       "type": "string",
@@ -66,11 +342,11 @@
     },
     "content_hash": {
       "type": "string",
-      "description": "SHA-256 hash of normalized knowledge_text_en for exact duplicate detection. Marker records use no-timing-<entry_id>."
+      "description": "SHA-256 hash of normalized knowledge_text_en for exact duplicate detection. Marker records use no-timing-<entry_id>. Screenshot records use scr-<full_context_key>-<hash of first action>."
     },
     "canonical_key": {
       "type": "string",
-      "description": "Canonical routing key for field-level knowledge evolution. Format: 'source_type|weekday|period|sahath_number|planet'. Records with the same canonical_key represent the same canonical topic."
+      "description": "Legacy canonical routing key. Format: 'source_type|weekday|period|sahath_number|planet'. Retained for backward compatibility with manuscript enrichment."
     },
     "is_marker": {
       "type": "boolean",
@@ -108,6 +384,9 @@
                 },
                 "entry_id": {
                   "type": "string"
+                },
+                "screenshot_url": {
+                  "type": "string"
                 }
               }
             },
@@ -129,7 +408,7 @@
         "properties": {
           "field": {
             "type": "string",
-            "description": "Which field/topic conflicts (e.g., 'timing', 'best_suited_activity', 'method')"
+            "description": "Which field/topic conflicts (e.g., 'timing', 'best_suited_activity', 'method', 'recommended_actions', 'forbidden_actions')"
           },
           "opinion_text_en": {
             "type": "string"
@@ -153,6 +432,9 @@
                 },
                 "entry_id": {
                   "type": "string"
+                },
+                "screenshot_url": {
+                  "type": "string"
                 }
               }
             },
@@ -174,7 +456,7 @@
         }
       },
       "default": [],
-      "description": "GLOBAL CONFLICT RESOLUTION RULE: Conflicting opinions from verified sources. Both statements preserved. Each attached to its supporting sources. Marked as 'Multiple Verified Opinions'. Future manuscripts can strengthen one opinion through additional supporting sources."
+      "description": "GLOBAL CONFLICT RESOLUTION RULE: Conflicting opinions from verified sources. Both statements preserved. Each attached to its supporting sources. Marked as 'Multiple Verified Opinions'."
     },
     "conflict_flags": {
       "type": "array",
@@ -186,24 +468,28 @@
     },
     "source_book_id": {
       "type": "string",
-      "description": "FK to ManuscriptBook.book_id"
+      "description": "FK to ManuscriptBook.book_id. Empty for screenshot-sourced records."
     },
     "source_book_title": {
       "type": "string",
-      "description": "Denormalized book title"
+      "description": "Denormalized book title. For screenshots, this is 'Screenshot Upload'."
     },
     "source_page_number": {
       "type": "string",
-      "description": "Page number"
+      "description": "Page number. For screenshots, empty."
     },
     "source_entry_id": {
       "type": "string",
-      "description": "FK to ManuscriptEntry.entry_id"
+      "description": "FK to ManuscriptEntry.entry_id. Empty for screenshot-sourced records."
+    },
+    "source_screenshot_url": {
+      "type": "string",
+      "description": "URL of the source screenshot image (for screenshot-sourced records). Preserved permanently for provenance."
     },
     "is_verified": {
       "type": "boolean",
       "default": false,
-      "description": "True only if source ManuscriptEntry was verified."
+      "description": "True only if source ManuscriptEntry was verified. Screenshot records default to false (admin-reviewed)."
     },
     "supporting_sources": {
       "type": "array",
@@ -218,16 +504,19 @@
           },
           "entry_id": {
             "type": "string"
+          },
+          "screenshot_url": {
+            "type": "string"
           }
         }
       },
       "default": [],
-      "description": "Additional manuscript sources. Updated when duplicate content_hash or canonical_key match is found."
+      "description": "Additional manuscript/screenshot sources. Updated when duplicate content_hash or full_context_key match is found. Every source is preserved permanently."
     },
     "source_count": {
       "type": "integer",
       "default": 1,
-      "description": "Total manuscript sources. 0 for markers."
+      "description": "Total manuscript/screenshot sources. 0 for markers."
     }
   },
   "required": [
@@ -254,6 +543,27 @@
       "name": "idx_canonical_key",
       "fields": [
         "canonical_key"
+      ]
+    },
+    {
+      "name": "idx_full_context_key",
+      "fields": [
+        "full_context_key"
+      ]
+    },
+    {
+      "name": "idx_context_lookup",
+      "fields": [
+        "weekday",
+        "period",
+        "saat_number",
+        "planet"
+      ]
+    },
+    {
+      "name": "idx_saat_number",
+      "fields": [
+        "saat_number"
       ]
     },
     {

@@ -11,6 +11,7 @@ import { ChevronDown } from "lucide-react";
 import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
+import AstroContextKnowledgePanel from "./AstroContextKnowledgePanel";
 import { getKashfHourAttributes } from "@/lib/astroClockManuscriptMerger";
 import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 import { getSahathQuality } from "@/lib/astroClockSahathQuality.js";
@@ -161,6 +162,16 @@ export default function SaatGrid() {
                     }]}
                   />
                 )}
+                {/* FULL-CONTEXT MANUSCRIPT KNOWLEDGE — Day+Saat+Kawkab specific */}
+                <AstroContextKnowledgePanel
+                  context={{
+                    weekday: d.activeDayIndex,
+                    period: h.period,
+                    saat_number: h.hourNumber,
+                    planet: h.planet,
+                    nakshatra: d.currentMansion?.name_en || ''
+                  }}
+                />
             </div>
           </motion.div>
         )}

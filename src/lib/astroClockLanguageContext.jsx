@@ -23,7 +23,7 @@ export function AstroClockLanguageProvider({ children }) {
 
   const setLanguage = useCallback((lang) => setLang(lang), []);
 
-  // Custom date override — persisted to localStorage so Historical Date Mode survives reloads
+  // Custom date override — persisted to localStorage so Historical Date Mode survives reloads.
   const [customDate, setCustomDate] = useState(() => {
     try { const saved = localStorage.getItem("astroClockCustomDate"); return saved ? new Date(saved) : null; } catch { return null; }
   });

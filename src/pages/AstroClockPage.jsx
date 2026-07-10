@@ -6,10 +6,14 @@
 import { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
 import { AstroClockLanguageProvider, useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import { useAuth } from "@/lib/AuthContext";
 import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
 import DashboardSection from "@/components/astroclock/dashboard/DashboardSection";
 import AstroClockErrorBoundary from "@/components/astroclock/AstroClockErrorBoundary";
+
+// Lazy-load admin screenshot uploader
+const AstroScreenshotUploader = lazy(() => import("@/components/astroclock/AstroScreenshotUploader"));
 
 // Lazy-load all sections — only renders when expanded
 const TodayDashboard = lazy(() => import("@/components/astroclock/dashboard/TodayDashboard"));
@@ -75,6 +79,8 @@ function CustomDatePicker() {
 
 function AstroClockContent() {
   const { txt } = useAstroClockLanguage();
+  const { role } = useAuth();
+  const isAdmin = role === 'admin' || role === 'owner';
 
   return (
     <PageLayout>
@@ -175,6 +181,18 @@ function AstroClockContent() {
             </Suspense>
           </DashboardSection>
         </AstroClockErrorBoundary>
+
+        {/* ── Admin-only: Screenshot Analysis & Merge ── */}
+        {isAdmin && (
+          <AstroClockErrorBoundary label="Screenshot Uploader">
+            <DashboardSection icon="📷" title={txt("സ്ക്രീൻഷോട്ട് വിശകലനം", "Screenshot Analysis", "تحليل لقطة الشاشة")}
+              subtitle={txt("ഗ്രന്ഥ സ്ക്രീൻഷോട്ട് → ദിവസം+സഅാത്+കവ്കബ് വിജ്ഞാനം", "Manuscript screenshot → Day+Saat+Kawkab knowledge", "لقطة المخطوطة → معرفة اليوم+الساعة+الكوكب")}>
+              <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+                <AstroScreenshotUploader />
+              </Suspense>
+            </DashboardSection>
+          </AstroClockErrorBoundary>
+        )}
       </div>
     </PageLayout>
   );
