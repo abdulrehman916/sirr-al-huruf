@@ -10,6 +10,7 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfMansionByNo } from "@/lib/astroClockManuscriptMerger";
 import { natureToArabic, isNahsNature, zodiacToArabic, extractDegree } from "@/lib/astroClockLabelMap";
+import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 
 export default function MansionsReference() {
   const d = useAstroData();
@@ -65,7 +66,7 @@ export default function MansionsReference() {
               <button onClick={() => setExpanded(isOpen ? null : m.no)}
                 className="w-full flex items-center gap-2 p-2.5 text-left">
                 <span className="font-inter text-[10px] font-bold tabular-nums w-6 text-center" style={{ color }}>#{m.no}</span>
-                <span className="font-inter text-xs font-bold flex-1 truncate" style={{ color: "rgba(255,255,255,0.80)" }}>{m.name}</span>
+                <span className="font-inter text-xs font-bold flex-1 truncate" style={{ color: "rgba(255,255,255,0.80)" }}>{MANSION_ML_NAMES[m.name] || m.name}</span>
                 <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.50)" }}>{m.name_arabic}</span>
                 {isCurrent && <span className="font-inter text-[7px] uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060" }}>{txt("നിലവിലെ", "Now", "Şimdi")}</span>}
                 <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)", transform: isOpen ? "rotate(180deg)" : "none" }} />

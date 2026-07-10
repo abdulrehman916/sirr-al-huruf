@@ -11,6 +11,7 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard, SubCollapse } from "./DashboardSection";
 import { getKashfLunarDayInfo, getKashfNahsStatus } from "@/lib/astroClockManuscriptMerger";
+import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
@@ -67,9 +68,8 @@ export default function TodayDashboard() {
   const moonPhaseLabel = language === "ml"
     ? d.moonPhaseDesc?.ml
     : phaseEn;
-  const moonMansionDisplay = language === "ml"
-    ? `നക്ഷത്രം #${d.currentMansion?.no || "?"}`
-    : `#${d.currentMansion?.no || "?"} ${d.currentMansion?.name_en || ""}`.trim();
+  const moonMansionName = MANSION_ML_NAMES[d.currentMansion?.name] || "";
+  const moonMansionDisplay = `#${d.currentMansion?.no || "?"} ${moonMansionName}`.trim();
 
   // ── Kashf lunar day data ──
   const kashfLunarDay = getKashfLunarDayInfo(d.lunarDay);

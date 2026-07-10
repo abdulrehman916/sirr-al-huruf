@@ -9,6 +9,7 @@ import { Moon } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfNightDayRule, getKashfLunarDayInfo } from "@/lib/astroClockManuscriptMerger";
 import { natureToArabic, isNahsNature } from "@/lib/astroClockLabelMap";
+import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 
 export default function MoonCenter() {
   const d = useAstroData();
@@ -25,7 +26,7 @@ export default function MoonCenter() {
   const waxing = d.lunarDay ? d.lunarDay <= 14 : true;
   const moonLongitude = parseFloat(d.moonPosition.longitude);
   const moonMansion = d.currentMansion;
-  const moonMansionName = moonMansion?.name || "—";
+  const moonMansionName = MANSION_ML_NAMES[moonMansion?.name] || moonMansion?.name || "—";
 
   const dignity = d.moonDignity;
   const dignityType = dignity ? (language === "ml" ? dignity.type_ml : dignity.type_en) : txt("സാധാരണം", "Normal", "Normal");
