@@ -18,6 +18,13 @@ import { getAllRecitationsMap, getQuranVerificationNote, MANUSCRIPT_AUTHORITY_RU
 const G = { text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.20)" };
 const NOT_SPECIFIED_ANY = "ഇറക്കുമതി ചെയ്ത ഒരു ഗ്രന്ഥത്തിലും പറയാത്തത്";
 
+// Display helper: convert English source names to Arabic manuscript titles
+function arabicBookTitle(source) {
+  if (!source) return source;
+  if (source.includes("Kashf")) return "كشف الحقائق";
+  return source;
+}
+
 const TYPE_META = {
   azimah: { label_ml: "അസീം", color: "#F87171", bg: "rgba(248,113,113,0.06)" },
   qasam: { label_ml: "ഖസം", color: "#818CF8", bg: "rgba(129,140,248,0.06)" },
@@ -99,7 +106,7 @@ function FieldDisplay({ num, label, fieldInstructions }) {
           fieldInstructions.map((instr, i) => (
             <div key={i}>
               <span className="font-malayalam text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>{instr.text}</span>
-              <span className="font-inter text-[8px] ml-1" style={{ color: "rgba(255,255,255,0.25)" }}>📖 {instr.source} p.{instr.page}</span>
+              <span className="font-inter text-[8px] ml-1" style={{ color: "rgba(255,255,255,0.25)" }}>📖 {arabicBookTitle(instr.source)} صـ{instr.page}</span>
             </div>
           ))
         ) : (
@@ -144,7 +151,7 @@ function ProcedureSection({ instructions }) {
               <div className="flex-1">
                 <span className="font-inter text-[8px] px-1 rounded mr-1" style={{ background: "rgba(251,191,36,0.10)", color: "rgba(251,191,36,0.60)" }}>{step.phase}</span>
                 <span className="font-malayalam text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.70)" }}>{step.text}</span>
-                <span className="font-inter text-[8px] block" style={{ color: "rgba(255,255,255,0.25)" }}>📖 {step.source} p.{step.page}</span>
+                <span className="font-inter text-[8px] block" style={{ color: "rgba(255,255,255,0.25)" }}>📖 {arabicBookTitle(step.source)} صـ{step.page}</span>
               </div>
             </div>
           ))}
@@ -182,7 +189,7 @@ function TranslationSection({ mantra, instructions }) {
           explanations.map((instr, i) => (
             <div key={i}>
               <span className="font-malayalam text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>{instr.text}</span>
-              <span className="font-inter text-[8px] ml-1" style={{ color: "rgba(255,255,255,0.25)" }}>📖 {instr.source} p.{instr.page}</span>
+              <span className="font-inter text-[8px] ml-1" style={{ color: "rgba(255,255,255,0.25)" }}>📖 {arabicBookTitle(instr.source)} صـ{instr.page}</span>
             </div>
           ))
         ) : (
@@ -210,10 +217,10 @@ function ReferencesSection({ mantra, instructions }) {
               return (
                 <div key={i} className="flex items-center gap-2">
                   <span className="font-inter text-[9px] font-bold" style={{ color: "#A78BFA" }}>{i + 1}.</span>
-                  <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>
-                    {r ? `${TYPE_META[r.type]?.label_ml || r.type} — ${r.king_en || r.servant_en || r.purpose_en?.slice(0, 50)}` : instr.text}
+                  <span className="font-amiri text-[11px]" style={{ color: "rgba(255,255,255,0.60)", direction: "rtl" }}>
+                    {r ? `${TYPE_META[r.type]?.label_ml || r.type} — ${r.king || r.servant || r.purpose_ml?.slice(0, 50)}` : instr.text}
                   </span>
-                  <span className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.25)" }}>📖 {instr.source} p.{instr.page}</span>
+                  <span className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.25)" }}>📖 {arabicBookTitle(instr.source)} صـ{instr.page}</span>
                 </div>
               );
             })}
@@ -226,7 +233,7 @@ function ReferencesSection({ mantra, instructions }) {
       <div className="pt-2" style={{ borderTop: "1px solid rgba(129,140,248,0.15)" }}>
         <span className="font-malayalam text-[11px] font-bold" style={{ color: "rgba(129,140,248,0.60)" }}>37. മൂലഗ്രന്ഥം:</span>
         <div className="mt-1 space-y-0.5">
-          <div className="flex gap-2"><span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)", minWidth: "60px" }}>ഗ്രന്ഥം:</span><span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.65)" }}>{mantra.source?.book_en || NOT_SPECIFIED_ANY}</span></div>
+          <div className="flex gap-2"><span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)", minWidth: "60px" }}>ഗ്രന്ഥം:</span><span className="font-amiri text-[12px]" style={{ color: "rgba(255,255,255,0.65)", direction: "rtl" }}>{mantra.source?.book || NOT_SPECIFIED_ANY}</span></div>
           <div className="flex gap-2"><span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)", minWidth: "60px" }}>പേജ്:</span><span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.65)" }}>{mantra.source?.page || NOT_SPECIFIED_ANY}</span></div>
           <div className="flex gap-2"><span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)", minWidth: "60px" }}>മൂലം:</span><span className="font-amiri text-[12px]" style={{ color: "rgba(255,255,255,0.65)", direction: "rtl" }}>{mantra.source?.book || NOT_SPECIFIED_ANY}</span></div>
         </div>
@@ -244,7 +251,8 @@ export default function GuidedRitualCard({ mantra, defaultExpanded = false }) {
   const instructions = getMergedRitualInstructions(mantra.id);
   const sources = getRegisteredSources();
   const category = autoClassifyEntry(mantra);
-  const title = mantra.king_en || mantra.servant_en || mantra.purpose_en?.slice(0, 60) || mantra.id;
+  const title = mantra.king || mantra.servant || mantra.purpose_ml?.slice(0, 60) || mantra.id;
+  const isArabicTitle = !!(mantra.king || mantra.servant);
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: meta.bg, border: `1px solid ${meta.color}33` }}>
@@ -259,7 +267,7 @@ export default function GuidedRitualCard({ mantra, defaultExpanded = false }) {
           {meta.label_ml}
         </span>
         <div className="flex-1 min-w-0">
-          <span className="font-inter text-xs font-bold block truncate" style={{ color: meta.color }}>{title}</span>
+          <span className={`${isArabicTitle ? 'font-amiri' : 'font-malayalam'} text-xs font-bold block truncate`} style={{ color: meta.color, ...(isArabicTitle ? { direction: 'rtl', textAlign: 'right', fontSize: '0.95rem' } : {}) }}>{title}</span>
           <span className="font-inter text-[9px] block truncate" style={{ color: "rgba(255,255,255,0.40)" }}>{mantra.purpose_ml?.slice(0, 70)}</span>
         </div>
         <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 transition-transform"
@@ -277,6 +285,12 @@ export default function GuidedRitualCard({ mantra, defaultExpanded = false }) {
             className="overflow-hidden"
           >
             <div className="px-3 pb-3 space-y-2.5">
+              {/* How to Perform — manuscript instructions heading */}
+              <div className="rounded-lg p-2 flex items-center gap-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                <span className="text-sm">📋</span>
+                <span className="font-amiri text-sm font-bold" style={{ color: G.text, direction: "rtl" }}>كيفية الأداء</span>
+                <span className="font-malayalam text-[10px]" style={{ color: "rgba(212,175,55,0.50)" }}>അനുഷ്ഠാന ക്രമം</span>
+              </div>
               {/* Sections 1-5: Title, Timing, Entities, Materials, Personal (fields 1-23) */}
               {DISPLAY_SECTIONS.slice(0, 5).map(section => (
                 <DisplaySection key={section.name} section={section} instructions={instructions} />

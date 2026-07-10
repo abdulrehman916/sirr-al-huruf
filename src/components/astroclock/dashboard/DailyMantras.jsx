@@ -86,8 +86,8 @@ export default function DailyMantras() {
             {total} {txt("പ്രാർഥനകൾ", "recitations", "zikir")}
           </span>
         </div>
-        <span className="font-inter text-[9px] px-2 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.10)", color: G.dim }}>
-          📖 {txt("കശ്ഫ് അൽ-ഹഖാഇഖ്", "Kashf al-Haqa'iq", "Kashf al-Haqa'iq")}
+        <span className="font-amiri text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.10)", color: G.dim, direction: "rtl" }}>
+          📖 كشف الحقائق
         </span>
       </div>
 

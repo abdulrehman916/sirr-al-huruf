@@ -167,7 +167,7 @@ export default function SaatGrid() {
                   <ManuscriptSourcePanel
                     sources={[{
                       id: "kashf",
-                      label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
+                      label: "كشف الحقائق",
                       items: kashfAttrs.map(a => ({
                         ar: a.ar, en: a.en, ml: a.ml, tr: a.tr,
                         type: a.type === "answer" ? "answer" : a.type === "dominance" ? "dominance" : "jaad",

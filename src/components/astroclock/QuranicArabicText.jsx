@@ -41,9 +41,9 @@ import {
 import { Loader2 } from "lucide-react";
 
 const SIZE_MAP = {
-  sm: { fontSize: "clamp(1.1rem, 3vw, 1.35rem)", lineHeight: "2.6" },
-  md: { fontSize: "clamp(1.25rem, 3.5vw, 1.6rem)", lineHeight: "2.8" },
-  lg: { fontSize: "clamp(1.6rem, 4.5vw, 2rem)", lineHeight: "3.0" },
+  sm: { fontSize: "clamp(1.3rem, 3.5vw, 1.6rem)", lineHeight: "3.0", wordSpacing: "0.15em", letterSpacing: "0.04em" },
+  md: { fontSize: "clamp(1.5rem, 4vw, 1.9rem)", lineHeight: "3.4", wordSpacing: "0.18em", letterSpacing: "0.05em" },
+  lg: { fontSize: "clamp(1.8rem, 5vw, 2.4rem)", lineHeight: "3.8", wordSpacing: "0.22em", letterSpacing: "0.06em" },
 };
 
 export default function QuranicArabicText({
@@ -177,6 +177,8 @@ export default function QuranicArabicText({
         style={{
           fontSize: sizeStyle.fontSize,
           lineHeight: sizeStyle.lineHeight,
+          wordSpacing: sizeStyle.wordSpacing,
+          letterSpacing: sizeStyle.letterSpacing,
           color,
           direction: "rtl",
           textAlign: "justify",

@@ -76,7 +76,7 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
                 <div key={source.id}>
                   {/* Source header */}
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(129,140,248,0.50)" }}>
+                    <span className={`${/[\u0600-\u06FF]/.test(source.label) ? 'font-amiri text-[11px]' : 'font-inter text-[9px] uppercase tracking-wider'} font-bold`} style={{ color: "rgba(129,140,248,0.50)", ...(/[\u0600-\u06FF]/.test(source.label) ? { direction: "rtl" } : {}) }}>
                       📖 {source.label}
                     </span>
                   </div>
