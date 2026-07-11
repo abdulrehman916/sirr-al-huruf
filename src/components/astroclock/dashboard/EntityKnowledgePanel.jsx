@@ -19,7 +19,7 @@ import { useEntityKnowledge } from "@/hooks/useEntityKnowledge";
 import { normalizeDisplay } from "@/lib/astroClockLanguageNormalizer";
 
 export default function EntityKnowledgePanel({ entityType, entityKey }) {
-  const { txt } = useAstroClockLanguage();
+  const { txt, language } = useAstroClockLanguage();
   const { knowledge, loading } = useEntityKnowledge(entityType, entityKey);
   const [showAll, setShowAll] = useState(false);
 
@@ -69,7 +69,8 @@ export default function EntityKnowledgePanel({ entityType, entityKey }) {
                   </span>
                 )}
                 {/* Split merged text by separator and show each piece */}
-                {(rec.knowledge_text_en || '').split('\n---\n').filter(t => t.trim()).map((textPiece, pi) => (
+                {(language === 'ml' && rec.knowledge_text_ml ? rec.knowledge_text_ml : (rec.knowledge_text_en || ''))
+                  .split('\n---\n').filter(t => t.trim()).map((textPiece, pi) => (
                   <p key={pi} className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
                     {textPiece.trim()}
                   </p>
