@@ -360,7 +360,7 @@ export function getAllKashfReferences() {
   addRef("53", "Answer Hours (ساعات الإجابة)");
   addRef("53", "Dominance Hours (ساعات المغالبات)");
   addRef("54", "Sheikh Jaad Hour Table (الأدق)");
-  addRef("54", "Moon in Zodiac Best Saat");
+  addRef("54", "Moon in Zodiac Best Hour");
   addRef("55-56", "28 Lunar Mansions (Omani Tradition)");
   addRef("57-58", "Seven Kamil Unlucky Days");
   addRef("57", "Travel Direction Unlucky Days");
