@@ -1,7 +1,7 @@
 {
   "name": "EntityKnowledge",
   "type": "object",
-  "description": "Canonical store for entity-specific manuscript knowledge displayed in entity detail pages on the Astrology page. Each record is linked to a specific entity (planet, zodiac, mansion, house, element, weekday, ritual, general_astro) and displayed in that entity's detail card via EntityKnowledgePanel. ISOLATED \u2014 only unifiedIngestKnowledge, enrichEntityKnowledgeFromManuscript, and migrateLegacyAstroKnowledge write to this entity. MERGE RULES: never overwrite, never delete, dedup by content_hash, merge complementary knowledge by canonical_key, preserve every source reference.",
+  "description": "Canonical store for entity-specific manuscript knowledge displayed in entity detail pages on the Astrology page. Each record is linked to a specific entity (planet, zodiac, mansion, house, element, weekday, ritual, general_astro) and displayed in that entity's detail card via EntityKnowledgePanel. ISOLATED \u2014 only unifiedIngestKnowledge, enrichEntityKnowledgeFromManuscript, and migrateLegacyAstroKnowledge write to this entity. MERGE RULES: never overwrite, never delete, dedup by content_hash, merge complementary knowledge by canonical_key, preserve every source reference. DATA QUALITY: records with verification_status='pending_review' are hidden from users until admin review. Only verification_status='verified' records are displayed.",
   "properties": {
     "knowledge_id": {
       "type": "string",
@@ -91,6 +91,20 @@
       "type": "boolean",
       "default": false,
       "description": "True if source ManuscriptEntry was verified."
+    },
+    "extraction_confidence": {
+      "type": "number",
+      "default": 100,
+      "description": "LLM extraction confidence score (0-100). 100=fully confident. Below 70 = uncertain, marked for review."
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "verified",
+        "pending_review"
+      ],
+      "default": "verified",
+      "description": "Data quality gate. 'verified' = displayed to users. 'pending_review' = hidden until admin review. Default 'verified' so existing records remain visible."
     },
     "supporting_sources": {
       "type": "array",
@@ -202,6 +216,20 @@
       "name": "idx_source_screenshot_url",
       "fields": [
         "source_screenshot_url"
+      ]
+    },
+    {
+      "name": "idx_verification_status",
+      "fields": [
+        "verification_status"
+      ]
+    },
+    {
+      "name": "idx_entity_type_key_verified",
+      "fields": [
+        "entity_type",
+        "entity_key",
+        "verification_status"
       ]
     }
   ],

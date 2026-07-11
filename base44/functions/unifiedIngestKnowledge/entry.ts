@@ -73,11 +73,26 @@ For EVERY distinct piece of knowledge found in the image, extract:
    - ritual: short ritual name (lowercase, no spaces)
    - general_astro: "general"
 
+MULTILINGUAL ENTITY RECOGNITION — The manuscript text may be in Arabic, Malayalam, English, or Turkish. ALL of these names resolve to the SAME entity_key:
+
+PLANETS: sun(الشمس,Shams,Sun,സൂര്യൻ,Güneş) moon(القمر,Qamar,Moon,ചന്ദ്രൻ,Ay) mars(المريخ,Mirrikh,Mars,കുജൻ,Merih) mercury(عطارد,Utarid,Mercury,ബുധൻ,Utarit) jupiter(المشتري,Mushtari,Jupiter,വ്യാഴം,Müşteri) venus(الزهرة,Zuhra,Venus,ശുക്രൻ,Zühre) saturn(زحل,Zuhal,Saturn,ശനി,Zühal)
+
+ZODIAC: aries(الحمل,Hamal,Aries,മേടം,Koç) taurus(الثور,Thawr,Taurus,ഇടം,Boğa) gemini(الجوزاء,Jawza',Gemini,മിഥുനം,İkizler) cancer(السرطان,Saratan,Cancer,കടകം,Yengeç) leo(الأسد,Asad,Leo,ചിങ്ങം,Aslan) virgo(العذراء,Adhra',Virgo,കന്നി,Başak) libra(الميزان,Mizan,Libra,തുലാം,Terazi) scorpio(العقرب,Aqrab,Scorpio,വൃശ്ചികം,Akrep) sagittarius(القوس,Qaws,Sagittarius,ധനു,Yay) capricorn(الجدي,Jady,Capricorn,മകരം,Oğlak) aquarius(الدلو,Dalw,Aquarius,കുംഭം,Kova) pisces(الحوت,Hut,Pisces,മീനം,Balık)
+
+ELEMENTS: fire(نار,Nar,Fire,അഗ്നി,Ateş) earth(تراب,Turab,Earth,ഭൂമി,Toprak) air(هواء,Hawa',Air,വായു,Hava) water(ماء,Ma',Water,ജലം,Su)
+
+WEEKDAYS (0=Sunday): 0(الأحد,Ahad,Sunday,ഞായർ,Pazar) 1(الاثنين,Ithnayn,Monday,തിങ്കൾ,Pazartesi) 2(الثلاثاء,Thulatha',Tuesday,ചൊവ്വ,Salı) 3(الأربعاء,Arbi'a',Wednesday,ബുധൻ,Çarşamba) 4(الخميس,Khamis,Thursday,വ്യാഴം,Perşembe) 5(الجمعة,Jumu'ah,Friday,വെള്ളി,Cuma) 6(السبت,Sabt,Saturday,ശനി,Cumartesi)
+
+MANSIONS 1-28: 1:الشرطين 2:البطين 3:الثريا 4:الدبران 5:الهقعة 6:الهنعة 7:الذراع 8:النثرة 9:الطرفة 10:الجبهة 11:الزبرة 12:الصرفة 13:العوا 14:السماك 15:الغفر 16:الزبانا 17:الإكليل 18:القلب 19:الشولة 20:النعائم 21:البلدة 22:سعد الذابح 23:سعد بلع 24:سعد السعود 25:سعد الأخبية 26:الفرغ المقدم 27:الفرغ المؤخر 28:الرشاء
+
+When you see ANY of these names in ANY language, resolve to the corresponding entity_key.
+
 3. knowledge_category — ONE of: "properties", "traits", "relationships", "timing_rules", "ritual_instructions", "warnings", "incense", "health", "general"
 
 4. knowledge_text_en — English summary of the knowledge (be detailed and specific)
 5. knowledge_text_ar — Original Arabic text if visible (verbatim, never modified, never AI-generated)
 6. structured_data — JSON object with any structured data (e.g., {"colors": ["red"], "metals": ["iron"], "actions": ["protection"], "traits": ["hot", "dry"]})
+7. confidence — Your confidence level (0-100) that: (a) entity_type and entity_key are correctly identified, (b) knowledge_text_en accurately represents the manuscript, (c) the text is not garbled OCR. Set below 70 if the image is unclear, partially visible, or you are uncertain about the entity identification.
 
 For planetary_hour entity_type ONLY, also extract:
 - weekday: 0-6 (0=Sunday)
@@ -136,6 +151,7 @@ Return JSON with this exact schema:
                 knowledge_text_en: { type: "string" },
                 knowledge_text_ar: { type: "string" },
                 structured_data: { type: "object", additionalProperties: true },
+                confidence: { type: "number" },
                 weekday: { type: "number" },
                 period: { type: "string" },
                 saat_number: { type: "number" },
@@ -293,6 +309,7 @@ Return JSON with this exact schema:
         details.push({ entity_type: entityType, entity_key: entityKey, action: 'merged_complementary' });
       } else {
         const knowledgeId = `EK-SCR-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const confidence = Number(entry.confidence || 80);
         await base44.asServiceRole.entities.EntityKnowledge.create({
           knowledge_id: knowledgeId, entity_type: entityType, entity_key: entityKey,
           knowledge_category: category, knowledge_text_en: textEn,
@@ -301,6 +318,8 @@ Return JSON with this exact schema:
           content_hash: contentHash, canonical_key: canonicalKey,
           is_marker: false, source_book_title: bookTitle,
           source_screenshot_url: file_url, is_verified: false,
+          extraction_confidence: confidence,
+          verification_status: confidence >= 70 ? 'verified' : 'pending_review',
           supporting_sources: [], source_count: 1
         });
         recordsCreated++;

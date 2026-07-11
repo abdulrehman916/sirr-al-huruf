@@ -96,10 +96,25 @@ entity_key (lowercase):
 - ritual: short name
 - general_astro: "general"
 
+MULTILINGUAL ENTITY RECOGNITION — Text may be in Arabic, Malayalam, English, or Turkish. ALL variants resolve to the SAME entity_key:
+
+PLANETS: sun(الشمس,Shams,Sun,സൂര്യൻ,Güneş) moon(القمر,Qamar,Moon,ചന്ദ്രൻ,Ay) mars(المريخ,Mirrikh,Mars,കുജൻ,Merih) mercury(عطارد,Utarid,Mercury,ബുധൻ,Utarit) jupiter(المشتري,Mushtari,Jupiter,വ്യാഴം,Müşteri) venus(الزهرة,Zuhra,Venus,ശുക്രൻ,Zühre) saturn(زحل,Zuhal,Saturn,ശനി,Zühal)
+
+ZODIAC: aries(الحمل,Hamal,Aries,മേടം,Koç) taurus(الثور,Thawr,Taurus,ഇടം,Boğa) gemini(الجوزاء,Jawza',Gemini,മിഥുനം,İkizler) cancer(السرطان,Saratan,Cancer,കടകം,Yengeç) leo(الأسد,Asad,Leo,ചിങ്ങം,Aslan) virgo(العذراء,Adhra',Virgo,കന്നി,Başak) libra(الميزان,Mizan,Libra,തുലാം,Terazi) scorpio(العقرب,Aqrab,Scorpio,വൃശ്ചികം,Akrep) sagittarius(القوس,Qaws,Sagittarius,ധനു,Yay) capricorn(الجدي,Jady,Capricorn,മകരം,Oğlak) aquarius(الدلو,Dalw,Aquarius,കുംഭം,Kova) pisces(الحوت,Hut,Pisces,മീനം,Balık)
+
+ELEMENTS: fire(نار,Nar,Fire,അഗ്നി,Ateş) earth(تراب,Turab,Earth,ഭൂമി,Toprak) air(هواء,Hawa',Air,വായു,Hava) water(ماء,Ma',Water,ജലം,Su)
+
+WEEKDAYS: 0(الأحد,Ahad,Sunday,ഞായർ,Pazar) 1(الاثنين,Ithnayn,Monday,തിങ്കൾ,Pazartesi) 2(الثلاثاء,Thulatha',Tuesday,ചൊവ്വ,Salı) 3(الأربعاء,Arbi'a',Wednesday,ബുധൻ,Çarşamba) 4(الخميس,Khamis,Thursday,വ്യാഴം,Perşembe) 5(الجمعة,Jumu'ah,Friday,വെള്ളി,Cuma) 6(السبت,Sabt,Saturday,ശനി,Cumartesi)
+
+MANSIONS 1-28: 1:الشرطين 2:البطين 3:الثريا 4:الدبران 5:الهقعة 6:الهنعة 7:الذراع 8:النثرة 9:الطرفة 10:الجبهة 11:الزبرة 12:الصرفة 13:العوا 14:السماك 15:الغفر 16:الزبانا 17:الإكليل 18:القلب 19:الشولة 20:النعائم 21:البلدة 22:سعد الذابح 23:سعد بلع 24:سعد السعود 25:سعد الأخبية 26:الفرغ المقدم 27:الفرغ المؤخر 28:الرشاء
+
+When you see ANY name in ANY language, resolve to the corresponding entity_key.
+
 Also extract:
 - knowledge_category: properties/traits/relationships/timing_rules/ritual_instructions/warnings/incense/health/general
 - knowledge_text_en: concise English summary of the knowledge
 - knowledge_text_ar: original Arabic text if available (verbatim)
+- confidence: 0-100 (your confidence that entity_type and entity_key are correct, and knowledge_text_en is accurate. Below 70 if uncertain or text is unclear.)
 
 RULES:
 - If an entry is about Mars (e.g., "Mars is hot and dry, rules Aries"), classify as planet/mars.
@@ -137,7 +152,8 @@ Return JSON:
                 entity_key: { type: "string" },
                 knowledge_category: { type: "string" },
                 knowledge_text_en: { type: "string" },
-                knowledge_text_ar: { type: "string" }
+                knowledge_text_ar: { type: "string" },
+                confidence: { type: "number" }
               },
               required: ["entry_id", "entity_type"]
             }
@@ -239,6 +255,7 @@ Return JSON:
         details.push({ entry_id: entry.entry_id, entity_type: entityType, entity_key: entityKey, action: 'merged_complementary' });
       } else {
         const knowledgeId = `EK-MAN-${entry.entry_id}-${Math.random().toString(36).substring(2, 5)}`;
+        const confidence = Number(cls.confidence || 80);
         await base44.asServiceRole.entities.EntityKnowledge.create({
           knowledge_id: knowledgeId, entity_type: entityType, entity_key: entityKey,
           knowledge_category: category, knowledge_text_en: textEn,
@@ -248,6 +265,8 @@ Return JSON:
           source_book_title: bookTitle, source_page_number: entry.page_number || '',
           source_entry_id: entry.entry_id, source_screenshot_url: '',
           is_verified: entry.verification_status === 'verified',
+          extraction_confidence: confidence,
+          verification_status: confidence >= 70 ? 'verified' : 'pending_review',
           supporting_sources: [], source_count: 1
         });
         recordsCreated++;

@@ -26,7 +26,8 @@ export function useEntityKnowledge(entityType, entityKey) {
     base44.entities.EntityKnowledge.filter({
       entity_type: entityType,
       entity_key: String(entityKey).toLowerCase(),
-      is_marker: false
+      is_marker: false,
+      verification_status: "verified"
     }, "-source_count", 20)
       .then(records => {
         if (cancelled) return;
