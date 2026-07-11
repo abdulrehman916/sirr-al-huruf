@@ -1,21 +1,37 @@
 // ═══════════════════════════════════════════════════════════════
-// ASTRO PDF RENDERER — Client-side PDF page → image conversion
+// ASTRO PDF RENDERER — Browser-side PDF page-to-image converter
 // Uses pdfjs-dist to render each PDF page to a PNG blob.
-// Pages are rendered STRICTLY IN ORDER (1, 2, 3, ...) to preserve
-// manuscript page sequence. No parallel rendering.
+// Each blob is then uploaded and sent through unifiedIngestKnowledge.
+//
+// ISOLATED: Only used by AstroScreenshotUploader for multi-page PDF.
+// Does NOT modify the OCR engine or any backend pipeline.
 // ═══════════════════════════════════════════════════════════════
 import * as pdfjsLib from 'pdfjs-dist';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+// Use CDN for worker — more reliable than ?url import across Vite configurations
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.worker.min.mjs';
 
 const RENDER_SCALE = 2;
 
 /**
- * Render every page of a PDF file to a PNG blob, IN ORDER.
- * @param {File} file — the PDF file selected by the user
- * @param {function} onProgress — called with (pageNumber, totalPages) per page
- * @returns {Promise<Array<{page_number: number, blob: Blob}>>} — ordered page images
+ * Get the number of pages in a PDF file.
+ * @param {File} file
+ * @returns {Promise<number>}
+ */
+export async function getPdfPageCount(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const count = pdf.numPages;
+  pdf.destroy();
+  return count;
+}
+
+/**
+ * Render every page of a PDF to a PNG blob, preserving page order.
+ * Calls onProgress(pageNum, totalPages) for each page.
+ * @param {File} file
+ * @param {(pageNum: number, totalPages: number) => void} [onProgress]
+ * @returns {Promise<Array<{page_number: number, blob: Blob}>>}
  */
 export async function renderPdfPages(file, onProgress) {
   const arrayBuffer = await file.arrayBuffer();
