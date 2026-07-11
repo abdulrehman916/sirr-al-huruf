@@ -27,11 +27,18 @@ export default function EntityKnowledgePanel({ entityType, entityKey }) {
   const uniqueRecords = useMemo(() => {
     if (!knowledge || knowledge.length === 0) return [];
     const seen = new Set();
-    return knowledge.filter(r => {
+    const deduped = knowledge.filter(r => {
       const key = (r.knowledge_text_en || '').toLowerCase().trim().substring(0, 100);
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
+    });
+    const PRIORITY = { properties: 1, traits: 2, timing_rules: 3, ritual_instructions: 4, incense: 5, health: 6, general: 7, warnings: 8, relationships: 9 };
+    return deduped.sort((a, b) => {
+      const pa = PRIORITY[a.knowledge_category] || 10;
+      const pb = PRIORITY[b.knowledge_category] || 10;
+      if (pa !== pb) return pa - pb;
+      return (b.source_count || 1) - (a.source_count || 1);
     });
   }, [knowledge]);
 

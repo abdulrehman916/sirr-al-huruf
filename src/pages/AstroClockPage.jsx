@@ -26,6 +26,7 @@ const MansionsReference = lazy(() => import("@/components/astroclock/dashboard/M
 const PlanetEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/PlanetEncyclopedia"));
 const ZodiacEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/ZodiacEncyclopedia"));
 const ReferenceLibrary = lazy(() => import("@/components/astroclock/dashboard/ReferenceLibrary"));
+const EntityKnowledgeReviewQueue = lazy(() => import("@/components/astroclock/dashboard/EntityKnowledgeReviewQueue"));
 
 function LangSelector() {
   const { language, setLanguage, txt } = useAstroClockLanguage();
@@ -198,6 +199,18 @@ function AstroClockContent() {
               subtitle={txt("ഗ്രന്ഥ സ്ക്രീൻഷോട്ട് → ദിവസം+സഅാത്+കവ്കബ് വിജ്ഞാനം", "Manuscript screenshot → Day+Saat+Kawkab knowledge", "لقطة المخطوطة → معرفة اليوم+الساعة+الكوكب")}>
               <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
                 <AstroScreenshotUploader />
+              </Suspense>
+            </DashboardSection>
+          </AstroClockErrorBoundary>
+        )}
+
+        {/* ── Admin-only: Knowledge Review Queue ── */}
+        {isAdmin && (
+          <AstroClockErrorBoundary label="Knowledge Review Queue">
+            <DashboardSection icon="📋" title={txt("വിജ്ഞാന അവലോകന ക്യൂ", "Knowledge Review Queue", "قائمة مراجعة المعرفة")}
+              subtitle={txt("അവലോകനം കാത്തിരിക്കുന്ന രേഖകൾ", "Records pending admin review", "سجلات تنتظر المراجعة")}>
+              <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+                <EntityKnowledgeReviewQueue />
               </Suspense>
             </DashboardSection>
           </AstroClockErrorBoundary>
