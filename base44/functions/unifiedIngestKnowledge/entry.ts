@@ -4,7 +4,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // UNIFIED KNOWLEDGE INGESTION PIPELINE
 //
 // ONE entry point for ALL knowledge ingestion: screenshots, PDF
-// page images, OCR pages, and future manuscript images.
+// documents, page images, OCR pages, and future manuscript images.
+// QUALITY CONTROL: rejects garbled OCR, broken Arabic, low confidence,
+// and hallucinated entries before they reach entity pages.
 //
 // PIPELINE:
 //   1. Vision LLM classifies content into entity_type + entity_key
@@ -29,6 +31,47 @@ async function computeHash(text: string): Promise<string> {
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// ══ QUALITY CONTROL — reject garbled OCR, broken Arabic, low confidence, hallucinations ══
+const VALID_ENTITY_KEYS: Record<string, string[]> = {
+  planet: ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn'],
+  zodiac: ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'],
+  element: ['fire', 'earth', 'air', 'water'],
+  weekday: ['0', '1', '2', '3', '4', '5', '6'],
+  house: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+};
+
+function validateArabicText(text: string): boolean {
+  if (!text || text.trim().length === 0) return true;
+  const arabicChars = (text.match(/[\u0600-\u06FF\u0750-\u077F]/g) || []).length;
+  const nonSpaceTotal = text.replace(/\s/g, '').length;
+  if (nonSpaceTotal === 0) return true;
+  if (arabicChars < 3) return false;
+  if (arabicChars / nonSpaceTotal < 0.3) return false;
+  if (/(.)\1{4,}/.test(text)) return false;
+  return true;
+}
+
+function validateEnglishText(text: string): boolean {
+  if (!text || text.trim().length < 15) return false;
+  const alphaNums = (text.match(/[a-zA-Z0-9]/g) || []).length;
+  const nonSpaceTotal = text.replace(/\s/g, '').length;
+  if (nonSpaceTotal === 0) return false;
+  if (alphaNums / nonSpaceTotal < 0.5) return false;
+  if (/(.)\1{4,}/.test(text)) return false;
+  return true;
+}
+
+function validateEntryQuality(entry: any): { valid: boolean; reason: string } {
+  const confidence = Number(entry.confidence || 80);
+  if (confidence < 50) return { valid: false, reason: `Low confidence (${confidence})` };
+  if (!validateEnglishText(String(entry.knowledge_text_en || ''))) return { valid: false, reason: 'Garbled or too-short English text' };
+  if (!validateArabicText(String(entry.knowledge_text_ar || ''))) return { valid: false, reason: 'Garbled or broken Arabic text' };
+  const et = String(entry.entity_type || '').toLowerCase();
+  const ek = String(entry.entity_key || '').toLowerCase();
+  if (VALID_ENTITY_KEYS[et] && !VALID_ENTITY_KEYS[et].includes(ek)) return { valid: false, reason: `Invalid entity key: ${et}/${ek}` };
+  return { valid: true, reason: '' };
+}
+
 const PLANET_KEYS = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn'];
 
 Deno.serve(async (req) => {
@@ -47,7 +90,7 @@ Deno.serve(async (req) => {
     // ══ Step 1: Vision LLM — classify + extract ══
     const prompt = `You are an expert analyst of Islamic occult manuscripts about astrology (Saat, Kawkab, Buruj, Manazil).
 
-Analyze the provided image VERY CAREFULLY. It contains manuscript text (possibly in Arabic, Turkish, or transliterated English) about planets, zodiac signs, lunar mansions, planetary hours, elements, houses, or general astrological knowledge.
+Analyze the provided image or PDF VERY CAREFULLY. It contains manuscript text (possibly in Arabic, Malayalam, Turkish, or transliterated English) about planets, zodiac signs, lunar mansions, planetary hours, elements, houses, or general astrological knowledge. The input may be a single screenshot image OR a multi-page PDF document — if it is a PDF, analyze ALL pages and extract knowledge from every page.
 
 For EVERY distinct piece of knowledge found in the image, extract:
 
@@ -183,6 +226,7 @@ Return JSON with this exact schema:
     const sourceObj = { book_title: bookTitle, page_number: '', entry_id: '', screenshot_url: file_url };
     let recordsCreated = 0;
     let recordsMerged = 0;
+    let rejectedCount = 0;
     const details: any[] = [];
 
     for (const entry of entries) {
@@ -193,6 +237,14 @@ Return JSON with this exact schema:
       const category = String(entry.knowledge_category || 'general').toLowerCase();
 
       if (!entityType || !textEn) continue;
+
+      // ── QUALITY CONTROL — reject garbled OCR, broken Arabic, low confidence, hallucinations ──
+      const qualityCheck = validateEntryQuality(entry);
+      if (!qualityCheck.valid) {
+        rejectedCount++;
+        details.push({ entity_type: entityType, entity_key: entityKey, action: 'rejected', reason: qualityCheck.reason });
+        continue;
+      }
 
       // ── Route planetary_hour entries to AstroClockKnowledge (full_context) ──
       if (entityType === 'planetary_hour') {
@@ -330,8 +382,8 @@ Return JSON with this exact schema:
     return Response.json({
       status: 'ingestion_complete', screenshot_url: file_url,
       entries_found: entries.length, records_created: recordsCreated,
-      records_merged: recordsMerged, details,
-      message: `Analyzed: ${entries.length} knowledge entries found. ${recordsCreated} new records created, ${recordsMerged} existing records merged. All sources preserved.`
+      records_merged: recordsMerged, rejected: rejectedCount, details,
+      message: `Analyzed: ${entries.length} knowledge entries found. ${recordsCreated} new records created, ${recordsMerged} existing records merged, ${rejectedCount} rejected by quality control. All sources preserved.`
     });
   } catch (error) {
     return Response.json({ error: error.message, status: 'ingestion_failed' }, { status: 500 });

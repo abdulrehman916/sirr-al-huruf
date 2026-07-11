@@ -12,7 +12,7 @@
 //   • Knowledge indexed by full context (Day+Saat+Kawkab+Nakshatra)
 // ═══════════════════════════════════════════════════════════════
 import { useState, useRef } from "react";
-import { Upload, Loader2, CheckCircle2, AlertCircle, Image as ImageIcon } from "lucide-react";
+import { Upload, Loader2, CheckCircle2, AlertCircle, Image as ImageIcon, FileText } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 
@@ -24,6 +24,7 @@ export default function AstroScreenshotUploader() {
   const [error, setError] = useState(null);
   const [sourceLabel, setSourceLabel] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [fileName, setFileName] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileSelect = async (e) => {
@@ -33,8 +34,10 @@ export default function AstroScreenshotUploader() {
     setError(null);
     setReport(null);
 
-    // Preview
-    setPreviewUrl(URL.createObjectURL(file));
+    // Detect file type (image or PDF)
+    const isPdf = file.type === 'application/pdf';
+    setFileName(isPdf ? file.name : null);
+    setPreviewUrl(isPdf ? null : URL.createObjectURL(file));
 
     try {
       // Step 1: Upload the file
@@ -52,8 +55,8 @@ export default function AstroScreenshotUploader() {
       setAnalyzing(true);
       const response = await base44.functions.invoke('unifiedIngestKnowledge', {
         file_url: fileUrl,
-        source_label: sourceLabel || 'Screenshot Upload',
-        source_type: 'screenshot'
+        source_label: sourceLabel || (isPdf ? 'PDF Upload' : 'Screenshot Upload'),
+        source_type: isPdf ? 'pdf' : 'screenshot'
       });
       setAnalyzing(false);
 
@@ -74,6 +77,7 @@ export default function AstroScreenshotUploader() {
     setReport(null);
     setError(null);
     setPreviewUrl(null);
+    setFileName(null);
     setSourceLabel("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -90,7 +94,7 @@ export default function AstroScreenshotUploader() {
         <div className="flex items-center gap-2">
           <ImageIcon className="w-4 h-4 flex-shrink-0" style={{ color: "#F5D060" }} />
           <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "rgba(212,175,55,0.65)" }}>
-            {txt("സ്ക്രീൻഷോട്ട് വിശകലനം", "Screenshot Analysis", "تحليل لقطة الشاشة")}
+            {txt("കൈപ്പറ്റഺ അപ്ലോഡ്", "Manuscript Upload", "رفع المخطوطة")}
           </span>
           <span className="font-inter text-[7px] px-1.5 py-0.5 rounded uppercase font-bold" style={{
             background: "rgba(248,113,113,0.10)",
@@ -102,9 +106,9 @@ export default function AstroScreenshotUploader() {
         </div>
         <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
           {txt(
-            "ഗ്രന്ഥ സ്ക്രീൻഷോട്ട് അപ്ലോഡ് ചെയ്യുക — AI ദിവസം + സഅാത് + കവ്കബ് പ്രകാരം വിജ്ഞാനം എക്സ്ട്രാക്റ്റ് ചെയ്യും",
-            "Upload a manuscript screenshot — AI extracts knowledge by Day+Saat+Kawkab",
-            "ارفع لقطة شاشة من المخطوطة — يستخرج الذكاء الاصطناعي المعرفة حسب اليوم+الساعة+الكوكب"
+            "ചിത്രം അല്ലെങ്കിൽ PDF അപ്ലോഡ് ചെയ്യുക — AI എന്റിറ്റി കണ്ടെത്തി ഗ്രഹം/രാശി/നക്ഷത്രം പേജിൽ വിജ്ഞാനം ലയിപ്പിക്കും",
+            "Upload image or PDF — AI detects entities and merges into Planet/Zodiac/Mansion pages",
+            "ارفع صورة أو PDF — يكتشف الذكاء الاصطناعي الكيانات ويدمج المعرفة في صفحات الكواكب/الأبراج/المنازل"
           )}
         </p>
       </div>
@@ -131,7 +135,7 @@ export default function AstroScreenshotUploader() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,application/pdf"
             onChange={handleFileSelect}
             className="hidden"
             disabled={isProcessing}
@@ -158,7 +162,7 @@ export default function AstroScreenshotUploader() {
               <>
                 <Upload className="w-4 h-4" style={{ color: "#F5D060" }} />
                 <span className="font-inter text-[10px] font-bold" style={{ color: "#F5D060" }}>
-                  {txt("സ്ക്രീൻഷോട്ട് തിരഞ്ഞെടുക്കുക", "Select Screenshot", "اختر لقطة الشاشة")}
+                  {txt("ചിത്രം/PDF തിരഞ്ഞെടുക്കുക", "Select Image or PDF", "اختر صورة أو PDF")}
                 </span>
               </>
             )}
@@ -169,6 +173,12 @@ export default function AstroScreenshotUploader() {
         {previewUrl && !report && (
           <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(212,175,55,0.15)" }}>
             <img src={previewUrl} alt="preview" className="w-full max-h-32 object-contain" style={{ background: "rgba(0,0,0,0.30)" }} />
+          </div>
+        )}
+        {fileName && !report && (
+          <div className="rounded-lg p-2 flex items-center gap-2" style={{ border: "1px solid rgba(212,175,55,0.15)", background: "rgba(212,175,55,0.04)" }}>
+            <FileText className="w-4 h-4 flex-shrink-0" style={{ color: "#F5D060" }} />
+            <span className="font-inter text-[10px] truncate" style={{ color: "rgba(212,175,55,0.60)" }}>{fileName}</span>
           </div>
         )}
 
@@ -212,9 +222,11 @@ export default function AstroScreenshotUploader() {
                       {detail.saat ? ` · Saat #${detail.saat}` : ''}
                       {detail.kawkab ? ` · ${detail.kawkab}` : ''}
                     </p>
-                    <p className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                    <p className="font-inter text-[8px]" style={{ color: detail.action === 'rejected' ? "rgba(248,113,113,0.60)" : "rgba(255,255,255,0.40)" }}>
                       {detail.action === 'created'
                         ? txt("പുതിയ രേഖ സൃഷ്ടിച്ചു", "New record created", "سجل جديد")
+                        : detail.action === 'rejected'
+                        ? `${txt("നിരസിച്ചു", "Rejected", "مرفوض")} — ${detail.reason}`
                         : txt("നിലവിലുള്ള രേഖയിൽ ലയിപ്പിച്ചു", "Merged into existing record", "دمج في سجل موجود")}
                     </p>
                   </div>
@@ -231,7 +243,7 @@ export default function AstroScreenshotUploader() {
                 color: "#F5D060",
               }}
             >
-              {txt("മറ്റൊരു സ്ക്രീൻഷോട്ട് അപ്ലോഡ് ചെയ്യുക", "Upload Another Screenshot", "رفع لقطة أخرى")}
+              {txt("മറ്റൊരു ഫയൽ അപ്ലോഡ് ചെയ്യുക", "Upload Another File", "رفع ملف آخر")}
             </button>
           </div>
         )}
