@@ -50,9 +50,10 @@ export default function AstroScreenshotUploader() {
 
       // Step 2: Analyze and merge
       setAnalyzing(true);
-      const response = await base44.functions.invoke('analyzeScreenshotAndMergeAstro', {
+      const response = await base44.functions.invoke('unifiedIngestKnowledge', {
         file_url: fileUrl,
-        source_label: sourceLabel || 'Screenshot Upload'
+        source_label: sourceLabel || 'Screenshot Upload',
+        source_type: 'screenshot'
       });
       setAnalyzing(false);
 
@@ -197,28 +198,24 @@ export default function AstroScreenshotUploader() {
               </div>
             </div>
 
-            {/* Merge details */}
-            {report.merge_details && report.merge_details.length > 0 && (
+            {/* Ingestion details */}
+            {report.details && report.details.length > 0 && (
               <div className="space-y-1">
-                {report.merge_details.map((detail, i) => (
+                {report.details.map((detail, i) => (
                   <div key={i} className="rounded-lg p-1.5" style={{
                     background: "rgba(255,255,255,0.03)",
                     border: "1px solid rgba(212,175,55,0.10)"
                   }}>
                     <p className="font-inter text-[9px] font-bold" style={{ color: "rgba(212,175,55,0.55)" }}>
-                      {detail.weekday} {txt("സഅാത്", "Saat", "ساعة")} #{detail.saat_number} ({detail.kawkab})
-                      {detail.nakshatra && detail.nakshatra !== '(none)' ? ` · ${detail.nakshatra}` : ''}
+                      {detail.entity_type} → {detail.entity_key}
+                      {detail.weekday !== undefined ? ` · Day ${detail.weekday}` : ''}
+                      {detail.saat ? ` · Saat #${detail.saat}` : ''}
+                      {detail.kawkab ? ` · ${detail.kawkab}` : ''}
                     </p>
                     <p className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.40)" }}>
                       {detail.action === 'created'
                         ? txt("പുതിയ രേഖ സൃഷ്ടിച്ചു", "New record created", "سجل جديد")
                         : txt("നിലവിലുള്ള രേഖയിൽ ലയിപ്പിച്ചു", "Merged into existing record", "دمج في سجل موجود")}
-                      {" · "}
-                      {detail.actions_added} {txt("പുതിയ ഇനങ്ങൾ", "items added", "عناصر جديدة")}
-                      {" · "}
-                      {detail.duplicates_skipped} {txt("തന്ത്രങ്ങൾ ഒഴിവാക്കി", "duplicates skipped", "مكرر")}
-                      {" · "}
-                      {detail.total_sources} {txt("സ്രോതസ്സുകൾ", "sources", "مصادر")}
                     </p>
                   </div>
                 ))}

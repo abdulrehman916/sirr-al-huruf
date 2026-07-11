@@ -12,6 +12,7 @@ import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/astroClockManuscriptMerger";
 import { elementToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 import { GIH_PLANET_INFLUENCE_CHARACTERISTICS, GIH_PLANET_RELATIONSHIPS, GIH_VENUS_VEFK, GIH_SUN_DEGREE_TABLE } from "@/lib/gizliIlimlerHazinesiZodiacData";
+import EntityKnowledgePanel from "./EntityKnowledgePanel";
 
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
@@ -238,6 +239,9 @@ export default function PlanetEncyclopedia() {
                     }]}
                   />
                 )}
+
+                {/* Entity Knowledge from unified ingestion pipeline */}
+                <EntityKnowledgePanel entityType="planet" entityKey={key} />
               </div>
             </motion.div>
           )}

@@ -8,6 +8,7 @@ import { ChevronDown } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
 import { GIH_SIGN_PROPERTIES, GIH_ZODIAC_RELATIONSHIPS, GIH_ZODIAC_PROPERTIES, GIH_ELEMENT_RELATIONSHIPS, GIH_TWELVE_HOUSES, GIH_RITUAL_INCENSE } from "@/lib/gizliIlimlerHazinesiZodiacData";
+import EntityKnowledgePanel from "./EntityKnowledgePanel";
 
 function TagList({ items, color }) {
   if (!items?.length) return null;
@@ -245,6 +246,9 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                   </div>
                 );
               })()}
+
+              {/* Entity Knowledge from unified ingestion pipeline */}
+              <EntityKnowledgePanel entityType="zodiac" entityKey={zodiacData.name_en} />
 
               {/* ── Source References ── */}
               <div className="pt-2" style={{ borderTop: "1px solid rgba(212,175,55,0.10)" }}>

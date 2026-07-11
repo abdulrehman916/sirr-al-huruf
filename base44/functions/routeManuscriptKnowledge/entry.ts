@@ -61,6 +61,13 @@ const ROUTE_TO_ENTITY: Record<string, string> = {
   dua: 'DuaKnowledge',
   ritual: 'RitualKnowledge',
   wafq: 'WafqKnowledge',
+  planet_info: 'EntityKnowledge',
+  zodiac_info: 'EntityKnowledge',
+  mansion_info: 'EntityKnowledge',
+  element_info: 'EntityKnowledge',
+  house_info: 'EntityKnowledge',
+  weekday_info: 'EntityKnowledge',
+  general_astro: 'EntityKnowledge',
   other: 'none',
 };
 
@@ -69,6 +76,13 @@ const ROUTE_TO_FUNCTION: Record<string, string> = {
   dua: 'enrichDuaFromManuscript',
   ritual: 'enrichRitualFromManuscript',
   wafq: 'enrichWafqFromManuscript',
+  planet_info: 'enrichEntityKnowledgeFromManuscript',
+  zodiac_info: 'enrichEntityKnowledgeFromManuscript',
+  mansion_info: 'enrichEntityKnowledgeFromManuscript',
+  element_info: 'enrichEntityKnowledgeFromManuscript',
+  house_info: 'enrichEntityKnowledgeFromManuscript',
+  weekday_info: 'enrichEntityKnowledgeFromManuscript',
+  general_astro: 'enrichEntityKnowledgeFromManuscript',
 };
 
 Deno.serve(async (req) => {
@@ -150,6 +164,13 @@ TASK: For each entry, determine its PRIMARY PURPOSE — what is the entry MOSTLY
 - "dua" — PRIMARILY a supplication/invocation/dhikr/quran verse/divine name
 - "ritual" — PRIMARILY an amal/procedure/exorcism/protection method with steps
 - "wafq" — PRIMARILY a magic square/letter diagram/taweez/numeric grid
+- "planet_info" — PRIMARILY about a specific planet's properties/traits/nature/relationships
+- "zodiac_info" — PRIMARILY about a specific zodiac sign's properties/rulership/health
+- "mansion_info" — PRIMARILY about a specific lunar mansion (1-28)
+- "element_info" — PRIMARILY about fire/earth/air/water elements
+- "house_info" — PRIMARILY about one of the 12 astrological houses
+- "weekday_info" — PRIMARILY about a specific weekday's properties
+- "general_astro" — PRIMARILY general astrological theory not specific to one entity
 - "other" — PRIMARILY about materials/herbs/incense/notes
 
 RULES:
@@ -171,7 +192,7 @@ Return JSON: { "classifications": [{ "entry_id": "...", "primary_purpose": "astr
                 type: "object",
                 properties: {
                   entry_id: { type: "string" },
-                  primary_purpose: { type: "string", enum: ["astro_timing", "dua", "ritual", "wafq", "other"] }
+                  primary_purpose: { type: "string", enum: ["astro_timing", "dua", "ritual", "wafq", "planet_info", "zodiac_info", "mansion_info", "element_info", "house_info", "weekday_info", "general_astro", "other"] }
                 },
                 required: ["entry_id", "primary_purpose"]
               }

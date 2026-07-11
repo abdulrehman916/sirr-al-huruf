@@ -11,6 +11,7 @@ import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfMansionByNo } from "@/lib/astroClockManuscriptMerger";
 import { natureToArabic, natureToML, isNahsNature, zodiacToArabic, zodiacToML, extractDegree } from "@/lib/astroClockLabelMap";
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
+import EntityKnowledgePanel from "./EntityKnowledgePanel";
 
 export default function MansionsReference() {
   const d = useAstroData();
@@ -106,6 +107,9 @@ export default function MansionsReference() {
                           }]}
                         />
                       )}
+
+                      {/* Entity Knowledge from unified ingestion pipeline */}
+                      <EntityKnowledgePanel entityType="mansion" entityKey={String(m.no)} />
                     </div>
                   </motion.div>
                 )}

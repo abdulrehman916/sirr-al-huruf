@@ -22,9 +22,16 @@
         "dua",
         "ritual",
         "wafq",
+        "planet_info",
+        "zodiac_info",
+        "mansion_info",
+        "element_info",
+        "house_info",
+        "weekday_info",
+        "general_astro",
         "other"
       ],
-      "description": "The PRIMARY PURPOSE classification: astro_timing=timing/planetary hour knowledge, dua=supplication/invocation, ritual=amal/procedure, wafq=magic square/diagram, other=material/herb/note (not routed to a specific module)"
+      "description": "The PRIMARY PURPOSE classification. astro_timing=timing/planetary hour, dua=supplication, ritual=amal/procedure, wafq=magic square, planet_info=planet-specific knowledge, zodiac_info=zodiac-specific, mansion_info=mansion-specific, element_info=element-specific, house_info=house-specific, weekday_info=weekday-specific, general_astro=general astro knowledge, other=material/herb/note (not routed)."
     },
     "routed_to": {
       "type": "string",
@@ -33,9 +40,10 @@
         "DuaKnowledge",
         "RitualKnowledge",
         "WafqKnowledge",
+        "EntityKnowledge",
         "none"
       ],
-      "description": "The canonical module knowledge store this entry was enriched into. 'none' for primary_purpose='other' entries."
+      "description": "The canonical module knowledge store this entry was enriched into. none for primary_purpose=other entries."
     },
     "knowledge_ids": {
       "type": "array",
@@ -43,7 +51,7 @@
         "type": "string"
       },
       "default": [],
-      "description": "IDs of the knowledge records created in the canonical module store. Empty if the entry was a marker (no module-specific knowledge found) or routed_to='none'."
+      "description": "IDs of the knowledge records created in the canonical module store. Empty if the entry was a marker or routed_to=none."
     },
     "is_marker": {
       "type": "boolean",
