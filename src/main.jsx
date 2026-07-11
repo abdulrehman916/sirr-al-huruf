@@ -5,7 +5,7 @@ import './index.css'
 
 // Register / update service worker — forces immediate activation so old cached
 // login screens are purged and the latest build is always served.
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !import.meta.env.DEV) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then((registration) => {
       // Force the browser to check for an updated sw.js on every launch —
