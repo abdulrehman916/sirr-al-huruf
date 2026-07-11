@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { BookOpen, ChevronDown } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useEntityKnowledge } from "@/hooks/useEntityKnowledge";
+import { normalizeDisplay } from "@/lib/astroClockLanguageNormalizer";
 
 export default function EntityKnowledgePanel({ entityType, entityKey }) {
   const { txt } = useAstroClockLanguage();
@@ -84,7 +85,7 @@ export default function EntityKnowledgePanel({ entityType, entityKey }) {
                     background: "rgba(129,140,248,0.06)",
                     color: "rgba(129,140,248,0.40)"
                   }}>
-                    📖 {rec.source_book_title || 'Manuscript'}
+                    📖 {normalizeDisplay(rec.source_book_title || 'Manuscript')}
                     {rec.source_page_number ? ` p.${rec.source_page_number}` : ''}
                     {rec.source_screenshot_url ? ' 📷' : ''}
                   </span>

@@ -9,6 +9,7 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
 import { GIH_SIGN_PROPERTIES, GIH_ZODIAC_RELATIONSHIPS, GIH_ZODIAC_PROPERTIES, GIH_ELEMENT_RELATIONSHIPS, GIH_TWELVE_HOUSES, GIH_RITUAL_INCENSE } from "@/lib/gizliIlimlerHazinesiZodiacData";
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
+import { normalizeDisplay, normalizeArray } from "@/lib/astroClockLanguageNormalizer";
 
 function TagList({ items, color }) {
   if (!items?.length) return null;
@@ -30,12 +31,12 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
   const gihRel = GIH_ZODIAC_RELATIONSHIPS.find(r => r.sign_en === zodiacData.name_en);
 
   const zName = language === "ml" ? zodiacEnToML(zodiacData.name_en) : zodiacData.name_en;
-  const zElement = language === "ml" ? zodiacData.element_ml : zodiacData.element;
-  const zGender = language === "ml" ? zodiacData.gender_ml : zodiacData.gender;
-  const zRuler = language === "ml" ? zodiacData.ruling_planet_ml : zodiacData.ruling_planet;
-  const zMetal = language === "ml" ? zodiacData.metal_ml : zodiacData.metal;
-  const zIncense = language === "ml" ? zodiacData.incense_ml : zodiacData.incense;
-  const zExplanation = language === "ml" ? zodiacData.explanation_ml : zodiacData.explanation_en;
+  const zElement = normalizeDisplay(language === "ml" ? zodiacData.element_ml : zodiacData.element);
+  const zGender = normalizeDisplay(language === "ml" ? zodiacData.gender_ml : zodiacData.gender);
+  const zRuler = normalizeDisplay(language === "ml" ? zodiacData.ruling_planet_ml : zodiacData.ruling_planet);
+  const zMetal = normalizeDisplay(language === "ml" ? zodiacData.metal_ml : zodiacData.metal);
+  const zIncense = normalizeDisplay(language === "ml" ? zodiacData.incense_ml : zodiacData.incense);
+  const zExplanation = normalizeDisplay(language === "ml" ? zodiacData.explanation_ml : zodiacData.explanation_en);
   const friendlyDisplay = language === "ml"
     ? (signsToML(zodiacData.friendly_signs).join(", ") || "—")
     : (zodiacData.friendly_signs?.join(", ") || "—");
@@ -100,26 +101,26 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               {gih.favorable_colors?.length > 0 && (
                 <div>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല നിറങ്ങൾ", "Favorable Colors", "Colors")} (GIH p.{gih.source_page})</p>
-                  <TagList items={gih.favorable_colors} color={G} />
+                  <TagList items={normalizeArray(gih.favorable_colors)} color={G} />
                 </div>
               )}
               {gih.favorable_stones?.length > 0 && (
                 <div>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല രത്നങ്ങൾ", "Favorable Stones", "Stones")} (GIH p.{gih.source_page})</p>
-                  <TagList items={gih.favorable_stones} color={G} />
+                  <TagList items={normalizeArray(gih.favorable_stones)} color={G} />
                 </div>
               )}
               {gih.favorable_metals?.length > 0 && (
                 <div>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല ലോഹങ്ങൾ", "Favorable Metals", "Metals")} (GIH p.{gih.source_page})</p>
-                  <TagList items={gih.favorable_metals} color={G} />
+                  <TagList items={normalizeArray(gih.favorable_metals)} color={G} />
                 </div>
               )}
 
               {/* ── GIH Favorable Days, Numbers, Hour, Months ── */}
               <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                 {gih.favorable_days?.length > 0 && (
-                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("ദിവസങ്ങൾ", "Days", "Days")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_days.join(", ")}</span></div>
+                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("ദിവസങ്ങൾ", "Days", "Days")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{normalizeArray(gih.favorable_days).join(", ")}</span></div>
                 )}
                 {gih.favorable_number != null && (
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("സംഖ്യ", "Number", "Number")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_number}</span></div>
@@ -134,7 +135,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("രാത്രി", "Fav. Night", "Night")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_night}</span></div>
                 )}
                 {gih.favorable_incense?.length > 0 && (
-                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("തൂപം", "Incense", "Incense")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_incense.join(", ")}</span></div>
+                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("തൂപം", "Incense", "Incense")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{normalizeArray(gih.favorable_incense).join(", ")}</span></div>
                 )}
               </div>
 
@@ -142,7 +143,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               {gih.health_vulnerabilities_en?.length > 0 && (
                 <div>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.50)" }}>📖 {txt("ആരോഗ്യ ദൗർബല്യങ്ങൾ", "Health Vulnerabilities", "Health")} (GIH p.{gih.source_page})</p>
-                  <TagList items={gih.health_vulnerabilities_en} color="#F87171" />
+                  <TagList items={normalizeArray(gih.health_vulnerabilities_en)} color="#F87171" />
                 </div>
               )}
 
@@ -252,8 +253,8 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
 
               {/* ── Source References ── */}
               <div className="pt-2" style={{ borderTop: "1px solid rgba(212,175,55,0.10)" }}>
-                <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 Havâss'ın Derinlikleri — {zodiacData.date_range}</p>
-                {gih.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {gih.source} — pp.{gih.source_page}</p>}
+                <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay("Havâss'ın Derinlikleri")} — {zodiacData.date_range}</p>
+                {gih.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(gih.source)} — pp.{gih.source_page}</p>}
               </div>
             </div>
           </motion.div>

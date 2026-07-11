@@ -9,6 +9,7 @@ import { ChevronDown } from "lucide-react";
 import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
+import { normalizeDisplay, normalizeArray } from "@/lib/astroClockLanguageNormalizer";
 import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/astroClockManuscriptMerger";
 import { elementToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 import { GIH_PLANET_INFLUENCE_CHARACTERISTICS, GIH_PLANET_RELATIONSHIPS, GIH_VENUS_VEFK, GIH_SUN_DEGREE_TABLE } from "@/lib/gizliIlimlerHazinesiZodiacData";
@@ -42,16 +43,16 @@ export default function PlanetEncyclopedia() {
     const isCurrent = key === currentPlanet;
     const isOpen = expanded === key;
     const displayName = language === "ml" ? (planetArabicMLDisplay(key) || info.name_ml_equivalent) : info.name_en;
-    const nature = language === "ml" ? info.nature_ml : info.nature_en;
+    const nature = normalizeDisplay(language === "ml" ? info.nature_ml : info.nature_en);
     const elements = getPlanetElements(key, d.zodiacSigns);
     const color = isCurrent ? "#F5D060" : "rgba(255,255,255,0.70)";
     const borderColor = isCurrent ? "rgba(212,175,55,0.40)" : "rgba(255,255,255,0.08)";
 
-    const goodActions = language === "ml" ? info.goodActions_ml : info.goodActions_en;
-    const badActions = language === "ml" ? info.badActions_ml : info.badActions_en;
-    const benefits = language === "ml" ? info.benefits_ml : info.benefits_en;
-    const warnings = language === "ml" ? info.warnings_ml : info.warnings_en;
-    const spiritual = language === "ml" ? info.spiritualOperations_ml : info.spiritualOperations_en;
+    const goodActions = normalizeArray(language === "ml" ? info.goodActions_ml : info.goodActions_en);
+    const badActions = normalizeArray(language === "ml" ? info.badActions_ml : info.badActions_en);
+    const benefits = normalizeArray(language === "ml" ? info.benefits_ml : info.benefits_en);
+    const warnings = normalizeArray(language === "ml" ? info.warnings_ml : info.warnings_en);
+    const spiritual = normalizeArray(language === "ml" ? info.spiritualOperations_ml : info.spiritualOperations_en);
 
     const friendNames = (friends?.friends || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en);
     const enemyNames = (friends?.enemies || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en);
@@ -224,8 +225,8 @@ export default function PlanetEncyclopedia() {
                 })()}
 
                 {/* Source */}
-                <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {info.source}</p>
-                {friends?.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {friends.source}</p>}
+                <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(info.source)}</p>
+                {friends?.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(friends.source)}</p>}
 
                 {(kashfOps.length > 0 || kashfDir) && (
                   <ManuscriptSourcePanel
