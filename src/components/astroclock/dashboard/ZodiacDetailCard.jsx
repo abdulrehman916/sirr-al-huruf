@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
-import { GIH_SIGN_PROPERTIES, GIH_ZODIAC_RELATIONSHIPS } from "@/lib/gizliIlimlerHazinesiZodiacData";
+import { GIH_SIGN_PROPERTIES, GIH_ZODIAC_RELATIONSHIPS, GIH_ZODIAC_PROPERTIES, GIH_ELEMENT_RELATIONSHIPS, GIH_TWELVE_HOUSES, GIH_RITUAL_INCENSE } from "@/lib/gizliIlimlerHazinesiZodiacData";
 
 function TagList({ items, color }) {
   if (!items?.length) return null;
@@ -177,6 +177,74 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("ശത്രു", "Enemy", "Enemy")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gihRel.enemy_sign_en}</span></div>
                 </div>
               )}
+
+              {/* ── GIH Zodiac Classification (Cardinal/Fixed/Mutable, Triplicity, Gender, Hemisphere) ── */}
+              {(() => {
+                const signName = zodiacData.name_en;
+                const props = GIH_ZODIAC_PROPERTIES;
+                const classifications = [];
+                if (props.munkalibe_signs.signs.includes(signName)) classifications.push({ label: txt("മാറ്റായ്വരുന്ന", "Cardinal", "Cardinal"), page: props.munkalibe_signs.source_page });
+                if (props.sabite_signs.signs.includes(signName)) classifications.push({ label: txt("സ്ഥിരം", "Fixed", "Fixed"), page: props.sabite_signs.source_page });
+                if (props.mumtezic_signs.signs.includes(signName)) classifications.push({ label: txt("മിശ്രം", "Mutable", "Mutable"), page: props.mumtezic_signs.source_page });
+                if (props.nar_teslisler.signs.includes(signName)) classifications.push({ label: `${props.nar_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.nar_teslisler.source_page });
+                if (props.turab_teslisler.signs.includes(signName)) classifications.push({ label: `${props.turab_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.turab_teslisler.source_page });
+                if (props.heva_teslisler.signs.includes(signName)) classifications.push({ label: `${props.heva_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.heva_teslisler.source_page });
+                if (props.maiyye_teslisler.signs.includes(signName)) classifications.push({ label: `${props.maiyye_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.maiyye_teslisler.source_page });
+                if (props.masculine_signs.signs.includes(signName)) classifications.push({ label: txt("പുരുഷ/പകൽ", "Masculine/Day", "Masculine"), page: props.masculine_signs.source_page });
+                if (props.feminine_signs.signs.includes(signName)) classifications.push({ label: txt("സ്ത്രീ/രാത്രി", "Feminine/Night", "Feminine"), page: props.feminine_signs.source_page });
+                if (props.northern_signs.signs.includes(signName)) classifications.push({ label: txt("വടക്കൻ", "Northern", "Northern"), page: props.northern_signs.source_page });
+                if (props.southern_signs.signs.includes(signName)) classifications.push({ label: txt("തെക്കൻ", "Southern", "Southern"), page: props.southern_signs.source_page });
+                const horizonMin = props.horizon_minutes.durations[signName];
+                if (classifications.length === 0 && !horizonMin) return null;
+                return (
+                  <div className="flex flex-wrap gap-1">
+                    {classifications.map((c, i) => (
+                      <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.08)", color: "rgba(212,175,55,0.70)" }}>📖 {c.label} <span style={{ color: "rgba(74,222,128,0.35)" }}>p.{c.page}</span></span>
+                    ))}
+                    {horizonMin && (
+                      <span className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(129,140,248,0.08)", color: "rgba(129,140,248,0.70)" }}>📖 {txt("ഷാഫക് സമയം", "Horizon Duration", "Horizon")}: {horizonMin}m <span style={{ color: "rgba(74,222,128,0.35)" }}>p.1419</span></span>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* ── GIH Element Relationship (p.1419) ── */}
+              {(() => {
+                const elemKey = (zodiacData.element || "").toLowerCase();
+                const elemRel = GIH_ELEMENT_RELATIONSHIPS[elemKey];
+                if (!elemRel) return null;
+                return (
+                  <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക സുഹൃത്", "Elem. Friend", "Elem Friend")} (p.{elemRel.source_page}): </span><span style={{ color: "rgba(74,222,128,0.70)" }}>{elemRel.friend}</span></div>
+                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക ശത്രു", "Elem. Enemy", "Elem Enemy")} (p.{elemRel.source_page}): </span><span style={{ color: "rgba(248,113,113,0.70)" }}>{elemRel.enemy}</span></div>
+                  </div>
+                );
+              })()}
+
+              {/* ── GIH 12-House Rulership (pp.1429-1432) ── */}
+              {(() => {
+                const house = GIH_TWELVE_HOUSES.houses.find(h => h.sign_en === zodiacData.name_en);
+                if (!house) return null;
+                return (
+                  <div className="rounded-lg p-2" style={{ background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)" }}>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>📖 {txt("12-ാം ഭവനം", "12th House Rulership", "12th House")} (GIH p.{GIH_TWELVE_HOUSES.source_page})</p>
+                    <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>#{house.hane} — {house.title_tr} · {txt("ഗ്രഹം", "Planet", "Planet")}: {house.planet_en}</p>
+                  </div>
+                );
+              })()}
+
+              {/* ── GIH Ritual Incense (per-sign protection ritual) ── */}
+              {(() => {
+                const ritual = GIH_RITUAL_INCENSE.universal_protection_ritual[`${signKey}_ritual`];
+                if (!ritual) return null;
+                return (
+                  <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("ആചാര തൂപം", "Ritual Incense", "Ritual Incense")} (GIH p.{ritual.source_page})</p>
+                    <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.55)" }}>{txt("തൂപം", "Incense", "Incense")}: {ritual.incense.join(", ")}</p>
+                    <p className="font-inter text-[9px]" style={{ color: "rgba(129,140,248,0.55)" }}>{txt("സമയം", "Timing", "Timing")}: {ritual.timing}</p>
+                  </div>
+                );
+              })()}
 
               {/* ── Source References ── */}
               <div className="pt-2" style={{ borderTop: "1px solid rgba(212,175,55,0.10)" }}>

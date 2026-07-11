@@ -25,7 +25,6 @@ const MoonZodiac = lazy(() => import("@/components/astroclock/dashboard/MoonZodi
 const MansionsReference = lazy(() => import("@/components/astroclock/dashboard/MansionsReference"));
 const PlanetEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/PlanetEncyclopedia"));
 const ZodiacEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/ZodiacEncyclopedia"));
-const GihManuscriptKnowledge = lazy(() => import("@/components/astroclock/dashboard/GihManuscriptKnowledge"));
 const ReferenceLibrary = lazy(() => import("@/components/astroclock/dashboard/ReferenceLibrary"));
 
 function LangSelector() {
@@ -179,15 +178,6 @@ function AstroClockContent() {
             subtitle={txt("7 ഗ്രഹ ഭരണികൾ", "7 Planetary Rulers", "7 Gezegen Hükümdarı")}>
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <PlanetEncyclopedia />
-            </Suspense>
-          </DashboardSection>
-        </AstroClockErrorBoundary>
-
-        <AstroClockErrorBoundary label="GIH Manuscript Knowledge">
-          <DashboardSection icon="📜" title={txt("ഗ്രന്ഥ വിജ്ഞാനം", "Manuscript Knowledge", "El Yazması Bilgisi")}
-            subtitle={txt("ഗുപ്ത വിജ്ഞാന ശേഖരം (7ാം പുസ്തകം)", "Gizli İlimler Hazinesi (7th Book)", "Gizli İlimler Hazinesi (7. Kitap)")}>
-            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
-              <GihManuscriptKnowledge />
             </Suspense>
           </DashboardSection>
         </AstroClockErrorBoundary>

@@ -11,7 +11,7 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/astroClockManuscriptMerger";
 import { elementToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
-import { GIH_PLANET_INFLUENCE_CHARACTERISTICS } from "@/lib/gizliIlimlerHazinesiZodiacData";
+import { GIH_PLANET_INFLUENCE_CHARACTERISTICS, GIH_PLANET_RELATIONSHIPS, GIH_VENUS_VEFK, GIH_SUN_DEGREE_TABLE } from "@/lib/gizliIlimlerHazinesiZodiacData";
 
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
@@ -159,6 +159,64 @@ export default function PlanetEncyclopedia() {
                         {infl.moon_independence_note_en && (
                           <p className="font-inter text-[9px] italic" style={{ color: "rgba(129,140,248,0.50)" }}>☾ {infl.moon_independence_note_en}</p>
                         )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* GIH Planet Relationship (p.1419) */}
+                {(() => {
+                  const gihRel = GIH_PLANET_RELATIONSHIPS.find(r => r.planet_en === info.name_en);
+                  if (!gihRel) return null;
+                  return (
+                    <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                      <div><span className="font-bold" style={{ color: "rgba(212,175,55,0.50)" }}>📖 GIH {txt("സുഹൃത്", "Friend", "Friend")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(74,222,128,0.65)" }}>{gihRel.friend_en}</span></div>
+                      <div><span className="font-bold" style={{ color: "rgba(212,175,55,0.50)" }}>📖 GIH {txt("ശത്രു", "Enemy", "Enemy")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(248,113,113,0.65)" }}>{gihRel.enemy_en}</span></div>
+                    </div>
+                  );
+                })()}
+
+                {/* GIH Venus Vefk — only for Venus (p.1454) */}
+                {key === "venus" && (() => {
+                  const v = GIH_VENUS_VEFK;
+                  return (
+                    <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1" style={{ color: "rgba(212,175,55,0.60)" }}>📖 {txt("ശുക്ര വെഫ്ക് (7×7)", "Venus Vefk (7×7)", "Venus Vefk")} — p.{v.source_page}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-amiri text-lg" style={{ color: "rgba(212,175,55,0.60)" }}>{v.planet_ar}</span>
+                        <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>{txt("മാന്ത്രിക സ്ഥിരാങ്കം", "Magic Constant", "Constant")}: {v.magic_constant}</span>
+                      </div>
+                      <div className="inline-block rounded overflow-hidden" style={{ border: "1px solid rgba(212,175,55,0.20)" }}>
+                        {v.grid.map((row, ri) => (
+                          <div key={ri} className="flex">
+                            {row.map((cell, ci) => (
+                              <span key={ci} className="font-inter text-[9px] tabular-nums w-6 h-6 flex items-center justify-center"
+                                style={{
+                                  background: (ri === ci || ri + ci === 6) ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.02)",
+                                  color: (ri === ci || ri + ci === 6) ? "#F5D060" : "rgba(255,255,255,0.55)",
+                                  borderRight: ci < 6 ? "1px solid rgba(212,175,55,0.08)" : "none",
+                                  borderBottom: ri < 6 ? "1px solid rgba(212,175,55,0.08)" : "none",
+                                }}>{cell}</span>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>{v.ritual_timing_en}</p>
+                    </div>
+                  );
+                })()}
+
+                {/* GIH Sun Degree Table — only for Sun (pp.1420-1422) */}
+                {key === "sun" && (() => {
+                  const t = GIH_SUN_DEGREE_TABLE;
+                  return (
+                    <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1" style={{ color: "rgba(212,175,55,0.60)" }}>📖 {txt("സൂര്യ ഡിഗ്രി പട്ടിക", "Sun Degree Calculation", "Sun Degree")} — p.{t.source_page}</p>
+                      <p className="font-inter text-[9px] mb-1" style={{ color: "rgba(255,255,255,0.50)" }}>{t.method}</p>
+                      <div className="grid grid-cols-3 gap-0.5">
+                        {t.monthly_reference.map((m, i) => (
+                          <span key={i} className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.50)" }}>{m.month_en}: {m.sign_en} (+{m.degree_offset}°)</span>
+                        ))}
                       </div>
                     </div>
                   );
