@@ -25,6 +25,7 @@ import { renderPdfPages } from "@/lib/astroPdfRenderer";
 import AstroBatchThumbnailGrid from "./AstroBatchThumbnailGrid";
 import AstroUploadProgress from "./AstroUploadProgress";
 import AstroUploadSummary from "./AstroUploadSummary";
+import AstroDocumentSummary from "./AstroDocumentSummary";
 
 const MAX_IMAGES = 50;
 const MAX_PDF_PAGES = 100;
@@ -39,6 +40,8 @@ export default function AstroScreenshotUploader() {
   const [summary, setSummary] = useState(null);
   const [pdfProgress, setPdfProgress] = useState(null);
   const [startTime, setStartTime] = useState(null);
+  const [documentMode, setDocumentMode] = useState(false);
+  const [documentSummary, setDocumentSummary] = useState(null);
   const fileInputRef = useRef(null);
 
   // ── File selection: adds pages to the list (does not replace) ──
@@ -298,12 +301,118 @@ export default function AstroScreenshotUploader() {
     setCurrentIdx(-1);
   };
 
+  // ── Document Context Mode: upload all pages, then call documentContextIngest ──
+  // This wraps the existing pipeline with a Document Context Layer that provides
+  // continuous manuscript understanding (OCR, context reconstruction, chapter
+  // detection, entity continuation, relationship graph, document summary).
+  const startDocumentUpload = async () => {
+    if (pages.length === 0) return;
+    setStage('processing');
+    setStartTime(Date.now());
+    setError(null);
+    setDocumentSummary(null);
+
+    try {
+      // Step 1: Upload all page images (sequentially, preserving order)
+      const pageUrls = [];
+      for (let i = 0; i < pages.length; i++) {
+        setCurrentIdx(i);
+        setPages(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'uploading' } : p));
+
+        const page = pages[i];
+        const rawFile = page.blob || page.file;
+        if (!rawFile) {
+          pageUrls.push(null);
+          setPages(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'error' } : p));
+          continue;
+        }
+
+        const uploadName = `${page.file_name}-p${page.page_number}.png`;
+        const fileObj = await applyRotation(rawFile, page.rotation, uploadName);
+        const uploadRes = await base44.integrations.Core.UploadFile({ file: fileObj });
+        const fileUrl = uploadRes.data?.file_url || uploadRes.file_url;
+
+        if (!fileUrl) {
+          pageUrls.push(null);
+          setPages(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'error' } : p));
+          continue;
+        }
+
+        pageUrls.push({
+          file_url: fileUrl,
+          page_number: page.page_number,
+          is_pdf_page: page.isPdf,
+          file_name: page.file_name,
+        });
+        setPages(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'done' } : p));
+      }
+
+      // Step 2: Call documentContextIngest in batches (with resume)
+      const validPages = pageUrls.filter(p => p !== null);
+      if (validPages.length === 0) {
+        setError(txt("ഒരു പേജും അപ്ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല", "No pages could be uploaded", "لم يتم رفع أي صفحة"));
+        setStage('review');
+        return;
+      }
+
+      // Mark all uploaded pages as analyzing (document processing)
+      setPages(prev => prev.map(p => p.status === 'done' ? { ...p, status: 'analyzing' } : p));
+
+      let resumeFrom = 0;
+      let documentId = null;
+
+      while (resumeFrom < validPages.length) {
+        const response = await base44.functions.invoke('documentContextIngest', {
+          pages: validPages,
+          source_label: sourceLabel || 'Document Upload',
+          document_id: documentId,
+          resume_from_page: resumeFrom,
+          batch_size: 3,
+        });
+
+        const data = response.data || response;
+        if (data.error) {
+          setError(data.error);
+          break;
+        }
+
+        documentId = data.document_id;
+
+        if (data.status === 'completed') {
+          setDocumentSummary(data);
+          setStage('complete');
+          break;
+        } else if (data.status === 'processing') {
+          resumeFrom = data.resume_from_page;
+          // Update progress: mark processed pages as done
+          const processedCount = data.pages_processed;
+          setPages(prev => prev.map((p, idx) => {
+            if (idx < processedCount && p.status === 'analyzing') {
+              return { ...p, status: 'done' };
+            }
+            return p;
+          }));
+        } else {
+          break;
+        }
+      }
+
+      setCurrentIdx(-1);
+    } catch (err) {
+      setError(err?.message || txt("പിശക്", "Error", "خطأ"));
+      setStage('review');
+      setCurrentIdx(-1);
+    }
+  };
+
   // ── Reset: clear everything and revoke all thumbnail URLs ──
   const reset = () => {
     pages.forEach(p => { if (p.thumbnailUrl) URL.revokeObjectURL(p.thumbnailUrl); });
     setStage('idle');
     setPages([]);
     setSummary(null);
+    setDocumentSummary(null);
+    setDocumentMode(false);
     setError(null);
     setSourceLabel("");
     setStartTime(null);
@@ -314,7 +423,7 @@ export default function AstroScreenshotUploader() {
   const isBusy = stage === 'preparing' || stage === 'processing';
   const isPreparing = stage === 'preparing';
   const showProgress = stage === 'preparing' || stage === 'processing';
-  const showSummary = stage === 'complete' && summary;
+  const showSummary = stage === 'complete' && (summary || documentSummary);
   const showReview = stage === 'review' || stage === 'processing';
 
   return (
@@ -449,10 +558,29 @@ export default function AstroScreenshotUploader() {
               disabled={stage === 'processing'}
             />
 
+            {/* Document Context Mode toggle (review stage only) */}
+            {stage === 'review' && (
+              <button
+                onClick={() => setDocumentMode(v => !v)}
+                className="w-full py-2 rounded-lg flex items-center justify-center gap-2 transition-opacity"
+                style={{
+                  background: documentMode ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${documentMode ? "rgba(212,175,55,0.45)" : "rgba(212,175,55,0.15)"}`,
+                }}
+              >
+                <Layers className="w-3.5 h-3.5" style={{ color: documentMode ? "#F5D060" : "rgba(212,175,55,0.40)" }} />
+                <span className="font-inter text-[9px] font-bold" style={{ color: documentMode ? "#F5D060" : "rgba(255,255,255,0.40)" }}>
+                  {documentMode
+                    ? txt("പ്രമാണ സന്ദർഭ മോഡ് ഓൺ", "Document Context Mode ON", "وضع سياق المستند مفعّل")
+                    : txt("പ്രമാണ സന്ദർഭ മോഡ് ഓഫ്", "Document Context Mode OFF", "وضع سياق المستند معطّل")}
+                </span>
+              </button>
+            )}
+
             {/* Start Upload button (review stage only) */}
             {stage === 'review' && (
               <button
-                onClick={startUpload}
+                onClick={documentMode ? startDocumentUpload : startUpload}
                 className="w-full py-2.5 rounded-lg font-inter text-[10px] font-bold uppercase tracking-wider transition-opacity"
                 style={{
                   background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)",
@@ -461,7 +589,9 @@ export default function AstroScreenshotUploader() {
                 }}
               >
                 <Play className="w-3 h-3 inline mr-1" />
-                {txt("അപ്ലോഡ് ആരംഭിക്കുക", "Start Upload", "ابدأ الرفع")}
+                {documentMode
+                  ? txt("പ്രമാണം പ്രോസസ് ചെയ്യുക", "Process Document", "معالجة المستند")
+                  : txt("അപ്ലോഡ് ആരംഭിക്കുക", "Start Upload", "ابدأ الرفع")}
               </button>
             )}
           </>
@@ -489,9 +619,11 @@ export default function AstroScreenshotUploader() {
           </div>
         )}
 
-        {/* Final summary */}
+        {/* Final summary — document mode or standard mode */}
         {showSummary && (
-          <AstroUploadSummary summary={summary} onReset={reset} />
+          documentMode && documentSummary
+            ? <AstroDocumentSummary summary={documentSummary} onReset={reset} />
+            : <AstroUploadSummary summary={summary} onReset={reset} />
         )}
       </div>
     </div>
