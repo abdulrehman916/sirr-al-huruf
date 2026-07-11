@@ -71,25 +71,37 @@ export default function AstroScreenshotUploader() {
 
         if (isPdf) {
           setPdfProgress({ fileName: file.name, current: 0, total: 0 });
-          // renderPdfPages renders pages IN ORDER (1→2→3→...) and returns
-          // an array of { page_number, blob } in that same order.
-          const renderedPages = await renderPdfPages(file, (pageNum, total) => {
-            setPdfProgress({ fileName: file.name, current: pageNum, total });
-          });
-          setPdfProgress(null);
-
-          for (const rp of renderedPages) {
-            pageList.push({
-              id: `page-${pageId++}`,
-              source_name: sourceName,
-              file_name: file.name,
-              page_number: rp.page_number,
-              isPdf: true,
-              blob: rp.blob,
-              file: null,
-              status: 'pending',
-              result: null,
+          // renderPdfPages dynamically imports pdfjs-dist only here.
+          // If the library or CDN worker fails, we skip this PDF and
+          // continue with any remaining image files.
+          try {
+            const renderedPages = await renderPdfPages(file, (pageNum, total) => {
+              setPdfProgress({ fileName: file.name, current: pageNum, total });
             });
+            setPdfProgress(null);
+
+            for (const rp of renderedPages) {
+              pageList.push({
+                id: `page-${pageId++}`,
+                source_name: sourceName,
+                file_name: file.name,
+                page_number: rp.page_number,
+                isPdf: true,
+                blob: rp.blob,
+                file: null,
+                status: 'pending',
+                result: null,
+              });
+            }
+          } catch (pdfErr) {
+            setPdfProgress(null);
+            // Show a friendly error but continue processing images
+            setError(txt(
+              `PDF വായിക്കാൻ കഴിഞ്ഞില്ല (${file.name}). ചിത്രങ്ങൾ തുടർന്ന് അപ്ലോഡ് ചെയ്യാം.`,
+              `Could not read PDF (${file.name}). Image uploads will continue.`,
+              `تعذر قراءة ملف PDF (${file.name}). ستستمر رفع الصور.`
+            ));
+            // Skip this PDF — do not add any pages from it
           }
         } else {
           // Image file — one page per image, preserves selection order

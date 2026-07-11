@@ -3,15 +3,35 @@
 // Uses pdfjs-dist to render each PDF page to a PNG blob.
 // Each blob is then uploaded and sent through unifiedIngestKnowledge.
 //
+// LAZY LOADING: pdfjs-dist is dynamically imported ONLY when a PDF
+// file is selected. Image uploads never trigger this import. This
+// keeps the initial bundle small and prevents startup crashes.
+//
 // ISOLATED: Only used by AstroScreenshotUploader for multi-page PDF.
 // Does NOT modify the OCR engine or any backend pipeline.
 // ═══════════════════════════════════════════════════════════════
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Use CDN for worker — more reliable than ?url import across Vite configurations
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.worker.min.mjs';
 
 const RENDER_SCALE = 2;
+
+let _pdfjsLibPromise = null;
+
+/**
+ * Lazily load pdfjs-dist via dynamic import.
+ * The library and its worker are only fetched when a PDF is actually
+ * selected — never during app startup and never for image uploads.
+ * @returns {Promise<typeof import('pdfjs-dist')>}
+ */
+async function loadPdfjs() {
+  if (_pdfjsLibPromise) return _pdfjsLibPromise;
+  _pdfjsLibPromise = (async () => {
+    const pdfjsLib = await import('pdfjs-dist');
+    // Use CDN for worker — avoids Vite ?url build issues
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.worker.min.mjs';
+    return pdfjsLib;
+  })();
+  return _pdfjsLibPromise;
+}
 
 /**
  * Get the number of pages in a PDF file.
@@ -19,6 +39,7 @@ const RENDER_SCALE = 2;
  * @returns {Promise<number>}
  */
 export async function getPdfPageCount(file) {
+  const pdfjsLib = await loadPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const count = pdf.numPages;
@@ -34,6 +55,7 @@ export async function getPdfPageCount(file) {
  * @returns {Promise<Array<{page_number: number, blob: Blob}>>}
  */
 export async function renderPdfPages(file, onProgress) {
+  const pdfjsLib = await loadPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const totalPages = pdf.numPages;
