@@ -33,9 +33,9 @@ export const SEMANTIC_GRAPH = {
     related: ["Land Preparation", "Ground Work", "Beginning Construction", "Building Foundation", "Architecture", "Structure", "Edifice"],
     equivalent: ["Building", "Creation", "Structure", "Architecture", "Edifice", "Establishment"],
     synonyms: {
-      ml: ["കുട്ടിയടിക്കൽ", "തറയിടൽ", "വീട് പണിയൽ", "വീടിന് തറയിടൽ", "നിർമ്മാണം", "കെട്ടിടം", "കെട്ടിടനിർമ്മാണം", "അസ്തിത്വം", "വീടിന്റെ തറ", "വീട് പണി", "കെട്ടിട നിർമ്മാണം", "തറ", "അടിത്തറ", "പണിയൽ", "നിർമ്മിക്കൽ", "കെട്ടുക", "മണ്ണൊരുക്കൽ", "കുഴിക്കൽ", "അടിസ്ഥാനം", "സ്ഥാപനം", "ഉറപ്പിക്കൽ", "നിർമ്മാണപ്രവൃത്തി"],
+      ml: ["കുട്ടിയടിക്കൽ", "തറയിടൽ", "വീട് പണിയൽ", "വീടിന് തറയിടൽ", "നിർമ്മാണം", "കെട്ടിടം", "കെട്ടിടനിർമ്മാണം", "അസ്തിത്വം", "വീടിന്റെ തറ", "വീട് പണി", "കെട്ടിട നിർമ്മാണം", "തറ", "അടിത്തറ", "പണിയൽ", "നിർമ്മിക്കൽ", "കെട്ടുക", "മണ്ണൊരുക്കൽ", "കുഴിക്കൽ", "അടിസ്ഥാനം", "സ്ഥാപനം", "ഉറപ്പിക്കൽ", "നിർമ്മാണപ്രവൃത്തി", "കുറ്റി അടിക്കൽ", "അടിത്തറ ഇടൽ", "അടിസ്ഥാനം ഇടൽ", "തറയിടുക", "നിർമ്മാണമാരംഭം"],
       ar: ["بناء", "أساس", "بناء دار", "بناء بيت", "تشييد", "عمارة", "البناء", "التشييد", "الأساس", "العمارة", "بناء البيت", "وضع الأساس", "بنيان", "حفر الأساس", "تأسيس", "إعمار", "إنشاء", "الإنشاء", "الإعمار", "البناء والتشييد", "عمارة البيت", "تعمير"],
-      en: ["construction", "building", "foundation", "house construction", "laying foundation", "building house", "masonry", "excavation", "land preparation", "ground work", "beginning construction", "building foundation", "structure", "architecture", "edifice", "construct", "build", "erect", "establish", "create structure", "groundbreaking", "site preparation"],
+      en: ["construction", "building", "foundation", "house construction", "laying foundation", "building house", "masonry", "excavation", "land preparation", "ground work", "beginning construction", "building foundation", "structure", "architecture", "edifice", "construct", "build", "erect", "establish", "create structure", "groundbreaking", "site preparation", "foundation laying", "construction start", "ground breaking", "laying the foundation", "breaking ground"],
     },
     supporting_concepts: ["stability", "permanence", "growth", "foundation", "solidity", "strength", "durability"],
     blocking_concepts: ["destruction", "demolition", "instability", "collapse", "ruin", "deconstruction"],

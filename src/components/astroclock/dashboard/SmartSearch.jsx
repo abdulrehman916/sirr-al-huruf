@@ -385,6 +385,55 @@ export default function SmartSearch() {
             </div>
           )}
 
+          {/* ── Blocking Rules (from knowledge database) ── */}
+          {result.blockingRules && result.blockingRules.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Ban className="w-3.5 h-3.5" style={{ color: "#F87171" }} />
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#F87171" }}>
+                  {txt("തടയുന്ന നിയമങ്ങൾ", "Blocking Rules", "Engelleyici Kurallar")}
+                  <span className="opacity-50"> ({result.blockingRules.length})</span>
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {result.blockingRules.map((rule, i) => (
+                  <div key={i} className="rounded-lg p-2" style={{
+                    background: "rgba(248,113,113,0.04)",
+                    border: "1px solid rgba(248,113,113,0.12)",
+                  }}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{
+                        background: "rgba(248,113,113,0.08)", color: "rgba(248,113,113,0.60)",
+                      }}>#{rule.saat > 12 ? rule.saat - 12 : rule.saat} {rule.period}</span>
+                      <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                        {d.planetInfo[rule.planet]?.[language === 'ml' ? 'name_ml_equivalent' : 'name_en'] || rule.planet}
+                      </span>
+                    </div>
+                    {rule.actions.map((a, j) => (
+                      <p key={j} className="font-inter text-[10px] mb-0.5" style={{ color: "rgba(255,255,255,0.65)" }}>
+                        <span className="font-bold uppercase mr-1" style={{ color: "#F87171" }}>✗</span>
+                        {a[language] || a.en}
+                      </p>
+                    ))}
+                    {rule.summary && (
+                      <p className="font-inter text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>{rule.summary}</p>
+                    )}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
+                        background: "rgba(248,113,113,0.06)", color: "rgba(248,113,113,0.40)",
+                      }}>📖 {rule.source}{rule.page ? ` p.${rule.page}` : ''}{rule.screenshot ? ' 📷' : ''}</span>
+                      {rule.source_count > 1 && (
+                        <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
+                          background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.40)",
+                        }}>+{rule.source_count - 1}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── Supporting Manuscripts (from EntityKnowledge) ── */}
           {result.supportingManuscripts.length > 0 && (
             <div>

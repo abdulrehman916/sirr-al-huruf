@@ -207,6 +207,34 @@ export function useSemanticActionSearch() {
       };
     });
 
+    // ── Blocking rules from knowledge database (forbidden_actions) ──
+    // These are knowledge rules that explicitly FORBID the action at a
+    // specific saat/planet combination — separate from timing-based blocks.
+    const blockingRules = ackRecords.map(r => {
+      const blockedActions = [];
+      if (Array.isArray(r.forbidden_actions)) {
+        r.forbidden_actions.forEach(a => {
+          if (textMatchesExpansion(a.en, expansion) ||
+              textMatchesExpansion(a.ml, expansion) ||
+              textMatchesExpansion(a.ar, expansion)) {
+            blockedActions.push({ en: a.en, ml: a.ml, ar: a.ar });
+          }
+        });
+      }
+      if (blockedActions.length === 0) return null;
+      return {
+        saat: r.saat_number,
+        planet: r.planet,
+        period: r.period,
+        actions: blockedActions,
+        summary: r.knowledge_text_en || '',
+        source: r.source_book_title || 'Screenshot Upload',
+        page: r.source_page_number,
+        screenshot: r.source_screenshot_url,
+        source_count: r.source_count || 1,
+      };
+    }).filter(Boolean);
+
     // ── Supporting manuscripts from matched EntityKnowledge ──
     const supportingManuscripts = ekRecords.map(r => ({
       text: r.knowledge_text_en || '',
@@ -304,6 +332,7 @@ export function useSemanticActionSearch() {
 
       // Knowledge
       supportingRules,
+      blockingRules,
       supportingManuscripts,
       sources: Array.from(allSources),
       kashfOps,
