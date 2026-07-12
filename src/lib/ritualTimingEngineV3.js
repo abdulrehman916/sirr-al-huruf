@@ -612,36 +612,41 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // ── Polarity (only if explicitly selected; never invent) ──
   const khayrSharr = khayrSharrSelected || null;
 
-  // ── STEP 3+4: EFFECTIVE CONTEXT — single source of truth ──
-  // Each dimension independently uses manual selection or live auto-detection.
-  // No mixture: a dimension is either selected or auto-detected, never both.
+  // ── STEP 3+4: EFFECTIVE CONTEXT — SELECTIONS ARE THE SINGLE SOURCE OF TRUTH ──
+  // The engine NEVER reads from the CURRENT badge. It ALWAYS reads from the
+  // SELECTED Mizan cards (selections object), which are auto-initialized to
+  // current/planning values by buildDefaultSelections and updated by user clicks.
+  // Planning Mode provides the astronomical reference (sunrise/sunset/hours table)
+  // but does NOT override the Mizan selections.
   const now = planningContext?.date || new Date();
   const nowData = getTodayAllHours(now);
   const sunrise = nowData.sunrise;
   const sunset = nowData.sunset;
 
-  // ── Live auto-detection (same source as Mizan 3/4/5/6 cards) ──
+  // Timezone-corrected now — used ONLY for weekday resolution in resolveManuscriptDay
+  // (to find the next occurrence of the selected weekday on the civil calendar).
+  // NEVER used for current-hour detection — the engine does not compute the
+  // "current Saat" independently. It reads ONLY from selections.
   const liveLoc = _planningOverride?.location || getUserLocation();
-  const liveSun = calculateSunriseSunset(now, liveLoc.lat, liveLoc.lng, liveLoc.timezone);
-  const liveSunrise = (liveSun.sunrise != null) ? liveSun.sunrise : 6.5;
-  const liveSunset = (liveSun.sunset != null) ? liveSun.sunset : 18.25;
   const liveTzDiffMs = (liveLoc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
   const liveNowDate = new Date(now.getTime() + liveTzDiffMs);
-  const liveHourInfo = getCurrentPlanetaryHour(liveNowDate, liveSunrise, liveSunset);
 
-  // ── Effective Day (Mizan 5: manual selection > live auto-detect) ──
+  // ── Effective Day (from selections.days — ALWAYS set by buildDefaultSelections) ──
   const { activeDayIndex, referenceDate } = resolveManuscriptDay(selectedDay, dayNight, liveNowDate, sunrise, sunset);
   const refData = getTodayAllHours(referenceDate);
   const todayHours = refData.hours;
 
-  // ── Effective Saat + Kawkab (Mizan 4/6: manual selection > live auto-detect) ──
-  // Saat number: user-selected (Mizan 4) or auto-detected from live (Mizan 4 auto).
-  // Period: user-selected Day/Night (Mizan 3) or auto-detected from live (Mizan 3 auto).
-  // Kawkab: looked up in the effective Day's hours table — NEVER from a stale live value.
-  const effectivePeriod = dayNight === "gece" ? "night" : dayNight === "gunduz" ? "day" : liveHourInfo.period;
-  const effectiveSaatNum = selectedHour || liveHourInfo.hourNumber;
-  const foundSaat = todayHours.find(h => h.hourNumber === effectiveSaatNum && h.period === effectivePeriod);
-  const currentHourInfo = foundSaat || liveHourInfo;
+  // ── Effective Saat + Kawkab (from selections.hour + selections.dayNight) ──
+  // Saat number and period come DIRECTLY from the selected cards — NEVER from
+  // live current-hour detection. Kawkab is looked up in the effective Day's
+  // hours table. If the exact (Saat, period) pair isn't found (edge case),
+  // fall back to any hour with the same number, then to the first hour.
+  const effectivePeriod = dayNight === "gece" ? "night" : "day";
+  const effectiveSaatNum = selectedHour || 1;
+  const foundSaat = todayHours.find(h => h.hourNumber === effectiveSaatNum && h.period === effectivePeriod)
+    || todayHours.find(h => h.hourNumber === effectiveSaatNum)
+    || todayHours[0];
+  const currentHourInfo = foundSaat;
 
   const dayRuler = getDayRuler(activeDayIndex);
   const moonPhase = getMoonPhase(referenceDate);

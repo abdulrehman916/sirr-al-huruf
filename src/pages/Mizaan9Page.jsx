@@ -41,7 +41,7 @@ import RitualDecisionEngine from "../components/mizaan/RitualDecisionEngine";
 import QasamPanel from "../components/mizaan/QasamPanel";
 import { mizaanAnalyzeAbjad } from "../lib/mizaan9DataC";
 import { getBastLevelB } from "../lib/mizaan9DataB";
-import { getCurrentSaat, getKawkabForSaat, getCurrentLaylNahar, getCurrentWeekdayKey } from "../lib/mizaanSaatCalculator";
+import { getCurrentSaat, getKawkabForSaat, getCurrentLaylNahar, getCurrentWeekdayKey, subscribeSaatPlanningContext } from "../lib/mizaanSaatCalculator";
 import { usePageState } from "../context/PageStateContext";
 import { Lock } from "lucide-react";
 import FeatureLockedCard from "../components/FeatureLockedCard";
@@ -313,6 +313,20 @@ export default function Mizaan9Page() {
   useEffect(() => {
     setPageState(PAGE_KEY, { input, inputMode, directNumber, result, selections, customPurpose, degreeSels });
   }, [input, inputMode, directNumber, result, selections, customPurpose, degreeSels, setPageState]);
+
+  // ── PLANNING MODE SYNC — re-initialize selections when Planning Mode changes ──
+  // When Planning Mode is toggled ON/OFF or the planning date/location changes,
+  // the SELECTED Mizan cards must auto-update to the new astronomical source
+  // (Live or Planning). Manual selections made AFTER this re-initialization
+  // are preserved until the next Planning Mode change.
+  // Rule: SELECTED cards are the SINGLE SOURCE OF TRUTH for Ritual Timing.
+  // The engine NEVER reads from the CURRENT badge — only from selections.
+  useEffect(() => {
+    const unsub = subscribeSaatPlanningContext(() => {
+      setSelections(buildDefaultSelections(effectiveDominant));
+    });
+    return () => unsub();
+  }, [effectiveDominant]);
 
   // ══ OPTION 2 — DISABLED FOR NOW ═══════════════════════════════════
   // Option 2 calculation is temporarily disabled to prioritize Option 1 restoration
