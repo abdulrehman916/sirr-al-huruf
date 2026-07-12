@@ -24,6 +24,15 @@
 // calculation engine, OCR, translation, or any existing module.
 // ═══════════════════════════════════════════════════════════════
 
+// ── V2 Extension: 24 new canonical actions (buying, selling, surgery,
+//    education, exams, employment, promotion, trade, partnership,
+//    contracts, house_building, foundation_laying, moving_house,
+//    vehicle_purchase, animal_purchase, planting, harvesting,
+//    water_digging, ruqyah, prayer, dhikr, charity, hajj, umrah).
+//    Each entry includes ml/en/ar/tr synonyms. Existing V1 entries
+//    are 100% untouched — backward compatible. ──
+import { EXTENDED_ENTRIES } from "./semanticKnowledgeGraphV2";
+
 export const SEMANTIC_GRAPH = {
   construction: {
     id: "construction",
@@ -312,6 +321,14 @@ export const SEMANTIC_GRAPH = {
       ml: ["ധൈര്യം", "ശക്തി", "വിജയം", "ധീരത", "ശൗര്യം", "പോരാട്ടം"],
     },
   },
+
+  // ── V2 Extension entries (merged from semanticKnowledgeGraphV2.js) ──
+  // 24 new canonical actions: buying, selling, surgery, education, exams,
+  // employment, promotion, trade, partnership, contracts, house_building,
+  // foundation_laying, moving_house, vehicle_purchase, animal_purchase,
+  // planting, harvesting, water_digging, ruqyah, prayer, dhikr, charity,
+  // hajj, umrah. Each has ml/en/ar/tr synonyms. V1 entries untouched.
+  ...EXTENDED_ENTRIES,
 };
 
 // ── Parent categories (for hierarchical navigation) ──
