@@ -131,6 +131,40 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   if (!analysis || !analysis.report) return null;
 
+  // ── STEP 1 ENFORCEMENT — Purpose must be identified BEFORE any timing evaluation ──
+  // If no ritual purpose is selected, the engine must not evaluate timing or show
+  // recommendations. It must prompt the user to select a purpose first.
+  // Flow: Purpose → Evaluate Selected Context → Give Recommendation → User adjusts → Re-evaluate.
+  if (rawAnalysis.noPurposeSelected) {
+    return (
+      <div className="mt-6 rounded-2xl p-6" style={{
+        background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+        border: "1px solid rgba(251,191,36,0.40)",
+        boxShadow: "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)",
+      }}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{
+            background: "linear-gradient(135deg, rgba(251,191,36,0.20) 0%, rgba(251,191,36,0.06) 100%)",
+            border: "1px solid rgba(251,191,36,0.50)",
+          }}>
+            <Target className="w-5 h-5" style={{ color: "#FBBF24" }} />
+          </div>
+          <div>
+            <h3 className="font-inter text-base font-bold tracking-wide" style={{ color: "#FBBF24" }}>
+              {lang === "ml" ? "ലക്ഷ്യം തിരഞ്ഞെടുക്കുക" : "Select a Ritual Purpose"}
+            </h3>
+            <p className="font-amiri text-sm" style={{ color: "rgba(251,191,36,0.50)" }}>اختر الغرض أولاً</p>
+          </div>
+        </div>
+        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
+          {lang === "ml"
+            ? "ദയവായി മിസാൻ 7-ൽ ഒരു ലക്ഷ്യം തിരഞ്ഞെടുക്കുക. ലക്ഷ്യം തിരഞ്ഞെടുക്കുന്നതുവരെ ആചാര സമയ നിർദ്ദേശങ്ങൾ ലഭ്യമല്ല."
+            : "Please select a ritual purpose in Mizan 7 above. Ritual timing recommendations are unavailable until a purpose is identified."}
+        </p>
+      </div>
+    );
+  }
+
   const canPerformColor = rawAnalysis.canPerformToday === "Yes" ? "#4ADE80" : rawAnalysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";
   const canPerformLabel = rawAnalysis.canPerformToday === "Yes"
     ? T("Yes — proceed now", "അതെ — ഇപ്പോൾ തന്നെ", lang)
