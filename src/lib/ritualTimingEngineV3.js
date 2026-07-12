@@ -374,7 +374,7 @@ function resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset) {
 // manual Mizan selections against manuscript rules.
 // Every ✓/✗ includes the manuscript reason and source.
 // ═══════════════════════════════════════════════════════════════
-function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected, earliest, bestWindowsToday, todayHours, moonPhase, dayNight, selectedDay, selectedHour, selectedPlanet }) {
+function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected, earliest, bestWindowsToday, todayHours, moonPhase, dayNight, selectedDay, selectedHour, selectedPlanet, currentHourInfo }) {
   if (noPurposeSelected) {
     return {
       suitable: false,
@@ -410,18 +410,16 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
     breakdown.push({ dimension: "weekday", label: "Weekday", currentValue: selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
   }
 
-  // 2. Planetary Hour — find the ruling planet of the selected hour
+  // 2. Planetary Hour — effective Kawkab from the single source of truth
   if (req.hours) {
-    const selectedPeriod = dayNight === "gece" ? "night" : "day";
-    const selectedHourInfo = selectedHour ? todayHours.find(h => h.hourNumber === selectedHour && (dayNight ? h.period === selectedPeriod : true)) : null;
-    const hourPlanet = selectedHourInfo ? capitalPlanet(selectedHourInfo.planet) : null;
-    const hourOk = selectedHourInfo && req.hours.map(p => p.toLowerCase()).includes(selectedHourInfo.planet);
-    if (selectedHourInfo && !hourOk) allPass = false;
+    const hourPlanet = selectedHour ? capitalPlanet(currentHourInfo.planet) : null;
+    const hourOk = selectedHour && req.hours.map(p => p.toLowerCase()).includes(currentHourInfo.planet);
+    if (selectedHour && !hourOk) allPass = false;
     breakdown.push({
       dimension: "hour", label: "Planetary Hour",
       currentValue: selectedHour ? `Hour #${selectedHour}${hourPlanet ? ` (${hourPlanet})` : ""}` : "Not selected",
-      status: !selectedHourInfo ? "neutral" : hourOk ? "pass" : "fail",
-      reason: !selectedHourInfo
+      status: !selectedHour ? "neutral" : hourOk ? "pass" : "fail",
+      reason: !selectedHour
         ? `The manuscript prescribes ${req.hours.join(", ")} hour(s). Select an hour to verify.`
         : hourOk
           ? `The manuscript prescribes ${req.hours.join(", ")} hour. Your selected hour is ruled by ${hourPlanet}.`
@@ -614,38 +612,41 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // ── Polarity (only if explicitly selected; never invent) ──
   const khayrSharr = khayrSharrSelected || null;
 
-  // ── STEP 3+4: Astro Clock — manuscript sunset-aware (LIVE + MANUAL) ──
+  // ── STEP 3+4: EFFECTIVE CONTEXT — single source of truth ──
+  // Each dimension independently uses manual selection or live auto-detection.
+  // No mixture: a dimension is either selected or auto-detected, never both.
   const now = planningContext?.date || new Date();
   const nowData = getTodayAllHours(now);
   const sunrise = nowData.sunrise;
   const sunset = nowData.sunset;
 
-  const { activeDayIndex, referenceDate } = resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset);
+  // ── Live auto-detection (same source as Mizan 3/4/5/6 cards) ──
+  const liveLoc = _planningOverride?.location || getUserLocation();
+  const liveSun = calculateSunriseSunset(now, liveLoc.lat, liveLoc.lng, liveLoc.timezone);
+  const liveSunrise = (liveSun.sunrise != null) ? liveSun.sunrise : 6.5;
+  const liveSunset = (liveSun.sunset != null) ? liveSun.sunset : 18.25;
+  const liveTzDiffMs = (liveLoc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
+  const liveNowDate = new Date(now.getTime() + liveTzDiffMs);
+  const liveHourInfo = getCurrentPlanetaryHour(liveNowDate, liveSunrise, liveSunset);
+
+  // ── Effective Day (Mizan 5: manual selection > live auto-detect) ──
+  const { activeDayIndex, referenceDate } = resolveManuscriptDay(selectedDay, dayNight, liveNowDate, sunrise, sunset);
   const refData = getTodayAllHours(referenceDate);
   const todayHours = refData.hours;
 
-  let currentHourInfo = getCurrentPlanetaryHour(referenceDate, refData.sunrise, refData.sunset);
-
-  // ── ABSOLUTE PRIORITY: Manual Selected Card overrides live current hour ──
-  // When the user selects a Saat (Mizan 4), that Saat + its fixed Kawkab become
-  // the ONLY source for the current-moment evaluation. The live current hour is
-  // ignored. Planning Mode provides the astronomical reference (sunrise/sunset/
-  // hours table) but does NOT override the Mizan selection.
-  // Priority: 1. Manual Selected Card, 2. Planning/Live astronomy (fallback).
-  if (selectedHour) {
-    const selPeriod = dayNight === "gece" ? "night" : dayNight === "gunduz" ? "day" : null;
-    const foundSaat = todayHours.find(h => h.hourNumber === selectedHour && (!selPeriod || h.period === selPeriod));
-    if (foundSaat) currentHourInfo = foundSaat;
-  }
+  // ── Effective Saat + Kawkab (Mizan 4/6: manual selection > live auto-detect) ──
+  // Saat number: user-selected (Mizan 4) or auto-detected from live (Mizan 4 auto).
+  // Period: user-selected Day/Night (Mizan 3) or auto-detected from live (Mizan 3 auto).
+  // Kawkab: looked up in the effective Day's hours table — NEVER from a stale live value.
+  const effectivePeriod = dayNight === "gece" ? "night" : dayNight === "gunduz" ? "day" : liveHourInfo.period;
+  const effectiveSaatNum = selectedHour || liveHourInfo.hourNumber;
+  const foundSaat = todayHours.find(h => h.hourNumber === effectiveSaatNum && h.period === effectivePeriod);
+  const currentHourInfo = foundSaat || liveHourInfo;
 
   const dayRuler = getDayRuler(activeDayIndex);
   const moonPhase = getMoonPhase(referenceDate);
   const currentDayKey = DAY_KEY_BY_INDEX[activeDayIndex];
-  const isNightTime = selectedDay
-    ? (dayNight === 'gece' || (!dayNight && selectedHour ? currentHourInfo.period === 'night' : false))
-    : selectedHour
-      ? (currentHourInfo.period === 'night')
-      : (now.getHours() < sunrise || now.getHours() >= sunset);
+  const isNightTime = effectivePeriod === 'night';
 
   reasoning.push(`Current: ${MIZAN_DAY_NAMES[currentDayKey]}, hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}.`);
 
@@ -709,6 +710,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     selections, req, citations, noPurposeSelected,
     earliest, bestWindowsToday, todayHours, moonPhase,
     dayNight, selectedDay, selectedHour, selectedPlanet,
+    currentHourInfo,
   });
 
   // ── Score: only from found rules ──
@@ -759,53 +761,25 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     summary: `Today is ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}). Current hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}, ${currentHourInfo.remainingTime} left.`,
   };
 
-  // ── LIVE NOW — real current time + REAL local sunrise/sunset (NOAA) ──
-  // Separate state: manual selections (day/Layl-Nahar/Saat) do NOT overwrite this.
-  // Uses real local sunrise/sunset — never hardcoded seasonal approximations.
-  // getCurrentPlanetaryHour divides Sunrise→Sunset into 12 Day Saat and
-  // Sunset→next Sunrise into 12 Night Saat, returning the interval containing now.
-  const liveLoc = _planningOverride?.location || getUserLocation();
-  const liveSun = calculateSunriseSunset(now, liveLoc.lat, liveLoc.lng, liveLoc.timezone);
-  const liveSunrise = (liveSun.sunrise != null) ? liveSun.sunrise : 6.5;
-  const liveSunset = (liveSun.sunset != null) ? liveSun.sunset : 18.25;
-  // Shift now to the location's timezone so getHours()/getDay() return local
-  // time matching the sunrise/sunset values from calculateSunriseSunset.
-  // Without this, a browser in a non-Dubai timezone reads the wrong hour and
-  // the Sahat defaults to 1 instead of the actual current Sahat.
-  const liveTzDiffMs = (liveLoc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
-  const liveNowDate = new Date(now.getTime() + liveTzDiffMs);
-  const liveHourInfo = getCurrentPlanetaryHour(liveNowDate, liveSunrise, liveSunset);
-  const liveDayIndex = getActiveWeekday(liveNowDate, liveSunrise, liveSunset);
-  const liveDayKey = DAY_KEY_BY_INDEX[liveDayIndex];
-  const liveDayRuler = getDayRuler(liveDayIndex);
-  const liveIsNight = liveNowDate.getHours() < liveSunrise || liveNowDate.getHours() >= liveSunset;
-  // ── ABSOLUTE PRIORITY: Selected card overrides live state in display ──
+  // ── LIVE NOW — effective context display (single source of truth) ──
+  // Always uses the effective values: manual selection when selected, live
+  // auto-detection when not. No separate live calculation — the effective
+  // context IS the display context. Summary text distinguishes selected vs live.
   const hasManualSelection = !!(selectedDay || selectedHour);
-  const liveNow = hasManualSelection
-    ? {
-        day: MIZAN_DAY_NAMES[currentDayKey],
-        dayRuler: dayRuler.planet,
-        laylNahar: isNightTime ? "Layl" : "Nahar",
-        saat: currentHourInfo.hourNumber,
-        kawkab: capitalPlanet(currentHourInfo.planet),
-        planetaryHour: capitalPlanet(currentHourInfo.planet),
-        currentHour: { number: currentHourInfo.hourNumber, planet: capitalPlanet(currentHourInfo.planet), symbol: PLANET_INFO[currentHourInfo.planet]?.symbol || "" },
-        isDaytime: !isNightTime,
-        hourRemaining: currentHourInfo.remainingTime || "",
-        summary: `Selected: ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}), ${isNightTime ? "Layl (night)" : "Nahar (day)"}. Saat #${currentHourInfo.hourNumber} (${capitalPlanet(currentHourInfo.planet)}).`,
-      }
-    : {
-        day: MIZAN_DAY_NAMES[liveDayKey],
-        dayRuler: liveDayRuler.planet,
-        laylNahar: liveIsNight ? "Layl" : "Nahar",
-        saat: liveHourInfo.hourNumber,
-        kawkab: capitalPlanet(liveHourInfo.planet),
-        planetaryHour: capitalPlanet(liveHourInfo.planet),
-        currentHour: { number: liveHourInfo.hourNumber, planet: capitalPlanet(liveHourInfo.planet), symbol: PLANET_INFO[liveHourInfo.planet]?.symbol || "" },
-        isDaytime: !liveIsNight,
-        hourRemaining: liveHourInfo.remainingTime,
-        summary: `Now is ${MIZAN_DAY_NAMES[liveDayKey]} (ruled by ${liveDayRuler.planet}), ${liveIsNight ? "Layl (night)" : "Nahar (day)"}. Saat #${liveHourInfo.hourNumber} (${capitalPlanet(liveHourInfo.planet)}).`,
-      };
+  const liveNow = {
+    day: MIZAN_DAY_NAMES[currentDayKey],
+    dayRuler: dayRuler.planet,
+    laylNahar: isNightTime ? "Layl" : "Nahar",
+    saat: currentHourInfo.hourNumber,
+    kawkab: capitalPlanet(currentHourInfo.planet),
+    planetaryHour: capitalPlanet(currentHourInfo.planet),
+    currentHour: { number: currentHourInfo.hourNumber, planet: capitalPlanet(currentHourInfo.planet), symbol: PLANET_INFO[currentHourInfo.planet]?.symbol || "" },
+    isDaytime: !isNightTime,
+    hourRemaining: currentHourInfo.remainingTime || "",
+    summary: hasManualSelection
+      ? `Selected: ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}), ${isNightTime ? "Layl (night)" : "Nahar (day)"}. Saat #${currentHourInfo.hourNumber} (${capitalPlanet(currentHourInfo.planet)}).`
+      : `Now is ${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}), ${isNightTime ? "Layl (night)" : "Nahar (day)"}. Saat #${currentHourInfo.hourNumber} (${capitalPlanet(currentHourInfo.planet)}).`,
+  };
 
   // ═══════════════════════════════════════════════════════════════
   // BUILD 10-SECTION REPORT (same shape as V2)
