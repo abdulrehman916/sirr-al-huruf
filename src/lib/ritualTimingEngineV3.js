@@ -243,11 +243,15 @@ function getMoonPhase(date) {
 }
 
 function getTodayAllHours(date) {
-  const month = date.getMonth();
-  let sunrise, sunset;
-  if (month >= 4 && month <= 8) { sunrise = 5.5; sunset = 19.0; }
-  else if (month === 3 || month === 9) { sunrise = 6.0; sunset = 18.25; }
-  else { sunrise = 6.83; sunset = 17.67; }
+  // ── LIVE SUNRISE/SUNSET — single shared source of truth ──
+  // Uses the SAME calculateSunriseSunset + getUserLocation that the
+  // Astrology Clock page (useAstroData) uses — NOAA astronomical
+  // algorithm based on real lat/lng/timezone. No hardcoded seasonal
+  // values. Identical fallback (6.5 / 18.25) as useAstroData + liveNow.
+  const loc = getUserLocation();
+  const sun = calculateSunriseSunset(date, loc.lat, loc.lng, loc.timezone);
+  const sunrise = (sun.sunrise != null) ? sun.sunrise : 6.5;
+  const sunset = (sun.sunset != null) ? sun.sunset : 18.25;
   return { hours: getAllPlanetaryHours(date, sunrise, sunset), sunrise, sunset };
 }
 
