@@ -11,7 +11,7 @@
 // DOES NOT modify: timing engine, calculation engine, OCR, ingestion,
 // schema, routing, calculations, existing verified records, or any module.
 // ═══════════════════════════════════════════════════════════════
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useKnowledgeIntelligenceSearch } from "@/hooks/useKnowledgeIntelligenceSearch";
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { planetArabicMLDisplay } from "@/lib/astroClockLabelMap";
+import { batchTranslateToMalayalam } from "@/lib/ruleTextTranslator";
 
 const QUICK_TAGS = [
   "construction", "travel", "marriage", "business",
@@ -41,6 +42,33 @@ export default function SmartSearch() {
   const { txt, language } = useAstroClockLanguage();
   const { search, reset, loading, error, result, searched } = useKnowledgeIntelligenceSearch(d);
   const [input, setInput] = useState("");
+  const [mlTranslations, setMlTranslations] = useState({});
+
+  // ── Batch translate rule texts to Malayalam when ML is selected ──
+  // UI-only: does NOT modify database, search engine, or LLM prompts.
+  useEffect(() => {
+    if (language !== "ml" || !result) { setMlTranslations({}); return; }
+    let cancelled = false;
+    const texts = new Set();
+    [...result.supportingRules, ...result.blockingRules, ...result.conditionalRules, ...result.exceptions, ...result.indirectRules].forEach(rule => {
+      if (rule.recordType === "ACK") {
+        rule.actions.forEach(a => { if (!a.ml && a.en) texts.add(a.en); });
+      } else if (rule.recordType === "EK") {
+        if (!rule.text_ml && rule.text) texts.add(rule.text.split("\n---\n")[0]);
+      }
+    });
+    if (texts.size === 0) { setMlTranslations({}); return; }
+    batchTranslateToMalayalam([...texts]).then(tr => { if (!cancelled) setMlTranslations(tr); });
+    return () => { cancelled = true; };
+  }, [result, language]);
+
+  // ── Malayalam display helper for Manuscript Knowledge section ──
+  const getEkML = (en, ml) => {
+    if (language !== "ml") return (en || "").split("\n---\n")[0];
+    if (ml) return ml.split("\n---\n")[0];
+    const snippet = (en || "").split("\n---\n")[0];
+    return mlTranslations[snippet] || snippet;
+  };
 
   const handleSearch = () => {
     if (!input.trim()) return;
@@ -329,6 +357,7 @@ export default function SmartSearch() {
               d={d}
               lang={language}
               txt={txt}
+              mlTranslations={mlTranslations}
             />
           )}
 
@@ -345,6 +374,7 @@ export default function SmartSearch() {
               lang={language}
               txt={txt}
               actionMarker="✗"
+              mlTranslations={mlTranslations}
             />
           )}
 
@@ -361,6 +391,7 @@ export default function SmartSearch() {
               lang={language}
               txt={txt}
               showReason
+              mlTranslations={mlTranslations}
             />
           )}
 
@@ -377,6 +408,7 @@ export default function SmartSearch() {
               lang={language}
               txt={txt}
               showReason
+              mlTranslations={mlTranslations}
             />
           )}
 
@@ -393,6 +425,7 @@ export default function SmartSearch() {
               lang={language}
               txt={txt}
               showReason
+              mlTranslations={mlTranslations}
             />
           )}
 
@@ -413,7 +446,7 @@ export default function SmartSearch() {
                     border: "1px solid rgba(74,222,128,0.10)",
                   }}>
                     <p className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
-                      {(language === "ml" && m.text_ml ? m.text_ml : m.text).split("\n---\n")[0]}
+                      {getEkML(m.text, m.text_ml)}
                     </p>
                     {m.text_ar && (
                       <p className="font-amiri text-[11px] mt-1" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{m.text_ar}</p>
@@ -481,7 +514,15 @@ export default function SmartSearch() {
 // RuleSection — renders a categorized list of knowledge rules
 // Used for Supporting, Blocking, Conditional, Exceptions, Indirect
 // ═══════════════════════════════════════════════════════════════
-function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d, lang, txt, actionMarker, showReason }) {
+function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d, lang, txt, actionMarker, showReason, mlTranslations }) {
+  // ── Malayalam display helpers (UI layer only) ──
+  const getActionML = (en, ml) => lang === "ml" ? (ml || mlTranslations[en] || en) : en;
+  const getEkML = (en, ml) => {
+    if (lang !== "ml") return (en || "").split("\n---\n")[0];
+    if (ml) return ml.split("\n---\n")[0];
+    const snippet = (en || "").split("\n---\n")[0];
+    return mlTranslations[snippet] || snippet;
+  };
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-1.5">
@@ -514,7 +555,7 @@ function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d,
                     }}>
                       {actionMarker || (a.type === "recommended" ? "✓" : a.type === "forbidden" ? "✗" : "•")}
                     </span>
-                    {a[lang] || a.en}
+                    {getActionML(a.en, a.ml)}
                   </p>
                 ))}
               </>
@@ -523,7 +564,7 @@ function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d,
             {rule.recordType === "EK" && (
               <>
                 <p className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
-                  {(lang === "ml" && rule.text_ml ? rule.text_ml : rule.text).split("\n---\n")[0]}
+                  {getEkML(rule.text, rule.text_ml)}
                 </p>
                 {rule.text_ar && (
                   <p className="font-amiri text-[11px] mt-1" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{rule.text_ar}</p>
