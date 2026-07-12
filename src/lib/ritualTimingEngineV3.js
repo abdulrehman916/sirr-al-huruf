@@ -638,15 +638,27 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   // ── Effective Saat + Kawkab (from selections.hour + selections.dayNight) ──
   // Saat number and period come DIRECTLY from the selected cards — NEVER from
-  // live current-hour detection. Kawkab is looked up in the effective Day's
-  // hours table. If the exact (Saat, period) pair isn't found (edge case),
-  // fall back to any hour with the same number, then to the first hour.
+  // live current-hour detection. getAllPlanetaryHours numbers night hours 13-24,
+  // so for night Saats (1-12 from Mizaan4) we add 12 to match the table index.
   const effectivePeriod = dayNight === "gece" ? "night" : "day";
   const effectiveSaatNum = selectedHour || 1;
-  const foundSaat = todayHours.find(h => h.hourNumber === effectiveSaatNum && h.period === effectivePeriod)
-    || todayHours.find(h => h.hourNumber === effectiveSaatNum)
+  const effectiveHourNumber = effectivePeriod === 'night' ? effectiveSaatNum + 12 : effectiveSaatNum;
+  const foundSaat = todayHours.find(h => h.hourNumber === effectiveHourNumber && h.period === effectivePeriod)
+    || todayHours.find(h => h.hourNumber === effectiveHourNumber)
     || todayHours[0];
-  const currentHourInfo = foundSaat;
+
+  // ── Kawkab from manuscript Planetary Hours table (NOT from Day ruler) ──
+  // selections.planet is synced by Mizaan9Page via getKawkabForSaat(saat, day, dayNight),
+  // which reads DIRECTLY from the manuscript Day/Night Saat tables. This override
+  // ensures the Kawkab is ALWAYS the planetary ruler of the selected Saat — never
+  // the planetary ruler of the selected Day.
+  // Example: Tuesday + Day Saat 11 → Mercury (from table), NOT Mars (Day ruler).
+  // hourNumber is also overridden to show the Mizaan4 Saat number (1-12), not the
+  // internal getAllPlanetaryHours number (13-24 for night).
+  const manuscriptKawkab = selectedPlanet ? (MIZAN_TO_EN_PLANET[selectedPlanet] || "").toLowerCase() : null;
+  const currentHourInfo = foundSaat
+    ? { ...foundSaat, planet: manuscriptKawkab || foundSaat.planet, hourNumber: effectiveSaatNum }
+    : foundSaat;
 
   const dayRuler = getDayRuler(activeDayIndex);
   const moonPhase = getMoonPhase(referenceDate);
