@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ScrollText } from "lucide-react";
+import { useTranslation } from "@/i18n/useTranslation";
 import MysticalBackground from "../components/MysticalBackground";
 import HeroSection from "../components/HeroSection";
 import CardsSection from "../components/CardsSection";
@@ -10,6 +11,7 @@ import useMouseParallax from "../hooks/useMouseParallax";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const mouse = useMouseParallax(1);
 
   const handleRefresh = () => new Promise(res => setTimeout(res, 800));
@@ -60,7 +62,7 @@ export default function Home() {
       >
         <ScrollText className="w-5 h-5" style={{ color: "#0d1b2a" }} />
         <span className="font-inter font-bold text-sm" style={{ color: "#0d1b2a" }}>
-          Rules
+          {t("btn_rules", "Rules")}
         </span>
       </motion.button>
 

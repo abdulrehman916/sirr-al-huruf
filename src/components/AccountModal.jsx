@@ -4,10 +4,12 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { LogOut } from "lucide-react";
+import { useTranslation } from "@/i18n/useTranslation";
 
 export default function AccountModal({ user, onClose }) {
   const navigate = useNavigate();
   const { role, logout } = useAuth();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -61,7 +63,7 @@ export default function AccountModal({ user, onClose }) {
               }}>
               {user?.full_name?.[0]?.toUpperCase() || 'U'}
             </div>
-            <h2 className="font-amiri text-2xl font-bold text-white">{user?.full_name || 'User'}</h2>
+            <h2 className="font-amiri text-2xl font-bold text-white">{user?.full_name || t("account_user_fallback", "User")}</h2>
             <p className="font-inter text-xs text-white/50 mt-1">{user?.email}</p>
           </div>
 
@@ -69,24 +71,24 @@ export default function AccountModal({ user, onClose }) {
           {profile && (
             <div className="space-y-3 mb-6">
               <div className="flex items-center justify-between py-2 border-b border-white/10">
-                <span className="font-inter text-xs text-white/60">Role</span>
+                <span className="font-inter text-xs text-white/60">{t("user_role", "Role")}</span>
                 <span className={`font-inter text-xs font-semibold px-2 py-1 rounded-full ${
                   role === 'owner' || profile.role === 'admin'
                     ? 'text-amber-400 bg-amber-400/10'
                     : 'text-blue-400 bg-blue-400/10'
                 }`}>
-                  {role === 'owner' ? 'OWNER' : profile.role?.toUpperCase()}
+                  {role === 'owner' ? t("role_owner", "Owner") : (profile.role === 'admin' ? t("role_admin", "Admin") : t("role_user", "User"))}
                 </span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-white/10">
-                <span className="font-inter text-xs text-white/60">Status</span>
+                <span className="font-inter text-xs text-white/60">{t("user_status", "Status")}</span>
                 <span className="font-inter text-xs font-semibold text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
-                  {profile.account_status || 'ACTIVE'}
+                  {profile.account_status === 'ACTIVE' ? t("lbl_active", "Active") : (profile.account_status || t("lbl_active", "Active"))}
                 </span>
               </div>
               {profile.subscription_plan && profile.subscription_plan !== 'NONE' && (
                 <div className="flex items-center justify-between py-2 border-b border-white/10">
-                  <span className="font-inter text-xs text-white/60">Subscription</span>
+                  <span className="font-inter text-xs text-white/60">{t("account_subscription", "Subscription")}</span>
                   <span className="font-inter text-xs font-semibold text-purple-400 bg-purple-400/10 px-2 py-1 rounded-full">
                     {profile.subscription_plan.replace('_', ' ')}
                   </span>
@@ -106,7 +108,7 @@ export default function AccountModal({ user, onClose }) {
                   border: "1px solid rgba(212,175,55,0.40)",
                   color: "#E8C84A",
                   }}>
-                  {role === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
+                  {role === 'owner' ? t("account_owner_dashboard", "Owner Dashboard") : t("account_admin_dashboard", "Admin Dashboard")}
                   </button>
             )}
             
@@ -120,14 +122,14 @@ export default function AccountModal({ user, onClose }) {
                 color: "#fca5a5",
               }}>
               <LogOut className="w-4 h-4" />
-              {loggingOut ? "Logging out…" : "Log Out"}
+              {loggingOut ? t("account_logging_out", "Logging out…") : t("settings_logout", "Log Out")}
             </button>
 
             <button
               onClick={onClose}
               className="w-full py-2.5 px-4 rounded-xl font-inter text-xs text-white/50 hover:text-white/80"
               style={{ background: "transparent" }}>
-              Close
+              {t("btn_close", "Close")}
             </button>
           </div>
         </motion.div>

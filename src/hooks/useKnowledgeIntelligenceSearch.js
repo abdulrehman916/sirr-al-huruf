@@ -19,6 +19,7 @@ import { runKnowledgeIntelligenceSearch } from "@/lib/knowledgeIntelligenceEngin
 import { getKashfOperationsForPurpose } from "@/lib/astroClockManuscriptMerger";
 
 const WEEKDAY_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const DAY_ABBR_TO_FULL = { sun: "sunday", mon: "monday", tue: "tuesday", wed: "wednesday", thu: "thursday", fri: "friday", sat: "saturday" };
 const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function useKnowledgeIntelligenceSearch(d) {
@@ -103,7 +104,8 @@ export function useKnowledgeIntelligenceSearch(d) {
     // ── Suitability determination ──
     const hasRecommendedHours = recommendedHours.length > 0;
     const currentHourBlocked = d.currentHour && avoidPlanets.includes(d.currentHour.planet);
-    const isPreferredDay = preferredDays.includes(WEEKDAY_KEYS[d.activeDayIndex]);
+    const normalizedPreferredDays = preferredDays.map(d => DAY_ABBR_TO_FULL[d] || d);
+    const isPreferredDay = normalizedPreferredDays.includes(WEEKDAY_KEYS[d.activeDayIndex]);
     const isSuitable = hasRecommendedHours && !currentHourBlocked;
 
     // ── Blocking reasons ──

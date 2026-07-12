@@ -16,6 +16,7 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useKnowledgeIntelligenceSearch } from "@/hooks/useKnowledgeIntelligenceSearch";
 import { ACTION_CATEGORIES } from "@/lib/astroActionClassifier";
+import { SEMANTIC_GRAPH } from "@/lib/semanticKnowledgeGraph";
 import {
   Search, Clock, CheckCircle2, Ban, BookOpen, AlertTriangle,
   Brain, Tags, FileWarning, Lightbulb, Loader2, AlertCircle,
@@ -28,6 +29,9 @@ const QUICK_TAGS = [
   "construction", "travel", "marriage", "business",
   "agriculture", "medical", "love", "protection",
   "wealth", "knowledge", "spiritual", "courage",
+  "surgery", "education", "exams", "employment", "promotion",
+  "contracts", "vehicle_purchase", "ruqyah", "prayer", "dhikr",
+  "charity", "hajj", "umrah", "house_building", "planting", "harvesting",
 ];
 
 const G = { text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.20)" };
@@ -45,7 +49,8 @@ export default function SmartSearch() {
 
   const handleTag = (catKey) => {
     const cat = ACTION_CATEGORIES[catKey];
-    const label = cat?.label?.[language] || cat?.label?.en || catKey;
+    const graph = SEMANTIC_GRAPH[catKey];
+    const label = cat?.label?.[language] || cat?.label?.en || graph?.label?.[language] || graph?.label?.en || catKey;
     setInput(label);
     search(catKey);
   };
@@ -93,8 +98,9 @@ export default function SmartSearch() {
       <div className="flex flex-wrap gap-1.5">
         {QUICK_TAGS.map(key => {
           const cat = ACTION_CATEGORIES[key];
-          if (!cat) return null;
-          const label = cat.label[language] || cat.label.en;
+          const graph = SEMANTIC_GRAPH[key];
+          if (!cat && !graph) return null;
+          const label = cat?.label?.[language] || cat?.label?.en || graph?.label?.[language] || graph?.label?.en || key;
           const isActive = result?.canonicalId === key;
           return (
             <button

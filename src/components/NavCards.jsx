@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
+import { useTranslation } from "@/i18n/useTranslation";
 
 // SVG icon system
 const CARD_ICONS = {
@@ -96,6 +97,18 @@ const NAV_CARDS = [
   { path: "/plants",           arabic: "نباتات",       label: "PLANTS",           subtitle: "Medicinal Dictionary",      iconKey: "plants", accent: [34, 197, 94] },
 ];
 
+const CARD_SUB_KEYS = {
+  "/abjad": "card_sub_abjad",
+  "/anasir": "card_sub_anasir",
+  "/hadim": "card_sub_hadim",
+  "/mizaan9": "card_sub_mizaan",
+  "/magic-sqayer": "card_sub_sqayer",
+  "/vefkin-yapilisi": "card_sub_vefkin",
+  "/basthul-huroof-2": "card_sub_bast",
+  "/faal-hasrath": "card_sub_faal",
+  "/plants": "card_sub_plants",
+};
+
 function IconOrb({ iconKey, accent }) {
   const [r, g, b] = accent;
   const color = `rgb(${r},${g},${b})`;
@@ -115,6 +128,7 @@ function IconOrb({ iconKey, accent }) {
 }
 
 function CardInner({ card }) {
+  const { t } = useTranslation();
   const [r, g, b] = card.accent;
   return (
     <>
@@ -131,7 +145,7 @@ function CardInner({ card }) {
         style={{ width:28, height:0.5, background:`linear-gradient(90deg,transparent,rgba(${r},${g},${b},0.55),transparent)` }} />
       <p className="font-inter leading-relaxed text-center"
         style={{ fontSize:"9px", color:"rgba(255,255,255,0.32)", letterSpacing:"0.04em" }}>
-        {card.subtitle}
+        {t(CARD_SUB_KEYS[card.path] || "", card.subtitle)}
       </p>
     </>
   );

@@ -22,6 +22,12 @@ const TABS = [
   { key: 'en', label: 'English', dir: 'ltr' },
 ];
 
+const UI_STRINGS = {
+  ar: { agree: "لقد قرأت وأوافق على الشروط والأحكام.", continue: "متابعة", back: "العودة للرئيسية" },
+  ml: { agree: "ഞാൻ വായിച്ച് നിബന്ധനകളും വ്യവസ്ഥകളും അംഗീകരിക്കുന്നു.", continue: "തുടരുക", back: "ഹോമിലേക്ക് തിരികെ" },
+  en: { agree: "I have read and agree to the Rules & Conditions.", continue: "Continue", back: "Back to Home" },
+};
+
 export default function RulesConditions({ mode = 'view', onAccept }) {
   const [activeTab, setActiveTab] = useState('ar');
   const [agreed, setAgreed] = useState(false);
@@ -157,7 +163,7 @@ export default function RulesConditions({ mode = 'view', onAccept }) {
                 {agreed && <CheckCircle className="w-4 h-4" style={{ color: G.gold }} />}
               </button>
               <span className="font-inter text-sm" style={{ color: G.text }}>
-                I have read and agree to the Rules & Conditions.
+                {UI_STRINGS[activeTab].agree}
               </span>
             </label>
 
@@ -171,7 +177,7 @@ export default function RulesConditions({ mode = 'view', onAccept }) {
                 boxShadow: agreed ? '0 0 24px rgba(212,175,55,0.35)' : 'none',
               }}
             >
-              Continue
+              {UI_STRINGS[activeTab].continue}
             </button>
           </motion.div>
         )}
@@ -187,7 +193,7 @@ export default function RulesConditions({ mode = 'view', onAccept }) {
                 color: G.gold,
               }}>
               <ChevronLeft className="w-4 h-4" />
-              Back to Home
+              {UI_STRINGS[activeTab].back}
             </Link>
           </div>
         )}

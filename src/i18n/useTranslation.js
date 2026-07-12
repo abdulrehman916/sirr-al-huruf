@@ -6,7 +6,7 @@ import { useI18n } from '@/i18n/I18nContext';
  * Usage: const { t } = useTranslation();  →  t('welcome_title')
  * For missing keys, returns fallback or key itself.
  */
-export default function useTranslation() {
+function useTranslation() {
   const { language } = useI18n();
 
   function t(key, fallback) {
@@ -17,3 +17,6 @@ export default function useTranslation() {
 
   return { t, language };
 }
+
+export { useTranslation };
+export default useTranslation;

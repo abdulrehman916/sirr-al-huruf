@@ -14,6 +14,7 @@ import { hasSubFeatures } from "@/lib/featureRegistry";
 import { preloadPageFeatureConfigs } from "@/lib/featureConfigCache";
 import WhatsAppAccessRequest from "@/components/WhatsAppAccessRequest";
 import RequestAccessModal from "@/components/RequestAccessModal";
+import { useTranslation } from "@/i18n/useTranslation";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -35,6 +36,7 @@ const GoogleMark = ({ className = "w-4 h-4" }) => (
 export default function ProtectedPage({ routePath, children, requiresPermission }) {
   const { role, adminProfile, adminProfileLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [accessStatus, setAccessStatus] = useState("checking");
   const [pageName, setPageName] = useState("");
 
@@ -181,17 +183,17 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
             style={{ background: G.bg, border: `1px solid ${G.border}` }}>
             <Shield className="w-8 h-8" style={{ color: G.text }} />
           </div>
-          <h2 className="font-inter font-bold text-white text-lg">Admin Access Required</h2>
-          <p className="font-inter text-sm text-white/40">This page is restricted to administrators only.</p>
+          <h2 className="font-inter font-bold text-white text-lg">{t("admin_access_required", "Admin Access Required")}</h2>
+          <p className="font-inter text-sm text-white/40">{t("admin_restricted", "This page is restricted to administrators only.")}</p>
           <a href="/login"
             className="block w-full py-3 rounded-xl font-inter font-bold text-sm text-center"
             style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
-            Admin Login
+            {t("admin_login", "Admin Login")}
           </a>
           <button onClick={() => window.location.href = "/"}
             className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
             style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
-            ← Back to Home
+            {t("back_to_home", "← Back to Home")}
           </button>
         </div>
       </div>
@@ -207,12 +209,12 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
             style={{ background: G.bg, border: `1px solid ${G.border}` }}>
             <Shield className="w-8 h-8" style={{ color: G.text }} />
           </div>
-          <h2 className="font-inter font-bold text-white text-lg">Access Restricted</h2>
-          <p className="font-inter text-sm text-white/40">Your role does not have access to this section.</p>
+          <h2 className="font-inter font-bold text-white text-lg">{t("access_restricted_title", "Access Restricted")}</h2>
+          <p className="font-inter text-sm text-white/40">{t("access_restricted_desc", "Your role does not have access to this section.")}</p>
           <button onClick={() => window.location.href = "/"}
             className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
             style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
-            ← Back to Home
+            {t("back_to_home", "← Back to Home")}
           </button>
         </div>
       </div>
@@ -234,6 +236,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [code, setCode] = useState("");
@@ -277,10 +280,10 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
         // Re-check permissions and open the originally requested page.
         setTimeout(() => onUnlocked(), 1000);
       } else {
-        setCodeResult({ success: false, message: data?.message || "Invalid code." });
+        setCodeResult({ success: false, message: data?.message || t("invalid_code", "Invalid code.") });
       }
     } catch (e) {
-      setCodeResult({ success: false, message: e.message || "Redemption failed." });
+      setCodeResult({ success: false, message: e.message || t("redemption_failed", "Redemption failed.") });
     } finally {
       setLoading(false);
     }
@@ -301,18 +304,18 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             </div>
             <h1 className="font-inter text-lg font-bold mb-2" style={{ color: G.text }}>{pageName}</h1>
             <p className="font-inter text-sm text-white/60 mb-6">
-              This page requires an account. Please sign in with Google to continue.
+              {t("premium_account_required", "This page requires an account. Please sign in with Google to continue.")}
             </p>
             <button onClick={handleGoogle} disabled={googleLoading}
               className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3 disabled:opacity-50"
               style={{ background: "#ffffff", color: "#0d1b2a" }}>
               {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleMark className="w-4 h-4" />}
-              {googleLoading ? "Redirecting…" : "Continue with Google"}
+              {googleLoading ? t("google_redirecting", "Redirecting…") : t("google_continue", "Continue with Google")}
             </button>
             <button onClick={() => navigate("/")}
               className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
               style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
-              Cancel
+              {t("btn_cancel", "Cancel")}
             </button>
           </div>
         </motion.div>
@@ -333,13 +336,13 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             <Lock className="w-8 h-8" style={{ color: G.text }} />
           </div>
           <h1 className="font-inter text-lg font-bold mb-2" style={{ color: G.text }}>{pageName}</h1>
-          <p className="font-inter text-sm text-white/60 mb-6">You don't have access to this premium content.</p>
+          <p className="font-inter text-sm text-white/60 mb-6">{t("premium_no_access", "You don't have access to this premium content.")}</p>
 
           <button onClick={() => setShowCodeEntry(v => !v)}
             className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
             style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
             <KeyRound className="w-4 h-4" />
-            Enter Reading Access Code
+            {t("enter_reading_code", "Enter Reading Access Code")}
           </button>
 
           {/* ── Request access: WhatsApp + in-app form (original workflow) ── */}
@@ -351,7 +354,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
             className="w-full py-3 rounded-xl font-inter font-semibold text-sm flex items-center justify-center gap-2 mb-3"
             style={{ background: "rgba(212,175,55,0.08)", border: `1px solid rgba(212,175,55,0.35)`, color: "#F5D060" }}>
             <MessageCircle className="w-4 h-4" />
-            Request Access (In-App Form)
+            {t("request_access_form", "Request Access (In-App Form)")}
           </button>
 
           <button onClick={() => navigate("/")}
@@ -376,8 +379,8 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
               }}>
                 <h3 className="font-inter font-bold text-white text-sm flex items-center gap-2">
                   <KeyRound className="w-4 h-4" style={{ color: G.text }} />
-                  Enter Access Code
-                </h3>
+                  {t("enter_access_code", "Enter Access Code")}
+                                   </h3>
 
                 {codeResult && (
                   <div className="rounded-xl border p-3 flex items-start gap-2"
@@ -398,7 +401,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
                   value={code}
                   onChange={e => { setCode(e.target.value.toUpperCase()); setCodeResult(null); }}
                   onKeyDown={e => e.key === "Enter" && !loading && handleRedeem()}
-                  placeholder="e.g. ACCESS-1234"
+                  placeholder={t("code_placeholder", "e.g. ACCESS-1234")}
                   className="w-full px-4 py-3 rounded-xl text-white font-bold text-base text-center tracking-[0.15em] outline-none placeholder-white/20"
                   style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: "16px" }}
                   autoCapitalize="characters"
@@ -413,7 +416,7 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
                   style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                  {loading ? "Verifying…" : "Activate Code"}
+                  {loading ? t("verifying", "Verifying…") : t("activate_code", "Activate Code")}
                 </button>
               </div>
             </motion.div>

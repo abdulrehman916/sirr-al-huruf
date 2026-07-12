@@ -1,9 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/i18n/useTranslation";
 
 export default function ErrorBoundary({ children }) {
   const [hasError, setHasError] = React.useState(false);
   const [error, setError] = React.useState(null);
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     const errorHandler = (error) => {
@@ -30,9 +32,9 @@ export default function ErrorBoundary({ children }) {
             }}>
             ⚠️
           </div>
-          <h2 className="font-amiri text-2xl font-bold text-white mb-3">Something went wrong</h2>
+          <h2 className="font-amiri text-2xl font-bold text-white mb-3">{t("error_title", "Something went wrong")}</h2>
           <p className="font-inter text-sm text-white/60 mb-6">
-            The application encountered an unexpected error. Please try refreshing the page.
+            {t("error_desc", "The application encountered an unexpected error. Please try refreshing the page.")}
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -42,7 +44,7 @@ export default function ErrorBoundary({ children }) {
               border: "1px solid rgba(212,175,55,0.40)",
               color: "#E8C84A",
             }}>
-            Refresh Page
+            {t("error_refresh", "Refresh Page")}
           </button>
         </div>
       </div>

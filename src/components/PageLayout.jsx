@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, User } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
+import { useTranslation } from "@/i18n/useTranslation";
 import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
 import { useAuth } from "@/lib/AuthContext";
@@ -123,6 +124,7 @@ export default function PageLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { startNav } = useNavigation();
+  const { t } = useTranslation();
   const { user, role, adminProfile, isAuthenticated } = useAuth();
   const [showAccount, setShowAccount] = useState(false);
 
@@ -244,7 +246,7 @@ export default function PageLayout({ children }) {
               }}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="font-inter text-xs font-semibold tracking-wide">Back</span>
+              <span className="font-inter text-xs font-semibold tracking-wide">{t("btn_back", "Back")}</span>
             </button>
           </div>
         )}
@@ -288,7 +290,7 @@ export default function PageLayout({ children }) {
               }}
             >
               <User className="w-3.5 h-3.5" />
-              <span className="font-inter text-xs font-bold tracking-wide">{role === "owner" ? "Owner" : "Admin"}</span>
+              <span className="font-inter text-xs font-bold tracking-wide">{role === "owner" ? t("role_owner", "Owner") : t("role_admin", "Admin")}</span>
             </Link>
           )}
 

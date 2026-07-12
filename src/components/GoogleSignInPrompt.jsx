@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Loader2, ShieldCheck, X } from "lucide-react";
 import { persistSet } from "@/lib/devModePersistence";
+import { useTranslation } from "@/i18n/useTranslation";
 
 const GoogleMark = ({ className = "w-5 h-5" }) => (
   <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
@@ -20,6 +21,7 @@ const GoogleMark = ({ className = "w-5 h-5" }) => (
  * bypasses access codes — protected pages stay locked until a code is entered.
  */
 export default function GoogleSignInPrompt({ onSkip }) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const handleGoogle = async () => {
@@ -61,10 +63,9 @@ export default function GoogleSignInPrompt({ onSkip }) {
         </div>
 
         <div>
-          <h2 className="font-inter font-bold text-white text-lg">Sign in with Google</h2>
+          <h2 className="font-inter font-bold text-white text-lg">{t("google_signin_title", "Sign in with Google")}</h2>
           <p className="font-inter text-xs text-white/45 mt-1 leading-relaxed">
-            Sign in to sync your identity. Protected pages still require an access code —
-            Google Sign-In is for identity only and never unlocks content.
+            {t("google_signin_desc", "Sign in to sync your identity. Protected pages still require an access code — Google Sign-In is for identity only and never unlocks content.")}
           </p>
         </div>
 
@@ -72,13 +73,13 @@ export default function GoogleSignInPrompt({ onSkip }) {
           className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
           style={{ background: "#ffffff", color: "#0d1b2a" }}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleMark className="w-5 h-5" />}
-          {loading ? "Redirecting…" : "Continue with Google"}
+          {loading ? t("google_redirecting", "Redirecting…") : t("google_continue", "Continue with Google")}
         </button>
 
         <button onClick={handleSkip}
           className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
           style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.45)" }}>
-          Skip — Continue as Guest
+          {t("google_skip", "Skip — Continue as Guest")}
         </button>
       </motion.div>
     </div>

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
+import { useTranslation } from "@/i18n/useTranslation";
 import SacredWheel from "./SacredWheel";
 import NavCard from "./NavCards/NavCard";
 import useIsMobile from "../hooks/useIsMobile";
@@ -179,6 +180,7 @@ function GoldDivider({ delay = 0 }) {
 
 // Desktop: full animated title
 function HeroTitleDesktop({ paused }) {
+  const { t } = useTranslation();
   return (
     <motion.div initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }}
       transition={{ duration:0.9, delay:0.4 }}
@@ -197,7 +199,7 @@ function HeroTitleDesktop({ paused }) {
         </p>
         <p className="font-inter tracking-[0.22em] uppercase"
           style={{ fontSize:"clamp(8px,1.6vw,10px)", color:"rgba(255,255,255,0.38)" }}>
-          Advanced Ilm al-Huruf Analysis
+          {t("hero_subtitle", "Advanced Ilm al-Huruf Analysis")}
         </p>
       </motion.div>
       <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }} transition={{ delay:1.1, duration:0.9 }}
@@ -214,6 +216,7 @@ function HeroTitleDesktop({ paused }) {
 
 // Mobile: entrance animations only, no infinite loops
 function HeroTitleMobile() {
+  const { t } = useTranslation();
   return (
     <motion.div initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }}
       transition={{ duration:0.9, delay:0.4 }}
@@ -233,7 +236,7 @@ function HeroTitleMobile() {
         </p>
         <p className="font-inter tracking-[0.22em] uppercase"
           style={{ fontSize:"clamp(8px,1.6vw,10px)", color:"rgba(255,255,255,0.38)" }}>
-          Advanced Ilm al-Huruf Analysis
+          {t("hero_subtitle", "Advanced Ilm al-Huruf Analysis")}
         </p>
       </div>
       <div className="mt-5 flex items-center justify-center gap-2.5">
@@ -247,6 +250,7 @@ function HeroTitleMobile() {
 
 // Tablet: balanced proportions — reduced spacing, scaled typography
 function HeroTitleTablet({ paused }) {
+  const { t } = useTranslation();
   return (
     <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
       transition={{ duration:0.8, delay:0.3 }}
@@ -265,7 +269,7 @@ function HeroTitleTablet({ paused }) {
         </p>
         <p className="font-inter tracking-[0.20em] uppercase"
           style={{ fontSize:"clamp(7px,1.4vw,9px)", color:"rgba(255,255,255,0.35)" }}>
-          Advanced Ilm al-Huruf Analysis
+          {t("hero_subtitle", "Advanced Ilm al-Huruf Analysis")}
         </p>
       </motion.div>
       <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }} transition={{ delay:0.9, duration:0.7 }}
@@ -343,6 +347,7 @@ const NAV_CARDS = [
 // ── Main ──────────────────────────────────────────────────────────
 export default function HeroSection({ mouse }) {
   const { startNav, isNavigating } = useNavigation();
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const safeMouse = mouse ?? ZERO_MV;
   const [deviceType, setDeviceType] = useState('desktop');

@@ -234,6 +234,66 @@ const translations = {
   protected_expired_desc: { ml: "ഈ പേജിലേക്കുള്ള നിങ്ങളുടെ പ്രവേശനം കാലഹരണപ്പെട്ടു.", en: "Your access to this page has expired.", ar: "انتهت صلاحية وصولك إلى هذه الصفحة." },
   protected_revoked_title: { ml: "പ്രവേശനം റദ്ദാക്കി", en: "Access Revoked", ar: "تم إلغاء الوصول" },
   protected_revoked_desc: { ml: "ഈ പേജിലേക്കുള്ള നിങ്ങളുടെ പ്രവേശനം റദ്ദാക്കിയിരിക്കുന്നു.", en: "Your access to this page has been revoked.", ar: "تم إلغاء وصولك إلى هذه الصفحة." },
+
+  // ── Home Page ──
+  btn_rules: { ml: "നിയമങ്ങൾ", en: "Rules", ar: "القواعد" },
+  hero_subtitle: { ml: "അക്ഷര ശാസ്ത്ര വിശകലനം", en: "Advanced Ilm al-Huruf Analysis", ar: "تحليل علم الحروف المتقدم" },
+
+  // ── Card Subtitles ──
+  card_sub_abjad: { ml: "സംഖ്യാ കാൽക്കുലേറ്റർ", en: "Numerical Calculator", ar: "حاسبة الأرقام" },
+  card_sub_anasir: { ml: "മൂലക വിശകലനം", en: "Elemental Analysis", ar: "تحليل العناصر" },
+  card_sub_hadim: { ml: "നാമ സൃഷ്ടാവ്", en: "Name Generator", ar: "مولّد الأسماء" },
+  card_sub_mizaan: { ml: "പവിത്ര സംഖ്യാശാസ്ത്രം", en: "Sacred Numerology", ar: "علم الأرقام المقدس" },
+  card_sub_sqayer: { ml: "പവിത്ര വഫ്ക് നിർമ്മാണം", en: "Sacred Vefk Construction", ar: "بناء الوفق المقدس" },
+  card_sub_vefkin: { ml: "ഒട്ടോമൻ ഗ്രന്ഥ രീതി", en: "Ottoman Manuscript Method", ar: "طريقة المخطوطة العثمانية" },
+  card_sub_bast: { ml: "ബസ്തി അദദി ജദ്വേലി", en: "Basti Adedi Cedveli", ar: "باستي عديدي جدولي" },
+  card_sub_faal: { ml: "പവിത്ര ഫാൽ വ്യവസ്ഥ", en: "Sacred Omen System", ar: "نظام الفأل المقدس" },
+  card_sub_plants: { ml: "ഔഷധ നിഘണ്ടു", en: "Medicinal Dictionary", ar: "قاموس الأعشاب" },
+  card_sub_holy_names: { ml: "പവിത്ര നാമ പരാമർശം", en: "Sacred Names Reference", ar: "مرجع الأسماء المقدسة" },
+  card_sub_evil_jinn: { ml: "ജിൻ വർഗ്ഗീകരണം", en: "Jinn Classification", ar: "تصنيف الجن" },
+  card_sub_astro: { ml: "ഖഗോള സമയ എഞ്ചിൻ", en: "Celestial Time Engine", ar: "محرك الوقت السماوي" },
+  card_sub_sirr: { ml: "ഗ്രന്ഥ വിജ്ഞാനം", en: "Manuscript Knowledge", ar: "معرفة المخطوطة" },
+  card_sub_shop: { ml: "പ്രീമിയം ഉൽപ്പന്നങ്ങളും പുസ്തകങ്ങളും", en: "Premium Products & Books", ar: "منتجات وكتب مميزة" },
+
+  // ── Account Modal ──
+  account_owner_dashboard: { ml: "ഉടമസ്ഥ ഡാഷ്ബോർഡ്", en: "Owner Dashboard", ar: "لوحة المالك" },
+  account_admin_dashboard: { ml: "അഡ്മിൻ ഡാഷ്ബോർഡ്", en: "Admin Dashboard", ar: "لوحة المشرف" },
+  account_logging_out: { ml: "ലോഗ് ഔട്ട് ചെയ്യുന്നു…", en: "Logging out…", ar: "جاري الخروج…" },
+  account_user_fallback: { ml: "ഉപയോക്താവ്", en: "User", ar: "مستخدم" },
+  account_subscription: { ml: "സബ്സ്ക്രിപ്ഷൻ", en: "Subscription", ar: "الاشتراك" },
+  role_owner: { ml: "ഉടമസ്ഥൻ", en: "Owner", ar: "المالك" },
+  role_admin: { ml: "അഡ്മിൻ", en: "Admin", ar: "مشرف" },
+  role_user: { ml: "ഉപയോക്താവ്", en: "User", ar: "مستخدم" },
+
+  // ── Google Sign-In Prompt ──
+  google_signin_title: { ml: "Google വഴി സൈൻ ഇൻ ചെയ്യുക", en: "Sign in with Google", ar: "تسجيل الدخول عبر Google" },
+  google_signin_desc: { ml: "നിങ്ങളുടെ ഐഡന്റിറ്റി സിങ്ക് ചെയ്യാൻ സൈൻ ഇൻ ചെയ്യുക. സംരക്ഷിത പേജുകൾക്ക് ഇപ്പോഴും ആക്സസ് കോഡ് ആവശ്യമാണ് — Google സൈൻ-ഇൻ ഐഡന്റിറ്റിക്ക് മാത്രമാണ്, ഉള്ളടക്കം തുറക്കില്ല.", en: "Sign in to sync your identity. Protected pages still require an access code — Google Sign-In is for identity only and never unlocks content.", ar: "سجّل الدخول لمزامنة هويتك. الصفحات المحمية تتطلب رمز وصول — تسجيل الدخول عبر Google للهوية فقط ولا يفتح المحتوى." },
+  google_redirecting: { ml: "റീഡയറക്റ്റ് ചെയ്യുന്നു…", en: "Redirecting…", ar: "جاري إعادة التوجيه…" },
+  google_continue: { ml: "Google വഴി തുടരുക", en: "Continue with Google", ar: "المتابعة عبر Google" },
+  google_skip: { ml: "ഒഴിവാക്കുക — ഗസ്റ്റായി തുടരുക", en: "Skip — Continue as Guest", ar: "تخطي — المتابعة كضيف" },
+
+  // ── Error Boundary ──
+  error_title: { ml: "എന്തോ തെറ്റി", en: "Something went wrong", ar: "حدث خطأ ما" },
+  error_desc: { ml: "അപ്ലിക്കേഷന് അപ്രതീക്ഷിതമായ ഒരു പിശക് സംഭവിച്ചു. പേജ് പുതുക്കി ശ്രമിക്കുക.", en: "The application encountered an unexpected error. Please try refreshing the page.", ar: "واجه التطبيق خطأً غير متوقع. يرجى تحديث الصفحة." },
+  error_refresh: { ml: "പേജ് പുതുക്കുക", en: "Refresh Page", ar: "تحديث الصفحة" },
+
+  // ── Protected Page ──
+  admin_access_required: { ml: "അഡ്മിൻ പ്രവേശനം ആവശ്യം", en: "Admin Access Required", ar: "مطلوب وصول المشرف" },
+  admin_restricted: { ml: "ഈ പേജ് അഡ്മിനിസ്ട്രേറ്റർമാർക്ക് മാത്രം പരിമിതപ്പെടുത്തിയിരിക്കുന്നു.", en: "This page is restricted to administrators only.", ar: "هذه الصفحة مقتصرة على المسؤولين فقط." },
+  admin_login: { ml: "അഡ്മിൻ ലോഗിൻ", en: "Admin Login", ar: "دخول المشرف" },
+  back_to_home: { ml: "← ഹോമിലേക്ക് തിരികെ", en: "← Back to Home", ar: "← العودة للرئيسية" },
+  access_restricted_title: { ml: "പ്രവേശനം നിയന്ത്രിതം", en: "Access Restricted", ar: "وصول مقيد" },
+  access_restricted_desc: { ml: "നിങ്ങളുടെ റോളിന് ഈ വിഭാഗത്തിലേക്ക് പ്രവേശനമില്ല.", en: "Your role does not have access to this section.", ar: "دورك لا يملك صلاحية الوصول إلى هذا القسم." },
+  premium_account_required: { ml: "ഈ പേജിന് അക്കൗണ്ട് ആവശ്യമാണ്. തുടരാൻ Google വഴി സൈൻ ഇൻ ചെയ്യുക.", en: "This page requires an account. Please sign in with Google to continue.", ar: "تتطلب هذه الصفحة حساباً. يرجى تسجيل الدخول عبر Google للمتابعة." },
+  premium_no_access: { ml: "ഈ പ്രീമിയം ഉള്ളടക്കത്തിലേക്ക് നിങ്ങൾക്ക് പ്രവേശനമില്ല.", en: "You don't have access to this premium content.", ar: "ليس لديك وصول إلى هذا المحتوى المميز." },
+  enter_reading_code: { ml: "റീഡിംഗ് ആക്സസ് കോഡ് നൽകുക", en: "Enter Reading Access Code", ar: "أدخل رمز الوصول" },
+  request_access_form: { ml: "പ്രവേശനം അഭ്യർത്ഥിക്കുക (ഇൻ-ആപ്പ് ഫോം)", en: "Request Access (In-App Form)", ar: "طلب وصول (نموذج داخل التطبيق)" },
+  enter_access_code: { ml: "ആക്സസ് കോഡ് നൽകുക", en: "Enter Access Code", ar: "أدخل رمز الوصول" },
+  code_placeholder: { ml: "ഉദാ. ACCESS-1234", en: "e.g. ACCESS-1234", ar: "مثال: ACCESS-1234" },
+  verifying: { ml: "പരിശോധിക്കുന്നു…", en: "Verifying…", ar: "جاري التحقق…" },
+  activate_code: { ml: "കോഡ് സജീവമാക്കുക", en: "Activate Code", ar: "تفعيل الرمز" },
+  invalid_code: { ml: "അസാധുവായ കോഡ്.", en: "Invalid code.", ar: "رمز غير صالح." },
+  redemption_failed: { ml: "റിഡീം പരാജയപ്പെട്ടു.", en: "Redemption failed.", ar: "فشل التفعيل." },
 };
 
 export default translations;
