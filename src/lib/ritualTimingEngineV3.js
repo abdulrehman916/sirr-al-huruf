@@ -20,6 +20,14 @@ import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSuns
 import { calculateMoonPosition } from "./astroClockMoonPosition.js";
 import { AY_MANAZILLERI } from "./astroClockData.js";
 
+// ── PLANNING OVERRIDE (optional — Ritual Planning Mode) ──
+// Module-level: when set, getTodayAllHours() uses this location instead of
+// getUserLocation(), and analyzeRitualTiming uses this date instead of new Date().
+// Set by analyzeRitualTiming entry when planningContext is provided.
+// Null = default behavior (current location + current date).
+// Does NOT modify any calculation logic — only swaps the astronomical source.
+let _planningOverride = null;
+
 // ── Moon Mansion & Zodiac lists (for Plan-by-Moon dropdowns) ──
 export const MOON_MANSIONS = (AY_MANAZILLERI || []).map(m => ({
   no: m.no, name: m.name, harfi: m.harfi,
@@ -248,7 +256,7 @@ function getTodayAllHours(date) {
   // Astrology Clock page (useAstroData) uses — NOAA astronomical
   // algorithm based on real lat/lng/timezone. No hardcoded seasonal
   // values. Identical fallback (6.5 / 18.25) as useAstroData + liveNow.
-  const loc = getUserLocation();
+  const loc = _planningOverride?.location || getUserLocation();
   const sun = calculateSunriseSunset(date, loc.lat, loc.lng, loc.timezone);
   const sunrise = (sun.sunrise != null) ? sun.sunrise : 6.5;
   const sunset = (sun.sunset != null) ? sun.sunset : 18.25;
@@ -563,7 +571,8 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
 // ═══════════════════════════════════════════════════════════════
 // MAIN — analyzeRitualTiming (same return shape as V2)
 // ═══════════════════════════════════════════════════════════════
-export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup }) {
+export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup, planningContext }) {
+  _planningOverride = planningContext || null;
   const reasoning = [];
   const warnings = [];
   const bookNotes = [];
@@ -606,7 +615,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const khayrSharr = khayrSharrSelected || null;
 
   // ── STEP 3+4: Astro Clock — manuscript sunset-aware (LIVE + MANUAL) ──
-  const now = new Date();
+  const now = planningContext?.date || new Date();
   const nowData = getTodayAllHours(now);
   const sunrise = nowData.sunrise;
   const sunset = nowData.sunset;
@@ -740,7 +749,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // Uses real local sunrise/sunset — never hardcoded seasonal approximations.
   // getCurrentPlanetaryHour divides Sunrise→Sunset into 12 Day Saat and
   // Sunset→next Sunrise into 12 Night Saat, returning the interval containing now.
-  const liveLoc = getUserLocation();
+  const liveLoc = _planningOverride?.location || getUserLocation();
   const liveSun = calculateSunriseSunset(now, liveLoc.lat, liveLoc.lng, liveLoc.timezone);
   const liveSunrise = (liveSun.sunrise != null) ? liveSun.sunrise : 6.5;
   const liveSunset = (liveSun.sunset != null) ? liveSun.sunset : 18.25;
@@ -942,10 +951,10 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 // CONFIGURATION ADVISOR — compares current Mizan vs manuscript ideal.
 // Same return shape as V2.
 // ═══════════════════════════════════════════════════════════════
-export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup }) {
+export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup, planningContext }) {
   const purposes = selections?.purposes || [];
   const custom = (customPurpose || "").trim();
-  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup });
+  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup, planningContext });
   const noPurposeSelected = !!base?.noPurposeSelected;
   const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup });
   const effectiveRitualKey = ritualKey || "general";
@@ -956,7 +965,7 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   const selectedHour = selections?.hour || null;
   const selectedPlanet = selections?.planet || null;
   const dayNight = selections?.dayNight || null;
-  const now = new Date();
+  const now = planningContext?.date || new Date();
   const nowDataAdv = getTodayAllHours(now);
   const { referenceDate: cfgRefDate } = resolveManuscriptDay(selectedDay, dayNight, now, nowDataAdv.sunrise, nowDataAdv.sunset);
   const bestWindow = base.bestWindowsToday?.[0];

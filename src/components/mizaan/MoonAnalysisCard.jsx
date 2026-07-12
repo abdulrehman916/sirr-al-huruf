@@ -353,7 +353,7 @@ const L = (lang) => ({
   confNotSelected: lang === "ml" ? "തിരഞ്ഞെടുത്തിട്ടില്ല" : "Not selected",
 });
 
-export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, req, lang = "ml" }) {
+export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, req, lang = "ml", planningDate = null }) {
   const [expanded, setExpanded] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null); // null | "status" | "plan"
   const [desiredMansion, setDesiredMansion] = useState("");
@@ -382,7 +382,7 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
         desiredMansion: desiredMansion || null,
         desiredZodiac: desiredZodiac || null,
         desiredPhase: desiredPhase || null,
-        fromDate: new Date(),
+        fromDate: planningDate || new Date(),
       });
       setPlanResult(result);
       setPlanning(false);
@@ -674,6 +674,7 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
                       lang={lang}
                       moonCitations={moonCitations}
                       req={req}
+                      planningDate={planningDate}
                     />
                   )}
                 </motion.div>
@@ -690,7 +691,7 @@ export default function MoonAnalysisCard({ moonPhase, moonReq, moonCitations, re
 // ═══════════════════════════════════════════════════════════════
 // PLAN RESULT VIEW — Complete timing timeline with narrative flow
 // ═══════════════════════════════════════════════════════════════
-function PlanResultView({ result, t, lang, moonCitations, req }) {
+function PlanResultView({ result, t, lang, moonCitations, req, planningDate }) {
   const {
     found, recommendedTime, firstMoonPerfect, hasMoonPrefs,
     todayMoonMatches, todayManuscriptPass, todayResult,
@@ -738,7 +739,7 @@ function PlanResultView({ result, t, lang, moonCitations, req }) {
   return (
     <div className="space-y-3">
       {/* Nahas Warning — if today is a Nahas day per manuscript */}
-      <NahasWarning req={req} t={t} lang={lang} moonCitations={moonCitations} />
+      <NahasWarning req={req} t={t} lang={lang} moonCitations={moonCitations} planningDate={planningDate} />
 
       {/* Step 1: Today's Moon Check */}
       {hasMoonPrefs && todayMoonMatches && (
@@ -1126,10 +1127,11 @@ function TimelineExplanation({ rejectionTimeline, finalTime, t, lang, hasMoonPre
 // ═══════════════════════════════════════════════════════════════
 // NAHAS WARNING — Shows if today is a manuscript Nahas day
 // ═══════════════════════════════════════════════════════════════
-function NahasWarning({ req, t, lang, moonCitations }) {
+function NahasWarning({ req, t, lang, moonCitations, planningDate }) {
   if (!req?.worstDays?.length) return null;
 
-  const todayKey = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][new Date().getDay()];
+  const planningRefDate = planningDate || new Date();
+  const todayKey = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][planningRefDate.getDay()];
   const isNahasDay = req.worstDays.includes(todayKey);
   if (!isNahasDay) return null;
 

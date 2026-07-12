@@ -22,6 +22,7 @@ import ReportWindowsList from "./ReportWindowsList";
 import ConfigurationAdvisor from "./ConfigurationAdvisor";
 import ManuscriptComplianceChecklist from "./ManuscriptComplianceChecklist";
 import MoonAnalysisCard from "./MoonAnalysisCard";
+import PlanningModePanel from "./PlanningModePanel";
 import { localizeAnalysis, localizeAdvice, tStr, useRitualLang, tDay, tPlanet } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
@@ -57,6 +58,17 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
   const [lang, setLang] = useRitualLang();
   const { manuscriptRules } = useManuscriptRules();
 
+  // ── PLANNING MODE (optional) ──
+  // When ON, the engine evaluates for the selected location + date instead of
+  // current location + today. Uses the SAME astronomical source — no second engine.
+  const [planningMode, setPlanningMode] = useState(false);
+  const [planningLocation, setPlanningLocation] = useState(null);
+  const [planningDate, setPlanningDate] = useState(null);
+  const planningContext = useMemo(() => {
+    if (!planningMode || !planningLocation || !planningDate) return null;
+    return { location: planningLocation, date: planningDate };
+  }, [planningMode, planningLocation, planningDate]);
+
   const resolvedPurpose = purposeLookup || { matched: false };
   const effectiveSelections = useMemo(() => {
     if (resolvedPurpose.matched && resolvedPurpose.ritualIntent) {
@@ -68,15 +80,15 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   const rawAnalysis = useMemo(() => {
     if (!result || resolvedPurpose.needsConfirmation) return null;
-    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose });
-  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose]);
+    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose, planningContext });
+  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose, planningContext]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
   const rawAdvice = useMemo(() => {
     if (!result || resolvedPurpose.needsConfirmation) return null;
-    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose });
-  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose]);
+    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose, planningContext });
+  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose, planningContext]);
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 
@@ -145,6 +157,17 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   return (
     <div className="mt-6 space-y-4">
+
+      {/* ═══ PLANNING MODE (optional) ═══ */}
+      <PlanningModePanel
+        enabled={planningMode}
+        onToggle={setPlanningMode}
+        location={planningLocation}
+        onLocationChange={setPlanningLocation}
+        date={planningDate}
+        onDateChange={setPlanningDate}
+        lang={lang}
+      />
 
       {/* ═══════════════════════════════════════════════════════════════
           1. FINAL RECOMMENDATION — always visible, first thing the user sees
@@ -442,6 +465,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
         moonCitations={rawAnalysis?.moonCitations}
         req={rawAnalysis?.req}
         lang={lang}
+        planningDate={planningContext?.date || null}
       />
     </div>
   );
