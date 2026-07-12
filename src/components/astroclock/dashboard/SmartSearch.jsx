@@ -189,46 +189,25 @@ export default function SmartSearch() {
             <div className="flex items-center gap-2 mb-1.5">
               <Brain className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(129,140,248,0.70)" }} />
               <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "rgba(129,140,248,0.70)" }}>
-                {txt("വിജ്ഞാന വിശകലനം", "Knowledge Analysis", "Bilgi Analizi")}
+                {txt("ഫലം", "Result")}
               </span>
             </div>
-            {/* Detected action */}
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-inter text-[9px] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
-                {txt("കണ്ടെത്തിയത്", "Detected", "Tespit Edilen")}:
-              </span>
-              <span className="font-inter text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.80)" }}>
-                "{result.detectedAction}"
-              </span>
-            </div>
-            {/* Canonical action */}
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-inter text-[9px] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
-                {txt("കാനോണിക്കൽ പ്രവൃത്തി", "Canonical Action", "Kanonik Eylem")}:
-              </span>
-              <span className="font-inter text-[11px] font-bold" style={{ color: G.text }}>
+            {/* Action title */}
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="font-inter text-[12px] font-bold" style={{ color: G.text }}>
                 {result.canonicalAction[language] || result.canonicalAction.en}
               </span>
             </div>
-            {/* Confidence + rules used */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                {txt("ആത്മവിശ്വാസം", "Confidence", "Güven")}: <span style={{ color: result.suitable ? "#4ADE80" : "#F87171" }}>{result.confidence}%</span>
-              </span>
-              <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                {txt("വിജ്ഞാന നിയമങ്ങൾ", "Knowledge Rules", "Bilgi Kuralları")}: <span style={{ color: G.text }}>{result.knowledgeRulesUsed}</span>
-              </span>
-              <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                {txt("ബന്ധപ്പെട്ട പദങ്ങൾ", "Related Terms", "İlgili Terimler")}: <span style={{ color: G.dim }}>{result.relatedActions.length}</span>
-              </span>
+            {/* Suitability badge */}
+            <div className="flex items-center gap-2 flex-wrap">
               {result.suitable ? (
                 <span className="font-inter text-[9px] uppercase px-2 py-0.5 rounded font-bold" style={{
                   background: "rgba(74,222,128,0.12)", color: "#4ADE80",
-                }}>{txt("അനുകൂലം", "Suitable", "Elverişli")}</span>
+                }}>{txt("അനുകൂലം", "Suitable")}</span>
               ) : (
                 <span className="font-inter text-[9px] uppercase px-2 py-0.5 rounded font-bold" style={{
                   background: "rgba(248,113,113,0.12)", color: "#F87171",
-                }}>{txt("പ്രതികൂലം", "Not Ideal", "Elverişsiz")}</span>
+                }}>{txt("പ്രതികൂലം", "Not Ideal")}</span>
               )}
             </div>
           </div>
@@ -254,24 +233,6 @@ export default function SmartSearch() {
                   }}>{topic}</span>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* ── Reasoning Summary ── */}
-          {result.reasoningSummary && (
-            <div className="rounded-lg p-2.5" style={{
-              background: "rgba(129,140,248,0.03)",
-              border: "1px solid rgba(129,140,248,0.10)",
-            }}>
-              <div className="flex items-center gap-1.5 mb-1">
-                <Brain className="w-3 h-3" style={{ color: "rgba(129,140,248,0.50)" }} />
-                <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(129,140,248,0.50)" }}>
-                  {txt("നിഗമന സംഗ്രഹം", "Reasoning Summary", "Akıl Yürütme Özeti")}
-                </span>
-              </div>
-              <p className="font-inter text-[10px] leading-relaxed whitespace-pre-line" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {result.reasoningSummary}
-              </p>
             </div>
           )}
 
@@ -445,11 +406,6 @@ export default function SmartSearch() {
                     background: "rgba(74,222,128,0.03)",
                     border: "1px solid rgba(74,222,128,0.10)",
                   }}>
-                    {m.category && (
-                      <span className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1 block" style={{ color: "rgba(74,222,128,0.40)" }}>
-                        {m.category} · {m.entity_type}/{m.entity_key}
-                      </span>
-                    )}
                     <p className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
                       {(language === "ml" && m.text_ml ? m.text_ml : m.text).split("\n---\n")[0]}
                     </p>
@@ -459,7 +415,7 @@ export default function SmartSearch() {
                     <div className="flex flex-wrap gap-1 mt-1">
                       <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
                         background: "rgba(74,222,128,0.06)", color: "rgba(74,222,128,0.40)",
-                      }}>📖 {m.source}{m.page ? ` p.${m.page}` : ""}{m.screenshot ? " 📷" : ""}</span>
+                      }}>📖 {m.source}{m.page ? ` ${txt("പേ.", "p.")}${m.page}` : ""}{m.screenshot ? " 📷" : ""}</span>
                       {m.source_count > 1 && (
                         <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
                           background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.40)",
@@ -539,7 +495,7 @@ function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d,
                   <span className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{
                     background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.60)",
                   }}>
-                    #{rule.saat > 12 ? rule.saat - 12 : rule.saat} {rule.period}
+                    #{rule.saat > 12 ? rule.saat - 12 : rule.saat} {rule.period === "day" ? txt("പകൽ", "Day") : txt("രാത്രി", "Night")}
                   </span>
                   <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
                     {d.planetInfo[rule.planet]?.[lang === "ml" ? "name_ml_equivalent" : "name_en"] || rule.planet}
@@ -560,11 +516,6 @@ function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d,
             {/* EK record: text */}
             {rule.recordType === "EK" && (
               <>
-                {rule.category && (
-                  <span className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1 block" style={{ color: "rgba(96,165,250,0.40)" }}>
-                    {rule.category} · {rule.entity_type}/{rule.entity_key}
-                  </span>
-                )}
                 <p className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
                   {(lang === "ml" && rule.text_ml ? rule.text_ml : rule.text).split("\n---\n")[0]}
                 </p>
@@ -573,21 +524,12 @@ function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d,
                 )}
               </>
             )}
-            {/* Summary */}
-            {rule.summary && rule.recordType === "ACK" && (
-              <p className="font-inter text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>{rule.summary}</p>
-            )}
-            {/* Reason (for conditional/exception/indirect) */}
-            {showReason && rule.reason && (
-              <p className="font-inter text-[10px] mt-1 italic" style={{ color: "rgba(255,255,255,0.45)" }}>
-                {txt("കാരണം", "Reason", "Sebep")}: {rule.reason}
-              </p>
-            )}
+
             {/* Source */}
             <div className="flex flex-wrap gap-1 mt-1">
               <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
                 background: "rgba(129,140,248,0.06)", color: "rgba(129,140,248,0.40)",
-              }}>📖 {rule.source}{rule.page ? ` p.${rule.page}` : ""}{rule.screenshot ? " 📷" : ""}</span>
+              }}>📖 {rule.source}{rule.page ? ` ${txt("പേ.", "p.")}${rule.page}` : ""}{rule.screenshot ? " 📷" : ""}</span>
               {rule.source_count > 1 && (
                 <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
                   background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.40)",
