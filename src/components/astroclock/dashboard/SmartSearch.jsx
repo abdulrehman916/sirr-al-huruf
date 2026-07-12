@@ -1,81 +1,54 @@
 // ═══════════════════════════════════════════════════════════════
-// SECTION 2 — SMART SEARCH
-// User types a purpose → gets purpose-specific Saat recommendations
-// Shows ONLY: Best Saat, Alternative Saat, Times to Avoid, Explanation, References
-// Does NOT re-render the entire Astro Clock
+// SECTION 2 — SEMANTIC SMART SEARCH
+// Upgraded from keyword search to a semantic decision engine.
+//
+// FLOW:
+//   1. User types any action (any language) → classifier maps to category
+//   2. Semantic matcher searches verified knowledge dynamically
+//   3. Timing engine combines with matched knowledge
+//   4. UI shows: recommended times, why suitable, supporting rules,
+//      supporting manuscripts, confidence — or why not + alternatives
+//
+// DOES NOT modify: timing engine, OCR, ingestion, schema, routing,
+// calculations, existing verified records, or any other module.
 // ═══════════════════════════════════════════════════════════════
-import { useState, useMemo } from "react";
-import { useAstroData, PURPOSE_MAP } from "./useAstroData";
+import { useState } from "react";
+import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
-import { Search, Clock, CheckCircle2, Ban, BookOpen } from "lucide-react";
+import { useSemanticActionSearch } from "@/hooks/useSemanticActionSearch";
+import { ACTION_CATEGORIES } from "@/lib/astroActionClassifier";
+import { Search, Clock, CheckCircle2, Ban, BookOpen, AlertTriangle, Sparkles, Shield } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
-import { getKashfOperationsForPurpose } from "@/lib/astroClockManuscriptMerger";
 import { planetArabicMLDisplay } from "@/lib/astroClockLabelMap";
 
-const PURPOSE_LABELS = {
-  love: { ml: "പ്രണയം", en: "Love", tr: "Aşk" },
-  marriage: { ml: "വിവാഹം", en: "Marriage", tr: "Evlilik" },
-  business: { ml: "വ്യാപാരം", en: "Business", tr: "Ticaret" },
-  travel: { ml: "യാത്ര", en: "Travel", tr: "Seyahat" },
-  healing: { ml: "ചികിത്സ", en: "Healing", tr: "Şifa" },
-  knowledge: { ml: "ജ്ഞാനം", en: "Knowledge", tr: "İlim" },
-  protection: { ml: "സംരക്ഷണം", en: "Protection", tr: "Koruma" },
-  wealth: { ml: "ഐശ്വര്യം", en: "Wealth", tr: "Zenginlik" },
-  courage: { ml: "ധൈര്യം", en: "Courage", tr: "Cesaret" },
-  spiritual: { ml: "ആത്മികം", en: "Spiritual", tr: "Manevi" },
-};
+// Quick tag categories shown to the user (internal mapping is hidden)
+const QUICK_TAGS = [
+  "construction", "travel", "marriage", "business",
+  "agriculture", "medical", "love", "protection",
+  "wealth", "knowledge", "spiritual", "courage",
+];
 
 export default function SmartSearch() {
   const d = useAstroData();
   const { txt, language } = useAstroClockLanguage();
-  const [query, setQuery] = useState("");
-  const [matched, setMatched] = useState(null);
-
-  const results = useMemo(() => {
-    if (!matched || !d.allHours) return null;
-    const config = PURPOSE_MAP[matched];
-    if (!config) return null;
-
-    const planetLC = config.planets;
-    const bestHours = d.allHours.filter(h => h.status !== "past" && planetLC.includes(h.planet));
-    const avoidHours = d.allHours.filter(h => h.status !== "past" && !planetLC.includes(h.planet) && (h.planet === "saturn" || h.planet === "mars"));
-
-    const best = bestHours.slice().sort((a, b) => {
-      if (a.status === "current") return -1;
-      if (b.status === "current") return 1;
-      return 0;
-    }).slice(0, 3);
-
-    const alt = bestHours.slice(3, 5);
-    const avoid = avoidHours.slice(0, 3);
-
-    const planetNames = config.planets.map(p =>
-      language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en
-    );
-
-    const explanation = txt(
-      `${PURPOSE_LABELS[matched].ml} ${txt("കർമ്മത്തിന്", "work benefits from", "çalışması için")}`,
-      `${PURPOSE_LABELS[matched].en} work benefits from ${planetNames.join(", ")} ${txt("ساعة", "hours", "saatleri")}.`,
-      `${PURPOSE_LABELS[matched].tr} çalışması ${planetNames.join(", ")} saatleri için elverişlidir.`
-    );
-
-    const references = config.planets.map(p => d.planetInfo[p]?.source).filter(Boolean);
-
-    const kashfOps = getKashfOperationsForPurpose(matched);
-    return { best, alt, avoid, explanation, references, planetNames, kashfOps };
-  }, [matched, d, language, txt]);
+  const { query, search, reset, classification, result, loading } = useSemanticActionSearch();
+  const [input, setInput] = useState("");
 
   const handleSearch = () => {
-    const q = query.toLowerCase().trim();
-    if (!q) return;
-    for (const [key, cfg] of Object.entries(PURPOSE_MAP)) {
-      const allKw = [...cfg.keywords.en, ...cfg.keywords.ml, ...cfg.keywords.tr, key, PURPOSE_LABELS[key].en.toLowerCase(), PURPOSE_LABELS[key].ml, PURPOSE_LABELS[key].tr.toLowerCase()];
-      if (allKw.some(kw => q.includes(kw) || kw.includes(q))) {
-        setMatched(key);
-        return;
-      }
-    }
-    setMatched("__none__");
+    if (!input.trim()) return;
+    search(input.trim());
+  };
+
+  const handleTag = (catKey) => {
+    const cat = ACTION_CATEGORIES[catKey];
+    const label = cat?.label?.[language] || cat?.label?.en || catKey;
+    setInput(label);
+    search(catKey);
+  };
+
+  const handleReset = () => {
+    setInput("");
+    reset();
   };
 
   const G = { text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.20)" };
@@ -87,95 +60,285 @@ export default function SmartSearch() {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: G.dim }} />
           <input
-            value={query}
-            onChange={e => setQuery(e.target.value)}
+            value={input}
+            onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleSearch()}
-            placeholder={txt("ഉദ്ദേശം തിരയുക... (പ്രണയം, വ്യാപാരം, യാത്ര...)", "Search purpose... (Love, Business, Travel...)", "Amaç ara... (Aşk, Ticaret, Seyahat...)")}
+            placeholder={txt(
+              "പ്രവൃത്തി തിരയുക... (വീട് പണിയൽ, യാത്ര, വിവാഹം, കൃഷി...)",
+              "Search action... (Construction, Travel, Marriage, Farming...)",
+              "İşlem ara... (İnşaat, Seyahat, Evlilik, Tarım...)"
+            )}
             className="w-full pl-9 pr-3 py-2.5 rounded-xl font-inter text-sm"
             style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${G.border}`, color: "#fff" }}
           />
         </div>
-        <button onClick={handleSearch} className="px-4 py-2.5 rounded-xl font-inter text-xs font-bold uppercase tracking-wider" style={{
+        <button onClick={handleSearch} disabled={loading} className="px-4 py-2.5 rounded-xl font-inter text-xs font-bold uppercase tracking-wider transition-opacity" style={{
           background: "linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.08) 100%)",
-          border: `1px solid ${G.border}`, color: G.text,
-        }}>{txt("തിരയുക", "Search", "Ara")}</button>
+          border: `1px solid ${G.border}`, color: G.text, opacity: loading ? 0.5 : 1,
+        }}>{loading ? "..." : txt("തിരയുക", "Search", "Ara")}</button>
       </div>
 
       {/* ── Quick Tags ── */}
       <div className="flex flex-wrap gap-1.5">
-        {Object.entries(PURPOSE_LABELS).map(([key, label]) => (
-          <button key={key} onClick={() => { setQuery(label[language] || label.en); setMatched(key); }}
-            className="font-inter text-[10px] px-2 py-1 rounded-lg transition-opacity hover:opacity-80"
-            style={{ background: matched === key ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${matched === key ? G.border : "rgba(255,255,255,0.08)"}`, color: matched === key ? G.text : "rgba(255,255,255,0.50)" }}>
-            {label[language] || label.en}
-          </button>
-        ))}
+        {QUICK_TAGS.map(key => {
+          const cat = ACTION_CATEGORIES[key];
+          if (!cat) return null;
+          const label = cat.label[language] || cat.label.en;
+          const isActive = classification?.category === key;
+          return (
+            <button key={key} onClick={() => handleTag(key)}
+              className="font-inter text-[10px] px-2 py-1 rounded-lg transition-opacity hover:opacity-80"
+              style={{
+                background: isActive ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.03)",
+                border: `1px solid ${isActive ? G.border : "rgba(255,255,255,0.08)"}`,
+                color: isActive ? G.text : "rgba(255,255,255,0.50)",
+              }}>{label}</button>
+          );
+        })}
       </div>
 
-      {/* ── Results ── */}
-      {matched === "__none__" && (
-        <p className="font-inter text-xs text-center py-4" style={{ color: "rgba(255,255,255,0.40)" }}>
-          {txt("പൊരുത്തമില്ല. മുകളിലെ ടാഗുകൾ ഉപയോഗിക്കുക.", "No match. Try the tags above.", "Eşleşme yok. Yukarıdaki etiketleri deneyin.")}
-        </p>
+      {/* ── No Match ── */}
+      {search && !classification && !loading && (
+        <div className="rounded-lg p-3 text-center" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
+          <AlertTriangle className="w-4 h-4 mx-auto mb-1" style={{ color: "rgba(248,113,113,0.50)" }} />
+          <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>
+            {txt(
+              "ഈ പ്രവൃത്തി തിരിച്ചറിയാൻ കഴിഞ്ഞില്ല. മുകളിലെ വിഭാഗങ്ങൾ ഉപയോഗിക്കുക.",
+              "Could not identify this action. Try the categories above.",
+              "Bu işlem tanınamadı. Yukarıdaki kategorileri deneyin."
+            )}
+          </p>
+          <button onClick={handleReset} className="mt-2 font-inter text-[10px] underline" style={{ color: G.dim }}>
+            {txt("പുതിയ തിരൽ", "New Search", "Yeni Arama")}
+          </button>
+        </div>
       )}
 
-      {results && (
+      {/* ── Results ── */}
+      {result && classification && (
         <div className="space-y-2.5">
-          {/* Explanation */}
-          <div className="rounded-lg p-2.5" style={{ background: "rgba(212,175,55,0.06)", border: `1px solid ${G.border}` }}>
-            <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>{results.explanation}</p>
+          {/* ── Category + Confidence Header ── */}
+          <div className="rounded-lg p-2.5 flex items-center gap-2" style={{
+            background: result.suitable ? "rgba(74,222,128,0.06)" : "rgba(248,113,113,0.06)",
+            border: `1px solid ${result.suitable ? "rgba(74,222,128,0.20)" : "rgba(248,113,113,0.20)"}`,
+          }}>
+            <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: result.suitable ? "#4ADE80" : "#F87171" }} />
+            <div className="flex-1 min-w-0">
+              <span className="font-inter text-xs font-bold block" style={{ color: result.suitable ? "#4ADE80" : "#F87171" }}>
+                {result.categoryLabel[language] || result.categoryLabel.en}
+              </span>
+              <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                {txt("ആത്മവിശ്വാസം", "Confidence", "Güven")}: {result.confidence}%
+                {' · '}
+                {txt("വിജ്ഞാന രേഖകൾ", "Knowledge refs", "Bilgi kayıtları")}: {result.knowledgeMatchCount}
+              </span>
+            </div>
+            {result.suitable ? (
+              <span className="font-inter text-[9px] uppercase px-2 py-0.5 rounded font-bold" style={{
+                background: "rgba(74,222,128,0.12)", color: "#4ADE80",
+              }}>{txt("അനുകൂലം", "Suitable", "Elverişli")}</span>
+            ) : (
+              <span className="font-inter text-[9px] uppercase px-2 py-0.5 rounded font-bold" style={{
+                background: "rgba(248,113,113,0.12)", color: "#F87171",
+              }}>{txt("പ്രതികൂലം", "Not Ideal", "Elverişsiz")}</span>
+            )}
           </div>
 
-          {/* Best Saat */}
-          {results.best.length > 0 && (
+          {/* ── Why Suitable / Why Not ── */}
+          {result.suitable ? (
+            <div className="rounded-lg p-2.5" style={{ background: "rgba(212,175,55,0.06)", border: `1px solid ${G.border}` }}>
+              <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>
+                {txt(
+                  `${result.categoryLabel.ml} ഇന്ന് അനുകൂലമാണ്. ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_ml_equivalent || p).join(", ")} ഗ്രഹങ്ങളുടെ സഅാതുകൾ ഉപയോഗിക്കുക.`,
+                  `${result.categoryLabel.en} is favorable today. Use hours governed by ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")}.`,
+                  `${result.categoryLabel.en} today is favorable. Use ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")} hours.`
+                )}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-lg p-2.5 space-y-1.5" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
+              <div className="flex items-center gap-1.5">
+                <Ban className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#F87171" }} />
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#F87171" }}>
+                  {txt("കാരണങ്ങൾ", "Blocking Reasons", "Engel Sebepleri")}
+                </span>
+              </div>
+              {result.blockingReasons.map((r, i) => (
+                <p key={i} className="font-inter text-[11px] pl-5" style={{ color: "rgba(255,255,255,0.60)" }}>
+                  • {r[language] || r.en}
+                </p>
+              ))}
+              {(result.alternativeHours.length > 0 || result.recommendedHours.length > 0) && (
+                <p className="font-inter text-[11px] pl-5 mt-1" style={{ color: "rgba(74,222,128,0.60)" }}>
+                  {txt(
+                    "ഇതിനകം ലഭ്യമായ മികച്ച സഅാതുകൾ താഴെ കാണുക.",
+                    "Best available hours are shown below.",
+                    "Mevcut en iyi saatler aşağıda."
+                  )}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ── Recommended Saat ── */}
+          {result.recommendedHours.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#4ADE80" }} />
-                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>{txt("മികച്ച ساعة", "Best Saat", "En İyi Saat")}</span>
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>
+                  {txt("മികച്ച സഅാത്", "Best Saat", "En İyi Saat")}
+                </span>
               </div>
-              {results.best.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} />)}
+              {result.recommendedHours.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} />)}
             </div>
           )}
 
-          {/* Alternative Saat */}
-          {results.alt.length > 0 && (
+          {/* ── Alternative Saat ── */}
+          {result.alternativeHours.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <Clock className="w-3.5 h-3.5" style={{ color: G.dim }} />
-                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>{txt("ബദൽ ساعة", "Alternative Saat", "Alternatif Saat")}</span>
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
+                  {txt("ബദൽ സഅാത്", "Alternative Saat", "Alternatif Saat")}
+                </span>
               </div>
-              {results.alt.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} />)}
+              {result.alternativeHours.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} />)}
             </div>
           )}
 
-          {/* Times to Avoid */}
-          {results.avoid.length > 0 && (
+          {/* ── Times to Avoid ── */}
+          {result.avoidedHours.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <Ban className="w-3.5 h-3.5" style={{ color: "#F87171" }} />
-                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#F87171" }}>{txt("ഒഴിവാക്കുക", "Times to Avoid", "Kaçınılacak")}</span>
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#F87171" }}>
+                  {txt("ഒഴിവാക്കുക", "Times to Avoid", "Kaçınılacak")}
+                </span>
               </div>
-              {results.avoid.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} avoid />)}
+              {result.avoidedHours.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} avoid />)}
             </div>
           )}
 
-          {/* References */}
-          {results.references.length > 0 && (
+          {/* ── Supporting Rules (from AstroClockKnowledge) ── */}
+          {result.supportingRules.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Shield className="w-3.5 h-3.5" style={{ color: "rgba(129,140,248,0.60)" }} />
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "rgba(129,140,248,0.60)" }}>
+                  {txt("ഗ്രന്ഥ നിയമങ്ങൾ", "Supporting Rules", "Destekleyici Kurallar")}
+                  <span className="opacity-50"> ({result.supportingRules.length})</span>
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {result.supportingRules.map((rule, i) => (
+                  <div key={i} className="rounded-lg p-2" style={{
+                    background: "rgba(129,140,248,0.03)",
+                    border: "1px solid rgba(129,140,248,0.10)",
+                  }}>
+                    {/* Saat context */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{
+                        background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.60)",
+                      }}>#{rule.saat > 12 ? rule.saat - 12 : rule.saat} {rule.period}</span>
+                      <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                        {d.planetInfo[rule.planet]?.[language === 'ml' ? 'name_ml_equivalent' : 'name_en'] || rule.planet}
+                      </span>
+                    </div>
+                    {/* Action texts */}
+                    {rule.actions.map((a, j) => (
+                      <p key={j} className="font-inter text-[10px] mb-0.5" style={{ color: "rgba(255,255,255,0.65)" }}>
+                        <span className="font-bold uppercase mr-1" style={{
+                          color: a.type === 'recommended' ? '#4ADE80' : a.type === 'forbidden' ? '#F87171' : G.dim,
+                        }}>{a.type === 'recommended' ? '✓' : a.type === 'forbidden' ? '✗' : '•'}</span>
+                        {a[language] || a.en}
+                      </p>
+                    ))}
+                    {/* Summary */}
+                    {rule.summary && (
+                      <p className="font-inter text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>{rule.summary}</p>
+                    )}
+                    {/* Source */}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
+                        background: "rgba(129,140,248,0.06)", color: "rgba(129,140,248,0.40)",
+                      }}>📖 {rule.source}{rule.page ? ` p.${rule.page}` : ''}{rule.screenshot ? ' 📷' : ''}</span>
+                      {rule.source_count > 1 && (
+                        <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
+                          background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.40)",
+                        }}>+{rule.source_count - 1}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Supporting Manuscripts (from EntityKnowledge) ── */}
+          {result.supportingManuscripts.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <BookOpen className="w-3.5 h-3.5" style={{ color: "rgba(74,222,128,0.50)" }} />
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "rgba(74,222,128,0.50)" }}>
+                  {txt("ഗ്രന്ഥ വിജ്ഞാനം", "Manuscript Knowledge", "El Yazması Bilgisi")}
+                  <span className="opacity-50"> ({result.supportingManuscripts.length})</span>
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {result.supportingManuscripts.map((m, i) => (
+                  <div key={i} className="rounded-lg p-2" style={{
+                    background: "rgba(74,222,128,0.03)",
+                    border: "1px solid rgba(74,222,128,0.10)",
+                  }}>
+                    {m.category && (
+                      <span className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1 block" style={{ color: "rgba(74,222,128,0.40)" }}>
+                        {m.category} · {m.entity_type}/{m.entity_key}
+                      </span>
+                    )}
+                    <p className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
+                      {(language === 'ml' && m.text_ml ? m.text_ml : m.text).split('\n---\n')[0]}
+                    </p>
+                    {m.text_ar && (
+                      <p className="font-amiri text-[11px] mt-1" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{m.text_ar}</p>
+                    )}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
+                        background: "rgba(74,222,128,0.06)", color: "rgba(74,222,128,0.40)",
+                      }}>📖 {m.source}{m.page ? ` p.${m.page}` : ''}{m.screenshot ? ' 📷' : ''}</span>
+                      {m.source_count > 1 && (
+                        <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
+                          background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.40)",
+                        }}>+{m.source_count - 1}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Source References ── */}
+          {result.sources.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <BookOpen className="w-3 h-3" style={{ color: "rgba(74,222,128,0.50)" }} />
-              {results.references.map((r, i) => (
-                <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(74,222,128,0.08)", color: "rgba(74,222,128,0.60)", border: "1px solid rgba(74,222,128,0.15)" }}>{r}</span>
+              {result.sources.slice(0, 5).map((s, i) => (
+                <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{
+                  background: "rgba(74,222,128,0.08)", color: "rgba(74,222,128,0.60)", border: "1px solid rgba(74,222,128,0.15)",
+                }}>{s}</span>
               ))}
+              {result.sources.length > 5 && (
+                <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>+{result.sources.length - 5}</span>
+              )}
             </div>
           )}
 
-          {/* Additional Manuscript Sources */}
-          {results.kashfOps && results.kashfOps.length > 0 && (
+          {/* ── Kashf Manuscript Operations ── */}
+          {result.kashfOps && result.kashfOps.length > 0 && (
             <ManuscriptSourcePanel
               sources={[{
                 id: "kashf",
                 label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
-                items: results.kashfOps.map(op => ({
+                items: result.kashfOps.map(op => ({
                   ar: op.ar,
                   en: `${op.en} — ${op.day_en}, ${op.planet_en}`,
                   ml: op.ml,
@@ -186,12 +349,18 @@ export default function SmartSearch() {
               }]}
             />
           )}
+
+          {/* ── Reset ── */}
+          <button onClick={handleReset} className="w-full py-2 rounded-lg font-inter text-[10px] font-bold uppercase tracking-wider" style={{
+            background: "rgba(255,255,255,0.03)", border: `1px solid rgba(255,255,255,0.08)`, color: "rgba(255,255,255,0.40)",
+          }}>{txt("പുതിയ തിരൽ", "New Search", "Yeni Arama")}</button>
         </div>
       )}
     </div>
   );
 }
 
+// ── Saat row display (preserved from original) ──
 function SaatRow({ h, d, lang, avoid }) {
   const planetName = lang === "ml" ? (planetArabicMLDisplay(h.planet) || d.planetInfo[h.planet]?.name_ml_equivalent) : d.planetInfo[h.planet]?.name_en;
   const symbol = d.planetInfo[h.planet]?.symbol || "";
