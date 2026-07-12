@@ -780,7 +780,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const liveDayRuler = getDayRuler(liveDayIndex);
   const liveIsNight = liveNowDate.getHours() < liveSunrise || liveNowDate.getHours() >= liveSunset;
   // ── ABSOLUTE PRIORITY: Selected card overrides live state in display ──
-  const hasManualSelection = !!(selectedDay || selectedHour || dayNight || selectedPlanet);
+  const hasManualSelection = !!(selectedDay || selectedHour);
   const liveNow = hasManualSelection
     ? {
         day: MIZAN_DAY_NAMES[currentDayKey],
