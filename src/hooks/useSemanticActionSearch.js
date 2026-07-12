@@ -1,13 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// SEMANTIC ACTION SEARCH HOOK
-// Combines Action Classification + Knowledge Matching + Timing Engine
+// SEMANTIC ACTION SEARCH HOOK — Knowledge Reasoning Engine
 //
-// FLOW:
-//   1. User types an action → classifyAction maps it to a canonical category
-//   2. Query AstroClockKnowledge (today's weekday) + EntityKnowledge (verified)
-//   3. Filter both sets by semantic text matching against the category
-//   4. Combine with existing timing engine (allHours) to determine suitability
-//   5. Return recommendation: best hours, why suitable, supporting knowledge
+// Combines Semantic Reasoning + Knowledge Matching + Timing Engine
+//
+// WORKFLOW:
+//   1. User types any action (ML/AR/EN) → resolveAction finds canonical action
+//   2. expandAction collects ALL related terms (synonyms, children, related, equivalent)
+//   3. Query AstroClockKnowledge (today's weekday) + EntityKnowledge (verified only)
+//   4. Filter both sets by semantic text matching using the FULL expansion
+//   5. Combine with existing timing engine (allHours) — timing engine NOT modified
+//   6. Return recommendation with reasoning summary
 //
 // SAFETY:
 //   - Only verified knowledge appears (verification_status: "verified")
@@ -15,12 +17,16 @@
 //   - Timing engine is NOT replaced — only consumed read-only
 //   - No schema, OCR, ingestion, or calculation changes
 //
-// LIVE: As new verified knowledge is imported, results auto-enrich.
-// No manual mapping required — matching is dynamic via textMatchesCategory.
+// ISOLATED:
+//   - Does NOT modify astroActionClassifier.js (still used for quick tags)
+//   - Does NOT modify timing engine, calculation engine, or any other module
+//   - The reasoning engine is a pure additive layer
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { classifyAction, textMatchesCategory, ACTION_CATEGORIES } from "@/lib/astroActionClassifier";
+import { resolveAction, expandAction, textMatchesExpansion, generateReasoningSummary } from "@/lib/semanticReasoningEngine";
+import { SEMANTIC_GRAPH } from "@/lib/semanticKnowledgeGraph";
+import { ACTION_CATEGORIES } from "@/lib/astroActionClassifier";
 import { useAstroData } from "@/components/astroclock/dashboard/useAstroData";
 import { getKashfOperationsForPurpose } from "@/lib/astroClockManuscriptMerger";
 
@@ -32,11 +38,18 @@ export function useSemanticActionSearch() {
   const [ekRecords, setEkRecords] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const classification = useMemo(() => classifyAction(query), [query]);
+  // ── Semantic resolution: resolves any input to a canonical action ──
+  const resolution = useMemo(() => resolveAction(query), [query]);
 
-  // ── Knowledge query: fires when search is triggered + classification succeeds ──
+  // ── Semantic expansion: collects ALL related terms ──
+  const expansion = useMemo(() => {
+    if (!resolution) return null;
+    return expandAction(resolution.canonicalId);
+  }, [resolution]);
+
+  // ── Knowledge query: fires when search is triggered + resolution succeeds ──
   useEffect(() => {
-    if (!searchTriggered || !classification) {
+    if (!searchTriggered || !resolution || !expansion) {
       setAckRecords([]);
       setEkRecords([]);
       return;
@@ -45,10 +58,7 @@ export function useSemanticActionSearch() {
     let cancelled = false;
     setLoading(true);
 
-    const catKey = classification.category;
-
     // Query 1: AstroClockKnowledge for today's weekday (all saat/planet combos)
-    // Same filter as existing useAstroClockContextKnowledge, but by weekday only
     const ackQuery = {
       weekday: d.activeDayIndex,
       is_marker: false,
@@ -67,26 +77,27 @@ export function useSemanticActionSearch() {
       .then(([ackData, ekData]) => {
         if (cancelled) return;
 
-        // Filter AstroClockKnowledge: records with actions matching the category
+        // Filter AstroClockKnowledge: records with actions matching the FULL expansion
         const matchedACK = (ackData || []).filter(r => {
           if (r.source_type !== 'full_context') return false;
           const checkActions = (actions) => Array.isArray(actions) && actions.some(a =>
-            textMatchesCategory(a.en, catKey) ||
-            textMatchesCategory(a.ml, catKey) ||
-            textMatchesCategory(a.ar, catKey)
+            textMatchesExpansion(a.en, expansion) ||
+            textMatchesExpansion(a.ml, expansion) ||
+            textMatchesExpansion(a.ar, expansion)
           );
           return checkActions(r.recommended_actions) ||
                  checkActions(r.forbidden_actions) ||
                  checkActions(r.enemy_actions) ||
                  checkActions(r.friendship_actions) ||
-                 textMatchesCategory(r.ritual_suitability, catKey) ||
-                 textMatchesCategory(r.knowledge_text_en, catKey);
+                 textMatchesExpansion(r.ritual_suitability, expansion) ||
+                 textMatchesExpansion(r.knowledge_text_en, expansion);
         });
 
-        // Filter EntityKnowledge: text matching the category
+        // Filter EntityKnowledge: text matching the FULL expansion
         const matchedEK = (ekData || []).filter(r =>
-          textMatchesCategory(r.knowledge_text_en, catKey) ||
-          textMatchesCategory(r.knowledge_text_ml, catKey)
+          textMatchesExpansion(r.knowledge_text_en, expansion) ||
+          textMatchesExpansion(r.knowledge_text_ml, expansion) ||
+          textMatchesExpansion(r.knowledge_text_ar, expansion)
         );
 
         setAckRecords(matchedACK);
@@ -101,23 +112,24 @@ export function useSemanticActionSearch() {
       });
 
     return () => { cancelled = true; };
-  }, [searchTriggered, classification, d.activeDayIndex]);
+  }, [searchTriggered, resolution, expansion, d.activeDayIndex]);
 
-  // ── Build recommendation result ──
+  // ── Build recommendation result with full reasoning ──
   const result = useMemo(() => {
-    if (!classification || !d.allHours) return null;
-    const cat = ACTION_CATEGORIES[classification.category];
-    if (!cat) return null;
+    if (!resolution || !expansion || !d.allHours) return null;
 
-    const preferredPlanets = cat.preferredPlanets || [];
-    const avoidPlanets = cat.avoidPlanets || [];
-    const preferredDays = cat.preferredDays || [];
+    const graphEntry = SEMANTIC_GRAPH[resolution.canonicalId];
+    if (!graphEntry) return null;
+
+    const preferredPlanets = expansion.preferredPlanets;
+    const avoidPlanets = expansion.avoidPlanets;
+    const preferredDays = expansion.preferredDays;
 
     // Check if today is a preferred day
     const isPreferredDay = preferredDays.includes(d.dayKey);
 
     // ── Timing engine: find recommended/alternative/avoided hours ──
-    // Uses the EXISTING allHours from useAstroData — no calculation changes
+    // Uses the EXISTING allHours from useAstroData — NO calculation changes
     const recommendedHours = d.allHours
       .filter(h => h.status !== "past" && preferredPlanets.includes(h.planet))
       .sort((a, b) => {
@@ -163,14 +175,13 @@ export function useSemanticActionSearch() {
 
     // ── Supporting rules from matched AstroClockKnowledge ──
     const supportingRules = ackRecords.map(r => {
-      // Extract relevant action texts
       const relevantActions = [];
       const collectActions = (actions, type) => {
         if (!Array.isArray(actions)) return;
         actions.forEach(a => {
-          if (textMatchesCategory(a.en, classification.category) ||
-              textMatchesCategory(a.ml, classification.category) ||
-              textMatchesCategory(a.ar, classification.category)) {
+          if (textMatchesExpansion(a.en, expansion) ||
+              textMatchesExpansion(a.ml, expansion) ||
+              textMatchesExpansion(a.ar, expansion)) {
             relevantActions.push({ type, en: a.en, ml: a.ml, ar: a.ar });
           }
         });
@@ -211,6 +222,30 @@ export function useSemanticActionSearch() {
       source_count: r.source_count || 1,
     })).filter(r => r.text);
 
+    // ── Warnings from knowledge records (forbidden actions + warnings) ──
+    const warnings = [];
+    ackRecords.forEach(r => {
+      if (Array.isArray(r.forbidden_actions)) {
+        r.forbidden_actions.forEach(a => {
+          if (textMatchesExpansion(a.en, expansion) || textMatchesExpansion(a.ml, expansion)) {
+            warnings.push({ text: a.en || a.ml, source: r.source_book_title || 'Knowledge' });
+          }
+        });
+      }
+    });
+
+    // ── Recommendations from knowledge records (recommended actions) ──
+    const recommendations = [];
+    ackRecords.forEach(r => {
+      if (Array.isArray(r.recommended_actions)) {
+        r.recommended_actions.forEach(a => {
+          if (textMatchesExpansion(a.en, expansion) || textMatchesExpansion(a.ml, expansion)) {
+            recommendations.push({ text: a.en || a.ml, source: r.source_book_title || 'Knowledge' });
+          }
+        });
+      }
+    });
+
     // ── Collect all unique source references ──
     const allSources = new Set();
     [...ackRecords, ...ekRecords].forEach(r => {
@@ -221,29 +256,53 @@ export function useSemanticActionSearch() {
     });
 
     // ── Kashf manuscript operations (existing data, read-only) ──
-    const kashfOps = getKashfOperationsForPurpose(classification.category) || [];
+    const kashfOps = getKashfOperationsForPurpose(resolution.canonicalId) || [];
 
     // ── Confidence calculation ──
-    const classificationConfidence = classification.confidence;
+    const resolutionConfidence = resolution.confidence;
     const knowledgeMatchCount = ackRecords.length + ekRecords.length;
     const knowledgeConfidence = knowledgeMatchCount > 0
       ? Math.min(100, 50 + knowledgeMatchCount * 10)
       : 30;
     const timingConfidence = hasRecommendedHours ? 80 : 20;
     const overallConfidence = Math.round(
-      (classificationConfidence + knowledgeConfidence + timingConfidence) / 3
+      (resolutionConfidence + knowledgeConfidence + timingConfidence) / 3
     );
 
+    // ── Reasoning summary ──
+    const reasoningSummary = generateReasoningSummary({
+      resolution,
+      expansion,
+      knowledgeRuleCount: knowledgeMatchCount,
+      suitable: isSuitable,
+      preferredPlanets,
+      avoidPlanets,
+    });
+
     return {
-      category: classification.category,
-      categoryLabel: cat.label,
+      // Category info
+      category: resolution.canonicalId,
+      categoryLabel: expansion.canonicalLabel,
       suitable: isSuitable,
       confidence: overallConfidence,
+
+      // Reasoning info (NEW)
+      detectedAction: query,
+      canonicalAction: expansion.canonicalLabel,
+      relatedTopics: [...expansion.relatedTopics, ...expansion.equivalentTopics],
+      knowledgeRulesUsed: knowledgeMatchCount,
+      reasoningSummary,
+      warnings,
+      recommendations,
+
+      // Timing
       recommendedHours,
       alternativeHours,
       avoidedHours,
       isPreferredDay,
       blockingReasons,
+
+      // Knowledge
       supportingRules,
       supportingManuscripts,
       sources: Array.from(allSources),
@@ -251,8 +310,11 @@ export function useSemanticActionSearch() {
       preferredPlanets,
       avoidPlanets,
       knowledgeMatchCount,
+
+      // Expansion details (for display)
+      expansionTermsCount: expansion.allTerms.length,
     };
-  }, [classification, d, ackRecords, ekRecords]);
+  }, [resolution, expansion, d, ackRecords, ekRecords, query]);
 
   const search = (q) => {
     setQuery(q);
@@ -266,5 +328,5 @@ export function useSemanticActionSearch() {
     setEkRecords([]);
   };
 
-  return { query, search, reset, classification, result, loading };
+  return { query, search, reset, resolution, result, loading, searched: searchTriggered };
 }

@@ -1,13 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// SECTION 2 — SEMANTIC SMART SEARCH
-// Upgraded from keyword search to a semantic decision engine.
+// SECTION 2 — SEMANTIC SMART SEARCH (Knowledge Reasoning Engine)
 //
 // FLOW:
-//   1. User types any action (any language) → classifier maps to category
-//   2. Semantic matcher searches verified knowledge dynamically
-//   3. Timing engine combines with matched knowledge
-//   4. UI shows: recommended times, why suitable, supporting rules,
-//      supporting manuscripts, confidence — or why not + alternatives
+//   1. User types any action (any language) → reasoning engine resolves it
+//   2. Engine expands to all related terms (synonyms, topics, equivalents)
+//   3. Knowledge bases queried with full expansion
+//   4. Timing engine combines with matched knowledge (UNMODIFIED)
+//   5. UI shows: detected action, canonical action, related topics,
+//      knowledge rules used, reasoning summary, confidence, warnings,
+//      recommendations, recommended/alternative/avoid hours,
+//      supporting rules, supporting manuscripts, sources
 //
 // DOES NOT modify: timing engine, OCR, ingestion, schema, routing,
 // calculations, existing verified records, or any other module.
@@ -17,7 +19,7 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useSemanticActionSearch } from "@/hooks/useSemanticActionSearch";
 import { ACTION_CATEGORIES } from "@/lib/astroActionClassifier";
-import { Search, Clock, CheckCircle2, Ban, BookOpen, AlertTriangle, Sparkles, Shield } from "lucide-react";
+import { Search, Clock, CheckCircle2, Ban, BookOpen, AlertTriangle, Sparkles, Shield, Brain, Tags, FileWarning, Lightbulb } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { planetArabicMLDisplay } from "@/lib/astroClockLabelMap";
 
@@ -31,7 +33,7 @@ const QUICK_TAGS = [
 export default function SmartSearch() {
   const d = useAstroData();
   const { txt, language } = useAstroClockLanguage();
-  const { query, search, reset, classification, result, loading } = useSemanticActionSearch();
+  const { query, search, reset, resolution, result, loading, searched } = useSemanticActionSearch();
   const [input, setInput] = useState("");
 
   const handleSearch = () => {
@@ -84,7 +86,7 @@ export default function SmartSearch() {
           const cat = ACTION_CATEGORIES[key];
           if (!cat) return null;
           const label = cat.label[language] || cat.label.en;
-          const isActive = classification?.category === key;
+          const isActive = resolution?.canonicalId === key;
           return (
             <button key={key} onClick={() => handleTag(key)}
               className="font-inter text-[10px] px-2 py-1 rounded-lg transition-opacity hover:opacity-80"
@@ -98,7 +100,7 @@ export default function SmartSearch() {
       </div>
 
       {/* ── No Match ── */}
-      {search && !classification && !loading && (
+      {searched && !resolution && !loading && (
         <div className="rounded-lg p-3 text-center" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
           <AlertTriangle className="w-4 h-4 mx-auto mb-1" style={{ color: "rgba(248,113,113,0.50)" }} />
           <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>
@@ -115,43 +117,110 @@ export default function SmartSearch() {
       )}
 
       {/* ── Results ── */}
-      {result && classification && (
+      {result && resolution && (
         <div className="space-y-2.5">
-          {/* ── Category + Confidence Header ── */}
-          <div className="rounded-lg p-2.5 flex items-center gap-2" style={{
-            background: result.suitable ? "rgba(74,222,128,0.06)" : "rgba(248,113,113,0.06)",
-            border: `1px solid ${result.suitable ? "rgba(74,222,128,0.20)" : "rgba(248,113,113,0.20)"}`,
+          {/* ── Reasoning Header: Detected + Canonical + Confidence ── */}
+          <div className="rounded-lg p-2.5" style={{
+            background: "rgba(129,140,248,0.05)",
+            border: "1px solid rgba(129,140,248,0.20)",
           }}>
-            <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: result.suitable ? "#4ADE80" : "#F87171" }} />
-            <div className="flex-1 min-w-0">
-              <span className="font-inter text-xs font-bold block" style={{ color: result.suitable ? "#4ADE80" : "#F87171" }}>
-                {result.categoryLabel[language] || result.categoryLabel.en}
-              </span>
-              <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                {txt("ആത്മവിശ്വാസം", "Confidence", "Güven")}: {result.confidence}%
-                {' · '}
-                {txt("വിജ്ഞാന രേഖകൾ", "Knowledge refs", "Bilgi kayıtları")}: {result.knowledgeMatchCount}
+            <div className="flex items-center gap-2 mb-1.5">
+              <Brain className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(129,140,248,0.70)" }} />
+              <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "rgba(129,140,248,0.70)" }}>
+                {txt("നിഗമന ഫലം", "Reasoning Result", "Akıl Yürütme Sonucu")}
               </span>
             </div>
-            {result.suitable ? (
-              <span className="font-inter text-[9px] uppercase px-2 py-0.5 rounded font-bold" style={{
-                background: "rgba(74,222,128,0.12)", color: "#4ADE80",
-              }}>{txt("അനുകൂലം", "Suitable", "Elverişli")}</span>
-            ) : (
-              <span className="font-inter text-[9px] uppercase px-2 py-0.5 rounded font-bold" style={{
-                background: "rgba(248,113,113,0.12)", color: "#F87171",
-              }}>{txt("പ്രതികൂലം", "Not Ideal", "Elverişsiz")}</span>
-            )}
+            {/* Detected action */}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-inter text-[9px] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+                {txt("കണ്ടെത്തിയത്", "Detected", "Tespit Edilen")}:
+              </span>
+              <span className="font-inter text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.80)" }}>
+                "{result.detectedAction}"
+              </span>
+            </div>
+            {/* Canonical action */}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-inter text-[9px] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+                {txt("കാനോണിക്കൽ പ്രവൃത്തി", "Canonical Action", "Kanonik Eylem")}:
+              </span>
+              <span className="font-inter text-[11px] font-bold" style={{ color: G.text }}>
+                {result.canonicalAction[language] || result.canonicalAction.en}
+              </span>
+            </div>
+            {/* Confidence + rules used */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                {txt("ആത്മവിശ്വാസം", "Confidence", "Güven")}: <span style={{ color: result.suitable ? "#4ADE80" : "#F87171" }}>{result.confidence}%</span>
+              </span>
+              <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                {txt("വിജ്ഞാന നിയമങ്ങൾ", "Knowledge Rules", "Bilgi Kuralları")}: <span style={{ color: G.text }}>{result.knowledgeRulesUsed}</span>
+              </span>
+              <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                {txt("വിപുലീകരണ പദങ്ങൾ", "Expansion Terms", "Genişletme Terimleri")}: <span style={{ color: G.dim }}>{result.expansionTermsCount}</span>
+              </span>
+              {result.suitable ? (
+                <span className="font-inter text-[9px] uppercase px-2 py-0.5 rounded font-bold" style={{
+                  background: "rgba(74,222,128,0.12)", color: "#4ADE80",
+                }}>{txt("അനുകൂലം", "Suitable", "Elverişli")}</span>
+              ) : (
+                <span className="font-inter text-[9px] uppercase px-2 py-0.5 rounded font-bold" style={{
+                  background: "rgba(248,113,113,0.12)", color: "#F87171",
+                }}>{txt("പ്രതികൂലം", "Not Ideal", "Elverişsiz")}</span>
+              )}
+            </div>
           </div>
+
+          {/* ── Related Topics Found ── */}
+          {result.relatedTopics.length > 0 && (
+            <div className="rounded-lg p-2" style={{
+              background: "rgba(212,175,55,0.04)",
+              border: `1px solid ${G.border}`,
+            }}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Tags className="w-3 h-3" style={{ color: G.dim }} />
+                <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>
+                  {txt("ബന്ധപ്പെട്ട വിഷയങ്ങൾ", "Related Topics Found", "İlgili Konular")}
+                  <span className="opacity-50"> ({result.relatedTopics.length})</span>
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {result.relatedTopics.map((topic, i) => (
+                  <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{
+                    background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.50)",
+                    border: "1px solid rgba(212,175,55,0.10)",
+                  }}>{topic}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Reasoning Summary ── */}
+          {result.reasoningSummary && (
+            <div className="rounded-lg p-2.5" style={{
+              background: "rgba(129,140,248,0.03)",
+              border: "1px solid rgba(129,140,248,0.10)",
+            }}>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Brain className="w-3 h-3" style={{ color: "rgba(129,140,248,0.50)" }} />
+                <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(129,140,248,0.50)" }}>
+                  {txt("നിഗമന സംഗ്രഹം", "Reasoning Summary", "Akıl Yürütme Özeti")}
+                </span>
+              </div>
+              <p className="font-inter text-[10px] leading-relaxed whitespace-pre-line" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {result.reasoningSummary}
+              </p>
+            </div>
+          )}
 
           {/* ── Why Suitable / Why Not ── */}
           {result.suitable ? (
             <div className="rounded-lg p-2.5" style={{ background: "rgba(212,175,55,0.06)", border: `1px solid ${G.border}` }}>
               <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>
                 {txt(
-                  `${result.categoryLabel.ml} ഇന്ന് അനുകൂലമാണ്. ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_ml_equivalent || p).join(", ")} ഗ്രഹങ്ങളുടെ സഅാതുകൾ ഉപയോഗിക്കുക.`,
-                  `${result.categoryLabel.en} is favorable today. Use hours governed by ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")}.`,
-                  `${result.categoryLabel.en} today is favorable. Use ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")} hours.`
+                  `${result.canonicalAction.ml} ഇന്ന് അനുകൂലമാണ്. ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_ml_equivalent || p).join(", ")} ഗ്രഹങ്ങളുടെ സഅാതുകൾ ഉപയോഗിക്കുക.`,
+                  `${result.canonicalAction.en} is favorable today. Use hours governed by ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")}.`,
+                  `${result.canonicalAction.en} today is favorable. Use ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")} hours.`
                 )}
               </p>
             </div>
@@ -216,6 +285,48 @@ export default function SmartSearch() {
                 </span>
               </div>
               {result.avoidedHours.map((h, i) => <SaatRow key={i} h={h} d={d} lang={language} avoid />)}
+            </div>
+          )}
+
+          {/* ── Warnings from Knowledge ── */}
+          {result.warnings.length > 0 && (
+            <div className="rounded-lg p-2" style={{
+              background: "rgba(248,113,113,0.03)",
+              border: "1px solid rgba(248,113,113,0.10)",
+            }}>
+              <div className="flex items-center gap-1.5 mb-1">
+                <FileWarning className="w-3 h-3" style={{ color: "rgba(248,113,113,0.50)" }} />
+                <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.50)" }}>
+                  {txt("മുന്നറിയിപ്പുകൾ", "Warnings", "Uyarılar")}
+                  <span className="opacity-50"> ({result.warnings.length})</span>
+                </span>
+              </div>
+              {result.warnings.slice(0, 5).map((w, i) => (
+                <p key={i} className="font-inter text-[10px] mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                  • {w.text}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {/* ── Recommendations from Knowledge ── */}
+          {result.recommendations.length > 0 && (
+            <div className="rounded-lg p-2" style={{
+              background: "rgba(74,222,128,0.03)",
+              border: "1px solid rgba(74,222,128,0.10)",
+            }}>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Lightbulb className="w-3 h-3" style={{ color: "rgba(74,222,128,0.50)" }} />
+                <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(74,222,128,0.50)" }}>
+                  {txt("ശുപാർശകൾ", "Recommendations", "Öneriler")}
+                  <span className="opacity-50"> ({result.recommendations.length})</span>
+                </span>
+              </div>
+              {result.recommendations.slice(0, 5).map((r, i) => (
+                <p key={i} className="font-inter text-[10px] mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                  • {r.text}
+                </p>
+              ))}
             </div>
           )}
 
