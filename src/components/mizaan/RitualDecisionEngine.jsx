@@ -11,7 +11,7 @@
 //   6. User information separated from Technical Details
 //   7. Readable in 15 seconds without scrolling
 // ═══════════════════════════════════════════════════════════════
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock,
@@ -23,6 +23,7 @@ import ConfigurationAdvisor from "./ConfigurationAdvisor";
 import ManuscriptComplianceChecklist from "./ManuscriptComplianceChecklist";
 import MoonAnalysisCard from "./MoonAnalysisCard";
 import PlanningModePanel from "./PlanningModePanel";
+import { setSaatPlanningContext } from "../../lib/mizaanSaatCalculator";
 import { localizeAnalysis, localizeAdvice, tStr, useRitualLang, tDay, tPlanet } from "../../lib/ritualTimingI18n";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
@@ -68,6 +69,11 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
     if (!planningMode || !planningLocation || !planningDate) return null;
     return { location: planningLocation, date: planningDate };
   }, [planningMode, planningLocation, planningDate]);
+
+  // ── Notify Mizan cards (Saat/Day/Layl-Nahar/Kawkab auto-detect) of planning context ──
+  useEffect(() => {
+    setSaatPlanningContext(planningContext);
+  }, [planningContext]);
 
   const resolvedPurpose = purposeLookup || { matched: false };
   const effectiveSelections = useMemo(() => {

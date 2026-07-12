@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import MizaanHeader from "./MizaanHeader";
 import { MIZAAN_HOURS } from "../../lib/mizaan9Data";
-import { getCurrentSaat } from "../../lib/mizaanSaatCalculator";
+import { getCurrentSaat, subscribeSaatPlanningContext } from "../../lib/mizaanSaatCalculator";
 
 const G = { borderHi: "rgba(212,175,55,0.65)", glow: "rgba(212,175,55,0.22)", glowHi: "rgba(212,175,55,0.45)", text: "#F5D060", dim: "rgba(212,175,55,0.55)", faint: "rgba(212,175,55,0.20)" };
 
@@ -12,7 +12,8 @@ export default function Mizaan4({ selected, onChange, hoursData, dayNight }) {
   const [, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 15000);
-    return () => clearInterval(id);
+    const unsub = subscribeSaatPlanningContext(() => setTick((t) => t + 1));
+    return () => { clearInterval(id); unsub(); };
   }, []);
   const autoHour = getCurrentSaat(dayNight);
   const toggle = (hour) => onChange(selected === hour ? null : hour);

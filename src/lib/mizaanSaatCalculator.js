@@ -21,6 +21,24 @@
 import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE } from "./astroClockLiveEngine";
 import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSunset";
 
+// ── Planning Mode support ──
+// When set, getCurrentSaat / getCurrentKawkab / getCurrentLaylNahar /
+// getCurrentWeekdayKey use this location + date instead of live time.
+// Set by RitualDecisionEngine via setSaatPlanningContext(). Mizan cards
+// subscribe via subscribeSaatPlanningContext() to re-render immediately.
+let _planningContext = null;
+const _planningListeners = new Set();
+
+export function setSaatPlanningContext(ctx) {
+  _planningContext = ctx;
+  _planningListeners.forEach((fn) => fn());
+}
+
+export function subscribeSaatPlanningContext(fn) {
+  _planningListeners.add(fn);
+  return () => { _planningListeners.delete(fn); };
+}
+
 /**
  * Returns the current Saat (1–12) — the Astro Clock Saat interval that
  * contains the current time.
@@ -29,8 +47,8 @@ import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSuns
  * @returns {number} 1–12
  */
 export function getCurrentSaat(_dayNight = null) {
-  const now = new Date();
-  const loc = getUserLocation();
+  const now = _planningContext?.date || new Date();
+  const loc = _planningContext?.location || getUserLocation();
   const { sunrise, sunset } = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
 
   // Polar edge-case fallback (never occurs in the default Dubai location) —
@@ -78,8 +96,8 @@ const ASTRO_TO_MIZAN_PLANET = Object.freeze({
  * @returns {string|null} one of: zuhal, mustari, merih, sems, zuhre, utarid, kamer
  */
 export function getCurrentKawkab() {
-  const now = new Date();
-  const loc = getUserLocation();
+  const now = _planningContext?.date || new Date();
+  const loc = _planningContext?.location || getUserLocation();
   const { sunrise, sunset } = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
   if (sunrise === null || sunset === null) return null;
   // Shift now to the location's timezone — same correction as getCurrentSaat.
@@ -98,8 +116,8 @@ export function getCurrentKawkab() {
 const DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
 
 export function getCurrentLaylNahar() {
-  const now = new Date();
-  const loc = getUserLocation();
+  const now = _planningContext?.date || new Date();
+  const loc = _planningContext?.location || getUserLocation();
   const { sunrise, sunset } = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
   if (sunrise === null || sunset === null) return null;
   const tzDiffMs = (loc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
@@ -114,8 +132,8 @@ export function getCurrentLaylNahar() {
 // Uses getActiveWeekday (sunset boundary, not civil midnight) with real
 // local sunrise/sunset. Returns one of: sun, mon, tue, wed, thu, fri, sat.
 export function getCurrentWeekdayKey() {
-  const now = new Date();
-  const loc = getUserLocation();
+  const now = _planningContext?.date || new Date();
+  const loc = _planningContext?.location || getUserLocation();
   const { sunrise, sunset } = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
   const sr = (sunrise != null) ? sunrise : 6.5;
   const ss = (sunset != null) ? sunset : 18.25;
