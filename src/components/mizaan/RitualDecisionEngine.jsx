@@ -74,6 +74,12 @@ const ML_PLANET = {
 function lookupAstroRecord(astroClockKnowledge, weekday, period, saatNumber, kawkab) {
   if (!astroClockKnowledge || astroClockKnowledge.length === 0) return null;
   const kawkabLC = String(kawkab || "").toLowerCase();
+  const hasMl = (r) =>
+    r.recommended_actions?.some((a) => a.ml && a.ml.trim()) ||
+    (r.knowledge_text_ml && r.knowledge_text_ml.trim()) ||
+    r.notes_list?.some((a) => a.ml && a.ml.trim());
+
+  // 1. Exact match: weekday + period + saat_number + planet — prefer Malayalam
   const exact = astroClockKnowledge.find(
     (r) =>
       r.weekday === weekday &&
@@ -81,18 +87,32 @@ function lookupAstroRecord(astroClockKnowledge, weekday, period, saatNumber, kaw
       r.saat_number === saatNumber &&
       String(r.planet || "").toLowerCase() === kawkabLC
   );
-  if (exact) return exact;
-  const candidates = astroClockKnowledge.filter(
+  if (exact && hasMl(exact)) return exact;
+
+  // 2. Same weekday + period + saat_number (ignore planet) — prefer Malayalam
+  const sameDay = astroClockKnowledge.filter(
     (r) =>
       r.weekday === weekday &&
       r.period === period &&
       r.saat_number === saatNumber
   );
-  if (candidates.length === 0) return null;
-  const withMl = candidates.find(
-    (r) => r.recommended_actions?.some((a) => a.ml && a.ml.trim())
+  const sameDayMl = sameDay.find((r) => hasMl(r));
+  if (sameDayMl) return sameDayMl;
+
+  // 3. Any weekday + same period + saat_number — prefer Malayalam
+  //    The Malayalam explanation for a Saat is the same regardless of weekday;
+  //    only the ruling planet changes. If the current weekday has no Malayalam,
+  //    use the Malayalam from the same Saat on a different weekday.
+  const anyDay = astroClockKnowledge.filter(
+    (r) =>
+      r.period === period &&
+      r.saat_number === saatNumber
   );
-  return withMl || candidates[0];
+  const anyDayMl = anyDay.find((r) => hasMl(r));
+  if (anyDayMl) return anyDayMl;
+
+  // 4. Fall back to exact match (no Malayalam) → same weekday → any day
+  return exact || sameDay[0] || anyDay[0] || null;
 }
 
 // Collect original Malayalam text from an actions array (recommended/forbidden/enemy/warnings/notes).
