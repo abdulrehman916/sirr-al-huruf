@@ -654,7 +654,12 @@ function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKe
   }
 
   // 5. Forbidden context check — display the Astro Clock's forbidden explanation
-  if (purposeForb || evilCtx) {
+  // SINGLE SOURCE OF TRUTH: reject only when the purpose is explicitly forbidden,
+  // OR the context is evil AND the purpose is NOT recommended here.
+  // An evil context is allowed when the Astro Clock explicitly recommends
+  // the current ritual purpose for this exact Day+Saat+Kawkab.
+  const isContextForbidden = purposeForb || (evilCtx && !purposeRec);
+  if (isContextForbidden) {
     allPass = false;
     const forbiddenText = originalForbidden.map(a => a.en).join("; ");
     breakdown.push({
@@ -678,13 +683,15 @@ function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKe
   const saatFailed = !!req.hours && !!selectedHour && !req.hours.map(p => p.toLowerCase()).includes(String(currentHourInfo?.planet || kawkab || "").toLowerCase());
   const laylNaharFailed = req.nightRequired === true && dayNight !== "gece";
 
-  // Forbidden if Nahas day or enemy/worst hour
-  const isForbiddenDay = !!(req.worstDays && selectedDay && req.worstDays.includes(selectedDay));
-  const isForbiddenHour = !!(selectedHour && req.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(String(currentHourInfo?.planet || "").toLowerCase())) ||
-                          !!(selectedHour && req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(String(currentHourInfo?.planet || "").toLowerCase()));
-  const forbidden = isForbiddenDay || isForbiddenHour || purposeForb || (evilCtx && !purposeRec);
+  // SINGLE SOURCE OF TRUTH: forbidden = isContextForbidden.
+  // Reject ONLY when: purpose explicitly forbidden, OR context is evil
+  // AND purpose is NOT recommended here. An evil context where the purpose
+  // IS recommended is allowed. Dimension mismatches (day/hour not in
+  // recommended lists) do NOT cause rejection — they only produce
+  // bestAlternative suggestions.
+  const forbidden = isContextForbidden;
 
-  if (allPass && !forbidden) {
+  if (!forbidden) {
     bestAlt.complete = false;
   } else {
     bestAlt.changes = [];
@@ -762,10 +769,10 @@ function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKe
   }
 
   return {
-    suitable: allPass && !forbidden,
+    suitable: !forbidden,
     forbidden,
     purposeRequired: false,
-    summary: (allPass && !forbidden)
+    summary: !forbidden
       ? "Your current configuration is suitable — the Astrology Clock confirms this timing for your purpose."
       : `Your current configuration has ${breakdown.filter(b => b.status === "fail").length} issue(s). Adjust the recommended fields.`,
     decisionBreakdown: breakdown,
@@ -838,7 +845,7 @@ function buildDecisionAnalysis({
   ritualKey, req, matchingRules, conflictingRules,
   selectedDay, selectedHour, dayNight, selectedPlanet,
   currentHourInfo, weekday, period, saatNumber, kawkab,
-  todayHours, earliest,
+  todayHours, earliest, isContextForbidden,
 }) {
   // ═══════════════════════════════════════════════════════════════
   // ONE COMBINED COMPATIBILITY ANALYSIS
@@ -857,8 +864,12 @@ function buildDecisionAnalysis({
   const hasData = (matchingRules?.length > 0) || (conflictingRules?.length > 0);
 
   // ── Combined compatibility — ALL dimensions together ──
-  // If no data exists, isFullyCompatible is false (not vacuously true).
-  const isFullyCompatible = hasData && isContextFullyCompatible(req, currentDayKey, currentPlanet, period);
+  // SINGLE SOURCE OF TRUTH: same condition as buildSelectionAnalysis.
+  // Suitable when there is data AND the context is NOT forbidden.
+  // isContextForbidden = purpose explicitly forbidden, OR context is evil
+  // AND purpose NOT recommended. Dimension mismatches (day/hour not in
+  // recommended lists) do NOT affect the verdict — only forbidden does.
+  const isFullyCompatible = hasData && !isContextForbidden;
 
   // ── FILTER: only records for the EXACT current context ──
   // Decision → Filter → UI. Never dump all matching records.
@@ -890,6 +901,26 @@ function buildDecisionAnalysis({
     if (rule.text_en || rule.text_ml) {
       acceptanceReasons.push({
         text_en: rule.text_en, text_ml: rule.text_ml,
+      });
+    }
+  }
+
+  // ── SYNCHRONIZATION GUARD ──
+  // If the context is forbidden (evil without recommendation, or explicitly
+  // forbidden) but no context-specific conflicting rule was collected
+  // (e.g. forbidden_actions did not contain a purpose keyword), produce a
+  // rejection reason from the context record's own ritual_suitability text.
+  // This guarantees: every rejected verdict has at least one rejection reason.
+  if (isContextForbidden && rejectionReasons.length === 0) {
+    const ctxRecord = matchingRules.find(r =>
+      r.weekday === weekday && r.period === period && r.saat_number === saatNumber
+    ) || conflictingRules.find(r =>
+      r.weekday === weekday && r.period === period && r.saat_number === saatNumber
+    );
+    if (ctxRecord && (ctxRecord.text_en || ctxRecord.text_ml)) {
+      rejectionReasons.push({
+        text_en: ctxRecord.text_en,
+        text_ml: ctxRecord.text_ml,
       });
     }
   }
@@ -1069,36 +1100,47 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   reasoning.push(`Current: ${MIZAN_DAY_NAMES[currentDayKey]}, hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}.`);
 
-  // ── Evaluate current moment against found rules ONLY ──
-  const currentHourOk = !req.hours || req.hours.map((p) => p.toLowerCase()).includes(currentHourInfo.planet);
-  const currentDayOk = !req.days || req.days.includes(currentDayKey);
-  const currentNightOk = req.nightRequired !== true || isNightTime;
-  const currentNotEnemy = !req.enemyPlanets || !req.enemyPlanets.map((p) => p.toLowerCase()).includes(currentHourInfo.planet);
-  const currentNotWorst = !req.worstHours || !req.worstHours.map((p) => p.toLowerCase()).includes(currentHourInfo.planet);
-  const currentNotWorstDay = !req.worstDays || !req.worstDays.includes(currentDayKey);
-  // Moon is NOT part of the main timing evaluation — it is optional.
-  const currentMomentSuitable = currentHourOk && currentDayOk && currentNightOk && currentNotEnemy && currentNotWorst && currentNotWorstDay;
+  // ── SINGLE SOURCE OF TRUTH: context forbidden evaluation ──
+  // Computed ONCE here, used by canPerformToday, buildSelectionAnalysis,
+  // and buildDecisionAnalysis. Reject ONLY when: purpose explicitly
+  // forbidden, OR context is evil AND purpose NOT recommended.
+  const _earlyWeekday = activeDayIndex;
+  const _earlyPeriod = effectivePeriod;
+  const _earlySaatNumber = effectiveHourNumber;
+  const _earlyKawkab = manuscriptKawkab || (foundSaat ? foundSaat.planet : null);
+  const _earlyContextRecords = lookupContextRecord(astroClockKnowledge, _earlyWeekday, _earlyPeriod, _earlySaatNumber, _earlyKawkab);
+  const _earlyContextRecord = _earlyContextRecords[0] || null;
+  const _earlyPurposeRec = purposeInRecommended(_earlyContextRecord, effectiveRitualKey);
+  const _earlyPurposeForb = purposeInForbidden(_earlyContextRecord, effectiveRitualKey);
+  const _earlyEvilCtx = isEvilContext(_earlyContextRecord);
+  const isContextForbidden = _earlyPurposeForb || (_earlyEvilCtx && !_earlyPurposeRec);
 
   // ── Can perform today? ──
   // NO-DATA RULE: If no AstroClockKnowledge records matched this purpose,
   // canPerformToday is "No" — never "Yes" or "Limited".
+  // SINGLE SOURCE OF TRUTH: uses isContextForbidden, same as verdict.
   let canPerformToday = "No";
   if (dbRuleCount === 0 && msRules.matching.length === 0 && msRules.conflicting.length === 0) {
     canPerformToday = "No";
   }
-  else if (currentMomentSuitable) canPerformToday = "Yes";
+  else if (!isContextForbidden) canPerformToday = "Yes";
   else {
-    // search remaining today
+    // search remaining today for a non-forbidden saat
     const todayRemaining = todayHours.filter((h) => h.status !== "past");
-    const anyOk = todayRemaining.some((h) =>
-      (!req.hours || req.hours.map((p) => p.toLowerCase()).includes(h.planet)) &&
-      (!req.worstHours || !req.worstHours.map((p) => p.toLowerCase()).includes(h.planet)) &&
-      (!req.enemyPlanets || !req.enemyPlanets.map((p) => p.toLowerCase()).includes(h.planet)) &&
-      (req.nightRequired !== true || h.period === "night")
-    );
-    const dayOk = (!req.days || req.days.includes(currentDayKey)) && (!req.worstDays || !req.worstDays.includes(currentDayKey));
-    if (anyOk && dayOk) canPerformToday = "Limited";
+    const anyOk = todayRemaining.some((h) => {
+      const altRecords = lookupContextRecord(astroClockKnowledge, _earlyWeekday, h.period, h.hourNumber, h.planet);
+      const altRec = altRecords[0] || null;
+      const altPurposeRec = purposeInRecommended(altRec, effectiveRitualKey);
+      const altPurposeForb = purposeInForbidden(altRec, effectiveRitualKey);
+      const altEvil = isEvilContext(altRec);
+      const altForbidden = altPurposeForb || (altEvil && !altPurposeRec);
+      return !altForbidden;
+    });
+    if (anyOk) canPerformToday = "Limited";
   }
+
+  // currentMomentSuitable retained for report compatibility — same source of truth
+  const currentMomentSuitable = !isContextForbidden;
 
   // ── Today's windows (rule-matched, star-rated) ──
   // NO-DATA GUARD: Only populate windows if the Astro Clock has data for this purpose.
@@ -1205,7 +1247,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
       warnings.push(w.en || "");
     }
   }
-  if (req.days && !currentDayOk) warnings.push(`${MIZAN_DAY_NAMES[currentDayKey]} is not recommended. Astrology Clock recommends: ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
+  if (req.days && !req.days.includes(currentDayKey)) warnings.push(`${MIZAN_DAY_NAMES[currentDayKey]} is not recommended. Astrology Clock recommends: ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
   if (req.nightRequired === true && !isNightTime) warnings.push("The Astrology Clock requires this work at Night (Layl).");
 
   // ── Astro Clock status ──
@@ -1260,7 +1302,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     section: "CURRENT MOMENT", icon: "clock", status: currentMomentSuitable ? "Suitable" : "Not suitable",
     body: currentMomentSuitable
       ? `The current moment satisfies the Astrology Clock: Saat ${capitalPlanet(currentHourInfo.planet)}, ${isNightTime ? "Layl (night)" : "Nahar (day)"}. Act now.`
-      : `The current moment does NOT satisfy the Astrology Clock. Saat: ${capitalPlanet(currentHourInfo.planet)}. ${!currentHourOk ? `Recommended Saat(s): ${req.hours.join(", ")}.` : ""} ${!currentNightOk ? "Layl (night) required." : ""} ${earliest ? `Next valid opportunity: ${earliest.dayName}${earliest.isToday ? " (today)" : ""} at ${earliest.startTime}–${earliest.endTime} (${earliest.planet}).` : ""}`,
+      : `The current moment does NOT satisfy the Astrology Clock. Saat: ${capitalPlanet(currentHourInfo.planet)}. ${req.hours ? `Recommended Saat(s): ${req.hours.join(", ")}.` : ""} ${req.nightRequired === true ? "Layl (night) required." : ""} ${earliest ? `Next valid opportunity: ${earliest.dayName}${earliest.isToday ? " (today)" : ""} at ${earliest.startTime}–${earliest.endTime} (${earliest.planet}).` : ""}`,
     citation: citations.map((c) => c.source).join("; ") || "Astrology Clock",
     consequence: "Acting outside the Astrology Clock window wastes the ritual.",
     waitTime: earliest ? (earliest.isToday ? "later today" : `${earliest.daysAhead}d`) : null,
@@ -1364,7 +1406,18 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     currentHourInfo, weekday: astroWeekday, period: astroPeriod,
     saatNumber: astroSaatNumber, kawkab: astroKawkab,
     todayHours, earliest,
+    isContextForbidden,
   });
+
+  // ── NO-DATA REJECTION REASON ──
+  // Every rejected verdict must include at least one rejection reason.
+  // When no timing data exists for this purpose, add the no-data reason.
+  if (noDataForPurpose && decisionAnalysis.currentSaatAnalysis.rejectionReasons.length === 0) {
+    decisionAnalysis.currentSaatAnalysis.rejectionReasons.push({
+      text_en: "No timing data found for this purpose in the Astrology Clock.",
+      text_ml: "",
+    });
+  }
 
   return {
     report, consultation: report,
