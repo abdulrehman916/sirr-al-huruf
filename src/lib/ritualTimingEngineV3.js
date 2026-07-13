@@ -838,13 +838,40 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   }
 
   const stars = scoreToStars(score);
+  // ── VERDICT FROM MANUSCRIPT RULES ONLY — never from percentage score ──
+  // Percentage is a visual indicator only. Verdict is determined by how many
+  // manuscript conditions PASS vs FAIL, not by a computed score.
+  const saBreakdown = selectionAnalysis?.decisionBreakdown || [];
+  const failedItems = saBreakdown.filter(b => b.status === "fail");
+  const passedItems = saBreakdown.filter(b => b.status === "pass");
+
   let verdict, verdictColor, verdictReason;
-  if (selectionAnalysis?.forbidden) { verdict = "Forbidden"; verdictColor = "#DC2626"; verdictReason = "This timing is forbidden by the manuscript — Nahas day or enemy hour."; }
-  else if (score >= 85) { verdict = "Excellent"; verdictColor = "#4ADE80"; verdictReason = "All manuscript conditions align."; }
-  else if (score >= 70) { verdict = "Good"; verdictColor = "#86EFAC"; verdictReason = "Most manuscript conditions are favorable."; }
-  else if (score >= 50) { verdict = "Acceptable"; verdictColor = "#FBBF24"; verdictReason = "Mixed conditions — proceed with caution."; }
-  else if (score >= 30) { verdict = "Weak"; verdictColor = "#F59E0B"; verdictReason = "Conditions are unfavorable per manuscript."; }
-  else { verdict = "Not Recommended"; verdictColor = "#F87171"; verdictReason = "Multiple unfavorable conditions."; }
+  if (selectionAnalysis?.forbidden) {
+    const nahasItem = failedItems.find(b => b.dimension === "nahasDay");
+    const enemyItem = failedItems.find(b => b.dimension === "enemyPlanet");
+    verdict = "Forbidden"; verdictColor = "#DC2626";
+    verdictReason = nahasItem ? "Forbidden day (Nahas) per manuscript — this timing must not be used."
+      : enemyItem ? "Enemy planet hour per manuscript — this timing must not be used."
+      : "Forbidden by manuscript rules — this timing must not be used.";
+  }
+  else if (failedItems.length === 0 && passedItems.length >= 2) {
+    verdict = "Excellent"; verdictColor = "#4ADE80"; verdictReason = "All manuscript conditions are satisfied.";
+  }
+  else if (failedItems.length === 0) {
+    verdict = "Good"; verdictColor = "#86EFAC"; verdictReason = "No manuscript conditions are violated.";
+  }
+  else if (failedItems.length === 1) {
+    verdict = "Acceptable"; verdictColor = "#FBBF24";
+    verdictReason = `${failedItems[0].label} does not match the manuscript prescription.`;
+  }
+  else if (failedItems.length === 2) {
+    verdict = "Weak"; verdictColor = "#F59E0B";
+    verdictReason = `${failedItems[0].label} and ${failedItems[1].label} do not match the manuscript prescription.`;
+  }
+  else {
+    verdict = "Not Recommended"; verdictColor = "#F87171";
+    verdictReason = `${failedItems.length} manuscript conditions are not met: ${failedItems.map(f => f.label).join(", ")}.`;
+  }
 
   // ── Warnings (only for violated found rules) ──
   if (req.days && !currentDayOk) warnings.push(`Today (${MIZAN_DAY_NAMES[currentDayKey]}) is not a prescribed day. Manuscript prescribes: ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
