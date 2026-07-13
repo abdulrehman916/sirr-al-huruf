@@ -932,20 +932,10 @@ function buildDecisionAnalysis({
       };
     }
 
-    // 3. Next suitable weekday — only if no fully compatible opportunity found
-    //    This checks the day dimension only as a last resort when no fully
-    //    compatible opportunity exists within 14 days. The engine never
-    //    recommends this as "suitable" — it is informational only.
-    if (betterSaats.length === 0 && !earliest && req.days) {
-      for (let i = 1; i <= 7; i++) {
-        const checkIdx = (weekday + i) % 7;
-        const checkKey = DAY_KEY_BY_INDEX[checkIdx];
-        if (req.days.includes(checkKey) && (!req.worstDays || !req.worstDays.includes(checkKey))) {
-          nextDay = { dayName: MIZAN_DAY_NAMES[checkKey], dayKey: checkKey, daysAhead: i };
-          break;
-        }
-      }
-    }
+    // 3. No nextDay fallback — the engine NEVER recommends an alternative
+    //    that is not fully compatible across ALL dimensions. A day-only
+    //    check is insufficient. If no fully compatible opportunity exists
+    //    within 14 days, the engine reports "no suitable opportunity."
   }
 
   return {
@@ -1161,11 +1151,13 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const passedItems = saBreakdown.filter(b => b.status === "pass");
 
   let verdict, verdictColor, verdictReason;
+  // Only THREE verdicts: Suitable, Partially Suitable, Not Suitable.
+  // "Forbidden" is mapped to "Not Suitable" — no other verdicts exist.
   if (selectionAnalysis?.forbidden) {
-    verdict = "Forbidden"; verdictColor = "#DC2626";
+    verdict = "Not Suitable"; verdictColor = "#F87171";
     verdictReason = selectionAnalysis.originalSuitability
       || (failedItems.find(b => b.dimension === "forbidden")?.reason)
-      || "The Astrology Clock marks this timing as forbidden for this purpose.";
+      || "The Astrology Clock marks this timing as not suitable for this purpose.";
   }
   else if (selectionAnalysis?.suitable) {
     verdict = "Suitable"; verdictColor = "#4ADE80";

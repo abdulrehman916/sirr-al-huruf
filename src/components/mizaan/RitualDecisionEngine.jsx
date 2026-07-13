@@ -208,35 +208,36 @@ export default function RitualDecisionEngine({
   // period + saat). At most ONE short reason and ONE short rejection reason.
   const supportedReason = (currentSaatAnalysis.acceptanceReasons || [])[0] || null;
   const rejectionReason = (currentSaatAnalysis.rejectionReasons || [])[0] || null;
-  // ── Single best alternative (priority: saat → layl/nahar → next day) ──
+  // ── Single best alternative (priority: saat → layl/nahar) ──
+  // nextDay is NEVER recommended — it only checks the day dimension,
+  // not the full context. The engine recommends ONLY fully compatible
+  // opportunities.
   const bestAlternative = betterAlternatives.betterSaats?.[0]
     ? { type: "saat", data: betterAlternatives.betterSaats[0] }
     : betterAlternatives.nextLayl
     ? { type: "layl", data: betterAlternatives.nextLayl }
-    : betterAlternatives.nextDay
-    ? { type: "day", data: betterAlternatives.nextDay }
     : null;
 
   const verdict =
     rawAnalysis.canPerformToday === "Yes"
-      ? "YES"
+      ? "SUITABLE"
       : rawAnalysis.canPerformToday === "Limited"
       ? "PARTIAL"
-      : "NO";
+      : "NOT_SUITABLE";
   const verdictColor =
-    verdict === "YES" ? "#4ADE80" : verdict === "PARTIAL" ? "#FBBF24" : "#F87171";
+    verdict === "SUITABLE" ? "#4ADE80" : verdict === "PARTIAL" ? "#FBBF24" : "#F87171";
   const VerdictIcon =
-    verdict === "YES"
+    verdict === "SUITABLE"
       ? CheckCircle2
       : verdict === "PARTIAL"
       ? AlertCircle
       : XCircle;
   const verdictLabel =
-    verdict === "YES"
-      ? T("YES", "അതെ", lang)
+    verdict === "SUITABLE"
+      ? T("Suitable", "അനുയോജ്യം", lang)
       : verdict === "PARTIAL"
-      ? T("PARTIAL", "ഭാഗികം", lang)
-      : T("NO", "ഇല്ല", lang);
+      ? T("Partially Suitable", "ഭാഗികമായി അനുയോജ്യം", lang)
+      : T("Not Suitable", "അനുയോജ്യമല്ല", lang);
 
   const purposeText =
     (lang === "ml"
@@ -390,10 +391,10 @@ export default function RitualDecisionEngine({
                 }
                 style={{ color: "rgba(255,255,255,0.60)" }}
               >
-                {verdict === "YES"
+                {verdict === "SUITABLE"
                   ? T(
-                      "Today is suitable for this purpose.",
-                      "ഈ ലക്ഷ്യത്തിന് ഇന്ന് അനുയോജ്യമാണ്.",
+                      "This purpose is suitable now.",
+                      "ഈ ലക്ഷ്യം ഇപ്പോൾ അനുയോജ്യമാണ്.",
                       lang
                     )
                   : verdict === "PARTIAL"
@@ -466,7 +467,7 @@ export default function RitualDecisionEngine({
       {/* ═══════════════════════════════════════════════════════════
           BEST ALTERNATIVE OPPORTUNITY (only if not fully suitable)
          ═══════════════════════════════════════════════════════════ */}
-      {verdict !== "YES" && bestAlternative && (
+      {verdict !== "SUITABLE" && bestAlternative && (
         <div
           className="rounded-2xl overflow-hidden"
           style={{
@@ -499,6 +500,37 @@ export default function RitualDecisionEngine({
               alternative={bestAlternative}
               lang={lang}
             />
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════
+          NO SUITABLE OPPORTUNITY (if not suitable and no alternative found)
+         ═══════════════════════════════════════════════════════════ */}
+      {verdict !== "SUITABLE" && !bestAlternative && (
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background:
+              "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+            border: `1px solid ${G.border}`,
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <XCircle className="w-5 h-5 flex-shrink-0" style={{ color: "#F87171" }} />
+            <p
+              className={
+                lang === "ml"
+                  ? "font-malayalam text-sm font-bold"
+                  : "font-inter text-sm font-bold"
+              }
+              style={{ color: "rgba(255,255,255,0.80)" }}
+            >
+              {T(
+                "No suitable opportunity remains today.",
+                "ഇന്ന് അനുയോജ്യമായ അവസരമില്ല."
+              )}
+            </p>
           </div>
         </div>
       )}
