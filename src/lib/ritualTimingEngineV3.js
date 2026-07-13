@@ -936,7 +936,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   // ── Astro Clock status ──
   const astroClockStatus = {
-    day: MIZAN_DAY_NAMES[currentDayKey], dayRuler: dayRuler.planet,
+    day: MIZAN_DAY_NAMES[currentDayKey], activeWeekday: activeDayIndex, dayRuler: dayRuler.planet,
     currentHour: { number: currentHourInfo.hourNumber, planet: capitalPlanet(currentHourInfo.planet), symbol: PLANET_INFO[currentHourInfo.planet]?.symbol || "" },
     isDaytime: !isNightTime, hourRemaining: currentHourInfo.remainingTime,
     nextPlanet: PLANET_SEQUENCE[(PLANET_SEQUENCE.indexOf(currentHourInfo.planet) + 1) % 7] || "",

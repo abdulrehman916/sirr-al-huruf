@@ -1,30 +1,33 @@
 // ═══════════════════════════════════════════════════════════════
-// RITUAL DECISION ENGINE — Professional Report Layout (Read-only)
-// Attached below all four Mizan methods. NEVER modifies Mizan logic.
+// RITUAL TIMING ADVISOR — Astrology Clock Interpreter (Read-only)
+// ═══════════════════════════════════════════════════════════════
+// A simple Advisor that explains the Astrology Clock in plain Malayalam.
 //
-// UI/UX PRINCIPLES (Professional Report):
-//   1. FINAL RECOMMENDATION first — always visible, top of page
-//   2. Short 2–4 line summary below it (can perform / best time / reason)
-//   3. Everything else collapsed by default — expand on demand
-//   4. Zero repetition — each rule explained once, referenced later
-//   5. Book references grouped by rule (one explanation → multiple sources)
-//   6. User information separated from Technical Details
-//   7. Readable in 15 seconds without scrolling
+// FLOW:
+//   1. User selects a Ritual Purpose (identified FIRST).
+//   2. The engine reads AstroClockKnowledge records for that Purpose.
+//   3. The user's selected Day / Saat / Layl-Nahar are compared.
+//   4. The Advisor explains EVERYTHING in Malayalam.
+//   5. Original Astro Clock explanations are displayed — never invented.
+//
+// SECTIONS:
+//   • Purpose
+//   • Is today suitable? (Yes / No + original explanation)
+//   • Failed fields only (Better Day, Better Saat, Better Layl/Nahar)
+//   • Today's Available Times (each suitable Saat + explanation)
+//   • Next Available Timing (if no suitable times today)
+//   • Times to Avoid Today (each + explanation)
+//
+// No Turkish field names. No database terminology. No technical rule names.
+// Works identically across ALL Mizan Methods and ALL Sections.
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronDown, Sparkles, BookOpen, AlertTriangle, Clock,
-  Sunset, Target, CheckCircle2, Ban, Info,
-} from "lucide-react";
-import { analyzeRitualTiming, analyzeConfigurationAdvice } from "../../lib/ritualTimingEngineV3";
-import ReportWindowsList from "./ReportWindowsList";
-import ConfigurationAdvisor from "./ConfigurationAdvisor";
-import ManuscriptComplianceChecklist from "./ManuscriptComplianceChecklist";
-import MoonAnalysisCard from "./MoonAnalysisCard";
+import { Target, CheckCircle2, XCircle, AlertCircle, Clock, Sunset, Ban, Sparkles, AlertTriangle } from "lucide-react";
+import { analyzeRitualTiming } from "../../lib/ritualTimingEngineV3";
 import PlanningModePanel from "./PlanningModePanel";
+import MoonAnalysisCard from "./MoonAnalysisCard";
 import { setSaatPlanningContext } from "../../lib/mizaanSaatCalculator";
-import { localizeAnalysis, localizeAdvice, tStr, useRitualLang, tDay, tPlanet } from "../../lib/ritualTimingI18n";
+import { useRitualLang, tDay, tPlanet } from "../../lib/ritualTimingI18n";
 import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll";
 
 const G = {
@@ -36,32 +39,123 @@ const G = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
-// ── Inline bilingual helper for new section titles ──
-const T = (en, ml, lang) => lang === "ml" ? ml : en;
+// ── Inline bilingual helper ──
+const T = (en, ml, lang) => (lang === "ml" ? ml : en);
 
-// ── Group manuscript references by rule text — explanation once, all sources listed ──
-function groupReferences(rulesApplied, bookNotes) {
-  const map = new Map();
-  for (const r of rulesApplied || []) {
-    const text = r.desc || r.id;
-    if (!map.has(text)) map.set(text, { text, sources: new Set() });
-    if (r.source) map.get(text).sources.add(r.source);
-  }
-  for (const n of bookNotes || []) {
-    const text = n.text;
-    if (!map.has(text)) map.set(text, { text, sources: new Set() });
-    if (n.source) map.get(text).sources.add(n.source);
-  }
-  return Array.from(map.values()).map(g => ({ text: g.text, sources: Array.from(g.sources) }));
+const DAY_NAME_TO_INDEX = {
+  Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
+  Thursday: 4, Friday: 5, Saturday: 6,
+};
+
+const ML_DAY = {
+  Sunday: "ഞായർ", Monday: "തിങ്കൾ", Tuesday: "ചൊവ്വ",
+  Wednesday: "ബുധൻ", Thursday: "വ്യാഴം", Friday: "വെള്ളി", Saturday: "ശനി",
+};
+
+const ML_PLANET = {
+  Sun: "സൂര്യൻ", Moon: "ചന്ദ്രൻ", Mars: "ചൊവ്വ", Mercury: "ബുധൻ",
+  Jupiter: "ഗുരു", Venus: "ശുക്രൻ", Saturn: "ശനി",
+  sun: "സൂര്യൻ", moon: "ചന്ദ്രൻ", mars: "ചൊവ്വ", mercury: "ബുധൻ",
+  jupiter: "ഗുരു", venus: "ശുക്രൻ", saturn: "ശനി",
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ASTROLOGY CLOCK LOOKUP — find the original explanation for a
+// specific Day + Saat + Kawkab context. The Astro Clock is the
+// ONLY authority. These helpers are read-only display utilities.
+// ═══════════════════════════════════════════════════════════════
+
+// Look up the AstroClockKnowledge record for an exact context
+function lookupAstroRecord(astroClockKnowledge, weekday, period, saatNumber, kawkab) {
+  if (!astroClockKnowledge || astroClockKnowledge.length === 0) return null;
+  const kawkabLC = String(kawkab || "").toLowerCase();
+  return (
+    astroClockKnowledge.find(
+      (r) =>
+        r.weekday === weekday &&
+        r.period === period &&
+        r.saat_number === saatNumber &&
+        String(r.planet || "").toLowerCase() === kawkabLC
+    ) || null
+  );
 }
 
+// Get the original explanation from a record (prefer Malayalam)
+function getRecordExplanation(record, lang) {
+  if (!record) return "";
+  if (lang === "ml" && record.knowledge_text_ml) return record.knowledge_text_ml;
+  if (record.knowledge_text_en) return record.knowledge_text_en;
+  if (record.ritual_suitability) return record.ritual_suitability;
+  return "";
+}
+
+// Get the forbidden/enemy explanation from a record (prefer Malayalam)
+function getForbiddenExplanation(record, lang) {
+  if (!record) return "";
+  const actions = record.forbidden_actions || [];
+  const enemyActions = record.enemy_actions || [];
+  const all = [...actions, ...enemyActions];
+  if (all.length === 0) return getRecordExplanation(record, lang);
+  return all
+    .map((a) => (lang === "ml" ? a.ml || a.en : a.en))
+    .filter(Boolean)
+    .join("; ");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DISPLAY HELPERS — translate recommendation values to Malayalam
+// ═══════════════════════════════════════════════════════════════
+
+function translateDayRec(val, lang) {
+  if (!val || lang !== "ml") return val || "";
+  let r = val;
+  for (const [en, ml] of Object.entries(ML_DAY)) r = r.split(en).join(ml);
+  r = r.split(" or ").join(" അല്ലെങ്കിൽ ");
+  r = r.split("Any day except forbidden").join("ഏത് അനുയോജ്യ ദിവസവും");
+  return r;
+}
+
+function translateHourRec(val, lang) {
+  if (!val || lang !== "ml") return val || "";
+  let r = val;
+  for (const [en, ml] of Object.entries(ML_PLANET)) r = r.split(en).join(ml);
+  r = r.split(" or ").join(" അല്ലെങ്കിൽ ");
+  r = r.split(" Saat").join(" സഅാത്");
+  r = r.split("Saat #").join("സഅാത് #");
+  r = r.split("See recommended Saat").join("ശുപാർശ ചെയ്ത സഅാത് കാണുക");
+  return r;
+}
+
+function translateLaylRec(val, lang) {
+  if (!val || lang !== "ml") return val || "";
+  if (val === "Night (Layl)") return "രാത്രി (ലൈൽ)";
+  if (val === "Day (Nahar)") return "പകൽ (നഹർ)";
+  return val;
+}
+
+// Saat display number (1-12) from the internal hour number (1-24)
+function saatDisplayNum(hourNumber, period) {
+  return period === "night" ? hourNumber - 12 : hourNumber;
+}
+
+// Ordinal suffix for English, simple dash for Malayalam
+function ordinal(num, lang) {
+  if (lang === "ml") return "";
+  const j = num % 10, k = num % 100;
+  if (j === 1 && k !== 11) return "st";
+  if (j === 2 && k !== 12) return "nd";
+  if (j === 3 && k !== 13) return "rd";
+  return "th";
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
 export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod, purposeLookup }) {
   const [lang, setLang] = useRitualLang();
   const { astroClockKnowledge } = useAstroClockKnowledgeAll();
 
-  // ── PLANNING MODE (optional) ──
-  // When ON, the engine evaluates for the selected location + date instead of
-  // current location + today. Uses the SAME astronomical source — no second engine.
+  // ── Planning Mode (optional) ──
   const [planningMode, setPlanningMode] = useState(false);
   const [planningLocation, setPlanningLocation] = useState(null);
   const [planningDate, setPlanningDate] = useState(null);
@@ -70,7 +164,6 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
     return { location: planningLocation, date: planningDate };
   }, [planningMode, planningLocation, planningDate]);
 
-  // ── Notify Mizan cards (Saat/Day/Layl-Nahar/Kawkab auto-detect) of planning context ──
   useEffect(() => {
     setSaatPlanningContext(planningContext);
   }, [planningContext]);
@@ -86,118 +179,102 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   const rawAnalysis = useMemo(() => {
     if (!result || resolvedPurpose.needsConfirmation) return null;
-    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup: resolvedPurpose, planningContext });
+    return analyzeRitualTiming({
+      result, selections: effectiveSelections, customPurpose, activeMethod,
+      astroClockKnowledge, purposeLookup: resolvedPurpose, planningContext,
+    });
   }, [result, effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, resolvedPurpose, planningContext]);
 
-  const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
-
-  const rawAdvice = useMemo(() => {
-    if (!result || resolvedPurpose.needsConfirmation) return null;
-    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup: resolvedPurpose, planningContext });
-  }, [result, effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, resolvedPurpose, planningContext]);
-
-  const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
-
-  // ── Block when purpose unconfirmed ──
+  // ── Purpose confirmation required ──
   if (resolvedPurpose.needsConfirmation) {
     return (
       <div className="mt-6 rounded-2xl p-6" style={{
         background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
         border: "1px solid rgba(251,191,36,0.40)",
-        boxShadow: "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)",
       }}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{
-            background: "linear-gradient(135deg, rgba(251,191,36,0.20) 0%, rgba(251,191,36,0.06) 100%)",
-            border: "1px solid rgba(251,191,36,0.50)",
-          }}>
-            <AlertTriangle className="w-5 h-5" style={{ color: "#FBBF24" }} />
-          </div>
-          <div>
-            <h3 className="font-inter text-base font-bold tracking-wide" style={{ color: "#FBBF24" }}>
-              {lang === "ml" ? "ലക്ഷ്യം സ്ഥിരീകരിക്കേണ്ടതുണ്ട്" : "Purpose requires confirmation"}
-            </h3>
-            <p className="font-amiri text-sm" style={{ color: "rgba(251,191,36,0.50)" }}>يحتاج تأكيد المعنى</p>
-          </div>
+        <div className="flex items-center gap-3 mb-2">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" style={{ color: "#FBBF24" }} />
+          <h3 className="font-inter text-base font-bold" style={{ color: "#FBBF24" }}>
+            {T("Purpose requires confirmation", "ലക്ഷ്യം സ്ഥിരീകരിക്കേണ്ടതുണ്ട്", lang)}
+          </h3>
         </div>
-        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-          {lang === "ml"
-            ? "ദയവായി ലക്ഷ്യ വ്യാഖ്യാന കാർഡിൽ ശരിയായ അർത്ഥം തിരഞ്ഞെടുക്കുക. സ്ഥിരീകരിക്കുന്നതുവരെ ആചാര സമയ നിർദ്ദേശങ്ങൾ ലഭ്യമല്ല."
-            : "Please select the intended meaning in the Purpose Interpretation card above. Ritual timing recommendations are unavailable until the purpose is confirmed."}
+        <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.60)" }}>
+          {T(
+            "Please select the intended meaning in the Purpose card above.",
+            "ദയവായി ലക്ഷ്യ കാർഡിൽ ശരിയായ അർത്ഥം തിരഞ്ഞെടുക്കുക.",
+            lang
+          )}
         </p>
       </div>
     );
   }
 
-  if (!analysis || !analysis.report) return null;
-
-  // ── STEP 1 ENFORCEMENT — Purpose must be identified BEFORE any timing evaluation ──
-  // If no ritual purpose is selected, the engine must not evaluate timing or show
-  // recommendations. It must prompt the user to select a purpose first.
-  // Flow: Purpose → Evaluate Selected Context → Give Recommendation → User adjusts → Re-evaluate.
-  if (rawAnalysis.noPurposeSelected) {
+  // ── No purpose selected ──
+  if (!rawAnalysis || rawAnalysis.noPurposeSelected) {
     return (
       <div className="mt-6 rounded-2xl p-6" style={{
         background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
         border: "1px solid rgba(251,191,36,0.40)",
-        boxShadow: "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)",
       }}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{
-            background: "linear-gradient(135deg, rgba(251,191,36,0.20) 0%, rgba(251,191,36,0.06) 100%)",
-            border: "1px solid rgba(251,191,36,0.50)",
-          }}>
-            <Target className="w-5 h-5" style={{ color: "#FBBF24" }} />
-          </div>
-          <div>
-            <h3 className="font-inter text-base font-bold tracking-wide" style={{ color: "#FBBF24" }}>
-              {lang === "ml" ? "ലക്ഷ്യം തിരഞ്ഞെടുക്കുക" : "Select a Ritual Purpose"}
-            </h3>
-            <p className="font-amiri text-sm" style={{ color: "rgba(251,191,36,0.50)" }}>اختر الغرض أولاً</p>
-          </div>
+        <div className="flex items-center gap-3 mb-2">
+          <Target className="w-5 h-5 flex-shrink-0" style={{ color: "#FBBF24" }} />
+          <h3 className="font-inter text-base font-bold" style={{ color: "#FBBF24" }}>
+            {T("Select a Ritual Purpose", "ലക്ഷ്യം തിരഞ്ഞെടുക്കുക", lang)}
+          </h3>
         </div>
-        <p className="font-inter text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-          {lang === "ml"
-            ? "ദയവായി മിസാൻ 7-ൽ ഒരു ലക്ഷ്യം തിരഞ്ഞെടുക്കുക. ലക്ഷ്യം തിരഞ്ഞെടുക്കുന്നതുവരെ ആചാര സമയ നിർദ്ദേശങ്ങൾ ലഭ്യമല്ല."
-            : "Please select a ritual purpose in Mizan 7 above. Ritual timing recommendations are unavailable until a purpose is identified."}
+        <p className="font-inter text-sm" style={{ color: "rgba(255,255,255,0.60)" }}>
+          {T(
+            "Please select a ritual purpose above. Ritual timing advice is unavailable until a purpose is identified.",
+            "ദയവായി മുകളിൽ ഒരു ലക്ഷ്യം തിരഞ്ഞെടുക്കുക. ലക്ഷ്യം തിരഞ്ഞെടുക്കുന്നതുവരെ ആചാര സമയ ഉപദേശം ലഭ്യമല്ല.",
+            lang
+          )}
         </p>
       </div>
     );
   }
 
-  const canPerformColor = rawAnalysis.canPerformToday === "Yes" ? "#4ADE80" : rawAnalysis.canPerformToday === "Limited" ? "#FBBF24" : "#F87171";
-  const canPerformLabel = rawAnalysis.canPerformToday === "Yes"
-    ? T("Yes — proceed now", "അതെ — ഇപ്പോൾ തന്നെ", lang)
-    : rawAnalysis.canPerformToday === "Limited"
-      ? T("Limited — proceed with caution", "പരിമിതം — ശ്രദ്ധിച്ചു തുടരുക", lang)
-      : T("No — see alternative time", "ഇല്ല — ബദൽ സമയം കാണുക", lang);
+  // ═══════════════════════════════════════════════════════════════
+  // EXTRACT DATA FROM THE ENGINE
+  // ═══════════════════════════════════════════════════════════════
+  const weekday =
+    rawAnalysis.astroClockStatus?.activeWeekday ??
+    DAY_NAME_TO_INDEX[rawAnalysis.astroClockStatus?.day] ??
+    0;
 
-  // Extract data from report sections
-  const windowsSection = analysis.report.find(s => s.windows);
-  const avoidSection = analysis.report.find(s => s.avoid);
+  const sa = rawAnalysis.selectionAnalysis;
+  const failedFields = (sa?.decisionBreakdown || []).filter((b) => b.status === "fail");
+  const bestWindows = rawAnalysis.bestWindowsToday || [];
+  const avoidWindows = rawAnalysis.avoidWindowsToday || [];
+  const nextOpp = rawAnalysis.nextOpportunity;
+  const purposeText =
+    (lang === "ml" ? resolvedPurpose.interpretation_ml : resolvedPurpose.interpretation_en) ||
+    rawAnalysis.ritualType ||
+    "";
 
-  // Group manuscript references — each rule once, all sources listed
-  const groupedRefs = groupReferences(analysis.rulesApplied, analysis.bookNotes);
+  // Can perform today?
+  const canPerform = rawAnalysis.canPerformToday;
+  const canPerformColor = canPerform === "Yes" ? "#4ADE80" : canPerform === "Limited" ? "#FBBF24" : "#F87171";
+  const CanPerformIcon = canPerform === "Yes" ? CheckCircle2 : canPerform === "Limited" ? AlertCircle : XCircle;
+  const canPerformLabel =
+    canPerform === "Yes" ? T("Yes", "അതെ", lang)
+    : canPerform === "Limited" ? T("Limited", "പരിമിതം", lang)
+    : T("No", "ഇല്ല", lang);
 
-  // Summary data
-  const bestWindow = analysis.bestWindowsToday?.[0];
-  const bestTimeStr = bestWindow
-    ? `${bestWindow.startTime}–${bestWindow.endTime} (${bestWindow.planet})`
-    : rawAnalysis.nextOpportunity
-      ? `${rawAnalysis.nextOpportunity.dayName} ${rawAnalysis.nextOpportunity.startTime}`
-      : T("No valid time in 14 days", "14 ദിവസത്തിനുള്ളിൽ സമയമില്ല", lang);
+  // Main explanation (original Astro Clock text)
+  const mainExplanation =
+    (lang === "ml" && sa?.originalExplanationMl) ||
+    sa?.originalExplanation ||
+    sa?.originalSuitability ||
+    rawAnalysis.verdictReason ||
+    "";
 
-  const shortReason = rawAnalysis.canPerformToday === "Yes"
-    ? T("All manuscript conditions satisfied", "എല്ലാ ഗ്രന്ഥ നിബന്ധനകളും പാലിച്ചിരിക്കുന്നു", lang)
-    : rawAnalysis.canPerformToday === "Limited"
-      ? T("Some valid hours remain today", "ചില അനുയോജ്യ സമയങ്ങൾ ഇന്ന് ബാക്കിയുണ്ട്", lang)
-      : T("Manuscript conditions not met today", "ഇന്ന് ഗ്രന്ഥ നിബന്ധനകൾ പാലിച്ചിട്ടില്ല", lang);
-
-  const exactPurpose = lang === "ml" ? resolvedPurpose.interpretation_ml : resolvedPurpose.interpretation_en;
+  // Failed fields by dimension
+  const failedDay = failedFields.find((f) => f.dimension === "weekday");
+  const failedHour = failedFields.find((f) => f.dimension === "hour");
+  const failedDayNight = failedFields.find((f) => f.dimension === "dayNight");
 
   return (
     <div className="mt-6 space-y-4">
-
       {/* ═══ PLANNING MODE (optional) ═══ */}
       <PlanningModePanel
         enabled={planningMode}
@@ -210,289 +287,211 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
       />
 
       {/* ═══════════════════════════════════════════════════════════════
-          1. FINAL RECOMMENDATION — always visible, first thing the user sees
+          MAIN ADVISOR CARD
          ═══════════════════════════════════════════════════════════════ */}
       <div className="rounded-2xl overflow-hidden" style={{
         background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
-        border: `1px solid ${analysis.verdictColor}55`,
-        boxShadow: `0 4px 40px rgba(0,0,0,0.60), 0 0 30px ${analysis.verdictColor}15, inset 0 1px 0 rgba(212,175,55,0.08)`,
+        border: `1px solid ${G.border}`,
+        boxShadow: "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)",
       }}>
         {/* ── Header ── */}
         <div className="flex items-center justify-between p-4" style={{ borderBottom: `1px solid ${G.border}` }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{
-              background: `linear-gradient(135deg, ${analysis.verdictColor}22 0%, ${analysis.verdictColor}06 100%)`,
-              border: `1px solid ${analysis.verdictColor}55`,
+              background: G.bgHi, border: `1px solid ${G.borderHi}`,
             }}>
-              <Sparkles className="w-5 h-5" style={{ color: analysis.verdictColor }} />
+              <Sparkles className="w-5 h-5" style={{ color: G.text }} />
             </div>
-            <h3 className="font-inter text-base font-bold tracking-wide" style={{ color: "#fff" }}>
-              {T("FINAL RECOMMENDATION", "അന്തിമ ശുപാർശ", lang)}
-            </h3>
+            <div>
+              <h3 className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
+                {T("Ritual Timing Advisor", "ആചാര സമയ ഉപദേഷ്ടാവ്", lang)}
+              </h3>
+              <p className="font-amiri text-xs" style={{ color: G.dim }}>مستشار توقيت العمل</p>
+            </div>
           </div>
-          {/* Language toggle */}
           <button
             onClick={() => setLang(lang === "en" ? "ml" : "en")}
             className="font-inter text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
             style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.dim }}
           >
-            {tStr("langLabel", lang)}
+            {lang === "ml" ? "English" : "മലയാളം"}
           </button>
         </div>
 
-        {/* ── Verdict + Score ── */}
-        <div className="p-4 pb-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="font-inter text-base font-bold" style={{ color: analysis.verdictColor }}>
-                {analysis.verdict}
+        <div className="p-4 space-y-4">
+
+          {/* ══ 1. PURPOSE ══ */}
+          <div className="rounded-xl p-3" style={{
+            background: "linear-gradient(135deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.03) 100%)",
+            border: `1px solid ${G.border}`,
+          }}>
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="w-4 h-4" style={{ color: G.text }} />
+              <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: G.text }}>
+                {T("Purpose", "ലക്ഷ്യം", lang)}
               </span>
             </div>
+            <p className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: "#fff" }}>
+              {purposeText}
+            </p>
           </div>
 
-          {/* ── Short Summary — 2–4 lines, always visible ── */}
-          <div className="space-y-2">
-            <SummaryLine
-              icon={<CheckCircle2 className="w-4 h-4" />}
-              label={T("Can perform", "അനുഷ്ഠിക്കാം", lang)}
-              value={canPerformLabel}
-              color={canPerformColor}
-            />
-            <SummaryLine
-              icon={<Clock className="w-4 h-4" />}
-              label={T("Best time", "മികച്ച സമയം", lang)}
-              value={bestTimeStr}
-              color={G.text}
-            />
-            <SummaryLine
-              icon={<Info className="w-4 h-4" />}
-              label={T("Reason", "കാരണം", lang)}
-              value={shortReason}
-              color="rgba(255,255,255,0.70)"
-            />
-            {analysis.recommendedIncense && (
-              <SummaryLine
-                icon={<Sparkles className="w-4 h-4" />}
-                label={T("Incense", "ധൂപം", lang)}
-                value={analysis.recommendedIncense}
-                color={G.text}
-              />
+          {/* ══ 2. IS TODAY SUITABLE? ══ */}
+          <div className="rounded-xl p-4" style={{
+            background: `${canPerformColor}08`,
+            border: `1px solid ${canPerformColor}30`,
+          }}>
+            <div className="flex items-center gap-3 mb-2">
+              <CanPerformIcon className="w-5 h-5 flex-shrink-0" style={{ color: canPerformColor }} />
+              <h4 className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: "#fff" }}>
+                {T("Can this ritual be performed today?", "ഇന്ന് ഈ കർമ്മം അനുഷ്ഠിക്കാമോ?", lang)}
+              </h4>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: canPerformColor }} />
+              <span className="font-inter text-base font-bold" style={{ color: canPerformColor }}>
+                {canPerformLabel}
+              </span>
+            </div>
+            {mainExplanation && (
+              <div className="rounded-lg p-3" style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(212,175,55,0.15)",
+              }}>
+                <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.70)" }}>
+                  {mainExplanation}
+                </p>
+              </div>
             )}
           </div>
 
-          {/* ── Current Manuscript State — Layl/Nahar, Weekday, Saat, Kawkab ── */}
-          {rawAnalysis.liveNow && (
-            <div className="grid grid-cols-2 gap-2 mt-3 pt-3" style={{ borderTop: `1px solid ${G.border}` }}>
-              <StateItem
-                label={T("Layl / Nahar", "ലൈൽ / നഹർ", lang)}
-                value={rawAnalysis.liveNow.laylNahar === "Layl"
-                  ? T("Layl (Night)", "ലൈൽ (രാത്രി)", lang)
-                  : T("Nahar (Day)", "നഹർ (പകൽ)", lang)}
-                color={rawAnalysis.liveNow.laylNahar === "Layl" ? "#818CF8" : "#FBBF24"}
-              />
-              <StateItem
-                label={T("Weekday", "ദിവസം", lang)}
-                value={tDay(rawAnalysis.liveNow.day, lang)}
-                color={G.text}
-              />
-              <StateItem
-                label={T("Saat", "സഅാത്", lang)}
-                value={`#${rawAnalysis.liveNow.saat}`}
-                color={G.text}
-              />
-              <StateItem
-                label={T("Kawkab", "കവ്കബ്", lang)}
-                value={tPlanet(rawAnalysis.liveNow.kawkab, lang)}
-                color={G.text}
-              />
+          {/* ══ 3. FAILED FIELDS — Better Day, Better Saat, Better Layl/Nahar ══ */}
+          {failedFields.length > 0 && (
+            <div className="space-y-2">
+              {failedDay && (
+                <BetterFieldCard
+                  icon={<Clock className="w-4 h-4" />}
+                  label={T("Better Day", "മികച്ച ദിവസം", lang)}
+                  value={translateDayRec(failedDay.recommended, lang)}
+                  reason={lang === "ml" ? failedDay.reasonMl || failedDay.reason : failedDay.reason}
+                  lang={lang}
+                />
+              )}
+              {failedHour && (
+                <BetterFieldCard
+                  icon={<Clock className="w-4 h-4" />}
+                  label={T("Better Saat", "മികച്ച സഅാത്", lang)}
+                  value={translateHourRec(failedHour.recommended, lang)}
+                  reason={lang === "ml" ? failedHour.reasonMl || failedHour.reason : failedHour.reason}
+                  lang={lang}
+                />
+              )}
+              {failedDayNight && (
+                <BetterFieldCard
+                  icon={<Sunset className="w-4 h-4" />}
+                  label={T("Better Layl/Nahar", "മികച്ച ലൈൽ/നഹർ", lang)}
+                  value={translateLaylRec(failedDayNight.recommended, lang)}
+                  reason={lang === "ml" ? failedDayNight.reasonMl || failedDayNight.reason : failedDayNight.reason}
+                  lang={lang}
+                />
+              )}
             </div>
           )}
 
-          {/* ── One-line Warning — only if applicable ── */}
-          {analysis.warnings?.length > 0 && (
-            <div className="flex items-center gap-2 mt-2 rounded-lg p-2" style={{
-              background: "rgba(248,113,113,0.06)",
+          {/* ══ 4. TODAY'S AVAILABLE TIMES ══ */}
+          <div className="rounded-xl p-4" style={{
+            background: "rgba(74,222,128,0.04)",
+            border: "1px solid rgba(74,222,128,0.20)",
+          }}>
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-4 h-4" style={{ color: "#4ADE80" }} />
+              <h4 className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: "#4ADE80" }}>
+                {T("Today's Available Times", "ഇന്നത്തെ ലഭ്യമായ സമയങ്ങൾ", lang)}
+              </h4>
+            </div>
+
+            {bestWindows.length > 0 ? (
+              <>
+                <p className={lang === "ml" ? "font-malayalam text-xs mb-3" : "font-inter text-xs mb-3"} style={{ color: "rgba(255,255,255,0.60)" }}>
+                  {T("You can perform this ritual today during:", "ഈ കർമ്മം ഇന്ന് അനുഷ്ഠിക്കാം:", lang)}
+                </p>
+                <div className="space-y-2">
+                  {bestWindows.map((w, i) => {
+                    const saatNum = saatDisplayNum(w.hourNumber, w.period);
+                    const record = lookupAstroRecord(astroClockKnowledge, weekday, w.period, w.hourNumber, w.planet);
+                    const explanation = getRecordExplanation(record, lang);
+                    return (
+                      <SaatCard
+                        key={i}
+                        saatNum={saatNum}
+                        startTime={w.startTime}
+                        endTime={w.endTime}
+                        planet={w.planet}
+                        period={w.period}
+                        explanation={explanation}
+                        color="#4ADE80"
+                        lang={lang}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* ══ 5. NO SUITABLE TIMES TODAY + NEXT AVAILABLE ══ */}
+                <p className={lang === "ml" ? "font-malayalam text-sm font-bold mb-3" : "font-inter text-sm font-bold mb-3"} style={{ color: "#F87171" }}>
+                  {T("There are no suitable timings remaining today.", "ഇന്ന് അനുയോജ്യമായ സമയങ്ങളൊന്നുമില്ല.", lang)}
+                </p>
+                {nextOpp && (
+                  <NextTimingCard nextOpp={nextOpp} astroClockKnowledge={astroClockKnowledge} lang={lang} />
+                )}
+              </>
+            )}
+          </div>
+
+          {/* ══ 6. TIMES TO AVOID TODAY ══ */}
+          {avoidWindows.length > 0 && (
+            <div className="rounded-xl p-4" style={{
+              background: "rgba(248,113,113,0.04)",
               border: "1px solid rgba(248,113,113,0.20)",
             }}>
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "rgba(248,113,113,0.80)" }} />
-              <p className="font-inter text-[11px] flex-1" style={{ color: "rgba(248,113,113,0.85)" }}>
-                {analysis.warnings[0]}
+              <div className="flex items-center gap-2 mb-3">
+                <Ban className="w-4 h-4" style={{ color: "#F87171" }} />
+                <h4 className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: "#F87171" }}>
+                  {T("Times to Avoid Today", "ഇന്ന് ഒഴിവാക്കേണ്ട സമയങ്ങൾ", lang)}
+                </h4>
+              </div>
+              <p className={lang === "ml" ? "font-malayalam text-xs mb-3" : "font-inter text-xs mb-3"} style={{ color: "rgba(255,255,255,0.60)" }}>
+                {T("Avoid:", "ഒഴിവാക്കുക:", lang)}
               </p>
+              <div className="space-y-2">
+                {avoidWindows.map((w, i) => {
+                  const saatNum = saatDisplayNum(w.hourNumber, w.period || (w.startTime ? "day" : "day"));
+                  const record = lookupAstroRecord(astroClockKnowledge, weekday, w.period || "day", w.hourNumber, w.planet);
+                  const explanation = getForbiddenExplanation(record, lang);
+                  return (
+                    <SaatCard
+                      key={i}
+                      saatNum={saatNum}
+                      startTime={w.startTime}
+                      endTime={w.endTime}
+                      planet={w.planet}
+                      period={w.period}
+                      explanation={explanation}
+                      color="#F87171"
+                      showReasonLabel
+                      lang={lang}
+                    />
+                  );
+                })}
+              </div>
             </div>
           )}
+
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          2. Ritual Purpose — canonical text from Purpose Meaning box
-         ═══════════════════════════════════════════════════════════════ */}
-      {exactPurpose && (
-        <div className="rounded-xl p-3" style={{
-          background: "linear-gradient(135deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.03) 100%)",
-          border: `1px solid ${G.border}`,
-        }}>
-          <div className="flex items-center gap-2 mb-1">
-            <Target className="w-4 h-4" style={{ color: G.text }} />
-            <span className="font-inter text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: G.text }}>
-              {tStr("ritualPurpose", lang)}
-            </span>
-          </div>
-          <p className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: "#fff" }}>
-            {exactPurpose}
-          </p>
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════
-          3. Collapsed Detail Sections — expand on demand only
-         ═══════════════════════════════════════════════════════════════ */}
-      <div className="space-y-2">
-
-        {/* ▼ Why? — Compliance Checklist (✓/✗ per condition) */}
-        <CollapsibleSection
-          icon={<CheckCircle2 className="w-4 h-4" />}
-          title={T("Why?", "എന്തുകൊണ്ട്?", lang)}
-        >
-          <ManuscriptComplianceChecklist analysis={analysis} lang={lang} />
-        </CollapsibleSection>
-
-        {/* ▼ Manuscript Rules & References — grouped by rule, sources listed once */}
-        {groupedRefs.length > 0 && (
-          <CollapsibleSection
-            icon={<BookOpen className="w-4 h-4" />}
-            title={T("Manuscript Rules & References", "ഗ്രന്ഥ നിയമങ്ങളും റഫറൻസുകളും", lang)}
-          >
-            <div className="space-y-2">
-              {groupedRefs.map((ref, i) => (
-                <div key={i} className="rounded-lg p-2.5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(212,175,55,0.15)" }}>
-                  <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>{ref.text}</p>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {ref.sources.map((src, j) => (
-                      <span key={j} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{
-                        background: "rgba(74,222,128,0.10)", color: "rgba(74,222,128,0.60)", border: "1px solid rgba(74,222,128,0.20)",
-                      }}>{src}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CollapsibleSection>
-        )}
-
-        {/* ▼ Warnings & Conflicts */}
-        {(analysis.warnings?.length > 0 || analysis.conflicts?.length > 0) && (
-          <CollapsibleSection
-            icon={<AlertTriangle className="w-4 h-4" />}
-            title={T("Warnings & Conflicts", "മുന്നറിയിപ്പുകളും ഭിന്നതകളും", lang)}
-          >
-            {analysis.warnings?.length > 0 && (
-              <div className="space-y-1 mb-2">
-                {analysis.warnings.map((w, i) => (
-                  <div key={i} className="flex items-start gap-2 rounded-lg p-2" style={{ background: "rgba(248,113,113,0.06)" }}>
-                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(248,113,113,0.70)" }} />
-                    <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>{w}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-            {analysis.conflicts?.length > 0 && (
-              <div className="space-y-1.5">
-                {analysis.conflicts.map((c, i) => (
-                  <div key={i} className="rounded-lg p-2" style={{ background: "rgba(249,168,212,0.06)", border: "1px solid rgba(249,168,212,0.20)" }}>
-                    <p className="font-inter text-[11px]" style={{ color: "#F9A8D4" }}>
-                      <span className="font-bold">{tStr("conflict", lang)}:</span> {c.rule1} vs {c.rule2}
-                    </p>
-                    <p className="font-inter text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>{tStr("resolution", lang)}: {c.resolution}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CollapsibleSection>
-        )}
-
-        {/* ▼ Alternative Time — next valid opportunity */}
-        {analysis.nextOpportunity && (
-          <CollapsibleSection
-            icon={<Sunset className="w-4 h-4" />}
-            title={T("Alternative Time", "ബദൽ സമയം", lang)}
-          >
-            <div className="rounded-lg p-2.5" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-inter text-sm font-bold" style={{ color: G.text }}>{analysis.nextOpportunity.dayName}</span>
-                {!analysis.nextOpportunity.isToday && (
-                  <span className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{ background: G.bgHi, color: G.dim }}>
-                    {analysis.nextOpportunity.daysAhead} {tStr("daysAway", lang)}
-                  </span>
-                )}
-              </div>
-              <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.60)" }}>
-                {analysis.nextOpportunity.startTime}–{analysis.nextOpportunity.endTime} · {analysis.nextOpportunity.planet} ({tStr("hour", lang)} #{analysis.nextOpportunity.hour})
-              </p>
-            </div>
-          </CollapsibleSection>
-        )}
-
-        {/* ▼ Today's Best Times */}
-        {analysis.bestWindowsToday?.length > 0 && (
-          <CollapsibleSection
-            icon={<Clock className="w-4 h-4" />}
-            title={T("Today's Best Times", "ഇന്നത്തെ മികച്ച സമയങ്ങൾ", lang)}
-          >
-            <ReportWindowsList windows={windowsSection?.windows || []} />
-          </CollapsibleSection>
-        )}
-
-        {/* ▼ Times to Avoid */}
-        {analysis.avoidWindowsToday?.length > 0 && (
-          <CollapsibleSection
-            icon={<Ban className="w-4 h-4" />}
-            title={T("Times to Avoid", "ഒഴിവാക്കേണ്ട സമയങ്ങൾ", lang)}
-          >
-            <div className="space-y-1">
-              {(avoidSection?.avoid || []).map((w, i) => (
-                <div key={i} className="flex items-center gap-2 rounded-lg p-2" style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.20)" }}>
-                  <Ban className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "rgba(248,113,113,0.70)" }} />
-                  <span className="font-inter text-xs font-bold" style={{ color: "rgba(248,113,113,0.90)" }}>{w.time} · {w.planet}</span>
-                  <span className="font-inter text-[10px] flex-1" style={{ color: "rgba(255,255,255,0.50)" }}>{w.reason}</span>
-                </div>
-              ))}
-            </div>
-            {avoidSection?.enemyAnalysis?.note && (
-              <div className="mt-2 rounded-lg p-2.5" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
-                <p className="font-inter text-[10px] mb-1.5" style={{ color: "rgba(248,113,113,0.70)" }}>{avoidSection.enemyAnalysis.note}</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {avoidSection.enemyAnalysis.enemyHours?.length > 0 && <EnemyItem label={tStr("enemyHours", lang)} values={avoidSection.enemyAnalysis.enemyHours} />}
-                  {avoidSection.enemyAnalysis.enemyDays?.length > 0 && <EnemyItem label={tStr("enemyDays", lang)} values={avoidSection.enemyAnalysis.enemyDays} />}
-                  {avoidSection.enemyAnalysis.enemyRulers?.length > 0 && <EnemyItem label={tStr("enemyRulers", lang)} values={avoidSection.enemyAnalysis.enemyRulers} />}
-                </div>
-              </div>
-            )}
-          </CollapsibleSection>
-        )}
-
-        {/* ▼ Technical Details — engine reasoning, separated from user information */}
-        <CollapsibleSection
-          icon={<Info className="w-4 h-4" />}
-          title={T("Technical Details", "സാങ്കേതിക വിവരങ്ങൾ", lang)}
-        >
-          <div className="space-y-1">
-            {analysis.reasoning.map((r, i) => (
-              <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
-                {i + 1}. {r}
-              </p>
-            ))}
-          </div>
-        </CollapsibleSection>
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════════
-          4. Configuration Advisor — how to improve (secondary)
-         ═══════════════════════════════════════════════════════════════ */}
-      <ConfigurationAdvisor advice={advice} lang={lang} setLang={setLang} purposeLookup={resolvedPurpose} />
-
-      {/* ═══════════════════════════════════════════════════════════════
-          5. Moon Analysis — optional, separate card
-         ═══════════════════════════════════════════════════════════════ */}
+      {/* ═══ MOON ANALYSIS (optional, separate) ═══ */}
       <MoonAnalysisCard
         moonPhase={rawAnalysis?.moonPhase}
         moonReq={rawAnalysis?.moonReq}
@@ -509,70 +508,145 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 // SUB-COMPONENTS
 // ═══════════════════════════════════════════════════════════════
 
-// ── Collapsible Section — ALL collapsed by default (defaultOpen=false) ──
-function CollapsibleSection({ icon, title, children }) {
-  const [open, setOpen] = useState(false);
+// ── Better Field Card — shows a failed field with its better value + reason ──
+function BetterFieldCard({ icon, label, value, reason, lang }) {
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(212,175,55,0.15)" }}>
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2.5 p-3 text-left">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-          <div style={{ color: G.dim }}>{icon}</div>
+    <div className="rounded-xl p-3" style={{
+      background: "rgba(251,191,36,0.06)",
+      border: "1px solid rgba(251,191,36,0.25)",
+    }}>
+      <div className="flex items-center gap-2 mb-1">
+        <div style={{ color: "#FBBF24" }}>{icon}</div>
+        <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#FBBF24" }}>
+          {label}
+        </span>
+      </div>
+      {value && (
+        <p className="font-inter text-sm font-bold mb-1" style={{ color: "#fff" }}>{value}</p>
+      )}
+      {reason && (
+        <div className="mt-1 rounded-lg p-2" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.65)" }}>
+            <span className="font-bold" style={{ color: "rgba(251,191,36,0.80)" }}>
+              {lang === "ml" ? "കാരണം: " : "Reason: "}
+            </span>
+            {reason}
+          </p>
         </div>
-        <h4 className="font-inter text-xs font-bold uppercase tracking-wider flex-1" style={{ color: G.text }}>{title}</h4>
-        <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform" style={{ color: G.dim, transform: open ? "rotate(180deg)" : "none" }} />
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 pl-12">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      )}
     </div>
   );
 }
 
-// ── State Item — compact label/value pair for manuscript state grid ──
-function StateItem({ label, value, color }) {
+// ── Saat Card — a single Saat with its time, planet, and explanation ──
+function SaatCard({ saatNum, startTime, endTime, planet, period, explanation, color, showReasonLabel, lang }) {
+  const periodLabel = period === "night"
+    ? T("Night", "രാത്രി", lang)
+    : period === "day"
+    ? T("Day", "പകൽ", lang)
+    : "";
+
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(255,255,255,0.30)" }}>
-        {label}
-      </span>
-      <span className="font-inter text-sm font-bold" style={{ color: color || "rgba(255,255,255,0.80)" }}>
-        {value}
-      </span>
+    <div className="rounded-lg p-3" style={{
+      background: `${color}0A`,
+      border: `1px solid ${color}33`,
+    }}>
+      <div className="flex items-center gap-2 mb-1 flex-wrap">
+        <span className="font-inter text-sm font-bold" style={{ color }}>
+          {saatNum}{ordinal(saatNum, lang)} {T("Saat", "സഅാത്", lang)}
+        </span>
+        <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+          {startTime}–{endTime} · {tPlanet(planet, lang)}{periodLabel ? ` · ${periodLabel}` : ""}
+        </span>
+      </div>
+      {explanation && (
+        <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.65)" }}>
+          {showReasonLabel && (
+            <span className="font-bold" style={{ color: `${color}cc` }}>
+              {lang === "ml" ? "കാരണം: " : "Reason: "}
+            </span>
+          )}
+          {explanation}
+        </p>
+      )}
     </div>
   );
 }
 
-// ── Summary Line — single line in the recommendation summary ──
-function SummaryLine({ icon, label, value, color }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      <div style={{ color: color || G.dim }} className="flex-shrink-0">{icon}</div>
-      <span className="font-inter text-[10px] uppercase tracking-wider font-bold flex-shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>
-        {label}
-      </span>
-      <span className="font-inter text-sm font-bold flex-1" style={{ color: color || "rgba(255,255,255,0.80)" }}>
-        {value}
-      </span>
-    </div>
+// ── Next Timing Card — shows the next available timing with explanation ──
+function NextTimingCard({ nextOpp, astroClockKnowledge, lang }) {
+  const oppWeekday = DAY_NAME_TO_INDEX[nextOpp.dayName] ?? 0;
+  const oppSaatNum = saatDisplayNum(nextOpp.hour, nextOpp.period);
+  const record = lookupAstroRecord(
+    astroClockKnowledge,
+    oppWeekday,
+    nextOpp.period,
+    nextOpp.hour,
+    nextOpp.planet
   );
-}
+  const explanation = getRecordExplanation(record, lang);
+  const periodLabel = nextOpp.period === "night"
+    ? T("Night", "രാത്രി", lang)
+    : T("Day", "പകൽ", lang);
 
-function EnemyItem({ label, values }) {
-  if (!values || values.length === 0) return null;
   return (
-    <div>
-      <p className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.60)" }}>{label}</p>
-      <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>{values.join(', ')}</p>
+    <div className="rounded-lg p-3" style={{
+      background: "rgba(212,175,55,0.06)",
+      border: "1px solid rgba(212,175,55,0.25)",
+    }}>
+      <div className="flex items-center gap-2 mb-2">
+        <Sunset className="w-4 h-4" style={{ color: G.text }} />
+        <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: G.text }}>
+          {T("Next Available Timing", "അടുത്ത ലഭ്യമായ സമയം", lang)}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+            {T("Day", "ദിവസം", lang)}
+          </p>
+          <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
+            {tDay(nextOpp.dayName, lang)}
+            {!nextOpp.isToday && (
+              <span className="font-inter text-[10px] ml-1" style={{ color: G.dim }}>
+                ({nextOpp.daysAhead} {T("days away", "ദിവസം അകലെ", lang)})
+              </span>
+            )}
+          </p>
+        </div>
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+            {T("Saat", "സഅാത്", lang)}
+          </p>
+          <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
+            {oppSaatNum}{ordinal(oppSaatNum, lang)} {T("Saat", "സഅാത്", lang)}
+          </p>
+        </div>
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+            {T("Layl/Nahar", "ലൈൽ/നഹർ", lang)}
+          </p>
+          <p className="font-inter text-sm font-bold" style={{ color: G.text }}>{periodLabel}</p>
+        </div>
+        <div>
+          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+            {T("Time", "സമയം", lang)}
+          </p>
+          <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
+            {nextOpp.startTime}–{nextOpp.endTime}
+          </p>
+        </div>
+      </div>
+      {explanation && (
+        <div className="mt-2 rounded-lg p-2" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.65)" }}>
+            <span className="font-bold" style={{ color: "rgba(212,175,55,0.80)" }}>
+              {lang === "ml" ? "കാരണം: " : "Reason: "}
+            </span>
+            {explanation}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
