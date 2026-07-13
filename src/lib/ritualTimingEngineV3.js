@@ -108,6 +108,12 @@ function purposeInForbidden(record, ritualKey) {
   return record.forbidden_actions.some(a => purposeMatchesAction(ritualKey, a.en));
 }
 
+// Check if any of the record's friendship_actions match the purpose
+function purposeInFriendship(record, ritualKey) {
+  if (!record?.friendship_actions) return false;
+  return record.friendship_actions.some(a => purposeMatchesAction(ritualKey, a.en));
+}
+
 // Check if the ritual_suitability text indicates an evil/malefic/forbidden context
 function isEvilContext(record) {
   const s = (record?.ritual_suitability || "").toLowerCase();
@@ -185,9 +191,12 @@ function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
 
     const inRec = purposeInRecommended(r, ritualKey);
     const inForb = purposeInForbidden(r, ritualKey);
+    const inFriend = purposeInFriendship(r, ritualKey);
     const inEnemy = r.enemy_actions?.some(a => purposeMatchesAction(ritualKey, a.en)) || false;
 
-    if (inRec) {
+    // Friendship actions are positive recommendations — same as recommended_actions.
+    // They MUST contribute to goodDays/goodHours so the context is marked compatible.
+    if (inRec || inFriend) {
       goodDays.add(dayKey);
       goodHours.add(planet);
       if (period === "day") nightOnly = false;
@@ -202,14 +211,14 @@ function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
     }
 
     // Collect citations from matching records
-    if (inRec || inForb || inEnemy) {
+    if (inRec || inForb || inFriend || inEnemy) {
       const source = r.source_book_title || "Astrology Clock";
       citations.push({
         rule_id: r.knowledge_id,
         source,
         summary: r.ritual_suitability || r.knowledge_text_en?.substring(0, 120) || "",
         category: "ASTRO_CLOCK",
-        field: inRec ? "recommended" : inForb ? "forbidden" : "enemy",
+        field: inRec ? "recommended" : inForb ? "forbidden" : inFriend ? "friendship" : "enemy",
       });
     }
     // ── DECISION ENGINE: Collect individual rule references ──
@@ -243,7 +252,7 @@ function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
         weekday, period, saat_number: r.saat_number, planet: r.planet,
       });
     }
-    if (r.friendship_actions?.some(a => purposeMatchesAction(ritualKey, a.en))) {
+    if (inFriend) {
       const friendActions = (r.friendship_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
       matchingRules.push({
         rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock",
@@ -447,6 +456,12 @@ function moonSatisfied(moonReq, lunarDay) {
 // Searches: today remaining hours → tonight → next days → next valid day.
 // ═══════════════════════════════════════════════════════════════
 function findEarliestValidTime(req, fromDate) {
+  // NO-DATA GUARD: If no restrictions exist at all (no data for this purpose),
+  // return null — never fabricate a "valid" time from the absence of rules.
+  const hasAnyRestriction = req.days || req.hours || req.worstDays || req.worstHours ||
+    (req.enemyPlanets && req.enemyPlanets.length > 0) || req.nightRequired === true;
+  if (!hasAnyRestriction) return null;
+
   const SEARCH_DAYS = 14;
   for (let d = 0; d < SEARCH_DAYS; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
@@ -569,17 +584,14 @@ function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKe
     const dayName = selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected";
     const dayOk = !req.days || (selectedDay && req.days.includes(selectedDay));
     if (selectedDay && !dayOk && req.days) allPass = false;
-    const dayContextRecords = astroClockKnowledge?.filter(r => r.weekday === weekday && purposeInRecommended(r, ritualKey)) || [];
-    const daySuitableForPurpose = dayContextRecords.length > 0;
+    const dayContextRecords = astroClockKnowledge?.filter(r => r.weekday === weekday && (purposeInRecommended(r, ritualKey) || purposeInFriendship(r, ritualKey))) || [];
     breakdown.push({
       dimension: "weekday", label: "Weekday",
       currentValue: dayName,
       status: !selectedDay ? "neutral" : dayOk ? "pass" : (purposeForb && !purposeRec) ? "fail" : "neutral",
       reason: originalSuitability
         ? `${originalSuitability.split(/\n---\n/)[0] || originalSuitability}`
-        : daySuitableForPurpose
-          ? `${dayName} is suitable for this purpose per the Astrology Clock.`
-          : `No Astrology Clock data for ${dayName} and this purpose.`,
+        : "",
       reasonMl: originalExplanationMl || "",
       source: sourceLabel,
       recommended: dayOk ? null : (req.days?.map(d => MIZAN_DAY_NAMES[d]).join(" or ") || null),
@@ -597,11 +609,7 @@ function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKe
       status: !selectedHour ? "neutral" : hourOk ? "pass" : "fail",
       reason: originalExplanation
         ? originalExplanation.split(/\n---\n/)[0] || originalExplanation
-        : purposeRec
-          ? `This Saat is ruled by ${hourPlanet}. The Astrology Clock recommends it for this purpose.`
-          : purposeForb
-            ? `This Saat is ruled by ${hourPlanet}. The Astrology Clock marks it as forbidden for this purpose.`
-            : `Saat #${selectedHour} (${hourPlanet}). No specific Astrology Clock data for this purpose.`,
+        : "",
       reasonMl: originalExplanationMl || "",
       source: sourceLabel,
       recommended: hourOk ? null : (req.hours?.join(" or ") || null),
@@ -619,7 +627,7 @@ function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKe
       status: !dayNight ? "neutral" : dnOk ? "pass" : "fail",
       reason: req.nightRequired === true
         ? `The Astrology Clock requires this work at Night (Layl). ${originalSuitability ? originalSuitability.split(/\n---\n/)[0] : ""}`
-        : `${periodText}. ${originalSuitability ? originalSuitability.split(/\n---\n/)[0] : "No night restriction in the Astrology Clock."}`,
+        : (originalSuitability ? `${periodText}. ${originalSuitability.split(/\n---\n/)[0]}` : ""),
       reasonMl: originalExplanationMl || "",
       source: sourceLabel,
       recommended: dnOk ? null : "Night (Layl)",
@@ -638,9 +646,7 @@ function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKe
       status: isEnemy ? "fail" : "pass",
       reason: enemyText
         ? `Astrology Clock: ${enemyText}`
-        : isEnemy
-          ? `${selectedPlanetEn} is an enemy planet for this purpose per the Astrology Clock.`
-          : `No enemy relationship for this planet in the Astrology Clock.`,
+        : "",
       reasonMl: originalEnemy.map(a => a.ml).filter(Boolean).join("; "),
       source: sourceLabel,
       recommended: isEnemy ? (req.hours?.[0] || "See recommended Saat") : null,
@@ -657,7 +663,7 @@ function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKe
       status: "fail",
       reason: forbiddenText
         ? `Astrology Clock: ${forbiddenText}`
-        : originalSuitability || "This timing is forbidden by the Astrology Clock.",
+        : (originalSuitability || ""),
       reasonMl: originalForbidden.map(a => a.ml).filter(Boolean).join("; "),
       source: sourceLabel,
       recommended: req.days?.map(d => MIZAN_DAY_NAMES[d]).join(" or ") || "See recommended timing",
@@ -845,8 +851,14 @@ function buildDecisionAnalysis({
   const currentPlanet = String(currentHourInfo?.planet || kawkab || "").toLowerCase();
   const currentDayKey = DAY_KEY_BY_INDEX[weekday];
 
+  // ── NO-DATA RULE ──
+  // If no AstroClockKnowledge or ManuscriptRule records matched this purpose,
+  // the context is NOT compatible — never "Suitable" without supporting data.
+  const hasData = (matchingRules?.length > 0) || (conflictingRules?.length > 0);
+
   // ── Combined compatibility — ALL dimensions together ──
-  const isFullyCompatible = isContextFullyCompatible(req, currentDayKey, currentPlanet, period);
+  // If no data exists, isFullyCompatible is false (not vacuously true).
+  const isFullyCompatible = hasData && isContextFullyCompatible(req, currentDayKey, currentPlanet, period);
 
   // ── FILTER: only records for the EXACT current context ──
   // Decision → Filter → UI. Never dump all matching records.
@@ -865,16 +877,16 @@ function buildDecisionAnalysis({
   const rejectionReasons = [];
   const acceptanceReasons = [];
 
-  if (contextConflictingRules.length > 0) {
-    const rule = contextConflictingRules[0];
+  // Show ALL context-specific rejection reasons — never just the first.
+  for (const rule of contextConflictingRules) {
     if (rule.text_en || rule.text_ml) {
       rejectionReasons.push({
         text_en: rule.text_en, text_ml: rule.text_ml,
       });
     }
   }
-  if (contextMatchingRules.length > 0) {
-    const rule = contextMatchingRules[0];
+  // Show ALL context-specific acceptance reasons — never just the first.
+  for (const rule of contextMatchingRules) {
     if (rule.text_en || rule.text_ml) {
       acceptanceReasons.push({
         text_en: rule.text_en, text_ml: rule.text_ml,
@@ -893,7 +905,7 @@ function buildDecisionAnalysis({
   let nextLayl = null;
   let nextDay = null;
 
-  if (!isFullyCompatible) {
+  if (!isFullyCompatible && hasData) {
     // 1. Remaining Saat today — check ENTIRE context compatibility
     for (const h of todayHours) {
       if (h.status === "past") continue;
@@ -1068,8 +1080,13 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const currentMomentSuitable = currentHourOk && currentDayOk && currentNightOk && currentNotEnemy && currentNotWorst && currentNotWorstDay;
 
   // ── Can perform today? ──
+  // NO-DATA RULE: If no AstroClockKnowledge records matched this purpose,
+  // canPerformToday is "No" — never "Yes" or "Limited".
   let canPerformToday = "No";
-  if (currentMomentSuitable) canPerformToday = "Yes";
+  if (dbRuleCount === 0 && msRules.matching.length === 0 && msRules.conflicting.length === 0) {
+    canPerformToday = "No";
+  }
+  else if (currentMomentSuitable) canPerformToday = "Yes";
   else {
     // search remaining today
     const todayRemaining = todayHours.filter((h) => h.status !== "past");
@@ -1084,12 +1101,14 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   }
 
   // ── Today's windows (rule-matched, star-rated) ──
+  // NO-DATA GUARD: Only populate windows if the Astro Clock has data for this purpose.
+  const hasTimingData = !!(req.hours || req.worstHours || req.worstDays || req.enemyPlanets?.length || req.days || req.nightRequired);
   const bestWindowsToday = [];
   const avoidWindowsToday = [];
   const passedWindowsToday = [];
   for (const h of todayHours) {
     const planetLC = h.planet;
-    const isBest = !req.hours || req.hours.map((p) => p.toLowerCase()).includes(planetLC);
+    const isBest = hasTimingData && (!req.hours || req.hours.map((p) => p.toLowerCase()).includes(planetLC));
     const isWorst = (req.worstHours && req.worstHours.map((p) => p.toLowerCase()).includes(planetLC)) ||
                     (req.enemyPlanets && req.enemyPlanets.map((p) => p.toLowerCase()).includes(planetLC));
     if (h.status === "past") {
@@ -1153,23 +1172,31 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   let verdict, verdictColor, verdictReason;
   // Only THREE verdicts: Suitable, Partially Suitable, Not Suitable.
   // "Forbidden" is mapped to "Not Suitable" — no other verdicts exist.
-  if (selectionAnalysis?.forbidden) {
+  // NO-DATA RULE: If no AstroClockKnowledge records matched this purpose
+  // (dbRuleCount === 0), the verdict is "Not Suitable" — never "Suitable."
+  // The engine must never approve a context when no data supports it.
+  const noDataForPurpose = dbRuleCount === 0 && (msRules.matching.length === 0 && msRules.conflicting.length === 0);
+  if (noDataForPurpose) {
+    verdict = "Not Suitable"; verdictColor = "#F87171";
+    verdictReason = "No timing data found for this purpose in the Astrology Clock.";
+  }
+  else if (selectionAnalysis?.forbidden) {
     verdict = "Not Suitable"; verdictColor = "#F87171";
     verdictReason = selectionAnalysis.originalSuitability
       || (failedItems.find(b => b.dimension === "forbidden")?.reason)
-      || "The Astrology Clock marks this timing as not suitable for this purpose.";
+      || "";
   }
   else if (selectionAnalysis?.suitable) {
     verdict = "Suitable"; verdictColor = "#4ADE80";
     verdictReason = selectionAnalysis.originalSuitability
       || (passedItems.length > 0 ? passedItems.map(p => p.reason).join(" ") : "")
-      || "The Astrology Clock confirms this timing is suitable for your purpose.";
+      || "";
   }
   else {
     verdict = "Not Suitable"; verdictColor = "#F87171";
     verdictReason = selectionAnalysis.originalSuitability
       || (failedItems.length > 0 ? failedItems.map(f => f.reason).join(" ") : "")
-      || "The Astrology Clock does not recommend this timing for your purpose.";
+      || "";
   }
 
   // ── Warnings from the Astrology Clock's warnings_list (original text) ──

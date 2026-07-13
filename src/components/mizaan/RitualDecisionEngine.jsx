@@ -206,8 +206,8 @@ export default function RitualDecisionEngine({
   // Never dump all matching/conflicting rules. The engine already filtered
   // these to only records for the EXACT current context (same weekday +
   // period + saat). At most ONE short reason and ONE short rejection reason.
-  const supportedReason = (currentSaatAnalysis.acceptanceReasons || [])[0] || null;
-  const rejectionReason = (currentSaatAnalysis.rejectionReasons || [])[0] || null;
+  const supportedReasons = currentSaatAnalysis.acceptanceReasons || [];
+  const rejectionReasons = currentSaatAnalysis.rejectionReasons || [];
   // ── Single best alternative (priority: saat → layl/nahar) ──
   // nextDay is NEVER recommended — it only checks the day dimension,
   // not the full context. The engine recommends ONLY fully compatible
@@ -412,9 +412,10 @@ export default function RitualDecisionEngine({
             </div>
           </div>
 
-          {/* Short Database-Based Reason (one only, context-specific) */}
-          {supportedReason && (
+          {/* Database-Based Acceptance Reasons (all context-specific) */}
+          {supportedReasons.map((reason, idx) => (
             <div
+              key={`acc-${idx}`}
               className="rounded-lg p-3"
               style={{
                 background: "rgba(74,222,128,0.06)",
@@ -425,21 +426,22 @@ export default function RitualDecisionEngine({
                 <Shield className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#4ADE80" }} />
                 <p
                   className={
-                    lang === "ml" && supportedReason.text_ml
+                    lang === "ml" && reason.text_ml
                       ? "font-malayalam text-xs leading-relaxed"
                       : "font-inter text-xs leading-relaxed"
                   }
                   style={{ color: "rgba(255,255,255,0.75)" }}
                 >
-                  {lang === "ml" && supportedReason.text_ml ? supportedReason.text_ml : supportedReason.text_en}
+                  {lang === "ml" && reason.text_ml ? reason.text_ml : reason.text_en}
                 </p>
               </div>
             </div>
-          )}
+          ))}
 
-          {/* Short Rejection Reason (one only, context-specific) */}
-          {rejectionReason && (
+          {/* Database-Based Rejection Reasons (all context-specific) */}
+          {rejectionReasons.map((reason, idx) => (
             <div
+              key={`rej-${idx}`}
               className="rounded-lg p-3"
               style={{
                 background: "rgba(248,113,113,0.06)",
@@ -450,17 +452,17 @@ export default function RitualDecisionEngine({
                 <Swords className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#F87171" }} />
                 <p
                   className={
-                    lang === "ml" && rejectionReason.text_ml
+                    lang === "ml" && reason.text_ml
                       ? "font-malayalam text-xs leading-relaxed"
                       : "font-inter text-xs leading-relaxed"
                   }
                   style={{ color: "rgba(255,255,255,0.75)" }}
                 >
-                  {lang === "ml" && rejectionReason.text_ml ? rejectionReason.text_ml : rejectionReason.text_en}
+                  {lang === "ml" && reason.text_ml ? reason.text_ml : reason.text_en}
                 </p>
               </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
 
