@@ -871,7 +871,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
       });
     }
     if (isWorst) {
-      avoidWindowsToday.push({ startTime: h.startTime, endTime: h.endTime, planet: capitalPlanet(planetLC), hourNumber: h.hourNumber, reason: "enemy/worst planet per manuscript" });
+      avoidWindowsToday.push({ startTime: h.startTime, endTime: h.endTime, planet: capitalPlanet(planetLC), hourNumber: h.hourNumber, period: h.period, reason: "enemy/worst planet per manuscript" });
     }
   }
 
