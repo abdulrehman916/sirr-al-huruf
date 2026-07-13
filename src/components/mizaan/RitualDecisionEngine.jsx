@@ -399,7 +399,7 @@ export default function RitualDecisionEngine({
             </div>
           </div>
 
-          {/* Matching Rules */}
+          {/* Supported Reasons */}
           {matchingRules.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -412,21 +412,8 @@ export default function RitualDecisionEngine({
                   }
                   style={{ color: "#4ADE80" }}
                 >
-                  {T(
-                    "MATCHING RULES (Supporting)",
-                    "ചേർന്ന നിയമങ്ങൾ (പിന്തുണ)",
-                    lang
-                  )}
+                  {T("SUPPORTED REASONS", "പിന്തുണയ്ക്കുന്ന കാരണങ്ങൾ", lang)}
                 </h4>
-                <span
-                  className="font-inter text-[10px] px-2 py-0.5 rounded"
-                  style={{
-                    background: "rgba(74,222,128,0.15)",
-                    color: "#4ADE80",
-                  }}
-                >
-                  {matchingRules.length}
-                </span>
               </div>
               <div className="space-y-2">
                 {matchingRules.map((rule, i) => (
@@ -436,7 +423,7 @@ export default function RitualDecisionEngine({
             </div>
           )}
 
-          {/* Conflicting Rules */}
+          {/* Rejection Reasons */}
           {conflictingRules.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -449,53 +436,14 @@ export default function RitualDecisionEngine({
                   }
                   style={{ color: "#F87171" }}
                 >
-                  {T(
-                    "CONFLICTING RULES (Rejecting)",
-                    "വൈരുദ്ധ്യ നിയമങ്ങൾ (നിരസനം)",
-                    lang
-                  )}
+                  {T("REJECTION REASONS", "നിരസന കാരണങ്ങൾ", lang)}
                 </h4>
-                <span
-                  className="font-inter text-[10px] px-2 py-0.5 rounded"
-                  style={{
-                    background: "rgba(248,113,113,0.15)",
-                    color: "#F87171",
-                  }}
-                >
-                  {conflictingRules.length}
-                </span>
               </div>
               <div className="space-y-2">
                 {conflictingRules.map((rule, i) => (
                   <RuleCard key={i} rule={rule} type="conflicting" lang={lang} />
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* No rules found */}
-          {matchingRules.length === 0 && conflictingRules.length === 0 && (
-            <div
-              className="rounded-xl p-3"
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              <p
-                className={
-                  lang === "ml"
-                    ? "font-malayalam text-xs"
-                    : "font-inter text-xs"
-                }
-                style={{ color: "rgba(255,255,255,0.50)" }}
-              >
-                {T(
-                  "No matching or conflicting rules found in the database for this purpose. The engine has no data to analyze.",
-                  "ഈ ലക്ഷ്യത്തിന് ഡാറ്റാബേസിൽ ചേർന്ന അല്ലെങ്കിൽ വൈരുദ്ധ്യ നിയമങ്ങളൊന്നുമില്ല. വിശകലനം ചെയ്യാൻ ഡാറ്റയില്ല.",
-                  lang
-                )}
-              </p>
             </div>
           )}
         </div>
@@ -899,18 +847,10 @@ export default function RitualDecisionEngine({
 // SUB-COMPONENTS
 // ═══════════════════════════════════════════════════════════════
 
-// ── Rule Card — displays a matching or conflicting rule ──
+// ── Rule Card — displays a supported or rejection reason (user-facing text only) ──
 function RuleCard({ rule, type, lang }) {
-  const [expanded, setExpanded] = useState(false);
   const color = type === "matching" ? "#4ADE80" : "#F87171";
   const Icon = type === "matching" ? Shield : Swords;
-
-  const contextStr =
-    rule.weekday != null
-      ? `Day ${rule.weekday}, ${rule.period || ""}, Saat ${
-          rule.saat_number || ""
-        }, ${rule.planet || ""}`
-      : rule.category || "";
 
   return (
     <div
@@ -920,28 +860,11 @@ function RuleCard({ rule, type, lang }) {
         border: `1px solid ${color}25`,
       }}
     >
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left"
-      >
-        <div className="flex items-center gap-2 mb-1">
-          <Icon
-            className="w-3.5 h-3.5 flex-shrink-0"
-            style={{ color }}
-          />
-          <span
-            className="font-inter text-[10px] uppercase tracking-wider font-bold"
-            style={{ color }}
-          >
-            {rule.field}
-          </span>
-          <span
-            className="font-inter text-[10px]"
-            style={{ color: "rgba(255,255,255,0.40)" }}
-          >
-            {rule.source}
-          </span>
-        </div>
+      <div className="flex items-start gap-2">
+        <Icon
+          className="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
+          style={{ color }}
+        />
         <p
           className={
             lang === "ml" && rule.text_ml
@@ -952,38 +875,7 @@ function RuleCard({ rule, type, lang }) {
         >
           {lang === "ml" && rule.text_ml ? rule.text_ml : rule.text_en}
         </p>
-      </button>
-      {expanded && (
-        <div
-          className="mt-2 pt-2 border-t"
-          style={{ borderColor: `${color}20` }}
-        >
-          {rule.rule_id && (
-            <p
-              className="font-inter text-[10px]"
-              style={{ color: "rgba(255,255,255,0.40)" }}
-            >
-              ID: {rule.rule_id}
-            </p>
-          )}
-          {contextStr && (
-            <p
-              className="font-inter text-[10px]"
-              style={{ color: "rgba(255,255,255,0.40)" }}
-            >
-              {T("Context", "സന്ദർഭം", lang)}: {contextStr}
-            </p>
-          )}
-          {rule.text_en && lang === "ml" && rule.text_ml && (
-            <p
-              className="font-inter text-[10px] mt-1"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-            >
-              EN: {rule.text_en}
-            </p>
-          )}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -1038,14 +930,6 @@ function ReasonCard({ reason, type, lang }) {
           {reason.reason}
         </p>
       </div>
-      {reason.rule_id && (
-        <p
-          className="font-inter text-[9px] mt-1"
-          style={{ color: "rgba(255,255,255,0.30)" }}
-        >
-          {T("Rule", "നിയമം", lang)}: {reason.rule_id} · {reason.source}
-        </p>
-      )}
     </div>
   );
 }
@@ -1103,14 +987,6 @@ function BetterSaatCard({ saat, lang }) {
               >
                 {w.reason}
               </p>
-              {w.rule_id && (
-                <p
-                  className="font-inter text-[9px] mt-0.5"
-                  style={{ color: "rgba(255,255,255,0.30)" }}
-                >
-                  {T("Rule", "നിയമം", lang)}: {w.rule_id} · {w.source}
-                </p>
-              )}
             </div>
           ))}
         </div>
