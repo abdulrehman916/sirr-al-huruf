@@ -66,13 +66,13 @@ const ML_STATUS = {
   Yes: "അതെ", No: "ഇല്ല", Limited: "പരിമിതം",
   Suitable: "അനുയോജ്യം", "Not suitable": "അനുയോജ്യമല്ല",
   Excellent: "അത്യുത്തം", Good: "നല്ലത്", Moderate: "മിതമായത്",
-  Weak: "ദുർബലം", Avoid: "ഒഴിവാക്കുക",
+  Weak: "ദുർബലം", Avoid: "ഒഴിവാക്കുക", Forbidden: "നിരോധിതം",
   "None remaining": "ബാക്കിയില്ല", "None identified": "ഒന്നുമില്ല",
 };
 
 const ML_VERDICT = {
   Excellent: "അത്യുത്തം", Good: "നല്ലത്", Moderate: "മിതമായത്",
-  Weak: "ദുർബലം", Avoid: "ഒഴിവാക്കുക",
+  Weak: "ദുർബലം", Avoid: "ഒഴിവാക്കുക", Forbidden: "നിരോധിതം",
 };
 
 const ML_SECTION_TITLE = {
@@ -553,6 +553,7 @@ const ML_VERDICT_REASON = {
   Moderate: "മിശ്രിത വ്യവസ്ഥകൾ — ശ്രദ്ധയോടെ മുന്നോട്ടുപോകുക.",
   Weak: "കൈയെഴുത്തുപ്രതി പ്രകാരം വ്യവസ്ഥകൾ പ്രതികൂലമാണ്.",
   Avoid: "ഒന്നിലധികം പ്രതികൂല വ്യവസ്ഥകൾ.",
+  Forbidden: "ഗ്രന്ഥപ്രകാരം ഈ സമയം വിലക്കപ്പെട്ടതാണ്.",
 };
 const ML_KHAYR_SHARR = {
   "khayr": "ഖൈർ",
