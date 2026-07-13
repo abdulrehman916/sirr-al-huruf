@@ -71,8 +71,9 @@ const ML_STATUS = {
 };
 
 const ML_VERDICT = {
+  Suitable: "അനുയോജ്യം", "Not Suitable": "അനുയോജ്യമല്ല", Forbidden: "നിരോധിതം",
   Excellent: "അത്യുത്തം", Good: "നല്ലത്", Acceptable: "സ്വീകാര്യം",
-  Weak: "ദുർബലം", "Not Recommended": "ശുപാർശിക്കുന്നില്ല", Forbidden: "നിരോധിതം",
+  Weak: "ദുർബലം", "Not Recommended": "ശുപാർശിക്കുന്നില്ല",
 };
 
 const ML_SECTION_TITLE = {
@@ -373,7 +374,6 @@ function mlBody(section, analysis) {
   const nextOp = a?.nextOpportunity;
   const nextMoon = a?.nextMoonPhase;
   const verdict = tVerdict(a?.verdict, "ml");
-  const score = a?.confidenceScore;
 
   switch (section.section) {
     case "TODAY ANALYSIS": {
@@ -409,7 +409,7 @@ function mlBody(section, analysis) {
         ? `ഇന്നത്തെ അവസരം കഴിഞ്ഞതോ അനുയോജ്യമല്ലെങ്കിൽ, അടുത്ത ഉത്തമ സമയം: ${tDay(nextOp.dayName, "ml")}${nextOp.isToday ? " (ഇന്ന്)" : ` (${nextOp.daysAhead} ദിവസം അകലെ)`}, ${nextOp.startTime}–${nextOp.endTime} (${tPlanet(nextOp.planet, "ml")} മണിക്കൂർ, #${nextOp.hour}). ${nextMoon ? `ചന്ദ്രദശ: ${nextMoon.phase} — ${nextMoon.reason}${nextMoon.waitDays > 0 ? ` (ഏകദേശം ${nextMoon.waitDays} ദിവസം കാത്തിരിക്കാൻ).` : " (ഇപ്പോൾ ലഭ്യം)."}` : ""}`
         : `അടുത്ത 7 ദിവസത്തിനുള്ളിൽ ഭാവി അവസരമൊന്നും കണ്ടെത്തിയില്ല. ${nextMoon ? `ചന്ദ്രദശ: ${nextMoon.phase} — ${nextMoon.reason}` : ""} ബദൽ ദിവസങ്ങൾക്കായി ഗ്രന്ഥങ്ങൾ കാണുക.`;
     case "ASTRO ANALYSIS":
-      return `ഇന്ന് ${day}, ഭരണം ${dayRuler}. നിലവിലെ ഗ്രഹ മണിക്കൂർ #${curHour} (${curPlanet}), ${isNight ? "രാത്രി" : "പകൽ"}, ${remaining} ബാക്കി. ചന്ദ്രൻ ദിവസം ${moonDay} (${phaseName}). മൊത്തത്തിലുള്ള ഖഗോള ശക്തി: ${verdict} (${score}%).`;
+      return `ഇന്ന് ${day}, ഭരണം ${dayRuler}. നിലവിലെ ഗ്രഹ മണിക്കൂർ #${curHour} (${curPlanet}), ${isNight ? "രാത്രി" : "പകൽ"}, ${remaining} ബാക്കി. ചന്ദ്രൻ ദിവസം ${moonDay} (${phaseName}). മൊത്തത്തിലുള്ള ഖഗോള വിലയിരുത്തൽ: ${verdict}.`;
     case "MANUSCRIPT EXPLANATION":
       return `മുകളിലുള്ള ഓരോ ശുപാർശയും ഇറക്കുമതി ചെയ്ത ഗ്രന്ഥങ്ങളിൽ അധിഷ്ഠിതമാണ്. ${a.ritualType ? `നിങ്ങളുടെ കർമ്മം ${a.ritualType} ആയി വർഗ്ഗീകരിച്ചിരിക്കുന്നു.` : ""} പ്രയോഗിച്ച നിയമങ്ങളുടെ പൂർണ്ണ പട്ടിക താഴെ കാണാം.`;
     case "WARNING SECTION":
@@ -437,7 +437,7 @@ function tConsequence(c, section, analysis, lang) {
     "ASTRO ANALYSIS": "മൊത്തത്തിലുള്ള ഖഗോള ശക്തി എല്ലാ വ്യവസ്ഥകളുടെയും — ദിവസം, മണിക്കൂർ, ചന്ദ്രൻ, മൂലകം, രാശി — സംയോജനമാണ്.",
     "MANUSCRIPT EXPLANATION": "ഓരോ നിയമവും അതിന്റെ ഉറവിട ഗ്രന്ഥത്തിന്റെ അധികാരം വഹിക്കുന്നു. അവഗണിക്കുന്നത് പാരമ്പര്യത്തിന് വിരുദ്ധമാണ്; പണ്ഡിതർ ഇത് പരാജയത്തിനോ പ്രതിഫലനത്തിനോ കാരണമാകുമെന്ന് മുന്നറിയിക്കുന്നു.",
     "WARNING SECTION": "ഓരോ മുന്നറിയിപ്പും അവഗണിച്ചാൽ കർമ്മത്തിന്റെ ശക്തി കുറയ്ക്കുകയോ തിരിച്ചു വിടുകയോ ചെയ്യുന്ന ഒരു വ്യവസ്ഥയെ സൂചിപ്പിക്കുന്നു.",
-    "FINAL DECISION": a => a?.confidenceScore >= 70 ? "കർമ്മം ശക്തമാണ് — ആത്മവിശ്വാസത്തോടെ മുന്നോട്ടുപോകുക." : a?.confidenceScore >= 50 ? "കർമ്മം മിതമാണ് — അധിക ശ്രദ്ധയോടെയും കൃത്യമായ സമയപാലനത്തോടെയും മുന്നോട്ടുപോകുക." : "കർമ്മം ദുർബലമാണ് — സാധ്യമെങ്കിൽ മാറ്റിവെക്കുക.",
+    "FINAL DECISION": a => a?.verdict === "Suitable" ? "കർമ്മം ശക്തമാണ് — ആത്മവിശ്വാസത്തോടെ മുന്നോട്ടുപോകുക." : a?.verdict === "Forbidden" ? "ഈ സമയം ഗ്രന്ഥപ്രകാരം വിലക്കപ്പെട്ടതാണ് — മാറ്റിവെക്കുക." : "കർമ്മം ദുർബലമാണ് — സാധ്യമെങ്കിൽ മാറ്റിവെക്കുക.",
   };
   const v = map[sec];
   if (typeof v === "function") return v(analysis);
@@ -547,14 +547,10 @@ function localizeSelectionAnalysis(sa, lang) {
 }
 
 // ── Extra translation maps for analysis-level fields ──
-const ML_VERDICT_REASON = {
-  Excellent: "എല്ലാ കൈയെഴുത്തുപ്രതി വ്യവസ്ഥകളും യോജിക്കുന്നു.",
-  Good: "മിക്ക കൈയെഴുത്തുപ്രതി വ്യവസ്ഥകളും അനുകൂലമാണ്.",
-  Acceptable: "മിശ്രിത വ്യവസ്ഥകൾ — ശ്രദ്ധയോടെ മുന്നോട്ടുപോകുക.",
-  Weak: "കൈയെഴുത്തുപ്രതി പ്രകാരം വ്യവസ്ഥകൾ പ്രതികൂലമാണ്.",
-  "Not Recommended": "ഒന്നിലധികം പ്രതികൂല വ്യവസ്ഥകൾ.",
-  Forbidden: "ഗ്രന്ഥപ്രകാരം ഈ സമയം വിലക്കപ്പെട്ടതാണ്.",
-};
+// ── Verdict reason is now dynamic manuscript text from the engine ──
+// No static override — the engine's verdictReason cites specific manuscript rules.
+// This map is retained only for backward compatibility but no longer overrides.
+const ML_VERDICT_REASON = {};
 const ML_KHAYR_SHARR = {
   "khayr": "ഖൈർ",
   "sharr": "ശർ",
@@ -677,7 +673,7 @@ export function localizeAnalysis(analysis, lang) {
     ritualIntent: lang === "ml"
       ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualIntent] || analysis.ritualIntent)
       : analysis.ritualIntent,
-    verdictReason: ML_VERDICT_REASON[analysis.verdict] || analysis.verdictReason,
+    verdictReason: analysis.verdictReason,
     khayrSharr: ML_KHAYR_SHARR[analysis.khayrSharr] || analysis.khayrSharr,
     khayrSharrMeaning: ML_KHAYR_SHARR_MEANING[analysis.khayrSharr] || analysis.khayrSharrMeaning,
     bestDayReason: mlBestReason(analysis, "day"),
@@ -698,7 +694,6 @@ export function localizeAnalysis(analysis, lang) {
       ...analysis.enemyAnalysis,
       note: mlEnemyNote(analysis),
     } : analysis.enemyAnalysis,
-    scoreBreakdown: analysis.scoreBreakdown?.map(s => ML_SCORE_REASON[s] || s),
     canPerformToday: tStatus(analysis.canPerformToday, lang),
     astroClockStatus: {
       ...analysis.astroClockStatus,

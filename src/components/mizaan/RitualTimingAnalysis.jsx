@@ -226,9 +226,6 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
               <span className="font-inter text-xs font-bold" style={{ color: analysis.verdictColor }}>
                 {analysis.verdict}
               </span>
-              <span className="font-inter text-[10px]" style={{ color: G.dim }}>
-                {analysis.confidenceScore}%
-              </span>
             </div>
             <ChevronDown className="w-4 h-4 transition-transform" style={{ color: G.dim, transform: expanded ? "rotate(180deg)" : "none" }} />
           </div>
@@ -431,33 +428,19 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                   <InfoCard icon={<Shield className="w-4 h-4" />} label={tStr("khayrSharr", lang)} value={tVal(analysis.khayrSharr, ML_KHAYR)} sub={tVal(analysis.khayrSharrMeaning, ML_KHAYR_M)} />
                 </div>
 
-                {/* ── Verdict + Confidence ── */}
+                {/* ── Verdict ── */}
                 <div className="rounded-xl p-4" style={{
                   background: `${analysis.verdictColor}08`, border: `1px solid ${analysis.verdictColor}30`,
                 }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" style={{ color: analysis.verdictColor }} />
-                      <span className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
-                        {tStr("overallStrength", lang)}: {analysis.verdict}
-                      </span>
-                    </div>
-                    <span className="font-inter text-2xl font-bold" style={{ color: analysis.verdictColor }}>
-                      {analysis.confidenceScore}%
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4" style={{ color: analysis.verdictColor }} />
+                    <span className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
+                      {tStr("verdict", lang)}: {analysis.verdict}
                     </span>
                   </div>
-                  <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.60)" }}>
+                  <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
                     {tVerdictReason(analysis.verdictReason)}
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {analysis.scoreBreakdown.map((s, i) => (
-                      <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{
-                        background: G.bg, border: `1px solid ${G.border}`, color: G.dim,
-                      }}>
-                        {s}
-                      </span>
-                    ))}
-                  </div>
                 </div>
 
                 {/* ── Can Perform Today? ── */}
