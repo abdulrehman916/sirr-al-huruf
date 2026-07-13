@@ -61,8 +61,7 @@
         "important",
         "minor"
       ],
-      "default": "important",
-      "description": "Manuscript-defined importance of this rule for its ritual purpose. critical = failure produces Not Recommended or Forbidden; important = failure significantly affects verdict; minor = failure still allows Good. The manuscript is the authority for this weight. If unspecified, the engine defaults by rule type: forbidden conditions = critical, core timing = important, supplementary = minor."
+      "description": "Manuscript-defined importance of this rule for its ritual purpose. critical = failure produces Not Recommended or Forbidden; important = failure significantly affects verdict; minor = failure still allows Good. The manuscript is the SOLE authority for this weight. If the manuscript does not specify a priority for this rule, the field is absent (null) and the engine treats the rule as informational \u2014 it is displayed to the user with its reason and source but NEVER affects the verdict. NO default value. NO engine fallback. NO assumption by rule type, field, or category. The engine reads exactly what the manuscript wrote \u2014 nothing more."
     },
     "original_text": {
       "type": "string",
@@ -78,7 +77,7 @@
     },
     "data_json": {
       "type": "string",
-      "description": "Structured rule data as JSON string. May include a 'priority' field (critical/important/minor) that overrides the top-level priority for this rule."
+      "description": "Structured rule data as JSON string. May include a 'priority' field (critical/important/minor) that is set by the manuscript and overrides the top-level priority for this rule. This is manuscript-defined data \u2014 not an engine assumption."
     },
     "conflict_with": {
       "type": "string",
