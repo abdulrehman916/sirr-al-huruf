@@ -40,6 +40,10 @@
         "timezone": {
           "type": "string",
           "description": "App default timezone e.g. Asia/Dubai"
+        },
+        "onboarding_reset_date": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when admin last reset onboarding. Users who accepted rules before this date will see the Rules & Conditions again."
         }
       },
       "description": "General application settings"

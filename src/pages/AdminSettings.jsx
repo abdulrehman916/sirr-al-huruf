@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Settings, MessageCircle, Info, Database, Download, Upload, Clock,
-  Shield, Loader2, Globe, Archive,
+  Shield, Loader2, Globe, Archive, RotateCcw,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -54,6 +54,7 @@ export default function AdminSettings() {
   const [backupLoading, setBackupLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(null);
+  const [resetOnboardingLoading, setResetOnboardingLoading] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(user => {
@@ -122,6 +123,23 @@ export default function AdminSettings() {
       toast({ title: "Restore failed", description: e.message, variant: "destructive" });
     } finally {
       setRestoreLoading(false);
+    }
+  };
+
+  const handleResetOnboarding = async () => {
+    if (!confirm("Reset onboarding for ALL users? They will see the introduction rules again on their next visit.")) return;
+    setResetOnboardingLoading(true);
+    try {
+      const res = await base44.functions.invoke("resetOnboarding");
+      if (res.data?.success) {
+        toast({ title: "✓ Onboarding reset for all users", description: res.data?.message });
+      } else {
+        toast({ title: "Reset attempted", description: res.data?.message || "Unknown result" });
+      }
+    } catch (e) {
+      toast({ title: "Reset failed", description: e.message, variant: "destructive" });
+    } finally {
+      setResetOnboardingLoading(false);
     }
   };
 
@@ -246,6 +264,20 @@ export default function AdminSettings() {
             All payments are processed manually via WhatsApp. No payment gateway is configured.
             After payment confirmation, issue a Reading Code via the <strong className="text-white/70">Reading Codes</strong> section.
           </p>
+        </SettingsCard>
+
+        {/* Onboarding Management */}
+        <SettingsCard icon={<RotateCcw className="w-4 h-4" style={{ color: G.text }} />} title="Onboarding Management">
+          <p className="font-inter text-xs text-white/40">
+            Reset the introduction rules for all users. When reset, users will see the Rules &amp; Conditions again on their next visit.
+          </p>
+          <ActionButton
+            label="Reset Onboarding / Show Introduction Again"
+            icon={<RotateCcw className="w-3.5 h-3.5" />}
+            onClick={handleResetOnboarding}
+            loading={resetOnboardingLoading}
+            color="rgba(239, 68, 68, 0.10)"
+          />
         </SettingsCard>
 
         {/* Save Button */}

@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [adminProfile, setAdminProfile] = useState(null);
   const [role, setRole] = useState('guest');
   const [adminProfileLoading, setAdminProfileLoading] = useState(false);
+  const [authResolved, setAuthResolved] = useState(false);
   // Never block the app on loading — start as false so the app renders immediately
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
 
@@ -42,6 +43,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     base44.auth.me().then(u => {
+      setAuthResolved(true);
       if (!u) return; // no token — stay guest
       // Session-gate: only elevate after an explicit login this session, so
       // customers always start as guest. Applies identically to Preview and
@@ -150,6 +152,7 @@ export const AuthProvider = ({ children }) => {
           // stay Guest
         });
     }).catch(() => {
+      setAuthResolved(true);
       // No token / expired — that's fine, proceed as guest
     });
 
@@ -194,6 +197,7 @@ export const AuthProvider = ({ children }) => {
       role,
       adminProfileLoading,
       isLoadingAuth: false,
+      authResolved,
       isLoadingPublicSettings,
       authError: null,
       appPublicSettings: null,
