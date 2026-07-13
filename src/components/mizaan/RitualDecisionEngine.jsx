@@ -80,26 +80,43 @@ function lookupAstroRecord(astroClockKnowledge, weekday, period, saatNumber, kaw
   );
 }
 
-// Get the original explanation from a record (prefer Malayalam)
-function getRecordExplanation(record, lang) {
-  if (!record) return "";
-  if (lang === "ml" && record.knowledge_text_ml) return record.knowledge_text_ml;
-  if (record.knowledge_text_en) return record.knowledge_text_en;
-  if (record.ritual_suitability) return record.ritual_suitability;
-  return "";
+// Collect original Malayalam text from an actions array (recommended/forbidden/enemy/warnings/notes).
+// Only .ml is used — never .en. No generation. No translation.
+function actionsMl(actions) {
+  return (actions || [])
+    .map((a) => a.ml || "")
+    .filter((m) => m && m.trim())
+    .join("; ");
 }
 
-// Get the forbidden/enemy explanation from a record (prefer Malayalam)
-function getForbiddenExplanation(record, lang) {
+// Get the original Malayalam explanation for a SUITABLE time.
+// Displays knowledge_text_ml + recommended_actions.ml + notes_list.ml exactly as stored.
+// No English fallback. No generation. No summarization.
+function getRecordExplanation(record) {
   if (!record) return "";
-  const actions = record.forbidden_actions || [];
-  const enemyActions = record.enemy_actions || [];
-  const all = [...actions, ...enemyActions];
-  if (all.length === 0) return getRecordExplanation(record, lang);
-  return all
-    .map((a) => (lang === "ml" ? a.ml || a.en : a.en))
-    .filter(Boolean)
-    .join("; ");
+  const parts = [];
+  if (record.knowledge_text_ml && record.knowledge_text_ml.trim()) parts.push(record.knowledge_text_ml.trim());
+  const recMl = actionsMl(record.recommended_actions);
+  if (recMl) parts.push(recMl);
+  const notesMl = actionsMl(record.notes_list);
+  if (notesMl) parts.push(notesMl);
+  return parts.join("\n");
+}
+
+// Get the original Malayalam explanation for an AVOIDED time.
+// Displays knowledge_text_ml + forbidden_actions.ml + enemy_actions.ml + warnings_list.ml
+// exactly as stored. No English fallback. No generation. No summarization.
+function getForbiddenExplanation(record) {
+  if (!record) return "";
+  const parts = [];
+  if (record.knowledge_text_ml && record.knowledge_text_ml.trim()) parts.push(record.knowledge_text_ml.trim());
+  const forbMl = actionsMl(record.forbidden_actions);
+  if (forbMl) parts.push(forbMl);
+  const enemyMl = actionsMl(record.enemy_actions);
+  if (enemyMl) parts.push(enemyMl);
+  const warnMl = actionsMl(record.warnings_list);
+  if (warnMl) parts.push(warnMl);
+  return parts.join("\n");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -261,13 +278,29 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
     : canPerform === "Limited" ? T("Limited", "പരിമിതം", lang)
     : T("No", "ഇല്ല", lang);
 
-  // Main explanation (original Astro Clock text)
-  const mainExplanation =
-    (lang === "ml" && sa?.originalExplanationMl) ||
-    sa?.originalExplanation ||
-    sa?.originalSuitability ||
-    rawAnalysis.verdictReason ||
-    "";
+  // Main explanation — ALWAYS original Malayalam from the Astro Clock context record.
+  // Suitable verdict → recommended_actions.ml; Forbidden/Not-Suitable → forbidden_actions.ml.
+  // Plus knowledge_text_ml and warnings_list.ml. No English fallback. No generation.
+  const mainExplanation = (() => {
+    if (!sa) return "";
+    const parts = [];
+    if (sa.originalExplanationMl && sa.originalExplanationMl.trim()) parts.push(sa.originalExplanationMl.trim());
+    const recMl = actionsMl(sa.originalRecommended);
+    const forbMl = actionsMl(sa.originalForbidden);
+    const enemyMl = actionsMl(sa.contextRecord?.enemy_actions);
+    const warnMl = actionsMl(sa.originalWarnings);
+    if (sa.forbidden) {
+      if (forbMl) parts.push(forbMl);
+      if (enemyMl) parts.push(enemyMl);
+    } else if (sa.suitable) {
+      if (recMl) parts.push(recMl);
+    } else {
+      if (forbMl) parts.push(forbMl);
+      if (recMl) parts.push(recMl);
+    }
+    if (warnMl) parts.push(warnMl);
+    return parts.join("\n");
+  })();
 
   // Failed fields by dimension
   const failedDay = failedFields.find((f) => f.dimension === "weekday");
@@ -374,7 +407,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                   icon={<Clock className="w-4 h-4" />}
                   label={T("Better Day", "മികച്ച ദിവസം", lang)}
                   value={translateDayRec(failedDay.recommended, lang)}
-                  reason={lang === "ml" ? failedDay.reasonMl || failedDay.reason : failedDay.reason}
+                  reason={failedDay.reasonMl || ""}
                   lang={lang}
                 />
               )}
@@ -383,7 +416,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                   icon={<Clock className="w-4 h-4" />}
                   label={T("Better Saat", "മികച്ച സഅാത്", lang)}
                   value={translateHourRec(failedHour.recommended, lang)}
-                  reason={lang === "ml" ? failedHour.reasonMl || failedHour.reason : failedHour.reason}
+                  reason={failedHour.reasonMl || ""}
                   lang={lang}
                 />
               )}
@@ -392,7 +425,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                   icon={<Sunset className="w-4 h-4" />}
                   label={T("Better Layl/Nahar", "മികച്ച ലൈൽ/നഹർ", lang)}
                   value={translateLaylRec(failedDayNight.recommended, lang)}
-                  reason={lang === "ml" ? failedDayNight.reasonMl || failedDayNight.reason : failedDayNight.reason}
+                  reason={failedDayNight.reasonMl || ""}
                   lang={lang}
                 />
               )}
@@ -420,7 +453,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                   {bestWindows.map((w, i) => {
                     const saatNum = saatDisplayNum(w.hourNumber, w.period);
                     const record = lookupAstroRecord(astroClockKnowledge, weekday, w.period, w.hourNumber, w.planet);
-                    const explanation = getRecordExplanation(record, lang);
+                    const explanation = getRecordExplanation(record);
                     return (
                       <SaatCard
                         key={i}
@@ -469,7 +502,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                 {passedWindows.map((w, i) => {
                   const saatNum = saatDisplayNum(w.hourNumber, w.period);
                   const record = lookupAstroRecord(astroClockKnowledge, weekday, w.period, w.hourNumber, w.planet);
-                  const explanation = getRecordExplanation(record, lang);
+                  const explanation = getRecordExplanation(record);
                   return (
                     <SaatCard
                       key={i}
@@ -507,7 +540,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
                 {avoidWindows.map((w, i) => {
                   const saatNum = saatDisplayNum(w.hourNumber, w.period || (w.startTime ? "day" : "day"));
                   const record = lookupAstroRecord(astroClockKnowledge, weekday, w.period || "day", w.hourNumber, w.planet);
-                  const explanation = getForbiddenExplanation(record, lang);
+                  const explanation = getForbiddenExplanation(record);
                   return (
                     <SaatCard
                       key={i}
@@ -623,7 +656,7 @@ function NextTimingCard({ nextOpp, astroClockKnowledge, lang }) {
     nextOpp.hour,
     nextOpp.planet
   );
-  const explanation = getRecordExplanation(record, lang);
+  const explanation = getRecordExplanation(record);
   const periodLabel = nextOpp.period === "night"
     ? T("Night", "രാത്രി", lang)
     : T("Day", "പകൽ", lang);
