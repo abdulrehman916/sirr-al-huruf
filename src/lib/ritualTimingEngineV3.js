@@ -842,9 +842,9 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   if (selectionAnalysis?.forbidden) { verdict = "Forbidden"; verdictColor = "#DC2626"; verdictReason = "This timing is forbidden by the manuscript — Nahas day or enemy hour."; }
   else if (score >= 85) { verdict = "Excellent"; verdictColor = "#4ADE80"; verdictReason = "All manuscript conditions align."; }
   else if (score >= 70) { verdict = "Good"; verdictColor = "#86EFAC"; verdictReason = "Most manuscript conditions are favorable."; }
-  else if (score >= 50) { verdict = "Moderate"; verdictColor = "#FBBF24"; verdictReason = "Mixed conditions — proceed with caution."; }
+  else if (score >= 50) { verdict = "Acceptable"; verdictColor = "#FBBF24"; verdictReason = "Mixed conditions — proceed with caution."; }
   else if (score >= 30) { verdict = "Weak"; verdictColor = "#F59E0B"; verdictReason = "Conditions are unfavorable per manuscript."; }
-  else { verdict = "Avoid"; verdictColor = "#F87171"; verdictReason = "Multiple unfavorable conditions."; }
+  else { verdict = "Not Recommended"; verdictColor = "#F87171"; verdictReason = "Multiple unfavorable conditions."; }
 
   // ── Warnings (only for violated found rules) ──
   if (req.days && !currentDayOk) warnings.push(`Today (${MIZAN_DAY_NAMES[currentDayKey]}) is not a prescribed day. Manuscript prescribes: ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
