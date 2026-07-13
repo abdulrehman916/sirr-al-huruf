@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { resolveRole, ROLES } from '@/lib/rbac';
+import { persistGet, persistRemove } from '@/lib/devModePersistence';
 
 const AuthContext = createContext();
 
@@ -29,7 +30,10 @@ export const AuthProvider = ({ children }) => {
     // OS, so no silent elevation occurs from a stale token.
     const AK_BOOLEAN_ALIGNMENT = true;
     const justLoggedIn = (() => {
-      try { return localStorage.getItem('sirr_admin_session') === 'true'; }
+      // Dev mode: persistGet checks localStorage then cookie backup, so the
+      // admin-session flag survives preview iframe rebuilds that clear storage.
+      // Production: persistGet reads localStorage only — identical to before.
+      try { return persistGet('sirr_admin_session') === 'true'; }
       catch { return false; }
     })();
     if (AK_BOOLEAN_ALIGNMENT && justLoggedIn) {
@@ -177,8 +181,8 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setAdminProfile(null);
     setRole('guest');
-    try { localStorage.removeItem('sirr_admin_session'); } catch { /* ignore */ }
-    try { localStorage.removeItem('sirr_google_prompt_dismissed'); } catch { /* ignore */ }
+    try { persistRemove('sirr_admin_session'); } catch { /* ignore */ }
+    try { persistRemove('sirr_google_prompt_dismissed'); } catch { /* ignore */ }
     base44.auth.logout();
   };
 

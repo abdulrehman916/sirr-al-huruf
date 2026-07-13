@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Loader2, ShieldCheck } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import { persistSet, persistRemove } from "@/lib/devModePersistence";
 
 // Inline Google "G" mark — no external dependency.
 const GoogleMark = ({ className = "w-5 h-5 mr-2" }) => (
@@ -24,7 +25,10 @@ export default function Login() {
     try {
       // Mark this session as an explicit admin login so the session-gate in
       // AuthContext allows role elevation after Google redirects back to "/".
-      try { sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+      // persistSet: localStorage (production) or localStorage+cookie (dev preview).
+      // Was sessionStorage — which didn't survive preview rebuilds and was
+      // inconsistent with AuthContext's localStorage read.
+      try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
       // Redirects to Google consent, then back to "/". AuthContext resolves
       // Owner / Admin / Guest from the authenticated email:
       //   - Owner email == ADMIN_CONFIG.OWNER_EMAIL  → Owner
@@ -34,7 +38,7 @@ export default function Login() {
     } catch (err) {
       setError(err?.response?.data?.error || err?.message || "Google sign-in failed");
       setLoading(false);
-      try { sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
+      try { persistRemove("sirr_admin_session"); } catch { /* ignore */ }
     }
   };
 

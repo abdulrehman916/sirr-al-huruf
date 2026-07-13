@@ -16,7 +16,10 @@ const IS_DEV = import.meta.env.DEV;
 function setCookie(name, value, days = 365) {
   try {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};path=/;SameSite=Lax`;
+    // Dev preview runs in a cross-origin iframe — SameSite=Lax cookies are blocked
+    // there. SameSite=None;Secure works in HTTPS preview AND localhost (Chrome
+    // treats localhost as a secure context). Production never calls this.
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};path=/;SameSite=None;Secure`;
   } catch { /* ignore */ }
 }
 

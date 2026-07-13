@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Loader2, ShieldCheck, X } from "lucide-react";
-import { persistSet } from "@/lib/devModePersistence";
+import { persistSet, persistRemove } from "@/lib/devModePersistence";
 import { useTranslation } from "@/i18n/useTranslation";
 
 const GoogleMark = ({ className = "w-5 h-5" }) => (
@@ -28,12 +28,13 @@ export default function GoogleSignInPrompt({ onSkip }) {
     setLoading(true);
     // Mark this session as an explicit sign-in so AuthContext allows role
     // elevation (Owner/Admin) after Google redirects back.
-    try { localStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+    // persistSet: localStorage (production) or localStorage+cookie (dev preview).
+    try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
     try {
       await base44.auth.loginWithProvider("google", window.location.pathname || "/");
     } catch {
       setLoading(false);
-      try { localStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
+      try { persistRemove("sirr_admin_session"); } catch { /* ignore */ }
     }
   };
 
