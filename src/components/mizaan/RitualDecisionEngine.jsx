@@ -245,6 +245,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
   const failedFields = (sa?.decisionBreakdown || []).filter((b) => b.status === "fail");
   const bestWindows = rawAnalysis.bestWindowsToday || [];
   const avoidWindows = rawAnalysis.avoidWindowsToday || [];
+  const passedWindows = rawAnalysis.passedWindowsToday || [];
   const nextOpp = rawAnalysis.nextOpportunity;
   const purposeText =
     (lang === "ml" ? resolvedPurpose.interpretation_ml : resolvedPurpose.interpretation_en) ||
@@ -448,6 +449,44 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
               </>
             )}
           </div>
+
+          {/* ══ 5b. PASSED SUITABLE TIMES ══ */}
+          {passedWindows.length > 0 && (
+            <div className="rounded-xl p-4" style={{
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}>
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="w-4 h-4" style={{ color: "rgba(255,255,255,0.40)" }} />
+                <h4 className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: "rgba(255,255,255,0.55)" }}>
+                  {T("Passed Suitable Times", "കഴിഞ്ഞ അനുയോജ്യ സമയങ്ങൾ", lang)}
+                </h4>
+              </div>
+              <p className={lang === "ml" ? "font-malayalam text-xs mb-3" : "font-inter text-xs mb-3"} style={{ color: "rgba(255,255,255,0.40)" }}>
+                {T("These suitable times have already passed today:", "ഈ അനുയോജ്യ സമയങ്ങൾ ഇന്ന് കഴിഞ്ഞു:", lang)}
+              </p>
+              <div className="space-y-2">
+                {passedWindows.map((w, i) => {
+                  const saatNum = saatDisplayNum(w.hourNumber, w.period);
+                  const record = lookupAstroRecord(astroClockKnowledge, weekday, w.period, w.hourNumber, w.planet);
+                  const explanation = getRecordExplanation(record, lang);
+                  return (
+                    <SaatCard
+                      key={i}
+                      saatNum={saatNum}
+                      startTime={w.startTime}
+                      endTime={w.endTime}
+                      planet={w.planet}
+                      period={w.period}
+                      explanation={explanation}
+                      color="rgba(255,255,255,0.40)"
+                      lang={lang}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* ══ 6. TIMES TO AVOID TODAY ══ */}
           {avoidWindows.length > 0 && (

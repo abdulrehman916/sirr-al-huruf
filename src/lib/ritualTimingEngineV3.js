@@ -852,12 +852,23 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // ── Today's windows (rule-matched, star-rated) ──
   const bestWindowsToday = [];
   const avoidWindowsToday = [];
+  const passedWindowsToday = [];
   for (const h of todayHours) {
-    if (h.status === "past") continue;
     const planetLC = h.planet;
     const isBest = !req.hours || req.hours.map((p) => p.toLowerCase()).includes(planetLC);
     const isWorst = (req.worstHours && req.worstHours.map((p) => p.toLowerCase()).includes(planetLC)) ||
                     (req.enemyPlanets && req.enemyPlanets.map((p) => p.toLowerCase()).includes(planetLC));
+    if (h.status === "past") {
+      // Collect suitable windows that have already passed today
+      if (isBest && !isWorst) {
+        passedWindowsToday.push({
+          startTime: h.startTime, endTime: h.endTime, planet: capitalPlanet(planetLC),
+          hourNumber: h.hourNumber, period: h.period,
+          reason: "hour matches manuscript prescription",
+        });
+      }
+      continue;
+    }
     if (isBest && !isWorst) {
       let s = 50;
       const r = [];
@@ -1095,7 +1106,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     canPerformToday,
     currentMomentSuitable,
     waitTime: earliest ? (earliest.isToday ? "later today" : `${earliest.daysAhead}d`) : null,
-    bestWindowsToday, rankedWindows: ranked, topThree: ranked, avoidWindowsToday,
+    bestWindowsToday, rankedWindows: ranked, topThree: ranked, avoidWindowsToday, passedWindowsToday,
     enemyAnalysis: { enemyHours: req.worstHours || req.enemyPlanets || [], enemyDays: req.worstDays || [], enemyMoonPhases: [], enemyRulers: req.enemyPlanets || [], note: "" },
     nextOpportunity: earliest, nextMoonPhase: null,
     moonPhase: {
