@@ -1,7 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// RITUAL TIMING I18N — Presentation-layer multilingual support
+// RITUAL TIMING I18N — Astrology Clock Interpreter presentation layer
 // Malayalam (default) + English. NO engine/logic changes.
-// Translates the RitualDecisionEngine + ConfigurationAdvisor output.
+//
+// ARCHITECTURE: The engine is an Astrology Clock interpreter. The
+// explanations come directly from the AstroClockKnowledge dataset.
+// This I18n layer passes through the ORIGINAL Astro Clock text and
+// only translates UI labels and section titles. It NEVER translates
+// or overrides the Astro Clock's original explanations.
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect } from "react";
 
@@ -411,7 +416,8 @@ function mlBody(section, analysis) {
     case "ASTRO ANALYSIS":
       return `ഇന്ന് ${day}, ഭരണം ${dayRuler}. നിലവിലെ ഗ്രഹ മണിക്കൂർ #${curHour} (${curPlanet}), ${isNight ? "രാത്രി" : "പകൽ"}, ${remaining} ബാക്കി. ചന്ദ്രൻ ദിവസം ${moonDay} (${phaseName}). മൊത്തത്തിലുള്ള ഖഗോള വിലയിരുത്തൽ: ${verdict}.`;
     case "MANUSCRIPT EXPLANATION":
-      return `മുകളിലുള്ള ഓരോ ശുപാർശയും ഇറക്കുമതി ചെയ്ത ഗ്രന്ഥങ്ങളിൽ അധിഷ്ഠിതമാണ്. ${a.ritualType ? `നിങ്ങളുടെ കർമ്മം ${a.ritualType} ആയി വർഗ്ഗീകരിച്ചിരിക്കുന്നു.` : ""} പ്രയോഗിച്ച നിയമങ്ങളുടെ പൂർണ്ണ പട്ടിക താഴെ കാണാം.`;
+      // ── ORIGINAL Astro Clock text — pass through, never generate ──
+      return a.selectionAnalysis?.originalExplanationMl || a.selectionAnalysis?.originalExplanation || a.body || "";
     case "WARNING SECTION":
       return (a.warnings?.length > 0)
         ? a.warnings.map(w => "⚠ " + tWarning(w, "ml", a)).join(" ")
@@ -520,7 +526,10 @@ function localizeSelectionAnalysis(sa, lang) {
     ...b,
     label: ML_DIM_LABEL[b.label] || b.label,
     currentValue: tCV(b.currentValue),
-    reason: mlDecisionReason(b.reason),
+    // ── ORIGINAL Astro Clock text — use reasonMl when available, else pass through ──
+    // The engine provides reasonMl from the AstroClockKnowledge record's knowledge_text_ml.
+    // Never pattern-match or translate the original English text.
+    reason: (lang === "ml" && b.reasonMl) ? b.reasonMl : b.reason,
     recommended: tRec(b.recommended),
   }));
   const bestAlternative = sa.bestAlternative ? {
@@ -670,9 +679,10 @@ export function localizeAnalysis(analysis, lang) {
     ritualCategory: lang === "ml"
       ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualCategory] || analysis.ritualCategory)
       : analysis.ritualCategory,
-    ritualIntent: lang === "ml"
-      ? (analysis.ritualSemanticMl || ML_RITUAL_TYPE[analysis.ritualIntent] || analysis.ritualIntent)
-      : analysis.ritualIntent,
+    // ── verdictReason: ORIGINAL Astro Clock text — never translated or overridden ──
+    // The Astrology Clock is the only authority. The engine's verdictReason
+    // contains the original Astro Clock explanation. This I18n layer passes
+    // it through unchanged — the user sees the exact Astro Clock text.
     verdictReason: analysis.verdictReason,
     khayrSharr: ML_KHAYR_SHARR[analysis.khayrSharr] || analysis.khayrSharr,
     khayrSharrMeaning: ML_KHAYR_SHARR_MEANING[analysis.khayrSharr] || analysis.khayrSharrMeaning,

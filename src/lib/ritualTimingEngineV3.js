@@ -1,18 +1,21 @@
 // ═══════════════════════════════════════════════════════════════
-// RITUAL TIMING ENGINE V3 — MANUSCRIPT-DRIVEN, READ-ONLY
+// RITUAL TIMING ENGINE V3 — ASTROLOGY CLOCK INTERPRETER (READ-ONLY)
 // ═══════════════════════════════════════════════════════════════
-// SOURCE PRIORITY (strict, no invention):
-//   1. ManuscriptRule database (passed in via manuscriptRules param)
-//   2. Existing JS knowledge base (astroClockActionTimingAdvisor ACTION_RULES)
-//   3. Astro Clock live calculations (read-only)
+// ARCHITECTURE: This is NOT a rule engine. It is an INTERPRETER for
+// the Astrology Clock data already stored in the system.
 //
-// This engine NEVER invents rules. Every recommendation cites the
-// manuscript rule that produced it. If no rule is found for a
-// dimension (day, hour, moon, zodiac, planet, direction, incense,
-// element, night/day), that dimension is reported as unrestricted.
+// FLOW:
+//   1. Purpose is identified first (from Purpose Dictionary).
+//   2. The engine reads the Astrology Clock data (AstroClockKnowledge)
+//      for the selected Day + Saat + Layl/Nahar + Kawkab context.
+//   3. It displays the ORIGINAL Astrology Clock explanation — never
+//      generates, summarizes, or invents its own text.
+//   4. If the context is not optimal for the Purpose, it recommends
+//      ONLY: Better Day, Better Saat, Better Layl/Nahar.
+//      NEVER recommends Kawkab (auto-derived from Saat).
 //
-// Reads existing Mizan state + live Astro Clock. Does NOT modify
-// any Mizan calculation, Method 1–4, or Astro Clock logic.
+// The Astrology Clock is the ONLY authority.
+// This works identically across every Mizan Method and Section.
 // ═══════════════════════════════════════════════════════════════
 
 import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from "./astroClockLiveEngine.js";
@@ -62,22 +65,162 @@ const DAY_KEY_BY_INDEX = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 const BENEFIC = ["Sun", "Jupiter", "Venus", "Moon"];
 const MALEFIC = ["Saturn", "Mars"];
 
-// ManuscriptRule.category → ritualKey
-const CATEGORY_TO_RITUAL = {
-  LOVE_WORKS: "love",
-  PROTECTION_WORKS: "protection",
-  WEALTH_WORKS: "wealth",
-  TRAVEL_WORKS: "travel",
-  SPIRITUAL_WORKS: "spiritual",
-  TIMING_RULES: "general",
-  PLANETARY_HOURS: "general",
-  DAY_RULERS: "general",
-  SAAD_NAHS: "general",
-  INCENSE_RULES: "general",
-  ELEMENT_RULES: "general",
-  ZODIAC: "general",
-  LUNAR_MANSIONS: "general",
+// ═══════════════════════════════════════════════════════════════
+// ASTROLOGY CLOCK PURPOSE MATCHING
+// Maps a ritualKey (from Purpose Dictionary) to keywords that appear
+// in the AstroClockKnowledge recommended_actions / forbidden_actions
+// text. Used to determine if a context is suitable for the Purpose.
+// The matching is keyword-based — the DISPLAY is always the original
+// Astro Clock text, never a generated summary.
+// ═══════════════════════════════════════════════════════════════
+const PURPOSE_KEYWORDS = {
+  love: ["love", "attraction", "marriage", "romance", "affection", "courtship", "engagement", "reconciliation"],
+  separation: ["separation", "dispersing", "conflict", "punish", "binding", "revenge"],
+  healing: ["health", "healing", "medicine", "sick", "cure", "remedy"],
+  enemy: ["punishment", "binding", "malicious", "harm", "revenge", "enemy", "malice"],
+  protection: ["protection", "good deeds", "good works", "talisman", "recitation", "guard", "shield"],
+  wealth: ["money", "financial", "business", "trade", "commercial", "profit", "riches", "wealth", "transaction"],
+  knowledge: ["reading", "occult", "havas", "searching", "finding", "exposure", "manifestation", "knowledge"],
+  travel: ["travel", "journey", "voyage", "trip"],
+  planetary: ["honor", "dignitar", "royalt", "sultan", "acceptance", "king", "display", "exhibition", "favor"],
+  spiritual: ["spiritual", "worship", "devotion", "prayer", "dhikr"],
+  general: [],
 };
+
+// Check if a ritual purpose keyword appears in an action text (case-insensitive)
+function purposeMatchesAction(ritualKey, actionText) {
+  if (!actionText) return false;
+  const keywords = PURPOSE_KEYWORDS[ritualKey] || [];
+  if (keywords.length === 0) return false;
+  const text = String(actionText).toLowerCase();
+  return keywords.some(k => text.includes(k));
+}
+
+// Check if any of the record's recommended_actions match the purpose
+function purposeInRecommended(record, ritualKey) {
+  if (!record?.recommended_actions) return false;
+  return record.recommended_actions.some(a => purposeMatchesAction(ritualKey, a.en));
+}
+
+// Check if any of the record's forbidden_actions match the purpose
+function purposeInForbidden(record, ritualKey) {
+  if (!record?.forbidden_actions) return false;
+  return record.forbidden_actions.some(a => purposeMatchesAction(ritualKey, a.en));
+}
+
+// Check if the ritual_suitability text indicates an evil/malefic/forbidden context
+function isEvilContext(record) {
+  const s = (record?.ritual_suitability || "").toLowerCase();
+  return /evil|malefic|harmful|bad|unsuitable|unfavor|forbidden|dangerous/.test(s);
+}
+
+// Check if the ritual_suitability text indicates a good/benefic/suitable context
+function isGoodContext(record) {
+  const s = (record?.ritual_suitability || "").toLowerCase();
+  return /good|benefic|auspicious|suitable|favorable|very good|excellent/.test(s);
+}
+
+// Lookup AstroClockKnowledge record(s) matching the exact selected context
+// full_context_key = "weekday|period|saat_number|kawkab|nakshatra"
+function lookupContextRecord(astroClockKnowledge, weekday, period, saatNumber, kawkab) {
+  if (!astroClockKnowledge || astroClockKnowledge.length === 0) return [];
+  const kawkabLC = String(kawkab || "").toLowerCase();
+  return astroClockKnowledge.filter(r => {
+    if (r.weekday !== weekday) return false;
+    if (r.period !== period) return false;
+    if (r.saat_number !== saatNumber) return false;
+    if (String(r.planet || "").toLowerCase() !== kawkabLC) return false;
+    return true;
+  });
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ASTROLOGY CLOCK INTERPRETER — GATHER CONTEXT
+// Replaces the old ManuscriptRule gatherRules. Reads the Astrology
+// Clock data and builds the req / moonReq structure for downstream
+// compatibility (moon analysis still uses req).
+//
+// The req is derived from the Astrology Clock:
+//   req.days  → weekdays where the purpose appears in recommended_actions
+//   req.hours → kawkabs where the purpose appears in recommended_actions
+//   req.worstDays  → weekdays where the purpose appears in forbidden_actions
+//   req.worstHours → kawkabs where the purpose appears in forbidden_actions
+//   req.enemyPlanets → kawkabs where the purpose appears in enemy_actions
+//   req.nightRequired → true if the purpose only appears in night records
+// ═══════════════════════════════════════════════════════════════
+function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
+  const req = {
+    days: null, hours: null, worstDays: null, worstHours: null,
+    planet: null, direction: null, incense: null, element: null,
+    nightRequired: null, enemyPlanets: [],
+  };
+  const moonReq = { moon: null, zodiac: null, suitableMansions: null };
+  const citations = [];
+  const moonCitations = [];
+
+  if (!astroClockKnowledge || astroClockKnowledge.length === 0) {
+    return { req, moonReq, citations, moonCitations, dbRuleCount: 0 };
+  }
+
+  const goodDays = new Set();
+  const goodHours = new Set();
+  const badDays = new Set();
+  const badHours = new Set();
+  const enemyPlanets = new Set();
+  let nightOnly = true;
+  let hasDayRecord = false;
+  let hasNightRecord = false;
+
+  for (const r of astroClockKnowledge) {
+    const weekday = r.weekday;
+    const period = r.period;
+    const planet = String(r.planet || "").toLowerCase();
+    const dayKey = DAY_KEY_BY_INDEX[weekday];
+    if (!dayKey) continue;
+
+    if (period === "day") hasDayRecord = true;
+    if (period === "night") hasNightRecord = true;
+
+    const inRec = purposeInRecommended(r, ritualKey);
+    const inForb = purposeInForbidden(r, ritualKey);
+    const inEnemy = r.enemy_actions?.some(a => purposeMatchesAction(ritualKey, a.en)) || false;
+
+    if (inRec) {
+      goodDays.add(dayKey);
+      goodHours.add(planet);
+      if (period === "day") nightOnly = false;
+    }
+    if (inForb) {
+      badDays.add(dayKey);
+      badHours.add(planet);
+    }
+    if (inEnemy) {
+      enemyPlanets.add(planet);
+      badHours.add(planet);
+    }
+
+    // Collect citations from matching records
+    if (inRec || inForb || inEnemy) {
+      const source = r.source_book_title || "Astrology Clock";
+      citations.push({
+        rule_id: r.knowledge_id,
+        source,
+        summary: r.ritual_suitability || r.knowledge_text_en?.substring(0, 120) || "",
+        category: "ASTRO_CLOCK",
+        field: inRec ? "recommended" : inForb ? "forbidden" : "enemy",
+      });
+    }
+  }
+
+  if (goodDays.size > 0) req.days = Array.from(goodDays);
+  if (goodHours.size > 0) req.hours = Array.from(goodHours).map(p => capitalPlanet(p));
+  if (badDays.size > 0) req.worstDays = Array.from(badDays);
+  if (badHours.size > 0) req.worstHours = Array.from(badHours).map(p => capitalPlanet(p));
+  if (enemyPlanets.size > 0) req.enemyPlanets = Array.from(enemyPlanets).map(p => capitalPlanet(p));
+  if (nightOnly && hasNightRecord && !hasDayRecord && goodDays.size > 0) req.nightRequired = true;
+
+  return { req, moonReq, citations, moonCitations, dbRuleCount: citations.length };
+}
 
 // ═══════════════════════════════════════════════════════════════
 // STEP 1 — Identify the ritual from user's Mizan selections + custom purpose
@@ -149,66 +292,10 @@ function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLoo
 // user but never affecting the verdict. No default or fallback priority is assumed.
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 2 — Gather rules: ManuscriptRule DB only. No JS fallback. Never invent.
+// STEP 2 — Gather context from the Astrology Clock.
+// The Astrology Clock is the ONLY authority. No ManuscriptRule, no
+// JS fallback, no invented logic. See gatherRulesFromAstroClock above.
 // ═══════════════════════════════════════════════════════════════
-function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
-  const dbRules = (manuscriptRules || []).filter((r) => {
-    const cat = CATEGORY_TO_RITUAL[r.category];
-    return cat === ritualKey || (cat === "general" && r.subcategory && r.subcategory.toLowerCase().includes(ritualKey));
-  });
-
-  // Build requirements from DB rules — Moon fields separated into moonReq.
-  // Main timing (Day + Saat + Kawkab) uses req. Moon analysis (optional,
-  // user-initiated) uses moonReq — never affects the main timing decision.
-  const req = {
-    days: null,           // array of day keys e.g. ['fri','thu']
-    hours: null,          // array of planet names
-    worstDays: null,
-    worstHours: null,
-    planet: null,         // array of planets
-    direction: null,
-    incense: null,
-    element: null,
-    nightRequired: null,  // bool
-    enemyPlanets: [],
-  };
-  const moonReq = {
-    moon: null,           // 'waxing' | 'waning' | 'full' | 'new' | null
-    zodiac: null,         // array of signs
-    suitableMansions: null,
-  };
-  const citations = [];
-  const moonCitations = [];
-
-  // ── DB rules ──
-  for (const r of dbRules) {
-    let dj = null;
-    try { dj = r.data_json ? JSON.parse(r.data_json) : null; } catch (_) { dj = null; }
-    const cite = { rule_id: r.rule_id, source: `${r.book_name || "ManuscriptRule"}${r.page_number ? ` p.${r.page_number}` : ""}`, summary: r.rule_summary, category: r.category };
-
-    if (dj) {
-      if (Array.isArray(dj.bestDays) && dj.bestDays.length) { req.days = dj.bestDays.map((d) => String(d).toLowerCase()); citations.push({ ...cite, field: "day", value: req.days.join(", ") }); }
-      if (Array.isArray(dj.bestHours) && dj.bestHours.length) { req.hours = dj.bestHours.map((h) => capitalPlanet(h)); citations.push({ ...cite, field: "hour", value: req.hours.join(", ") }); }
-      if (Array.isArray(dj.worstDays) && dj.worstDays.length) req.worstDays = dj.worstDays.map((d) => String(d).toLowerCase());
-      if (Array.isArray(dj.worstHours) && dj.worstHours.length) req.worstHours = dj.worstHours.map((h) => capitalPlanet(h));
-      if (dj.moon) { moonReq.moon = String(dj.moon).toLowerCase(); moonCitations.push({ ...cite, field: "moon", value: moonReq.moon }); }
-      if (Array.isArray(dj.zodiac) && dj.zodiac.length) { moonReq.zodiac = dj.zodiac.map((z) => String(z).toLowerCase()); moonCitations.push({ ...cite, field: "zodiac", value: moonReq.zodiac.join(", ") }); }
-      if (Array.isArray(dj.planet) && dj.planet.length) { req.planet = dj.planet.map((p) => capitalPlanet(p)); citations.push({ ...cite, field: "planet", value: req.planet.join(", ") }); }
-      if (dj.direction) { req.direction = dj.direction; citations.push({ ...cite, field: "direction", value: dj.direction }); }
-      if (dj.incense) { req.incense = dj.incense; citations.push({ ...cite, field: "incense", value: dj.incense }); }
-      if (dj.element) { req.element = String(dj.element).toLowerCase(); citations.push({ ...cite, field: "element", value: dj.element }); }
-      if (typeof dj.nightRequired === "boolean") { req.nightRequired = dj.nightRequired; citations.push({ ...cite, field: "night", value: String(dj.nightRequired) }); }
-      if (Array.isArray(dj.enemyPlanets) && dj.enemyPlanets.length) req.enemyPlanets = dj.enemyPlanets.map((p) => capitalPlanet(p));
-      if (Array.isArray(dj.suitableMansions) && dj.suitableMansions.length) { moonReq.suitableMansions = dj.suitableMansions; moonCitations.push({ ...cite, field: "mansion", value: moonReq.suitableMansions.join(", ") }); }
-    }
-  }
-
-  // ── NO JS FALLBACK ──
-  // Recommendations come ONLY from ManuscriptRule DB. If no manuscript rule
-  // exists for a dimension, that dimension is reported as unrestricted with
-  // "No manuscript rule available for this ritual." Never invent or estimate.
-  return { req, moonReq, citations, moonCitations, dbRuleCount: dbRules.length };
-}
 
 // ═══════════════════════════════════════════════════════════════
 // Astronomy helpers (pure math, read-only)
@@ -379,11 +466,19 @@ function resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SELECTION ANALYSIS — Dimension-by-dimension check of user's
-// manual Mizan selections against manuscript rules.
-// Every ✓/✗ includes the manuscript reason and source.
+// ASTROLOGY CLOCK INTERPRETER — Dimension-by-dimension display of
+// the ORIGINAL Astrology Clock explanation for the selected context.
+//
+// Every dimension shows the Astro Clock's own text:
+//   - ritual_suitability (the Astro Clock's own assessment)
+//   - recommended_actions (the Astro Clock's own recommendations)
+//   - forbidden_actions (the Astro Clock's own warnings)
+//   - knowledge_text_en / knowledge_text_ml (the original explanation)
+//
+// The engine NEVER generates its own explanations. It displays the
+// original Astro Clock text that belongs to the selected context.
 // ═══════════════════════════════════════════════════════════════
-function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected, earliest, bestWindowsToday, todayHours, moonPhase, dayNight, selectedDay, selectedHour, selectedPlanet, currentHourInfo, priorities }) {
+function buildSelectionAnalysis({ selections, req, astroClockKnowledge, ritualKey, noPurposeSelected, earliest, todayHours, dayNight, selectedDay, selectedHour, selectedPlanet, currentHourInfo, weekday, period, saatNumber, kawkab }) {
   if (noPurposeSelected) {
     return {
       suitable: false,
@@ -394,203 +489,167 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
     };
   }
 
+  // ── Look up the Astro Clock record for the EXACT selected context ──
+  const contextRecords = lookupContextRecord(astroClockKnowledge, weekday, period, saatNumber, kawkab);
+  const contextRecord = contextRecords[0] || null;
+
+  // ── Original Astro Clock text for this context ──
+  const originalSuitability = contextRecord?.ritual_suitability || "";
+  const originalRecommended = contextRecord?.recommended_actions || [];
+  const originalForbidden = contextRecord?.forbidden_actions || [];
+  const originalEnemy = contextRecord?.enemy_actions || [];
+  const originalWarnings = contextRecord?.warnings_list || [];
+  const originalExplanation = contextRecord?.knowledge_text_en || "";
+  const originalExplanationMl = contextRecord?.knowledge_text_ml || "";
+  const sourceLabel = contextRecord?.source_book_title || "Astrology Clock";
+
+  // ── Determine if this context is suitable for the Purpose ──
+  const purposeRec = purposeInRecommended(contextRecord, ritualKey);
+  const purposeForb = purposeInForbidden(contextRecord, ritualKey);
+  const evilCtx = isEvilContext(contextRecord);
+
   const breakdown = [];
   let allPass = true;
-  const citeFor = (field) => {
-    const c = citations.find(x => x.field === field);
-    return c ? c.source : null;
-  };
 
-  // 1. Weekday
-  if (req.days) {
-    const dayOk = selectedDay && req.days.includes(selectedDay);
-    if (!dayOk) allPass = false;
+  // 1. Weekday — display the Astro Clock's assessment for this Day
+  {
+    const dayName = selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected";
+    const dayOk = !req.days || (selectedDay && req.days.includes(selectedDay));
+    if (selectedDay && !dayOk && req.days) allPass = false;
+    const dayContextRecords = astroClockKnowledge?.filter(r => r.weekday === weekday && purposeInRecommended(r, ritualKey)) || [];
+    const daySuitableForPurpose = dayContextRecords.length > 0;
     breakdown.push({
       dimension: "weekday", label: "Weekday",
-      currentValue: selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected",
-      status: dayOk ? "pass" : "fail",
-      reason: dayOk
-        ? `The manuscript prescribes ${req.days.map(d => MIZAN_DAY_NAMES[d]).join(", ")}. Your selection matches.`
-        : `The manuscript prescribes ${req.days.map(d => MIZAN_DAY_NAMES[d]).join(" and ")} only.`,
-      source: citeFor("day"),
-      recommended: dayOk ? null : req.days.map(d => MIZAN_DAY_NAMES[d]).join(" or "),
+      currentValue: dayName,
+      status: !selectedDay ? "neutral" : dayOk ? "pass" : (purposeForb && !purposeRec) ? "fail" : "neutral",
+      reason: originalSuitability
+        ? `${originalSuitability.split(/\n---\n/)[0] || originalSuitability}`
+        : daySuitableForPurpose
+          ? `${dayName} is suitable for this purpose per the Astrology Clock.`
+          : `No Astrology Clock data for ${dayName} and this purpose.`,
+      reasonMl: originalExplanationMl || "",
+      source: sourceLabel,
+      recommended: dayOk ? null : (req.days?.map(d => MIZAN_DAY_NAMES[d]).join(" or ") || null),
     });
-  } else {
-    breakdown.push({ dimension: "weekday", label: "Weekday", currentValue: selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
   }
 
-  // 2. Planetary Hour — effective Kawkab from the single source of truth
-  if (req.hours) {
-    const hourPlanet = selectedHour ? capitalPlanet(currentHourInfo.planet) : null;
-    const hourOk = selectedHour && req.hours.map(p => p.toLowerCase()).includes(currentHourInfo.planet);
-    if (selectedHour && !hourOk) allPass = false;
+  // 2. Saat (Planetary Hour) — display the Astro Clock's assessment for this Saat + Kawkab
+  {
+    const hourPlanet = selectedHour ? capitalPlanet(currentHourInfo?.planet || kawkab) : null;
+    const hourOk = !req.hours || (selectedHour && req.hours.map(p => p.toLowerCase()).includes(String(currentHourInfo?.planet || kawkab || "").toLowerCase()));
+    if (selectedHour && !hourOk && req.hours) allPass = false;
     breakdown.push({
-      dimension: "hour", label: "Planetary Hour",
-      currentValue: selectedHour ? `Hour #${selectedHour}${hourPlanet ? ` (${hourPlanet})` : ""}` : "Not selected",
+      dimension: "hour", label: "Planetary Hour (Saat)",
+      currentValue: selectedHour ? `Saat #${selectedHour} (${hourPlanet})` : "Not selected",
       status: !selectedHour ? "neutral" : hourOk ? "pass" : "fail",
-      reason: !selectedHour
-        ? `The manuscript prescribes ${req.hours.join(", ")} hour(s). Select an hour to verify.`
-        : hourOk
-          ? `The manuscript prescribes ${req.hours.join(", ")} hour. Your selected hour is ruled by ${hourPlanet}.`
-          : `The manuscript prescribes ${req.hours.join(", ")} hour. Your selected hour is ruled by ${hourPlanet}, which does not match.`,
-      source: citeFor("hour"),
-      recommended: req.hours.join(" or "),
+      reason: originalExplanation
+        ? originalExplanation.split(/\n---\n/)[0] || originalExplanation
+        : purposeRec
+          ? `This Saat is ruled by ${hourPlanet}. The Astrology Clock recommends it for this purpose.`
+          : purposeForb
+            ? `This Saat is ruled by ${hourPlanet}. The Astrology Clock marks it as forbidden for this purpose.`
+            : `Saat #${selectedHour} (${hourPlanet}). No specific Astrology Clock data for this purpose.`,
+      reasonMl: originalExplanationMl || "",
+      source: sourceLabel,
+      recommended: hourOk ? null : (req.hours?.join(" or ") || null),
     });
-  } else {
-    breakdown.push({ dimension: "hour", label: "Planetary Hour", currentValue: selectedHour ? `Hour #${selectedHour}` : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
   }
 
-  // 3. Planet
-  if (req.planet) {
-    const selectedPlanetEn = MIZAN_TO_EN_PLANET[selectedPlanet];
-    const planetOk = selectedPlanetEn && req.planet.includes(selectedPlanetEn);
-    if (selectedPlanet && !planetOk) allPass = false;
+  // 3. Layl/Nahar (Day/Night) — display the Astro Clock's assessment
+  {
+    const dnOk = req.nightRequired !== true || dayNight === "gece";
+    if (dayNight && !dnOk && req.nightRequired) allPass = false;
+    const periodText = period === "night" ? "Night (Layl)" : "Day (Nahar)";
     breakdown.push({
-      dimension: "planet", label: "Planet",
-      currentValue: selectedPlanetEn || (selectedPlanet || "Not selected"),
-      status: !selectedPlanet ? "neutral" : planetOk ? "pass" : "fail",
-      reason: !selectedPlanet
-        ? `The manuscript prescribes ${req.planet.join(", ")}.`
-        : planetOk
-          ? `The manuscript prescribes ${req.planet.join(", ")}. Your selection matches.`
-          : `The manuscript prescribes ${req.planet.join(" and ")} only.`,
-      source: citeFor("planet"),
-      recommended: planetOk ? null : req.planet.join(" or "),
-    });
-  } else {
-    breakdown.push({ dimension: "planet", label: "Planet", currentValue: selectedPlanet ? (MIZAN_TO_EN_PLANET[selectedPlanet] || selectedPlanet) : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
-  }
-
-  // 4. Element
-  const selectedElement = selections?.elements?.[0] || null;
-  if (req.element) {
-    const elemOk = selectedElement === req.element;
-    if (selectedElement && !elemOk) allPass = false;
-    breakdown.push({
-      dimension: "element", label: "Element",
-      currentValue: selectedElement || "Not selected",
-      status: !selectedElement ? "neutral" : elemOk ? "pass" : "fail",
-      reason: !selectedElement
-        ? `The manuscript prescribes ${req.element} element.`
-        : elemOk
-          ? `The manuscript prescribes ${req.element} element. Your selection matches.`
-          : `The manuscript prescribes ${req.element} element for this work.`,
-      source: citeFor("element"),
-      recommended: elemOk ? null : req.element,
-    });
-  } else {
-    breakdown.push({ dimension: "element", label: "Element", currentValue: selectedElement || "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
-  }
-
-  // 5. Day/Night
-  if (req.nightRequired === true) {
-    const dnOk = dayNight === "gece";
-    if (dayNight && !dnOk) allPass = false;
-    breakdown.push({
-      dimension: "dayNight", label: "Day / Night",
-      currentValue: dayNight === "gunduz" ? "Day" : dayNight === "gece" ? "Night" : "Not selected",
+      dimension: "dayNight", label: "Layl / Nahar",
+      currentValue: dayNight === "gunduz" ? "Day (Nahar)" : dayNight === "gece" ? "Night (Layl)" : "Not selected",
       status: !dayNight ? "neutral" : dnOk ? "pass" : "fail",
-      reason: !dayNight
-        ? "The manuscript requires this work be performed at night."
-        : dnOk
-          ? "The manuscript requires night. Your selection matches."
-          : "The manuscript requires this work be performed at night.",
-      source: citeFor("night"),
-      recommended: dnOk ? null : "Night (Gece)",
+      reason: req.nightRequired === true
+        ? `The Astrology Clock requires this work at Night (Layl). ${originalSuitability ? originalSuitability.split(/\n---\n/)[0] : ""}`
+        : `${periodText}. ${originalSuitability ? originalSuitability.split(/\n---\n/)[0] : "No night restriction in the Astrology Clock."}`,
+      reasonMl: originalExplanationMl || "",
+      source: sourceLabel,
+      recommended: dnOk ? null : "Night (Layl)",
     });
-  } else {
-    breakdown.push({ dimension: "dayNight", label: "Day / Night", currentValue: dayNight === "gunduz" ? "Day" : dayNight === "gece" ? "Night" : "Not selected", status: "neutral", reason: "No manuscript rule exists for this condition.", source: null, recommended: null });
   }
 
-  // ── Moon dimensions removed from main checklist ──
-  // Moon analysis is OPTIONAL and handled by the MoonAnalysisCard component.
-  // The main checklist evaluates Day + Saat + Kawkab + Element + Day/Night only.
-
-  // 7. Enemy planet check
-  if (req.enemyPlanets && req.enemyPlanets.length > 0 && selectedPlanet) {
-    const selectedPlanetEn = MIZAN_TO_EN_PLANET[selectedPlanet];
-    const isEnemy = selectedPlanetEn && req.enemyPlanets.includes(selectedPlanetEn);
+  // 4. Enemy relationship — display the Astro Clock's enemy explanation
+  if (originalEnemy.length > 0 || (req.enemyPlanets && req.enemyPlanets.length > 0)) {
+    const selectedPlanetEn = MIZAN_TO_EN_PLANET[selectedPlanet] || capitalPlanet(kawkab);
+    const isEnemy = req.enemyPlanets?.includes(selectedPlanetEn) || originalEnemy.some(a => purposeMatchesAction(ritualKey, a.en));
     if (isEnemy) allPass = false;
+    const enemyText = originalEnemy.map(a => a.en).join("; ");
     breakdown.push({
-      dimension: "enemyPlanet", label: "Enemy Planet Check",
+      dimension: "enemyPlanet", label: "Enemy Relationship",
       currentValue: selectedPlanetEn || "Not selected",
       status: isEnemy ? "fail" : "pass",
-      reason: isEnemy
-        ? `${selectedPlanetEn} is an enemy planet for this ritual per the manuscript.`
-        : `Your selected planet is not an enemy planet for this ritual.`,
-      source: "ManuscriptRule",
-      recommended: isEnemy ? (req.planet?.[0] || req.hours?.[0] || "See prescribed planets") : null,
+      reason: enemyText
+        ? `Astrology Clock: ${enemyText}`
+        : isEnemy
+          ? `${selectedPlanetEn} is an enemy planet for this purpose per the Astrology Clock.`
+          : `No enemy relationship for this planet in the Astrology Clock.`,
+      reasonMl: originalEnemy.map(a => a.ml).filter(Boolean).join("; "),
+      source: sourceLabel,
+      recommended: isEnemy ? (req.hours?.[0] || "See recommended Saat") : null,
     });
   }
 
-  // 8. Nahas (forbidden) day check
-  if (req.worstDays && req.worstDays.length > 0) {
-    const isNahasDay = selectedDay && req.worstDays.includes(selectedDay);
-    if (isNahasDay) allPass = false;
+  // 5. Forbidden context check — display the Astro Clock's forbidden explanation
+  if (purposeForb || evilCtx) {
+    allPass = false;
+    const forbiddenText = originalForbidden.map(a => a.en).join("; ");
     breakdown.push({
-      dimension: "nahasDay", label: "Nahas (Forbidden Day)",
-      currentValue: selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected",
-      status: !selectedDay ? "neutral" : isNahasDay ? "fail" : "pass",
-      reason: !selectedDay
-        ? `The manuscript forbids: ${req.worstDays.map(d => MIZAN_DAY_NAMES[d]).join(", ")}.`
-        : isNahasDay
-          ? `${MIZAN_DAY_NAMES[selectedDay]} is a Nahas (forbidden) day for this ritual per the manuscript.`
-          : `Your selected day is not a Nahas day.`,
-      source: citeFor("day"),
-      recommended: isNahasDay ? (req.days?.map(d => MIZAN_DAY_NAMES[d]).join(" or ") || "Avoid forbidden days") : null,
+      dimension: "forbidden", label: "Forbidden Timing",
+      currentValue: "This context",
+      status: "fail",
+      reason: forbiddenText
+        ? `Astrology Clock: ${forbiddenText}`
+        : originalSuitability || "This timing is forbidden by the Astrology Clock.",
+      reasonMl: originalForbidden.map(a => a.ml).filter(Boolean).join("; "),
+      source: sourceLabel,
+      recommended: req.days?.map(d => MIZAN_DAY_NAMES[d]).join(" or ") || "See recommended timing",
     });
   }
 
-  // ── STEP 5: RECOMMENDATION — report exactly what failed, no hardcoded priority ──
-  // The manuscript validation determines which fields are invalid.
-  // The recommendation engine reports ONLY the failed field(s).
-  // It NEVER recommends changing something that already passes.
-  // Kawkab is NEVER recommended independently — derived from Day + Saat.
+  // ── RECOMMENDATION — only the fields that need changing ──
+  // NEVER recommend Kawkab (auto-derived from Saat).
   const bestAlt = {};
-
-  // Determine which fields actually FAILED the manuscript rules
   const dayFailed = (!!req.days && (!selectedDay || !req.days.includes(selectedDay))) ||
                     (!!req.worstDays && selectedDay && req.worstDays.includes(selectedDay));
-  const saatFailed = !!req.hours && !!selectedHour && !req.hours.map(p => p.toLowerCase()).includes(currentHourInfo?.planet);
+  const saatFailed = !!req.hours && !!selectedHour && !req.hours.map(p => p.toLowerCase()).includes(String(currentHourInfo?.planet || kawkab || "").toLowerCase());
   const laylNaharFailed = req.nightRequired === true && dayNight !== "gece";
 
-  // ── FORBIDDEN CHECK — Nahas day or enemy/worst hour (STEP 7) ──
+  // Forbidden if Nahas day or enemy/worst hour
   const isForbiddenDay = !!(req.worstDays && selectedDay && req.worstDays.includes(selectedDay));
-  const isForbiddenHour = !!(selectedHour && req.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(currentHourInfo?.planet)) ||
-                         !!(selectedHour && req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(currentHourInfo?.planet));
-  const forbidden = isForbiddenDay || isForbiddenHour;
+  const isForbiddenHour = !!(selectedHour && req.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(String(currentHourInfo?.planet || "").toLowerCase())) ||
+                          !!(selectedHour && req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(String(currentHourInfo?.planet || "").toLowerCase()));
+  const forbidden = isForbiddenDay || isForbiddenHour || purposeForb || (evilCtx && !purposeRec);
 
-  if (allPass) {
-    // Everything valid — no recommendation.
+  if (allPass && !forbidden) {
     bestAlt.complete = false;
   } else {
     bestAlt.changes = [];
     bestAlt.reason = "";
 
-    // ── Day failed → recommend a prescribed Day ──
     if (dayFailed) {
       bestAlt.day = req.days?.length > 0
         ? req.days.map(d => MIZAN_DAY_NAMES[d]).join(" or ")
         : "Any day except forbidden";
       bestAlt.dayValue = earliest?.dayKey || req.days?.[0] || null;
       bestAlt.changes.push("Day");
-      bestAlt.reason += `Change Day to ${bestAlt.day}. `;
+      bestAlt.reason += `Better Day: ${bestAlt.day}. `;
     }
 
-    // ── Layl/Nahar failed → recommend Night (Gece) ──
     if (laylNaharFailed) {
-      bestAlt.dayNight = "Night (Gece)";
+      bestAlt.dayNight = "Night (Layl)";
       bestAlt.dayNightValue = "gece";
       bestAlt.changes.push("Layl/Nahar");
-      bestAlt.reason += "Change to Night (Gece). ";
+      bestAlt.reason += "Better Layl/Nahar: Night (Layl). ";
     }
 
-    // ── Saat failed → recommend a Saat with matching Kawkab ──
-    // Kawkab is derived from Day + Saat — shown as context, never recommended independently.
     if (saatFailed) {
       let saatRecommended = false;
       if (!dayFailed) {
-        // Day is valid → find a Saat on the CURRENT Day
         const validSaats = (todayHours || [])
           .filter(h => {
             if (req.hours && !req.hours.map(p => p.toLowerCase()).includes(h.planet)) return false;
@@ -611,12 +670,11 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
           bestAlt.dayName = selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Today";
           bestAlt.isToday = true;
           bestAlt.changes.push("Saat");
-          bestAlt.reason += `Change Saat to #${saatNum} (${capitalPlanet(bestSaat.planet)}). `;
+          bestAlt.reason += `Better Saat: #${saatNum} (${capitalPlanet(bestSaat.planet)}). `;
           saatRecommended = true;
         }
       }
       if (!saatRecommended && earliest) {
-        // Day also failed OR no valid Saat on current Day — use earliest valid Day + Saat
         const earliestSaatNum = earliest.period === 'night' ? earliest.hour - 12 : earliest.hour;
         bestAlt.hour = `#${earliestSaatNum} (${earliest.planet})`;
         bestAlt.hourValue = earliestSaatNum;
@@ -628,39 +686,46 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
         bestAlt.isToday = earliest.isToday;
         bestAlt.daysAhead = earliest.daysAhead;
         bestAlt.changes.push("Saat");
-        bestAlt.reason += `Change Saat to #${earliestSaatNum} (${earliest.planet})${dayFailed ? ` on ${earliest.dayName}` : ""}. `;
+        bestAlt.reason += `Better Saat: #${earliestSaatNum} (${earliest.planet})${dayFailed ? ` on ${earliest.dayName}` : ""}. `;
         saatRecommended = true;
       }
       if (!saatRecommended) {
-        // No specific Saat found — show prescribed Kawkab(s)
         bestAlt.hour = req.hours.join(" or ");
         bestAlt.changes.push("Saat");
-        bestAlt.reason += `Change Saat to one ruled by ${req.hours.join(", ")}. `;
+        bestAlt.reason += `Better Saat: one ruled by ${req.hours.join(", ")}. `;
       }
     }
 
     bestAlt.complete = bestAlt.changes.length > 0;
     if (!bestAlt.complete) {
-      bestAlt.reason = "Review manuscript rules for this ritual.";
+      bestAlt.reason = "See the Astrology Clock recommendations below.";
     }
   }
 
   return {
-    suitable: allPass,
+    suitable: allPass && !forbidden,
     forbidden,
     purposeRequired: false,
-    summary: allPass
-      ? "Your current configuration is valid — all manuscript conditions are satisfied."
-      : `Your current configuration has ${breakdown.filter(b => b.status === "fail").length} issue(s) that need to be corrected.`,
+    summary: (allPass && !forbidden)
+      ? "Your current configuration is suitable — the Astrology Clock confirms this timing for your purpose."
+      : `Your current configuration has ${breakdown.filter(b => b.status === "fail").length} issue(s). Adjust the recommended fields.`,
     decisionBreakdown: breakdown,
     bestAlternative: bestAlt.complete ? bestAlt : null,
+    // ── Original Astro Clock text for the selected context ──
+    contextRecord,
+    originalSuitability,
+    originalRecommended,
+    originalForbidden,
+    originalWarnings,
+    originalExplanation,
+    originalExplanationMl,
   };
 }
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN — analyzeRitualTiming (same return shape as V2)
 // ═══════════════════════════════════════════════════════════════
-export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup, planningContext }) {
+export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup, planningContext }) {
   _planningOverride = planningContext || null;
   const reasoning = [];
   const warnings = [];
@@ -678,7 +743,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   const purposes = selections?.purposes || [];
 
   // ── STEP 1: identify ritual from user selections ──
-  const identified = identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup });
+  const identified = identifyRitual({ selections, customPurpose, astroClockKnowledge, purposeLookup });
   const ritualKey = identified.ritualKey;
   const matchedOn = identified.matchedOn;
   // No purpose selected → continue with a "general" context so the full report
@@ -689,15 +754,15 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   rulesApplied.push({
     id: "IDENTIFY",
     desc: `Ritual classified as ${effectiveRitualKey} (${matchedOn})`,
-    source: "Engine inference from Mizan + custom purpose",
+    source: "Purpose Dictionary",
   });
 
-  // ── STEP 2: gather rules ──
-  const { req, moonReq, citations, moonCitations, dbRuleCount, priorities } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
-  reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). No JS fallback — manuscript-only authority.`);
+  // ── STEP 2: gather context from the Astrology Clock ──
+  const { req, moonReq, citations, moonCitations, dbRuleCount } = gatherRulesFromAstroClock(effectiveRitualKey, astroClockKnowledge);
+  reasoning.push(`Astrology Clock: ${dbRuleCount} matching context record(s) for this purpose.`);
   for (const c of citations) {
-    rulesApplied.push({ id: c.rule_id, desc: c.summary || `${c.category} rule`, source: c.source });
-    bookNotes.push({ source: c.source, text: c.summary || c.category });
+    rulesApplied.push({ id: c.rule_id, desc: c.summary || `Astro Clock context`, source: c.source });
+    bookNotes.push({ source: c.source, text: c.summary || "Astrology Clock" });
   }
 
   // ── Polarity (only if explicitly selected; never invent) ──
@@ -813,54 +878,61 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // ── STEP 5: earliest valid time ──
   const earliest = findEarliestValidTime(req, now);
 
-  // ── SELECTION ANALYSIS: dimension-by-dimension check of user's selections ──
+  // ── SELECTION ANALYSIS: Astro Clock interpreter for the selected context ──
+  const astroWeekday = activeDayIndex;
+  const astroPeriod = effectivePeriod;
+  const astroSaatNumber = effectiveHourNumber;
+  const astroKawkab = manuscriptKawkab || (foundSaat ? foundSaat.planet : null);
+
   const selectionAnalysis = buildSelectionAnalysis({
-    selections, req, citations, noPurposeSelected,
-    earliest, bestWindowsToday, todayHours, moonPhase,
+    selections, req, astroClockKnowledge, ritualKey: effectiveRitualKey, noPurposeSelected,
+    earliest, todayHours,
     dayNight, selectedDay, selectedHour, selectedPlanet,
     currentHourInfo,
+    weekday: astroWeekday, period: astroPeriod,
+    saatNumber: astroSaatNumber, kawkab: astroKawkab,
   });
 
-  // ── VERDICT FROM MANUSCRIPT COMPARISON — no priorities, no scores, no weights ──
-  // The engine compares the user's selections with the manuscript rules.
-  // - Forbidden: a Nahas day or enemy planet hour is selected (manuscript forbids it).
-  // - Suitable: all manuscript conditions are satisfied.
-  // - Not Suitable: one or more manuscript conditions are not satisfied.
-  // The explanation cites the specific manuscript rules that caused the result.
+  // ── VERDICT FROM ASTROLOGY CLOCK — original text only ──
+  // The verdict uses the Astro Clock's own ritual_suitability assessment.
+  // Forbidden: the Astro Clock marks this context as evil/malefic or the
+  //   purpose appears in forbidden_actions.
+  // Suitable: the purpose appears in recommended_actions or the Astro Clock
+  //   marks this context as good/benefic.
+  // Not Suitable: otherwise.
+  // The verdictReason is the ORIGINAL Astro Clock text — never generated.
   const saBreakdown = selectionAnalysis?.decisionBreakdown || [];
   const failedItems = saBreakdown.filter(b => b.status === "fail");
   const passedItems = saBreakdown.filter(b => b.status === "pass");
 
   let verdict, verdictColor, verdictReason;
   if (selectionAnalysis?.forbidden) {
-    const nahasItem = failedItems.find(b => b.dimension === "nahasDay");
-    const enemyItem = failedItems.find(b => b.dimension === "enemyPlanet");
     verdict = "Forbidden"; verdictColor = "#DC2626";
-    verdictReason = nahasItem
-      ? `${nahasItem.reason} This is a Nahas period — the manuscript forbids this timing.`
-      : enemyItem
-        ? `${enemyItem.reason} This is an enemy planet hour — the manuscript forbids this timing.`
-        : "This timing is forbidden by manuscript rules.";
+    verdictReason = selectionAnalysis.originalSuitability
+      || (failedItems.find(b => b.dimension === "forbidden")?.reason)
+      || "The Astrology Clock marks this timing as forbidden for this purpose.";
   }
   else if (selectionAnalysis?.suitable) {
     verdict = "Suitable"; verdictColor = "#4ADE80";
-    verdictReason = passedItems.length > 0
-      ? passedItems.map(p => p.reason).join(" ")
-      : "All manuscript conditions for this ritual are satisfied.";
+    verdictReason = selectionAnalysis.originalSuitability
+      || (passedItems.length > 0 ? passedItems.map(p => p.reason).join(" ") : "")
+      || "The Astrology Clock confirms this timing is suitable for your purpose.";
   }
   else {
     verdict = "Not Suitable"; verdictColor = "#F87171";
-    verdictReason = failedItems.length > 0
-      ? failedItems.map(f => f.reason).join(" ")
-      : "One or more manuscript conditions are not satisfied.";
+    verdictReason = selectionAnalysis.originalSuitability
+      || (failedItems.length > 0 ? failedItems.map(f => f.reason).join(" ") : "")
+      || "The Astrology Clock does not recommend this timing for your purpose.";
   }
 
-  // ── Warnings (only for violated found rules) ──
-  if (req.days && !currentDayOk) warnings.push(`Today (${MIZAN_DAY_NAMES[currentDayKey]}) is not a prescribed day. Manuscript prescribes: ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
-  if (req.hours && !currentHourOk) warnings.push(`Current hour (${capitalPlanet(currentHourInfo.planet)}) is not prescribed. Manuscript prescribes: ${req.hours.join(", ")} hour(s).`);
-  if (req.nightRequired === true && !isNightTime) warnings.push("Manuscript requires night, but it is currently day.");
-  if (req.worstHours && currentNotWorst === false) warnings.push(`Current hour is a worst/enemy hour: ${capitalPlanet(currentHourInfo.planet)}.`);
-  if (req.worstDays && req.worstDays.includes(currentDayKey)) warnings.push(`Today (${MIZAN_DAY_NAMES[currentDayKey]}) is a Nahas (forbidden) day per the manuscript. Avoid performing this ritual today.`);
+  // ── Warnings from the Astrology Clock's warnings_list (original text) ──
+  if (selectionAnalysis.originalWarnings && selectionAnalysis.originalWarnings.length > 0) {
+    for (const w of selectionAnalysis.originalWarnings) {
+      warnings.push(w.en || "");
+    }
+  }
+  if (req.days && !currentDayOk) warnings.push(`${MIZAN_DAY_NAMES[currentDayKey]} is not recommended. Astrology Clock recommends: ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
+  if (req.nightRequired === true && !isNightTime) warnings.push("The Astrology Clock requires this work at Night (Layl).");
 
   // ── Astro Clock status ──
   const astroClockStatus = {
@@ -903,20 +975,20 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 
   report.push({
     section: "TODAY ANALYSIS", icon: "calendar", status: canPerformToday,
-    body: canPerformToday === "Yes" ? `Yes — the current conditions satisfy every manuscript rule found for this ritual. You may proceed now.`
-      : canPerformToday === "Limited" ? `Today is partially suitable — some valid hours remain, but the current moment is not ideal.`
-      : `No — today does not satisfy the manuscript rules for this ritual. ${req.days ? `Prescribed day(s): ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.` : ""}`,
-    citation: citations.map((c) => c.source).join("; ") || "ManuscriptRule DB only",
-    consequence: "Proceeding against manuscript rules weakens or reverses the ritual.",
+    body: canPerformToday === "Yes" ? `Yes — the Astrology Clock confirms this timing for your purpose. You may proceed now.`
+      : canPerformToday === "Limited" ? `Partially suitable — some valid hours remain today, but the current moment is not ideal.`
+      : `No — the Astrology Clock does not recommend today for this purpose. ${req.days ? `Recommended day(s): ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.` : ""}`,
+    citation: citations.map((c) => c.source).join("; ") || "Astrology Clock",
+    consequence: "Proceeding against the Astrology Clock weakens or reverses the ritual.",
   });
 
   report.push({
     section: "CURRENT MOMENT", icon: "clock", status: currentMomentSuitable ? "Suitable" : "Not suitable",
     body: currentMomentSuitable
-      ? `The current moment satisfies all found manuscript rules: hour ${capitalPlanet(currentHourInfo.planet)}, ${isNightTime ? "night" : "day"}. Act now.`
-      : `The current moment does NOT satisfy all manuscript rules. Hour: ${capitalPlanet(currentHourInfo.planet)}. ${!currentHourOk ? `Prescribed hours: ${req.hours.join(", ")}.` : ""} ${!currentNightOk ? "Night required." : ""} ${earliest ? `Earliest valid opportunity: ${earliest.dayName}${earliest.isToday ? " (today)" : ""} at ${earliest.startTime}–${earliest.endTime} (${earliest.planet}).` : ""}`,
-    citation: citations.map((c) => c.source).join("; ") || "Manuscript rules",
-    consequence: "Acting outside the manuscript window wastes the ritual.",
+      ? `The current moment satisfies the Astrology Clock: Saat ${capitalPlanet(currentHourInfo.planet)}, ${isNightTime ? "Layl (night)" : "Nahar (day)"}. Act now.`
+      : `The current moment does NOT satisfy the Astrology Clock. Saat: ${capitalPlanet(currentHourInfo.planet)}. ${!currentHourOk ? `Recommended Saat(s): ${req.hours.join(", ")}.` : ""} ${!currentNightOk ? "Layl (night) required." : ""} ${earliest ? `Next valid opportunity: ${earliest.dayName}${earliest.isToday ? " (today)" : ""} at ${earliest.startTime}–${earliest.endTime} (${earliest.planet}).` : ""}`,
+    citation: citations.map((c) => c.source).join("; ") || "Astrology Clock",
+    consequence: "Acting outside the Astrology Clock window wastes the ritual.",
     waitTime: earliest ? (earliest.isToday ? "later today" : `${earliest.daysAhead}d`) : null,
   });
 
@@ -926,9 +998,9 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
       time: `${w.startTime}–${w.endTime}`, stars: starsToString(w.stars), planet: w.planet, hourNumber: w.hourNumber, period: w.period,
       reason: w.reason, strengthReason: `${starsToString(w.stars)} — ${w.reason}`,
     })),
-    body: bestWindowsToday.length > 0 ? `Rule-matched windows today, star-rated by alignment with manuscript prescriptions.` : `No rule-matched windows remain today.`,
-    citation: citations.map((c) => c.source).join("; ") || "Manuscript rules",
-    consequence: "These are your power windows per the manuscripts.",
+    body: bestWindowsToday.length > 0 ? `Astrology Clock windows today, aligned with your purpose.` : `No Astrology Clock windows remain today.`,
+    citation: citations.map((c) => c.source).join("; ") || "Astrology Clock",
+    consequence: "These are your power windows per the Astrology Clock.",
   });
 
   const ranked = [...bestWindowsToday].sort((a, b) => b.score - a.score).slice(0, 3).map((w, i) => ({ ...w, rank: i + 1 }));
@@ -936,10 +1008,10 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     section: "BEST TIME", icon: "star", status: `${ranked.length} ranked`,
     ranked: ranked.map((w) => ({
       rank: w.rank, time: `${w.startTime}–${w.endTime}`, stars: starsToString(w.stars), planet: w.planet,
-      reason: w.rank === 1 ? `Strongest window today. ${w.reason}.` : `Rank ${w.rank} fallback. ${w.reason}.`,
+      reason: w.rank === 1 ? `Best window today. ${w.reason}.` : `Rank ${w.rank} fallback. ${w.reason}.`,
     })),
-    body: ranked.length > 0 ? `Top hours today ranked by manuscript alignment.` : `No ranked windows today — see next opportunity.`,
-    citation: citations.map((c) => c.source).join("; ") || "Manuscript rules",
+    body: ranked.length > 0 ? `Top hours today per the Astrology Clock.` : `No ranked windows today — see next opportunity.`,
+    citation: citations.map((c) => c.source).join("; ") || "Astrology Clock",
     consequence: "Starting at the wrong hour means the ruling planet does not govern the request.",
   });
 
@@ -951,10 +1023,10 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
       enemyDays: req.worstDays || [],
       enemyMoonPhases: [],
       enemyRulers: req.enemyPlanets || [],
-      note: req.enemyPlanets?.length ? `Manuscript identifies ${req.enemyPlanets.join(", ")} as enemy planets for this work.` : `No enemy planets specified in the manuscripts for this ritual.`,
+      note: req.enemyPlanets?.length ? `Astrology Clock identifies ${req.enemyPlanets.join(", ")} as enemy planets for this work.` : `No enemy planets for this purpose in the Astrology Clock.`,
     },
-    body: avoidWindowsToday.length > 0 ? `Avoid these hours today per manuscript: ${avoidWindowsToday.map((w) => `${w.startTime}–${w.endTime} (${w.planet})`).join("; ")}.` : `No specifically dangerous hours found today.`,
-    citation: citations.map((c) => c.source).join("; ") || "Manuscript rules",
+    body: avoidWindowsToday.length > 0 ? `Avoid these hours today per the Astrology Clock: ${avoidWindowsToday.map((w) => `${w.startTime}–${w.endTime} (${w.planet})`).join("; ")}.` : `No specifically dangerous hours found today.`,
+    citation: citations.map((c) => c.source).join("; ") || "Astrology Clock",
     consequence: "Performing in an enemy hour can cause the ritual to rebound.",
   });
 
@@ -963,53 +1035,54 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     nextHour: earliest ? { day: earliest.dayName, time: `${earliest.startTime}–${earliest.endTime}`, planet: earliest.planet, isToday: earliest.isToday, daysAhead: earliest.daysAhead } : null,
     nextMoonPhase: null,
     body: earliest
-      ? `Earliest valid opportunity: ${earliest.dayName}${earliest.isToday ? " (today)" : ` (${earliest.daysAhead} day(s) ahead)`}, ${earliest.startTime}–${earliest.endTime} (${earliest.planet} hour, hour #${earliest.hour}). This is the first time all Day + Saat manuscript rules are simultaneously satisfied within the next 14 days.`
-      : `No fully valid opportunity found within 14 days. Review the manuscript rules for exceptions.`,
-    citation: citations.map((c) => c.source).join("; ") || "Manuscript rules",
-    consequence: "Waiting for the earliest valid time ensures full ritual power.",
+      ? `Next valid opportunity: ${earliest.dayName}${earliest.isToday ? " (today)" : ` (${earliest.daysAhead} day(s) ahead)`}, ${earliest.startTime}–${earliest.endTime} (${earliest.planet} Saat, Saat #${earliest.hour}). This is the first time all Day + Saat conditions are satisfied per the Astrology Clock within the next 14 days.`
+      : `No valid opportunity found within 14 days per the Astrology Clock.`,
+    citation: citations.map((c) => c.source).join("; ") || "Astrology Clock",
+    consequence: "Waiting for the valid time ensures full ritual power.",
   });
 
   report.push({
     section: "ASTRO ANALYSIS", icon: "globe", status: `${astroClockStatus.day} / ${astroClockStatus.currentHour.planet}`,
-    body: `Today is ${astroClockStatus.day}, ruled by ${dayRuler.planet}. Current hour #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "night" : "day"}, ${currentHourInfo.remainingTime} left. ${verdictReason}`,
-    citation: "Live Astro Clock (read-only)",
-    consequence: "Composite of all manuscript conditions.",
+    body: `${MIZAN_DAY_NAMES[currentDayKey]} (ruled by ${dayRuler.planet}). Saat #${currentHourInfo.hourNumber} (${currentHourInfo.planet}), ${isNightTime ? "Layl (night)" : "Nahar (day)"}, ${currentHourInfo.remainingTime} left. ${verdictReason}`,
+    citation: "Astrology Clock (read-only)",
+    consequence: "Composite of all Astrology Clock conditions.",
     details: { dayRuler: dayRuler.planet, currentHour: currentHourInfo, moonPhase, verdict },
   });
 
   report.push({
-    section: "MANUSCRIPT EXPLANATION", icon: "book", status: `${rulesApplied.length} rules applied`,
+    section: "MANUSCRIPT EXPLANATION", icon: "book", status: `${rulesApplied.length} context records`,
     rules: rulesApplied,
-    body: `Every recommendation is grounded exclusively in the ManuscriptRule database. ${citations.length} rule citation(s) found for this ritual. No JS fallback, no heuristic, no invented rule: dimensions without a manuscript rule are reported as unrestricted.`,
-    citation: "ManuscriptRule DB (manuscript-only authority)",
-    consequence: "Each rule carries the authority of its source manuscript.",
+    body: selectionAnalysis.originalExplanation
+      || `Every recommendation is grounded in the Astrology Clock. ${citations.length} context record(s) found for this purpose.`,
+    citation: "Astrology Clock (sole authority)",
+    consequence: "Each explanation comes directly from the Astrology Clock data.",
   });
 
   report.push({
     section: "WARNING SECTION", icon: "alert-triangle", status: warnings.length > 0 ? `${warnings.length} warnings` : "No warnings",
     warnings, conflicts,
-    body: warnings.length > 0 ? warnings.map((w) => `⚠ ${w}`).join(" ") : `No warnings — all found manuscript conditions are satisfied.`,
-    citation: "Manuscript rules",
-    consequence: "Each warning identifies a violated manuscript condition.",
+    body: warnings.length > 0 ? warnings.map((w) => `⚠ ${w}`).join(" ") : `No warnings — the Astrology Clock conditions are satisfied.`,
+    citation: "Astrology Clock",
+    consequence: "Each warning comes from the Astrology Clock.",
   });
 
   report.push({
     section: "FINAL DECISION", icon: "sparkles", status: verdict, color: verdictColor,
-    body: `${verdict}. ${verdictReason} ${canPerformToday === "Yes" ? "You may proceed now." : canPerformToday === "Limited" ? "Some valid hours remain today — proceed with caution or wait for the earliest fully valid time." : "Postpone to the earliest valid opportunity."} ${req.incense ? `Burn ${req.incense} during the work.` : ""}`,
-    citation: "Manuscript rules — Astrology Clock",
-    consequence: selectionAnalysis?.suitable ? "All manuscript conditions are satisfied." : selectionAnalysis?.forbidden ? "Forbidden by manuscript — do not proceed." : "Adjust the recommended fields to satisfy the manuscript.",
+    body: `${verdict}. ${verdictReason} ${canPerformToday === "Yes" ? "You may proceed now." : canPerformToday === "Limited" ? "Some valid hours remain today — proceed with caution or wait for the valid time." : "Postpone to the valid opportunity."}`,
+    citation: "Astrology Clock",
+    consequence: selectionAnalysis?.suitable ? "The Astrology Clock confirms this timing." : selectionAnalysis?.forbidden ? "Forbidden by the Astrology Clock — do not proceed." : "Adjust the recommended fields per the Astrology Clock.",
   });
 
-  // ── Expert narrative ──
+  // ── Expert narrative (from the Astrology Clock) ──
   const expertNarrative = [];
   expertNarrative.push(`This ritual has been identified as "${ritualTypeLabel}" from your Mizan results and custom purpose (${matchedOn}).`);
-  if (dbRuleCount > 0) expertNarrative.push(`${dbRuleCount} manuscript rule(s) were found in the database for this ritual. All recommendations are manuscript-sourced.`);
-  else expertNarrative.push(`No matching rules were found in the ManuscriptRule database. No manuscript rule available for this ritual — all dimensions are unrestricted.`);
-  if (req.days) expertNarrative.push(`The manuscripts prescribe day(s): ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
-  if (req.hours) expertNarrative.push(`The manuscripts prescribe hour(s) ruled by: ${req.hours.join(", ")}.`);
-  if (req.nightRequired === true) expertNarrative.push(`The manuscripts require this work be performed at night.`);
-  if (earliest) expertNarrative.push(`The earliest fully valid opportunity is ${earliest.dayName}${earliest.isToday ? " (today)" : ` (${earliest.daysAhead} day(s) away)`} at ${earliest.startTime}–${earliest.endTime}.`);
-  if (!req.days && !req.hours) expertNarrative.push(`No specific day or hour restriction was found in the manuscripts for this ritual — timing is guided by the general planetary conditions only.`);
+  if (dbRuleCount > 0) expertNarrative.push(`${dbRuleCount} Astrology Clock context record(s) found for this purpose. All recommendations come from the Astrology Clock.`);
+  else expertNarrative.push(`No matching context found in the Astrology Clock for this purpose — timing is guided by general planetary conditions only.`);
+  if (req.days) expertNarrative.push(`The Astrology Clock recommends day(s): ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`);
+  if (req.hours) expertNarrative.push(`The Astrology Clock recommends Saat(s) ruled by: ${req.hours.join(", ")}.`);
+  if (req.nightRequired === true) expertNarrative.push(`The Astrology Clock requires this work at Night (Layl).`);
+  if (earliest) expertNarrative.push(`The next valid opportunity is ${earliest.dayName}${earliest.isToday ? " (today)" : ` (${earliest.daysAhead} day(s) away)`} at ${earliest.startTime}–${earliest.endTime}.`);
+  if (!req.days && !req.hours) expertNarrative.push(`No specific day or Saat restriction was found in the Astrology Clock for this ritual — timing is guided by general planetary conditions only.`);
 
   return {
     report, consultation: report,
@@ -1037,23 +1110,23 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     req,
     bestPlanetaryHour: req.hours?.[0] || null, bestRulingPlanet: req.planet?.[0] || req.hours?.[0] || null,
     bestDay: req.days?.[0] ? MIZAN_DAY_NAMES[req.days[0]] : null,
-    bestDayReason: req.days ? `Manuscript prescribes ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}` : "No day restriction in manuscripts",
-    bestHourReason: req.hours ? `Manuscript prescribes ${req.hours.join(", ")} hour(s)` : "No hour restriction in manuscripts",
+    bestDayReason: req.days ? `Astrology Clock recommends ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}` : "No day restriction in the Astrology Clock",
+    bestHourReason: req.hours ? `Astrology Clock recommends ${req.hours.join(", ")} Saat(s)` : "No Saat restriction in the Astrology Clock",
     altDay: req.days?.[1] ? MIZAN_DAY_NAMES[req.days[1]] : null, altHour: req.hours?.[1] || null,
     dayNightSuitability: {
       status: req.nightRequired === true ? (isNightTime ? "optimal" : "forbidden") : "neutral",
-      reason: req.nightRequired === true ? (isNightTime ? "Night, as required." : "Day, but night required.") : "No night restriction in manuscripts.",
-      citation: "ManuscriptRule (if specified)",
+      reason: req.nightRequired === true ? (isNightTime ? "Night, as required." : "Day, but night required.") : "No night restriction in the Astrology Clock.",
+      citation: "Astrology Clock",
     },
     zodiacSuitability: { assessed: false, note: "Zodiac analysis is optional — use the Moon Analysis card." },
-    elementCompatibility: { assessed: !!req.element, status: "neutral", reason: req.element ? `Manuscript prescribes element: ${req.element}` : "No element restriction in manuscripts." },
-    elementDirection: req.direction ? { dir: req.direction } : null,
+    elementCompatibility: { assessed: false, status: "neutral", reason: "Element analysis is not part of the Astrology Clock interpreter." },
+    elementDirection: null,
     elementPlacement: null,
     astroClockStatus,
     liveNow,
     recommendedStart: ranked[0]?.startTime || earliest?.startTime || null,
     recommendedEnd: ranked[0]?.endTime || earliest?.endTime || null,
-    recommendedIncense: req.incense || null,
+    recommendedIncense: null,
     selectionAnalysis,
     rulesApplied, warnings, bookNotes, conflicts, expertNarrative, reasoning,
   };
@@ -1063,19 +1136,15 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 // CONFIGURATION ADVISOR — compares current Mizan vs manuscript ideal.
 // Same return shape as V2.
 // ═══════════════════════════════════════════════════════════════
-export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup, planningContext }) {
-  const purposes = selections?.purposes || [];
-  const custom = (customPurpose || "").trim();
-  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, manuscriptRules, purposeLookup, planningContext });
+export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup, planningContext }) {
+  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup, planningContext });
   const noPurposeSelected = !!base?.noPurposeSelected;
-  const { ritualKey } = identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup });
+  const { ritualKey } = identifyRitual({ selections, customPurpose, astroClockKnowledge, purposeLookup });
   const effectiveRitualKey = ritualKey || "general";
-  const { req, citations } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
+  const { req, citations } = gatherRulesFromAstroClock(effectiveRitualKey, astroClockKnowledge);
 
-  const dominant = result?.dominant || (selections?.elements?.[0] || null);
   const selectedDay = selections?.days || null;
   const selectedHour = selections?.hour || null;
-  const selectedPlanet = selections?.planet || null;
   const dayNight = selections?.dayNight || null;
   const now = planningContext?.date || new Date();
   const nowDataAdv = getTodayAllHours(now);
@@ -1086,101 +1155,76 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   let allOptimal = true;
 
   const purposeLabel = base?.ritualType || (effectiveRitualKey.charAt(0).toUpperCase() + effectiveRitualKey.slice(1) + " Work");
-  const identifiedAdv = identifyRitual({ selections, customPurpose, manuscriptRules, purposeLookup });
+  const identifiedAdv = identifyRitual({ selections, customPurpose, astroClockKnowledge, purposeLookup });
+
+  // 1. Ritual Purpose — identified first
   recommendations.push({
     field: "Ritual Purpose", icon: "target",
     current: noPurposeSelected ? "No Purpose Selected" : purposeLabel,
     recommended: noPurposeSelected ? "Select a Purpose in Mizan 7" : purposeLabel,
     isOptimal: !noPurposeSelected,
     reason: noPurposeSelected
-      ? "No purpose selected in Mizan 7. Purpose-specific recommendations are marked as Not Available. Select a purpose to receive targeted ritual timing advice."
-      : `Ritual identified as ${effectiveRitualKey} from Mizan selections and custom purpose (${identifiedAdv.matchedOn}). This is the basis for all manuscript rule lookups.`,
+      ? "No purpose selected. Purpose-specific recommendations are unavailable. Select a purpose to receive targeted Astrology Clock advice."
+      : `Ritual identified as ${effectiveRitualKey} from Purpose Dictionary (${identifiedAdv.matchedOn}). This is the basis for all Astrology Clock lookups.`,
   });
 
-  const khayrSharrSelected = selections?.khayrSharr8 || null;
-  recommendations.push({
-    field: "Khayr / Sharr (Mizan 8)", icon: "scale",
-    current: khayrSharrSelected || "Not selected",
-    recommended: khayrSharrSelected || "Select Khayr or Sharr (optional — no universal rule applied)",
-    isOptimal: true,
-    reason: "No manuscript rule was found that forces a universal Khayr/Sharr timing restriction for this ritual. Select it only if your specific manuscript requires it.",
-  });
-
+  // 2. Better Day — only if the Astro Clock recommends specific days
   const dayOptimal = !req.days || (selectedDay && req.days.includes(selectedDay));
   if (req.days && !dayOptimal) allOptimal = false;
   recommendations.push({
     field: "Selected Weekday (Mizan 5)", icon: "calendar",
     current: selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Not selected",
-    recommended: req.days ? req.days.map((d) => MIZAN_DAY_NAMES[d]).join(" or ") : "No day restriction in manuscripts",
+    recommended: req.days ? req.days.map((d) => MIZAN_DAY_NAMES[d]).join(" or ") : "No day restriction in the Astrology Clock",
     isOptimal: dayOptimal,
-    reason: !req.days ? "The manuscripts do not prescribe a specific day for this ritual." : !selectedDay ? `The manuscripts prescribe ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}. Select one of these days.` : dayOptimal ? `Your selected day matches the manuscript prescription.` : `Your day is ${MIZAN_DAY_NAMES[selectedDay]}, but the manuscripts prescribe ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")} (${citations.map((c) => c.source).join("; ")}).`,
+    reason: !req.days ? "The Astrology Clock does not prescribe a specific day for this purpose."
+      : !selectedDay ? `The Astrology Clock recommends ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}. Select one of these days.`
+      : dayOptimal ? `Your selected day matches the Astrology Clock.`
+      : `Your day is ${MIZAN_DAY_NAMES[selectedDay]}, but the Astrology Clock recommends ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}.`,
   });
 
-  const planetOptimal = !req.planet || (selectedPlanet && req.planet.includes(MIZAN_TO_EN_PLANET[selectedPlanet]));
-  if (req.planet && !planetOptimal) allOptimal = false;
-  recommendations.push({
-    field: "Selected Planet (Mizan 6)", icon: "orbit",
-    current: selectedPlanet ? MIZAN_TO_EN_PLANET[selectedPlanet] || selectedPlanet : "Not selected",
-    recommended: req.planet ? req.planet.join(" or ") : "No planet restriction in manuscripts",
-    isOptimal: planetOptimal,
-    reason: !req.planet ? "The manuscripts do not prescribe a specific planet for this ritual." : !selectedPlanet ? `The manuscripts prescribe ${req.planet.join(", ")}.` : planetOptimal ? `Your planet matches the manuscript.` : `Your planet is ${MIZAN_TO_EN_PLANET[selectedPlanet]}, but the manuscripts prescribe ${req.planet.join(", ")} (${citations.map((c) => c.source).join("; ")}).`,
-  });
-
+  // 3. Better Saat — only if the Astro Clock recommends specific Saats
+  // Kawkab is NEVER recommended separately — it is auto-derived from the Saat.
   const { hours: todayHours } = getTodayAllHours(cfgRefDate);
   const recommendedHourNumbers = req.hours ? findHoursByPlanet(todayHours, req.hours[0]).map((h) => h.hourNumber) : [];
   const hourOptimal = !req.hours || (selectedHour && recommendedHourNumbers.includes(selectedHour));
   if (req.hours && !hourOptimal) allOptimal = false;
   recommendations.push({
-    field: "Selected Planetary Hour (Mizan 4)", icon: "clock",
-    current: selectedHour ? `Hour #${selectedHour}` : "Not selected",
-    recommended: recommendedHourNumbers.length > 0 ? `Hour #${recommendedHourNumbers.join(" or #")}` : (req.hours ? req.hours.join(" hour") : "No hour restriction in manuscripts"),
+    field: "Selected Saat (Mizan 4)", icon: "clock",
+    current: selectedHour ? `Saat #${selectedHour}` : "Not selected",
+    recommended: recommendedHourNumbers.length > 0 ? `Saat #${recommendedHourNumbers.join(" or #")}` : (req.hours ? `${req.hours.join(" Saat")}` : "No Saat restriction in the Astrology Clock"),
     isOptimal: hourOptimal,
-    reason: !req.hours ? "The manuscripts do not prescribe a specific hour for this ritual." : !selectedHour ? `The manuscripts prescribe ${req.hours.join(", ")} hour(s). Today at: ${base.bestWindowsToday?.map((w) => `${w.startTime}–${w.endTime}`).join(", ") || "none remain"}.` : hourOptimal ? `Your hour matches the manuscript.` : `Your hour is #${selectedHour}, but the manuscripts prescribe ${req.hours.join(", ")} (${citations.map((c) => c.source).join("; ")}).`,
+    reason: !req.hours ? "The Astrology Clock does not prescribe a specific Saat for this purpose."
+      : !selectedHour ? `The Astrology Clock recommends ${req.hours.join(", ")} Saat(s). Available today: ${base.bestWindowsToday?.map((w) => `${w.startTime}–${w.endTime}`).join(", ") || "none remain"}.`
+      : hourOptimal ? `Your Saat matches the Astrology Clock.`
+      : `Your Saat is #${selectedHour}, but the Astrology Clock recommends ${req.hours.join(", ")}.`,
   });
 
+  // 4. Better Layl/Nahar — only if the Astro Clock requires night
   recommendations.push({
-    field: "Selected Element (Mizan 2)", icon: "flame",
-    current: dominant || "Not detected",
-    recommended: req.element || "Based on your input text",
-    isOptimal: !req.element || dominant === req.element,
-    reason: !req.element ? "No element restriction in manuscripts for this ritual." : dominant === req.element ? "Your element matches the manuscript." : `The manuscripts recommend the ${req.element} element for this work (${citations.map((c) => c.source).join("; ")}).`,
-  });
-  if (req.element && dominant !== req.element) allOptimal = false;
-
-  recommendations.push({
-    field: "Day / Night (Mizan 3)", icon: "sunset",
-    current: dayNight ? (dayNight === "gunduz" ? "Day" : "Night") : "Not selected",
-    recommended: req.nightRequired === true ? "Night (Gece)" : "No night restriction in manuscripts",
+    field: "Layl / Nahar (Mizan 3)", icon: "sunset",
+    current: dayNight ? (dayNight === "gunduz" ? "Nahar (Day)" : "Layl (Night)") : "Not selected",
+    recommended: req.nightRequired === true ? "Layl (Night)" : "No night restriction in the Astrology Clock",
     isOptimal: req.nightRequired !== true || dayNight === "gece",
-    reason: req.nightRequired === true ? (dayNight === "gece" ? "You selected Night, as required." : "The manuscripts require night (Gece).") : "The manuscripts do not require a specific day/night for this ritual.",
+    reason: req.nightRequired === true
+      ? (dayNight === "gece" ? "You selected Layl (Night), as required by the Astrology Clock." : "The Astrology Clock requires Layl (Night) for this purpose.")
+      : "The Astrology Clock does not require a specific Layl/Nahar for this purpose.",
   });
   if (req.nightRequired === true && dayNight !== "gece") allOptimal = false;
 
+  // 5. Next available suitable timing
   const currentClock = now.toLocaleTimeString("en-US", { timeZone: "Asia/Dubai", hour: "2-digit", minute: "2-digit" });
   recommendations.push({
-    field: "Best Time to Perform (Today)", icon: "timer",
+    field: "Next Available Suitable Timing", icon: "timer",
     current: `Now: ${currentClock}`,
     recommended: bestWindow ? `${bestWindow.startTime}–${bestWindow.endTime}` : (base.nextOpportunity ? `${base.nextOpportunity.startTime}–${base.nextOpportunity.endTime} (${base.nextOpportunity.dayName})` : "No valid time in 14 days"),
     isOptimal: bestWindow && base.currentMomentSuitable,
-    reason: !bestWindow ? `No valid window today. Earliest opportunity: ${base.nextOpportunity ? `${base.nextOpportunity.dayName} ${base.nextOpportunity.startTime}` : "none in 14 days"}.` : base.currentMomentSuitable ? `Current moment is within an optimal window (${bestWindow.startTime}–${bestWindow.endTime}).` : `Wait until ${bestWindow.startTime}–${bestWindow.endTime} (${bestWindow.planet} hour) for full manuscript alignment.`,
+    reason: !bestWindow
+      ? `No valid window today. Next opportunity: ${base.nextOpportunity ? `${base.nextOpportunity.dayName} ${base.nextOpportunity.startTime}` : "none in 14 days"}.`
+      : base.currentMomentSuitable
+        ? `Current moment is within a suitable window (${bestWindow.startTime}–${bestWindow.endTime}).`
+        : `Wait until ${bestWindow.startTime}–${bestWindow.endTime} (${bestWindow.planet} Saat) per the Astrology Clock.`,
   });
   if (bestWindow && !base.currentMomentSuitable) allOptimal = false;
-
-  recommendations.push({
-    field: "Direction", icon: "compass",
-    current: "Not selected",
-    recommended: req.direction || "No direction restriction in manuscripts",
-    isOptimal: true,
-    reason: req.direction ? `The manuscripts prescribe facing ${req.direction} (${citations.map((c) => c.source).join("; ")}).` : "The manuscripts do not prescribe a direction for this ritual.",
-  });
-
-  recommendations.push({
-    field: "Incense", icon: "wind",
-    current: req.incense || "Not specified",
-    recommended: req.incense || "No incense restriction in manuscripts",
-    isOptimal: true,
-    reason: req.incense ? `The manuscripts prescribe ${req.incense} (${citations.map((c) => c.source).join("; ")}).` : "The manuscripts do not prescribe a specific incense for this ritual.",
-  });
 
   return { recommendations, allOptimal, base, noPurposeSelected };
 }

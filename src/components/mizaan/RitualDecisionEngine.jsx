@@ -25,7 +25,7 @@ import MoonAnalysisCard from "./MoonAnalysisCard";
 import PlanningModePanel from "./PlanningModePanel";
 import { setSaatPlanningContext } from "../../lib/mizaanSaatCalculator";
 import { localizeAnalysis, localizeAdvice, tStr, useRitualLang, tDay, tPlanet } from "../../lib/ritualTimingI18n";
-import { useManuscriptRules } from "../../hooks/useManuscriptRules";
+import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -57,7 +57,7 @@ function groupReferences(rulesApplied, bookNotes) {
 
 export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod, purposeLookup }) {
   const [lang, setLang] = useRitualLang();
-  const { manuscriptRules } = useManuscriptRules();
+  const { astroClockKnowledge } = useAstroClockKnowledgeAll();
 
   // ── PLANNING MODE (optional) ──
   // When ON, the engine evaluates for the selected location + date instead of
@@ -86,15 +86,15 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
 
   const rawAnalysis = useMemo(() => {
     if (!result || resolvedPurpose.needsConfirmation) return null;
-    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose, planningContext });
-  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose, planningContext]);
+    return analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup: resolvedPurpose, planningContext });
+  }, [result, effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, resolvedPurpose, planningContext]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
   const rawAdvice = useMemo(() => {
     if (!result || resolvedPurpose.needsConfirmation) return null;
-    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose, planningContext });
-  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose, planningContext]);
+    return analyzeConfigurationAdvice({ result, selections: effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup: resolvedPurpose, planningContext });
+  }, [result, effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, resolvedPurpose, planningContext]);
 
   const advice = useMemo(() => rawAdvice ? localizeAdvice(rawAdvice, lang) : null, [rawAdvice, lang]);
 
