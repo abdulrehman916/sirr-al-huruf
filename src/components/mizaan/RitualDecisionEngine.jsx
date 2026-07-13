@@ -244,16 +244,10 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
         <div className="p-4 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="font-inter text-lg" style={{ color: analysis.verdictColor, letterSpacing: "0.1em" }}>
-                {analysis.verdictStarsString}
-              </span>
               <span className="font-inter text-base font-bold" style={{ color: analysis.verdictColor }}>
                 {analysis.verdict}
               </span>
             </div>
-            <span className="font-inter text-2xl font-bold" style={{ color: analysis.verdictColor }}>
-              {analysis.confidenceScore}%
-            </span>
           </div>
 
           {/* ── Short Summary — 2–4 lines, always visible ── */}

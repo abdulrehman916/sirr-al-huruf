@@ -34,9 +34,6 @@ export default function ManuscriptComplianceChecklist({ analysis, lang }) {
   const passed = breakdown.filter((b) => b.status === "pass");
   const neutral = breakdown.filter((b) => b.status === "neutral");
 
-  const compatibility = analysis.confidenceScore || 0;
-  const successPotential = analysis.confidenceScore || 0;
-
   // Weakness — summarize the first failed condition
   // item.label is already localized by localizeSelectionAnalysis
   const weaknessText = failed.length > 0
@@ -93,20 +90,6 @@ export default function ManuscriptComplianceChecklist({ analysis, lang }) {
           {breakdown.map((item, idx) => (
             <ChecklistRow key={idx} item={item} lang={lang} />
           ))}
-        </div>
-
-        {/* ── Summary Metrics ── */}
-        <div className="grid grid-cols-2 gap-2">
-          <MetricBox
-            label={tStr("overallCompatibility", lang)}
-            value={`${compatibility}%`}
-            color={compatibility >= 70 ? G.pass : compatibility >= 50 ? "#FBBF24" : G.fail}
-          />
-          <MetricBox
-            label={tStr("successPotential", lang)}
-            value={`${successPotential}%`}
-            color={successPotential >= 70 ? G.pass : successPotential >= 50 ? "#FBBF24" : G.fail}
-          />
         </div>
 
         {/* ── Weakness ── */}
@@ -185,19 +168,6 @@ function ChecklistRow({ item, lang }) {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-// ── Metric Box ──
-function MetricBox({ label, value, color }) {
-  return (
-    <div className="rounded-lg p-2.5" style={{
-      background: "rgba(255,255,255,0.03)",
-      border: `1px solid rgba(212,175,55,0.20)`,
-    }}>
-      <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{label}</p>
-      <p className="font-inter text-lg font-bold" style={{ color }}>{value}</p>
     </div>
   );
 }
