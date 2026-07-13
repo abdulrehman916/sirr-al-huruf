@@ -145,7 +145,8 @@ function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLoo
 // data_json). It is NOT hardcoded by field type — priority changes per ritual
 // purpose. For one purpose Saat may be critical; for another, Day may be critical.
 // The manuscript is the sole authority for both the rule and its importance.
-// If a rule has no priority field, the engine uses a neutral "important" default.
+// If a rule has no priority field, it is treated as informational — shown to the
+// user but never affecting the verdict. No default or fallback priority is assumed.
 
 // ═══════════════════════════════════════════════════════════════
 // STEP 2 — Gather rules: ManuscriptRule DB only. No JS fallback. Never invent.
@@ -182,9 +183,9 @@ function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
   const priorities = {};
   const priorityOrder = { critical: 3, important: 2, minor: 1 };
   const setPriority = (field, p) => {
-    const resolved = p || 'important';
-    if (!priorities[field] || priorityOrder[resolved] > priorityOrder[priorities[field]]) {
-      priorities[field] = resolved;
+    if (!p) return; // No manuscript priority → informational, don't set one
+    if (!priorities[field] || priorityOrder[p] > priorityOrder[priorities[field]]) {
+      priorities[field] = p;
     }
   };
 
@@ -672,7 +673,7 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
   };
   for (const item of breakdown) {
     const field = dimToField[item.dimension] || item.dimension;
-    item.priority = priorities?.[field] || 'important';
+    item.priority = priorities?.[field] || null;
   }
 
   return {
@@ -910,13 +911,20 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     verdictReason = `${importantFails[0].label} does not match the manuscript prescription.`;
   }
   else if (minorFails.length === 0 && passedItems.length > 0) {
-    verdict = "Excellent"; verdictColor = "#4ADE80"; verdictReason = "All manuscript conditions are satisfied.";
+    verdict = "Excellent"; verdictColor = "#4ADE80";
+    const infoFails = failedItems.filter(b => !b.priority);
+    verdictReason = infoFails.length > 0
+      ? `All manuscript-prioritized conditions are satisfied. ${infoFails.length} informational note(s) do not affect the verdict.`
+      : "All manuscript conditions are satisfied.";
   }
   else {
     verdict = "Good"; verdictColor = "#86EFAC";
+    const infoFails = failedItems.filter(b => !b.priority);
     verdictReason = minorFails.length > 0
       ? `Minor conditions not met: ${minorFails.map(f => f.label).join(", ")}. Core conditions are satisfied.`
-      : "No manuscript conditions are violated.";
+      : infoFails.length > 0
+        ? `Informational conditions noted: ${infoFails.map(f => f.label).join(", ")}. No manuscript-defined priority affects the verdict.`
+        : "No manuscript conditions are violated.";
   }
 
   // ── Warnings (only for violated found rules) ──
