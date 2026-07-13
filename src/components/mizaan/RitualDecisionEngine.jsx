@@ -65,19 +65,34 @@ const ML_PLANET = {
 // ONLY authority. These helpers are read-only display utilities.
 // ═══════════════════════════════════════════════════════════════
 
-// Look up the AstroClockKnowledge record for an exact context
+// Look up the AstroClockKnowledge record for an exact context.
+// 1. Exact match: weekday + period + saat_number + planet.
+// 2. Fallback: weekday + period + saat_number (ignore planet) — the engine's
+//    Chaldean-order planet may differ from the manuscript's assignment for the
+//    same Saat. The Malayalam explanation belongs to the Saat, not the planet.
+//    Prefer fallback records that actually have Malayalam recommended_actions.
 function lookupAstroRecord(astroClockKnowledge, weekday, period, saatNumber, kawkab) {
   if (!astroClockKnowledge || astroClockKnowledge.length === 0) return null;
   const kawkabLC = String(kawkab || "").toLowerCase();
-  return (
-    astroClockKnowledge.find(
-      (r) =>
-        r.weekday === weekday &&
-        r.period === period &&
-        r.saat_number === saatNumber &&
-        String(r.planet || "").toLowerCase() === kawkabLC
-    ) || null
+  const exact = astroClockKnowledge.find(
+    (r) =>
+      r.weekday === weekday &&
+      r.period === period &&
+      r.saat_number === saatNumber &&
+      String(r.planet || "").toLowerCase() === kawkabLC
   );
+  if (exact) return exact;
+  const candidates = astroClockKnowledge.filter(
+    (r) =>
+      r.weekday === weekday &&
+      r.period === period &&
+      r.saat_number === saatNumber
+  );
+  if (candidates.length === 0) return null;
+  const withMl = candidates.find(
+    (r) => r.recommended_actions?.some((a) => a.ml && a.ml.trim())
+  );
+  return withMl || candidates[0];
 }
 
 // Collect original Malayalam text from an actions array (recommended/forbidden/enemy/warnings/notes).
@@ -302,10 +317,15 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
     return parts.join("\n");
   })();
 
-  // Failed fields by dimension
-  const failedDay = failedFields.find((f) => f.dimension === "weekday");
-  const failedHour = failedFields.find((f) => f.dimension === "hour");
-  const failedDayNight = failedFields.find((f) => f.dimension === "dayNight");
+  // ── Better recommendations from the engine's bestAlternative ──
+  // The engine marks suboptimal fields as "neutral" (not "fail") in the
+  // decisionBreakdown, so filtering by status==="fail" misses real
+  // recommendations. Use bestAlternative.changes instead — it contains
+  // exactly the fields that need changing ("Day", "Saat", "Layl/Nahar").
+  const bestAlt = sa?.bestAlternative || null;
+  const altHasDay = bestAlt?.changes?.includes("Day") && !!bestAlt?.day;
+  const altHasSaat = bestAlt?.changes?.includes("Saat") && !!bestAlt?.hour;
+  const altHasLayl = bestAlt?.changes?.includes("Layl/Nahar") && !!bestAlt?.dayNight;
 
   return (
     <div className="mt-6 space-y-4">
@@ -399,33 +419,33 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
             )}
           </div>
 
-          {/* ══ 3. FAILED FIELDS — Better Day, Better Saat, Better Layl/Nahar ══ */}
-          {failedFields.length > 0 && (
+          {/* ══ 3. BETTER FIELDS — Better Day, Better Saat, Better Layl/Nahar ══ */}
+          {bestAlt && bestAlt.changes?.length > 0 && (
             <div className="space-y-2">
-              {failedDay && (
+              {altHasDay && (
                 <BetterFieldCard
                   icon={<Clock className="w-4 h-4" />}
                   label={T("Better Day", "മികച്ച ദിവസം", lang)}
-                  value={translateDayRec(failedDay.recommended, lang)}
-                  reason={failedDay.reasonMl || ""}
+                  value={translateDayRec(bestAlt.day, lang)}
+                  reason=""
                   lang={lang}
                 />
               )}
-              {failedHour && (
+              {altHasSaat && (
                 <BetterFieldCard
                   icon={<Clock className="w-4 h-4" />}
                   label={T("Better Saat", "മികച്ച സഅാത്", lang)}
-                  value={translateHourRec(failedHour.recommended, lang)}
-                  reason={failedHour.reasonMl || ""}
+                  value={translateHourRec(bestAlt.hour, lang)}
+                  reason=""
                   lang={lang}
                 />
               )}
-              {failedDayNight && (
+              {altHasLayl && (
                 <BetterFieldCard
                   icon={<Sunset className="w-4 h-4" />}
                   label={T("Better Layl/Nahar", "മികച്ച ലൈൽ/നഹർ", lang)}
-                  value={translateLaylRec(failedDayNight.recommended, lang)}
-                  reason={failedDayNight.reasonMl || ""}
+                  value={translateLaylRec(bestAlt.dayNight, lang)}
+                  reason=""
                   lang={lang}
                 />
               )}
