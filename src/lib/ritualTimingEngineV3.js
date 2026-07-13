@@ -141,16 +141,11 @@ function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLoo
 }
 
 // ── Manuscript-defined rule priority ──
-// The manuscript defines the importance of each rule for each ritual purpose.
-// critical = single failure produces "Not Recommended" or "Forbidden"
-// important = failure significantly affects the verdict
-// minor = several failures may still produce "Good"
-// The engine NEVER assumes equal weight — the manuscript is the authority.
-function defaultPriorityForField(field) {
-  if (['worstDays', 'worstHours', 'enemyPlanets'].includes(field)) return 'critical';
-  if (['direction', 'incense'].includes(field)) return 'minor';
-  return 'important';
-}
+// Priority comes ONLY from the manuscript rule's priority field (top-level or
+// data_json). It is NOT hardcoded by field type — priority changes per ritual
+// purpose. For one purpose Saat may be critical; for another, Day may be critical.
+// The manuscript is the sole authority for both the rule and its importance.
+// If a rule has no priority field, the engine uses a neutral "important" default.
 
 // ═══════════════════════════════════════════════════════════════
 // STEP 2 — Gather rules: ManuscriptRule DB only. No JS fallback. Never invent.
@@ -187,7 +182,7 @@ function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
   const priorities = {};
   const priorityOrder = { critical: 3, important: 2, minor: 1 };
   const setPriority = (field, p) => {
-    const resolved = p || defaultPriorityForField(field);
+    const resolved = p || 'important';
     if (!priorities[field] || priorityOrder[resolved] > priorityOrder[priorities[field]]) {
       priorities[field] = resolved;
     }
@@ -677,7 +672,7 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
   };
   for (const item of breakdown) {
     const field = dimToField[item.dimension] || item.dimension;
-    item.priority = priorities?.[field] || defaultPriorityForField(field);
+    item.priority = priorities?.[field] || 'important';
   }
 
   return {
