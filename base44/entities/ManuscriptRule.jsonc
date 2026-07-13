@@ -54,6 +54,16 @@
       "type": "string",
       "description": "More specific subcategory"
     },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "important",
+        "minor"
+      ],
+      "default": "important",
+      "description": "Manuscript-defined importance of this rule for its ritual purpose. critical = failure produces Not Recommended or Forbidden; important = failure significantly affects verdict; minor = failure still allows Good. The manuscript is the authority for this weight. If unspecified, the engine defaults by rule type: forbidden conditions = critical, core timing = important, supplementary = minor."
+    },
     "original_text": {
       "type": "string",
       "description": "Verbatim original text from the manuscript"
@@ -68,7 +78,7 @@
     },
     "data_json": {
       "type": "string",
-      "description": "Structured rule data as JSON string"
+      "description": "Structured rule data as JSON string. May include a 'priority' field (critical/important/minor) that overrides the top-level priority for this rule."
     },
     "conflict_with": {
       "type": "string",

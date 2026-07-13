@@ -140,6 +140,18 @@ function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLoo
   };
 }
 
+// ── Manuscript-defined rule priority ──
+// The manuscript defines the importance of each rule for each ritual purpose.
+// critical = single failure produces "Not Recommended" or "Forbidden"
+// important = failure significantly affects the verdict
+// minor = several failures may still produce "Good"
+// The engine NEVER assumes equal weight — the manuscript is the authority.
+function defaultPriorityForField(field) {
+  if (['worstDays', 'worstHours', 'enemyPlanets'].includes(field)) return 'critical';
+  if (['direction', 'incense'].includes(field)) return 'minor';
+  return 'important';
+}
+
 // ═══════════════════════════════════════════════════════════════
 // STEP 2 — Gather rules: ManuscriptRule DB only. No JS fallback. Never invent.
 // ═══════════════════════════════════════════════════════════════
@@ -171,6 +183,15 @@ function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
   };
   const citations = [];
   const moonCitations = [];
+  // ── Manuscript-defined priorities per dimension (highest priority wins) ──
+  const priorities = {};
+  const priorityOrder = { critical: 3, important: 2, minor: 1 };
+  const setPriority = (field, p) => {
+    const resolved = p || defaultPriorityForField(field);
+    if (!priorities[field] || priorityOrder[resolved] > priorityOrder[priorities[field]]) {
+      priorities[field] = resolved;
+    }
+  };
 
   // ── DB rules ──
   for (const r of dbRules) {
@@ -192,6 +213,18 @@ function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
       if (typeof dj.nightRequired === "boolean") { req.nightRequired = dj.nightRequired; citations.push({ ...cite, field: "night", value: String(dj.nightRequired) }); }
       if (Array.isArray(dj.enemyPlanets) && dj.enemyPlanets.length) req.enemyPlanets = dj.enemyPlanets.map((p) => capitalPlanet(p));
       if (Array.isArray(dj.suitableMansions) && dj.suitableMansions.length) { moonReq.suitableMansions = dj.suitableMansions; moonCitations.push({ ...cite, field: "mansion", value: moonReq.suitableMansions.join(", ") }); }
+      // ── Set manuscript-defined priority for each field this rule contributes to ──
+      const rp = dj.priority || r.priority;
+      if (Array.isArray(dj.bestDays) && dj.bestDays.length) setPriority('days', rp);
+      if (Array.isArray(dj.bestHours) && dj.bestHours.length) setPriority('hours', rp);
+      if (Array.isArray(dj.worstDays) && dj.worstDays.length) setPriority('worstDays', rp);
+      if (Array.isArray(dj.worstHours) && dj.worstHours.length) setPriority('worstHours', rp);
+      if (Array.isArray(dj.planet) && dj.planet.length) setPriority('planet', rp);
+      if (dj.direction) setPriority('direction', rp);
+      if (dj.incense) setPriority('incense', rp);
+      if (dj.element) setPriority('element', rp);
+      if (typeof dj.nightRequired === "boolean") setPriority('nightRequired', rp);
+      if (Array.isArray(dj.enemyPlanets) && dj.enemyPlanets.length) setPriority('enemyPlanets', rp);
     }
   }
 
@@ -199,7 +232,7 @@ function gatherRules(ritualKey, manuscriptRules, purposeSelected) {
   // Recommendations come ONLY from ManuscriptRule DB. If no manuscript rule
   // exists for a dimension, that dimension is reported as unrestricted with
   // "No manuscript rule available for this ritual." Never invent or estimate.
-  return { req, moonReq, citations, moonCitations, dbRuleCount: dbRules.length };
+  return { req, moonReq, citations, moonCitations, dbRuleCount: dbRules.length, priorities };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -375,7 +408,7 @@ function resolveManuscriptDay(selectedDay, dayNight, now, sunrise, sunset) {
 // manual Mizan selections against manuscript rules.
 // Every ✓/✗ includes the manuscript reason and source.
 // ═══════════════════════════════════════════════════════════════
-function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected, earliest, bestWindowsToday, todayHours, moonPhase, dayNight, selectedDay, selectedHour, selectedPlanet, currentHourInfo }) {
+function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected, earliest, bestWindowsToday, todayHours, moonPhase, dayNight, selectedDay, selectedHour, selectedPlanet, currentHourInfo, priorities }) {
   if (noPurposeSelected) {
     return {
       suitable: false,
@@ -637,6 +670,16 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
     }
   }
 
+  // ── Assign manuscript-defined priority to each dimension ──
+  const dimToField = {
+    weekday: 'days', hour: 'hours', planet: 'planet', element: 'element',
+    dayNight: 'nightRequired', enemyPlanet: 'enemyPlanets', nahasDay: 'worstDays',
+  };
+  for (const item of breakdown) {
+    const field = dimToField[item.dimension] || item.dimension;
+    item.priority = priorities?.[field] || defaultPriorityForField(field);
+  }
+
   return {
     suitable: allPass,
     forbidden,
@@ -685,7 +728,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   });
 
   // ── STEP 2: gather rules ──
-  const { req, moonReq, citations, moonCitations, dbRuleCount } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
+  const { req, moonReq, citations, moonCitations, dbRuleCount, priorities } = gatherRules(effectiveRitualKey, manuscriptRules, !noPurposeSelected);
   reasoning.push(`ManuscriptRule DB: ${dbRuleCount} matching rule(s). No JS fallback — manuscript-only authority.`);
   for (const c of citations) {
     rulesApplied.push({ id: c.rule_id, desc: c.summary || `${c.category} rule`, source: c.source });
@@ -811,6 +854,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     earliest, bestWindowsToday, todayHours, moonPhase,
     dayNight, selectedDay, selectedHour, selectedPlanet,
     currentHourInfo,
+    priorities,
   });
 
   // ── Score: only from found rules ──
@@ -838,12 +882,16 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   }
 
   const stars = scoreToStars(score);
-  // ── VERDICT FROM MANUSCRIPT RULES ONLY — never from percentage score ──
-  // Percentage is a visual indicator only. Verdict is determined by how many
-  // manuscript conditions PASS vs FAIL, not by a computed score.
+  // ── VERDICT FROM MANUSCRIPT-WEIGHTED RULES — never from pass/fail counts or percentages ──
+  // Each dimension has a manuscript-defined priority: critical, important, or minor.
+  // A single critical failure → Not Recommended. A forbidden condition → Forbidden.
+  // Several minor failures may still produce Good. The manuscript defines the weight.
   const saBreakdown = selectionAnalysis?.decisionBreakdown || [];
   const failedItems = saBreakdown.filter(b => b.status === "fail");
   const passedItems = saBreakdown.filter(b => b.status === "pass");
+  const criticalFails = failedItems.filter(b => b.priority === "critical");
+  const importantFails = failedItems.filter(b => b.priority === "important");
+  const minorFails = failedItems.filter(b => b.priority === "minor");
 
   let verdict, verdictColor, verdictReason;
   if (selectionAnalysis?.forbidden) {
@@ -854,23 +902,26 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
       : enemyItem ? "Enemy planet hour per manuscript — this timing must not be used."
       : "Forbidden by manuscript rules — this timing must not be used.";
   }
-  else if (failedItems.length === 0 && passedItems.length >= 2) {
+  else if (criticalFails.length > 0) {
+    verdict = "Not Recommended"; verdictColor = "#F87171";
+    verdictReason = `Critical manuscript condition not met: ${criticalFails.map(f => f.label).join(", ")}.`;
+  }
+  else if (importantFails.length >= 2) {
+    verdict = "Weak"; verdictColor = "#F59E0B";
+    verdictReason = `${importantFails.map(f => f.label).join(" and ")} do not match the manuscript prescription.`;
+  }
+  else if (importantFails.length === 1) {
+    verdict = "Acceptable"; verdictColor = "#FBBF24";
+    verdictReason = `${importantFails[0].label} does not match the manuscript prescription.`;
+  }
+  else if (minorFails.length === 0 && passedItems.length > 0) {
     verdict = "Excellent"; verdictColor = "#4ADE80"; verdictReason = "All manuscript conditions are satisfied.";
   }
-  else if (failedItems.length === 0) {
-    verdict = "Good"; verdictColor = "#86EFAC"; verdictReason = "No manuscript conditions are violated.";
-  }
-  else if (failedItems.length === 1) {
-    verdict = "Acceptable"; verdictColor = "#FBBF24";
-    verdictReason = `${failedItems[0].label} does not match the manuscript prescription.`;
-  }
-  else if (failedItems.length === 2) {
-    verdict = "Weak"; verdictColor = "#F59E0B";
-    verdictReason = `${failedItems[0].label} and ${failedItems[1].label} do not match the manuscript prescription.`;
-  }
   else {
-    verdict = "Not Recommended"; verdictColor = "#F87171";
-    verdictReason = `${failedItems.length} manuscript conditions are not met: ${failedItems.map(f => f.label).join(", ")}.`;
+    verdict = "Good"; verdictColor = "#86EFAC";
+    verdictReason = minorFails.length > 0
+      ? `Minor conditions not met: ${minorFails.map(f => f.label).join(", ")}. Core conditions are satisfied.`
+      : "No manuscript conditions are violated.";
   }
 
   // ── Warnings (only for violated found rules) ──
