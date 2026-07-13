@@ -17,7 +17,7 @@ import ProtectedPage from './components/ProtectedPage';
 import ROUTE_MANIFEST from '@/lib/routeManifest';
 import RulesGate from './components/RulesGate';
 import GoogleSignInPrompt from './components/GoogleSignInPrompt';
-import { persistGet } from '@/lib/devModePersistence';
+import { persistGet, isDevMode } from '@/lib/devModePersistence';
 
 // ── Lazy import map — Core pages only ──────
 const PAGE_IMPORTS = {
@@ -158,7 +158,7 @@ const AuthenticatedApp = () => {
 
   return (
     <>
-    {!isAuthenticated && !googlePromptDismissed && (
+    {!isDevMode && !isAuthenticated && !googlePromptDismissed && (
       <GoogleSignInPrompt onSkip={() => setGooglePromptDismissed(true)} />
     )}
     <AnimatePresence mode="wait">
@@ -188,7 +188,7 @@ function App() {
 
   return (
     <>
-      {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
+      {!isDevMode && !splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
       <I18nProvider>
         <AuthProvider>
           <QueryClientProvider client={queryClientInstance}>

@@ -175,6 +175,19 @@ export default function RulesGate({ children }) {
     }
   }, [authResolved, role, isAuthenticated, user, serverResetDate]);
 
+  // ── PREVIEW BYPASS ──
+  // In Base44 Preview (dev mode), completely skip onboarding so every
+  // build refresh opens directly to the working page. Production APK
+  // is unaffected — isDevMode is false in production builds.
+  if (isDevMode) {
+    return (
+      <>
+        {children}
+        <DevResetButton />
+      </>
+    );
+  }
+
   // ── Phase 1: Fast path — localStorage cache says accepted AND
   //    accepted date is after the cached reset date ──
   // Render children immediately to prevent flash on refresh/navigation/reload.
