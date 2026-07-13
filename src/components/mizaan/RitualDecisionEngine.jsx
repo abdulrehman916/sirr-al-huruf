@@ -15,12 +15,11 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo, useEffect } from "react";
 import {
-  Target, CheckCircle2, XCircle, AlertCircle, Clock, Sunset,
+  Target, CheckCircle2, XCircle, AlertCircle, Sunset,
   Sparkles, AlertTriangle, Shield, Swords, Calendar,
 } from "lucide-react";
 import { analyzeRitualTiming } from "../../lib/ritualTimingEngineV3";
 import PlanningModePanel from "./PlanningModePanel";
-import MoonAnalysisCard from "./MoonAnalysisCard";
 import { setSaatPlanningContext } from "../../lib/mizaanSaatCalculator";
 import { useRitualLang } from "../../lib/ritualTimingI18n";
 import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll";
@@ -204,6 +203,24 @@ export default function RitualDecisionEngine({
     nextLayl: null,
     nextDay: null,
   };
+
+  // ── Unified reason lists (merge today's rules + current saat reasons) ──
+  const allSupportedReasons = [
+    ...matchingRules,
+    ...(currentSaatAnalysis.acceptanceReasons || []),
+  ];
+  const allRejectionReasons = [
+    ...conflictingRules,
+    ...(currentSaatAnalysis.rejectionReasons || []),
+  ];
+  // ── Single best alternative (priority: saat → layl/nahar → next day) ──
+  const bestAlternative = betterAlternatives.betterSaats?.[0]
+    ? { type: "saat", data: betterAlternatives.betterSaats[0] }
+    : betterAlternatives.nextLayl
+    ? { type: "layl", data: betterAlternatives.nextLayl }
+    : betterAlternatives.nextDay
+    ? { type: "day", data: betterAlternatives.nextDay }
+    : null;
 
   const verdict =
     rawAnalysis.canPerformToday === "Yes"
@@ -400,7 +417,7 @@ export default function RitualDecisionEngine({
           </div>
 
           {/* Supported Reasons */}
-          {matchingRules.length > 0 && (
+          {allSupportedReasons.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="w-4 h-4" style={{ color: "#4ADE80" }} />
@@ -412,11 +429,11 @@ export default function RitualDecisionEngine({
                   }
                   style={{ color: "#4ADE80" }}
                 >
-                  {T("SUPPORTED REASONS", "പിന്തുണയ്ക്കുന്ന കാരണങ്ങൾ", lang)}
+                  {T("REASONS", "കാരണങ്ങൾ", lang)}
                 </h4>
               </div>
               <div className="space-y-2">
-                {matchingRules.map((rule, i) => (
+                {allSupportedReasons.map((rule, i) => (
                   <RuleCard key={i} rule={rule} type="matching" lang={lang} />
                 ))}
               </div>
@@ -424,7 +441,7 @@ export default function RitualDecisionEngine({
           )}
 
           {/* Rejection Reasons */}
-          {conflictingRules.length > 0 && (
+          {allRejectionReasons.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Swords className="w-4 h-4" style={{ color: "#F87171" }} />
@@ -440,7 +457,7 @@ export default function RitualDecisionEngine({
                 </h4>
               </div>
               <div className="space-y-2">
-                {conflictingRules.map((rule, i) => (
+                {allRejectionReasons.map((rule, i) => (
                   <RuleCard key={i} rule={rule} type="conflicting" lang={lang} />
                 ))}
               </div>
@@ -450,395 +467,44 @@ export default function RitualDecisionEngine({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════
-          2. CURRENT TIME ANALYSIS
+          BEST ALTERNATIVE OPPORTUNITY (only if not fully suitable)
          ═══════════════════════════════════════════════════════════ */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
-          border: `1px solid ${G.border}`,
-          boxShadow:
-            "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)",
-        }}
-      >
-        <div className="p-4 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5" style={{ color: G.text }} />
-            <h4
-              className={
-                lang === "ml"
-                  ? "font-malayalam text-sm font-bold"
-                  : "font-inter text-sm font-bold"
-              }
-              style={{ color: "#fff" }}
-            >
-              {T(
-                "CURRENT TIME ANALYSIS",
-                "നിലവിലെ സമയ വിശകലനം",
-                lang
-              )}
-            </h4>
-          </div>
-
-          {/* Is current Saat suitable? */}
-          <div
-            className="rounded-xl p-3"
-            style={{
-              background: currentSaatAnalysis.suitable
-                ? "rgba(74,222,128,0.06)"
-                : "rgba(248,113,113,0.06)",
-              border: `1px solid ${
-                currentSaatAnalysis.suitable
-                  ? "rgba(74,222,128,0.25)"
-                  : "rgba(248,113,113,0.25)"
-              }`,
-            }}
-          >
-            <div className="flex items-center gap-2">
-              {currentSaatAnalysis.suitable ? (
-                <CheckCircle2
-                  className="w-5 h-5"
-                  style={{ color: "#4ADE80" }}
-                />
-              ) : (
-                <XCircle
-                  className="w-5 h-5"
-                  style={{ color: "#F87171" }}
-                />
-              )}
-              <span
-                className="font-inter text-sm font-bold"
-                style={{
-                  color: currentSaatAnalysis.suitable
-                    ? "#4ADE80"
-                    : "#F87171",
-                }}
-              >
-                {currentSaatAnalysis.suitable
-                  ? T(
-                      "Current Saat is SUITABLE",
-                      "നിലവിലെ സഅാത് അനുയോജ്യമാണ്"
-                    )
-                  : T(
-                      "Current Saat is NOT SUITABLE",
-                      "നിലവിലെ സഅാത് അനുയോജ്യമല്ല"
-                    )}
-              </span>
-            </div>
-          </div>
-
-          {/* Rejection Reasons */}
-          {currentSaatAnalysis.rejectionReasons &&
-            currentSaatAnalysis.rejectionReasons.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <XCircle
-                    className="w-4 h-4"
-                    style={{ color: "#F87171" }}
-                  />
-                  <h5
-                    className={
-                      lang === "ml"
-                        ? "font-malayalam text-xs font-bold"
-                        : "font-inter text-xs font-bold"
-                    }
-                    style={{ color: "#F87171" }}
-                  >
-                    {T(
-                      "REJECTION REASONS",
-                      "നിരസന കാരണങ്ങൾ",
-                      lang
-                    )}
-                  </h5>
-                </div>
-                <div className="space-y-2">
-                  {currentSaatAnalysis.rejectionReasons.map((reason, i) => (
-                    <ReasonCard
-                      key={i}
-                      reason={reason}
-                      type="rejection"
-                      lang={lang}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-          {/* Acceptance Reasons */}
-          {currentSaatAnalysis.acceptanceReasons &&
-            currentSaatAnalysis.acceptanceReasons.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2
-                    className="w-4 h-4"
-                    style={{ color: "#4ADE80" }}
-                  />
-                  <h5
-                    className={
-                      lang === "ml"
-                        ? "font-malayalam text-xs font-bold"
-                        : "font-inter text-xs font-bold"
-                    }
-                    style={{ color: "#4ADE80" }}
-                  >
-                    {T(
-                      "ACCEPTANCE REASONS",
-                      "അംഗീകാര കാരണങ്ങൾ",
-                      lang
-                    )}
-                  </h5>
-                </div>
-                <div className="space-y-2">
-                  {currentSaatAnalysis.acceptanceReasons.map((reason, i) => (
-                    <ReasonCard
-                      key={i}
-                      reason={reason}
-                      type="acceptance"
-                      lang={lang}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-        </div>
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════
-          3. BETTER ALTERNATIVES
-         ═══════════════════════════════════════════════════════════ */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
-          border: `1px solid ${G.border}`,
-          boxShadow:
-            "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)",
-        }}
-      >
-        <div className="p-4 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Sunset className="w-5 h-5" style={{ color: G.text }} />
-            <h4
-              className={
-                lang === "ml"
-                  ? "font-malayalam text-sm font-bold"
-                  : "font-inter text-sm font-bold"
-              }
-              style={{ color: "#fff" }}
-            >
-              {T("BETTER ALTERNATIVES", "മികച്ച ബദലുകൾ", lang)}
-            </h4>
-          </div>
-
-          {/* Better Saats Today */}
-          {betterAlternatives.betterSaats &&
-          betterAlternatives.betterSaats.length > 0 ? (
-            <div>
-              <p
+      {verdict !== "YES" && bestAlternative && (
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+            border: `1px solid ${G.border}`,
+            boxShadow:
+              "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)",
+          }}
+        >
+          <div className="p-4 space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Sunset className="w-5 h-5" style={{ color: G.text }} />
+              <h4
                 className={
                   lang === "ml"
-                    ? "font-malayalam text-xs mb-2"
-                    : "font-inter text-xs mb-2"
+                    ? "font-malayalam text-sm font-bold"
+                    : "font-inter text-sm font-bold"
                 }
-                style={{ color: "rgba(255,255,255,0.60)" }}
+                style={{ color: "#fff" }}
               >
                 {T(
-                  "Better Saats remaining today:",
-                  "ഇന്ന് ലഭ്യമായ മികച്ച സഅാതുകൾ:",
+                  "BEST ALTERNATIVE OPPORTUNITY",
+                  "മികച്ച അവസരം",
                   lang
                 )}
-              </p>
-              <div className="space-y-3">
-                {betterAlternatives.betterSaats.map((saat, i) => (
-                  <BetterSaatCard key={i} saat={saat} lang={lang} />
-                ))}
-              </div>
+              </h4>
             </div>
-          ) : (
-            <>
-              {/* No better saats today — Next Layl/Nahar */}
-              {betterAlternatives.nextLayl ? (
-                <div
-                  className="rounded-xl p-4"
-                  style={{
-                    background: "rgba(212,175,55,0.06)",
-                    border: "1px solid rgba(212,175,55,0.25)",
-                  }}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sunset
-                      className="w-4 h-4"
-                      style={{ color: G.text }}
-                    />
-                    <h5
-                      className={
-                        lang === "ml"
-                          ? "font-malayalam text-xs font-bold"
-                          : "font-inter text-xs font-bold"
-                      }
-                      style={{ color: G.text }}
-                    >
-                      {T("NEXT LAYL / NAHAR", "അടുത്ത ലൈൽ / നഹർ", lang)}
-                    </h5>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <p
-                        className="font-inter text-[9px] uppercase tracking-wider"
-                        style={{ color: G.dim }}
-                      >
-                        {T("Day", "ദിവസം", lang)}
-                      </p>
-                      <p
-                        className="font-inter text-sm font-bold"
-                        style={{ color: G.text }}
-                      >
-                        {translateDay(
-                          betterAlternatives.nextLayl.dayName,
-                          lang
-                        )}
-                        {!betterAlternatives.nextLayl.isToday && (
-                          <span
-                            className="font-inter text-[10px] ml-1"
-                            style={{ color: G.dim }}
-                          >
-                            ({betterAlternatives.nextLayl.daysAhead}{" "}
-                            {T("days away", "ദിവസം അകലെ", lang)})
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <p
-                        className="font-inter text-[9px] uppercase tracking-wider"
-                        style={{ color: G.dim }}
-                      >
-                        {T("Saat", "സഅാത്", lang)}
-                      </p>
-                      <p
-                        className="font-inter text-sm font-bold"
-                        style={{ color: G.text }}
-                      >
-                        #{betterAlternatives.nextLayl.saatNum} (
-                        {translatePlanet(
-                          betterAlternatives.nextLayl.planet,
-                          lang
-                        )}
-                        )
-                      </p>
-                    </div>
-                    <div>
-                      <p
-                        className="font-inter text-[9px] uppercase tracking-wider"
-                        style={{ color: G.dim }}
-                      >
-                        {T("Period", "മാലയാളം", lang)}
-                      </p>
-                      <p
-                        className="font-inter text-sm font-bold"
-                        style={{ color: G.text }}
-                      >
-                        {betterAlternatives.nextLayl.period === "night"
-                          ? T("Night (Layl)", "രാത്രി (ലൈൽ)", lang)
-                          : T("Day (Nahar)", "പകൽ (നഹർ)", lang)}
-                      </p>
-                    </div>
-                    <div>
-                      <p
-                        className="font-inter text-[9px] uppercase tracking-wider"
-                        style={{ color: G.dim }}
-                      >
-                        {T("Time", "സമയം", lang)}
-                      </p>
-                      <p
-                        className="font-inter text-sm font-bold"
-                        style={{ color: G.text }}
-                      >
-                        {betterAlternatives.nextLayl.startTime}–
-                        {betterAlternatives.nextLayl.endTime}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : betterAlternatives.nextDay ? (
-                /* No layl/nahar — Next Weekday */
-                <div
-                  className="rounded-xl p-4"
-                  style={{
-                    background: "rgba(212,175,55,0.06)",
-                    border: "1px solid rgba(212,175,55,0.25)",
-                  }}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calendar
-                      className="w-4 h-4"
-                      style={{ color: G.text }}
-                    />
-                    <h5
-                      className={
-                        lang === "ml"
-                          ? "font-malayalam text-xs font-bold"
-                          : "font-inter text-xs font-bold"
-                      }
-                      style={{ color: G.text }}
-                    >
-                      {T("NEXT WEEKDAY", "അടുത്ത ദിവസം", lang)}
-                    </h5>
-                  </div>
-                  <p
-                    className="font-inter text-sm font-bold"
-                    style={{ color: G.text }}
-                  >
-                    {translateDay(betterAlternatives.nextDay.dayName, lang)}
-                    <span
-                      className="font-inter text-[10px] ml-1"
-                      style={{ color: G.dim }}
-                    >
-                      ({betterAlternatives.nextDay.daysAhead}{" "}
-                      {T("days away", "ദിവസം അകലെ", lang)})
-                    </span>
-                  </p>
-                </div>
-              ) : (
-                <div
-                  className="rounded-xl p-3"
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <p
-                    className={
-                      lang === "ml"
-                        ? "font-malayalam text-xs"
-                        : "font-inter text-xs"
-                    }
-                    style={{ color: "rgba(255,255,255,0.50)" }}
-                  >
-                    {T(
-                      "No valid opportunity found within 14 days.",
-                      "14 ദിവസത്തിനുള്ളിൽ സാധുവായ അവസരങ്ങളൊന്നുമില്ല.",
-                      lang
-                    )}
-                  </p>
-                </div>
-              )}
-            </>
-          )}
+            <BestAlternativeCard
+              alternative={bestAlternative}
+              lang={lang}
+            />
+          </div>
         </div>
-      </div>
-
-      {/* Moon Analysis */}
-      <MoonAnalysisCard
-        moonPhase={rawAnalysis?.moonPhase}
-        moonReq={rawAnalysis?.moonReq}
-        moonCitations={rawAnalysis?.moonCitations}
-        req={rawAnalysis?.req}
-        lang={lang}
-        planningDate={planningContext?.date || null}
-      />
+      )}
     </div>
   );
 }
@@ -880,7 +546,7 @@ function RuleCard({ rule, type, lang }) {
   );
 }
 
-// ── Reason Card — displays a rejection or acceptance reason ──
+// ── Reason Card — displays a rejection or acceptance reason (database text only) ──
 function ReasonCard({ reason, type, lang }) {
   const color = type === "rejection" ? "#F87171" : "#4ADE80";
   const Icon = type === "rejection" ? XCircle : CheckCircle2;
@@ -893,80 +559,168 @@ function ReasonCard({ reason, type, lang }) {
         border: `1px solid ${color}25`,
       }}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <Icon className="w-4 h-4 flex-shrink-0" style={{ color }} />
-        <span
-          className="font-inter text-[10px] uppercase tracking-wider font-bold"
-          style={{ color }}
+      <div className="flex items-start gap-2">
+        <Icon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color }} />
+        <p
+          className={
+            lang === "ml" && reason.text_ml
+              ? "font-malayalam text-xs leading-relaxed"
+              : "font-inter text-xs leading-relaxed"
+          }
+          style={{ color: "rgba(255,255,255,0.75)" }}
         >
-          {reason.dimension}
-        </span>
+          {lang === "ml" && reason.text_ml ? reason.text_ml : reason.text_en}
+        </p>
       </div>
-      <p
-        className={
-          lang === "ml" && reason.text_ml
-            ? "font-malayalam text-xs leading-relaxed"
-            : "font-inter text-xs leading-relaxed"
-        }
-        style={{ color: "rgba(255,255,255,0.70)" }}
-      >
-        {lang === "ml" && reason.text_ml ? reason.text_ml : reason.text_en}
-      </p>
     </div>
   );
 }
 
-// ── Better Saat Card — displays a better saat with WHY it is better ──
-function BetterSaatCard({ saat, lang }) {
-  const periodLabel =
-    saat.period === "night"
-      ? T("Night", "രാത്രി", lang)
-      : T("Day", "പകൽ", lang);
+// ── Best Alternative Card — single best opportunity with database-supported why ──
+function BestAlternativeCard({ alternative, lang }) {
+  const { type, data } = alternative;
 
+  if (type === "saat") {
+    const periodLabel =
+      data.period === "night"
+        ? T("Night (Layl)", "രാത്രി (ലൈൽ)", lang)
+        : T("Day (Nahar)", "പകൽ (നഹർ)", lang);
+    return (
+      <div
+        className="rounded-xl p-4"
+        style={{
+          background: "rgba(74,222,128,0.06)",
+          border: "1px solid rgba(74,222,128,0.25)",
+        }}
+      >
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+              {T("Saat", "സഅാത്", lang)}
+            </p>
+            <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>
+              #{data.saatNum} ({translatePlanet(data.planet, lang)})
+            </p>
+          </div>
+          <div>
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+              {T("Time", "സമയം", lang)}
+            </p>
+            <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>
+              {data.startTime}–{data.endTime}
+            </p>
+          </div>
+          <div>
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+              {T("Layl / Nahar", "ലൈൽ / നഹർ", lang)}
+            </p>
+            <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>
+              {periodLabel}
+            </p>
+          </div>
+          <div>
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+              {T("Day", "ദിവസം", lang)}
+            </p>
+            <p className="font-inter text-sm font-bold" style={{ color: "#4ADE80" }}>
+              {T("Today", "ഇന്ന്", lang)}
+            </p>
+          </div>
+        </div>
+        {data.whyBetter && data.whyBetter.length > 0 && (
+          <div className="space-y-1">
+            {data.whyBetter.map((w, i) => (
+              <div key={i} className="rounded p-2" style={{ background: "rgba(255,255,255,0.03)" }}>
+                <p
+                  className={
+                    lang === "ml" && w.text_ml
+                      ? "font-malayalam text-[11px] leading-relaxed"
+                      : "font-inter text-[11px] leading-relaxed"
+                  }
+                  style={{ color: "rgba(255,255,255,0.65)" }}
+                >
+                  {lang === "ml" && w.text_ml ? w.text_ml : w.text_en}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (type === "layl") {
+    return (
+      <div
+        className="rounded-xl p-4"
+        style={{
+          background: "rgba(212,175,55,0.06)",
+          border: "1px solid rgba(212,175,55,0.25)",
+        }}
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+              {T("Day", "ദിവസം", lang)}
+            </p>
+            <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
+              {translateDay(data.dayName, lang)}
+              {!data.isToday && (
+                <span className="font-inter text-[10px] ml-1" style={{ color: G.dim }}>
+                  ({data.daysAhead} {T("days away", "ദിവസം അകലെ", lang)})
+                </span>
+              )}
+            </p>
+          </div>
+          <div>
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+              {T("Saat", "സഅാത്", lang)}
+            </p>
+            <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
+              #{data.saatNum} ({translatePlanet(data.planet, lang)})
+            </p>
+          </div>
+          <div>
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+              {T("Layl / Nahar", "ലൈൽ / നഹർ", lang)}
+            </p>
+            <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
+              {data.period === "night"
+                ? T("Night (Layl)", "രാത്രി (ലൈൽ)", lang)
+                : T("Day (Nahar)", "പകൽ (നഹർ)", lang)}
+            </p>
+          </div>
+          <div>
+            <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>
+              {T("Time", "സമയം", lang)}
+            </p>
+            <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
+              {data.startTime}–{data.endTime}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // type === "day"
   return (
     <div
-      className="rounded-xl p-3"
+      className="rounded-xl p-4"
       style={{
-        background: "rgba(74,222,128,0.06)",
-        border: "1px solid rgba(74,222,128,0.25)",
+        background: "rgba(212,175,55,0.06)",
+        border: "1px solid rgba(212,175,55,0.25)",
       }}
     >
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <span
-          className="font-inter text-sm font-bold"
-          style={{ color: "#4ADE80" }}
-        >
-          {T("Saat", "സഅാത്", lang)} #{saat.saatNum}
-        </span>
-        <span
-          className="font-inter text-[10px]"
-          style={{ color: "rgba(255,255,255,0.40)" }}
-        >
-          {saat.startTime}–{saat.endTime} · {saat.planet} · {periodLabel}
-        </span>
+      <div className="flex items-center gap-2">
+        <Calendar className="w-4 h-4" style={{ color: G.text }} />
+        <p className="font-inter text-sm font-bold" style={{ color: G.text }}>
+          {translateDay(data.dayName, lang)}
+          <span className="font-inter text-[10px] ml-1" style={{ color: G.dim }}>
+            ({data.daysAhead} {T("days away", "ദിവസം അകലെ", lang)})
+          </span>
+        </p>
       </div>
-      {saat.whyBetter && saat.whyBetter.length > 0 && (
-        <div className="space-y-1">
-          {saat.whyBetter.map((w, i) => (
-            <div
-              key={i}
-              className="rounded p-2"
-              style={{ background: "rgba(255,255,255,0.03)" }}
-            >
-              <p
-                className={
-                  lang === "ml" && w.text_ml
-                    ? "font-malayalam text-[11px] leading-relaxed"
-                    : "font-inter text-[11px] leading-relaxed"
-                }
-                style={{ color: "rgba(255,255,255,0.65)" }}
-              >
-                {lang === "ml" && w.text_ml ? w.text_ml : w.text_en}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
