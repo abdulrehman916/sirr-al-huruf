@@ -305,8 +305,8 @@ function identifyRitual({ selections, customPurpose, manuscriptRules, purposeLoo
         matchedOn: `Purpose Dictionary: "${purposeLookup.matchedPhrase}" → ${purposeLookup.ritualIntent}`,
         semanticMeaningEn: purposeLookup.english_meaning || "",
         semanticMeaningMl: purposeLookup.malayalam_meaning || "",
-        resolvedPhraseEn: purposeLookup.interpretation_en || "",
-        resolvedPhraseMl: purposeLookup.interpretation_ml || "",
+        resolvedPhraseEn: purposeLookup.interpretation_en || purposeLookup.english_meaning || "",
+        resolvedPhraseMl: purposeLookup.interpretation_ml || purposeLookup.malayalam_meaning || "",
         dictionarySource: purposeLookup.source || null,
       };
     }
