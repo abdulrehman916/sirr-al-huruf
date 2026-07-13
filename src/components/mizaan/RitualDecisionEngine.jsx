@@ -55,7 +55,7 @@ function groupReferences(rulesApplied, bookNotes) {
   return Array.from(map.values()).map(g => ({ text: g.text, sources: Array.from(g.sources) }));
 }
 
-export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod, purposeLookup }) {
+export default function RitualDecisionEngine({ result, selections, customPurpose, activeMethod, purposeLookup, onApplyRecommendation }) {
   const [lang, setLang] = useRitualLang();
   const { manuscriptRules } = useManuscriptRules();
 
@@ -359,7 +359,7 @@ export default function RitualDecisionEngine({ result, selections, customPurpose
           icon={<CheckCircle2 className="w-4 h-4" />}
           title={T("Why?", "എന്തുകൊണ്ട്?", lang)}
         >
-          <ManuscriptComplianceChecklist analysis={analysis} lang={lang} />
+          <ManuscriptComplianceChecklist analysis={analysis} lang={lang} onApplyRecommendation={onApplyRecommendation} />
         </CollapsibleSection>
 
         {/* ▼ Manuscript Rules & References — grouped by rule, sources listed once */}

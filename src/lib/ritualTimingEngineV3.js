@@ -323,6 +323,7 @@ function findEarliestValidTime(req, fromDate) {
       if (req.enemyPlanets && req.enemyPlanets.map((p) => p.toLowerCase()).includes(h.planet)) continue;
 
       return {
+        dayKey,
         dayName: MIZAN_DAY_NAMES[dayKey],
         date: date.toISOString().split("T")[0],
         hour: h.hourNumber,
@@ -545,6 +546,12 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
   const saatFailed = !!req.hours && !!selectedHour && !req.hours.map(p => p.toLowerCase()).includes(currentHourInfo?.planet);
   const laylNaharFailed = req.nightRequired === true && dayNight !== "gece";
 
+  // ── FORBIDDEN CHECK — Nahas day or enemy/worst hour (STEP 7) ──
+  const isForbiddenDay = !!(req.worstDays && selectedDay && req.worstDays.includes(selectedDay));
+  const isForbiddenHour = !!(selectedHour && req.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(currentHourInfo?.planet)) ||
+                         !!(selectedHour && req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(currentHourInfo?.planet));
+  const forbidden = isForbiddenDay || isForbiddenHour;
+
   if (allPass) {
     // Everything valid — no recommendation.
     bestAlt.complete = false;
@@ -557,6 +564,7 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
       bestAlt.day = req.days?.length > 0
         ? req.days.map(d => MIZAN_DAY_NAMES[d]).join(" or ")
         : "Any day except forbidden";
+      bestAlt.dayValue = earliest?.dayKey || req.days?.[0] || null;
       bestAlt.changes.push("Day");
       bestAlt.reason += `Change Day to ${bestAlt.day}. `;
     }
@@ -564,6 +572,7 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
     // ── Layl/Nahar failed → recommend Night (Gece) ──
     if (laylNaharFailed) {
       bestAlt.dayNight = "Night (Gece)";
+      bestAlt.dayNightValue = "gece";
       bestAlt.changes.push("Layl/Nahar");
       bestAlt.reason += "Change to Night (Gece). ";
     }
@@ -588,6 +597,7 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
           const bestSaat = validSaats[0];
           const saatNum = bestSaat.period === 'night' ? bestSaat.hourNumber - 12 : bestSaat.hourNumber;
           bestAlt.hour = `#${saatNum} (${capitalPlanet(bestSaat.planet)})`;
+          bestAlt.hourValue = saatNum;
           bestAlt.planet = capitalPlanet(bestSaat.planet);
           bestAlt.timeWindow = `${bestSaat.startTime} – ${bestSaat.endTime}`;
           bestAlt.dayName = selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Today";
@@ -601,6 +611,8 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
         // Day also failed OR no valid Saat on current Day — use earliest valid Day + Saat
         const earliestSaatNum = earliest.period === 'night' ? earliest.hour - 12 : earliest.hour;
         bestAlt.hour = `#${earliestSaatNum} (${earliest.planet})`;
+        bestAlt.hourValue = earliestSaatNum;
+        bestAlt.dayValue = bestAlt.dayValue || earliest.dayKey;
         bestAlt.planet = earliest.planet;
         bestAlt.timeWindow = `${earliest.startTime} – ${earliest.endTime}`;
         bestAlt.dayName = earliest.dayName;
@@ -627,6 +639,7 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
 
   return {
     suitable: allPass,
+    forbidden,
     purposeRequired: false,
     summary: allPass
       ? "Your current configuration is valid — all manuscript conditions are satisfied."

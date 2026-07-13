@@ -9,7 +9,7 @@
 // Read-only. Never modifies any Mizan, calculation, or engine.
 // ═══════════════════════════════════════════════════════════════
 import { motion } from "framer-motion";
-import { Check, X, Minus, Target, AlertTriangle, TrendingUp, ArrowUpCircle } from "lucide-react";
+import { Check, X, Minus, Target, AlertTriangle, TrendingUp, ArrowUpCircle, Ban } from "lucide-react";
 import { tStr } from "../../lib/ritualTimingI18n";
 
 const G = {
@@ -31,7 +31,7 @@ const REC_LABELS = {
   time: { en: "Time", ml: "സമയം" },
 };
 
-export default function ManuscriptComplianceChecklist({ analysis, lang }) {
+export default function ManuscriptComplianceChecklist({ analysis, lang, onApplyRecommendation }) {
   const sa = analysis?.selectionAnalysis;
   if (!sa || sa.purposeRequired) return null;
 
@@ -135,6 +135,26 @@ export default function ManuscriptComplianceChecklist({ analysis, lang }) {
           </div>
         </div>
 
+        {/* ── FORBIDDEN WARNING — STEP 7 ── */}
+        {sa.forbidden && (
+          <div className="rounded-lg p-3" style={{
+            background: "rgba(248,113,113,0.10)",
+            border: "1px solid rgba(248,113,113,0.35)",
+          }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Ban className="w-4 h-4" style={{ color: G.fail }} />
+              <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: G.fail }}>
+                {lang === "ml" ? "ഈ സമയം ഈ ലക്ഷ്യത്തിന് വിലക്കപ്പെട്ടതാണ്" : "FORBIDDEN FOR THIS PURPOSE"}
+              </span>
+            </div>
+            <p className={`text-xs mb-2 ${lang === "ml" ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.70)" }}>
+              {lang === "ml"
+                ? "കൈയെഴുത്തുപ്രതി പ്രകാരം ഈ സമയത്തിൽ ഈ ആചാരം അനുഷ്ഠിക്കരുത്. താഴെ കാണിക്കുന്ന ശുപാർശ പ്രയോഗിക്കുക."
+                : "The manuscript forbids this timing for this Purpose. Apply the recommendation below."}
+            </p>
+          </div>
+        )}
+
         {/* ── Recommendation + Estimated After Changes ── */}
         {hasImprovements && sa.bestAlternative && (
           <div className="rounded-lg p-3" style={{
@@ -150,10 +170,19 @@ export default function ManuscriptComplianceChecklist({ analysis, lang }) {
             <p className="font-inter text-[9px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>
               {tStr("changeTo", lang)}:
             </p>
-            <div className="space-y-0.5 mb-2">
-              {sa.bestAlternative.day && <RecLine label={REC_LABELS.weekday[lang]} value={sa.bestAlternative.day} />}
-              {sa.bestAlternative.hour && <RecLine label={REC_LABELS.hour[lang]} value={sa.bestAlternative.hour} />}
-              {sa.bestAlternative.dayNight && <RecLine label={REC_LABELS.dayNight[lang]} value={sa.bestAlternative.dayNight} />}
+            <div className="space-y-1 mb-2">
+              {sa.bestAlternative.day && (
+                <RecLine label={REC_LABELS.weekday[lang]} value={sa.bestAlternative.day}
+                  onClick={sa.bestAlternative.dayValue && onApplyRecommendation ? () => onApplyRecommendation("days", sa.bestAlternative.dayValue) : null} />
+              )}
+              {sa.bestAlternative.hour && (
+                <RecLine label={REC_LABELS.hour[lang]} value={sa.bestAlternative.hour}
+                  onClick={sa.bestAlternative.hourValue && onApplyRecommendation ? () => onApplyRecommendation("hour", sa.bestAlternative.hourValue) : null} />
+              )}
+              {sa.bestAlternative.dayNight && (
+                <RecLine label={REC_LABELS.dayNight[lang]} value={sa.bestAlternative.dayNight}
+                  onClick={sa.bestAlternative.dayNightValue && onApplyRecommendation ? () => onApplyRecommendation("dayNight", sa.bestAlternative.dayNightValue) : null} />
+              )}
               {sa.bestAlternative.timeWindow && <RecLine label={REC_LABELS.time[lang]} value={`${sa.bestAlternative.timeWindow}${sa.bestAlternative.dayName ? ` (${sa.bestAlternative.dayName})` : ""}`} />}
             </div>
             <div className="flex items-center justify-between pt-2" style={{ borderTop: "1px solid rgba(74,222,128,0.15)" }}>
@@ -246,7 +275,16 @@ function MetricBox({ label, value, color }) {
 }
 
 // ── Recommendation Line ──
-function RecLine({ label, value }) {
+function RecLine({ label, value, onClick }) {
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="w-full flex items-center gap-2 text-left rounded-lg p-1.5 transition-opacity hover:opacity-80" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.15)" }}>
+        <span className="font-inter text-[10px] uppercase tracking-wider flex-shrink-0" style={{ color: G.dim, minWidth: 70 }}>{label}:</span>
+        <span className="font-inter text-xs font-bold flex-1" style={{ color: G.pass }}>{value}</span>
+        <span className="font-inter text-[9px] uppercase tracking-wider flex-shrink-0" style={{ color: G.dim }}>Apply →</span>
+      </button>
+    );
+  }
   return (
     <div className="flex items-center gap-2">
       <span className="font-inter text-[10px] uppercase tracking-wider flex-shrink-0" style={{ color: G.dim, minWidth: 70 }}>{label}:</span>
