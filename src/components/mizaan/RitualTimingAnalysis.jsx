@@ -7,12 +7,12 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Clock, Moon, Compass, AlertTriangle, BookOpen,
-  Sparkles, Sun, Sunset, Star, Zap, Shield, FileText, Globe,
+  Sparkles, Sun, Sunset, Star, Zap, Shield, Globe,
   CheckCircle2, XCircle, AlertCircle,
 } from "lucide-react";
 import { analyzeRitualTiming } from "../../lib/ritualTimingEngineV3";
 import { localizeAnalysis, tStr, tPlanet, tDay, tStatus, useRitualLang, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
-import { useManuscriptRules } from "../../hooks/useManuscriptRules";
+import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -50,13 +50,6 @@ function normalizeForUI(v3) {
 // ── Inline translation helpers for RitualTimingAnalysis ──
 const ML_KHAYR = { "Not selected": "തിരഞ്ഞെടുത്തിട്ടില്ല", "khayr": "ഖൈർ", "sharr": "ശർ" };
 const ML_KHAYR_M = { "Benevolence": "ഐശ്വര്യം", "Power/Banishment": "ശക്തി/നിരസനം", "Not determined": "നിർണ്ണയിച്ചിട്ടില്ല", "Not selected": "തിരഞ്ഞെടുത്തിട്ടില്ല" };
-const ML_VERDICT_REASON = {
-  "All manuscript conditions align.": "എല്ലാ ഗ്രന്ഥ വ്യവസ്ഥകളും യോജിക്കുന്നു.",
-  "Most manuscript conditions are favorable.": "മിക്ക ഗ്രന്ഥ വ്യവസ്ഥകളും അനുകൂലമാണ്.",
-  "Mixed conditions — proceed with caution.": "മിശ്ര വ്യവസ്ഥകൾ — ശ്രദ്ധയോടെ മുന്നോട്ടുപോകുക.",
-  "Conditions are unfavorable per manuscript.": "ഗ്രന്ഥപ്രകാരം വ്യവസ്ഥകൾ പ്രതികൂലമാണ്.",
-  "Multiple unfavorable conditions.": "ഒന്നിലധികം പ്രതികൂല വ്യവസ്ഥകൾ.",
-};
 const ML_DN_STATUS = {
   optimal: "ഉത്തമം (രാത്രി)",
   good: "നല്ലത് (രാത്രി)",
@@ -90,7 +83,7 @@ const ML_PLACEMENT = {
 export default function RitualTimingAnalysis({ result, selections, customPurpose, activeMethod, purposeLookup }) {
   const [expanded, setExpanded] = useState(false);
   const [lang, setLang] = useRitualLang();
-  const { manuscriptRules } = useManuscriptRules();
+  const { astroClockKnowledge } = useAstroClockKnowledgeAll();
 
   // purposeLookup comes from the Purpose Interpretation card (single source of truth).
   // Ritual Timing NEVER analyzes Arabic — it consumes the interpreted meaning directly.
@@ -106,9 +99,9 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, manuscriptRules, purposeLookup: resolvedPurpose });
+    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup: resolvedPurpose });
     return normalizeForUI(raw);
-  }, [result, effectiveSelections, customPurpose, activeMethod, manuscriptRules, resolvedPurpose]);
+  }, [result, effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, resolvedPurpose]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
@@ -122,7 +115,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
   const CanPerformIcon = rawAnalysis.canPerformToday === 'Yes' ? CheckCircle2 : rawAnalysis.canPerformToday === 'Limited' ? AlertCircle : XCircle;
 
   // Translate long sentence fields inline
-  const tVerdictReason = (val) => lang === "ml" ? (ML_VERDICT_REASON[val] || val) : val;
+  // verdictReason is ORIGINAL Astro Clock text — never translated or overridden
   const tDNReason = (val) => lang === "ml" ? (ML_DN_REASON[val] || val) : val;
   const tElemReason = (val) => {
     if (lang !== "ml") return val;
@@ -439,7 +432,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                     </span>
                   </div>
                   <p className="font-inter text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-                    {tVerdictReason(analysis.verdictReason)}
+                    {analysis.verdictReason}
                   </p>
                 </div>
 
@@ -668,16 +661,6 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                   </SectionRow>
                 )}
 
-                {/* ── Recommended Incense ── */}
-                <SectionRow icon={<Sparkles className="w-4 h-4" />} title={tStr("recIncense", lang)}>
-                  <p className="font-inter text-sm" style={{ color: G.text }}>
-                    {tIncense(analysis.recommendedIncense) || tStr("notSpecified", lang)}
-                  </p>
-                  <p className="font-inter text-[10px] mt-1" style={{ color: G.dim }}>
-                    {tStr("incenseNote", lang)}
-                  </p>
-                </SectionRow>
-
                 {/* ── Warnings ── */}
                 {analysis.warnings.length > 0 && (
                   <SectionRow icon={<AlertTriangle className="w-4 h-4" />} title={tStr("warningsForbidden", lang)}>
@@ -712,9 +695,9 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                   </SectionRow>
                 )}
 
-                {/* ── Manuscript Rules Used ── */}
+                {/* ── Astrology Clock Context Records ── */}
                 {analysis.rulesApplied.length > 0 && (
-                  <SectionRow icon={<BookOpen className="w-4 h-4" />} title={tStr("msRulesApplied", lang)}>
+                  <SectionRow icon={<BookOpen className="w-4 h-4" />} title={lang === "ml" ? "ആസ്ട്രോ ക്ലോക്ക് കോൺടെക്സ്റ്റ്" : "Astrology Clock Context"}>
                     <div className="space-y-1">
                       {analysis.rulesApplied.map((r, i) => (
                         <div key={i} className="flex items-start gap-2">
@@ -727,24 +710,6 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
                             <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.60)" }}>{r.desc}</p>
                             <p className="font-inter text-[9px]" style={{ color: G.dim }}>{r.source}</p>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </SectionRow>
-                )}
-
-                {/* ── Manuscript References ── */}
-                {analysis.bookNotes.length > 0 && (
-                  <SectionRow icon={<FileText className="w-4 h-4" />} title={tStr("msRefs", lang)}>
-                    <div className="space-y-1">
-                      {analysis.bookNotes.map((n, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <span className="font-inter text-[9px] px-1.5 py-0.5 rounded flex-shrink-0" style={{
-                            background: "rgba(74,192,122,0.10)", color: "rgba(74,192,122,0.60)", border: "1px solid rgba(74,192,122,0.20)",
-                          }}>
-                            {n.source}
-                          </span>
-                          <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>{n.text}</p>
                         </div>
                       ))}
                     </div>
