@@ -532,68 +532,96 @@ function buildSelectionAnalysis({ selections, req, citations, noPurposeSelected,
     });
   }
 
-  // ── STEP 5: BEST ALTERNATIVE — smallest possible change ──
-  // Priority:
-  //   1. Keep current selection if already valid.
-  //   2. If only Saat is unsuitable → recommend a better Saat on the same Day.
-  //   3. Only recommend changing Day if no suitable Saat exists on the current Day.
-  //   4. Layl/Nahar changes only if required by manuscript rules.
-  //   5. Kawkab is never manually recommended — derived automatically from Day + Saat.
+  // ── STEP 5: RECOMMENDATION — report exactly what failed, no hardcoded priority ──
+  // The manuscript validation determines which fields are invalid.
+  // The recommendation engine reports ONLY the failed field(s).
+  // It NEVER recommends changing something that already passes.
+  // Kawkab is NEVER recommended independently — derived from Day + Saat.
   const bestAlt = {};
 
+  // Determine which fields actually FAILED the manuscript rules
+  const dayFailed = (!!req.days && (!selectedDay || !req.days.includes(selectedDay))) ||
+                    (!!req.worstDays && selectedDay && req.worstDays.includes(selectedDay));
+  const saatFailed = !!req.hours && !!selectedHour && !req.hours.map(p => p.toLowerCase()).includes(currentHourInfo?.planet);
+  const laylNaharFailed = req.nightRequired === true && dayNight !== "gece";
+
   if (allPass) {
-    // Priority 1: Current selection is already valid — no changes needed.
+    // Everything valid — no recommendation.
     bestAlt.complete = false;
   } else {
-    // Find valid Saats on the CURRENT Day (all hours, not just future ones)
-    const validSaatsOnCurrentDay = (todayHours || [])
-      .filter(h => {
-        if (req.hours && !req.hours.map(p => p.toLowerCase()).includes(h.planet)) return false;
-        if (req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(h.planet)) return false;
-        if (req.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(h.planet)) return false;
-        if (req.nightRequired === true && h.period !== "night") return false;
-        return true;
-      })
-      .sort((a, b) => a.hourNumber - b.hourNumber);
+    bestAlt.changes = [];
+    bestAlt.reason = "";
 
-    const dayValid = !req.days || (selectedDay && req.days.includes(selectedDay));
-    const dayHasNahas = !!(req.worstDays && selectedDay && req.worstDays.includes(selectedDay));
-    const laylNaharRequired = req.nightRequired === true;
-    const laylNaharValid = !laylNaharRequired || dayNight === "gece";
-
-    if (dayValid && !dayHasNahas && validSaatsOnCurrentDay.length > 0) {
-      // Priority 2: Day is fine — only Saat needs changing (smallest change)
-      const bestSaat = validSaatsOnCurrentDay[0];
-      const saatNum = bestSaat.period === 'night' ? bestSaat.hourNumber - 12 : bestSaat.hourNumber;
-      bestAlt.hour = `#${saatNum} (${capitalPlanet(bestSaat.planet)})`;
-      bestAlt.planet = capitalPlanet(bestSaat.planet);
-      bestAlt.timeWindow = `${bestSaat.startTime} – ${bestSaat.endTime}`;
-      bestAlt.dayName = selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Today";
-      bestAlt.isToday = true;
-      bestAlt.reason = `Keep ${bestAlt.dayName}. Change Saat to #${saatNum} (${capitalPlanet(bestSaat.planet)}).`;
-      bestAlt.complete = true;
-    } else if (earliest) {
-      // Priority 3: No valid Saat on current Day — recommend changing Day
-      const earliestSaatNum = earliest.period === 'night' ? earliest.hour - 12 : earliest.hour;
-      bestAlt.day = earliest.dayName;
-      bestAlt.hour = `#${earliestSaatNum} (${earliest.planet})`;
-      bestAlt.planet = earliest.planet;
-      bestAlt.timeWindow = `${earliest.startTime} – ${earliest.endTime}`;
-      bestAlt.dayName = earliest.dayName;
-      bestAlt.date = earliest.date;
-      bestAlt.isToday = earliest.isToday;
-      bestAlt.daysAhead = earliest.daysAhead;
-      bestAlt.reason = `Change Day to ${earliest.dayName}. Saat #${earliestSaatNum} (${earliest.planet}).`;
-      bestAlt.complete = true;
-    } else {
-      bestAlt.reason = "No valid configuration found within 14 days. Review manuscript rules.";
-      bestAlt.complete = false;
+    // ── Day failed → recommend a prescribed Day ──
+    if (dayFailed) {
+      bestAlt.day = req.days?.length > 0
+        ? req.days.map(d => MIZAN_DAY_NAMES[d]).join(" or ")
+        : "Any day except forbidden";
+      bestAlt.changes.push("Day");
+      bestAlt.reason += `Change Day to ${bestAlt.day}. `;
     }
 
-    // Priority 4: Layl/Nahar only if manuscript requires it
-    if (laylNaharRequired && !laylNaharValid) {
+    // ── Layl/Nahar failed → recommend Night (Gece) ──
+    if (laylNaharFailed) {
       bestAlt.dayNight = "Night (Gece)";
-      bestAlt.reason += " Perform at Night (Gece) as required by manuscript.";
+      bestAlt.changes.push("Layl/Nahar");
+      bestAlt.reason += "Change to Night (Gece). ";
+    }
+
+    // ── Saat failed → recommend a Saat with matching Kawkab ──
+    // Kawkab is derived from Day + Saat — shown as context, never recommended independently.
+    if (saatFailed) {
+      let saatRecommended = false;
+      if (!dayFailed) {
+        // Day is valid → find a Saat on the CURRENT Day
+        const validSaats = (todayHours || [])
+          .filter(h => {
+            if (req.hours && !req.hours.map(p => p.toLowerCase()).includes(h.planet)) return false;
+            if (req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(h.planet)) return false;
+            if (req.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(h.planet)) return false;
+            if (req.nightRequired === true && h.period !== "night") return false;
+            return true;
+          })
+          .sort((a, b) => a.hourNumber - b.hourNumber);
+
+        if (validSaats.length > 0) {
+          const bestSaat = validSaats[0];
+          const saatNum = bestSaat.period === 'night' ? bestSaat.hourNumber - 12 : bestSaat.hourNumber;
+          bestAlt.hour = `#${saatNum} (${capitalPlanet(bestSaat.planet)})`;
+          bestAlt.planet = capitalPlanet(bestSaat.planet);
+          bestAlt.timeWindow = `${bestSaat.startTime} – ${bestSaat.endTime}`;
+          bestAlt.dayName = selectedDay ? MIZAN_DAY_NAMES[selectedDay] : "Today";
+          bestAlt.isToday = true;
+          bestAlt.changes.push("Saat");
+          bestAlt.reason += `Change Saat to #${saatNum} (${capitalPlanet(bestSaat.planet)}). `;
+          saatRecommended = true;
+        }
+      }
+      if (!saatRecommended && earliest) {
+        // Day also failed OR no valid Saat on current Day — use earliest valid Day + Saat
+        const earliestSaatNum = earliest.period === 'night' ? earliest.hour - 12 : earliest.hour;
+        bestAlt.hour = `#${earliestSaatNum} (${earliest.planet})`;
+        bestAlt.planet = earliest.planet;
+        bestAlt.timeWindow = `${earliest.startTime} – ${earliest.endTime}`;
+        bestAlt.dayName = earliest.dayName;
+        bestAlt.date = earliest.date;
+        bestAlt.isToday = earliest.isToday;
+        bestAlt.daysAhead = earliest.daysAhead;
+        bestAlt.changes.push("Saat");
+        bestAlt.reason += `Change Saat to #${earliestSaatNum} (${earliest.planet})${dayFailed ? ` on ${earliest.dayName}` : ""}. `;
+        saatRecommended = true;
+      }
+      if (!saatRecommended) {
+        // No specific Saat found — show prescribed Kawkab(s)
+        bestAlt.hour = req.hours.join(" or ");
+        bestAlt.changes.push("Saat");
+        bestAlt.reason += `Change Saat to one ruled by ${req.hours.join(", ")}. `;
+      }
+    }
+
+    bestAlt.complete = bestAlt.changes.length > 0;
+    if (!bestAlt.complete) {
+      bestAlt.reason = "Review manuscript rules for this ritual.";
     }
   }
 
