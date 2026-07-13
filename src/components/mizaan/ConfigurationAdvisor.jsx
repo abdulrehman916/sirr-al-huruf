@@ -133,7 +133,7 @@ export default function ConfigurationAdvisor({ advice, lang = "ml", setLang, pur
 
               {/* ── Per-field recommendations ── */}
               <div className="space-y-2">
-                {recommendations.map((rec, idx) => (
+                {improvements.map((rec, idx) => (
                   <AdvisorRow
                     key={idx}
                     rec={rec.field === "Ritual Purpose" && semanticPhrase

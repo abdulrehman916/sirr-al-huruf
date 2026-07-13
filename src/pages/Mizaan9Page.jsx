@@ -438,13 +438,6 @@ export default function Mizaan9Page() {
 
   const updateSel = (key) => (val) => setSelections(prev => ({ ...prev, [key]: val }));
 
-  // ── STEP 8: Apply recommendation from Ritual Decision Engine ──
-  // When the user clicks a recommended Day/Saat/Layl-Nahar, update the
-  // corresponding selection. The Kawkab auto-syncs via the Saat↔Kawkab useEffect.
-  const handleApplyRecommendation = useCallback((field, value) => {
-    setSelections(prev => ({ ...prev, [field]: value }));
-  }, []);
-
   // ── Saat ↔ Kawkab sync: when the selected Saat (Mizaan 4), Day (Mizaan 5),
   // or Day/Night (Mizaan 3) changes, auto-set the Kawkab (Mizaan 6) to the
   // planet ruling that exact combination, per the manuscript Day/Night tables.
@@ -1217,7 +1210,6 @@ export default function Mizaan9Page() {
           customPurpose={customPurpose}
           activeMethod={activeMethod}
           purposeLookup={resolvedPurpose}
-          onApplyRecommendation={handleApplyRecommendation}
         />
       )}
 
