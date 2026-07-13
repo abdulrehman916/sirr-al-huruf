@@ -817,181 +817,127 @@ function gatherManuscriptRulesForPurpose(ritualKey, manuscriptRules) {
   return { matching, conflicting };
 }
 
+function isContextFullyCompatible(req, dayKey, planetLC, periodVal) {
+  // ── COMBINED COMPATIBILITY — all dimensions evaluated as ONE unit ──
+  const dayOk = !req.days || req.days.includes(dayKey);
+  const hourOk = !req.hours || req.hours.map(p => p.toLowerCase()).includes(planetLC);
+  const nightOk = req.nightRequired !== true || periodVal === "night";
+  const notEnemy = !req.enemyPlanets || !req.enemyPlanets.map(p => p.toLowerCase()).includes(planetLC);
+  const notWorstHour = !req.worstHours || !req.worstHours.map(p => p.toLowerCase()).includes(planetLC);
+  const notWorstDay = !req.worstDays || !req.worstDays.includes(dayKey);
+  return dayOk && hourOk && nightOk && notEnemy && notWorstHour && notWorstDay;
+}
+
 function buildDecisionAnalysis({
   ritualKey, req, matchingRules, conflictingRules,
   selectedDay, selectedHour, dayNight, selectedPlanet,
   currentHourInfo, weekday, period, saatNumber, kawkab,
   todayHours, earliest,
 }) {
+  // ═══════════════════════════════════════════════════════════════
+  // ONE COMBINED COMPATIBILITY ANALYSIS
+  // Never evaluate Day, Saat, Planet, Layl/Nahar independently.
+  // The COMPLETE context (Day + Layl/Nahar + Saat + Planet) is evaluated
+  // as a single unit. The verdict is based on the combined compatibility
+  // of ALL dimensions together — never on individual dimensions.
+  // ═══════════════════════════════════════════════════════════════
+
+  const currentPlanet = String(currentHourInfo?.planet || kawkab || "").toLowerCase();
+  const currentDayKey = DAY_KEY_BY_INDEX[weekday];
+
+  // ── Combined compatibility — ALL dimensions together ──
+  const isFullyCompatible = isContextFullyCompatible(req, currentDayKey, currentPlanet, period);
+
+  // ── Collect ALL database rules relevant to this complete context ──
+  // Matching rules support the complete context; conflicting rules reject it.
+  // No dimension-by-dimension breakdown — one unified collection.
   const rejectionReasons = [];
   const acceptanceReasons = [];
-  let isSuitable = true;
 
-  // ── DAY CHECK ──
-  if (selectedDay && req.days && !req.days.includes(selectedDay)) {
-    isSuitable = false;
-    const dayRules = conflictingRules.filter(r => r.weekday === weekday && r.field !== "enemy_actions");
-    for (const rule of dayRules) {
-      if (rule.text_en || rule.text_ml) {
-        rejectionReasons.push({
-          dimension: "Day",
-          text_en: rule.text_en, text_ml: rule.text_ml,
-        });
-      }
-    }
-  } else if (selectedDay && req.days && req.days.includes(selectedDay)) {
-    const dayRules = matchingRules.filter(r => r.weekday === weekday);
-    for (const rule of dayRules) {
-      if (rule.text_en || rule.text_ml) {
-        acceptanceReasons.push({
-          dimension: "Day",
-          text_en: rule.text_en, text_ml: rule.text_ml,
-        });
-      }
-    }
-  }
-
-  // ── SAAT / PLANET CHECK ──
-  const currentPlanet = String(currentHourInfo?.planet || kawkab || "").toLowerCase();
-  if (selectedHour && req.hours && !req.hours.map(p => p.toLowerCase()).includes(currentPlanet)) {
-    isSuitable = false;
-    const saatRules = conflictingRules.filter(r => r.saat_number === saatNumber && r.period === period);
-    for (const rule of saatRules) {
-      if (rule.text_en || rule.text_ml) {
-        rejectionReasons.push({
-          dimension: "Saat",
-          text_en: rule.text_en, text_ml: rule.text_ml,
-        });
-      }
-    }
-  } else if (selectedHour && req.hours && req.hours.map(p => p.toLowerCase()).includes(currentPlanet)) {
-    const saatRules = matchingRules.filter(r => r.saat_number === saatNumber && r.period === period);
-    for (const rule of saatRules) {
-      if (rule.text_en || rule.text_ml) {
-        acceptanceReasons.push({
-          dimension: "Saat",
-          text_en: rule.text_en, text_ml: rule.text_ml,
-        });
-      }
-    }
-  }
-
-  // ── ENEMY PLANET CHECK ──
-  if (req.enemyPlanets && req.enemyPlanets.length > 0) {
-    if (req.enemyPlanets.map(p => p.toLowerCase()).includes(currentPlanet)) {
-      isSuitable = false;
-      const enemyRules = conflictingRules.filter(r => r.field === "enemy_actions");
-      for (const rule of enemyRules) {
-        if (rule.text_en || rule.text_ml) {
-          rejectionReasons.push({
-            dimension: "Enemy",
-            text_en: rule.text_en, text_ml: rule.text_ml,
-          });
-        }
-      }
-    }
-  }
-
-  // ── FORBIDDEN / WORST HOUR CHECK ──
-  if (req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(currentPlanet)) {
-    isSuitable = false;
-    const worstRules = conflictingRules.filter(r => r.field === "forbidden_actions" && r.saat_number === saatNumber);
-    for (const rule of worstRules) {
-      if (rule.text_en || rule.text_ml) {
-        rejectionReasons.push({
-          dimension: "Forbidden",
-          text_en: rule.text_en, text_ml: rule.text_ml,
-        });
-      }
-    }
-  }
-
-  // ── NAHAS DAY CHECK ──
-  if (req.worstDays && selectedDay && req.worstDays.includes(selectedDay)) {
-    isSuitable = false;
-    const nahasRules = conflictingRules.filter(r => r.weekday === weekday && r.field === "forbidden_actions");
-    for (const rule of nahasRules) {
-      if (rule.text_en || rule.text_ml) {
-        rejectionReasons.push({
-          dimension: "Nahas Day",
-          text_en: rule.text_en, text_ml: rule.text_ml,
-        });
-      }
-    }
-  }
-
-  // ── MANUSCRIPT RULES CHECK ──
-  for (const rule of conflictingRules.filter(r => r.category)) {
+  for (const rule of conflictingRules) {
     if (rule.text_en || rule.text_ml) {
       rejectionReasons.push({
-        dimension: "Manuscript Rule",
         text_en: rule.text_en, text_ml: rule.text_ml,
       });
     }
   }
-  for (const rule of matchingRules.filter(r => r.category)) {
+  for (const rule of matchingRules) {
     if (rule.text_en || rule.text_ml) {
       acceptanceReasons.push({
-        dimension: "Manuscript Rule",
         text_en: rule.text_en, text_ml: rule.text_ml,
       });
     }
   }
 
-  // ═══ BETTER ALTERNATIVES ═══
+  // ═══ SEARCH FOR BETTER OPPORTUNITY ═══
+  // Only if the current context is NOT fully compatible.
+  // Priority: 1. Remaining Saat today → 2. Remaining Layl/Nahar today
+  //           → 3. First future valid opportunity (from findEarliestValidTime)
+  // Stop IMMEDIATELY after finding the first FULLY COMPATIBLE opportunity.
+  // NEVER recommend unless the ENTIRE context is compatible.
+
   const betterSaats = [];
-  for (const h of todayHours) {
-    if (h.status === "past") continue;
-    const planetLC = h.planet;
-    const isBest = !req.hours || req.hours.map(p => p.toLowerCase()).includes(planetLC);
-    const isWorst = (req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(planetLC)) ||
-                    (req.enemyPlanets && req.enemyPlanets.map(p => p.toLowerCase()).includes(planetLC));
-    if (!isBest || isWorst) continue;
-    const whyBetter = [];
-    const supportingRules = matchingRules.filter(r => r.saat_number === h.hourNumber && r.period === h.period);
-    for (const rule of supportingRules) {
-      if (rule.text_en || rule.text_ml) {
-        whyBetter.push({
-          text_en: rule.text_en, text_ml: rule.text_ml,
+  let nextLayl = null;
+  let nextDay = null;
+
+  if (!isFullyCompatible) {
+    // 1. Remaining Saat today — check ENTIRE context compatibility
+    for (const h of todayHours) {
+      if (h.status === "past") continue;
+      const planetLC = h.planet;
+      if (isContextFullyCompatible(req, currentDayKey, planetLC, h.period)) {
+        // ENTIRE context is compatible — collect supporting database rules
+        const whyBetter = [];
+        const supportingRules = matchingRules.filter(
+          r => r.saat_number === h.hourNumber && r.period === h.period
+        );
+        for (const rule of supportingRules) {
+          if (rule.text_en || rule.text_ml) {
+            whyBetter.push({ text_en: rule.text_en, text_ml: rule.text_ml });
+          }
+        }
+        betterSaats.push({
+          saatNum: saatDisplayNumEngine(h.hourNumber, h.period),
+          planet: capitalPlanet(h.planet),
+          startTime: h.startTime, endTime: h.endTime, period: h.period,
+          whyBetter,
         });
+        break; // Stop immediately — first fully compatible opportunity found
       }
     }
-    betterSaats.push({
-      saatNum: saatDisplayNumEngine(h.hourNumber, h.period),
-      planet: capitalPlanet(h.planet),
-      startTime: h.startTime, endTime: h.endTime, period: h.period,
-      whyBetter,
-    });
-  }
 
-  // ── NEXT LAYL / NAHAR ──
-  let nextLayl = null;
-  if (betterSaats.length === 0 && earliest) {
-    nextLayl = {
-      dayName: earliest.dayName, period: earliest.period,
-      startTime: earliest.startTime, endTime: earliest.endTime,
-      planet: earliest.planet,
-      saatNum: saatDisplayNumEngine(earliest.hour, earliest.period),
-      daysAhead: earliest.daysAhead, isToday: earliest.isToday,
-    };
-  }
+    // 2. Next Layl/Nahar — only if no fully compatible saat found today
+    //    earliest comes from findEarliestValidTime which does a combined check
+    //    across all dimensions (Day + Saat + Night requirement).
+    if (betterSaats.length === 0 && earliest) {
+      nextLayl = {
+        dayName: earliest.dayName, period: earliest.period,
+        startTime: earliest.startTime, endTime: earliest.endTime,
+        planet: earliest.planet,
+        saatNum: saatDisplayNumEngine(earliest.hour, earliest.period),
+        daysAhead: earliest.daysAhead, isToday: earliest.isToday,
+      };
+    }
 
-  // ── NEXT WEEKDAY ──
-  let nextDay = null;
-  if (betterSaats.length === 0 && !earliest && req.days) {
-    for (let i = 1; i <= 7; i++) {
-      const checkIdx = (weekday + i) % 7;
-      const checkKey = DAY_KEY_BY_INDEX[checkIdx];
-      if (req.days.includes(checkKey) && (!req.worstDays || !req.worstDays.includes(checkKey))) {
-        nextDay = { dayName: MIZAN_DAY_NAMES[checkKey], dayKey: checkKey, daysAhead: i };
-        break;
+    // 3. Next suitable weekday — only if no fully compatible opportunity found
+    //    This checks the day dimension only as a last resort when no fully
+    //    compatible opportunity exists within 14 days. The engine never
+    //    recommends this as "suitable" — it is informational only.
+    if (betterSaats.length === 0 && !earliest && req.days) {
+      for (let i = 1; i <= 7; i++) {
+        const checkIdx = (weekday + i) % 7;
+        const checkKey = DAY_KEY_BY_INDEX[checkIdx];
+        if (req.days.includes(checkKey) && (!req.worstDays || !req.worstDays.includes(checkKey))) {
+          nextDay = { dayName: MIZAN_DAY_NAMES[checkKey], dayKey: checkKey, daysAhead: i };
+          break;
+        }
       }
     }
   }
 
   return {
     currentSaatAnalysis: {
-      suitable: isSuitable,
+      suitable: isFullyCompatible,
       rejectionReasons,
       acceptanceReasons,
     },
