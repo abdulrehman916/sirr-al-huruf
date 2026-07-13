@@ -17,6 +17,7 @@ import ProtectedPage from './components/ProtectedPage';
 import ROUTE_MANIFEST from '@/lib/routeManifest';
 import RulesGate from './components/RulesGate';
 import GoogleSignInPrompt from './components/GoogleSignInPrompt';
+import PreviewStateRestore from './components/PreviewStateRestore';
 import { persistGet, isDevMode } from '@/lib/devModePersistence';
 
 // ── Lazy import map — Core pages only ──────
@@ -195,6 +196,7 @@ function App() {
             <Router>
               <PageStateProvider>
                 <NavigationProvider>
+                  <PreviewStateRestore />
                   <RulesGate>
                     <AuthenticatedApp />
                   </RulesGate>

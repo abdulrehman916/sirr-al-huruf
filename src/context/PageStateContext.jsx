@@ -1,7 +1,13 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { isDevMode } from '@/lib/devModePersistence';
 
 const PageStateContext = createContext(null);
 const STORAGE_KEY = 'app_navigation_state_v2';
+
+// In dev mode (Base44 Preview), use localStorage so UI state survives
+// full page reloads across build refreshes. In production, use
+// sessionStorage (cleared when tab closes) as before.
+const storage = isDevMode ? localStorage : sessionStorage;
 
 export function PageStateProvider({ children }) {
   const [pageStates, setPageStates] = useState({});
@@ -10,7 +16,7 @@ export function PageStateProvider({ children }) {
   // Load from sessionStorage on mount
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem(STORAGE_KEY);
+      const saved = storage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         setPageStates(parsed.pageStates || {});
@@ -24,7 +30,7 @@ export function PageStateProvider({ children }) {
   // Save to sessionStorage on change
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      storage.setItem(STORAGE_KEY, JSON.stringify({
         pageStates,
         navStack,
         timestamp: Date.now()
