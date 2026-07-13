@@ -848,20 +848,33 @@ function buildDecisionAnalysis({
   // ── Combined compatibility — ALL dimensions together ──
   const isFullyCompatible = isContextFullyCompatible(req, currentDayKey, currentPlanet, period);
 
-  // ── Collect ALL database rules relevant to this complete context ──
-  // Matching rules support the complete context; conflicting rules reject it.
-  // No dimension-by-dimension breakdown — one unified collection.
+  // ── FILTER: only records for the EXACT current context ──
+  // Decision → Filter → UI. Never dump all matching records.
+  // Only records that DIRECTLY support/reject the CURRENT context
+  // (same weekday + period + saat_number) are shown.
+  // Manuscript rules (weekday=null, saat_number=null) are excluded —
+  // they are raw manuscript text, not context-specific decisions.
+  const contextMatchingRules = matchingRules.filter(r =>
+    r.weekday === weekday && r.period === period && r.saat_number === saatNumber
+  );
+  const contextConflictingRules = conflictingRules.filter(r =>
+    r.weekday === weekday && r.period === period && r.saat_number === saatNumber
+  );
+
+  // Only ONE short reason and ONE short rejection reason — never lists
   const rejectionReasons = [];
   const acceptanceReasons = [];
 
-  for (const rule of conflictingRules) {
+  if (contextConflictingRules.length > 0) {
+    const rule = contextConflictingRules[0];
     if (rule.text_en || rule.text_ml) {
       rejectionReasons.push({
         text_en: rule.text_en, text_ml: rule.text_ml,
       });
     }
   }
-  for (const rule of matchingRules) {
+  if (contextMatchingRules.length > 0) {
+    const rule = contextMatchingRules[0];
     if (rule.text_en || rule.text_ml) {
       acceptanceReasons.push({
         text_en: rule.text_en, text_ml: rule.text_ml,

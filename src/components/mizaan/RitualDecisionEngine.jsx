@@ -191,8 +191,6 @@ export default function RitualDecisionEngine({
   }
 
   // ═══ EXTRACT DECISION DATA ═══
-  const matchingRules = rawAnalysis.matchingRules || [];
-  const conflictingRules = rawAnalysis.conflictingRules || [];
   const currentSaatAnalysis = rawAnalysis.currentSaatAnalysis || {
     suitable: false,
     rejectionReasons: [],
@@ -204,15 +202,12 @@ export default function RitualDecisionEngine({
     nextDay: null,
   };
 
-  // ── Unified reason lists (merge today's rules + current saat reasons) ──
-  const allSupportedReasons = [
-    ...matchingRules,
-    ...(currentSaatAnalysis.acceptanceReasons || []),
-  ];
-  const allRejectionReasons = [
-    ...conflictingRules,
-    ...(currentSaatAnalysis.rejectionReasons || []),
-  ];
+  // ── FILTERED reasons: only context-specific records from the engine ──
+  // Never dump all matching/conflicting rules. The engine already filtered
+  // these to only records for the EXACT current context (same weekday +
+  // period + saat). At most ONE short reason and ONE short rejection reason.
+  const supportedReason = (currentSaatAnalysis.acceptanceReasons || [])[0] || null;
+  const rejectionReason = (currentSaatAnalysis.rejectionReasons || [])[0] || null;
   // ── Single best alternative (priority: saat → layl/nahar → next day) ──
   const bestAlternative = betterAlternatives.betterSaats?.[0]
     ? { type: "saat", data: betterAlternatives.betterSaats[0] }
@@ -416,50 +411,52 @@ export default function RitualDecisionEngine({
             </div>
           </div>
 
-          {/* Supported Reasons */}
-          {allSupportedReasons.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Shield className="w-4 h-4" style={{ color: "#4ADE80" }} />
-                <h4
+          {/* Short Database-Based Reason (one only, context-specific) */}
+          {supportedReason && (
+            <div
+              className="rounded-lg p-3"
+              style={{
+                background: "rgba(74,222,128,0.06)",
+                border: "1px solid rgba(74,222,128,0.25)",
+              }}
+            >
+              <div className="flex items-start gap-2">
+                <Shield className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#4ADE80" }} />
+                <p
                   className={
-                    lang === "ml"
-                      ? "font-malayalam text-sm font-bold"
-                      : "font-inter text-sm font-bold"
+                    lang === "ml" && supportedReason.text_ml
+                      ? "font-malayalam text-xs leading-relaxed"
+                      : "font-inter text-xs leading-relaxed"
                   }
-                  style={{ color: "#4ADE80" }}
+                  style={{ color: "rgba(255,255,255,0.75)" }}
                 >
-                  {T("REASONS", "കാരണങ്ങൾ", lang)}
-                </h4>
-              </div>
-              <div className="space-y-2">
-                {allSupportedReasons.map((rule, i) => (
-                  <RuleCard key={i} rule={rule} type="matching" lang={lang} />
-                ))}
+                  {lang === "ml" && supportedReason.text_ml ? supportedReason.text_ml : supportedReason.text_en}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Rejection Reasons */}
-          {allRejectionReasons.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Swords className="w-4 h-4" style={{ color: "#F87171" }} />
-                <h4
+          {/* Short Rejection Reason (one only, context-specific) */}
+          {rejectionReason && (
+            <div
+              className="rounded-lg p-3"
+              style={{
+                background: "rgba(248,113,113,0.06)",
+                border: "1px solid rgba(248,113,113,0.25)",
+              }}
+            >
+              <div className="flex items-start gap-2">
+                <Swords className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#F87171" }} />
+                <p
                   className={
-                    lang === "ml"
-                      ? "font-malayalam text-sm font-bold"
-                      : "font-inter text-sm font-bold"
+                    lang === "ml" && rejectionReason.text_ml
+                      ? "font-malayalam text-xs leading-relaxed"
+                      : "font-inter text-xs leading-relaxed"
                   }
-                  style={{ color: "#F87171" }}
+                  style={{ color: "rgba(255,255,255,0.75)" }}
                 >
-                  {T("REJECTION REASONS", "നിരസന കാരണങ്ങൾ", lang)}
-                </h4>
-              </div>
-              <div className="space-y-2">
-                {allRejectionReasons.map((rule, i) => (
-                  <RuleCard key={i} rule={rule} type="conflicting" lang={lang} />
-                ))}
+                  {lang === "ml" && rejectionReason.text_ml ? rejectionReason.text_ml : rejectionReason.text_en}
+                </p>
               </div>
             </div>
           )}
