@@ -905,31 +905,13 @@ function ReasonCard({ reason, type, lang }) {
       <p
         className={
           lang === "ml" && reason.text_ml
-            ? "font-malayalam text-xs leading-relaxed mb-1"
-            : "font-inter text-xs leading-relaxed mb-1"
+            ? "font-malayalam text-xs leading-relaxed"
+            : "font-inter text-xs leading-relaxed"
         }
         style={{ color: "rgba(255,255,255,0.70)" }}
       >
         {lang === "ml" && reason.text_ml ? reason.text_ml : reason.text_en}
       </p>
-      <div
-        className="rounded p-2"
-        style={{ background: "rgba(255,255,255,0.03)" }}
-      >
-        <p
-          className={
-            lang === "ml"
-              ? "font-malayalam text-[11px] leading-relaxed"
-              : "font-inter text-[11px] leading-relaxed"
-          }
-          style={{ color: "rgba(255,255,255,0.60)" }}
-        >
-          <span className="font-bold" style={{ color: `${color}cc` }}>
-            {T("WHY", "കാരണം", lang)}:{" "}
-          </span>
-          {reason.reason}
-        </p>
-      </div>
     </div>
   );
 }
@@ -965,12 +947,6 @@ function BetterSaatCard({ saat, lang }) {
       </div>
       {saat.whyBetter && saat.whyBetter.length > 0 && (
         <div className="space-y-1">
-          <p
-            className="font-inter text-[10px] uppercase tracking-wider font-bold"
-            style={{ color: "rgba(74,222,128,0.70)" }}
-          >
-            {T("WHY IT IS BETTER", "എന്തുകൊണ്ട് മികച്ചത്", lang)}
-          </p>
           {saat.whyBetter.map((w, i) => (
             <div
               key={i}
@@ -985,7 +961,7 @@ function BetterSaatCard({ saat, lang }) {
                 }
                 style={{ color: "rgba(255,255,255,0.65)" }}
               >
-                {w.reason}
+                {lang === "ml" && w.text_ml ? w.text_ml : w.text_en}
               </p>
             </div>
           ))}

@@ -825,164 +825,117 @@ function buildDecisionAnalysis({
 }) {
   const rejectionReasons = [];
   const acceptanceReasons = [];
+  let isSuitable = true;
 
   // ── DAY CHECK ──
   if (selectedDay && req.days && !req.days.includes(selectedDay)) {
-    const dayName = MIZAN_DAY_NAMES[selectedDay];
+    isSuitable = false;
     const dayRules = conflictingRules.filter(r => r.weekday === weekday && r.field !== "enemy_actions");
-    if (dayRules.length > 0) {
-      for (const rule of dayRules) {
+    for (const rule of dayRules) {
+      if (rule.text_en || rule.text_ml) {
         rejectionReasons.push({
-          dimension: "Day", rule_id: rule.rule_id, source: rule.source,
-          field: rule.field, text_en: rule.text_en, text_ml: rule.text_ml,
-          reason: `${dayName} is not recommended. Conflicting rule from ${rule.source}: ${rule.text_en}`,
+          dimension: "Day",
+          text_en: rule.text_en, text_ml: rule.text_ml,
         });
       }
-    } else {
-      rejectionReasons.push({
-        dimension: "Day", rule_id: null, source: "Astrology Clock",
-        field: "day_rule",
-        text_en: `Recommended days: ${req.days.map(d => MIZAN_DAY_NAMES[d]).join(", ")}`,
-        text_ml: "",
-        reason: `${dayName} is not in the recommended days. Recommended: ${req.days.map(d => MIZAN_DAY_NAMES[d]).join(", ")}`,
-      });
     }
   } else if (selectedDay && req.days && req.days.includes(selectedDay)) {
     const dayRules = matchingRules.filter(r => r.weekday === weekday);
     for (const rule of dayRules) {
-      acceptanceReasons.push({
-        dimension: "Day", rule_id: rule.rule_id, source: rule.source,
-        field: rule.field, text_en: rule.text_en, text_ml: rule.text_ml,
-        reason: `${MIZAN_DAY_NAMES[selectedDay]} is recommended. Supporting rule from ${rule.source}: ${rule.text_en}`,
-      });
+      if (rule.text_en || rule.text_ml) {
+        acceptanceReasons.push({
+          dimension: "Day",
+          text_en: rule.text_en, text_ml: rule.text_ml,
+        });
+      }
     }
   }
 
   // ── SAAT / PLANET CHECK ──
   const currentPlanet = String(currentHourInfo?.planet || kawkab || "").toLowerCase();
   if (selectedHour && req.hours && !req.hours.map(p => p.toLowerCase()).includes(currentPlanet)) {
-    const planetName = capitalPlanet(currentPlanet);
+    isSuitable = false;
     const saatRules = conflictingRules.filter(r => r.saat_number === saatNumber && r.period === period);
-    if (saatRules.length > 0) {
-      for (const rule of saatRules) {
+    for (const rule of saatRules) {
+      if (rule.text_en || rule.text_ml) {
         rejectionReasons.push({
-          dimension: "Saat", rule_id: rule.rule_id, source: rule.source,
-          field: rule.field, text_en: rule.text_en, text_ml: rule.text_ml,
-          reason: `Saat #${selectedHour} (${planetName}) is not recommended. Conflicting rule from ${rule.source}: ${rule.text_en}`,
+          dimension: "Saat",
+          text_en: rule.text_en, text_ml: rule.text_ml,
         });
       }
-    } else {
-      rejectionReasons.push({
-        dimension: "Saat", rule_id: null, source: "Astrology Clock",
-        field: "hour_rule",
-        text_en: `Recommended planets: ${req.hours.join(", ")}`,
-        text_ml: "",
-        reason: `Saat #${selectedHour} is ruled by ${planetName}, but recommended planets are: ${req.hours.join(", ")}`,
-      });
     }
   } else if (selectedHour && req.hours && req.hours.map(p => p.toLowerCase()).includes(currentPlanet)) {
-    const planetName = capitalPlanet(currentPlanet);
     const saatRules = matchingRules.filter(r => r.saat_number === saatNumber && r.period === period);
     for (const rule of saatRules) {
-      acceptanceReasons.push({
-        dimension: "Saat", rule_id: rule.rule_id, source: rule.source,
-        field: rule.field, text_en: rule.text_en, text_ml: rule.text_ml,
-        reason: `Saat #${selectedHour} (${planetName}) is recommended. Supporting rule from ${rule.source}: ${rule.text_en}`,
-      });
+      if (rule.text_en || rule.text_ml) {
+        acceptanceReasons.push({
+          dimension: "Saat",
+          text_en: rule.text_en, text_ml: rule.text_ml,
+        });
+      }
     }
-  }
-
-  // ── LAYL / NAHAR CHECK ──
-  if (req.nightRequired === true && dayNight !== "gece") {
-    rejectionReasons.push({
-      dimension: "Layl/Nahar", rule_id: null, source: "Astrology Clock",
-      field: "night_required",
-      text_en: "This purpose requires Night (Layl)",
-      text_ml: "",
-      reason: "This purpose requires Night (Layl), but current selection is Day (Nahar)",
-    });
-  } else if (req.nightRequired === true && dayNight === "gece") {
-    acceptanceReasons.push({
-      dimension: "Layl/Nahar", rule_id: null, source: "Astrology Clock",
-      field: "night_required",
-      text_en: "Night (Layl) selected as required",
-      text_ml: "",
-      reason: "Night (Layl) is selected, matching the requirement",
-    });
   }
 
   // ── ENEMY PLANET CHECK ──
   if (req.enemyPlanets && req.enemyPlanets.length > 0) {
-    const selectedPlanetEn = capitalPlanet(currentPlanet);
     if (req.enemyPlanets.map(p => p.toLowerCase()).includes(currentPlanet)) {
+      isSuitable = false;
       const enemyRules = conflictingRules.filter(r => r.field === "enemy_actions");
-      if (enemyRules.length > 0) {
-        for (const rule of enemyRules) {
+      for (const rule of enemyRules) {
+        if (rule.text_en || rule.text_ml) {
           rejectionReasons.push({
-            dimension: "Enemy", rule_id: rule.rule_id, source: rule.source,
-            field: "enemy_actions", text_en: rule.text_en, text_ml: rule.text_ml,
-            reason: `${selectedPlanetEn} is an enemy planet. Enemy rule from ${rule.source}: ${rule.text_en}`,
+            dimension: "Enemy",
+            text_en: rule.text_en, text_ml: rule.text_ml,
           });
         }
-      } else {
-        rejectionReasons.push({
-          dimension: "Enemy", rule_id: null, source: "Astrology Clock",
-          field: "enemy_planets",
-          text_en: `Enemy planets: ${req.enemyPlanets.join(", ")}`,
-          text_ml: "",
-          reason: `${selectedPlanetEn} is listed as an enemy planet for this purpose`,
-        });
       }
     }
   }
 
   // ── FORBIDDEN / WORST HOUR CHECK ──
   if (req.worstHours && req.worstHours.map(p => p.toLowerCase()).includes(currentPlanet)) {
+    isSuitable = false;
     const worstRules = conflictingRules.filter(r => r.field === "forbidden_actions" && r.saat_number === saatNumber);
-    if (worstRules.length > 0) {
-      for (const rule of worstRules) {
+    for (const rule of worstRules) {
+      if (rule.text_en || rule.text_ml) {
         rejectionReasons.push({
-          dimension: "Forbidden", rule_id: rule.rule_id, source: rule.source,
-          field: "forbidden_actions", text_en: rule.text_en, text_ml: rule.text_ml,
-          reason: `This Saat has forbidden actions. Forbidden rule from ${rule.source}: ${rule.text_en}`,
+          dimension: "Forbidden",
+          text_en: rule.text_en, text_ml: rule.text_ml,
         });
       }
-    } else {
-      rejectionReasons.push({
-        dimension: "Forbidden", rule_id: null, source: "Astrology Clock",
-        field: "worst_hours",
-        text_en: `Worst hours: ${req.worstHours.join(", ")}`,
-        text_ml: "",
-        reason: `Saat #${selectedHour} is ruled by ${capitalPlanet(currentPlanet)}, which is in the worst hours list`,
-      });
     }
   }
 
   // ── NAHAS DAY CHECK ──
   if (req.worstDays && selectedDay && req.worstDays.includes(selectedDay)) {
-    rejectionReasons.push({
-      dimension: "Nahas Day", rule_id: null, source: "Astrology Clock",
-      field: "worst_days",
-      text_en: `Nahas days: ${req.worstDays.map(d => MIZAN_DAY_NAMES[d]).join(", ")}`,
-      text_ml: "",
-      reason: `${MIZAN_DAY_NAMES[selectedDay]} is a Nahas (forbidden) day for this purpose`,
-    });
+    isSuitable = false;
+    const nahasRules = conflictingRules.filter(r => r.weekday === weekday && r.field === "forbidden_actions");
+    for (const rule of nahasRules) {
+      if (rule.text_en || rule.text_ml) {
+        rejectionReasons.push({
+          dimension: "Nahas Day",
+          text_en: rule.text_en, text_ml: rule.text_ml,
+        });
+      }
+    }
   }
 
   // ── MANUSCRIPT RULES CHECK ──
   for (const rule of conflictingRules.filter(r => r.category)) {
-    rejectionReasons.push({
-      dimension: "Manuscript Rule", rule_id: rule.rule_id, source: rule.source,
-      field: rule.field, text_en: rule.text_en, text_ml: rule.text_ml,
-      reason: `Manuscript rule from ${rule.source}: ${rule.text_en}`,
-    });
+    if (rule.text_en || rule.text_ml) {
+      rejectionReasons.push({
+        dimension: "Manuscript Rule",
+        text_en: rule.text_en, text_ml: rule.text_ml,
+      });
+    }
   }
   for (const rule of matchingRules.filter(r => r.category)) {
-    acceptanceReasons.push({
-      dimension: "Manuscript Rule", rule_id: rule.rule_id, source: rule.source,
-      field: rule.field, text_en: rule.text_en, text_ml: rule.text_ml,
-      reason: `Manuscript rule from ${rule.source}: ${rule.text_en}`,
-    });
+    if (rule.text_en || rule.text_ml) {
+      acceptanceReasons.push({
+        dimension: "Manuscript Rule",
+        text_en: rule.text_en, text_ml: rule.text_ml,
+      });
+    }
   }
 
   // ═══ BETTER ALTERNATIVES ═══
@@ -997,20 +950,11 @@ function buildDecisionAnalysis({
     const whyBetter = [];
     const supportingRules = matchingRules.filter(r => r.saat_number === h.hourNumber && r.period === h.period);
     for (const rule of supportingRules) {
-      whyBetter.push({
-        rule_id: rule.rule_id, source: rule.source,
-        field: rule.field, text_en: rule.text_en, text_ml: rule.text_ml,
-        reason: `Saat #${saatDisplayNumEngine(h.hourNumber, h.period)} is ruled by ${capitalPlanet(h.planet)}. Supporting rule from ${rule.source}: ${rule.text_en}`,
-      });
-    }
-    if (whyBetter.length === 0 && req.hours) {
-      whyBetter.push({
-        rule_id: null, source: "Astrology Clock",
-        field: "hour_rule",
-        text_en: `Recommended planets: ${req.hours.join(", ")}`,
-        text_ml: "",
-        reason: `Saat #${saatDisplayNumEngine(h.hourNumber, h.period)} is ruled by ${capitalPlanet(h.planet)}, which is in the recommended list: ${req.hours.join(", ")}`,
-      });
+      if (rule.text_en || rule.text_ml) {
+        whyBetter.push({
+          text_en: rule.text_en, text_ml: rule.text_ml,
+        });
+      }
     }
     betterSaats.push({
       saatNum: saatDisplayNumEngine(h.hourNumber, h.period),
@@ -1047,7 +991,7 @@ function buildDecisionAnalysis({
 
   return {
     currentSaatAnalysis: {
-      suitable: rejectionReasons.length === 0,
+      suitable: isSuitable,
       rejectionReasons,
       acceptanceReasons,
     },
