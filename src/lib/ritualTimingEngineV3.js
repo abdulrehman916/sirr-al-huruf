@@ -1409,14 +1409,25 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     isContextForbidden,
   });
 
-  // ── NO-DATA REJECTION REASON ──
+  // ── REJECTION REASON GUARANTEE ──
   // Every rejected verdict must include at least one rejection reason.
-  // When no timing data exists for this purpose, add the no-data reason.
-  if (noDataForPurpose && decisionAnalysis.currentSaatAnalysis.rejectionReasons.length === 0) {
-    decisionAnalysis.currentSaatAnalysis.rejectionReasons.push({
-      text_en: "No timing data found for this purpose in the Astrology Clock.",
-      text_ml: "",
-    });
+  // Case 1: No timing data exists for this purpose → no-data reason.
+  // Case 2: Context is forbidden (evil without recommendation) but no
+  //         context-specific rule text was collected → use the context
+  //         record's own ritual_suitability text as the rejection reason.
+  // This guarantees: suitable=false ALWAYS has rejectionReasons.length > 0.
+  if (decisionAnalysis.currentSaatAnalysis.rejectionReasons.length === 0) {
+    if (noDataForPurpose) {
+      decisionAnalysis.currentSaatAnalysis.rejectionReasons.push({
+        text_en: "No timing data found for this purpose in the Astrology Clock.",
+        text_ml: "",
+      });
+    } else if (isContextForbidden && _earlyContextRecord) {
+      decisionAnalysis.currentSaatAnalysis.rejectionReasons.push({
+        text_en: _earlyContextRecord.ritual_suitability || _earlyContextRecord.knowledge_text_en || "This timing is not suitable for the selected purpose per the Astrology Clock.",
+        text_ml: _earlyContextRecord.knowledge_text_ml || "",
+      });
+    }
   }
 
   return {
