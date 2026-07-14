@@ -165,11 +165,8 @@ export default function RitualDecisionEngine({
             </div>
             <div>
               <h3 className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
-                {T("Ritual Timing Research Report", "ആചാര സമയ ഗവേഷണ റിപ്പോർട്ട്", lang)}
+                {T("Ritual Timing Advisor", "ആചാര സമയ ഉപദേഷ്ടാവു", lang)}
               </h3>
-              <p className="font-amiri text-xs" style={{ color: G.dim }}>
-                تقرير بحث توقيت العمل
-              </p>
             </div>
           </div>
           <button

@@ -6,9 +6,23 @@ import GuidedCard from "./GuidedCard";
 import { G, T } from "../ritual-report/shared";
 
 export default function GuidedManuscript({ analysis, lang }) {
-  const explanationEn = analysis?.selectionAnalysis?.originalExplanation || "";
-  const explanationMl =
-    analysis?.selectionAnalysis?.originalExplanationMl || "";
+  // Strip source citations and Turkish references from the explanation
+  const cleanExplanation = (text) => {
+    if (!text) return "";
+    return text
+      .replace(/\s*Source:.*?(\.|$)/gi, "") // Remove "Source: ..." citations
+      .replace(/\s*Source\s*:.*$/gi, "") // Remove trailing source citations
+      .replace(/Havâss[^\s]*\s*Derinlikleri[^\n]*/gi, "") // Remove Turkish book names
+      .replace(/\s*—\s*Source.*$/gi, "") // Remove em-dash source references
+      .trim();
+  };
+
+  const explanationEn = cleanExplanation(
+    analysis?.selectionAnalysis?.originalExplanation || ""
+  );
+  const explanationMl = cleanExplanation(
+    analysis?.selectionAnalysis?.originalExplanationMl || ""
+  );
   const explanation =
     lang === "ml" ? explanationMl || explanationEn : explanationEn;
 
