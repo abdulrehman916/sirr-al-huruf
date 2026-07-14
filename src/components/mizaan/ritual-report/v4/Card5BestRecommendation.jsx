@@ -1,6 +1,5 @@
 import { Sparkles, Check } from "lucide-react";
-import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor, DAY_KEY_BY_INDEX } from "../v3/shared";
-import { collectAllValidTimes } from "@/lib/ritualTimingEngineV3";
+import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor } from "../v3/shared";
 import SourcesCollapse from "./SourcesCollapse";
 
 // CARD 5 — BEST RECOMMENDATION
@@ -15,23 +14,12 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
   const moonReq = analysis?.moonReq || {};
   const week = analysis?.weekBreakdown || [];
 
-  // Search the FULL 29-day window. Prefer the rich "allowed" timeline; if no
-  // hour is explicitly marked allowed, fall back to every req-compatible
-  // (suitable) hour in the same 29-day window so a best is still found.
-  // Only when neither source has any suitable hour is there truly no recommendation.
-  const fallback = timeline.length === 0
-    ? collectAllValidTimes(analysis?.req || {}, new Date(), 29).map(o => ({
-        ...o,
-        weekday: DAY_KEY_BY_INDEX.indexOf(o.dayKey),
-        reasonEn: "", reasonMl: "", rules: [],
-      }))
-    : [];
-  const candidates = timeline.length > 0 ? timeline : fallback;
-
-  // Single BEST across the full search window — first occurrence of the
-  // highest-ranked suitable hour (highest compatibility, earliest on tie).
+  // Single BEST across the full 29-day window — first occurrence of the
+  // highest-ranked hour whose EXACT context (weekday + period + saat + planet)
+  // is explicitly recommended by an imported book rule. No inference, no
+  // planet/day-only matching: only exact per-hour book rules are ranked.
   let best = null, bestPct = -1;
-  for (const o of candidates) {
+  for (const o of timeline) {
     const pct = computeCompat(analysis, { weekday: o.weekday, dayKey: o.dayKey, period: o.period, saatNumber: o.hour, planetLC: String(o.planet || "").toLowerCase() }).final;
     if (pct > bestPct) { bestPct = pct; best = o; }
   }
@@ -54,7 +42,7 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
   // Other Time Slots on the SAME day as the best — every remaining planetary
   // hour of that day, in time order, each with book-rule status + reason.
   // No other days, no future-date search (Card 6 owns the future).
-  const NO_RULE_EN = "No matching rule found in the imported sources.";
+  const NO_RULE_EN = "No matching rule exists in the imported sources.";
   const NO_RULE_ML = "ഇറക്കുമതി ചെയ്ത സ്രോതസ്സുകളിൽ പൊരുത്തപ്പെടുന്ന നിയമമൊന്നുമില്ല.";
   const firstSentence = (s) => { if (!s) return ""; const p = String(s).split(/[.;\n]| · /); return (p[0] || "").trim(); };
   const bestDay = best ? (week[best.daysAhead] || week.find(d => d.dayKey === best.dayKey)) : null;
@@ -76,13 +64,13 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
   return (
     <Box number={5} titleEn="Best Recommendation" titleMl="മികച്ച ശുപാർശ" icon={Sparkles} lang={lang}>
       {!best ? (
-        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No recommendation found.", "ശുപാർശ കണ്ടെത്താനായില്ല.", lang)}</p>
+        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No matching rule exists in the imported sources.", "ഇറക്കുമതി ചെയ്ത സ്രോതസ്സുകളിൽ പൊരുത്തപ്പെടുന്ന നിയമമൊന്നുമില്ല.", lang)}</p>
       ) : (
         <>
           <div className="rounded-xl p-3 mb-3" style={{ background: `${cColor}12`, border: `1px solid ${cColor}50` }}>
             <p className="font-inter text-sm font-bold" style={{ color: cColor }}>{T("Strongest combination", "ഏറ്റവും ശക്തമായ കൂട്ടായ്മ", lang)}: {bestPct}%</p>
             <p className={lang === "ml" ? "font-malayalam text-[11px] mt-0.5" : "font-inter text-[11px] mt-0.5"} style={{ color: "rgba(255,255,255,0.65)" }}>
-              {lang === "ml" && best.reasonMl ? best.reasonMl : (best.reasonEn || T("Imported book rules fully align at this hour — highest strength across all days.", "ഈ സമയത്ത് ഇറക്കുമതി ചെയ്ത പുസ്തക നിയമങ്ങൾ പൂർണ്ണമായി പൊരുത്തപ്പെടുന്നു — എല്ലാ ദിവസങ്ങളിലും ഏറ്റവും ശക്തം.", lang))}
+              {lang === "ml" && best.reasonMl ? best.reasonMl : (best.reasonEn || T("No matching rule exists in the imported sources.", "ഇറക്കുമതി ചെയ്ത സ്രോതസ്സുകളിൽ പൊരുത്തപ്പെടുന്ന നിയമമൊന്നുമില്ല.", lang))}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
