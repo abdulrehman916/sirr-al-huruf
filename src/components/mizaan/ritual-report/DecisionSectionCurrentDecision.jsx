@@ -45,6 +45,8 @@ export default function DecisionSectionCurrentDecision({ analysis, resolvedPurpo
   const rejectionReasons = analysis?.currentSaatAnalysis?.rejectionReasons || [];
 
   const isExplicitlyForbidden = analysis?.selectionAnalysis?.forbidden === true;
+  const dims = computeDimensionBreakdown(analysis);
+  const compatPct = dims.final;
   let displayVerdict, verdictColor, VerdictIcon, emoji;
   if (isExplicitlyForbidden) {
     displayVerdict = "Forbidden"; verdictColor = "#F87171"; VerdictIcon = XCircle; emoji = "⛔";
@@ -58,9 +60,6 @@ export default function DecisionSectionCurrentDecision({ analysis, resolvedPurpo
     displayVerdict = "Weak"; verdictColor = "#FB923C"; VerdictIcon = AlertCircle; emoji = "⚠";
   }
   const labelMl = { "Very Strong": "വളരെ ശക്തം", "Strong": "ശക്തം", "Moderate": "മിതമായ", "Weak": "ദുർബലം", "Forbidden": "വിലക്കപ്പെട്ടത്" };
-
-  const dims = computeDimensionBreakdown(analysis);
-  const compatPct = dims.final;
   const compatColor = compatPct >= 70 ? "#4ADE80" : compatPct >= 50 ? "#FBBF24" : "#F87171";
   const liveNow = analysis?.liveNow || {};
   const purposeText = (lang === "ml" ? resolvedPurpose?.interpretation_ml : resolvedPurpose?.interpretation_en) || analysis?.ritualType || "";
