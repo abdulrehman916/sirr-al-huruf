@@ -44,17 +44,20 @@ export default function DecisionSectionCurrentDecision({ analysis, resolvedPurpo
   const acceptanceReasons = analysis?.currentSaatAnalysis?.acceptanceReasons || [];
   const rejectionReasons = analysis?.currentSaatAnalysis?.rejectionReasons || [];
 
+  const isExplicitlyForbidden = analysis?.selectionAnalysis?.forbidden === true;
   let displayVerdict, verdictColor, VerdictIcon, emoji;
-  if (verdict === "Suitable" && failedItems.length === 0) {
-    displayVerdict = "Suitable"; verdictColor = "#4ADE80"; VerdictIcon = CheckCircle2; emoji = "✅";
-  } else if (verdict === "Suitable" && failedItems.length > 0) {
-    displayVerdict = "Partially Suitable"; verdictColor = "#FBBF24"; VerdictIcon = AlertCircle; emoji = "⚠";
-  } else if (canPerform === "Limited") {
-    displayVerdict = "Partially Suitable"; verdictColor = "#FBBF24"; VerdictIcon = AlertCircle; emoji = "⚠";
+  if (isExplicitlyForbidden) {
+    displayVerdict = "Forbidden"; verdictColor = "#F87171"; VerdictIcon = XCircle; emoji = "⛔";
+  } else if (compatPct >= 85) {
+    displayVerdict = "Very Strong"; verdictColor = "#4ADE80"; VerdictIcon = CheckCircle2; emoji = "✅";
+  } else if (compatPct >= 70) {
+    displayVerdict = "Strong"; verdictColor = "#4ADE80"; VerdictIcon = CheckCircle2; emoji = "✅";
+  } else if (compatPct >= 50) {
+    displayVerdict = "Moderate"; verdictColor = "#FBBF24"; VerdictIcon = AlertCircle; emoji = "⚠";
   } else {
-    displayVerdict = "Not Suitable"; verdictColor = "#F87171"; VerdictIcon = XCircle; emoji = "❌";
+    displayVerdict = "Weak"; verdictColor = "#FB923C"; VerdictIcon = AlertCircle; emoji = "⚠";
   }
-  const labelMl = { Suitable: "അനുയോജ്യം", "Partially Suitable": "ഭാഗികമായി അനുയോജ്യം", "Not Suitable": "അനുയോജ്യമല്ല" };
+  const labelMl = { "Very Strong": "വളരെ ശക്തം", "Strong": "ശക്തം", "Moderate": "മിതമായ", "Weak": "ദുർബലം", "Forbidden": "വിലക്കപ്പെട്ടത്" };
 
   const dims = computeDimensionBreakdown(analysis);
   const compatPct = dims.final;

@@ -72,6 +72,11 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
   // ── 4. Forbidden Saats today ──
   const forbiddenSaats = avoidWindows || [];
 
+  // ── Passed Saat detection ──
+  const hasPassedStrongest = passedWindows.length > 0 && (
+    !hasRemaining || Math.max(...passedWindows.map(w => w.score || 0)) >= Math.max(...remainingSaats.map(w => w.score || 0))
+  );
+
   // ── 5. Next available day (if no suitable Saat remains today) ──
   const nextDay = (!hasRemaining && nextOpp) ? nextOpp : null;
   const nextDayCompat = nextDay ? Math.round(
@@ -168,6 +173,16 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
           </p>
         </div>
 
+        {/* ── Passed Saat message ── */}
+        {hasPassedStrongest && (
+          <div className="rounded-lg p-3 flex items-center gap-2" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.20)" }}>
+            <Clock className="w-4 h-4 flex-shrink-0" style={{ color: "#FBBF24" }} />
+            <p className={lang === "ml" ? "font-malayalam text-[11px] font-bold" : "font-inter text-[11px] font-bold"} style={{ color: "#FBBF24" }}>
+              {T("The strongest Saat today has already passed — see next best below.", "ഇന്നത്തെ ഏറ്റവും ശക്ത സഅാത് കഴിഞ്ഞു — താഴെ അടുത്ത മികച്ചത് കാണുക.", lang)}
+            </p>
+          </div>
+        )}
+
         {/* ── 3. Remaining suitable Saats today ── */}
         <div className="rounded-lg p-3" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
           <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: G.dim }}>
@@ -181,6 +196,10 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
                 const reason = findReasonForSaat(sn, w.period);
                 const c = compatColor(w.score || 0);
                 const isStrongest = idx === 0;
+                const rankLabel = idx === 0 ? T("Best Today", "ഇന്നത്തെ മികച്ചത്", lang)
+                  : idx === 1 ? T("Second Best", "രണ്ടാമത്തെ മികച്ചത്", lang)
+                  : idx === 2 ? T("Third Best", "മൂന്നാമത്തെ മികച്ചത്", lang)
+                  : null;
                 return (
                   <div key={`saat-${idx}`} className="rounded-lg p-2.5" style={{
                     background: isStrongest ? "rgba(74,222,128,0.06)" : "rgba(255,255,255,0.02)",
@@ -189,6 +208,15 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2 min-w-0">
                         {isStrongest && <TrendingUp className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#4ADE80" }} />}
+                        {rankLabel && (
+                          <span className="font-inter text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{
+                            background: isStrongest ? "rgba(74,222,128,0.15)" : "rgba(212,175,55,0.10)",
+                            color: isStrongest ? "#4ADE80" : G.dim,
+                            border: `1px solid ${isStrongest ? "rgba(74,222,128,0.20)" : G.border}`,
+                          }}>
+                            {rankLabel}
+                          </span>
+                        )}
                         <span className="font-inter text-xs font-bold flex-shrink-0" style={{ color: "#fff" }}>
                           {T("Saat", "സഅാത്", lang)} #{sn}
                         </span>
