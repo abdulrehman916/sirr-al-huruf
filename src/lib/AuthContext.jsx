@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { resolveRole, ROLES } from '@/lib/rbac';
-import { persistGet, persistRemove } from '@/lib/devModePersistence';
+import { persistGet, persistRemove, isDevMode } from '@/lib/devModePersistence';
 
 const AuthContext = createContext();
 
@@ -46,9 +46,11 @@ export const AuthProvider = ({ children }) => {
       setAuthResolved(true);
       if (!u) return; // no token — stay guest
       // Session-gate: only elevate after an explicit login this session, so
-      // customers always start as guest. Applies identically to Preview and
-      // the published APK — no environment-specific bypass.
-      if (!justLoggedIn) {
+      // customers always start as guest. In dev mode (Preview), a valid token
+      // alone is enough — the platform auto-authenticates the builder and
+      // sirr_admin_session may not be set, so we skip the session-gate check.
+      // Production is unaffected: isDevMode is false in prod builds.
+      if (!justLoggedIn && !isDevMode) {
         return;
       }
       // ── Owner/Admin email verification ─────────────────────────────

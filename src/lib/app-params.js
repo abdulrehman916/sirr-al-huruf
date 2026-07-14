@@ -2,6 +2,52 @@ const isNode = typeof window === 'undefined';
 const windowObj = isNode ? { localStorage: new Map() } : window;
 const storage = windowObj.localStorage;
 
+const IS_DEV = import.meta.env.DEV;
+
+// ── Dev-mode token cookie backup ──────────────────────────────
+// The Base44 SDK stores the access token in localStorage. On Preview
+// iframe recreation (every code build), localStorage is cleared and the
+// token is lost — forcing a Google re-login on every refresh. In dev
+// mode only, we back up the token to a cookie and restore it on the next
+// load so the Owner session survives preview rebuilds.
+// Production is completely unaffected: IS_DEV is false in prod builds.
+function devSetCookie(name, value, days = 365) {
+  try {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};path=/;SameSite=None;Secure`;
+  } catch { /* ignore */ }
+}
+function devGetCookie(name) {
+  try {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : null;
+  } catch { return null; }
+}
+function devDeleteCookie(name) {
+  try { document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`; }
+  catch { /* ignore */ }
+}
+
+// Restore token from cookie BEFORE getAppParams() reads localStorage
+if (IS_DEV && !isNode) {
+  const TOKEN_KEY = 'base44_access_token';
+  const TOKEN_COOKIE = 'base44_dev_token';
+  const urlParams = new URLSearchParams(window.location.search);
+  const isLoggingOut = urlParams.get('clear_access_token') === 'true';
+  const lsToken = storage.getItem(TOKEN_KEY);
+  if (isLoggingOut) {
+    // Explicit logout — clear cookie backup so token is NOT restored
+    devDeleteCookie(TOKEN_COOKIE);
+  } else if (lsToken) {
+    // Token exists in localStorage — back up to cookie
+    devSetCookie(TOKEN_COOKIE, lsToken);
+  } else {
+    // localStorage cleared (preview rebuild) — restore from cookie
+    const cookieToken = devGetCookie(TOKEN_COOKIE);
+    if (cookieToken) storage.setItem(TOKEN_KEY, cookieToken);
+  }
+}
+
 const toSnakeCase = (str) => {
 	return str.replace(/([A-Z])/g, '_$1').toLowerCase();
 }

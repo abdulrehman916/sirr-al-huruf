@@ -15,6 +15,7 @@ import { preloadPageFeatureConfigs } from "@/lib/featureConfigCache";
 import WhatsAppAccessRequest from "@/components/WhatsAppAccessRequest";
 import RequestAccessModal from "@/components/RequestAccessModal";
 import { useTranslation } from "@/i18n/useTranslation";
+import { isDevMode, persistSet, persistRemove } from "@/lib/devModePersistence";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -250,13 +251,15 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
   // Otherwise the authenticated "no access" dialog is shown below.
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    try { sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+    // Dev mode: persistSet writes localStorage + cookie so the session flag
+    // survives preview iframe rebuilds. Production: sessionStorage (unchanged).
+    try { isDevMode ? persistSet("sirr_admin_session", "true") : sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
     try { sessionStorage.setItem("sirr_locked_signin_redirect", routePath); } catch { /* ignore */ }
     try {
       await base44.auth.loginWithProvider("google", routePath);
     } catch {
       setGoogleLoading(false);
-      try { sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
+      try { isDevMode ? persistRemove("sirr_admin_session") : sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
       try { sessionStorage.removeItem("sirr_locked_signin_redirect"); } catch { /* ignore */ }
     }
   };
