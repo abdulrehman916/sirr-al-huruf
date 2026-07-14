@@ -1210,6 +1210,7 @@ export default function Mizaan9Page() {
           customPurpose={customPurpose}
           activeMethod={activeMethod}
           purposeLookup={resolvedPurpose}
+          onApplySelections={(patch) => setSelections(prev => ({ ...prev, ...patch }))}
         />
       )}
 

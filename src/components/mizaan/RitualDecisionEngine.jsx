@@ -21,15 +21,15 @@ import { usePurposeActionKeywords } from "../../hooks/usePurposeActionKeywords";
 import { subscribeLocation, getLocationVersion } from "../../lib/astroClockGeolocation";
 
 import { G, T } from "./ritual-report/shared";
-import BoxForbidden from "./ritual-report/v3/BoxForbidden";
-import CardPurposeSummary from "./ritual-report/v4/CardPurposeSummary";
-import CardCurrentDecision from "./ritual-report/v4/CardCurrentDecision";
-import CardNextOpportunity from "./ritual-report/v4/CardNextOpportunity";
-import CardHowToImprove from "./ritual-report/v4/CardHowToImprove";
-import CardMoon from "./ritual-report/v4/CardMoon";
+import Card1RitualAnalysis from "./ritual-report/v4/Card1RitualAnalysis";
+import Card2NextTimes from "./ritual-report/v4/Card2NextTimes";
+import Card3ForbiddenTimes from "./ritual-report/v4/Card3ForbiddenTimes";
+import Card4MoonAnalysis from "./ritual-report/v4/Card4MoonAnalysis";
+import Card5BestRecommendation from "./ritual-report/v4/Card5BestRecommendation";
+import Card6FutureOpportunities from "./ritual-report/v4/Card6FutureOpportunities";
 
 export default function RitualDecisionEngine({
-  result, selections, customPurpose, activeMethod, purposeLookup,
+  result, selections, customPurpose, activeMethod, purposeLookup, onApplySelections,
 }) {
   const [lang, setLang] = useRitualLang();
   const { astroClockKnowledge } = useAstroClockKnowledgeAll();
@@ -255,26 +255,13 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ 6-CARD DECISION ASSISTANT ═══ */}
-      <CardPurposeSummary analysis={rawAnalysis} selections={engineSelections} lang={lang} />
-      <CardCurrentDecision analysis={rawAnalysis} lang={lang} />
-      {!rawAnalysis?.selectionAnalysis?.suitable && (
-        <CardNextOpportunity analysis={rawAnalysis} liveRecommendation={liveRecommendation} lang={lang} />
-      )}
-      <CardHowToImprove
-        analysis={rawAnalysis}
-        override={override}
-        onApply={applyOverride}
-        onReset={() => setOverride(null)}
-        lang={lang}
-      />
-      <CardMoon
-        analysis={rawAnalysis}
-        open={moonOpen}
-        onToggle={() => setMoonOpen(o => !o)}
-        lang={lang}
-      />
-      <BoxForbidden analysis={rawAnalysis} lang={lang} />
+      {/* ═══ 6-CARD DECISION ASSISTANT (FINAL SPEC) ═══ */}
+      <Card1RitualAnalysis analysis={rawAnalysis} lang={lang} />
+      <Card2NextTimes analysis={rawAnalysis} liveTimeline={liveTimeline} lang={lang} />
+      <Card3ForbiddenTimes analysis={rawAnalysis} lang={lang} />
+      <Card4MoonAnalysis analysis={rawAnalysis} open={moonOpen} onToggle={() => setMoonOpen(o => !o)} lang={lang} />
+      <Card5BestRecommendation analysis={rawAnalysis} liveTimeline={liveTimeline} onApply={onApplySelections} lang={lang} />
+      <Card6FutureOpportunities analysis={rawAnalysis} liveTimeline={liveTimeline} lang={lang} />
     </div>
   );
 }
