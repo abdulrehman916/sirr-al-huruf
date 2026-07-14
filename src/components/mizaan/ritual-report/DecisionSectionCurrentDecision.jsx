@@ -3,7 +3,7 @@
 // Selections + Compatibility % + Verdict + WHY (2-4 lines)
 // ═══════════════════════════════════════════════════════════════
 import { CheckCircle2, XCircle, AlertCircle, Scale } from "lucide-react";
-import { G, T, translatePlanet, translateDay, DAY_KEY_BY_INDEX } from "./shared";
+import { G, T, translatePlanet, translateDay, MIZAN_DAY_NAMES, DAY_KEY_BY_INDEX, saatDisplayNum } from "./shared";
 
 function computeCompatibility(analysis) {
   const req = analysis?.req || {};
@@ -51,9 +51,28 @@ export default function DecisionSectionCurrentDecision({ analysis, resolvedPurpo
   const liveNow = analysis?.liveNow || {};
   const purposeText = (lang === "ml" ? resolvedPurpose?.interpretation_ml : resolvedPurpose?.interpretation_en) || analysis?.ritualType || "";
 
-  // WHY from database — 2-4 short lines
+  // WHY — Purpose-first flow: Purpose → Book → Day → Saat → Planet → Verdict
+  const matchingRules = analysis?.matchingRules || [];
+  const firstMatch = matchingRules[0];
+  const bookName = firstMatch?.source || "";
+  const recDay = firstMatch?.weekday != null ? MIZAN_DAY_NAMES[DAY_KEY_BY_INDEX[firstMatch.weekday]] : null;
+  const recSaat = firstMatch?.saat_number != null ? saatDisplayNum(firstMatch.saat_number, firstMatch.period) : null;
+  const recPlanet = firstMatch?.planet || null;
+
+  const whyLines = [];
+  whyLines.push(`${T("Purpose", "ലക്ഷ്യം", lang)}: ${purposeText}`);
+  if (bookName && recSaat) {
+    const recStr = recDay ? `${translateDay(recDay, lang)} ${T("Saat", "സഅാത്", lang)} #${recSaat}` : `${T("Saat", "സഅാത്", lang)} #${recSaat}`;
+    const planetStr = recPlanet ? ` (${translatePlanet(recPlanet, lang)})` : "";
+    whyLines.push(`${bookName} ${T("recommends", "ശുപാർശ ചെയ്യുന്നു", lang)}: ${recStr}${planetStr}`);
+  }
+  const selDay = translateDay(liveNow.day, lang);
+  const selSaat = liveNow.saat || "—";
+  const selPlanet = translatePlanet(liveNow.kawkab || liveNow.planetaryHour, lang);
+  whyLines.push(`${T("Your selection", "നിങ്ങളുടെ തിരഞ്ഞെടുപ്പ്", lang)}: ${selDay} ${T("Saat", "സഅാത്", lang)} #${selSaat} (${selPlanet})`);
   const reasons = displayVerdict === "Suitable" ? acceptanceReasons : displayVerdict === "Partially Suitable" ? [...acceptanceReasons, ...rejectionReasons] : rejectionReasons;
-  const whyLines = reasons.map((r) => cleanReason(lang === "ml" && r.text_ml ? r.text_ml : r.text_en)).filter(Boolean).slice(0, 3);
+  const dbReason = reasons.map((r) => cleanReason(lang === "ml" && r.text_ml ? r.text_ml : r.text_en)).filter(Boolean).slice(0, 1).join(" ");
+  if (dbReason) whyLines.push(dbReason);
 
   function SelRow({ label, value }) {
     if (!value && value !== 0) return null;
