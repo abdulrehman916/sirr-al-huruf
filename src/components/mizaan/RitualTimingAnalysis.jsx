@@ -13,6 +13,7 @@ import {
 import { analyzeRitualTiming } from "../../lib/ritualTimingEngineV3";
 import { localizeAnalysis, tStr, tPlanet, tDay, tStatus, useRitualLang, RITUAL_LANGS } from "../../lib/ritualTimingI18n";
 import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll";
+import { usePurposeActionKeywords } from "../../hooks/usePurposeActionKeywords";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -84,6 +85,7 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
   const [expanded, setExpanded] = useState(false);
   const [lang, setLang] = useRitualLang();
   const { astroClockKnowledge } = useAstroClockKnowledgeAll();
+  const { purposeKeywords } = usePurposeActionKeywords();
 
   // purposeLookup comes from the Purpose Interpretation card (single source of truth).
   // Ritual Timing NEVER analyzes Arabic — it consumes the interpreted meaning directly.
@@ -99,9 +101,9 @@ export default function RitualTimingAnalysis({ result, selections, customPurpose
 
   const rawAnalysis = useMemo(() => {
     if (!result) return null;
-    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup: resolvedPurpose });
+    const raw = analyzeRitualTiming({ result, selections: effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup: resolvedPurpose, purposeKeywords });
     return normalizeForUI(raw);
-  }, [result, effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, resolvedPurpose]);
+  }, [result, effectiveSelections, customPurpose, activeMethod, astroClockKnowledge, resolvedPurpose, purposeKeywords]);
 
   const analysis = useMemo(() => rawAnalysis ? localizeAnalysis(rawAnalysis, lang) : null, [rawAnalysis, lang]);
 
