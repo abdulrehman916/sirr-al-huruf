@@ -1,5 +1,6 @@
 import { Sparkles, Check } from "lucide-react";
-import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor } from "../v3/shared";
+import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor, DAY_KEY_BY_INDEX } from "../v3/shared";
+import { collectAllValidTimes } from "@/lib/ritualTimingEngineV3";
 import SourcesCollapse from "./SourcesCollapse";
 
 // CARD 5 — BEST RECOMMENDATION
@@ -14,9 +15,23 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
   const moonReq = analysis?.moonReq || {};
   const week = analysis?.weekBreakdown || [];
 
-  // Single BEST across the full search window (next 29 days).
+  // Search the FULL 29-day window. Prefer the rich "allowed" timeline; if no
+  // hour is explicitly marked allowed, fall back to every req-compatible
+  // (suitable) hour in the same 29-day window so a best is still found.
+  // Only when neither source has any suitable hour is there truly no recommendation.
+  const fallback = timeline.length === 0
+    ? collectAllValidTimes(analysis?.req || {}, new Date(), 29).map(o => ({
+        ...o,
+        weekday: DAY_KEY_BY_INDEX.indexOf(o.dayKey),
+        reasonEn: "", reasonMl: "", rules: [],
+      }))
+    : [];
+  const candidates = timeline.length > 0 ? timeline : fallback;
+
+  // Single BEST across the full search window — first occurrence of the
+  // highest-ranked suitable hour (highest compatibility, earliest on tie).
   let best = null, bestPct = -1;
-  for (const o of timeline) {
+  for (const o of candidates) {
     const pct = computeCompat(analysis, { weekday: o.weekday, dayKey: o.dayKey, period: o.period, saatNumber: o.hour, planetLC: String(o.planet || "").toLowerCase() }).final;
     if (pct > bestPct) { bestPct = pct; best = o; }
   }
@@ -61,7 +76,7 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
   return (
     <Box number={5} titleEn="Best Recommendation" titleMl="മികച്ച ശുപാർശ" icon={Sparkles} lang={lang}>
       {!best ? (
-        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No matching rule found in the imported sources within 29 days.", "29 ദിവസത്തിനുള്ളിൽ ഇറക്കുമതി ചെയ്ത സ്രോതസ്സുകളിൽ പൊരുത്തപ്പെടുന്ന നിയമമൊന്നുമില്ല.", lang)}</p>
+        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No recommendation found.", "ശുപാർശ കണ്ടെത്താനായില്ല.", lang)}</p>
       ) : (
         <>
           <div className="rounded-xl p-3 mb-3" style={{ background: `${cColor}12`, border: `1px solid ${cColor}50` }}>
