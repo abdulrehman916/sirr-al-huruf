@@ -32,7 +32,7 @@ function bookAndReasonFor(analysis, opp) {
     r.weekday === idx && r.period === opp.period && r.saat_number === opp.hour
   );
   if (hits.length === 0) return { book: "", reason: "" };
-  const books = Array.from(new Set(hits.map(r => r.source).filter(Boolean)));
+  const books = Array.from(new Set(hits.map(r => r.source ? (r.page ? `${r.source} (p.${r.page})` : r.source) : "").filter(Boolean)));
   const reason = hits.map(r => r.text_en).filter(Boolean)[0] || "";
   return { book: books.join(" · "), reason };
 }

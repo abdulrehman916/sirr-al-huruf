@@ -74,6 +74,7 @@ export default function BoxTodayOpportunities({ analysis, todayRemaining, lang }
               {w.startTime && w.endTime && <p className="font-inter text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.50)" }}>{w.startTime} – {w.endTime}</p>}
               {isBest && <p className="font-inter text-xs font-bold mb-1" style={{ color: cColor }}>{c}%</p>}
               {reason && <p className={lang === "ml" ? "font-malayalam text-[11px]" : "font-inter text-[11px]"} style={{ color: "rgba(255,255,255,0.65)" }}>{String(reason).split(/\n/)[0].slice(0, 80)}</p>}
+              {rule && <p className="font-inter text-[9px] mt-0.5" style={{ color: G.dim }}>{rule.source}{rule.page ? ` · p.${rule.page}` : ""}</p>}
             </div>
           );
         })}

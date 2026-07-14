@@ -1,5 +1,5 @@
 import { HelpCircle, Check, X, Minus } from "lucide-react";
-import { G, T, Box } from "./shared";
+import { G, T, Box, RuleSources } from "./shared";
 
 // BOX 3 — WHY THIS RESULT? (conclusion-first)
 // One conclusion first: supported / opposed / no rules. Then per-dimension
@@ -66,6 +66,19 @@ export default function BoxWhyResult({ analysis, lang }) {
               </div>
             );
           })}
+        </div>
+      )}
+      {/* EVERY SOURCE — Book · Page · Title for all supporting & opposing rules */}
+      {matching.length > 0 && (
+        <div className="mt-3">
+          <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: "#4ADE80" }}>{T("Supporting Sources", "പിന്തുണയ്ക്കുന്ന ഉറവിടങ്ങൾ", lang)}</p>
+          <RuleSources rules={matching} lang={lang} tone="support" />
+        </div>
+      )}
+      {conflicting.length > 0 && (
+        <div className="mt-3">
+          <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: "#F87171" }}>{T("Opposing Sources", "എതിർ ഉറവിടങ്ങൾ", lang)}</p>
+          <RuleSources rules={conflicting} lang={lang} tone="oppose" />
         </div>
       )}
       <p className={lang === "ml" ? "font-malayalam text-[10px] mt-3" : "font-inter text-[10px] mt-3"} style={{ color: "rgba(255,255,255,0.45)" }}>

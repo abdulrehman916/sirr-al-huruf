@@ -23,12 +23,13 @@ export default function BoxNextOpportunity({ analysis, liveRecommendation, lang 
   const cColor = compatColor(c);
   const rule = matchingRules.find(rr => rr.saat_number === r.hour && rr.period === r.period);
   const reason = rule ? (lang === "ml" && rule.text_ml ? rule.text_ml : rule.text_en) : "";
-  const book = rule?.source || "";
+  const book = rule ? (rule.page ? `${rule.source} (p.${rule.page})` : (rule.source || "")) : "";
   const whenLabel = r.isToday ? T("Today", "ഇന്ന്", lang) : r.daysAhead === 1 ? T("Tomorrow", "നാളെ", lang) : translateDay(r.dayName, lang);
 
   const conclRows = [
     { k: T("Date", "തീയതി", lang), v: r.date },
     { k: T("Weekday", "ദിവസം", lang), v: `${whenLabel} · ${translateDay(r.dayName, lang)}` },
+    { k: T("Day / Night", "പകൽ / രാത്രി", lang), v: r.period === "night" ? T("Night (Layl)", "രാത്രി (ലൈൽ)", lang) : T("Day (Nahar)", "പകൽ (നഹർ)", lang) },
     { k: T("Saat", "സഅാത്", lang), v: `#${saatDisplayNum(r.hour, r.period)} · ${translatePlanet(r.planet, lang)}` },
     { k: T("Compatibility", "പൊരുത്തം", lang), v: `${c}%` },
   ];

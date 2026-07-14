@@ -20,7 +20,7 @@ export default function BoxBestConditions({ analysis, lang }) {
   const bestSaatPeriod = ruleWithPlanet?.period || bestPeriod;
   const c = computeCompat(analysis, { dayKey: bestDayKey || undefined, period: bestSaatPeriod, saatNumber: ruleWithPlanet?.saat_number || undefined, planetLC: planetLC || undefined }).final;
   const cColor = compatColor(c);
-  const book = matchingRules[0]?.source || "";
+  const book = matchingRules[0] ? (matchingRules[0].page ? `${matchingRules[0].source} (p.${matchingRules[0].page})` : (matchingRules[0].source || "")) : "";
 
   const altDays = (req.days || []).slice(1);
   const altPlanets = (req.hours || []).slice(1);

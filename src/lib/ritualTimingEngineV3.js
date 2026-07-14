@@ -225,7 +225,7 @@ function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
     if (inRec) {
       const recActions = (r.recommended_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
       matchingRules.push({
-        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock",
+        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock", page: r.source_page_number || "", title: (r.knowledge_text_en || "").split(/\n/)[0].slice(0, 120),
         field: "recommended_actions",
         text_en: recActions.map(a => a.en).join("; "),
         text_ml: recActions.map(a => a.ml).filter(Boolean).join("; "),
@@ -235,7 +235,7 @@ function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
     if (inForb) {
       const forbActions = (r.forbidden_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
       conflictingRules.push({
-        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock",
+        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock", page: r.source_page_number || "", title: (r.knowledge_text_en || "").split(/\n/)[0].slice(0, 120),
         field: "forbidden_actions",
         text_en: forbActions.map(a => a.en).join("; "),
         text_ml: forbActions.map(a => a.ml).filter(Boolean).join("; "),
@@ -245,7 +245,7 @@ function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
     if (inEnemy) {
       const enemyActions = (r.enemy_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
       conflictingRules.push({
-        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock",
+        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock", page: r.source_page_number || "", title: (r.knowledge_text_en || "").split(/\n/)[0].slice(0, 120),
         field: "enemy_actions",
         text_en: enemyActions.map(a => a.en).join("; "),
         text_ml: enemyActions.map(a => a.ml).filter(Boolean).join("; "),
@@ -255,7 +255,7 @@ function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
     if (inFriend) {
       const friendActions = (r.friendship_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
       matchingRules.push({
-        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock",
+        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock", page: r.source_page_number || "", title: (r.knowledge_text_en || "").split(/\n/)[0].slice(0, 120),
         field: "friendship_actions",
         text_en: friendActions.map(a => a.en).join("; "),
         text_ml: friendActions.map(a => a.ml).filter(Boolean).join("; "),
@@ -265,7 +265,7 @@ function gatherRulesFromAstroClock(ritualKey, astroClockKnowledge) {
     if (r.warnings_list?.some(a => purposeMatchesAction(ritualKey, a.en))) {
       const warnActions = (r.warnings_list || []).filter(a => purposeMatchesAction(ritualKey, a.en));
       conflictingRules.push({
-        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock",
+        rule_id: r.knowledge_id, source: r.source_book_title || "Astrology Clock", page: r.source_page_number || "", title: (r.knowledge_text_en || "").split(/\n/)[0].slice(0, 120),
         field: "warnings_list",
         text_en: warnActions.map(a => a.en).join("; "),
         text_ml: warnActions.map(a => a.ml).filter(Boolean).join("; "),
@@ -862,6 +862,8 @@ function gatherManuscriptRulesForPurpose(ritualKey, manuscriptRules) {
     const ruleRef = {
       rule_id: rule.rule_id,
       source: rule.book_name || "Manuscript",
+      page: rule.page_number || "",
+      title: (rule.rule_summary || rule.original_text || "").split(/\n/)[0].slice(0, 120),
       field: isForbidden ? "forbidden" : "recommended",
       text_en: rule.rule_summary || rule.original_text || "",
       text_ml: rule.rule_summary_ml || "",

@@ -10,7 +10,7 @@ export default function BoxForbidden({ analysis, lang }) {
   const forbiddenDays = (req.worstDays || []).map(d => MIZAN_DAY_NAMES[d] || d);
   const forbiddenHours = req.worstHours || [];
   const enemyPlanets = req.enemyPlanets || [];
-  const reasons = conflictingRules.filter(r => r.text_en || r.text_ml).slice(0, 4).map(r => ({ text: lang === "ml" && r.text_ml ? r.text_ml : r.text_en, source: r.source }));
+  const reasons = conflictingRules.filter(r => r.text_en || r.text_ml).slice(0, 4).map(r => ({ text: lang === "ml" && r.text_ml ? r.text_ml : r.text_en, source: r.source, page: r.page }));
   const hasAny = forbiddenDays.length || forbiddenHours.length || enemyPlanets.length || reasons.length;
 
   if (!hasAny) {
@@ -61,7 +61,7 @@ export default function BoxForbidden({ analysis, lang }) {
               {reasons.map((r, i) => (
                 <div key={i} className="rounded-lg p-2.5" style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(248,113,113,0.30)" }}>
                   <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.78)" }}>{String(r.text).split(/\n/)[0]}</p>
-                  {r.source && <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>{r.source}</p>}
+                  {r.source && <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>{r.source}{r.page ? ` · p.${r.page}` : ""}</p>}
                 </div>
               ))}
             </div>

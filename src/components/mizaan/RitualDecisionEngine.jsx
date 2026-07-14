@@ -93,7 +93,19 @@ export default function RitualDecisionEngine({
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60000);
-    return () => clearInterval(id);
+    // Real-time auto-update (#3): the recommendation refreshes the moment the
+    // user returns to the tab, so saat / sunset / sunrise / new-day boundaries
+    // are reflected immediately with no manual refresh. The 60s interval is the
+    // safety net while the tab stays open. No calculation changes.
+    const onFocus = () => setNow(new Date());
+    const onVisibility = () => { if (!document.hidden) setNow(new Date()); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   // Live forward-search timeline from the ticking now (today → tomorrow → …).
