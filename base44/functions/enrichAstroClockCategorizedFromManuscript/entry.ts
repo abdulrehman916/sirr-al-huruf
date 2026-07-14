@@ -11,8 +11,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 // (source_type='categorized') — the single permanent store for all
 // astrology knowledge. EntityKnowledge is NOT touched.
 //
-// Uses the same LLM classification prompt as the legacy
-// enrichEntityKnowledgeFromManuscript (multilingual recognition of
+// Uses a multilingual LLM classification prompt (recognition of
 // Arabic/Turkish/English/Malayalam entities → canonical keys).
 //
 // MERGE RULES (identical to AstroClockKnowledge global rule):
