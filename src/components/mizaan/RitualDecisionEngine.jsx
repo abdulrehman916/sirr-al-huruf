@@ -19,9 +19,11 @@ import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 import { G, T } from "./ritual-report/shared";
-import CompactPurpose from "./ritual-report/CompactPurpose";
-import CompactEvaluation from "./ritual-report/CompactEvaluation";
-import CompactAlternative from "./ritual-report/CompactAlternative";
+import DecisionSectionEvaluation from "./ritual-report/DecisionSectionEvaluation";
+import DecisionSectionRelationship from "./ritual-report/DecisionSectionRelationship";
+import DecisionSectionBetterTiming from "./ritual-report/DecisionSectionBetterTiming";
+import DecisionSectionAlternativeSaats from "./ritual-report/DecisionSectionAlternativeSaats";
+import DecisionSectionBookDifferences from "./ritual-report/DecisionSectionBookDifferences";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -182,10 +184,12 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ COMPACT 3-SECTION REPORT ═══ */}
-      <CompactPurpose analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
-      <CompactEvaluation analysis={rawAnalysis} lang={lang} />
-      <CompactAlternative analysis={rawAnalysis} lang={lang} />
+      {/* ═══ 5-SECTION DECISION REPORT ═══ */}
+      <DecisionSectionEvaluation analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
+      <DecisionSectionRelationship analysis={rawAnalysis} lang={lang} />
+      <DecisionSectionBetterTiming analysis={rawAnalysis} lang={lang} />
+      <DecisionSectionAlternativeSaats analysis={rawAnalysis} lang={lang} />
+      <DecisionSectionBookDifferences analysis={rawAnalysis} lang={lang} />
     </div>
   );
 }
