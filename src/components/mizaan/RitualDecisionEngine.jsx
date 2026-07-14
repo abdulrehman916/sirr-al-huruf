@@ -20,10 +20,7 @@ import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 import { G, T } from "./ritual-report/shared";
 import SectionPurpose from "./ritual-report/v2/SectionPurpose";
-import SectionBestOpportunity from "./ritual-report/v2/SectionBestOpportunity";
-import SectionNextBest from "./ritual-report/v2/SectionNextBest";
-import SectionForbidden from "./ritual-report/v2/SectionForbidden";
-import SectionHowToImprove from "./ritual-report/v2/SectionHowToImprove";
+import DecisionTimeline from "./ritual-report/v2/DecisionTimeline";
 import SectionBookComparison from "./ritual-report/v2/SectionBookComparison";
 
 export default function RitualDecisionEngine({
@@ -185,12 +182,9 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ 6-SECTION PURPOSE-FOCUSED DECISION ENGINE ═══ */}
+      {/* ═══ DECISION TIMELINE — chronological recommendation flow ═══ */}
       <SectionPurpose analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
-      <SectionBestOpportunity analysis={rawAnalysis} lang={lang} />
-      <SectionNextBest analysis={rawAnalysis} lang={lang} />
-      <SectionForbidden analysis={rawAnalysis} lang={lang} />
-      <SectionHowToImprove analysis={rawAnalysis} lang={lang} />
+      <DecisionTimeline analysis={rawAnalysis} lang={lang} />
       <SectionBookComparison analysis={rawAnalysis} lang={lang} />
     </div>
   );

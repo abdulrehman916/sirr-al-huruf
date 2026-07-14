@@ -503,6 +503,51 @@ function findEarliestValidTime(req, fromDate) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// TIMELINE COLLECTOR — collects ALL fully-valid future opportunities
+// (today remaining + up to maxDays ahead) using the EXACT same req
+// checks as findEarliestValidTime. Purely additive — does NOT modify
+// findEarliestValidTime, compatibility, or any calculation. Used by
+// the chronological Decision Timeline UI.
+// ═══════════════════════════════════════════════════════════════
+export function collectAllValidTimes(req, fromDate, maxDays = 14) {
+  const hasAnyRestriction = req.days || req.hours || req.worstDays || req.worstHours ||
+    (req.enemyPlanets && req.enemyPlanets.length > 0) || req.nightRequired === true;
+  if (!hasAnyRestriction) return [];
+
+  const results = [];
+  for (let d = 0; d < maxDays; d++) {
+    const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
+    const { hours, sunrise, sunset } = getTodayAllHours(date);
+    const dayKey = DAY_KEY_BY_INDEX[getActiveWeekday(date, sunrise, sunset)];
+
+    if (req.days && !req.days.includes(dayKey)) continue;
+    if (req.worstDays && req.worstDays.includes(dayKey)) continue;
+
+    for (const h of hours) {
+      if (d === 0 && h.status === "past") continue;
+      if (req.hours && !req.hours.map((p) => p.toLowerCase()).includes(h.planet)) continue;
+      if (req.nightRequired === true && h.period !== "night") continue;
+      if (req.worstHours && req.worstHours.map((p) => p.toLowerCase()).includes(h.planet)) continue;
+      if (req.enemyPlanets && req.enemyPlanets.map((p) => p.toLowerCase()).includes(h.planet)) continue;
+
+      results.push({
+        dayKey,
+        dayName: MIZAN_DAY_NAMES[dayKey],
+        date: date.toISOString().split("T")[0],
+        hour: h.hourNumber,
+        planet: capitalPlanet(h.planet),
+        startTime: h.startTime,
+        endTime: h.endTime,
+        period: h.period,
+        isToday: d === 0,
+        daysAhead: d,
+      });
+    }
+  }
+  return results;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MANUSCRIPT DAY RESOLVER — LIVE (sunset-aware) or MANUAL (selected day)
 // ═══════════════════════════════════════════════════════════════
 // LIVE mode (no selectedDay): active day = getActiveWeekday(now) — changes at sunset.
