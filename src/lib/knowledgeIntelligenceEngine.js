@@ -79,16 +79,19 @@ const RESPONSE_SCHEMA = {
 
 // ── Collect ALL verified knowledge from database (no keyword filter) ──
 async function collectAllKnowledge(weekday) {
+  // PERMANENT ARCHITECTURE: all astrology knowledge lives ONLY in
+  // AstroClockKnowledge. Timing = full_context records; entity knowledge =
+  // categorized records. EntityKnowledge is no longer read here.
   const [ackData, ekData] = await Promise.all([
     base44.entities.AstroClockKnowledge.filter(
       { weekday, is_marker: false },
       "-source_count",
       30
     ),
-    base44.entities.EntityKnowledge.filter(
-      { is_marker: false, verification_status: "verified" },
+    base44.entities.AstroClockKnowledge.filter(
+      { is_marker: false, source_type: "categorized" },
       "-source_count",
-      30
+      50
     ),
   ]);
   return { ackRecords: ackData || [], ekRecords: ekData || [] };
@@ -110,8 +113,9 @@ function formatRecordsForLLM(ackRecords, ekRecords) {
 
   ekRecords.forEach(r => {
     const text = (r.knowledge_text_en || "").substring(0, 150);
+    const cat = (r.attributes && r.attributes.knowledge_category) || r.rule_category || "general";
     lines.push(
-      `EK|${r.knowledge_id}|entity:${r.entity_type}/${r.entity_key}|category:${r.knowledge_category}|text:${text}`
+      `EK|${r.knowledge_id}|entity:${r.rule_category || r.entity_type}/${r.rule_entity || r.entity_key}|category:${cat}|text:${text}`
     );
   });
 
@@ -216,9 +220,9 @@ function processResponse(llmResponse, ackRecords, ekRecords) {
         text: record.knowledge_text_en || "",
         text_ml: record.knowledge_text_ml || "",
         text_ar: record.knowledge_text_ar || "",
-        category: record.knowledge_category,
-        entity_type: record.entity_type,
-        entity_key: record.entity_key,
+        category: (record.attributes && record.attributes.knowledge_category) || record.rule_category || record.knowledge_category,
+        entity_type: record.rule_category || record.entity_type,
+        entity_key: record.rule_entity || record.entity_key,
         source: record.source_book_title || "Manuscript",
         page: record.source_page_number,
         screenshot: record.source_screenshot_url,

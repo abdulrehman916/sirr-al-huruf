@@ -24,9 +24,12 @@ export default function EntityKnowledgeReviewQueue() {
     setLoading(true);
     setError(null);
     try {
-      const data = await base44.entities.EntityKnowledge.filter({
-        verification_status: "pending_review",
+      // Astrology review queue now reads ONLY from AstroClockKnowledge
+      // (categorized records pending verification).
+      const data = await base44.entities.AstroClockKnowledge.filter({
+        source_type: "categorized",
         is_marker: false,
+        is_verified: false,
       }, "-created_date", 50);
       setRecords(data || []);
     } catch (err) {
@@ -41,7 +44,7 @@ export default function EntityKnowledgeReviewQueue() {
   const approve = async (id) => {
     setActioning(id);
     try {
-      await base44.entities.EntityKnowledge.update(id, { verification_status: "verified" });
+      await base44.entities.AstroClockKnowledge.update(id, { is_verified: true });
       setRecords(prev => prev.filter(r => r.id !== id));
     } catch (err) {
       setError(err?.message || "Failed to approve");
@@ -53,7 +56,8 @@ export default function EntityKnowledgeReviewQueue() {
   const reject = async (id) => {
     setActioning(id);
     try {
-      await base44.entities.EntityKnowledge.delete(id);
+      // Never delete ACK records — hide as marker instead (preserves provenance).
+      await base44.entities.AstroClockKnowledge.update(id, { is_marker: true });
       setRecords(prev => prev.filter(r => r.id !== id));
     } catch (err) {
       setError(err?.message || "Failed to reject");
@@ -106,15 +110,15 @@ export default function EntityKnowledgeReviewQueue() {
           {/* Entity + category + confidence */}
           <div className="flex items-center gap-2 mb-1.5">
             <span className="font-inter text-[9px] uppercase font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.10)", color: "rgba(212,175,55,0.70)" }}>
-              {rec.entity_type}/{rec.entity_key}
+              {rec.rule_category || rec.entity_type}/{rec.rule_entity || rec.entity_key}
             </span>
-            {rec.knowledge_category && rec.knowledge_category !== 'general' && (
+            {(rec.attributes?.knowledge_category || rec.knowledge_category) && (rec.attributes?.knowledge_category || rec.knowledge_category) !== 'general' && (
               <span className="font-inter text-[8px] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
-                {rec.knowledge_category}
+                {rec.attributes?.knowledge_category || rec.knowledge_category}
               </span>
             )}
-            <span className="font-inter text-[8px] ml-auto" style={{ color: (rec.extraction_confidence || 100) < 70 ? "rgba(248,113,113,0.60)" : "rgba(255,255,255,0.30)" }}>
-              {rec.extraction_confidence || 0}%
+            <span className="font-inter text-[8px] ml-auto" style={{ color: ((rec.ocr_confidence ?? rec.extraction_confidence) || 100) < 70 ? "rgba(248,113,113,0.60)" : "rgba(255,255,255,0.30)" }}>
+              {(rec.ocr_confidence ?? rec.extraction_confidence) || 0}%
             </span>
           </div>
 
