@@ -1,5 +1,6 @@
 import { Ban } from "lucide-react";
-import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat } from "../v3/shared";
+import { G, T, translatePlanet, translateDay, saatDisplayNum, computeCompat } from "../v3/shared";
+import CollapsibleBox from "./CollapsibleBox";
 import SourcesCollapse from "./SourcesCollapse";
 
 function gradeOf(status, pct) {
@@ -45,7 +46,7 @@ export default function Card3ForbiddenTimes({ analysis, lang }) {
   };
 
   return (
-    <Box number={3} titleEn="Forbidden Times" titleMl="നിരോധിത സമയങ്ങൾ" icon={Ban} lang={lang}>
+    <CollapsibleBox number={3} titleEn="Forbidden Times" titleMl="നിരോധിത സമയങ്ങൾ" icon={Ban} lang={lang}>
       {/* 1. Forbidden Weekdays */}
       <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>{T("Forbidden Weekdays", "നിരോധിത ദിവസങ്ങൾ", lang)}</p>
       {completelyForbidden.length === 0 ? (
@@ -100,6 +101,6 @@ export default function Card3ForbiddenTimes({ analysis, lang }) {
           );
         })}
       </div>
-    </Box>
+    </CollapsibleBox>
   );
 }

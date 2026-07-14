@@ -1,5 +1,6 @@
 import { CalendarClock, Check, ArrowRight } from "lucide-react";
-import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, MIZAN_DAY_NAMES, computeCompat, compatColor } from "../v3/shared";
+import { G, T, translatePlanet, translateDay, saatDisplayNum, MIZAN_DAY_NAMES, computeCompat, compatColor } from "../v3/shared";
+import CollapsibleBox from "./CollapsibleBox";
 
 // CARD 2 — NEXT AVAILABLE PLANETARY HOURS (current cycle only)
 // Shows the remaining planetary hours of the CURRENT day/night cycle
@@ -51,11 +52,11 @@ export default function Card2NextTimes({ analysis, onApply, lang }) {
   const hasData = (analysis?.matchingRules?.length > 0) || (analysis?.conflictingRules?.length > 0);
   if (!hasData) {
     return (
-      <Box number={2} titleEn="Next Available Planetary Hours" titleMl="അടുത്ത ലഭ്യമായ ഗ്രഹ മണിക്കൂറുകൾ" icon={CalendarClock} lang={lang}>
+      <CollapsibleBox number={2} titleEn="Next Available Planetary Hours" titleMl="അടുത്ത ലഭ്യമായ ഗ്രഹ മണിക്കൂറുകൾ" icon={CalendarClock} lang={lang}>
         <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>
           {T(NO_RULE_EN, NO_RULE_ML, lang)}
         </p>
-      </Box>
+      </CollapsibleBox>
     );
   }
 
@@ -101,7 +102,7 @@ export default function Card2NextTimes({ analysis, onApply, lang }) {
   });
 
   return (
-    <Box number={2} titleEn="Next Available Planetary Hours" titleMl="അടുത്ത ലഭ്യമായ ഗ്രഹ മണിക്കൂറുകൾ" icon={CalendarClock} lang={lang}>
+    <CollapsibleBox number={2} titleEn="Next Available Planetary Hours" titleMl="അടുത്ത ലഭ്യമായ ഗ്രഹ മണിക്കൂറുകൾ" icon={CalendarClock} lang={lang}>
       {/* ── Current-moment verdict (compact) ── */}
       {currentAllowed ? (
         <div className="rounded-xl p-2.5 mb-2" style={{ background: "rgba(74,222,128,0.10)", border: "1px solid rgba(74,222,128,0.45)" }}>
@@ -210,6 +211,6 @@ export default function Card2NextTimes({ analysis, onApply, lang }) {
           );
         })()}
       </div>
-    </Box>
+    </CollapsibleBox>
   );
 }

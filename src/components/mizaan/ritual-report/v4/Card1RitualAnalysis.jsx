@@ -25,15 +25,37 @@ export default function Card1RitualAnalysis({ analysis, lang }) {
   const mc = analyzeMoonCompatibility({ moonReq, moonPhase: moon, moonCitations: analysis?.moonCitations || [] });
   const mansionCheck = (mc.checks || []).find(c => c.dimension === "mansion");
 
+  // Each line is a DISTINCT relationship — never duplicated in different wording.
+  // A check is only shown when an imported book rule exists for that dimension.
   const chk = [];
-  if (req.days?.length) chk.push({ label: T("Purpose matches weekday", "ലക്ഷ്യം ദിവസവുമായി പൊരുത്തപ്പെടുന്നു", lang), pass: req.days.includes(currentDayKey) });
-  if (req.hours?.length) chk.push({ label: T("Weekday matches planetary hour", "ദിവസം ഗ്രഹ സമയവുമായി പൊരുത്തപ്പെടുന്നു", lang), pass: req.hours.map(p => p.toLowerCase()).includes(currentPlanetLC) });
+  if (req.days?.length) chk.push({
+    pass: req.days.includes(currentDayKey),
+    passLabel: T("Purpose ↔ Weekday — compatible", "ലക്ഷ്യം ↔ ദിവസം — അനുയോജ്യം", lang),
+    failLabel: T("Purpose is not compatible with today's weekday.", "ലക്ഷ്യം ഇന്നത്തെ ദിവസവുമായി അനുയോജ്യമല്ല.", lang),
+  });
+  if (req.hours?.length) chk.push({
+    pass: req.hours.map(p => p.toLowerCase()).includes(currentPlanetLC),
+    passLabel: T("Purpose ↔ Planetary Hour — compatible", "ലക്ഷ്യം ↔ ഗ്രഹ സമയം — അനുയോജ്യം", lang),
+    failLabel: T("Purpose is not compatible with this planetary hour.", "ലക്ഷ്യം ഈ ഗ്രഹ സമയവുമായി അനുയോജ്യമല്ല.", lang),
+  });
   if (req.enemyPlanets?.length || req.worstHours?.length) {
     const enemyHit = (req.enemyPlanets || []).map(p => p.toLowerCase()).includes(currentPlanetLC) || (req.worstHours || []).map(p => p.toLowerCase()).includes(currentPlanetLC);
-    chk.push({ label: T("Planet supports purpose", "ഗ്രഹം ലക്ഷ്യത്തെ പിന്തുണയ്ക്കുന്നു", lang), pass: !enemyHit });
+    chk.push({
+      pass: !enemyHit,
+      passLabel: T("Purpose ↔ Current Planet — compatible", "ലക്ഷ്യം ↔ നിലവിലെ ഗ്രഹം — അനുയോജ്യം", lang),
+      failLabel: T("Purpose is not compatible with the current planet.", "ലക്ഷ്യം നിലവിലെ ഗ്രഹവുമായി അനുയോജ്യമല്ല.", lang),
+    });
   }
-  if (mc.hasMoonRules) chk.push({ label: T("Moon supports ritual", "ചന്ദ്രൻ കർമ്മത്തെ പിന്തുണയ്ക്കുന്നു", lang), pass: mc.compatible });
-  if (mansionCheck) chk.push({ label: T("Lunar Mansion compatible", "ചന്ദ്ര നക്ഷത്രം അനുയോജ്യം", lang), pass: mansionCheck.status === "pass" });
+  if (mc.hasMoonRules) chk.push({
+    pass: mc.compatible,
+    passLabel: T("Purpose ↔ Moon Condition — compatible", "ലക്ഷ്യം ↔ ചന്ദ്ര അവസ്ഥ — അനുയോജ്യം", lang),
+    failLabel: T("Purpose is not compatible with the current moon condition.", "ലക്ഷ്യം നിലവിലെ ചന്ദ്ര അവസ്ഥയുമായി അനുയോജ്യമല്ല.", lang),
+  });
+  if (mansionCheck) chk.push({
+    pass: mansionCheck.status === "pass",
+    passLabel: T("Purpose ↔ Lunar Mansion — compatible", "ലക്ഷ്യം ↔ ചന്ദ്ര നക്ഷത്രം — അനുയോജ്യം", lang),
+    failLabel: T("Purpose is not compatible with the current lunar mansion.", "ലക്ഷ്യം നിലവിലെ ചന്ദ്ര നക്ഷത്രവുമായി അനുയോജ്യമല്ല.", lang),
+  });
 
   const passes = chk.filter(c => c.pass).length;
   const fails = chk.filter(c => !c.pass).length;
@@ -68,7 +90,7 @@ export default function Card1RitualAnalysis({ analysis, lang }) {
         {chk.length === 0 ? (
           <p className={lang === "ml" ? "font-malayalam text-[11px]" : "font-inter text-[11px]"} style={{ color: "#94A3B8" }}>{T("No matching rule found in the imported sources.", "ഇറക്കുമതി ചെയ്ത സ്രോതസ്സുകളിൽ പൊരുത്തപ്പെടുന്ന നിയമമൊന്നുമില്ല.", lang)}</p>
         ) : chk.map((c, i) => (
-          <p key={i} className={lang === "ml" ? "font-malayalam text-[11px]" : "font-inter text-[11px]"} style={{ color: c.pass ? "rgba(74,222,128,0.90)" : "rgba(248,113,113,0.90)" }}>{c.pass ? "✓ " : "✗ "}{c.label}</p>
+          <p key={i} className={lang === "ml" ? "font-malayalam text-[11px]" : "font-inter text-[11px]"} style={{ color: c.pass ? "rgba(74,222,128,0.90)" : "rgba(248,113,113,0.90)" }}>{c.pass ? "✓ " : "✗ "}{c.pass ? c.passLabel : c.failLabel}</p>
         ))}
       </div>
 
