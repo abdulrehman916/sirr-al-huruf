@@ -103,22 +103,14 @@ export default function DecisionSectionEvidence({ analysis, lang }) {
 
           return (
             <div key={`evidence-${idx}`} className="rounded-lg p-3" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-inter text-[10px] uppercase tracking-wider font-bold flex-shrink-0" style={{ color: G.dim }}>{T("Book", "പുസ്തകം", lang)}</span>
-                  <span className={lang === "ml" ? "font-malayalam text-xs font-bold truncate" : "font-inter text-xs font-bold truncate"} style={{ color: "#fff" }}>{book}</span>
-                </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <vd.Icon className="w-4 h-4" style={{ color: vd.color }} />
-                  <span className="font-inter text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: `${vd.color}15`, color: vd.color, border: `1px solid ${vd.color}30` }}>
-                    {vd.emoji} {vd.label}
-                  </span>
-                </div>
+              <div className="mb-1.5">
+                <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: G.dim }}>{T("Source", "ഉറവിടം", lang)}: </span>
+                <span className={lang === "ml" ? "font-malayalam text-xs font-bold" : "font-inter text-xs font-bold"} style={{ color: "#fff" }}>{book}</span>
               </div>
               {ruleText && (
                 <div>
                   <span className="font-inter text-[10px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Rule", "നിയമം", lang)}: </span>
-                  <span className={lang === "ml" ? "font-malayalam text-[11px] leading-relaxed" : "font-inter text-[11px] leading-relaxed"} style={{ color: "rgba(255,255,255,0.70)" }}>{ruleText}</span>
+                  <span className={lang === "ml" ? "font-malayalam text-[11px] leading-relaxed" : "font-inter text-[11px] leading-relaxed"} style={{ color: "rgba(255,255,255,0.75)" }}>{ruleText}</span>
                 </div>
               )}
             </div>
