@@ -6,16 +6,15 @@
 //   idle:       Source label + file select button
 //   preparing:  PDF pages rendered, thumbnails generated
 //   review:     Thumbnail grid (drag/reorder/rotate/remove/add more)
-//   processing: Sequential upload through unifiedIngestKnowledge
+//   processing: Sequential upload through analyzeScreenshotAndMergeAstro
 //   complete:   Detailed summary
 //
 // LIMITS: 50 images max, 100 PDF pages max
 //
-// PIPELINE (per page, UNCHANGED):
-//   Upload → unifiedIngestKnowledge (OCR + Entity Detection +
-//   Routing + Duplicate Detection + Merge + Storage)
-//
-// No backend modifications. No OCR/LLM/entity changes.
+// PIPELINE (per page): Upload → analyzeScreenshotAndMergeAstro
+// (Astro Clock ACK store — full_context timing rules in AstroClockKnowledge).
+// Pages lacking Day+Saat+Kawkab context are rejected (no fabricated keys).
+// Document Context Mode and Smart Topic Router remain independent.
 // ═══════════════════════════════════════════════════════════════
 import { useState, useRef } from "react";
 import { Upload, Loader2, AlertCircle, Image as ImageIcon, FileText, Layers, Play, Plus, Route } from "lucide-react";
@@ -244,12 +243,11 @@ export default function AstroScreenshotUploader() {
           continue;
         }
 
-        // Step 2: Send through EXISTING unifiedIngestKnowledge pipeline
+        // Step 2: Send through the Astro Clock ACK pipeline (AstroClockKnowledge)
         setPages(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'analyzing' } : p));
-        const response = await base44.functions.invoke('unifiedIngestKnowledge', {
+        const response = await base44.functions.invoke('analyzeScreenshotAndMergeAstro', {
           file_url: fileUrl,
           source_label: page.source_name,
-          source_type: page.isPdf ? 'pdf_page' : 'screenshot',
         });
         const data = response.data || response;
 
@@ -261,10 +259,10 @@ export default function AstroScreenshotUploader() {
 
         const created = data.records_created || 0;
         const merged = data.records_merged || 0;
-        const entriesFound = data.entries_found || 0;
+        const combinationsFound = data.combinations_found || 0;
 
         let pageStatus = 'done';
-        if (entriesFound === 0) {
+        if (combinationsFound === 0) {
           pageStatus = 'rejected';
           rejected++;
         } else if (created === 0 && merged === 0) {
@@ -273,9 +271,9 @@ export default function AstroScreenshotUploader() {
         } else {
           processed++;
           newKnowledge += created;
-          if (Array.isArray(data.details)) {
-            data.details.forEach(d => {
-              const key = `${d.entity_type}/${d.entity_key}`;
+          if (Array.isArray(data.merge_details)) {
+            data.merge_details.forEach(d => {
+              const key = d.full_context_key || '';
               if (d.action === 'created') entityKeysCreated.add(key);
               if (d.action && String(d.action).includes('merged')) entityKeysUpdated.add(key);
             });
