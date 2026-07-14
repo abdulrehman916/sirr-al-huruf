@@ -1,14 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// RITUAL TIMING DECISION ENGINE — 11-POINT REPORT
+// RITUAL TIMING DECISION ENGINE — COMPACT 3-SECTION REPORT
 // ═══════════════════════════════════════════════════════════════
-// REPORT SECTIONS (decision-focused, no manuscript browser):
-//   1. PURPOSE — selected purpose
-//   2. CURRENT TIME ANALYSIS — Saat/Day/Planet/Kawkab compatibility
-//   3. WHY SUITABLE (if suitable) / WHY NOT SUITABLE (if not)
-//   4. WARNINGS — only if applicable
-//   5. BEST TIMES — better time today
-//   6. SCHEDULE — next best day
-//   7. DECISION SUMMARY — final decision
+// SECTIONS (compact, decision-focused):
+//   1. PURPOSE — selected purpose + auto-identified type
+//   2. SELECTED TIME EVALUATION — per-factor Status + Reason
+//   3. ALTERNATIVE RECOMMENDATION — only if NOT suitable
 //
 // Language rule: Never display Turkish. Only EN or ML.
 // No database IDs, no source citations, no manuscript rule lists.
@@ -23,14 +19,9 @@ import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 import { G, T } from "./ritual-report/shared";
-import SectionPurpose from "./ritual-report/SectionPurpose";
-import SectionCurrentTime from "./ritual-report/SectionCurrentTime";
-import SectionWhySuitable from "./ritual-report/SectionWhySuitable";
-import SectionWhyNotSuitable from "./ritual-report/SectionWhyNotSuitable";
-import SectionForbidden from "./ritual-report/SectionForbidden";
-import SectionBestTimes from "./ritual-report/SectionBestTimes";
-import SectionSchedule from "./ritual-report/SectionSchedule";
-import SectionDecisionSummary from "./ritual-report/SectionDecisionSummary";
+import CompactPurpose from "./ritual-report/CompactPurpose";
+import CompactEvaluation from "./ritual-report/CompactEvaluation";
+import CompactAlternative from "./ritual-report/CompactAlternative";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -191,18 +182,10 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ RITUAL TIMING REPORT ═══ */}
-      <SectionPurpose analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
-      <SectionCurrentTime analysis={rawAnalysis} lang={lang} />
-      {rawAnalysis?.selectionAnalysis?.suitable ? (
-        <SectionWhySuitable analysis={rawAnalysis} lang={lang} />
-      ) : (
-        <SectionWhyNotSuitable analysis={rawAnalysis} lang={lang} />
-      )}
-      <SectionForbidden analysis={rawAnalysis} lang={lang} />
-      <SectionBestTimes analysis={rawAnalysis} lang={lang} />
-      <SectionSchedule analysis={rawAnalysis} lang={lang} planningContext={planningContext} />
-      <SectionDecisionSummary analysis={rawAnalysis} lang={lang} />
+      {/* ═══ COMPACT 3-SECTION REPORT ═══ */}
+      <CompactPurpose analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
+      <CompactEvaluation analysis={rawAnalysis} lang={lang} />
+      <CompactAlternative analysis={rawAnalysis} lang={lang} />
     </div>
   );
 }
