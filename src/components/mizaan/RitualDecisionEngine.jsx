@@ -1,17 +1,17 @@
 // ═══════════════════════════════════════════════════════════════
-// RITUAL TIMING DECISION ENGINE — GUIDED DECISION ASSISTANT
+// RITUAL TIMING DECISION ENGINE — 11-POINT REPORT
 // ═══════════════════════════════════════════════════════════════
-// 7 SECTIONS (guided, minimal, decision-focused):
-//   1. PURPOSE — only the selected purpose
-//   2. CURRENT RITUAL ANALYSIS — ✔ Suitable or ✘ Not Suitable
-//   3. WHY? — only applicable reasons
-//   4. CAN I DO THIS TODAY? — better time today (if not suitable)
-//   5. NEXT AVAILABLE TIME — future days (if today has none)
-//   6. WARNINGS — only applicable warnings
-//   7. MANUSCRIPT EXPLANATION — translated only, no Turkish
+// REPORT SECTIONS (decision-focused, no manuscript browser):
+//   1. PURPOSE — selected purpose
+//   2. CURRENT TIME ANALYSIS — Saat/Day/Planet/Kawkab compatibility
+//   3. WHY SUITABLE (if suitable) / WHY NOT SUITABLE (if not)
+//   4. WARNINGS — only if applicable
+//   5. BEST TIMES — better time today
+//   6. SCHEDULE — next best day
+//   7. DECISION SUMMARY — final decision
 //
 // Language rule: Never display Turkish. Only EN or ML.
-// Every change to Purpose/Weekday/Saat/Planet/Kawkab recalculates instantly.
+// No database IDs, no source citations, no manuscript rule lists.
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo, useEffect } from "react";
 import { AlertTriangle, Target, Sparkles } from "lucide-react";
@@ -23,13 +23,14 @@ import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 import { G, T } from "./ritual-report/shared";
-import GuidedPurpose from "./guided-report/GuidedPurpose";
-import GuidedVerdict from "./guided-report/GuidedVerdict";
-import GuidedWhy from "./guided-report/GuidedWhy";
-import GuidedTodayAlt from "./guided-report/GuidedTodayAlt";
-import GuidedNextTime from "./guided-report/GuidedNextTime";
-import GuidedWarnings from "./guided-report/GuidedWarnings";
-import GuidedManuscript from "./guided-report/GuidedManuscript";
+import SectionPurpose from "./ritual-report/SectionPurpose";
+import SectionCurrentTime from "./ritual-report/SectionCurrentTime";
+import SectionWhySuitable from "./ritual-report/SectionWhySuitable";
+import SectionWhyNotSuitable from "./ritual-report/SectionWhyNotSuitable";
+import SectionForbidden from "./ritual-report/SectionForbidden";
+import SectionBestTimes from "./ritual-report/SectionBestTimes";
+import SectionSchedule from "./ritual-report/SectionSchedule";
+import SectionDecisionSummary from "./ritual-report/SectionDecisionSummary";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -190,14 +191,18 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ 7-SECTION GUIDED DECISION ASSISTANT ═══ */}
-      <GuidedPurpose analysis={rawAnalysis} lang={lang} />
-      <GuidedVerdict analysis={rawAnalysis} lang={lang} />
-      <GuidedWhy analysis={rawAnalysis} lang={lang} />
-      <GuidedTodayAlt analysis={rawAnalysis} lang={lang} />
-      <GuidedNextTime analysis={rawAnalysis} lang={lang} />
-      <GuidedWarnings analysis={rawAnalysis} lang={lang} />
-      <GuidedManuscript analysis={rawAnalysis} lang={lang} />
+      {/* ═══ RITUAL TIMING REPORT ═══ */}
+      <SectionPurpose analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
+      <SectionCurrentTime analysis={rawAnalysis} lang={lang} />
+      {rawAnalysis?.selectionAnalysis?.suitable ? (
+        <SectionWhySuitable analysis={rawAnalysis} lang={lang} />
+      ) : (
+        <SectionWhyNotSuitable analysis={rawAnalysis} lang={lang} />
+      )}
+      <SectionForbidden analysis={rawAnalysis} lang={lang} />
+      <SectionBestTimes analysis={rawAnalysis} lang={lang} />
+      <SectionSchedule analysis={rawAnalysis} lang={lang} planningContext={planningContext} />
+      <SectionDecisionSummary analysis={rawAnalysis} lang={lang} />
     </div>
   );
 }

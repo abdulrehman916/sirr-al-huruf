@@ -7,9 +7,21 @@ import { CheckCircle2, XCircle, AlertCircle, Sunset, Ban } from "lucide-react";
 import ReportSection from "./ReportSection";
 import { G, T, translatePlanet, translateDay, saatDisplayNum } from "./shared";
 
+// Strip source citations and Turkish book references from text
+const cleanText = (text) => {
+  if (!text) return "";
+  return text
+    .replace(/\s*Source:.*?(\.|$)/gi, "")
+    .replace(/\s*Source\s*:.*$/gi, "")
+    .replace(/Havâss[^\s]*\s*Derinlikleri[^\n]*/gi, "")
+    .replace(/\s*—\s*Source.*$/gi, "")
+    .trim();
+};
+
 export default function SectionDecisionSummary({ analysis, lang }) {
   const verdict = analysis?.verdict || "Not Suitable";
-  const verdictReason = analysis?.verdictReason || "";
+  const verdictReason = cleanText(analysis?.verdictReason || "");
+  const explanationMl = cleanText(analysis?.selectionAnalysis?.originalExplanationMl || "");
   const nextOpp = analysis?.nextOpportunity || null;
   const betterAlternatives = analysis?.betterAlternatives || {};
   const bestAlt = betterAlternatives.betterSaats?.[0] || betterAlternatives.nextLayl || null;
@@ -82,8 +94,8 @@ export default function SectionDecisionSummary({ analysis, lang }) {
             }
             style={{ color: "rgba(255,255,255,0.75)" }}
           >
-            {lang === "ml" && analysis?.selectionAnalysis?.originalExplanationMl
-              ? analysis.selectionAnalysis.originalExplanationMl
+            {lang === "ml" && explanationMl
+              ? explanationMl
               : verdictReason}
           </p>
         )}

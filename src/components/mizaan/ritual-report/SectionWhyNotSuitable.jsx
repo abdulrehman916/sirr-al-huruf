@@ -67,11 +67,7 @@ export default function SectionWhyNotSuitable({ analysis, lang }) {
                 >
                   {lang === "ml" && reason.text_ml ? reason.text_ml : reason.text_en}
                 </p>
-                {reason.source && (
-                  <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>
-                    {T("Source", "ഉറവിടം", lang)}: {reason.source}
-                  </p>
-                )}
+
               </div>
             </div>
           </div>
