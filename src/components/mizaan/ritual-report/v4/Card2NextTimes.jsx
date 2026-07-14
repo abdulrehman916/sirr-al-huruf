@@ -1,5 +1,5 @@
 import { CalendarClock, Check, ArrowRight } from "lucide-react";
-import { G, T, Box, translatePlanet, saatDisplayNum, computeCompat, compatColor } from "../v3/shared";
+import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, MIZAN_DAY_NAMES, computeCompat, compatColor } from "../v3/shared";
 
 // CARD 2 — NEXT AVAILABLE PLANETARY HOURS (current cycle only)
 // Shows the remaining planetary hours of the CURRENT day/night cycle
@@ -20,6 +20,30 @@ function firstSentence(s) {
   if (!s) return "";
   const parts = String(s).split(/[.;\n]| · /);
   return (parts[0] || "").trim();
+}
+
+// Build a short reason naming ONLY the relationships that actually conflict
+// for this hour, derived strictly from imported book rules (req) + the
+// per-hour forbidden context text. Never invents a relationship.
+function unsuitableReason(h, req, lang) {
+  const parts = [];
+  if (req?.worstDays?.includes(h.dayKey)) {
+    parts.push(`${T("Selected purpose vs weekday", "തിരഞ്ഞെടുത്ത ലക്ഷ്യം vs വാരദിനം", lang)} (${translateDay(h.dayName, lang)})`);
+  }
+  if (req?.nightRequired === true && h.period === "day") {
+    parts.push(`${T("Selected purpose vs day/night", "തിരഞ്ഞെടുത്ത ലക്ഷ്യം vs പകൽ/രാത്രി", lang)} (${T("night required", "രാത്രി ആവശ്യം", lang)})`);
+  }
+  const planetLC = String(h.planet || "").toLowerCase();
+  const isWorstPlanet = req?.worstHours?.map(p => p.toLowerCase()).includes(planetLC);
+  const isEnemyPlanet = req?.enemyPlanets?.map(p => p.toLowerCase()).includes(planetLC);
+  if (isWorstPlanet || isEnemyPlanet) {
+    parts.push(`${T("Selected purpose vs ruling planet", "തിരഞ്ഞെടുത്ത ലക്ഷ്യം vs ഗ്രഹം", lang)} (${translatePlanet(h.planet, lang)})`);
+  }
+  if (parts.length === 0) {
+    parts.push(T("Selected purpose vs current astrological condition", "തിരഞ്ഞെടുത്ത ലക്ഷ്യം vs നിലവിലെ ജ്യോതിഷ വ്യവസ്ഥ", lang));
+  }
+  const bookText = lang === "ml" && h.reasonMl ? firstSentence(h.reasonMl) : firstSentence(h.reasonEn);
+  return bookText ? parts.join("; ") + " — " + bookText : parts.join("; ");
 }
 
 export default function Card2NextTimes({ analysis, onApply, lang }) {
@@ -147,6 +171,45 @@ export default function Card2NextTimes({ analysis, onApply, lang }) {
           })}
         </div>
       )}
+
+      {/* ── Today's Unsuitable Planetary Hours ── */}
+      <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${G.border}` }}>
+        <p className="font-inter text-[10px] uppercase tracking-wider mb-2" style={{ color: "#F87171" }}>
+          {T("Today's Unsuitable Planetary Hours", "ഇന്നത്തെ അനുചിതമായ ഗ്രഹ മണിക്കൂറുകൾ", lang)}
+        </p>
+        {(() => {
+          const bad = scored.filter(s => s.h.status === "forbidden");
+          if (bad.length === 0) {
+            return (
+              <p className={lang === "ml" ? "font-malayalam text-xs" : "font-inter text-xs"} style={{ color: "#4ADE80" }}>
+                {T("All remaining planetary hours today are suitable.", "ഇന്ന് ബാക്കിയുള്ള എല്ലാ ഗ്രഹ മണിക്കൂറുകളും ഉചിതമാണ്.", lang)}
+              </p>
+            );
+          }
+          return (
+            <div className="space-y-1.5">
+              {bad.map((s, i) => {
+                const h = s.h;
+                return (
+                  <div key={i} className="rounded-lg p-2.5" style={{ background: "rgba(153,27,27,0.12)", border: "1px solid rgba(248,113,113,0.45)" }}>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>
+                        {h.startTime}–{h.endTime} · #{h.saatNum} {translatePlanet(h.planet, lang)}
+                      </p>
+                      <span className="font-inter text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: "#F87171", border: "1px solid #F8717155", background: "#F8717112" }}>
+                        {T("Not Suitable", "അനുചിതം", lang)}
+                      </span>
+                    </div>
+                    <p className={lang === "ml" ? "font-malayalam text-[10px]" : "font-inter text-[10px]"} style={{ color: "rgba(255,255,255,0.62)" }}>
+                      {unsuitableReason(h, analysis?.req, lang)}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+      </div>
     </Box>
   );
 }
