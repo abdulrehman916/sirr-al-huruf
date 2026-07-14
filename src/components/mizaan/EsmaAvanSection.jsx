@@ -14,7 +14,7 @@
 // ISOLATION: Nothing feeds back into Section 1.
 // ═══════════════════════════════════════════════════════════════
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
@@ -405,9 +405,14 @@ export default function EsmaAvanSection({ allExpandedLetters, dominant, onVefkRe
   }, [pipeline, getBastLevelFn]);
 
   // Notify parent of vefk data for the Final Summary
+  const lastVefkKeyRef = useRef("");
   useEffect(() => {
     if (onVefkReady && pipeline?.vefk) {
-      onVefkReady({ vefk: pipeline.vefk, source: pipeline.vefkSourceNumber, names });
+      const key = pipeline.vefkSourceNumber + "|" + names.join(",");
+      if (key !== lastVefkKeyRef.current) {
+        lastVefkKeyRef.current = key;
+        onVefkReady({ vefk: pipeline.vefk, source: pipeline.vefkSourceNumber, names });
+      }
     }
   }, [pipeline, names, onVefkReady]);
 

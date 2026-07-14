@@ -18,7 +18,7 @@
 //   - Nothing writes back to Section 1 or Section 2.
 // ═══════════════════════════════════════════════════════════════
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES, buildVefk } from "../../lib/mizaanPostEngine";
@@ -494,9 +494,14 @@ export default function EsmaKasemSection({ section2ExpandedLetters, dominant, on
   const names = useMemo(() => groupFormation.groups.map(g => g.name), [groupFormation]);
 
   // Notify parent of the computed vefk data (display-only, no recalc)
+  const lastVefkKeyRef = useRef("");
   useEffect(() => {
     if (onVefkReady && s3Vefk) {
-      onVefkReady({ vefk: s3Vefk, source: s3VefkSourceNumber, borderLetters: s3BorderLetters, names });
+      const key = s3VefkSourceNumber + "|" + s3BorderLetters + "|" + names.join(",");
+      if (key !== lastVefkKeyRef.current) {
+        lastVefkKeyRef.current = key;
+        onVefkReady({ vefk: s3Vefk, source: s3VefkSourceNumber, borderLetters: s3BorderLetters, names });
+      }
     }
   }, [s3Vefk, s3VefkSourceNumber, s3BorderLetters, names, onVefkReady]);
 

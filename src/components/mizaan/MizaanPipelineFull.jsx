@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { runMizaanPostPipeline, getBastLevel as getBastLevelA, istintak, GALIB_ANASIR_VALUES } from "../../lib/mizaanPostEngine";
 import SatrVahidGrouping from "./SatrVahidGrouping";
@@ -177,9 +177,14 @@ export default function MizaanPipelineFull({ grandBast, grandLetters, dominant, 
     return { names: groups, originalNames: originalGroups };
   }, [pipeline, dominant, getBastLevelFn]);
 
+  const lastVefkKeyRef = useRef("");
   useEffect(() => {
     if (onVefkReady && pipeline?.vefk) {
-      onVefkReady({ vefk: pipeline.vefk, source: pipeline.vefkSourceNumber, names, originalNames });
+      const key = pipeline.vefkSourceNumber + "|" + names.join(",") + "|" + originalNames.join(",");
+      if (key !== lastVefkKeyRef.current) {
+        lastVefkKeyRef.current = key;
+        onVefkReady({ vefk: pipeline.vefk, source: pipeline.vefkSourceNumber, names, originalNames });
+      }
     }
   }, [pipeline, names, originalNames, onVefkReady]);
 
