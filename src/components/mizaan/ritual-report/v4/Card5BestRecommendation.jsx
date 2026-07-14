@@ -1,4 +1,5 @@
-import { Sparkles, Check } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Check, ChevronDown } from "lucide-react";
 import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor } from "../v3/shared";
 import SourcesCollapse from "./SourcesCollapse";
 
@@ -10,6 +11,7 @@ import SourcesCollapse from "./SourcesCollapse";
 // selectors so every card recalculates live. No invented rules — every reason
 // cites only imported sources.
 export default function Card5BestRecommendation({ analysis, onApply, lang }) {
+  const [showSameDay, setShowSameDay] = useState(false);
   const timeline = analysis?.allowedTimeline || [];
   const moonReq = analysis?.moonReq || {};
   const week = analysis?.weekBreakdown || [];
@@ -39,14 +41,19 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
     { k: T("Lunar Mansion", "ചന്ദ്ര നക്ഷത്രം", lang), v: bestMansion },
   ] : [];
 
-  // Other Time Slots on the SAME day as the best — every remaining planetary
-  // hour of that day, in time order, each with book-rule status + reason.
-  // No other days, no future-date search (Card 6 owns the future).
+  // Other Time Slots on the SAME day as the best — collapsible, closed by
+  // default. Only the remaining-hour count shows in the header; the full list
+  // is built only when expanded. Excludes the best hour (already shown above).
+  // Each hour uses imported book-rule status + reason only — no invention.
   const NO_RULE_EN = "No matching rule exists in the imported sources.";
   const NO_RULE_ML = "ഇറക്കുമതി ചെയ്ത സ്രോതസ്സുകളിൽ പൊരുത്തപ്പെടുന്ന നിയമമൊന്നുമില്ല.";
   const firstSentence = (s) => { if (!s) return ""; const p = String(s).split(/[.;\n]| · /); return (p[0] || "").trim(); };
   const bestDay = best ? (week[best.daysAhead] || week.find(d => d.dayKey === best.dayKey)) : null;
-  const sameDaySlots = bestDay ? bestDay.hours.filter(h => !h.past).map(h => {
+  const sameDayRemaining = bestDay
+    ? bestDay.hours.filter(h => !h.past && !(best && h.hourNumber === best.hour && h.period === best.period))
+    : [];
+  const sameDayCount = sameDayRemaining.length;
+  const sameDaySlots = showSameDay ? sameDayRemaining.map(h => {
     const pct = computeCompat(analysis, { weekday: h.weekday, dayKey: h.dayKey, period: h.period, saatNumber: h.hourNumber, planetLC: String(h.planet || "").toLowerCase() }).final;
     let statusEn, statusMl, statusColor;
     if (h.status === "forbidden") { statusEn = "Not Suitable"; statusMl = "അനുചിതം"; statusColor = "#F87171"; }
@@ -86,15 +93,21 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
             <Check className="w-4 h-4 inline mr-1.5" />{T("Apply Recommendation", "ശുപാർശ പ്രയോഗിക്കുക", lang)}
           </button>
 
-          {/* Other Time Slots on This Same Day */}
+          {/* Other Time Slots on This Day — collapsible, closed by default */}
           {bestDay && (
             <div className="mt-3">
-              <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>{T("Other Time Slots on This Same Day", "ഈ ദിവസത്തിലെ മറ്റ് സമയ സ്ലോട്ടുകൾ", lang)}</p>
-              {sameDaySlots.length === 0 ? (
-                <p className={lang === "ml" ? "font-malayalam text-xs" : "font-inter text-xs"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No remaining planetary hours on this day.", "ഈ ദിവസത്തിൽ ബാക്കി ഗ്രഹ സമയങ്ങളില്ല.", lang)}</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {sameDaySlots.map((s, i) => {
+              <button type="button" onClick={() => setShowSameDay(o => !o)} className="w-full flex items-center justify-between rounded-lg p-2.5 cursor-pointer" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+                <span className="font-inter text-[10px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Other Time Slots on This Day", "ഈ ദിവസത്തിലെ മറ്റ് സമയ സ്ലോട്ടുകൾ", lang)}</span>
+                <span className="flex items-center gap-2">
+                  <span className="font-inter text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: G.bgHi, color: G.text, border: `1px solid ${G.border}` }}>{sameDayCount}</span>
+                  <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform duration-200" style={{ color: G.dim, transform: showSameDay ? "rotate(180deg)" : "rotate(0deg)" }} />
+                </span>
+              </button>
+              {showSameDay && (
+                <div className="mt-2 space-y-1.5">
+                  {sameDaySlots.length === 0 ? (
+                    <p className={lang === "ml" ? "font-malayalam text-xs" : "font-inter text-xs"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No remaining planetary hours on this day.", "ഈ ദിവസത്തിൽ ബാക്കി ഗ്രഹ സമയങ്ങളില്ല.", lang)}</p>
+                  ) : sameDaySlots.map((s, i) => {
                     const h = s.h;
                     return (
                       <div key={i} className="rounded-lg p-2" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
