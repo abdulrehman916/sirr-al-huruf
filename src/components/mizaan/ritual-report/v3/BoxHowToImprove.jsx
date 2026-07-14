@@ -1,16 +1,15 @@
-import { TrendingUp } from "lucide-react";
-import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor, DAY_KEY_BY_INDEX, MIZAN_DAY_NAMES } from "./shared";
+import { TrendingUp, ArrowDown } from "lucide-react";
+import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor, DAY_KEY_BY_INDEX } from "./shared";
 
-// BOX 7 — HOW TO IMPROVE
-// Shows how to increase compatibility: current → change weekday/saat/planet → result → increase.
-// Every recommendation comes from database rules (req.days / req.hours).
+// BOX 7 — HOW TO IMPROVE (conclusion-first vertical path)
+// Conclusion banner: Result % (+increase). Then the exact vertical path:
+// Current → Change weekday → Change Saat → Night instead of Day → Result.
 export default function BoxHowToImprove({ analysis, lang }) {
   const req = analysis?.req || {};
   const current = computeCompat(analysis).final;
   const bestWindows = analysis?.bestWindowsToday || [];
   const nextOpp = analysis?.nextOpportunity || null;
 
-  // Best improvement target: the strongest remaining today, else next opportunity.
   const target = bestWindows.length > 0
     ? { dayKey: DAY_KEY_BY_INDEX[analysis?.astroClockStatus?.activeWeekday] || null, period: bestWindows[0].period, saatNumber: bestWindows[0].hourNumber, planetLC: String(bestWindows[0].planet || "").toLowerCase(), dayName: analysis?.liveNow?.day, saatNum: saatDisplayNum(bestWindows[0].hourNumber, bestWindows[0].period), planet: bestWindows[0].planet, startTime: bestWindows[0].startTime, endTime: bestWindows[0].endTime }
     : nextOpp
@@ -20,9 +19,8 @@ export default function BoxHowToImprove({ analysis, lang }) {
   if (!target) {
     return (
       <Box number={7} titleEn="How to Improve" titleMl="എങ്ങനെ മെച്ചപ്പെടുത്താം" icon={TrendingUp} lang={lang}>
-        <p className={lang === "ml" ? "font-malayalam text-xs" : "font-inter text-xs"} style={{ color: "rgba(255,255,255,0.60)" }}>
-          {T("No improvement opportunity found in the uploaded books.",
-            "അപ്‌ലോഡ് ചെയ്ത പുസ്തകങ്ങളിൽ മെച്ചപ്പെടുത്തൽ അവസരമൊന്നുമില്ല.", lang)}
+        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>
+          {T("No improvement opportunity found in the uploaded books.", "അപ്‌ലോഡ് ചെയ്ത പുസ്തകങ്ങളിൽ മെച്ചപ്പെടൽ അവസരമൊന്നുമില്ല.", lang)}
         </p>
       </Box>
     );
@@ -32,55 +30,47 @@ export default function BoxHowToImprove({ analysis, lang }) {
   const cColor = compatColor(improved);
   const increase = improved - current;
 
-  const changes = [];
-  if (target.dayName) changes.push({ labelEn: "Weekday", labelMl: "ആഴ്ച", value: translateDay(target.dayName, lang) });
-  if (target.saatNum) changes.push({ labelEn: "Saat", labelMl: "സഅാത്", value: `#${target.saatNum} · ${translatePlanet(target.planet, lang)}` });
-  if (target.planet) changes.push({ labelEn: "Planet", labelMl: "ഗ്രഹം", value: translatePlanet(target.planet, lang) });
-
-  const recReason = req.hours?.length
-    ? T("Database recommends this planet for this purpose.", "ഈ ലക്ഷ്യത്തിന് ഡാറ്റാബേസ് ഈ ഗ്രഹത്തെ ശുപാർശ ചെയ്യുന്നു.", lang)
-    : req.days?.length
-      ? T("Database recommends this weekday for this purpose.", "ഈ ലക്ഷ്യത്തിന് ഡാറ്റാബേസ് ഈ ദിവസത്തെ ശുപാർശ ചെയ്യുന്നു.", lang)
-      : "";
+  const steps = [];
+  const curDay = analysis?.liveNow?.day;
+  if (target.dayName && target.dayName !== curDay) steps.push({ labelEn: "Change weekday", labelMl: "ദിവസം മാറ്റുക", value: translateDay(target.dayName, lang) });
+  if (target.saatNum) steps.push({ labelEn: "Change Saat", labelMl: "സഅാത് മാറ്റുക", value: `#${target.saatNum} · ${translatePlanet(target.planet, lang)}` });
+  if (req.nightRequired === true && target.period === "night") steps.push({ labelEn: "Night instead of Day", labelMl: "പകലിന് പകരം രാത്രി", value: "" });
 
   return (
     <Box number={7} titleEn="How to Improve" titleMl="എങ്ങനെ മെച്ചപ്പെടുത്താം" icon={TrendingUp} lang={lang}>
-      <div className="flex items-center justify-between mb-3">
+      {/* CONCLUSION FIRST */}
+      <div className="rounded-xl p-3 mb-3 flex items-center justify-between" style={{ background: `${cColor}12`, border: `1px solid ${cColor}50` }}>
+        <div>
+          <p className="font-inter text-sm font-bold" style={{ color: cColor }}>{T("Result", "ഫലം", lang)}: {improved}%</p>
+          {increase > 0 && <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.65)" }}>+{increase}% {T("increase", "വർദ്ധനവ്", lang)}</p>}
+        </div>
         <div className="text-center">
-          <p className="font-inter text-[9px] uppercase tracking-wider mb-0.5" style={{ color: G.dim }}>{T("Current", "നിലവിൽ", lang)}</p>
+          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Current", "നിലവിൽ", lang)}</p>
           <p className="font-inter text-xl font-bold" style={{ color: compatColor(current) }}>{current}%</p>
         </div>
-        <div className="flex-1 mx-3 text-center">
-          <TrendingUp className="w-5 h-5 mx-auto" style={{ color: cColor }} />
-          {target.startTime && target.endTime && (
-            <p className="font-inter text-[9px] mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{target.startTime}–{target.endTime}</p>
-          )}
-        </div>
-        <div className="text-center">
-          <p className="font-inter text-[9px] uppercase tracking-wider mb-0.5" style={{ color: G.dim }}>{T("Result", "ഫലം", lang)}</p>
-          <p className="font-inter text-xl font-bold" style={{ color: cColor }}>{improved}%</p>
-        </div>
       </div>
 
-      <div className="space-y-1.5 mb-3">
-        {changes.map((c, i) => (
-          <div key={i} className="flex items-center gap-2 rounded-lg p-2.5" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-            <span className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T(c.labelEn, c.labelMl, lang)}</span>
-            <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>→</span>
-            <span className="font-inter text-xs font-bold ml-auto" style={{ color: "#fff" }}>{c.value}</span>
+      {/* VERTICAL PATH */}
+      <div>
+        <div className="rounded-lg p-2.5 text-center" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Start", "തുടക്കം", lang)}</p>
+          <p className="font-inter text-sm font-bold" style={{ color: compatColor(current) }}>{current}%</p>
+        </div>
+        {steps.map((s, i) => (
+          <div key={i}>
+            <div className="flex justify-center py-1"><ArrowDown className="w-4 h-4" style={{ color: G.dim }} /></div>
+            <div className="rounded-lg p-2.5" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+              <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T(s.labelEn, s.labelMl, lang)}</p>
+              {s.value && <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{s.value}</p>}
+            </div>
           </div>
         ))}
-      </div>
-
-      {increase > 0 && (
-        <div className="rounded-lg p-2.5 text-center" style={{ background: `${cColor}10`, border: `1px solid ${cColor}40` }}>
-          <p className="font-inter text-sm font-bold" style={{ color: cColor }}>+{increase}%</p>
-          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Compatibility Increase", "പൊരുത്ത വർദ്ധനവ്", lang)}</p>
+        <div className="flex justify-center py-1"><ArrowDown className="w-4 h-4" style={{ color: cColor }} /></div>
+        <div className="rounded-lg p-2.5 text-center" style={{ background: `${cColor}12`, border: `1px solid ${cColor}50` }}>
+          <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Result", "ഫലം", lang)}</p>
+          <p className="font-inter text-lg font-bold" style={{ color: cColor }}>{improved}% {increase > 0 ? `(+${increase}%)` : ""}</p>
         </div>
-      )}
-      {recReason && (
-        <p className={lang === "ml" ? "font-malayalam text-[10px] mt-2" : "font-inter text-[10px] mt-2"} style={{ color: "rgba(255,255,255,0.50)" }}>{recReason}</p>
-      )}
+      </div>
     </Box>
   );
 }
