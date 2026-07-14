@@ -19,11 +19,12 @@ import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 import { G, T } from "./ritual-report/shared";
-import DecisionSectionEvaluation from "./ritual-report/DecisionSectionEvaluation";
-import DecisionSectionRelationship from "./ritual-report/DecisionSectionRelationship";
-import DecisionSectionBetterTiming from "./ritual-report/DecisionSectionBetterTiming";
-import DecisionSectionAlternativeSaats from "./ritual-report/DecisionSectionAlternativeSaats";
-import DecisionSectionBookDifferences from "./ritual-report/DecisionSectionBookDifferences";
+import DecisionSectionCurrentDecision from "./ritual-report/DecisionSectionCurrentDecision";
+import DecisionSectionWhy from "./ritual-report/DecisionSectionWhy";
+import DecisionSectionBookEvidence from "./ritual-report/DecisionSectionBookEvidence";
+import DecisionSectionBestAlternative from "./ritual-report/DecisionSectionBestAlternative";
+import DecisionSectionAllowedForbidden from "./ritual-report/DecisionSectionAllowedForbidden";
+import DecisionSectionFriendEnemy from "./ritual-report/DecisionSectionFriendEnemy";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -184,12 +185,13 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ 5-SECTION DECISION REPORT ═══ */}
-      <DecisionSectionEvaluation analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
-      <DecisionSectionRelationship analysis={rawAnalysis} lang={lang} />
-      <DecisionSectionBetterTiming analysis={rawAnalysis} lang={lang} />
-      <DecisionSectionAlternativeSaats analysis={rawAnalysis} lang={lang} />
-      <DecisionSectionBookDifferences analysis={rawAnalysis} lang={lang} />
+      {/* ═══ 6-SECTION DECISION REPORT ═══ */}
+      <DecisionSectionCurrentDecision analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
+      <DecisionSectionWhy analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
+      <DecisionSectionBookEvidence analysis={rawAnalysis} lang={lang} />
+      <DecisionSectionBestAlternative analysis={rawAnalysis} lang={lang} />
+      <DecisionSectionAllowedForbidden analysis={rawAnalysis} lang={lang} />
+      <DecisionSectionFriendEnemy analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
     </div>
   );
 }
