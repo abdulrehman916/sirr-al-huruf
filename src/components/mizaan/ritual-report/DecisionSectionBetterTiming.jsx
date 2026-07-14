@@ -1,10 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// SECTION 4 — BEST TIMING
-// Always shows: Day vs Night analysis + Strongest Saat today.
-// If unsuitable: also explains WHY + which dimensions to change.
-// All data from uploaded database only.
+// SECTION 4 — BEST TIMING (FULLY CONTEXTUAL)
+// Answers practical questions from uploaded database only:
+//   1. Can I perform this ritual now?
+//   2. Is DAY or NIGHT stronger?
+//   3. Which Saats are suitable TODAY (all remaining)?
+//   4. Which Saat should never be used?
+//   5. If no suitable Saat remains today, which day?
+//   6. If unsuitable: why + what to change
+// Every recommendation includes compatibility %, book source, reason.
 // ═══════════════════════════════════════════════════════════════
-import { CalendarClock, TrendingUp, CheckCircle2, AlertTriangle, Sun, Moon } from "lucide-react";
+import { CalendarClock, TrendingUp, CheckCircle2, AlertTriangle, Sun, Moon, XCircle, Clock } from "lucide-react";
 import { G, T, translatePlanet, translateDay, MIZAN_DAY_NAMES, DAY_KEY_BY_INDEX, saatDisplayNum } from "./shared";
 
 function cleanReason(text) {
@@ -12,23 +17,37 @@ function cleanReason(text) {
   return String(text).replace(/Source\s*:.*?(\.|$)/gi, "").replace(/Astrology Clock\s*:/gi, "").split(/\n/)[0].trim();
 }
 
+function compatColor(pct) {
+  return pct >= 70 ? "#4ADE80" : pct >= 50 ? "#FBBF24" : pct > 0 ? "#FB923C" : "#F87171";
+}
+
 export default function DecisionSectionBetterTiming({ analysis, lang }) {
   const verdict = analysis?.verdict || "Not Suitable";
   const canPerform = analysis?.canPerformToday || "No";
+  const currentMomentSuitable = analysis?.currentMomentSuitable || false;
   const breakdown = analysis?.selectionAnalysis?.decisionBreakdown || [];
   const failedItems = breakdown.filter((b) => b.status === "fail");
   const isSuitable = (verdict === "Suitable" && failedItems.length === 0) || (verdict === "Suitable" && canPerform === "Yes");
 
   const bestWindows = analysis?.bestWindowsToday || [];
-  const betterSaats = analysis?.betterAlternatives?.betterSaats || [];
-  const nextLayl = analysis?.betterAlternatives?.nextLayl || null;
+  const avoidWindows = analysis?.avoidWindowsToday || [];
+  const passedWindows = analysis?.passedWindowsToday || [];
   const nextOpp = analysis?.nextOpportunity || null;
   const matchingRules = analysis?.matchingRules || [];
   const req = analysis?.req || {};
   const liveNow = analysis?.liveNow || {};
   const astro = analysis?.astroClockStatus || {};
+  const rejectionReasons = analysis?.currentSaatAnalysis?.rejectionReasons || [];
 
-  // ── Day vs Night analysis (from database rules) ──
+  // ── 1. Can I perform now? ──
+  const canNow = currentMomentSuitable;
+  const canNowReason = rejectionReasons.length > 0
+    ? cleanReason(lang === "ml" && rejectionReasons[0].text_ml ? rejectionReasons[0].text_ml : rejectionReasons[0].text_en)
+    : (matchingRules.length > 0
+      ? cleanReason(lang === "ml" && matchingRules[0].text_ml ? matchingRules[0].text_ml : matchingRules[0].text_en)
+      : "");
+
+  // ── 2. Day vs Night analysis (from database rules) ──
   const dayRules = matchingRules.filter((r) => r.period === "day");
   const nightRules = matchingRules.filter((r) => r.period === "night");
   let dayNightRec;
@@ -46,23 +65,41 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
     dayNightRec = { period: "both", label: T("Both", "രണ്ടും", lang), reason: T("Both Day and Night are suitable per the database.", "ഡാറ്റാബേസ് പ്രകാരം പകലും രാത്രിയും അനുയോജ്യമാണ്.", lang) };
   }
 
-  // ── Strongest Saat today (from bestWindowsToday — already filtered to non-past) ──
-  const strongestToday = bestWindows.length > 0
-    ? bestWindows.slice().sort((a, b) => (b.score || 0) - (a.score || 0))[0]
-    : null;
-  const strongestSaatNum = strongestToday ? saatDisplayNum(strongestToday.hourNumber, strongestToday.period) : null;
-  const strongestCompat = strongestToday?.score || 0;
-  const strongestBookRef = matchingRules.length > 0 ? matchingRules[0]?.source : "";
-  const strongestReason = matchingRules.length > 0
-    ? cleanReason(lang === "ml" && matchingRules[0].text_ml ? matchingRules[0].text_ml : matchingRules[0].text_en)
-    : "";
+  // ── 3. All remaining suitable Saats today (sorted by score) ──
+  const remainingSaats = bestWindows.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+  const hasRemaining = remainingSaats.length > 0;
 
-  // ── If no suitable Saat today, next available day ──
-  const nextDay = (!strongestToday && nextOpp) ? nextOpp : null;
+  // ── 4. Forbidden Saats today ──
+  const forbiddenSaats = avoidWindows || [];
 
-  // ── If suitable: check for stronger timing ──
-  const currentSaatNum = liveNow.saat;
-  const hasStronger = isSuitable && strongestToday && strongestSaatNum !== currentSaatNum && strongestCompat > (analysis?.compatPct || 50);
+  // ── 5. Next available day (if no suitable Saat remains today) ──
+  const nextDay = (!hasRemaining && nextOpp) ? nextOpp : null;
+  const nextDayCompat = nextDay ? Math.round(
+    ((req.days?.includes(nextDay.dayKey || "") ? 100 : 50) +
+     (req.hours?.some(p => p.toLowerCase() === String(nextDay.planet || "").toLowerCase()) ? 100 : 50)) / 2
+  ) : 0;
+
+  // ── 6. Unsuitable: which dimensions to change ──
+  const currentDayKey = DAY_KEY_BY_INDEX[astro.activeWeekday];
+  const currentPlanetLC = String(liveNow.kawkab || liveNow.planetaryHour || "").toLowerCase();
+  const dayFailed = !!req.days && !req.days.includes(currentDayKey);
+  const saatFailed = !!req.hours && !req.hours.some((p) => p.toLowerCase() === currentPlanetLC);
+  const planetEnemy = (!!req.worstHours && req.worstHours.some((p) => p.toLowerCase() === currentPlanetLC)) ||
+    (!!req.enemyPlanets && req.enemyPlanets.some((p) => p.toLowerCase() === currentPlanetLC));
+  const dayForbidden = !!req.worstDays && req.worstDays.includes(currentDayKey);
+  const rejectRule = rejectionReasons.map((r) => cleanReason(lang === "ml" && r.text_ml ? r.text_ml : r.text_en)).filter(Boolean).slice(0, 1).join(" ");
+
+  // Find the book source for a given saat
+  function findBookForSaat(saatNum, period) {
+    const fullSaat = period === "night" ? saatNum + 12 : saatNum;
+    const rule = matchingRules.find(r => r.saat_number === fullSaat && r.period === period);
+    return rule?.source || "";
+  }
+  function findReasonForSaat(saatNum, period) {
+    const fullSaat = period === "night" ? saatNum + 12 : saatNum;
+    const rule = matchingRules.find(r => r.saat_number === fullSaat && r.period === period);
+    return rule ? cleanReason(lang === "ml" && rule.text_ml ? rule.text_ml : rule.text_en) : "";
+  }
 
   function ChangeRow({ label, current, recommended, isFailed }) {
     if (!isFailed || !recommended) return null;
@@ -78,29 +115,6 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
     );
   }
 
-  // ── Unsuitable: which dimensions to change ──
-  const currentDayKey = DAY_KEY_BY_INDEX[astro.activeWeekday];
-  const currentPlanetLC = String(liveNow.kawkab || liveNow.planetaryHour || "").toLowerCase();
-  const dayFailed = !!req.days && !req.days.includes(currentDayKey);
-  const saatFailed = !!req.hours && !req.hours.some((p) => p.toLowerCase() === currentPlanetLC);
-  const planetEnemy = (!!req.worstHours && req.worstHours.some((p) => p.toLowerCase() === currentPlanetLC)) ||
-    (!!req.enemyPlanets && req.enemyPlanets.some((p) => p.toLowerCase() === currentPlanetLC));
-  const dayForbidden = !!req.worstDays && req.worstDays.includes(currentDayKey);
-  const rejectionReasons = analysis?.currentSaatAnalysis?.rejectionReasons || [];
-  const rejectRule = rejectionReasons.map((r) => cleanReason(lang === "ml" && r.text_ml ? r.text_ml : r.text_en)).filter(Boolean).slice(0, 1).join(" ");
-
-  const sameDayAlt = betterSaats[0] || null;
-  const alt = sameDayAlt || nextLayl || nextOpp || null;
-  const altDayName = alt?.dayName || nextOpp?.dayName;
-  const altSaatNum = alt?.saatNum || (alt ? saatDisplayNum(alt.hour || alt.hourNumber, alt.period) : null);
-  const altPlanet = alt?.planet;
-  const altStartTime = alt?.startTime;
-  const altEndTime = alt?.endTime;
-  const altDaysAhead = alt?.daysAhead;
-  const isToday = sameDayAlt ? true : (nextLayl?.isToday || nextOpp?.isToday);
-  const whyText = (alt?.whyBetter || []).map((r) => cleanReason(lang === "ml" && r.text_ml ? r.text_ml : r.text_en)).filter(Boolean).join(" ");
-  const fallbackWhy = matchingRules.length > 0 ? cleanReason(lang === "ml" && matchingRules[0].text_ml ? matchingRules[0].text_ml : matchingRules[0].text_en) : "";
-
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)", border: `1px solid ${G.border}`, boxShadow: "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)" }}>
       <div className="flex items-center gap-3 p-4" style={{ borderBottom: `1px solid ${G.border}` }}>
@@ -115,7 +129,28 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
         </div>
       </div>
       <div className="p-4 space-y-3">
-        {/* ── Day vs Night Analysis ── */}
+        {/* ── 1. Can I perform now? ── */}
+        <div className="rounded-xl p-3 flex items-center gap-3" style={{
+          background: canNow ? "rgba(74,222,128,0.06)" : "rgba(248,113,113,0.06)",
+          border: `1px solid ${canNow ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}`,
+        }}>
+          {canNow ? <CheckCircle2 className="w-6 h-6 flex-shrink-0" style={{ color: "#4ADE80" }} />
+                  : <XCircle className="w-6 h-6 flex-shrink-0" style={{ color: "#F87171" }} />}
+          <div className="flex-1 min-w-0">
+            <p className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: canNow ? "#4ADE80" : "#F87171" }}>
+              {canNow
+                ? T("Yes — you can perform this ritual now.", "അതെ — നിങ്ങൾക്ക് ഇപ്പോൾ ഈ ആചാരം അനുഷ്ഠിക്കാം.", lang)
+                : T("No — not at this moment.", "അല്ല — ഈ നിമിഷത്തിൽ അല്ല.", lang)}
+            </p>
+            {!canNow && canNowReason && (
+              <p className={lang === "ml" ? "font-malayalam text-[11px] leading-relaxed mt-0.5" : "font-inter text-[11px] leading-relaxed mt-0.5"} style={{ color: "rgba(255,255,255,0.60)" }}>
+                {canNowReason}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ── 2. Day or Night ── */}
         <div className="rounded-lg p-3" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
           <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: G.dim }}>
             {T("Day or Night", "പകല് അതോ രാത്രി", lang)}
@@ -133,56 +168,106 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
           </p>
         </div>
 
-        {/* ── Strongest Saat Today ── */}
-        {strongestToday ? (
-          <div className="rounded-xl p-3" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.25)" }}>
-            <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "#4ADE80" }}>
-              {T("Strongest Saat Today", "ഇന്നത്തെ ഏറ്റവും ശക്ത സഅാത്", lang)}
-            </p>
-            <div className="grid grid-cols-2 gap-3 mb-2">
-              <div>
-                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Day/Night", "പകല്/രാത്രി", lang)}</p>
-                <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{strongestToday.period === "night" ? T("Night", "രാത്രി", lang) : T("Day", "പകല്", lang)}</p>
-              </div>
-              <div>
-                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Saat", "സഅാത്", lang)}</p>
-                <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>#{strongestSaatNum} ({translatePlanet(strongestToday.planet, lang)})</p>
-              </div>
-              <div>
-                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Planet", "ഗ്രഹം", lang)}</p>
-                <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{translatePlanet(strongestToday.planet, lang)}</p>
-              </div>
-              <div>
-                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Compat", "പൊരുത്തം", lang)}</p>
-                <p className="font-inter text-xs font-bold" style={{ color: strongestCompat >= 70 ? "#4ADE80" : strongestCompat >= 50 ? "#FBBF24" : "#F87171" }}>{strongestCompat}%</p>
-              </div>
-              {strongestToday.startTime && strongestToday.endTime && (
-                <div>
-                  <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Time", "സമയം", lang)}</p>
-                  <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{strongestToday.startTime} – {strongestToday.endTime}</p>
-                </div>
-              )}
-              {strongestBookRef && (
-                <div>
-                  <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Book", "പുസ്തകം", lang)}</p>
-                  <p className={lang === "ml" ? "font-malayalam text-xs font-bold truncate" : "font-inter text-xs font-bold truncate"} style={{ color: "#fff" }}>{strongestBookRef}</p>
-                </div>
-              )}
+        {/* ── 3. Remaining suitable Saats today ── */}
+        <div className="rounded-lg p-3" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+          <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: G.dim }}>
+            {T("Suitable Saats remaining today", "ഇന്ന് ബാക്കിയുള്ള അനുയോജ്യ സഅാത്തുകൾ", lang)}
+          </p>
+          {hasRemaining ? (
+            <div className="space-y-1.5">
+              {remainingSaats.map((w, idx) => {
+                const sn = saatDisplayNum(w.hourNumber, w.period);
+                const bookRef = findBookForSaat(sn, w.period);
+                const reason = findReasonForSaat(sn, w.period);
+                const c = compatColor(w.score || 0);
+                const isStrongest = idx === 0;
+                return (
+                  <div key={`saat-${idx}`} className="rounded-lg p-2.5" style={{
+                    background: isStrongest ? "rgba(74,222,128,0.06)" : "rgba(255,255,255,0.02)",
+                    border: `1px solid ${isStrongest ? "rgba(74,222,128,0.20)" : G.border}`,
+                  }}>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {isStrongest && <TrendingUp className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#4ADE80" }} />}
+                        <span className="font-inter text-xs font-bold flex-shrink-0" style={{ color: "#fff" }}>
+                          {T("Saat", "സഅാത്", lang)} #{sn}
+                        </span>
+                        <span className="font-inter text-[10px]" style={{ color: G.dim }}>·</span>
+                        <span className="font-inter text-[11px] font-bold" style={{ color: "#fff" }}>{translatePlanet(w.planet, lang)}</span>
+                        <span className="font-inter text-[10px]" style={{ color: G.dim }}>·</span>
+                        <span className="font-inter text-[10px]" style={{ color: G.dim }}>
+                          {w.period === "night" ? T("Night", "രാത്രി", lang) : T("Day", "പകല്", lang)}
+                        </span>
+                      </div>
+                      <span className="font-inter text-xs font-bold flex-shrink-0" style={{ color: c }}>{w.score || 0}%</span>
+                    </div>
+                    {w.startTime && w.endTime && (
+                      <p className="font-inter text-[10px] mb-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>
+                        {w.startTime} – {w.endTime}
+                      </p>
+                    )}
+                    {bookRef && (
+                      <p className={lang === "ml" ? "font-malayalam text-[10px]" : "font-inter text-[10px]"} style={{ color: G.dim }}>
+                        {T("Book", "പുസ്തകം", lang)}: {bookRef}
+                      </p>
+                    )}
+                    {reason && (
+                      <p className={lang === "ml" ? "font-malayalam text-[10px] leading-relaxed" : "font-inter text-[10px] leading-relaxed"} style={{ color: "rgba(255,255,255,0.55)" }}>
+                        {reason}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            {strongestReason && (
-              <p className={lang === "ml" ? "font-malayalam text-[11px] leading-relaxed" : "font-inter text-[11px] leading-relaxed"} style={{ color: "rgba(255,255,255,0.65)" }}>
-                {strongestReason}
-              </p>
-            )}
+          ) : (
+            <p className={lang === "ml" ? "font-malayalam text-[11px]" : "font-inter text-[11px]"} style={{ color: "rgba(255,255,255,0.50)" }}>
+              {T("No suitable Saat remaining today.", "ഇന്ന് അനുയോജ്യ സഅാത് ബാക്കിയില്ല.", lang)}
+            </p>
+          )}
+        </div>
+
+        {/* ── 4. Forbidden Saats today ── */}
+        {forbiddenSaats.length > 0 && (
+          <div className="rounded-lg p-3" style={{ background: "rgba(248,113,113,0.03)", border: "1px solid rgba(248,113,113,0.15)" }}>
+            <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "#F87171" }}>
+              {T("Never use these Saats today", "ഇന്ന് ഈ സഅാത്തുകൾ ഒരിക്കലും ഉപയോഗിക്കരുത്", lang)}
+            </p>
+            <div className="space-y-1">
+              {forbiddenSaats.map((w, idx) => {
+                const sn = saatDisplayNum(w.hourNumber, w.period);
+                return (
+                  <div key={`forbid-${idx}`} className="flex items-center justify-between gap-2 py-1 border-b last:border-0" style={{ borderColor: "rgba(248,113,113,0.10)" }}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <XCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#F87171" }} />
+                      <span className="font-inter text-[11px] font-bold flex-shrink-0" style={{ color: "#fff" }}>
+                        {T("Saat", "സഅാത്", lang)} #{sn}
+                      </span>
+                      <span className="font-inter text-[10px]" style={{ color: G.dim }}>·</span>
+                      <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>{translatePlanet(w.planet, lang)}</span>
+                      {w.startTime && w.endTime && (
+                        <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>{w.startTime}–{w.endTime}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className={lang === "ml" ? "font-malayalam text-[10px] leading-relaxed mt-1.5" : "font-inter text-[10px] leading-relaxed mt-1.5"} style={{ color: "rgba(248,113,113,0.70)" }}>
+              {T("These Saats are forbidden for your purpose per the uploaded books.", "അപ്ലോഡ് ചെയ്ത പുസ്തകങ്ങൾ പ്രകാരം ഈ സഅാത്തുകൾ നിങ്ങളുടെ ലക്ഷ്യത്തിന് വിലക്കപ്പെട്ടിരിക്കുന്നു.", lang)}
+            </p>
           </div>
-        ) : nextDay ? (
+        )}
+
+        {/* ── 5. Next available day (if no suitable Saat remains today) ── */}
+        {nextDay && (
           <div className="rounded-xl p-3" style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.25)" }}>
             <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "#FBBF24" }}>
-              {T("No suitable Saat remaining today", "ഇന്ന് അനുയോജ്യ സഅാത് ബാക്കിയില്ല", lang)}
+              {T("Next available day", "അടുത്ത ലഭ്യ ദിവസം", lang)}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Next Day", "അടുത്ത ദിവസം", lang)}</p>
+                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Day", "ദിവസം", lang)}</p>
                 <p className={lang === "ml" ? "font-malayalam text-xs font-bold" : "font-inter text-xs font-bold"} style={{ color: "#fff" }}>
                   {translateDay(nextDay.dayName, lang)} ({nextDay.daysAhead} {T("d", "ദി", lang)})
                 </p>
@@ -190,6 +275,10 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
               <div>
                 <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Saat", "സഅാത്", lang)}</p>
                 <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>#{saatDisplayNum(nextDay.hour, nextDay.period)} ({translatePlanet(nextDay.planet, lang)})</p>
+              </div>
+              <div>
+                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Compat", "പൊരുത്തം", lang)}</p>
+                <p className="font-inter text-xs font-bold" style={{ color: compatColor(nextDayCompat) }}>{nextDayCompat}%</p>
               </div>
               {nextDay.startTime && nextDay.endTime && (
                 <div>
@@ -199,30 +288,9 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
               )}
             </div>
           </div>
-        ) : (
-          <div className="rounded-xl p-4" style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.25)" }}>
-            <p className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: "#F87171" }}>
-              {T("No better timing found within 14 days.", "14 ദിവസത്തിനുള്ളിൽ മികച്ച സമയമില്ല.", lang)}
-            </p>
-          </div>
         )}
 
-        {/* ── If suitable + stronger exists ── */}
-        {isSuitable && hasStronger && (
-          <div className="rounded-lg p-3" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.20)" }}>
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4" style={{ color: "#4ADE80" }} />
-              <p className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>
-                {T("Stronger than current selection", "നിലവിലെ തിരഞ്ഞെടുപ്പിനേക്കാൾ ശക്തം", lang)}
-              </p>
-            </div>
-            <p className={lang === "ml" ? "font-malayalam text-[11px] leading-relaxed" : "font-inter text-[11px] leading-relaxed"} style={{ color: "rgba(255,255,255,0.70)" }}>
-              {T(`Saat #${strongestSaatNum} (${translatePlanet(strongestToday.planet, lang)}) at ${strongestCompat}% is stronger than your current Saat #${currentSaatNum}.`, `സഅാത് #${strongestSaatNum} (${translatePlanet(strongestToday.planet, lang)}) ${strongestCompat}% നിലവിലെ സഅാത് #${currentSaatNum} നേക്കാൾ ശക്തമാണ്.`, lang)}
-            </p>
-          </div>
-        )}
-
-        {/* ── If unsuitable: why + what to change ── */}
+        {/* ── 6. If unsuitable: why + what to change ── */}
         {!isSuitable && rejectRule && (
           <div className="rounded-lg p-3" style={{ background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.20)" }}>
             <div className="flex items-center gap-2 mb-1">
@@ -249,52 +317,20 @@ export default function DecisionSectionBetterTiming({ analysis, lang }) {
             <ChangeRow
               label={T("Saat", "സഅാത്", lang)}
               current={`#${liveNow.saat || "—"}`}
-              recommended={sameDayAlt ? `#${sameDayAlt.saatNum || saatDisplayNum(sameDayAlt.hourNumber, sameDayAlt.period)}` : (altSaatNum ? `#${altSaatNum}` : null)}
+              recommended={hasRemaining ? `#${saatDisplayNum(remainingSaats[0].hourNumber, remainingSaats[0].period)}` : null}
               isFailed={saatFailed}
             />
             <ChangeRow
               label={T("Planet", "ഗ്രഹം", lang)}
               current={translatePlanet(liveNow.kawkab || liveNow.planetaryHour, lang)}
-              recommended={req.hours?.length > 0 ? translatePlanet(req.hours[0], lang) : (altPlanet ? translatePlanet(altPlanet, lang) : null)}
+              recommended={req.hours?.length > 0 ? translatePlanet(req.hours[0], lang) : (hasRemaining ? translatePlanet(remainingSaats[0].planet, lang) : null)}
               isFailed={saatFailed || planetEnemy}
             />
           </div>
         )}
 
-        {/* ── Strongest alternative (unsuitable only) ── */}
-        {!isSuitable && alt && (
-          <div className="rounded-xl p-3" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.25)" }}>
-            <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "#4ADE80" }}>
-              {T("Strongest Alternative", "ഏറ്റവും ശക്തമായ ബദൽ", lang)}
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Day", "ദിവസം", lang)}</p>
-                <p className={lang === "ml" ? "font-malayalam text-xs font-bold" : "font-inter text-xs font-bold"} style={{ color: "#fff" }}>
-                  {translateDay(altDayName, lang)}{isToday ? ` (${T("Today", "ഇന്ന്", lang)})` : altDaysAhead > 0 ? ` (${altDaysAhead} ${T("d", "ദി", lang)})` : ""}
-                </p>
-              </div>
-              <div>
-                <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Saat", "സഅാത്", lang)}</p>
-                <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>#{altSaatNum} ({translatePlanet(altPlanet, lang)})</p>
-              </div>
-              {altStartTime && altEndTime && (
-                <div>
-                  <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Time", "സമയം", lang)}</p>
-                  <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{altStartTime} – {altEndTime}</p>
-                </div>
-              )}
-            </div>
-            {(whyText || fallbackWhy) && (
-              <p className={lang === "ml" ? "font-malayalam text-[11px] leading-relaxed mt-2" : "font-inter text-[11px] leading-relaxed mt-2"} style={{ color: "rgba(255,255,255,0.65)" }}>
-                {whyText || fallbackWhy || T("This timing satisfies all required conditions.", "ഈ സമയം എല്ലാ ആവശ്യകതകളും പാലിക്കുന്നു.", lang)}
-              </p>
-            )}
-          </div>
-        )}
-
         {/* ── Already strongest ── */}
-        {isSuitable && !hasStronger && (
+        {isSuitable && !hasRemaining && (
           <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.25)" }}>
             <CheckCircle2 className="w-6 h-6 flex-shrink-0" style={{ color: "#4ADE80" }} />
             <p className={lang === "ml" ? "font-malayalam text-sm font-bold" : "font-inter text-sm font-bold"} style={{ color: "#4ADE80" }}>
