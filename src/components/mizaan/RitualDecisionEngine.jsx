@@ -19,14 +19,14 @@ import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 import { G, T } from "./ritual-report/shared";
-import DecisionSectionCurrentSelection from "./ritual-report/DecisionSectionCurrentSelection";
-import DecisionSectionDecision from "./ritual-report/DecisionSectionDecision";
-import DecisionSectionWhy from "./ritual-report/DecisionSectionWhy";
-import DecisionSectionBookEvidence from "./ritual-report/DecisionSectionBookEvidence";
-import DecisionSectionBestAlternative from "./ritual-report/DecisionSectionBestAlternative";
+import DecisionSectionCurrentDecision from "./ritual-report/DecisionSectionCurrentDecision";
+import DecisionSectionEvidence from "./ritual-report/DecisionSectionEvidence";
 import DecisionSectionFriendEnemy from "./ritual-report/DecisionSectionFriendEnemy";
+import DecisionSectionBetterTiming from "./ritual-report/DecisionSectionBetterTiming";
 import DecisionSectionAllowedSaat from "./ritual-report/DecisionSectionAllowedSaat";
 import DecisionSectionForbiddenSaat from "./ritual-report/DecisionSectionForbiddenSaat";
+import DecisionSectionAlternativeBooks from "./ritual-report/DecisionSectionAlternativeBooks";
+import DecisionSectionFinalRecommendation from "./ritual-report/DecisionSectionFinalRecommendation";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -187,15 +187,15 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ 8-SECTION LIVE DECISION REPORT ═══ */}
-      <DecisionSectionCurrentSelection analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
-      <DecisionSectionDecision analysis={rawAnalysis} lang={lang} />
-      <DecisionSectionWhy analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
-      <DecisionSectionBookEvidence analysis={rawAnalysis} lang={lang} />
-      <DecisionSectionBestAlternative analysis={rawAnalysis} lang={lang} />
+      {/* ═══ 8-SECTION LIVE DECISION ENGINE ═══ */}
+      <DecisionSectionCurrentDecision analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
+      <DecisionSectionEvidence analysis={rawAnalysis} lang={lang} />
       <DecisionSectionFriendEnemy analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
+      <DecisionSectionBetterTiming analysis={rawAnalysis} lang={lang} />
       <DecisionSectionAllowedSaat analysis={rawAnalysis} lang={lang} />
       <DecisionSectionForbiddenSaat analysis={rawAnalysis} lang={lang} />
+      <DecisionSectionAlternativeBooks analysis={rawAnalysis} lang={lang} />
+      <DecisionSectionFinalRecommendation analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
     </div>
   );
 }
