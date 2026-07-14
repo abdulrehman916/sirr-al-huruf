@@ -84,12 +84,25 @@ export default function RitualDecisionEngine({
     planningContext,
   ]);
 
-  // ── Upcoming valid opportunities (forward search for Box 5) ──
-  // Reuses the engine's pure collector — no calculation duplication.
-  const upcomingOpportunities = useMemo(() => {
+  // ── LIVE NAVIGATION CLOCK ──
+  // Ticks every 60s so the recommendation auto-advances like a navigation
+  // system: as a suitable Saat passes, the next remaining Saat becomes the
+  // recommendation; when today's final suitable Saat passes, the engine
+  // continues to tomorrow, then future days — it never stops at today.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Live forward-search timeline from the ticking now (today → tomorrow → …).
+  const liveTimeline = useMemo(() => {
     if (!rawAnalysis?.req) return [];
-    try { return collectAllValidTimes(rawAnalysis.req, new Date(), 14); } catch { return []; }
-  }, [rawAnalysis]);
+    try { return collectAllValidTimes(rawAnalysis.req, now, 14); } catch { return []; }
+  }, [rawAnalysis, now]);
+
+  const todayRemaining = useMemo(() => liveTimeline.filter(o => o.isToday), [liveTimeline]);
+  const liveRecommendation = liveTimeline[0] || null;
 
   // ── Purpose confirmation required ──
   if (resolvedPurpose.needsConfirmation) {
@@ -200,13 +213,13 @@ export default function RitualDecisionEngine({
       <BoxPurpose analysis={rawAnalysis} lang={lang} />
       <BoxCurrentSituation analysis={rawAnalysis} selections={effectiveSelections} lang={lang} />
       <BoxWhyResult analysis={rawAnalysis} lang={lang} />
-      <BoxTodayOpportunities analysis={rawAnalysis} lang={lang} />
-      <BoxNextOpportunity analysis={rawAnalysis} upcoming={upcomingOpportunities} lang={lang} />
+      <BoxTodayOpportunities analysis={rawAnalysis} todayRemaining={todayRemaining} lang={lang} />
+      <BoxNextOpportunity analysis={rawAnalysis} liveRecommendation={liveRecommendation} lang={lang} />
       <BoxForbidden analysis={rawAnalysis} lang={lang} />
       <BoxHowToImprove analysis={rawAnalysis} lang={lang} />
       <BoxBestConditions analysis={rawAnalysis} lang={lang} />
       <BoxPlanetDetails analysis={rawAnalysis} lang={lang} />
-      <FinalDecision analysis={rawAnalysis} lang={lang} />
+      <FinalDecision analysis={rawAnalysis} liveRecommendation={liveRecommendation} lang={lang} />
     </div>
   );
 }

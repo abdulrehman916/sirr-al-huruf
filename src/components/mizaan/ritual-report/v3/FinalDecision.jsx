@@ -1,36 +1,47 @@
 import { Sparkles } from "lucide-react";
 import { G, T, saatDisplayNum, translatePlanet, translateDay, computeCompat, compatColor } from "./shared";
 
-// FINAL DECISION — one clear verdict + actionable sentence.
-// Derives the action from the analysis: perform now / wait / avoid.
-export default function FinalDecision({ analysis, lang }) {
-  const verdict = analysis?.verdict || "";
+// FINAL DECISION — one clear, actionable sentence that follows the
+// auto-advancing recommendation:
+//   • Perform now — when the current Saat is suitable and still active.
+//   • Wait until today's next Saat — when today still has a remaining suitable Saat.
+//   • Wait until tomorrow / [weekday] — when today's suitable Saats have passed.
+//   • Avoid — when forbidden or no opportunity exists.
+export default function FinalDecision({ analysis, liveRecommendation, lang }) {
   const suitable = analysis?.selectionAnalysis?.suitable || false;
-  const canPerformToday = analysis?.canPerformToday;
-  const bestWindow = (analysis?.bestWindowsToday || [])[0];
-  const nextOpp = analysis?.nextOpportunity || null;
   const compat = computeCompat(analysis).final;
   const cColor = compatColor(compat);
+  const r = liveRecommendation;
+
+  // Are we currently inside the recommended Saat? If the live recommendation
+  // is today AND its hour matches the current Saat, the current moment is the
+  // recommendation → "Perform now." Once that Saat passes, the recommendation
+  // advances and this becomes false → "Wait until…".
+  const liveNow = analysis?.liveNow || {};
+  const currentSaat = liveNow.saat;
+  const currentPeriod = liveNow.laylNahar === "Layl" ? "night" : "day";
+  const currentHourNumber = currentPeriod === "night" ? (currentSaat || 1) + 12 : (currentSaat || 1);
+  const inCurrentSaat = !!(r && r.isToday && r.hour === currentHourNumber && r.period === currentPeriod);
 
   let actionEn, actionMl;
-  if (suitable && canPerformToday === "Yes") {
-    actionEn = "Perform now.";
-    actionMl = "ഇപ്പോൾ ചെയ്യുക.";
-  } else if (bestWindow) {
-    actionEn = `Wait until today's best Saat (#${saatDisplayNum(bestWindow.hourNumber, bestWindow.period)} · ${bestWindow.planet}).`;
-    actionMl = `ഇന്നത്തെ മികച്ച സഅാത്തിനായി കാത്തിരിക്കുക (#${saatDisplayNum(bestWindow.hourNumber, bestWindow.period)} · ${translatePlanet(bestWindow.planet, lang)}).`;
-  } else if (nextOpp) {
-    const when = nextOpp.isToday ? T("later today", "ഇന്ന് പിന്നീട്", lang)
-      : nextOpp.daysAhead === 1 ? T("tomorrow", "നാളെ", lang)
-      : translateDay(nextOpp.dayName, lang);
-    actionEn = `Wait until ${when} — Saat #${saatDisplayNum(nextOpp.hour, nextOpp.period)} (${nextOpp.planet}).`;
-    actionMl = `${when} വരെ കാത്തിരിക്കുക — സഅാത് #${saatDisplayNum(nextOpp.hour, nextOpp.period)} (${translatePlanet(nextOpp.planet, lang)}).`;
+  if (suitable && inCurrentSaat) {
+    actionEn = "Perform now."; actionMl = "ഇപ്പോൾ ചെയ്യുക.";
+  } else if (r) {
+    const saatStr = `#${saatDisplayNum(r.hour, r.period)} · ${translatePlanet(r.planet, lang)}`;
+    if (r.isToday) {
+      actionEn = `Wait until today's next Saat (${saatStr}).`;
+      actionMl = `ഇന്നത്തെ അടുത്ത സഅാത്തിനായി കാത്തിരിക്കുക (${saatStr}).`;
+    } else if (r.daysAhead === 1) {
+      actionEn = `Wait until tomorrow — Saat ${saatStr}.`;
+      actionMl = `നാളെ വരെ കാത്തിരിക്കുക — സഅാത് ${saatStr}.`;
+    } else {
+      actionEn = `Wait until ${translateDay(r.dayName, lang)} — Saat ${saatStr}.`;
+      actionMl = `${translateDay(r.dayName, lang)} വരെ കാത്തിരിക്കുക — സഅാത് ${saatStr}.`;
+    }
   } else if (analysis?.selectionAnalysis?.forbidden) {
-    actionEn = "Avoid this planetary hour.";
-    actionMl = "ഈ ഗ്രഹ മണിക്കൂർ ഒഴിവാക്കുക.";
+    actionEn = "Avoid this planetary hour."; actionMl = "ഈ ഗ്രഹ മണിക്കൂർ ഒഴിവാക്കുക.";
   } else {
-    actionEn = "Avoid today.";
-    actionMl = "ഇന്ന് ഒഴിവാക്കുക.";
+    actionEn = "Avoid today."; actionMl = "ഇന്ന് ഒഴിവാക്കുക.";
   }
 
   return (

@@ -1,20 +1,14 @@
-import { Calendar, Star, Clock } from "lucide-react";
+import { Calendar, Clock } from "lucide-react";
 import { G, T, Box, translatePlanet, saatDisplayNum, computeCompat, compatColor } from "./shared";
 
-// BOX 4 — TODAY'S AVAILABLE OPPORTUNITIES
+// BOX 4 — TODAY'S AVAILABLE OPPORTUNITIES (LIVE)
 // All remaining suitable Saat TODAY, sorted chronologically.
-// Marks the strongest one ★★★★★ Best Today.
-// If none remain: "No suitable Saat remains today."
-export default function BoxTodayOpportunities({ analysis, lang }) {
-  const windows = (analysis?.bestWindowsToday || []).slice().sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
-
-  // Strongest = highest database-driven compat among remaining
-  let strongestIdx = -1, strongestCompat = -1;
-  windows.forEach((w, i) => {
-    const c = computeCompat(analysis, { period: w.period, saatNumber: w.hourNumber, planetLC: String(w.planet || "").toLowerCase() }).final;
-    if (c > strongestCompat) { strongestCompat = c; strongestIdx = i; }
-  });
-
+// The first remaining = ⭐ Best Remaining Today — the auto-advancing
+// recommendation. When the current Saat passes, the next remaining Saat
+// automatically becomes the recommendation. When today's final suitable
+// Saat passes, the engine continues to tomorrow (Box 5).
+export default function BoxTodayOpportunities({ analysis, todayRemaining, lang }) {
+  const windows = (todayRemaining || []).slice().sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
   const matchingRules = analysis?.matchingRules || [];
 
   if (windows.length === 0) {
@@ -27,7 +21,7 @@ export default function BoxTodayOpportunities({ analysis, lang }) {
           </p>
         </div>
         <p className={lang === "ml" ? "font-malayalam text-[10px] mt-2" : "font-inter text-[10px] mt-2"} style={{ color: "rgba(255,255,255,0.45)" }}>
-          {T("See the Next Available Opportunity below.", "താഴെ അടുത്ത ലഭ്യമായ അവസരം കാണുക.", lang)}
+          {T("Continuing to tomorrow — see Next Available Opportunity below.", "നാളെയ്ക്ക് തുടരുന്നു — താഴെ അടുത്ത ലഭ്യമായ അവസരം കാണുക.", lang)}
         </p>
       </Box>
     );
@@ -37,22 +31,22 @@ export default function BoxTodayOpportunities({ analysis, lang }) {
     <Box number={4} titleEn="Today's Available Opportunities" titleMl="ഇന്നത്തെ ലഭ്യമായ അവസരങ്ങൾ" icon={Calendar} lang={lang}>
       <div className="space-y-2">
         {windows.map((w, i) => {
-          const isBest = i === strongestIdx;
-          const c = i === strongestIdx ? strongestCompat : computeCompat(analysis, { period: w.period, saatNumber: w.hourNumber, planetLC: String(w.planet || "").toLowerCase() }).final;
+          const isBest = i === 0; // auto-advancing recommendation = next remaining
+          const c = computeCompat(analysis, { period: w.period, saatNumber: w.hour, planetLC: String(w.planet || "").toLowerCase() }).final;
           const cColor = compatColor(c);
-          const rule = matchingRules.find(r => r.saat_number === w.hourNumber && r.period === w.period);
-          const reason = rule ? (lang === "ml" && rule.text_ml ? rule.text_ml : rule.text_en) : w.reason;
+          const rule = matchingRules.find(r => r.saat_number === w.hour && r.period === w.period);
+          const reason = rule ? (lang === "ml" && rule.text_ml ? rule.text_ml : rule.text_en) : "";
           return (
             <div key={i} className="rounded-lg p-3" style={{ background: isBest ? `${cColor}12` : G.bg, border: `1px solid ${isBest ? `${cColor}60` : G.border}` }}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-inter text-sm font-bold" style={{ color: "#fff" }}>
-                  {T("Saat", "സഅാത്", lang)} #{saatDisplayNum(w.hourNumber, w.period)}
+                  {T("Saat", "സഅാത്", lang)} #{saatDisplayNum(w.hour, w.period)}
                 </span>
                 <span className="font-inter text-[10px]" style={{ color: G.dim }}>·</span>
                 <span className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{translatePlanet(w.planet, lang)}</span>
                 {isBest && (
                   <span className="ml-auto font-inter text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: cColor, border: `1px solid ${cColor}60`, background: `${cColor}12` }}>
-                    ★★★★★ {T("Best Today", "ഇന്നത്തെ മികച്ചത്", lang)}
+                    ★ {T("Best Remaining Today", "ഇന്ന് ബാക്കിയുള്ള മികച്ചത്", lang)}
                   </span>
                 )}
               </div>
@@ -71,6 +65,10 @@ export default function BoxTodayOpportunities({ analysis, lang }) {
           );
         })}
       </div>
+      <p className={lang === "ml" ? "font-malayalam text-[10px] mt-3" : "font-inter text-[10px] mt-3"} style={{ color: "rgba(255,255,255,0.45)" }}>
+        {T("When the current Saat passes, the next suitable Saat becomes the recommendation automatically.",
+           "നിലവിലെ സഅാത് കഴിയുമ്പോൾ, അടുത്ത അനുയോജ്യ സഅാത് സ്വയമേവ ശുപാർശയാകും.", lang)}
+      </p>
     </Box>
   );
 }
