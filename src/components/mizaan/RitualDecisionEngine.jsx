@@ -11,7 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo, useEffect } from "react";
 import { AlertTriangle, Target, Sparkles } from "lucide-react";
-import { analyzeRitualTiming } from "../../lib/ritualTimingEngineV3";
+import { analyzeRitualTiming, collectAllValidTimes } from "../../lib/ritualTimingEngineV3";
 import PlanningModePanel from "./PlanningModePanel";
 import { setSaatPlanningContext } from "../../lib/mizaanSaatCalculator";
 import { useRitualLang } from "../../lib/ritualTimingI18n";
@@ -19,9 +19,16 @@ import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 import { G, T } from "./ritual-report/shared";
-import SectionPurpose from "./ritual-report/v2/SectionPurpose";
-import DecisionTimeline from "./ritual-report/v2/DecisionTimeline";
-import SectionBookComparison from "./ritual-report/v2/SectionBookComparison";
+import BoxPurpose from "./ritual-report/v3/BoxPurpose";
+import BoxCurrentSituation from "./ritual-report/v3/BoxCurrentSituation";
+import BoxWhyResult from "./ritual-report/v3/BoxWhyResult";
+import BoxTodayOpportunities from "./ritual-report/v3/BoxTodayOpportunities";
+import BoxNextOpportunity from "./ritual-report/v3/BoxNextOpportunity";
+import BoxForbidden from "./ritual-report/v3/BoxForbidden";
+import BoxHowToImprove from "./ritual-report/v3/BoxHowToImprove";
+import BoxBestConditions from "./ritual-report/v3/BoxBestConditions";
+import BoxPlanetDetails from "./ritual-report/v3/BoxPlanetDetails";
+import FinalDecision from "./ritual-report/v3/FinalDecision";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -76,6 +83,13 @@ export default function RitualDecisionEngine({
     resolvedPurpose,
     planningContext,
   ]);
+
+  // ── Upcoming valid opportunities (forward search for Box 5) ──
+  // Reuses the engine's pure collector — no calculation duplication.
+  const upcomingOpportunities = useMemo(() => {
+    if (!rawAnalysis?.req) return [];
+    try { return collectAllValidTimes(rawAnalysis.req, new Date(), 14); } catch { return []; }
+  }, [rawAnalysis]);
 
   // ── Purpose confirmation required ──
   if (resolvedPurpose.needsConfirmation) {
@@ -182,10 +196,17 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ DECISION TIMELINE — chronological recommendation flow ═══ */}
-      <SectionPurpose analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
-      <DecisionTimeline analysis={rawAnalysis} lang={lang} />
-      <SectionBookComparison analysis={rawAnalysis} lang={lang} />
+      {/* ═══ 9-BOX RITUAL TIME DECISION UI ═══ */}
+      <BoxPurpose analysis={rawAnalysis} lang={lang} />
+      <BoxCurrentSituation analysis={rawAnalysis} selections={effectiveSelections} lang={lang} />
+      <BoxWhyResult analysis={rawAnalysis} lang={lang} />
+      <BoxTodayOpportunities analysis={rawAnalysis} lang={lang} />
+      <BoxNextOpportunity analysis={rawAnalysis} upcoming={upcomingOpportunities} lang={lang} />
+      <BoxForbidden analysis={rawAnalysis} lang={lang} />
+      <BoxHowToImprove analysis={rawAnalysis} lang={lang} />
+      <BoxBestConditions analysis={rawAnalysis} lang={lang} />
+      <BoxPlanetDetails analysis={rawAnalysis} lang={lang} />
+      <FinalDecision analysis={rawAnalysis} lang={lang} />
     </div>
   );
 }
