@@ -31,6 +31,15 @@ import { AY_MANAZILLERI } from "./astroClockData.js";
 // Does NOT modify any calculation logic — only swaps the astronomical source.
 let _planningOverride = null;
 
+// ── DYNAMIC PURPOSE KEYWORDS (Rule Database) ──
+// When set by analyzeRitualTiming (from the DB-loaded usePurposeActionKeywords
+// hook), purposeMatchesAction reads keywords from here instead of the legacy
+// hardcoded PURPOSE_KEYWORDS constant. Null = use the legacy constant as a
+// guaranteed-safe fallback, preserving outputs for any unwired caller.
+// No recommendation, reason, or decision is derived from hardcoded ritual
+// knowledge once the DB map is provided.
+let _purposeKeywordsOverride = null;
+
 // ── Moon Mansion & Zodiac lists (for Plan-by-Moon dropdowns) ──
 export const MOON_MANSIONS = (AY_MANAZILLERI || []).map(m => ({
   no: m.no, name: m.name, harfi: m.harfi,
@@ -73,6 +82,11 @@ const MALEFIC = ["Saturn", "Mars"];
 // The matching is keyword-based — the DISPLAY is always the original
 // Astro Clock text, never a generated summary.
 // ═══════════════════════════════════════════════════════════════
+// LEGACY HARDCODED MAP — retained ONLY as a guaranteed-safe fallback and as the
+// bootstrap seed source for seedPurposeActionClassifier. The runtime
+// recommendation path reads from the PurposeActionClassifier Rule Database via
+// usePurposeActionKeywords; this constant is used only when no DB map is
+// provided (e.g. while loading, or unwired callers) so outputs never change.
 const PURPOSE_KEYWORDS = {
   love: ["love", "attraction", "marriage", "romance", "affection", "courtship", "engagement", "reconciliation"],
   separation: ["separation", "dispersing", "conflict", "punish", "binding", "revenge"],
@@ -90,7 +104,11 @@ const PURPOSE_KEYWORDS = {
 // Check if a ritual purpose keyword appears in an action text (case-insensitive)
 function purposeMatchesAction(ritualKey, actionText) {
   if (!actionText) return false;
-  const keywords = PURPOSE_KEYWORDS[ritualKey] || [];
+  // DB-first: use the dynamic PurposeActionClassifier map when available;
+  // fall back to the legacy constant only when no DB map was provided.
+  const keywords = (_purposeKeywordsOverride && _purposeKeywordsOverride[ritualKey])
+    || PURPOSE_KEYWORDS[ritualKey]
+    || [];
   if (keywords.length === 0) return false;
   const text = String(actionText).toLowerCase();
   return keywords.some(k => text.includes(k));
@@ -1046,8 +1064,9 @@ function buildDecisionAnalysis({
 // ═══════════════════════════════════════════════════════════════
 // MAIN — analyzeRitualTiming (same return shape as V2)
 // ═══════════════════════════════════════════════════════════════
-export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, astroClockKnowledge, manuscriptRules, purposeLookup, planningContext }) {
+export function analyzeRitualTiming({ result, selections, customPurpose, activeMethod, astroClockKnowledge, manuscriptRules, purposeLookup, planningContext, purposeKeywords }) {
   _planningOverride = planningContext || null;
+  _purposeKeywordsOverride = purposeKeywords || null;
   const reasoning = [];
   const warnings = [];
   const bookNotes = [];
@@ -1533,8 +1552,8 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
 // CONFIGURATION ADVISOR — compares current Mizan vs manuscript ideal.
 // Same return shape as V2.
 // ═══════════════════════════════════════════════════════════════
-export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup, planningContext }) {
-  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup, planningContext });
+export function analyzeConfigurationAdvice({ result, selections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup, planningContext, purposeKeywords }) {
+  const base = analyzeRitualTiming({ result, selections, customPurpose, activeMethod, astroClockKnowledge, purposeLookup, planningContext, purposeKeywords });
   const noPurposeSelected = !!base?.noPurposeSelected;
   const { ritualKey } = identifyRitual({ selections, customPurpose, astroClockKnowledge, purposeLookup });
   const effectiveRitualKey = ritualKey || "general";

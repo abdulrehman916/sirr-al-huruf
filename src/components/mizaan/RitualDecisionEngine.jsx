@@ -17,6 +17,7 @@ import { setSaatPlanningContext } from "../../lib/mizaanSaatCalculator";
 import { useRitualLang } from "../../lib/ritualTimingI18n";
 import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
+import { usePurposeActionKeywords } from "../../hooks/usePurposeActionKeywords";
 
 import { G, T } from "./ritual-report/shared";
 import BoxPurpose from "./ritual-report/v3/BoxPurpose";
@@ -37,6 +38,7 @@ export default function RitualDecisionEngine({
   const [lang, setLang] = useRitualLang();
   const { astroClockKnowledge } = useAstroClockKnowledgeAll();
   const { manuscriptRules } = useManuscriptRules();
+  const { purposeKeywords } = usePurposeActionKeywords();
 
   // ── Planning Mode ──
   const [planningMode, setPlanningMode] = useState(false);
@@ -73,6 +75,7 @@ export default function RitualDecisionEngine({
       manuscriptRules,
       purposeLookup: resolvedPurpose,
       planningContext,
+      purposeKeywords,
     });
   }, [
     result,
@@ -83,6 +86,7 @@ export default function RitualDecisionEngine({
     manuscriptRules,
     resolvedPurpose,
     planningContext,
+    purposeKeywords,
   ]);
 
   // ── LIVE NAVIGATION CLOCK ──
