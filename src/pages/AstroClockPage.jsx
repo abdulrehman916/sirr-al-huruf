@@ -3,8 +3,10 @@
 // 8 Sections, each with unique responsibility — zero duplication
 // UI-only redesign: no calculation/engine changes
 // ═══════════════════════════════════════════════════════════════
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { requestLocationPermission, startLocationWatch, stopLocationWatch, setManualLocation, getUserLocation, subscribeLocation } from "@/lib/astroClockGeolocation";
+import { KNOWN_LOCATIONS } from "@/lib/astroClockSunriseSunset";
 import { AstroClockLanguageProvider, useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useAuth } from "@/lib/AuthContext";
 import PageLayout from "@/components/PageLayout";
@@ -78,10 +80,49 @@ function CustomDatePicker() {
   );
 }
 
+function LocationSelector() {
+  const { txt } = useAstroClockLanguage();
+  const [loc, setLoc] = useState(() => getUserLocation());
+  useEffect(() => {
+    const unsub = subscribeLocation(() => setLoc(getUserLocation()));
+    setLoc(getUserLocation());
+    return unsub;
+  }, []);
+  const cities = Object.entries(KNOWN_LOCATIONS);
+  const label = loc.source === "gps"
+    ? txt("GPS", "GPS", "GPS")
+    : (loc.name || "Dubai").toString().slice(0, 14);
+  return (
+    <div className="flex items-center gap-1.5">
+      <button onClick={() => requestLocationPermission()}
+        title={txt("നിലവിലെ സ്ഥാനം ഉപയോഗിക്കുക", "Use my GPS location", "GPS konumumu kullan")}
+        className="px-2.5 py-2 rounded-xl font-inter text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"
+        style={{ background: loc.source === "gps" ? "rgba(74,222,128,0.10)" : "rgba(212,175,55,0.10)", color: loc.source === "gps" ? "#4ADE80" : "#F5D060", border: "1px solid rgba(212,175,55,0.30)" }}>
+        📍 {label}
+      </button>
+      <select
+        value=""
+        onChange={(e) => { const c = cities.find(([k]) => k === e.target.value); if (c) setManualLocation({ ...c[1], source: "manual" }); }}
+        className="px-2 py-2 rounded-xl font-inter text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+        style={{ background: "transparent", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(212,175,55,0.30)", colorScheme: "dark" }}>
+        <option value="">{txt("സ്ഥാനം", "Location", "Konum")}</option>
+        {cities.map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+      </select>
+    </div>
+  );
+}
+
 function AstroClockContent() {
   const { txt, language } = useAstroClockLanguage();
   const { role } = useAuth();
   const isAdmin = role === 'admin' || role === 'owner';
+
+  // Request GPS permission + start continuous location watch on mount.
+  useEffect(() => {
+    requestLocationPermission();
+    startLocationWatch();
+    return () => stopLocationWatch();
+  }, []);
 
   return (
     <PageLayout>
@@ -96,6 +137,7 @@ function AstroClockContent() {
             </Link>
             <LangSelector />
             <CustomDatePicker />
+            <LocationSelector />
           </div>
         </div>
 

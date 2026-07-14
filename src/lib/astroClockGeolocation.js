@@ -1,74 +1,155 @@
 /**
- * ASTRO CLOCK — BROWSER GEOLOCATION
- * Get user's actual location from browser
- * Astro Clock module only — completely isolated
+ * ASTRO CLOCK — LOCATION STORE (real GPS + manual fallback)
+ * Single source of truth for the user's geographic location.
+ *
+ *   getUserLocation()           — synchronous read of the persisted location
+ *                                  (GPS or manual). Dubai default ONLY when
+ *                                  nothing is saved (last-resort fallback).
+ *   requestLocationPermission() — async; asks the browser for GPS once;
+ *                                  saves + notifies subscribers.
+ *   startLocationWatch()        — continuous GPS (travel → recalculate),
+ *                                  throttled to ~1 km (0.01°) to avoid drift noise.
+ *   stopLocationWatch()          — clear the watch.
+ *   setManualLocation(loc)      — manual override (fallback when GPS denied).
+ *   subscribeLocation(fn)       — reactivity; consumers recompute on change.
+ *   getLocationVersion()        — version counter for memo deps.
+ *
+ * Timezone = device offset (DST-aware via getTimezoneOffset), NOT a longitude
+ * estimate. No calculation formulas live here — only the location SOURCE.
  */
+const STORAGE_KEY = "astro_clock_location";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET USER LOCATION FROM BROWSER
-// ─────────────────────────────────────────────────────────────────────────────
-export function getUserLocationFromBrowser() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      // Fallback to Dubai
-      resolve({
-        lat: 25.2048,
-        lng: 55.2708,
-        timezone: 4,
-        name: "Dubai, UAE (Default)",
-        isDefault: true
-      });
-      return;
+const DUBAI_DEFAULT = Object.freeze({
+  lat: 25.2048,
+  lng: 55.2708,
+  timezone: 4,
+  name: "Dubai, UAE (Default)",
+  isDefault: true,
+  source: "default",
+});
+
+let _version = 0;
+const _listeners = new Set();
+let _watchId = null;
+let _lastWatch = null;
+let _inflight = null;
+
+function readPersisted() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const loc = JSON.parse(raw);
+      if (loc && typeof loc.lat === "number" && typeof loc.lng === "number") return loc;
     }
+  } catch (_) {}
+  return null;
+}
 
+function writePersisted(loc) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(loc)); } catch (_) {}
+}
+
+function deviceTimezone() {
+  // Browser offset in minutes (DST-aware) → hours. Dubai = +4, no DST.
+  try { return -new Date().getTimezoneOffset() / 60; } catch (_) { return 0; }
+}
+
+function notify() {
+  _version++;
+  _listeners.forEach((fn) => { try { fn(); } catch (_) {} });
+}
+
+function buildGpsLoc(latitude, longitude) {
+  return {
+    lat: latitude,
+    lng: longitude,
+    timezone: deviceTimezone(),
+    name: `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`,
+    isDefault: false,
+    source: "gps",
+  };
+}
+
+// ── Synchronous read — the single source used by every calculation ──
+export function getUserLocation() {
+  const persisted = readPersisted();
+  if (persisted) return persisted;
+  return DUBAI_DEFAULT;
+}
+
+export function getLocationVersion() { return _version; }
+
+export function subscribeLocation(fn) {
+  _listeners.add(fn);
+  return () => { _listeners.delete(fn); };
+}
+
+export function setManualLocation(loc) {
+  if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return;
+  const tz = (typeof loc.timezone === "number") ? loc.timezone : deviceTimezone();
+  const next = { ...loc, timezone: tz, isDefault: false, source: "manual" };
+  writePersisted(next);
+  notify();
+}
+
+// Ask the browser for GPS once. Idempotent — concurrent callers share one prompt.
+export function requestLocationPermission() {
+  if (_inflight) return _inflight;
+  _inflight = new Promise((resolve) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) { resolve(null); return; }
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
-        
-        // Calculate timezone offset from longitude (approximate)
-        const timezone = Math.round(longitude / 15);
-        
-        resolve({
-          lat: latitude,
-          lng: longitude,
-          timezone: timezone,
-          name: `Custom Location (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`,
-          isDefault: false
-        });
+        const loc = buildGpsLoc(position.coords.latitude, position.coords.longitude);
+        writePersisted(loc);
+        notify();
+        resolve(loc);
       },
-      (error) => {
-        console.error('Geolocation error:', error);
-        // Fallback to Dubai on error
-        resolve({
-          lat: 25.2048,
-          lng: 55.2708,
-          timezone: 4,
-          name: "Dubai, UAE (Default)",
-          isDefault: true
-        });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000 // 5 minutes cache
-      }
+      () => { resolve(null); }, // denied/unavailable — keep existing (manual or default)
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
     );
+  });
+  _inflight.finally(() => { _inflight = null; });
+  return _inflight;
+}
+
+// Continuous GPS — recalculate on travel. Throttled to ~1 km.
+export function startLocationWatch() {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return;
+  if (_watchId !== null) return;
+  _watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      if (_lastWatch) {
+        if (Math.abs(latitude - _lastWatch.lat) < 0.01 && Math.abs(longitude - _lastWatch.lng) < 0.01) return;
+      }
+      _lastWatch = { lat: latitude, lng: longitude };
+      const loc = buildGpsLoc(latitude, longitude);
+      writePersisted(loc);
+      notify();
+    },
+    () => { /* ignore watch errors — keep last known location */ },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
+  );
+}
+
+export function stopLocationWatch() {
+  if (_watchId !== null && typeof navigator !== "undefined" && navigator.geolocation) {
+    try { navigator.geolocation.clearWatch(_watchId); } catch (_) {}
+  }
+  _watchId = null;
+}
+
+// ── Legacy compat ──
+export function getUserLocationFromBrowser() {
+  return new Promise((resolve) => {
+    requestLocationPermission().then((loc) => resolve(loc || DUBAI_DEFAULT));
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET TIMEZONE OFFSET
-// ─────────────────────────────────────────────────────────────────────────────
 export function getTimezoneOffset() {
-  const now = new Date();
-  return -now.getTimezoneOffset() / 60; // Convert minutes to hours
+  return deviceTimezone();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LOCATION STATUS
-// ─────────────────────────────────────────────────────────────────────────────
 export const GEOLOCATION_STATUS = {
-  supported: typeof navigator !== 'undefined' && navigator.geolocation,
-  permission: 'unknown', // Will be updated on request
-  lastUpdate: null
+  supported: typeof navigator !== "undefined" && !!navigator.geolocation,
 };

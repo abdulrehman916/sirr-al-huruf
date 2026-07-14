@@ -18,6 +18,7 @@ import { useRitualLang } from "../../lib/ritualTimingI18n";
 import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 import { usePurposeActionKeywords } from "../../hooks/usePurposeActionKeywords";
+import { subscribeLocation } from "../../lib/astroClockGeolocation";
 
 import { G, T } from "./ritual-report/shared";
 import BoxPurpose from "./ritual-report/v3/BoxPurpose";
@@ -110,6 +111,13 @@ export default function RitualDecisionEngine({
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisibility);
     };
+  }, []);
+
+  // Location reactivity — force an immediate recompute when GPS/manual location
+  // changes so the forward-search (Box 5 / Timeline) uses the new sunrise/sunset.
+  useEffect(() => {
+    const unsub = subscribeLocation(() => setNow(new Date()));
+    return unsub;
   }, []);
 
   // Live forward-search timeline from the ticking now (today → tomorrow → …).

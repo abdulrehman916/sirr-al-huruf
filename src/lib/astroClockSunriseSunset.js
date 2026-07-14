@@ -114,13 +114,17 @@ function getEquationOfTime(dayOfYear) {
 // GET USER LOCATION (AUTO-DETECT OR DEFAULT)
 // ─────────────────────────────────────────────────────────────────────────────
 export function getUserLocation() {
-  // Default to Dubai if geolocation fails
-  return {
-    lat: 25.2048,
-    lng: 55.2708,
-    timezone: 4, // Dubai timezone
-    name: "Dubai, UAE"
-  };
+  // Real GPS / manual location persisted by the astroClockGeolocation store.
+  // Synchronous read — Dubai is only the last-resort fallback when nothing is
+  // saved (GPS unavailable/denied and no manual selection).
+  try {
+    const raw = localStorage.getItem("astro_clock_location");
+    if (raw) {
+      const loc = JSON.parse(raw);
+      if (loc && typeof loc.lat === "number" && typeof loc.lng === "number") return loc;
+    }
+  } catch (_) {}
+  return { lat: 25.2048, lng: 55.2708, timezone: 4, name: "Dubai, UAE", isDefault: true };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

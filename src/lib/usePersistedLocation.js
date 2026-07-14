@@ -1,92 +1,47 @@
 /**
  * PERSISTED LOCATION HOOK — Astro Clock
- * Saves location to localStorage on first detect.
- * Never prompts again once saved. User can override manually.
+ * Delegates to the astroClockGeolocation store. Reads the persisted location
+ * (GPS or manual), subscribes to changes, and exposes a manual setter for the
+ * fallback selector. Timezone comes from the store (device offset, DST-aware).
  */
+import { useEffect, useState } from "react";
+import {
+  getUserLocation,
+  subscribeLocation,
+  setManualLocation,
+  getLocationVersion,
+} from "./astroClockGeolocation.js";
 
-import { useState, useEffect } from "react";
-
-const STORAGE_KEY = "astro_clock_location";
-
-const DUBAI_DEFAULT = {
-  lat: 25.2048,
-  lng: 55.2708,
-  timezone: 4,
-  name: "Dubai, UAE (Default)",
-  isDefault: true
-};
-
-export function getSavedLocation() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (_) {}
-  return null;
-}
-
-export function saveLocation(loc) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(loc));
-  } catch (_) {}
-}
-
-export function clearSavedLocation() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch (_) {}
-}
-
-/**
- * Returns { location, setLocation, isLoading }
- * - On first call: checks localStorage → if found, uses it immediately (no geolocation prompt)
- * - If nothing saved: requests geolocation once, saves result permanently
- * - setLocation(loc) lets users override manually — also saved permanently
- */
 export function usePersistedLocation() {
-  const saved = getSavedLocation();
-  const [location, setLocationState] = useState(saved || null);
-  const [isLoading, setIsLoading] = useState(!saved);
+  const [location, setLocationState] = useState(() => getUserLocation());
+  const [, setVersion] = useState(() => getLocationVersion());
 
   useEffect(() => {
-    if (saved) {
-      // Already have a saved location — never call geolocation again
-      setIsLoading(false);
-      return;
-    }
-
-    // First time: try geolocation, fall back to Dubai
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            timezone: Math.round(position.coords.longitude / 15),
-            name: `${position.coords.latitude.toFixed(2)}°N, ${position.coords.longitude.toFixed(2)}°E`,
-            isDefault: false
-          };
-          saveLocation(loc);
-          setLocationState(loc);
-          setIsLoading(false);
-        },
-        () => {
-          saveLocation(DUBAI_DEFAULT);
-          setLocationState(DUBAI_DEFAULT);
-          setIsLoading(false);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    } else {
-      saveLocation(DUBAI_DEFAULT);
-      setLocationState(DUBAI_DEFAULT);
-      setIsLoading(false);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // React to any location change (GPS watch / manual override / GPS resolve).
+    const unsub = subscribeLocation(() => {
+      setLocationState(getUserLocation());
+      setVersion(getLocationVersion());
+    });
+    // Ensure initial state is current (GPS may have resolved before mount).
+    setLocationState(getUserLocation());
+    return unsub;
+  }, []);
 
   const setLocation = (loc) => {
-    saveLocation(loc);
-    setLocationState(loc);
+    setManualLocation(loc);
+    setLocationState(getUserLocation());
   };
 
-  return { location: location || DUBAI_DEFAULT, setLocation, isLoading };
+  return { location, setLocation, isLoading: false };
+}
+
+// Legacy helpers — saved location now lives in the geolocation store.
+export function getSavedLocation() {
+  return getUserLocation();
+}
+export function saveLocation(loc) {
+  setManualLocation(loc);
+}
+export function clearSavedLocation() {
+  try { localStorage.removeItem("astro_clock_location"); } catch (_) {}
 }

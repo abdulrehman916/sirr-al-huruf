@@ -14,6 +14,7 @@ import { AY_MANAZILLERI, PLANETARY_DAY_RULERS } from "@/lib/astroClockData";
 import { ZODIAC_SIGNS } from "@/lib/astroClockZodiacData";
 import { PLANET_FRIENDSHIPS } from "@/lib/astroClockPlanetFriendships";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import { subscribeLocation } from "@/lib/astroClockGeolocation";
 
 // Turkish name maps (from manuscript PLANETARY_DAY_RULERS)
 export const PLANET_TR = {
@@ -54,10 +55,17 @@ export const PURPOSE_MAP = {
 export function useAstroData() {
   const { customDate } = useAstroClockLanguage();
   const [tick, setTick] = useState(0);
+  const [locTick, setLocTick] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 60000);
     return () => clearInterval(id);
+  }, []);
+
+  // Location reactivity — recompute immediately when GPS/manual location changes.
+  useEffect(() => {
+    const unsub = subscribeLocation(() => setLocTick((t) => t + 1));
+    return unsub;
   }, []);
 
   return useMemo(() => {
@@ -111,5 +119,5 @@ export function useAstroData() {
       planetSequence: PLANET_SEQUENCE,
       zodiacSigns: ZODIAC_SIGNS,
     };
-  }, [tick, customDate]);
+  }, [tick, customDate, locTick]);
 }
