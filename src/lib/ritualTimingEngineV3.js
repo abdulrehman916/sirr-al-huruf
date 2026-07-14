@@ -1396,7 +1396,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // never blanket-forbidden — only the specific hours the book rules forbid are
   // forbidden; only the specific hours the book rules recommend are allowed.
   const dayHourBreakdown = buildDayHourBreakdown(astroClockKnowledge, effectiveRitualKey, referenceDate);
-  const allowedTimeline = collectAllowedTimeline(astroClockKnowledge, effectiveRitualKey, now, 14);
+  const allowedTimeline = collectAllowedTimeline(astroClockKnowledge, effectiveRitualKey, now, 30);
 
   // ── SELECTION ANALYSIS: Astro Clock interpreter for the selected context ──
   const astroWeekday = activeDayIndex;
