@@ -1,29 +1,19 @@
 import { Sparkles, Check } from "lucide-react";
-import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor, DAY_KEY_BY_INDEX } from "../v3/shared";
+import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor } from "../v3/shared";
 
 // CARD 5 — BEST RECOMMENDATION
-// Finds the highest-strength configuration across the timeline and recommends
-// best weekday / planetary hour / day-night / moon mansion with expected
-// strength %. "Apply Recommendation" pushes the config into the engine override
-// so EVERY card recalculates live immediately.
-export default function Card5BestRecommendation({ analysis, liveTimeline, onApply, lang }) {
-  const req = analysis?.req || {};
+// Picks the strongest hour from the per-hour allowed timeline (each hour
+// evaluated independently by its exact context record). "Apply Recommendation"
+// updates the top Mizan selectors so EVERY card recalculates live.
+export default function Card5BestRecommendation({ analysis, onApply, lang }) {
+  const timeline = analysis?.allowedTimeline || [];
   const moonReq = analysis?.moonReq || {};
 
   let best = null, bestPct = -1;
-  for (const o of (liveTimeline || [])) {
-    const pct = computeCompat(analysis, { dayKey: o.dayKey, period: o.period, saatNumber: o.hour, planetLC: String(o.planet || "").toLowerCase() }).final;
+  for (const o of timeline) {
+    const pct = computeCompat(analysis, { weekday: o.weekday, dayKey: o.dayKey, period: o.period, saatNumber: o.hour, planetLC: String(o.planet || "").toLowerCase() }).final;
     if (pct > bestPct) { bestPct = pct; best = o; }
   }
-  if (!best) {
-    const w = (analysis?.bestWindowsToday || [])[0];
-    const dk = DAY_KEY_BY_INDEX[analysis?.astroClockStatus?.activeWeekday];
-    if (w) {
-      best = { dayKey: dk, dayName: analysis?.liveNow?.day, period: w.period, hour: w.hourNumber, planet: w.planet, startTime: w.startTime, endTime: w.endTime };
-      bestPct = computeCompat(analysis, { dayKey: dk, period: w.period, saatNumber: w.hourNumber, planetLC: String(w.planet || "").toLowerCase() }).final;
-    }
-  }
-
   const cColor = compatColor(bestPct > 0 ? bestPct : 0);
   const bestMansion = moonReq.suitableMansions?.length ? moonReq.suitableMansions.join(", ") : T("No Moon restriction", "ചന്ദ്ര നിയന്ത്രണമില്ല", lang);
 
@@ -44,12 +34,12 @@ export default function Card5BestRecommendation({ analysis, liveTimeline, onAppl
   return (
     <Box number={5} titleEn="Best Recommendation" titleMl="മികച്ച ശുപാർശ" icon={Sparkles} lang={lang}>
       {!best ? (
-        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No recommendation found in the uploaded books.", "അപ്‌ലോഡ് ചെയ്ത പുസ്തകങ്ങളിൽ ശുപാർശ കണ്ടെത്തിയില്ല.", lang)}</p>
+        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No recommendation found in the book rules within 14 days.", "14 ദിവസത്തിനുള്ളിൽ പുസ്തക നിയമങ്ങളിൽ ശുപാർശ കണ്ടെത്തിയില്ല.", lang)}</p>
       ) : (
         <>
           <div className="rounded-xl p-3 mb-3" style={{ background: `${cColor}12`, border: `1px solid ${cColor}50` }}>
-            <p className="font-inter text-sm font-bold" style={{ color: cColor }}>{T("Best possible configuration", "മികച്ച ക്രമീകരണം", lang)}: {bestPct}%</p>
-            <p className={lang === "ml" ? "font-malayalam text-[11px] mt-0.5" : "font-inter text-[11px] mt-0.5"} style={{ color: "rgba(255,255,255,0.65)" }}>{T("All book rules fully align at this time.", "ഈ സമയത്ത് എല്ലാ പുസ്തക നിയമങ്ങളും പൂർണ്ണമായി പൊരുത്തപ്പെടുന്നു.", lang)}</p>
+            <p className="font-inter text-sm font-bold" style={{ color: cColor }}>{T("Strongest hour", "ഏറ്റവും ശക്തമായ സമയം", lang)}: {bestPct}%</p>
+            <p className={lang === "ml" ? "font-malayalam text-[11px] mt-0.5" : "font-inter text-[11px] mt-0.5"} style={{ color: "rgba(255,255,255,0.65)" }}>{lang === "ml" && best.reasonMl ? best.reasonMl : (best.reasonEn || T("Book rules fully align at this hour.", "ഈ സമയത്ത് പുസ്തക നിയമങ്ങൾ പൂർണ്ണമായി പൊരുത്തപ്പെടുന്നു.", lang))}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
             {rows.map((r, i) => (

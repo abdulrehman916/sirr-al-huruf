@@ -586,6 +586,126 @@ export function collectAllValidTimes(req, fromDate, maxDays = 14) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// TWO-LEVEL PER-HOUR ANALYSIS (Day → Hour)
+// Every planetary hour inside every weekday is evaluated independently by its
+// EXACT context record (weekday + period + saat_number + planet). A weekday is
+// NEVER blanket-forbidden — only the specific hours the book rules forbid are
+// forbidden; only the specific hours the book rules recommend are allowed.
+// Neutral = no book rule for this exact hour (neither recommended nor forbidden).
+// Additive — does not modify collectAllValidTimes / findEarliestValidTime.
+// ═══════════════════════════════════════════════════════════════
+function buildContextIndex(astroClockKnowledge) {
+  const map = new Map();
+  for (const r of astroClockKnowledge || []) {
+    if (r.weekday == null || !r.period || r.saat_number == null) continue;
+    const key = `${r.weekday}|${r.period}|${r.saat_number}|${String(r.planet || "").toLowerCase()}`;
+    if (!map.has(key)) map.set(key, r);
+  }
+  return map;
+}
+
+function evaluateHourContextByIndex(idx, ritualKey, weekday, period, saatNumber, planet) {
+  const record = idx.get(`${weekday}|${period}|${saatNumber}|${String(planet || "").toLowerCase()}`) || null;
+  const purposeRec = purposeInRecommended(record, ritualKey);
+  const purposeForb = purposeInForbidden(record, ritualKey);
+  const purposeFriend = purposeInFriendship(record, ritualKey);
+  const evil = isEvilContext(record);
+  const forbidden = purposeForb || (evil && !purposeRec);
+  const allowed = purposeRec || purposeFriend;
+  const rules = [];
+  if (record) {
+    const src = record.source_book_title || "Astrology Clock";
+    const page = record.source_page_number || "";
+    if (purposeRec) {
+      const acts = (record.recommended_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
+      rules.push({ source: src, page, text_en: acts.map(a => a.en).join("; "), text_ml: acts.map(a => a.ml).filter(Boolean).join("; "), field: "recommended" });
+    }
+    if (purposeFriend && !purposeRec) {
+      const acts = (record.friendship_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
+      rules.push({ source: src, page, text_en: acts.map(a => a.en).join("; "), text_ml: acts.map(a => a.ml).filter(Boolean).join("; "), field: "friendship" });
+    }
+    if (purposeForb) {
+      const acts = (record.forbidden_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
+      rules.push({ source: src, page, text_en: acts.map(a => a.en).join("; "), text_ml: acts.map(a => a.ml).filter(Boolean).join("; "), field: "forbidden" });
+    }
+    const enemyActs = (record.enemy_actions || []).filter(a => purposeMatchesAction(ritualKey, a.en));
+    if (enemyActs.length) {
+      rules.push({ source: src, page, text_en: enemyActs.map(a => a.en).join("; "), text_ml: enemyActs.map(a => a.ml).filter(Boolean).join("; "), field: "enemy" });
+    }
+  }
+  let status = "neutral";
+  if (forbidden) status = "forbidden";
+  else if (allowed) status = "allowed";
+  const reasonEn = rules.map(r => r.text_en).filter(Boolean).join(" · ") || (record ? (record.ritual_suitability || "") : "");
+  const reasonMl = rules.map(r => r.text_ml).filter(Boolean).join(" · ") || (record ? (record.knowledge_text_ml || "") : "");
+  return { status, reasonEn, reasonMl, rules, hasRecord: !!record };
+}
+
+// All 24 planetary hours of a given date, each evaluated by its exact context.
+function buildDayHourBreakdown(astroClockKnowledge, ritualKey, date) {
+  const idx = buildContextIndex(astroClockKnowledge);
+  const localDate = toLocationDate(date);
+  const { hours, sunrise, sunset } = getTodayAllHours(localDate);
+  const weekday = getActiveWeekday(localDate, sunrise, sunset);
+  const dayKey = DAY_KEY_BY_INDEX[weekday];
+  const dayName = MIZAN_DAY_NAMES[dayKey];
+  return hours.map(h => {
+    const ev = evaluateHourContextByIndex(idx, ritualKey, weekday, h.period, h.hourNumber, h.planet);
+    return {
+      hourNumber: h.hourNumber,
+      saatNum: saatDisplayNumEngine(h.hourNumber, h.period),
+      period: h.period,
+      planet: capitalPlanet(h.planet),
+      startTime: h.startTime,
+      endTime: h.endTime,
+      past: h.status === "past",
+      weekday, dayKey, dayName,
+      status: ev.status,
+      reasonEn: ev.reasonEn,
+      reasonMl: ev.reasonMl,
+      rules: ev.rules,
+    };
+  });
+}
+
+// Chronological list of ALLOWED hours across up to maxDays — never skips a whole
+// weekday. Each hour evaluated by its exact context record (book rules only).
+function collectAllowedTimeline(astroClockKnowledge, ritualKey, fromDate, maxDays) {
+  const idx = buildContextIndex(astroClockKnowledge);
+  const results = [];
+  for (let d = 0; d < maxDays; d++) {
+    const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
+    const localDate = toLocationDate(date);
+    const { hours, sunrise, sunset } = getTodayAllHours(localDate);
+    const weekday = getActiveWeekday(localDate, sunrise, sunset);
+    const dayKey = DAY_KEY_BY_INDEX[weekday];
+    for (const h of hours) {
+      if (d === 0 && h.status === "past") continue;
+      const ev = evaluateHourContextByIndex(idx, ritualKey, weekday, h.period, h.hourNumber, h.planet);
+      if (ev.status !== "allowed") continue;
+      results.push({
+        date: toLocationDateStr(date),
+        dayName: MIZAN_DAY_NAMES[dayKey],
+        dayKey, weekday,
+        hour: h.hourNumber,
+        saatNum: saatDisplayNumEngine(h.hourNumber, h.period),
+        period: h.period,
+        planet: capitalPlanet(h.planet),
+        startTime: h.startTime,
+        endTime: h.endTime,
+        status: ev.status,
+        reasonEn: ev.reasonEn,
+        reasonMl: ev.reasonMl,
+        rules: ev.rules,
+        isToday: d === 0,
+        daysAhead: d,
+      });
+    }
+  }
+  return results;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MANUSCRIPT DAY RESOLVER — LIVE (sunset-aware) or MANUAL (selected day)
 // ═══════════════════════════════════════════════════════════════
 // LIVE mode (no selectedDay): active day = getActiveWeekday(now) — changes at sunset.
@@ -1270,6 +1390,14 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // ── STEP 5: earliest valid time ──
   const earliest = findEarliestValidTime(req, now);
 
+  // ── TWO-LEVEL PER-HOUR ANALYSIS (Day → Hour) ──
+  // Every planetary hour inside the selected weekday is evaluated independently
+  // by its exact context record (Day + Period + Saat + Planet). A weekday is
+  // never blanket-forbidden — only the specific hours the book rules forbid are
+  // forbidden; only the specific hours the book rules recommend are allowed.
+  const dayHourBreakdown = buildDayHourBreakdown(astroClockKnowledge, effectiveRitualKey, referenceDate);
+  const allowedTimeline = collectAllowedTimeline(astroClockKnowledge, effectiveRitualKey, now, 14);
+
   // ── SELECTION ANALYSIS: Astro Clock interpreter for the selected context ──
   const astroWeekday = activeDayIndex;
   const astroPeriod = effectivePeriod;
@@ -1540,6 +1668,8 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     moonReq,
     moonCitations,
     req,
+    dayHourBreakdown,
+    allowedTimeline,
     bestPlanetaryHour: req.hours?.[0] || null, bestRulingPlanet: req.planet?.[0] || req.hours?.[0] || null,
     bestDay: req.days?.[0] ? MIZAN_DAY_NAMES[req.days[0]] : null,
     bestDayReason: req.days ? `Astrology Clock recommends ${req.days.map((d) => MIZAN_DAY_NAMES[d]).join(", ")}` : "No day restriction in the Astrology Clock",

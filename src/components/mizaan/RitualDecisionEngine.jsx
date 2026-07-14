@@ -255,13 +255,13 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ 6-CARD DECISION ASSISTANT (FINAL SPEC) ═══ */}
+      {/* ═══ 6-CARD DECISION ASSISTANT (TWO-LEVEL PER-HOUR) ═══ */}
       <Card1RitualAnalysis analysis={rawAnalysis} lang={lang} />
-      <Card2NextTimes analysis={rawAnalysis} liveTimeline={liveTimeline} lang={lang} />
+      <Card2NextTimes analysis={rawAnalysis} lang={lang} />
       <Card3ForbiddenTimes analysis={rawAnalysis} lang={lang} />
       <Card4MoonAnalysis analysis={rawAnalysis} open={moonOpen} onToggle={() => setMoonOpen(o => !o)} lang={lang} />
-      <Card5BestRecommendation analysis={rawAnalysis} liveTimeline={liveTimeline} onApply={onApplySelections} lang={lang} />
-      <Card6FutureOpportunities analysis={rawAnalysis} liveTimeline={liveTimeline} lang={lang} />
+      <Card5BestRecommendation analysis={rawAnalysis} onApply={onApplySelections} lang={lang} />
+      <Card6FutureOpportunities analysis={rawAnalysis} lang={lang} />
     </div>
   );
 }
