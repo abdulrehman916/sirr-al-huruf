@@ -21,17 +21,12 @@ import { usePurposeActionKeywords } from "../../hooks/usePurposeActionKeywords";
 import { subscribeLocation, getLocationVersion } from "../../lib/astroClockGeolocation";
 
 import { G, T } from "./ritual-report/shared";
-import BoxPurpose from "./ritual-report/v3/BoxPurpose";
-import BoxCurrentSituation from "./ritual-report/v3/BoxCurrentSituation";
-import BoxWhyResult from "./ritual-report/v3/BoxWhyResult";
-import BoxTodayOpportunities from "./ritual-report/v3/BoxTodayOpportunities";
-import BoxNextOpportunity from "./ritual-report/v3/BoxNextOpportunity";
 import BoxForbidden from "./ritual-report/v3/BoxForbidden";
-import BoxHowToImprove from "./ritual-report/v3/BoxHowToImprove";
-import BoxBestConditions from "./ritual-report/v3/BoxBestConditions";
-import BoxPlanetDetails from "./ritual-report/v3/BoxPlanetDetails";
-import FinalDecision from "./ritual-report/v3/FinalDecision";
-import RitualTimeline from "./ritual-report/v3/RitualTimeline";
+import CardPurposeSummary from "./ritual-report/v4/CardPurposeSummary";
+import CardCurrentDecision from "./ritual-report/v4/CardCurrentDecision";
+import CardNextOpportunity from "./ritual-report/v4/CardNextOpportunity";
+import CardHowToImprove from "./ritual-report/v4/CardHowToImprove";
+import CardMoon from "./ritual-report/v4/CardMoon";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -67,15 +62,30 @@ export default function RitualDecisionEngine({
 
   // Location reactivity state — declared before rawAnalysis (which reads
   // locationVersion in its deps). Bumps on any GPS/manual location change so
-  // the FULL report (Boxes 1-9, Compatibility, Final Decision) recomputes with
-  // the new sunrise/sunset — no manual refresh required.
+  // the FULL report (all 6 cards) recomputes with the new sunrise/sunset —
+  // no manual refresh required.
   const [locationVersion, setLocationVersion] = useState(() => getLocationVersion());
+
+  // ── Card 4 live override ──
+  // When the user taps a "How to Improve" recommendation, the selected Mizan
+  // field is overridden locally and the engine re-runs with the new value —
+  // the ENTIRE report (all 6 cards) recalculates live. No engine or
+  // calculation change; only the input selections change.
+  const [override, setOverride] = useState(null);
+  const applyOverride = (partial) => setOverride(prev => (prev ? { ...prev, ...partial } : partial));
+  const engineSelections = useMemo(() => {
+    if (!override) return effectiveSelections;
+    return { ...effectiveSelections, ...override };
+  }, [effectiveSelections, override]);
+
+  // ── Card 5 Moon toggle (optional — opens only when the user selects it) ──
+  const [moonOpen, setMoonOpen] = useState(false);
 
   const rawAnalysis = useMemo(() => {
     if (!result || resolvedPurpose.needsConfirmation) return null;
     return analyzeRitualTiming({
       result,
-      selections: effectiveSelections,
+      selections: engineSelections,
       customPurpose,
       activeMethod,
       astroClockKnowledge,
@@ -86,7 +96,7 @@ export default function RitualDecisionEngine({
     });
   }, [
     result,
-    effectiveSelections,
+    engineSelections,
     customPurpose,
     activeMethod,
     astroClockKnowledge,
@@ -245,27 +255,26 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ RITUAL TIMELINE NAVIGATOR ═══ */}
-      <RitualTimeline
+      {/* ═══ 6-CARD DECISION ASSISTANT ═══ */}
+      <CardPurposeSummary analysis={rawAnalysis} selections={engineSelections} lang={lang} />
+      <CardCurrentDecision analysis={rawAnalysis} lang={lang} />
+      {!rawAnalysis?.selectionAnalysis?.suitable && (
+        <CardNextOpportunity analysis={rawAnalysis} liveRecommendation={liveRecommendation} lang={lang} />
+      )}
+      <CardHowToImprove
         analysis={rawAnalysis}
-        liveTimeline={liveTimeline}
-        todayRemaining={todayRemaining}
-        liveRecommendation={liveRecommendation}
-        now={now}
+        override={override}
+        onApply={applyOverride}
+        onReset={() => setOverride(null)}
         lang={lang}
       />
-
-      {/* ═══ 9-BOX RITUAL TIME DECISION UI ═══ */}
-      <BoxPurpose analysis={rawAnalysis} lang={lang} />
-      <BoxCurrentSituation analysis={rawAnalysis} selections={effectiveSelections} lang={lang} />
-      <BoxWhyResult analysis={rawAnalysis} lang={lang} />
-      <BoxTodayOpportunities analysis={rawAnalysis} todayRemaining={todayRemaining} lang={lang} />
-      <BoxNextOpportunity analysis={rawAnalysis} liveRecommendation={liveRecommendation} lang={lang} />
+      <CardMoon
+        analysis={rawAnalysis}
+        open={moonOpen}
+        onToggle={() => setMoonOpen(o => !o)}
+        lang={lang}
+      />
       <BoxForbidden analysis={rawAnalysis} lang={lang} />
-      <BoxHowToImprove analysis={rawAnalysis} lang={lang} />
-      <BoxBestConditions analysis={rawAnalysis} lang={lang} />
-      <BoxPlanetDetails analysis={rawAnalysis} lang={lang} />
-      <FinalDecision analysis={rawAnalysis} liveRecommendation={liveRecommendation} lang={lang} />
     </div>
   );
 }
