@@ -29,6 +29,7 @@ import BoxHowToImprove from "./ritual-report/v3/BoxHowToImprove";
 import BoxBestConditions from "./ritual-report/v3/BoxBestConditions";
 import BoxPlanetDetails from "./ritual-report/v3/BoxPlanetDetails";
 import FinalDecision from "./ritual-report/v3/FinalDecision";
+import RitualTimeline from "./ritual-report/v3/RitualTimeline";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -206,6 +207,16 @@ export default function RitualDecisionEngine({
         onLocationChange={setPlanningLocation}
         date={planningDate}
         onDateChange={setPlanningDate}
+        lang={lang}
+      />
+
+      {/* ═══ RITUAL TIMELINE NAVIGATOR ═══ */}
+      <RitualTimeline
+        analysis={rawAnalysis}
+        liveTimeline={liveTimeline}
+        todayRemaining={todayRemaining}
+        liveRecommendation={liveRecommendation}
+        now={now}
         lang={lang}
       />
 
