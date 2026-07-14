@@ -1,29 +1,17 @@
 // ═══════════════════════════════════════════════════════════════
-// RITUAL TIMING DECISION ENGINE — COMPLETE RESEARCH REPORT
+// RITUAL TIMING DECISION ENGINE — GUIDED DECISION ASSISTANT
 // ═══════════════════════════════════════════════════════════════
-// When a user selects a Purpose, this component behaves like the
-// Astro Clock Search page: it searches all existing database and
-// manuscript records and presents a COMPLETE RESEARCH REPORT.
+// 7 SECTIONS (guided, minimal, decision-focused):
+//   1. PURPOSE — only the selected purpose
+//   2. CURRENT RITUAL ANALYSIS — ✔ Suitable or ✘ Not Suitable
+//   3. WHY? — only applicable reasons
+//   4. CAN I DO THIS TODAY? — better time today (if not suitable)
+//   5. NEXT AVAILABLE TIME — future days (if today has none)
+//   6. WARNINGS — only applicable warnings
+//   7. MANUSCRIPT EXPLANATION — translated only, no Turkish
 //
-// 11 SECTIONS (in exact order):
-//   1.  PURPOSE ANALYSIS
-//   2.  CURRENT TIME ANALYSIS
-//   3.  WHY THIS TIME IS SUITABLE
-//   4.  WHY THIS TIME IS NOT SUITABLE
-//   5.  FORBIDDEN CONDITIONS
-//   6.  BEST TIMES
-//   7.  UPCOMING SCHEDULE
-//   8.  RECOMMENDED ACTIONS
-//   9.  RECOMMENDED QASAM (kept as existing QasamPanel in Mizaan9Page)
-//   10. MANUSCRIPT REFERENCES
-//   11. DECISION SUMMARY
-//
-// Everything comes ONLY from:
-//   • Astro Clock database (via analyzeRitualTiming)
-//   • Purpose database (via purposeLookup)
-//   • Manuscript database (via manuscriptRules)
-//
-// No new astrology rules. No AI explanations. No invented recommendations.
+// Language rule: Never display Turkish. Only EN or ML.
+// Every change to Purpose/Weekday/Saat/Planet/Kawkab recalculates instantly.
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo, useEffect } from "react";
 import { AlertTriangle, Target, Sparkles } from "lucide-react";
@@ -35,16 +23,13 @@ import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 
 import { G, T } from "./ritual-report/shared";
-import SectionPurpose from "./ritual-report/SectionPurpose";
-import SectionCurrentTime from "./ritual-report/SectionCurrentTime";
-import SectionWhySuitable from "./ritual-report/SectionWhySuitable";
-import SectionWhyNotSuitable from "./ritual-report/SectionWhyNotSuitable";
-import SectionForbidden from "./ritual-report/SectionForbidden";
-import SectionBestTimes from "./ritual-report/SectionBestTimes";
-import SectionSchedule from "./ritual-report/SectionSchedule";
-import SectionRecommendedActions from "./ritual-report/SectionRecommendedActions";
-import SectionManuscriptRefs from "./ritual-report/SectionManuscriptRefs";
-import SectionDecisionSummary from "./ritual-report/SectionDecisionSummary";
+import GuidedPurpose from "./guided-report/GuidedPurpose";
+import GuidedVerdict from "./guided-report/GuidedVerdict";
+import GuidedWhy from "./guided-report/GuidedWhy";
+import GuidedTodayAlt from "./guided-report/GuidedTodayAlt";
+import GuidedNextTime from "./guided-report/GuidedNextTime";
+import GuidedWarnings from "./guided-report/GuidedWarnings";
+import GuidedManuscript from "./guided-report/GuidedManuscript";
 
 export default function RitualDecisionEngine({
   result, selections, customPurpose, activeMethod, purposeLookup,
@@ -208,18 +193,14 @@ export default function RitualDecisionEngine({
         lang={lang}
       />
 
-      {/* ═══ 11 SECTIONS IN EXACT ORDER ═══ */}
-      <SectionPurpose analysis={rawAnalysis} resolvedPurpose={resolvedPurpose} lang={lang} />
-      <SectionCurrentTime analysis={rawAnalysis} lang={lang} />
-      <SectionWhySuitable analysis={rawAnalysis} lang={lang} />
-      <SectionWhyNotSuitable analysis={rawAnalysis} lang={lang} />
-      <SectionForbidden analysis={rawAnalysis} lang={lang} />
-      <SectionBestTimes analysis={rawAnalysis} lang={lang} />
-      <SectionSchedule analysis={rawAnalysis} lang={lang} planningContext={planningContext} />
-      <SectionRecommendedActions analysis={rawAnalysis} lang={lang} />
-      {/* Section 9: RECOMMENDED QASAM — kept as existing QasamPanel in Mizaan9Page */}
-      <SectionManuscriptRefs analysis={rawAnalysis} lang={lang} />
-      <SectionDecisionSummary analysis={rawAnalysis} lang={lang} />
+      {/* ═══ 7-SECTION GUIDED DECISION ASSISTANT ═══ */}
+      <GuidedPurpose analysis={rawAnalysis} lang={lang} />
+      <GuidedVerdict analysis={rawAnalysis} lang={lang} />
+      <GuidedWhy analysis={rawAnalysis} lang={lang} />
+      <GuidedTodayAlt analysis={rawAnalysis} lang={lang} />
+      <GuidedNextTime analysis={rawAnalysis} lang={lang} />
+      <GuidedWarnings analysis={rawAnalysis} lang={lang} />
+      <GuidedManuscript analysis={rawAnalysis} lang={lang} />
     </div>
   );
 }
