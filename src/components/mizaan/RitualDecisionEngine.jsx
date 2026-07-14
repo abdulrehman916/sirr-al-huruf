@@ -18,7 +18,7 @@ import { useRitualLang } from "../../lib/ritualTimingI18n";
 import { useAstroClockKnowledgeAll } from "../../hooks/useAstroClockKnowledgeAll";
 import { useManuscriptRules } from "../../hooks/useManuscriptRules";
 import { usePurposeActionKeywords } from "../../hooks/usePurposeActionKeywords";
-import { subscribeLocation } from "../../lib/astroClockGeolocation";
+import { subscribeLocation, getLocationVersion } from "../../lib/astroClockGeolocation";
 
 import { G, T } from "./ritual-report/shared";
 import BoxPurpose from "./ritual-report/v3/BoxPurpose";
@@ -65,6 +65,12 @@ export default function RitualDecisionEngine({
     return selections;
   }, [selections, resolvedPurpose]);
 
+  // Location reactivity state — declared before rawAnalysis (which reads
+  // locationVersion in its deps). Bumps on any GPS/manual location change so
+  // the FULL report (Boxes 1-9, Compatibility, Final Decision) recomputes with
+  // the new sunrise/sunset — no manual refresh required.
+  const [locationVersion, setLocationVersion] = useState(() => getLocationVersion());
+
   const rawAnalysis = useMemo(() => {
     if (!result || resolvedPurpose.needsConfirmation) return null;
     return analyzeRitualTiming({
@@ -88,6 +94,7 @@ export default function RitualDecisionEngine({
     resolvedPurpose,
     planningContext,
     purposeKeywords,
+    locationVersion,
   ]);
 
   // ── LIVE NAVIGATION CLOCK ──
@@ -114,9 +121,13 @@ export default function RitualDecisionEngine({
   }, []);
 
   // Location reactivity — force an immediate recompute when GPS/manual location
-  // changes so the forward-search (Box 5 / Timeline) uses the new sunrise/sunset.
+  // changes so the forward-search (Box 5 / Timeline) uses the new sunrise/sunset,
+  // and bump locationVersion (declared above) so rawAnalysis + every box recalculates.
   useEffect(() => {
-    const unsub = subscribeLocation(() => setNow(new Date()));
+    const unsub = subscribeLocation(() => {
+      setNow(new Date());
+      setLocationVersion(getLocationVersion());
+    });
     return unsub;
   }, []);
 

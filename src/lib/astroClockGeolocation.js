@@ -54,6 +54,17 @@ function deviceTimezone() {
   try { return -new Date().getTimezoneOffset() / 60; } catch (_) { return 0; }
 }
 
+// Location-aware timezone from longitude (solar/nautical offset). Used for
+// free-form manual coordinates where no curated civil offset exists.
+// Astronomically correct for sunrise/sunset — planetary hours are solar time,
+// so the longitude-based offset matches the sun's actual position at that place.
+// GPS users keep the device offset (DST-aware, correct for physical location);
+// preset cities keep their curated offset. No external API.
+export function timezoneFromLng(lng) {
+  if (typeof lng !== "number" || !isFinite(lng)) return 0;
+  return Math.round(lng / 15);
+}
+
 function notify() {
   _version++;
   _listeners.forEach((fn) => { try { fn(); } catch (_) {} });
@@ -86,10 +97,24 @@ export function subscribeLocation(fn) {
 
 export function setManualLocation(loc) {
   if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return;
-  const tz = (typeof loc.timezone === "number") ? loc.timezone : deviceTimezone();
+  // Location-aware timezone: explicit offset (preset city) → use it; otherwise
+  // derive from longitude so any free-form coordinate gets a sane solar offset.
+  const tz = (typeof loc.timezone === "number") ? loc.timezone : timezoneFromLng(loc.lng);
   const next = { ...loc, timezone: tz, isDefault: false, source: "manual" };
   writePersisted(next);
   notify();
+}
+
+// Free-form manual location from raw coordinates — supports ANY place on Earth,
+// not only the preset city list. Timezone is derived from longitude.
+export function setManualLocationByCoords(lat, lng, name) {
+  if (typeof lat !== "number" || typeof lng !== "number") return;
+  setManualLocation({
+    lat, lng,
+    timezone: timezoneFromLng(lng),
+    name: name || `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`,
+    source: "manual",
+  });
 }
 
 // Ask the browser for GPS once. Idempotent — concurrent callers share one prompt.

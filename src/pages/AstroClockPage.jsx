@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { requestLocationPermission, startLocationWatch, stopLocationWatch, setManualLocation, getUserLocation, subscribeLocation } from "@/lib/astroClockGeolocation";
+import { requestLocationPermission, startLocationWatch, stopLocationWatch, setManualLocation, setManualLocationByCoords, getUserLocation, subscribeLocation } from "@/lib/astroClockGeolocation";
 import { KNOWN_LOCATIONS } from "@/lib/astroClockSunriseSunset";
 import { AstroClockLanguageProvider, useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -83,6 +83,9 @@ function CustomDatePicker() {
 function LocationSelector() {
   const { txt } = useAstroClockLanguage();
   const [loc, setLoc] = useState(() => getUserLocation());
+  const [showCoords, setShowCoords] = useState(false);
+  const [latInput, setLatInput] = useState("");
+  const [lngInput, setLngInput] = useState("");
   useEffect(() => {
     const unsub = subscribeLocation(() => setLoc(getUserLocation()));
     setLoc(getUserLocation());
@@ -92,6 +95,14 @@ function LocationSelector() {
   const label = loc.source === "gps"
     ? txt("GPS", "GPS", "GPS")
     : (loc.name || "Dubai").toString().slice(0, 14);
+  const applyCoords = () => {
+    const la = parseFloat(latInput);
+    const ln = parseFloat(lngInput);
+    if (!isFinite(la) || !isFinite(ln) || la < -90 || la > 90 || ln < -180 || ln > 180) return;
+    setManualLocationByCoords(la, ln);
+    setShowCoords(false);
+    setLatInput(""); setLngInput("");
+  };
   return (
     <div className="flex items-center gap-1.5">
       <button onClick={() => requestLocationPermission()}
@@ -108,6 +119,29 @@ function LocationSelector() {
         <option value="">{txt("സ്ഥാനം", "Location", "Konum")}</option>
         {cities.map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
       </select>
+      <button onClick={() => setShowCoords(s => !s)}
+        title={txt("ഏതെങ്കിലും സ്ഥാനം (അക്ഷാംശം/രേഖാംശം)", "Any location (lat/lng)", "Herhangi bir konum")}
+        className="px-2 py-2 rounded-xl font-inter text-[10px] font-bold uppercase tracking-wider"
+        style={{ background: showCoords ? "rgba(212,175,55,0.15)" : "transparent", color: "#F5D060", border: "1px solid rgba(212,175,55,0.30)" }}>
+        ⊕
+      </button>
+      {showCoords && (
+        <div className="flex items-center gap-1">
+          <input type="number" step="any" placeholder="lat" value={latInput}
+            onChange={(e) => setLatInput(e.target.value)}
+            className="w-16 px-1.5 py-2 rounded-lg font-inter text-[10px]"
+            style={{ background: "rgba(255,255,255,0.04)", color: "#fff", border: "1px solid rgba(212,175,55,0.30)", colorScheme: "dark" }} />
+          <input type="number" step="any" placeholder="lng" value={lngInput}
+            onChange={(e) => setLngInput(e.target.value)}
+            className="w-16 px-1.5 py-2 rounded-lg font-inter text-[10px]"
+            style={{ background: "rgba(255,255,255,0.04)", color: "#fff", border: "1px solid rgba(212,175,55,0.30)", colorScheme: "dark" }} />
+          <button onClick={applyCoords}
+            className="px-2 py-2 rounded-lg font-inter text-[10px] font-bold uppercase"
+            style={{ background: "rgba(74,222,128,0.10)", color: "#4ADE80", border: "1px solid rgba(74,222,128,0.25)" }}>
+            ✓
+          </button>
+        </div>
+      )}
     </div>
   );
 }
