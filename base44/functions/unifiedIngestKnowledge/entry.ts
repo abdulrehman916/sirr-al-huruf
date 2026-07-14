@@ -12,9 +12,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 //   1. Vision LLM classifies content into entity_type + entity_key
 //   2. Vision LLM extracts structured knowledge
 //   3. Routes to correct knowledge store:
-//      - planet/zodiac/mansion/house/element/weekday/ritual/general_astro → EntityKnowledge
-//      - planetary_hour (timing rules) → AstroClockKnowledge
-//   4. Merges with dedup (content_hash) + canonical merge
+//      - planet/zodiac/mansion/house/element/weekday/general_astro → AstroClockKnowledge (categorized)
+//      - planetary_hour (timing rules) → AstroClockKnowledge (full_context)
+//      - ritual → EntityKnowledge (non-astrology, unchanged)
+//   4. Merges with dedup (content_hash) + rule_record_key merge
 //   5. Never overwrites, never deletes, preserves every source
 //
 // FUTURE-PROOF: No code changes needed for new uploads.
@@ -308,15 +309,103 @@ Return JSON with this exact schema:
         continue;
       }
 
-      // ── Route entity-specific entries to EntityKnowledge ──
+      // ── Route astrology entity entries to AstroClockKnowledge (single store) ──
+      // Ritual entity stays in EntityKnowledge (non-astrology module — untouched).
+      const ASTRO_RULE_CATEGORY: Record<string, string> = {
+        planet: 'planet', zodiac: 'zodiac', mansion: 'lunar mansion',
+        weekday: 'weekday', house: 'house', element: 'element', general_astro: 'general astrology',
+      };
+      const isAstroEntity = !!ASTRO_RULE_CATEGORY[entityType];
+
+      if (isAstroEntity) {
+        const ruleCategory = ASTRO_RULE_CATEGORY[entityType];
+        const ruleEntity = entityKey;
+        const ruleRecordKey = `${ruleCategory}|${ruleEntity}`;
+        const textHash = await computeHash(`${entityType}|${entityKey}|${normalizeText(textEn).substring(0, 200)}`);
+        const contentHash = `cat-${ruleRecordKey}-${textHash.substring(0, 16)}`;
+
+        // Dedup by content_hash (exact duplicate)
+        const existingByHash = await base44.asServiceRole.entities.AstroClockKnowledge.filter(
+          { content_hash: contentHash, is_marker: false }, undefined, 1
+        );
+        if (existingByHash && existingByHash.length > 0) {
+          const ex = existingByHash[0];
+          const sources = [...(ex.supporting_sources || [])];
+          if (!sources.some((s: any) => s.screenshot_url === file_url)) {
+            sources.push(sourceObj);
+            await base44.asServiceRole.entities.AstroClockKnowledge.update(ex.id, {
+              supporting_sources: sources, source_count: (ex.source_count || 1) + 1
+            });
+          }
+          recordsMerged++;
+          details.push({ entity_type: entityType, entity_key: entityKey, action: 'merged_exact', store: 'AstroClockKnowledge' });
+          continue;
+        }
+
+        // Complementary merge by rule_record_key
+        const existingByKey = await base44.asServiceRole.entities.AstroClockKnowledge.filter(
+          { rule_record_key: ruleRecordKey, is_marker: false, source_type: 'categorized' }, undefined, 1
+        );
+        if (existingByKey && existingByKey.length > 0) {
+          const ex = existingByKey[0];
+          const normExisting = normalizeText(ex.knowledge_text_en || '');
+          const normNew = normalizeText(textEn);
+          let mergedText = ex.knowledge_text_en || '';
+          if (!normExisting.includes(normNew)) {
+            mergedText = mergedText ? mergedText + '\n---\n' + textEn : textEn;
+          }
+          let mergedAr = ex.knowledge_text_ar || '';
+          if (textAr && !normalizeText(mergedAr).includes(normalizeText(textAr))) {
+            mergedAr = mergedAr ? mergedAr + '\n---\n' + textAr : textAr;
+          }
+          const sources = [...(ex.supporting_sources || [])];
+          const hasNewSource = !sources.some((s: any) => s.screenshot_url === file_url);
+          if (hasNewSource) sources.push(sourceObj);
+          const mergedAttributes: any = { ...(ex.attributes || {}), ...(entry.structured_data || {}) };
+          mergedAttributes.knowledge_category = mergedAttributes.knowledge_category || category || 'general';
+          mergedAttributes.verification_status = (Number(entry.confidence || 80) >= 70) ? 'verified' : 'pending_review';
+          mergedAttributes.migrated_from = 'screenshot';
+          await base44.asServiceRole.entities.AstroClockKnowledge.update(ex.id, {
+            knowledge_text_en: mergedText, knowledge_text_ar: mergedAr,
+            attributes: mergedAttributes, supporting_sources: sources,
+            source_count: (ex.source_count || 1) + (hasNewSource ? 1 : 0)
+          });
+          recordsMerged++;
+          details.push({ entity_type: entityType, entity_key: entityKey, action: 'merged_complementary', store: 'AstroClockKnowledge' });
+        } else {
+          const knowledgeId = `ACK-CAT-SCR-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+          const confidence = Number(entry.confidence || 80);
+          const attributes: any = {
+            ...(entry.structured_data || {}),
+            knowledge_category: category || 'general',
+            verification_status: confidence >= 70 ? 'verified' : 'pending_review',
+            migrated_from: 'screenshot',
+          };
+          await base44.asServiceRole.entities.AstroClockKnowledge.create({
+            knowledge_id: knowledgeId, source_type: 'categorized',
+            rule_category: ruleCategory, rule_entity: ruleEntity, entity_raw: entityKey,
+            rule_record_key: ruleRecordKey, knowledge_category: 'categorized_rule',
+            knowledge_text_en: textEn, knowledge_text_ml: '', knowledge_text_ar: textAr,
+            attributes, content_hash: contentHash,
+            canonical_key: `categorized|${ruleRecordKey}`,
+            is_marker: false, source_book_title: bookTitle,
+            source_screenshot_url: file_url, ocr_confidence: confidence,
+            upload_date: new Date().toISOString(), is_verified: false,
+            supporting_sources: [], source_count: 1
+          });
+          recordsCreated++;
+          details.push({ entity_type: entityType, entity_key: entityKey, action: 'created', store: 'AstroClockKnowledge' });
+        }
+        continue;
+      }
+
+      // ── Non-astrology entity (ritual) → EntityKnowledge (unchanged) ──
       const canonicalKey = `${entityType}|${entityKey}|${category}`;
       const contentHash = await computeHash(`${entityType}|${entityKey}|${normalizeText(textEn).substring(0, 200)}`);
 
-      // Check by content_hash first (exact duplicate)
       const existingByHash = await base44.asServiceRole.entities.EntityKnowledge.filter(
         { content_hash: contentHash, is_marker: false }, undefined, 1
       );
-
       if (existingByHash && existingByHash.length > 0) {
         const ex = existingByHash[0];
         const sources = [...(ex.supporting_sources || [])];
@@ -327,15 +416,12 @@ Return JSON with this exact schema:
           });
         }
         recordsMerged++;
-        details.push({ entity_type: entityType, entity_key: entityKey, action: 'merged_exact' });
+        details.push({ entity_type: entityType, entity_key: entityKey, action: 'merged_exact', store: 'EntityKnowledge' });
         continue;
       }
-
-      // Check by canonical_key (same entity + category — merge complementary knowledge)
       const existingByCanonical = await base44.asServiceRole.entities.EntityKnowledge.filter(
         { canonical_key: canonicalKey, is_marker: false }, undefined, 1
       );
-
       if (existingByCanonical && existingByCanonical.length > 0) {
         const ex = existingByCanonical[0];
         const normExisting = normalizeText(ex.knowledge_text_en || '');
@@ -358,7 +444,7 @@ Return JSON with this exact schema:
           source_count: (ex.source_count || 1) + (hasNewSource ? 1 : 0)
         });
         recordsMerged++;
-        details.push({ entity_type: entityType, entity_key: entityKey, action: 'merged_complementary' });
+        details.push({ entity_type: entityType, entity_key: entityKey, action: 'merged_complementary', store: 'EntityKnowledge' });
       } else {
         const knowledgeId = `EK-SCR-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
         const confidence = Number(entry.confidence || 80);
@@ -375,7 +461,7 @@ Return JSON with this exact schema:
           supporting_sources: [], source_count: 1
         });
         recordsCreated++;
-        details.push({ entity_type: entityType, entity_key: entityKey, action: 'created' });
+        details.push({ entity_type: entityType, entity_key: entityKey, action: 'created', store: 'EntityKnowledge' });
       }
     }
 

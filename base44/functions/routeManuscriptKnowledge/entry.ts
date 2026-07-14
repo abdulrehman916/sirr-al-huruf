@@ -8,11 +8,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // its PRIMARY PURPOSE and routed to exactly ONE canonical module
 // knowledge store:
 //
-//   astro_timing → AstroClockKnowledge (via enrichAstroClockFromManuscript)
-//   dua          → DuaKnowledge         (via enrichDuaFromManuscript)
-//   ritual       → RitualKnowledge      (via enrichRitualFromManuscript)
-//   wafq         → WafqKnowledge        (via enrichWafqFromManuscript)
-//   other        → none (materials, herbs, notes — not routed)
+//   astro_timing      → AstroClockKnowledge (via enrichAstroClockFromManuscript)
+//   planet_info..general_astro → AstroClockKnowledge (via enrichAstroClockCategorizedFromManuscript)
+//   dua               → DuaKnowledge         (via enrichDuaFromManuscript)
+//   ritual            → RitualKnowledge      (via enrichRitualFromManuscript)
+//   wafq              → WafqKnowledge        (via enrichWafqFromManuscript)
+//   other             → none (materials, herbs, notes — not routed)
+//
+// ALL astrology knowledge (timing + entity properties) now flows into the
+// single permanent AstroClockKnowledge store. EntityKnowledge is no longer
+// written to by the astrology ingestion pipeline.
 //
 // CANONICAL STORAGE RULE:
 // - ONE canonical location per knowledge piece.
@@ -61,13 +66,14 @@ const ROUTE_TO_ENTITY: Record<string, string> = {
   dua: 'DuaKnowledge',
   ritual: 'RitualKnowledge',
   wafq: 'WafqKnowledge',
-  planet_info: 'EntityKnowledge',
-  zodiac_info: 'EntityKnowledge',
-  mansion_info: 'EntityKnowledge',
-  element_info: 'EntityKnowledge',
-  house_info: 'EntityKnowledge',
-  weekday_info: 'EntityKnowledge',
-  general_astro: 'EntityKnowledge',
+  // ALL astrology entity knowledge → AstroClockKnowledge (single permanent store)
+  planet_info: 'AstroClockKnowledge',
+  zodiac_info: 'AstroClockKnowledge',
+  mansion_info: 'AstroClockKnowledge',
+  element_info: 'AstroClockKnowledge',
+  house_info: 'AstroClockKnowledge',
+  weekday_info: 'AstroClockKnowledge',
+  general_astro: 'AstroClockKnowledge',
   other: 'none',
 };
 
@@ -76,13 +82,14 @@ const ROUTE_TO_FUNCTION: Record<string, string> = {
   dua: 'enrichDuaFromManuscript',
   ritual: 'enrichRitualFromManuscript',
   wafq: 'enrichWafqFromManuscript',
-  planet_info: 'enrichEntityKnowledgeFromManuscript',
-  zodiac_info: 'enrichEntityKnowledgeFromManuscript',
-  mansion_info: 'enrichEntityKnowledgeFromManuscript',
-  element_info: 'enrichEntityKnowledgeFromManuscript',
-  house_info: 'enrichEntityKnowledgeFromManuscript',
-  weekday_info: 'enrichEntityKnowledgeFromManuscript',
-  general_astro: 'enrichEntityKnowledgeFromManuscript',
+  // Astrology entity knowledge → categorized records in AstroClockKnowledge
+  planet_info: 'enrichAstroClockCategorizedFromManuscript',
+  zodiac_info: 'enrichAstroClockCategorizedFromManuscript',
+  mansion_info: 'enrichAstroClockCategorizedFromManuscript',
+  element_info: 'enrichAstroClockCategorizedFromManuscript',
+  house_info: 'enrichAstroClockCategorizedFromManuscript',
+  weekday_info: 'enrichAstroClockCategorizedFromManuscript',
+  general_astro: 'enrichAstroClockCategorizedFromManuscript',
 };
 
 Deno.serve(async (req) => {
