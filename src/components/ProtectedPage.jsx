@@ -70,6 +70,20 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
+    // 0.5 Dev-mode session-restore safety net — the Base44 Preview is always
+    //     the project Owner. On every rebuild the iframe storage is wiped; the
+    //     token cookie-restore (app-params.js) brings the session back, but
+    //     auth resolution is async. This grants immediately while auth is
+    //     pending (or if the restored token has expired) so NO Google Sign-In,
+    //     admin-login, or Terms screen ever flashes on refresh/rebuild.
+    //     Production is completely unaffected — isDevMode is false in prod
+    //     builds, so this branch never runs for real customers.
+    if (isDevMode && !isAuthenticated) {
+      setAdminFlag(true);
+      setAccessStatus("granted");
+      return;
+    }
+
     // 1. Admin-only pages — RBAC role check (runs before DB/static so admin
     //    pages are governed by RBAC, not PageVisibilityConfig).
     const config = getPageConfig(routePath);
@@ -159,7 +173,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 
     // Background validation — removes permissions for revoked/disabled/expired codes
     validateAndCleanPermissions();
-  }, [routePath, requiresPermission, role, adminProfile, adminProfileLoading]);
+  }, [routePath, requiresPermission, role, adminProfile, adminProfileLoading, isAuthenticated]);
 
   useEffect(() => {
     const config = getPageConfig(routePath);
