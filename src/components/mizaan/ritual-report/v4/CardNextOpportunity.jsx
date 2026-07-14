@@ -1,5 +1,6 @@
 import { CalendarClock } from "lucide-react";
 import { G, T, Box, translatePlanet, translateDay, saatDisplayNum, computeCompat, compatColor } from "../v3/shared";
+import SourcesCollapse from "./SourcesCollapse";
 
 // CARD 3 — NEXT AVAILABLE OPPORTUNITY (shown only when the ritual cannot be
 // performed now). Auto-searches forward: remaining day Saat → remaining night
@@ -21,9 +22,7 @@ export default function CardNextOpportunity({ analysis, liveRecommendation, lang
   const planetLC = String(r.planet || "").toLowerCase();
   const c = computeCompat(analysis, { dayKey: r.dayKey, period: r.period, saatNumber: r.hour, planetLC }).final;
   const cColor = compatColor(c);
-  const rule = matchingRules.find(rr => rr.saat_number === r.hour && rr.period === r.period);
-  const reason = rule ? (lang === "ml" && rule.text_ml ? rule.text_ml : rule.text_en) : "";
-  const book = rule ? (rule.page ? `${rule.source} (p.${rule.page})` : (rule.source || "")) : "";
+  const rule = matchingRules.find(rr => rr.saat_number === r.hour && rr.period === r.period) || null;
   const whenLabel = r.isToday ? T("Today", "ഇന്ന്", lang) : r.daysAhead === 1 ? T("Tomorrow", "നാളെ", lang) : translateDay(r.dayName, lang);
 
   const rows = [
@@ -49,8 +48,7 @@ export default function CardNextOpportunity({ analysis, liveRecommendation, lang
           ))}
         </div>
       </div>
-      {reason && <p className={lang === "ml" ? "font-malayalam text-[11px] leading-relaxed mb-1" : "font-inter text-[11px] leading-relaxed mb-1"} style={{ color: "rgba(255,255,255,0.72)" }}>{String(reason).split(/\n/)[0]}</p>}
-      {book && <p className="font-inter text-[9px]" style={{ color: G.dim }}>{T("Supporting Book", "പിന്തുണയ്ക്കുന്ന പുസ്തകം", lang)}: {book}</p>}
+      <SourcesCollapse sources={rule ? [{ source: rule.source, page: rule.page }] : []} lang={lang} />
       <p className={lang === "ml" ? "font-malayalam text-[10px] mt-2" : "font-inter text-[10px] mt-2"} style={{ color: "rgba(255,255,255,0.45)" }}>
         {T("Searched forward automatically: remaining day Saat → remaining night Saat → tomorrow → future days.",
            "സ്വയമേവ മുന്നോട്ട് തിരഞ്ഞു: ശേഷിക്കുന്ന പകൽ സഅാത് → ശേഷിക്കുന്ന രാത്രി സഅാത് → നാളെ → ഭാവി ദിവസങ്ങൾ.", lang)}

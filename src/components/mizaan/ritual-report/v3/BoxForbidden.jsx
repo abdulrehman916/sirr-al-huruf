@@ -1,5 +1,6 @@
 import { Ban } from "lucide-react";
 import { G, T, Box, translatePlanet, translateDay, MIZAN_DAY_NAMES } from "./shared";
+import SourcesCollapse from "../v4/SourcesCollapse";
 
 // BOX 6 — FORBIDDEN CONDITIONS (conclusion-first)
 // Conclusion: "Do NOT perform this ritual during these conditions."
@@ -57,14 +58,7 @@ export default function BoxForbidden({ analysis, lang }) {
         {reasons.length > 0 && (
           <div className="rounded-xl p-3" style={{ background: "rgba(153,27,27,0.12)", border: "1px solid rgba(248,113,113,0.45)" }}>
             <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: "#F87171" }}>{T("Forbidden Combinations (Book Rules)", "നിരോധിത കൂട്ടായ്മകൾ (പുസ്തക നിയമങ്ങൾ)", lang)}</p>
-            <div className="space-y-1.5">
-              {reasons.map((r, i) => (
-                <div key={i} className="rounded-lg p-2.5" style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(248,113,113,0.30)" }}>
-                  <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.78)" }}>{String(r.text).split(/\n/)[0]}</p>
-                  {r.source && <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>{r.source}{r.page ? ` · p.${r.page}` : ""}</p>}
-                </div>
-              ))}
-            </div>
+            <SourcesCollapse sources={reasons} lang={lang} />
           </div>
         )}
       </div>

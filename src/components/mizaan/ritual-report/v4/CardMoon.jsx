@@ -1,5 +1,6 @@
 import { Moon } from "lucide-react";
 import { G, T, Box } from "../v3/shared";
+import SourcesCollapse from "./SourcesCollapse";
 
 // CARD 5 — MOON MODULE (optional)
 // Opens only when the user taps "Open Moon Module". Shows ONLY the current
@@ -32,10 +33,6 @@ export default function CardMoon({ analysis, open, onToggle, lang }) {
     reasonMl = "ഈ ലക്ഷ്യത്തിനായി അപ്‌ലോഡ് ചെയ്ത പുസ്തകങ്ങളിൽ ചന്ദ്ര നക്ഷത്ര നിയമമൊന്നുമില്ല.";
   }
 
-  const book = citations[0]
-    ? `${citations[0].source || citations[0].book_title || ""}${citations[0].page ? ` · p.${citations[0].page}` : ""}`
-    : "";
-
   return (
     <Box number={5} titleEn="Moon Module" titleMl="ചന്ദ്ര മൊഡ്യൂൾ" icon={Moon} lang={lang}>
       {!open ? (
@@ -63,7 +60,7 @@ export default function CardMoon({ analysis, open, onToggle, lang }) {
             <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed mt-1" : "font-inter text-xs leading-relaxed mt-1"} style={{ color: "rgba(255,255,255,0.72)" }}>
               {lang === "ml" ? reasonMl : reasonEn}
             </p>
-            {book && <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>{T("Supporting Book", "പിന്തുണയ്ക്കുന്ന പുസ്തകം", lang)}: {book}</p>}
+            <SourcesCollapse sources={citations} lang={lang} />
           </div>
 
           <button onClick={onToggle} className="font-inter text-[10px]" style={{ color: G.dim }}>{T("Close", "അടയ്ക്കുക", lang)}</button>
