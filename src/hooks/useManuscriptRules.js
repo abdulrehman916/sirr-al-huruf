@@ -17,7 +17,7 @@ export function fetchManuscriptRules() {
       const all = [];
       let skip = 0;
       // Page through up to 500 rules (single source of truth).
-      while (skip < 500) {
+      while (skip < 3000) {
         const batch = await base44.entities.ManuscriptRule.list("-created_date", 100, skip);
         if (!batch || batch.length === 0) break;
         all.push(...batch);

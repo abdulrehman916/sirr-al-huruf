@@ -18,7 +18,7 @@ export function fetchAstroClockKnowledge() {
     try {
       const all = [];
       let skip = 0;
-      while (skip < 600) {
+      while (skip < 5000) {
         const batch = await base44.entities.AstroClockKnowledge.filter(
           { is_marker: false, source_type: "full_context" },
           "-source_count", 100, skip

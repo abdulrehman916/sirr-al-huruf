@@ -6,7 +6,7 @@ import { G, T, Box, translatePlanet, saatDisplayNum, computeCompat, compatColor 
 // If none remain: "No suitable opportunity remains today."
 // Then full time cards below as supporting details.
 export default function BoxTodayOpportunities({ analysis, todayRemaining, lang }) {
-  const windows = (todayRemaining || []).slice().sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+  const windows = (todayRemaining || []).slice().sort((a, b) => (a.hour || 0) - (b.hour || 0));
   const matchingRules = analysis?.matchingRules || [];
 
   if (windows.length === 0) {

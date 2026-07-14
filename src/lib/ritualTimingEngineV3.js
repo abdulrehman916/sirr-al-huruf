@@ -425,6 +425,24 @@ function getMoonPhase(date) {
   };
 }
 
+// Shift a Date instant to the location's local timezone so getHours()/getDay()
+// return values matching the location-local sunrise/sunset. Matches the Astro
+// Clock page (useAstroData) and mizaanSaatCalculator. Without this, a browser in
+// a non-location timezone would read the wrong hour/day against location-local
+// sunrise/sunset in the forward-search loops.
+function toLocationDate(date) {
+  const loc = _planningOverride?.location || getUserLocation();
+  const tzDiffMs = (loc.timezone * 60 + date.getTimezoneOffset()) * 60 * 1000;
+  return new Date(date.getTime() + tzDiffMs);
+}
+function toLocationDateStr(date) {
+  const d = toLocationDate(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function getTodayAllHours(date) {
   // ── LIVE SUNRISE/SUNSET — single shared source of truth ──
   // Uses the SAME calculateSunriseSunset + getUserLocation that the
@@ -483,8 +501,9 @@ function findEarliestValidTime(req, fromDate) {
   const SEARCH_DAYS = 14;
   for (let d = 0; d < SEARCH_DAYS; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
-    const { hours, sunrise, sunset } = getTodayAllHours(date);
-    const dayKey = DAY_KEY_BY_INDEX[getActiveWeekday(date, sunrise, sunset)];
+    const localDate = toLocationDate(date);
+    const { hours, sunrise, sunset } = getTodayAllHours(localDate);
+    const dayKey = DAY_KEY_BY_INDEX[getActiveWeekday(localDate, sunrise, sunset)];
 
     // Day rule check only — Moon is handled separately in analyzeMoonCompatibility
     if (req.days && !req.days.includes(dayKey)) continue;
@@ -506,7 +525,7 @@ function findEarliestValidTime(req, fromDate) {
       return {
         dayKey,
         dayName: MIZAN_DAY_NAMES[dayKey],
-        date: date.toISOString().split("T")[0],
+        date: toLocationDateStr(date),
         hour: h.hourNumber,
         planet: capitalPlanet(h.planet),
         startTime: h.startTime,
@@ -535,8 +554,9 @@ export function collectAllValidTimes(req, fromDate, maxDays = 14) {
   const results = [];
   for (let d = 0; d < maxDays; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
-    const { hours, sunrise, sunset } = getTodayAllHours(date);
-    const dayKey = DAY_KEY_BY_INDEX[getActiveWeekday(date, sunrise, sunset)];
+    const localDate = toLocationDate(date);
+    const { hours, sunrise, sunset } = getTodayAllHours(localDate);
+    const dayKey = DAY_KEY_BY_INDEX[getActiveWeekday(localDate, sunrise, sunset)];
 
     if (req.days && !req.days.includes(dayKey)) continue;
     if (req.worstDays && req.worstDays.includes(dayKey)) continue;
@@ -551,7 +571,7 @@ export function collectAllValidTimes(req, fromDate, maxDays = 14) {
       results.push({
         dayKey,
         dayName: MIZAN_DAY_NAMES[dayKey],
-        date: date.toISOString().split("T")[0],
+        date: toLocationDateStr(date),
         hour: h.hourNumber,
         planet: capitalPlanet(h.planet),
         startTime: h.startTime,
@@ -871,7 +891,7 @@ function gatherManuscriptRulesForPurpose(ritualKey, manuscriptRules) {
   const matching = [];
   const conflicting = [];
   if (!manuscriptRules || manuscriptRules.length === 0) return { matching, conflicting };
-  const keywords = PURPOSE_KEYWORDS[ritualKey] || [];
+  const keywords = (_purposeKeywordsOverride && _purposeKeywordsOverride[ritualKey]) || PURPOSE_KEYWORDS[ritualKey] || [];
   if (keywords.length === 0) return { matching, conflicting };
   for (const rule of manuscriptRules) {
     const text = ((rule.rule_summary || "") + " " + (rule.original_text || "")).toLowerCase();
@@ -1782,8 +1802,9 @@ export function findNextSuitableMoonTime({ req, moonReq, fromDate, filters }) {
     if (!moonOk) continue;
 
     // Moon conditions satisfied — find best Day + Saat on this date
-    const { hours, sunrise, sunset } = getTodayAllHours(date);
-    const dayKey = DAY_KEY_BY_INDEX[getActiveWeekday(date, sunrise, sunset)];
+    const localDate = toLocationDate(date);
+    const { hours, sunrise, sunset } = getTodayAllHours(localDate);
+    const dayKey = DAY_KEY_BY_INDEX[getActiveWeekday(localDate, sunrise, sunset)];
     const dayOk = !req?.days || req.days.includes(dayKey);
     if (!dayOk) continue;
 
@@ -1799,7 +1820,7 @@ export function findNextSuitableMoonTime({ req, moonReq, fromDate, filters }) {
 
     if (bestHour) {
       return {
-        date: date.toISOString().split("T")[0],
+        date: toLocationDateStr(date),
         daysAhead: d,
         dayName: MIZAN_DAY_NAMES[dayKey],
         moonPhaseName: moon.phaseName,
@@ -1875,9 +1896,10 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
 
   for (let d = 0; d <= MAX_SEARCH_DAYS; d++) {
     const date = new Date(fromDate.getTime() + d * 24 * 60 * 60 * 1000);
+    const localDate = toLocationDate(date);
     const moon = getMoonPhase(date);
-    const { hours, sunrise, sunset } = getTodayAllHours(date);
-    const dayIndex = getActiveWeekday(date, sunrise, sunset);
+    const { hours, sunrise, sunset } = getTodayAllHours(localDate);
+    const dayIndex = getActiveWeekday(localDate, sunrise, sunset);
     const dayKey = DAY_KEY_BY_INDEX[dayIndex];
     const dayRuler = getDayRuler(dayIndex);
 
@@ -2077,7 +2099,7 @@ export function planRitualByMoon({ req, moonReq, desiredMansion, desiredZodiac, 
       : "No Nahas restriction found.";
 
     const matchResult = {
-      date: date.toISOString().split("T")[0],
+      date: toLocationDateStr(date),
       dateObj: date,
       daysAhead: d,
       dayName: MIZAN_DAY_NAMES[dayKey],
