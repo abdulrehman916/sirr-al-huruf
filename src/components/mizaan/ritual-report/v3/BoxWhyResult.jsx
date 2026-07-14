@@ -31,8 +31,13 @@ export default function BoxWhyResult({ analysis, lang }) {
     if (status === "fail") return <X className="w-4 h-4" style={{ color: "#F87171" }} />;
     return <Minus className="w-4 h-4" style={{ color: G.dim }} />;
   };
-  const labelFor = (status) => status === "pass" ? T("Supports", "പിന്തുണയ്ക്കുന്നു", lang)
-    : status === "fail" ? T("Opposes", "എതിരാണ്", lang) : T("Neutral", "നിഷ്പക്ഷം", lang);
+  const FRIENDLY = { weekday: ["Friendly weekday", "സൗഹൃദ ദിവസം"], hour: ["Friendly Saat", "സൗഹൃദ സഅാത്"], enemyPlanet: ["Friendly planet", "സൗഹൃദ ഗ്രഹം"], dayNight: ["Friendly period", "സൗഹൃദ സമയം"], forbidden: ["Allowed", "അനുവദനീയം"] };
+  const ENEMY = { weekday: ["Enemy weekday", "ശത്രു ദിവസം"], hour: ["Enemy Saat", "ശത്രു സഅാത്"], enemyPlanet: ["Enemy planet", "ശത്രു ഗ്രഹം"], dayNight: ["Enemy period", "ശത്രു സമയം"], forbidden: ["Forbidden combination", "നിരോധിത കൂട്ടായ്മ"] };
+  const labelFor = (b) => {
+    if (b.status === "pass") { const f = FRIENDLY[b.dimension] || ["Supports", "പിന്തുണയ്ക്കുന്നു"]; return T(f[0], f[1], lang); }
+    if (b.status === "fail") { const e = ENEMY[b.dimension] || ["Opposes", "എതിരാണ്"]; return T(e[0], e[1], lang); }
+    return T("Neutral", "നിഷ്പക്ഷം", lang);
+  };
 
   return (
     <Box number={3} titleEn="Why This Result?" titleMl="ഈ ഫലം എന്തുകൊണ്ട്?" icon={HelpCircle} lang={lang}>
@@ -54,7 +59,7 @@ export default function BoxWhyResult({ analysis, lang }) {
                 <div className="flex items-center gap-2 mb-1">
                   {iconFor(b.status)}
                   <p className="font-inter text-xs font-bold" style={{ color: "#fff" }}>{b.label || b.dimension}</p>
-                  <span className="font-inter text-[9px] uppercase tracking-wider ml-auto" style={{ color: G.dim }}>{labelFor(b.status)}</span>
+                  <span className="font-inter text-[9px] uppercase tracking-wider ml-auto" style={{ color: G.dim }}>{labelFor(b)}</span>
                 </div>
                 {clean && <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.72)" }}>{clean}</p>}
                 {b.source && <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>{T("Source", "ഉറവിടം", lang)}: {b.source}</p>}

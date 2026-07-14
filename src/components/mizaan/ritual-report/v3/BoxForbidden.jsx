@@ -40,27 +40,27 @@ export default function BoxForbidden({ analysis, lang }) {
         </p>
       </div>
 
-      {/* SUPPORTING DETAILS */}
+      {/* SUPPORTING DETAILS — red warning cards */}
       <div className="space-y-2.5">
         {forbiddenDays.length > 0 && (
-          <div>
-            <p className="font-inter text-[9px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>{T("Forbidden Weekdays", "നിരോധിത ദിവസങ്ങൾ", lang)}</p>
+          <div className="rounded-xl p-3" style={{ background: "rgba(153,27,27,0.12)", border: "1px solid rgba(248,113,113,0.45)" }}>
+            <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: "#F87171" }}>{T("Forbidden Weekdays", "നിരോധിത ദിവസങ്ങൾ", lang)}</p>
             <div className="flex flex-wrap gap-1.5">{chips(forbiddenDays, "day")}</div>
           </div>
         )}
         {(forbiddenHours.length > 0 || enemyPlanets.length > 0) && (
-          <div>
-            <p className="font-inter text-[9px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>{T("Forbidden Saat / Planet", "നിരോധിത സഅാത് / ഗ്രഹം", lang)}</p>
+          <div className="rounded-xl p-3" style={{ background: "rgba(153,27,27,0.12)", border: "1px solid rgba(248,113,113,0.45)" }}>
+            <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: "#F87171" }}>{T("Forbidden Saat / Planet", "നിരോധിത സഅാത് / ഗ്രഹം", lang)}</p>
             <div className="flex flex-wrap gap-1.5">{chips([...new Set([...forbiddenHours, ...enemyPlanets])], "planet")}</div>
           </div>
         )}
         {reasons.length > 0 && (
-          <div className="pt-1">
-            <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: G.dim }}>{T("Why (Book Rules)", "കാരണം (പുസ്തക നിയമങ്ങൾ)", lang)}</p>
+          <div className="rounded-xl p-3" style={{ background: "rgba(153,27,27,0.12)", border: "1px solid rgba(248,113,113,0.45)" }}>
+            <p className="font-inter text-[9px] uppercase tracking-wider mb-1.5" style={{ color: "#F87171" }}>{T("Forbidden Combinations (Book Rules)", "നിരോധിത കൂട്ടായ്മകൾ (പുസ്തക നിയമങ്ങൾ)", lang)}</p>
             <div className="space-y-1.5">
               {reasons.map((r, i) => (
-                <div key={i} className="rounded-lg p-2.5" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
-                  <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.72)" }}>{String(r.text).split(/\n/)[0]}</p>
+                <div key={i} className="rounded-lg p-2.5" style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(248,113,113,0.30)" }}>
+                  <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.78)" }}>{String(r.text).split(/\n/)[0]}</p>
                   {r.source && <p className="font-inter text-[9px] mt-1" style={{ color: G.dim }}>{r.source}</p>}
                 </div>
               ))}

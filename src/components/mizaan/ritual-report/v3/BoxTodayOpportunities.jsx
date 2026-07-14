@@ -29,13 +29,19 @@ export default function BoxTodayOpportunities({ analysis, todayRemaining, lang }
   const last = windows[windows.length - 1];
   const firstC = computeCompat(analysis, { period: first.period, saatNumber: first.hour, planetLC: String(first.planet || "").toLowerCase() }).final;
   const firstColor = compatColor(firstC);
+  const currentSuitable = analysis?.currentSaatAnalysis?.suitable;
+  const liveNow = analysis?.liveNow || {};
+  const curSaatNum = liveNow.saat;
+  const curPlanet = liveNow.kawkab || liveNow.currentHour?.planet || "";
 
   return (
     <Box number={4} titleEn="Today's Opportunities" titleMl="ഇന്നത്തെ അവസരങ്ങൾ" icon={Calendar} lang={lang}>
-      {/* CONCLUSION FIRST — the ⭐ summary lines */}
+      {/* CONCLUSION FIRST — the ⭐ summary line */}
       <div className="rounded-xl p-3 mb-3" style={{ background: `${firstColor}12`, border: `1px solid ${firstColor}50` }}>
         <p className="font-inter text-sm font-bold mb-1.5" style={{ color: firstColor }}>
-          ⭐ {T("Perform at Saat", "ഈ സഅാത്തിൽ ചെയ്യുക", lang)} #{saatDisplayNum(first.hour, first.period)} · {translatePlanet(first.planet, lang)}
+          {currentSuitable
+            ? `⭐ ${T("Perform during this Saat", "ഈ സഅാത്തിൽ ചെയ്യുക", lang)} #${curSaatNum} · ${translatePlanet(curPlanet, lang)}`
+            : `⭐ ${T("Next Suitable Saat Today", "ഇന്നത്തെ അടുത്ത അനുയോജ്യ സഅാത്", lang)} #${saatDisplayNum(first.hour, first.period)} · ${translatePlanet(first.planet, lang)}`}
         </p>
         {windows.slice(1).map((w, i) => {
           const isLast = w === last;
