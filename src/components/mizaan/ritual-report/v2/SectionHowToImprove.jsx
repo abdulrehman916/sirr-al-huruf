@@ -1,38 +1,59 @@
 import { Lightbulb, ArrowRight } from "lucide-react";
-import { G, T, translatePlanet, translateDay, MIZAN_DAY_NAMES, DAY_KEY_BY_INDEX, saatDisplayNum } from "../shared";
-import { computeCompat, compatColor } from "./compatibility";
+import { G, T, translatePlanet, translateDay, MIZAN_DAY_NAMES, saatDisplayNum } from "../shared";
+import { computeCompat, compatColor, findStrongestWindow } from "./compatibility";
 
 export default function SectionHowToImprove({ analysis, lang }) {
   const req = analysis?.req || {};
   const liveNow = analysis?.liveNow || {};
-  const astro = analysis?.astroClockStatus || {};
-  const bestWindows = (analysis?.bestWindowsToday || []).filter(w => w.score > 0);
+  const bestWindows = analysis?.bestWindowsToday || [];
+  const nextOpp = analysis?.nextOpportunity || null;
 
+  // Current compat (database-driven)
   const currentCompat = computeCompat(analysis).final;
 
-  // 1. Change Day — use first recommended day
-  const bestDayKey = req.days?.[0] || null;
-  const changeDayCompat = bestDayKey ? computeCompat(analysis, { dayKey: bestDayKey }).final : null;
-  const changeDayLabel = bestDayKey ? translateDay(MIZAN_DAY_NAMES[bestDayKey], lang) : null;
+  // ── 1. Change Day — use nextOpportunity context (database-computed next valid day) ──
+  let changeDayCompat = null, changeDayLabel = null;
+  if (nextOpp) {
+    changeDayCompat = computeCompat(analysis, {
+      dayKey: nextOpp.dayKey,
+      period: nextOpp.period,
+      saatNumber: nextOpp.hour,
+      planetLC: String(nextOpp.planet || "").toLowerCase(),
+    }).final;
+    changeDayLabel = `${translateDay(nextOpp.dayName, lang)} (${nextOpp.daysAhead} ${T("d", "ദി", lang)})`;
+  } else if (req.days?.[0]) {
+    const bestDayKey = req.days[0];
+    changeDayCompat = computeCompat(analysis, { dayKey: bestDayKey }).final;
+    changeDayLabel = translateDay(MIZAN_DAY_NAMES[bestDayKey], lang);
+  }
 
-  // 2. Change Saat — use best remaining window's planet
-  const bestWindow = bestWindows.length > 0
-    ? bestWindows.slice().sort((a, b) => (b.score || 0) - (a.score || 0))[0]
-    : null;
-  const changeSaatCompat = bestWindow ? computeCompat(analysis, { planetLC: String(bestWindow.planet || "").toLowerCase() }).final : null;
-  const changeSaatLabel = bestWindow ? `#${saatDisplayNum(bestWindow.hourNumber, bestWindow.period)} (${translatePlanet(bestWindow.planet, lang)})` : null;
+  // ── 2. Change Saat — use the strongest remaining window today (database-driven) ──
+  const strongest = findStrongestWindow(analysis, bestWindows);
+  let changeSaatCompat = null, changeSaatLabel = null;
+  if (strongest) {
+    changeSaatCompat = strongest.compat;
+    changeSaatLabel = `#${saatDisplayNum(strongest.hourNumber, strongest.period)} (${translatePlanet(strongest.planet, lang)})`;
+  }
 
-  // 3. Wait for Night — find best night window
-  const bestNightWindow = bestWindows.find(w => w.period === "night");
-  const waitNightCompat = bestNightWindow ? computeCompat(analysis, { planetLC: String(bestNightWindow.planet || "").toLowerCase() }).final : null;
-  const waitNightLabel = bestNightWindow ? `#${saatDisplayNum(bestNightWindow.hourNumber, "night")} (${translatePlanet(bestNightWindow.planet, lang)})` : null;
+  // ── 3. Wait for Night — find best night window (database-driven) ──
+  const nightWindows = bestWindows.filter(w => w.period === "night");
+  const bestNight = findStrongestWindow(analysis, nightWindows);
+  let waitNightCompat = null, waitNightLabel = null;
+  if (bestNight) {
+    waitNightCompat = bestNight.compat;
+    waitNightLabel = `#${saatDisplayNum(bestNight.hourNumber, "night")} (${translatePlanet(bestNight.planet, lang)})`;
+  }
 
-  // 4. Wait for Day — find best day window
-  const bestDayWindow = bestWindows.find(w => w.period === "day");
-  const waitDayCompat = bestDayWindow ? computeCompat(analysis, { planetLC: String(bestDayWindow.planet || "").toLowerCase() }).final : null;
-  const waitDayLabel = bestDayWindow ? `#${saatDisplayNum(bestDayWindow.hourNumber, "day")} (${translatePlanet(bestDayWindow.planet, lang)})` : null;
+  // ── 4. Wait for Day — find best day window (database-driven) ──
+  const dayWindows = bestWindows.filter(w => w.period === "day");
+  const bestDayWindow = findStrongestWindow(analysis, dayWindows);
+  let waitDayCompat = null, waitDayLabel = null;
+  if (bestDayWindow) {
+    waitDayCompat = bestDayWindow.compat;
+    waitDayLabel = `#${saatDisplayNum(bestDayWindow.hourNumber, "day")} (${translatePlanet(bestDayWindow.planet, lang)})`;
+  }
 
-  // Build improvement options, sorted by improvement amount
+  // Build improvement options — only if they actually improve the current compat
   const improvements = [];
   if (changeDayCompat !== null && changeDayCompat > currentCompat) {
     improvements.push({ key: "day", label: T("Change Day", "ദിവസം മാറ്റുക", lang), detail: changeDayLabel, newPct: changeDayCompat, delta: changeDayCompat - currentCompat });
@@ -48,9 +69,7 @@ export default function SectionHowToImprove({ analysis, lang }) {
   }
   improvements.sort((a, b) => b.delta - a.delta);
 
-  if (improvements.length === 0) {
-    return null;
-  }
+  if (improvements.length === 0) return null;
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)", border: `1px solid ${G.border}`, boxShadow: "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)" }}>
@@ -72,7 +91,7 @@ export default function SectionHowToImprove({ analysis, lang }) {
           <span className="font-inter text-lg font-bold" style={{ color: compatColor(currentCompat) }}>{currentCompat}%</span>
         </div>
 
-        {/* Improvement options */}
+        {/* Improvement options — sorted by actual database-driven delta */}
         {improvements.map((imp, idx) => {
           const c = compatColor(imp.newPct);
           const isBest = idx === 0;

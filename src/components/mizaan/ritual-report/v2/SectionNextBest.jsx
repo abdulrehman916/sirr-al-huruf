@@ -1,6 +1,6 @@
 import { CalendarClock, Clock, TrendingUp } from "lucide-react";
 import { G, T, translatePlanet, translateDay, saatDisplayNum } from "../shared";
-import { computeCompat, compatColor } from "./compatibility";
+import { computeCompat, compatColor, findStrongestWindow } from "./compatibility";
 
 function cleanReason(text) {
   if (!text) return "";
@@ -8,47 +8,22 @@ function cleanReason(text) {
 }
 
 export default function SectionNextBest({ analysis, lang }) {
-  const bestWindows = (analysis?.bestWindowsToday || []).filter(w => w.score > 0);
+  const bestWindows = analysis?.bestWindowsToday || [];
   const passedWindows = analysis?.passedWindowsToday || [];
   const nextOpp = analysis?.nextOpportunity || null;
   const matchingRules = analysis?.matchingRules || [];
-  const liveNow = analysis?.liveNow || {};
 
-  // Determine what to show: next best Saat today, or next suitable day
-  const hasRemainingToday = bestWindows.length > 0;
-  const hasPassed = passedWindows.length > 0;
+  // The strongest available now (shown in Section 2 — excluded here to avoid repetition)
+  const strongest = findStrongestWindow(analysis, bestWindows);
 
-  // The "next best" is the highest-scoring remaining window today
-  const nextBestToday = hasRemainingToday
-    ? bestWindows.slice().sort((a, b) => (b.score || 0) - (a.score || 0))[0]
-    : null;
+  // Next best = remaining windows AFTER the strongest (never repeat the same Saat)
+  const remaining = strongest
+    ? bestWindows.filter(w => !(w.hourNumber === strongest.hourNumber && w.period === strongest.period))
+    : bestWindows;
+  const nextBestToday = remaining.length > 0 ? findStrongestWindow(analysis, remaining) : null;
 
-  // If nothing remains today, use nextOpportunity (next day)
-  const nextDay = (!hasRemainingToday && nextOpp) ? nextOpp : null;
-
-  // Compute compat for the next best
-  let nextCompat = 0;
-  let nextLabel = "";
-  let nextReason = "";
-
-  if (nextBestToday) {
-    nextCompat = computeCompat(analysis, {
-      planetLC: String(nextBestToday.planet || "").toLowerCase(),
-    }).final;
-    nextLabel = T("Next best Saat today", "ഇന്നത്തെ അടുത്ത മികച്ച സഅാത്", lang);
-    const sn = saatDisplayNum(nextBestToday.hourNumber, nextBestToday.period);
-    const rule = matchingRules.find(r => r.saat_number === nextBestToday.hourNumber && r.period === nextBestToday.period);
-    nextReason = rule
-      ? cleanReason(lang === "ml" && rule.text_ml ? rule.text_ml : rule.text_en)
-      : T("Highest compatibility Saat remaining today.", "ഇന്ന് ബാക്കിയുള്ളതിൽ ഏറ്റവും അനുയോജ്യ സഅാത്.", lang);
-  } else if (nextDay) {
-    nextCompat = computeCompat(analysis, {
-      dayKey: nextDay.dayKey,
-      planetLC: String(nextDay.planet || "").toLowerCase(),
-    }).final;
-    nextLabel = T("Next suitable day", "അടുത്ത അനുയോജ്യ ദിവസം", lang);
-    nextReason = T("No suitable Saat remains today — this is the next fully compatible opportunity.", "ഇന്ന് അനുയോജ്യ സഅാത് ബാക്കിയില്ല — ഇതാണ് അടുത്ത പൂർണ്ണ പൊരുത്തമുള്ള അവസരം.", lang);
-  }
+  // If no second-best Saat remains today, show the next suitable day
+  const nextDay = (!nextBestToday && nextOpp) ? nextOpp : null;
 
   if (!nextBestToday && !nextDay) {
     return (
@@ -73,7 +48,38 @@ export default function SectionNextBest({ analysis, lang }) {
     );
   }
 
+  // Database-driven compat for the next best context
+  const nextCompat = nextBestToday
+    ? computeCompat(analysis, {
+        period: nextBestToday.period,
+        saatNumber: nextBestToday.hourNumber,
+        planetLC: String(nextBestToday.planet || "").toLowerCase(),
+      }).final
+    : nextDay
+      ? computeCompat(analysis, {
+          dayKey: nextDay.dayKey,
+          period: nextDay.period,
+          saatNumber: nextDay.hour,
+          planetLC: String(nextDay.planet || "").toLowerCase(),
+        }).final
+      : 0;
+
   const cColor = compatColor(nextCompat);
+  const hasPassed = passedWindows.length > 0;
+
+  // Reason from the database rule for this exact context (traceable to uploaded books)
+  const reasonRule = nextBestToday
+    ? matchingRules.find(r => r.saat_number === nextBestToday.hourNumber && r.period === nextBestToday.period)
+    : null;
+  const reason = reasonRule
+    ? cleanReason(lang === "ml" && reasonRule.text_ml ? reasonRule.text_ml : reasonRule.text_en)
+    : nextDay
+      ? T("No suitable Saat remains today — this is the next fully compatible opportunity per the database.", "ഇന്ന് അനുയോജ്യ സഅാത് ബാക്കിയില്ല — ഡാറ്റാബേസ് പ്രകാരം അടുത്ത പൂർണ്ണ പൊരുത്തമുള്ള അവസരമാണിത്.", lang)
+      : "";
+
+  const nextLabel = nextBestToday
+    ? T("Next best Saat today", "ഇന്നത്തെ അടുത്ത മികച്ച സഅാത്", lang)
+    : T("Next suitable day", "അടുത്ത അനുയോജ്യ ദിവസം", lang);
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)", border: `1px solid ${G.border}`, boxShadow: "0 4px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(212,175,55,0.08)" }}>
@@ -132,17 +138,17 @@ export default function SectionNextBest({ analysis, lang }) {
           )}
         </div>
 
-        {/* Expected compat */}
+        {/* Expected compat — database-driven */}
         <div className="rounded-xl p-3 text-center" style={{ background: `${cColor}08`, border: `1px solid ${cColor}30` }}>
           <p className="font-inter text-xl font-bold" style={{ color: cColor }}>{nextCompat}%</p>
           <p className="font-inter text-[9px] uppercase tracking-wider" style={{ color: G.dim }}>{T("Expected Compatibility", "പ്രതീക്ഷിത പൊരുത്തം", lang)}</p>
         </div>
 
-        {/* Reason */}
-        {nextReason && (
+        {/* Reason — from uploaded books only */}
+        {reason && (
           <div className="rounded-lg p-3" style={{ background: G.bg, border: `1px solid ${G.border}` }}>
             <p className={lang === "ml" ? "font-malayalam text-xs leading-relaxed" : "font-inter text-xs leading-relaxed"} style={{ color: "rgba(255,255,255,0.75)" }}>
-              {nextReason}
+              {reason}
             </p>
           </div>
         )}
