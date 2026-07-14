@@ -22,6 +22,7 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   const bestMansion = moonReq.suitableMansions?.length ? moonReq.suitableMansions.join(", ") : T("No Moon restriction", "ചന്ദ്ര നിയന്ത്രണമില്ല", lang);
   const bestMoonCondition = moonReq.moon ? cap(moonReq.moon) : T("No Moon restriction", "ചന്ദ്ര നിയന്ത്രണമില്ല", lang);
+  const bestMoonPosition = moonReq.zodiac?.length ? moonReq.zodiac.map(cap).join(", ") : (moonReq.moon ? cap(moonReq.moon) : T("No Moon restriction", "ചന്ദ്ര നിയന്ത്രണമില്ല", lang));
 
   const rows = best ? [
     { k: T("Weekday", "ദിവസം", lang), v: translateDay(best.dayName, lang) },
@@ -29,6 +30,7 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
     { k: T("Day / Night", "പകൽ / രാത്രി", lang), v: best.period === "night" ? T("Night", "രാത്രി", lang) : T("Day", "പകൽ", lang) },
     { k: T("Time", "സമയം", lang), v: `${best.startTime}–${best.endTime}` },
     { k: T("Moon Condition", "ചന്ദ്ര അവസ്ഥ", lang), v: bestMoonCondition },
+    { k: T("Best Moon Position", "മികച്ച ചന്ദ്ര സ്ഥാനം", lang), v: bestMoonPosition },
     { k: T("Lunar Mansion", "ചന്ദ്ര നക്ഷത്രം", lang), v: bestMansion },
     { k: T("Expected Strength", "പ്രതീക്ഷിത ശക്തി", lang), v: `${bestPct}%` },
   ] : [];
@@ -41,7 +43,7 @@ export default function Card5BestRecommendation({ analysis, onApply, lang }) {
   return (
     <Box number={5} titleEn="Best Recommendation" titleMl="മികച്ച ശുപാർശ" icon={Sparkles} lang={lang}>
       {!best ? (
-        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No matching rule found in the imported sources within 30 days.", "30 ദിവസത്തിനുള്ളിൽ ഇറക്കുമതി ചെയ്ത സ്രോതസ്സുകളിൽ പൊരുത്തപ്പെടുന്ന നിയമമൊന്നുമില്ല.", lang)}</p>
+        <p className={lang === "ml" ? "font-malayalam text-sm" : "font-inter text-sm"} style={{ color: "rgba(255,255,255,0.60)" }}>{T("No matching rule found in the imported sources within 29 days.", "29 ദിവസത്തിനുള്ളിൽ ഇറക്കുമതി ചെയ്ത സ്രോതസ്സുകളിൽ പൊരുത്തപ്പെടുന്ന നിയമമൊന്നുമില്ല.", lang)}</p>
       ) : (
         <>
           <div className="rounded-xl p-3 mb-3" style={{ background: `${cColor}12`, border: `1px solid ${cColor}50` }}>

@@ -668,6 +668,26 @@ function buildDayHourBreakdown(astroClockKnowledge, ritualKey, date) {
   });
 }
 
+// All 7 weekdays × 24 hours, each hour evaluated independently by its exact
+// imported-book-rule context. Used by Card 3 (Forbidden Times) to list the
+// completely-forbidden weekdays and the per-weekday forbidden/allowed hours.
+// Additive — does not modify any existing calculation.
+function buildWeekBreakdown(astroClockKnowledge, ritualKey, fromDate) {
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(fromDate.getTime() + i * 24 * 60 * 60 * 1000);
+    const localDate = toLocationDate(date);
+    const { sunrise, sunset } = getTodayAllHours(localDate);
+    const weekday = getActiveWeekday(localDate, sunrise, sunset);
+    const dayKey = DAY_KEY_BY_INDEX[weekday];
+    days.push({
+      weekday, dayKey, dayName: MIZAN_DAY_NAMES[dayKey],
+      hours: buildDayHourBreakdown(astroClockKnowledge, ritualKey, date),
+    });
+  }
+  return days;
+}
+
 // Chronological list of ALLOWED hours across up to maxDays — never skips a whole
 // weekday. Each hour evaluated by its exact context record (book rules only).
 function collectAllowedTimeline(astroClockKnowledge, ritualKey, fromDate, maxDays) {
@@ -1396,7 +1416,8 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
   // never blanket-forbidden — only the specific hours the book rules forbid are
   // forbidden; only the specific hours the book rules recommend are allowed.
   const dayHourBreakdown = buildDayHourBreakdown(astroClockKnowledge, effectiveRitualKey, referenceDate);
-  const allowedTimeline = collectAllowedTimeline(astroClockKnowledge, effectiveRitualKey, now, 30);
+  const allowedTimeline = collectAllowedTimeline(astroClockKnowledge, effectiveRitualKey, now, 29);
+  const weekBreakdown = buildWeekBreakdown(astroClockKnowledge, effectiveRitualKey, now);
 
   // ── SELECTION ANALYSIS: Astro Clock interpreter for the selected context ──
   const astroWeekday = activeDayIndex;
@@ -1669,6 +1690,7 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     moonCitations,
     req,
     dayHourBreakdown,
+    weekBreakdown,
     allowedTimeline,
     bestPlanetaryHour: req.hours?.[0] || null, bestRulingPlanet: req.planet?.[0] || req.hours?.[0] || null,
     bestDay: req.days?.[0] ? MIZAN_DAY_NAMES[req.days[0]] : null,
