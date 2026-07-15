@@ -38,7 +38,7 @@ const PLANET_NATURE_STRENGTH = {
 export const QUALITY_META = {
   4: { dot: "🟢", color: "#22c55e", label_en: "Excellent", label_ml: "ഉത്തമം", label_ar: "ممتاز", label_tr: "Mükemmel" },
   3: { dot: "🟡", color: "#F5D060", label_en: "Good", label_ml: "നല്ലത്", label_ar: "جيد", label_tr: "İyi" },
-  2: { dot: "🟠", color: "#FB923C", label_en: "Moderate", label_ml: "ഇടത്തരം", label_ar: "متوسط", label_tr: "Orta" },
+  2: { dot: "🟠", color: "#FB923C", label_en: "Medium", label_ml: "മിതത്തം", label_ar: "متوسط", label_tr: "Orta" },
   1: { dot: "🔴", color: "#F87171", label_en: "Weak", label_ml: "ദുർബലം", label_ar: "ضعيف", label_tr: "Zayıf" },
 };
 
