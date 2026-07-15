@@ -242,6 +242,8 @@ Return ONLY the JSON object. No commentary.`;
     const total_pages = Number(data.total_pages) || 0;
     const malayalam_book_name = provided_malayalam_name || data.malayalam_book_name || '';
 
+    // Harakat/tatweel stripping for indexed partial Arabic search (RULES 1, 3, 4).
+    const normalizeArabic = (s) => (s || '').replace(/[\u064B-\u0652\u0670\u0640]/g, '').trim();
     const records = entries.map((e, i) => {
       const conf = Number(e.ocr_confidence);
       const ocr_confidence = Number.isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 95;
@@ -261,6 +263,7 @@ Return ONLY the JSON object. No commentary.`;
         heading_title_ar: e.heading_title_ar || '',
         heading_title: '',
         arabic_text: e.arabic_text || '',
+        arabic_normalized: normalizeArabic(e.arabic_text || ''),
         malayalam_meaning: e.malayalam_meaning || '',
         english_meaning: '',
         images: [],

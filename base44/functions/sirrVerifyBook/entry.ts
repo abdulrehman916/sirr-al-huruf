@@ -35,8 +35,20 @@ Deno.serve(async (req) => {
     const book = books[0];
     if (!book) return Response.json({ error: 'Book not found: ' + sirr_book_id }, { status: 404 });
 
-    // ── Load every entry for this book (in order) ──
-    const entries = await sdk.entities.SirrManuscriptEntry.filter({ sirr_book_id }, 'entry_order', 5000);
+    // ── Load every entry for this book in paginated batches (RULE 2: never one giant query) ──
+    const entries = [];
+    let lastOrder = -1;
+    while (true) {
+      const batch = await sdk.entities.SirrManuscriptEntry.filter(
+        { sirr_book_id, entry_order: { $gt: lastOrder } },
+        'entry_order',
+        5000
+      );
+      if (!batch.length) break;
+      entries.push(...batch);
+      lastOrder = Number(batch[batch.length - 1].entry_order) || lastOrder;
+      if (batch.length < 5000) break;
+    }
 
     const pdf_parts = Array.isArray(book.pdf_parts) ? book.pdf_parts : [];
     const total_pdf_parts = pdf_parts.length;

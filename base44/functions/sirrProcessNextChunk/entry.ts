@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
     let chunksProcessed = 0;
     let lastBookId = '';
 
+    let lockedBookId = '';
     while (Date.now() - started < TIME_BUDGET_MS) {
       // Find the oldest book with work remaining.
       const books = await sdk.entities.SirrManuscriptBook.filter(
@@ -50,8 +51,15 @@ Deno.serve(async (req) => {
         50
       ).catch(() => []);
 
+      const nowMs = Date.now();
       let target = null;
       for (const book of books) {
+        // Concurrency lock (RULE 6, 8): skip books locked by another active run.
+        // The book this run already holds (lockedBookId) is allowed to continue.
+        if (book.sirr_book_id !== lockedBookId) {
+          const lockUntil = book.processing_lock_until ? Date.parse(book.processing_lock_until) : 0;
+          if (lockUntil && lockUntil > nowMs) continue;
+        }
         const parts = Array.isArray(book.pdf_parts) ? book.pdf_parts : [];
         if (parts.length > 0) {
           // Multi-part book: work remains if current_part_index < parts.length
@@ -79,6 +87,13 @@ Deno.serve(async (req) => {
       if (!target) break; // no pending work
 
       const bookRecordId = target.id || target._id;
+      // Claim/refresh a time-limited lock so no other run processes this book
+      // concurrently (RULE 6, 8). Auto-expires on crash so the book never gets stuck.
+      const LOCK_MS = 120000;
+      await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
+        processing_lock_until: new Date(Date.now() + LOCK_MS).toISOString(),
+      }).catch(() => {});
+      lockedBookId = target.sirr_book_id;
       lastBookId = target.sirr_book_id;
       const parts = Array.isArray(target.pdf_parts) ? target.pdf_parts : [];
 
@@ -314,6 +329,11 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Release the lock on exit so the next run can pick the book up immediately (RULE 6).
+    if (lockedBookId) {
+      const lb = await sdk.entities.SirrManuscriptBook.filter({ sirr_book_id: lockedBookId }, undefined, 1).catch(() => []);
+      if (lb[0]) await sdk.entities.SirrManuscriptBook.update(lb[0].id || lb[0]._id, { processing_lock_until: '' }).catch(() => {});
+    }
     return Response.json({
       status: chunksProcessed > 0 ? 'processed' : 'idle',
       chunks_processed: chunksProcessed,
