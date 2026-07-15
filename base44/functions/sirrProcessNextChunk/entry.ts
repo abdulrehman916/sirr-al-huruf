@@ -163,6 +163,21 @@ Deno.serve(async (req) => {
         }
 
         if (success) {
+          const newEntries = Number(result?.total_entries) || 0;
+          if (newEntries === 0) {
+            await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
+              extraction_status: 'failed',
+              extraction_error: `Zero content extracted from Part ${partIdx + 1}, pages ${page_start}-${page_end}. Processing stopped — manual review required.`,
+            }).catch(() => {});
+            return Response.json({
+              status: 'error',
+              book_id: target.sirr_book_id,
+              part_index: partIdx,
+              page_range: `${page_start}-${page_end}`,
+              error: 'Zero content extracted — possible OCR or PDF failure',
+              chunks_processed: chunksProcessed,
+            });
+          }
           chunksProcessed++;
           const returnedTotalPages = Number(result?.total_pages) || 0;
           const allEntriesCount = Number(result?.total_entries_all) ?? (target.total_entries || 0);
@@ -241,7 +256,23 @@ Deno.serve(async (req) => {
           }
         }
 
-        if (success) chunksProcessed++;
+        if (success) {
+          const newEntries = Number(result?.total_entries) || 0;
+          if (newEntries === 0) {
+            await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
+              extraction_status: 'failed',
+              extraction_error: `Zero content extracted from pages ${page_start}-${page_end}. Processing stopped — manual review required.`,
+            }).catch(() => {});
+            return Response.json({
+              status: 'error',
+              book_id: target.sirr_book_id,
+              page_range: `${page_start}-${page_end}`,
+              error: 'Zero content extracted — possible OCR or PDF failure',
+              chunks_processed: chunksProcessed,
+            });
+          }
+          chunksProcessed++;
+        }
         if (Date.now() - started > TIME_BUDGET_MS - 20000) break;
       }
     }
