@@ -1,35 +1,37 @@
 // ═══════════════════════════════════════════════════════════════
-// SIRR DUA LIBRARY — reads from the BASE MANUSCRIPT LIBRARY
+// SIRR DUA LIBRARY — reads ONLY from SIRR-DEDICATED entities
 //
-// Reads ONLY from ManuscriptBook / ManuscriptEntry / ManuscriptHeading.
-// Does NOT use separate SIRR entities. Does NOT upload PDFs.
+// SirrManuscriptBook / SirrManuscriptEntry are ISOLATED from the
+// global ManuscriptBook / ManuscriptEntry used by Astro, Bast,
+// Holy Names, Plants, Jinn, and all other modules.
 //
-// Home: grid of clickable Dua title cards (no books, no counts, no tech info)
+// SIRR starts EMPTY. A Dua card appears ONLY after a PDF is
+// uploaded specifically via the SIRR upload button. No manuscripts
+// from other modules ever appear here.
+//
+// Home: grid of clickable Dua title cards (no books, no counts)
 // Detail: full Dua content in exact manuscript order
 //
 // Card: Malayalam title (large) + Arabic title (smaller below)
 // Detail order:
 //   ML title → AR title → Introduction → Purpose → Benefits →
-//   Etiquette → Conditions → Preparation → Materials → Repetitions →
-//   Best Time → Best Day → Warnings → Notes → Complete Arabic Dua →
-//   Malayalam meaning → Reference footer
+//   Etiquette → Conditions → Preparation → Warnings → Notes →
+//   Complete Arabic Dua (verbatim, all harakat) → Malayalam meaning →
+//   Book & page reference
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ChevronLeft, BookOpen, Loader2, AlertTriangle, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import SirrUploadButton from "./SirrUploadButton";
 
 // ── Field labels (Malayalam / English) ──────────────────────
 const LABELS = {
   introduction:  { ml: "ആമുഖം",         en: "Introduction" },
   purpose:       { ml: "ഉദ്ദേശ്യം",       en: "Purpose" },
   benefits:      { ml: "ഗുണങ്ങൾ",        en: "Virtues / Benefits" },
-  etiquette:    { ml: "മര്യാദകൾ",       en: "Etiquette" },
+  etiquette:     { ml: "മര്യാദകൾ",       en: "Etiquette" },
   conditions:    { ml: "നിബന്ധനകൾ",     en: "Conditions" },
   preparation:   { ml: "ഒരുക്കം",         en: "Preparation" },
-  materials:     { ml: "സാമഗ്രികൾ",      en: "Materials" },
-  repetition:    { ml: "ആവർത്തനം",       en: "Repetitions" },
-  timing:        { ml: "അനുയോജ്യ സമയം", en: "Best Time" },
-  day:           { ml: "അനുയോജ്യ ദിവസം", en: "Best Day" },
   warnings:      { ml: "മുന്നറിയിപ്പ്",   en: "Warnings" },
   notes:         { ml: "കുറിപ്പുകൾ",      en: "Notes" },
 };
@@ -37,53 +39,22 @@ const LABELS = {
 // Manuscript-order field keys for the detail view (pre-Arabic section)
 const DETAIL_FIELDS = [
   'introduction','purpose','benefits','etiquette','conditions',
-  'preparation','materials','repetition','timing','day','warnings','notes',
+  'preparation','warnings','notes',
 ];
 
 function hasText(v) { return v != null && String(v).trim().length > 0; }
 
-// Turkish detection — heading_title_ar sometimes contains Turkish, not Arabic
-function looksTurkish(text) {
-  if (!text) return false;
-  return /[ŞİĞÜÖÇşığüöç]/.test(text);
-}
-
-// Get Malayalam content for a field from content_translations_ml or _ml variant
-function getMlField(entry, fieldName) {
-  if (entry.content_translations_ml && entry.content_translations_ml[fieldName]) {
-    return entry.content_translations_ml[fieldName];
-  }
-  const mlKey = fieldName + '_ml';
-  if (entry[mlKey]) return entry[mlKey];
-  return '';
-}
-
-// ── Title resolution ────────────────────────────────────────
-function getTitleMl(entry, headingMap) {
-  if (hasText(entry.topic_ml)) return entry.topic_ml;
-  if (hasText(entry.purpose_ml)) return entry.purpose_ml;
-  const heading = headingMap[entry.heading_id];
-  if (heading && hasText(heading.heading_title)) return heading.heading_title;
-  if (hasText(entry.topic)) return entry.topic;
-  if (hasText(entry.purpose)) return entry.purpose;
-  return '';
-}
-
-function getTitleAr(entry, headingMap) {
-  if (hasText(entry.topic_ar) && !looksTurkish(entry.topic_ar)) return entry.topic_ar;
-  const heading = headingMap[entry.heading_id];
-  if (heading && hasText(heading.heading_title_ar) && !looksTurkish(heading.heading_title_ar)) {
-    return heading.heading_title_ar;
-  }
-  return '';
+function parseNotes(raw) {
+  try { return JSON.parse(raw || '{}'); } catch { return {}; }
 }
 
 // ── Detail view ──────────────────────────────────────────────
-function DuaDetail({ entry, book, headingMap, language, onBack }) {
+function DuaDetail({ entry, book, language, onBack }) {
   const isMl = language === "ml";
+  const fields = parseNotes(entry.notes);
 
-  const titleMl = getTitleMl(entry, headingMap);
-  const titleAr = getTitleAr(entry, headingMap);
+  const titleMl = entry.heading_title_ml || entry.heading_title || '';
+  const titleAr = entry.heading_title_ar || '';
   const arabic  = entry.arabic_text || '';
   const malayalam = entry.malayalam_meaning || '';
 
@@ -127,15 +98,9 @@ function DuaDetail({ entry, book, headingMap, language, onBack }) {
         </header>
 
         <div className="px-4 py-4 space-y-4">
-          {/* 3–12: Pre-Arabic fields in manuscript order */}
+          {/* 3–8: Pre-Arabic fields in manuscript order */}
           {DETAIL_FIELDS.map((key) => {
-            let val = '';
-            if (isMl) {
-              val = getMlField(entry, key);
-              if (!hasText(val)) val = ''; // ML mode: only Malayalam
-            } else {
-              val = entry[key] || '';
-            }
+            const val = fields[key];
             if (!hasText(val)) return null;
             const label = LABELS[key]?.[isMl ? 'ml' : 'en'] || key;
             return (
@@ -152,7 +117,7 @@ function DuaDetail({ entry, book, headingMap, language, onBack }) {
             );
           })}
 
-          {/* 13. Complete Arabic Dua — verbatim */}
+          {/* 9. Complete Arabic Dua — verbatim, all harakat */}
           {hasText(arabic) && (
             <div className="rounded-xl p-4 my-1"
               style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.20)" }}>
@@ -163,7 +128,7 @@ function DuaDetail({ entry, book, headingMap, language, onBack }) {
             </div>
           )}
 
-          {/* 14. Malayalam meaning */}
+          {/* 10. Malayalam meaning */}
           {hasText(malayalam) && (
             <div className="rounded-xl p-3"
               style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -188,12 +153,11 @@ function DuaDetail({ entry, book, headingMap, language, onBack }) {
             </span>
           </div>
           <div className="space-y-0.5">
-            {book?.book_title && <RefRow label={isMl ? "ഗ്രന്ഥം" : "Book"} value={book.book_title} />}
+            {book?.malayalam_book_name && <RefRow label={isMl ? "ഗ്രന്ഥം" : "Book"} value={book.malayalam_book_name} />}
+            {book?.book_title && book.book_title !== book?.malayalam_book_name && <RefRow label={isMl ? "മൂല ഗ്രന്ഥം" : "Original Title"} value={book.book_title} />}
             {book?.book_title_ar && <RefRow label={isMl ? "അറബി ശീർഷകം" : "Arabic Title"} value={book.book_title_ar} />}
             {entry.page_number && <RefRow label={isMl ? "പേജ്" : "Page"} value={String(entry.page_number)} />}
             {book?.author && <RefRow label={isMl ? "ഗ്രന്ഥകർത്താവ്" : "Author"} value={book.author} />}
-            {book?.edition && <RefRow label={isMl ? "പതിപ്പ്" : "Edition"} value={book.edition} />}
-            {book?.publication_year && <RefRow label={isMl ? "പ്രസിദ്ധീകരണ വർഷം" : "Year"} value={book.publication_year} />}
           </div>
         </footer>
       </article>
@@ -212,10 +176,10 @@ function RefRow({ label, value }) {
 }
 
 // ── Dua title card ───────────────────────────────────────────
-function DuaCard({ entry, headingMap, language, onClick }) {
+function DuaCard({ entry, language, onClick }) {
   const isMl = language === "ml";
-  const titleMl = getTitleMl(entry, headingMap) || (isMl ? `ഭാഗം ${entry.entry_order || ''}` : `Section ${entry.entry_order || ''}`);
-  const titleAr = getTitleAr(entry, headingMap);
+  const titleMl = entry.heading_title_ml || entry.heading_title || (isMl ? `ഭാഗം ${entry.entry_order}` : `Section ${entry.entry_order}`);
+  const titleAr = entry.heading_title_ar || '';
 
   return (
     <button onClick={onClick}
@@ -229,11 +193,11 @@ function DuaCard({ entry, headingMap, language, onClick }) {
         <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5"
           style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.20)" }}>
           <span className="font-inter text-[10px] font-bold tabular-nums" style={{ color: "rgba(212,175,55,0.70)" }}>
-            {entry.entry_order ? String(entry.entry_order).slice(-3) : ''}
+            {entry.entry_order}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          {/* Line 1: Malayalam/English title (large) */}
+          {/* Line 1: Malayalam title (large) */}
           <p className="font-malayalam text-sm font-bold leading-snug line-clamp-2" style={{ color: "rgba(255,255,255,0.88)" }}>
             {titleMl}
           </p>
@@ -268,7 +232,6 @@ function LangToggle({ language, setLanguage }) {
 export default function SirrManuscriptReader({ language, setLanguage }) {
   const [books, setBooks] = useState([]);
   const [entries, setEntries] = useState([]);
-  const [headings, setHeadings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [search, setSearch] = useState('');
@@ -277,40 +240,28 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
   const refresh = useCallback(() => {
     setLoading(true);
     Promise.all([
-      base44.entities.ManuscriptBook.list('-created_date', 100).catch(() => []),
-      base44.entities.ManuscriptEntry.list('entry_order', 2000).catch(() => []),
-      base44.entities.ManuscriptHeading.list('heading_order', 500).catch(() => []),
-    ]).then(([b, e, h]) => {
+      base44.entities.SirrManuscriptBook.list('-created_date', 100).catch(() => []),
+      base44.entities.SirrManuscriptEntry.list('entry_order', 2000).catch(() => []),
+    ]).then(([b, e]) => {
       setBooks(b || []);
       setEntries((e || []).sort((a, b2) => (a.entry_order || 0) - (b2.entry_order || 0)));
-      setHeadings(h || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  // Build lookup maps
-  const bookMap = useMemo(() => {
-    const m = {};
-    (books || []).forEach(b => { if (b.book_id) m[b.book_id] = b; });
-    return m;
+  // Find the book for a given entry
+  const bookFor = useCallback((entry) => {
+    return books.find(b => b.sirr_book_id === entry?.sirr_book_id) || null;
   }, [books]);
-
-  const headingMap = useMemo(() => {
-    const m = {};
-    (headings || []).forEach(h => { if (h.heading_id) m[h.heading_id] = h; });
-    return m;
-  }, [headings]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return entries;
     const q = search.toLowerCase();
     return entries.filter(e =>
-      (e.topic_ml || '').toLowerCase().includes(q) ||
-      (e.topic || '').toLowerCase().includes(q) ||
-      (e.topic_ar || '').includes(q) ||
-      (e.purpose || '').toLowerCase().includes(q) ||
+      (e.heading_title_ml || '').toLowerCase().includes(q) ||
+      (e.heading_title_ar || '').includes(q) ||
       (e.arabic_text || '').includes(q)
     );
   }, [entries, search]);
@@ -321,8 +272,7 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
       <div className="relative z-10 w-full max-w-4xl mx-auto px-3 sm:px-4 py-4">
         <DuaDetail
           entry={selectedEntry}
-          book={bookMap[selectedEntry.book_id]}
-          headingMap={headingMap}
+          book={bookFor(selectedEntry)}
           language={language}
           onBack={() => setSelectedEntry(null)}
         />
@@ -344,6 +294,9 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
         <LangToggle language={language} setLanguage={setLanguage} />
       </div>
 
+      {/* Admin: upload button */}
+      <SirrUploadButton onUploaded={refresh} language={language} />
+
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(212,175,55,0.60)" }} />
@@ -352,7 +305,10 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
         <div className="text-center py-12">
           <BookOpen className="w-10 h-10 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.25)" }} />
           <p className="font-malayalam text-sm font-bold" style={{ color: "rgba(255,255,255,0.45)" }}>
-            {isMl ? "ഔറാദുകളൊന്നുമില്ല" : "No duas found"}
+            {isMl ? "ഔറാദുകളൊന്നുമില്ല" : "No duas imported yet"}
+          </p>
+          <p className="font-inter text-xs mt-1" style={{ color: "rgba(255,255,255,0.30)" }}>
+            {isMl ? "ഒരു PDF അപ്‌ലോഡ് ചെയ്യൂ" : "Upload a PDF above to begin"}
           </p>
         </div>
       ) : (
@@ -371,9 +327,8 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {filtered.map(entry => (
               <DuaCard
-                key={entry.entry_id || entry._id}
+                key={entry.sirr_entry_id || entry._id}
                 entry={entry}
-                headingMap={headingMap}
                 language={language}
                 onClick={() => setSelectedEntry(entry)}
               />
