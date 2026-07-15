@@ -179,6 +179,7 @@ export default function SaatGrid() {
                 )}
                 {/* FULL-CONTEXT MANUSCRIPT KNOWLEDGE — Day+Saat+Kawkab specific */}
                 <AstroContextKnowledgePanel
+                  qualityTier={quality.tier}
                   context={{
                     weekday: d.activeDayIndex,
                     period: h.period,

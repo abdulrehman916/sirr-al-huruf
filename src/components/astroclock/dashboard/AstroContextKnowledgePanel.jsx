@@ -76,6 +76,18 @@ const CATEGORY_CONFIG = {
   },
 };
 
+// ── Display order of manuscript sections per quality tier (UI/content order ONLY) ──
+// Labels and content are unchanged — only the render order follows the calculated
+// quality level. Excellent leads with beneficial actions; Weak leads with the
+// manuscript's destructive (enemy) operations, then a clearly separated ⚠️ avoid-
+// banner over the forbidden (beneficial-to-avoid) actions. No content generated/merged.
+const SECTION_ORDER = {
+  4: ['recommended', 'friendship', 'ritual', 'warnings', 'forbidden', 'enemy', 'notes'],
+  3: ['recommended', 'friendship', 'warnings', 'forbidden', 'ritual', 'enemy', 'notes'],
+  2: ['recommended', 'friendship', 'warnings', 'forbidden', 'ritual', 'enemy', 'notes'],
+  1: ['enemy', 'avoidBanner', 'recommended', 'friendship', 'warnings', 'notes', 'ritual'],
+};
+
 function ActionList({ items, config, language }) {
   if (!items || items.length === 0) return null;
   const Icon = config.icon;
@@ -175,7 +187,7 @@ function dedupeSources(sources) {
 /**
  * @param {object} context - { weekday, period, saat_number, planet, nakshatra }
  */
-export default function AstroContextKnowledgePanel({ context }) {
+export default function AstroContextKnowledgePanel({ context, qualityTier }) {
   const { txt, language } = useAstroClockLanguage();
   const { knowledge, loading, error } = useAstroClockContextKnowledge(context);
   const [showAll, setShowAll] = useState(false);
@@ -246,6 +258,51 @@ export default function AstroContextKnowledgePanel({ context }) {
     (merged.warnings?.length || 0) +
     (merged.notes?.length || 0);
 
+  // Renders one manuscript section by key. Reorder only — never merges or deletes.
+  const renderSection = (key) => {
+    switch (key) {
+      case 'ritual':
+        if (!merged.ritual) return null;
+        return (
+          <div key="ritual" className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
+            <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1" style={{ color: "rgba(212,175,55,0.60)" }}>
+              {txt("ആചാര അനുയോജ്യത", "Ritual Suitability", "ملاءمة الطقوس")}
+            </p>
+            <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.60)" }}>
+              {merged.ritual}
+            </p>
+          </div>
+        );
+      case 'recommended':
+        return <ActionList key="recommended" items={merged.recommended} config={CATEGORY_CONFIG.recommended} language={language} />;
+      case 'forbidden':
+        return <ActionList key="forbidden" items={merged.forbidden} config={CATEGORY_CONFIG.forbidden} language={language} />;
+      case 'enemy':
+        return <ActionList key="enemy" items={merged.enemy} config={CATEGORY_CONFIG.enemy} language={language} />;
+      case 'friendship':
+        return <ActionList key="friendship" items={merged.friendship} config={CATEGORY_CONFIG.friendship} language={language} />;
+      case 'warnings':
+        return <ActionList key="warnings" items={merged.warnings} config={CATEGORY_CONFIG.warnings} language={language} />;
+      case 'notes':
+        return <ActionList key="notes" items={merged.notes} config={CATEGORY_CONFIG.notes} language={language} />;
+      case 'avoidBanner':
+        if (!merged.forbidden || merged.forbidden.length === 0) return null;
+        return (
+          <div key="avoidBanner">
+            <div className="flex items-center gap-1.5 mb-1.5 px-1">
+              <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(248,113,113,0.75)" }} />
+              <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.80)" }}>
+                {txt("ഈ സമയത്ത് ഒഴിവാക്കേണ്ടത്", "Avoid During This Time", "تجنب في هذا الوقت")}
+              </span>
+            </div>
+            <ActionList items={merged.forbidden} config={CATEGORY_CONFIG.forbidden} language={language} />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="rounded-lg overflow-hidden mt-1.5" style={{
       background: "rgba(212,175,55,0.04)",
@@ -271,26 +328,9 @@ export default function AstroContextKnowledgePanel({ context }) {
       {showAll && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
           <div className="px-2 pb-2 space-y-1.5">
-            {/* Ritual suitability */}
-            {merged.ritual && (
-              <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.20)" }}>
-                <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1" style={{ color: "rgba(212,175,55,0.60)" }}>
-                  {txt("ആചാര അനുയോജ്യത", "Ritual Suitability", "ملاءمة الطقوس")}
-                </p>
-                <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.60)" }}>
-                  {merged.ritual}
-                </p>
-              </div>
-            )}
-
-            {/* Action categories */}
-            <ActionList items={merged.recommended} config={CATEGORY_CONFIG.recommended} language={language} />
-            <ActionList items={merged.forbidden} config={CATEGORY_CONFIG.forbidden} language={language} />
-            <ActionList items={merged.enemy} config={CATEGORY_CONFIG.enemy} language={language} />
-            <ActionList items={merged.friendship} config={CATEGORY_CONFIG.friendship} language={language} />
-            <ActionList items={merged.warnings} config={CATEGORY_CONFIG.warnings} language={language} />
-            <ActionList items={merged.notes} config={CATEGORY_CONFIG.notes} language={language} />
-
+            {/* Manuscript sections rendered in the order defined by the calculated
+                quality tier (SECTION_ORDER). Labels and content unchanged — order only. */}
+            {(SECTION_ORDER[qualityTier] || SECTION_ORDER[3]).map((key) => renderSection(key))}
             {/* All supporting sources */}
             <SourceList sources={merged.sources} language={language} txt={txt} />
           </div>
