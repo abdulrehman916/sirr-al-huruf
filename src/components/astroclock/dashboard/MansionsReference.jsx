@@ -12,6 +12,7 @@ import { getKashfMansionByNo } from "@/lib/astroClockManuscriptMerger";
 import { natureToArabic, natureToML, isNahsNature, zodiacToArabic, zodiacToML, extractDegree } from "@/lib/astroClockLabelMap";
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
+import MagicalPeriodPanel from "./MagicalPeriodPanel";
 
 export default function MansionsReference() {
   const d = useAstroData();
@@ -107,6 +108,9 @@ export default function MansionsReference() {
                           }]}
                         />
                       )}
+
+                      {/* Magical period from manuscript (if available) */}
+                      <MagicalPeriodPanel entityType="mansion" entityKey={m.name} />
 
                       {/* Entity Knowledge from unified ingestion pipeline */}
                       <EntityKnowledgePanel entityType="mansion" entityKey={String(m.no)} />

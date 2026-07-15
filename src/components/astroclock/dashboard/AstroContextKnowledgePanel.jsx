@@ -81,11 +81,19 @@ const CATEGORY_CONFIG = {
 // quality level. Excellent leads with beneficial actions; Weak leads with the
 // manuscript's destructive (enemy) operations, then a clearly separated ⚠️ avoid-
 // banner over the forbidden (beneficial-to-avoid) actions. No content generated/merged.
+// Quality tiers: 4=Excellent(ഉത്തമം), 3=Good(നല്ലത്), 2=Medium(ഇടത്തരം), 1=Weak(ദുർബലം)
+// EXCELLENT: lead with most-recommended & spiritual benefits, avoid last.
+// GOOD: recommended → suitable → benefits → warnings → avoid → notes → refs.
+// MEDIUM: suitable → neutral → warnings → avoid → notes → refs.
+// WEAK: NEVER lead with recommendations — lead with avoidance (⚠️ banner over
+//   forbidden), then dangerous/harmful (enemy) operations, then warnings, then
+//   any safe actions, then notes, then refs. Sources always render last.
+// Labels and content unchanged — order only.
 const SECTION_ORDER = {
   4: ['recommended', 'friendship', 'ritual', 'warnings', 'forbidden', 'enemy', 'notes'],
-  3: ['recommended', 'friendship', 'warnings', 'forbidden', 'ritual', 'enemy', 'notes'],
-  2: ['recommended', 'friendship', 'warnings', 'forbidden', 'ritual', 'enemy', 'notes'],
-  1: ['enemy', 'avoidBanner', 'recommended', 'friendship', 'warnings', 'notes', 'ritual'],
+  3: ['recommended', 'friendship', 'ritual', 'warnings', 'forbidden', 'enemy', 'notes'],
+  2: ['recommended', 'friendship', 'warnings', 'forbidden', 'notes', 'ritual', 'enemy'],
+  1: ['avoidBanner', 'enemy', 'warnings', 'recommended', 'friendship', 'notes', 'ritual'],
 };
 
 function ActionList({ items, config, language }) {

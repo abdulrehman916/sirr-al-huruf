@@ -14,6 +14,7 @@ import { getKashfOperationsForPlanet, getKashfDirectionForElement } from "@/lib/
 import { elementToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 import { GIH_PLANET_INFLUENCE_CHARACTERISTICS, GIH_PLANET_RELATIONSHIPS, GIH_VENUS_VEFK, GIH_SUN_DEGREE_TABLE } from "@/lib/gizliIlimlerHazinesiZodiacData";
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
+import MagicalPeriodPanel from "./MagicalPeriodPanel";
 
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
@@ -240,6 +241,9 @@ export default function PlanetEncyclopedia() {
                     }]}
                   />
                 )}
+
+                {/* Magical period from manuscript (if available) */}
+                <MagicalPeriodPanel entityType="planet" entityKey={key} />
 
                 {/* Entity Knowledge from unified ingestion pipeline */}
                 <EntityKnowledgePanel entityType="planet" entityKey={key} />

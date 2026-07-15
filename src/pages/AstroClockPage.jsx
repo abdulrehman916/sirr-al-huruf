@@ -36,6 +36,7 @@ function LangSelector() {
   const langs = [
     { key: "ml", label: "മലയാളം" },
     { key: "en", label: "English" },
+    { key: "ar", label: "العربية" },
   ];
   return (
     <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(212,175,55,0.30)" }}>

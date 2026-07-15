@@ -7,8 +7,9 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, BookOpen, FileText, Globe, Calendar, Link2, Layers, CheckCircle2, AlertTriangle } from "lucide-react";
-import { useManuscriptCatalog } from "@/hooks/useManuscriptCatalog";
+import { ChevronDown, BookOpen, FileText, Globe, Calendar, Link2, Layers, CheckCircle2, AlertTriangle, Trash2 } from "lucide-react";
+import { useManuscriptCatalog, refreshCatalog } from "@/hooks/useManuscriptCatalog";
+import { base44 } from "@/api/base44Client";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 
 function parsePageNum(p) {
@@ -119,9 +120,11 @@ function PageRecord({ rec, txt, language }) {
   );
 }
 
-function BookCard({ book, knowledge, txt, language }) {
+function BookCard({ book, knowledge, txt, language, onDelete }) {
   const [open, setOpen] = useState(false);
   const [activePage, setActivePage] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const bookRecords = useMemo(() => knowledge.filter(k => k.source_book_id === book.book_id), [book.book_id, knowledge]);
 
@@ -166,6 +169,24 @@ function BookCard({ book, knowledge, txt, language }) {
 
   const activeRecords = activePage ? (pageMap.get(activePage) || []) : [];
 
+  // Deletable only when the book is a placeholder: 0 imported pages OR 0 records.
+  // Books that already contain imported manuscript knowledge can never be deleted.
+  const canDelete = importedPages === 0 || bookRecords.length === 0;
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await base44.entities.ManuscriptBook.delete(book.book_id || book._id);
+      refreshCatalog();
+    } catch (e) {
+      console.error("Delete book failed:", e);
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+      setOpen(false);
+    }
+  };
+
   return (
     <div className="rounded-lg overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(212,175,55,0.12)" }}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2 p-2.5 text-left">
@@ -201,6 +222,41 @@ function BookCard({ book, knowledge, txt, language }) {
                 <MetaItem icon={FileText} label={txt("സ്രോതസ്സ്", "Source", "Kaynak")} value={sourceAvailable ? txt("ലഭ്യം", "Available", "Mevcut") : txt("ലഭ്യമല്ല", "Missing", "Yok")} color={sourceAvailable ? "#4ADE80" : "#F87171"} />
                 <MetaItem icon={Calendar} label={txt("അവസാന പുതുക്കൽ", "Last Updated", "Son Güncelleme")} value={fmtDate(book.updated_date)} />
               </div>
+
+              {/* Delete placeholder book — only allowed when 0 pages OR 0 records */}
+              {canDelete && (
+                <div className="rounded-lg p-2" style={{ background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)" }}>
+                  {!confirmDelete ? (
+                    <button onClick={() => setConfirmDelete(true)}
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg font-inter text-[10px] font-bold uppercase tracking-wider"
+                      style={{ background: "rgba(248,113,113,0.06)", color: "rgba(248,113,113,0.75)", border: "1px solid rgba(248,113,113,0.25)" }}>
+                      <Trash2 className="w-3 h-3" />{txt("ഒഴിവാക്കൽ ഗ്രന്ഥം നീക്കം ചെയ്യുക", "Delete Placeholder Book", "حذف الكتاب")}
+                    </button>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <p className="font-inter text-[10px] text-center" style={{ color: "rgba(248,113,113,0.80)" }}>
+                        {txt(
+                          "ഈ ഗ്രന്ഥത്തിൽ ഇറക്കുമതി ചെയ്ത വിവരങ്ങളില്ല. നീക്കം ചെയ്യണോ?",
+                          "This book has no imported knowledge. Delete it permanently?",
+                          "هذا الكتاب لا يحتوي على بيانات. حذف نهائي؟"
+                        )}
+                      </p>
+                      <div className="flex gap-1.5">
+                        <button onClick={handleDelete} disabled={deleting}
+                          className="flex-1 py-1.5 rounded-lg font-inter text-[10px] font-bold uppercase tracking-wider"
+                          style={{ background: "rgba(248,113,113,0.15)", color: "#F87171", border: "1px solid rgba(248,113,113,0.40)", opacity: deleting ? 0.5 : 1 }}>
+                          {deleting ? txt("നീക്കുന്നു...", "Deleting...", "جارٍ الحذف...") : txt("സ്ഥിരീകരിക്കുക", "Confirm Delete", "تأكيد الحذف")}
+                        </button>
+                        <button onClick={() => setConfirmDelete(false)}
+                          className="flex-1 py-1.5 rounded-lg font-inter text-[10px] font-bold uppercase tracking-wider"
+                          style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.60)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                          {txt("റദ്ദാക്കുക", "Cancel", "إلغاء")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Imported page ranges */}
               {importedPageNums.length > 0 && (
@@ -334,7 +390,7 @@ export default function ReferenceLibrary() {
         <p className="font-inter text-xs text-center py-4" style={{ color: "rgba(255,255,255,0.30)" }}>{txt("ഗ്രന്ഥങ്ങളൊന്നുമില്ല", "No manuscripts found", "El yazması bulunamadı")}</p>
       ) : (
         filtered.map(book => (
-          <BookCard key={book.book_id || book._id} book={book} knowledge={knowledge} txt={txt} language={language} />
+          <BookCard key={book.book_id || book._id} book={book} knowledge={knowledge} txt={txt} language={language} onDelete />
         ))
       )}
     </div>

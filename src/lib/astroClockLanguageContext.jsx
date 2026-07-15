@@ -9,7 +9,7 @@ const LanguageContext = createContext();
 export function AstroClockLanguageProvider({ children }) {
   const [language, setLang] = useState(() => {
     let saved = localStorage.getItem("astroClockLanguage");
-    if (saved === "tr" || saved === "ar") saved = "ml"; // Only ML + EN supported
+    if (saved === "tr") saved = "ml"; // ML, EN, AR supported; TR not supported
     return saved || "ml";
   });
 

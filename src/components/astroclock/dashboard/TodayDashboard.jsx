@@ -15,6 +15,7 @@ import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 import { zodiacEnToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
 import { formatDecimalHour12h } from "@/lib/astroClockTimeFormat";
+import MagicalPeriodPanel from "./MagicalPeriodPanel";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
 const MALEFIC = ["saturn", "mars"];
@@ -133,6 +134,9 @@ export default function TodayDashboard() {
           <span className="font-inter text-xs" style={{ color: "#818CF8" }}>{moonMansionDisplay}</span>
         </div>
       </div>
+
+      {/* ══ Magical period for today's weekday (from manuscript, if available) ══ */}
+      <MagicalPeriodPanel entityType="weekday" entityKey={(d.dayInfo?.name_en || "").toLowerCase()} />
 
       {/* ══ EXPAND: Today's Activities (collapsed by default) ══ */}
       <SubCollapse title={txt("ഇന്നത്തെ പ്രവൃത്തികൾ", "Today's Activities", "Bugünün Eylemleri")}>
