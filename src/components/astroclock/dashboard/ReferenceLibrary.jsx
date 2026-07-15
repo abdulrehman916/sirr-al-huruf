@@ -153,6 +153,18 @@ function BookCard({ book, knowledge, txt, language, onDelete }) {
     return { cats: Array.from(cats).filter(Boolean), planets: planets.size, weekdays: weekdays.size, mansions: mansions.size, zodiacs: zodiacs.size };
   }, [bookRecords]);
 
+  // Actual linked entity names per category — for expandable detail view
+  const linked = useMemo(() => {
+    const byCat = {};
+    for (const k of bookRecords) {
+      const c = k.rule_category;
+      if (!c || !k.rule_entity) continue;
+      if (!byCat[c]) byCat[c] = new Set();
+      byCat[c].add(k.rule_entity);
+    }
+    return Object.fromEntries(Object.entries(byCat).map(([c, s]) => [c, Array.from(s).filter(Boolean).sort()]));
+  }, [bookRecords]);
+
   const totalPages = book.total_pages || 0;
   const importedPageNums = useMemo(() => pages.map(parsePageNum).filter(n => n != null), [pages]);
   const importedPages = importedPageNums.length;
@@ -320,6 +332,25 @@ function BookCard({ book, knowledge, txt, language, onDelete }) {
                   <div className="flex flex-wrap gap-1">
                     {covered.cats.map((c, i) => (
                       <span key={i} className="font-inter text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(74,222,128,0.06)", color: "rgba(74,222,128,0.55)", border: "1px solid rgba(74,222,128,0.12)" }}>{categoryLabel(c, txt)}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Linked entities — actual planet/weekday/zodiac/mansion names per category */}
+              {Object.keys(linked).length > 0 && (
+                <div>
+                  <span className="font-inter text-[8px] uppercase tracking-wider font-bold block mb-1" style={{ color: "rgba(212,175,55,0.55)" }}>{txt("ബന്ധിത വിഭവങ്ങൾ", "Linked Entities", "الكيانات المرتبطة")}</span>
+                  <div className="space-y-1">
+                    {Object.entries(linked).map(([cat, ents]) => (
+                      <div key={cat}>
+                        <span className="font-inter text-[8px] font-bold" style={{ color: "rgba(129,140,248,0.55)" }}>{categoryLabel(cat, txt)}:</span>
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {ents.map((e, i) => (
+                            <span key={i} className="font-inter text-[8px] px-1 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.05)", color: "rgba(255,255,255,0.60)", border: "1px solid rgba(212,175,55,0.10)" }}>{e}</span>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

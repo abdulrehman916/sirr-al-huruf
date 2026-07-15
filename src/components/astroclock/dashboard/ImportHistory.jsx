@@ -110,6 +110,46 @@ export default function ImportHistory() {
           </div>
         </div>
       </div>
+
+      {/* ── Per-book import history ── */}
+      {books.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(212,175,55,0.12)" }}>
+          <div className="px-2.5 py-2" style={{ borderBottom: "1px solid rgba(212,175,55,0.12)" }}>
+            <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color: "rgba(212,175,55,0.60)" }}>
+              {txt("പ്രതി ഗ്രന്ഥ ചരിത്രം", "Per-Book Import History", "حسب الكتاب")}
+            </span>
+          </div>
+          <div className="max-h-[280px] overflow-y-auto scrollbar-none">
+            {books.map(b => {
+              const bRecs = knowledge.filter(k => k.source_book_id === b.book_id);
+              const bPages = new Set(bRecs.map(k => k.source_page_number).filter(Boolean));
+              const exColor = b.extraction_status === "completed" ? "#4ADE80" : b.extraction_status === "failed" ? "#F87171" : "#FBBF24";
+              const vColor = b.verification_status === "verified" ? "#4ADE80" : b.verification_status === "unverified" ? "rgba(255,255,255,0.40)" : "#FBBF24";
+              return (
+                <div key={b.book_id} className="px-2.5 py-2 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <BookOpen className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(212,175,55,0.45)" }} />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-inter text-[10px] font-bold block truncate" style={{ color: "rgba(255,255,255,0.75)" }}>{b.book_title || b.book_id}</span>
+                    <span className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.35)" }}>{fmtDate(b.upload_date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-col items-end">
+                      <span className="font-inter text-[9px] font-bold tabular-nums" style={{ color: "#4ADE80" }}>{bPages.size}</span>
+                      <span className="font-inter text-[7px] uppercase" style={{ color: "rgba(255,255,255,0.30)" }}>{txt("പേജ്", "pg", "ص")}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="font-inter text-[9px] font-bold tabular-nums" style={{ color: "#818CF8" }}>{bRecs.length}</span>
+                      <span className="font-inter text-[7px] uppercase" style={{ color: "rgba(255,255,255,0.30)" }}>{txt("രേഖ", "rec", "سج")}</span>
+                    </div>
+                    <span className="font-inter text-[8px] px-1.5 py-0.5 rounded" style={{ background: `${exColor}15`, color: exColor, border: `1px solid ${exColor}30` }}>{b.extraction_status || "—"}</span>
+                    <span className="font-inter text-[8px] px-1.5 py-0.5 rounded" style={{ background: `${vColor}15`, color: vColor, border: `1px solid ${vColor}30` }}>{b.verification_status || "—"}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
