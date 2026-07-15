@@ -79,6 +79,7 @@ export default function SirrUploadButton({ onUploaded, language }) {
           current_part_index: 0,
           pdf_parts: [
             {
+              part_id: `SIRRP-${sirr_book_id}-1`,
               part_number: 1,
               file_url,
               file_name: file.name,
@@ -87,6 +88,9 @@ export default function SirrUploadButton({ onUploaded, language }) {
               page_count: 0,
               uploaded_at: now,
               processed: false,
+              extraction_status: "pending",
+              ocr_status: "pending",
+              verification_status: "unverified",
             },
           ],
         });
@@ -99,6 +103,7 @@ export default function SirrUploadButton({ onUploaded, language }) {
         const newParts = [
           ...existingParts,
           {
+            part_id: `SIRRP-${selectedBookId}-${newPartNumber}`,
             part_number: newPartNumber,
             file_url,
             file_name: file.name,
@@ -107,6 +112,9 @@ export default function SirrUploadButton({ onUploaded, language }) {
             page_count: 0,
             uploaded_at: now,
             processed: false,
+            extraction_status: "pending",
+            ocr_status: "pending",
+            verification_status: "unverified",
           },
         ];
         const bookRecordId = book.id || book._id;

@@ -48,6 +48,10 @@ Deno.serve(async (req) => {
     // continues from PDF 1 but uses its own page numbers)
     const manual_order_offset = Number(body.order_offset) || 0;
 
+    // Permanent source provenance: the originating PDF part
+    const source_part_id = body.source_part_id || '';
+    const source_part_number = Number(body.source_part_number) || 0;
+
     const now = new Date().toISOString();
     const stamp = Date.now();
     const rand = Math.random().toString(36).slice(2, 8);
@@ -247,6 +251,8 @@ Return ONLY the JSON object. No commentary.`;
       return {
         sirr_entry_id: `SIRRE-${sirr_book_id}-${orderOffset + i + 1}`,
         sirr_book_id,
+        source_part_id,
+        source_part_number,
         entry_order: orderOffset + (Number(e.entry_order) || (i + 1)),
         heading_title_ml: e.heading_title_ml || '',
         heading_title_ar: e.heading_title_ar || '',

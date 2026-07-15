@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         // If the current part is fully processed, advance to the next part.
         if (partPageCount > 0 && lp >= partPageCount) {
           const markedParts = parts.map((p, i) =>
-            i === partIdx ? { ...p, processed: true, page_end: p.page_count } : p
+            i === partIdx ? { ...p, processed: true, page_end: p.page_count, extraction_status: 'completed', ocr_status: 'completed' } : p
           );
           await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
             pdf_parts: markedParts,
@@ -123,8 +123,12 @@ Deno.serve(async (req) => {
           page_end = partPageCount;
         }
 
+        const processingParts = parts.map((p, i) =>
+          i === partIdx ? { ...p, extraction_status: 'processing' } : p
+        );
         await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
           extraction_status: 'processing',
+          pdf_parts: processingParts,
         }).catch(() => {});
 
         // Process the chunk with retry on transient errors.
@@ -139,6 +143,8 @@ Deno.serve(async (req) => {
               page_start,
               page_end,
               order_offset: orderOffset,
+              source_part_id: part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`,
+              source_part_number: part.part_number || (partIdx + 1),
             });
             result = res?.data || res;
             if (result?.error) throw new Error(result.error);
@@ -146,13 +152,21 @@ Deno.serve(async (req) => {
             break;
           } catch (e) {
             if (attempt >= MAX_ATTEMPTS - 1) {
+              const failPartId = part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`;
+              const failPartNum = part.part_number || (partIdx + 1);
+              const failedPartsErr = parts.map((p, i) =>
+                i === partIdx ? { ...p, extraction_status: 'failed', ocr_status: 'failed' } : p
+              );
               await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
                 extraction_status: 'partial',
-                extraction_error: String(e?.message || e).slice(0, 500),
+                extraction_error: `Book ${target.sirr_book_id}, Part ${failPartId} (Part ${failPartNum}): ${String(e?.message || e).slice(0, 400)}`,
+                pdf_parts: failedPartsErr,
               }).catch(() => {});
               return Response.json({
                 status: 'error',
                 book_id: target.sirr_book_id,
+                part_id: failPartId,
+                part_number: failPartNum,
                 part_index: partIdx,
                 error: String(e?.message || e),
                 chunks_processed: chunksProcessed,
@@ -165,13 +179,21 @@ Deno.serve(async (req) => {
         if (success) {
           const newEntries = Number(result?.total_entries) || 0;
           if (newEntries === 0) {
+            const failedPartId = part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`;
+            const failedPartNum = part.part_number || (partIdx + 1);
+            const failedPartsZero = parts.map((p, i) =>
+              i === partIdx ? { ...p, extraction_status: 'failed', ocr_status: 'failed' } : p
+            );
             await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
               extraction_status: 'failed',
-              extraction_error: `Zero content extracted from Part ${partIdx + 1}, pages ${page_start}-${page_end}. Processing stopped — manual review required.`,
+              extraction_error: `Zero content extracted. Book ${target.sirr_book_id}, Part ${failedPartId} (Part ${failedPartNum}), pages ${page_start}-${page_end}. Processing stopped — manual review required.`,
+              pdf_parts: failedPartsZero,
             }).catch(() => {});
             return Response.json({
               status: 'error',
               book_id: target.sirr_book_id,
+              part_id: failedPartId,
+              part_number: failedPartNum,
               part_index: partIdx,
               page_range: `${page_start}-${page_end}`,
               error: 'Zero content extracted — possible OCR or PDF failure',
@@ -183,20 +205,22 @@ Deno.serve(async (req) => {
           const allEntriesCount = Number(result?.total_entries_all) ?? (target.total_entries || 0);
 
           // Update the current part's metadata.
+          const partDone = returnedTotalPages > 0 && page_end >= returnedTotalPages;
           const updatedParts = parts.map((p, i) =>
             i === partIdx
               ? {
                   ...p,
                   page_count: returnedTotalPages || p.page_count,
                   page_end: page_end,
-                  processed: returnedTotalPages > 0 && page_end >= returnedTotalPages,
+                  processed: partDone,
+                  extraction_status: partDone ? 'completed' : 'processing',
+                  ocr_status: 'completed',
                 }
               : p
           );
 
           // Determine if the whole book is now complete.
           const isLastPart = partIdx === parts.length - 1;
-          const partDone = returnedTotalPages > 0 && page_end >= returnedTotalPages;
           const bookComplete = isLastPart && partDone;
           const combined = updatedParts.reduce((s, p) => s + (p.page_count || 0), 0);
 
@@ -261,7 +285,7 @@ Deno.serve(async (req) => {
           if (newEntries === 0) {
             await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
               extraction_status: 'failed',
-              extraction_error: `Zero content extracted from pages ${page_start}-${page_end}. Processing stopped — manual review required.`,
+              extraction_error: `Zero content extracted from Book ${target.sirr_book_id}, pages ${page_start}-${page_end}. Processing stopped — manual review required.`,
             }).catch(() => {});
             return Response.json({
               status: 'error',

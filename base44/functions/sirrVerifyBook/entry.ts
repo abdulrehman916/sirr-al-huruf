@@ -3,9 +3,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 // ═══════════════════════════════════════════════════════════════
 // SIRR BOOK VERIFICATION REPORT — sirrVerifyBook
 //
-// Read-only. Produces the full post-processing verification report
-// required after ALL PDF parts of a book have been uploaded and
-// processed. Never mutates data.
+// Produces the full post-processing verification report required after
+// ALL PDF parts of a book have been uploaded and processed. Persists
+// the book-level verification_status verdict on the book record.
 //
 // Report fields:
 //   total_pdf_parts           — count of pdf_parts
@@ -103,6 +103,31 @@ Deno.serve(async (req) => {
         ? 'verified'
         : 'incomplete';
 
+    // ── Per-part breakdown (exact Part ID + status for every uploaded PDF) ──
+    const parts = pdf_parts.map((p) => {
+      const partEntries = entries.filter((e) => (e.source_part_id || '') === (p.part_id || ''));
+      const partOcrIssues = partEntries.filter((e) => e.needs_review).length;
+      const partMissing = !p.processed || (p.page_count > 0 && (p.page_end || 0) < p.page_count) ? 1 : 0;
+      const partVerified = !!p.processed && partMissing === 0 && partOcrIssues === 0 && partEntries.length > 0;
+      return {
+        part_id: p.part_id || '',
+        part_number: p.part_number,
+        file_name: p.file_name,
+        page_count: p.page_count || 0,
+        page_end: p.page_end || 0,
+        processed: !!p.processed,
+        extraction_status: p.extraction_status || 'pending',
+        ocr_status: p.ocr_status || 'pending',
+        entries: partEntries.length,
+        ocr_issues: partOcrIssues,
+        missing_pages: partMissing,
+        verification_status: partVerified ? 'verified' : 'failed',
+      };
+    });
+    const failedPartIds = parts
+      .filter((p) => !p.processed || p.missing_pages > 0 || p.ocr_issues > 0 || p.entries === 0)
+      .map((p) => p.part_id || `Part ${p.part_number}`);
+
     // ── Final verdict + exact failure reasons ──
     const all_pass =
       missing_pages === 0 &&
@@ -130,11 +155,20 @@ Deno.serve(async (req) => {
       failure_reasons.push(`${missing_malayalam_meanings} entry(ies) with explanatory text but missing Malayalam meaning`);
     if (order_gaps > 0)
       failure_reasons.push(`${order_gaps} gap(s) in entry_order sequence`);
+    if (failedPartIds.length > 0)
+      failure_reasons.push(`part(s) not verified: ${failedPartIds.join(', ')}`);
 
     let final_result;
     if (all_pass) final_result = 'VERIFIED';
     else if (book.extraction_status === 'completed') final_result = 'FAILED';
     else final_result = 'PENDING';
+
+    // Persist the book-level verification verdict permanently on the book record.
+    const persistedStatus =
+      all_pass ? 'verified' : (book.extraction_status === 'completed' ? 'failed' : 'unverified');
+    await sdk.entities.SirrManuscriptBook.update(book.id || book._id, {
+      verification_status: persistedStatus,
+    }).catch(() => {});
 
     return Response.json({
       sirr_book_id,
@@ -153,6 +187,7 @@ Deno.serve(async (req) => {
       final_result,
       failure_reasons,
       verification_passed: all_pass,
+      parts,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

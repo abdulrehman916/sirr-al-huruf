@@ -1,11 +1,11 @@
 {
   "name": "SirrManuscriptBook",
   "type": "object",
-  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity. The SIRR page reads ONLY from this entity. MULTI-PART PERMANENT STORAGE: A single book may be built from multiple uploaded PDF parts (Part 1, Part 2, ... Part N). Every uploaded PDF URL is permanently stored in the pdf_parts array immediately at upload time \u2014 never kept only in conversation state. The background engine (sirrProcessNextChunk) rebuilds exclusively from the stored pdf_parts list, never from chat history. current_part_index tracks which part is being processed; last_processed_page tracks progress within the current part. combined_total_pages is the true total across all parts. UPLOAD-THEN-PROCESS FLOW: While the user is still uploading parts, extraction_status stays 'uploading' \u2014 the background engine IGNORES books in this state, so processing NEVER begins until the user explicitly clicks 'Begin Processing', which flips the status to 'pending'. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function, sirrProcessNextChunk, and SIRR-only UI logic may write to this entity.",
+  "description": "SIRR-MODULE-ISOLATED permanent manuscript library. Completely separate from the global ManuscriptBook entity. The SIRR page reads ONLY from this entity. PERMANENT SCALABLE LIBRARY: supports unlimited books for many years. Every book has a permanent sirr_book_id; every uploaded PDF part has a permanent part_id; every extracted card has a permanent sirr_entry_id (in SirrManuscriptEntry). MULTI-PART PERMANENT STORAGE: A single book may be built from multiple uploaded PDF parts (Part 1, Part 2, ... Part N). Every uploaded PDF URL is permanently stored in the pdf_parts array immediately at upload time \u2014 never kept only in conversation state, never deleted unless the book is explicitly deleted. The background engine (sirrProcessNextChunk) rebuilds exclusively from the stored pdf_parts list, never from chat history. current_part_index tracks which part is being processed; last_processed_page tracks progress within the current part. combined_total_pages is the true total across all parts. UPLOAD-THEN-PROCESS FLOW: While the user is still uploading parts, extraction_status stays 'uploading' \u2014 the background engine IGNORES books in this state, so processing NEVER begins until the user explicitly clicks 'Begin Processing', which flips the status to 'pending'. Upload order is preserved permanently by the ordered pdf_parts array. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function, sirrProcessNextChunk, and SIRR-only UI logic may write to this entity.",
   "properties": {
     "sirr_book_id": {
       "type": "string",
-      "description": "Permanent unique identifier for this SIRR book. Never changes. Used as FK in SirrManuscriptEntry."
+      "description": "Permanent unique identifier for this SIRR book. Never changes. Used as FK in SirrManuscriptEntry. Required."
     },
     "malayalam_book_name": {
       "type": "string",
@@ -71,13 +71,17 @@
       "items": {
         "type": "object",
         "properties": {
+          "part_id": {
+            "type": "string",
+            "description": "PERMANENT unique identifier for this PDF part. Format: SIRRP-<sirr_book_id>-<part_number>. Never changes. Every extracted SirrManuscriptEntry from this part carries this as source_part_id so every card always knows its originating PDF part."
+          },
           "part_number": {
             "type": "integer",
-            "description": "1-based part sequence number (Part 1, Part 2, ...)."
+            "description": "1-based part sequence number (Part 1, Part 2, ...). Preserves upload order permanently."
           },
           "file_url": {
             "type": "string",
-            "description": "PERMANENT URL to this PDF part. Saved immediately at upload time. Never lost."
+            "description": "PERMANENT URL to this PDF part. Saved immediately at upload time. Never lost, never deleted unless the book is explicitly deleted."
           },
           "file_name": {
             "type": "string",
@@ -100,22 +104,54 @@
           },
           "uploaded_at": {
             "type": "string",
-            "description": "ISO 8601 timestamp when this part was uploaded."
+            "description": "ISO 8601 timestamp when this part was uploaded. Preserved permanently."
           },
           "processed": {
             "type": "boolean",
             "default": false,
             "description": "True when this part is fully processed (page_end >= page_count)."
+          },
+          "extraction_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "completed",
+              "failed"
+            ],
+            "default": "pending",
+            "description": "Per-PDF processing status. 'pending' = uploaded, not yet processed. 'processing' = currently being extracted. 'completed' = fully processed. 'failed' = extraction error on this part."
+          },
+          "ocr_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "failed"
+            ],
+            "default": "pending",
+            "description": "Per-PDF OCR status. 'pending' = not yet OCR'd. 'completed' = OCR finished (confidence may still flag pages for review). 'failed' = OCR error."
+          },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "unverified",
+              "verified",
+              "failed"
+            ],
+            "default": "unverified",
+            "description": "Per-PDF verification status, set by sirrVerifyBook. 'verified' = all pages extracted with no OCR issues. 'failed' = missing pages or OCR issues. 'unverified' = not yet verified."
           }
         },
         "required": [
+          "part_id",
           "part_number",
           "file_url",
           "file_name"
         ]
       },
       "default": [],
-      "description": "ORDERED LIST of every uploaded PDF part for this book. Part 1, Part 2, ... Part N. Every part's file_url is permanently stored here at upload time. The background engine processes parts in order. Adding a new part appends to this array and keeps extraction_status at 'uploading'. This is the SOLE source of truth for what to process \u2014 never chat history."
+      "description": "ORDERED LIST of every uploaded PDF part for this book. Part 1, Part 2, ... Part N. Every part's file_url and part_id are permanently stored here at upload time. The background engine processes parts in order. Adding a new part appends to this array and keeps extraction_status at 'uploading'. This is the SOLE source of truth for what to process \u2014 never chat history. Upload order is preserved permanently by array position."
     },
     "original_file_url": {
       "type": "string",
@@ -147,12 +183,22 @@
         "partial"
       ],
       "default": "pending",
-      "description": "Content extraction status. 'uploading' = user is still uploading PDF parts; the background engine IGNORES this state so processing never begins until the user clicks 'Begin Processing'. 'pending' = all parts uploaded, waiting for background processor. 'processing' = a part is being extracted. 'completed' = ALL parts fully processed. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
+      "description": "Book-level content extraction status. 'uploading' = user is still uploading PDF parts; the background engine IGNORES this state so processing never begins until the user clicks 'Begin Processing'. 'pending' = all parts uploaded, waiting for background processor. 'processing' = a part is being extracted. 'completed' = ALL parts fully processed AND verified. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
     },
     "extraction_error": {
       "type": "string",
       "default": "",
-      "description": "Error message if extraction_status is failed or partial."
+      "description": "Error message if extraction_status is failed or partial. Includes the exact Book ID, Part ID and page number when a part fails."
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "verified",
+        "failed"
+      ],
+      "default": "unverified",
+      "description": "Book-level verification status from sirrVerifyBook. 'verified' = VERIFIED (every part processed, no missing pages, no OCR issues, no duplicates). Never set to 'verified' until every uploaded PDF part has been processed and verified."
     },
     "total_entries": {
       "type": "integer",
@@ -212,6 +258,12 @@
       "name": "idx_current_part_index",
       "fields": [
         "current_part_index"
+      ]
+    },
+    {
+      "name": "idx_verification_status",
+      "fields": [
+        "verification_status"
       ]
     }
   ],

@@ -157,6 +157,7 @@ function DuaDetail({ entry, book, language, onBack }) {
             {book?.malayalam_book_name && <RefRow label={isMl ? "ഗ്രന്ഥം" : "Book"} value={book.malayalam_book_name} />}
             {book?.book_title && book.book_title !== book?.malayalam_book_name && <RefRow label={isMl ? "മൂല ഗ്രന്ഥം" : "Original Title"} value={book.book_title} />}
             {book?.book_title_ar && <RefRow label={isMl ? "അറബി ശീർഷകം" : "Arabic Title"} value={book.book_title_ar} />}
+            {entry.source_part_number ? <RefRow label={isMl ? "ഭാഗം" : "PDF Part"} value={`Part ${entry.source_part_number}`} /> : null}
             {entry.page_number && <RefRow label={isMl ? "പേജ്" : "Page"} value={String(entry.page_number)} />}
             {book?.author && <RefRow label={isMl ? "ഗ്രന്ഥകർത്താവ്" : "Author"} value={book.author} />}
             {book?.edition && <RefRow label={isMl ? "പതിപ്പ്" : "Edition"} value={book.edition} />}
@@ -238,6 +239,7 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [search, setSearch] = useState('');
+  const [bookFilter, setBookFilter] = useState('');
   const isMl = language === "ml";
 
   const refresh = useCallback(() => {
@@ -285,14 +287,17 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
   }, [books]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return entries;
+    let list = entries;
+    if (bookFilter) list = list.filter(e => e.sirr_book_id === bookFilter);
+    if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return entries.filter(e =>
+    return list.filter(e =>
       (e.heading_title_ml || '').toLowerCase().includes(q) ||
       (e.heading_title_ar || '').includes(q) ||
-      (e.arabic_text || '').includes(q)
+      (e.arabic_text || '').includes(q) ||
+      (e.book_title || '').toLowerCase().includes(q)
     );
-  }, [entries, search]);
+  }, [entries, search, bookFilter]);
 
   // ── Detail view ──
   if (selectedEntry) {
@@ -341,6 +346,28 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
         </div>
       ) : (
         <>
+          {/* Book filter */}
+          {books.length > 1 && (
+            <select
+              value={bookFilter}
+              onChange={(e) => setBookFilter(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl text-xs"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(255,255,255,0.80)",
+                border: "1px solid rgba(212,175,55,0.15)",
+                colorScheme: "dark",
+              }}
+            >
+              <option value="">{isMl ? "എല്ലാ ഗ്രന്ഥങ്ങളും" : "All books"}</option>
+              {books.map((b) => (
+                <option key={b.sirr_book_id} value={b.sirr_book_id}>
+                  {b.malayalam_book_name || b.book_title}
+                </option>
+              ))}
+            </select>
+          )}
+
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "rgba(212,175,55,0.50)" }} />
