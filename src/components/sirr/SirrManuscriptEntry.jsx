@@ -20,7 +20,7 @@
 //   • Every word comes ONLY from the uploaded manuscript. Nothing
 //     invented, summarized, merged, or reordered.
 // ═══════════════════════════════════════════════════════════════
-import { BookOpen } from "lucide-react";
+import { BookOpen, AlertTriangle } from "lucide-react";
 
 // Field label map (Malayalam / English). Manuscript-section labels only.
 const FIELD_LABELS = {
@@ -104,6 +104,24 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
       }}>
       {/* ── Title: Malayalam primary, Arabic original smaller ── */}
       <header className="px-4 pt-4 pb-2 text-center" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+        {/* Manual-review flag — shown when OCR confidence is below 100. The page
+            is flagged for human review instead of trusting uncertain text. */}
+        {entry.needs_review && (
+          <div className="flex justify-center mb-2">
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"
+              style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.30)" }}>
+              <AlertTriangle className="w-3 h-3" style={{ color: "#FBBF24" }} />
+              <span className="font-inter text-[9px] font-bold uppercase tracking-wider" style={{ color: "#FBBF24" }}>
+                {isMl ? "നിയതമായ പരിശോധന ആവശ്യം" : "Needs Manual Review"}
+              </span>
+              {typeof entry.ocr_confidence === "number" && (
+                <span className="font-inter text-[8px]" style={{ color: "rgba(251,191,36,0.70)" }}>
+                  OCR {entry.ocr_confidence}%
+                </span>
+              )}
+            </span>
+          </div>
+        )}
         {hasText(titleMl) && (
           <h2 className={`text-xl font-bold leading-relaxed ${isMl ? "font-malayalam" : "font-inter"}`}
             style={{ color: "#D4AF37" }}>

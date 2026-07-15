@@ -1,17 +1,24 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 
 // ═══════════════════════════════════════════════════════════════
-// SIRR-ONLY MANUSCRIPT INGESTION
+// SIRR-ONLY FAITHFUL MANUSCRIPT ARCHIVE INGESTION
 // ═══════════════════════════════════════════════════════════════
-// Writes ONLY to the SIRR-isolated entities (SirrManuscriptBook /
-// SirrManuscriptEntry). Never touches the global ManuscriptBook /
-// ManuscriptEntry collections used by Astro Clock, Reference Library,
-// Holy Names, or any other module.
+// The uploaded PDF is the ONLY source of truth. This function is a
+// faithful digital archive — it TRANSCRIBES, it never GENERATES.
 //
-// Admin-only. Receives a PDF file_url (uploaded via Core.UploadFile),
-// extracts every Dua / Surah / practice / section in EXACT manuscript
-// order via LLM vision, and stores them verbatim (Arabic with every
-// harakah, faithful Malayalam translation). Nothing is invented.
+//   • Transcribes each page VERBATIM (every Arabic letter, harakah,
+//     punctuation, paragraph, line break preserved) in page order.
+//   • Never rewrites, summarizes, paraphrases, or regenerates content.
+//   • Never auto-translates Arabic. malayalam_meaning is left empty.
+//   • Never generates introductions, benefits, warnings, or
+//     explanations.
+//   • A Malayalam NAVIGATION title is created ONLY when the
+//     manuscript has no Malayalam title (short label, never content).
+//   • Pages with OCR confidence < 100 are flagged needs_review=true
+//     for manual review — never guesses or invents missing words.
+//
+// Writes ONLY to the SIRR-isolated entities (SirrManuscriptBook /
+// SirrManuscriptEntry). Admin-only. Never touches global collections.
 // ═══════════════════════════════════════════════════════════════
 Deno.serve(async (req) => {
   try {
@@ -32,7 +39,6 @@ Deno.serve(async (req) => {
     const rand = Math.random().toString(36).slice(2, 8);
     const sirr_book_id = existing_book_id || `SIRRB-${stamp}-${rand}`;
 
-    // Re-import: clear old entries for this book, mark processing.
     if (existing_book_id) {
       await base44.entities.SirrManuscriptEntry.deleteMany({ sirr_book_id: existing_book_id });
       await base44.entities.SirrManuscriptBook.update(existing_book_id, {
@@ -54,31 +60,29 @@ Deno.serve(async (req) => {
     }
 
     const extractionPrompt = [
-      'You are given an Islamic occult manuscript PDF (Arabic / Ottoman Turkish).',
-      'It contains Duas, Surahs, Hizbs, Wirds, practices, and sections.',
+      'You are a faithful manuscript archivist. You are given a scanned Islamic occult manuscript PDF (Arabic / Ottoman Turkish).',
+      'Your ONLY job is to TRANSCRIBE — never to generate.',
       '',
-      'Extract EVERY Dua, Surah, practice, or section in EXACT manuscript order.',
-      'Do NOT skip any. Do NOT merge. Do NOT rearrange. Do NOT invent.',
+      'ABSOLUTE RULES (HIGHEST PRIORITY):',
+      '- Transcribe each page EXACTLY as printed. Copy EVERY Arabic letter, EVERY harakah, EVERY punctuation mark, EVERY paragraph, EVERY line break.',
+      '- Do NOT paraphrase, rewrite, summarize, or "improve" anything.',
+      '- Do NOT translate. Do NOT generate introductions, benefits, warnings, or explanations.',
+      '- Do NOT reconstruct Duas from memory. Only copy what is literally visible on the page.',
+      '- Do NOT add, guess, or invent missing words. If a word or character is unclear, lower the ocr_confidence for that page — never guess.',
+      '- Preserve the original language mix exactly (if a page has Arabic and Turkish and Malayalam, transcribe all as printed).',
+      '- Process pages in order. Return one object per page.',
       '',
-      'For each entry provide:',
-      '- heading_title_ml: the Malayalam title. If the manuscript already has a Malayalam title, use it verbatim. If it does NOT, translate ONLY the title into Malayalam (nothing else). NEVER use generic names like "Dua 1", "Prayer 2", "Section 5". Always use the real manuscript title.',
-      '- heading_title_ar: the original Arabic title exactly as printed (verbatim, with harakat).',
-      '- heading_title: the original heading in its source language / transliteration.',
-      '- arabic_text: the COMPLETE Arabic text verbatim. Preserve EVERY letter, harakah, punctuation mark, line break, and paragraph. Never modify, normalize, summarize, or merge.',
-      '- malayalam_meaning: a faithful Malayalam translation of the Arabic text. If the source is Turkish, translate the Turkish meaning accurately into Malayalam. Do NOT summarize. Do NOT simplify. Do NOT invent explanations.',
-      '- english_meaning: English translation only if the manuscript itself provides one.',
-      '- introduction, purpose, etiquette, conditions, preparation, warnings, repetition, timing, notes, materials, day, planet, incense, benefits, procedure: exactly as written in the manuscript for this entry. If the manuscript does not contain a field, leave it empty (""). NEVER fabricate introductions, benefits, warnings, or explanations.',
-      '- page_number: the page number where this entry appears.',
-      '- entry_order: 1-based position in manuscript order.',
+      'For EACH page return:',
+      '- page_number: the page number (1-based).',
+      '- verbatim_text: the COMPLETE text printed on the page, transcribed character-for-character, preserving line breaks with \\n.',
+      '- ocr_confidence: integer 0-100. Use 100 ONLY if you are completely certain of every single character on the page. Use a value below 100 if ANY character is uncertain, unclear, partially cut, or guessed. Never round up to 100 when unsure.',
+      '- heading_ar: ONLY if this page begins a new section AND the manuscript prints a heading on it — transcribe that heading verbatim (with harakat). Otherwise "".',
+      '- heading_ml: ONLY if heading_ar is non-empty AND the manuscript has NO Malayalam title for this section — a SHORT Malayalam navigation label (a few words, for navigation ONLY). NEVER a translation of the section content. Otherwise "".',
+      '- has_malayalam: true if the page itself contains Malayalam text (which is already part of verbatim_text).',
       '',
-      'Also return book-level metadata:',
-      '- book_title: original book title (original language).',
-      '- book_title_ar: Arabic book title if present.',
-      '- author, edition, volume, publication_year, book_language: if present in the manuscript.',
-      '- malayalam_book_name: Malayalam book name (translate the book title to Malayalam if the manuscript has none).',
-      '- total_pages: total number of pages in the PDF.',
+      'Also return book-level metadata if visible on the manuscript: book_title (original), book_title_ar, author, edition, volume, publication_year, book_language, total_pages, and malayalam_book_name (a short Malayalam navigation name for the book ONLY if the manuscript has no Malayalam book title).',
       '',
-      'Return ONLY the JSON object matching the schema. No commentary.'
+      'Return ONLY the JSON object matching the schema. No commentary, no notes, no extra text.'
     ].join('\n');
 
     const schema = {
@@ -93,40 +97,23 @@ Deno.serve(async (req) => {
         publication_year: { type: 'string' },
         book_language: { type: 'string' },
         malayalam_book_name: { type: 'string' },
-        entries: {
+        pages: {
           type: 'array',
           items: {
             type: 'object',
             properties: {
-              entry_order: { type: 'integer' },
-              page_number: { type: 'string' },
-              heading_title_ml: { type: 'string' },
-              heading_title_ar: { type: 'string' },
-              heading_title: { type: 'string' },
-              introduction: { type: 'string' },
-              purpose: { type: 'string' },
-              etiquette: { type: 'string' },
-              conditions: { type: "string" },
-              preparation: { type: 'string' },
-              warnings: { type: 'string' },
-              repetition: { type: 'string' },
-              timing: { type: 'string' },
-              notes: { type: 'string' },
-              materials: { type: 'string' },
-              day: { type: 'string' },
-              planet: { type: 'string' },
-              incense: { type: 'string' },
-              benefits: { type: 'string' },
-              procedure: { type: 'string' },
-              arabic_text: { type: 'string' },
-              malayalam_meaning: { type: 'string' },
-              english_meaning: { type: 'string' },
+              page_number: { type: 'integer' },
+              verbatim_text: { type: 'string' },
+              ocr_confidence: { type: 'integer' },
+              heading_ar: { type: 'string' },
+              heading_ml: { type: 'string' },
+              has_malayalam: { type: 'boolean' },
             },
-            required: ['entry_order'],
+            required: ['page_number', 'verbatim_text', 'ocr_confidence'],
           },
         },
       },
-      required: ['entries'],
+      required: ['pages'],
     };
 
     let extracted;
@@ -141,43 +128,38 @@ Deno.serve(async (req) => {
         extraction_status: 'failed',
         extraction_error: String(e?.message || e),
       });
-      return Response.json({ error: 'Extraction failed', details: String(e?.message || e) }, { status: 500 });
+      return Response.json({ error: 'Transcription failed', details: String(e?.message || e) }, { status: 500 });
     }
 
     const data = (extracted && typeof extracted === 'object') ? extracted : {};
-    const entries = Array.isArray(data.entries) ? data.entries : [];
-    const total_pages = Number(data.total_pages) || 0;
+    const pages = Array.isArray(data.pages) ? data.pages : [];
+    const total_pages = Number(data.total_pages) || pages.length;
     const malayalam_book_name = provided_malayalam_name || data.malayalam_book_name || '';
 
-    const records = entries.map((e, i) => ({
-      sirr_entry_id: `SIRRE-${sirr_book_id}-${i + 1}`,
-      sirr_book_id,
-      entry_order: Number(e.entry_order) || (i + 1),
-      heading_title_ml: e.heading_title_ml || '',
-      heading_title_ar: e.heading_title_ar || '',
-      heading_title: e.heading_title || '',
-      introduction: e.introduction || '',
-      purpose: e.purpose || '',
-      etiquette: e.etiquette || '',
-      conditions: e.conditions || '',
-      materials: e.materials || '',
-      preparation: e.preparation || '',
-      procedure: e.procedure || '',
-      timing: e.timing || '',
-      day: e.day || '',
-      planet: e.planet || '',
-      incense: e.incense || '',
-      repetition: e.repetition || '',
-      warnings: e.warnings || '',
-      benefits: e.benefits || '',
-      notes: e.notes || '',
-      arabic_text: e.arabic_text || '',
-      malayalam_meaning: e.malayalam_meaning || '',
-      english_meaning: e.english_meaning || '',
-      images: Array.isArray(e.images) ? e.images : [],
-      page_number: e.page_number ? String(e.page_number) : '',
-      book_title: data.book_title || original_file_name || '',
-    }));
+    // One SirrManuscriptEntry per page — verbatim, in page order.
+    // No structured fields are generated. No Malayalam translation.
+    const records = pages.map((p) => {
+      const page_number = Number(p.page_number) || 0;
+      const conf = Number(p.ocr_confidence);
+      const ocr_confidence = Number.isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 100;
+      return {
+        sirr_entry_id: `SIRRE-${sirr_book_id}-${page_number}`,
+        sirr_book_id,
+        entry_order: page_number,
+        heading_title_ml: p.heading_ml || '',
+        heading_title_ar: p.heading_ar || '',
+        heading_title: '',
+        arabic_text: p.verbatim_text || '',
+        malayalam_meaning: '',
+        english_meaning: '',
+        images: [],
+        page_number: page_number ? String(page_number) : '',
+        book_title: data.book_title || original_file_name || '',
+        ocr_confidence,
+        needs_review: ocr_confidence < 100,
+        has_malayalam: !!p.has_malayalam,
+      };
+    });
 
     if (records.length > 0) {
       for (let i = 0; i < records.length; i += 100) {
@@ -185,10 +167,11 @@ Deno.serve(async (req) => {
       }
     }
 
+    const review_count = records.filter((r) => r.needs_review).length;
     const bookUpdate = {
       total_pages,
       total_entries: records.length,
-      extraction_status: records.length > 0 ? 'completed' : (total_pages > 0 ? 'partial' : 'failed'),
+      extraction_status: records.length > 0 ? 'completed' : 'failed',
       book_title: data.book_title || original_file_name || '',
       book_title_ar: data.book_title_ar || '',
       author: data.author || '',
@@ -205,6 +188,7 @@ Deno.serve(async (req) => {
       sirr_book_id,
       total_entries: records.length,
       total_pages,
+      review_count,
       status: bookUpdate.extraction_status,
     });
   } catch (error) {
