@@ -106,9 +106,19 @@ export default function SirrUploadButton({ onUploaded, language }) {
         });
       } else {
         // 2b. Append the next part to the selected existing book.
-        const book = books.find((b) => b.sirr_book_id === selectedBookId);
-        if (!book) throw new Error("Book not found");
-        const existingParts = Array.isArray(book.pdf_parts) ? book.pdf_parts : [];
+        // ANTI-RACE: reload the LATEST pdf_parts from the database right
+        // before writing, so we never clobber processing progress the
+        // background engine wrote between our initial read and this
+        // update. We append to the FRESH array, preserving every part
+        // (including any the engine just marked completed/processing).
+        const freshFetched = await base44.entities.SirrManuscriptBook.filter(
+          { sirr_book_id: selectedBookId },
+          undefined,
+          1
+        );
+        const freshBook = freshFetched[0] || books.find((b) => b.sirr_book_id === selectedBookId);
+        if (!freshBook) throw new Error("Book not found");
+        const existingParts = Array.isArray(freshBook.pdf_parts) ? freshBook.pdf_parts : [];
         const newPartNumber = existingParts.length + 1;
         const newParts = [
           ...existingParts,
@@ -129,7 +139,7 @@ export default function SirrUploadButton({ onUploaded, language }) {
             verification_status: "unverified",
           },
         ];
-        const bookRecordId = book.id || book._id;
+        const bookRecordId = freshBook.id || freshBook._id;
         await base44.entities.SirrManuscriptBook.update(bookRecordId, {
           pdf_parts: newParts,
           extraction_status: "uploading",

@@ -43,6 +43,30 @@ Deno.serve(async (req) => {
     let lastBookId = '';
 
     let lockedBookId = '';
+
+    // ── ANTI-RACE MERGE HELPER ──────────────────────────────────────
+    // Reloads the LATEST pdf_parts from the database, then applies a
+    // per-part patch to the part identified by targetPartId (falling
+    // back to partIdx). Every part in the fresh array — including parts
+    // appended DURING this chunk's LLM call — is preserved. This is the
+    // permanent fix for the race where a stale snapshot overwrote newer
+    // appended PDF parts. Returns the merged pdf_parts array, or null
+    // when the fresh state could not be loaded (caller falls back).
+    async function reloadAndMergeParts(bookRecordId, targetPartId, partIdx, partPatch) {
+      try {
+        const fresh = await sdk.entities.SirrManuscriptBook.get(bookRecordId);
+        const freshParts = Array.isArray(fresh?.pdf_parts) ? fresh.pdf_parts : null;
+        if (!freshParts) return null;
+        let matchIdx = -1;
+        if (targetPartId) matchIdx = freshParts.findIndex((p) => (p.part_id || '') === targetPartId);
+        if (matchIdx === -1 && partIdx >= 0 && partIdx < freshParts.length) matchIdx = partIdx;
+        if (matchIdx === -1) return freshParts; // part gone from fresh state — preserve everything
+        return freshParts.map((p, i) => (i === matchIdx ? { ...p, ...partPatch } : p));
+      } catch (_) {
+        return null;
+      }
+    }
+
     while (Date.now() - started < TIME_BUDGET_MS) {
       // Find the oldest book with work remaining.
       const books = await sdk.entities.SirrManuscriptBook.filter(
@@ -116,15 +140,21 @@ Deno.serve(async (req) => {
 
         // If the current part is fully processed, advance to the next part.
         if (partPageCount > 0 && lp >= partPageCount) {
-          const markedParts = parts.map((p, i) =>
-            i === partIdx ? { ...p, processed: true, page_end: p.page_count, extraction_status: 'completed', ocr_status: 'completed' } : p
-          );
-          await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
-            pdf_parts: markedParts,
+          // ANTI-RACE: reload latest pdf_parts and patch the completed part
+          // into the FRESH array, so any part appended during the previous
+          // chunk's LLM call is preserved (never overwritten by this stale
+          // snapshot).
+          const partIdA = part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`;
+          const mergedA = await reloadAndMergeParts(bookRecordId, partIdA, partIdx, {
+            processed: true, page_end: part.page_count, extraction_status: 'completed', ocr_status: 'completed',
+          });
+          const updateA = {
             current_part_index: partIdx + 1,
             last_processed_page: 0,
             extraction_status: 'processing',
-          }).catch(() => {});
+          };
+          if (mergedA) updateA.pdf_parts = mergedA;
+          await sdk.entities.SirrManuscriptBook.update(bookRecordId, updateA).catch(() => {});
           continue; // loop again to pick the next part
         }
 
@@ -138,13 +168,11 @@ Deno.serve(async (req) => {
           page_end = partPageCount;
         }
 
-        const processingParts = parts.map((p, i) =>
-          i === partIdx ? { ...p, extraction_status: 'processing' } : p
-        );
-        await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
-          extraction_status: 'processing',
-          pdf_parts: processingParts,
-        }).catch(() => {});
+        const partIdB = part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`;
+        const mergedB = await reloadAndMergeParts(bookRecordId, partIdB, partIdx, { extraction_status: 'processing' });
+        const updateB = { extraction_status: 'processing' };
+        if (mergedB) updateB.pdf_parts = mergedB;
+        await sdk.entities.SirrManuscriptBook.update(bookRecordId, updateB).catch(() => {});
 
         // Process the chunk with retry on transient errors.
         let result = null;
@@ -169,14 +197,13 @@ Deno.serve(async (req) => {
             if (attempt >= MAX_ATTEMPTS - 1) {
               const failPartId = part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`;
               const failPartNum = part.part_number || (partIdx + 1);
-              const failedPartsErr = parts.map((p, i) =>
-                i === partIdx ? { ...p, extraction_status: 'failed', ocr_status: 'failed' } : p
-              );
-              await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
+              const mergedD = await reloadAndMergeParts(bookRecordId, failPartId, partIdx, { extraction_status: 'failed', ocr_status: 'failed' });
+              const updateD = {
                 extraction_status: 'partial',
                 extraction_error: `Book ${target.sirr_book_id}, Part ${failPartId} (Part ${failPartNum}): ${String(e?.message || e).slice(0, 400)}`,
-                pdf_parts: failedPartsErr,
-              }).catch(() => {});
+              };
+              if (mergedD) updateD.pdf_parts = mergedD;
+              await sdk.entities.SirrManuscriptBook.update(bookRecordId, updateD).catch(() => {});
               return Response.json({
                 status: 'error',
                 book_id: target.sirr_book_id,
@@ -209,14 +236,13 @@ Deno.serve(async (req) => {
           if (newEntries === 0) {
             const failedPartId = part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`;
             const failedPartNum = part.part_number || (partIdx + 1);
-            const failedPartsZero = parts.map((p, i) =>
-              i === partIdx ? { ...p, extraction_status: 'failed', ocr_status: 'failed' } : p
-            );
-            await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
+            const mergedE = await reloadAndMergeParts(bookRecordId, failedPartId, partIdx, { extraction_status: 'failed', ocr_status: 'failed' });
+            const updateE = {
               extraction_status: 'failed',
               extraction_error: `Zero content extracted. Book ${target.sirr_book_id}, Part ${failedPartId} (Part ${failedPartNum}), pages ${page_start}-${page_end}. Processing stopped — manual review required.`,
-              pdf_parts: failedPartsZero,
-            }).catch(() => {});
+            };
+            if (mergedE) updateE.pdf_parts = mergedE;
+            await sdk.entities.SirrManuscriptBook.update(bookRecordId, updateE).catch(() => {});
             return Response.json({
               status: 'error',
               book_id: target.sirr_book_id,
@@ -234,26 +260,41 @@ Deno.serve(async (req) => {
 
           // Update the current part's metadata.
           const partDone = returnedTotalPages > 0 && page_end >= returnedTotalPages;
-          const updatedParts = parts.map((p, i) =>
-            i === partIdx
-              ? {
-                  ...p,
-                  page_count: returnedTotalPages || p.page_count,
-                  page_end: page_end,
-                  processed: partDone,
-                  extraction_status: partDone ? 'completed' : 'processing',
-                  ocr_status: 'completed',
-                }
-              : p
-          );
+          const partIdC = part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`;
+          const partPatchC = {
+            page_count: returnedTotalPages || part.page_count,
+            page_end: page_end,
+            processed: partDone,
+            extraction_status: partDone ? 'completed' : 'processing',
+            ocr_status: 'completed',
+          };
 
-          // Determine if the whole book is now complete.
-          const isLastPart = partIdx === parts.length - 1;
-          const bookComplete = isLastPart && partDone;
-          const combined = updatedParts.reduce((s, p) => s + (p.page_count || 0), 0);
+          // ANTI-RACE: reload the LATEST pdf_parts and patch the processed
+          // part into the FRESH array. This preserves any part appended
+          // during the LLM call and recomputes book completion from the
+          // fresh state — so appended parts are never skipped and the book
+          // is only 'pending_verification' when EVERY part is fully done.
+          const mergedC = await reloadAndMergeParts(bookRecordId, partIdC, partIdx, partPatchC);
+          let finalParts;
+          let combined;
+          let bookComplete;
+          if (mergedC) {
+            finalParts = mergedC;
+            combined = mergedC.reduce((s, p) => s + (p.page_count || 0), 0);
+            const freshPartIdx = mergedC.findIndex((p) => (p.part_id || '') === partIdC);
+            const freshCurrentIdx = freshPartIdx >= 0 ? freshPartIdx : partIdx;
+            const isLastPartFresh = freshCurrentIdx === mergedC.length - 1;
+            bookComplete = isLastPartFresh && partDone && mergedC.every((p) => p.processed && (p.page_count || 0) > 0 && (p.page_end || 0) >= (p.page_count || 0));
+          } else {
+            // Fresh state unavailable — fall back to the stale snapshot patch.
+            finalParts = parts.map((p, i) => (i === partIdx ? { ...p, ...partPatchC } : p));
+            combined = finalParts.reduce((s, p) => s + (p.page_count || 0), 0);
+            const isLastPart = partIdx === parts.length - 1;
+            bookComplete = isLastPart && partDone;
+          }
 
           const bookUpdate = {
-            pdf_parts: updatedParts,
+            pdf_parts: finalParts,
             last_processed_page: page_end,
             total_pages: returnedTotalPages || (target.total_pages || 0),
             total_entries: allEntriesCount,
