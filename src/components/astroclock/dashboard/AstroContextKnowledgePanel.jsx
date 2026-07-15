@@ -90,7 +90,7 @@ const CATEGORY_CONFIG = {
 //   any safe actions, then notes, then refs. Sources always render last.
 // Labels and content unchanged — order only.
 const SECTION_ORDER = {
-  4: ['recommended', 'friendship', 'ritual', 'warnings', 'forbidden', 'enemy', 'notes'],
+  4: ['recommended', 'ritual', 'friendship', 'notes', 'warnings', 'forbidden', 'enemy'],
   3: ['recommended', 'friendship', 'ritual', 'warnings', 'forbidden', 'enemy', 'notes'],
   2: ['recommended', 'friendship', 'warnings', 'forbidden', 'notes', 'ritual', 'enemy'],
   1: ['avoidBanner', 'enemy', 'warnings', 'recommended', 'friendship', 'notes', 'ritual'],

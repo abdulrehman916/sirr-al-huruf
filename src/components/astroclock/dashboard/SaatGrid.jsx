@@ -120,48 +120,53 @@ export default function SaatGrid() {
                 {h.timeRemaining && (
                   <p className="font-inter text-[10px]" style={{ color: "#F5D060" }}>⏳ {txt("ബാക്കി", "Remaining", "Kalan")}: {h.timeRemaining}</p>
                 )}
-                {/* Best suited activities */}
-                {bestSuited?.length > 0 && (
-                  <div>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(34,197,94,0.70)" }}>{txt("ഏറ്റവും അനുയോജ്യം", "Best Suited", "En Uygun")}</p>
-                    {bestSuited.slice(0, 3).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>• {a}</p>)}
-                  </div>
-                )}
-                {/* Suitable activities */}
-                {suitable?.length > 0 && (
-                  <div>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(134,239,172,0.60)" }}>{txt("അനുയോജ്യം", "Suitable", "Uygun")}</p>
-                    {suitable.slice(0, 3).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>• {a}</p>)}
-                  </div>
-                )}
-                {/* Activities requiring caution */}
-                {caution?.length > 0 && (
-                  <div>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(251,191,36,0.60)" }}>{txt("ശ്രദ്ധിക്കുക", "Caution", "Dikkat")}</p>
-                    {caution.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {a}</p>)}
-                  </div>
-                )}
-                {/* Less suitable activities — NEVER labeled "Avoid" */}
-                {lessSuitable?.length > 0 && (
-                  <div>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.55)" }}>{txt("കുറവ് അനുയോജ്യം", "Less Suitable", "Daha Az Uygun")}</p>
-                    {lessSuitable.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>• {a}</p>)}
-                  </div>
-                )}
-                {/* Spiritual operations */}
-                {spiritual?.length > 0 && (
-                  <div>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>{txt("ആത്മികം", "Spiritual", "Manevi")}</p>
-                    {spiritual.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {a}</p>)}
-                  </div>
-                )}
-                {/* Warnings and conditions */}
-                {warnings?.length > 0 && (
-                  <div>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(251,191,36,0.50)" }}>{txt("മുന്നറിയിപ്പുകൾ", "Warnings", "Uyarılar")}</p>
-                    {warnings.map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>• {a}</p>)}
-                  </div>
-                )}
+                {/* Section render order follows the calculated quality tier (UI order ONLY).
+                    WEAK (ദുർബലം) hours lead with warnings / less-suitable / caution so the
+                    user immediately sees what must be avoided — never with recommendations.
+                    Other tiers lead with best-suited, matching Excellent/Good/Medium order.
+                    Labels and content are unchanged — only the render order. */}
+                {(() => {
+                  const secBest = bestSuited?.length > 0 ? (
+                    <div>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(34,197,94,0.70)" }}>{txt("ഏറ്റവും അനുയോജ്യം", "Best Suited", "En Uygun")}</p>
+                      {bestSuited.slice(0, 3).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>• {a}</p>)}
+                    </div>
+                  ) : null;
+                  const secSuit = suitable?.length > 0 ? (
+                    <div>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(134,239,172,0.60)" }}>{txt("അനുയോജ്യം", "Suitable", "Uygun")}</p>
+                      {suitable.slice(0, 3).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>• {a}</p>)}
+                    </div>
+                  ) : null;
+                  const secCaut = caution?.length > 0 ? (
+                    <div>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(251,191,36,0.60)" }}>{txt("ശ്രദ്ധിക്കുക", "Caution", "Dikkat")}</p>
+                      {caution.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {a}</p>)}
+                    </div>
+                  ) : null;
+                  const secLess = lessSuitable?.length > 0 ? (
+                    <div>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.55)" }}>{txt("കുറവ് അനുയോജ്യം", "Less Suitable", "Daha Az Uygun")}</p>
+                      {lessSuitable.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>• {a}</p>)}
+                    </div>
+                  ) : null;
+                  const secSpir = spiritual?.length > 0 ? (
+                    <div>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>{txt("ആത്മികം", "Spiritual", "Manevi")}</p>
+                      {spiritual.slice(0, 2).map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>• {a}</p>)}
+                    </div>
+                  ) : null;
+                  const secWarn = warnings?.length > 0 ? (
+                    <div>
+                      <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(251,191,36,0.50)" }}>{txt("മുന്നറിയിപ്പുകൾ", "Warnings", "Uyarılar")}</p>
+                      {warnings.map((a, i) => <p key={i} className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>• {a}</p>)}
+                    </div>
+                  ) : null;
+                  const order = quality.tier === 1
+                    ? [secWarn, secLess, secCaut, secBest, secSuit, secSpir]
+                    : [secBest, secSuit, secCaut, secLess, secSpir, secWarn];
+                  return <>{order.filter(Boolean)}</>;
+                })()}
                 {source && (
                   <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.40)" }}>📖 {source}</p>
                 )}
