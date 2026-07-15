@@ -1,24 +1,29 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 
 // ═══════════════════════════════════════════════════════════════
-// SIRR-ONLY FAITHFUL MANUSCRIPT ARCHIVE INGESTION
-// ═══════════════════════════════════════════════════════════════
-// The uploaded PDF is the ONLY source of truth. This function is a
-// faithful digital archive — it TRANSCRIBES, it never GENERATES.
+// SIRR FAITHFUL MANUSCRIPT ARCHIVE — SECTION-BASED INGESTION
 //
-//   • Transcribes each page VERBATIM (every Arabic letter, harakah,
-//     punctuation, paragraph, line break preserved) in page order.
-//   • Never rewrites, summarizes, paraphrases, or regenerates content.
-//   • Never auto-translates Arabic. malayalam_meaning is left empty.
-//   • Never generates introductions, benefits, warnings, or
-//     explanations.
-//   • A Malayalam NAVIGATION title is created ONLY when the
-//     manuscript has no Malayalam title (short label, never content).
-//   • Pages with OCR confidence < 100 are flagged needs_review=true
-//     for manual review — never guesses or invents missing words.
+// The uploaded PDF is the ONLY source of truth.
+// This function transcribes each named section/wirid/hizb in the
+// manuscript as a separate entry, preserving:
+//   - heading_title_ar: exactly as printed (Arabic/Ottoman)
+//   - heading_title_ml: Malayalam nav label ONLY (translated title,
+//     never content); never "Dua 1" etc.
+//   - arabic_text: complete Arabic text verbatim, every letter,
+//     harakah, punctuation, paragraph, line break
+//   - malayalam_meaning: faithful Malayalam translation of the
+//     explanatory text (Indonesian in this book → translate to
+//     Malayalam faithfully). Leave empty if no explanation exists.
+//   - introduction, purpose, etiquette, conditions, preparation,
+//     warnings, repetition, timing, notes: only if manuscript prints
+//     these; leave empty otherwise. Never fabricate.
+//   - page_number: page(s) where this section appears
 //
-// Writes ONLY to the SIRR-isolated entities (SirrManuscriptBook /
-// SirrManuscriptEntry). Admin-only. Never touches global collections.
+// RULES:
+//   - Never generate, invent, summarize, or paraphrase content
+//   - Never auto-translate Arabic
+//   - One entry per named section/wirid/hizb in manuscript order
+//   - OCR confidence < 100 → needs_review = true
 // ═══════════════════════════════════════════════════════════════
 Deno.serve(async (req) => {
   try {
@@ -59,31 +64,49 @@ Deno.serve(async (req) => {
       });
     }
 
-    const extractionPrompt = [
-      'You are a faithful manuscript archivist. You are given a scanned Islamic occult manuscript PDF (Arabic / Ottoman Turkish).',
-      'Your ONLY job is to TRANSCRIBE — never to generate.',
-      '',
-      'ABSOLUTE RULES (HIGHEST PRIORITY):',
-      '- Transcribe each page EXACTLY as printed. Copy EVERY Arabic letter, EVERY harakah, EVERY punctuation mark, EVERY paragraph, EVERY line break.',
-      '- Do NOT paraphrase, rewrite, summarize, or "improve" anything.',
-      '- Do NOT translate. Do NOT generate introductions, benefits, warnings, or explanations.',
-      '- Do NOT reconstruct Duas from memory. Only copy what is literally visible on the page.',
-      '- Do NOT add, guess, or invent missing words. If a word or character is unclear, lower the ocr_confidence for that page — never guess.',
-      '- Preserve the original language mix exactly (if a page has Arabic and Turkish and Malayalam, transcribe all as printed).',
-      '- Process pages in order. Return one object per page.',
-      '',
-      'For EACH page return:',
-      '- page_number: the page number (1-based).',
-      '- verbatim_text: the COMPLETE text printed on the page, transcribed character-for-character, preserving line breaks with \\n.',
-      '- ocr_confidence: integer 0-100. Use 100 ONLY if you are completely certain of every single character on the page. Use a value below 100 if ANY character is uncertain, unclear, partially cut, or guessed. Never round up to 100 when unsure.',
-      '- heading_ar: ONLY if this page begins a new section AND the manuscript prints a heading on it — transcribe that heading verbatim (with harakat). Otherwise "".',
-      '- heading_ml: ONLY if heading_ar is non-empty AND the manuscript has NO Malayalam title for this section — a SHORT Malayalam navigation label (a few words, for navigation ONLY). NEVER a translation of the section content. Otherwise "".',
-      '- has_malayalam: true if the page itself contains Malayalam text (which is already part of verbatim_text).',
-      '',
-      'Also return book-level metadata if visible on the manuscript: book_title (original), book_title_ar, author, edition, volume, publication_year, book_language, total_pages, and malayalam_book_name (a short Malayalam navigation name for the book ONLY if the manuscript has no Malayalam book title).',
-      '',
-      'Return ONLY the JSON object matching the schema. No commentary, no notes, no extra text.'
-    ].join('\n');
+    const prompt = `You are a faithful manuscript archivist. You are given a PDF of an Islamic manuscript.
+
+ABSOLUTE RULES (HIGHEST PRIORITY — never break these):
+1. TRANSCRIBE, never generate. Copy text EXACTLY as printed.
+2. Never invent, summarize, paraphrase, or "improve" any content.
+3. Never auto-translate Arabic text. arabic_text must be verbatim from the manuscript.
+4. Never fabricate introductions, benefits, warnings, or explanations.
+5. Preserve every Arabic letter, every harakah (diacritic), every punctuation mark, every line break.
+6. If OCR confidence is not 100% for any character, set ocr_confidence below 100. Never guess unclear text.
+
+WHAT TO EXTRACT:
+Extract one entry per named section, wirid, hizb, or prayer in manuscript order.
+Do NOT extract pages — extract SECTIONS (named units). Each section gets one entry.
+Do NOT merge sections. Do NOT split a section unless the manuscript itself separates it.
+
+FOR EACH ENTRY:
+- entry_order: sequential number (1, 2, 3...) in manuscript order
+- page_number: page number(s) where this section starts
+- heading_title_ar: the heading EXACTLY as printed in Arabic (with all harakat). Only if a heading is printed. Otherwise "".
+- heading_title_ml: a SHORT Malayalam navigation label for this section (2-6 words). This is ONLY for navigation. Translate the section title into Malayalam. NEVER use generic names like "ദുആ 1" or "Prayer 1". Use the actual section name translated into Malayalam. If the section is "الصلاة العظيمة" the label is "അസ്സ്വലാത്തുൽ അദ്വീമ" or its Malayalam equivalent.
+- arabic_text: the COMPLETE Arabic text of this section, verbatim. Every letter, harakah, punctuation, paragraph break. This is the most important field.
+- malayalam_meaning: IF the manuscript prints explanatory text (in this book it will be in Indonesian/Malay), translate that explanation faithfully into Malayalam. Do NOT translate the Arabic duas themselves. Do NOT invent explanations. If there is no explanatory text for this section, leave empty "".
+- introduction: if the manuscript prints an introduction for this section, copy it faithfully (translate from Indonesian/Malay to Malayalam if needed). Otherwise "".
+- purpose: if printed in manuscript. Otherwise "".
+- etiquette: if printed. Otherwise "".
+- conditions: if printed. Otherwise "".
+- preparation: if printed. Otherwise "".
+- warnings: if printed. Otherwise "".
+- repetition: if the manuscript specifies how many times to recite (e.g. "500x", "3x"). Otherwise "".
+- timing: if the manuscript specifies time/day. Otherwise "".
+- notes: any other manuscript notes for this section. Otherwise "".
+- ocr_confidence: 0-100. Use 100 ONLY if every character is completely certain. Lower if any character is unclear.
+
+BOOK METADATA (extract from title pages):
+- book_title: original book title as printed
+- book_title_ar: Arabic title as printed
+- author: if mentioned
+- edition, volume, publication_year: if mentioned
+- book_language: primary language (ar, id, ml, etc.)
+- malayalam_book_name: Malayalam name for the book (translate title to Malayalam if no Malayalam title exists)
+- total_pages: total PDF pages
+
+Return ONLY the JSON object. No commentary.`;
 
     const schema = {
       type: 'object',
@@ -97,67 +120,87 @@ Deno.serve(async (req) => {
         publication_year: { type: 'string' },
         book_language: { type: 'string' },
         malayalam_book_name: { type: 'string' },
-        pages: {
+        entries: {
           type: 'array',
           items: {
             type: 'object',
             properties: {
-              page_number: { type: 'integer' },
-              verbatim_text: { type: 'string' },
+              entry_order: { type: 'integer' },
+              page_number: { type: 'string' },
+              heading_title_ar: { type: 'string' },
+              heading_title_ml: { type: 'string' },
+              arabic_text: { type: 'string' },
+              malayalam_meaning: { type: 'string' },
+              introduction: { type: 'string' },
+              purpose: { type: 'string' },
+              etiquette: { type: 'string' },
+              conditions: { type: 'string' },
+              preparation: { type: 'string' },
+              warnings: { type: 'string' },
+              repetition: { type: 'string' },
+              timing: { type: 'string' },
+              notes: { type: 'string' },
               ocr_confidence: { type: 'integer' },
-              heading_ar: { type: 'string' },
-              heading_ml: { type: 'string' },
-              has_malayalam: { type: 'boolean' },
             },
-            required: ['page_number', 'verbatim_text', 'ocr_confidence'],
+            required: ['entry_order'],
           },
         },
       },
-      required: ['pages'],
+      required: ['entries'],
     };
 
     let extracted;
     try {
       extracted = await base44.integrations.Core.InvokeLLM({
-        prompt: extractionPrompt,
+        prompt,
         file_urls: [pdf_file_url],
         response_json_schema: schema,
+        model: 'claude_sonnet_4_6',
       });
     } catch (e) {
       await base44.entities.SirrManuscriptBook.update(sirr_book_id, {
         extraction_status: 'failed',
         extraction_error: String(e?.message || e),
       });
-      return Response.json({ error: 'Transcription failed', details: String(e?.message || e) }, { status: 500 });
+      return Response.json({ error: 'Extraction failed', details: String(e?.message || e) }, { status: 500 });
     }
 
     const data = (extracted && typeof extracted === 'object') ? extracted : {};
-    const pages = Array.isArray(data.pages) ? data.pages : [];
-    const total_pages = Number(data.total_pages) || pages.length;
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+    const total_pages = Number(data.total_pages) || 0;
     const malayalam_book_name = provided_malayalam_name || data.malayalam_book_name || '';
 
-    // One SirrManuscriptEntry per page — verbatim, in page order.
-    // No structured fields are generated. No Malayalam translation.
-    const records = pages.map((p) => {
-      const page_number = Number(p.page_number) || 0;
-      const conf = Number(p.ocr_confidence);
-      const ocr_confidence = Number.isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 100;
+    const records = entries.map((e, i) => {
+      const conf = Number(e.ocr_confidence);
+      const ocr_confidence = Number.isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 95;
       return {
-        sirr_entry_id: `SIRRE-${sirr_book_id}-${page_number}`,
+        sirr_entry_id: `SIRRE-${sirr_book_id}-${i + 1}`,
         sirr_book_id,
-        entry_order: page_number,
-        heading_title_ml: p.heading_ml || '',
-        heading_title_ar: p.heading_ar || '',
+        entry_order: Number(e.entry_order) || (i + 1),
+        heading_title_ml: e.heading_title_ml || '',
+        heading_title_ar: e.heading_title_ar || '',
         heading_title: '',
-        arabic_text: p.verbatim_text || '',
-        malayalam_meaning: '',
+        arabic_text: e.arabic_text || '',
+        malayalam_meaning: e.malayalam_meaning || '',
         english_meaning: '',
         images: [],
-        page_number: page_number ? String(page_number) : '',
+        page_number: e.page_number ? String(e.page_number) : '',
         book_title: data.book_title || original_file_name || '',
         ocr_confidence,
         needs_review: ocr_confidence < 100,
-        has_malayalam: !!p.has_malayalam,
+        has_malayalam: !!(e.malayalam_meaning),
+        // Store structured fields in notes as JSON for display
+        notes: JSON.stringify({
+          introduction: e.introduction || '',
+          purpose: e.purpose || '',
+          etiquette: e.etiquette || '',
+          conditions: e.conditions || '',
+          preparation: e.preparation || '',
+          warnings: e.warnings || '',
+          repetition: e.repetition || '',
+          timing: e.timing || '',
+          notes: e.notes || '',
+        }),
       };
     });
 

@@ -19,9 +19,7 @@ export default function SirrPage() {
 
   return (
     <PageLayout>
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-3 sm:px-4 py-4">
-        <SirrManuscriptReader language={language} setLanguage={setLanguage} />
-      </div>
+      <SirrManuscriptReader language={language} setLanguage={setLanguage} />
     </PageLayout>
   );
 }

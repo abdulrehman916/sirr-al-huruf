@@ -1,172 +1,360 @@
 // ═══════════════════════════════════════════════════════════════
-// SIRR MANUSCRIPT READER — SIRR-ISOLATED STORE
-// ═══════════════════════════════════════════════════════════════
-// Reads ONLY from the SIRR-dedicated entities (SirrManuscriptBook /
-// SirrManuscriptEntry). NEVER connects to the global ManuscriptBook /
-// ManuscriptEntry collections used by Astro Clock, Reference Library,
-// Holy Names, or any other module.
+// SIRR DUA LIBRARY — Main reader page
 //
-// Library: Upload button + book cards (Open / Rename / Delete /
-// Re-import). Book view: entries in exact manuscript order.
+// Home: grid of clickable Dua title cards (no books, no import info)
+// Detail: full Dua content in exact manuscript order
+//
+// Content display order (manuscript spec):
+//   1. Malayalam title  2. Arabic title  3. Introduction
+//   4. Purpose  5. Etiquette  6. Conditions  7. Preparation
+//   8. Method  9. Repetitions  10. Recommended time
+//   11. Warnings  12. Notes  13. Complete Arabic Dua
+//   14. Malayalam meaning (translation of explanatory text)
+//   Reference footer: book name, page, source
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { ChevronLeft, BookOpen, Loader2 } from "lucide-react";
+import { ChevronLeft, BookOpen, Loader2, AlertTriangle, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import SirrManuscriptEntry from "./SirrManuscriptEntry";
 import SirrUploadButton from "./SirrUploadButton";
-import SirrBookCard from "./SirrBookCard";
 
-async function fetchSirrBooks() {
-  try { return (await base44.entities.SirrManuscriptBook.list("-created_date", 500)) || []; }
-  catch { return []; }
-}
-async function fetchSirrEntries() {
-  try { return (await base44.entities.SirrManuscriptEntry.list("-created_date", 1000)) || []; }
-  catch { return []; }
+// ── Field labels (Malayalam / English) ──────────────────────
+const LABELS = {
+  introduction:  { ml: "ആമുഖം",         en: "Introduction" },
+  purpose:       { ml: "ഉദ്ദേശ്യം",       en: "Purpose" },
+  etiquette:     { ml: "മര്യാദകൾ",       en: "Etiquette" },
+  conditions:    { ml: "നിബന്ധനകൾ",     en: "Conditions" },
+  preparation:   { ml: "ഒരുക്കം",         en: "Preparation" },
+  warnings:      { ml: "മുന്നറിയിപ്പ്",   en: "Warnings" },
+  repetition:    { ml: "ആവർത്തനം",       en: "Repetitions" },
+  timing:        { ml: "അനുയോജ്യ സമയം", en: "Recommended Time" },
+  notes:         { ml: "കുറിപ്പുകൾ",      en: "Notes" },
+};
+
+function hasText(v) { return v != null && String(v).trim().length > 0; }
+
+function parseNotes(raw) {
+  try { return JSON.parse(raw || '{}'); } catch { return {}; }
 }
 
+// ── Individual Dua detail view ───────────────────────────────
+function DuaDetail({ entry, book, language, onBack }) {
+  const isMl = language === "ml";
+  const fields = parseNotes(entry.notes);
+
+  const titleMl = entry.heading_title_ml || entry.heading_title || '';
+  const titleAr = entry.heading_title_ar || '';
+  const arabic  = entry.arabic_text || '';
+  const malayalam = entry.malayalam_meaning || '';
+
+  const PRE_ARABIC = ['introduction','purpose','etiquette','conditions','preparation','warnings','repetition','timing','notes'];
+
+  return (
+    <div className="space-y-3">
+      {/* Back button */}
+      <button onClick={onBack}
+        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold"
+        style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.60)", border: "1px solid rgba(255,255,255,0.10)" }}>
+        <ChevronLeft className="w-4 h-4" />
+        {isMl ? "ഗ്രന്ഥശേഖരത്തിലേക്ക്" : "Back to Library"}
+      </button>
+
+      <article className="rounded-xl overflow-hidden"
+        style={{
+          background: "linear-gradient(145deg, rgba(8,16,38,0.98) 0%, rgba(4,10,24,0.99) 100%)",
+          border: "1px solid rgba(212,175,55,0.22)",
+          boxShadow: "0 4px 32px rgba(0,0,0,0.55)",
+        }}>
+        {/* Title */}
+        <header className="px-4 pt-5 pb-3 text-center" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+          {/* Review badge */}
+          {entry.needs_review && (
+            <div className="flex justify-center mb-3">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"
+                style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.30)" }}>
+                <AlertTriangle className="w-3 h-3" style={{ color: "#FBBF24" }} />
+                <span className="font-inter text-[9px] font-bold uppercase tracking-wider" style={{ color: "#FBBF24" }}>
+                  {isMl ? "പരിശോധന ആവശ്യം" : "Needs Manual Review"} · OCR {entry.ocr_confidence}%
+                </span>
+              </span>
+            </div>
+          )}
+
+          {/* 1. Malayalam title */}
+          {hasText(titleMl) && (
+            <h1 className="font-malayalam text-xl font-bold leading-relaxed" style={{ color: "#D4AF37" }}>
+              {titleMl}
+            </h1>
+          )}
+
+          {/* 2. Arabic title */}
+          {hasText(titleAr) && (
+            <p className="font-amiri text-lg font-bold mt-1" style={{ color: "rgba(212,175,55,0.70)", direction: "rtl" }}>
+              {titleAr}
+            </p>
+          )}
+
+          {entry.page_number && (
+            <p className="font-inter text-[10px] mt-1.5" style={{ color: "rgba(255,255,255,0.30)" }}>
+              {isMl ? "പേജ്" : "Page"} {entry.page_number}
+            </p>
+          )}
+        </header>
+
+        <div className="px-4 py-4 space-y-4">
+          {/* 3–12: Pre-Arabic fields in manuscript order */}
+          {PRE_ARABIC.map((key) => {
+            const val = fields[key];
+            if (!hasText(val)) return null;
+            const label = LABELS[key]?.[isMl ? 'ml' : 'en'] || key;
+            return (
+              <div key={key} className="space-y-1">
+                <p className={`text-[10px] font-bold uppercase tracking-wider ${isMl ? 'font-malayalam' : 'font-inter'}`}
+                  style={{ color: "rgba(212,175,55,0.60)" }}>
+                  {label}
+                </p>
+                <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isMl ? 'font-malayalam' : 'font-inter'}`}
+                  style={{ color: "rgba(255,255,255,0.72)" }}>
+                  {val}
+                </p>
+              </div>
+            );
+          })}
+
+          {/* 13. Complete Arabic Dua — verbatim */}
+          {hasText(arabic) && (
+            <div className="rounded-xl p-4 my-1"
+              style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.20)" }}>
+              <p className="font-amiri text-xl leading-loose whitespace-pre-wrap selectable"
+                style={{ color: "rgba(255,255,255,0.92)", direction: "rtl", textAlign: "right", lineHeight: "2.4" }}>
+                {arabic}
+              </p>
+            </div>
+          )}
+
+          {/* 14. Malayalam meaning — translation of explanatory text only */}
+          {hasText(malayalam) && (
+            <div className="rounded-xl p-3"
+              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <p className="font-inter text-[9px] font-bold uppercase tracking-wider mb-2"
+                style={{ color: "rgba(212,175,55,0.50)" }}>
+                {isMl ? "വിശദീകരണം" : "Explanation"}
+              </p>
+              <p className="font-malayalam text-sm leading-relaxed whitespace-pre-wrap"
+                style={{ color: "rgba(255,255,255,0.68)" }}>
+                {malayalam}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Reference footer */}
+        <footer className="px-4 py-3" style={{ borderTop: "1px solid rgba(212,175,55,0.12)", background: "rgba(212,175,55,0.02)" }}>
+          <div className="flex items-center gap-1.5 mb-2">
+            <BookOpen className="w-3 h-3" style={{ color: "rgba(212,175,55,0.50)" }} />
+            <span className="font-inter text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(212,175,55,0.55)" }}>
+              {isMl ? "അവലംബം" : "Reference"}
+            </span>
+          </div>
+          <div className="space-y-0.5">
+            {book?.malayalam_book_name && <RefRow label={isMl ? "ഗ്രന്ഥം" : "Book"} value={book.malayalam_book_name} />}
+            {book?.book_title && book.book_title !== book?.malayalam_book_name && <RefRow label={isMl ? "മൂല ഗ്രന്ഥം" : "Original Title"} value={book.book_title} />}
+            {book?.book_title_ar && <RefRow label={isMl ? "അറബി ശീർഷകം" : "Arabic Title"} value={book.book_title_ar} />}
+            {entry.page_number && <RefRow label={isMl ? "പേജ്" : "Page"} value={String(entry.page_number)} />}
+            {book?.author && <RefRow label={isMl ? "ഗ്രന്ഥകർത്താവ്" : "Author"} value={book.author} />}
+          </div>
+        </footer>
+      </article>
+    </div>
+  );
+}
+
+function RefRow({ label, value }) {
+  if (!value) return null;
+  return (
+    <div className="flex gap-1.5">
+      <span className="font-inter text-[9px] font-bold flex-shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>{label}:</span>
+      <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>{value}</span>
+    </div>
+  );
+}
+
+// ── Dua title card ───────────────────────────────────────────
+function DuaCard({ entry, language, onClick }) {
+  const isMl = language === "ml";
+  const titleMl = entry.heading_title_ml || entry.heading_title || (isMl ? `ഭാഗം ${entry.entry_order}` : `Section ${entry.entry_order}`);
+  const titleAr = entry.heading_title_ar || '';
+  const fields = parseNotes(entry.notes);
+  // Show a brief preview of repetition or timing if present
+  const meta = [fields.repetition, fields.timing].filter(hasText).join(' · ');
+
+  return (
+    <button onClick={onClick}
+      className="w-full text-left rounded-xl p-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
+      style={{
+        background: "linear-gradient(145deg, rgba(8,16,38,0.95) 0%, rgba(4,10,24,0.98) 100%)",
+        border: "1px solid rgba(212,175,55,0.20)",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.40)",
+      }}>
+      <div className="flex items-start gap-2.5">
+        <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5"
+          style={{ background: "rgba(212,175,55,0.10)", border: "1px solid rgba(212,175,55,0.20)" }}>
+          <span className="font-inter text-[10px] font-bold tabular-nums" style={{ color: "rgba(212,175,55,0.70)" }}>
+            {entry.entry_order}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          {/* Line 1: Malayalam title (large) */}
+          <p className="font-malayalam text-sm font-bold leading-snug truncate" style={{ color: "rgba(255,255,255,0.88)" }}>
+            {titleMl}
+          </p>
+          {/* Line 2: Arabic title (smaller, if exists) */}
+          {hasText(titleAr) && (
+            <p className="font-amiri text-sm mt-0.5 truncate" style={{ color: "rgba(212,175,55,0.60)", direction: "rtl", textAlign: "right" }}>
+              {titleAr}
+            </p>
+          )}
+          {/* Meta: repetition / timing */}
+          {meta && (
+            <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(255,255,255,0.30)" }}>{meta}</p>
+          )}
+        </div>
+        {entry.needs_review && (
+          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-1" style={{ color: "#FBBF24", opacity: 0.7 }} />
+        )}
+      </div>
+    </button>
+  );
+}
+
+// ── Language toggle ──────────────────────────────────────────
+function LangToggle({ language, setLanguage }) {
+  return (
+    <div className="flex items-center gap-1">
+      {['ml','en'].map(lang => (
+        <button key={lang} onClick={() => setLanguage(lang)}
+          className={`px-2 py-1 rounded-md text-[10px] font-bold ${language === lang ? 'btn-gold' : ''}`}
+          style={language !== lang ? { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.50)", border: "1px solid rgba(255,255,255,0.10)" } : {}}>
+          {lang === 'ml' ? 'മലയാളം' : 'EN'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Main component ───────────────────────────────────────────
 export default function SirrManuscriptReader({ language, setLanguage }) {
   const [books, setBooks] = useState([]);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState("list");
-  const [selectedBook, setSelectedBook] = useState(null);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [search, setSearch] = useState('');
   const isMl = language === "ml";
 
   const refresh = useCallback(() => {
     setLoading(true);
-    Promise.all([fetchSirrBooks(), fetchSirrEntries()])
-      .then(([b, e]) => { setBooks(b); setEntries(e); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      base44.entities.SirrManuscriptBook.list('-created_date', 100).catch(() => []),
+      base44.entities.SirrManuscriptEntry.list('entry_order', 2000).catch(() => []),
+    ]).then(([b, e]) => {
+      setBooks(b || []);
+      setEntries((e || []).sort((a, b2) => (a.entry_order || 0) - (b2.entry_order || 0)));
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const selectedEntries = useMemo(() => {
-    if (!selectedBook) return [];
-    return entries
-      .filter((e) => e.sirr_book_id === selectedBook.sirr_book_id)
-      .sort((a, b) => (a.entry_order || 0) - (b.entry_order || 0));
-  }, [entries, selectedBook]);
+  // Find the book for a given entry
+  const bookFor = useCallback((entry) => {
+    return books.find(b => b.sirr_book_id === entry?.sirr_book_id) || null;
+  }, [books]);
 
-  // ── Book view — entries in exact manuscript order ──
-  if (view === "book" && selectedBook) {
+  const filtered = useMemo(() => {
+    if (!search.trim()) return entries;
+    const q = search.toLowerCase();
+    return entries.filter(e =>
+      (e.heading_title_ml || '').toLowerCase().includes(q) ||
+      (e.heading_title_ar || '').includes(q) ||
+      (e.arabic_text || '').includes(q)
+    );
+  }, [entries, search]);
+
+  // ── Detail view ──
+  if (selectedEntry) {
     return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <button onClick={() => { setView("list"); setSelectedBook(null); }}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold"
-            style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.60)", border: "1px solid rgba(255,255,255,0.10)" }}>
-            <ChevronLeft className="w-4 h-4" /> {isMl ? "ഗ്രന്ഥങ്ങളിലേക്ക്" : "Back to Books"}
-          </button>
-          <LangToggle language={language} setLanguage={setLanguage} />
-        </div>
-
-        <div className="text-center pb-2">
-          {selectedBook.malayalam_book_name && (
-            <h1 className={`text-xl font-bold ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.90)" }}>
-              {selectedBook.malayalam_book_name}
-            </h1>
-          )}
-          {selectedBook.book_title_ar && (
-            <p className="font-amiri text-lg font-bold" style={{ color: "#D4AF37", direction: "rtl" }}>{selectedBook.book_title_ar}</p>
-          )}
-          {selectedBook.book_title && selectedBook.book_title !== selectedBook.malayalam_book_name && (
-            <p className="font-inter text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>{selectedBook.book_title}</p>
-          )}
-          <p className="font-inter text-[10px] mt-1" style={{ color: "rgba(212,175,55,0.55)" }}>
-            {selectedEntries.length} {isMl ? "വിഭാഗങ്ങൾ" : "sections"} · {selectedBook.total_pages || "?"} {isMl ? "പേജുകൾ" : "pages"}
-          </p>
-        </div>
-
-        {selectedEntries.length === 0 ? (
-          <div className="text-center py-8">
-            <BookOpen className="w-8 h-8 mx-auto mb-2" style={{ color: "rgba(255,255,255,0.20)" }} />
-            <p className={`text-xs ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.35)" }}>
-              {isMl ? "ഈ ഗ്രന്ഥത്തിൽ ഇറക്കുമതി ചെയ്ത വിഭാഗങ്ങളില്ല." : "No imported sections in this book."}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {selectedEntries.map((entry) => (
-              <SirrManuscriptEntry
-                key={entry.sirr_entry_id || entry._id}
-                entry={entry}
-                book={selectedBook}
-                heading={null}
-                language={language}
-              />
-            ))}
-          </div>
-        )}
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-3 sm:px-4 py-4">
+        <DuaDetail
+          entry={selectedEntry}
+          book={bookFor(selectedEntry)}
+          language={language}
+          onBack={() => setSelectedEntry(null)}
+        />
       </div>
     );
   }
 
-  // ── Library view — SIRR-only books (starts empty) ──
+  // ── Library (home) view ──
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2 pt-1">
+    <div className="relative z-10 w-full max-w-4xl mx-auto px-3 sm:px-4 py-4 space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4" style={{ color: "rgba(212,175,55,0.60)" }} />
-          <h1 className={`text-sm font-bold ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.85)" }}>
-            {isMl ? "സിറർ ഗ്രന്ഥശേഖരം" : "Sirr Manuscript Library"}
+          <h1 className="font-malayalam text-sm font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>
+            {isMl ? "സൂഫി ഔറാദ് ലൈബ്രറി" : "Sufi Wird Library"}
           </h1>
         </div>
         <LangToggle language={language} setLanguage={setLanguage} />
       </div>
 
-      {/* Upload button — native file picker, SIRR-only ingestion */}
+      {/* Admin: upload button */}
       <SirrUploadButton onUploaded={refresh} language={language} />
 
       {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="w-7 h-7 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(212,175,55,0.60)" }} />
         </div>
-      ) : books.length === 0 ? (
-        <div className="text-center py-10">
+      ) : entries.length === 0 ? (
+        <div className="text-center py-12">
           <BookOpen className="w-10 h-10 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.25)" }} />
-          <p className={`text-sm font-bold ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.45)" }}>
-            {isMl ? "സിറർ ഗ്രന്ഥങ്ങളൊന്നുമില്ല" : "No Sirr manuscripts"}
+          <p className="font-malayalam text-sm font-bold" style={{ color: "rgba(255,255,255,0.45)" }}>
+            {isMl ? "ഔറാദുകളൊന്നുമില്ല" : "No wirids imported yet"}
           </p>
-          <p className={`text-xs mt-1 ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.30)" }}>
-            {isMl ? "മുകളിൽ നിന്ന് ഒരു PDF ഇറക്കുമതി ചെയ്യുക" : "Upload a PDF above to begin"}
+          <p className="font-inter text-xs mt-1" style={{ color: "rgba(255,255,255,0.30)" }}>
+            {isMl ? "ഒരു PDF ഇറക്കുമതി ചെയ്യൂ" : "Upload a PDF above to begin"}
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {books.map((book) => {
-            const entryCount = entries.filter((e) => e.sirr_book_id === book.sirr_book_id).length;
-            return (
-              <SirrBookCard
-                key={book.sirr_book_id || book._id}
-                book={book}
-                entryCount={entryCount}
-                onOpen={() => { setSelectedBook(book); setView("book"); }}
-                onRefresh={refresh}
-                language={language}
-              />
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+        <>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "rgba(212,175,55,0.50)" }} />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder={isMl ? "ദുആ തിരയുക..." : "Search..."}
+              className="w-full pl-8 pr-3 py-2 rounded-xl text-sm"
+              style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.80)", border: "1px solid rgba(212,175,55,0.15)", colorScheme: "dark" }}
+            />
+          </div>
 
-function LangToggle({ language, setLanguage }) {
-  return (
-    <div className="flex items-center gap-1">
-      <button onClick={() => setLanguage("ml")}
-        className={`px-2 py-1 rounded-md text-[10px] font-bold ${language === "ml" ? "btn-gold" : ""}`}
-        style={language !== "ml" ? { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.50)", border: "1px solid rgba(255,255,255,0.10)" } : {}}>
-        മലയാളം
-      </button>
-      <button onClick={() => setLanguage("en")}
-        className={`px-2 py-1 rounded-md text-[10px] font-bold ${language === "en" ? "btn-gold" : ""}`}
-        style={language !== "en" ? { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.50)", border: "1px solid rgba(255,255,255,0.10)" } : {}}>
-        EN
-      </button>
+          {/* Entry count */}
+          <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>
+            {filtered.length} {isMl ? "ഭാഗങ്ങൾ" : "sections"}
+            {search && ` (${entries.length} ${isMl ? "ആകെ" : "total"})`}
+          </p>
+
+          {/* Dua cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {filtered.map(entry => (
+              <DuaCard
+                key={entry.sirr_entry_id || entry._id}
+                entry={entry}
+                language={language}
+                onClick={() => setSelectedEntry(entry)}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
