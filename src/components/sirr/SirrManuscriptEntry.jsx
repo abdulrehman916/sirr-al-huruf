@@ -1,19 +1,24 @@
 // ═══════════════════════════════════════════════════════════════
 // SIRR MANUSCRIPT ENTRY — FAITHFUL MANUSCRIPT RENDERER
 // ═══════════════════════════════════════════════════════════════
-// Renders ONE manuscript entry EXACTLY as imported from the PDF.
+// Renders ONE manuscript entry EXACTLY as imported from the SIRR PDF.
 //
 // STRICT MANUSCRIPT RULE:
-//   • Title = the original heading printed inside the manuscript
-//     (heading_title_ar / heading_title). Never "Dua 1", "Prayer 2".
-//   • Every field is shown ONLY if the manuscript provided it.
-//   • Arabic text is displayed verbatim — every letter, harakah,
+//   • Title = Malayalam title (heading_title_ml). If the manuscript had
+//     no Malayalam title, ONLY the title was translated into Malayalam.
+//     The original Arabic title (heading_title_ar) is shown smaller
+//     beneath. Never "Dua 1", "Prayer 2".
+//   • Content order before the Arabic Dua (manuscript order):
+//       1. Introduction  2. Purpose  3. Etiquette  4. Conditions
+//       5. Preparation  6. Warnings  7. Repetitions  8. Recommended time
+//       9. Remaining notes  (then any remaining practical fields)
+//   • Then the COMPLETE Arabic Dua verbatim — every letter, harakah,
 //     punctuation, line break preserved. Never normalized/rewritten.
 //   • Malayalam translation sits immediately below the Arabic.
-//   • Ends with a full reference footer (Book / Page / Edition / Source).
-//   • Nothing is invented, summarized, merged, or reordered.
-//
-// This component displays manuscript content ONLY. It never generates.
+//   • Ends with a reference footer: Book Name, Original Book Name,
+//     Page Number, Volume, Edition, Source.
+//   • Every word comes ONLY from the uploaded manuscript. Nothing
+//     invented, summarized, merged, or reordered.
 // ═══════════════════════════════════════════════════════════════
 import { BookOpen } from "lucide-react";
 
@@ -21,32 +26,33 @@ import { BookOpen } from "lucide-react";
 const FIELD_LABELS = {
   introduction:  { ml: "ആമുഖം",            en: "Introduction" },
   purpose:       { ml: "ഉദ്ദേശ്യം",          en: "Purpose" },
-  preparation:   { ml: "ഒരുക്കം",            en: "Preparation" },
+  etiquette:     { ml: "നയങ്ങൾ",            en: "Etiquette" },
   conditions:    { ml: "വ്യവസ്ഥകൾ",          en: "Conditions" },
-  materials:     { ml: "സാമഗ്രികൾ",          en: "Materials" },
+  preparation:   { ml: "ഒരുക്കം",            en: "Preparation" },
+  warnings:      { ml: "മുന്നറിയിപ്പുകൾ",    en: "Warnings" },
   repetition:    { ml: "ആവർത്തന എണ്ണം",      en: "Number of Recitations" },
-  timing:        { ml: "അനുയോജ്യ സമയം",     en: "Best Time" },
+  timing:        { ml: "അനുയോജ്യ സമയം",     en: "Recommended Time" },
+  notes:         { ml: "കുറിപ്പുകൾ",        en: "Notes" },
+  materials:     { ml: "സാമഗ്രികൾ",          en: "Materials" },
   day:           { ml: "ദിവസം",              en: "Day" },
   planet:        { ml: "ഗ്രഹം",              en: "Planet" },
   incense:       { ml: "ധൂപം",              en: "Incense" },
-  warnings:      { ml: "മുന്നറിയിപ്പുകൾ",    en: "Warnings" },
-  notes:         { ml: "കുറിപ്പുകൾ",        en: "Notes" },
   benefits:      { ml: "ഗുണങ്ങൾ",           en: "Benefits" },
   procedure:     { ml: "രീതി",              en: "Method" },
 };
 
-// Order of context fields shown BEFORE the Arabic text (manuscript order).
+// Introductory information shown BEFORE the Arabic Dua (exact spec order).
 const PRE_ARABIC_ORDER = [
-  "introduction", "purpose", "preparation", "conditions", "materials",
-  "repetition", "timing", "day", "planet", "incense", "warnings", "notes",
+  "introduction", "purpose", "etiquette", "conditions", "preparation",
+  "warnings", "repetition", "timing", "notes",
+  // remaining practical fields (if the manuscript provided them)
+  "materials", "day", "planet", "incense",
 ];
 
-// Order of practice fields shown AFTER the Malayalam translation.
+// Practice fields shown AFTER the Malayalam translation.
 const POST_ARABIC_ORDER = ["benefits", "procedure"];
 
-function hasText(v) {
-  return v != null && String(v).trim().length > 0;
-}
+function hasText(v) { return v != null && String(v).trim().length > 0; }
 
 // Resolve the Malayalam rendering of a context field:
 // content_translations_ml[field] (faithful Malayalam) → fallback to raw field.
@@ -81,19 +87,12 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
   if (!entry) return null;
   const isMl = language === "ml";
 
-  // ── Title: the original heading printed inside the manuscript ──
-  // Resolved from the explicit heading prop (global join) OR from the
-  // entry's own embedded heading fields (SIRR-isolated store).
+  // ── Title: Malayalam title primary, Arabic original below (smaller) ──
+  const titleMl = heading?.heading_title_ml || entry.heading_title_ml || entry.topic_ml || entry.purpose_ml || entry.heading_title || entry.topic || "";
   const titleAr = heading?.heading_title_ar || entry.heading_title_ar || entry.topic_ar || "";
-  const titleMain = heading?.heading_title || entry.heading_title || entry.topic || entry.purpose || "";
-  const titleMl = entry.topic_ml || entry.purpose_ml || "";
 
-  // ── Arabic text — verbatim, harakat preserved ──
   const arabic = entry.arabic_text || "";
-  // ── Malayalam translation — immediately below Arabic ──
   const malayalam = entry.malayalam_meaning || "";
-
-  // ── Images extracted from the manuscript (diagrams / wafq) ──
   const images = Array.isArray(entry.images) ? entry.images.filter(Boolean) : [];
 
   return (
@@ -103,36 +102,28 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
         border: "1px solid rgba(212,175,55,0.22)",
         boxShadow: "0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(212,175,55,0.08)",
       }}>
-      {/* ── Original manuscript title ── */}
-      <header className="px-4 pt-4 pb-2 text-center"
-        style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
-        {hasText(titleAr) && (
-          <h2 className="font-amiri text-2xl font-bold leading-relaxed"
-            style={{ color: "#D4AF37", direction: "rtl" }}>
-            {titleAr}
+      {/* ── Title: Malayalam primary, Arabic original smaller ── */}
+      <header className="px-4 pt-4 pb-2 text-center" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+        {hasText(titleMl) && (
+          <h2 className={`text-xl font-bold leading-relaxed ${isMl ? "font-malayalam" : "font-inter"}`}
+            style={{ color: "#D4AF37" }}>
+            {titleMl}
           </h2>
         )}
-        {hasText(titleMain) && (
-          <p className={`text-base font-bold mt-1 ${isMl ? "font-malayalam" : "font-inter"}`}
-            style={{ color: "rgba(255,255,255,0.85)" }}>
-            {titleMain}
-          </p>
-        )}
-        {hasText(titleMl) && titleMl !== titleMain && (
-          <p className="font-malayalam text-sm mt-0.5"
-            style={{ color: "rgba(212,175,55,0.55)" }}>
-            {titleMl}
+        {hasText(titleAr) && titleAr !== titleMl && (
+          <p className="font-amiri text-base mt-1" style={{ color: "rgba(212,175,55,0.60)", direction: "rtl" }}>
+            {titleAr}
           </p>
         )}
       </header>
 
       <div className="px-4 py-3 space-y-3">
-        {/* ── Pre-Arabic context fields (manuscript order) ── */}
+        {/* ── Introductory information (exact manuscript order) ── */}
         {PRE_ARABIC_ORDER.map((f) => (
           <FieldBlock key={f} entry={entry} field={f} language={language} />
         ))}
 
-        {/* ── Complete Arabic text — verbatim ── */}
+        {/* ── Complete Arabic Dua — verbatim, harakat preserved ── */}
         {hasText(arabic) && (
           <div className="rounded-lg p-3 my-1"
             style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.18)" }}>
@@ -164,35 +155,29 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
           <div className="space-y-2">
             {images.map((url, i) => (
               <img key={i} src={url} alt={`manuscript image ${i + 1}`}
-                className="w-full rounded-lg"
-                style={{ border: "1px solid rgba(212,175,55,0.18)" }}
-                loading="lazy" />
+                className="w-full rounded-lg" style={{ border: "1px solid rgba(212,175,55,0.18)" }} loading="lazy" />
             ))}
           </div>
         )}
       </div>
 
-      {/* ── Reference footer ── */}
-      <footer className="px-4 py-3 mt-1"
-        style={{ borderTop: "1px solid rgba(212,175,55,0.15)", background: "rgba(212,175,55,0.03)" }}>
+      {/* ── Reference footer: Book Name · Original Book Name · Page · Volume · Edition · Source ── */}
+      <footer className="px-4 py-3 mt-1" style={{ borderTop: "1px solid rgba(212,175,55,0.15)", background: "rgba(212,175,55,0.03)" }}>
         <div className="flex items-center gap-1.5 mb-2">
           <BookOpen className="w-3 h-3" style={{ color: "rgba(212,175,55,0.55)" }} />
-          <span className="font-inter text-[9px] font-bold uppercase tracking-wider"
-            style={{ color: "rgba(212,175,55,0.60)" }}>
+          <span className="font-inter text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(212,175,55,0.60)" }}>
             {isMl ? "അവലംബം" : "Reference"}
           </span>
         </div>
         <div className="grid grid-cols-1 gap-1 text-[10px]">
-          <RefRow label={isMl ? "ഗ്രന്ഥം" : "Book"} value={book?.book_title || entry.book_title} />
+          <RefRow label={isMl ? "ഗ്രന്ഥം" : "Book Name"} value={book?.malayalam_book_name || book?.book_title || entry.book_title} />
+          <RefRow label={isMl ? "മൂല ഗ്രന്ഥം" : "Original Book Name"} value={book?.book_title} />
           {hasText(book?.book_title_ar) && book.book_title_ar !== book?.book_title &&
-            <RefRow label={isMl ? "മൂല ശീർഷകം" : "Original Title"} value={book.book_title_ar} />}
-          {hasText(book?.author) && <RefRow label={isMl ? "രചയിതാവ്" : "Author"} value={book.author} />}
-          {book?.pdf_count > 1 && <RefRow label={isMl ? "വാല്യം" : "Volume"} value={String(book.pdf_count)} />}
-          {hasText(entry.page_number) && <RefRow label={isMl ? "പേജ്" : "Page"} value={String(entry.page_number)} />}
+            <RefRow label={isMl ? "അറബി ശീർഷകം" : "Arabic Title"} value={book.book_title_ar} />}
+          {hasText(entry.page_number) && <RefRow label={isMl ? "പേജ്" : "Page Number"} value={String(entry.page_number)} />}
+          {hasText(book?.volume) && <RefRow label={isMl ? "വാല്യം" : "Volume"} value={book.volume} />}
           {hasText(book?.edition) && <RefRow label={isMl ? "പതിപ്പ്" : "Edition"} value={book.edition} />}
-          {hasText(book?.publication_year) && <RefRow label={isMl ? "വർഷം" : "Year"} value={book.publication_year} />}
-          <RefRow label={isMl ? "സ്രോതസ്സ്" : "Source"} value={book?.source || "manuscript"} />
-          {hasText(entry.entry_id) && <RefRow label={isMl ? "അവലംബ ഐഡി" : "Reference ID"} value={entry.entry_id} />}
+          <RefRow label={isMl ? "സ്രോതസ്സ്" : "Source"} value={book?.source || "Sirr Manuscript Upload"} />
         </div>
       </footer>
     </article>
@@ -203,10 +188,8 @@ function RefRow({ label, value }) {
   if (!value) return null;
   return (
     <div className="flex gap-1.5">
-      <span className="font-inter text-[9px] font-bold flex-shrink-0"
-        style={{ color: "rgba(255,255,255,0.35)" }}>{label}:</span>
-      <span className="font-inter text-[10px]"
-        style={{ color: "rgba(255,255,255,0.60)" }}>{value}</span>
+      <span className="font-inter text-[9px] font-bold flex-shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>{label}:</span>
+      <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>{value}</span>
     </div>
   );
 }

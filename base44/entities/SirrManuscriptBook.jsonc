@@ -1,15 +1,20 @@
 {
   "name": "SirrManuscriptBook",
   "type": "object",
-  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity used by Astro Clock, Reference Library, and Import History. The SIRR page reads ONLY from this entity \u2014 it never connects to ManuscriptBook. Starts empty. A book appears here ONLY when a PDF is uploaded specifically for the SIRR module. No records are shared, copied, or synced from any other module's manuscript store. ISOLATED \u2014 only SIRR-specific upload logic may write to this entity.",
+  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity used by Astro Clock, Reference Library, and Import History. The SIRR page reads ONLY from this entity \u2014 it never connects to ManuscriptBook. Starts empty. A book appears here ONLY when a PDF is uploaded specifically for the SIRR module via the SIRR upload button. No records are shared, copied, or synced from any other module's manuscript store. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function and SIRR-only UI logic may write to this entity.",
   "properties": {
     "sirr_book_id": {
       "type": "string",
       "description": "Permanent unique identifier for this SIRR book. Never changes. Used as FK in SirrManuscriptEntry."
     },
+    "malayalam_book_name": {
+      "type": "string",
+      "default": "",
+      "description": "Malayalam display name for the book. Editable by the user from the SIRR library. Shown as the primary book title in the SIRR UI. If the manuscript has no Malayalam title, only the title is translated into Malayalam (nothing else)."
+    },
     "book_title": {
       "type": "string",
-      "description": "Full title of the manuscript exactly as imported. Original language preserved \u2014 never translated or renamed."
+      "description": "Original book title exactly as imported (original language preserved \u2014 never translated)."
     },
     "book_title_ar": {
       "type": "string",
@@ -29,7 +34,12 @@
     "edition": {
       "type": "string",
       "default": "",
-      "description": "Edition of the manuscript if available."
+      "description": "Edition of the manuscript if available. Shown in the reference footer."
+    },
+    "volume": {
+      "type": "string",
+      "default": "",
+      "description": "Volume of the manuscript if available. Shown in the reference footer."
     },
     "publication_year": {
       "type": "string",
@@ -70,7 +80,12 @@
         "partial"
       ],
       "default": "pending",
-      "description": "Content extraction status for this SIRR book."
+      "description": "Content extraction status for this SIRR book. Shown in the library as Import Status."
+    },
+    "extraction_error": {
+      "type": "string",
+      "default": "",
+      "description": "Error message if extraction_status is failed."
     },
     "total_entries": {
       "type": "integer",
