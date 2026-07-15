@@ -329,6 +329,25 @@ Return ONLY the JSON object. No commentary.`;
 
     await sdk.entities.SirrManuscriptBook.update(bookRecordId, bookUpdate);
 
+    const chunkMinConf = records.length > 0
+      ? Math.min(...records.map((r) => r.ocr_confidence))
+      : 100;
+    await sdk.entities.SirrAuditLog.create({
+      audit_id: `SA-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      sirr_book_id,
+      part_id: source_part_id,
+      part_number: source_part_number,
+      action: extraction_status === 'completed' ? 'extract_complete' : 'extract_chunk',
+      user_id: user?.id || 'system',
+      user_name: user?.full_name || user?.email || 'system',
+      timestamp: now,
+      page_range: isChunked ? `${page_start}-${page_end}` : 'all',
+      status: 'success',
+      details: `Extracted ${records.length} entries (${review_count} flagged for review).`,
+      entry_count: records.length,
+      ocr_confidence_min: chunkMinConf,
+    }).catch(() => {});
+
     return Response.json({
       sirr_book_id,
       total_entries: records.length,

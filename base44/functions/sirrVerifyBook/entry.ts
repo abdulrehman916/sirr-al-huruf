@@ -170,6 +170,21 @@ Deno.serve(async (req) => {
       verification_status: persistedStatus,
     }).catch(() => {});
 
+    await sdk.entities.SirrAuditLog.create({
+      audit_id: `SA-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      sirr_book_id,
+      action: 'verify',
+      user_id: user?.id || 'system',
+      user_name: user?.full_name || user?.email || 'system',
+      timestamp: new Date().toISOString(),
+      status: all_pass ? 'success' : (book.extraction_status === 'completed' ? 'failed' : 'partial'),
+      details: `Verification ${final_result}. parts=${total_pdf_parts} entries=${entries.length} ocr_issues=${ocr_issues} missing_pages=${missing_pages}`,
+      entry_count: entries.length,
+      ocr_confidence_min: entries.length > 0
+        ? Math.min(...entries.map((e) => Number(e.ocr_confidence) || 100))
+        : 100,
+    }).catch(() => {});
+
     return Response.json({
       sirr_book_id,
       book_title: book.book_title,

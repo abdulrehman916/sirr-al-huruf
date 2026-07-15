@@ -52,6 +52,14 @@ export default function SirrUploadButton({ onUploaded, language }) {
     setBusy(true);
     setError("");
     try {
+      // 0. Compute permanent SHA-256 checksum + size for corruption detection.
+      const arrayBuffer = await file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+      const file_hash = Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      const file_size = file.size;
+
       // 1. Upload PDF to permanent SIRR storage.
       const upRes = await base44.integrations.Core.UploadFile({ file });
       const file_url = upRes?.file_url || upRes?.data?.file_url;
@@ -83,6 +91,8 @@ export default function SirrUploadButton({ onUploaded, language }) {
               part_number: 1,
               file_url,
               file_name: file.name,
+              file_hash,
+              file_size,
               page_start: 1,
               page_end: 0,
               page_count: 0,
@@ -107,6 +117,8 @@ export default function SirrUploadButton({ onUploaded, language }) {
             part_number: newPartNumber,
             file_url,
             file_name: file.name,
+            file_hash,
+            file_size,
             page_start: 1,
             page_end: 0,
             page_count: 0,
@@ -135,6 +147,22 @@ export default function SirrUploadButton({ onUploaded, language }) {
         const failedPartNumber = mode === "new" ? 1 : (savedParts.length + 1);
         throw new Error(`Part ${failedPartNumber} upload FAILED — PDF URL was not persisted in pdf_parts (book ${verifyBookId}). Upload stopped. Please retry this part.`);
       }
+
+      // 3b. Audit: record this upload permanently in SirrAuditLog.
+      const me = await base44.auth.me().catch(() => null);
+      await base44.entities.SirrAuditLog.create({
+        audit_id: `SA-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        sirr_book_id: verifyBookId,
+        part_id: savedParts[partIdx]?.part_id || "",
+        part_number: savedParts[partIdx]?.part_number || (mode === "new" ? 1 : savedParts.length),
+        action: "upload",
+        user_id: me?.id || "",
+        user_name: me?.full_name || me?.email || "",
+        timestamp: now,
+        status: "info",
+        details: `Uploaded Part ${savedParts[partIdx]?.part_number || ""} (${file.name}, ${file_size} bytes, sha256:${file_hash.slice(0, 16)}…).`,
+        file_uri: file_url,
+      }).catch(() => {});
 
       // 4. After Part 1 of a new book, switch to append mode and select this
       //    book so the user can add more parts OR click "Begin Processing".
