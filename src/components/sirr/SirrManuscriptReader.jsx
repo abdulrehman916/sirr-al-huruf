@@ -1,52 +1,70 @@
 // ═══════════════════════════════════════════════════════════════
-// SIRR MANUSCRIPT READER — MANUSCRIPT-DRIVEN READER
+// SIRR MANUSCRIPT READER — SIRR-ISOLATED STORE
 // ═══════════════════════════════════════════════════════════════
-// Clean, production-ready reader. Displays ONLY imported manuscripts.
+// Reads ONLY from the SIRR-dedicated entities (SirrManuscriptBook /
+// SirrManuscriptEntry). It NEVER connects to the global ManuscriptBook
+// or ManuscriptEntry collections used by Astro Clock, Reference
+// Library, or Import History.
 //
-//   • No hardcoded Sirr 1-7 sections, categories, demo content, or counts.
-//   • Each imported PDF = one Book, shown exactly as imported.
-//   • Inside every book, entries render in exact manuscript order
-//     (entry_order) with original titles, verbatim Arabic, Malayalam
-//     translation, and a full reference footer.
-//   • Import is the only non-manuscript action (opens the existing
-//     OneDrive browser, which is reused unchanged).
+// The SIRR page therefore starts COMPLETELY EMPTY. No placeholder
+// books, no old imports, no cross-module manuscripts are shown. A book
+// appears here ONLY after a PDF is uploaded specifically for the SIRR
+// module (written into SirrManuscriptBook by SIRR-only logic).
 //
-// The manuscript is the ONLY source of truth. Nothing is fabricated.
+// Books → entries render in exact manuscript order (entry_order) with
+// original titles, verbatim Arabic, Malayalam translation, and a full
+// reference footer. Nothing is invented.
 // ═══════════════════════════════════════════════════════════════
-import { useState, useMemo } from "react";
-import { ChevronLeft, BookOpen, FileText, Globe, Upload, Sparkles } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { ChevronLeft, BookOpen, FileText, Globe, Sparkles } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import SirrManuscriptEntry from "./SirrManuscriptEntry";
-import SirrOneDriveBrowser from "./SirrOneDriveBrowser";
 
-export default function SirrManuscriptReader({ books, entries, headings, loading, onRefresh, language, setLanguage }) {
-  const [view, setView] = useState("list");     // 'list' | 'book' | 'import'
+// SIRR-ISOLATED fetchers — query ONLY the SIRR-dedicated entities.
+async function fetchSirrBooks() {
+  try {
+    const books = await base44.entities.SirrManuscriptBook.list("-created_date", 500);
+    return books || [];
+  } catch {
+    return [];
+  }
+}
+async function fetchSirrEntries() {
+  try {
+    const entries = await base44.entities.SirrManuscriptEntry.list("-created_date", 1000);
+    return entries || [];
+  } catch {
+    return [];
+  }
+}
+
+function hasText(v) { return v != null && String(v).trim().length > 0; }
+
+export default function SirrManuscriptReader({ language, setLanguage }) {
+  const [books, setBooks] = useState([]);
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState("list");     // 'list' | 'book'
   const [selectedBook, setSelectedBook] = useState(null);
   const isMl = language === "ml";
 
-  // heading_id → heading record (for original manuscript titles)
-  const headingMap = useMemo(() => {
-    const m = new Map();
-    for (const h of headings || []) m.set(h.heading_id, h);
-    return m;
-  }, [headings]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([fetchSirrBooks(), fetchSirrEntries()])
+      .then(([b, e]) => {
+        if (!cancelled) { setBooks(b); setEntries(e); setLoading(false); }
+      })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const selectedEntries = useMemo(() => {
     if (!selectedBook) return [];
-    return (entries || [])
-      .filter((e) => e.book_id === selectedBook.book_id)
+    return entries
+      .filter((e) => e.sirr_book_id === selectedBook.sirr_book_id)
       .sort((a, b) => (a.entry_order || 0) - (b.entry_order || 0));
   }, [entries, selectedBook]);
-
-  // ── Import view — reuse existing OneDrive browser (unchanged) ──
-  if (view === "import") {
-    return (
-      <SirrOneDriveBrowser
-        onBack={() => setView(books.length ? "list" : "list")}
-        onImported={() => { onRefresh?.(); setView("list"); setSelectedBook(null); }}
-        language={language}
-      />
-    );
-  }
 
   // ── Book view — entries in manuscript order ──
   if (view === "book" && selectedBook) {
@@ -69,7 +87,7 @@ export default function SirrManuscriptReader({ books, entries, headings, loading
             </h1>
           )}
           <h1 className="font-inter text-lg font-bold" style={{ color: "rgba(255,255,255,0.90)" }}>
-            {selectedBook.book_title || selectedBook.book_id}
+            {selectedBook.book_title || selectedBook.sirr_book_id}
           </h1>
           {hasText(selectedBook.author) && (
             <p className="font-inter text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>
@@ -95,10 +113,10 @@ export default function SirrManuscriptReader({ books, entries, headings, loading
           <div className="space-y-4">
             {selectedEntries.map((entry) => (
               <SirrManuscriptEntry
-                key={entry.entry_id || entry._id}
+                key={entry.sirr_entry_id || entry._id}
                 entry={entry}
                 book={selectedBook}
-                heading={entry.heading_id ? headingMap.get(entry.heading_id) : null}
+                heading={null}
                 language={language}
               />
             ))}
@@ -108,23 +126,17 @@ export default function SirrManuscriptReader({ books, entries, headings, loading
     );
   }
 
-  // ── List view — imported books + import action ──
+  // ── List view — SIRR-only books (starts empty) ──
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2 pt-1">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4" style={{ color: "rgba(212,175,55,0.60)" }} />
           <h1 className="font-inter text-sm font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>
-            {isMl ? "ഗ്രന്ഥശേഖരം" : "Manuscript Library"}
+            {isMl ? "സിറർ ഗ്രന്ഥശേഖരം" : "Sirr Manuscript Library"}
           </h1>
         </div>
-        <div className="flex items-center gap-1.5">
-          <LangToggle language={language} setLanguage={setLanguage} isMl={isMl} />
-          <button onClick={() => setView("import")}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold btn-gold">
-            <Upload className="w-3.5 h-3.5" /> {isMl ? "ഗ്രന്ഥം ഇറക്കുമതി" : "Import"}
-          </button>
-        </div>
+        <LangToggle language={language} setLanguage={setLanguage} isMl={isMl} />
       </div>
 
       {loading ? (
@@ -132,24 +144,25 @@ export default function SirrManuscriptReader({ books, entries, headings, loading
           <div className="w-7 h-7 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
         </div>
       ) : books.length === 0 ? (
-        // Empty production-ready container — waiting for manuscript content
+        // Empty production-ready container — waiting for SIRR manuscript upload.
+        // No placeholder books, no global manuscripts, nothing fabricated.
         <div className="text-center py-12">
           <BookOpen className="w-10 h-10 mx-auto mb-3" style={{ color: "rgba(212,175,55,0.25)" }} />
           <p className={`text-sm font-bold ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.45)" }}>
-            {isMl ? "ഇറക്കുമതി ചെയ്ത ഗ്രന്ഥങ്ങളൊന്നുമില്ല" : "No manuscript imported yet"}
+            {isMl ? "സിറർ ഗ്രന്ഥങ്ങളൊന്നുമില്ല" : "No Sirr manuscripts"}
           </p>
           <p className={`text-xs mt-1 ${isMl ? "font-malayalam" : "font-inter"}`} style={{ color: "rgba(255,255,255,0.30)" }}>
-            {isMl ? "ഒരു ഗ്രന്ഥം ഇറക്കുമതി ചെയ്യുക" : "Import a manuscript to begin"}
+            {isMl ? "സിറർ ഘടകത്തിനായി ഒരു ഗ്രന്ഥം ഇറക്കുമതി ചെയ്യുക" : "Upload a manuscript for the Sirr module to begin"}
           </p>
         </div>
       ) : (
         <div className="space-y-2">
           {books.map((book) => {
-            const bookEntryCount = (entries || []).filter((e) => e.book_id === book.book_id).length;
+            const bookEntryCount = entries.filter((e) => e.sirr_book_id === book.sirr_book_id).length;
             const exColor = book.extraction_status === "completed" ? "#4ADE80"
               : book.extraction_status === "failed" ? "#F87171" : "#FBBF24";
             return (
-              <button key={book.book_id || book._id}
+              <button key={book.sirr_book_id || book._id}
                 onClick={() => { setSelectedBook(book); setView("book"); }}
                 className="w-full flex items-center gap-3 p-3.5 rounded-xl text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
                 style={{
@@ -164,7 +177,7 @@ export default function SirrManuscriptReader({ books, entries, headings, loading
                     </p>
                   )}
                   <p className="font-inter text-sm font-bold truncate" style={{ color: "rgba(255,255,255,0.85)" }}>
-                    {book.book_title || book.book_id}
+                    {book.book_title || book.sirr_book_id}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     {hasText(book.author) && (
@@ -213,5 +226,3 @@ function LangToggle({ language, setLanguage, isMl }) {
     </div>
   );
 }
-
-function hasText(v) { return v != null && String(v).trim().length > 0; }

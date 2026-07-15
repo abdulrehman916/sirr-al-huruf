@@ -82,8 +82,10 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
   const isMl = language === "ml";
 
   // ── Title: the original heading printed inside the manuscript ──
-  const titleAr = heading?.heading_title_ar || entry.topic_ar || "";
-  const titleMain = heading?.heading_title || entry.topic || entry.purpose || "";
+  // Resolved from the explicit heading prop (global join) OR from the
+  // entry's own embedded heading fields (SIRR-isolated store).
+  const titleAr = heading?.heading_title_ar || entry.heading_title_ar || entry.topic_ar || "";
+  const titleMain = heading?.heading_title || entry.heading_title || entry.topic || entry.purpose || "";
   const titleMl = entry.topic_ml || entry.purpose_ml || "";
 
   // ── Arabic text — verbatim, harakat preserved ──

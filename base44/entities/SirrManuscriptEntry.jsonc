@@ -1,0 +1,209 @@
+{
+  "name": "SirrManuscriptEntry",
+  "type": "object",
+  "description": "SIRR-MODULE-ISOLATED manuscript entry collection. Completely separate from the global ManuscriptEntry entity. Each record is one Dua / Surah / Hizb / Wird / Practice / Section extracted from a SIRR-uploaded PDF, in exact manuscript order (entry_order). The SIRR page renders these verbatim \u2014 Arabic text preserved with every letter and harakah, Malayalam translation immediately below, original manuscript heading as the title. ISOLATED \u2014 only SIRR-specific upload/extraction logic may write to this entity. Never shared with or copied from ManuscriptEntry.",
+  "properties": {
+    "sirr_entry_id": {
+      "type": "string",
+      "description": "Permanent unique identifier for this SIRR entry."
+    },
+    "sirr_book_id": {
+      "type": "string",
+      "description": "FK to SirrManuscriptBook.sirr_book_id. The SIRR book this entry belongs to."
+    },
+    "entry_order": {
+      "type": "integer",
+      "default": 0,
+      "description": "Sequential position of this entry within the book, by manuscript page order. Preserves exact manuscript page-by-page ordering. 1-based."
+    },
+    "heading_title": {
+      "type": "string",
+      "default": "",
+      "description": "The original heading printed inside the manuscript for this section. Used as the entry title \u2014 never invented, never 'Dua 1'."
+    },
+    "heading_title_ar": {
+      "type": "string",
+      "default": "",
+      "description": "Original heading in Arabic script if the manuscript heading is in Arabic. Preserved verbatim."
+    },
+    "topic": {
+      "type": "string",
+      "default": "",
+      "description": "Manuscript topic/section name (English) if provided by the manuscript."
+    },
+    "topic_ar": {
+      "type": "string",
+      "default": "",
+      "description": "Arabic topic name if provided by the manuscript."
+    },
+    "topic_ml": {
+      "type": "string",
+      "default": "",
+      "description": "Malayalam topic name if the manuscript itself provides one."
+    },
+    "purpose": {
+      "type": "string",
+      "default": "",
+      "description": "Purpose or goal of this entry as written in the manuscript."
+    },
+    "purpose_ml": {
+      "type": "string",
+      "default": "",
+      "description": "Malayalam purpose if provided by the manuscript."
+    },
+    "introduction": {
+      "type": "string",
+      "default": "",
+      "description": "Introduction or context as written in the manuscript."
+    },
+    "arabic_text": {
+      "type": "string",
+      "default": "",
+      "description": "Complete Arabic text verbatim from the manuscript. Every letter, harakah, punctuation, line break preserved. Never normalized or rewritten."
+    },
+    "malayalam_meaning": {
+      "type": "string",
+      "default": "",
+      "description": "Faithful Malayalam translation of the Arabic text. Displayed immediately below the Arabic."
+    },
+    "english_meaning": {
+      "type": "string",
+      "default": "",
+      "description": "English translation if the manuscript provides one."
+    },
+    "conditions": {
+      "type": "string",
+      "default": "",
+      "description": "Conditions or prerequisites as written in the manuscript."
+    },
+    "materials": {
+      "type": "string",
+      "default": "",
+      "description": "Materials required as written in the manuscript."
+    },
+    "preparation": {
+      "type": "string",
+      "default": "",
+      "description": "Preparation instructions as written in the manuscript."
+    },
+    "procedure": {
+      "type": "string",
+      "default": "",
+      "description": "Procedure / method / practice steps as written in the manuscript."
+    },
+    "timing": {
+      "type": "string",
+      "default": "",
+      "description": "Timing requirements (best time) as written in the manuscript."
+    },
+    "day": {
+      "type": "string",
+      "default": "",
+      "description": "Suitable day as written in the manuscript."
+    },
+    "planet": {
+      "type": "string",
+      "default": "",
+      "description": "Associated planet as written in the manuscript."
+    },
+    "incense": {
+      "type": "string",
+      "default": "",
+      "description": "Required incense as written in the manuscript."
+    },
+    "repetition": {
+      "type": "string",
+      "default": "",
+      "description": "Repetition count as written in the manuscript."
+    },
+    "warnings": {
+      "type": "string",
+      "default": "",
+      "description": "Warnings or precautions as written in the manuscript."
+    },
+    "benefits": {
+      "type": "string",
+      "default": "",
+      "description": "Benefits or expected results as written in the manuscript."
+    },
+    "notes": {
+      "type": "string",
+      "default": "",
+      "description": "Additional notes from the manuscript."
+    },
+    "content_translations_ml": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {},
+      "description": "Malayalam translations for content fields that do not have a dedicated _ml variant. Keys are field names, values are Malayalam translations."
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Extracted image URLs (diagrams, wafq, seals) from the manuscript. Original images only \u2014 never redrawn."
+    },
+    "page_number": {
+      "type": "string",
+      "default": "",
+      "description": "Page number in the source PDF."
+    },
+    "book_title": {
+      "type": "string",
+      "default": "",
+      "description": "Denormalized book title for display without joins."
+    }
+  },
+  "required": [
+    "sirr_entry_id",
+    "sirr_book_id",
+    "entry_order"
+  ],
+  "indexes": [
+    {
+      "name": "idx_sirr_entry_id",
+      "fields": [
+        "sirr_entry_id"
+      ]
+    },
+    {
+      "name": "idx_sirr_book_id",
+      "fields": [
+        "sirr_book_id"
+      ]
+    },
+    {
+      "name": "idx_entry_order",
+      "fields": [
+        "entry_order"
+      ]
+    },
+    {
+      "name": "idx_sirr_book_order",
+      "fields": [
+        "sirr_book_id",
+        "entry_order"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
