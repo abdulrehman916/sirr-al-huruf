@@ -32,6 +32,10 @@ const LABELS = {
   etiquette:     { ml: "മര്യാദകൾ",       en: "Etiquette" },
   conditions:    { ml: "നിബന്ധനകൾ",     en: "Conditions" },
   preparation:   { ml: "ഒരുക്കം",         en: "Preparation" },
+  materials:     { ml: "സാമഗ്രികൾ",      en: "Materials" },
+  repetition:    { ml: "ആവർത്തനം",      en: "Repetition" },
+  timing:        { ml: "സമയം",          en: "Recommended Time" },
+  day:           { ml: "ദിവസം",         en: "Recommended Day" },
   warnings:      { ml: "മുന്നറിയിപ്പ്",   en: "Warnings" },
   notes:         { ml: "കുറിപ്പുകൾ",      en: "Notes" },
 };
@@ -39,7 +43,8 @@ const LABELS = {
 // Manuscript-order field keys for the detail view (pre-Arabic section)
 const DETAIL_FIELDS = [
   'introduction','purpose','benefits','etiquette','conditions',
-  'preparation','warnings','notes',
+  'preparation','materials','repetition','timing','day',
+  'warnings','notes',
 ];
 
 function hasText(v) { return v != null && String(v).trim().length > 0; }
@@ -90,11 +95,7 @@ function DuaDetail({ entry, book, language, onBack }) {
             </p>
           )}
 
-          {entry.page_number && (
-            <p className="font-inter text-[10px] mt-1.5" style={{ color: "rgba(255,255,255,0.30)" }}>
-              {isMl ? "പേജ്" : "Page"} {entry.page_number}
-            </p>
-          )}
+
         </header>
 
         <div className="px-4 py-4 space-y-4">
@@ -158,6 +159,8 @@ function DuaDetail({ entry, book, language, onBack }) {
             {book?.book_title_ar && <RefRow label={isMl ? "അറബി ശീർഷകം" : "Arabic Title"} value={book.book_title_ar} />}
             {entry.page_number && <RefRow label={isMl ? "പേജ്" : "Page"} value={String(entry.page_number)} />}
             {book?.author && <RefRow label={isMl ? "ഗ്രന്ഥകർത്താവ്" : "Author"} value={book.author} />}
+            {book?.edition && <RefRow label={isMl ? "പതിപ്പ്" : "Edition"} value={book.edition} />}
+            {book?.original_file_name && <RefRow label={isMl ? "ഉറവിടം" : "Source"} value={book.original_file_name} />}
           </div>
         </footer>
       </article>
@@ -240,7 +243,7 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
   const refresh = useCallback(() => {
     setLoading(true);
     Promise.all([
-      base44.entities.SirrManuscriptBook.list('-created_date', 100).catch(() => []),
+      base44.entities.SirrManuscriptBook.list('-created_date', 500).catch(() => []),
       base44.entities.SirrManuscriptEntry.list('entry_order', 2000).catch(() => []),
     ]).then(([b, e]) => {
       setBooks(b || []);
@@ -250,6 +253,31 @@ export default function SirrManuscriptReader({ language, setLanguage }) {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Realtime: new Dua cards appear automatically as the background engine processes pages.
+  useEffect(() => {
+    const unsubscribe = base44.entities.SirrManuscriptEntry.subscribe((event) => {
+      if (event.type === 'create' && event.data) {
+        setEntries(prev => {
+          if (prev.find(e => (e.sirr_entry_id || e._id) === (event.data.sirr_entry_id || event.data._id))) return prev;
+          const next = [...prev, event.data];
+          next.sort((a, b2) => (a.entry_order || 0) - (b2.entry_order || 0));
+          return next;
+        });
+      }
+    });
+    return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
+  }, []);
+
+  // Periodic refresh while any book is still processing in the background (safety net).
+  useEffect(() => {
+    const interval = setInterval(() => {
+      base44.entities.SirrManuscriptBook.filter({ extraction_status: { $in: ['pending', 'processing', 'partial'] } }, undefined, 1)
+        .then(b => { if (b && b.length > 0) refresh(); })
+        .catch(() => {});
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [refresh]);
 
   // Find the book for a given entry
   const bookFor = useCallback((entry) => {

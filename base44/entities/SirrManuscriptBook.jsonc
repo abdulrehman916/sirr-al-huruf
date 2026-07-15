@@ -1,7 +1,7 @@
 {
   "name": "SirrManuscriptBook",
   "type": "object",
-  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity used by Astro Clock, Reference Library, and Import History. The SIRR page reads ONLY from this entity \u2014 it never connects to ManuscriptBook. Starts empty. A book appears here ONLY when a PDF is uploaded specifically for the SIRR module via the SIRR upload button. No records are shared, copied, or synced from any other module's manuscript store. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function and SIRR-only UI logic may write to this entity.",
+  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity used by Astro Clock, Reference Library, and Import History. The SIRR page reads ONLY from this entity \u2014 it never connects to ManuscriptBook. Starts empty. A book appears here ONLY when a PDF is uploaded specifically for the SIRR module via the SIRR upload button. No records are shared, copied, or synced from any other module's manuscript store. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function and SIRR-only UI logic may write to this entity. BACKGROUND ENGINE: After upload, extraction_status='pending' and last_processed_page=0. The sirrProcessNextChunk background processor and scheduled automation read last_processed_page to resume automatically \u2014 never requires manual restart.",
   "properties": {
     "sirr_book_id": {
       "type": "string",
@@ -49,17 +49,22 @@
     "total_pages": {
       "type": "integer",
       "default": 0,
-      "description": "Total number of pages in the source PDF."
+      "description": "Total number of pages in the source PDF. 0 until the first chunk determines it from the LLM. Used by the background processor to know when extraction is complete."
+    },
+    "last_processed_page": {
+      "type": "integer",
+      "default": 0,
+      "description": "Last page successfully processed during chunked background ingestion. 0 = not started. The sirrProcessNextChunk background processor resumes from last_processed_page+1 automatically. When last_processed_page >= total_pages, extraction is complete."
     },
     "original_file_url": {
       "type": "string",
       "default": "",
-      "description": "Permanent URL to the original PDF file. The original PDF remains the master source."
+      "description": "Permanent URL to the original PDF file. The original PDF remains the master source and is stored permanently in SIRR storage."
     },
     "original_file_name": {
       "type": "string",
       "default": "",
-      "description": "Original file name of the uploaded PDF."
+      "description": "Original file name of the uploaded PDF. Shown as the Source in the reference footer."
     },
     "source": {
       "type": "string",
@@ -80,12 +85,12 @@
         "partial"
       ],
       "default": "pending",
-      "description": "Content extraction status for this SIRR book. Shown in the library as Import Status."
+      "description": "Content extraction status for this SIRR book. 'pending' = uploaded, waiting for background processor. 'processing' = background engine is extracting pages. 'completed' = all pages processed. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
     },
     "extraction_error": {
       "type": "string",
       "default": "",
-      "description": "Error message if extraction_status is failed."
+      "description": "Error message if extraction_status is failed or partial."
     },
     "total_entries": {
       "type": "integer",
@@ -126,6 +131,19 @@
       "name": "idx_upload_date",
       "fields": [
         "upload_date"
+      ]
+    },
+    {
+      "name": "idx_status_upload_date",
+      "fields": [
+        "extraction_status",
+        "upload_date"
+      ]
+    },
+    {
+      "name": "idx_last_processed_page",
+      "fields": [
+        "last_processed_page"
       ]
     }
   ],

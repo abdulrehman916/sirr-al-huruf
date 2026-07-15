@@ -28,9 +28,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
+    // Allow admin-triggered calls AND internal calls from sirrProcessNextChunk / scheduled automation (no user).
+    const user = await base44.auth.me().catch(() => null);
+    if (user && user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
+    const sdk = base44.asServiceRole;
 
     const body = await req.json().catch(() => ({}));
     const pdf_file_url = body.pdf_file_url;
@@ -58,12 +59,12 @@ Deno.serve(async (req) => {
     let bookRecordId = '';
 
     if (existing_book_id) {
-      const existingBooks = await base44.entities.SirrManuscriptBook.filter({ sirr_book_id: existing_book_id }, undefined, 1);
+      const existingBooks = await sdk.entities.SirrManuscriptBook.filter({ sirr_book_id: existing_book_id }, undefined, 1);
       bookRecordId = existingBooks[0]?.id || existingBooks[0]?._id || '';
       if (!bookRecordId) return Response.json({ error: 'Book not found: ' + existing_book_id }, { status: 404 });
 
       if (!isChunked && manual_order_offset === 0) {
-        await base44.entities.SirrManuscriptEntry.deleteMany({ sirr_book_id: existing_book_id });
+        await sdk.entities.SirrManuscriptEntry.deleteMany({ sirr_book_id: existing_book_id });
       } else if (isChunked) {
         // Only delete entries within the current chunk's order range
         const delStart = manual_order_offset > 0
@@ -72,16 +73,16 @@ Deno.serve(async (req) => {
         const delEnd = manual_order_offset > 0
           ? manual_order_offset + page_end + 99
           : page_end * 100 + 99;
-        await base44.entities.SirrManuscriptEntry.deleteMany({
+        await sdk.entities.SirrManuscriptEntry.deleteMany({
           sirr_book_id: existing_book_id,
           entry_order: { $gte: delStart, $lte: delEnd },
         });
       }
-      await base44.entities.SirrManuscriptBook.update(bookRecordId, {
+      await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
         extraction_status: 'processing', extraction_error: ''
       });
     } else {
-      const created = await base44.entities.SirrManuscriptBook.create({
+      const created = await sdk.entities.SirrManuscriptBook.create({
         sirr_book_id,
         book_title: original_file_name || 'Sirr Manuscript',
         malayalam_book_name: provided_malayalam_name,
@@ -194,7 +195,7 @@ Return ONLY the JSON object. No commentary.`;
 
     let extracted;
     try {
-      extracted = await base44.integrations.Core.InvokeLLM({
+      extracted = await sdk.integrations.Core.InvokeLLM({
         prompt,
         file_urls: [pdf_file_url],
         response_json_schema: schema,
@@ -202,7 +203,7 @@ Return ONLY the JSON object. No commentary.`;
       });
     } catch (e) {
       if (bookRecordId) {
-        await base44.entities.SirrManuscriptBook.update(bookRecordId, {
+        await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
           extraction_status: 'failed',
           extraction_error: String(e?.message || e),
         });
@@ -259,7 +260,7 @@ Return ONLY the JSON object. No commentary.`;
 
     if (records.length > 0) {
       for (let i = 0; i < records.length; i += 100) {
-        await base44.entities.SirrManuscriptEntry.bulkCreate(records.slice(i, i + 100));
+        await sdk.entities.SirrManuscriptEntry.bulkCreate(records.slice(i, i + 100));
       }
     }
 
@@ -268,14 +269,21 @@ Return ONLY the JSON object. No commentary.`;
     // For chunked processing, count ALL entries for this book
     let allEntriesCount = records.length;
     if (isChunked) {
-      const allEntries = await base44.entities.SirrManuscriptEntry.filter({ sirr_book_id });
+      const allEntries = await sdk.entities.SirrManuscriptEntry.filter({ sirr_book_id });
       allEntriesCount = allEntries.length;
     }
+
+    const isLastChunk = isChunked && total_pages > 0 && page_end >= total_pages;
+    let extraction_status;
+    if (allEntriesCount === 0) extraction_status = 'failed';
+    else if (!isChunked || isLastChunk) extraction_status = 'completed';
+    else extraction_status = 'processing';
 
     const bookUpdate = {
       total_pages: total_pages || (isChunked ? undefined : 0),
       total_entries: allEntriesCount,
-      extraction_status: allEntriesCount > 0 ? 'completed' : 'failed',
+      extraction_status,
+      last_processed_page: isChunked ? page_end : (total_pages || 0),
     };
 
     // Only set book metadata from the first chunk or non-chunked call
@@ -293,7 +301,7 @@ Return ONLY the JSON object. No commentary.`;
     // Remove undefined values
     Object.keys(bookUpdate).forEach(k => bookUpdate[k] === undefined && delete bookUpdate[k]);
 
-    await base44.entities.SirrManuscriptBook.update(bookRecordId, bookUpdate);
+    await sdk.entities.SirrManuscriptBook.update(bookRecordId, bookUpdate);
 
     return Response.json({
       sirr_book_id,
