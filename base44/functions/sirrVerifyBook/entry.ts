@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
         ? 'verified'
         : 'incomplete';
 
-    // ── Final verdict ──
+    // ── Final verdict + exact failure reasons ──
     const all_pass =
       missing_pages === 0 &&
       ocr_issues === 0 &&
@@ -112,6 +112,24 @@ Deno.serve(async (req) => {
       order_gaps === 0 &&
       book.extraction_status === 'completed' &&
       entries.length > 0;
+
+    const failure_reasons = [];
+    if (book.extraction_status !== 'completed')
+      failure_reasons.push(`extraction_status is '${book.extraction_status}' (not completed)`);
+    if (entries.length === 0)
+      failure_reasons.push('no entries extracted');
+    if (total_pdf_parts === 0)
+      failure_reasons.push('no pdf_parts stored in the book record (multi-part storage missing)');
+    if (missing_pages > 0)
+      failure_reasons.push(`${missing_pages} PDF part(s) not fully processed`);
+    if (ocr_issues > 0)
+      failure_reasons.push(`${ocr_issues} entry(ies) with OCR confidence < 100 (flagged for review)`);
+    if (duplicate_entries > 0)
+      failure_reasons.push(`${duplicate_entries} duplicate entry group(s) detected`);
+    if (missing_malayalam_meanings > 0)
+      failure_reasons.push(`${missing_malayalam_meanings} entry(ies) with explanatory text but missing Malayalam meaning`);
+    if (order_gaps > 0)
+      failure_reasons.push(`${order_gaps} gap(s) in entry_order sequence`);
 
     let final_result;
     if (all_pass) final_result = 'VERIFIED';
@@ -133,6 +151,8 @@ Deno.serve(async (req) => {
       arabic_verification_status,
       database_verification_status,
       final_result,
+      failure_reasons,
+      verification_passed: all_pass,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
