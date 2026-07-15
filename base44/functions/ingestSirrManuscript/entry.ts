@@ -211,8 +211,28 @@ Return ONLY the JSON object. No commentary.`;
       return Response.json({ error: 'Extraction failed', details: String(e?.message || e) }, { status: 500 });
     }
 
-    const data = (extracted && typeof extracted === 'object') ? extracted : {};
-    const entries = Array.isArray(data.entries) ? data.entries : [];
+    let data = (extracted && typeof extracted === 'object') ? extracted : {};
+    let entries = Array.isArray(data.entries) ? data.entries : [];
+
+    // ── OCR RETRY: if any entry has low confidence, re-extract once and keep the better result ──
+    const minConf = entries.length > 0 ? Math.min(...entries.map(e => Number(e.ocr_confidence) || 100)) : 100;
+    if (entries.length > 0 && minConf < 100) {
+      try {
+        const retryExtracted = await sdk.integrations.Core.InvokeLLM({
+          prompt, file_urls: [pdf_file_url], response_json_schema: schema, model: 'claude_sonnet_4_6',
+        });
+        const retryData = (retryExtracted && typeof retryExtracted === 'object') ? retryExtracted : {};
+        const retryEntries = Array.isArray(retryData.entries) ? retryData.entries : [];
+        if (retryEntries.length > 0) {
+          const retryMinConf = Math.min(...retryEntries.map(e => Number(e.ocr_confidence) || 100));
+          if (retryMinConf >= minConf) {
+            data = retryData;
+            entries = retryEntries;
+          }
+        }
+      } catch (_) { /* keep original extraction on retry failure */ }
+    }
+
     const total_pages = Number(data.total_pages) || 0;
     const malayalam_book_name = provided_malayalam_name || data.malayalam_book_name || '';
 
