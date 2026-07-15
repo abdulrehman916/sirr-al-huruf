@@ -199,7 +199,7 @@ Return ONLY the JSON object. No commentary.`;
         prompt,
         file_urls: [pdf_file_url],
         response_json_schema: schema,
-        model: 'claude_sonnet_4_6',
+        model: 'gemini_3_flash',
       });
     } catch (e) {
       if (bookRecordId) {
@@ -219,7 +219,7 @@ Return ONLY the JSON object. No commentary.`;
     if (entries.length > 0 && minConf < 100) {
       try {
         const retryExtracted = await sdk.integrations.Core.InvokeLLM({
-          prompt, file_urls: [pdf_file_url], response_json_schema: schema, model: 'claude_sonnet_4_6',
+          prompt, file_urls: [pdf_file_url], response_json_schema: schema, model: 'gemini_3_flash',
         });
         const retryData = (retryExtracted && typeof retryExtracted === 'object') ? retryExtracted : {};
         const retryEntries = Array.isArray(retryData.entries) ? retryData.entries : [];

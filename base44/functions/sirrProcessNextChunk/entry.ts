@@ -20,7 +20,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 //   platform database. Multiple uploaded PDFs queue automatically.
 // ═══════════════════════════════════════════════════════════════
 
-const CHUNK_SIZE = 3;
+const CHUNK_SIZE = 10;
 const TIME_BUDGET_MS = 85000;
 const RETRY_DELAY_MS = 6000;
 const MAX_ATTEMPTS = 2;
