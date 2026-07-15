@@ -50,22 +50,29 @@ Deno.serve(async (req) => {
 
     const isChunked = page_end > 0;
 
+    // Resolve the built-in record ID for the book (SDK update/delete use _id, not custom fields)
+    let bookRecordId = '';
+
     if (existing_book_id) {
+      const existingBooks = await base44.entities.SirrManuscriptBook.filter({ sirr_book_id: existing_book_id }, undefined, 1);
+      bookRecordId = existingBooks[0]?.id || existingBooks[0]?._id || '';
+      if (!bookRecordId) return Response.json({ error: 'Book not found: ' + existing_book_id }, { status: 404 });
+
       if (!isChunked) {
-        // Full re-import: clear all entries
         await base44.entities.SirrManuscriptEntry.deleteMany({ sirr_book_id: existing_book_id });
       } else {
-        // Chunked: delete only entries from this page range
+        const delStart = (page_start - 1) * 100;
+        const delEnd = page_end * 100 + 99;
         await base44.entities.SirrManuscriptEntry.deleteMany({
           sirr_book_id: existing_book_id,
-          entry_order: { $gte: page_start, $lte: page_end },
+          entry_order: { $gte: delStart, $lte: delEnd },
         });
       }
-      await base44.entities.SirrManuscriptBook.update(existing_book_id, {
+      await base44.entities.SirrManuscriptBook.update(bookRecordId, {
         extraction_status: 'processing', extraction_error: ''
       });
     } else {
-      await base44.entities.SirrManuscriptBook.create({
+      const created = await base44.entities.SirrManuscriptBook.create({
         sirr_book_id,
         book_title: original_file_name || 'Sirr Manuscript',
         malayalam_book_name: provided_malayalam_name,
@@ -77,6 +84,7 @@ Deno.serve(async (req) => {
         total_pages: 0,
         total_entries: 0,
       });
+      bookRecordId = created.id || created._id || '';
     }
 
     const pageRangeInstruction = isChunked
@@ -184,10 +192,12 @@ Return ONLY the JSON object. No commentary.`;
         model: 'claude_sonnet_4_6',
       });
     } catch (e) {
-      await base44.entities.SirrManuscriptBook.update(sirr_book_id, {
-        extraction_status: 'failed',
-        extraction_error: String(e?.message || e),
-      });
+      if (bookRecordId) {
+        await base44.entities.SirrManuscriptBook.update(bookRecordId, {
+          extraction_status: 'failed',
+          extraction_error: String(e?.message || e),
+        });
+      }
       return Response.json({ error: 'Extraction failed', details: String(e?.message || e) }, { status: 500 });
     }
 
@@ -271,7 +281,7 @@ Return ONLY the JSON object. No commentary.`;
     // Remove undefined values
     Object.keys(bookUpdate).forEach(k => bookUpdate[k] === undefined && delete bookUpdate[k]);
 
-    await base44.entities.SirrManuscriptBook.update(sirr_book_id, bookUpdate);
+    await base44.entities.SirrManuscriptBook.update(bookRecordId, bookUpdate);
 
     return Response.json({
       sirr_book_id,
